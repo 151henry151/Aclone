@@ -11,6 +11,7 @@ import {
   weapons,
 } from '../shared/catalog';
 import { money, carry, distance } from '../shared/simulation';
+import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
 import type { Account } from '../server/universe';
 document.documentElement.classList.toggle(
@@ -59,6 +60,8 @@ let audio: AudioContext | undefined,
   weapon = 'plasma';
 const keys = new Set<string>();
 const $ = (id: string) => document.getElementById(id)!;
+declare const __ACLONE_BASE__: string;
+const withBase = (path: string) => publicPath(__ACLONE_BASE__, path);
 function toast(text: string, error = false) {
   $('toast').textContent = text;
   $('toast').className = error ? 'show error' : 'show';
@@ -88,7 +91,7 @@ function send(action: Action) {
   ws.send(JSON.stringify({ type: 'action', request: ++request, action }));
 }
 async function api(path: string, options: RequestInit = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(withBase(path), {
     ...options,
     headers: {
       'content-type': 'application/json',
@@ -103,7 +106,9 @@ async function api(path: string, options: RequestInit = {}) {
 async function connect() {
   clearTimeout(reconnectTimer);
   $('connection').textContent = 'CONNECTING';
-  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+  ws = new WebSocket(
+    `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${withBase('/ws')}`,
+  );
   ws.addEventListener('open', () => {
     ws!.send(
       JSON.stringify({
@@ -700,7 +705,7 @@ function editorWindow() {
               : tab === 'Script'
                 ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart. Functions: on, announce, getvar, setvar, kudos. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
                 : tab === 'Assets'
-                  ? `<p>Upload original PNG, JPEG, MP3 or GLB assets (2 MiB each, 32 per world). Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(a.url)}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(a.url)}"></audio></label>` : `<a href="${esc(a.url)}" download>${esc(a.name)} · GLB</a>`)).join('')}</div>`
+                  ? `<p>Upload original PNG, JPEG, MP3 or GLB assets (2 MiB each, 32 per world). Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · GLB</a>`)).join('')}</div>`
                   : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
                       .slice(-25)
                       .reverse()
@@ -886,7 +891,7 @@ app.addEventListener('submit', async (e) => {
       (document.activeElement as HTMLElement)?.blur();
     } else if (form.id === 'asset-form') {
       const file = data.file as File;
-      const response = await fetch('/api/assets/' + world!.id, {
+      const response = await fetch(withBase('/api/assets/' + world!.id), {
         method: 'POST',
         headers: {
           authorization: 'Bearer ' + token,

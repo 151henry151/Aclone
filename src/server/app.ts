@@ -21,6 +21,7 @@ import {
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
 import { runScript } from './scripts.ts';
+import { clientAddress } from './client-address.ts';
 const inputSchema = z
   .object({
     throttle: z.number().min(-1).max(1),
@@ -233,7 +234,7 @@ export async function createApp(options: AppOptions) {
       if (path === '/api/health')
         return json(res, 200, { ok: true, version: VERSION, worlds: worlds.size });
       if (path === '/api/register' && req.method === 'POST') {
-        const ip = req.socket.remoteAddress ?? 'unknown',
+        const ip = clientAddress(req.socket.remoteAddress, req.headers['x-real-ip']?.toString()),
           r = rate.get(ip) ?? { time: Date.now(), count: 0 };
         if (Date.now() - r.time > 3600000) {
           r.time = Date.now();

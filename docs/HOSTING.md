@@ -13,6 +13,11 @@ Environment variables:
   working directory. Use an absolute path in a service definition.
 - `PUBLIC_ORIGIN`: optional exact external origin when the reverse proxy's Host
   header differs from the browser origin. Prefer preserving Host.
+- `BASE_PATH`: public URL prefix baked into the client at build time, default `/`.
+  Set it when the game is mounted under a path (`BASE_PATH=/aclone npm run build`).
+  The Node process still serves `/`, `/api/`, `/ws`, and `/world-assets/` at its
+  own root. The reverse proxy must strip that prefix before forwarding. Rebuild
+  after changing `BASE_PATH`.
 
 The operator's filesystem owns the instance, but public template worlds have no
 player owner. Create a world through the client to obtain in-game owner access.

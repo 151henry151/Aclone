@@ -4,7 +4,7 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, procedural art and synthesized sounds are original.
 
-**Version 0.2.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.2.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
 
