@@ -1,0 +1,18 @@
+sources/discord/.env
+sources/discord/export/
+tools/
+node_modules/
+dist/
+var/
+.env
+*.sqlite*
+coverage/
+test-results/
+playwright-report/
+release/
+# Local research and tool archives are not game source or redistributable assets.
+sources/
+A tractor The Universal — Clone Design Spec.md
+scripts/export-discord.sh
+.agents/
+.codex/

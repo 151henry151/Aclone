@@ -1,0 +1,151 @@
+{
+  "farm": {
+    "inputs": {},
+    "outputs": {
+      "wheat": 8
+    },
+    "skill": "farmer",
+    "seconds": 600,
+    "tier": 0
+  },
+  "mill": {
+    "inputs": {
+      "wheat": 5
+    },
+    "outputs": {
+      "flour": 3
+    },
+    "skill": "miller",
+    "seconds": 600,
+    "tier": 0
+  },
+  "bakery": {
+    "inputs": {
+      "flour": 2
+    },
+    "outputs": {
+      "bread": 3
+    },
+    "skill": "baker",
+    "seconds": 600,
+    "tier": 0
+  },
+  "sawmill": {
+    "inputs": {
+      "logs": 2
+    },
+    "outputs": {
+      "wood": 4
+    },
+    "skill": "lumberjack",
+    "seconds": 600,
+    "tier": 0
+  },
+  "quarry": {
+    "inputs": {},
+    "outputs": {
+      "stone": 6
+    },
+    "skill": "miner",
+    "seconds": 600,
+    "tier": 0
+  },
+  "mason": {
+    "inputs": {
+      "stone": 3
+    },
+    "outputs": {
+      "blocks": 2
+    },
+    "skill": "mason",
+    "seconds": 600,
+    "tier": 0
+  },
+  "mine": {
+    "inputs": {},
+    "outputs": {
+      "ore": 5
+    },
+    "skill": "miner",
+    "seconds": 600,
+    "tier": 1
+  },
+  "forge": {
+    "inputs": {
+      "ore": 5
+    },
+    "outputs": {
+      "steel": 1
+    },
+    "skill": "engineer",
+    "seconds": 600,
+    "tier": 1
+  },
+  "brewery": {
+    "inputs": {
+      "hops": 3
+    },
+    "outputs": {
+      "beer": 2
+    },
+    "skill": "brewer",
+    "seconds": 600,
+    "tier": 1
+  },
+  "workshop": {
+    "inputs": {
+      "steel": 1,
+      "wood": 2
+    },
+    "outputs": {
+      "tools": 1
+    },
+    "skill": "engineer",
+    "seconds": 600,
+    "tier": 1
+  },
+  "refinery": {
+    "inputs": {
+      "ore": 1
+    },
+    "outputs": {
+      "fuel": 3
+    },
+    "skill": "engineer",
+    "seconds": 600,
+    "tier": 1
+  },
+  "rareMine": {
+    "inputs": {},
+    "outputs": {
+      "rareEarth": 2
+    },
+    "skill": "scientist",
+    "seconds": 600,
+    "tier": 2
+  },
+  "factory": {
+    "inputs": {
+      "rareEarth": 2,
+      "steel": 1
+    },
+    "outputs": {
+      "electronics": 2
+    },
+    "skill": "scientist",
+    "seconds": 600,
+    "tier": 2
+  },
+  "shipyard": {
+    "inputs": {
+      "electronics": 2,
+      "steel": 3
+    },
+    "outputs": {
+      "shipParts": 1
+    },
+    "skill": "scientist",
+    "seconds": 600,
+    "tier": 2
+  }
+}

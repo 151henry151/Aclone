@@ -1,0 +1,68 @@
+{
+  "machine": {
+    "name": "Machine gun",
+    "damage": 500,
+    "buildDamage": 500,
+    "speed": 80,
+    "gravity": 0,
+    "delay": 0.15,
+    "energy": 1800,
+    "radius": 2,
+    "ttl": 2
+  },
+  "grenade": {
+    "name": "Grenade",
+    "damage": 4000,
+    "buildDamage": 4000,
+    "speed": 22,
+    "gravity": 9.8,
+    "delay": 1,
+    "energy": 9000,
+    "radius": 6,
+    "ttl": 3
+  },
+  "plasma": {
+    "name": "Plasma bolt",
+    "damage": 2000,
+    "buildDamage": 2000,
+    "speed": 48,
+    "gravity": 0,
+    "delay": 0.7,
+    "energy": 7000,
+    "radius": 3,
+    "ttl": 4
+  },
+  "rocket": {
+    "name": "Rocket",
+    "damage": 6500,
+    "buildDamage": 6500,
+    "speed": 32,
+    "gravity": 0,
+    "delay": 1.5,
+    "energy": 15000,
+    "radius": 5,
+    "ttl": 6
+  },
+  "javelin": {
+    "name": "Javelin",
+    "damage": 3000,
+    "buildDamage": 3000,
+    "speed": 35,
+    "gravity": 6,
+    "delay": 1.2,
+    "energy": 8000,
+    "radius": 3,
+    "ttl": 5
+  },
+  "mine": {
+    "name": "Mine",
+    "damage": 4500,
+    "buildDamage": 4500,
+    "speed": 0,
+    "gravity": 0,
+    "delay": 2,
+    "energy": 12000,
+    "radius": 5,
+    "ttl": 12
+  }
+}

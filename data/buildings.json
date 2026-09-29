@@ -1,0 +1,734 @@
+{
+  "market": {
+    "name": "Harbour stores",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {
+      "wheat": 480,
+      "flour": 1200,
+      "bread": 2880,
+      "water": 300,
+      "tea": 1680,
+      "logs": 480,
+      "wood": 840,
+      "stone": 360,
+      "blocks": 1380,
+      "ore": 300,
+      "steel": 2880,
+      "tools": 8400,
+      "hops": 720,
+      "beer": 2700,
+      "fuel": 1200,
+      "fish": 720,
+      "largeFish": 3000,
+      "tackle": 5400,
+      "rc": 9000,
+      "jetpack": 48000,
+      "electronics": 6000,
+      "rareEarth": 3600,
+      "shipParts": 24000,
+      "concrete": 1560,
+      "steak": 2220,
+      "cows": 12000,
+      "grapes": 1200
+    },
+    "sell": {
+      "wheat": 800,
+      "flour": 2000,
+      "bread": 4800,
+      "water": 500,
+      "tea": 2800,
+      "logs": 800,
+      "wood": 1400,
+      "stone": 600,
+      "blocks": 2300,
+      "ore": 500,
+      "steel": 4800,
+      "tools": 14000,
+      "hops": 1200,
+      "beer": 4500,
+      "fuel": 2000,
+      "fish": 1200,
+      "largeFish": 5000,
+      "tackle": 9000,
+      "rc": 15000,
+      "jetpack": 80000,
+      "electronics": 10000,
+      "rareEarth": 6000,
+      "shipParts": 40000,
+      "concrete": 2600,
+      "steak": 3700,
+      "cows": 20000,
+      "grapes": 2000
+    },
+    "stock": {
+      "wheat": 60,
+      "flour": 60,
+      "bread": 60,
+      "water": 60,
+      "tea": 60,
+      "logs": 60,
+      "wood": 60,
+      "stone": 60,
+      "blocks": 60,
+      "ore": 60,
+      "steel": 60,
+      "tools": 60,
+      "hops": 60,
+      "beer": 60,
+      "fuel": 60,
+      "fish": 60,
+      "largeFish": 60,
+      "tackle": 60,
+      "rc": 60,
+      "jetpack": 60,
+      "electronics": 60,
+      "rareEarth": 60,
+      "shipParts": 60,
+      "concrete": 60,
+      "steak": 60,
+      "cows": 60,
+      "grapes": 60
+    },
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "workhouse": {
+    "name": "Odd Jobs Office",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "school": {
+    "name": "Further Education, Eventually",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "home": {
+    "name": "Small cottage",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "pub": {
+    "name": "The Unsteady Axle",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {
+      "beer": 4500,
+      "bread": 4800,
+      "tea": 2800
+    },
+    "stock": {
+      "beer": 60,
+      "bread": 60,
+      "tea": 60
+    },
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "garage": {
+    "name": "Spanner & Sons",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "starport": {
+    "name": "Puddlewick spaceport",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {
+      "wheat": 480,
+      "flour": 1200,
+      "bread": 2880,
+      "water": 300,
+      "tea": 1680,
+      "logs": 480,
+      "wood": 840,
+      "stone": 360,
+      "blocks": 1380,
+      "ore": 300,
+      "steel": 2880,
+      "tools": 8400,
+      "hops": 720,
+      "beer": 2700,
+      "fuel": 1200,
+      "fish": 720,
+      "largeFish": 3000,
+      "tackle": 5400,
+      "rc": 9000,
+      "jetpack": 48000,
+      "electronics": 6000,
+      "rareEarth": 3600,
+      "shipParts": 24000,
+      "concrete": 1560,
+      "steak": 2220,
+      "cows": 12000,
+      "grapes": 1200
+    },
+    "sell": {
+      "wheat": 800,
+      "flour": 2000,
+      "bread": 4800,
+      "water": 500,
+      "tea": 2800,
+      "logs": 800,
+      "wood": 1400,
+      "stone": 600,
+      "blocks": 2300,
+      "ore": 500,
+      "steel": 4800,
+      "tools": 14000,
+      "hops": 1200,
+      "beer": 4500,
+      "fuel": 2000,
+      "fish": 1200,
+      "largeFish": 5000,
+      "tackle": 9000,
+      "rc": 15000,
+      "jetpack": 80000,
+      "electronics": 10000,
+      "rareEarth": 6000,
+      "shipParts": 40000,
+      "concrete": 2600,
+      "steak": 3700,
+      "cows": 20000,
+      "grapes": 2000
+    },
+    "stock": {
+      "wheat": 60,
+      "flour": 60,
+      "bread": 60,
+      "water": 60,
+      "tea": 60,
+      "logs": 60,
+      "wood": 60,
+      "stone": 60,
+      "blocks": 60,
+      "ore": 60,
+      "steel": 60,
+      "tools": 60,
+      "hops": 60,
+      "beer": 60,
+      "fuel": 60,
+      "fish": 60,
+      "largeFish": 60,
+      "tackle": 60,
+      "rc": 60,
+      "jetpack": 60,
+      "electronics": 60,
+      "rareEarth": 60,
+      "shipParts": 60,
+      "concrete": 60,
+      "steak": 60,
+      "cows": 60,
+      "grapes": 60
+    },
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "bank": {
+    "name": "Mutual Misgivings Bank",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "town": {
+    "name": "Puddlewick council",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "farm": {
+    "name": "Wheat farm",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {
+      "wheat": 840
+    },
+    "stock": {
+      "wheat": 20
+    },
+    "recipe": "farm",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "mill": {
+    "name": "Flour mill",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "wheat": 520
+    },
+    "sell": {
+      "flour": 2100
+    },
+    "stock": {
+      "flour": 20,
+      "wheat": 20
+    },
+    "recipe": "mill",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "bakery": {
+    "name": "Bakery",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "flour": 1300
+    },
+    "sell": {
+      "bread": 5040
+    },
+    "stock": {
+      "flour": 20,
+      "bread": 20
+    },
+    "recipe": "bakery",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "sawmill": {
+    "name": "Sawmill",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "logs": 520
+    },
+    "sell": {
+      "wood": 1470
+    },
+    "stock": {
+      "logs": 20,
+      "wood": 20
+    },
+    "recipe": "sawmill",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "quarry": {
+    "name": "Quarry",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {
+      "stone": 630
+    },
+    "stock": {
+      "stone": 20
+    },
+    "recipe": "quarry",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "mason": {
+    "name": "Stonemason",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "stone": 390
+    },
+    "sell": {
+      "blocks": 2415
+    },
+    "stock": {
+      "blocks": 20,
+      "stone": 20
+    },
+    "recipe": "mason",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "mine": {
+    "name": "Iron mine",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {
+      "ore": 525
+    },
+    "stock": {
+      "ore": 20
+    },
+    "recipe": "mine",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 1,
+    "color": "#d5c5a2"
+  },
+  "forge": {
+    "name": "Steel mill",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "ore": 325
+    },
+    "sell": {
+      "steel": 5040
+    },
+    "stock": {
+      "steel": 20,
+      "ore": 20
+    },
+    "recipe": "forge",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 1,
+    "color": "#d5c5a2"
+  },
+  "brewery": {
+    "name": "Brewery",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "hops": 780
+    },
+    "sell": {
+      "beer": 4725
+    },
+    "stock": {
+      "beer": 20,
+      "hops": 20
+    },
+    "recipe": "brewery",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 1,
+    "color": "#d5c5a2"
+  },
+  "workshop": {
+    "name": "Tool workshop",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "steel": 3120,
+      "wood": 910
+    },
+    "sell": {
+      "tools": 14700
+    },
+    "stock": {
+      "tools": 20,
+      "steel": 20,
+      "wood": 20
+    },
+    "recipe": "workshop",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 1,
+    "color": "#d5c5a2"
+  },
+  "refinery": {
+    "name": "Fuel refinery",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "ore": 325
+    },
+    "sell": {
+      "fuel": 2100
+    },
+    "stock": {
+      "fuel": 20,
+      "ore": 20
+    },
+    "recipe": "refinery",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 1,
+    "color": "#d5c5a2"
+  },
+  "rareMine": {
+    "name": "Rare earth mine",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {
+      "rareEarth": 6300
+    },
+    "stock": {
+      "rareEarth": 20
+    },
+    "recipe": "rareMine",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 2,
+    "color": "#d5c5a2"
+  },
+  "factory": {
+    "name": "Electronics works",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "rareEarth": 3900,
+      "steel": 3120
+    },
+    "sell": {
+      "electronics": 10500
+    },
+    "stock": {
+      "electronics": 20,
+      "rareEarth": 20,
+      "steel": 20
+    },
+    "recipe": "factory",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 2,
+    "color": "#d5c5a2"
+  },
+  "shipyard": {
+    "name": "Shipyard",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "electronics": 6500,
+      "steel": 3120
+    },
+    "sell": {
+      "shipParts": 42000
+    },
+    "stock": {
+      "electronics": 20,
+      "shipParts": 20,
+      "steel": 20
+    },
+    "recipe": "shipyard",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 2,
+    "color": "#d5c5a2"
+  },
+  "warehouse": {
+    "name": "Warehouse",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "turret": {
+    "name": "Automated turret",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "portal": {
+    "name": "Portal",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "notice": {
+    "name": "Noticeboard",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "scripted": {
+    "name": "Curious tree",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  },
+  "pickup": {
+    "name": "Supply cache",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {},
+    "sell": {},
+    "stock": {},
+    "recipe": null,
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 5
+    },
+    "tier": 0,
+    "color": "#d5c5a2"
+  }
+}

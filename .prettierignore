@@ -1,0 +1,10 @@
+node_modules
+dist
+var
+sources
+tools
+release
+test-results
+playwright-report
+A tractor The Universal — Clone Design Spec.md
+package-lock.json

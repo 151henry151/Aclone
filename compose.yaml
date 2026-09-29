@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+services:
+  aclone:
+    build: .
+    ports:
+      - '127.0.0.1:3000:3000'
+    volumes:
+      - parish:/app/var
+    restart: unless-stopped
+    stop_grace_period: 20s
+volumes:
+  parish:

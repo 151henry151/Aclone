@@ -1,0 +1,45 @@
+{
+  "systems": [
+    {
+      "id": "hearth",
+      "name": "Hearth",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "brindle",
+      "name": "Brindle",
+      "x": 3,
+      "y": 2
+    },
+    {
+      "id": "farthing",
+      "name": "Farthing",
+      "x": 7,
+      "y": -1
+    }
+  ],
+  "ships": [
+    {
+      "id": "shuttle",
+      "name": "Modest shuttle",
+      "range": 4,
+      "capacity": 20,
+      "price": 0
+    },
+    {
+      "id": "hauler",
+      "name": "Cargo apology",
+      "range": 8,
+      "capacity": 80,
+      "price": 200
+    },
+    {
+      "id": "alien",
+      "name": "Unidentified teapot",
+      "range": 20,
+      "capacity": 120,
+      "price": 900
+    }
+  ]
+}

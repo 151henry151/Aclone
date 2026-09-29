@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Check Aclone
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run check
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: DATA_DIR=/tmp/aclone-ci npm start > /tmp/aclone.log 2>&1 &
+      - run: |
+          for attempt in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3000/api/health && break
+            sleep 1
+          done
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-evidence
+          path: test-results/

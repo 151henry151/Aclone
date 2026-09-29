@@ -1,0 +1,41 @@
+{
+  "name": "aclone",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "A small, persistent universe with an unreasonable number of tractors.",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "node": ">=24.14.0"
+  },
+  "scripts": {
+    "dev": "tsx src/server/main.ts --dev",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx src/server/main.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "test:watch": "tsx --test --watch tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "check": "tsc --noEmit && npm test",
+    "backup": "tsx scripts/backup.ts",
+    "format": "prettier --write src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
+    "format:check": "prettier --check src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
+    "package": "tsx scripts/package.ts",
+    "screenshots": "tsx scripts/screenshots.ts"
+  },
+  "dependencies": {
+    "fengari": "^0.1.4",
+    "three": "^0.180.0",
+    "ws": "^8.18.3",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^24.5.2",
+    "@types/three": "^0.180.0",
+    "@types/ws": "^8.18.1",
+    "prettier": "^3.9.9",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7"
+  }
+}

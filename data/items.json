@@ -1,0 +1,152 @@
+{
+  "wheat": {
+    "name": "Wheat",
+    "weight": 1,
+    "price": 800
+  },
+  "flour": {
+    "name": "Flour",
+    "weight": 1,
+    "price": 2000
+  },
+  "bread": {
+    "name": "Bread",
+    "weight": 1,
+    "price": 4800,
+    "food": 16000,
+    "drink": 0
+  },
+  "water": {
+    "name": "Water",
+    "weight": 1,
+    "price": 500,
+    "food": 0,
+    "drink": 20000
+  },
+  "tea": {
+    "name": "Tea",
+    "weight": 1,
+    "price": 2800,
+    "food": 0,
+    "drink": 24000
+  },
+  "logs": {
+    "name": "Logs",
+    "weight": 3,
+    "price": 800
+  },
+  "wood": {
+    "name": "Wood",
+    "weight": 2,
+    "price": 1400
+  },
+  "stone": {
+    "name": "Stone",
+    "weight": 2,
+    "price": 600
+  },
+  "blocks": {
+    "name": "Stone blocks",
+    "weight": 2,
+    "price": 2300
+  },
+  "ore": {
+    "name": "Metal ore",
+    "weight": 2,
+    "price": 500
+  },
+  "steel": {
+    "name": "Steel",
+    "weight": 2,
+    "price": 4800
+  },
+  "tools": {
+    "name": "Tools",
+    "weight": 2,
+    "price": 14000
+  },
+  "hops": {
+    "name": "Hops",
+    "weight": 1,
+    "price": 1200
+  },
+  "beer": {
+    "name": "Beer",
+    "weight": 1,
+    "price": 4500,
+    "food": 2000,
+    "drink": 10000
+  },
+  "fuel": {
+    "name": "Fuel",
+    "weight": 1,
+    "price": 2000,
+    "fuel": 8
+  },
+  "fish": {
+    "name": "Small fish",
+    "weight": 1,
+    "price": 1200,
+    "food": 9000,
+    "drink": 0
+  },
+  "largeFish": {
+    "name": "Large fish",
+    "weight": 2,
+    "price": 5000,
+    "food": 16000,
+    "drink": 0
+  },
+  "tackle": {
+    "name": "Fishing tackle",
+    "weight": 1,
+    "price": 9000
+  },
+  "rc": {
+    "name": "Disposable robocrow",
+    "weight": 1,
+    "price": 15000
+  },
+  "jetpack": {
+    "name": "Jetpack",
+    "weight": 5,
+    "price": 80000
+  },
+  "electronics": {
+    "name": "Electronics",
+    "weight": 1,
+    "price": 10000
+  },
+  "rareEarth": {
+    "name": "Rare earth",
+    "weight": 2,
+    "price": 6000
+  },
+  "shipParts": {
+    "name": "Ship parts",
+    "weight": 5,
+    "price": 40000
+  },
+  "concrete": {
+    "name": "Concrete",
+    "weight": 2,
+    "price": 2600
+  },
+  "steak": {
+    "name": "Steak",
+    "weight": 1,
+    "price": 3700,
+    "food": 24000,
+    "drink": 0
+  },
+  "cows": {
+    "name": "Cows",
+    "weight": 5,
+    "price": 20000
+  },
+  "grapes": {
+    "name": "Grapes",
+    "weight": 1,
+    "price": 2000
+  }
+}

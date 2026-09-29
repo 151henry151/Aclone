@@ -1,0 +1,14 @@
+node_modules
+dist
+var
+sources
+tools
+.git
+.agents
+.codex
+.env
+*.sqlite*
+test-results
+playwright-report
+release
+A tractor The Universal — Clone Design Spec.md
