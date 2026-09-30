@@ -3,6 +3,7 @@ import * as T from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { contactShadow } from './materials';
+import { createHuman } from './human';
 /** Original detailed model. +Z is forward; wheel groups rotate about their X axle. */
 export function tractor(g: T.Group, color: string) {
   const paint = new T.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.22 });
@@ -126,26 +127,10 @@ export function tractor(g: T.Group, color: string) {
   // Seat, driver, steering wheel and controls visible through the cab.
   box(g, 0.9, 0.18, 0.75, black, 0, 2.1, -0.95, 0.08);
   box(g, 0.9, 0.66, 0.16, black, 0, 2.37, -1.3, 0.08);
-  box(
-    g,
-    0.62,
-    0.66,
-    0.42,
-    new T.MeshStandardMaterial({ color: '#536d78', roughness: 0.9 }),
-    0,
-    2.49,
-    -0.95,
-    0.11,
-  );
-  add(
-    g,
-    new T.SphereGeometry(0.24, 12, 8),
-    new T.MeshStandardMaterial({ color: '#ba946c', roughness: 1 }),
-    0,
-    3.01,
-    -0.88,
-  );
-  box(g, 0.52, 0.08, 0.42, black, 0, 3.18, -0.82, 0.035);
+  const driver = createHuman('seated');
+  driver.group.position.set(0, 2.2, -0.85);
+  g.add(driver.group);
+  g.userData.driver = driver.group;
   const steering = add(g, new T.TorusGeometry(0.29, 0.033, 6, 16), black, 0, 2.62, -0.1);
   steering.rotation.x = -0.8;
   const pipe = add(g, new T.CylinderGeometry(0.095, 0.11, 1.65, 10), steel, -0.57, 2.94, 0.78);

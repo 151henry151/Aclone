@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.3.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.3.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.3.3:** smoothly shaded walking characters and cab drivers with natural proportions, facial and clothing detail, animated limbs, and a closer walking camera. Use **Inventory → Switch to walking** or **Return to tractor**.
 
 **Fixed in 0.3.2:** smoother tractor movement and camera tracking between network updates, with software/performance rendering targeting up to 30 FPS. A short 300 ms visual buffer absorbs modest packet jitter; physics and saved positions remain server-owned.
 
@@ -27,7 +29,13 @@ Actual gameplay, with original models, material textures and interface. The firs
 ![A working flour mill showing stock, prices, investment and property purchase](docs/screenshots/trading.png)
 
 <details>
-<summary>Galaxy directory and live world editor</summary>
+<summary>Character detail, galaxy directory and live world editor</summary>
+
+![Original walking character with work clothes and articulated limbs](docs/screenshots/character.png)
+
+![Walking pose captured from the live renderer](docs/screenshots/walking.png)
+
+![Seated driver visible through the tractor cab](docs/screenshots/driver.png)
 
 ![Galaxy directory with persistent worlds and world creation](docs/screenshots/galaxy.png)
 

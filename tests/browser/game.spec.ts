@@ -168,3 +168,38 @@ test('pilot nameplates and disconnects match the live parish list', async ({ pag
     pilot.terminate();
   }
 });
+
+test('walking character can move, change camera and return to the tractor', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  await page.goto('./');
+  await page
+    .getByLabel('Pilot name', { exact: true })
+    .fill('Walker ' + Date.now().toString().slice(-8));
+  await page.getByRole('button', { name: 'Make yourself at home' }).click();
+  await page.getByRole('button', { name: 'Land on this world' }).first().click();
+  await expect(page.locator('#world-hud')).toBeVisible();
+  await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
+  await page.getByRole('button', { name: 'Switch to walking' }).click();
+  await expect(page.locator('#driving')).toContainText('On foot');
+  await page.keyboard.down('ArrowDown');
+  await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
+  await page.waitForTimeout(800);
+  await page.keyboard.up('ArrowDown');
+  await page.screenshot({ path: 'test-results/walking.png' });
+  await page.keyboard.press('c');
+  await page.screenshot({ path: 'test-results/walking-first-person.png' });
+  await page.keyboard.press('c');
+  await page.keyboard.press('c');
+  await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
+  await page.getByRole('button', { name: 'Return to tractor' }).click();
+  await expect(page.locator('#driving')).toContainText('Puddle tractor');
+  await page.keyboard.press('c');
+  await page.screenshot({ path: 'test-results/driver-first-person.png' });
+  await page.reload();
+  await expect(page.locator('#driving')).toContainText('Puddle tractor');
+  expect(errors).toEqual([]);
+});

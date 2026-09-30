@@ -5,6 +5,7 @@ import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
 import { tractor } from './tractor';
 import { MotionClock, MotionTrack } from './motion';
+import { createHuman, type HumanFigure } from './human';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeight, distance } from '../shared/simulation';
 import { vehicles, checkpoints } from '../shared/catalog';
@@ -704,18 +705,18 @@ export class GameScene {
   private vehicle(slot: number, name?: string) {
     const v = vehicles[slot],
       g = new T.Group();
-    if (slot === 5 || slot === 6) {
-      const ostrich = slot === 6;
+    if (slot === 5) {
+      const human = createHuman();
+      g.add(human.group);
+      g.userData.human = human;
+    } else if (slot === 6) {
       cylinder(g, 0.22, 1.5, '#bd9971', -0.45, 0.8, 0, 5);
       cylinder(g, 0.22, 1.5, '#bd9971', 0.45, 0.8, 0, 5);
-      const body = new T.Mesh(
-        new T.IcosahedronGeometry(ostrich ? 1.2 : 0.7, 1),
-        material(ostrich ? '#403f39' : '#5d7790'),
-      );
+      const body = new T.Mesh(new T.IcosahedronGeometry(1.2, 1), material('#403f39'));
       body.position.y = 2;
       g.add(body);
-      cylinder(g, 0.2, ostrich ? 2 : 0.5, '#d7c5a1', 0, ostrich ? 3.2 : 2.6, 0.4, 5);
-      box(g, 0.6, 0.6, 0.7, '#d7c5a1', 0, ostrich ? 4.2 : 3, 0.4);
+      cylinder(g, 0.2, 2, '#d7c5a1', 0, 3.2, 0.4, 5);
+      box(g, 0.6, 0.6, 0.7, '#d7c5a1', 0, 4.2, 0.4);
     } else if (v.mode === 2) {
       box(g, 1, 1, 6, v.color, 0, 1, 0);
       box(g, 9, 0.3, 1.8, v.color, 0, 1.6, 0);
@@ -736,7 +737,8 @@ export class GameScene {
     }
     if (name) {
       const tag = pilotLabel(name);
-      tag.position.y = 5;
+      tag.position.y = slot === 5 ? 2.6 : 5;
+      if (slot === 5) tag.scale.set(3.5, 1.15, 1);
       g.add(tag);
     }
     return g;
@@ -775,6 +777,11 @@ export class GameScene {
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.y = pose.heading;
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[]) wheel.rotation.x += travel;
+        (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
+        // Keep the player's own face/driver out of the first-person camera.
+        const occupant =
+          (mesh.userData.human as HumanFigure | undefined)?.group ?? mesh.userData.driver;
+        if (occupant) occupant.visible = mesh !== this.meshes.get(p.id) || this.cameraMode !== 1;
       }
       this.headlights.visible = p.lights;
       const local = this.meshes.get(p.id);
@@ -788,7 +795,8 @@ export class GameScene {
           pos.z + Math.cos(facing) * 20,
         );
         this.target.copy(pos);
-        this.target.y += 1.6;
+        const walking = p.vehicle === 5;
+        this.target.y += walking ? 1.25 : 1.6;
         let diff = facing - this.chase;
         diff = Math.atan2(Math.sin(diff), Math.cos(diff));
         this.chase += diff * (1 - Math.exp(-dt * 3));
@@ -796,15 +804,15 @@ export class GameScene {
         const heading = this.chase + this.orbit;
         const cam =
           this.cameraMode === 1
-            ? new T.Vector3(pos.x, pos.y + 3, pos.z)
+            ? new T.Vector3(pos.x, pos.y + (walking ? 1.68 : 3), pos.z)
             : this.cameraMode === 2 || p.vehicle === 7
               ? new T.Vector3(pos.x, pos.y + 65 * this.zoom, pos.z + 3)
               : new T.Vector3(
-                  pos.x - Math.sin(heading) * 21 * this.zoom,
-                  pos.y + 8.5 * this.zoom,
-                  pos.z - Math.cos(heading) * 21 * this.zoom,
+                  pos.x - Math.sin(heading) * (walking ? 6 : 21) * this.zoom,
+                  pos.y + (walking ? 3 : 8.5) * this.zoom,
+                  pos.z - Math.cos(heading) * (walking ? 6 : 21) * this.zoom,
                 );
-        cam.y = Math.max(cam.y, terrainHeight(w, cam.x, cam.z) + 3);
+        cam.y = Math.max(cam.y, terrainHeight(w, cam.x, cam.z) + (walking ? 0.6 : 3));
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         local.userData.snapCamera = false;
@@ -922,8 +930,9 @@ function dispose(root: T.Object3D) {
   root.traverse((o) => {
     if (o instanceof T.Mesh || o instanceof T.Sprite || o instanceof T.Line) {
       if (o instanceof T.InstancedMesh) o.dispose();
-      if ('geometry' in o) o.geometry?.dispose();
+      if ('geometry' in o && !o.geometry?.userData.shared) o.geometry?.dispose();
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        if (m?.userData.shared) continue;
         if (m && 'map' in m) {
           const map = m.map as T.Texture | undefined;
           if (!map?.userData.shared) map?.dispose();

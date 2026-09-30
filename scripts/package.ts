@@ -42,6 +42,7 @@ try {
     'backup.ts',
     'package.ts',
     'screenshots.ts',
+    'characters.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',

@@ -28,7 +28,7 @@ Original seamless square game albedo texture of weathered charcoal blue-grey sla
 - Building UVs are measured in metres. Subtle bump relief comes from the albedo luminance; these are not calibrated height maps. Terrain samples the meadow every five metres and gravel every six, with a noisy transition at verges and shorelines. Roads remain aligned with the original village layout.
 - `noise.ts` precomputes a small noise texture, avoiding expensive per-pixel trigonometry. `sky.ts` layers that noise into cloud cover and a solar halo.
 - `scenery.ts` creates deterministic grass, leaf cards, trees, gardens and contact shade. Roads, building approaches and sports areas are kept clear. Alpha-tested foliage and instancing reduce sorting and draw overhead; scenery has no authoritative collision or economic effect.
-- `tractor.ts` owns the original cab, bonnet, grille, lights, treaded wheels and driver. Batch the body and each animated axle separately. Normalize indexed/non-indexed geometry before merging.
+- `tractor.ts` owns the original cab, bonnet, grille, lights and treaded wheels, and places the seated `human.ts` figure in its seat. Batch the body and each animated axle separately. Normalize indexed/non-indexed geometry before merging.
 - Textured opaque scenery batches by material properties and texture identity, not colour alone. Transparent windows remain separate. Contact shade remains visible when dynamic shadows are disabled. Multisample antialiasing is opt-in for detailed mode, so software fallback can reduce rendering cost without recreating the WebGL context.
 
 ## Reviewing visual changes
@@ -36,3 +36,27 @@ Original seamless square game albedo texture of weathered charcoal blue-grey sla
 Run `npm run screenshots` against a disposable local server with `TEST_URL` set. It creates a pilot and a world, checks for console/page errors, and captures actual gameplay; see `scripts/screenshots.ts`. `SCREENSHOT_QUALITY=low`, `balanced`, or `high` selects performance, adaptive, or detailed respectively. Detailed mode keeps dynamic shadows enabled; a GPU is recommended. `SCREENSHOT_GPU=1` opts into desktop OpenGL/ANGLE hardware rendering for captures on a supported local machine; the default uses SwiftShader for reproducibility. The capture prints the actual graphics device so a fallback is visible. Set `SCREENSHOT_HERO_ONLY=1 SCREENSHOT_QUALITY=high` to additionally capture `scenery.png` using the H-key view and an orbit/zoom, skipping the trading and editor captures. Never substitute a concept render for a gameplay screenshot.
 
 Check driving-height close-ups, distant terrain, road edges, building sides and roof UVs, all camera modes, changed terrain, and both root and subpath builds. The viewport canvas exposes `data-draw-calls` and `data-triangles` for diagnostics. Software-renderer timings are not representative of a hardware GPU, but controls must remain responsive in performance mode. The four textures should load once, not every world update.
+
+## Human figures
+
+`src/client/human.ts` is the editable source for the original walking and seated
+figures; it does not download models, face images or animation files. Smooth
+profile geometry shapes the head, torso and limbs, with modeled face features,
+fingers, collar, pockets, cap and boots. A small deterministic procedural weave
+provides cloth bump detail. The model is stylized, not a scanned human likeness.
+Code and generated geometry are GPL-3.0-or-later like the rest of Aclone.
+
+The walking figure keeps hip, knee, ankle, shoulder and elbow pivots. A two-bone
+leg solver keeps the boot soles above the ground; distance from the interpolated
+visual pose advances the gait, which blends back to rest on stopping. The seated
+pose is baked into three vertex-coloured material batches. Walkers use at most
+24 draws and both figures stay below 22,000 triangles, enforced by tests. Immutable geometry, materials and the cloth weave are cached for the page
+lifetime. Each figure clones its joint hierarchy, so animations stay independent;
+disposal must respect the shared resource flags. Camera changes hide only the local occupant in first-person views.
+
+Run `TEST_URL=http://127.0.0.1:3000 SCREENSHOT_GPU=1 npm run screenshots:characters`
+against a disposable server with a hardware-capable browser to capture the
+standing character, walking pose and driver. `CHROMIUM_PATH` can select a locally
+installed browser. Omit `SCREENSHOT_GPU` to use software rendering (slower).
+Captures use the real inventory actions and scenery view, and fail on browser
+errors. See `scripts/characters.ts`; no mockup is substituted for gameplay.

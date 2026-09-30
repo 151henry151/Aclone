@@ -53,3 +53,10 @@ No schema or wire-protocol change. Rebuild the browser bundle with the existing
 The movement fix is in the client bundle; pulling source without rebuilding will
 continue serving the old movement code. Software rendering can now draw up to
 30 FPS, so CPU use may increase on machines without GPU acceleration.
+
+## 0.3.3 upgrade notes
+
+No schema or protocol change, and no new external asset downloads. Rebuild with
+the existing `BASE_PATH`, restart the service, and refresh browser clients to load
+the character models and walking-camera changes. The editable character source
+and capture script are included in the source archive.

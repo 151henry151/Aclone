@@ -32,6 +32,7 @@ cross-service exchange; it is tracked as a remaining specification gap.
   request rollback, snapshot projection and static files.
 - `src/server/lua.ts`, `scripts.ts`, `script-worker.mjs`: isolated scripting.
 - `src/client/scene.ts`: original models, terrain, camera and effects.
+- `src/client/human.ts`: shared walking/driver geometry, articulated walking and seated poses.
 - `src/client/main.ts`, `style.css`: input, panels, connection and responsive HUD.
 
 ## Economy invariants
@@ -131,6 +132,13 @@ for asset provenance, prompts, texture ownership and visual verification.
 Screenshot capture defaults to adaptive mode. Set `SCREENSHOT_QUALITY=low` for
 performance or `high` for detailed. The capture checks for rendering errors before
 writing gameplay screenshots.
+
+Human figures share immutable geometry and materials for the lifetime of the page.
+Each walker clones only the object hierarchy so joint animation remains independent;
+scene disposal respects the shared-resource flags. Seated drivers are baked into
+three material draws. Walking uses displayed travel to animate two-bone legs and
+counter-swinging arms, with a closer camera and a first-person eye height of 1.68 m.
+The local occupant is hidden in first-person views to avoid camera clipping.
 
 ## Movement presentation
 
