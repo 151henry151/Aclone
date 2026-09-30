@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { resourceNodes } from '../shared/resources';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingPlan, buildingBounds } from '../shared/building-shapes';
@@ -13,7 +14,7 @@ function random(seed: number) {
   };
 }
 /** Crossed alpha-tested cards: crisp leaf/grass silhouettes without transparent sorting. */
-function foliage(grass: boolean) {
+function foliage(grass: boolean, pine = false) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
   const ctx = canvas.getContext('2d')!,
@@ -38,7 +39,15 @@ function foliage(grass: boolean) {
       if (dx * dx + dy * dy > 1) continue;
       ctx.fillStyle = ['#788e42', '#90a253', '#58752f', '#a1ad60', '#677f3c'][i % 5];
       ctx.beginPath();
-      ctx.ellipse(x, y, 3 + rand() * 6, 2 + rand() * 3, rand() * Math.PI, 0, Math.PI * 2);
+      ctx.ellipse(
+        x,
+        y,
+        3 + rand() * 6,
+        pine ? 1.4 : 2 + rand() * 3,
+        rand() * Math.PI,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -57,10 +66,10 @@ function foliage(grass: boolean) {
     geometry,
     material: new T.MeshLambertMaterial({
       map,
-      alphaTest: 0.45,
+      alphaTest: pine ? 0.18 : 0.45,
       side: T.DoubleSide,
       emissive: new T.Color(grass ? '#38451e' : '#35441d'),
-      emissiveIntensity: 0.45,
+      emissiveIntensity: 0,
     }),
   };
 }
@@ -113,6 +122,9 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     flowers: number[][] = [],
     trunks: number[][] = [],
     crowns: number[][] = [],
+    pines: number[][] = [],
+    birches: number[][] = [],
+    pineCards: number[][] = [],
     rocks: number[][] = [];
   for (let i = 0; i < (low ? 2600 : 10000); i++) {
     const x = (rand() - 0.5) * 480,
@@ -127,11 +139,37 @@ export function countryside(root: T.Group, world: World, low: boolean) {
         grass.push([x + rand() * 1.5, h, z + rand() * 1.5, s, rand() * 6.28]);
     if (i % 7 === 0) flowers.push([x, h + 0.24, z, 0.6 + rand() * 0.5]);
     if (i % 42 === 0 && clear(x, z, 5)) {
-      const scale = 0.72 + rand() * 0.8;
-      trunks.push([x, h, z, scale, rand() * 6]);
+      const scale = 0.55 + rand() * 1.1;
+      const species = Math.abs(Math.floor(x / 55) + Math.floor(z / 45)) % 3;
+      if (species === 0) {
+        trunks.push([x, h, z, scale, 0]);
+        for (let level = 0; level < 5; level++)
+          pines.push([
+            x,
+            h + (2.8 + level * 1.1) * scale,
+            z,
+            scale * (1 - level * 0.15),
+            rand() * 6,
+          ]);
+        for (let j = 0; j < 28; j++) {
+          const level = j % 5,
+            a = j * 2.399,
+            r = (1.9 - level * 0.42) * scale;
+          pineCards.push([
+            x + Math.sin(a) * r,
+            h + (1.4 + level * 1.4) * scale,
+            z + Math.cos(a) * r,
+            2.4 * (1 - level * 0.18) * scale,
+            a,
+          ]);
+        }
+        continue;
+      }
+      if (species === 1) birches.push([x, h, z, scale, 0]);
+      else trunks.push([x, h, z, scale, rand() * 6]);
       for (let j = 0; j < 13; j++) {
         const a = j * 2.399,
-          r = j < 4 ? 1 : 2.4;
+          r = j < 4 ? 0.7 : species === 1 ? 1.4 : 2.4;
         crowns.push([
           x + Math.sin(a) * r * scale,
           h + (3.7 + rand() * 2.5) * scale,
@@ -183,6 +221,32 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   const trunk = new T.CylinderGeometry(0.15, 0.46, 5, 7);
   trunk.translate(0, 2.5, 0);
   scatter(trunk, mat('#625340'), trunks, true);
+  const sprays = foliage(false, true);
+  sprays.material.color.set('#638d6c');
+  sprays.material.userData.evergreen = true;
+  scatter(sprays.geometry, sprays.material, pineCards, true);
+  const needles = new T.MeshStandardMaterial({ color: '#315e47', roughness: 1 });
+  needles.userData.evergreen = true;
+  scatter(new T.ConeGeometry(1.35, 3, 14, 3), needles, pines, true);
+  const barkCanvas = document.createElement('canvas');
+  barkCanvas.width = barkCanvas.height = 128;
+  const bark = barkCanvas.getContext('2d')!;
+  bark.fillStyle = '#d8d3bf';
+  bark.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 80; i++) {
+    bark.fillStyle = i % 2 ? '#776f60' : '#aaa18c';
+    bark.fillRect(rand() * 128, rand() * 128, 3 + rand() * 12, 1 + rand() * 2);
+  }
+  const barkMap = new T.CanvasTexture(barkCanvas);
+  barkMap.colorSpace = T.SRGBColorSpace;
+  const birch = new T.CylinderGeometry(0.13, 0.24, 6, 9);
+  birch.translate(0, 3, 0);
+  scatter(
+    birch,
+    new T.MeshStandardMaterial({ color: '#ffffff', map: barkMap, roughness: 1 }),
+    birches,
+    true,
+  );
   const leaves = foliage(false);
   scatter(leaves.geometry, leaves.material, crowns, true);
   scatter(
@@ -191,6 +255,36 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     rocks,
     true,
   );
+  for (const node of resourceNodes) {
+    if (world.buildings.some((b) => Math.hypot(b.x - node.x, b.z - node.z) < 12)) continue;
+    const y = terrainHeight(world, node.x, node.z);
+    if (node.item === 'logs') {
+      for (let j = 0; j < 5; j++) {
+        const log = new T.Mesh(new T.CylinderGeometry(0.26, 0.3, 3.4, 10), mat('#795939'));
+        log.rotation.z = Math.PI / 2;
+        log.position.set(node.x, y + 0.3 + (j > 2 ? 0.55 : 0), node.z + (j % 3) * 0.55);
+        log.castShadow = true;
+        root.add(log);
+      }
+    } else {
+      const mound = new T.Mesh(
+        new T.SphereGeometry(2.8, 14, 8),
+        new T.MeshStandardMaterial({
+          color: node.item === 'dirt' ? '#78603f' : node.item === 'gravel' ? '#a5a18f' : '#8b9389',
+          map: texture('stone'),
+          roughness: 1,
+        }),
+      );
+      mound.scale.y = node.item === 'stone' ? 0.5 : 0.13;
+      mound.position.set(node.x, y, node.z);
+      mound.receiveShadow = true;
+      mound.castShadow = true;
+      root.add(mound);
+    }
+    const post = new T.Mesh(new T.BoxGeometry(0.12, 1.4, 0.12), mat('#b6a279'));
+    post.position.set(node.x + 3, y + 0.7, node.z);
+    root.add(post);
+  }
   const hedges: number[][] = [],
     fence: number[][] = [],
     rails: number[][] = [];

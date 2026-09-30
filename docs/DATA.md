@@ -64,3 +64,22 @@ Projectile physics uses bounded 20ms substeps; at most 24 projectiles per player
 and 512 per world can exist. Match parameters and ammunition allotments are in
 `combat.ts`. Ship fittings, trade quotes and route planning are in `galaxy.ts`.
 The `market:SYSTEM` metadata records station stock and hourly replenishment.
+
+## Living-world fields (0.5.0)
+
+Optional `World.climate` stores snow cover and wetness in 0–1 units; integration
+splits at daily climate boundaries and works during restart catch-up. Missing
+fields start clear/dry. `resources` stores remaining reserve and last-update time
+by stable gathering-ground ID; replenishment is lazy, bounded by node capacity.
+
+Buildings can contain `lodging` with open status, hourly integer price, and guest
+records (expiry simulation time plus item stock). Snapshot projections remove
+all pantry stocks and send only the recipient's in `self.roomPantries`; the latter
+is a projection, not authoritative save state. Optional plot `drainage` persists
+across harvests; soil restoration clears the previous family once before planting.
+
+`data/crops.json` defines frost and wet-soil sensitivity. New professions derive
+from recipe skills, plus innkeeper, forester and excavator. Recipe times scale by
+`settings.productionSeconds / 600`; custom production uses its explicit interval.
+Existing public market/starport quotes gain the new items with zero stock, keeping
+custom existing prices and inventories intact.

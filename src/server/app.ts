@@ -22,7 +22,13 @@ import {
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
 import { runScript, ScriptEvents } from './scripts.ts';
-import { DeltaStream, prepareFrame, type Frame } from './snapshots.ts';
+import {
+  DeltaStream,
+  prepareFrame,
+  privatePlayer,
+  publicBuildings,
+  type Frame,
+} from './snapshots.ts';
 import { Accounts, type Mailer } from './accounts.ts';
 import { configuredMailer } from './mail.ts';
 import { clientAddress } from './client-address.ts';
@@ -157,7 +163,7 @@ export async function createApp(options: AppOptions) {
         .map(([id, q]) => [
           id,
           id === me.id
-            ? q
+            ? privatePlayer(w, q)
             : {
                 id: q.id,
                 name: q.name,
@@ -183,6 +189,7 @@ export async function createApp(options: AppOptions) {
     );
     const state = {
       ...w,
+      buildings: publicBuildings(w),
       players,
       ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
       script: me.authority >= 20 ? w.script : '',

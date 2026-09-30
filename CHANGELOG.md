@@ -6,6 +6,28 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-30
+
+### Added
+
+- Player-built bed & breakfasts and hotels with three or eight prepaid rooms, configurable hourly rates, food service trading, protected personal pantries, offline meals and durable checkout.
+- Eight processing businesses: composting yards, brick kilns, concrete works, furniture workshops, wineries, kitchens, tea blending houses and coffee roasteries. Their materials, professions, input/output recipes and construction costs connect gathering, farming and hospitality.
+- Finite woodland, stone, gravel and topsoil gathering grounds, with saved depletion, gradual replenishment and forestry/excavation qualifications.
+- Persistent snow accumulation and thaw, wet roads, thunderstorms with lightning, blizzards, and reduced ground-vehicle speed and grip in poor conditions.
+- Occupied evening windows with varied bedtimes, all-night street lighting, real light on the ground, and dark countryside that needs headlights. Nearby lighting uses a fixed rendering budget.
+- Evergreen, birch and broadleaf groves, varied tree sizes, distinctive guesthouses and industrial building silhouettes.
+- Gravel drainage, compost fertilizer and topsoil restoration for farm plots; crop-specific frost and waterlogging responses and downstream uses for all six crops.
+
+### Changed
+
+- Residents left at home keep their chimneys active and consume stored food and drink after logout. Offline ageing and health loss still pause.
+- Production shift lengths now follow each business's cycle duration while respecting the world owner's production-speed setting.
+- Manual logging and quarry work move to gathering grounds, with tool requirements, cargo checks and persistent completion.
+
+### Security
+
+- Guest pantry contents are visible only in their owner's private snapshot. Other guests and property owners cannot withdraw them; occupied or stocked lodging cannot be demolished.
+
 ## [0.4.0] - 2026-09-29
 
 ### Added

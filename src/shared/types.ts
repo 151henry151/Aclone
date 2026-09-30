@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 export type Stock = Record<string, number>;
 export type Input = { throttle: number; steer: number; boost: boolean; lift?: number };
-export type Task = { kind: string; end: number; building?: string; plot?: number };
+export type Task = {
+  kind: string;
+  end: number;
+  building?: string;
+  plot?: number;
+  resource?: string;
+  item?: string;
+  amount?: number;
+};
 export interface Player {
   id: string;
   name: string;
@@ -27,6 +35,8 @@ export interface Player {
   activeUntil: number;
   home?: string;
   atHome: boolean;
+  /** Recipient-only snapshot projection; room stock is stored on the building. */
+  roomPantries?: Record<string, Stock>;
   vehicle: number;
   fleet?: number[];
   tractorPaint?: string;
@@ -87,6 +97,11 @@ export interface Building {
   construction?: Stock;
   style?: string;
   smoking?: boolean;
+  lodging?: {
+    open: boolean;
+    rate: number;
+    guests: Record<string, { until: number; stock: Stock }>;
+  };
   plots?: import('./farming.ts').Plot[];
 }
 export interface Ledger {
@@ -152,6 +167,8 @@ export interface World {
   ball: { x: number; z: number; vx: number; vz: number };
   scores: number[];
   round: number;
+  climate?: { snow: number; wetness: number };
+  resources?: Record<string, { amount: number; updated: number }>;
   combat?: import('./combat.ts').Combat;
   projectiles: {
     id: number;

@@ -41,3 +41,23 @@ test('shared delta frames isolate private inventory, messages and scripts, inclu
   assert.equal(delta.world.terrain, undefined);
   assert.ok(JSON.parse(new DeltaStream().encode(w, account('a'), prepareFrame(w))).world.terrain);
 });
+
+test('room pantry stocks are delivered only to their guest, including legacy projections', async () => {
+  const { publicBuildings, privatePlayer } = await import('../src/server/snapshots.ts');
+  const w = createWorld('rooms', 'Rooms', 'a'),
+    a = addPlayer(w, 'a', 'Ada'),
+    b = addPlayer(w, 'b', 'Bo');
+  const inn = w.buildings[0];
+  inn.lodging = {
+    open: true,
+    rate: 100,
+    guests: {
+      a: { until: 3600, stock: { bread: 777 } },
+      b: { until: 3600, stock: { water: 888 } },
+    },
+  };
+  assert.deepEqual(publicBuildings(w)[0].lodging!.guests.a.stock, {});
+  assert.equal(privatePlayer(w, a).roomPantries[inn.id].bread, 777);
+  assert.equal(privatePlayer(w, b).roomPantries[inn.id].bread, undefined);
+  assert.ok(!prepareFrame(w).fields.buildings.includes('777'));
+});

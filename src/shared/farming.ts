@@ -14,6 +14,9 @@ export const crops: Record<
     seasons: string[];
     family: string;
     thirst: number;
+    frost: number;
+    rot: number;
+    description: string;
   }
 > = data;
 export interface Plot {
@@ -23,6 +26,8 @@ export interface Plot {
   water: number;
   fertilized: boolean;
   previous?: string;
+  drainage?: boolean;
+  improved?: boolean;
   harvest?: { player: string; amount: number; wage: number };
 }
 export function cropStatus(w: World, b: Building, index: number) {
@@ -50,7 +55,8 @@ export function cropStatus(w: World, b: Building, index: number) {
           (0.6 + 0.4 * moisture) *
           (p.fertilized ? 1.33 : 1) *
           rotation *
-          Math.max(0.5, 1 - frost / c.days) *
+          Math.max(0.35, 1 - (frost / c.days) * c.frost) *
+          (p.drainage ? 1 : 1 - Math.max(0, rain / c.days - 0.35) * c.rot) *
           late,
       ),
     ),
@@ -75,6 +81,25 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   const old = b.plots?.[index],
     op = a.operation;
   check(!old?.harvest, 'Someone is already harvesting this plot');
+  if (op === 'drain' || op === 'improve') {
+    check(old && !old!.crop, 'Improve an empty plot after its first harvest');
+    const stock = p.inventory;
+    if (op === 'drain') {
+      check(!old!.drainage && (stock.gravel ?? 0) >= 6, 'Carry six gravel; drainage is permanent');
+      stock.gravel -= 6;
+      old!.drainage = true;
+    } else {
+      check(
+        !old!.improved && (stock.dirt ?? 0) >= 6 && (stock.compost ?? 0) >= 1,
+        'Carry six topsoil and one compost; improve once between crops',
+      );
+      stock.dirt -= 6;
+      stock.compost -= 1;
+      delete old!.previous;
+      old!.improved = true;
+    }
+    return;
+  }
   if (op === 'plant') {
     const key = String(a.crop),
       c = crops[key];
@@ -97,6 +122,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
       water: 0,
       fertilized: false,
       previous: old?.previous,
+      drainage: old?.drainage,
     };
     b.sell[key] ??= Math.round(items[key].price * 0.9);
     return;
@@ -111,9 +137,12 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     plot.water++;
   } else if (op === 'fertilize') {
     check(w.time < plot.ready && !plot.fertilized, 'Fertilize once during growth');
-    check(b.investment >= 1000, 'Fertilizer costs 10d from farm investment');
-    b.investment -= 1000;
-    log(w, 'sink', 1000, b.id, 'merchant', 'fertilizer');
+    if ((p.inventory.compost ?? 0) > 0) p.inventory.compost--;
+    else {
+      check(b.investment >= 1000, 'Carry compost or fund 10d of fertilizer');
+      b.investment -= 1000;
+      log(w, 'sink', 1000, b.id, 'merchant', 'fertilizer');
+    }
     plot.fertilized = true;
   } else if (op === 'harvest') {
     check(w.time >= plot.ready, 'The crop is not ripe yet');
@@ -157,6 +186,13 @@ export function finishHarvest(w: World, p: Player, building: string, index: numb
     log(w, 'sink', tax, b.id, 'treasury', 'wage tax');
   }
   p.kudos++;
-  b.plots![index] = { planted: 0, ready: 0, water: 0, fertilized: false, previous: plot.crop };
+  b.plots![index] = {
+    planted: 0,
+    ready: 0,
+    water: 0,
+    fertilized: false,
+    previous: plot.crop,
+    drainage: plot.drainage,
+  };
   say(w, 'Farm', `${p.name} harvested ${amount} ${plot.crop}.`);
 }

@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.4.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.5.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.5.0:** truly dark nights with working street/window lights, persistent snow and storm traction, varied woodland, finite gathering grounds, eight new processing businesses, richer crops, and player-run hotels/B&Bs with offline room provisions. See the [economy and lodging guide](docs/ECONOMY.md).
 
 **New in 0.4.0:** seasonal farming and weather, team combat modes, an expanded galaxy with saved journeys and contracts, cottage styles, tractor paint and conditional chimney smoke. See the [player guide](docs/PLAYING.md) for timing, controls and balance decisions.
 
@@ -71,6 +73,20 @@ Staged gameplay in a disposable local world, using the actual renderer and serve
 
 </details>
 
+<details>
+<summary>Night lighting, storms, woodland and guesthouses (0.5.0)</summary>
+
+Staged local worlds running the released gameplay code:
+
+![An occupied guesthouse at dusk](docs/screenshots/evening-inn.png)
+![Street lights and cottage windows illuminate the village](docs/screenshots/night-town.png)
+![Snowstorm with accumulated snow](docs/screenshots/snowstorm.png)
+![Player-built timber bed and breakfast](docs/screenshots/guesthouse.png)
+![Room booking and a guest's private pantry](docs/screenshots/lodging.png)
+![Gathering grounds and their remaining reserves](docs/screenshots/gathering.png)
+
+</details>
+
 ## Play locally
 
 Install Node.js 24.14 or newer, then clone and run:
@@ -128,10 +144,11 @@ Open **Pilot key & options → Graphics** to cycle through **adaptive** (the def
 2. Drive near the **Odd Jobs Office**, north of the village green. **E / Ctrl** opens a nearby building. A 15-second shift pays 45d.
 3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
 4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
-5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. In the unreleased farming system, farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
-6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies while playing. While disconnected, hunger, ageing and property decay pause; your business and training continue.
-7. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
-8. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
+5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
+6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Offline health loss, ageing and property decay pause; business and training continue.
+7. Open **Resources** to find wood, stone, gravel and topsoil. Carry tools for timber/minerals. Deliver to businesses or build your own processing chain. Turn on **headlights (L)** outside town at night; wet or snowy roads slow you down.
+8. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
+9. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
 
 The menu has a directory showing distances to every building. Transactions require proximity; opening a distant building only inspects it. On touch screens there are driving buttons. Desktop keyboard and mouse remain the primary interface.
 
@@ -156,13 +173,13 @@ If the operator enables SMTP, add an email address and follow its verification l
 
 The browser still stores a private **pilot key** for automatic reconnection. Export a fresh key after password sign-in and keep it private; sign-in rotates it. Key-only pilots remain supported. Losing both a key and password access without a verified recovery address still loses access to that identity.
 
-World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Personal survival and owned-building decay pause when disconnected. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
+World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Personal health loss, ageing and owned-building decay pause when disconnected. Residents at home or in paid rooms still use stored provisions; running out cannot kill an offline pilot. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
 
 ## What is included
 
 - A Three.js client with original low-poly scenery, a 128 × 128 terrain mesh, day/night lighting, chase cameras, tractor smoke, map, chat, inventory and building windows.
 - Authoritative multiplayer simulation: clients request actions and send bounded control inputs; the server owns position, money, stock, damage and timers.
-- Integer currency with sheckle/denarius formatting, taxes, investment, wages, 14 supply-chain recipes, tasks, skills, construction, banks, home stores and survival.
+- Integer currency with sheckle/denarius formatting, taxes, investment, wages, 22 production recipes (farms use seasonal plots), tasks, skills, construction, banks, home stores and survival.
 - 24 data-defined vehicle slots; tractor, car, biplane, boat, hovercraft, walking, ostrich and robocrow modes. Six data-defined weapons and safe zones.
 - Hornball, checkpoint racing, fishing and a simple original Ultrakricket ruleset.
 - Persistent pilot identities, three star systems, planet travel, credit conversion, three ships and station cargo trading.

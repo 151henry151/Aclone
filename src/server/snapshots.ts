@@ -1,6 +1,34 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World } from '../shared/types';
+import type { World, Player } from '../shared/types';
 import type { Account } from './universe';
+export function publicBuildings(w: World) {
+  return w.buildings.map((b) =>
+    b.lodging
+      ? {
+          ...b,
+          lodging: {
+            ...b.lodging,
+            guests: Object.fromEntries(
+              Object.entries(b.lodging.guests).map(([id, g]) => [
+                id,
+                { until: g.until, stock: {} },
+              ]),
+            ),
+          },
+        }
+      : b,
+  );
+}
+export function privatePlayer(w: World, p: Player) {
+  return {
+    ...p,
+    roomPantries: Object.fromEntries(
+      w.buildings
+        .filter((b) => b.lodging?.guests[p.id])
+        .map((b) => [b.id, b.lodging!.guests[p.id].stock]),
+    ),
+  };
+}
 export interface Frame {
   fields: Record<string, string>;
   players: Record<string, string>;
@@ -8,6 +36,7 @@ export interface Frame {
 /** Serialize shared world data once per broadcast, rather than once per recipient. */
 export function prepareFrame(w: World): Frame {
   const { players, ledger, script, scriptVariables, messages, ...common } = w;
+  common.buildings = publicBuildings(w);
   const fields = Object.fromEntries(
     Object.entries(common).map(([key, value]) => [key, JSON.stringify(value)]),
   );
@@ -65,7 +94,7 @@ export class DeltaStream {
       '},"me":' +
       JSON.stringify(me.id) +
       ',"self":' +
-      JSON.stringify(me) +
+      JSON.stringify(privatePlayer(w, me)) +
       ',"account":' +
       JSON.stringify(account) +
       '}';

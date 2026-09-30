@@ -6,6 +6,11 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
 ## Playable and covered by tests
 
+- Player-built hotels/B&Bs, prepaid bookings, private guest stores, offline meals and safe expiry.
+- Finite natural-resource gathering, eight processing businesses, materials and professions connecting crops, industry and hospitality.
+- Occupied offline chimneys, varied evening windows, actual street/window illumination, dark nights, thunderstorms, persistent snow and weather-dependent driving.
+- Evergreen and deciduous groves, varied tree scales and new building silhouettes.
+
 - Persistent server-owned cash, inventory, building investment and stock.
 - Positive-quantity validation, transaction conservation, taxes and exact
   fractional-denarius wages.
@@ -56,7 +61,7 @@ consistent doors and windows, a compact tractor cab, human-scale street furnitur
 and footprint-aware movement collision. It changes existing presentation and
 navigation without adding historical game systems.
 
-The unreleased expansion adds timber siding, paint choices, occupied/working chimney smoke,
+Version 0.4.0 adds timber siding, paint choices, occupied/working chimney smoke,
 visible crop growth, seasonal foliage, snow coverage, precipitation and moving
 sunlight. Effects and projectiles use bounded batches. See [the player guide](PLAYING.md)
 for the new gameplay loops and their deliberately documented balance choices.

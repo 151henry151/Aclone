@@ -160,5 +160,54 @@
     "weight": 1,
     "price": 3200,
     "drink": 18000
+  },
+  "gravel": {
+    "name": "Gravel",
+    "weight": 3,
+    "price": 400
+  },
+  "dirt": {
+    "name": "Topsoil",
+    "weight": 2,
+    "price": 250
+  },
+  "compost": {
+    "name": "Compost",
+    "weight": 2,
+    "price": 1500
+  },
+  "bricks": {
+    "name": "Fired bricks",
+    "weight": 3,
+    "price": 2000
+  },
+  "furniture": {
+    "name": "Furniture",
+    "weight": 8,
+    "price": 12000
+  },
+  "wine": {
+    "name": "Wine",
+    "weight": 1,
+    "price": 3800,
+    "drink": 20000
+  },
+  "meals": {
+    "name": "Hearty meals",
+    "weight": 2,
+    "price": 5200,
+    "food": 24000
+  },
+  "teaBlend": {
+    "name": "Packed tea",
+    "weight": 1,
+    "price": 3800,
+    "drink": 24000
+  },
+  "roastCoffee": {
+    "name": "Roasted coffee",
+    "weight": 1,
+    "price": 4500,
+    "drink": 28000
   }
 }

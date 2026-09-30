@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
 import { bases } from '../shared/combat';
-import { calendar, weatherAt, sunAt } from '../shared/environment';
+import { calendar, weatherAt, sunAt, lightningAt } from '../shared/environment';
 import { Precipitation } from './weather';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
@@ -109,6 +110,18 @@ export class GameScene {
   private terrain?: T.Mesh;
   private sun = new T.DirectionalLight(0xffe9bb, 3);
   private headlights = new T.SpotLight('#fff1b5', 45, 45, Math.PI / 5, 0.65, 1);
+  private lightning = new T.Line(
+    new T.BufferGeometry().setFromPoints([
+      new T.Vector3(0, 90, 0),
+      new T.Vector3(-5, 72, 1),
+      new T.Vector3(2, 60, 0),
+      new T.Vector3(-8, 38, 2),
+      new T.Vector3(-3, 27, 0),
+      new T.Vector3(-14, 0, 2),
+    ]),
+    new T.LineBasicMaterial({ color: '#d9e5ff', toneMapped: false }),
+  );
+  private townLighting: TownLighting;
   private ambient = new T.HemisphereLight(0xb6cbd9, 0x7c8067, 1.1);
   private meshes = new Map<string, T.Group>();
   private motionClock = new MotionClock();
@@ -180,6 +193,7 @@ export class GameScene {
       document.documentElement.classList.add('performance');
     }
     const low = this.low;
+    this.townLighting = new TownLighting(low ? 4 : 12);
     this.renderer.setPixelRatio(
       low
         ? this.software
@@ -228,7 +242,14 @@ export class GameScene {
       far: 320,
     });
     this.sun.shadow.bias = -0.0005;
-    this.scene.add(this.sun.target, this.headlights, this.headlights.target);
+    this.scene.add(
+      this.sun.target,
+      this.headlights,
+      this.headlights.target,
+      this.townLighting.group,
+      this.lightning,
+    );
+    this.lightning.visible = false;
     this.ball = new T.Mesh(new T.IcosahedronGeometry(2.2, 1), material('#e8d4a5'));
     this.ball.castShadow = true;
     this.projectiles.count = 0;
@@ -390,6 +411,8 @@ export class GameScene {
     this.sky.visible = false;
     this.precipitation.mesh.visible = false;
     this.headlights.visible = false;
+    this.townLighting.group.visible = false;
+    this.lightning.visible = false;
     this.world = undefined;
     this.me = undefined;
     this.space.visible = true;
@@ -449,6 +472,7 @@ export class GameScene {
         box(lamp, 0.7, 0.1, 0.7, '#353e38', 0, 5.55, 0);
         const glass = box(lamp, 0.55, 0.8, 0.55, '#c9bf95', 0, 6, 0);
         glass.material.roughness = 0.25;
+        glass.userData.lightSource = 'street';
         glass.material.emissive.set('#956925');
         glass.material.emissiveIntensity = 0.25;
         for (const x of [-0.3, 0.3])
@@ -547,7 +571,13 @@ export class GameScene {
     this.land.traverse((o) => {
       if (!(o instanceof T.Mesh) || o === this.terrain || Array.isArray(o.material)) return;
       const mat = o.material as T.MeshStandardMaterial;
-      if (mat.transparent || mat.vertexColors || !(mat instanceof T.MeshStandardMaterial)) return;
+      if (
+        o.userData.lightSource ||
+        mat.transparent ||
+        mat.vertexColors ||
+        !(mat instanceof T.MeshStandardMaterial)
+      )
+        return;
       let parent: T.Object3D | null = o;
       while (parent) {
         if (parent.userData.blades) return;
@@ -585,6 +615,7 @@ export class GameScene {
         this.land.add(mesh);
       }
     }
+    this.townLighting.reset(this.land);
     countryside(this.land, w, this.low);
     const seasonal = new Set<T.Material>();
     this.land.traverse((o) => {
@@ -596,7 +627,7 @@ export class GameScene {
             !seasonal.has(m)
           ) {
             seasonal.add(m);
-            seasonalMaterial(m, m.alphaTest > 0);
+            seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
           }
     });
     if (!this.fields.group.parent) this.actors.add(this.fields.group);
@@ -754,7 +785,7 @@ export class GameScene {
           (mesh.userData.human as HumanFigure | undefined)?.group ?? mesh.userData.driver;
         if (occupant) occupant.visible = mesh !== this.meshes.get(p.id) || this.cameraMode !== 1;
       }
-      this.headlights.visible = p.lights;
+      this.headlights.visible = p.lights && !p.atHome;
       const local = this.meshes.get(p.id);
       if (local) {
         const pos = local.position;
@@ -826,8 +857,16 @@ export class GameScene {
         climate = weatherAt(w.id, date.absoluteDay),
         solar = sunAt(w.settings.time, date.dayOfYear),
         daylight = solar.daylight;
-      snowCover.value = climate.snowCover;
+      snowCover.value = w.climate?.snow ?? 0;
+      if (this.terrain)
+        (this.terrain.material as T.MeshStandardMaterial).roughness =
+          1 - (w.climate?.wetness ?? 0) * 0.45;
+      this.townLighting.group.visible = true;
+      this.townLighting.update(w, this.camera.position);
+      const flash = lightningAt(motionTime, climate.storm && climate.precipitation === 'rain');
       autumnTint.value = climate.season === 'Autumn' ? 0.85 : climate.season === 'Winter' ? 0.5 : 0;
+      this.lightning.visible = flash > 0;
+      this.lightning.position.set(p.x + 38, 0, p.z - 85);
       this.precipitation.update(
         dt,
         this.camera.position,
@@ -837,12 +876,14 @@ export class GameScene {
       );
       this.sun.intensity = daylight * (3 - climate.clouds * 1.7);
       this.sun.color.set(solar.twilight > 0.3 ? '#ffac68' : '#ffe9bb');
-      this.ambient.intensity = 0.15 + daylight * 1.05;
-      const sky = new T.Color('#b8ced9').multiplyScalar(0.045 + daylight * 0.9);
+      this.ambient.intensity = 0.002 + daylight * 1.05 + flash * 2.5;
+      const sky = new T.Color('#b8ced9').multiplyScalar(0.001 + daylight * 0.9 + flash);
       sky.lerp(new T.Color('#c87458'), solar.twilight * 0.45);
       this.sky.position.copy(this.camera.position);
       this.sky.material.uniforms.horizon.value.copy(sky);
-      this.sky.material.uniforms.zenith.value.set('#458fc2').multiplyScalar(0.025 + daylight * 0.9);
+      this.sky.material.uniforms.zenith.value
+        .set('#458fc2')
+        .multiplyScalar(0.003 + daylight * 0.9 + flash);
       this.sky.material.uniforms.daylight.value = daylight;
       this.sky.material.uniforms.sunDirection.value.fromArray(solar.direction).normalize();
       this.sky.material.uniforms.clouds.value = climate.clouds;
@@ -850,8 +891,8 @@ export class GameScene {
       this.scene.background = sky;
       this.scene.fog = new T.Fog(
         sky,
-        climate.precipitation === 'clear' ? 125 : 70,
-        climate.precipitation === 'clear' ? 450 : 260,
+        climate.precipitation === 'clear' ? 125 : climate.storm ? 35 : 70,
+        climate.precipitation === 'clear' ? 450 : climate.storm ? 140 : 260,
       );
       this.sun.position.set(
         p.x + solar.direction[0] * 110,

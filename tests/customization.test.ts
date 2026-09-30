@@ -35,7 +35,7 @@ test('garage repaint validates proximity, costs money once and broadcasts a safe
   assert.throws(() => act(w, p.id, { type: 'paint', building: g.id, color: 'plum' }));
   assert.equal(p.cash, cash - 2500);
 });
-test('home and workplace smoke depends on live occupancy and active, present staff', () => {
+test('home and workplace smoke depends on saved occupancy and active, present staff', () => {
   const w = createWorld('t', 'Test', 'p'),
     p = addPlayer(w, 'p', 'Resident');
   const h = w.buildings.find((b) => b.kind === 'home')!,
@@ -49,7 +49,7 @@ test('home and workplace smoke depends on live occupancy and active, present sta
   assert.equal(m.smoking, false);
   p.online = false;
   advance(w, 0.05);
-  assert.equal(h.smoking, false);
+  assert.equal(h.smoking, true);
   p.online = true;
   p.atHome = false;
   p.job = m.id;

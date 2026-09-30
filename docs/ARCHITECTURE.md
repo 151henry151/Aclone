@@ -116,7 +116,7 @@ bounded and slow receivers are disconnected instead of buffering indefinitely.
 The load probe uses a child server process so client JSON parsing does not count
 as server event-loop work.
 
-Offline survival pauses independently of economic time. Disconnects save, restart
+Offline health loss and ageing pause independently of economic time; sheltered residents still consume provisions. Disconnects save, restart
 marks all pilots offline before catch-up, and SQLite FULL synchronization protects
 acknowledged actions. The durability test exercises actual disconnect and restart;
 the economy tests separately exercise long offline progression.
@@ -173,7 +173,7 @@ by building kind and bounded visual variant, not individual player or building I
 Crop harvests reserve a plot and complete through the existing saved task system.
 Capacity, funds and permission are checked again at completion; a failed harvest
 leaves the crop available. Growth and climate are derived from saved simulation
-time, so catch-up tick sizes do not change yields. Offline survival remains paused.
+time, so catch-up tick sizes do not change yields. Offline health loss and ageing remain paused.
 
 Universe mutations operate on a copy inside a SQLite transaction. The connected
 account is replaced only after commit. Station stock changes share that transaction.
@@ -186,3 +186,18 @@ use fixed render pools. Nearby crop fields rebuild only when their crop/growth s
 changes. Snow and autumn colours use shared shader uniforms, avoiding seasonal
 world rebuilds. Combat simulation expires ordnance during large offline catch-up
 steps instead of inflicting offline kills.
+
+## Living-world expansion (0.5.0)
+
+`environment.ts` integrates saved snow/wetness at exact weather boundaries.
+Movement reads these authoritative surface conditions. `lodging.ts` owns room
+booking, guest-stock permissions and bounded provision consumption; offline
+residents cannot die or age from unattended needs. `resources.ts` owns stable
+finite gathering grounds and delayed delivery. Accepted tasks and reservations
+use the same immediate world-save boundary as other acknowledged actions.
+
+`TownLighting` merges window panes per building and reuses twelve spotlights (four in performance mode), disabling the pool in daylight.
+Particle counts, light counts and scenery instances remain bounded. Public
+building snapshots redact guest stocks; the private pilot projection carries
+only that pilot's pantries. Lodging is protected against demolition, decay and
+combat destruction while guest property could otherwise become inaccessible.

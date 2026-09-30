@@ -88,7 +88,7 @@ commands, and checks browser errors. `CHROMIUM_PATH` is supported. The character
 capture also shows the resized cab. Review first-person views after changing cab
 or seat dimensions, and test both root and `/aclone/` builds.
 
-## Unreleased seasonal and customization work
+## Seasonal and customization work (0.4.0)
 
 Cottage siding and paint swatches are original data-driven variants in
 `appearance.json`. Timber walls use horizontal board seams and matching gables;
@@ -106,3 +106,18 @@ seasonal/cottage/farm/galaxy images. It owns a disposable server and uses staged
 world dates and crop state, followed by real UI actions including harvesting.
 It checks page/console errors and cleans up its database. Use `CHROMIUM_PATH`
 when the installed Chromium is outside Playwright's default location.
+
+## Living villages (0.5.0)
+
+Windows are merged per building with separate emissive control. Up to twelve pooled spotlights (four in performance mode) illuminate the nearest active windows and street lamps; the budget is
+independent of player count. Windows aim outward and down. Lights do not cast
+additional shadow maps. Unlit nights use almost no ambient light; headlamps remain
+available in every graphics mode. Lightning combines a brief cloud flash and bolt.
+
+Evergreen groves use layered alpha-tested needle sprays; birches use generated bark
+markings and narrower crowns. Spatial seed regions group species and sizes vary.
+These are code-generated original assets; no new external images are needed.
+
+Run `npm run screenshots:living` for the disposable booking/gathering walkthrough
+and night/headlight/snowstorm comparisons. `SCREENSHOT_GPU=1` opts into hardware
+headless rendering; `CHROMIUM_PATH` can select a local Chromium executable.

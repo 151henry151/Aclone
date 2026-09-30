@@ -9,9 +9,9 @@ The date and the default visual clock cross midnight together. World owners can
 change or freeze the **visual** day length without speeding up crops or ageing.
 
 Sunrise comes earlier in summer and later in winter. Sunlight moves east to west;
-night has stars and reduced ambient light. Weather fronts last three game days
+night is genuinely dark outside pools of light. Turn on headlights with **L**. Street lamps stay on all night; occupied houses cast light from their windows until a varied evening bedtime. Weather fronts last three game days
 (about half an hour): rain, snow or clear skies, with seasonal temperatures.
-Winter snow settles on the ground, rooftops and foliage; autumn changes leaf colour.
+Some wet fronts become thunderstorms with lightning or windy snowstorms. Snow accumulates on the ground, rooftops and foliage and stays until positive temperatures gradually melt it. Wet roads dry over several game days. Rain and snow reduce ground-vehicle speed and steering grip; the clock reports road conditions. Autumn changes deciduous leaf colour; evergreen groves stay green.
 Weather is deterministic for each world's date, including after a server restart.
 
 The ten-minute day and 365-day year follow the supplied historical information.
@@ -35,7 +35,7 @@ Stockroom tab moves your produce into your tractor for delivery to other shops.
 
 Seeds use farm investment. Irrigation uses three carried water per treatment,
 up to three treatments per plot. Rain contributes moisture; thirstier crops need
-more care. One fertilizer treatment costs 10d and adds 33% to yield. Repeating a
+more care. One fertilizer treatment uses a carried compost, or costs 10d if you have none, and adds 33% to yield. Repeating a
 crop family in the same plot reduces yield by 20%; rotate families between harvests.
 Frost during growth lowers yield, so planting warm crops late in their window
 has a consequence. Growth itself continues in cold weather; this is not a dormant
@@ -54,8 +54,7 @@ also employed. If the stockroom fills or wages become unfunded during the shift,
 the plot remains intact and can be tried again. Disconnecting does not cancel an
 accepted harvest shift or pay it twice.
 
-Wheat supplies mills, hops supply breweries, and fruit/drinks/vegetables can be
-sold through the local shops or your farm's configured prices. New coffee and
+Wheat supplies mills, hops supply breweries, potatoes supply kitchens/compost, grapes supply wineries, tea supplies blending houses and coffee supplies roasteries. These goods can also be sold through shops or your farm's configured prices. See [resources, crop care and industry](ECONOMY.md) for drainage, soil improvements and processing recipes. New coffee and
 potato market listings begin empty: farmers must supply them. Existing farm stock
 is retained on upgrade, but automatic wheat production is replaced by these plots.
 
@@ -131,6 +130,4 @@ cottage. Styles have the same construction cost. Existing cottages get stable,
 varied appearances; their owners, stock and locations stay intact. The garage offers
 seven tractor paint colours for 25d, saved with your planetary pilot.
 
-A cottage chimney smokes only while its owner is online and inside. Workplace
-chimneys smoke while an employed player is online, within 18m and on an active shift.
-Unoccupied buildings and disconnected residents do not keep their fires burning.
+A cottage chimney smokes while its owner is inside, including after logout. Booked guests keep B&B/hotel fires active too. Workplace chimneys smoke while an employed player is online, within 18m and on an active shift. Offline residents eat from home or room supplies without offline health loss or ageing. [Running and staying at a guesthouse](ECONOMY.md#running-a-guesthouse) explains booking, food stores and checkout.

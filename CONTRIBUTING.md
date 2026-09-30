@@ -70,3 +70,9 @@ server/database. `SCREENSHOT_GPU=1` selects native GPU rendering for captures;
 `TEST_GPU=1 npm run test:e2e` does the same for browser checks on machines with
 working headless GPU support. The default browser suite retains software rendering
 coverage. Avoid running CPU-heavy unit/load suites alongside software browser tests.
+
+For the living-world acceptance walkthrough run `npm run screenshots:living`.
+It uses a disposable server/database and checks room booking, private provisions,
+reconnect, offline meals and resource gathering before capturing lighting/weather.
+`npm run screenshots:seasons` checks farm harvesting and records seasonal/galaxy views.
+Never point staging scripts or load tests at production data.

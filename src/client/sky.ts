@@ -31,7 +31,7 @@ export function countrySky() {
         float cloud=smoothstep(.65-clouds*.3,.82-clouds*.3,fbm(p));
         cloud*=smoothstep(0.,.16,h);
         vec3 cloudColor=mix(vec3(.49,.55,.57),vec3(1.,.94,.81),smoothstep(.45,.8,fbm(p+vec2(.12,.08))));
-        color=mix(color,cloudColor*(.3+.7*daylight),cloud*.86);
+        color=mix(color,cloudColor*(.003+.997*daylight),cloud*.86);
         float sun=max(0.,dot(d,normalize(sunDirection)));
         color+=vec3(1.,.72,.36)*pow(sun,24.)*.22*daylight;
         color+=vec3(1.,.86,.62)*pow(sun,1800.)*2.*daylight;

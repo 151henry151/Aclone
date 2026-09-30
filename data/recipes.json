@@ -147,5 +147,103 @@
     "skill": "scientist",
     "seconds": 600,
     "tier": 2
+  },
+  "composter": {
+    "inputs": {
+      "dirt": 4,
+      "potatoes": 2
+    },
+    "outputs": {
+      "compost": 3
+    },
+    "skill": "horticulturist",
+    "seconds": 600,
+    "tier": 0
+  },
+  "brickworks": {
+    "inputs": {
+      "dirt": 5,
+      "fuel": 1
+    },
+    "outputs": {
+      "bricks": 4
+    },
+    "skill": "ceramicist",
+    "seconds": 600,
+    "tier": 0
+  },
+  "concreteWorks": {
+    "inputs": {
+      "gravel": 4,
+      "stone": 2,
+      "water": 2
+    },
+    "outputs": {
+      "concrete": 4
+    },
+    "skill": "mason",
+    "seconds": 600,
+    "tier": 0
+  },
+  "carpenter": {
+    "inputs": {
+      "wood": 5,
+      "tools": 1
+    },
+    "outputs": {
+      "furniture": 3
+    },
+    "skill": "carpenter",
+    "seconds": 900,
+    "tier": 1
+  },
+  "winery": {
+    "inputs": {
+      "grapes": 5,
+      "wood": 1
+    },
+    "outputs": {
+      "wine": 3
+    },
+    "skill": "vintner",
+    "seconds": 1200,
+    "tier": 1
+  },
+  "kitchen": {
+    "inputs": {
+      "potatoes": 4,
+      "flour": 1,
+      "water": 1
+    },
+    "outputs": {
+      "meals": 4
+    },
+    "skill": "cook",
+    "seconds": 600,
+    "tier": 0
+  },
+  "teaHouse": {
+    "inputs": {
+      "tea": 4,
+      "water": 1
+    },
+    "outputs": {
+      "teaBlend": 3
+    },
+    "skill": "tea blender",
+    "seconds": 600,
+    "tier": 0
+  },
+  "roastery": {
+    "inputs": {
+      "coffee": 4,
+      "fuel": 1
+    },
+    "outputs": {
+      "roastCoffee": 3
+    },
+    "skill": "roaster",
+    "seconds": 900,
+    "tier": 1
   }
 }

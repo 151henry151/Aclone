@@ -240,7 +240,10 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
           shooter.game !== 'combat' &&
           !safe(w, building)
         )
-          building.condition -= def.buildDamage / 1000;
+          building.condition = Math.max(
+            building.lodging ? 1 : 0,
+            building.condition - def.buildDamage / 1000,
+          );
         shot.ttl = 0;
       }
     }

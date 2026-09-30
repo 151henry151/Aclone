@@ -51,6 +51,44 @@ export function buildingPlan(b: { kind: string; id: string; style?: string }): B
       ];
       trim = ['#526d60', '#7c5145', '#516a79'][variant];
       break;
+    case 'bnb':
+      volumes = [volume(8.4, 6.8, 5.4, 1.8), volume(4, 4, 2.7, 0.8, 'shed', 5.5, -1)];
+      wall = '#efe2c9';
+      trim = '#527585';
+      break;
+    case 'hotel':
+      volumes = [volume(15, 9, 8, 2, 'hip'), volume(5, 4, 3, 1, 'gable', 0, 5)];
+      wall = '#d6c1a1';
+      trim = '#435a57';
+      break;
+    case 'composter':
+      volumes = [volume(5, 5, 2.6, 0.7, 'shed'), volume(5, 4, 1, 0, 'flat', 5, 0)];
+      wall = '#8c9772';
+      break;
+    case 'concreteWorks':
+    case 'brickworks':
+      volumes = [volume(9, 7, 4.2, 0.8, 'shed'), volume(3, 3, 6, 0, 'flat', 5, -1)];
+      wall = '#b09983';
+      break;
+    case 'carpenter':
+      volumes = [volume(10, 7, 3.8, 2.2), volume(4, 5, 2.7, 0.6, 'shed', 7, 0)];
+      wall = '#b09972';
+      break;
+    case 'winery':
+      volumes = [volume(8, 9, 4, 2.4), volume(4, 6, 2.8, 1, 'gable', 5, 0)];
+      wall = '#c7b5a0';
+      trim = '#715263';
+      break;
+    case 'teaHouse':
+      volumes = [volume(8, 6, 3, 1.4, 'hip')];
+      wall = '#d5deba';
+      trim = '#45684f';
+      break;
+    case 'roastery':
+    case 'kitchen':
+      volumes = [volume(7, 6, 5.2, 1.5), volume(3, 4, 2.6, 0.6, 'shed', 5, 0)];
+      wall = '#d1af95';
+      break;
     case 'pub':
       volumes = [volume(9, 6.8, 5.35, 1.8), volume(3.2, 4.8, 2.7, 0.9, 'shed', 5.8, -1)];
       wall = '#e9dfbc';
@@ -159,6 +197,7 @@ export function buildingPlan(b: { kind: string; id: string; style?: string }): B
       volumes = [volume(7, 5.8, 2.8, 1.6)];
   }
   let siding: 'stone' | 'wood' = 'stone';
+  if (['bnb', 'teaHouse', 'carpenter', 'composter'].includes(b.kind)) siding = 'wood';
   if (b.kind === 'home') {
     const chosen =
       cottageStyle(b.style ?? '') ?? appearance.cottages[seed % appearance.cottages.length];

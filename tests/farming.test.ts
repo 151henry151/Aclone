@@ -107,3 +107,29 @@ test('harvest work reserves the plot, completes offline once, and releases on fa
   advance(w, 15);
   assert.equal(b.stock.wheat, units);
 });
+
+test('gravel drainage and compost/topsoil amendments consume real resources and survive harvest', () => {
+  const w = createWorld('soil', 'Soil', 'p'),
+    p = addPlayer(w, 'p', 'Farmer'),
+    b = w.buildings.find((b) => b.kind === 'farm')!;
+  b.owner = p.id;
+  p.skills = ['farmer'];
+  p.x = b.x;
+  p.z = b.z;
+  b.investment = 10000;
+  b.plots = [{ planted: 0, ready: 0, water: 0, fertilized: false, previous: 'potatoes' }];
+  p.inventory = { gravel: 6, dirt: 6, compost: 2 };
+  act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'drain' });
+  act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'improve' });
+  assert.equal(p.inventory.gravel, 0);
+  assert.equal(p.inventory.dirt, 0);
+  assert.equal(b.plots[0].previous, undefined);
+  act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'plant', crop: 'wheat' });
+  act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'fertilize' });
+  assert.equal(p.inventory.compost, 0);
+  assert.equal(b.plots[0].drainage, true);
+  advance(w, b.plots[0].ready - w.time);
+  act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'harvest' });
+  advance(w, 15);
+  assert.equal(b.plots[0].drainage, true);
+});

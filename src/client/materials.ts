@@ -133,6 +133,7 @@ export function contactShadow(width: number, depth: number, opacity = 0.3) {
     new T.PlaneGeometry(width, depth),
     new T.MeshBasicMaterial({
       map: contact,
+      color: 0x000000,
       transparent: true,
       opacity,
       depthWrite: false,

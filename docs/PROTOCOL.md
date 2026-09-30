@@ -111,3 +111,18 @@ permits only one active socket per pilot, including pilots in space.
 arrival. Timestamps are Unix seconds. Planetside state includes optional crop plots,
 building `smoking`, public `tractorPaint` and `atHome`, and world combat state.
 All new records are saved server-side; older saves acquire defaults lazily.
+
+## Gathering and lodging (0.5.0)
+
+- `gather`: `node` is a stable ID from the shared resource catalog. The server checks
+  proximity, tools, activity, cargo and remaining shared reserve, then saves a task.
+- `lodging`: `building`, `operation`. `configure` needs owner/innkeeper, integer
+  `rate` (hundredths of a denarius per hour), and boolean `open`. `rent` needs integer
+  `hours` from 1 to 24. `store` uses `item`, positive integer `quantity`, and
+  `direction: deposit|withdraw`. `checkout` expires only that pilot's booking.
+- `home` now accepts a currently paid room as well as an owned cottage.
+- `farm` adds `drain` and `improve` operations on an empty previously cultivated plot.
+
+Shared snapshots include saved surface conditions and resource depletion. Guest
+pantry contents are stripped from buildings in both legacy and delta snapshots;
+only `self.roomPantries` (or the legacy recipient player) contains the pilot's stores.

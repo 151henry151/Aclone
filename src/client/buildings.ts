@@ -163,6 +163,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     box(width + 0.18, 1.36, 0.16, '#e2d5b8', 0, 0, 0);
     const pane = box(width, 1.16, 0.18, '#405e62', 0, 0, 0.03);
     pane.material.roughness = 0.24;
+    pane.userData.lightSource = b.id;
     box(0.065, 1.2, 0.08, '#e2d5b8', 0, 0, 0.15);
     box(width, 0.065, 0.08, '#e2d5b8', 0, 0, 0.15);
     box(width + 0.28, 0.12, 0.32, '#bcb49c', 0, -0.7, 0.06);
@@ -271,6 +272,12 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
         window(side * (main.width / 2 + 0.035), 1.6, z, 1.05, (side * Math.PI) / 2);
     for (const x of [-main.width * 0.3, main.width * 0.3])
       window(x, 1.6, -main.depth / 2 - 0.035, 1.05, Math.PI);
+    if (main.eaves > 7) {
+      for (const x of [-main.width * 0.3, 0, main.width * 0.3]) {
+        window(x, 6.6, front);
+        window(x, 6.6, -main.depth / 2 - 0.035, 1.05, Math.PI);
+      }
+    }
     if (main.eaves > 4.8) {
       for (const x of [-main.width * 0.3, main.width * 0.3])
         window(x, 4.1, -main.depth / 2 - 0.035, 1.05, Math.PI);
@@ -279,7 +286,20 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
         window(side * (main.width / 2 + 0.035), 4.1, 0, 1.05, (side * Math.PI) / 2);
     }
   }
-  if (['home', 'bakery', 'pub', 'workhouse'].includes(b.kind))
+  if (
+    [
+      'home',
+      'bnb',
+      'hotel',
+      'kitchen',
+      'roastery',
+      'teaHouse',
+      'bakery',
+      'pub',
+      'workhouse',
+      'brickworks',
+    ].includes(b.kind)
+  )
     chimney(-main.width * 0.3, -main.depth * 0.22, main.eaves + main.rise + 0.5);
   if (['market', 'shop', 'bakery'].includes(b.kind)) {
     const width = main.width - 0.5;

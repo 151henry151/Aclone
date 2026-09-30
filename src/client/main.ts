@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { resourceNodes, resourceAmount } from '../shared/resources';
+import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
 import { calendar, weatherAt } from '../shared/environment';
 import { crops, cropStatus } from '../shared/farming';
@@ -8,13 +10,14 @@ import './style.css';
 import { GameScene } from './scene';
 import {
   items,
+  recipes,
   vehicles,
   buildings as definitions,
   skills,
   galaxy,
   weapons,
 } from '../shared/catalog';
-import { money, carry, distance } from '../shared/simulation';
+import { money, carry, distance, productionInterval } from '../shared/simulation';
 import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
 import type { Account } from '../server/universe';
@@ -30,7 +33,7 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><canvas id="minimap" width="230" height="170" aria-label="World map"></canvas><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><canvas id="minimap" width="230" height="170" aria-label="World map"></canvas><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 let scene: GameScene;
 try {
   scene = new GameScene(document.querySelector('#viewport')!);
@@ -266,7 +269,7 @@ function updateHud() {
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
-    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation} · ${world.template}`;
+    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation} · ${weatherAt(world.id, calendar(world).absoluteDay).storm ? 'STORM · ' : ''}${(world.climate?.snow ?? 0) > 0.05 ? 'Snow on roads · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
   $('pilot-name').textContent = me.name;
   $('age').textContent = 'Age ' + Math.floor(me.age);
   $('cash').textContent = money(me.cash, world.settings.denariiPerSheckle);
@@ -503,6 +506,24 @@ function renderPanel() {
     buildingWindow(b);
     return;
   }
+  if (panel === 'resources') {
+    modal(
+      'Gathering grounds',
+      `<p>Drive within 10 metres of a marked ground. Carry tools for timber and minerals; topsoil can be gathered by hand. School qualifications double a load and shorten the task. Reserves replenish slowly, including offline.</p><div class="directory">${[
+        ...resourceNodes,
+      ]
+        .sort((a, b) => distance(me!, a) - distance(me!, b))
+        .map(
+          (n) =>
+            `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${resourceAmount(world!, n)}/${n.capacity} available</p>${button('Gather', 'gather', `data-id="${n.id}" ${distance(me!, n) > 10 ? 'disabled' : ''}`)}</article>`,
+        )
+        .join(
+          '',
+        )}</div><h3>Where it goes</h3><p>Logs → sawmill → timber → furniture. Stone and gravel → concrete works. Topsoil → brick kiln or composting yard. Gravel drains farm plots; topsoil and compost restore soil. Sell to a funded business or carry materials to your own stockroom.</p>`,
+      true,
+    );
+    return;
+  }
   if (panel === 'inventory' || panel === 'skills') {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
@@ -642,14 +663,14 @@ function buildingWindow(b: Building) {
           const attrs = `data-building="${b.id}" data-plot="${i}"`;
           return `<article><h3>Plot ${i + 1} · ${plot?.crop ? esc(crops[plot.crop].name) : 'Fallow'}</h3>${
             plot?.crop
-              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button('Fertilize · 10d', 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button('Fertilize · compost or 10d', 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
               : `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
                   'crop',
                   Object.entries(crops)
                     .filter(([, c]) => c.seasons.includes(calendar(world!).season))
                     .map(([id, c]) => [id, `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`]),
                 )}<button>Plant seeds</button></form>`
-          }</article>`;
+          }${!plot?.crop && plot ? button('Drain · 6 gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · 6 dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
         },
       ).join(
         '',
@@ -658,7 +679,36 @@ function buildingWindow(b: Building) {
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
     if (b.kind === 'home')
-      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom while you are online. Needs pause while you are offline.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Offline ageing and health loss pause, so running out of supplies cannot kill you while away. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+    if (roomCount(b)) {
+      const l = b.lodging,
+        guest = l?.guests[me.id],
+        booked = guest && guest.until > world.time;
+      html += `<h3>${roomCount(b)} guest rooms</h3><p>${Object.values(l?.guests ?? {}).filter((g) => g.until > world!.time).length} booked · ${money(l?.rate ?? 600)} per real hour · ${l?.open ? 'Accepting guests' : 'Closed to new bookings'}</p><p>Prepaid stays last 1–24 real hours. Enter your room to eat and drink from your personal stores, including offline. Checkout has no refund; your leftover supplies remain collectible. The owner cannot take guest supplies.</p>${booked ? `<p>Your stay: ${Math.ceil((guest.until - world.time) / 60)} minutes left</p>${button('Enter your room', 'home', `data-building="${b.id}"`)}<form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'checkout')}<button>Check out early</button></form>` : `<form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'rent')}${field('Real hours', 'hours', 6, 'number', 'min="1" max="24"')}<button ${!l?.open ? 'disabled' : ''}>Book a room</button></form>`}`;
+      if (guest)
+        html += `<h3>Your room pantry</h3><p>${
+          Object.entries(me.roomPantries?.[b.id] ?? guest.stock)
+            .filter(([, n]) => n > 0)
+            .map(([k, n]) => esc(items[k].name) + ' × ' + n)
+            .join(' · ') || 'No provisions stored yet.'
+        }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
+          'item',
+          Object.entries(items)
+            .filter(([, d]) => d.food || d.drink)
+            .map(([k, d]) => [k, d.name]),
+        )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
+          ['deposit', 'Store provisions'],
+          ['withdraw', 'Collect provisions'],
+        ])}<button>Transfer provisions</button></form>`;
+      if (owned)
+        html += `<h3>Run your guesthouse</h3><p>Learn innkeeper at school. Booking payments enter Working capital; collect earnings in Building Admin. Closing only stops new bookings.</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'configure')}${field('Hourly price in denarii', 'rateDenarii', (l?.rate ?? 600) / 100, 'number', 'min="0" max="10000" step="0.01"')}${select(
+          'open',
+          [
+            ['true', 'Accept bookings'],
+            ['false', 'Close to new bookings'],
+          ],
+        )}<button>Save room rates</button></form>`;
+    }
     if (b.kind === 'starport')
       html += `<div class="notice">Local cash → galactic credits. ${world.settings.exchangeRate}d buys 1cr. Limit ${world.settings.exchangeCap}cr per real day.</div><form data-action="exchange">${field('Credits to receive', 'amount', 1, 'number', 'min="1" max="100"')}<button>Exchange</button></form>${button('Take off to space', 'takeoff', '', 'primary')}`;
     if (b.kind === 'bank')
@@ -677,12 +727,22 @@ function buildingWindow(b: Building) {
         button('Parish activities', 'activities');
     if ((!b.owner || b.forSale) && b.owner !== me.id && !b.government)
       html += `<div class="purchase"><span>This building is for sale.<b>${money(b.price)}</b></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
+    if (b.recipe && b.kind !== 'farm') {
+      const r = b.production ?? recipes[b.recipe];
+      html += `<h3>Production</h3><p>${
+        Object.entries(r.inputs)
+          .map(([k, n]) => `${n} ${esc(items[k].name)}`)
+          .join(' + ') || 'Raw extraction'
+      } → ${Object.entries(r.outputs)
+        .map(([k, n]) => `${n} ${esc(items[k].name)}`)
+        .join(' + ')} · ${productionInterval(world, b) / 60} minutes · ${esc(r.skill)}</p>`;
+    }
     if (b.recipe || b.production)
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
     if (['sawmill', 'quarry', 'forge'].includes(b.kind))
       html += button(
         b.kind === 'forge' ? 'Craft tools (1 steel + 2 wood)' : 'Gather raw materials',
-        'task',
+        b.kind === 'forge' ? 'task' : 'resources',
         `data-building="${b.id}" data-id="${b.kind === 'sawmill' ? 'logging' : b.kind === 'quarry' ? 'quarrying' : 'craft'}"`,
       );
   }
@@ -828,6 +888,7 @@ app.addEventListener('click', async (e) => {
       'shipyard',
       'inventory',
       'skills',
+      'resources',
       'activities',
       'construction',
       'editor',
@@ -901,6 +962,10 @@ app.addEventListener('click', async (e) => {
         break;
       case 'learn':
         send({ type: 'learn', skill: id, building });
+        break;
+      case 'gather':
+        send({ type: 'gather', node: id });
+        closePanel();
         break;
       case 'task':
         send({ type: 'task', building, task: id });
@@ -1090,6 +1155,8 @@ app.addEventListener('submit', async (e) => {
       for (const [k, v] of Object.entries(data)) {
         values[k] = [
           'plot',
+          'hours',
+          'rate',
           'quantity',
           'amount',
           'tax',
@@ -1106,9 +1173,13 @@ app.addEventListener('submit', async (e) => {
           'seconds',
         ].includes(k)
           ? Number(v)
-          : k === 'buy'
+          : k === 'buy' || k === 'open'
             ? v === 'true'
             : v;
+      }
+      if (data.rateDenarii !== undefined) {
+        values.rate = Math.round(Number(data.rateDenarii) * 100);
+        delete values.rateDenarii;
       }
       if (data.inputs !== undefined) values.inputs = JSON.parse(String(data.inputs));
       if (data.outputs !== undefined) values.outputs = JSON.parse(String(data.outputs));

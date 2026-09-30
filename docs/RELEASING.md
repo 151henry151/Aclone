@@ -84,3 +84,17 @@ recipes are retained in the save but no longer executed; other custom recipes ar
 unchanged. Read [PLAYING.md](PLAYING.md) before upgrading a busy economy.
 
 Production at hromp.com remains an operator-managed pull/rebuild/restart deployment.
+
+## 0.5.0 upgrade notes
+
+Back up, pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build` and
+restart using the existing hosting configuration. Refresh clients. There is no new
+service or SQL schema migration; optional save fields preserve old accounts,
+properties, crops and stock. New public-market items start empty. New industries
+and lodging are player-buildable and are not forced into established towns.
+
+Residents left inside now consume provisions while offline. Health loss and ageing
+remain paused offline. Manual logging/quarry tasks move to the Resources grounds;
+carry tools. Read [ECONOMY.md](ECONOMY.md) for the new material chains, professions,
+soil care and guest protections. Light and weather changes apply in every graphics
+mode. The screenshots are local staged worlds, not evidence of a production deploy.

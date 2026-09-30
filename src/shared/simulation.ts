@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { gather, finishGather } from './resources.ts';
+import { advanceClimate, roadConditions } from './environment.ts';
+import { shelter, lodgingAction, feedAtHome, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
 import {
   items,
@@ -232,7 +235,7 @@ function nearby(w: World, p: Player, id: unknown) {
 function owns(p: Player, b: Building) {
   requireThat(p.authority >= 20 || b.owner === p.id, 'Only the building owner can do that');
 }
-function canCarry(p: Player, item: string, n: number) {
+export function canCarry(p: Player, item: string, n: number) {
   return carry(p) + items[item].weight * n <= vehicles[p.vehicle].capacity;
 }
 export function carry(p: Player) {
@@ -472,7 +475,7 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(b.employees.length < 16, 'All jobs filled');
       b.employees.push(id);
       p.job = b.id;
-      p.activeUntil = w.time + 1200;
+      p.activeUntil = w.time + 2 * productionInterval(w, b);
       break;
     }
     case 'quit': {
@@ -486,7 +489,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'work': {
       const b = nearby(w, p, a.building);
       requireThat(p.job === b.id, 'Take a job here first');
-      p.activeUntil = w.time + 1200;
+      p.activeUntil = w.time + 2 * productionInterval(w, b);
       result = 'Working for the next two cycles. The glamour is unbearable.';
       break;
     }
@@ -501,6 +504,10 @@ export function act(w: World, id: string, a: Action): string {
       );
       charge(w, p, p.skills.length ? 16000 : 8000, 'tuition');
       p.learning = { skill, end: w.time + (p.skills.length ? 2400 : 60) };
+      break;
+    }
+    case 'gather': {
+      gather(w, p, str(a.node));
       break;
     }
     case 'task': {
@@ -518,6 +525,10 @@ export function act(w: World, id: string, a: Action): string {
               : b.kind === 'forge',
         'Wrong workplace',
       );
+      requireThat(
+        task === 'craft' || task === 'labour',
+        'Gather at the marked woodland or mineral grounds using the Resources menu',
+      );
       if (task === 'craft') {
         requireThat(
           (p.inventory.steel ?? 0) >= 1 && (p.inventory.wood ?? 0) >= 2,
@@ -533,10 +544,19 @@ export function act(w: World, id: string, a: Action): string {
       result = 'A bit of honest work. 15 seconds.';
       break;
     }
+    case 'lodging': {
+      lodgingAction(w, p, nearby(w, p, a.building), a);
+      break;
+    }
     case 'home': {
       requireThat(p.game !== 'combat', 'Leave combat before entering a home');
       const b = nearby(w, p, a.building);
-      requireThat(b.kind === 'home' && b.owner === id, 'You need your own home');
+      requireThat(
+        !b.construction &&
+          ((b.kind === 'home' && b.owner === id) || (b.lodging?.guests[id]?.until ?? 0) > w.time),
+        'You need your own home or a booked room',
+      );
+      requireThat(!p.task && !p.hitch && !p.crowBody, 'Finish your activity first');
       p.home = b.id;
       p.atHome = true;
       p.speed = 0;
@@ -796,6 +816,12 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       owns(p, b);
       requireThat(!b.government, 'Government buildings cannot be demolished');
+      requireThat(
+        !Object.values(b.lodging?.guests ?? {}).some(
+          (g) => g.until > w.time || Object.values(g.stock).some((n) => n > 0),
+        ),
+        'Guests must check out and collect their supplies first',
+      );
       w.buildings = w.buildings.filter((x) => x !== b);
       break;
     }
@@ -1081,12 +1107,17 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     water = ground < w.settings.seaLevel;
   const throttle = clamp(input.throttle, -1, 1);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
-  const cap = v.speed * (input.boost ? 1.7 : 1);
-  p.speed += ((powered ? throttle : 0) * v.acceleration - p.speed * (throttle ? 0.13 : 1.8)) * dt;
+  const surface =
+    [0, 1, 4].includes(v.mode) && p.y <= ground + 1 ? roadConditions(w) : { speed: 1, grip: 1 };
+  const cap = v.speed * (input.boost ? 1.7 : 1) * surface.speed;
+  p.speed +=
+    ((powered ? throttle : 0) * v.acceleration * surface.grip - p.speed * (throttle ? 0.13 : 1.8)) *
+    dt;
   p.speed = clamp(p.speed, -cap * 0.4, cap);
   p.heading +=
     clamp(input.steer, -1, 1) *
     v.turn *
+    surface.grip *
     (input.boost ? 1.15 : 1) *
     dt *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
@@ -1164,6 +1195,10 @@ function kill(w: World, p: Player, comic = false) {
     for (const b of w.buildings) {
       b.employees = b.employees.filter((id) => id !== p.id);
       if (b.owner === p.id) {
+        if (roomCount(b)) {
+          if (b.lodging) b.lodging.open = false;
+          continue;
+        }
         b.stock = {};
         log(w, 'sink', b.investment, b.id, 'treasury', 'estate closure');
         b.investment = 0;
@@ -1176,6 +1211,12 @@ function kill(w: World, p: Player, comic = false) {
       `${p.name} has begun a new life. Their cash survives; their qualifications do not.`,
     );
   }
+}
+export function productionInterval(w: World, b: Building) {
+  return (
+    b.production?.seconds ??
+    (((b.recipe ? recipes[b.recipe]?.seconds : 600) ?? 600) / 600) * w.settings.productionSeconds
+  );
 }
 function cycle(w: World, b: Building, at: number) {
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
@@ -1213,38 +1254,29 @@ export function advance(w: World, seconds: number) {
   const start = w.time,
     end = start + seconds;
   for (const b of w.buildings) {
-    const interval = b.production?.seconds ?? w.settings.productionSeconds;
+    const interval = productionInterval(w, b);
     for (let t = (Math.floor(start / interval) + 1) * interval; t <= end; t += interval)
       cycle(w, b, t);
   }
+  advanceClimate(w, start, end);
   w.time = end;
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
+    const current = shelter({ ...w, time: start }, p);
+    if (current)
+      feedAtHome(
+        p,
+        current.stock,
+        Math.min(seconds, current.until - start),
+        w.settings.hungerRate,
+        w.settings.thirstRate,
+      );
+    if (p.atHome && !shelter(w, p)) p.atHome = false;
     if (p.online) {
-      const home = p.atHome && w.buildings.find((b) => b.id === p.home && b.owner === p.id);
-      const scale = home ? 0.8 : 1;
-      p.hunger = Math.min(50000, p.hunger + w.settings.hungerRate * seconds * scale);
-      p.thirst = Math.min(50000, p.thirst + w.settings.thirstRate * seconds * scale);
-      if (home) {
-        for (const [key, def] of Object.entries(items)) {
-          const hunger = def.food && p.hunger >= 30000,
-            thirst = def.drink && p.thirst >= 30000;
-          if ((hunger || thirst) && (home.stock[key] ?? 0) > 0) {
-            const n = Math.min(
-              home.stock[key],
-              Math.ceil(
-                Math.max(
-                  hunger ? p.hunger / (def.food ?? 1) : 0,
-                  thirst ? p.thirst / (def.drink ?? 1) : 0,
-                ),
-              ),
-            );
-            p.hunger = Math.max(0, p.hunger - (def.food ?? 0) * n);
-            p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * n);
-            home.stock[key] -= n;
-          }
-        }
+      if (!current) {
+        p.hunger = Math.min(50000, p.hunger + w.settings.hungerRate * seconds);
+        p.thirst = Math.min(50000, p.thirst + w.settings.thirstRate * seconds);
       }
       p.health = clamp(
         p.health + (p.hunger >= 50000 || p.thirst >= 50000 ? -6 : 2) * seconds,
@@ -1262,6 +1294,10 @@ export function advance(w: World, seconds: number) {
     }
     if (p.task && p.task.end <= end) {
       const t = p.task;
+      if (t.kind === 'gather') {
+        finishGather(p);
+        continue;
+      }
       delete p.task;
       if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!);
       else if (t.kind === 'labour') {
@@ -1302,6 +1338,12 @@ export function advance(w: World, seconds: number) {
       p.fishUntil = p.fishAt + 8;
     }
   }
+  // Resolve residents once; avoid scanning every resident for every cottage each tick.
+  const occupied = new Set(
+    Object.values(w.players)
+      .filter((p) => p.atHome)
+      .map((p) => shelter(w, p)?.b.id),
+  );
   for (const b of w.buildings) {
     for (const plot of b.plots ?? [])
       if (plot.harvest) {
@@ -1310,10 +1352,8 @@ export function advance(w: World, seconds: number) {
       }
     b.smoking =
       !b.construction &&
-      (b.kind === 'home'
-        ? Object.values(w.players).some(
-            (p) => p.online && p.atHome && p.home === b.id && b.owner === p.id,
-          )
+      (b.kind === 'home' || roomCount(b)
+        ? occupied.has(b.id)
         : b.employees.some((id) => {
             const worker = w.players[id];
             return (
@@ -1328,7 +1368,10 @@ export function advance(w: World, seconds: number) {
       if (!owner || !owner.online) continue;
       const skill = b.recipe && recipes[b.recipe].skill;
       const factor = !owner ? 100 : skill && !owner.skills.includes(skill) ? 10 : 1;
-      b.condition = Math.max(0, b.condition - (seconds * 100 * factor) / (160 * 365 * 600));
+      b.condition = Math.max(
+        b.lodging ? 1 : 0,
+        b.condition - (seconds * 100 * factor) / (160 * 365 * 600),
+      );
     }
   }
   w.buildings = w.buildings.filter((b) => b.condition > 0);

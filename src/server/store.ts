@@ -44,8 +44,20 @@ export class Store {
         const world = JSON.parse(String(row.state)) as World;
         world.settings = { ...defaults, ...world.settings };
         for (const b of world.buildings)
-          if (b.government && b.kind === 'market')
-            for (const key of ['potatoes', 'coffee']) {
+          if (b.government && ['market', 'starport'].includes(b.kind))
+            for (const key of [
+              'potatoes',
+              'coffee',
+              'gravel',
+              'dirt',
+              'compost',
+              'bricks',
+              'furniture',
+              'wine',
+              'meals',
+              'teaBlend',
+              'roastCoffee',
+            ]) {
               b.buy[key] ??= Math.round(items[key].price * 0.6);
               b.sell[key] ??= items[key].price;
               b.stock[key] ??= 0;
