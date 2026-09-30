@@ -45,3 +45,11 @@ existing `BASE_PATH` (for hromp.com, `/aclone`), then restart the Node service s
 it loads the script-worker changes. Refresh browser clients for the pilot labels.
 Existing script errors are chat history; the upgrade does not erase messages or
 pilot accounts. A connected test pilot remains a player until its session closes.
+
+## 0.3.2 upgrade notes
+
+No schema or wire-protocol change. Rebuild the browser bundle with the existing
+`BASE_PATH`, restart the service to report the new version, and refresh clients.
+The movement fix is in the client bundle; pulling source without rebuilding will
+continue serving the old movement code. Software rendering can now draw up to
+30 FPS, so CPU use may increase on machines without GPU acceleration.

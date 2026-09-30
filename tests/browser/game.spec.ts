@@ -43,6 +43,11 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.waitForTimeout(1800);
   await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
   await page.keyboard.up('ArrowDown');
+  await page.keyboard.press('c');
+  await page.screenshot({ path: 'test-results/cockpit.png' });
+  await page.keyboard.press('c');
+  await page.screenshot({ path: 'test-results/overhead.png' });
+  await page.keyboard.press('c');
   await page.getByRole('button', { name: 'World F9' }).click();
   await page.getByRole('button', { name: 'Return to town centre' }).click();
   await page.getByRole('button', { name: 'Close dialog' }).click();

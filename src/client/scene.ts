@@ -4,6 +4,7 @@ import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
 import { tractor } from './tractor';
+import { MotionClock, MotionTrack } from './motion';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeight, distance } from '../shared/simulation';
 import { vehicles, checkpoints } from '../shared/catalog';
@@ -100,6 +101,7 @@ export class GameScene {
   private headlights = new T.SpotLight('#fff1b5', 45, 45, Math.PI / 5, 0.65, 1);
   private ambient = new T.HemisphereLight(0xb6cbd9, 0x7c8067, 1.1);
   private meshes = new Map<string, T.Group>();
+  private motionClock = new MotionClock();
   private buildingMeshes: T.Group[] = [];
   private ball: T.Mesh;
   private projectiles = new T.Group();
@@ -310,10 +312,12 @@ export class GameScene {
       this.buildWorld(world);
     }
     if (this.lastWorld !== world.id) {
+      this.motionClock = new MotionClock();
       this.lastWorld = world.id;
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
+    const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
       let mesh = this.meshes.get(p.id);
       if (mesh && mesh.userData.vehicle !== p.vehicle) {
@@ -329,7 +333,13 @@ export class GameScene {
         this.meshes.set(p.id, mesh);
         this.actors.add(mesh);
       }
-      mesh.userData.player = p;
+      if (resetMotion || !mesh.userData.motion) mesh.userData.motion = new MotionTrack();
+      const snapped = (mesh.userData.motion as MotionTrack).receive(world.time, p);
+      if (snapped) {
+        mesh.position.set(p.x, p.y, p.z);
+        mesh.rotation.y = p.heading;
+        mesh.userData.snapCamera = true;
+      }
     }
     for (const [id, mesh] of this.meshes)
       if (!world.players[id]) {
@@ -339,6 +349,7 @@ export class GameScene {
       }
   }
   setSpace() {
+    this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
     this.sky.visible = false;
     this.headlights.visible = false;
@@ -732,9 +743,11 @@ export class GameScene {
   }
   private frame() {
     const now = performance.now();
-    if (now - this.renderTime < (this.paused ? 250 : this.software ? 100 : this.low ? 33 : 16))
-      return;
-    this.renderTime = now;
+    const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
+    const sinceRender = now - this.renderTime;
+    if (sinceRender < interval) return;
+    // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
+    this.renderTime = now - (sinceRender % interval);
     if (!this.low && !this.paused && localStorage.getItem('aclone.quality') !== 'high') {
       this.slowFrames =
         now - this.lastTime > 180 ? this.slowFrames + 1 : Math.max(0, this.slowFrames - 1);
@@ -753,30 +766,33 @@ export class GameScene {
     if (this.world && this.me) {
       const w = this.world,
         p = this.me;
+      const motionTime = this.motionClock.sample(now);
       for (const mesh of this.meshes.values()) {
-        const player = mesh.userData.player as Player;
-        mesh.position.lerp(new T.Vector3(player.x, player.y, player.z), Math.min(1, dt * 12));
-        let diff = player.heading - mesh.rotation.y;
-        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-        mesh.rotation.y += diff * Math.min(1, dt * 12);
-        for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
-          wheel.rotation.x += player.speed * dt;
+        const pose = (mesh.userData.motion as MotionTrack).sample(motionTime)!;
+        const travel =
+          (pose.x - mesh.position.x) * Math.sin(pose.heading) +
+          (pose.z - mesh.position.z) * Math.cos(pose.heading);
+        mesh.position.set(pose.x, pose.y, pose.z);
+        mesh.rotation.y = pose.heading;
+        for (const wheel of (mesh.userData.wheels ?? []) as T.Group[]) wheel.rotation.x += travel;
       }
       this.headlights.visible = p.lights;
-      this.headlights.position.set(p.x, p.y + 2, p.z);
-      this.headlights.target.position.set(
-        p.x + Math.sin(p.heading) * 20,
-        p.y,
-        p.z + Math.cos(p.heading) * 20,
-      );
       const local = this.meshes.get(p.id);
       if (local) {
         const pos = local.position;
+        const facing = local.rotation.y;
+        this.headlights.position.set(pos.x, pos.y + 2, pos.z);
+        this.headlights.target.position.set(
+          pos.x + Math.sin(facing) * 20,
+          pos.y,
+          pos.z + Math.cos(facing) * 20,
+        );
         this.target.copy(pos);
         this.target.y += 1.6;
-        let diff = p.heading - this.chase;
+        let diff = facing - this.chase;
         diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-        this.chase += diff * dt * 3;
+        this.chase += diff * (1 - Math.exp(-dt * 3));
+        if (local.userData.snapCamera) this.chase = facing;
         const heading = this.chase + this.orbit;
         const cam =
           this.cameraMode === 1
@@ -789,9 +805,11 @@ export class GameScene {
                   pos.z - Math.cos(heading) * 21 * this.zoom,
                 );
         cam.y = Math.max(cam.y, terrainHeight(w, cam.x, cam.z) + 3);
-        this.camera.position.lerp(cam, dt * 4);
+        if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
+        else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
+        local.userData.snapCamera = false;
         if (this.cameraMode === 1)
-          this.target.add(new T.Vector3(Math.sin(p.heading) * 30, 0, Math.cos(p.heading) * 30));
+          this.target.add(new T.Vector3(Math.sin(facing) * 30, 0, Math.cos(facing) * 30));
         this.camera.lookAt(this.target);
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;

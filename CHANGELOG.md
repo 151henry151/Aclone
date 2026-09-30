@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-29
+
+### Fixed
+
+- Smooth driving between server updates using timestamped movement history instead of repeatedly easing toward stationary snapshots. Camera direction, headlights and wheel animation now follow the same displayed motion.
+- Remove the artificial 10 FPS software-rendering cap; software and performance modes now target up to 30 FPS, with consistent frame pacing. Actual frame rate still depends on hardware.
+- Reset visual motion on large teleports, vehicle changes, world changes and long pauses, and stop at the last known position when updates run out.
+
 ## [0.3.1] - 2026-09-29
 
 ### Fixed

@@ -124,10 +124,28 @@ batches the detailed body and each animated wheel separately. Static scenery
 batches include texture identity and surface properties. Performance mode disables
 dynamic shadows and water animation, reduces plant density and uses a smaller
 framebuffer without multisample antialiasing. Detected software renderers use a
-10 FPS render cap so expensive CPU draws do not starve controls. Adaptive mode falls back after sustained
+30 FPS render target, matching performance mode, rather than a forced 10 FPS cap. Actual throughput depends on the device. Adaptive mode falls back after sustained
 slow frames; detailed mode keeps dynamic shadows enabled. See [art documentation](ART.md)
 for asset provenance, prompts, texture ownership and visual verification.
 
 Screenshot capture defaults to adaptive mode. Set `SCREENSHOT_QUALITY=low` for
 performance or `high` for detailed. The capture checks for rendering errors before
 writing gameplay screenshots.
+
+## Movement presentation
+
+The server still simulates input at 20 Hz and broadcasts state at 5 Hz. The client
+stores up to eight poses per visible pilot and renders 300 ms behind its estimate
+of server simulation time. Position and vertical height are linearly interpolated;
+heading follows the shortest angular path. Recent packet timestamps anchor the
+clock, with drift corrections capped at 5% to avoid following arrival-time jitter.
+The buffer trades some visual latency for steady travel without extra network
+traffic. This is visual interpolation, not client-side physics prediction.
+
+The camera, cockpit view, headlights and wheel rotation use displayed motion.
+Large position discontinuities, vehicle/world changes and long update gaps reset
+the history. Missing updates drain the buffer and hold the last authoritative
+position; the client does not extrapolate through walls or continue driving after
+losing its connection. Interactions, physics and persistence still use server state.
+`tests/motion.test.ts` exercises steady motion at multiple frame rates, packet
+jitter, angle wrapping, teleports, disconnections and clock resets.
