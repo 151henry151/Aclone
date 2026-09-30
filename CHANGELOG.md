@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-29
+
+### Fixed
+
+- Start the Lua execution deadline after the isolated worker has loaded its runtime, with a separate bounded startup deadline, to avoid false script timeouts on busy hosts.
+- Pause failing automatic world scripts for 60 seconds after one chat notice. Successful editor reloads allow an immediate retry; stale failures from replaced scripts are discarded.
+- Distinguish other pilots from landmarks with compact, rounded PILOT nameplates instead of oversized building-style signs.
+
 ## [0.3.0] - 2026-09-29
 
 ### Added

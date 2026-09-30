@@ -61,6 +61,33 @@ function label(text: string, color = '#eee4c8', scale = 1) {
   s.scale.set(15 * scale, 2.8 * scale, 1);
   return s;
 }
+function pilotLabel(name: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 384;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = 'rgba(20,34,37,.9)';
+  ctx.beginPath();
+  ctx.roundRect(4, 4, 376, 104, 22);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(180, 108);
+  ctx.lineTo(192, 124);
+  ctx.lineTo(204, 108);
+  ctx.fill();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#a9dbcb';
+  ctx.font = '600 19px sans-serif';
+  ctx.fillText('● PILOT', 192, 36);
+  ctx.fillStyle = '#fff4d8';
+  ctx.font = '600 28px sans-serif';
+  ctx.fillText(name.slice(0, 30), 192, 78, 348);
+  const tag = new T.Sprite(
+    new T.SpriteMaterial({ map: new T.CanvasTexture(canvas), depthWrite: false }),
+  );
+  tag.scale.set(6, 2, 1);
+  return tag;
+}
 export class GameScene {
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
@@ -697,8 +724,8 @@ export class GameScene {
       if (v.mode === 5) box(g, 4, 0.6, 5, '#454d42', 0, 0.4, 0);
     }
     if (name) {
-      const tag = label(name, '#f5dc9d', 0.65);
-      tag.position.y = 6;
+      const tag = pilotLabel(name);
+      tag.position.y = 5;
       g.add(tag);
     }
     return g;

@@ -88,7 +88,8 @@ CSP. Supply HTTPS at the reverse proxy for non-local use.
 
 Lua runs in a separate worker heap with instruction and deadline limits. It has
 no OS, files, modules, JavaScript bridge or network. A script failure becomes a
-world message, not a server failure. See SCRIPTING.md for the smaller supported
+single world notice and a 60-second automatic-event pause, not a server failure.
+Worker startup and Lua execution have separate bounded deadlines. See SCRIPTING.md for the smaller supported
 API; the original event catalogue is not fully implemented.
 
 This alpha is tested for six simultaneous clients. It has not been load-tested

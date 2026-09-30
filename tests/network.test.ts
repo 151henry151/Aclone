@@ -102,3 +102,51 @@ test('real headless server: identity, six clients, chat, denied edits, atomic re
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('disconnecting a parked pilot removes it from legacy and delta views without deleting progress', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-presence-'));
+  const app = await createApp({ dataDir: dir, port: 0 });
+  const sockets: WebSocket[] = [];
+  try {
+    const port = await app.listen();
+    const world = app.worlds.get('puddlewick')!;
+    world.script = '';
+    const connect = async (name: string, protocol: number) => {
+      const pilot = app.universe.register(name);
+      const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+      sockets.push(ws);
+      await new Promise((r) => ws.once('open', r));
+      const ready = next(ws, (m) => m.type === 'state');
+      ws.send(
+        JSON.stringify({
+          type: 'hello',
+          protocol: protocol === 2 ? 2 : undefined,
+          token: pilot.token,
+          world: world.id,
+        }),
+      );
+      await ready;
+      return { ws, id: pilot.account.id };
+    };
+    const parked = await connect('Launch Check', 2);
+    const legacy = await connect('Legacy observer', 1);
+    const delta = await connect('Delta observer', 2);
+    world.players[parked.id].inventory.logs = 7;
+    const removedLegacy = next(legacy.ws, (m) => m.type === 'state' && !m.world.players[parked.id]);
+    const removedDelta = next(
+      delta.ws,
+      (m) => m.type === 'state' && m.world.players[parked.id] === null,
+    );
+    parked.ws.close();
+    await Promise.all([removedLegacy, removedDelta]);
+    assert.equal(world.players[parked.id].online, false);
+    assert.equal(world.players[parked.id].inventory.logs, 7);
+    const saved = app.store.loadWorlds().find((s) => s.world.id === world.id)!;
+    assert.equal(saved.world.players[parked.id].online, false);
+    assert.equal(saved.world.players[parked.id].inventory.logs, 7);
+  } finally {
+    for (const socket of sockets) socket.terminate();
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

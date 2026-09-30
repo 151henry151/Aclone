@@ -37,3 +37,11 @@ For a deployment at `/aclone/`, retain `BASE_PATH=/aclone` at build time and the
 prefix-stripping reverse proxy. Include the new `public/textures/` files in the
 client build. Editable PNG masters in `art/materials/` ship in the source archive,
 but are excluded from the runtime Docker build context.
+
+## 0.3.1 upgrade notes
+
+No schema change. Pull and install the locked dependencies, rebuild with the
+existing `BASE_PATH` (for hromp.com, `/aclone`), then restart the Node service so
+it loads the script-worker changes. Refresh browser clients for the pilot labels.
+Existing script errors are chat history; the upgrade does not erase messages or
+pilot accounts. A connected test pilot remains a player until its session closes.

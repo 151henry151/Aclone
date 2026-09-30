@@ -25,7 +25,17 @@ Handlers use `on(eventName, function(e) ... end)`.
 
 A script is limited to 16 KiB, 16 handlers per event, roughly 100,000 executed
 instructions per load/handler, a 32 MiB worker old-generation heap and a 1.5-second
-wall deadline including worker startup. At most four script workers run at once. An error is reported in the world chat.
+execution deadline starting after the worker runtime is ready. Worker startup has
+a separate 10-second deadline; both phases can be terminated without blocking the
+simulation. At most four script workers run at once. Empty scripts skip the worker.
+
+If an automatic login or task event fails, the world gets one error notice and
+further automatic script events pause for 60 seconds. Events during that pause
+are skipped, not queued for later replay. A successful **Validate & reload Lua**
+clears the pause immediately, including when reinstalling the same source.
+Repeated failures already in flight do not produce duplicate notices during the
+pause. Normal gameplay continues. Existing chat history is retained, so old error
+messages may remain visible after an upgrade; check for new notices after landing.
 No `os`, `io`, `debug`, `package`, `require`, filesystem, JavaScript bridge,
 network, dynamic source loading or coroutines are exposed. The string library
 is removed to reduce allocation-based abuse. Ordinary Lua strings still work.

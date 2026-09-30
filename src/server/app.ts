@@ -20,7 +20,7 @@ import {
 } from '../shared/simulation.ts';
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
-import { runScript } from './scripts.ts';
+import { runScript, ScriptEvents } from './scripts.ts';
 import { DeltaStream, prepareFrame, type Frame } from './snapshots.ts';
 import { Accounts, type Mailer } from './accounts.ts';
 import { configuredMailer } from './mail.ts';
@@ -226,18 +226,14 @@ export async function createApp(options: AppOptions) {
     snapshot(p);
     void scriptEvent(w, 'PlayerLogin', { id: me.id, name: me.name });
   };
+  const scriptEvents = new ScriptEvents();
   const scriptEvent = async (w: World, event: string, data: Record<string, string | number>) => {
-    const source = w.script;
-    try {
-      const result = await runScript(w, source, event, data);
-      if (worlds.get(w.id) !== w || source !== w.script) return;
-      for (const message of result.messages) say(w, 'World script', message);
-      w.scriptVariables = result.variables;
-      for (const [id, kudos] of Object.entries(result.kudos)) {
-        if (w.players[id]) w.players[id].kudos += kudos;
-      }
-    } catch (e) {
-      say(w, 'Script error', String((e as Error).message).slice(0, 180));
+    const result = await scriptEvents.run(w, event, data, () => worlds.get(w.id) === w);
+    if (!result) return;
+    for (const message of result.messages) say(w, 'World script', message);
+    w.scriptVariables = result.variables;
+    for (const [id, kudos] of Object.entries(result.kudos)) {
+      if (w.players[id]) w.players[id].kudos += kudos;
     }
   };
   const json = (res: ServerResponse, status: number, data: unknown) => {
@@ -580,6 +576,7 @@ export async function createApp(options: AppOptions) {
           const source = z.string().max(16384).parse(a.source);
           await runScript(w, source, 'ScriptReload', {});
           w.script = source;
+          scriptEvents.reset(w);
           store.saveWorld(w);
           send(p, {
             type: 'result',

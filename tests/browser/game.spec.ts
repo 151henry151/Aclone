@@ -125,3 +125,41 @@ test('password setup, sign-out and sign-in return to the same pilot', async ({ p
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#pilot-name')).toHaveText(name);
 });
+
+test('pilot nameplates and disconnects match the live parish list', async ({ page, baseURL }) => {
+  const { WebSocket } = await import('ws');
+  await page.goto('./');
+  await page
+    .getByLabel('Pilot name', { exact: true })
+    .fill('Observer ' + Date.now().toString().slice(-8));
+  await page.getByRole('button', { name: 'Make yourself at home' }).click();
+  await page.getByRole('button', { name: 'Land on this world' }).first().click();
+  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#chat-log')).toContainText(
+    'Welcome to the parish. Mind the tractor.',
+    { timeout: 15000 },
+  );
+  const name = 'Launch Check ' + Date.now().toString().slice(-4);
+  const registered = await page.request.post('./api/register', { data: { name } });
+  expect(registered.ok()).toBeTruthy();
+  const { token } = await registered.json();
+  const address = new URL('ws', baseURL!.replace(/\/?$/, '/'));
+  address.protocol = address.protocol === 'https:' ? 'wss:' : 'ws:';
+  const pilot = new WebSocket(address);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      pilot.once('open', resolve);
+      pilot.once('error', reject);
+    });
+    pilot.send(JSON.stringify({ type: 'hello', token, protocol: 2, world: 'puddlewick' }));
+    await expect(page.locator('#players')).toContainText(name);
+    await expect(page.locator('#player-count')).toHaveText('2');
+    await page.screenshot({ path: 'test-results/pilot-nameplate.png' });
+    pilot.close();
+    await expect(page.locator('#players')).not.toContainText(name);
+    await expect(page.locator('#player-count')).toHaveText('1');
+    await expect(page.locator('#chat-log')).not.toContainText('Script error');
+  } finally {
+    pilot.terminate();
+  }
+});
