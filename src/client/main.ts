@@ -260,6 +260,7 @@ async function showGalaxy() {
         '',
       )}</div></div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Field guide', 'help')}</div></div></div>`;
 }
+let previousTargetHtml = '';
 function updateHud() {
   if (!world || !me) return;
   $('location').textContent =
@@ -299,7 +300,7 @@ function updateHud() {
   $('driving').innerHTML =
     `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${ping} ms</small></span>`;
   const target = scene.nearest();
-  $('target').innerHTML = me.task
+  let targetHtml = me.task
     ? `<div class="task"><span>${esc(me.task.kind.toUpperCase())}</span><b>${Math.max(0, Math.ceil(me.task.end - world.time))}s</b></div>`
     : me.atHome
       ? button('At home · Go outside', 'outside', '', 'wide')
@@ -343,12 +344,17 @@ function updateHud() {
     world.time >= me.fishAt &&
     world.time <= (me.fishUntil ?? 0)
   )
-    $('target').innerHTML = button('Fish! Reel in <kbd>F3</kbd>', 'reel', '', 'wide target-button');
+    targetHtml = button('Fish! Reel in <kbd>F3</kbd>', 'reel', '', 'wide target-button');
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
   if (me.race)
-    $('target').innerHTML =
-      `<div class="task">${world.time < me.race.start ? 'Race starts in ' + Math.ceil(me.race.start - world.time) : 'Checkpoint ' + me.race.next + ' / 4'} <b>${Math.max(0, world.time - me.race.start).toFixed(1)}s</b></div>`;
+    targetHtml = `<div class="task">${world.time < me.race.start ? 'Race starts in ' + Math.ceil(me.race.start - world.time) : 'Checkpoint ' + me.race.next + ' / 4'} <b>${Math.max(0, world.time - me.race.start).toFixed(1)}s</b></div>`;
+  // Preserve the button between snapshots so a mouse press/release or keyboard
+  // focus is not lost. Compute activity overrides before updating the DOM too.
+  if (targetHtml !== previousTargetHtml) {
+    $('target').innerHTML = targetHtml;
+    previousTargetHtml = targetHtml;
+  }
 }
 function drawMap() {
   if (!world || !me) return;
@@ -1219,6 +1225,8 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') (e.target as HTMLElement).blur();
     return;
   }
+  // Let focused buttons use their native activation instead of honking or opening chat.
+  if ((e.target as HTMLElement).closest('button') && [' ', 'Enter'].includes(e.key)) return;
   if (e.key === 'Escape') {
     document.documentElement.classList.remove('scenery-view');
     closePanel();

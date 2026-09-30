@@ -98,3 +98,10 @@ remain paused offline. Manual logging/quarry tasks move to the Resources grounds
 carry tools. Read [ECONOMY.md](ECONOMY.md) for the new material chains, professions,
 soil care and guest protections. Light and weather changes apply in every graphics
 mode. The screenshots are local staged worlds, not evidence of a production deploy.
+
+## 0.5.1 upgrade notes
+
+No save, schema or protocol changes. Rebuild the client with the existing
+`BASE_PATH`, restart the service and refresh open clients. This fixes the
+Go outside button losing clicks during world updates, and restores native
+Space/Enter activation for focused buttons.

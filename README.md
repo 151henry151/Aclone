@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.5.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.5.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.5.1:** reliable Go outside buttons during live updates, plus Space/Enter activation of focused buttons.
 
 **New in 0.5.0:** truly dark nights with working street/window lights, persistent snow and storm traction, varied woodland, finite gathering grounds, eight new processing businesses, richer crops, and player-run hotels/B&Bs with offline room provisions. See the [economy and lodging guide](docs/ECONOMY.md).
 
@@ -145,7 +147,7 @@ Open **Pilot key & options → Graphics** to cycle through **adaptive** (the def
 3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
 4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
 5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
-6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Offline health loss, ageing and property decay pause; business and training continue.
+6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Click **At home · Go outside** above the chat to leave your house or rented room and resume driving or walking. Offline health loss, ageing and property decay pause; business and training continue.
 7. Open **Resources** to find wood, stone, gravel and topsoil. Carry tools for timber/minerals. Deliver to businesses or build your own processing chain. Turn on **headlights (L)** outside town at night; wet or snowy roads slow you down.
 8. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
 9. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
@@ -202,7 +204,7 @@ npm run test:e2e
 npm run test:load    # isolated 100-client, 10-second local load probe
 ```
 
-The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. Unit and network tests use temporary databases and random ports.
+The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The browser runner uses `tsx` for TypeScript server fixtures. Unit and network tests use temporary databases and random ports.
 
 Tuning is in `data/*.json`. New behaviours need tests before or alongside implementation. Update `CHANGELOG.md`, review this README and affected guides, and keep the code formatted. No generated client build, saved accounts, reference screenshots or source-research exports belong in a release archive.
 

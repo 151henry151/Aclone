@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-30
+
+### Fixed
+
+- The “At home · Go outside” button now accepts clicks that overlap live world updates, allowing residents and guests to leave reliably. Nearby-building and fishing prompts also retain keyboard focus between unchanged updates.
+- Focused buttons respond to Space and Enter instead of triggering the horn or chat shortcuts.
+
 ## [0.5.0] - 2026-09-30
 
 ### Added
