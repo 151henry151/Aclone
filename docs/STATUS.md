@@ -15,7 +15,11 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
   construction materials, repair, decay, home supplies and life/death resets.
 - Twenty-four vehicle slots, five primary control families, fuel/boost,
   persistent purchased vehicles, walking, disposable robocrows and ostriches.
-- Safe-zone/fighting checks, energy, cooldowns, projectiles and armour formula.
+- Safe-zone/fighting checks, energy or ammunition, charged javelins, bouncing grenades, armed mines, blast damage, armour, and balanced deathmatch/capture/CTF rounds.
+- Seasonal crop plots, irrigation, fertilizer, rotation, frost and delayed-harvest quality, with reserved paid harvest shifts and offline completion.
+- Seven-system route map, saved jump transit, owned-ship hangars, upgrades, shared station stocks, courier contracts, surveys and alien-ship unlocks.
+- Four seasons, deterministic rain/snow, snow cover, seasonal sunlight and sunrise/sunset.
+- Six selectable cottage styles, garage tractor paint and occupancy-driven chimney smoke.
 - Six-client Hornball, ordered race checkpoints and best laps, bite/reel fishing,
   and an original timing-based two-player Ultrakricket implementation.
 - Optional password login, verified SMTP recovery, hashed pilot-key identities, multiplayer chat, command authority, world
@@ -30,7 +34,7 @@ Browser tests exercise the real rendered client and live server rather than a
 mock game state. Unit and integration tests focus on critical invariants; they
 do not establish production-scale security or long-term economic balance.
 
-## Graphics through 0.3.4
+## Graphics and the current working tree
 
 The 0.3.0 renderer uses original generated meadow, gravel, limestone and slate
 materials, a detailed glazed tractor cab and treaded wheels, instanced foliage,
@@ -52,6 +56,11 @@ consistent doors and windows, a compact tractor cab, human-scale street furnitur
 and footprint-aware movement collision. It changes existing presentation and
 navigation without adding historical game systems.
 
+The unreleased expansion adds timber siding, paint choices, occupied/working chimney smoke,
+visible crop growth, seasonal foliage, snow coverage, precipitation and moving
+sunlight. Effects and projectiles use bounded batches. See [the player guide](PLAYING.md)
+for the new gameplay loops and their deliberately documented balance choices.
+
 ## Implemented with a smaller scope than the spec
 
 - Worlds are logically isolated simulations in one host process. Independent
@@ -61,10 +70,10 @@ navigation without adding historical game systems.
   buoyancy, trailer physics, balloon handling and robust lag compensation need
   further work.
 - Robocrow control uses one built-in drone type rather than eight ranked types.
-  Weapons use tap-fire and energy; charged javelins, ammunition economies,
-  configurable kill rewards and competitive balancing remain to be developed.
+  Detailed per-vehicle weapon loadouts, additional reward sources and sustained
+  competitive balance testing remain to be developed.
 - Town membership, a first-candidate mayor and town tax exist. Full scheduled
-  elections, leases, war declarations, battles, capture-the-flag, turrets and
+  elections, leases, war declarations, territorial battles, turrets and
   protected town zoning do not yet have complete gameplay.
 - Tribes/families currently store group names. Hitching and item gifts exist in
   the protocol; richer membership permissions, negotiated barter and their
@@ -80,9 +89,9 @@ navigation without adding historical game systems.
   numeric world variables and reputation changes. The full historical event and
   command catalogue, timers, transaction cancellation and scripted OSD are not
   wired. Worker limits protect the host from runaway handlers.
-- Crop production is a timed recipe. Annual harvest scheduling, fertilizer,
-  dormant crop growth, richer diets and precise historic death/estate behaviour
-  still need fidelity work.
+- Crop plots now have dated harvests and seasonal planting windows. Perennial
+  dormancy, livestock, richer diets, exact historical crop balance and precise
+  historic death/estate behaviour still need fidelity work.
 - Space is a functional map and trading layer, not a real-time cockpit flight
   simulation. Different world processes and public registry registration need a
   federation protocol.

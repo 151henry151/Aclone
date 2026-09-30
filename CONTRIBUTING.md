@@ -63,3 +63,10 @@ Be kind and concrete. Critique code and ideas, not people. Respect privacy,
 accessibility needs and different levels of experience. Harassment, threats,
 identity-based attacks and posting private information are not acceptable.
 Report security issues privately using the process in SECURITY.md.
+
+For seasonal visuals and the crop/galaxy interface, build first and run
+`npx tsx scripts/seasons.ts`. It creates and removes its own disposable local
+server/database. `SCREENSHOT_GPU=1` selects native GPU rendering for captures;
+`TEST_GPU=1 npm run test:e2e` does the same for browser checks on machines with
+working headless GPU support. The default browser suite retains software rendering
+coverage. Avoid running CPU-heavy unit/load suites alongside software browser tests.

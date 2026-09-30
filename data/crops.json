@@ -1,0 +1,56 @@
+{
+  "wheat": {
+    "name": "Wheat",
+    "days": 18,
+    "yield": 60,
+    "seed": 750,
+    "seasons": ["Spring", "Autumn"],
+    "family": "grain",
+    "thirst": 0.5
+  },
+  "potatoes": {
+    "name": "Potatoes",
+    "days": 12,
+    "yield": 45,
+    "seed": 900,
+    "seasons": ["Spring", "Summer"],
+    "family": "root",
+    "thirst": 0.4
+  },
+  "hops": {
+    "name": "Hops",
+    "days": 30,
+    "yield": 70,
+    "seed": 1800,
+    "seasons": ["Spring", "Summer"],
+    "family": "vine",
+    "thirst": 0.7
+  },
+  "grapes": {
+    "name": "Grapes",
+    "days": 48,
+    "yield": 80,
+    "seed": 3000,
+    "seasons": ["Spring"],
+    "family": "vine",
+    "thirst": 0.5
+  },
+  "tea": {
+    "name": "Tea",
+    "days": 36,
+    "yield": 65,
+    "seed": 2400,
+    "seasons": ["Spring", "Summer"],
+    "family": "leaf",
+    "thirst": 0.8
+  },
+  "coffee": {
+    "name": "Coffee",
+    "days": 60,
+    "yield": 90,
+    "seed": 4500,
+    "seasons": ["Spring"],
+    "family": "bean",
+    "thirst": 0.7
+  }
+}

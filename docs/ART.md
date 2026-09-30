@@ -87,3 +87,22 @@ scale screenshots. It uses real registration, world creation and owner teleport
 commands, and checks browser errors. `CHROMIUM_PATH` is supported. The character
 capture also shows the resized cab. Review first-person views after changing cab
 or seat dimensions, and test both root and `/aclone/` builds.
+
+## Unreleased seasonal and customization work
+
+Cottage siding and paint swatches are original data-driven variants in
+`appearance.json`. Timber walls use horizontal board seams and matching gables;
+style keys are saved at construction. Chimney emitter tips are part of each
+building model. Occupancy is authoritative; smoke particles are visual only.
+
+Seasonal coverage is a shader uniform on terrain, upward-facing static surfaces
+and foliage, with autumn tinting. The sky and directional light share the solar
+trajectory. Rain/snow and smoke use bounded point pools. Nearby farm plots use
+instanced stalks/leaves and update at four growth stages; projectiles use one
+bounded instanced draw instead of a mesh allocation per shot.
+
+Build, then run `SCREENSHOT_GPU=1 npx tsx scripts/seasons.ts` to reproduce the
+seasonal/cottage/farm/galaxy images. It owns a disposable server and uses staged
+world dates and crop state, followed by real UI actions including harvesting.
+It checks page/console errors and cleans up its database. Use `CHROMIUM_PATH`
+when the installed Chromium is outside Playwright's default location.

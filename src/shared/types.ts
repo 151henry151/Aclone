@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 export type Stock = Record<string, number>;
 export type Input = { throttle: number; steer: number; boost: boolean; lift?: number };
-export type Task = { kind: string; end: number; building?: string };
+export type Task = { kind: string; end: number; building?: string; plot?: number };
 export interface Player {
   id: string;
   name: string;
@@ -29,6 +29,7 @@ export interface Player {
   atHome: boolean;
   vehicle: number;
   fleet?: number[];
+  tractorPaint?: string;
   engine: boolean;
   lights: boolean;
   task?: Task;
@@ -38,6 +39,11 @@ export interface Player {
   fishAt?: number;
   fishUntil?: number;
   lastShot: number;
+  weaponCharge?: { weapon: string; start: number };
+  ammo?: Stock;
+  invulnerableUntil?: number;
+  lastRewardedDeath?: number;
+  combatVehicle?: number;
   lastHorn: number;
   energy: number;
   kills: number;
@@ -79,6 +85,9 @@ export interface Building {
   production?: Recipe;
   forSale?: boolean;
   construction?: Stock;
+  style?: string;
+  smoking?: boolean;
+  plots?: import('./farming.ts').Plot[];
 }
 export interface Ledger {
   id: number;
@@ -104,6 +113,8 @@ export interface Settings {
   wageTax: number;
   startingCash: number;
   fighting: boolean;
+  weaponMode?: string;
+  killReward?: number;
   locked: boolean;
   chatLocked: boolean;
   seaLevel: number;
@@ -141,6 +152,7 @@ export interface World {
   ball: { x: number; z: number; vx: number; vz: number };
   scores: number[];
   round: number;
+  combat?: import('./combat.ts').Combat;
   projectiles: {
     id: number;
     owner: string;
@@ -152,6 +164,10 @@ export interface World {
     vy: number;
     vz: number;
     ttl: number;
+    age?: number;
+    power?: number;
+    game?: string;
+    team?: number;
   }[];
   raceBest: Record<string, number>;
   towns: { name: string; tax: number; mayor?: string; residents: string[]; wars: string[] }[];

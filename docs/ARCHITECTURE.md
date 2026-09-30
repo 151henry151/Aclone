@@ -25,6 +25,7 @@ cross-service exchange; it is tracked as a remaining specification gap.
 - `src/shared/catalog.ts`, `data/`: original default content and tuning.
 - `src/shared/simulation.ts`: pure synchronous actions, validation, motion,
   accounting, production, survival and minigames. No network or filesystem.
+- `src/shared/environment.ts`, `farming.ts`, `combat.ts`, `galaxy.ts`: calendar, crop lifecycle, match/weapon rules and route/trade calculations.
 - `src/server/store.ts`: SQLite schema, transactional snapshots, append-only
   ledger, online backups.
 - `src/server/universe.ts`: token hashes, pilot records, ships, jumps and trading.
@@ -166,3 +167,22 @@ individual volumes. A pilot already inside a newly enlarged or edited footprint
 may reduce penetration to escape; outside pilots cannot enter. This is still
 simple footprint collision, not a mesh physics engine. The plan cache is keyed
 by building kind and bounded visual variant, not individual player or building ID.
+
+## Expansion persistence
+
+Crop harvests reserve a plot and complete through the existing saved task system.
+Capacity, funds and permission are checked again at completion; a failed harvest
+leaves the crop available. Growth and climate are derived from saved simulation
+time, so catch-up tick sizes do not change yields. Offline survival remains paused.
+
+Universe mutations operate on a copy inside a SQLite transaction. The connected
+account is replaced only after commit. Station stock changes share that transaction.
+Jumps save their destination and wall-clock arrival before departure; reconnecting
+or the live timer settles a due arrival once. Contracts and discoveries stay in the
+account snapshot. No new external services or database schema are required.
+
+Smoke (128 particles), precipitation (900 particles) and ordnance (512 instances)
+use fixed render pools. Nearby crop fields rebuild only when their crop/growth stage
+changes. Snow and autumn colours use shared shader uniforms, avoiding seasonal
+world rebuilds. Combat simulation expires ordnance during large offline catch-up
+steps instead of inflicting offline kills.

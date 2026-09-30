@@ -3,6 +3,8 @@
 `data/` contains the original default content. JSON values are versioned with
 the application. Keep identifiers stable: saves refer to them by key.
 
+- `appearance.json`: validated cottage styles and garage paint choices/pricing.
+- `crops.json`: planting seasons, growth days, seed cost, base yield, family and water demand.
 - `items.json`: display name, integer weight, price in hundredths of a denarius,
   optional food, drink or fuel effect.
 - `recipes.json`: integer input/output quantities, profession, seconds and tier.
@@ -41,3 +43,24 @@ acceleration, steering, armour and fuel overrides. These stay in the world
 snapshot; they do not modify the shared default JSON files. Custom recipes use
 their own production boundaries. Previously purchased vehicles are retained in
 the pilot's per-world fleet and are not charged for again when selected.
+
+## Seasonal and combat rules
+
+Farms use `farming.ts`, not the old automatic farm recipe; the recipe key still
+identifies the farmer profession. Four plot records hold planted/ready times,
+care, previous crop family and optional harvest reservation. World owners cannot
+replace farm plots with a custom production recipe. Existing stock is preserved.
+New public-market coffee/potato quotes are filled in on load without overwriting
+existing quotes, and without creating free stock.
+
+`environment.ts` provides the fixed 600-second economic calendar and seeded
+three-day weather fronts. `dayLength` changes only the visual clock. Midnight
+matches the date boundary at default speed. The original crop values and planting
+windows are documented in [PLAYING.md](PLAYING.md).
+
+`weaponMode` is `energy` or `ammo`; `killReward` is a nonnegative integer up to
+100000 hundredths of a denarius. Old saves receive missing default settings.
+Projectile physics uses bounded 20ms substeps; at most 24 projectiles per player
+and 512 per world can exist. Match parameters and ammunition allotments are in
+`combat.ts`. Ship fittings, trade quotes and route planning are in `galaxy.ts`.
+The `market:SYSTEM` metadata records station stock and hourly replenishment.

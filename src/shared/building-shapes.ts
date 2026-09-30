@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { appearance, cottageStyle } from './appearance';
 /** One world unit is one metre. Shared by geometry, picking, planting and collision. */
 export interface BuildingVolume {
   x: number;
@@ -15,6 +16,7 @@ export interface BuildingPlan {
   wall: string;
   trim: string;
   doorHeight: number;
+  siding: 'stone' | 'wood';
 }
 const volume = (
   width: number,
@@ -26,11 +28,16 @@ const volume = (
   z = 0,
 ): BuildingVolume => ({ width, depth, eaves, rise, roof, x, z });
 const plans = new Map<string, BuildingPlan>();
-export function buildingPlan(b: { kind: string; id: string }): BuildingPlan {
+export function buildingPlan(b: { kind: string; id: string; style?: string }): BuildingPlan {
   let seed = 0;
   for (const c of b.id) seed = (Math.imul(seed, 31) + c.charCodeAt(0)) >>> 0;
   const variant = seed % 3;
-  const key = b.kind + ':' + (b.kind === 'home' ? variant : 0);
+  const key =
+    b.kind +
+    ':' +
+    (b.kind === 'home' ? seed % appearance.cottages.length : 0) +
+    ':' +
+    (b.style ?? '');
   const cached = plans.get(key);
   if (cached) return cached;
   let style = b.kind,
@@ -151,7 +158,16 @@ export function buildingPlan(b: { kind: string; id: string }): BuildingPlan {
       style = 'cottage';
       volumes = [volume(7, 5.8, 2.8, 1.6)];
   }
-  const plan = { style, volumes, wall, trim, doorHeight: 2.1 };
+  let siding: 'stone' | 'wood' = 'stone';
+  if (b.kind === 'home') {
+    const chosen =
+      cottageStyle(b.style ?? '') ?? appearance.cottages[seed % appearance.cottages.length];
+    wall = chosen.wall;
+    trim = chosen.trim;
+    siding = chosen.siding as 'stone' | 'wood';
+    volumes[0].roof = chosen.roof as BuildingVolume['roof'];
+  }
+  const plan = { style, volumes, wall, trim, siding, doorHeight: 2.1 };
   plans.set(key, plan);
   return plan;
 }
@@ -171,7 +187,7 @@ export function buildingBounds(plan: BuildingPlan) {
   };
 }
 export function buildingPenetration(
-  b: { kind: string; id: string; x: number; z: number; rotation: number },
+  b: { kind: string; id: string; style?: string; x: number; z: number; rotation: number },
   x: number,
   z: number,
   height: number,

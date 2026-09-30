@@ -27,6 +27,14 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     m.position.copy(a).add(b).multiplyScalar(0.5);
     m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize());
   }
+  function wallFinish(m: T.Mesh<T.BufferGeometry, T.Material | T.Material[]>) {
+    if (plan.siding === 'wood') {
+      const material = m.material as T.MeshStandardMaterial;
+      material.color.set(plan.wall);
+      return m;
+    }
+    return finish(m, 'stone', 3, b.construction ? '#a6a18d' : plan.wall);
+  }
   function roof(v: BuildingVolume) {
     const w = v.width / 2 + 0.28,
       d = v.depth / 2 + 0.28,
@@ -114,7 +122,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       shape.lineTo(v.width / 2, 0);
       shape.closePath();
       for (const side of [-1, 1]) {
-        const face = finish(
+        const face = wallFinish(
           mesh(
             new T.ShapeGeometry(shape),
             '#ffffff',
@@ -122,10 +130,21 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
             v.eaves,
             v.z + side * (v.depth / 2 + 0.015),
           ),
-          'stone',
-          3,
-          plan.wall,
         );
+        if (plan.siding === 'wood') {
+          for (let y = 0.2; y < h - 0.1; y += 0.22) {
+            const width = v.width * (1 - y / h);
+            box(
+              width,
+              0.025,
+              0.025,
+              plan.trim,
+              v.x,
+              v.eaves + y,
+              v.z + side * (v.depth / 2 + 0.045),
+            );
+          }
+        }
         if (side < 0) face.rotation.y = Math.PI;
         (face.material as T.Material).side = T.DoubleSide;
       }
@@ -160,6 +179,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     box(1.5, 0.12, 0.65, '#aaa58f', x, 0.06, z + 0.25);
   }
   function chimney(x: number, z: number, top: number) {
+    (root.userData.chimneys ??= []).push(new T.Vector3(x, top + 0.4, z));
     finish(box(0.62, top, 0.68, '#ffffff', x, top / 2, z), 'stone', 2, '#b79780');
     box(0.8, 0.16, 0.86, '#b6aa94', x, top, z);
     for (const dx of [-0.17, 0.17]) cylinder(0.095, 0.3, '#907360', x + dx, top + 0.2, z);
@@ -188,12 +208,14 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return root;
   }
   for (const v of plan.volumes) {
-    finish(
-      box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z),
-      'stone',
-      3,
-      b.construction ? '#a6a18d' : plan.wall,
-    );
+    wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z));
+    if (plan.siding === 'wood' && !b.construction) {
+      for (let y = 0.22; y < v.eaves; y += 0.22)
+        for (const side of [-1, 1]) {
+          box(v.width, 0.025, 0.04, plan.trim, v.x, y, v.z + side * (v.depth / 2 + 0.015));
+          box(0.04, 0.025, v.depth, plan.trim, v.x + side * (v.width / 2 + 0.015), y, v.z);
+        }
+    }
     box(v.width + 0.15, 0.2, v.depth + 0.15, '#9d9f8e', v.x, 0.1, v.z);
     if (b.construction) {
       for (const side of [-1, 1])
@@ -309,6 +331,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     }
   }
   if (b.kind === 'mill') {
+    chimney(4.5, -1, 5.2);
     // A mill wheel gives a recognizable silhouette without adding animated draw calls.
     const wheel = mesh(
       new T.TorusGeometry(1.6, 0.16, 8, 28),
@@ -347,6 +370,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       '#968676',
     );
     cylinder(0.57, 0.2, '#79786a', main.width * 0.35, height, -main.depth * 0.3);
+    (root.userData.chimneys ??= []).push(
+      new T.Vector3(main.width * 0.35, height + 0.2, -main.depth * 0.3),
+    );
   }
   if (b.kind === 'starport') {
     const tower = plan.volumes[1];

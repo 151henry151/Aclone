@@ -6,6 +6,27 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-29
+
+### Added
+
+- Balanced team deathmatch, capture-point and capture-the-flag rounds, protected respawns, ammunition refits, server-timed javelin charges, bouncing grenades, armed mines and optional treasury kill rewards.
+- A seven-system galaxy route map, saved jump journeys, ship hangars and upgrades, shared station inventories, courier contracts, surveys, alien-ship discovery unlocks and stranded-pilot rescue.
+- Four seasonal farm plots with six crops, planting windows, rain and irrigation, fertilizer, family rotation, frost effects, dated harvests and funded harvest shifts that finish safely after disconnecting.
+- Four seasons, moving sunlight, sunrise and sunset, rain, snow, autumn foliage and winter coverage on ground and buildings. Ten-minute days and the 365-day calendar are aligned at default speed.
+- Six stone and timber cottage styles, seven garage paint finishes, and chimney smoke driven by online occupants or nearby active workers.
+- A detailed player guide, persistence and multiplayer regression coverage, and reproducible seasonal gameplay captures.
+
+### Changed
+
+- Farms produce scheduled crops instead of automatically adding wheat every production cycle. Existing stock is retained; planting and harvest care now determine future output.
+- Bound smoke, precipitation and projectile rendering in shared pools; crop visuals update by growth stage without rebuilding the village.
+
+### Fixed
+
+- Prevent fast shots crossing safe-zone boundaries, friendly fire in arena teams, duplicate harvest collection, and repeated match-result rewards.
+- Commit station stock and pilot cargo together, preserving both on failed writes and completing saved journeys after reconnecting.
+
 ## [0.3.4] - 2026-09-29
 
 ### Changed

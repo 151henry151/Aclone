@@ -2,6 +2,7 @@
 import { DatabaseSync, backup } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { defaults, items } from '../shared/catalog.ts';
 import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
@@ -39,7 +40,18 @@ export class Store {
     return this.db
       .prepare('SELECT state,saved FROM worlds')
       .all()
-      .map((row) => ({ world: JSON.parse(String(row.state)) as World, saved: Number(row.saved) }));
+      .map((row) => {
+        const world = JSON.parse(String(row.state)) as World;
+        world.settings = { ...defaults, ...world.settings };
+        for (const b of world.buildings)
+          if (b.government && b.kind === 'market')
+            for (const key of ['potatoes', 'coffee']) {
+              b.buy[key] ??= Math.round(items[key].price * 0.6);
+              b.sell[key] ??= items[key].price;
+              b.stock[key] ??= 0;
+            }
+        return { world, saved: Number(row.saved) };
+      });
   }
   transaction<T>(fn: () => T): T {
     this.db.exec('BEGIN IMMEDIATE');

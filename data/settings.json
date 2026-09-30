@@ -21,5 +21,7 @@
   "importCap": 100,
   "fishingMode": 5,
   "exchangeRate": 100,
-  "exchangeCap": 100
+  "exchangeCap": 100,
+  "weaponMode": "energy",
+  "killReward": 0
 }

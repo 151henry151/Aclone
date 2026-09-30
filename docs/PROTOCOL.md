@@ -93,3 +93,21 @@ available. WebSocket compression is negotiated automatically.
 Close code 4004 requires signing in again after key revocation. Code 4005 means
 the client could not keep up; reconnect with a fresh full snapshot. The server
 permits only one active socket per pilot, including pilots in space.
+
+## Gameplay expansion actions
+
+- `construct` accepts an optional `style` from `data/appearance.json` for homes.
+- `paint`: `{building, color}` at a garage; `refit`: `{building}` for ammunition.
+- `farm`: `{building, plot, operation, crop?}`. Plot is 0–3; operations are
+  `plant`, `water`, `fertilize`, `harvest`. A harvest starts a saved 15-second task.
+- `joinCombat`: `{mode}` where mode is `deathmatch`, `capture`, or `ctf`.
+  `leaveGame` exits. `chargeWeapon`: `{weapon: "javelin"}` begins a server timer;
+  `fire`: `{weapon}` releases it. Client-supplied damage or charge duration is ignored.
+- Space-only `upgrade`: `{kind: "drive" | "hold"}`, `courier`:
+  `{operation: "accept" | "deliver" | "cancel"}`, `survey`, and `rescue`.
+
+`welcome` and `space` include current station `market` stock. Accounts may include
+`transit: {destination, arrives}`; the server sends another `space` after committing
+arrival. Timestamps are Unix seconds. Planetside state includes optional crop plots,
+building `smoking`, public `tractorPaint` and `atHome`, and world combat state.
+All new records are saved server-side; older saves acquire defaults lazily.

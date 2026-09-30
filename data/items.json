@@ -148,5 +148,17 @@
     "name": "Grapes",
     "weight": 1,
     "price": 2000
+  },
+  "potatoes": {
+    "name": "Potatoes",
+    "weight": 1,
+    "price": 1500,
+    "food": 8000
+  },
+  "coffee": {
+    "name": "Coffee",
+    "weight": 1,
+    "price": 3200,
+    "drink": 18000
   }
 }

@@ -1,0 +1,62 @@
+{
+  "paintPrice": 2500,
+  "paints": [
+    { "id": "rust", "name": "Tractor red", "color": "#ad382a" },
+    { "id": "moss", "name": "Moss green", "color": "#526c42" },
+    { "id": "blue", "name": "Harbour blue", "color": "#416e97" },
+    { "id": "plum", "name": "Plum purple", "color": "#80578f" },
+    { "id": "ochre", "name": "Harvest gold", "color": "#c39739" },
+    { "id": "cream", "name": "Warm cream", "color": "#d8cba4" },
+    { "id": "charcoal", "name": "Charcoal", "color": "#494c50" }
+  ],
+  "cottages": [
+    {
+      "id": "stone-gable",
+      "name": "Stone gable",
+      "siding": "stone",
+      "wall": "#e6ddc8",
+      "trim": "#526d60",
+      "roof": "gable"
+    },
+    {
+      "id": "white-clapboard",
+      "name": "White clapboard",
+      "siding": "wood",
+      "wall": "#d8d5bd",
+      "trim": "#576d7b",
+      "roof": "gable"
+    },
+    {
+      "id": "red-timber",
+      "name": "Red timber",
+      "siding": "wood",
+      "wall": "#9b5947",
+      "trim": "#dad2b7",
+      "roof": "gable"
+    },
+    {
+      "id": "stone-hip",
+      "name": "Hipped stone",
+      "siding": "stone",
+      "wall": "#cbbfaa",
+      "trim": "#724e41",
+      "roof": "hip"
+    },
+    {
+      "id": "green-cabin",
+      "name": "Green timber cabin",
+      "siding": "wood",
+      "wall": "#819078",
+      "trim": "#e1d4b5",
+      "roof": "hip"
+    },
+    {
+      "id": "honey-timber",
+      "name": "Honey timber",
+      "siding": "wood",
+      "wall": "#bba078",
+      "trim": "#5a6150",
+      "roof": "gable"
+    }
+  ]
+}

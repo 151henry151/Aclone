@@ -43,6 +43,7 @@ test('galaxy range, credits and inventory are server-owned', () => {
   assert.throws(() => u.travel(a, 'farthing'), /range/);
   u.travel(a, 'brindle');
   assert.equal(a.credits, 46);
+  u.arrive(a, a.transit!.arrives);
   assert.throws(() => u.trade(a, 'electronics', -1, true));
   assert.throws(() => u.buyShip(a, 'alien'));
   s.close();

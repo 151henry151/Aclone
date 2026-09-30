@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
+import { calendar, weatherAt } from '../shared/environment';
+import { crops, cropStatus } from '../shared/farming';
+import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
 import { GameScene } from './scene';
@@ -47,6 +51,7 @@ let registry: {
   owner: string;
   locked: boolean;
 }[] = [];
+let market: { stock: Record<string, number> } | undefined;
 let panel = '',
   selected = '',
   tab = 'Main',
@@ -136,6 +141,7 @@ async function connect() {
     if (msg.type === 'welcome') {
       account = msg.account;
       registry = msg.galaxy.worlds;
+      market = msg.market;
       $('connection').textContent = 'CONNECTED';
       if (!world) showGalaxy();
     }
@@ -158,11 +164,15 @@ async function connect() {
     if (msg.type === 'space') {
       account = msg.account;
       registry = msg.galaxy.worlds;
+      market = msg.market;
       world = undefined;
       me = undefined;
       localStorage.removeItem('aclone.world');
+      const reopen = panel === 'shipyard';
       closePanel();
-      showGalaxy();
+      void showGalaxy().then(() => {
+        if (reopen) openPanel('shipyard');
+      });
     }
     if (msg.type === 'result') {
       if (msg.message !== 'Parp.') toast(msg.message, !msg.ok);
@@ -214,11 +224,23 @@ async function showGalaxy() {
   if (!account) return;
   const system = galaxy.systems.find((s) => s.id === account!.system)!;
   $('overlay').innerHTML =
-    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">GALACTIC DIRECTORY / ${esc(system.name.toUpperCase())} SYSTEM</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div><div class="world-cards">${registry
+    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">GALACTIC DIRECTORY / ${esc(system.name.toUpperCase())} SYSTEM</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div>${account.transit ? `<div class="notice">Jumping to ${esc(galaxy.systems.find((s) => s.id === account!.transit!.destination)?.name)}. <span id="jump-countdown">${Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000))}</span>s until arrival. Your flight is saved if you disconnect.</div>` : ''}<div class="star-map"><svg viewBox="0 0 700 260" role="img" aria-label="Galaxy map; bright routes are within your current jump range">${galaxy.systems
+      .flatMap((s, i) =>
+        galaxy.systems
+          .slice(i + 1)
+          .filter((t) => Math.hypot(s.x - t.x, s.y - t.y) <= shipStats(account!).range)
+          .map(
+            (t) =>
+              `<line x1="${80 + (s.x + 3) * 28}" y1="${220 - s.y * 23}" x2="${80 + (t.x + 3) * 28}" y2="${220 - t.y * 23}" stroke="#58716a"/>`,
+          ),
+      )
+      .join(
+        '',
+      )}${galaxy.systems.map((s) => `<circle cx="${80 + (s.x + 3) * 28}" cy="${220 - s.y * 23}" r="${s.id === account!.system ? 8 : 5}" fill="${s.id === account!.system ? '#ffd889' : '#c7dbd8'}"/><text x="${90 + (s.x + 3) * 28}" y="${215 - s.y * 23}" fill="#ece8cc" font-size="13">${esc(s.name)}</text>`).join('')}</svg><p>${esc(shipStats(account).name)} · ${shipStats(account).range} pc jump range. Routes below show intermediate stops and fuel costs.</p></div><div class="world-cards">${registry
       .filter((r) => r.system === account!.system)
       .map(
         (r, i) =>
-          `<article class="world-card"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><h2>${esc(r.name)}</h2><p>${r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p><div class="world-facts"><span>PERSISTENT WORLD</span><span>${r.owner === account!.id ? 'YOUR WORLD' : 'COMMUNITY PARISH'}</span></div>${button('Land on this world <span>↗</span>', 'land', `data-id="${r.id}"`, 'primary wide')}</div></article>`,
+          `<article class="world-card"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><h2>${esc(r.name)}</h2><p>${r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p><div class="world-facts"><span>PERSISTENT WORLD</span><span>${r.owner === account!.id ? 'YOUR WORLD' : 'COMMUNITY PARISH'}</span></div>${button('Land on this world <span>↗</span>', 'land', `data-id="${r.id}" ${account!.transit ? 'disabled' : ''}`, 'primary wide')}</div></article>`,
       )
       .join(
         '',
@@ -226,9 +248,9 @@ async function showGalaxy() {
       .filter((s) => s.id !== account!.system)
       .map((s) =>
         button(
-          `${s.name} · ${Math.hypot(s.x - system.x, s.y - system.y).toFixed(1)} pc`,
+          `${s.name} · ${Math.hypot(s.x - system.x, s.y - system.y).toFixed(1)} pc · ${Math.ceil(Math.hypot(s.x - system.x, s.y - system.y))}cr${Math.hypot(s.x - system.x, s.y - system.y) > shipStats(account!).range ? ' · via ' + (route(account!.system, s.id, shipStats(account!).range).slice(1, -1).join(' → ') || 'upgrade required') : ''}`,
           'jump',
-          `data-id="${s.id}"`,
+          `data-id="${s.id}" ${account!.transit || Math.hypot(s.x - system.x, s.y - system.y) > shipStats(account!).range ? 'disabled' : ''}`,
         ),
       )
       .join(
@@ -244,7 +266,7 @@ function updateHud() {
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
-    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · Day ${(days % 365) + 1}, Year ${Math.floor(days / 365)} · ${world.template}`;
+    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation} · ${world.template}`;
   $('pilot-name').textContent = me.name;
   $('age').textContent = 'Age ' + Math.floor(me.age);
   $('cash').textContent = money(me.cash, world.settings.denariiPerSheckle);
@@ -308,6 +330,9 @@ function updateHud() {
       : me.job
         ? 'Keep working at your employer to earn wages when production runs.'
         : 'Earn cash at the Odd Jobs Office. Learn a skill at the school. Own a business. In roughly that order.';
+  if (me.game === 'combat' && world.combat)
+    $('objective').textContent =
+      `${world.combat.mode} · ${me.team === 0 ? 'Rust' : 'Moss'} team · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
   drawMap();
   if (
     me.game === 'fishing' &&
@@ -432,7 +457,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -448,11 +473,11 @@ function renderPanel() {
     if (!account) return;
     modal(
       'A slightly better spaceship.',
-      `<p>${account.credits} galactic credits · ${Object.values(account.cargo).reduce((s, n) => s + n, 0)} cargo items</p><div class="cards">${galaxy.ships.map((s) => `<article><h3>${esc(s.name)}</h3><p>${s.range} pc range · ${s.capacity} cargo · ${s.price} cr</p>${button(s.id === account!.ship ? 'Current ship' : 'Buy ship', 'ship', `data-id="${s.id}" ${s.id === account!.ship ? 'disabled' : ''}`)}</article>`).join('')}</div><h3>Station trading</h3><p>Buy here, jump, sell elsewhere. Station prices differ by system.</p><form data-action="spaceTrade">${select(
+      `<p>${account.credits} galactic credits · ${Object.values(account.cargo).reduce((s, n) => s + n, 0)} cargo items</p><div class="cards">${galaxy.ships.map((s) => `<article><h3>${esc(s.name)}</h3><p>${s.range} pc range · ${s.capacity} cargo · ${s.price} cr</p>${button(s.id === account!.ship ? 'Current ship' : account!.hangar?.includes(s.id) ? 'Fly owned ship' : 'Buy ship', 'ship', `data-id="${s.id}" ${s.id === account!.ship ? 'disabled' : ''}`)}</article>`).join('')}</div><h3>Ship fittings</h3><p>Fleet-wide fittings stay installed when switching ships. Current range ${shipStats(account).range} pc · capacity ${shipStats(account).capacity}.</p>${['drive', 'hold'].map((kind) => button(`${kind === 'drive' ? 'Jump drive +2 pc' : 'Cargo hold +20'} · level ${account!.upgrades?.[kind] ?? 0}/3 · ${((account!.upgrades?.[kind] ?? 0) + 1) * (kind === 'drive' ? 80 : 60)}cr`, 'upgrade', `data-id="${kind}" ${(account!.upgrades?.[kind] ?? 0) >= 3 ? 'disabled' : ''}`)).join('')}<h3>Courier desk</h3>${account.mission ? `<p>Ten sealed packages to ${esc(galaxy.systems.find((s) => s.id === account!.mission!.destination)?.name)} · reward ${account.mission.reward}cr. No expiry while offline.</p>${button('Deliver contract', 'courier', 'data-id="deliver"')}${button('Cancel contract', 'courier', 'data-id="cancel"')}` : `<p>Carry ten sealed packages to a reachable station. Keep jump fuel in reserve.</p>${button('Accept delivery contract', 'courier', 'data-id="accept"')}`}<h3>Exploration</h3><p>Survey each system once for 15cr. Frontier surveys at Lantern, Rime and The Vessel reveal relics; three relics unlock the alien ship. ${account.discoveries?.length ?? 0}/3 found.</p>${button('Survey this system', 'survey', ' ' + (account.visited?.includes(account.system) ? 'disabled' : ''))}${button('Stranded pilot rescue', 'rescue')}<p class="note">Free rescue to Hearth is available with an empty hold, no contract and under 10cr.</p><h3>Station trading</h3><p>Buy here, jump, sell elsewhere. Station prices differ by system.</p><form data-action="spaceTrade">${select(
         'item',
         ['electronics', 'rareEarth', 'shipParts'].map((id) => [
           id,
-          `${items[id].name} · carried ${account!.cargo[id] ?? 0}`,
+          `${items[id].name} · buy ${stationPrice(account!.system, id).buy} / sell ${stationPrice(account!.system, id).sell}cr · station ${market?.stock[id] ?? 200} · carried ${account!.cargo[id] ?? 0}`,
         ]),
         'Cargo',
       )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select(
@@ -507,7 +532,7 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
+      `${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced Rust and Moss teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
         world.raceBest,
       )
         .map(([n, t]) => `${esc(n)} ${t.toFixed(1)}s`)
@@ -521,7 +546,7 @@ function renderPanel() {
   if (panel === 'construction') {
     modal(
       'Build something useful.',
-      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply wood and stone blocks to finish construction. Stand on clear ground first.</p><div class="directory">${Object.entries(
+      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply wood and stone blocks to finish construction. Stand on clear ground first.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
         definitions,
       )
         .filter(([, d]) => d.tier <= world!.tier)
@@ -606,8 +631,34 @@ function buildingWindow(b: Building) {
           ),
         )
         .join('')}</div>`;
+    if (b.kind === 'garage')
+      html += `<h3>Tractor paint shop</h3><p>A fresh finish costs ${money(appearance.paintPrice)}. Your choice stays with your tractor when you leave or sign out.</p><div class="paint-options">${appearance.paints.map((p) => `<button data-do="paint" data-id="${p.id}" data-building="${b.id}" ${!near || me!.tractorPaint === p.id ? 'disabled' : ''}><span class="paint-chip" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
+    if (b.kind === 'farm') {
+      html += `<h3>Four plots · ${calendar(world).season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p><div class="cards">${Array.from(
+        { length: 4 },
+        (_, i) => {
+          const plot = b.plots?.[i],
+            status = cropStatus(world!, b, i);
+          const attrs = `data-building="${b.id}" data-plot="${i}"`;
+          return `<article><h3>Plot ${i + 1} · ${plot?.crop ? esc(crops[plot.crop].name) : 'Fallow'}</h3>${
+            plot?.crop
+              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button('Fertilize · 10d', 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+              : `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
+                  'crop',
+                  Object.entries(crops)
+                    .filter(([, c]) => c.seasons.includes(calendar(world!).season))
+                    .map(([id, c]) => [id, `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`]),
+                )}<button>Plant seeds</button></form>`
+          }</article>`;
+        },
+      ).join(
+        '',
+      )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Harvest within six real hours of ripening for best yield; later crops retain at least 65% of their quality-adjusted yield.</p>`;
+    }
+    if (b.kind === 'garage' && world.settings.fighting)
+      html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
     if (b.kind === 'home')
-      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home automatically feeds you from its storeroom while you are offline.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom while you are online. Needs pause while you are offline.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (b.kind === 'starport')
       html += `<div class="notice">Local cash → galactic credits. ${world.settings.exchangeRate}d buys 1cr. Limit ${world.settings.exchangeCap}cr per real day.</div><form data-action="exchange">${field('Credits to receive', 'amount', 1, 'number', 'min="1" max="100"')}<button>Exchange</button></form>${button('Take off to space', 'takeoff', '', 'primary')}`;
     if (b.kind === 'bank')
@@ -627,7 +678,7 @@ function buildingWindow(b: Building) {
     if ((!b.owner || b.forSale) && b.owner !== me.id && !b.government)
       html += `<div class="purchase"><span>This building is for sale.<b>${money(b.price)}</b></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
     if (b.recipe || b.production)
-      html += `<div class="employment"><span>Employment · ${money(b.wage)} per production cycle · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? 'Work two cycles' : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
+      html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
     if (['sawmill', 'quarry', 'forge'].includes(b.kind))
       html += button(
         b.kind === 'forge' ? 'Craft tools (1 steel + 2 wood)' : 'Gather raw materials',
@@ -713,7 +764,16 @@ function editorWindow() {
             .map(([k, v]) =>
               typeof v === 'boolean'
                 ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k}</label>`
-                : field(k, k, v, 'number', 'step="any"'),
+                : k === 'weaponMode'
+                  ? select(
+                      k,
+                      [
+                        ['energy', 'Energy weapons'],
+                        ['ammo', 'Ammunition per life'],
+                      ],
+                      k,
+                    )
+                  : field(k, k, v, 'number', 'step="any"'),
             )
             .join('')}</div><button class="primary">Apply changes to server</button></form>`
         : tab === 'Landscape'
@@ -799,6 +859,12 @@ app.addEventListener('click', async (e) => {
       case 'jump':
         send({ type: 'jump', system: id });
         break;
+      case 'upgrade':
+        send({ type: 'upgrade', kind: id });
+        break;
+      case 'courier':
+        send({ type: 'courier', operation: id });
+        break;
       case 'ship':
         send({ type: 'ship', ship: id });
         closePanel();
@@ -843,8 +909,24 @@ app.addEventListener('click', async (e) => {
       case 'town':
         send({ type: 'town', building, operation: id });
         break;
+      case 'farm':
+        send({ type: 'farm', building, plot: Number(el.dataset.plot), operation: id });
+        break;
+      case 'paint':
+        send({ type: 'paint', building, color: id });
+        break;
       case 'construct':
-        send({ type: 'construct', kind: id });
+        send({
+          type: 'construct',
+          kind: id,
+          ...(id === 'home'
+            ? { style: (document.getElementById('cottage-style') as HTMLSelectElement).value }
+            : {}),
+        });
+        closePanel();
+        break;
+      case 'joinCombat':
+        send({ type: 'joinCombat', mode: id });
         closePanel();
         break;
       case 'joinGame':
@@ -978,7 +1060,12 @@ app.addEventListener('submit', async (e) => {
     } else if (form.id === 'settings-form') {
       const patch: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(world!.settings))
-        patch[k] = typeof v === 'boolean' ? data[k] === 'on' : Number(data[k]);
+        patch[k] =
+          typeof v === 'boolean'
+            ? data[k] === 'on'
+            : typeof v === 'string'
+              ? String(data[k])
+              : Number(data[k]);
       send({ type: 'settings', patch });
       (document.activeElement as HTMLElement)?.blur();
     } else if (form.id === 'script-form') {
@@ -1002,6 +1089,7 @@ app.addEventListener('submit', async (e) => {
       const values: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(data)) {
         values[k] = [
+          'plot',
           'quantity',
           'amount',
           'tax',
@@ -1148,7 +1236,7 @@ window.addEventListener('keydown', (e) => {
   if (key === 'c') scene.cameraMode = (scene.cameraMode + 1) % 3;
   if (key === ' ' || key === 'tab') {
     if (key === 'tab' && world.settings.fighting) {
-      send({ type: 'fire', weapon });
+      if (!e.repeat) send({ type: weapon === 'javelin' ? 'chargeWeapon' : 'fire', weapon });
       tone(60, 0.08);
     } else {
       send({ type: 'horn' });
@@ -1160,7 +1248,10 @@ window.addEventListener('keydown', (e) => {
     toast('Selected ' + weapons[weapon].name);
   }
 });
-window.addEventListener('keyup', (e) => keys.delete(e.key));
+window.addEventListener('keyup', (e) => {
+  keys.delete(e.key);
+  if (e.key === 'Tab' && weapon === 'javelin' && world && !panel) send({ type: 'fire', weapon });
+});
 window.addEventListener('blur', () => keys.clear());
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
@@ -1190,6 +1281,11 @@ setInterval(() => {
     }),
   );
 }, 50);
+setInterval(() => {
+  const timer = document.getElementById('jump-countdown');
+  if (timer && account?.transit)
+    timer.textContent = String(Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000)));
+}, 500);
 setInterval(() => {
   if (ws?.readyState === WebSocket.OPEN)
     ws.send(JSON.stringify({ type: 'ping', at: performance.now() }));

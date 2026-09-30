@@ -44,6 +44,7 @@ try {
     'screenshots.ts',
     'characters.ts',
     'streets.ts',
+    'seasons.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',

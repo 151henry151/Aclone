@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
 import {
   items,
   vehicles,
   buildings as catalog,
   recipes,
-  weapons,
   defaults,
   skills,
   checkpoints,
 } from './catalog.ts';
+import { farmAction, finishHarvest } from './farming.ts';
+import { appearance, cottageStyle, tractorPaint } from './appearance.ts';
 import { buildingBlocksMovement } from './building-shapes.ts';
 import type { World, Player, Building, Stock, Action, Input, Ledger, Settings } from './types.ts';
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -271,6 +273,10 @@ export function act(w: World, id: string, a: Action): string {
   const type = a.type;
   let result = 'Done. Quietly competent.';
   switch (type) {
+    case 'farm': {
+      farmAction(w, p, nearby(w, p, a.building), a);
+      break;
+    }
     case 'trade': {
       const b = nearby(w, p, a.building),
         item = str(a.item);
@@ -363,6 +369,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'production': {
       owner(p);
       const b = nearby(w, p, a.building);
+      requireThat(b.kind !== 'farm', 'Farm plots use the seasonal crop calendar');
       const readStock = (v: unknown) => {
         requireThat(v && typeof v === 'object' && !Array.isArray(v), 'Expected an item map');
         const stock: Stock = {};
@@ -455,7 +462,8 @@ export function act(w: World, id: string, a: Action): string {
     case 'job': {
       const b = nearby(w, p, a.building);
       requireThat(!p.job, 'Quit your current job first');
-      const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+      const recipe =
+        b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
       requireThat(recipe, 'No work at this building');
       requireThat(
         p.skills.includes(recipe.skill),
@@ -526,6 +534,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'home': {
+      requireThat(p.game !== 'combat', 'Leave combat before entering a home');
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'home' && b.owner === id, 'You need your own home');
       p.home = b.id;
@@ -548,8 +557,23 @@ export function act(w: World, id: string, a: Action): string {
       log(w, 'transfer', n, deposit ? id : id + ':bank', deposit ? id + ':bank' : id, 'bank');
       break;
     }
+    case 'paint': {
+      const b = nearby(w, p, a.building);
+      requireThat(b.kind === 'garage', 'Visit the garage to repaint your tractor');
+      const color = str(a.color);
+      requireThat(tractorPaint(color), 'Choose a paint from the garage palette');
+      requireThat(p.tractorPaint !== color, 'Your tractor already has that paint');
+      charge(w, p, appearance.paintPrice, 'tractor repaint');
+      p.tractorPaint = color;
+      result = 'Fresh paint. Same dependable tractor.';
+      break;
+    }
     case 'vehicle': {
       const slot = num(a.slot, 0, 23, true);
+      requireThat(
+        p.game !== 'combat' || [0, 5].includes(slot),
+        'Arena combat uses tractors or walking',
+      );
       requireThat(slot !== 7 && slot !== 6, 'Use a robocrow item; ostriches happen by accident');
       const fleet = p.fleet ?? [0, 5];
       requireThat(
@@ -577,6 +601,7 @@ export function act(w: World, id: string, a: Action): string {
       p.lights = !p.lights;
       break;
     case 'crow': {
+      requireThat(p.game !== 'combat', 'Leave combat before flying a robocrow');
       if (p.crowBody) {
         Object.assign(p, p.crowBody);
         delete p.crowBody;
@@ -593,7 +618,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'joinGame': {
       const game = str(a.game);
       requireThat(['hornball', 'race', 'fishing', 'kricket'].includes(game), 'Unknown game');
-      requireThat(!p.task, 'Finish your task first');
+      requireThat(!p.task && p.game !== 'combat', 'Finish your task or leave combat first');
       if (game === 'fishing') {
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
@@ -643,6 +668,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'leaveGame': {
+      leaveCombat(w, p);
       delete p.game;
       delete p.race;
       delete p.fishAt;
@@ -693,36 +719,27 @@ export function act(w: World, id: string, a: Action): string {
       }
       break;
     }
-    case 'fire': {
-      requireThat(w.settings.fighting, 'Fighting is disabled on this world');
-      requireThat(
-        !w.zones.some((z) => z.kind === 'safe' && distance(p, z) < z.radius),
-        'Weapons are disabled in safe zones',
-      );
-      const key = str(a.weapon),
-        weapon = weapons[key];
-      requireThat(weapon, 'Unknown weapon');
-      requireThat(w.time - p.lastShot >= weapon.delay, 'Weapon cooling down');
-      requireThat(p.energy >= weapon.energy, 'Not enough energy');
-      p.energy -= weapon.energy;
-      p.lastShot = w.time;
-      w.projectiles.push({
-        id: ++w.revision,
-        owner: id,
-        weapon: key,
-        x: p.x,
-        y: p.y + 2,
-        z: p.z,
-        vx: Math.sin(p.heading) * weapon.speed,
-        vy: weapon.gravity ? weapon.speed * 0.4 : 0,
-        vz: Math.cos(p.heading) * weapon.speed,
-        ttl: weapon.ttl,
-      });
+    case 'joinCombat':
+      joinCombat(w, p, str(a.mode));
+      break;
+    case 'chargeWeapon':
+    case 'fire':
+      fireWeapon(w, p, a);
+      break;
+    case 'refit': {
+      const b = nearby(w, p, a.building);
+      requireThat(b.kind === 'garage', 'Visit the garage');
+      requireThat(w.time - p.lastShot >= 10, 'Wait ten seconds after firing');
+      charge(w, p, 2500, 'ammunition refit');
+      p.ammo = { ...ammunition };
+      p.energy = 65000;
       break;
     }
     case 'construct': {
       const kind = str(a.kind),
         def = catalog[kind];
+      const style = kind === 'home' && a.style !== undefined ? str(a.style) : undefined;
+      requireThat(style === undefined || cottageStyle(style), 'Choose a cottage style');
       requireThat(def && def.tier <= w.tier, 'Building unavailable at this civilization tier');
       requireThat(
         !w.zones.some((z) => z.kind === 'noBuild' && distance(p, z) < z.radius),
@@ -746,6 +763,7 @@ export function act(w: World, id: string, a: Action): string {
       charge(w, p, Math.round(def.price * (1 + w.towns[0].tax)), 'construction');
       const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, p.x, p.z);
       b.owner = id;
+      if (style) b.style = style;
       b.investment = 0;
       b.stock = {};
       b.construction = { ...def.materials };
@@ -790,6 +808,11 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(Object.hasOwn(w.settings, key), 'Unknown setting');
         const old = w.settings[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (key === 'weaponMode')
+          requireThat(
+            typeof v === 'string' && ['energy', 'ammo'].includes(v),
+            'Choose energy or ammo',
+          );
         else num(v, key === 'seaLevel' ? -50 : 0, key === 'startingCash' ? 1e8 : 1e6);
         if (['salesTax', 'wageTax', 'offlineEfficiency'].includes(key)) num(v, 0, 1);
         if (['denariiPerSheckle', 'productionSeconds', 'maxAge', 'exchangeRate'].includes(key))
@@ -808,6 +831,7 @@ export function act(w: World, id: string, a: Action): string {
         )
           num(v, 0, 100000000, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
+        if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
         (clean as Record<string, unknown>)[key] = v;
@@ -883,6 +907,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'hitch': {
+      requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
       const target = w.players[String(a.player)];
       requireThat(
         target && target.id !== id && distance(p, target) < 10 && !target.hitch,
@@ -925,6 +950,8 @@ export function act(w: World, id: string, a: Action): string {
     case 'command':
       return command(w, p, str(a.text, 300));
     case 'respawn':
+      leaveCombat(w, p);
+      if (p.game === 'combat') delete p.game;
       p.x = 0;
       p.z = 17;
       p.y = 0.15;
@@ -1106,6 +1133,8 @@ export function move(w: World, p: Player, input: Input, dt: number) {
 }
 function kill(w: World, p: Player, comic = false) {
   p.deaths++;
+  p.ammo = { ...ammunition };
+  p.invulnerableUntil = w.time + 3;
   p.health = 60000;
   p.hunger = 5000;
   p.thirst = 5000;
@@ -1119,7 +1148,13 @@ function kill(w: World, p: Player, comic = false) {
   delete p.crowBody;
   if (comic) {
     p.vehicle = 6;
-    say(w, 'Parish notice', `${p.name} has become an ostrich. These things happen.`);
+    say(
+      w,
+      'Parish notice',
+      p.game === 'combat'
+        ? `${p.name} was knocked out. Returning to the team base.`
+        : `${p.name} has become an ostrich. These things happen.`,
+    );
   } else {
     p.age = 18;
     p.skills = [];
@@ -1144,7 +1179,7 @@ function kill(w: World, p: Player, comic = false) {
 }
 function cycle(w: World, b: Building, at: number) {
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
-  if (!r || b.construction) return;
+  if (!r || b.construction || b.kind === 'farm') return;
   const staff = b.employees
     .map((id) => w.players[id])
     .filter((p) => p && (!w.settings.activeWork || p.activeUntil >= at));
@@ -1228,7 +1263,8 @@ export function advance(w: World, seconds: number) {
     if (p.task && p.task.end <= end) {
       const t = p.task;
       delete p.task;
-      if (t.kind === 'labour') {
+      if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!);
+      else if (t.kind === 'labour') {
         grant(w, p, 4500, 'labour task');
         p.kudos++;
       } else
@@ -1267,6 +1303,26 @@ export function advance(w: World, seconds: number) {
     }
   }
   for (const b of w.buildings) {
+    for (const plot of b.plots ?? [])
+      if (plot.harvest) {
+        const task = w.players[plot.harvest.player]?.task;
+        if (task?.kind !== 'harvest' || task.building !== b.id) delete plot.harvest;
+      }
+    b.smoking =
+      !b.construction &&
+      (b.kind === 'home'
+        ? Object.values(w.players).some(
+            (p) => p.online && p.atHome && p.home === b.id && b.owner === p.id,
+          )
+        : b.employees.some((id) => {
+            const worker = w.players[id];
+            return (
+              worker?.online &&
+              worker.job === b.id &&
+              worker.activeUntil >= end &&
+              distance(worker, b) < 18
+            );
+          }));
     if (!b.government) {
       const owner = b.owner && w.players[b.owner];
       if (!owner || !owner.online) continue;
@@ -1293,47 +1349,7 @@ export function advance(w: World, seconds: number) {
     Object.assign(ball, { x: 90, z: 45, vx: 0, vz: 0 });
   } else if (ball.x < 60 || ball.x > 120 || ball.z < 20 || ball.z > 70)
     Object.assign(ball, { x: 90, z: 45, vx: 0, vz: 0 });
-  for (const shot of w.projectiles) {
-    const def = weapons[shot.weapon];
-    shot.x += shot.vx * dt;
-    shot.z += shot.vz * dt;
-    shot.y += shot.vy * dt;
-    shot.vy -= def.gravity * dt;
-    shot.ttl -= dt;
-    if (w.zones.some((z) => z.kind === 'safe' && distance(shot, z) < z.radius)) {
-      shot.ttl = 0;
-      continue;
-    }
-    const target = Object.values(w.players).find(
-      (p) =>
-        p.id !== shot.owner &&
-        p.online &&
-        distance(p, shot) < def.radius &&
-        Math.abs(p.y + 2 - shot.y) < 5,
-    );
-    if (target && w.settings.fighting) {
-      target.health -= damage(
-        def.damage,
-        w.vehicleTuning?.[target.vehicle]?.armour ?? vehicles[target.vehicle].armour,
-      );
-      if (target.health <= 0) {
-        kill(w, target, true);
-        const shooter = w.players[shot.owner];
-        if (shooter) {
-          shooter.kills++;
-          shooter.kudos += 2;
-        }
-      }
-      shot.ttl = 0;
-    }
-    const building = w.buildings.find((b) => !b.government && distance(b, shot) < 5);
-    if (building && w.settings.fighting) {
-      building.condition -= def.buildDamage / 1000;
-      shot.ttl = 0;
-    }
-    if (shot.y < terrainHeight(w, shot.x, shot.z)) shot.ttl = 0;
-  }
-  w.projectiles = w.projectiles.filter((p) => p.ttl > 0);
+  tickCombat(w, seconds, (p) => kill(w, p, true));
   if (w.kricket.due && end > w.kricket.due + 1) {
     const batter = w.kricket.batter && w.players[w.kricket.batter];
     if (batter) kill(w, batter, true);

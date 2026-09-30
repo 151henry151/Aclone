@@ -17,6 +17,30 @@
       "name": "Farthing",
       "x": 7,
       "y": -1
+    },
+    {
+      "id": "loam",
+      "name": "Loam",
+      "x": -3,
+      "y": 2
+    },
+    {
+      "id": "lantern",
+      "name": "Lantern",
+      "x": 6,
+      "y": 5
+    },
+    {
+      "id": "rime",
+      "name": "Rime",
+      "x": 10,
+      "y": 4
+    },
+    {
+      "id": "vessel",
+      "name": "The Vessel",
+      "x": 15,
+      "y": 7
     }
   ],
   "ships": [

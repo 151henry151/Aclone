@@ -69,3 +69,18 @@ collision share the new footprint definitions. Saved building identities,
 positions, ownership and inventory remain intact. A player caught inside a
 changed footprint can drive or walk toward its edge to escape. Refresh clients
 so displayed geometry matches the server collision model.
+
+## 0.4.0 upgrade notes
+
+Back up first, rebuild with your existing `BASE_PATH=/aclone`, restart the server
+and refresh all clients. The additions use optional JSON fields; missing combat
+settings and public-market crop listings are filled on load without resetting
+accounts, buildings, stock or custom prices. Station supply uses the existing
+metadata table. No database schema migration or new service is required.
+
+Farms keep their stock and employment but stop automatic wheat production. Owners
+must learn farmer, fund seeds and plant plots. Legacy custom farm production
+recipes are retained in the save but no longer executed; other custom recipes are
+unchanged. Read [PLAYING.md](PLAYING.md) before upgrading a busy economy.
+
+Production at hromp.com remains an operator-managed pull/rebuild/restart deployment.

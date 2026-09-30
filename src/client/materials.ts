@@ -64,9 +64,11 @@ export function roadDistance(x: number, z: number) {
     ...roads.map(([cx, cz, w, d]) => Math.max(Math.abs(x - cx) - w / 2, Math.abs(z - cz) - d / 2)),
   );
 }
+export const snowCover = { value: 0 };
 export function groundMaterial(seaLevel: number) {
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
   mat.onBeforeCompile = (shader) => {
+    shader.uniforms.snowCover = snowCover;
     shader.uniforms.groundNoise = { value: noiseTexture() };
     shader.uniforms.meadow = { value: texture('meadow') };
     shader.uniforms.gravel = { value: texture('gravel') };
@@ -78,7 +80,7 @@ export function groundMaterial(seaLevel: number) {
     );
     shader.fragmentShader =
       `
-      uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
@@ -103,7 +105,7 @@ export function groundMaterial(seaLevel: number) {
       vec3 turf=texture2D(meadow,p/5.).rgb;
       turf*=mix(vec3(.68,.74,.52),vec3(1.06,1.03,.88),noise(p*.045));
       vec3 grit=texture2D(gravel,p/6.).rgb;
-      diffuseColor.rgb*=mix(turf,grit,max(road,beach));
+      diffuseColor.rgb*=mix(mix(turf,grit,max(road,beach)),vec3(.85,.91,.94),snowCover*(1.-road*.25));
     `,
     );
   };
@@ -141,4 +143,28 @@ export function contactShadow(width: number, depth: number, opacity = 0.3) {
   mesh.rotation.x = -Math.PI / 2;
   mesh.position.y = 0.08;
   return mesh;
+}
+
+export const autumnTint = { value: 0 };
+/** Snow settles on upward faces; foliage also shifts colour with the season. */
+export function seasonalMaterial(mat: T.Material, foliage = false) {
+  const previous = mat.onBeforeCompile;
+  mat.onBeforeCompile = (shader, renderer) => {
+    previous.call(mat, shader, renderer);
+    shader.uniforms.snowCover = snowCover;
+    shader.uniforms.autumnTint = autumnTint;
+    shader.vertexShader = 'varying vec3 snowNormal;\n' + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <beginnormal_vertex>',
+      '#include <beginnormal_vertex>\nsnowNormal=normalize(mat3(modelMatrix)*objectNormal);',
+    );
+    shader.fragmentShader =
+      'uniform float snowCover;uniform float autumnTint;varying vec3 snowNormal;\n' +
+      shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <map_fragment>',
+      `#include <map_fragment>\n${foliage ? 'diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.65,.72,.35),autumnTint);' : ''}\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.85,.91,.94),snowCover*${foliage ? '.6' : 'smoothstep(.25,.8,snowNormal.y)'});`,
+    );
+  };
+  mat.customProgramCacheKey = () => `seasonal-v1-${foliage}`;
 }

@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { FarmFields } from './fields';
+import { bases } from '../shared/combat';
+import { calendar, weatherAt, sunAt } from '../shared/environment';
+import { Precipitation } from './weather';
+import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
 import { tractor, TRACTOR_EYE_HEIGHT, TRACTOR_SEAT_Z } from './tractor';
+import { SmokePlumes } from './smoke';
+import { tractorPaint } from '../shared/appearance';
 import { buildingModel } from './buildings';
 import { buildingPlan } from '../shared/building-shapes';
 import { MotionClock, MotionTrack } from './motion';
@@ -107,13 +114,18 @@ export class GameScene {
   private motionClock = new MotionClock();
   private buildingMeshes: T.Group[] = [];
   private ball: T.Mesh;
-  private projectiles = new T.Group();
+  private projectiles = new T.InstancedMesh(
+    new T.SphereGeometry(1, 8, 6),
+    new T.MeshBasicMaterial({ color: '#ffffff' }),
+    512,
+  );
   private lastWorld = '';
   private revision = '';
   private target = new T.Vector3();
   private elapsed = 0;
   private chase = 0;
-  private smoke: T.Mesh[] = [];
+  private plumes = new SmokePlumes();
+  private chimneyTime = 0;
   private smokesAt = 0;
   private stars: T.Points;
   private planets: T.Mesh[] = [];
@@ -136,6 +148,9 @@ export class GameScene {
   private me?: Player;
   paused = false;
   private sky = countrySky();
+  private precipitation = new Precipitation();
+  private fields = new FarmFields();
+  private combatMarkers = new T.Group();
   private water?: T.Mesh;
   private waterBase?: Float32Array;
   private low = localStorage.getItem('aclone.quality') === 'low';
@@ -191,7 +206,16 @@ export class GameScene {
     this.sky.renderOrder = -1;
     this.sky.frustumCulled = false;
     this.sky.visible = false;
-    this.scene.add(this.land, this.actors, this.space, this.sun, this.ambient, this.sky);
+    this.precipitation.mesh.visible = false;
+    this.scene.add(
+      this.land,
+      this.actors,
+      this.space,
+      this.sun,
+      this.ambient,
+      this.sky,
+      this.precipitation.mesh,
+    );
     this.sun.position.set(-60, 110, 40);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
@@ -207,7 +231,9 @@ export class GameScene {
     this.scene.add(this.sun.target, this.headlights, this.headlights.target);
     this.ball = new T.Mesh(new T.IcosahedronGeometry(2.2, 1), material('#e8d4a5'));
     this.ball.castShadow = true;
-    this.actors.add(this.ball, this.projectiles);
+    this.projectiles.count = 0;
+    this.projectiles.frustumCulled = false;
+    this.actors.add(this.ball, this.projectiles, this.plumes.mesh);
     const starGeo = new T.BufferGeometry();
     const coords = [];
     for (let i = 0; i < 1400; i++) {
@@ -299,6 +325,7 @@ export class GameScene {
     this.world = world;
     this.me = world.players[me];
     this.sky.visible = true;
+    this.fields.update(world, this.me);
     this.space.visible = false;
     this.land.visible = true;
     this.actors.visible = true;
@@ -307,7 +334,9 @@ export class GameScene {
       ':' +
       JSON.stringify(world.terrain) +
       ':' +
-      world.buildings.map((b) => b.id + b.name + (b.construction ? 'c' : '')).join(',') +
+      world.buildings
+        .map((b) => b.id + b.name + (b.style ?? '') + (b.construction ? 'c' : ''))
+        .join(',') +
       ':' +
       world.settings.seaLevel;
     if (this.revision !== rev) {
@@ -317,25 +346,29 @@ export class GameScene {
     if (this.lastWorld !== world.id) {
       this.motionClock = new MotionClock();
       this.lastWorld = world.id;
+      this.plumes.clear();
+      this.fields.reset();
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
       let mesh = this.meshes.get(p.id);
-      if (mesh && mesh.userData.vehicle !== p.vehicle) {
+      if (mesh && (mesh.userData.vehicle !== p.vehicle || mesh.userData.paint !== p.tractorPaint)) {
         this.actors.remove(mesh);
         dispose(mesh);
         this.meshes.delete(p.id);
         mesh = undefined;
       }
       if (!mesh) {
-        mesh = this.vehicle(p.vehicle, p.id === me ? undefined : p.name);
+        mesh = this.vehicle(p.vehicle, p.id === me ? undefined : p.name, p.tractorPaint);
+        mesh.userData.paint = p.tractorPaint;
         mesh.userData.vehicle = p.vehicle;
         mesh.position.set(p.x, p.y, p.z);
         this.meshes.set(p.id, mesh);
         this.actors.add(mesh);
       }
+      mesh.visible = !p.atHome;
       if (resetMotion || !mesh.userData.motion) mesh.userData.motion = new MotionTrack();
       const snapped = (mesh.userData.motion as MotionTrack).receive(world.time, p);
       if (snapped) {
@@ -355,6 +388,7 @@ export class GameScene {
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
     this.sky.visible = false;
+    this.precipitation.mesh.visible = false;
     this.headlights.visible = false;
     this.world = undefined;
     this.me = undefined;
@@ -369,6 +403,7 @@ export class GameScene {
   private buildWorld(w: World) {
     dispose(this.land);
     this.land.clear();
+    this.fields.reset();
     this.buildingMeshes = [];
     this.labelsHidden = false;
     this.renderer.shadowMap.needsUpdate = true;
@@ -551,6 +586,22 @@ export class GameScene {
       }
     }
     countryside(this.land, w, this.low);
+    const seasonal = new Set<T.Material>();
+    this.land.traverse((o) => {
+      if (o instanceof T.Mesh && o !== this.terrain && o !== this.water)
+        for (const m of Array.isArray(o.material) ? o.material : [o.material])
+          if (
+            (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
+            !m.transparent &&
+            !seasonal.has(m)
+          ) {
+            seasonal.add(m);
+            seasonalMaterial(m, m.alphaTest > 0);
+          }
+    });
+    if (!this.fields.group.parent) this.actors.add(this.fields.group);
+    if (!this.combatMarkers.parent) this.actors.add(this.combatMarkers);
+
     for (const g of this.buildingMeshes) {
       const b = w.buildings.find((b) => b.id === g.userData.building)!;
       for (const v of buildingPlan(b).volumes) {
@@ -612,14 +663,16 @@ export class GameScene {
       g.scale.setScalar(0.6);
       return g;
     }
-    g.add(buildingModel(b));
+    const model = buildingModel(b);
+    g.add(model);
+    g.userData.chimneys = model.userData.chimneys ?? [];
     const bounds = new T.Box3().setFromObject(g);
     const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.65);
     sign.position.set(0, bounds.max.y + 1.1, 0);
     g.add(sign);
     return g;
   }
-  private vehicle(slot: number, name?: string) {
+  private vehicle(slot: number, name?: string, paint?: string) {
     const v = vehicles[slot],
       g = new T.Group();
     if (slot === 5) {
@@ -649,7 +702,7 @@ export class GameScene {
       g.add(body);
       box(g, 4, 0.1, 1, '#555f65', 0, 0, 0);
     } else {
-      tractor(g, v.color);
+      tractor(g, tractorPaint(paint)?.color ?? v.color);
       if (v.mode === 5) box(g, 4, 0.6, 5, '#454d42', 0, 0.4, 0);
     }
     if (name) {
@@ -747,57 +800,116 @@ export class GameScene {
         this.camera.lookAt(this.target);
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
-          const puff = new T.Mesh(
-            new T.IcosahedronGeometry(0.35, 0),
-            new T.MeshBasicMaterial({ color: '#c3c0a8', transparent: true, opacity: 0.4 }),
-          );
-          puff.position
-            .copy(pos)
-            .add(
-              new T.Vector3(
-                -0.57 * 0.82 * Math.cos(facing) + 0.78 * 0.82 * Math.sin(facing),
-                2.8,
-                0.57 * 0.82 * Math.sin(facing) + 0.78 * 0.82 * Math.cos(facing),
+          this.plumes.emit(
+            pos
+              .clone()
+              .add(
+                new T.Vector3(
+                  -0.57 * 0.82 * Math.cos(facing) + 0.78 * 0.82 * Math.sin(facing),
+                  2.8,
+                  0.57 * 0.82 * Math.sin(facing) + 0.78 * 0.82 * Math.cos(facing),
+                ),
               ),
-            );
-          puff.userData.life = 2;
-          this.smoke.push(puff);
-          this.actors.add(puff);
+          );
         }
       }
-      for (const s of this.smoke) {
-        s.userData.life -= dt;
-        s.position.y += dt * 1.6;
-        s.scale.multiplyScalar(1 + dt);
-        (s.material as T.MeshBasicMaterial).opacity = s.userData.life * 0.2;
-        if (s.userData.life < 0) {
-          this.actors.remove(s);
-          dispose(s);
-        }
+      if (this.elapsed - this.chimneyTime > 0.55) {
+        this.chimneyTime = this.elapsed;
+        const smoking = new Set(w.buildings.filter((b) => b.smoking).map((b) => b.id));
+        for (const g of this.buildingMeshes)
+          if (smoking.has(g.userData.building) && distance(p, g.position) < 100)
+            for (const at of (g.userData.chimneys as T.Vector3[]) ?? [])
+              this.plumes.emit(g.localToWorld(at.clone()));
       }
-      this.smoke = this.smoke.filter((s) => s.userData.life > 0);
-      const daylight =
-        0.3 + Math.max(0, Math.sin((w.settings.time / 86400) * Math.PI * 2 - Math.PI / 2)) * 0.7;
-      this.sun.intensity = daylight * 3;
-      this.ambient.intensity = 0.45 + daylight * 1.05;
-      const sky = new T.Color('#d0dddf').multiplyScalar(0.35 + daylight * 0.65);
+      this.plumes.update(dt);
+      const date = calendar(w),
+        climate = weatherAt(w.id, date.absoluteDay),
+        solar = sunAt(w.settings.time, date.dayOfYear),
+        daylight = solar.daylight;
+      snowCover.value = climate.snowCover;
+      autumnTint.value = climate.season === 'Autumn' ? 0.85 : climate.season === 'Winter' ? 0.5 : 0;
+      this.precipitation.update(
+        dt,
+        this.camera.position,
+        climate.precipitation,
+        climate.intensity,
+        climate.wind,
+      );
+      this.sun.intensity = daylight * (3 - climate.clouds * 1.7);
+      this.sun.color.set(solar.twilight > 0.3 ? '#ffac68' : '#ffe9bb');
+      this.ambient.intensity = 0.15 + daylight * 1.05;
+      const sky = new T.Color('#b8ced9').multiplyScalar(0.045 + daylight * 0.9);
+      sky.lerp(new T.Color('#c87458'), solar.twilight * 0.45);
       this.sky.position.copy(this.camera.position);
       this.sky.material.uniforms.horizon.value.copy(sky);
-      this.sky.material.uniforms.zenith.value.set('#458fc2').multiplyScalar(0.25 + daylight * 0.75);
+      this.sky.material.uniforms.zenith.value.set('#458fc2').multiplyScalar(0.025 + daylight * 0.9);
       this.sky.material.uniforms.daylight.value = daylight;
+      this.sky.material.uniforms.sunDirection.value.fromArray(solar.direction).normalize();
+      this.sky.material.uniforms.clouds.value = climate.clouds;
+      this.sky.material.uniforms.drift.value = this.elapsed * 0.001 * climate.wind;
       this.scene.background = sky;
-      this.scene.fog = new T.Fog(sky, 125, 450);
-      this.sun.position.set(p.x - 80, 70, p.z + 50);
+      this.scene.fog = new T.Fog(
+        sky,
+        climate.precipitation === 'clear' ? 125 : 70,
+        climate.precipitation === 'clear' ? 450 : 260,
+      );
+      this.sun.position.set(
+        p.x + solar.direction[0] * 110,
+        Math.max(2, solar.direction[1] * 110),
+        p.z + solar.direction[2] * 110,
+      );
       this.sun.target.position.set(p.x, 0, p.z);
       if (
         now - this.shadowTime > 200 &&
-        (this.shadowPosition.distanceTo(new T.Vector3(p.x, p.y, p.z)) > 0.2 ||
+        (now - this.shadowTime > 2000 ||
+          this.shadowPosition.distanceTo(new T.Vector3(p.x, p.y, p.z)) > 0.2 ||
           Object.values(w.players).some((q) => Math.abs(q.speed) > 0.1))
       ) {
         this.renderer.shadowMap.needsUpdate = true;
         this.shadowTime = now;
         this.shadowPosition.set(p.x, p.y, p.z);
       }
+      const mode = w.combat?.mode ?? '';
+      if (this.combatMarkers.userData.mode !== mode) {
+        dispose(this.combatMarkers);
+        this.combatMarkers.clear();
+        this.combatMarkers.userData.mode = mode;
+        if (mode)
+          for (let i = 0; i < 3; i++) {
+            const at = i < 2 ? bases[i] : { x: 0, z: -110 };
+            const marker = new T.Group();
+            const ring = new T.Mesh(
+              new T.RingGeometry(i === 2 ? 11.5 : 7.5, i === 2 ? 12 : 8, 48),
+              new T.MeshBasicMaterial({
+                color: i === 0 ? '#dd7455' : i === 1 ? '#9ab976' : '#ecd998',
+                side: T.DoubleSide,
+              }),
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.05;
+            marker.add(ring);
+            if (i < 2) {
+              cylinder(marker, 0.08, 4, '#e7dfc8', 0, 2, 0);
+              box(marker, 1.8, 1.1, 0.07, i === 0 ? '#b6533e' : '#70924f', 0.9, 3.4, 0);
+            }
+            const sign = label(i === 2 ? 'CAPTURE POINT' : i === 0 ? 'RUST BASE' : 'MOSS BASE');
+            sign.position.y = 5;
+            marker.add(sign);
+            marker.position.set(at.x, terrainHeight(w, at.x, at.z), at.z);
+            this.combatMarkers.add(marker);
+          }
+      }
+      this.combatMarkers.visible = w.settings.fighting && !!mode;
+      if (mode === 'ctf')
+        this.combatMarkers.children.slice(0, 2).forEach((m, i) => {
+          const f = w.combat!.flags[i];
+          for (const index of [1, 2])
+            m.children[index].position.set(
+              f.x - bases[i].x + (index === 2 ? 0.9 : 0),
+              terrainHeight(w, f.x, f.z) - m.position.y + (index === 2 ? 3.4 : 2),
+              f.z - bases[i].z,
+            );
+        });
       this.ball.position.set(
         w.ball.x,
         2.5 +
@@ -809,16 +921,22 @@ export class GameScene {
       this.ball.rotation.z -= dt * w.ball.vx * 0.1;
       if (this.projectiles.userData.state !== w.projectiles) {
         this.projectiles.userData.state = w.projectiles;
-        dispose(this.projectiles);
-        this.projectiles.clear();
-        for (const shot of w.projectiles) {
-          const m = new T.Mesh(
-            new T.IcosahedronGeometry(0.6, 0),
-            new T.MeshBasicMaterial({ color: '#ffbc68' }),
+        this.projectiles.count = Math.min(512, w.projectiles.length);
+        const matrix = new T.Matrix4();
+        w.projectiles.slice(0, 512).forEach((shot, i) => {
+          const scale = shot.weapon === 'machine' ? 0.12 : shot.weapon === 'mine' ? 0.35 : 0.28;
+          matrix.makeScale(scale, scale, scale);
+          matrix.setPosition(shot.x, shot.y, shot.z);
+          this.projectiles.setMatrixAt(i, matrix);
+          this.projectiles.setColorAt(
+            i,
+            new T.Color(
+              shot.weapon === 'plasma' ? '#78dfee' : shot.weapon === 'mine' ? '#676b44' : '#ffbc68',
+            ),
           );
-          m.position.set(shot.x, shot.y, shot.z);
-          this.projectiles.add(m);
-        }
+        });
+        this.projectiles.instanceMatrix.needsUpdate = true;
+        if (this.projectiles.instanceColor) this.projectiles.instanceColor.needsUpdate = true;
       }
       const scenic = document.documentElement.classList.contains('scenery-view');
       if (scenic !== this.labelsHidden) {

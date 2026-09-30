@@ -23,6 +23,8 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         vehicle: p.vehicle,
+        tractorPaint: p.tractorPaint,
+        atHome: p.atHome,
         lights: p.lights,
         team: p.team,
         game: p.game,

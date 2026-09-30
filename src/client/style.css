@@ -1757,3 +1757,36 @@ button span {
   visibility: hidden;
   pointer-events: none;
 }
+
+.paint-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.paint-options button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.paint-chip {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 1px solid #ddd3b3;
+}
+.star-map {
+  margin: 1rem 0;
+  background: #162927bb;
+  border: 1px solid #6f817150;
+  padding: 1rem;
+  border-radius: 0.4rem;
+}
+.star-map svg {
+  width: 100%;
+  max-height: 260px;
+}
+.star-map p {
+  color: #c7d0b9;
+  font-size: 0.85rem;
+}

@@ -11,9 +11,9 @@ export default defineConfig({
       args: [
         '--no-sandbox',
         '--enable-webgl',
-        '--use-gl=angle',
-        '--use-angle=swiftshader',
-        '--enable-unsafe-swiftshader',
+        ...(process.env.TEST_GPU === '1'
+          ? ['--enable-gpu', '--use-angle=gl', '--ignore-gpu-blocklist']
+          : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']),
       ],
     },
     screenshot: 'only-on-failure',

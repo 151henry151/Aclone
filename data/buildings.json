@@ -30,7 +30,9 @@
       "concrete": 1560,
       "steak": 2220,
       "cows": 12000,
-      "grapes": 1200
+      "grapes": 1200,
+      "potatoes": 900,
+      "coffee": 1920
     },
     "sell": {
       "wheat": 800,
@@ -59,7 +61,9 @@
       "concrete": 2600,
       "steak": 3700,
       "cows": 20000,
-      "grapes": 2000
+      "grapes": 2000,
+      "potatoes": 1500,
+      "coffee": 3200
     },
     "stock": {
       "wheat": 60,
@@ -88,7 +92,9 @@
       "concrete": 60,
       "steak": 60,
       "cows": 60,
-      "grapes": 60
+      "grapes": 60,
+      "potatoes": 0,
+      "coffee": 0
     },
     "recipe": null,
     "wage": 2200,
@@ -320,7 +326,7 @@
     "color": "#d5c5a2"
   },
   "farm": {
-    "name": "Wheat farm",
+    "name": "Mixed-crop farm",
     "price": 120000,
     "capacity": 500,
     "buy": {},

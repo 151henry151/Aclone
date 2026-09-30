@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { leaveCombat } from '../shared/combat.ts';
 import { VERSION } from '../shared/version';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -166,6 +167,8 @@ export async function createApp(options: AppOptions) {
                 heading: q.heading,
                 speed: q.speed,
                 vehicle: q.vehicle,
+                tractorPaint: q.tractorPaint,
+                atHome: q.atHome,
                 lights: q.lights,
                 team: q.team,
                 game: q.game,
@@ -193,6 +196,7 @@ export async function createApp(options: AppOptions) {
       const w = worlds.get(p.world)!;
       const me = w.players[p.account.id];
       if (me) {
+        leaveCombat(w, me);
         me.speed = 0;
         me.online = false;
         me.lastSeen = w.time;
@@ -205,6 +209,7 @@ export async function createApp(options: AppOptions) {
     p.input = { throttle: 0, steer: 0, boost: false };
   };
   const enter = (p: Peer, id: string) => {
+    if (p.account?.transit) throw Error('Wait until your jump arrives before landing');
     const w = worlds.get(id);
     if (!w) throw Error('World not found');
     if (w.settings.locked && w.owner !== p.account!.id) throw Error('World is locked');
@@ -523,6 +528,7 @@ export async function createApp(options: AppOptions) {
           send(p, {
             type: 'welcome',
             account: p.account,
+            market: universe.market(p.account!.system),
             galaxy: { ...galaxy, worlds: registry() },
           });
           return;
@@ -552,11 +558,22 @@ export async function createApp(options: AppOptions) {
           if (!w || !me || !w.buildings.some((b) => b.kind === 'starport' && distance(me, b) < 18))
             throw Error('Drive to the spaceport to take off');
           leave(p);
-          send(p, { type: 'space', account: p.account, galaxy: { ...galaxy, worlds: registry() } });
+          send(p, {
+            type: 'space',
+            account: p.account,
+            market: universe.market(p.account!.system),
+            galaxy: { ...galaxy, worlds: registry() },
+          });
           return;
         }
-        if (['jump', 'ship', 'spaceTrade'].includes(a.type)) {
+        if (
+          ['jump', 'ship', 'spaceTrade', 'upgrade', 'courier', 'survey', 'rescue'].includes(a.type)
+        ) {
           if (p.world) throw Error('Take off first');
+          if (a.type === 'upgrade') universe.upgrade(p.account, z.string().parse(a.kind));
+          if (a.type === 'courier') universe.courier(p.account, z.string().parse(a.operation));
+          if (a.type === 'survey') universe.survey(p.account);
+          if (a.type === 'rescue') universe.rescue(p.account);
           if (a.type === 'jump') universe.travel(p.account, z.string().parse(a.system));
           if (a.type === 'ship') universe.buyShip(p.account, z.string().parse(a.ship));
           if (a.type === 'spaceTrade')
@@ -566,7 +583,12 @@ export async function createApp(options: AppOptions) {
               z.number().int().positive().parse(a.quantity),
               z.boolean().parse(a.buy),
             );
-          send(p, { type: 'space', account: p.account, galaxy: { ...galaxy, worlds: registry() } });
+          send(p, {
+            type: 'space',
+            account: p.account,
+            market: universe.market(p.account!.system),
+            galaxy: { ...galaxy, worlds: registry() },
+          });
           return;
         }
         const w = p.world && worlds.get(p.world);
@@ -650,6 +672,19 @@ export async function createApp(options: AppOptions) {
             dt = Math.min((now - last) / 1000, 0.25);
           last = now;
           for (const p of peers) {
+            if (p.account?.transit && p.account.transit.arrives <= Date.now() / 1000) {
+              try {
+                if (universe.arrive(p.account))
+                  send(p, {
+                    type: 'space',
+                    account: p.account,
+                    market: universe.market(p.account.system),
+                    galaxy: { ...galaxy, worlds: registry() },
+                  });
+              } catch (e) {
+                console.error('Could not persist ship arrival:', (e as Error).message);
+              }
+            }
             if (p.world && p.account) {
               const w = worlds.get(p.world)!;
               const player = w.players[p.account.id];

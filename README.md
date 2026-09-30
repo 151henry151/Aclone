@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.3.4 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.4.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.4.0:** seasonal farming and weather, team combat modes, an expanded galaxy with saved journeys and contracts, cottage styles, tractor paint and conditional chimney smoke. See the [player guide](docs/PLAYING.md) for timing, controls and balance decisions.
 
 **Updated in 0.3.4:** compact tractor proportions and a varied village of cottages, shops, civic buildings and industrial sheds, with consistent human-scale doors, windows and street furniture. New buildings retain existing identities, ownership and inventories.
 
@@ -52,6 +54,20 @@ These gameplay captures show the scale and architecture update in 0.3.4.
 ![Galaxy directory with persistent worlds and world creation](docs/screenshots/galaxy.png)
 
 ![Owner editor for world rules](docs/screenshots/editor.png)
+
+</details>
+
+<details>
+<summary>Gameplay expansion</summary>
+
+Staged gameplay in a disposable local world, using the actual renderer and server:
+
+![Timber cottage and blue tractor](docs/screenshots/wood-cottage.png)
+![Winter snow on the village](docs/screenshots/winter.png)
+![Sunset lighting](docs/screenshots/sunset.png)
+![Growing crops beside a farm](docs/screenshots/farm-plots.png)
+![Crop care and harvest controls](docs/screenshots/farming.png)
+![Seven-system galaxy and jump routes](docs/screenshots/galaxy-routes.png)
 
 </details>
 
@@ -112,7 +128,7 @@ Open **Pilot key & options → Graphics** to cycle through **adaptive** (the def
 2. Drive near the **Odd Jobs Office**, north of the village green. **E / Ctrl** opens a nearby building. A 15-second shift pays 45d.
 3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
 4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
-5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
+5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. In the unreleased farming system, farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
 6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies while playing. While disconnected, hunger, ageing and property decay pause; your business and training continue.
 7. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
 8. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
@@ -142,7 +158,7 @@ The browser still stores a private **pilot key** for automatic reconnection. Exp
 
 World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Personal survival and owned-building decay pause when disconnected. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
 
-## What is here
+## What is included
 
 - A Three.js client with original low-poly scenery, a 128 × 128 terrain mesh, day/night lighting, chase cameras, tractor smoke, map, chat, inventory and building windows.
 - Authoritative multiplayer simulation: clients request actions and send bounded control inputs; the server owns position, money, stock, damage and timers.
@@ -154,6 +170,8 @@ World state, accounts and a money ledger are stored under `var/aclone.sqlite` by
 - GPL licensing, unit and real WebSocket integration tests, browser tests, CI, Docker packaging, developer and operator documentation.
 
 ## Contribute
+
+The gameplay expansion is described in [the player guide](docs/PLAYING.md) and [the changelog](CHANGELOG.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), [data tuning](docs/DATA.md), [protocol](docs/PROTOCOL.md) and [Lua scripting](docs/SCRIPTING.md).
 
