@@ -124,7 +124,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
       previous: old?.previous,
       drainage: old?.drainage,
     };
-    b.sell[key] ??= Math.round(items[key].price * 0.9);
+    b.sell[key] ??= items[key].price;
     return;
   }
   check(old?.crop, 'This plot is empty');
@@ -149,7 +149,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     const n = cropStatus(w, b, index).yield,
       key = plot.crop!;
     check((b.stock[key] ?? 0) + n <= b.capacity, 'Make room in the stockroom');
-    const wage = b.employees.includes(p.id) ? b.wage : 0;
+    const wage = b.owner !== p.id && b.employees.includes(p.id) ? b.wage : 0;
     check(b.investment >= wage, 'Fund harvest wages first');
     plot.harvest = { player: p.id, amount: n, wage };
     p.task = { kind: 'harvest', building: b.id, plot: index, end: w.time + 15 };
@@ -161,7 +161,8 @@ export function finishHarvest(w: World, p: Player, building: string, index: numb
   const b = w.buildings.find((b) => b.id === building),
     plot = b?.plots?.[index];
   if (!b || !plot?.crop || plot.harvest?.player !== p.id) return;
-  const { amount, wage } = plot.harvest;
+  const { amount } = plot.harvest;
+  const wage = b.owner === p.id ? 0 : plot.harvest.wage;
   delete plot.harvest;
   if (
     (b.owner !== p.id && !b.employees.includes(p.id)) ||

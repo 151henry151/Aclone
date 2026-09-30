@@ -618,7 +618,8 @@ function renderPanel() {
 function buildingWindow(b: Building) {
   if (!me || !world) return;
   const near = distance(me, b) < 18,
-    owned = b.owner === me.id || me.authority === 20;
+    selfOwned = b.owner === me.id,
+    owned = selfOwned || me.authority === 20;
   const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info'];
   let html = `<div class="building-meta"><span>OWNER <b>${esc(b.government ? 'Parish' : (world.players[b.owner ?? '']?.name ?? (b.owner ? 'Another player' : 'Unclaimed')))}</b></span><span>INVESTMENT <b>${money(b.investment)}</b></span><span>EFFICIENCY <b>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
@@ -631,7 +632,10 @@ function buildingWindow(b: Building) {
     return;
   }
   if (tab === 'Main') {
-    if (Object.keys(b.sell).length || Object.keys(b.buy).length)
+    if (selfOwned)
+      html +=
+        '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages.</p>';
+    if (!selfOwned && (Object.keys(b.sell).length || Object.keys(b.buy).length))
       html += `<div class="trade-columns">${(['sell', 'buy'] as const)
         .map(
           (side) =>
@@ -647,7 +651,7 @@ function buildingWindow(b: Building) {
         .join(
           '',
         )}</div><label class="quantity">Quantity per trade<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label>`;
-    if (b.kind === 'workhouse')
+    if (b.kind === 'workhouse' && !selfOwned)
       html += `<p>Unskilled labour. A 15-second task pays 45d. You will be quite still while working.</p>${button('Work a shift · 45d', 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
     if (b.kind === 'school')
       html += `<p>First qualification: 80d and one minute. Later qualifications: 160d and forty minutes. Up to ${world.settings.maxSkills} skills.</p><div class="menu-grid">${skills.map((s) => button(s, 'learn', `data-id="${s}" data-building="${b.id}" ${me!.skills.includes(s) || me!.learning ? 'disabled' : ''}`)).join('')}</div>`;
@@ -748,9 +752,9 @@ function buildingWindow(b: Building) {
         .map(([k, n]) => `${n} ${esc(items[k].name)}`)
         .join(' + ')} · ${productionInterval(world, b) / 60} minutes · ${esc(r.skill)}</p>`;
     }
-    if (b.recipe || b.production)
+    if (!selfOwned && (b.recipe || b.production))
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
-    if (['sawmill', 'quarry', 'forge'].includes(b.kind))
+    if (['sawmill', 'quarry', 'forge'].includes(b.kind) && !(selfOwned && b.kind === 'forge'))
       html += button(
         b.kind === 'forge' ? 'Craft tools (1 steel + 2 wood)' : 'Gather raw materials',
         b.kind === 'forge' ? 'task' : 'resources',
@@ -765,6 +769,7 @@ function buildingWindow(b: Building) {
             id,
             `${d.name} · stock ${b.stock[id] ?? 0} / carrying ${me!.inventory[id] ?? 0}`,
           ]),
+          'Item',
         )}${field('Quantity', 'quantity', 1, 'number', 'min="1"')}${select('direction', [
           ['deposit', 'Store items'],
           ['withdraw', 'Collect items'],

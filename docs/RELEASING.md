@@ -124,3 +124,16 @@ additive over the wider flat parish; coastal water remains south of town.
 The optional saved `townLayout` field prevents a second move. A rollback should
 restore the pre-upgrade backup so old clients do not show old roads over new lots.
 No production deployment is performed by the release scripts.
+
+## 0.6.1 upgrade notes
+
+Back up, pull, rebuild with the existing `BASE_PATH` and restart; refresh browser
+clients for the owner controls. Saved accounts, stock, money and property IDs are
+preserved. Default buy/sell quotes matching the 0.6.0 data pack migrate once to
+the delivery pricing model; other saved quotes are kept. The optional saved
+`tradePricing` field prevents future loads from overwriting subsequent edits.
+
+Owner-employees are removed from their own payroll on load and property purchase.
+Existing self-paid harvest reservations become unpaid; the produce still goes to
+the farm. Other staff and employment at other buildings remain intact. Workplace
+tasks already in progress can complete; new tasks at one's own building are blocked.

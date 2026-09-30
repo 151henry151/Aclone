@@ -2,7 +2,9 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests/browser',
-  timeout: 120000,
+  // Concurrent software WebGL renderers starve input and snapshot handling on CI.
+  workers: 1,
+  timeout: process.env.TEST_GPU === '1' ? 120000 : 180000,
   use: {
     baseURL: process.env.TEST_URL ?? 'http://127.0.0.1:3000',
     viewport: { width: 1440, height: 900 },

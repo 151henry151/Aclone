@@ -72,7 +72,7 @@ test('distant building interaction and unprivileged commands are rejected', () =
 test('production is persistent, consumes inputs, pays funded wages and cannot overflow storage', () => {
   const { w, p } = setup();
   const b = w.buildings.find((b) => b.kind === 'mill')!;
-  b.owner = p.id;
+  b.owner = 'employer';
   b.stock.wheat = 100;
   b.stock.flour = 0;
   b.investment = 100000;

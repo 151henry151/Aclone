@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
@@ -98,6 +99,7 @@ export function createWorld(
     players: {},
     buildings: [],
     townLayout: 2,
+    tradePricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -269,6 +271,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'trade': {
       const b = nearby(w, p, a.building),
         item = str(a.item);
+      requireThat(b.owner !== id, 'Owners use the Stockroom, not trades with their own building');
       requireThat(items[item], 'Unknown item');
       const n = qty(a.quantity);
       requireThat(a.direction === 'buy' || a.direction === 'sell', 'Invalid trade direction');
@@ -342,6 +345,7 @@ export function act(w: World, id: string, a: Action): string {
         log(w, 'transfer', b.price, p.id, seller.id, 'property sale');
       } else charge(w, p, b.price, 'property purchase');
       b.owner = id;
+      removeOwnerEmployment(w, b);
       b.forSale = false;
       result = `You now own ${b.name}. Bring a broom.`;
       break;
@@ -450,6 +454,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'job': {
       const b = nearby(w, p, a.building);
+      requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
       requireThat(!p.job, 'Quit your current job first');
       const recipe =
         b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
@@ -474,6 +479,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'work': {
       const b = nearby(w, p, a.building);
+      requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
       requireThat(p.job === b.id, 'Take a job here first');
       p.activeUntil = w.time + 2 * productionInterval(w, b);
       result = 'Working for the next two cycles. The glamour is unbearable.';
@@ -498,6 +504,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'task': {
       const b = nearby(w, p, a.building);
+      requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
       requireThat(!p.task, 'Already busy');
       const task = str(a.task);
       requireThat(['labour', 'logging', 'quarrying', 'craft'].includes(task), 'Unknown task');
@@ -1106,6 +1113,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     surface.grip *
     (input.boost ? 1.15 : 1) *
     dt *
+    ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
   if (v.mode === 2 || v.mode === 6)
     p.y = Math.max(
@@ -1207,6 +1215,7 @@ export function productionInterval(w: World, b: Building) {
 function cycle(w: World, b: Building, at: number) {
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
+  removeOwnerEmployment(w, b);
   const staff = b.employees
     .map((id) => w.players[id])
     .filter((p) => p && (!w.settings.activeWork || p.activeUntil >= at));

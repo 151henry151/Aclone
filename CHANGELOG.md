@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-30
+
+### Changed
+
+- Standardize default non-harbour selling prices to the item reference price. Harbour stores pays 3% more for deliveries and sells at a higher price, so there is no profitable buy-back loop within one store. Untouched saved defaults migrate once; custom quotes, cash and stock remain intact.
+
+### Fixed
+
+- Wheeled vehicles steer naturally while reversing, based on actual movement direction even while braking. Walking and aircraft controls retain their existing turn direction.
+- Owners cannot trade with, take employment at, refresh shifts at, or start workplace tasks at their own property. The interface directs them to Stockroom and Building Admin instead.
+- Purchasing your workplace clears your employment there. Legacy owner-employees and reserved self-paid harvest wages are removed; owners can still tend their own farm plots without wages.
+- Seasonal capture fixtures now find the relocated cottage, farm and spaceport instead of using old coordinates.
+- Run browser checks sequentially so competing software WebGL renderers do not cause input and connection timeouts on CI.
+
 ## [0.6.0] - 2026-09-30
 
 ### Changed

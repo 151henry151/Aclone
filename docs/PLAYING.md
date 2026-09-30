@@ -139,3 +139,18 @@ and use the minimap or Directory to locate dispersed shops and workplaces. Stree
 lights follow the lanes; headlights help between them. The buildings and tractors
 retain their original scale. The Hornball pitch, racing checkpoints and gathering
 grounds remain at their established locations.
+
+## Driving and running your business
+
+Wheeled vehicles reverse their steering response when rolling backwards, like
+a steering wheel on a reversing tractor. This follows actual speed, so it still
+applies while braking from reverse into forward. Walking and aircraft controls
+are unchanged.
+
+Owners use **Stockroom** to move goods and **Building Admin** for investment and
+profit. You cannot buy/sell goods or take paid work at your own property.
+Qualified farm owners can still manage and harvest their own plots unpaid.
+Buying your workplace ends your job there.
+
+Default building prices allow a 3% gross resale margin at Harbour stores. Check
+stock, working capital, distance and customized quotes before loading your cargo.

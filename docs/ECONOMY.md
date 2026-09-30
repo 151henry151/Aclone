@@ -22,10 +22,24 @@ within 12m obstruct extraction. Survey posts, log stacks and mineral/earth mound
 mark the locations; scenic trees are not individually destructible.
 
 Sell cargo to a business through its Main trading tab. It must offer a buy price,
-have working capital and stockroom space. Owners can instead use **Stockroom**
+have working capital and stockroom space. Owners must use **Stockroom**
 to move goods without a sale. Use **Building Admin** to invest cash, collect
 profit, set wages and set buy/sell prices. There are no automatic sales or unlimited
 new-item stocks in public markets.
+
+Default selling prices outside Harbour stores use each item's reference price.
+Harbour stores buys at 103% of that price and sells at 112% (rounded to the nearest
+hundredth of a denarius). For example, buy bread for 48d at a bakery and sell it
+at the harbour for 49.44d: 1.44d gross profit per loaf. Fuel, travel time, available
+stock, cargo capacity and the harbour's working capital still matter. Buying from
+and selling back to the harbour loses money. Player-set prices can remove or
+increase this margin; check the displayed quotes before making a delivery.
+
+Owners cannot buy from or sell to their own property, hire themselves, refresh
+their own work shifts or start workplace tasks there. Use Stockroom for goods and
+Building Admin for funding and withdrawals. Buying your current workplace ends
+your employment there; other employees keep their jobs. Owners can still tend
+and harvest their own farm plots, but receive no harvest wage.
 
 Production requires input goods, output space and funded wages. Qualified active
 employees give full efficiency; unattended businesses run at the world's reduced

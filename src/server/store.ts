@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { migrateEconomy } from '../shared/economy.ts';
 import { migrateTown } from '../shared/town.ts';
 import { DatabaseSync, backup } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { defaults, items } from '../shared/catalog.ts';
+import { defaults, buildings } from '../shared/catalog.ts';
 import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
@@ -45,6 +46,7 @@ export class Store {
         const world = JSON.parse(String(row.state)) as World;
         world.settings = { ...defaults, ...world.settings };
         migrateTown(world);
+        migrateEconomy(world);
         for (const b of world.buildings)
           if (b.government && ['market', 'starport'].includes(b.kind))
             for (const key of [
@@ -60,8 +62,8 @@ export class Store {
               'teaBlend',
               'roastCoffee',
             ]) {
-              b.buy[key] ??= Math.round(items[key].price * 0.6);
-              b.sell[key] ??= items[key].price;
+              b.buy[key] ??= buildings[b.kind].buy[key];
+              b.sell[key] ??= buildings[b.kind].sell[key];
               b.stock[key] ??= 0;
             }
         return { world, saved: Number(row.saved) };

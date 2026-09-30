@@ -149,6 +149,7 @@ export interface Settings {
 }
 export interface World {
   townLayout?: 1 | 2;
+  tradePricing?: 1;
   schemaVersion: 1;
   id: string;
   name: string;
