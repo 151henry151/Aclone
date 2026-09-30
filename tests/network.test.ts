@@ -35,7 +35,10 @@ test('real headless server: identity, six clients, chat, denied edits, atomic re
       const html = await index.text();
       const src = html.match(/src="([^"]+\.js)"/)?.[1];
       assert.ok(src);
-      const bundle = await fetch(base + src);
+      // The production proxy strips any configured deployment prefix.
+      const assetPath = src.slice(src.lastIndexOf('/assets/'));
+      assert.ok(assetPath.startsWith('/assets/'));
+      const bundle = await fetch(base + assetPath);
       assert.equal(bundle.status, 200);
       assert.match(bundle.headers.get('content-type') ?? '', /javascript/);
     }

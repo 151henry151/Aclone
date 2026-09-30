@@ -82,3 +82,26 @@ test('world snapshot and account change roll back together on a failed save', ()
   assert.equal(s.loadWorlds()[0].world.players[a.id].cash, 180000);
   s.close();
 });
+
+test('schema 1 migration preserves existing pilot IDs, keys and account state', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-migration-'));
+  const path = join(dir, 'world.sqlite');
+  let store = new Store(path);
+  try {
+    const old = new Universe(store).register('Existing Pilot');
+    old.account.credits = 321;
+    new Universe(store).save(old.account);
+    store.db.exec(
+      "DROP INDEX account_name_key; ALTER TABLE accounts DROP COLUMN name_key; UPDATE meta SET value='1' WHERE key='schema';",
+    );
+    store.close();
+    store = new Store(path);
+    assert.equal(new Universe(store).authenticate(old.token)?.id, old.account.id);
+    assert.equal(new Universe(store).authenticate(old.token)?.credits, 321);
+    assert.equal(store.db.prepare("SELECT value FROM meta WHERE key='schema'").get()!.value, '2');
+    assert.throws(() => new Universe(store).register('existing pilot'));
+  } finally {
+    store.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

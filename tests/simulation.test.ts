@@ -148,12 +148,13 @@ test('terrain is deterministic and editable without changing distant heights', (
   assert.equal(terrainHeight(w, 100, 100), initial + 5);
   assert.equal(terrainHeight(w, -100, -100), far);
 });
-test('home supplies feed offline residents and exhaustion damages health', () => {
+test('home supplies feed online residents and exhaustion damages health', () => {
   const { w, p } = setup();
   const b = w.buildings.find((b) => b.kind === 'home')!;
   b.owner = p.id;
   p.home = b.id;
   p.atHome = true;
+  p.online = true;
   b.stock.bread = 100;
   b.stock.water = 100;
   p.hunger = 49000;

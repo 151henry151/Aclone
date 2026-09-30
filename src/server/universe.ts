@@ -18,13 +18,8 @@ export class Universe {
   register(name: string) {
     name = name.normalize('NFKC').trim();
     const nameKey = name.toLocaleLowerCase('en-US');
-    if (
-      this.store.db
-        .prepare('SELECT name FROM accounts')
-        .all()
-        .some((row) => String(row.name).normalize('NFKC').toLocaleLowerCase('en-US') === nameKey)
-    )
-      throw Error('That name is taken. Use your saved pilot key to return.');
+    if (this.store.db.prepare('SELECT id FROM accounts WHERE name_key=?').get(nameKey))
+      throw Error('That name is taken. Sign in to return.');
     if (!/^[\p{L}\p{N} _-]{2,24}$/u.test(name))
       throw Error('Use 2–24 letters, numbers, spaces, hyphens or underscores');
     const id = randomUUID(),
@@ -40,8 +35,8 @@ export class Universe {
     };
     try {
       this.store.db
-        .prepare('INSERT INTO accounts VALUES (?,?,?,?)')
-        .run(id, name, tokenHash(token), JSON.stringify(a));
+        .prepare('INSERT INTO accounts (id,name,token_hash,state,name_key) VALUES (?,?,?,?,?)')
+        .run(id, name, tokenHash(token), JSON.stringify(a), nameKey);
     } catch {
       throw Error('That name is taken. Use your saved pilot key to return.');
     }

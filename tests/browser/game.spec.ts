@@ -6,7 +6,15 @@ test.beforeEach(async ({ page }) => {
 test('pilot registration, galaxy, landing, movement and persistent recovery', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  const textures = new Set<string>();
+  page.on('response', (r) => {
+    if (r.ok() && /\/textures\/(meadow|gravel|stone|roof)\.webp$/.test(r.url()))
+      textures.add(r.url().split('/').at(-1)!);
+  });
+  await page.goto('./');
   await expect(page.getByRole('heading', { name: 'Welcome to Aclone.' })).toBeVisible();
   await page.screenshot({ path: 'test-results/welcome.png' });
   await page
@@ -18,8 +26,19 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#world-hud')).toBeVisible();
   await expect(page.locator('#cash')).toHaveText('18s 0d');
+  await expect.poll(() => textures.size).toBe(4);
+  await expect
+    .poll(
+      async () => Number(await page.locator('#viewport canvas').getAttribute('data-triangles')),
+      { timeout: 30000 },
+    )
+    .toBeGreaterThan(1000);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: 'test-results/parish.png' });
+  await page.keyboard.press('h');
+  await expect(page.locator('#world-hud')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#world-hud')).toBeVisible();
   await page.keyboard.down('ArrowDown');
   await page.waitForTimeout(1800);
   await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
@@ -38,7 +57,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   expect(errors).toEqual([]);
 });
 test('world creation, owner editor, safe Lua and live terrain changes', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   await page
     .getByLabel('Pilot name', { exact: true })
     .fill('Builder ' + Date.now().toString().slice(-8));
@@ -63,7 +82,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.screenshot({ path: 'test-results/editor.png' });
   await page.getByRole('button', { name: 'Close dialog' }).click();
   const key = await page.evaluate(() => localStorage.getItem('aclone.pilot'));
-  const session = await page.request.get('/api/session', {
+  const session = await page.request.get('./api/session', {
     headers: { authorization: 'Bearer ' + key },
   });
   const identity = (await session.json()).account.id;
@@ -77,7 +96,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
 });
 test('small viewport can register and navigate', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.getByRole('heading', { name: 'Welcome to Aclone.' })).toBeVisible();
   await page
     .getByLabel('Pilot name', { exact: true })
@@ -86,4 +105,23 @@ test('small viewport can register and navigate', async ({ page }) => {
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#world-hud')).toBeVisible();
   await page.screenshot({ path: 'test-results/mobile.png' });
+});
+
+test('password setup, sign-out and sign-in return to the same pilot', async ({ page }) => {
+  const name = 'Password ' + Date.now().toString().slice(-8);
+  await page.goto('./');
+  await page.getByLabel('Pilot name', { exact: true }).fill(name);
+  await page.getByRole('button', { name: 'Make yourself at home' }).click();
+  await page.getByRole('button', { name: 'Pilot key & options' }).click();
+  await page.getByLabel('New password', { exact: true }).fill('browser test long password');
+  await page.getByRole('button', { name: 'Save account security' }).click();
+  await expect(page.locator('#toast')).toContainText('Password saved');
+  await page.getByRole('button', { name: 'Sign out of all devices' }).click();
+  await page.getByText('Sign in with a password', { exact: true }).click();
+  await page.getByLabel('Returning pilot name', { exact: true }).fill(name);
+  await page.getByLabel('Password', { exact: true }).fill('browser test long password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.locator('.pilot-card')).toContainText(name);
+  await page.getByRole('button', { name: 'Land on this world' }).first().click();
+  await expect(page.locator('#pilot-name')).toHaveText(name);
 });

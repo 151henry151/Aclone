@@ -70,3 +70,26 @@ passing another player's ID cannot change who is performing the action.
 `ping` with a numeric `at` gets a `pong` echo. Binary frames are not a separate
 protocol. Snapshot data for other players excludes their private inventory,
 cash, bank, skills and account credentials.
+
+## Account endpoints and compact state (0.3.0)
+
+Authenticated `GET /api/auth/status` reports password/email configuration for the
+current pilot only. JSON POST endpoints are `/api/auth/login` (name, password),
+`/api/auth/configure` (bearer key, password, currentPassword when already set,
+optional email), `/api/auth/resend` (bearer key; resends verification), `/api/auth/forgot` (email), `/api/auth/verify` (token),
+`/api/auth/reset` (token, password), and `/api/auth/logout` (bearer key).
+Reset requests never disclose whether an email belongs to an account. SMTP
+configuration belongs to the server, not the client.
+
+A hello message may include `protocol: 2`. Its first `state` has `partial: false`
+and a complete world. Later states use `partial: true`: merge changed top-level
+world fields; merge `world.players` by ID and remove entries with null values.
+The `self` field always contains the recipient's complete private player record
+and overrides that player's public entry. Arrays in changed fields replace old
+arrays. A new socket/world starts with a full snapshot. Do not merge a partial
+state into a different world. Without `protocol: 2`, full-state delivery remains
+available. WebSocket compression is negotiated automatically.
+
+Close code 4004 requires signing in again after key revocation. Code 4005 means
+the client could not keep up; reconnect with a fresh full snapshot. The server
+permits only one active socket per pilot, including pilots in space.

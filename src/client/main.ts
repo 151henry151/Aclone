@@ -55,6 +55,18 @@ let panel = '',
   reconnectTimer: ReturnType<typeof setTimeout> | undefined,
   ping = 0,
   request = 0;
+let accountStatus:
+  | {
+      password: boolean;
+      email: string;
+      verified: boolean;
+      recoveryAvailable: boolean;
+      deliveryError?: boolean;
+    }
+  | undefined;
+const recovery = new URLSearchParams(location.hash.slice(1));
+const recoveryToken = recovery.get('reset') ?? recovery.get('verify');
+if (recoveryToken) history.replaceState(null, '', location.pathname + location.search);
 let audio: AudioContext | undefined,
   sound = localStorage.getItem('aclone.sound') === 'on',
   weapon = 'plasma';
@@ -85,7 +97,7 @@ function tone(freq = 180, duration = 0.2) {
 }
 function send(action: Action) {
   if (ws?.readyState !== WebSocket.OPEN) {
-    toast('Connection unavailable. Your progress is saved.', true);
+    toast('Connection unavailable. Reconnect before making changes.', true);
     return;
   }
   ws.send(JSON.stringify({ type: 'action', request: ++request, action }));
@@ -114,6 +126,7 @@ async function connect() {
       JSON.stringify({
         type: 'hello',
         token,
+        protocol: 2,
         world: localStorage.getItem('aclone.world') ?? undefined,
       }),
     );
@@ -127,7 +140,12 @@ async function connect() {
       if (!world) showGalaxy();
     }
     if (msg.type === 'state') {
-      world = msg.world;
+      if (msg.partial && world) {
+        const players = { ...world.players, ...msg.world.players };
+        for (const id of Object.keys(players)) if (!players[id]) delete players[id];
+        world = { ...world, ...msg.world, players };
+      } else world = msg.world;
+      if (msg.self) world!.players[msg.me] = msg.self;
       me = world!.players[msg.me];
       account = msg.account;
       inSpace = false;
@@ -160,6 +178,16 @@ async function connect() {
   ws.addEventListener('close', (e) => {
     $('connection').textContent = 'DISCONNECTED';
     keys.clear();
+    if (e.code === 4004) {
+      token = '';
+      localStorage.removeItem('aclone.pilot');
+      world = undefined;
+      me = undefined;
+      closePanel();
+      login();
+      toast(e.reason, true);
+      return;
+    }
     if (e.code === 4001 || e.code === 4003) {
       toast(e.reason, true);
       return;
@@ -174,7 +202,7 @@ function login() {
   scene.setSpace();
   $('world-hud').hidden = true;
   $('overlay').innerHTML =
-    `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p><form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot key stays in this browser. Export it from the game menu to keep your identity safe.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
+    `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p><form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
 }
 async function showGalaxy() {
   inSpace = true;
@@ -343,6 +371,13 @@ function drawMap() {
   ctx.fillText('CIRCUIT', 36, 126);
 }
 function openPanel(name: string) {
+  if (name === 'options' && token)
+    void api('/api/auth/status')
+      .then((r) => {
+        accountStatus = r;
+        if (panel === 'options') renderPanel();
+      })
+      .catch((e) => toast(e.message, true));
   scene.paused = true;
   panel = name;
   tab = 'Main';
@@ -397,7 +432,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes.</li><li>Buy a house and stock its pantry before a long absence.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -405,7 +440,7 @@ function renderPanel() {
   if (panel === 'options') {
     modal(
       'Pilot & preferences.',
-      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound ? 'Sound: on' : 'Sound: off', 'sound')}${button('Graphics: ' + (localStorage.getItem('aclone.quality') === 'low' ? 'performance' : 'balanced'), 'quality')}<p class="note">Local browser preferences. The server stores progress automatically, including when you disconnect.</p><hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original procedural visuals and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
+      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound ? 'Sound: on' : 'Sound: off', 'sound')}${button('Graphics: ' + scene.qualityLabel, 'quality')}<p class="note">Graphics cycles through adaptive, detailed (fixed shadows), and performance. The server stores progress automatically, including when you disconnect.</p><hr>${account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
     );
     return;
   }
@@ -825,9 +860,30 @@ app.addEventListener('click', async (e) => {
       case 'quality':
         localStorage.setItem(
           'aclone.quality',
-          localStorage.getItem('aclone.quality') === 'low' ? 'balanced' : 'low',
+          localStorage.getItem('aclone.quality') === 'low'
+            ? 'balanced'
+            : localStorage.getItem('aclone.quality') === 'high'
+              ? 'low'
+              : 'high',
         );
         location.reload();
+        break;
+      case 'resendEmail':
+        await api('/api/auth/resend', { method: 'POST', body: '{}' });
+        toast('Check your email. Verification links can be resent once a minute.');
+        break;
+      case 'logout':
+        await api('/api/auth/logout', { method: 'POST', body: '{}' });
+        token = '';
+        account = undefined;
+        accountStatus = undefined;
+        world = undefined;
+        me = undefined;
+        localStorage.removeItem('aclone.pilot');
+        localStorage.removeItem('aclone.world');
+        ws?.close();
+        closePanel();
+        login();
         break;
       case 'exportKey':
         download(
@@ -860,6 +916,45 @@ app.addEventListener('submit', async (e) => {
       account = result.account;
       localStorage.setItem('aclone.pilot', token);
       await connect();
+    } else if (form.id === 'signin-form') {
+      const result = await api('/api/auth/login', { method: 'POST', body: JSON.stringify(data) });
+      token = result.token;
+      account = result.account;
+      localStorage.setItem('aclone.pilot', token);
+      localStorage.removeItem('aclone.world');
+      await connect();
+    } else if (form.id === 'account-form') {
+      accountStatus = await api('/api/auth/configure', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      toast(
+        accountStatus?.deliveryError
+          ? 'Password saved, but email delivery failed. Use Resend verification email to retry.'
+          : accountStatus?.email && !accountStatus.verified
+            ? 'Password saved. Check your email for the verification link.'
+            : 'Password saved. You can now sign in by name.',
+      );
+      renderPanel();
+    } else if (form.id === 'forgot-form') {
+      const result = await api('/api/auth/forgot', { method: 'POST', body: JSON.stringify(data) });
+      toast(result.message);
+      form.reset();
+    } else if (form.id === 'recovery-form') {
+      await api(recovery.has('reset') ? '/api/auth/reset' : '/api/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ ...data, token: recoveryToken }),
+      });
+      if (recovery.has('reset')) {
+        token = '';
+        localStorage.removeItem('aclone.pilot');
+      }
+      login();
+      toast(
+        recovery.has('reset')
+          ? 'Password reset. Sign in with your new password.'
+          : 'Email verified. You can now use email recovery.',
+      );
     } else if (form.id === 'restore-form') {
       token = String(data.key).trim();
       const r = await api('/api/session');
@@ -966,6 +1061,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   if (e.key === 'Escape') {
+    document.documentElement.classList.remove('scenery-view');
     closePanel();
     return;
   }
@@ -984,6 +1080,15 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const key = e.key.toLowerCase();
+  if (key === 'h' && world && !panel) {
+    document.documentElement.classList.toggle('scenery-view');
+    toast(
+      document.documentElement.classList.contains('scenery-view')
+        ? 'Scenery view · H or Escape restores the controls.'
+        : 'Controls restored.',
+    );
+    return;
+  }
   const handled = [
     'arrowup',
     'arrowdown',
@@ -1089,7 +1194,11 @@ setInterval(() => {
   if (ws?.readyState === WebSocket.OPEN)
     ws.send(JSON.stringify({ type: 'ping', at: performance.now() }));
 }, 5000);
-if (token) {
+if (recoveryToken) {
+  login();
+  const card = document.querySelector('.login-card')!;
+  card.innerHTML = `<h2>${recovery.has('reset') ? 'Choose a new password' : 'Verify your recovery email'}</h2><form id="recovery-form">${recovery.has('reset') ? '<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>' : '<p>Confirm that you want this address to recover your Aclone pilot.</p>'}<button class="primary">${recovery.has('reset') ? 'Reset password' : 'Verify email'}</button></form>`;
+} else if (token) {
   api('/api/session')
     .then((r) => {
       account = r.account;

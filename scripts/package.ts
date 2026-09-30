@@ -12,6 +12,7 @@ const files = [
   'src',
   'data',
   'public',
+  'art',
   'docs',
   'tests',
   '.github',
@@ -37,7 +38,14 @@ const files = [
 try {
   for (const file of files) cpSync(file, join(root, file), { recursive: true });
   mkdirSync(join(root, 'scripts'));
-  for (const file of ['backup.ts', 'package.ts', 'screenshots.ts'])
+  for (const file of [
+    'backup.ts',
+    'package.ts',
+    'screenshots.ts',
+    'load.ts',
+    'load-server.ts',
+    'test-proxy.ts',
+  ])
     cpSync(join('scripts', file), join(root, 'scripts', file));
   mkdirSync('release', { recursive: true });
   const output = resolve('release', name + '.tar.gz');

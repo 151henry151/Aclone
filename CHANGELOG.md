@@ -6,6 +6,33 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-29
+
+### Added
+
+- Scenery view: press H to hide the HUD and H or Escape to restore it.
+- Optional password sign-in for existing pilots, recovery email verification, expiring single-use password reset links, and sign-out across devices. SMTP is configured by the operator.
+- Repeatable load probe with real WebSocket clients in a separate process and disconnect/restart regression coverage.
+
+### Changed
+
+- Rebuilt countryside graphics around original meadow, gravel, limestone and slate textures, softly worn road verges, leafy trees, garden fences, a village fountain, layered clouds and warmer lighting. Cottages have textured gables and industrial annexes.
+- Redesigned tractors with glazed cabs, rounded bonnets, detailed grilles, mirrors, wheel hubs and animated chevron-tread tyres. Static bodies and wheels are batched separately.
+- Added a detailed graphics setting alongside adaptive and performance modes. Performance mode retains material textures and contact shading; detailed mode retains dynamic shadows. Texture assets respect subpath hosting and are documented with their generation prompts.
+- Protocol 2 sends changed world fields and players, shares serialized frames across recipients, and compresses WebSocket traffic. Legacy full-state clients remain supported.
+- Disconnected pilots pause hunger, thirst, ageing and property decay. Production, wages, lessons and pending tasks continue, without erasing an absent player's estate.
+- SQLite uses full synchronous durability and an indexed normalized pilot-name lookup. Existing saves migrate automatically.
+
+### Fixed
+
+- Replaced connections lose authority immediately, so a stale socket cannot keep playing after sign-in elsewhere or password recovery.
+- Unclaimed starter businesses no longer decay out of existence while nobody is playing.
+
+### Security
+
+- Passwords use salted asynchronous scrypt; recovery tokens are stored hashed and expire. Verified email is required for recovery, and password resets revoke existing pilot keys and connections.
+- Bounded password hashing, account-request throttling, reset-email cooldowns, connection limits and slow-client disconnection bound resource use.
+
 ## [0.2.1] - 2026-09-29
 
 ### Added

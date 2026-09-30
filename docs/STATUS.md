@@ -18,7 +18,7 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 - Safe-zone/fighting checks, energy, cooldowns, projectiles and armour formula.
 - Six-client Hornball, ordered race checkpoints and best laps, bite/reel fishing,
   and an original timing-based two-player Ultrakricket implementation.
-- Hashed pilot-key identities, multiplayer chat, command authority, world
+- Optional password login, verified SMTP recovery, hashed pilot-key identities, multiplayer chat, command authority, world
   creation and separate per-world progress.
 - SQLite persistence, transactional ledger, online backup/restore, bounded
   offline catch-up and atomic planet-cash / universe-credit conversion.
@@ -29,6 +29,15 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 Browser tests exercise the real rendered client and live server rather than a
 mock game state. Unit and integration tests focus on critical invariants; they
 do not establish production-scale security or long-term economic balance.
+
+## Graphics in 0.3.0
+
+The 0.3.0 renderer uses original generated meadow, gravel, limestone and slate
+materials, a detailed glazed tractor cab and treaded wheels, instanced foliage,
+cloud layers, a village fountain and textured cottage gables. See [art sources](ART.md)
+for prompts and implementation conventions. Adaptive, detailed and performance
+modes let players trade dynamic shadows and resolution against GPU cost. These
+are visual improvements to the existing game, not additional historical mechanics.
 
 ## Implemented with a smaller scope than the spec
 
@@ -81,7 +90,7 @@ archives are local research material and are excluded from the public source.
 Complete required fidelity features above, expand game-module and rendering
 boundaries, add save migrations and world export/import, soak-test offline
 production and survival over long periods, load-test tens to hundreds of players,
-review script/upload/auth abuse resistance, and playtest the three core scenarios:
+review script/upload/auth abuse resistance and sustained trading load, and playtest the three core scenarios:
 a sustainable business after days away, six-player Hornball, and a created world
 that friends reach through space. Keep every remaining claim explicit in the
 release notes rather than treating a successful build as completion of the spec.

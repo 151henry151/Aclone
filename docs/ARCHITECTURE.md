@@ -94,3 +94,39 @@ API; the original event catalogue is not fully implemented.
 This alpha is tested for six simultaneous clients. It has not been load-tested
 or hardened for hundreds of untrusted public players. Development mode is not
 a public hosting mode.
+
+## Playability update
+
+`accounts.ts` separates private credentials and recovery hashes from public
+universe account state. Async scrypt work has a bounded concurrency budget.
+`mail.ts` is the optional SMTP adapter; tests inject a capturing transport and
+never send real mail. Reset consumption, password replacement and key revocation
+share a SQLite transaction. Existing account rows receive an indexed normalized
+name key without changing their IDs or saved property.
+
+`snapshots.ts` prepares public world fields once per broadcast and keeps each
+peer's previous frame. Private player state and private messages are added only
+for that recipient. Protocol 1 remains available for older clients. Sockets are
+bounded and slow receivers are disconnected instead of buffering indefinitely.
+The load probe uses a child server process so client JSON parsing does not count
+as server event-loop work.
+
+Offline survival pauses independently of economic time. Disconnects save, restart
+marks all pilots offline before catch-up, and SQLite FULL synchronization protects
+acknowledged actions. The durability test exercises actual disconnect and restart;
+the economy tests separately exercise long offline progression.
+
+`materials.ts` supplies shared, base-path-aware material textures and the blended
+terrain shader. `scenery.ts` supplies deterministic instanced foliage and batched
+contact shading; `sky.ts` and `noise.ts` supply atmospheric clouds. `tractor.ts`
+batches the detailed body and each animated wheel separately. Static scenery
+batches include texture identity and surface properties. Performance mode disables
+dynamic shadows and water animation, reduces plant density and uses a smaller
+framebuffer without multisample antialiasing. Detected software renderers use a
+10 FPS render cap so expensive CPU draws do not starve controls. Adaptive mode falls back after sustained
+slow frames; detailed mode keeps dynamic shadows enabled. See [art documentation](ART.md)
+for asset provenance, prompts, texture ownership and visual verification.
+
+Screenshot capture defaults to adaptive mode. Set `SCREENSHOT_QUALITY=low` for
+performance or `high` for detailed. The capture checks for rendering errors before
+writing gameplay screenshots.

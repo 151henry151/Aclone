@@ -11,8 +11,8 @@ Environment variables:
 - `PORT`: TCP port, default `3000`.
 - `DATA_DIR`: persistent database/assets directory, default `var` relative to the
   working directory. Use an absolute path in a service definition.
-- `PUBLIC_ORIGIN`: optional exact external origin when the reverse proxy's Host
-  header differs from the browser origin. Prefer preserving Host.
+- `PUBLIC_ORIGIN`: external public URL, including any deployment prefix, used
+  for recovery links and allowed browser origin. Prefer preserving Host at the proxy.
 - `BASE_PATH`: public URL prefix baked into the client at build time, default `/`.
   Set it when the game is mounted under a path (`BASE_PATH=/aclone npm run build`).
   The Node process still serves `/`, `/api/`, `/ws`, and `/world-assets/` at its
@@ -46,6 +46,25 @@ play.example.org {
     reverse_proxy 127.0.0.1:3000
 }
 ```
+
+For `https://hromp.com/aclone`, build with `BASE_PATH=/aclone npm run build`
+and strip the prefix in the proxy. An equivalent Caddy route is:
+
+```caddy
+hromp.com {
+    redir /aclone /aclone/ 308
+    handle_path /aclone/* {
+        reverse_proxy 127.0.0.1:3000
+    }
+}
+```
+
+Set `PUBLIC_ORIGIN=https://hromp.com/aclone/` for email links. Keep the trailing
+slash redirect: relative browser navigation and assets must stay under the
+prefix. Pass WebSocket upgrades through `/aclone/ws`. This configuration must be
+merged into the host's existing routes rather than replacing other hosted sites.
+For Docker builds, pass `--build-arg BASE_PATH=/aclone` or set Compose's `BASE_PATH`
+environment variable before `docker compose up --build`.
 
 Caddy handles TLS and WebSocket upgrades. The hostname and DNS must be yours.
 This is a configuration example; the repository does not provision a domain.
@@ -89,9 +108,9 @@ silently substituted for a corrupted database or unknown schema version.
 
 ## Operational limits
 
-This alpha has a six-client integration test, not a hundreds-of-users load
-certification. Worlds share a Node process and SQLite file. Suggested initial
-use is small trusted groups. Bounds include 100 worlds per instance, 8 created
+This alpha has multiplayer regression tests and a configurable 100-client load
+probe. It is not a production-scale certification. Worlds share a Node process
+and SQLite file. Bounds include 100 worlds per instance, 8 created
 worlds per pilot, 500 placed buildings, 128 zones, 256 terrain brushes, 32 uploaded
 assets per world, and 2 MiB per upload. Monitor disk usage: retained historical
 ledger entries and manual backups are not automatically pruned.
@@ -100,3 +119,74 @@ Each request is validated and rate-limited, but anonymous registration is not a
 full abuse-prevention service. Deploy additional access control at the proxy
 for a private instance. No invasive device fingerprint or raw-machine tracking
 is collected. Account-farming detection remains an open security task.
+
+## Accounts and recovery email
+
+Before upgrading, take a database backup. The account-name index migrates schema 1
+to schema 2 without changing pilot IDs. Roll back older binaries by restoring a
+pre-upgrade backup; old versions intentionally reject the migrated schema.
+
+Passwords are optional; existing pilot keys continue to work. Players set a
+password under Pilot & preferences and can add a recovery email when configured.
+The email must be verified before it can reset a password. Verification links last
+24 hours; reset links last 30 minutes and are single-use. Resetting a password or
+signing out revokes the pilot key and disconnects existing sessions. Password
+sign-in also rotates the key, so previously exported keys need replacing.
+
+Configure these environment variables in your private service environment:
+
+```sh
+PUBLIC_ORIGIN=https://game.example.com/aclone/
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-user
+SMTP_PASSWORD=your-smtp-password
+MAIL_FROM="Aclone <pilots@example.com>"
+```
+
+Use your real public URL, including a trailing slash and deployment subpath if
+applicable. Links use this configured URL, never a request Host header. Port 587
+requires STARTTLS; port 465 uses TLS immediately. Certificate validation stays
+enabled. Configure a sender your provider authorizes, including its recommended
+DNS records. SMTP is optional: without it the UI still supports passwords and
+key export, and explains that email recovery is unavailable. Do not commit these
+values. Compose deployments must explicitly pass these variables to the service.
+No live email provider is bundled or provisioned by Aclone.
+
+Reset requests have the same public response for unknown and verified addresses;
+delivery runs asynchronously and failures produce a generic server log message.
+Repeated reset mail to the same account is limited to once per minute. Account
+POSTs are limited to 60 per IP per minute; password hashing has four concurrent
+slots. Configure a trusted reverse proxy correctly for visitors behind it.
+Credentials and recovery-token hashes are separate from publicly streamed game
+state. Backups now also contain private email addresses and password hashes.
+
+## Offline progress and capacity testing
+
+Disconnecting stops movement and immediately saves the world. Hunger, thirst,
+ageing and property decay pause while offline; jobs, production, lessons and
+pending tasks still advance. A lost connection is detected by heartbeat within
+roughly a minute, so this is not a way to pause combat instantly. A graceful
+server stop saves all worlds. A hard process/host failure can lose up to five
+seconds of movement or ongoing simulation; acknowledged economic actions are
+saved transactionally with full SQLite synchronization. An automated test kills a
+child server with SIGKILL after a purchase acknowledgement and verifies the
+restored ownership and cash. Backups remain necessary
+for disk loss, corruption and operator mistakes.
+
+Run `npm run test:load` for 100 real connections, 20 input messages per second per
+client, and ten seconds of measurement. Override `LOAD_CLIENTS` (1–128) and
+`LOAD_SECONDS` (2–300). It creates and deletes its own temporary database. The
+server runs in a separate process from synthetic clients. Output reports wire
+traffic, decoded state volume, frames, disconnections and server event-loop
+latency. This is a movement/broadcast probe, not a certification of heavy trading,
+hundreds of simultaneous password hashes, Lua workloads or long-term stability.
+
+The instance defaults to 128 simultaneous WebSocket connections. Slow clients
+are disconnected before accumulating large send queues. Protocol 2 shares world
+serialization, sends only changed fields/players, and negotiates compression.
+Full reconnects always receive complete state; private player fields stay private.
+Capacity depends on host CPU, storage, active worlds and player behavior. Measure
+on deployment hardware before raising the connection ceiling or promising a
+particular concurrency level. Scale separate communities on independent instances;
+multiple processes must not write to the same database.

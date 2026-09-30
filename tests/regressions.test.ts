@@ -131,6 +131,7 @@ test('Lua worker executes real events and rejects runaway scripts without stalli
 });
 test('survival death resets skills and estate, but retains cash', () => {
   const { w, p } = setup();
+  p.online = true;
   const b = w.buildings.find((b) => b.kind === 'mill')!;
   b.owner = p.id;
   p.skills = ['miller'];
@@ -224,4 +225,27 @@ test('money and count settings reject fractional values before changing the worl
     assert.throws(() => act(w, p.id, { type: 'settings', patch: { [key]: 2.5 } }));
     assert.equal(JSON.stringify(w.settings), before);
   }
+});
+
+test('offline absence preserves life, home supplies and property while production and tasks continue', () => {
+  const { w, p } = setup();
+  const b = w.buildings.find((b) => b.kind === 'mill')!;
+  b.owner = p.id;
+  b.condition = 0.01;
+  p.health = 1;
+  p.hunger = p.thirst = 50000;
+  p.age = w.settings.maxAge;
+  p.skills = ['miller'];
+  p.online = false;
+  p.task = { kind: 'labour', end: w.time + 15 } as any;
+  const cash = p.cash;
+  advance(w, 86400 * 7);
+  assert.equal(p.deaths, 0);
+  assert.equal(p.health, 1);
+  assert.deepEqual(p.skills, ['miller']);
+  assert.equal(b.owner, p.id);
+  assert.equal(b.condition, 0.01);
+  assert.ok(w.buildings.includes(b));
+  assert.equal(p.cash, cash + 4500);
+  assert.equal(p.task, undefined);
 });

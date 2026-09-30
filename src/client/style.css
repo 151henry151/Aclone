@@ -131,11 +131,7 @@ kbd {
   outline: 0;
 }
 .grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, #000 3px);
+  display: none;
 }
 .brand {
   position: absolute;
@@ -1753,4 +1749,11 @@ button span {
 }
 .performance .modal-backdrop {
   backdrop-filter: none;
+}
+
+/* Keep dialogs and the restore hint available while admiring the landscape. */
+.scenery-view #world-hud,
+.scenery-view .brand {
+  visibility: hidden;
+  pointer-events: none;
 }

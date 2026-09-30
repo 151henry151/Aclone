@@ -1179,38 +1179,40 @@ export function advance(w: World, seconds: number) {
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
-    const home = p.atHome && w.buildings.find((b) => b.id === p.home && b.owner === p.id);
-    const scale = home ? 0.8 : 1;
-    p.hunger = Math.min(50000, p.hunger + w.settings.hungerRate * seconds * scale);
-    p.thirst = Math.min(50000, p.thirst + w.settings.thirstRate * seconds * scale);
-    if (home) {
-      for (const [key, def] of Object.entries(items)) {
-        const hunger = def.food && p.hunger >= 30000,
-          thirst = def.drink && p.thirst >= 30000;
-        if ((hunger || thirst) && (home.stock[key] ?? 0) > 0) {
-          const n = Math.min(
-            home.stock[key],
-            Math.ceil(
-              Math.max(
-                hunger ? p.hunger / (def.food ?? 1) : 0,
-                thirst ? p.thirst / (def.drink ?? 1) : 0,
+    if (p.online) {
+      const home = p.atHome && w.buildings.find((b) => b.id === p.home && b.owner === p.id);
+      const scale = home ? 0.8 : 1;
+      p.hunger = Math.min(50000, p.hunger + w.settings.hungerRate * seconds * scale);
+      p.thirst = Math.min(50000, p.thirst + w.settings.thirstRate * seconds * scale);
+      if (home) {
+        for (const [key, def] of Object.entries(items)) {
+          const hunger = def.food && p.hunger >= 30000,
+            thirst = def.drink && p.thirst >= 30000;
+          if ((hunger || thirst) && (home.stock[key] ?? 0) > 0) {
+            const n = Math.min(
+              home.stock[key],
+              Math.ceil(
+                Math.max(
+                  hunger ? p.hunger / (def.food ?? 1) : 0,
+                  thirst ? p.thirst / (def.drink ?? 1) : 0,
+                ),
               ),
-            ),
-          );
-          p.hunger = Math.max(0, p.hunger - (def.food ?? 0) * n);
-          p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * n);
-          home.stock[key] -= n;
+            );
+            p.hunger = Math.max(0, p.hunger - (def.food ?? 0) * n);
+            p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * n);
+            home.stock[key] -= n;
+          }
         }
       }
+      p.health = clamp(
+        p.health + (p.hunger >= 50000 || p.thirst >= 50000 ? -6 : 2) * seconds,
+        0,
+        60000,
+      );
+      p.age += seconds / (600 * 365);
+      p.energy = Math.min(65000, p.energy + 3000 * seconds);
+      if (!p.health || p.age >= w.settings.maxAge) kill(w, p);
     }
-    p.health = clamp(
-      p.health + (p.hunger >= 50000 || p.thirst >= 50000 ? -6 : 2) * seconds,
-      0,
-      60000,
-    );
-    p.age += seconds / (600 * 365);
-    p.energy = Math.min(65000, p.energy + 3000 * seconds);
-    if (!p.health || p.age >= w.settings.maxAge) kill(w, p);
     if (p.learning && p.learning.end <= end) {
       p.skills.push(p.learning.skill);
       say(w, 'School', `${p.name} qualified as ${p.learning.skill}.`);
@@ -1260,6 +1262,7 @@ export function advance(w: World, seconds: number) {
   for (const b of w.buildings) {
     if (!b.government) {
       const owner = b.owner && w.players[b.owner];
+      if (!owner || !owner.online) continue;
       const skill = b.recipe && recipes[b.recipe].skill;
       const factor = !owner ? 100 : skill && !owner.skills.includes(skill) ? 10 : 1;
       b.condition = Math.max(0, b.condition - (seconds * 100 * factor) / (160 * 365 * 600));

@@ -12,3 +12,6 @@ test-results
 playwright-report
 release
 A tractor The Universal — Clone Design Spec.md
+
+# Editable PNG masters ship in source archives, not the runtime build context.
+art

@@ -4,15 +4,19 @@
 
 **Play the alpha:** [hromp.com/aclone](https://hromp.com/aclone)
 
-Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, procedural art and synthesized sounds are original.
+Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.2.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.3.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.3.0:** detailed tractors, limestone cottages, slate roofs, textured meadows and gravel lanes, layered clouds and leafy village scenery, protected offline progress, optional password accounts and email recovery, and a repeatable 100-client load probe. See [CHANGELOG.md](CHANGELOG.md).
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
 
 ## Screenshots
 
-Actual gameplay with Aclone's original procedural models and interface:
+Actual gameplay, with original models, material textures and interface. The first image uses detailed graphics and the H-key scenery view:
+
+![Detailed-mode countryside, a glazed tractor cab and weathered village materials](docs/screenshots/scenery.png)
 
 ![A tractor in Little Puddlewick, with the parish map, player status and inventory](docs/screenshots/parish.png)
 
@@ -74,6 +78,10 @@ HOST=0.0.0.0 PORT=3000 npm start
 
 They open `http://YOUR-LAN-IP:3000`. Use HTTPS through a reverse proxy for an internet-facing instance; see [hosting and backups](docs/HOSTING.md). A running server continues simulating every world even when all players are offline.
 
+### Graphics
+
+Open **Pilot key & options → Graphics** to cycle through **adaptive** (the default, with automatic fallback), **detailed** (keeps dynamic shadows), and **performance** (lower resolution, fewer plants, contact shading). Detailed mode benefits from a hardware GPU. Detected software renderers use a smaller framebuffer and a capped render rate to leave time for controls. Every mode uses the same original material textures and detailed tractor model. Drag the view and scroll to inspect the scene; **C** cycles cameras. Press **H** for an unobstructed scenery view; **H** or **Escape** restores the HUD. The four textures add about 2.7 MiB to the first village visit and work under URL prefixes such as `/aclone/`.
+
 ## Your first day
 
 1. Drive with **arrows** or **WASD**. **Shift** boosts; it also uses more fuel. Drag the view, use the mouse wheel to zoom, or press **C** to change camera.
@@ -81,7 +89,7 @@ They open `http://YOUR-LAN-IP:3000`. Use HTTPS through a reverse proxy for an in
 3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
 4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
 5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
-6. Buy a house and put food and drink in its Stockroom. **Go home** before leaving; it automatically feeds you while you are away.
+6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies while playing. While disconnected, hunger, ageing and property decay pause; your business and training continue.
 7. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
 8. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
 
@@ -102,9 +110,13 @@ All important F-key actions have on-screen alternatives because browsers reserve
 
 ## Keep your pilot
 
-Your browser stores a random **pilot key**, not a password. Export it from **World → Options & pilot key**, keep it private, and use **Restore pilot** in another browser. Losing both the browser storage and exported key loses access to that identity. Names are reserved case-insensitively. Anyone with the key can act as that pilot; never publish it in a bug report.
+Start with a pilot name, then open **Pilot & preferences** to set a password of at least 12 characters. Returning players can sign in by pilot name and password. You keep the same inventory, properties, skills and credits when adding a password to an existing pilot.
 
-World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. World mutations save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
+If the operator enables SMTP, add an email address and follow its verification link. **Forgot your password?** emails a single-use reset link valid for 30 minutes. Password resets and signing out invalidate old pilot keys and active connections. Email delivery needs operator configuration; it is not available automatically on a fresh local install. See [account and email setup](docs/HOSTING.md#accounts-and-recovery-email).
+
+The browser still stores a private **pilot key** for automatic reconnection. Export a fresh key after password sign-in and keep it private; sign-in rotates it. Key-only pilots remain supported. Losing both a key and password access without a verified recovery address still loses access to that identity.
+
+World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Personal survival and owned-building decay pause when disconnected. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
 
 ## What is here
 
@@ -128,6 +140,7 @@ npm run build
 npx playwright install chromium
 # start the game in another terminal, then:
 npm run test:e2e
+npm run test:load    # isolated 100-client, 10-second local load probe
 ```
 
 The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. Unit and network tests use temporary databases and random ports.

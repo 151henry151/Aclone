@@ -7,6 +7,8 @@ COPY tsconfig.json vite.config.ts index.html ./
 COPY src ./src
 COPY data ./data
 COPY public ./public
+ARG BASE_PATH=/
+ENV BASE_PATH=$BASE_PATH
 RUN npm run build
 
 FROM node:24-bookworm-slim

@@ -21,6 +21,9 @@ import {
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
 import { runScript } from './scripts.ts';
+import { DeltaStream, prepareFrame, type Frame } from './snapshots.ts';
+import { Accounts, type Mailer } from './accounts.ts';
+import { configuredMailer } from './mail.ts';
 import { clientAddress } from './client-address.ts';
 const inputSchema = z
   .object({
@@ -35,6 +38,7 @@ const messageSchema = z.discriminatedUnion('type', [
     type: z.literal('hello'),
     token: z.string().max(100),
     world: z.string().max(80).optional(),
+    protocol: z.literal(2).optional(),
   }),
   z.object({ type: z.literal('input'), input: inputSchema }),
   z.object({
@@ -54,6 +58,8 @@ interface Peer {
   window: number;
   alive: boolean;
   born: number;
+  delta?: boolean;
+  stream?: DeltaStream;
 }
 export interface AppOptions {
   dataDir: string;
@@ -61,6 +67,9 @@ export interface AppOptions {
   host?: string;
   dev?: boolean;
   tick?: boolean;
+  mailer?: Mailer;
+  publicOrigin?: string;
+  maxPeers?: number;
 }
 export async function createApp(options: AppOptions) {
   const dataDir = resolve(options.dataDir),
@@ -88,7 +97,21 @@ export async function createApp(options: AppOptions) {
       store.saveWorld(w);
     }
   }
+  const accounts = new Accounts(
+    store,
+    universe,
+    options.mailer ?? configuredMailer(),
+    options.publicOrigin ?? process.env.PUBLIC_ORIGIN,
+  );
   const peers = new Set<Peer>();
+  const revoke = (id: string) => {
+    for (const peer of peers)
+      if (peer.account?.id === id) {
+        leave(peer);
+        peer.account = undefined;
+        peer.socket.close(4004, 'Sign in again to continue');
+      }
+  };
   const auth = (req: IncomingMessage) => {
     const token = req.headers.authorization?.replace(/^Bearer /, '') ?? '';
     const a = universe.authenticate(token);
@@ -97,7 +120,7 @@ export async function createApp(options: AppOptions) {
   };
   const send = (p: Peer, data: unknown) => {
     if (p.socket.readyState === WebSocket.OPEN && p.socket.bufferedAmount < 1024 * 1024)
-      p.socket.send(JSON.stringify(data));
+      p.socket.send(typeof data === 'string' ? data : JSON.stringify(data));
   };
   const registry = () =>
     [...worlds.values()].map((w) => ({
@@ -109,10 +132,24 @@ export async function createApp(options: AppOptions) {
       owner: w.owner,
       locked: w.settings.locked,
     }));
-  const snapshot = (p: Peer) => {
+  const snapshot = (p: Peer, frames = new Map<string, Frame>()) => {
     const w = p.world && worlds.get(p.world);
     if (!w || !p.account) return;
     const me = w.players[p.account.id];
+    if (p.delta) {
+      if (p.socket.bufferedAmount > 256 * 1024) {
+        p.socket.close(4005, 'Connection too slow; reconnecting');
+        return;
+      }
+      let frame = frames.get(w.id);
+      if (!frame) {
+        frame = prepareFrame(w);
+        frames.set(w.id, frame);
+      }
+      p.stream ??= new DeltaStream();
+      send(p, p.stream.encode(w, p.account, frame));
+      return;
+    }
     const players = Object.fromEntries(
       Object.entries(w.players)
         .filter(([id, q]) => q.online || id === me.id)
@@ -136,36 +173,34 @@ export async function createApp(options: AppOptions) {
                 kudos: q.kudos,
                 online: q.online,
                 kills: q.kills,
-                age: q.age,
+                age: Math.floor(q.age),
                 lastHorn: q.lastHorn,
               },
         ]),
     );
-    send(p, {
-      type: 'state',
-      world: {
-        ...w,
-        players,
-        ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
-        script: me.authority >= 20 ? w.script : '',
-        scriptVariables: {},
-        messages: w.messages.filter((m) => !m.to || m.to === me.id || m.name === me.name),
-      },
-      me: me.id,
-      account: p.account,
-    });
+    const state = {
+      ...w,
+      players,
+      ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
+      script: me.authority >= 20 ? w.script : '',
+      scriptVariables: {},
+      messages: w.messages.filter((m) => !m.to || m.to === me.id || m.name === me.name),
+    };
+    send(p, { type: 'state', world: state, me: me.id, account: p.account });
   };
   const leave = (p: Peer) => {
     if (p.world && p.account) {
       const w = worlds.get(p.world)!;
       const me = w.players[p.account.id];
       if (me) {
+        me.speed = 0;
         me.online = false;
         me.lastSeen = w.time;
         say(w, 'Parish notice', me.name + ' has left.');
         store.saveWorld(w);
       }
       delete p.world;
+      delete p.stream;
     }
     p.input = { throttle: 0, steer: 0, boost: false };
   };
@@ -225,7 +260,13 @@ export async function createApp(options: AppOptions) {
   };
   const rate = new Map<string, { time: number; count: number }>();
   const server = createServer(async (req, res) => {
-    const path = new URL(req.url ?? '/', 'http://localhost').pathname;
+    let path: string;
+    try {
+      path = new URL(req.url ?? '/', 'http://localhost').pathname;
+    } catch {
+      return json(res, 400, { error: 'Invalid request URL' });
+    }
+    if (rate.size > 10000) rate.delete(rate.keys().next().value!);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'same-origin');
     try {
@@ -233,6 +274,63 @@ export async function createApp(options: AppOptions) {
         return json(res, 403, { error: 'Origin not allowed' });
       if (path === '/api/health')
         return json(res, 200, { ok: true, version: VERSION, worlds: worlds.size });
+      if (path.startsWith('/api/auth/')) {
+        if (path === '/api/auth/status' && req.method === 'GET')
+          return json(res, 200, accounts.status(auth(req).id));
+        const ip = clientAddress(req.socket.remoteAddress, req.headers['x-real-ip']?.toString());
+        const key = 'auth:' + ip,
+          now = Date.now();
+        let r = rate.get(key);
+        if (!r || now - r.time > 60000) r = { time: now, count: 0 };
+        rate.set(key, r);
+        if (++r.count > 60)
+          return json(res, 429, { error: 'Too many account requests. Try again in a minute.' });
+        if (path === '/api/auth/status' && req.method === 'GET')
+          return json(res, 200, accounts.status(auth(req).id));
+        if (req.method !== 'POST') return json(res, 405, { error: 'POST required' });
+        const data = JSON.parse((await body(req)).toString());
+        if (path === '/api/auth/login') {
+          const result = await accounts.login(String(data.name ?? ''), String(data.password ?? ''));
+          revoke(result.account.id);
+          return json(res, 200, result);
+        }
+        if (path === '/api/auth/configure') {
+          const a = auth(req);
+          const status = await accounts.configure(a.id, data);
+          return json(res, 200, status);
+        }
+        if (path === '/api/auth/resend') {
+          await accounts.resend(auth(req).id);
+          return json(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/forgot') {
+          // Do not reveal whether an address exists, is verified, or failed delivery.
+          if (!accounts.status('').recoveryAvailable)
+            return json(res, 503, { error: 'Email recovery is not configured on this server' });
+          void accounts
+            .requestReset(String(data.email ?? ''))
+            .catch(() => console.error('Recovery delivery failed'));
+          return json(res, 200, {
+            message: 'If that verified address belongs to a pilot, a reset link is on its way.',
+          });
+        }
+        if (path === '/api/auth/verify') {
+          accounts.verify(String(data.token ?? ''));
+          return json(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/reset') {
+          const id = await accounts.reset(String(data.token ?? ''), String(data.password ?? ''));
+          revoke(id);
+          return json(res, 200, { ok: true });
+        }
+        if (path === '/api/auth/logout') {
+          const a = auth(req);
+          accounts.rotate(a.id);
+          revoke(a.id);
+          return json(res, 200, { ok: true });
+        }
+        return json(res, 404, { error: 'Endpoint not found' });
+      }
       if (path === '/api/register' && req.method === 'POST') {
         const ip = clientAddress(req.socket.remoteAddress, req.headers['x-real-ip']?.toString()),
           r = rate.get(ip) ?? { time: Date.now(), count: 0 };
@@ -355,16 +453,32 @@ export async function createApp(options: AppOptions) {
     try {
       return (
         new URL(req.headers.origin).host === req.headers.host ||
-        req.headers.origin === process.env.PUBLIC_ORIGIN
+        (!!(options.publicOrigin ?? process.env.PUBLIC_ORIGIN) &&
+          req.headers.origin ===
+            new URL((options.publicOrigin ?? process.env.PUBLIC_ORIGIN)!).origin)
       );
     } catch {
       return false;
     }
   }
-  const wss = new WebSocketServer({ noServer: true, maxPayload: 32768 });
+  const wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: 32768,
+    perMessageDeflate: {
+      threshold: 1024,
+      serverNoContextTakeover: true,
+      clientNoContextTakeover: true,
+      concurrencyLimit: 4,
+      zlibDeflateOptions: { level: 1 },
+    },
+  });
   server.on('upgrade', (req, socket, head) => {
-    if (new URL(req.url ?? '/', 'http://localhost').pathname !== '/ws' || !allowedOrigin(req)) {
+    if (req.url?.split('?')[0] !== '/ws' || !allowedOrigin(req)) {
       socket.destroy();
+      return;
+    }
+    if (peers.size >= (options.maxPeers ?? 128)) {
+      socket.end('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n');
       return;
     }
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
@@ -395,7 +509,14 @@ export async function createApp(options: AppOptions) {
           if (p.account) throw Error('Already signed in');
           const a = universe.authenticate(m.token);
           if (!a) throw Error('Invalid pilot key');
+          for (const other of peers)
+            if (other !== p && other.account?.id === a.id) {
+              leave(other);
+              other.account = undefined;
+              other.socket.close(4001, 'Connected elsewhere');
+            }
           p.account = a;
+          p.delta = m.protocol === 2;
           if (m.world) {
             try {
               enter(p, m.world);
@@ -545,9 +666,14 @@ export async function createApp(options: AppOptions) {
           }
           for (const w of worlds.values()) advance(w, dt);
           counter++;
-          if (counter % 4 === 0) for (const p of peers) snapshot(p);
+          if (counter % 4 === 0) {
+            const frames = new Map<string, Frame>();
+            for (const p of peers) snapshot(p, frames);
+          }
           if (counter % 100 === 0) for (const w of worlds.values()) store.saveWorld(w);
           if (counter % 600 === 0) {
+            for (const [key, entry] of rate)
+              if (Date.now() - entry.time > 3600000) rate.delete(key);
             for (const p of peers) {
               if (!p.alive || (!p.account && Date.now() - p.born > 10000)) p.socket.terminate();
               else {
@@ -592,7 +718,7 @@ export async function createApp(options: AppOptions) {
     if (server.listening) await new Promise<void>((r) => server.close(() => r()));
     store.close();
   };
-  return { server, worlds, store, universe, listen, close };
+  return { server, worlds, store, universe, accounts, listen, close };
 }
 function mime(path: string) {
   return (
@@ -602,6 +728,7 @@ function mime(path: string) {
         '.js': 'text/javascript',
         '.css': 'text/css',
         '.png': 'image/png',
+        '.webp': 'image/webp',
         '.jpg': 'image/jpeg',
         '.mp3': 'audio/mpeg',
         '.glb': 'model/gltf-binary',

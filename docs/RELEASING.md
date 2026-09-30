@@ -24,3 +24,16 @@ build or test command.
 0.1.0 was the local bootstrap; 0.2.0 is the first public alpha. Advance minor versions for implemented
 milestones and patch versions for fixes. Do not label a release 1.0.0 while
 STATUS.md still lists unresolved required milestone features.
+
+## 0.3.0 upgrade notes
+
+Back up the database and uploaded assets before upgrading. This release migrates
+account storage from schema 1 to schema 2; a rollback to 0.2.x requires restoring
+the pre-upgrade backup. Existing pilots and pilot keys remain usable. Configure
+SMTP and PUBLIC_ORIGIN only if enabling email verification and password recovery;
+passwords also work without mail delivery. See [hosting and recovery](HOSTING.md).
+
+For a deployment at `/aclone/`, retain `BASE_PATH=/aclone` at build time and the
+prefix-stripping reverse proxy. Include the new `public/textures/` files in the
+client build. Editable PNG masters in `art/materials/` ship in the source archive,
+but are excluded from the runtime Docker build context.
