@@ -44,6 +44,7 @@ try {
     'screenshots.ts',
     'characters.ts',
     'streets.ts',
+    'town.ts',
     'seasons.ts',
     'living-world.ts',
     'load.ts',

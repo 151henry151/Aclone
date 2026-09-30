@@ -74,7 +74,7 @@ try {
       headers: { authorization: 'Bearer ' + key },
     });
     const pilot = (await response.json()).account.id;
-    await page.locator('#chat-input').fill('*teleport ' + pilot + ' 24 45');
+    await page.locator('#chat-input').fill('*teleport ' + pilot + ' 45 118');
     await page.locator('#chat-input').press('Enter');
     await page.waitForTimeout(500);
     await page.keyboard.press('e');

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
+import { townRoads } from '../shared/town';
+import type { World } from '../shared/types';
 import { noiseTexture } from './noise';
 declare const __ACLONE_BASE__: string;
 import { publicPath } from '../shared/public-path';
@@ -51,28 +53,51 @@ export function surface(
   return mesh;
 }
 
-export const roads = [
-  [0, 30, 12, 175],
-  [0, 10, 120, 11],
-  [0, -36, 80, 9],
-  [-40, 60, 75, 8],
-  [35, 50, 9, 90],
-  [52, 45, 82, 7],
-];
-export function roadDistance(x: number, z: number) {
-  return Math.min(
-    ...roads.map(([cx, cz, w, d]) => Math.max(Math.abs(x - cx) - w / 2, Math.abs(z - cz) - d / 2)),
-  );
+// Bake road coverage once per world rebuild. Shader cost stays constant as lanes grow.
+function roadTexture(w: World) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1024;
+  const ctx = canvas.getContext('2d')!,
+    scale = 1024 / 540;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const roads = townRoads(w);
+  for (const [extra, color] of [
+    [2, '#555'],
+    [0, '#fff'],
+  ] as const) {
+    ctx.strokeStyle = color;
+    for (const { a, b, width } of roads) {
+      ctx.lineWidth = (width + extra) * scale;
+      ctx.beginPath();
+      ctx.moveTo((a.x + 270) * scale, (a.z + 270) * scale);
+      ctx.lineTo((b.x + 270) * scale, (b.z + 270) * scale);
+      ctx.stroke();
+    }
+  }
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(512, 512, 13 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  const map = new T.CanvasTexture(canvas);
+  map.generateMipmaps = false;
+  map.minFilter = map.magFilter = T.LinearFilter;
+  return map;
 }
 export const snowCover = { value: 0 };
-export function groundMaterial(seaLevel: number) {
+export function groundMaterial(w: World) {
+  const mask = roadTexture(w);
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
+  mat.addEventListener('dispose', () => mask.dispose());
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.snowCover = snowCover;
     shader.uniforms.groundNoise = { value: noiseTexture() };
     shader.uniforms.meadow = { value: texture('meadow') };
     shader.uniforms.gravel = { value: texture('gravel') };
-    shader.uniforms.shore = { value: seaLevel };
+    shader.uniforms.shore = { value: w.settings.seaLevel };
+    shader.uniforms.roadMask = { value: mask };
     shader.vertexShader = 'varying vec3 groundPosition;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
@@ -80,26 +105,18 @@ export function groundMaterial(seaLevel: number) {
     );
     shader.fragmentShader =
       `
-      uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
-      float lane(vec2 p,vec2 centre,vec2 halfSize){vec2 q=abs(p-centre)-halfSize;return max(q.x,q.y);}
       ` + shader.fragmentShader;
-    const lanes = roads
-      .map(
-        ([x, z, w, d]) =>
-          `r=min(r,lane(p,vec2(${x.toFixed(1)},${z.toFixed(1)}),vec2(${(w / 2).toFixed(1)},${(d / 2).toFixed(1)})));`,
-      )
-      .join('\n');
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <map_fragment>',
       `
       vec2 p=groundPosition.xz;
-      float r=1000.; ${lanes}
       // Gravel wears away into the turf; noise breaks up the verge at two scales.
       float verge=noise(p*1.9)*.7+noise(p*.32)*1.4;
-      float road=1.-smoothstep(-.8,1.4,r+verge-.8);
+      float road=smoothstep(.16,.84,texture2D(roadMask,vec2(.5+p.x/540.,.5-p.y/540.)).r+verge*.06);
       road=max(road,1.-smoothstep(12.,14.,length(p)));
       float beach=1.-smoothstep(shore+.3,shore+1.7,groundPosition.y);
       vec3 turf=texture2D(meadow,p/5.).rgb;
@@ -109,7 +126,7 @@ export function groundMaterial(seaLevel: number) {
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v1';
+  mat.customProgramCacheKey = () => 'countryside-ground-v2';
   return mat;
 }
 

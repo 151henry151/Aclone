@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { streetLights } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
 import { bases } from '../shared/combat';
@@ -356,7 +357,18 @@ export class GameScene {
       JSON.stringify(world.terrain) +
       ':' +
       world.buildings
-        .map((b) => b.id + b.name + (b.style ?? '') + (b.construction ? 'c' : ''))
+        .map(
+          (b) =>
+            b.id +
+            b.name +
+            b.x +
+            ':' +
+            b.z +
+            ':' +
+            b.rotation +
+            (b.style ?? '') +
+            (b.construction ? 'c' : ''),
+        )
         .join(',') +
       ':' +
       world.settings.seaLevel;
@@ -435,7 +447,7 @@ export class GameScene {
     const pos = geometry.attributes.position;
     for (let i = 0; i < pos.count; i++) pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
     geometry.computeVertexNormals();
-    this.terrain = new T.Mesh(geometry, groundMaterial(w.settings.seaLevel));
+    this.terrain = new T.Mesh(geometry, groundMaterial(w));
     this.terrain.receiveShadow = true;
     this.land.add(this.terrain);
     const sea = new T.Mesh(
@@ -461,30 +473,26 @@ export class GameScene {
       this.buildingMeshes.push(g);
       this.land.add(g);
     }
-    for (let i = 0; i < 18; i++) {
-      const x = -12,
-        z = -65 + i * 9;
-      if (i % 2 === 0) {
-        const lamp = new T.Group();
-        cylinder(lamp, 0.1, 5.5, '#353e38', 0, 2.75, 0, 10);
-        cylinder(lamp, 0.21, 0.3, '#353e38', 0, 0.15, 0, 10);
-        cylinder(lamp, 0.16, 0.15, '#353e38', 0, 5.35, 0, 10);
-        box(lamp, 0.7, 0.1, 0.7, '#353e38', 0, 5.55, 0);
-        const glass = box(lamp, 0.55, 0.8, 0.55, '#c9bf95', 0, 6, 0);
-        glass.material.roughness = 0.25;
-        glass.userData.lightSource = 'street';
-        glass.material.emissive.set('#956925');
-        glass.material.emissiveIntensity = 0.25;
-        for (const x of [-0.3, 0.3])
-          for (const z of [-0.3, 0.3]) box(lamp, 0.06, 0.9, 0.06, '#353e38', x, 6, z);
-        const cap = new T.Mesh(new T.ConeGeometry(0.56, 0.32, 4), material('#353e38'));
-        cap.position.y = 6.58;
-        cap.rotation.y = Math.PI / 4;
-        lamp.add(cap);
-        lamp.scale.setScalar(0.6);
-        lamp.position.set(x, terrainHeight(w, x, z), z);
-        this.land.add(lamp);
-      }
+    for (const { x, z } of streetLights(w)) {
+      const lamp = new T.Group();
+      cylinder(lamp, 0.1, 5.5, '#353e38', 0, 2.75, 0, 10);
+      cylinder(lamp, 0.21, 0.3, '#353e38', 0, 0.15, 0, 10);
+      cylinder(lamp, 0.16, 0.15, '#353e38', 0, 5.35, 0, 10);
+      box(lamp, 0.7, 0.1, 0.7, '#353e38', 0, 5.55, 0);
+      const glass = box(lamp, 0.55, 0.8, 0.55, '#c9bf95', 0, 6, 0);
+      glass.material.roughness = 0.25;
+      glass.userData.lightSource = 'street';
+      glass.material.emissive.set('#956925');
+      glass.material.emissiveIntensity = 0.25;
+      for (const x of [-0.3, 0.3])
+        for (const z of [-0.3, 0.3]) box(lamp, 0.06, 0.9, 0.06, '#353e38', x, 6, z);
+      const cap = new T.Mesh(new T.ConeGeometry(0.56, 0.32, 4), material('#353e38'));
+      cap.position.y = 6.58;
+      cap.rotation.y = Math.PI / 4;
+      lamp.add(cap);
+      lamp.scale.setScalar(0.6);
+      lamp.position.set(x, terrainHeight(w, x, z), z);
+      this.land.add(lamp);
     }
     const pitch = new T.Mesh(new T.PlaneGeometry(60, 50), material('#69894f'));
     surface(pitch, 'meadow', 5, '#a8ba83');

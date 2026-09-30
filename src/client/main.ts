@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { townRoads } from '../shared/town';
 import { resourceNodes, resourceAmount } from '../shared/resources';
 import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
@@ -266,7 +267,9 @@ function updateHud() {
   $('location').textContent =
     world.name +
     ' · ' +
-    (distance(me, { x: 0, z: 0 }) < 80 ? 'In the parish of Puddlewick' : 'Out in the sticks');
+    (distance(me, { x: 0, z: 0 }) < (world.townLayout === 2 ? 245 : 80)
+      ? 'In the parish of Puddlewick'
+      : 'Out in the sticks');
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
@@ -362,8 +365,9 @@ function drawMap() {
     ctx = c.getContext('2d')!;
   ctx.fillStyle = '#4e6247';
   ctx.fillRect(0, 0, 230, 170);
-  const sx = (x: number) => 115 + x * 0.6,
-    sz = (z: number) => 65 + z * 0.6;
+  const scale = world.townLayout === 2 ? 0.31 : 0.6;
+  const sx = (x: number) => 115 + x * scale,
+    sz = (z: number) => (world!.townLayout === 2 ? 85 : 65) + z * scale;
   ctx.strokeStyle = '#718160';
   ctx.lineWidth = 1;
   for (let x = 0; x < 230; x += 23) {
@@ -379,19 +383,20 @@ function drawMap() {
     ctx.stroke();
   }
   ctx.fillStyle = '#758e86';
-  ctx.fillRect(0, 155, 230, 15);
+  ctx.fillRect(0, sz(150), 230, 170 - sz(150));
   ctx.strokeStyle = '#b6ac84';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(sx(0), sz(-65));
-  ctx.lineTo(sx(0), sz(115));
-  ctx.moveTo(sx(-60), sz(10));
-  ctx.lineTo(sx(60), sz(10));
-  ctx.stroke();
+  ctx.lineCap = 'round';
+  for (const { a, b, width } of townRoads(world)) {
+    ctx.lineWidth = Math.max(1, width * scale);
+    ctx.beginPath();
+    ctx.moveTo(sx(a.x), sz(a.z));
+    ctx.lineTo(sx(b.x), sz(b.z));
+    ctx.stroke();
+  }
   ctx.fillStyle = '#ddd0a5';
   for (const b of world.buildings) ctx.fillRect(sx(b.x) - 2, sz(b.z) - 2, 4, 4);
   ctx.strokeStyle = '#c8d29e';
-  ctx.strokeRect(sx(60), sz(20), 36, 30);
+  ctx.strokeRect(sx(60), sz(20), 60 * scale, 50 * scale);
   for (const p of Object.values(world.players)) {
     ctx.fillStyle = p.id === me.id ? '#f2ba71' : '#b9d3cc';
     ctx.beginPath();
@@ -400,9 +405,9 @@ function drawMap() {
   }
   ctx.font = '9px monospace';
   ctx.fillStyle = '#f0e6c4';
-  ctx.fillText('PUDDLEWICK', 76, 30);
-  ctx.fillText('HORN BALL', 159, 105);
-  ctx.fillText('CIRCUIT', 36, 126);
+  ctx.fillText('PUDDLEWICK', sx(-30), sz(-22));
+  ctx.fillText('HORN BALL', sx(63), sz(84));
+  ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
 function openPanel(name: string) {
   if (name === 'options' && token)

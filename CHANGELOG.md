@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-30
+
+### Changed
+
+- Spread the starter town across roughly eight times its previous area, with winding connected lanes, branches and loops instead of a compact crossroad layout. Buildings, vehicles and characters retain their metre scale.
+- Road textures, roadside vegetation, streetlights and the parish map now share the same street plan; terrain accommodates the expanded town while preserving the coast and terrain edits.
+- Existing untouched starter lots move once on load, preserving ownership, prices, inventory and residents. Edited and player-built properties remain in place; occupied destinations are skipped, and pilots parked on newly occupied lots are placed outside the walls.
+
 ## [0.5.1] - 2026-09-30
 
 ### Fixed

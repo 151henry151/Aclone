@@ -5,7 +5,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingPlan, buildingBounds } from '../shared/building-shapes';
 import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/simulation';
-import { roadDistance, contactShadow, texture } from './materials';
+import { contactShadow, texture } from './materials';
+import { townRoads, roadDistance as distanceToRoad } from '../shared/town';
 const mat = (color: string) => new T.MeshStandardMaterial({ color, roughness: 0.96 });
 function random(seed: number) {
   return () => {
@@ -112,6 +113,8 @@ export function countryside(root: T.Group, world: World, low: boolean) {
       ),
     };
   });
+  const roads = townRoads(world);
+  const roadDistance = (x: number, z: number) => distanceToRoad(roads, x, z);
   const clear = (x: number, z: number, margin: number) =>
     roadDistance(x, z) > margin &&
     Math.hypot(x, z) > 16 &&
@@ -206,8 +209,8 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     shade.position.set(x, h + 0.1, z);
     shades.push(shade);
   }
-  for (let x = -85; x < 105; x += 1.7)
-    for (let z = -90; z < 110; z += 1.7) {
+  for (let x = -235; x < 235; x += 3.4)
+    for (let z = -235; z < 140; z += 3.4) {
       const px = x + rand(),
         pz = z + rand(),
         d = roadDistance(px, pz),

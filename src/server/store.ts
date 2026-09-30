@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { migrateTown } from '../shared/town.ts';
 import { DatabaseSync, backup } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -43,6 +44,7 @@ export class Store {
       .map((row) => {
         const world = JSON.parse(String(row.state)) as World;
         world.settings = { ...defaults, ...world.settings };
+        migrateTown(world);
         for (const b of world.buildings)
           if (b.government && ['market', 'starport'].includes(b.kind))
             for (const key of [

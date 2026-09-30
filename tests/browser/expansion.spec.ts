@@ -60,7 +60,7 @@ test('cottage styles, garage paint and combat choices survive real server action
     await page.locator('#chat-input').fill(text);
     await page.locator('#chat-input').press('Enter');
   };
-  await command(`*teleport ${id} -30 16`);
+  await command(`*teleport ${id} -118 8`);
   await expect(page.locator('#target')).toContainText('Spanner & Sons');
   await page.keyboard.press('e');
   await page.getByRole('button', { name: 'Harbour blue', exact: true }).click();

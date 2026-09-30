@@ -131,3 +131,11 @@ varied appearances; their owners, stock and locations stay intact. The garage of
 seven tractor paint colours for 25d, saved with your planetary pilot.
 
 A cottage chimney smokes while its owner is inside, including after logout. Booked guests keep B&B/hotel fires active too. Workplace chimneys smoke while an employed player is online, within 18m and on an active shift. Offline residents eat from home or room supplies without offline health loss or ageing. [Running and staying at a guesthouse](ECONOMY.md#running-a-guesthouse) explains booking, food stores and checkout.
+
+## Finding your way around town
+
+The parish covers roughly eight times its original area. Follow the winding lanes
+and use the minimap or Directory to locate dispersed shops and workplaces. Street
+lights follow the lanes; headlights help between them. The buildings and tractors
+retain their original scale. The Hornball pitch, racing checkpoints and gathering
+grounds remain at their established locations.

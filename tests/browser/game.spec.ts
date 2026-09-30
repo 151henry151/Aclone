@@ -91,7 +91,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
     headers: { authorization: 'Bearer ' + key },
   });
   const identity = (await session.json()).account.id;
-  await page.locator('#chat-input').fill('*teleport ' + identity + ' 0 -28');
+  await page.locator('#chat-input').fill('*teleport ' + identity + ' -8 -97');
   await page.locator('#chat-input').press('Enter');
   await expect(page.locator('#target')).toContainText('Odd Jobs Office');
   await page.keyboard.press('e');

@@ -40,11 +40,11 @@ try {
   // Front elevations approached through normal world-owner teleport commands.
   for (const [name, x, z] of [
     ['village', 0, 17],
-    ['cottage', -24, 45],
-    ['pub', 30, 20],
-    ['mill', 24, 47],
-    ['shops', -22, -5],
-    ['school', 22, -7],
+    ['cottage', -78, 121],
+    ['pub', 105, 7],
+    ['mill', 45, 118],
+    ['shops', -65, -42],
+    ['school', 68, -69],
   ] as const) {
     await page.locator('#chat-input').fill(`*teleport ${id} ${x} ${z}`);
     await page.locator('#chat-input').press('Enter');
@@ -57,7 +57,7 @@ try {
   await page.mouse.wheel(0, 280);
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   await page.getByRole('button', { name: 'Switch to walking' }).click();
-  await page.locator('#chat-input').fill(`*teleport ${id} -24 39`);
+  await page.locator('#chat-input').fill(`*teleport ${id} -78 115`);
   await page.locator('#chat-input').press('Enter');
   await page.keyboard.press('h');
   await expect(page.locator('#toast')).not.toHaveClass(/show/, { timeout: 15000 });

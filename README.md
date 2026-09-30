@@ -6,7 +6,11 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.5.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.6.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.6.0:** an approximately eight-times-larger town footprint with winding roads, dispersed businesses, roadside lights and a matching parish map. Existing starter properties retain their owners and contents when relocated; custom lots stay in place.
+
+![Expanded town and winding lanes](docs/screenshots/town-overview.png)
 
 **Fixed in 0.5.1:** reliable Go outside buttons during live updates, plus Space/Enter activation of focused buttons.
 
@@ -204,7 +208,7 @@ npm run test:e2e
 npm run test:load    # isolated 100-client, 10-second local load probe
 ```
 
-The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The browser runner uses `tsx` for TypeScript server fixtures. Unit and network tests use temporary databases and random ports.
+The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The browser runner uses `tsx` for TypeScript server fixtures. `npm run screenshots:town` captures the expanded town and checks access to its public services using an isolated server. Unit and network tests use temporary databases and random ports.
 
 Tuning is in `data/*.json`. New behaviours need tests before or alongside implementation. Update `CHANGELOG.md`, review this README and affected guides, and keep the code formatted. No generated client build, saved accounts, reference screenshots or source-research exports belong in a release archive.
 

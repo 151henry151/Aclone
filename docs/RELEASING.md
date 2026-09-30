@@ -105,3 +105,22 @@ No save, schema or protocol changes. Rebuild the client with the existing
 `BASE_PATH`, restart the service and refresh open clients. This fixes the
 Go outside button losing clicks during world updates, and restores native
 Space/Enter activation for focused buttons.
+
+## 0.6.0 upgrade notes
+
+Back up the database and assets, pull, install dependencies, rebuild with your
+existing `BASE_PATH=/aclone`, restart, and refresh clients. The town footprint
+is about eight times larger (area, not eight times each dimension). Building
+models, player size, speed, map boundaries and activity locations remain unchanged.
+
+On first load, starter buildings still at their original coordinates relocate
+to the new parish plan. Ownership, prices, stock, plots, employment and IDs stay
+intact; nearby grounded pilots and residents move with their building. Edited
+starter positions and player-built lots are preserved. A destination occupied
+by another retained property is skipped. Such customized worlds can retain
+some compact lots alongside the expanded street network. Terrain brushes remain
+additive over the wider flat parish; coastal water remains south of town.
+
+The optional saved `townLayout` field prevents a second move. A rollback should
+restore the pre-upgrade backup so old clients do not show old roads over new lots.
+No production deployment is performed by the release scripts.

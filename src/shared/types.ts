@@ -148,6 +148,7 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  townLayout?: 1 | 2;
   schemaVersion: 1;
   id: string;
   name: string;

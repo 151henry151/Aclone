@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
 import { shelter, lodgingAction, feedAtHome, roomCount } from './lodging.ts';
@@ -29,7 +30,8 @@ export function damage(value: number, armour: number) {
 }
 export function terrainHeight(w: World, x: number, z: number) {
   const hills = Math.sin(x * 0.021) * Math.cos(z * 0.019) * 8 + Math.sin(x * 0.047 + z * 0.025) * 3;
-  const flat = 1 - clamp((Math.max(Math.abs(x), Math.abs(z)) - 120) / 80, 0, 1);
+  const plateau = w.townLayout === 2 ? 230 : 120;
+  const flat = 1 - clamp((Math.max(Math.abs(x), Math.abs(z)) - plateau) / 80, 0, 1);
   let h = hills * (1 - flat) + 0.15;
   if (z > 140) h -= (z - 140) * 0.2;
   for (const t of w.terrain)
@@ -95,6 +97,7 @@ export function createWorld(
     vehicleTuning: {},
     players: {},
     buildings: [],
+    townLayout: 2,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -114,24 +117,7 @@ export function createWorld(
     kricket: { due: 0, score: {} },
     revision: 0,
   };
-  const layout: [string, number, number][] = [
-    ['market', -22, -16],
-    ['workhouse', 0, -28],
-    ['school', 22, -18],
-    ['pub', 30, 8],
-    ['garage', -30, 8],
-    ['home', -24, 34],
-    ['mill', 24, 35],
-    ['farm', 40, 70],
-    ['bakery', 0, 48],
-    ['sawmill', -45, 60],
-    ['quarry', -65, 85],
-    ['starport', 8, -65],
-    ['bank', -22, -42],
-    ['town', 0, 0],
-    ['forge', 50, -40],
-  ];
-  layout.forEach(([kind, x, z], i) => {
+  expandedTown.forEach(({ kind, x, z }, i) => {
     const b = makeBuilding('b' + i, kind, x, z);
     b.government = [
       'market',
