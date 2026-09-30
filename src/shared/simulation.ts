@@ -9,6 +9,7 @@ import {
   skills,
   checkpoints,
 } from './catalog.ts';
+import { buildingBlocksMovement } from './building-shapes.ts';
 import type { World, Player, Building, Stock, Action, Input, Ledger, Settings } from './types.ts';
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 export const distance = (a: { x: number; z: number }, b: { x: number; z: number }) =>
@@ -1079,8 +1080,14 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -250, 250),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -250, 250);
   if (
-    !w.buildings.some(
-      (b) => distance({ x: nx, z: nz }, b) < 5 && p.y < terrainHeight(w, b.x, b.z) + 6,
+    !w.buildings.some((b) =>
+      buildingBlocksMovement(
+        b,
+        p,
+        { x: nx, z: nz },
+        p.y - terrainHeight(w, b.x, b.z),
+        p.vehicle === 5 ? 0.25 : 1.3,
+      ),
     )
   ) {
     p.x = nx;

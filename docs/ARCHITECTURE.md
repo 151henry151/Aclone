@@ -31,6 +31,8 @@ cross-service exchange; it is tracked as a remaining specification gap.
 - `src/server/app.ts`: HTTP endpoints, WebSocket authentication, scheduling,
   request rollback, snapshot projection and static files.
 - `src/server/lua.ts`, `scripts.ts`, `script-worker.mjs`: isolated scripting.
+- `src/shared/building-shapes.ts`: deterministic metre-scale building volumes shared by rendering, picking, planting and movement collision.
+- `src/client/buildings.ts`: original building silhouettes and facade details.
 - `src/client/scene.ts`: original models, terrain, camera and effects.
 - `src/client/human.ts`: shared walking/driver geometry, articulated walking and seated poses.
 - `src/client/main.ts`, `style.css`: input, panels, connection and responsive HUD.
@@ -157,3 +159,10 @@ position; the client does not extrapolate through walls or continue driving afte
 losing its connection. Interactions, physics and persistence still use server state.
 `tests/motion.test.ts` exercises steady motion at multiple frame rates, packet
 jitter, angle wrapping, teleports, disconnections and clock resets.
+
+Building plans keep existing building IDs, positions, inventories and ownership.
+Collision transforms movement into each building's local frame and checks its
+individual volumes. A pilot already inside a newly enlarged or edited footprint
+may reduce penetration to escape; outside pilots cannot enter. This is still
+simple footprint collision, not a mesh physics engine. The plan cache is keyed
+by building kind and bounded visual variant, not individual player or building ID.

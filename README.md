@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.3.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.3.4 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Updated in 0.3.4:** compact tractor proportions and a varied village of cottages, shops, civic buildings and industrial sheds, with consistent human-scale doors, windows and street furniture. New buildings retain existing identities, ownership and inventories.
 
 **Fixed in 0.3.3:** smoothly shaded walking characters and cab drivers with natural proportions, facial and clothing detail, animated limbs, and a closer walking camera. Use **Inventory → Switch to walking** or **Return to tractor**.
 
@@ -29,7 +31,17 @@ Actual gameplay, with original models, material textures and interface. The firs
 ![A working flour mill showing stock, prices, investment and property purchase](docs/screenshots/trading.png)
 
 <details>
-<summary>Character detail, galaxy directory and live world editor</summary>
+<summary>Village variety, character detail, galaxy directory and live world editor</summary>
+
+These gameplay captures show the scale and architecture update in 0.3.4.
+
+![Village buildings at distinct heights and footprints](docs/screenshots/village.png)
+
+![Human beside a cottage with a full-height doorway](docs/screenshots/human-scale.png)
+
+![Two-storey pub with a side wing and timber framing](docs/screenshots/pub.png)
+
+![Mill tower and original timber mill wheel](docs/screenshots/mill.png)
 
 ![Original walking character with work clothes and articulated limbs](docs/screenshots/character.png)
 

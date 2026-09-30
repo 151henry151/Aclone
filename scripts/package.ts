@@ -43,6 +43,7 @@ try {
     'package.ts',
     'screenshots.ts',
     'characters.ts',
+    'streets.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',

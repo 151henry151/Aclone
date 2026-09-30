@@ -30,7 +30,7 @@ Browser tests exercise the real rendered client and live server rather than a
 mock game state. Unit and integration tests focus on critical invariants; they
 do not establish production-scale security or long-term economic balance.
 
-## Graphics through 0.3.3
+## Graphics through 0.3.4
 
 The 0.3.0 renderer uses original generated meadow, gravel, limestone and slate
 materials, a detailed glazed tractor cab and treaded wheels, instanced foliage,
@@ -46,6 +46,11 @@ chase camera and a human-height first-person view. Figures remain stylized;
 they are not photorealistic scans. Shared geometry and batched drivers keep the
 additional rendering cost bounded. Browser tests cover switching to walking,
 moving, changing cameras and returning to the tractor.
+
+Version 0.3.4 adds distinct building footprints and roof forms,
+consistent doors and windows, a compact tractor cab, human-scale street furniture,
+and footprint-aware movement collision. It changes existing presentation and
+navigation without adding historical game systems.
 
 ## Implemented with a smaller scope than the spec
 

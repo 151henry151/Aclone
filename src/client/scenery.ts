@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { buildingPlan, buildingBounds } from '../shared/building-shapes';
 import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/simulation';
 import { roadDistance, contactShadow, texture } from './materials';
@@ -92,12 +93,22 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     root.add(mesh);
     return mesh;
   };
+  const footprints = world.buildings.map((b) => {
+    const bounds = buildingBounds(buildingPlan(b));
+    return {
+      b,
+      radius: Math.hypot(
+        Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)),
+        Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)),
+      ),
+    };
+  });
   const clear = (x: number, z: number, margin: number) =>
     roadDistance(x, z) > margin &&
     Math.hypot(x, z) > 16 &&
     !(x > 56 && x < 124 && z > 16 && z < 74) &&
     !(x > 45 && x < 105 && z < -55 && z > -92) &&
-    world.buildings.every((b) => Math.hypot(b.x - x, b.z - z) > 9 + margin);
+    footprints.every(({ b, radius }) => Math.hypot(b.x - x, b.z - z) > radius + 1 + margin);
   const grass: number[][] = [],
     flowers: number[][] = [],
     trunks: number[][] = [],
@@ -108,15 +119,15 @@ export function countryside(root: T.Group, world: World, low: boolean) {
       z = (rand() - 0.5) * 480,
       h = terrainHeight(world, x, z);
     if (h < world.settings.seaLevel + 0.9 || !clear(x, z, 0.5)) continue;
-    const s = 0.5 + rand() * 0.7;
+    const s = 0.18 + rand() * 0.32;
     grass.push([x, h, z, s, rand() * 6.28]);
     // Local tufts along the roadside, not just far-away woodland.
     if (roadDistance(x, z) < 5)
       for (let j = 0; j < 4; j++)
         grass.push([x + rand() * 1.5, h, z + rand() * 1.5, s, rand() * 6.28]);
-    if (i % 7 === 0) flowers.push([x, h + 0.45, z, 0.6 + rand() * 0.5]);
+    if (i % 7 === 0) flowers.push([x, h + 0.24, z, 0.6 + rand() * 0.5]);
     if (i % 42 === 0 && clear(x, z, 5)) {
-      const scale = 0.8 + rand() * 0.65;
+      const scale = 0.72 + rand() * 0.8;
       trunks.push([x, h, z, scale, rand() * 6]);
       for (let j = 0; j < 13; j++) {
         const a = j * 2.399,
@@ -164,7 +175,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
         d = roadDistance(px, pz),
         h = terrainHeight(world, px, pz);
       if (d < 1 || d > 3.8 || !clear(px, pz, 0.5) || h < world.settings.seaLevel + 0.9) continue;
-      grass.push([px, h, pz, 0.35 + rand() * 0.45, rand() * 6.28]);
+      grass.push([px, h, pz, 0.14 + rand() * 0.22, rand() * 6.28]);
     }
   const blades = foliage(true);
   scatter(blades.geometry, blades.material, grass);
@@ -184,25 +195,28 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     fence: number[][] = [],
     rails: number[][] = [];
   for (const b of world.buildings) {
-    if (['town', 'starport', 'farm'].includes(b.kind)) continue;
+    if (!['home', 'pub', 'school', 'bank', 'workhouse', 'bakery'].includes(b.kind)) continue;
+    const bounds = buildingBounds(buildingPlan(b));
+    const half = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 1.7;
+    const front = bounds.maxZ + 1.8;
     const c = Math.cos(b.rotation),
       s = Math.sin(b.rotation);
     const point = (x: number, z: number) => [b.x + x * c + z * s, b.z - x * s + z * c];
     for (const side of [-1, 1]) {
       for (let j = 0; j < 7; j++) {
-        const [x, z] = point(side * 7.8, -5 + j * 1.65);
-        hedges.push([x, terrainHeight(world, x, z), z, 1.7 + (j % 2) * 0.2, j]);
+        const [x, z] = point(side * half, bounds.minZ + j * (bounds.depth / 6));
+        hedges.push([x, terrainHeight(world, x, z), z, 1.15 + (j % 2) * 0.1, j]);
       }
       for (let j = 0; j < 4; j++) {
-        const [x, z] = point(side * (2.8 + j * 1.4), 7);
+        const [x, z] = point(side * (1.8 + j * ((half - 1.8) / 3)), front);
         fence.push([x, terrainHeight(world, x, z) + 0.65, z, 1, b.rotation]);
       }
       for (const h of [0.45, 1]) {
-        const [x, z] = point(side * 4.9, 7);
-        rails.push([x, terrainHeight(world, x, z) + h, z, 1, b.rotation]);
+        const [x, z] = point(side * ((half + 1.8) / 2), front);
+        rails.push([x, terrainHeight(world, x, z) + h, z, (half - 1.8) / 4.4, b.rotation]);
       }
     }
-    const shade = contactShadow(17, 15, 0.38);
+    const shade = contactShadow(bounds.width + 3, bounds.depth + 3, 0.38);
     shade.position.set(b.x, terrainHeight(world, b.x, b.z) + 0.09, b.z);
     shades.push(shade);
   }

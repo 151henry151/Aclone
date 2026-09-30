@@ -60,3 +60,30 @@ standing character, walking pose and driver. `CHROMIUM_PATH` can select a locall
 installed browser. Omit `SCREENSHOT_GPU` to use software rendering (slower).
 Captures use the real inventory actions and scenery view, and fail on browser
 errors. See `scripts/characters.ts`; no mockup is substituted for gameplay.
+
+## Scale and architecture (0.3.4)
+
+One world unit is treated as one metre. The adult figure is about 1.8 m tall;
+tractors are about 2.85 m tall and 2.6 m wide, with a 2.5 m cockpit eye position.
+The driver retains exactly the same body size when seated. Ordinary door leaves
+are 2.1 m tall, cottage eaves 2.7 m and two-storey eaves around 5.4 m. Workshops
+have larger 3.2 m vehicle doors. Village lamps are about 4 m, bench seats about
+0.5 m, and mature trees roughly 7–15 m tall. These are design proportions for
+this stylized game, not replicas of a particular manufacturer's dimensions.
+
+`src/shared/building-shapes.ts` owns deterministic building volumes in metres.
+The renderer, planting clearance, picking and authoritative movement collision
+use those same plans. Cottage variants depend on stable building IDs, not names
+or random frame state. `src/client/buildings.ts` supplies gable, hipped, shed and
+flat roofs, wings, consistent joinery, timber framing, striped shop awnings,
+workshop bays, a mill wheel and civic/industrial landmarks. Material UVs retain
+metre-based tiling rather than stretching with the size of the building. All
+models remain original procedural GPL-covered source; there are no new assets
+or external downloads. Static details still participate in world batching.
+
+Run `TEST_URL=http://127.0.0.1:3000 SCREENSHOT_GPU=1 npx tsx scripts/streets.ts`
+on a disposable instance for village, cottage, pub, mill, shop, school and human
+scale screenshots. It uses real registration, world creation and owner teleport
+commands, and checks browser errors. `CHROMIUM_PATH` is supported. The character
+capture also shows the resized cab. Review first-person views after changing cab
+or seat dimensions, and test both root and `/aclone/` builds.

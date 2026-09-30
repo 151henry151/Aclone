@@ -3,7 +3,9 @@ import * as T from 'three';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
-import { tractor } from './tractor';
+import { tractor, TRACTOR_EYE_HEIGHT, TRACTOR_SEAT_Z } from './tractor';
+import { buildingModel } from './buildings';
+import { buildingPlan } from '../shared/building-shapes';
 import { MotionClock, MotionTrack } from './motion';
 import { createHuman, type HumanFigure } from './human';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -420,7 +422,8 @@ export class GameScene {
         cap.position.y = 6.58;
         cap.rotation.y = Math.PI / 4;
         lamp.add(cap);
-        lamp.position.set(x, 0.2, z);
+        lamp.scale.setScalar(0.6);
+        lamp.position.set(x, terrainHeight(w, x, z), z);
         this.land.add(lamp);
       }
     }
@@ -520,6 +523,7 @@ export class GameScene {
         mat.map?.uuid,
         mat.roughness,
         mat.metalness,
+        mat.side,
         mat.emissive.getHexString(),
       ].join(':');
       const batch = batches.get(key) ?? { geometries: [], material: mat.clone() };
@@ -548,10 +552,17 @@ export class GameScene {
     }
     countryside(this.land, w, this.low);
     for (const g of this.buildingMeshes) {
-      const picker = new T.Mesh(new T.BoxGeometry(11, 9, 9), material('#ffffff'));
-      picker.position.y = 4.5;
-      picker.visible = false;
-      g.add(picker);
+      const b = w.buildings.find((b) => b.id === g.userData.building)!;
+      for (const v of buildingPlan(b).volumes) {
+        const height = v.eaves + v.rise;
+        const picker = new T.Mesh(new T.BoxGeometry(v.width, height, v.depth), material('#ffffff'));
+        picker.position.set(v.x, height / 2, v.z);
+        // Town geometry is scaled as a group; plans already contain final metres.
+        picker.position.divide(g.scale);
+        picker.scale.set(1 / g.scale.x, 1 / g.scale.y, 1 / g.scale.z);
+        picker.visible = false;
+        g.add(picker);
+      }
     }
   }
   private building(b: Building) {
@@ -598,107 +609,13 @@ export class GameScene {
         box(g, 2.8, 0.6, 0.14, '#796747', x, 1.22, -0.46);
         for (const dx of [-1.05, 1.05]) box(g, 0.13, 0.85, 0.7, '#434c42', x + dx, 0.42, 0);
       }
+      g.scale.setScalar(0.6);
       return g;
     }
-    const industrial = ['mill', 'forge', 'sawmill', 'quarry', 'factory', 'refinery'].includes(
-      b.kind,
-    );
-    const base = b.government ? '#d9cfaa' : industrial ? '#b69778' : '#e0c9a2';
-    const wall = box(g, 10, 5.5, 8, b.construction ? '#a2987b' : base, 0, 2.75, 0);
-    if (!b.construction)
-      surface(wall, 'stone', 4, b.kind === 'pub' ? '#f5ead8' : industrial ? '#b0a793' : '#e8dfc8');
-    if (!b.construction) {
-      box(g, 10.5, 0.55, 8.5, '#8f9180', 0, 0.28, 0);
-      box(g, 10.4, 0.25, 8.4, '#eee0bd', 0, 5.45, 0);
-      for (const x of [-4.85, 4.85])
-        for (const z of [-3.9, 3.9]) box(g, 0.35, 5.2, 0.35, '#b8aa8b', x, 2.9, z);
-      for (const x of [-3, 3]) {
-        box(g, 2.5, 0.2, 0.65, '#e6d7b3', x, 2.1, 4.3);
-        box(g, 2.5, 0.3, 0.65, '#7a694f', x, 1.8, 4.3);
-        for (let i = 0; i < 5; i++) {
-          cylinder(
-            g,
-            0.16,
-            0.4,
-            ['#edc165', '#c87568', '#d6d7aa'][i % 3],
-            x - 0.8 + i * 0.4,
-            2.15,
-            4.35,
-            5,
-          );
-        }
-        for (const side of [-1, 1]) box(g, 0.42, 1.85, 0.18, '#52796d', x + side * 1.17, 3, 4.15);
-        box(g, 1.9, 0.1, 0.2, '#e1d4ae', x, 3, 4.21);
-      }
-      box(g, 2.3, 0.25, 1.1, '#afa88e', 0, 0.2, 4.7);
-      box(g, 0.13, 0.13, 0.16, '#edc270', 0.55, 1.6, 4.2);
-      const roofShape = new T.Shape();
-      roofShape.moveTo(-5.7, 0);
-      roofShape.lineTo(0, 3.3);
-      roofShape.lineTo(5.7, 0);
-      roofShape.closePath();
-      const roofGeometry = new T.ExtrudeGeometry(roofShape, { depth: 9, bevelEnabled: false });
-      roofGeometry.translate(0, 0, -4.5);
-      const roof = new T.Mesh(roofGeometry, material('#ffffff'));
-      surface(roof, 'roof', 4, industrial ? '#a4b8bd' : '#ffffff');
-      roof.position.y = 5.5;
-      if (!industrial) {
-        box(g, 0.8, 2.4, 0.8, '#ac8467', 3, 7.5, -2.2);
-        box(g, 1, 0.25, 1, '#d2bc94', 3, 8.8, -2.2);
-      }
-      // Stone gables sit behind the slate eaves, with exposed ridge framing.
-      for (const side of [-1, 1]) {
-        const face = new T.Mesh(new T.ShapeGeometry(roofShape), material('#ffffff'));
-        surface(face, 'stone', 4, '#ede1ca');
-        face.position.set(0, 5.5, side * 4.51);
-        if (side < 0) face.rotation.y = Math.PI;
-        g.add(face);
-        box(g, 0.18, 2.75, 0.16, '#594d3c', 0, 6.87, side * 4.59);
-        box(g, 10.4, 0.18, 0.16, '#594d3c', 0, 5.65, side * 4.59);
-        for (const x of [-2.5, 2.5]) {
-          const beam = box(g, 0.18, 4.9, 0.16, '#594d3c', x, 6.96, side * 4.59);
-          beam.rotation.z = x < 0 ? -1.04 : 1.04;
-        }
-      }
-      roof.castShadow = true;
-      g.add(roof);
-      box(g, 1.8, 3, 0.15, '#4c5544', 0, 1.5, 4.05);
-      for (const x of [-3, 3]) {
-        const pane = box(g, 1.9, 1.6, 0.15, '#496266', x, 3, 4.06);
-        pane.material.roughness = 0.2;
-        pane.material.metalness = 0.25;
-        box(g, 0.12, 1.6, 0.2, '#e1d4ae', x, 3, 4.2);
-      }
-      // Gable timber and roof ridge make each cottage read clearly at driving height.
-      box(g, 0.25, 0.16, 9.15, '#67594b', 0, 8.86, 0);
-      if (b.kind === 'shop' || b.kind === 'workhouse') {
-        box(g, 6, 0.2, 2.4, '#748f6b', 0, 3.8, 5.1);
-        for (const x of [-2.8, 2.8]) cylinder(g, 0.1, 3.8, '#67594b', x, 1.9, 6, 6);
-      }
-      if (industrial) {
-        surface(cylinder(g, 0.7, 9, '#ffffff', 3, 7, -2, 12), 'stone', 3, '#918b7d');
-        surface(box(g, 5, 3.4, 7, '#ffffff', 7, 1.7, 0), 'stone', 4, '#b4b0a0');
-        const awning = box(g, 5.7, 0.2, 8, '#ffffff', 7, 3.6, 0);
-        surface(awning, 'roof', 4);
-        awning.rotation.z = -0.14;
-        for (const x of [6, 8]) box(g, 1.3, 2.5, 0.13, '#555b4d', x, 1.3, 3.58);
-      }
-      if (b.kind === 'farm') {
-        for (let i = 0; i < 6; i++) box(g, 18, 0.8, 1, '#bcac56', 12, 0.4, (i - 3) * 2);
-      }
-      if (b.kind === 'starport') {
-        const ring = new T.Mesh(new T.TorusGeometry(5, 0.6, 6, 30), material('#678989'));
-        ring.position.set(0, 11, 0);
-        g.add(ring);
-      }
-      if (b.kind === 'pub') {
-        box(g, 10.12, 0.3, 8.12, '#5c5442', 0, 3, 0);
-        for (const x of [-4.8, 0, 4.8]) box(g, 0.3, 5.5, 8.1, '#5c5442', x, 2.75, 0);
-      }
-    } else
-      for (const x of [-6, 6]) for (const z of [-5, 5]) box(g, 0.25, 9, 0.25, '#a98456', x, 4.5, z);
-    const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.85);
-    sign.position.set(0, 10, 0);
+    g.add(buildingModel(b));
+    const bounds = new T.Box3().setFromObject(g);
+    const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.65);
+    sign.position.set(0, bounds.max.y + 1.1, 0);
     g.add(sign);
     return g;
   }
@@ -776,7 +693,8 @@ export class GameScene {
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.y = pose.heading;
-        for (const wheel of (mesh.userData.wheels ?? []) as T.Group[]) wheel.rotation.x += travel;
+        for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
+          wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
         (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
         // Keep the player's own face/driver out of the first-person camera.
         const occupant =
@@ -788,7 +706,7 @@ export class GameScene {
       if (local) {
         const pos = local.position;
         const facing = local.rotation.y;
-        this.headlights.position.set(pos.x, pos.y + 2, pos.z);
+        this.headlights.position.set(pos.x, pos.y + (local.userData.driver ? 1.7 : 2), pos.z);
         this.headlights.target.position.set(
           pos.x + Math.sin(facing) * 20,
           pos.y,
@@ -796,6 +714,7 @@ export class GameScene {
         );
         this.target.copy(pos);
         const walking = p.vehicle === 5;
+        const tractorView = !!local.userData.driver;
         this.target.y += walking ? 1.25 : 1.6;
         let diff = facing - this.chase;
         diff = Math.atan2(Math.sin(diff), Math.cos(diff));
@@ -804,7 +723,11 @@ export class GameScene {
         const heading = this.chase + this.orbit;
         const cam =
           this.cameraMode === 1
-            ? new T.Vector3(pos.x, pos.y + (walking ? 1.68 : 3), pos.z)
+            ? new T.Vector3(
+                pos.x + (tractorView ? Math.sin(facing) * TRACTOR_SEAT_Z : 0),
+                pos.y + (walking ? 1.68 : tractorView ? TRACTOR_EYE_HEIGHT : 3),
+                pos.z + (tractorView ? Math.cos(facing) * TRACTOR_SEAT_Z : 0),
+              )
             : this.cameraMode === 2 || p.vehicle === 7
               ? new T.Vector3(pos.x, pos.y + 65 * this.zoom, pos.z + 3)
               : new T.Vector3(
@@ -812,7 +735,10 @@ export class GameScene {
                   pos.y + (walking ? 3 : 8.5) * this.zoom,
                   pos.z - Math.cos(heading) * (walking ? 6 : 21) * this.zoom,
                 );
-        cam.y = Math.max(cam.y, terrainHeight(w, cam.x, cam.z) + (walking ? 0.6 : 3));
+        cam.y = Math.max(
+          cam.y,
+          terrainHeight(w, cam.x, cam.z) + (walking || tractorView ? 0.6 : 3),
+        );
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         local.userData.snapCamera = false;
@@ -825,7 +751,15 @@ export class GameScene {
             new T.IcosahedronGeometry(0.35, 0),
             new T.MeshBasicMaterial({ color: '#c3c0a8', transparent: true, opacity: 0.4 }),
           );
-          puff.position.copy(pos).add(new T.Vector3(0, 3.5, 0));
+          puff.position
+            .copy(pos)
+            .add(
+              new T.Vector3(
+                -0.57 * 0.82 * Math.cos(facing) + 0.78 * 0.82 * Math.sin(facing),
+                2.8,
+                0.57 * 0.82 * Math.sin(facing) + 0.78 * 0.82 * Math.cos(facing),
+              ),
+            );
           puff.userData.life = 2;
           this.smoke.push(puff);
           this.actors.add(puff);

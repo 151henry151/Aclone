@@ -60,3 +60,12 @@ No schema or protocol change, and no new external asset downloads. Rebuild with
 the existing `BASE_PATH`, restart the service, and refresh browser clients to load
 the character models and walking-camera changes. The editable character source
 and capture script are included in the source archive.
+
+## 0.3.4 upgrade notes
+
+No schema or protocol change. Rebuild the browser bundle with the existing
+`BASE_PATH` and restart the Node service: rendering and authoritative building
+collision share the new footprint definitions. Saved building identities,
+positions, ownership and inventory remain intact. A player caught inside a
+changed footprint can drive or walk toward its edge to escape. Refresh clients
+so displayed geometry matches the server collision model.

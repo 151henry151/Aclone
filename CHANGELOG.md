@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-09-29
+
+### Changed
+
+- Re-proportion tractors around a full-size adult driver: lower and narrower glazing, a compact roof, matching mirrors and exhaust, corrected cockpit eye position and wheel rotation.
+- Give buildings distinct metre-scale footprints and silhouettes: cottages, two-storey pubs and banks, awning-front shops, schools, barns, workshops, a mill wheel and a spaceport control tower. Door and window sizes stay consistent between buildings.
+- Reduce oversized street lamps, fountain benches, grass and garden hedges; fit planting and fences to building footprints while retaining varied mature trees.
+
+### Fixed
+
+- Match building picking and movement collisions to rotated building volumes instead of one fixed-size box/circle. Pilots caught inside a changed footprint can move toward its edge.
+
 ## [0.3.3] - 2026-09-29
 
 ### Fixed

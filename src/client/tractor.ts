@@ -4,8 +4,11 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { contactShadow } from './materials';
 import { createHuman } from './human';
+export const TRACTOR_SCALE = 0.82;
+export const TRACTOR_EYE_HEIGHT = 2.5;
+export const TRACTOR_SEAT_Z = -0.85 * TRACTOR_SCALE;
 /** Original detailed model. +Z is forward; wheel groups rotate about their X axle. */
-export function tractor(g: T.Group, color: string) {
+export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   const paint = new T.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.22 });
   const cream = new T.MeshStandardMaterial({ color: '#e0d4b6', roughness: 0.5, metalness: 0.15 });
   const steel = new T.MeshStandardMaterial({ color: '#454945', roughness: 0.46, metalness: 0.5 });
@@ -71,13 +74,13 @@ export function tractor(g: T.Group, color: string) {
     box(g, 0.48, 0.13, 0.8, steel, side * 1.04, 0.73, -0.4);
     box(g, 0.36, 0.13, 0.64, steel, side * 0.98, 1.06, -0.4);
     // Cab door posts and sills frame genuine transparent glazing.
-    for (const z of [-1.72, 0.07]) box(g, 0.095, 1.7, 0.095, cream, side * 0.82, 2.88, z);
-    box(g, 0.08, 0.09, 1.83, cream, side * 0.82, 2.05, -0.82);
-    box(g, 0.03, 1.38, 1.62, glass, side * 0.82, 2.87, -0.82);
-    box(g, 0.06, 0.07, 0.3, steel, side * 0.88, 2.65, -0.25);
-    box(g, 0.32, 0.25, 0.08, black, side * 1.12, 3.13, 0.02, 0.035);
-    box(g, 0.28, 0.22, 0.025, glass, side * 1.12, 3.13, 0.071);
-    box(g, 0.35, 0.04, 0.04, steel, side * 0.98, 3.1, 0);
+    for (const z of [-1.55, -0.03]) box(g, 0.075, 1.26, 0.075, cream, side * 0.73, 2.68, z);
+    box(g, 0.075, 0.09, 1.6, cream, side * 0.73, 2.05, -0.79);
+    box(g, 0.025, 1.12, 1.4, glass, side * 0.73, 2.69, -0.79);
+    box(g, 0.06, 0.07, 0.3, steel, side * 0.79, 2.55, -0.3);
+    box(g, 0.32, 0.25, 0.08, black, side * 1.12, 2.92, -0.02, 0.035);
+    box(g, 0.28, 0.22, 0.025, glass, side * 1.12, 2.92, 0.031);
+    box(g, 0.35, 0.04, 0.04, steel, side * 0.98, 2.9, 0);
     const lamp = add(
       g,
       new T.CylinderGeometry(0.19, 0.2, 0.13, 16),
@@ -116,25 +119,27 @@ export function tractor(g: T.Group, color: string) {
       -1.9,
     );
   }
-  for (const z of [-1.74, 0.09]) {
-    box(g, 1.59, 1.42, 0.025, glass, 0, 2.88, z);
-    box(g, 1.72, 0.09, 0.08, cream, 0, 3.68, z);
-    box(g, 1.7, 0.09, 0.08, cream, 0, 2.1, z);
+  for (const z of [-1.56, -0.02]) {
+    box(g, 1.39, 1.12, 0.025, glass, 0, 2.69, z);
+    box(g, 1.53, 0.075, 0.08, cream, 0, 3.31, z);
+    box(g, 1.53, 0.075, 0.08, cream, 0, 2.1, z);
   }
-  box(g, 1.92, 0.19, 2.07, cream, 0, 3.81, -0.8, 0.08);
-  const wiper = box(g, 0.035, 0.75, 0.025, black, -0.2, 2.89, 0.12);
+  box(g, 1.72, 0.15, 1.79, cream, 0, 3.4, -0.79, 0.08);
+  const wiper = box(g, 0.025, 0.61, 0.025, black, -0.2, 2.7, 0.015);
   wiper.rotation.z = -0.4;
   // Seat, driver, steering wheel and controls visible through the cab.
   box(g, 0.9, 0.18, 0.75, black, 0, 2.1, -0.95, 0.08);
   box(g, 0.9, 0.66, 0.16, black, 0, 2.37, -1.3, 0.08);
   const driver = createHuman('seated');
   driver.group.position.set(0, 2.2, -0.85);
+  // Machinery is reduced to compact-tractor dimensions; the adult stays full size.
+  driver.group.scale.setScalar(1 / TRACTOR_SCALE);
   g.add(driver.group);
   g.userData.driver = driver.group;
   const steering = add(g, new T.TorusGeometry(0.29, 0.033, 6, 16), black, 0, 2.62, -0.1);
   steering.rotation.x = -0.8;
-  const pipe = add(g, new T.CylinderGeometry(0.095, 0.11, 1.65, 10), steel, -0.57, 2.94, 0.78);
-  box(g, 0.3, 0.12, 0.24, black, pipe.position.x, 3.78, 0.78, 0.04);
+  const pipe = add(g, new T.CylinderGeometry(0.08, 0.095, 1.22, 10), steel, -0.57, 2.73, 0.78);
+  box(g, 0.3, 0.12, 0.24, black, pipe.position.x, 3.37, 0.78, 0.04);
   // Rounded sidewalls, recessed hubs, wheel bolts and alternating chevron lugs.
   for (const x of [-1.22, 1.22])
     for (const z of [-1.15, 1.37]) {
@@ -143,6 +148,7 @@ export function tractor(g: T.Group, color: string) {
         width = rear ? 0.58 : 0.4,
         assembly = new T.Group();
       assembly.position.set(x, rear ? 1 : 0.68, z);
+      assembly.userData.radius = r * TRACTOR_SCALE;
       g.add(assembly);
       (g.userData.wheels ??= []).push(assembly);
       const tire = add(
@@ -213,10 +219,14 @@ export function tractor(g: T.Group, color: string) {
       }
       batch(assembly);
     }
-  const shade = contactShadow(4.7, 6.5, 0.52);
+  const shade = makeShadow(4.7, 6.5, 0.52);
   shade.position.y = 0.035;
   g.add(shade);
   batch(g);
+  for (const child of g.children) {
+    child.position.multiplyScalar(TRACTOR_SCALE);
+    child.scale.multiplyScalar(TRACTOR_SCALE);
+  }
 }
 /** Batch the stationary body and each animated wheel separately. */
 function batch(group: T.Group) {
