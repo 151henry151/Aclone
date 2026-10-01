@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../../shared/types.ts';
-import { act, addPlayer, move } from '../../shared/simulation.ts';
+import { act, addPlayer, move, say } from '../../shared/simulation.ts';
 import { resourceNodes } from '../../shared/resources.ts';
 import type { Store } from '../store.ts';
-import type { Universe } from '../universe.ts';
+import type { Universe, Account } from '../universe.ts';
+import { spaceChoices, spaceOperations, spaceAction, exchange, systemFor } from './space.ts';
+import { operation } from './player-operations.ts';
+import { leaveCombat } from '../../shared/combat.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
 import { decisionSchema, type Brain, type BrainResult, type Step } from './decision.ts';
@@ -11,15 +14,18 @@ import type { NpcConfig } from './config.ts';
 import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
-import { instructions, observe } from './observation.ts';
+import { instructions, conversationInstructions, observe } from './observation.ts';
 import { jevInstructions } from './jev.ts';
-import { farmerChoices, farmerSituation } from './farmer.ts';
+import { farmerSituation } from './farmer.ts';
+import { adaptiveChoices, parishSurvey } from './adaptive.ts';
+import { conversationTool, conversationOutputLimit } from './conversation.ts';
+import { operationAction } from './player-operations.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export interface ResidentOptions {
   config: NpcConfig;
   brain: Brain;
   rates?: TokenRates;
-  dialogue?: { brain: Brain; rates: TokenRates };
+  dialogue?: { brain: Brain; rates: TokenRates; provider?: 'openai' | 'anthropic' };
 }
 interface Resident extends ResidentOptions {
   state: ResidentState;
@@ -55,20 +61,21 @@ export class Residents {
       throw Error('Choose at most 50 unique resident IDs');
     for (const option of options) {
       const c = option.config,
-        w = worlds.get(c.world);
-      if (!w || w.template !== 'economy')
+        w = worlds.get(this.memory.load(c.id)?.world ?? c.world);
+      if (!w || worlds.get(c.world)?.template !== 'economy')
         throw Error('NPC world must be an existing economy parish');
       w.messageSeq = Math.max(w.messageSeq ?? 0, ...w.messages.map((m) => m.id ?? 0));
       // Old saves lack sequence IDs; migrate the entire retained ring in order.
       if (w.messages.some((m) => !m.id))
         for (const message of w.messages) message.id = ++w.messageSeq;
       let state = this.memory.load(c.id);
-      if (state && state.world !== w.id)
+      if (state && (state.originWorld ?? state.world) !== c.world)
         throw Error('An existing NPC cannot be moved to another world by configuration');
       if (!state)
         this.store.transaction(() => {
           const { account } = this.universe.register(c.name);
           account.npc = true;
+          account.system = systemFor(w.id);
           this.universe.save(account);
           state = {
             playerId: account.id,
@@ -90,6 +97,11 @@ export class Residents {
           this.memory.save(c.id, state);
         });
       state = state!;
+      state.originWorld ??= c.world;
+      if (c.provider === 'jev' && state.behaviorVersion !== 1) state.needsDecision = true;
+      state.behaviorVersion = 1;
+      if (state.decisionProvider !== c.provider) state.needsDecision = true;
+      state.decisionProvider = c.provider;
       if (state.personality !== c.personality) {
         this.memory.append(c.id, w.time, 'personality', {
           previous: state.personality,
@@ -116,7 +128,7 @@ export class Residents {
   }
   /** Called inside the same SQLite transaction that saves the world/chat. */
   capture(w: World) {
-    for (const r of this.residents.filter((r) => r.state.world === w.id)) {
+    for (const r of this.residents.filter((r) => r.state.world === w.id && !r.state.inSpace)) {
       r.state.cursor = this.memory.load(r.config.id)?.cursor ?? r.state.cursor;
       let changed = false;
       for (const m of w.messages) {
@@ -136,6 +148,7 @@ export class Residents {
           r.wake = true;
           r.state.needsDecision = true;
           r.state.helpQuestion = m.text;
+          r.state.conversationId = m.id;
           r.state.questionFrom = sender.id;
           // A person can ask about the problem immediately; the failed-step
           // block remains, so chatting cannot restart the same action loop.
@@ -178,7 +191,7 @@ export class Residents {
     r.state.status = message;
     this.checkpoint(r, w, 'failure', r.state.lastOutcome);
   }
-  private perform(r: Resident, w: World, a: Action, advanceStep: boolean) {
+  private perform(r: Resident, w: World, a: Action, advanceStep: boolean, attemptedStep?: Step) {
     const before = structuredClone(w),
       stateBefore = structuredClone(r.state);
     try {
@@ -201,7 +214,7 @@ export class Residents {
           time: w.time,
           ok: true,
           message: result,
-          attempted: { kind: 'act', action: a } as Step,
+          attempted: attemptedStep ?? ({ kind: 'act', action: a } as Step),
           repeats: 1,
         };
       }
@@ -215,15 +228,133 @@ export class Residents {
     } catch (e) {
       this.worlds.set(w.id, before);
       r.state = stateBefore;
-      this.failure(r, before, (e as Error).message.slice(0, 250), {
-        kind: 'act',
-        action: a,
-      } as Step);
+      this.failure(
+        r,
+        before,
+        (e as Error).message.slice(0, 250),
+        attemptedStep ?? ({ kind: 'act', action: a } as Step),
+      );
       return false;
     }
     // A script hook cannot roll back an already committed action.
     if (a.type === 'task') this.onTask?.(w, r.state.playerId);
     return true;
+  }
+  private account(r: Resident): Account {
+    const row = this.store.db
+      .prepare('SELECT state FROM accounts WHERE id=?')
+      .get(r.state.playerId);
+    if (!row) throw Error('Resident account missing');
+    return JSON.parse(String(row.state));
+  }
+  private choices(r: Resident, w: World, p: Player) {
+    const a = this.account(r);
+    if (r.state.inSpace) return spaceChoices(a, this.worlds, this.universe);
+    const choices = adaptiveChoices(w, p, r.state);
+    const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
+    if (port && !p.task && !p.atHome && !p.game) {
+      const prep: Step[] =
+        p.vehicle !== 5 && p.fuel <= 0
+          ? [{ kind: 'act', action: { type: 'vehicle', slot: 5 } }]
+          : p.vehicle !== 5 && !p.engine
+            ? [{ kind: 'act', action: { type: 'engine' } }]
+            : [];
+      const visit: Step[] = [...prep, { kind: 'travel', destination: port.id }];
+      choices.push({
+        id: 'space_takeoff',
+        description:
+          'Visit the spaceport and take off to explore galactic work, surveying or trade. Local money, skills and jobs remain here; galactic credits are separate. Consider unfinished work first.',
+        plan: [...visit, operation('takeoff')],
+        reconsiderSeconds: 600,
+      });
+      const spent =
+        a.exchanged[w.id]?.day === Math.floor(w.time / 86400) ? a.exchanged[w.id].amount : 0;
+      const n = Math.min(
+        10,
+        w.settings.exchangeCap - spent,
+        Math.floor(Math.max(0, p.cash - 20000) / (w.settings.exchangeRate * 100)),
+      );
+      if (n > 0)
+        choices.push({
+          id: 'space_exchange',
+          description: `Convert ${n * w.settings.exchangeRate * 100} local cash to ${n} galactic credits at the port. One-way conversion, not profit.`,
+          plan: [...visit, operation('exchange', { amount: n })],
+          reconsiderSeconds: 600,
+        });
+    }
+    return choices.filter((c) => !c.plan.some((s) => blockedStep(r.state.recovery, s, w.time)));
+  }
+  private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
+    const stateBefore = structuredClone(r.state),
+      before = structuredClone(w);
+    let destination: World | undefined, destinationBefore: World | undefined;
+    try {
+      this.store.transaction(() => {
+        const a = this.account(r),
+          previous = structuredClone(a),
+          op = operationAction(step),
+          p = w.players[a.id];
+        if (op.type === 'exchange') {
+          if (r.state.inSpace) throw Error('Land before exchanging local cash');
+          exchange(w, p, a, Number(op.amount));
+          this.universe.save(a);
+        } else if (op.type === 'takeoff') {
+          if (
+            r.state.inSpace ||
+            !w.buildings.some((b) => b.kind === 'starport' && distance(p, b) < 18)
+          )
+            throw Error('Drive to the spaceport to take off');
+          leaveCombat(w, p);
+          p.online = false;
+          p.speed = 0;
+          p.lastSeen = w.time;
+          r.state.inSpace = true;
+          say(w, 'Parish notice', p.name + ' has left for space.');
+        } else if (op.type === 'land') {
+          if (!r.state.inSpace || a.transit)
+            throw Error('Wait until your jump arrives before landing');
+          destination = this.worlds.get(String(op.world));
+          if (
+            !destination ||
+            systemFor(destination.id) !== a.system ||
+            (destination.settings.locked && destination.owner !== a.id)
+          )
+            throw Error('World unavailable in this system');
+          destinationBefore = structuredClone(destination);
+          const q = addPlayer(destination, a.id, a.name);
+          q.npc = true;
+          q.authority = 0;
+          q.online = true;
+          if (r.state.world !== destination.id) {
+            delete r.state.evaluation;
+            delete r.state.observedDeaths;
+            delete r.state.observedTask;
+          }
+          r.state.world = destination.id;
+          r.state.inSpace = false;
+          r.state.cursor = destination.messageSeq ?? 0;
+          say(destination, 'Parish notice', q.name + ' arrived.');
+        } else {
+          if (!r.state.inSpace) throw Error('Take off first');
+          spaceAction(this.universe, a, op);
+        }
+        r.state.index++;
+        r.state.lastOutcome = {
+          time: w.time,
+          ok: true,
+          message: `Completed ${op.type}`,
+          attempted: step,
+          repeats: 1,
+        };
+        this.checkpoint(r, w, 'space-action', { action: op, before: previous, after: a });
+        if (destination && destination !== w) this.checkpoint(r, destination);
+      });
+    } catch (e) {
+      this.worlds.set(w.id, before);
+      if (destinationBefore) this.worlds.set(destinationBefore.id, destinationBefore);
+      r.state = stateBefore;
+      this.failure(r, before, (e as Error).message, step);
+    }
   }
   private actionStats(w: World, p: Player, a: Action) {
     const b = w.buildings.find((b) => b.id === a.building);
@@ -272,7 +403,7 @@ export class Residents {
       const w = this.worlds.get(r.state.world),
         p = w?.players[r.state.playerId];
       if (!w || !p) continue;
-      if (r.active && !p.online) {
+      if (r.active && !p.online && !r.state.inSpace) {
         this.memory.pause(r.config.id, true);
         r.active = false;
         r.busy?.abort();
@@ -281,13 +412,22 @@ export class Residents {
         r.state.needsDecision = true;
         this.checkpoint(r, w, 'session', { event: 'Removed from play; operator resume required' });
       }
-      if ((w.messageSeq ?? 0) > (this.memory.load(r.config.id)?.cursor ?? r.state.cursor))
+      if (
+        !r.state.inSpace &&
+        (w.messageSeq ?? 0) > (this.memory.load(r.config.id)?.cursor ?? r.state.cursor)
+      )
         this.checkpoint(r, w);
       const paused = this.memory.paused(r.config.id),
-        occupied = r.config.activeAlone || Object.values(w.players).some((q) => q.online && !q.npc);
+        occupied =
+          r.config.activeAlone ||
+          [...this.worlds.values()].some(
+            (v) =>
+              (v.id === w.id || v.id === r.state.originWorld) &&
+              Object.values(v.players).some((q) => q.online && !q.npc),
+          );
       if (paused || !occupied) {
         r.active = false;
-        if (p.online) {
+        if (p.online || r.busy) {
           p.online = false;
           p.speed = 0;
           r.nav = undefined;
@@ -304,8 +444,9 @@ export class Residents {
         continue;
       }
       if (now < r.cooldown) continue;
-      p.online = true;
+      p.online = !r.state.inSpace;
       r.active = true;
+      if (r.state.inSpace) this.universe.arrive(this.account(r));
       if (r.state.observedTask && !p.task) {
         delete r.state.observedTask;
         this.checkpoint(r, w, 'task-complete', {
@@ -365,8 +506,31 @@ export class Residents {
         r.state.index++;
         r.state.waitUntil = now + step.seconds * 1000;
         this.checkpoint(r, w);
-      } else if (step.kind === 'act') this.perform(r, w, step.action, true);
-      else if (step.kind === 'guide') {
+      } else if (step.kind === 'act') {
+        if (r.state.inSpace) throw Error('Land before taking parish actions');
+        this.perform(r, w, step.action, true);
+      } else if (step.kind === 'operation') {
+        if (spaceOperations.has(step.operation)) this.performSpace(r, w, step);
+        else {
+          if (r.state.inSpace) throw Error('Land before taking parish actions');
+          this.perform(r, w, operationAction(step), true, step);
+        }
+      } else if (step.kind === 'fish') {
+        if (p.game !== 'fishing' || (p.fishUntil ?? Infinity) < w.time) {
+          this.perform(r, w, { type: 'joinGame', game: 'fishing' }, false, step);
+        } else if (p.fishAt !== undefined && w.time >= p.fishAt && w.time <= (p.fishUntil ?? 0)) {
+          if (this.perform(r, w, { type: 'reel' }, false, step)) {
+            r.state.fishCaught = (r.state.fishCaught ?? 0) + 1;
+            if (r.state.fishCaught >= step.catches) {
+              r.state.index++;
+              delete r.state.fishCaught;
+            }
+            this.checkpoint(r, w, 'fishing-progress', {
+              caught: r.state.fishCaught ?? step.catches,
+            });
+          }
+        }
+      } else if (step.kind === 'guide') {
         r.state.guideQuery = step.query;
         r.state.plan = [];
         r.wake = true;
@@ -383,6 +547,7 @@ export class Residents {
           matches: r.state.recall.map((e) => e.id),
         });
       } else {
+        if (r.state.inSpace) throw Error('Land before driving');
         let target: { x: number; z: number } | undefined,
           radius = 3;
         if (step.kind === 'move') target = step;
@@ -408,12 +573,43 @@ export class Residents {
     }
   }
   private think(r: Resident, w: World, p: Player, now: number) {
+    const snapshot = {
+      time: w.time,
+      cash: p.cash,
+      bank: p.bank,
+      health: p.health,
+      inventory: { ...p.inventory },
+      job: p.job ?? null,
+    };
+    const prior = r.state.evaluation;
+    if (prior) {
+      const result = {
+        goal: r.state.intent,
+        elapsedSeconds: Math.max(0, w.time - prior.time),
+        cashChange: p.cash - prior.cash,
+        bankChange: p.bank - prior.bank,
+        healthChange: p.health - prior.health,
+        previousJob: prior.job,
+        currentJob: p.job ?? null,
+      };
+      r.state.experiences = [...(r.state.experiences ?? []), result].slice(-8);
+      this.memory.append(r.config.id, w.time, 'evaluation', result);
+    }
+    r.state.evaluation = snapshot;
     const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
       observation: {
         ...observe(w, p, r.state, this.memory, r.config.id),
+        experiences: r.state.experiences,
         ...(r.config.provider === 'jev'
-          ? { farmerChoices: farmerChoices(w, p, r.state), farming: farmerSituation(w, p) }
+          ? {
+              choices: this.choices(r, w, p),
+              space: { inSpace: !!r.state.inSpace, account: this.account(r) },
+              parishSurvey: parishSurvey(w, p),
+              farming: farmerSituation(w, p),
+              vocation: r.config.vocation,
+              enduringGoal: r.config.initialGoal,
+            }
           : {}),
       },
     });
@@ -427,7 +623,7 @@ export class Residents {
         : request;
     const bytes =
       Buffer.byteLength(JSON.stringify(decisionRequest)) +
-      Buffer.byteLength(JSON.stringify(turnTool));
+      (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
     if (bytes > 96000) {
       p.online = false;
       p.speed = 0;
@@ -474,33 +670,50 @@ export class Residents {
           controller.signal.aborted ||
           this.memory.paused(r.config.id) ||
           !current ||
-          !player?.online
+          !player ||
+          (!player.online && !r.state.inSpace)
         )
           return;
         // Dialogue is a separately metered call, only for an addressed human.
         // It cannot replace the action provider's choice or replay a whole plan.
-        if (r.dialogue && request.observation.currentConversation) {
-          const { farmerChoices: _choices, ...conversationObservation } = request.observation;
+        const conversation = request.observation.currentConversation;
+        const conversationKey = conversation
+          ? `${r.state.world}:${conversation.id ?? `${conversation.speakerId}:${conversation.question}`}`
+          : undefined;
+        const attempt =
+          r.state.dialogueAttempt?.key === conversationKey ? r.state.dialogueAttempt : undefined;
+        if (
+          r.dialogue &&
+          conversation &&
+          (!attempt || (!attempt.done && attempt.attempts < 3 && Date.now() >= attempt.nextAt))
+        ) {
+          const { choices: _choices, ...conversationObservation } = request.observation;
           const dialogueRequest = {
-            instructions:
-              request.instructions +
-              '\nCONVERSATION ONLY: Jev has already chosen your actions. Reply to the current human question using the game guide and observed results. chosenPlan is a future intention, NOT completed work. Update your notebook with useful relationships/lessons. Return a harmless wait plan; your plan, intent and timing are ignored. Do not promise a different action. Never start a reply with a chat command.',
+            instructions: conversationInstructions + '\nYour personality: ' + r.state.personality,
             observation: { ...conversationObservation, chosenPlan: result.decision.plan },
           };
           const chatBytes =
             Buffer.byteLength(JSON.stringify(dialogueRequest)) +
-            Buffer.byteLength(JSON.stringify(turnTool));
+            Buffer.byteLength(JSON.stringify(conversationTool));
           const chatReservation =
             chatBytes <= 96000
               ? this.budget.reserve(
                   r.config.id,
                   chatBytes,
-                  outputLimit,
+                  conversationOutputLimit,
                   Date.now(),
                   r.dialogue.rates,
                 )
               : undefined;
           if (chatReservation !== undefined) {
+            const count = (attempt?.attempts ?? 0) + 1;
+            r.state.dialogueAttempt = {
+              key: conversationKey!,
+              attempts: count,
+              nextAt: Date.now() + (count === 1 ? 60000 : 300000),
+              done: false,
+            };
+            this.checkpoint(r, this.worlds.get(r.state.world) ?? current);
             try {
               const chat = await r.dialogue.brain.decide(dialogueRequest, controller.signal);
               if (this.closed) return;
@@ -513,6 +726,12 @@ export class Residents {
               );
               const d = decisionSchema.parse(chat.decision);
               if (d.speech?.text.trim().startsWith('*')) throw Error('Invalid conversation');
+              r.state.dialogueAttempt.done = true;
+              // Even a deliberate silent reply is a completed conversation, not a reason to poll chat again.
+              if (!d.speech && r.state.conversationId === conversation.id) {
+                r.state.helpQuestion = undefined;
+                r.state.replyTo = undefined;
+              }
               result = {
                 ...result,
                 decision: { ...result.decision, speech: d.speech, notebook: d.notebook },
@@ -524,10 +743,29 @@ export class Residents {
                 message: 'Conversation unavailable; the selected gameplay plan is preserved.',
               });
             }
-          } else
-            this.checkpoint(r, this.worlds.get(r.state.world) ?? current, 'dialogue-budget', {
+          } else {
+            const latest = this.worlds.get(r.state.world) ?? current;
+            r.state.dialogueAttempt = {
+              key: conversationKey!,
+              attempts: attempt?.attempts ?? 0,
+              nextAt: Date.now() + 60000,
+              done: false,
+            };
+            const noticeKey = conversationKey!;
+            if (conversation.speakerId && r.state.dialogueNoticeKey !== noticeKey) {
+              say(
+                latest,
+                'AI notice',
+                `${r.state.name} received your message, but conversation is waiting for the shared AI budget. Gameplay can continue while funds remain for decisions.`,
+                'system',
+                conversation.speakerId,
+              );
+              r.state.dialogueNoticeKey = noticeKey;
+            }
+            this.checkpoint(r, latest, 'dialogue-budget', {
               message: 'Conversation deferred by shared budget or context limit.',
             });
+          }
         }
         // Another action may have rolled back/replaced the world during dialogue.
         const latest = this.worlds.get(r.state.world);
@@ -535,7 +773,8 @@ export class Residents {
           controller.signal.aborted ||
           this.closed ||
           this.memory.paused(r.config.id) ||
-          !latest?.players[r.state.playerId]?.online
+          !latest ||
+          (!latest.players[r.state.playerId]?.online && !r.state.inSpace)
         )
           return;
         this.accept(r, latest, result, Date.now(), replyTo);
@@ -578,6 +817,9 @@ export class Residents {
     if (d.speech?.text.trim().startsWith('*')) throw Error('NPC speech cannot run chat commands');
     r.state.pending = false;
     const addressed = !!r.state.helpQuestion;
+    // Public activity narration is never an autonomous side effect of a plan.
+    // Apply to every provider, including old adapters and malformed chat replies.
+    if (!addressed) d.speech = null;
     const rejected = d.plan.find((s) => blockedStep(r.state.recovery, s, w.time));
     if (rejected) {
       this.failure(
@@ -594,6 +836,7 @@ export class Residents {
     r.state.notebook = d.notebook;
     r.state.intent = d.intent;
     r.state.plan = d.plan;
+    delete r.state.fishCaught;
     r.state.index = 0;
     r.state.repeats = d.repeat;
     r.state.until = now + d.reconsiderSeconds * 1000;
@@ -631,15 +874,18 @@ export class Residents {
       personality: r.state.personality,
       world: r.state.world,
       online: !!this.worlds.get(r.state.world)?.players[r.state.playerId]?.online,
-      status: r.busy
-        ? 'Thinking'
-        : this.memory.paused(r.config.id)
-          ? 'Paused by operator'
-          : this.worlds.get(r.state.world)?.players[r.state.playerId]?.online
-            ? 'Active'
-            : 'Resting',
+      status: r.state.inSpace
+        ? 'In space'
+        : r.busy
+          ? 'Thinking'
+          : this.memory.paused(r.config.id)
+            ? 'Paused by operator'
+            : this.worlds.get(r.state.world)?.players[r.state.playerId]?.online
+              ? 'Active'
+              : 'Resting',
       model: r.config.model,
       provider: r.config.provider,
+      conversationProvider: r.dialogue ? (r.dialogue.provider ?? 'anthropic') : undefined,
     }));
   }
   async settled() {

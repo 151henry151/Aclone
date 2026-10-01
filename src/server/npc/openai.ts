@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
+import { conversationTool, conversationOutputLimit, conversationDecision } from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export { outputLimit, turnTool } from './turn-tool.ts';
 export class OpenAIBrain implements Brain {
@@ -7,8 +8,10 @@ export class OpenAIBrain implements Brain {
     private apiKey: string,
     private model: string,
     private transport: typeof fetch = fetch,
+    private mode: 'plan' | 'conversation' = 'plan',
   ) {}
   async decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult> {
+    const tool = this.mode === 'conversation' ? conversationTool : turnTool;
     const response = await this.transport('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${this.apiKey}` },
@@ -18,10 +21,10 @@ export class OpenAIBrain implements Brain {
         store: false,
         instructions: request.instructions,
         input: JSON.stringify(request.observation),
-        tools: [turnTool],
-        tool_choice: { type: 'function', name: 'plan_turn' },
+        tools: [tool],
+        tool_choice: { type: 'function', name: tool.name },
         parallel_tool_calls: false,
-        max_output_tokens: outputLimit,
+        max_output_tokens: this.mode === 'conversation' ? conversationOutputLimit : outputLimit,
       }),
     });
     // Never persist provider error bodies: they can echo credentials or prompt data.
@@ -33,10 +36,13 @@ export class OpenAIBrain implements Brain {
     };
     if (body.status !== 'completed') throw Error('AI response incomplete');
     const calls =
-      body.output?.filter((o) => o.type === 'function_call' && o.name === 'plan_turn') ?? [];
+      body.output?.filter((o) => o.type === 'function_call' && o.name === tool.name) ?? [];
     if (calls.length !== 1 || !calls[0].arguments || calls[0].arguments.length > 20000)
       throw Error('AI response did not contain one valid turn');
-    const decision = decisionSchema.parse(JSON.parse(calls[0].arguments));
+    const decision =
+      this.mode === 'conversation'
+        ? conversationDecision(JSON.parse(calls[0].arguments))
+        : decisionSchema.parse(JSON.parse(calls[0].arguments));
     if (
       !body.usage ||
       !Number.isSafeInteger(body.usage.input_tokens) ||

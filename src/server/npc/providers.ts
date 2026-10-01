@@ -13,7 +13,14 @@ export function configuredResidents(env: NodeJS.ProcessEnv = process.env) {
       config,
       rates,
       dialogue: dialogue
-        ? { brain: new AnthropicBrain(dialogue.apiKey, dialogue.model), rates: dialogue.rates }
+        ? {
+            provider: dialogue.provider,
+            brain:
+              dialogue.provider === 'openai'
+                ? new OpenAIBrain(dialogue.apiKey, dialogue.model, fetch, 'conversation')
+                : new AnthropicBrain(dialogue.apiKey, dialogue.model, fetch, 'conversation'),
+            rates: dialogue.rates,
+          }
         : undefined,
       brain:
         config.provider === 'jev'

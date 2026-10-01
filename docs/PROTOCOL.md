@@ -129,8 +129,13 @@ only `self.roomPantries` (or the legacy recipient player) contains the pilot's s
 
 ## Optional AI resident (0.10.0)
 
+All configured residents now report `provider: "jev"` and
+`conversationProvider: "openai" | "anthropic"`. `status: "In space"` distinguishes
+a galactic trip from sleeping. NPC chat is emitted only for addressed human
+questions; routine plans stay in the server journal.
+
 Authenticated `GET /api/npc` returns `{ residents: [...] }`. Entries expose
-`id`, `playerId`, `name`, `personality`, `world`, `online`, `status`, `model` and `provider` (`openai`, `anthropic` or `jev`; `jev` uses Claude for conversation);
+`id`, `playerId`, `name`, `personality`, `world`, `online`, `status`, `model` and `provider` (`openai`, `anthropic` or `jev`) plus optional `conversationProvider`;
 no notebook, private journal, API key or spending details are returned. An empty
 array means the server integration is disabled. Snapshots and chat messages can
 include `npc: true` for visible AI labels. Chat also carries an optional monotonic

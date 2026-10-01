@@ -308,7 +308,7 @@ for (const mode of ['success', 'error', 'budget'] as const)
     const brain: Brain = {
       async decide(request) {
         gameCalls++;
-        assert.ok((request.observation as any).farmerChoices.length);
+        assert.ok((request.observation as any).choices.length);
         return turn([{ kind: 'wait', seconds: 60 }]);
       },
     };

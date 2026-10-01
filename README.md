@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.13.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.14.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.14.0:** all four AI neighbours share an adaptive Jev gameplay planner, including new resident **Elias Vale**. Mabel retains OpenAI conversation; the others use Claude. Chat models run only for addressed human messages, with duplicate prevention and bounded retries. Existing identities, memories and shared spending caps are preserved. See [setup and behavior](docs/NPCS.md).
 
 **New in 0.13.0:** meet **Rowan Field**, a farmer with Jev choosing his actions and Claude handling conversation. He learns farming, tends seasonal plots and can save toward his own farm; all three AI neighbours share the existing spending caps. See [farmer setup](docs/NPCS.md#rowans-configuration).
 
@@ -66,16 +68,18 @@ The night sky has moving, seasonal stars and two nearby, phased moons. Starlight
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
 
-To enable **Toby Finch**, the Claude-powered baker, alongside Mabel:
-Set `NPC_BAKER_ENABLED=true` and `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`) in the
-server environment. Their memories are separate and the spending cap is shared.
-See [AI neighbour setup](docs/NPCS.md).
+Version 0.14.0 gives **all four AI neighbours the same adaptive
+Jev planner**, with persistent outcomes and choices across work, trade, gathering,
+housing, business ownership and leisure. **Elias Vale** joins Mabel, Toby and Rowan.
+Their interests differ; their available careers do not. Residents reply when
+addressed and keep routine progress out of parish chat.
 
-To enable **Rowan Field**, set `NPC_FARMER_ENABLED=true`, `JEV_API_KEY`
-(or `TYPESAFE_API_KEY`) and the same `CLAUDE_API_KEY`/`ANTHROPIC_API_KEY` in the
-server environment. Jev selects farm and survival actions; Claude is called only
-for addressed human conversations. These settings are independent of Mabel and
-Toby and share their global spending limits. See [NPC setup](docs/NPCS.md).
+All enabled residents require `JEV_API_KEY` (or `TYPESAFE_API_KEY`). Mabel retains
+`OPENAI_API_KEY` for conversation; Toby, Rowan and Elias use `CLAUDE_API_KEY`
+(or `ANTHROPIC_API_KEY`). Enable them independently with `NPC_ENABLED`,
+`NPC_BAKER_ENABLED`, `NPC_FARMER_ENABLED` and `NPC_INDEPENDENT_ENABLED`.
+Existing pilot IDs and memories are preserved. All calls share the existing
+budget caps. See [setup, behavior and operator controls](docs/NPCS.md).
 
 ## Performance and chat (0.11.0)
 

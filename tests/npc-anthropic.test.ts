@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { AnthropicBrain } from '../src/server/npc/anthropic.ts';
 import { residentsEnvironment, BAKER_MODEL } from '../src/server/npc/config.ts';
 import { configuredResidents } from '../src/server/npc/providers.ts';
+import { JevBrain } from '../src/server/npc/jev.ts';
 import { OpenAIBrain } from '../src/server/npc/openai.ts';
 import { NpcBudget, budgetSchema } from '../src/server/npc/budget.ts';
 import { NpcMemory } from '../src/server/npc/memory.ts';
@@ -138,23 +139,28 @@ test('Mabel and Toby are independently enabled with separate credentials, defaul
     OPENAI_API_KEY: 'openai-test',
     NPC_BAKER_ENABLED: 'true',
     CLAUDE_API_KEY: 'claude-test',
+    JEV_API_KEY: 'jev-test',
     NPC_DAILY_USD: '0.7',
   };
   const options = residentsEnvironment(env)!;
   assert.deepEqual(
     options.residents.map((r) => [r.config.id, r.config.provider, r.apiKey]),
     [
-      ['mabel', 'openai', 'openai-test'],
-      ['toby', 'anthropic', 'claude-test'],
+      ['mabel', 'jev', 'jev-test'],
+      ['toby', 'jev', 'jev-test'],
     ],
   );
   assert.equal(options.budget.dailyUsd, 0.7);
   assert.match(options.residents[1].config.personality, /male village baker/);
   assert.match(options.residents[1].config.initialGoal, /learn baker/);
-  assert.equal(options.residents[0].rates.inputUsdPerMillion, 0.4);
-  assert.equal(options.residents[1].rates.inputUsdPerMillion, 1);
+  assert.equal(options.residents[0].dialogue!.rates.inputUsdPerMillion, 0.4);
+  assert.equal(options.residents[1].dialogue!.rates.inputUsdPerMillion, 1);
   assert.equal(
-    residentsEnvironment({ NPC_BAKER_ENABLED: 'true', ANTHROPIC_API_KEY: 'key' })!.residents.length,
+    residentsEnvironment({
+      NPC_BAKER_ENABLED: 'true',
+      ANTHROPIC_API_KEY: 'key',
+      JEV_API_KEY: 'key',
+    })!.residents.length,
     1,
   );
   assert.throws(() => residentsEnvironment({ NPC_BAKER_ENABLED: 'true' }), /ANTHROPIC_API_KEY/);
@@ -162,8 +168,10 @@ test('Mabel and Toby are independently enabled with separate credentials, defaul
   assert.throws(() => residentsEnvironment({ ...env, NPC_BAKER_ID: 'mabel' }), /distinct/);
   assert.throws(() => residentsEnvironment({ ...env, NPC_BAKER_INPUT_USD_PER_MILLION: '-1' }));
   const wired = configuredResidents(env)!;
-  assert.ok(wired.residents[0].brain instanceof OpenAIBrain);
-  assert.ok(wired.residents[1].brain instanceof AnthropicBrain);
+  assert.ok(wired.residents[0].brain instanceof JevBrain);
+  assert.ok(wired.residents[1].brain instanceof JevBrain);
+  assert.ok(wired.residents[0].dialogue!.brain instanceof OpenAIBrain);
+  assert.ok(wired.residents[1].dialogue!.brain instanceof AnthropicBrain);
 });
 
 test('mixed-provider reservations retain rates across restart, charge cache usage and share one cap', () => {

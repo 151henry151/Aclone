@@ -3,6 +3,31 @@ import type { Store } from '../store.ts';
 import type { Recovery } from './recovery.ts';
 import type { Step } from './decision.ts';
 export interface ResidentState {
+  decisionProvider?: string;
+  behaviorVersion?: number;
+  evaluation?: {
+    time: number;
+    cash: number;
+    bank: number;
+    health: number;
+    inventory: Record<string, number>;
+    job: string | null;
+  };
+  experiences?: {
+    goal: string;
+    elapsedSeconds: number;
+    cashChange: number;
+    bankChange: number;
+    healthChange: number;
+    previousJob: string | null;
+    currentJob: string | null;
+  }[];
+  fishCaught?: number;
+  originWorld?: string;
+  inSpace?: boolean;
+  conversationId?: number;
+  dialogueNoticeKey?: string;
+  dialogueAttempt?: { key: string; attempts: number; nextAt: number; done: boolean };
   recovery?: Recovery;
   lastOutcome?: {
     time: number;

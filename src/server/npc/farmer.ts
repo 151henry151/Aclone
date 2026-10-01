@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, Player, World } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
-import { items } from '../../shared/catalog.ts';
+import { economyChoices } from './economy-choices.ts';
+import { items, skills } from '../../shared/catalog.ts';
 import { calendar } from '../../shared/environment.ts';
 import { crops, cropStatus } from '../../shared/farming.ts';
 import type { ResidentState } from './memory.ts';
@@ -12,14 +13,25 @@ export interface FarmerChoice {
   id: string;
   description: string;
   plan: Step[];
+  reconsiderSeconds?: number;
 }
 /** Supply feasible plans, not a scripted priority order: Jev chooses the goal.
  * Eligibility is only a snapshot; every step still passes ordinary act validation. */
-export function farmerChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
+export function gameplayChoices(
+  w: World,
+  p: Player,
+  state: ResidentState,
+  vocation: 'general' | 'baker' | 'farmer' | 'independent',
+): FarmerChoice[] {
   const choices: FarmerChoice[] = [];
-  const add = (description: string, plan: Step[]) => {
+  const add = (description: string, plan: Step[], reconsiderSeconds?: number) => {
     if (choices.length < 100 && !plan.some((s) => blockedStep(state.recovery, s, w.time)))
-      choices.push({ id: `option_${choices.length}`, description, plan });
+      choices.push({
+        id: `option_${choices.length}`,
+        description,
+        plan,
+        ...(reconsiderSeconds ? { reconsiderSeconds } : {}),
+      });
   };
   const visit = (b: Building, actions: Step[]): Step[] => [
     ...(p.atHome ? [{ kind: 'act', action: { type: 'outside' } } as Step] : []),
@@ -39,14 +51,29 @@ export function farmerChoices(w: World, p: Player, state: ResidentState): Farmer
     kind: 'act',
     action: a,
   });
+  const mentioned = `${state.helpQuestion ?? ''} ${state.intent}`.toLowerCase();
   const buildings = w.buildings
     .filter((b) => !b.construction)
-    .sort((a, b) => distance(p, a) - distance(p, b));
+    .sort((a, b) => {
+      const priority = (v: Building) =>
+        v.id === p.job
+          ? 4
+          : mentioned.includes(v.name.toLowerCase())
+            ? 3
+            : v.owner === p.id
+              ? 2
+              : vocation === 'baker' && v.kind === 'bakery'
+                ? 1
+                : 0;
+      return priority(b) - priority(a) || distance(p, a) - distance(p, b);
+    });
+  const restSeconds = p.task ? Math.max(1, Math.min(600, Math.ceil(p.task.end - w.time))) : 180;
   add(
     p.task
       ? 'Finish the current timed task before doing anything else.'
-      : 'Rest for a minute; reassess changing needs, crops and instructions.',
-    [{ kind: 'wait', seconds: 60 }],
+      : 'Rest for three minutes; reassess changing needs, crops and instructions.',
+    [{ kind: 'wait', seconds: restSeconds }],
+    Math.max(10, restSeconds + 5),
   );
   if (p.task) return choices;
   for (const [item, n] of Object.entries(p.inventory)) {
@@ -104,21 +131,26 @@ export function farmerChoices(w: World, p: Player, state: ResidentState): Farmer
       ]),
     );
   if (
-    !p.skills.includes('farmer') &&
     !p.learning &&
     p.skills.length < w.settings.maxSkills &&
     p.cash >= (p.skills.length ? 16000 : 8000)
   )
-    for (const b of buildings.filter((b) => b.kind === 'school').slice(0, 2))
-      add(
-        `Learn farmer at ${b.name}; tuition ${p.skills.length ? 16000 : 8000}. Training takes ${p.skills.length ? 2400 : 60} seconds.`,
-        visit(b, [
-          action({ type: 'learn', building: b.id, skill: 'farmer' }),
-          { kind: 'wait', seconds: 60 },
-        ]),
-      );
+    for (const skill of skills.filter((skill) => !p.skills.includes(skill)))
+      for (const b of buildings.filter((b) => b.kind === 'school').slice(0, 1))
+        add(
+          `Learn ${skill} at ${b.name}; tuition ${p.skills.length ? 16000 : 8000}. Training takes ${p.skills.length ? 2400 : 60} seconds.`,
+          visit(b, [
+            action({ type: 'learn', building: b.id, skill }),
+            { kind: 'wait', seconds: 60 },
+          ]),
+        );
+  economyChoices(w, p, buildings, add, visit);
   const farms = buildings
-    .filter((b) => b.kind === 'farm')
+    .filter(
+      (b) =>
+        b.kind === 'farm' &&
+        (vocation === 'farmer' || p.skills.includes('farmer') || b.owner === p.id),
+    )
     .sort(
       (a, b) =>
         Number(b.owner === p.id || b.id === p.job) - Number(a.owner === p.id || a.id === p.job),
@@ -239,6 +271,11 @@ export function farmerChoices(w: World, p: Player, state: ResidentState): Farmer
       { kind: 'recall', query: state.helpQuestion.slice(0, 200), before: null },
     ]);
   return choices;
+}
+
+/** Backwards-compatible farmer entry point used by the standalone crop tests. */
+export function farmerChoices(w: World, p: Player, state: ResidentState) {
+  return gameplayChoices(w, p, state, 'farmer');
 }
 
 /** Compact crop feedback includes blocked farms, even when they have no viable action. */

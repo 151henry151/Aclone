@@ -50,14 +50,90 @@ const action = z.discriminatedUnion('type', [
     .object({
       type: z.literal('farm'),
       ...building,
-      operation: z.enum(['plant', 'water', 'fertilize', 'harvest']),
+      operation: z.enum(['plant', 'water', 'fertilize', 'harvest', 'drain', 'improve']),
       plot: z.number().int().min(0).max(3),
       crop: z.string().max(30).nullable(),
     })
     .strict(),
   z.object({ type: z.literal('paint'), ...building, color: id }).strict(),
 ]);
+/** Ordinary player operations only. Editor, moderation, account and arbitrary commands are excluded. */
+export const playerOperations = [
+  'listProperty',
+  'buildingAdmin',
+  'lodging',
+  'construct',
+  'supply',
+  'repair',
+  'demolish',
+  'vehicle',
+  'crow',
+  'joinGame',
+  'leaveGame',
+  'reel',
+  'kricket',
+  'joinCombat',
+  'chargeWeapon',
+  'fire',
+  'refit',
+  'town',
+  'group',
+  'hitch',
+  'detach',
+  'give',
+  'respawn',
+  'exchange',
+  'takeoff',
+  'land',
+  'jump',
+  'ship',
+  'spaceTrade',
+  'upgrade',
+  'courier',
+  'survey',
+  'rescue',
+] as const;
+const operationParameter = z
+  .object({
+    name: z.enum([
+      'building',
+      'price',
+      'name',
+      'wage',
+      'item',
+      'side',
+      'operation',
+      'rate',
+      'open',
+      'hours',
+      'quantity',
+      'direction',
+      'kind',
+      'style',
+      'slot',
+      'game',
+      'mode',
+      'weapon',
+      'tax',
+      'player',
+      'amount',
+      'world',
+      'system',
+      'ship',
+      'buy',
+    ]),
+    value: z.union([z.string().max(80), z.number().finite(), z.boolean()]),
+  })
+  .strict();
 export const stepSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('operation'),
+      operation: z.enum(playerOperations),
+      parameters: z.array(operationParameter).max(12),
+    })
+    .strict(),
+  z.object({ kind: z.literal('fish'), catches: z.number().int().min(1).max(5) }).strict(),
   z
     .object({
       kind: z.literal('wait'),

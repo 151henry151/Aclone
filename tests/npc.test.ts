@@ -502,7 +502,7 @@ test('a looping model is throttled and silenced across restart, while a new priv
     await s.residents.settled();
   }
   assert.ok(calls <= 6, `retry requests should back off, got ${calls}`);
-  assert.equal(s.w.messages.filter((m) => m.npc).length, 1, 'one autonomous announcement');
+  assert.equal(s.w.messages.filter((m) => m.npc).length, 0, 'no unsolicited model narration');
   const saved = s.residents.memory.load('resident-0')!;
   assert.ok(saved.recovery!.retryAt! > s.w.time);
   assert.ok(saved.recovery!.failures!.some((f) => f.until > s.w.time));

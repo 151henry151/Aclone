@@ -16,8 +16,10 @@ const configured = residentsEnvironment({
   ...process.env,
   NPC_ENABLED: 'false',
   NPC_BAKER_ENABLED: 'true',
+  NPC_FARMER_ENABLED: 'false',
 })!;
-const { config, apiKey, rates } = configured.residents[0];
+const { config, dialogue } = configured.residents[0];
+const { apiKey, model, rates } = dialogue!;
 const store = new Store(':memory:');
 const w = createWorld(config.world, 'Baker smoke test', 'test-owner');
 const worlds = new Map([[w.id, w]]);
@@ -38,7 +40,7 @@ const residents = new Residents(
   ],
   { dailyUsd: 0.4, monthlyUsd: 0.4 },
 );
-const provider = new AnthropicBrain(apiKey, config.model, async (url, options) => {
+const provider = new AnthropicBrain(apiKey, model, async (url, options) => {
   const response = await fetch(url, options);
   if (response.ok) {
     const body = await response.clone().json();

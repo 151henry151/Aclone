@@ -4,7 +4,12 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { npcConfigSchema, bakerDefaults, farmerDefaults } from '../../src/server/npc/config.ts';
+import {
+  npcConfigSchema,
+  bakerDefaults,
+  farmerDefaults,
+  independentDefaults,
+} from '../../src/server/npc/config.ts';
 import type { BrainRequest } from '../../src/server/npc/decision.ts';
 
 test('AI identity, memory notice and private NPC chat work through real sockets', async ({
@@ -22,7 +27,7 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
         {
           config: npcConfigSchema.parse({ intervalMs: 5000 }),
           brain: {
-            async decide(request) {
+            async decide(request: BrainRequest) {
               seen.push(request);
               const context = JSON.stringify(request.observation);
               const invited = context.includes('blue tractors');
@@ -50,7 +55,7 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
         {
           config: npcConfigSchema.parse({ ...bakerDefaults, intervalMs: 5000 }),
           brain: {
-            async decide(request) {
+            async decide(request: BrainRequest) {
               const o = request.observation as any;
               expect(JSON.stringify(o)).not.toContain('blue tractors');
               return {
@@ -74,7 +79,7 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
           config: npcConfigSchema.parse({ ...farmerDefaults, intervalMs: 5000 }),
           rates: { inputUsdPerMillion: 0.042, outputUsdPerMillion: 0 },
           brain: {
-            async decide(request) {
+            async decide(request: BrainRequest) {
               expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
               return {
                 decision: {
@@ -93,7 +98,7 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
           dialogue: {
             rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
             brain: {
-              async decide(request) {
+              async decide(request: BrainRequest) {
                 expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
                 return {
                   decision: {
@@ -114,7 +119,88 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
             },
           },
         },
-      ],
+      ]
+        .map((r) =>
+          r.config.provider === 'jev'
+            ? r
+            : {
+                ...r,
+                config: { ...r.config, provider: 'jev' as const },
+                rates: { inputUsdPerMillion: 0.042, outputUsdPerMillion: 0 },
+                dialogue: {
+                  provider: r.config.id === 'mabel' ? ('openai' as const) : ('anthropic' as const),
+                  brain: r.brain,
+                  rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
+                },
+                brain: {
+                  async decide(request: BrainRequest) {
+                    expect(
+                      (request.observation as any).choices.some((c: any) =>
+                        c.description.startsWith('Learn farmer'),
+                      ),
+                    ).toBe(true);
+                    return {
+                      decision: {
+                        intent: 'Consider the parish',
+                        notebook: '',
+                        speech: null,
+                        plan: [{ kind: 'wait' as const, seconds: 600 }],
+                        repeat: 1,
+                        reconsiderSeconds: 600,
+                      },
+                      inputTokens: 100,
+                      outputTokens: 0,
+                    };
+                  },
+                },
+              },
+        )
+        .concat([
+          {
+            config: npcConfigSchema.parse({ ...independentDefaults, intervalMs: 5000 }),
+            rates: { inputUsdPerMillion: 0.042, outputUsdPerMillion: 0 },
+            brain: {
+              async decide(request: BrainRequest) {
+                expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
+                return {
+                  decision: {
+                    intent: 'Survey opportunities',
+                    notebook: '',
+                    speech: null,
+                    plan: [{ kind: 'wait' as const, seconds: 600 }],
+                    repeat: 1,
+                    reconsiderSeconds: 600,
+                  },
+                  inputTokens: 100,
+                  outputTokens: 0,
+                };
+              },
+            },
+            dialogue: {
+              rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
+              brain: {
+                async decide(request: BrainRequest) {
+                  expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
+                  return {
+                    decision: {
+                      intent: 'Conversation',
+                      notebook: 'Met Robin.',
+                      speech: {
+                        text: 'I am Elias Vale. I compare opportunities and learn as I go.',
+                        to: humanId,
+                      },
+                      plan: [{ kind: 'wait' as const, seconds: 600 }],
+                      repeat: 1,
+                      reconsiderSeconds: 600,
+                    },
+                    inputTokens: 100,
+                    outputTokens: 30,
+                  };
+                },
+              },
+            },
+          },
+        ]),
     },
   });
   try {
@@ -136,7 +222,7 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     await expect(page.locator('#players')).toContainText('Mabel Reed');
     await expect(page.locator('#players')).toContainText('Toby Finch');
     await expect(page.locator('#players')).toContainText('Rowan Field');
-    await expect(page.locator('#players .ai-tag')).toHaveText(['AI', 'AI', 'AI']);
+    await expect(page.locator('#players .ai-tag')).toHaveText(['AI', 'AI', 'AI', 'AI']);
     await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
     await expect(page.getByRole('dialog', { name: 'AI neighbours.' })).toBeVisible();
     await expect(
@@ -145,13 +231,13 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
       }),
     ).toBeVisible();
     await expect(page.locator('.npc-card').filter({ hasText: 'Toby Finch' })).toContainText(
-      'AI · Claude',
+      'AI · Jev + Claude',
     );
     await expect(
       page
         .locator('.npc-card')
-        .filter({ has: page.getByRole('heading', { name: 'Mabel Reed AI · OpenAI' }) }),
-    ).toContainText('AI · OpenAI');
+        .filter({ has: page.getByRole('heading', { name: 'Mabel Reed AI · Jev + OpenAI' }) }),
+    ).toContainText('AI · Jev + OpenAI');
     await expect(page.locator('.npc-card').filter({ hasText: 'Rowan Field' })).toContainText(
       'AI · Jev + Claude',
     );
@@ -210,6 +296,16 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     const rowanReply = w.messages.find((m) => m.text.startsWith('I am Rowan Field.'))!;
     expect(rowanReply.to).toBe(humanId);
     expect(rowanReply.name).toBe('Rowan Field');
+    await page.getByRole('button', { name: 'Back to parish chat' }).click();
+    await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
+    await page.getByRole('button', { name: 'Chat with Elias Vale' }).click();
+    await page.getByRole('textbox', { name: 'Chat message' }).fill('Elias, introduce yourself.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(page.locator('#chat-log')).toContainText(
+      'I am Elias Vale. I compare opportunities and learn as I go.',
+      { timeout: 20000 },
+    );
+    expect(app.residents!.memory.search('elias', 'blue tractors', null)).toEqual([]);
     expect(seen.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   } finally {

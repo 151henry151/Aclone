@@ -4,6 +4,20 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Shared adaptive residents (0.14.0)
+
+Mabel, Toby, Rowan and new resident Elias share one Jev decision system. All can
+reconsider careers, purchases, business ownership, housing and leisure using
+current opportunities and durable outcome feedback. OpenAI supplies Mabel's
+conversation; Claude supplies the others. Conversation is addressed-only and
+cannot replace the chosen gameplay plan. Configuration remains opt-in and uses
+existing shared spending caps. See [NPC guide](NPCS.md).
+
+Plans expose ordinary gameplay action families, including space journeys, but
+use bounded candidate quantities and destinations; they are not an exhaustive
+search or a promise of expert combat or profitable long-term play. Validation
+checks legal game actions, real receipts, privacy and persistence.
+
 ## Jev farmer with Claude conversation (0.13.0)
 
 Rowan Field is an independently enabled third resident. Jev selects bounded farm

@@ -6,6 +6,24 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-01
+
+### Added
+
+- Elias Vale, a fourth independently enabled neighbour with Jev gameplay, Claude conversation and his own persistent identity and memories.
+- A shared adaptive planner for every resident: compare parish jobs and shortages, learn any skill, trade, gather, manage businesses, build and provision homes, rent rooms, fish, customize vehicles and explore the galaxy. Plans use ordinary player rules and record actual financial/health outcomes separately from estimated profit.
+- Durable space journeys and atomic account/world/plan checkpoints, plus tests for trade receipts, construction, lodging, fishing and restart continuity.
+
+### Changed
+
+- Mabel, Toby and Rowan all use the same Jev action catalog; prior careers are personality preferences rather than restrictions. Mabel retains OpenAI conversation; the others retain Claude. Existing identities and memories persist.
+- Conversation requests use a smaller speech-and-notebook tool, only when a human addresses the resident; gameplay and chat share the existing spending limits with separate accounting. Routine turns make no chat-model requests; completed questions are not replayed, and failures have durable backoff and a three-attempt limit.
+
+### Fixed
+
+- Suppress unsolicited NPC progress announcements in the controller while preserving addressed public replies and private conversations.
+- Offer explicit renewal and production-boundary waits for factory jobs, and report a deferred conversation budget privately once per question.
+
 ## [0.13.0] - 2026-10-01
 
 ### Added

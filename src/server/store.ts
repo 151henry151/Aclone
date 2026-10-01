@@ -8,6 +8,7 @@ import { defaults, buildings } from '../shared/catalog.ts';
 import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
+  private transactionDepth = 0;
   constructor(public path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
@@ -70,14 +71,23 @@ export class Store {
       });
   }
   transaction<T>(fn: () => T): T {
-    this.db.exec('BEGIN IMMEDIATE');
+    const level = this.transactionDepth++,
+      savepoint = `nested_${level}`;
     try {
-      const out = fn();
-      this.db.exec('COMMIT');
-      return out;
-    } catch (e) {
-      this.db.exec('ROLLBACK');
-      throw e;
+      this.db.exec(level ? `SAVEPOINT ${savepoint}` : 'BEGIN IMMEDIATE');
+      try {
+        const out = fn();
+        this.db.exec(level ? `RELEASE ${savepoint}` : 'COMMIT');
+        return out;
+      } catch (e) {
+        if (level) {
+          this.db.exec(`ROLLBACK TO ${savepoint}`);
+          this.db.exec(`RELEASE ${savepoint}`);
+        } else this.db.exec('ROLLBACK');
+        throw e;
+      }
+    } finally {
+      this.transactionDepth--;
     }
   }
   saveWorld(w: World, now = Date.now() / 1000, withinTransaction?: () => void) {

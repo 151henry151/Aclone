@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
+import { conversationTool, conversationOutputLimit, conversationDecision } from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 
 // Explain numeric/string limits as well as specifying them in the schema.
@@ -33,8 +34,17 @@ export class AnthropicBrain implements Brain {
     private apiKey: string,
     private model: string,
     private transport: typeof fetch = fetch,
+    private mode: 'plan' | 'conversation' = 'plan',
   ) {}
   async decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult> {
+    const tool =
+      this.mode === 'conversation'
+        ? {
+            name: conversationTool.name,
+            description: conversationTool.description,
+            input_schema: claudeSchema(conversationTool.parameters),
+          }
+        : claudeTurnTool;
     const response = await this.transport('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -45,7 +55,7 @@ export class AnthropicBrain implements Brain {
       signal: AbortSignal.any([signal, AbortSignal.timeout(45000)]),
       body: JSON.stringify({
         model: this.model,
-        max_tokens: outputLimit,
+        max_tokens: this.mode === 'conversation' ? conversationOutputLimit : outputLimit,
         // Cache only the stable instructions/tools, never a growing chat history.
         system: [
           {
@@ -55,8 +65,8 @@ export class AnthropicBrain implements Brain {
           },
         ],
         messages: [{ role: 'user', content: JSON.stringify(request.observation) }],
-        tools: [claudeTurnTool],
-        tool_choice: { type: 'tool', name: 'plan_turn', disable_parallel_tool_use: true },
+        tools: [tool],
+        tool_choice: { type: 'tool', name: tool.name, disable_parallel_tool_use: true },
       }),
     });
     // Provider bodies can echo private data; retain only the HTTP status.
@@ -75,12 +85,20 @@ export class AnthropicBrain implements Brain {
     const calls = body.content?.filter((c) => c.type === 'tool_use') ?? [];
     if (
       calls.length !== 1 ||
-      calls[0].name !== 'plan_turn' ||
+      calls[0].name !== tool.name ||
       !calls[0].input ||
       JSON.stringify(calls[0].input).length > 20000
     )
       throw Error('AI response did not contain one valid turn');
-    const parsed = decisionSchema.safeParse(calls[0].input);
+    let value = calls[0].input;
+    if (this.mode === 'conversation') {
+      try {
+        value = conversationDecision(value);
+      } catch {
+        throw Error('AI response did not contain one valid turn');
+      }
+    }
+    const parsed = decisionSchema.safeParse(value);
     if (!parsed.success) throw Error('AI response did not contain one valid turn');
     const inputTokens = body.usage?.input_tokens;
     const outputTokens = body.usage?.output_tokens;
