@@ -163,8 +163,8 @@ state. Backups now also contain private email addresses and password hashes.
 
 ## Offline progress and capacity testing
 
-Disconnecting stops movement and immediately saves the world. Hunger, thirst,
-ageing and property decay pause while offline; jobs, production, lessons and
+Disconnecting stops movement and immediately saves the world. Hunger, thirst and starvation damage continue offline; ageing and passive
+property decay pause while offline; jobs, production, lessons and
 pending tasks still advance. A lost connection is detected by heartbeat within
 roughly a minute, so this is not a way to pause combat instantly. A graceful
 server stop saves all worlds. A hard process/host failure can lose up to five
@@ -218,11 +218,11 @@ multiple processes must not write to the same database.
 ## Optional AI resident
 
 The NPC prototype is disabled by default. See [AI neighbours](NPCS.md) for the
-server-only OpenAI/Anthropic/TypeSafe keys, independent Mabel/Toby/Rowan configuration, shared spending caps, native and
+server-only OpenAI/Anthropic/TypeSafe keys, Mabel/Toby/Rowan/Elias and optional fifteen-neighbour configuration, shared spending caps, native and
 Compose startup, privacy notice and operator controls. The same persistent
 SQLite database stores resident identity, memories and usage reservations, so
 include it in normal backups. Use the same DATA_DIR for the server and NPC CLI.
-No changes to the `/aclone` proxy routes are required.
+No changes to the `/aclone` proxy routes are required. To add the new fifteen neighbours, set `NPC_POPULATION_ENABLED=true` in the server environment and restart. `NPC_TIME_ZONE` defaults to `America/New_York`. Existing enabled Mabel stays online; Toby, Rowan and Elias move to scheduled sessions. Spending caps are unchanged. Provision player homes before an extended absence: offline starvation now applies, including restart catch-up.
 
 Set `LOAD_NPC=1` on the local load probe to include one resident using a free,
 deterministic decision double, exercising real navigation, labour, persistence

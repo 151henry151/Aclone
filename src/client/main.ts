@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { resourceNodes, resourceAmount } from '../shared/resources';
 import { roomCount } from '../shared/lodging';
@@ -38,7 +39,7 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 let npcResidents:
   | {
       id: string;
@@ -47,11 +48,15 @@ let npcResidents:
       personality: string;
       provider?: string;
       conversationProvider?: string;
+      presence?: string;
+      nextVisitAt?: number;
+      sessionEndsAt?: number;
       world: string;
       online: boolean;
       status: string;
     }[]
   | undefined;
+let tradingSelection: { building: string; item: string; side: 'buy' | 'sell' } | undefined;
 let chatRecipient: { id: string; name: string } | undefined;
 let parishMap: ParishMap | undefined;
 let scene: GameScene;
@@ -199,6 +204,7 @@ async function connect() {
       $('world-hud').hidden = false;
       scene.setWorld(world!, msg.me);
       updateHud();
+      refreshTradingPrices();
       if (msg.sequence !== undefined && ws?.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
     }
@@ -217,7 +223,8 @@ async function connect() {
       });
     }
     if (msg.type === 'result') {
-      if (msg.message !== 'Parp.') toast(msg.message, !msg.ok);
+      if (msg.message && !['Parp.', 'Done. Quietly competent.'].includes(msg.message))
+        toast(msg.message, !msg.ok);
       if (msg.ok && panel) setTimeout(() => renderPanel(), 100);
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';
@@ -539,9 +546,72 @@ function field(
 function hidden(name: string, value: string) {
   return `<input type="hidden" name="${name}" value="${esc(value)}">`;
 }
-function select(name: string, entries: [string, string][], label = '') {
-  return `<label>${label}<select name="${name}">${entries.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select></label>`;
+function select(name: string, entries: [string, string][], label = '', selectedValue?: string) {
+  return `<label>${label}<select name="${name}">${entries.map(([v, l]) => `<option value="${esc(v)}" ${v === selectedValue ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
 }
+function refreshBusinessDetails() {
+  const form = app.querySelector<HTMLFormElement>('form[data-business-details]');
+  const b = world?.buildings.find((b) => b.id === form?.dataset.businessDetails);
+  if (!form || !b) return;
+  for (const [name, value] of [
+    ['name', b.name],
+    ['wageDenarii', String(b.wage / 100)],
+  ]) {
+    const input = form.elements.namedItem(name) as HTMLInputElement;
+    if (input.dataset.dirty !== 'true') input.value = value;
+  }
+  form.querySelector('[data-saved-wage]')!.textContent =
+    `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
+}
+function refreshTradingPrices() {
+  refreshBusinessDetails();
+  const form = app.querySelector<HTMLFormElement>('form[data-price-editor]');
+  const b = world?.buildings.find((b) => b.id === form?.dataset.priceEditor);
+  if (!form || !b) return;
+  const item = (form.elements.namedItem('item') as HTMLSelectElement).value;
+  const side = (form.elements.namedItem('side') as HTMLSelectElement).value as 'buy' | 'sell';
+  const price = b[side][item];
+  const input = form.elements.namedItem('priceDenarii') as HTMLInputElement;
+  if (input.dataset.dirty !== 'true') input.value = price === undefined ? '' : String(price / 100);
+  form.querySelector('[data-saved-price]')!.textContent =
+    price === undefined
+      ? 'No saved price for this item and direction.'
+      : `Saved price: ${money(price)} per item`;
+  const list = form.querySelector<HTMLElement>('[data-current-prices]')!;
+  const key = JSON.stringify([b.buy, b.sell]);
+  if (list.dataset.prices !== key) {
+    list.dataset.prices = key;
+    list.innerHTML =
+      '<h4>Current trading prices</h4><ul>' +
+      [...new Set([...Object.keys(b.buy), ...Object.keys(b.sell)])]
+        .map(
+          (i) =>
+            `<li>${esc(items[i]?.name ?? i)} · buys: ${b.buy[i] === undefined ? 'not buying' : money(b.buy[i])} · sells: ${b.sell[i] === undefined ? 'not selling' : money(b.sell[i])}</li>`,
+        )
+        .join('') +
+      '</ul>';
+  }
+}
+app.addEventListener('change', (event) => {
+  const control = event.target as HTMLInputElement;
+  const form = control.closest<HTMLFormElement>('form[data-price-editor]');
+  if (!form || !['item', 'side'].includes(control.name)) return;
+  tradingSelection = {
+    building: form.dataset.priceEditor!,
+    item: (form.elements.namedItem('item') as HTMLSelectElement).value,
+    side: (form.elements.namedItem('side') as HTMLSelectElement).value as 'buy' | 'sell',
+  };
+  delete (form.elements.namedItem('priceDenarii') as HTMLInputElement).dataset.dirty;
+  refreshTradingPrices();
+});
+app.addEventListener('input', (event) => {
+  const input = event.target as HTMLInputElement;
+  if (
+    (input.name === 'priceDenarii' && input.closest('form[data-price-editor]')) ||
+    input.closest('form[data-business-details]')
+  )
+    input.dataset.dirty = 'true';
+});
 function renderPanel() {
   if (!panel) return;
   if (panel === 'create') {
@@ -607,7 +677,7 @@ function renderPanel() {
     const residents = npcResidents?.filter((r) => r.world === world!.id);
     modal(
       'AI neighbours.',
-      `<p>These residents are AI agents with their own personalities, savings and memories. They drive, work and trade under the same rules as you.</p><p class="notice">Parish chat and messages sent to an AI are saved in its memory. Relevant excerpts and game observations are sent to that resident’s AI provider (OpenAI, Anthropic/Claude, or TypeSafe/Jev; Jev chooses actions; Mabel uses OpenAI for conversation, Toby, Rowan and Elias use Claude) to decide its replies and actions. Private messages go only to the addressed resident.</p>${residents === undefined ? '<p>Loading residents…</p>' : residents.length ? residents.map((r) => `<article class="npc-card"><h3>${esc(r.name)} <small class="ai-tag">AI · ${r.provider === 'jev' ? (r.conversationProvider === 'openai' ? 'Jev + OpenAI' : 'Jev + Claude') : r.provider === 'anthropic' ? 'Claude' : 'OpenAI'}</small></h3><p>${esc(r.personality)}</p><p>${r.online ? 'In the parish' : r.status === 'In space' ? 'Exploring the galaxy' : 'Currently resting'} · ${esc(r.status)}</p>${button('Chat with ' + esc(r.name), 'npc-chat', `data-id="${esc(r.playerId)}"`)}</article>`).join('') : '<p>No AI resident is enabled in this parish. The server operator can enable the proof of concept.</p>'}<p class="note">Use the chat button for a private conversation, or mention their first name in parish chat. Replies can take a little time. Memories persist across restarts; the server operator can inspect and manage them.</p>${button('Refresh residents', 'npc')}`,
+      `<p>These residents are AI agents with their own personalities, savings and memories. They drive, work and trade under the same rules as you.</p><p class="notice">Parish chat and messages sent to an AI are saved in its memory. Relevant excerpts and game observations are sent to that resident’s AI provider (OpenAI, Anthropic/Claude, or TypeSafe/Jev; Jev chooses actions; Mabel uses OpenAI for conversation, all other residents use Claude) to decide its replies and actions. Private messages go only to the addressed resident.</p>${residents === undefined ? '<p>Loading residents…</p>' : residents.length ? residents.map((r) => `<article class="npc-card"><h3>${esc(r.name)} <small class="ai-tag">AI · ${r.provider === 'jev' ? (r.conversationProvider === 'openai' ? 'Jev + OpenAI' : 'Jev + Claude') : r.provider === 'anthropic' ? 'Claude' : 'OpenAI'}</small></h3><p>${esc(r.personality)}</p><p>${r.online ? 'In the parish' : r.status === 'In space' ? 'Exploring the galaxy' : 'Currently resting'} · ${esc(r.status)}${r.nextVisitAt ? ` · Expected back around ${esc(new Date(r.nextVisitAt).toLocaleString())}` : ''}</p>${button('Chat with ' + esc(r.name), 'npc-chat', `data-id="${esc(r.playerId)}"`)}</article>`).join('') : '<p>No AI resident is enabled in this parish. The server operator can enable the proof of concept.</p>'}<p class="note">Use the chat button for a private conversation, or mention their first name in parish chat. Replies can take a little time. Mabel stays online; other residents have individual playing habits and do not answer while signed off. Unnamed public follow-ups work for two minutes after your latest turn. Memories persist across restarts; the server operator can inspect and manage them.</p>${button('Refresh residents', 'npc')}`,
     );
     return;
   }
@@ -750,6 +820,7 @@ function buildingWindow(b: Building) {
         ', ',
       )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}"`)}`;
     modal(b.name, html);
+    refreshTradingPrices();
     return;
   }
   if (tab === 'Main') {
@@ -815,7 +886,7 @@ function buildingWindow(b: Building) {
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
     if (b.kind === 'home')
-      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Offline ageing and health loss pause, so running out of supplies cannot kill you while away. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (roomCount(b)) {
       const l = b.lodging,
         guest = l?.guests[me.id],
@@ -899,6 +970,12 @@ function buildingWindow(b: Building) {
           ['withdraw', 'Collect items'],
         ])}<button>Transfer stock</button></form>`
       : '<p>The stockroom belongs to the owner. Use the trade window instead.</p>';
+  if (tab === 'Building Admin' && tradingSelection?.building !== b.id)
+    tradingSelection = {
+      building: b.id,
+      item: Object.keys(b.buy)[0] ?? Object.keys(b.sell)[0] ?? Object.keys(items)[0],
+      side: 'buy',
+    };
   if (tab === 'Building Admin')
     html += owned
       ? `<div class="admin-grid"><form data-action="investment">${hidden('building', b.id)}<h3>Working capital</h3>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
@@ -907,19 +984,27 @@ function buildingWindow(b: Building) {
             ['deposit', 'Invest cash'],
             ['withdraw', 'Collect earnings'],
           ],
-        )}<button>Transfer cash</button></form><form data-action="buildingAdmin">${hidden('building', b.id)}<h3>Business details</h3>${field('Building name', 'name', b.name, 'text', 'maxlength="48"')}${field('Wage in denarii', 'wageDenarii', b.wage / 100, 'number', 'min="0" step="0.01"')}<button>Save details</button></form><form data-action="buildingAdmin">${hidden('building', b.id)}<h3>Set trading prices</h3>${select(
+        )}<button>Transfer cash</button></form><form data-action="buildingAdmin" data-business-details="${esc(b.id)}">${hidden('building', b.id)}<h3>Business details</h3><p data-saved-wage></p>${field('Building name', 'name', b.name, 'text', 'maxlength="48"')}${field('Wage in denarii', 'wageDenarii', b.wage / 100, 'number', 'min="0" max="10000" step="0.01" required')}<button>Save details</button></form><form data-action="buildingAdmin" data-price-editor="${esc(b.id)}">${hidden('building', b.id)}<h3>Set trading prices</h3>${select(
           'item',
           Object.entries(items).map(([id, d]) => [id, d.name]),
-        )}${select('side', [
-          ['buy', 'Building buys'],
-          ['sell', 'Building sells'],
-        ])}${field('Denarii per item', 'priceDenarii', 10, 'number', 'min="0" step="0.01"')}<button>Set price</button></form></div>`
+          'Item',
+          tradingSelection!.item,
+        )}${select(
+          'side',
+          [
+            ['buy', 'Building buys'],
+            ['sell', 'Building sells'],
+          ],
+          'Trade direction',
+          tradingSelection!.side,
+        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
       : '<p>Only the owner may manage this building.</p>';
   if (tab === 'Building Admin' && owned && !b.government)
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
   if (tab === 'Extra Info')
     html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Active workers give full efficiency. Unstaffed businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
   modal(b.name, html, true);
+  refreshTradingPrices();
 }
 function editorWindow() {
   if (!world || !me) return;

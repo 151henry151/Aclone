@@ -171,7 +171,7 @@ test('scheduler bounds concurrency for a 50-resident fixture; pausing discards l
   s.residents.close();
   s.store.close();
 });
-test('invalid and remote actions cannot mint wealth, and provider failure rests the NPC', async () => {
+test('invalid and remote actions cannot mint wealth, and provider failure rests without hiding the NPC', async () => {
   const s = setup({
     async decide() {
       return answer(
@@ -207,7 +207,7 @@ test('invalid and remote actions cannot mint wealth, and provider failure rests 
   });
   failure.residents.tick(0.05, Date.now());
   await failure.residents.settled();
-  assert.equal(failure.residents.status()[0].online, false);
+  assert.equal(failure.residents.status()[0].online, true);
   assert.ok(!JSON.stringify(failure.residents.memory.recent('resident-0')).includes('SECRET'));
   failure.residents.close();
   failure.store.close();
@@ -581,6 +581,56 @@ test('an expired miller can replay job then work without aborting or extra AI ca
       s.residents.memory.recent('resident-0', 20).some((e) => e.kind === 'failure'),
       false,
     );
+  } finally {
+    s.residents.close();
+    s.store.close();
+  }
+});
+
+test('resident stays visible through delayed thinking, provider failure, backoff and retry', async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  const pending: { resolve: (value: BrainResult) => void; reject: (reason: Error) => void }[] = [];
+  const s = setup({
+    decide() {
+      return new Promise((resolve, reject) => pending.push({ resolve, reject }));
+    },
+  });
+  const id = s.residents.status()[0].playerId;
+  try {
+    const human = addPlayer(s.w, 'human', 'Human');
+    human.online = true;
+    say(s.w, human.name, 'Resident, hello.', 'chat');
+    s.residents.capture(s.w);
+    s.residents.tick(0.05, now);
+    assert.equal(pending.length, 1);
+    for (let i = 0; i < 10; i++) {
+      now += 500;
+      s.residents.tick(0.05, now);
+      assert.equal(s.w.players[id].online, true, 'remains visible while thinking');
+    }
+    pending[0].reject(new Error('AI response incomplete'));
+    await s.residents.settled();
+    assert.equal(s.w.players[id].online, true, 'failure does not mean logout');
+    for (let i = 0; i < 10; i++) {
+      now += 500;
+      s.residents.tick(0.05, now);
+      assert.equal(s.w.players[id].online, true, 'backoff preserves presence');
+    }
+    assert.equal(pending.length, 1);
+    now += 60000;
+    s.residents.tick(0.05, now);
+    assert.equal(pending.length, 2);
+    pending[1].resolve(
+      answer({
+        ...decision([{ kind: 'wait', seconds: 600 }]),
+        speech: { text: 'Hello there.', to: null },
+      }),
+    );
+    await s.residents.settled();
+    assert.equal(s.w.players[id].online, true);
+    assert.ok(s.w.messages.some((m) => m.text === 'Hello there.'));
+    assert.equal(s.residents.memory.paused('resident-0'), false);
   } finally {
     s.residents.close();
     s.store.close();

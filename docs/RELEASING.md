@@ -4,6 +4,22 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.15.0
+
+Back up the SQLite database, pull the release, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build` and restart the existing service. No route changes
+are needed. Enable the new fifteen residents with `NPC_POPULATION_ENABLED=true`
+in the server environment; `NPC_TIME_ZONE` defaults to `America/New_York`.
+Existing identities and memory survive. All residents share the same spending caps.
+Mabel stays online, and enabled Toby/Rowan/Elias receive longer scheduled visits.
+
+Offline starvation is now active for all pilots, including restart catch-up.
+Provision a home or a booked room before a long absence; empty stores and booking
+expiry can lead to death and ordinary estate losses. Ageing and passive property
+decay still pause offline. This supersedes older releases' offline protections.
+
+## Release procedure
+
 1. Complete the required behaviour and its regression tests.
 2. Run `npm run check`, `npm run format:check`, `npm run build` and the browser
    suite against a fresh disposable instance. Review visual evidence.

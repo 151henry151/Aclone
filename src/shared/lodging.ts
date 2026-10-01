@@ -74,7 +74,7 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
   } else throw Error('Unknown lodging operation');
   b.lodging = l;
 }
-/** Bounded, exact threshold feeding, including long disconnects; never kills an offline guest. */
+/** Bounded threshold feeding; returns the seconds before either need reaches starvation. */
 export function feedAtHome(
   p: Player,
   stock: Stock,
@@ -82,6 +82,7 @@ export function feedAtHome(
   hungerRate: number,
   thirstRate: number,
 ) {
+  let healthySeconds = seconds;
   for (const [need, nutrient, rate] of [
     ['hunger', 'food', hungerRate],
     ['thirst', 'drink', thirstRate],
@@ -93,6 +94,11 @@ export function feedAtHome(
       stock[key] = (stock[key] ?? 0) - count;
       value -= count * def[nutrient]!;
     }
+    const effectiveRate = rate * 0.8;
+    const healthy =
+      effectiveRate > 0 ? (50000 - value) / effectiveRate + seconds : value >= 50000 ? 0 : seconds;
+    healthySeconds = Math.min(healthySeconds, Math.max(0, healthy));
     p[need] = Math.max(0, Math.min(50000, value));
   }
+  return healthySeconds;
 }

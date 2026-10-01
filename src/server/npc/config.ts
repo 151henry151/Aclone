@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
+import { habitSchema, timeZoneSchema } from './habits.ts';
+import { population, veteranHabits, preferenceSchemaValues } from './population.ts';
 import { budgetSchema, type TokenRates } from './budget.ts';
 export const npcConfigSchema = z.object({
   id: z
@@ -24,6 +26,10 @@ export const npcConfigSchema = z.object({
   model: z.string().min(1).max(100).default('gpt-4.1-mini'),
   intervalMs: z.number().int().min(5000).max(300000).default(15000),
   activeAlone: z.boolean().default(false),
+  presence: z.enum(['on-demand', 'always', 'scheduled']).default('on-demand'),
+  timeZone: timeZoneSchema,
+  habit: habitSchema.default(() => habitSchema.parse({})),
+  preference: z.enum(preferenceSchemaValues).default('balanced'),
 });
 export type NpcConfig = z.infer<typeof npcConfigSchema>;
 export function npcEnvironment(env: NodeJS.ProcessEnv = process.env) {
@@ -248,7 +254,46 @@ export function residentsEnvironment(env: NodeJS.ProcessEnv = process.env) {
       },
     });
   }
+  if (env.NPC_POPULATION_ENABLED === 'true') {
+    const apiKey = env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY;
+    if (!apiKey)
+      throw Error('NPC_POPULATION_ENABLED requires CLAUDE_API_KEY (or ANTHROPIC_API_KEY)');
+    for (const person of population)
+      residents.push({
+        apiKey,
+        config: npcConfigSchema.parse({
+          ...person,
+          provider: 'anthropic',
+          model: BAKER_MODEL,
+          world: env.NPC_WORLD || 'puddlewick',
+          presence: 'scheduled',
+          timeZone: env.NPC_TIME_ZONE,
+        }),
+        rates: {
+          inputUsdPerMillion: 1,
+          outputUsdPerMillion: 5,
+          cacheWriteMultiplier: 1.25,
+          cacheReadMultiplier: 0.1,
+        },
+      });
+  }
   if (!residents.length) return undefined;
+  for (const r of residents) {
+    r.config.timeZone = timeZoneSchema.parse(env.NPC_TIME_ZONE);
+    if (r.config.id === mabel?.config.id) r.config.presence = 'always';
+    else if (!population.some((p) => p.id === r.config.id)) {
+      const role = r.config.vocation;
+      r.config.presence = 'scheduled';
+      r.config.habit =
+        role === 'baker'
+          ? veteranHabits.toby
+          : role === 'farmer'
+            ? veteranHabits.rowan
+            : veteranHabits.elias;
+      r.config.preference =
+        role === 'baker' ? 'employee' : role === 'farmer' ? 'farmer' : 'balanced';
+    }
+  }
   // Preserve all existing chat model/rate variables. Gameplay now shares Jev.
   const jevKey = env.TYPESAFE_API_KEY || env.JEV_API_KEY;
   if (!jevKey)

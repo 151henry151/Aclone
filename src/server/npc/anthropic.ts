@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
-import { conversationTool, conversationOutputLimit, conversationDecision } from './conversation.ts';
+import {
+  conversationTool,
+  conversationOutputLimit,
+  conversationDecision,
+  conversationRequest,
+} from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 
 // Explain numeric/string limits as well as specifying them in the schema.
@@ -91,8 +96,10 @@ export class AnthropicBrain implements Brain {
     )
       throw Error('AI response did not contain one valid turn');
     let value = calls[0].input;
+    let gameplayRequest;
     if (this.mode === 'conversation') {
       try {
+        gameplayRequest = conversationRequest(value);
         value = conversationDecision(value);
       } catch {
         throw Error('AI response did not contain one valid turn');
@@ -112,6 +119,7 @@ export class AnthropicBrain implements Brain {
       throw Error('AI response missing token accounting');
     return {
       decision: parsed.data,
+      gameplayRequest,
       inputTokens: inputTokens!,
       outputTokens: outputTokens!,
       cacheWriteTokens,

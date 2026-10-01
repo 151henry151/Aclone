@@ -718,6 +718,7 @@ kbd {
   color: #d2dfbd;
 }
 .chat-panel {
+  pointer-events: auto;
   position: absolute;
   bottom: 24px;
   left: 50%;
@@ -756,6 +757,13 @@ kbd {
   width: 100%;
   font: 11px monospace;
   color: #ddc58d;
+}
+.chat-panel:focus-within {
+  border-color: #d2c58d;
+}
+#chat-log:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 #chat-log {
   height: 100px;

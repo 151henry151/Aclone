@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
+import { MAX_CHAT_LENGTH } from '../../shared/messages.ts';
+import type { GameplayRequest } from './commitments.ts';
 const id = z.string().min(1).max(80),
   quantity = z.number().int().min(1).max(10000);
 const building = {
@@ -205,7 +207,7 @@ export const decisionSchema = z
       ),
     speech: z
       .object({
-        text: z.string().min(1).max(300),
+        text: z.string().min(1).max(MAX_CHAT_LENGTH),
         to: id
           .nullable()
           .describe(
@@ -245,6 +247,7 @@ export interface BrainRequest {
   observation: unknown;
 }
 export interface BrainResult {
+  gameplayRequest?: GameplayRequest | null;
   decision: Decision;
   inputTokens: number;
   outputTokens: number;

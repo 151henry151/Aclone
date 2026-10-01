@@ -23,6 +23,7 @@ try {
           status: s.status,
           paused: memory.paused(String(row.id)),
           intent: s.intent,
+          presence: s.presence,
           memories: memory.count(String(row.id)),
         };
       });

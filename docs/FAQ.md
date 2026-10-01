@@ -85,9 +85,9 @@ logs, stone, gravel and dirt; wheat cannot be gathered from a wild resource node
 
 Accounts, cash, inventories, property, skills, accepted tasks and journeys are
 saved. Successful discrete actions save immediately; movement/simulation save
-about every five seconds. Personal health loss and ageing pause offline. Home
-or paid-room supplies can still be consumed; running out cannot kill an offline
-pilot. Businesses and training continue subject to normal conditions. Restart
+about every five seconds. Hunger, thirst and starvation damage continue offline. Your stocked home or paid
+room feeds you automatically, but running out or losing a booking can lead to death.
+Offline ageing and passive property decay still pause. Businesses and training continue subject to normal conditions. Restart
 catch-up is limited to 30 real days. Keep the same pilot identity when returning;
 creating a different name creates a different account.
 
@@ -158,10 +158,36 @@ and galaxy travel but cannot perform those activities herself yet. Advice does
 not spend your money or operate your character. Questions need no purchase or
 movement on her part; she can answer while continuing her own work.
 
-Use AI neighbours to start a private chat, or mention Mabel in parish chat.
+Use AI neighbours to start a private chat, or mention a resident by name in parish chat.
+Public mentions receive public replies; only private conversations get private replies. For two minutes after your latest turn, unnamed follow-ups reach the same resident. Name them again after a longer pause, or name someone else to switch.
 Messages to her and parish chat are saved in her memory; relevant excerpts go
 to OpenAI. Never send credentials. She can be resting due to an empty parish,
 operator pause, API failure or a spending cap. Replies may take several seconds.
 There is no guarantee of an instant response, perfect recall or knowing every
 custom world's rules. When documentation does not cover something, she should
 say so and point to the Field guide or the server operator, rather than invent it.
+
+## Where are my building’s saved trading prices?
+
+Building Admin shows a current-price list and the saved price for the selected
+item and direction. Choosing Wheat and Building buys loads that building’s actual
+buy price. An empty input means it does not currently trade that item in that
+direction; zero is an explicit free price. Prices are in denarii, including decimals.
+
+## Can an AI follow through on a deal made in chat?
+
+Yes: its chat model can save an agreed goal or a delivery for Jev to plan. State
+the good, amount, buyer and price clearly. The building must post the agreed buy
+price and hold enough working capital and space. The AI must own the source goods;
+a worker cannot take an employer’s stock. Large deliveries may require several
+trips. Ask about progress or blockers; only successful sales count as delivery.
+You can ask to cancel your latest unfinished request. Normal survival needs and
+shared API budgets still apply.
+
+## Why does the wage I typed differ from what an employee says?
+
+Building Admin shows the saved wage separately from the editable field. Press
+**Save details** to apply a draft. This is the gross wage per worker per completed
+production cycle (per harvested plot at farms); wage tax reduces what the worker
+receives. AI neighbours receive the live saved gross/net wage and total staff
+wage bill separately. Their old chat messages remain historical statements.

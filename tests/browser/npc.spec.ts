@@ -306,6 +306,35 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
       { timeout: 20000 },
     );
     expect(app.residents!.memory.search('elias', 'blue tractors', null)).toEqual([]);
+    await page.getByRole('button', { name: 'Back to parish chat' }).click();
+    await page
+      .getByRole('textbox', { name: 'Chat message' })
+      .fill('Elias, say hello to the parish.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect
+      .poll(
+        () =>
+          w.messages.filter((m) => m.name === 'Elias Vale' && m.text.startsWith('I am Elias Vale.'))
+            .length,
+      )
+      .toBe(2);
+    const publicReply = w.messages.filter((m) => m.name === 'Elias Vale').at(-1)!;
+    expect(publicReply.to).toBeUndefined();
+    await expect(page.locator('#chat-log .chat-line').last()).toContainText('Elias Vale');
+    await expect(page.locator('#chat-log .chat-line').last()).not.toContainText('private');
+    await page
+      .getByRole('textbox', { name: 'Chat message' })
+      .fill('I am good. How can I earn more money?');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect
+      .poll(
+        () =>
+          w.messages.filter((m) => m.name === 'Elias Vale' && m.text.startsWith('I am Elias Vale.'))
+            .length,
+        { timeout: 20000 },
+      )
+      .toBe(3);
+    expect(w.messages.filter((m) => m.name === 'Elias Vale').at(-1)!.to).toBeUndefined();
     expect(seen.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   } finally {

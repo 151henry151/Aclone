@@ -106,7 +106,7 @@ withdraw its contents. Hosts can separately stock and price meals/drinks for sal
 through normal trading, creating demand for kitchens, tea houses and roasteries.
 
 Inside, hunger/thirst rise 20% more slowly. Provisions are consumed as needed,
-including offline. Offline health loss and ageing pause even when stores run out.
+including offline. Hunger, thirst and starvation damage continue offline; empty stores can lead to death. Offline ageing still pauses.
 A saved resident keeps the chimney active. Window lights follow a household's
 varied evening bedtime, independently of whether the guest is connected.
 

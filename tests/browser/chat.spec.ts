@@ -31,10 +31,47 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
     await expect(chat).toContainText('Earlier message 0');
     await expect(chat).not.toContainText('private secret');
     const bottom = () => chat.evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight);
-    await expect.poll(bottom).toBeLessThan(12);
-    await chat.focus();
+    // Software WebGL shader warm-up can briefly block the first DOM evaluation.
+    await expect.poll(bottom, { timeout: 20000 }).toBeLessThan(12);
+    // Real pointer input must hit the chat, not the canvas behind the HUD.
+    await page.locator('#viewport canvas').evaluate((el) => {
+      el.setAttribute('data-wheel-count', '0');
+      el.addEventListener('wheel', () =>
+        el.setAttribute(
+          'data-wheel-count',
+          String(Number(el.getAttribute('data-wheel-count')) + 1),
+        ),
+      );
+    });
+    const canvas = page.locator('#viewport canvas');
+    await chat.click({ timeout: 10000 });
+    await expect(chat).toBeFocused();
+    const atLatest = await chat.evaluate((el) => el.scrollTop);
+    await page.mouse.wheel(0, -180);
+    await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(atLatest - 30);
+    await expect(canvas).toHaveAttribute('data-wheel-count', '0');
+    const input = page.getByRole('textbox', { name: 'Chat message' });
+    await expect(input).toHaveAttribute('maxlength', '1200');
+    await input.fill('Unsent draft');
+    const beforePage = await chat.evaluate((el) => el.scrollTop);
+    await page.keyboard.press('PageUp');
+    await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(beforePage);
+    await expect(input).toBeFocused();
+    await expect(input).toHaveValue('Unsent draft');
+    const beforeDown = await chat.evaluate((el) => el.scrollTop);
+    await page.keyboard.press('PageDown');
+    await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeGreaterThan(beforeDown);
+    await input.hover();
+    const beforeInputWheel = await chat.evaluate((el) => el.scrollTop);
+    await page.mouse.wheel(0, -60);
+    await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(beforeInputWheel);
+    await expect(canvas).toHaveAttribute('data-wheel-count', '0');
+    await chat.click({ timeout: 10000 });
     await page.keyboard.press('Home');
     await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(5);
+    await chat.hover();
+    await page.mouse.wheel(0, -180);
+    await expect(canvas).toHaveAttribute('data-wheel-count', '0');
     say(w, 'Neighbour', 'A new arrival while reading', 'chat');
     await expect(chat).toContainText('A new arrival while reading');
     await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(5);
@@ -52,6 +89,18 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
     for (let i = 0; i < 80; i++) say(w, 'Neighbour', 'Recent message ' + i, 'chat');
     await expect(chat).toContainText('Recent message 79');
     expect(await chat.locator('.chat-line').count()).toBeLessThanOrEqual(100);
+    // Ordinary chat and switches should be quiet; errors must remain visible.
+    await input.fill('Hello parish, no success flash please.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(chat).toContainText('Hello parish, no success flash please.');
+    await expect(page.locator('#toast')).not.toHaveClass(/show/);
+    const engineBefore = w.players[pilot.account.id].engine;
+    await page.locator('[data-do="engine"]').click();
+    await expect.poll(() => w.players[pilot.account.id].engine).toBe(!engineBefore);
+    await expect(page.locator('#toast')).not.toHaveClass(/show/);
+    await input.fill('*cash Chat reader 100');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(page.locator('#toast')).toHaveClass(/error/);
     await page.screenshot({ path: 'test-results/chat-scrollback.png' });
   } finally {
     await page.close();

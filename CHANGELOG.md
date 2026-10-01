@@ -6,6 +6,30 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-01
+
+### Added
+
+- Fifteen named AI neighbours with distinct personalities and economic preferences, bringing the optional population to nineteen. Jev chooses gameplay; Mabel keeps OpenAI conversation and everyone else uses Claude.
+- Persistent, varied real-world playing habits: shorter daily visits and occasional long visits, with three times the duration for Toby, Rowan and Elias. Mabel remains present. New arrivals are staggered, and the AI panel shows expected return times.
+- Local departure routines that eat, drink, buy provisions, stock a home or booked room and travel inside using ordinary actions. Unprepared residents return sooner for a short welfare visit; spending limits remain shared and unchanged.
+- Durable agreements from conversation to Jev, including deliveries split into cargo-sized loads. Ownership, posted prices, funding and storage are checked; actual successful sales track progress across restarts.
+
+### Changed
+
+- Hunger, thirst and starvation damage continue offline for human and AI players. Stocked homes and unexpired booked rooms feed their occupants; running out can cause ordinary death and estate consequences. Offline ageing and passive property decay still pause.
+- Chat and NPC replies allow up to 1,200 characters, with matching input/model limits and complete-sentence guidance. Oversized submissions are rejected rather than silently shortened.
+
+### Fixed
+
+- Keep residents visible while AI requests wait, fail or hit spending limits; backoff no longer disconnects their characters.
+- Show saved wages separately from editable drafts, refresh business details from live state, and give NPCs explicit current gross/net wages instead of relying on default or remembered figures.
+- Building Admin displays current buy/sell prices and loads the selected saved price into the editor, preserving drafts during live updates and refreshing after saving.
+- AI residents hear unnamed public follow-ups for two minutes after your latest turn. Conversations follow the same player, switch when another person is named, and retain recent dialogue context without extra routing-model calls.
+- Remove the generic “Done. Quietly competent.” notification for chat and routine actions; errors and specific action results remain visible.
+- AI replies now follow the initiating chat channel: public mentions receive public replies, and private conversations stay private, regardless of the model's suggested recipient.
+- Chat scrollback receives mouse and trackpad input instead of passing it through to camera zoom. Page Up/Page Down also scroll history while composing a message, without losing the draft or reading position.
+
 ## [0.14.0] - 2026-10-01
 
 ### Added

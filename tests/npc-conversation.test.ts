@@ -4,8 +4,19 @@ import assert from 'node:assert/strict';
 import { OpenAIBrain } from '../src/server/npc/openai.ts';
 import { AnthropicBrain } from '../src/server/npc/anthropic.ts';
 for (const provider of ['openai', 'anthropic'] as const)
-  test(`${provider} conversation uses a small speech/notebook tool and cannot supply gameplay`, async () => {
+  test(`${provider} conversation supports bounded requests but cannot supply executable gameplay`, async () => {
     const reply = {
+      gameplayRequest: {
+        summary: 'Deliver wheat',
+        cancel: false,
+        delivery: {
+          item: 'wheat',
+          quantity: 118,
+          unitPrice: 600,
+          sourceBuilding: 'farm',
+          destinationBuilding: 'mill',
+        },
+      },
       notebook: 'Robin owns a mill.',
       speech: { text: 'The mill uses its own wheat and investment to make flour.', to: 'robin' },
     };
@@ -41,14 +52,20 @@ for (const provider of ['openai', 'anthropic'] as const)
     );
     assert.equal(body.tools[0].name, 'converse');
     const schema = body.tools[0].parameters ?? body.tools[0].input_schema;
-    assert.deepEqual(Object.keys(schema.properties).sort(), ['notebook', 'speech']);
+    assert.deepEqual(Object.keys(schema.properties).sort(), [
+      'gameplayRequest',
+      'notebook',
+      'speech',
+    ]);
     assert.equal(schema.additionalProperties, false);
     assert.equal(result.decision.speech?.to, 'robin');
     assert.deepEqual(result.decision.plan, [{ kind: 'wait', seconds: 60 }]);
     assert.equal(result.inputTokens, 200);
+    assert.deepEqual(result.gameplayRequest, reply.gameplayRequest);
   });
 
-import { createWorld, addPlayer, say } from '../src/shared/simulation.ts';
+import { decisionSchema } from '../src/server/npc/decision.ts';
+import { createWorld, addPlayer, say, act } from '../src/shared/simulation.ts';
 import { Store } from '../src/server/store.ts';
 import { Universe } from '../src/server/universe.ts';
 import { Residents } from '../src/server/npc/residents.ts';
@@ -182,4 +199,222 @@ test('chat models get zero routine calls, one per answered message, and durable 
     r.close();
     store.close();
   }
+});
+
+for (const channel of ['public', 'private'] as const)
+  test(`controller keeps ${channel} replies on the initiating channel despite the model's recipient`, async () => {
+    const store = new Store(':memory:');
+    const w = createWorld('puddlewick', 'Town', 'owner');
+    const worlds = new Map([[w.id, w]]);
+    const human = addPlayer(w, 'human', 'Robin');
+    const bystander = addPlayer(w, 'bystander', 'Bystander');
+    const r = new Residents(store, new Universe(store), worlds, [
+      {
+        config: npcConfigSchema.parse({ provider: 'jev', activeAlone: true }),
+        brain: {
+          async decide() {
+            return {
+              decision: {
+                intent: 'Keep working',
+                notebook: '',
+                speech: null,
+                plan: [{ kind: 'wait', seconds: 60 }],
+                repeat: 1,
+                reconsiderSeconds: 60,
+              },
+              inputTokens: 10,
+              outputTokens: 0,
+            };
+          },
+        },
+        dialogue: {
+          provider: 'openai',
+          rates: { inputUsdPerMillion: 0.4, outputUsdPerMillion: 1.6 },
+          brain: {
+            async decide(request) {
+              assert.equal(
+                (request.observation as any).currentConversation.replyTo,
+                channel === 'private' ? human.id : null,
+              );
+              return {
+                decision: {
+                  intent: 'Reply',
+                  notebook: '',
+                  speech: {
+                    text: 'Hello Robin.',
+                    to: channel === 'public' ? human.id : bystander.id,
+                  },
+                  plan: [{ kind: 'wait', seconds: 60 }],
+                  repeat: 1,
+                  reconsiderSeconds: 60,
+                },
+                inputTokens: 20,
+                outputTokens: 5,
+              };
+            },
+          },
+        },
+      },
+    ]);
+    try {
+      const id = r.status()[0].playerId;
+      say(w, human.name, 'Mabel, hello.', 'chat', channel === 'private' ? id : undefined);
+      r.capture(w);
+      r.tick(0.5, Date.now());
+      await r.settled();
+      const reply = w.messages.find((m) => m.name === 'Mabel Reed')!;
+      assert.ok(reply);
+      assert.equal(reply.to, channel === 'private' ? human.id : undefined);
+    } finally {
+      r.close();
+      store.close();
+    }
+  });
+
+test('public follow-ups stay with one resident, survive restart and expire without extra dialogue calls', async (t) => {
+  const store = new Store(':memory:');
+  const w = createWorld('puddlewick', 'Town', 'owner');
+  const worlds = new Map([[w.id, w]]);
+  const human = addPlayer(w, 'human', 'Robin');
+  const other = addPlayer(w, 'other', 'Alex');
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  const calls: string[] = [];
+  const idle = {
+    intent: 'Wait quietly',
+    notebook: '',
+    speech: null,
+    plan: [{ kind: 'wait' as const, seconds: 600 }],
+    repeat: 1,
+    reconsiderSeconds: 600,
+  };
+  const options = ['Mabel Reed', 'Elias Vale'].map((name) => ({
+    config: npcConfigSchema.parse({
+      id: name.split(' ')[0].toLowerCase(),
+      name,
+      provider: 'jev',
+      activeAlone: true,
+      intervalMs: 5000,
+    }),
+    brain: {
+      async decide() {
+        return { decision: idle, inputTokens: 10, outputTokens: 0 };
+      },
+    },
+    dialogue: {
+      provider: 'openai' as const,
+      rates: { inputUsdPerMillion: 0.4, outputUsdPerMillion: 1.6 },
+      brain: {
+        async decide(request: any) {
+          calls.push(name + ': ' + request.observation.currentConversation.question);
+          if (request.observation.currentConversation.question.startsWith('I am good.')) {
+            assert.ok(
+              request.observation.conversationHistory.some(
+                (m: any) => m.text === 'How are things with you?',
+              ),
+            );
+          }
+          return {
+            decision: { ...idle, speech: { text: 'How are things with you?', to: null } },
+            inputTokens: 20,
+            outputTokens: 5,
+          };
+        },
+      },
+    },
+  }));
+  let r = new Residents(store, new Universe(store), worlds, options);
+  const send = async (text: string, speaker = human, to?: string) => {
+    now += 6000;
+    say(w, speaker.name, text, 'chat', to);
+    r.capture(w);
+    r.tick(0.5, now);
+    await r.settled();
+  };
+  try {
+    await send('Elias, how is it going?');
+    assert.equal(calls.length, 1);
+    r.close();
+    r = new Residents(store, new Universe(store), worlds, options);
+    await send('I am good. How can I make some real money?');
+    assert.deepEqual(calls, [
+      'Elias Vale: Elias, how is it going?',
+      'Elias Vale: I am good. How can I make some real money?',
+    ]);
+    assert.equal(w.messages.at(-1)?.to, undefined);
+    await send('I am also looking for work.', other);
+    await send('How about the mill?', w.players[r.status()[0].playerId]);
+    assert.equal(calls.length, 2, 'bystanders and NPC speech do not trigger replies');
+    await send('Mabel, what do you think?');
+    await send('And where is that?');
+    assert.deepEqual(calls.slice(2), [
+      'Mabel Reed: Mabel, what do you think?',
+      'Mabel Reed: And where is that?',
+    ]);
+    // Even mentioning Mabel inside a DM to Elias must not wake her.
+    await send('Does Mabel know about this?', human, r.status()[1].playerId);
+    await send('Talking in public again.');
+    assert.equal(calls.length, 5, 'private chat ends the public follow-up window');
+    await send('Elias, hello again.');
+    now += 121000;
+    await send('This is unrelated later chat.');
+    assert.equal(calls.length, 6, 'expired conversations do not call the chat model');
+    await send('Mabel and Elias, hello.');
+    assert.equal(calls.length, 8);
+    await send('An ambiguous follow-up.');
+    assert.equal(calls.length, 8, 'group mentions do not make multiple listeners sticky');
+    await send('Elias, one more question.');
+    await send('Alex, did you see that?');
+    await send('I will talk to you later.');
+    assert.equal(calls.length, 9, 'addressing a human ends the NPC thread');
+    await send('Something eliaslike is not a name.');
+    assert.equal(calls.length, 9, 'partial name matches do not trigger dialogue');
+  } finally {
+    r.close();
+    store.close();
+  }
+});
+
+test('conversation context survives noisy action history and keeps private turns out of public replies', () => {
+  const store = new Store(':memory:');
+  const r = new Residents(store, new Universe(store), new Map(), []);
+  try {
+    const add = (sender: string, text: string, to?: string) =>
+      r.memory.append('elias', 1, 'chat', { kind: 'chat', sender, text, to });
+    add('human', 'Public question');
+    add('npc', 'Public answer');
+    add('human', 'Private question', 'npc');
+    add('npc', 'Private answer', 'human');
+    add('npc', 'Another person’s private answer', 'other');
+    for (let i = 0; i < 50; i++) r.memory.append('elias', 2, 'action', { type: 'drive' });
+    assert.deepEqual(
+      r.memory.conversation('elias', 'human', 'npc', false).map((e: any) => e.data.text),
+      ['Public question', 'Public answer'],
+    );
+    assert.deepEqual(
+      r.memory.conversation('elias', 'human', 'npc', true).map((e: any) => e.data.text),
+      ['Private question', 'Private answer'],
+    );
+  } finally {
+    r.close();
+    store.close();
+  }
+});
+
+test('long NPC and human chat use the same 1200-character limit without truncation', () => {
+  const w = createWorld('puddlewick', 'Town', 'owner');
+  const human = addPlayer(w, 'human', 'Robin');
+  const text = 'A complete answer with detail. '.repeat(30) + 'This is the ending.';
+  const d = decisionSchema.parse({
+    intent: 'Answer',
+    notebook: '',
+    speech: { text, to: null },
+    plan: [{ kind: 'wait', seconds: 60 }],
+    repeat: 1,
+    reconsiderSeconds: 60,
+  });
+  act(w, human.id, { type: 'chat', text: d.speech!.text });
+  assert.equal(w.messages.at(-1)!.text, text);
+  assert.throws(() => act(w, human.id, { type: 'chat', text: 'x'.repeat(1201) }), /Invalid text/);
+  assert.throws(() => decisionSchema.parse({ ...d, speech: { text: 'x'.repeat(1201), to: null } }));
 });

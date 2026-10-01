@@ -2,7 +2,11 @@
 import type { Store } from '../store.ts';
 import type { Recovery } from './recovery.ts';
 import type { Step } from './decision.ts';
+import type { Presence } from './habits.ts';
+import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  presence?: Presence;
+  commitments?: Commitment[];
   decisionProvider?: string;
   behaviorVersion?: number;
   evaluation?: {
@@ -26,6 +30,12 @@ export interface ResidentState {
   originWorld?: string;
   inSpace?: boolean;
   conversationId?: number;
+  publicConversations?: {
+    speakerId: string;
+    world: string;
+    messageId: number;
+    expiresAt: number;
+  }[];
   dialogueNoticeKey?: string;
   dialogueAttempt?: { key: string; attempts: number; nextAt: number; done: boolean };
   recovery?: Recovery;
@@ -74,6 +84,7 @@ export class NpcMemory {
       .exec(`CREATE TABLE IF NOT EXISTS npc_residents (id TEXT PRIMARY KEY, state TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS npc_journal (id INTEGER PRIMARY KEY AUTOINCREMENT, resident TEXT NOT NULL, time REAL NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS npc_journal_resident ON npc_journal(resident,id);
+      CREATE INDEX IF NOT EXISTS npc_journal_chat ON npc_journal(resident,id) WHERE kind='chat';
       CREATE TABLE IF NOT EXISTS npc_control (resident TEXT PRIMARY KEY, paused INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS npc_calls (id INTEGER PRIMARY KEY AUTOINCREMENT, resident TEXT NOT NULL, at INTEGER NOT NULL, reserved REAL NOT NULL, charged REAL NOT NULL, input_tokens INTEGER NOT NULL DEFAULT 0, output_tokens INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS npc_calls_at ON npc_calls(at);`);
@@ -125,6 +136,26 @@ export class NpcMemory {
       this.store.db
         .prepare('SELECT * FROM npc_journal WHERE resident=? ORDER BY id DESC LIMIT ?')
         .all(id, Math.min(100, limit)),
+    ).reverse();
+  }
+  /** Keep conversational turns available even when action records crowd the journal. */
+  conversation(id: string, speakerId: string, playerId: string, privateChat: boolean) {
+    return this.rows(
+      this.store.db
+        .prepare(
+          `SELECT * FROM npc_journal WHERE resident=? AND kind='chat'
+        AND json_extract(data, '$.kind')='chat'
+        AND ((json_extract(data, '$.sender')=? AND ${privateChat ? "json_extract(data, '$.to')=?" : "json_extract(data, '$.to') IS NULL"})
+          OR (json_extract(data, '$.sender')=? AND ${privateChat ? "json_extract(data, '$.to')=?" : "json_extract(data, '$.to') IS NULL"}))
+        ORDER BY id DESC LIMIT 8`,
+        )
+        .all(
+          id,
+          speakerId,
+          ...(privateChat ? [playerId] : []),
+          playerId,
+          ...(privateChat ? [speakerId] : []),
+        ),
     ).reverse();
   }
   search(id: string, query: string, before: number | null) {

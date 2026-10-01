@@ -8,6 +8,37 @@ export class ChatLog {
     private element: HTMLElement,
     private latest: HTMLButtonElement,
   ) {
+    const panel = element.closest<HTMLElement>('.chat-panel') ?? element;
+    panel.addEventListener(
+      'wheel',
+      (event) => {
+        if (event.ctrlKey || event.metaKey) return; // Keep browser zoom/pinch gestures available.
+        const unit =
+          event.deltaMode === WheelEvent.DOM_DELTA_LINE
+            ? 18
+            : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+              ? element.clientHeight
+              : 1;
+        element.scrollTop += event.deltaY * unit;
+        // Consume the wheel even at the ends, including over the message input.
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      { passive: false },
+    );
+    panel.addEventListener('keydown', (event) => {
+      if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        !['PageUp', 'PageDown'].includes(event.key)
+      )
+        return;
+      element.scrollTop +=
+        (event.key === 'PageUp' ? -1 : 1) * Math.max(1, element.clientHeight - 18);
+      event.preventDefault();
+      event.stopPropagation();
+    });
     latest.addEventListener('click', () => {
       element.scrollTop = element.scrollHeight;
       latest.hidden = true;

@@ -187,7 +187,7 @@ cottage. Styles have the same construction cost. Existing cottages get stable,
 varied appearances; their owners, stock and locations stay intact. The garage offers
 seven tractor paint colours for 25d, saved with your planetary pilot.
 
-A cottage chimney smokes while its owner is inside, including after logout. Booked guests keep B&B/hotel fires active too. Workplace chimneys smoke while an employed player is online, within 18m and on an active shift. Offline residents eat from home or room supplies without offline health loss or ageing. [Running and staying at a guesthouse](ECONOMY.md#running-a-guesthouse) explains booking, food stores and checkout.
+A cottage chimney smokes while its owner is inside, including after logout. Booked guests keep B&B/hotel fires active too. Workplace chimneys smoke while an employed player is online, within 18m and on an active shift. Offline residents eat from home or room supplies, but can starve if food or drink runs out. Needs and starvation damage continue offline; ageing still pauses. [Running and staying at a guesthouse](ECONOMY.md#running-a-guesthouse) explains booking, food stores and checkout.
 
 ## Finding your way around town
 
@@ -218,10 +218,12 @@ An operator can enable Mabel Reed, an AI resident with her own personality, goal
 and persistent memory. Her pilot and chat messages show **AI**. Open **AI resident
 · chat & memory info** above chat, or **Game menu → AI neighbours**, to read the
 notice and start a private conversation. **Back to parish chat** switches back.
-Mention Mabel in public chat to attract her attention. Replies can take several
+Mention an AI resident by name in public chat for a public reply; a private conversation receives private replies. You can continue without repeating the name for two minutes after your latest message. Naming another person or starting a private chat ends that public thread. After a longer pause, name the resident again. Replies can take several
 seconds; she sleeps when the parish is empty or her shared AI budget runs out.
 Parish chat and messages to her are retained, and relevant excerpts are sent to
 OpenAI. Other players' private conversations are excluded. See [the NPC guide](NPCS.md).
+
+Chat messages can contain up to **1,200 characters**. NPCs use the same limit and are instructed to finish their answers within it. Longer submissions are rejected rather than silently cut off.
 
 ## When the game feels laggy
 
@@ -252,6 +254,8 @@ server; reconnecting retrieves current state without resending purchases.
 Scroll inside the main chat window to read the server's recent history (up to
 100 messages, with private messages shown only to their participants). Click the
 log and use arrow keys, Page Up/Page Down, Home or End for keyboard scrolling.
+Page Up/Page Down also work while typing a message and preserve your draft.
+A wheel or trackpad over the chat panel scrolls messages; it does not zoom the camera.
 New messages leave your reading position alone; **New messages · jump to latest**
 returns to the bottom. At the bottom, chat follows new arrivals automatically.
 Switching parishes starts that parish's history. This is recent scrollback, not

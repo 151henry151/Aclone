@@ -133,7 +133,7 @@ limits remain a final bound for connections that cannot keep up.
 The load probe uses a child server process so client JSON parsing does not count
 as server event-loop work.
 
-Offline health loss and ageing pause independently of economic time; sheltered residents still consume provisions. Disconnects save, restart
+Offline hunger/thirst and starvation damage use the same survival simulation as online players; only ageing remains paused. Sheltered residents consume provisions. Disconnects save, restart
 marks all pilots offline before catch-up, and SQLite FULL synchronization protects
 acknowledged actions. The durability test exercises actual disconnect and restart;
 the economy tests separately exercise long offline progression.
@@ -199,7 +199,7 @@ by building kind and bounded visual variant, not individual player or building I
 Crop harvests reserve a plot and complete through the existing saved task system.
 Capacity, funds and permission are checked again at completion; a failed harvest
 leaves the crop available. Growth and climate are derived from saved simulation
-time, so catch-up tick sizes do not change yields. Offline health loss and ageing remain paused.
+time, so catch-up tick sizes do not change yields. Offline starvation continues; ageing remains paused. Survival integration splits at food exhaustion, room expiry and death rather than applying end-of-period needs to the entire interval.
 
 Universe mutations operate on a copy inside a SQLite transaction. The connected
 account is replaced only after commit. Station stock changes share that transaction.

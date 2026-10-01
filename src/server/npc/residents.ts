@@ -20,6 +20,15 @@ import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
 import { conversationTool, conversationOutputLimit } from './conversation.ts';
 import { operationAction } from './player-operations.ts';
+import { initialPresence, beginVisit } from './habits.ts';
+import { preferChoices } from './preferences.ts';
+import {
+  commitmentChoices,
+  recordCommitment,
+  checkCommitmentPrice,
+  recordDelivery,
+} from './commitments.ts';
+import { homecomingPlan, offlineReadiness, returnDelay } from './homecoming.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export interface ResidentOptions {
   config: NpcConfig;
@@ -97,6 +106,14 @@ export class Residents {
           this.memory.save(c.id, state);
         });
       state = state!;
+      if (c.presence === 'scheduled') {
+        if (!state.presence) {
+          state.presence = initialPresence(c.id, c.habit, c.timeZone, Date.now());
+          // Existing pilots get a full visit to prepare, rather than being
+          // suddenly signed off with empty stores during this migration.
+          if (w.players[state.playerId]) state.presence.nextAt = Date.now();
+        }
+      } else delete state.presence;
       state.originWorld ??= c.world;
       if (c.provider === 'jev' && state.behaviorVersion !== 1) state.needsDecision = true;
       state.behaviorVersion = 1;
@@ -109,11 +126,20 @@ export class Residents {
         });
         state.personality = c.personality;
       }
-      const p = addPlayer(w, state.playerId, state.name);
-      p.npc = true;
-      p.authority = 0;
-      p.online = false;
-      p.speed = 0;
+      // Register identity now, but create a new pilot only on their first visit.
+      // Unborn characters must not starve while waiting to start playing.
+      const p =
+        !w.players[state.playerId] &&
+        state.presence?.phase === 'offline' &&
+        state.presence.sessions === 0
+          ? undefined
+          : addPlayer(w, state.playerId, state.name);
+      if (p) {
+        p.npc = true;
+        p.authority = 0;
+        p.online = false;
+        p.speed = 0;
+      }
       const r: Resident = {
         ...option,
         state,
@@ -128,37 +154,92 @@ export class Residents {
   }
   /** Called inside the same SQLite transaction that saves the world/chat. */
   capture(w: World) {
-    for (const r of this.residents.filter((r) => r.state.world === w.id && !r.state.inSpace)) {
+    const residents = this.residents.filter((r) => r.state.world === w.id && !r.state.inSpace);
+    const now = Date.now();
+    const changed = new Set<Resident>();
+    for (const r of residents) {
       r.state.cursor = this.memory.load(r.config.id)?.cursor ?? r.state.cursor;
-      let changed = false;
-      for (const m of w.messages) {
-        if (!m.id || m.id <= r.state.cursor) continue;
-        changed = true;
+      const previous = r.state.publicConversations ?? [];
+      r.state.publicConversations = previous.filter((c) => c.world === w.id && c.expiresAt > now);
+      if (previous.length !== r.state.publicConversations.length) changed.add(r);
+    }
+    // Route once per message, before updating any resident's state. Iterating
+    // residents first makes a switch of addressee depend on resident order.
+    for (const m of w.messages) {
+      if (!m.id) continue;
+      const unread = residents.filter((r) => m.id! > r.state.cursor);
+      if (!unread.length) continue;
+      const sender = Object.values(w.players).find((p) => p.name === m.name);
+      const humanChat = m.kind === 'chat' && sender && !sender.npc;
+      const words: string[] = m.text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [];
+      const named = residents.filter((r) =>
+        words.includes(r.state.name.toLowerCase().split(' ')[0]),
+      );
+      const namesHuman = Object.values(w.players).some(
+        (p) => !p.npc && p.id !== sender?.id && words.includes(p.name.toLowerCase().split(' ')[0]),
+      );
+      const listeners =
+        humanChat && !m.to && !named.length && !namesHuman
+          ? residents.filter((r) =>
+              r.state.publicConversations?.some(
+                (c) => c.speakerId === sender.id && c.messageId < m.id!,
+              ),
+            )
+          : [];
+      const targets = m.to
+        ? residents.filter((r) => r.state.playerId === m.to)
+        : named.length
+          ? named
+          : listeners.length === 1
+            ? listeners
+            : [];
+      for (const r of unread) {
+        changed.add(r);
         r.state.cursor = m.id;
+        if (humanChat) {
+          // A DM or a different named resident ends this player's public thread.
+          // Never overwrite a newer thread when catching up an older cursor.
+          const newer = r.state.publicConversations!.some(
+            (c) => c.speakerId === sender.id && c.messageId >= m.id!,
+          );
+          if (!newer) {
+            r.state.publicConversations = r.state.publicConversations!.filter(
+              (c) => c.speakerId !== sender.id,
+            );
+            if (
+              !m.to &&
+              targets.length === 1 &&
+              targets[0] === r &&
+              r.state.presence?.phase !== 'offline'
+            ) {
+              r.state.publicConversations.push({
+                speakerId: sender.id,
+                world: w.id,
+                messageId: m.id,
+                expiresAt: now + 120000,
+              });
+              // Bounded state even in a busy parish; oldest threads expire first.
+              r.state.publicConversations = r.state.publicConversations.slice(-64);
+            }
+          }
+        }
         if (m.to && m.to !== r.state.playerId && m.name !== r.state.name) continue;
-        const sender = Object.values(w.players).find((p) => p.name === m.name);
         this.memory.append(r.config.id, w.time, 'chat', { ...m, sender: sender?.id });
-        if (
-          m.kind === 'chat' &&
-          sender &&
-          !sender.npc &&
-          (m.to === r.state.playerId ||
-            m.text.toLowerCase().includes(r.state.name.toLowerCase().split(' ')[0]))
-        ) {
+        if (humanChat && targets.includes(r) && r.state.presence?.phase !== 'offline') {
           r.wake = true;
           r.state.needsDecision = true;
           r.state.helpQuestion = m.text;
           r.state.conversationId = m.id;
           r.state.questionFrom = sender.id;
-          // A person can ask about the problem immediately; the failed-step
-          // block remains, so chatting cannot restart the same action loop.
+          // Chat can interrupt recovery without restarting a failed action loop.
           if (r.state.recovery) r.state.recovery.retryAt = 0;
           r.state.replyTo = m.to === r.state.playerId ? sender.id : undefined;
         }
       }
-      if (changed) this.memory.save(r.config.id, r.state);
     }
+    for (const r of changed) this.memory.save(r.config.id, r.state);
   }
+
   private checkpoint(r: Resident, w: World, kind?: string, data?: unknown) {
     this.store.saveWorld(w, Date.now() / 1000, () => {
       if (kind) this.memory.append(r.config.id, w.time, kind, data);
@@ -197,7 +278,12 @@ export class Residents {
     try {
       const p = w.players[r.state.playerId],
         stats = this.actionStats(w, p, a);
+      checkCommitmentPrice(w, r.state, a);
       const result = act(w, p.id, a);
+      if (recordDelivery(r.state, w.id, a)) {
+        r.wake = true;
+        r.state.needsDecision = true;
+      }
       if (advanceStep) {
         // Engine toggles, outside when already outside, and work refreshes are
         // not evidence that a failed journey or production goal has succeeded.
@@ -250,7 +336,7 @@ export class Residents {
   private choices(r: Resident, w: World, p: Player) {
     const a = this.account(r);
     if (r.state.inSpace) return spaceChoices(a, this.worlds, this.universe);
-    const choices = adaptiveChoices(w, p, r.state);
+    const choices = [...commitmentChoices(w, p, r.state), ...adaptiveChoices(w, p, r.state)];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (port && !p.task && !p.atHome && !p.game) {
       const prep: Step[] =
@@ -282,7 +368,11 @@ export class Residents {
           reconsiderSeconds: 600,
         });
     }
-    return choices.filter((c) => !c.plan.some((s) => blockedStep(r.state.recovery, s, w.time)));
+    return preferChoices(
+      choices.filter((c) => !c.plan.some((s) => blockedStep(r.state.recovery, s, w.time))),
+      r.config.preference,
+      p.job,
+    );
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
     const stateBefore = structuredClone(r.state),
@@ -400,9 +490,21 @@ export class Residents {
     this.pollAt = now + 500;
     // Oldest request first prevents a chatty NPC from monopolising the shared queue.
     for (const r of [...this.residents].sort((a, b) => a.lastCall - b.lastCall)) {
-      const w = this.worlds.get(r.state.world),
-        p = w?.players[r.state.playerId];
-      if (!w || !p) continue;
+      const w = this.worlds.get(r.state.world);
+      if (!w) continue;
+      let p = w.players[r.state.playerId];
+      if (
+        !p &&
+        r.state.presence?.phase === 'offline' &&
+        now >= r.state.presence.nextAt &&
+        !this.memory.paused(r.config.id)
+      ) {
+        p = addPlayer(w, r.state.playerId, r.state.name);
+        p.npc = true;
+        p.authority = 0;
+        p.online = false;
+      }
+      if (!p) continue;
       if (r.active && !p.online && !r.state.inSpace) {
         this.memory.pause(r.config.id, true);
         r.active = false;
@@ -419,6 +521,7 @@ export class Residents {
         this.checkpoint(r, w);
       const paused = this.memory.paused(r.config.id),
         occupied =
+          r.config.presence !== 'on-demand' ||
           r.config.activeAlone ||
           [...this.worlds.values()].some(
             (v) =>
@@ -443,6 +546,7 @@ export class Residents {
         r.state.status = paused ? 'Paused by operator' : 'Sleeping while parish is empty';
         continue;
       }
+      if (this.session(r, w, p, now)) continue;
       if (now < r.cooldown) continue;
       p.online = !r.state.inSpace;
       r.active = true;
@@ -477,6 +581,98 @@ export class Residents {
       if (r.nav || p.task || now < r.state.waitUntil) continue;
       this.runStep(r, w, p, now);
     }
+  }
+  /** Wall-clock presence is independent of game days, model calls and human visitors. */
+  private session(r: Resident, w: World, p: Player, now: number) {
+    const s = r.state.presence;
+    if (!s) return false;
+    if (s.phase === 'offline') {
+      if (now < s.nextAt) return true;
+      beginVisit(s, r.config.id, r.config.habit, r.config.timeZone, now);
+      r.state.plan = [];
+      r.state.waitUntil = 0;
+      r.nav = undefined;
+      r.wake = true;
+      r.state.needsDecision = true;
+      r.state.status = s.reason!;
+      this.checkpoint(r, w, 'session', { event: 'Scheduled arrival', ...s });
+    }
+    if (s.phase === 'playing' && now >= s.endsAt - 5 * 60000) {
+      s.phase = 'preparing';
+      r.busy?.abort();
+      r.nav = undefined;
+      r.state.plan = [];
+      r.state.waitUntil = 0;
+      r.state.pending = false;
+      r.wake = false;
+      r.state.needsDecision = false;
+      this.checkpoint(r, w, 'session', {
+        event: 'Preparing food, stores and shelter before logout',
+      });
+    }
+    if (s.phase !== 'preparing') return false;
+    const away = Math.max(600, (s.nextRegularAt - now) / 1000);
+    const ready = offlineReadiness(w, p, away);
+    if (
+      now >= s.preparationUntil ||
+      (now >= s.endsAt && ready.atHome && ready.stocked && ready.comfortable)
+    ) {
+      const seconds = returnDelay(w, p, away);
+      s.phase = 'offline';
+      s.nextAt = now + seconds * 1000;
+      s.shortVisit = s.nextAt < s.nextRegularAt;
+      s.reason = s.shortVisit
+        ? 'Returning sooner for food, water or shelter'
+        : 'At home until the next visit';
+      r.active = false;
+      r.busy?.abort();
+      r.nav = undefined;
+      r.wake = false;
+      r.state.plan = [];
+      r.state.needsDecision = false;
+      r.state.pending = false;
+      r.state.helpQuestion = undefined;
+      r.state.replyTo = undefined;
+      r.state.publicConversations = [];
+      r.state.status = s.reason;
+      p.online = false;
+      p.speed = 0;
+      p.lastSeen = w.time;
+      leaveCombat(w, p);
+      this.checkpoint(r, w, 'session', { event: 'Scheduled departure', readiness: ready, ...s });
+      return true;
+    }
+    p.online = !r.state.inSpace;
+    r.active = true;
+    if (r.busy || r.nav || p.task || now < r.state.waitUntil) return true;
+    if (r.state.inSpace) {
+      const a = this.account(r);
+      this.universe.arrive(a);
+      const landing = spaceChoices(a, this.worlds, this.universe).find((c) =>
+        c.plan.some((step) => step.kind === 'operation' && step.operation === 'land'),
+      );
+      if (!landing) return true;
+      r.state.plan = landing.plan;
+    } else if (!r.state.plan.length || r.state.index >= r.state.plan.length) {
+      r.state.plan = homecomingPlan(w, p, away);
+      // Never execute the remainder of an errand whose prerequisite failed.
+      if (r.state.plan.some((step) => blockedStep(r.state.recovery, step, w.time)))
+        r.state.plan = [];
+      if (!r.state.plan.length) {
+        r.state.waitUntil = now + 30000;
+        return true;
+      }
+    } else {
+      this.runStep(r, w, p, now);
+      return true;
+    }
+    r.state.index = 0;
+    r.state.repeats = 1;
+    r.state.intent = 'Prepare supplies and return home before logging off';
+    r.state.status = r.state.intent;
+    this.checkpoint(r, w, 'homecoming', { plan: r.state.plan, readiness: ready });
+    this.runStep(r, w, p, now);
+    return true;
   }
   private runStep(r: Resident, w: World, p: Player, now: number) {
     if (!r.state.plan.length) return;
@@ -601,6 +797,19 @@ export class Residents {
       observation: {
         ...observe(w, p, r.state, this.memory, r.config.id),
         experiences: r.state.experiences,
+        careerPreference: r.config.preference,
+        commitments: r.state.commitments,
+        session: r.state.presence
+          ? {
+              phase: r.state.presence.phase,
+              minutesRemaining: Math.max(0, (r.state.presence.endsAt - now) / 60000),
+              readiness: offlineReadiness(
+                w,
+                p,
+                Math.max(600, (r.state.presence.nextRegularAt - now) / 1000),
+              ),
+            }
+          : undefined,
         ...(r.config.provider === 'jev'
           ? {
               choices: this.choices(r, w, p),
@@ -625,17 +834,18 @@ export class Residents {
       Buffer.byteLength(JSON.stringify(decisionRequest)) +
       (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
     if (bytes > 96000) {
-      p.online = false;
+      // Model availability is not a logout. Preserve visible presence and back off.
+      p.online = !r.state.inSpace;
       p.speed = 0;
-      r.active = false;
+      r.active = p.online;
       this.failure(r, w, 'Observation too large; reduce custom world content');
       r.cooldown = now + 60000;
       return;
     }
     const reservation = this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
     if (reservation === undefined) {
-      p.online = false;
-      r.active = false;
+      p.online = !r.state.inSpace;
+      r.active = p.online;
       p.speed = 0;
       r.nav = undefined;
       r.cooldown = now + 60000;
@@ -734,6 +944,7 @@ export class Residents {
               }
               result = {
                 ...result,
+                gameplayRequest: chat.gameplayRequest,
                 decision: { ...result.decision, speech: d.speech, notebook: d.notebook },
               };
             } catch {
@@ -778,9 +989,33 @@ export class Residents {
         )
           return;
         this.accept(r, latest, result, Date.now(), replyTo);
+        if (
+          result.gameplayRequest &&
+          conversation?.speakerId &&
+          conversationKey &&
+          recordCommitment(
+            r.state,
+            result.gameplayRequest,
+            conversationKey,
+            conversation.speakerId,
+            latest,
+          )
+        ) {
+          // One extra gameplay decision only when a new agreement is recorded.
+          // Speech was already answered, so this must not call the chat model again.
+          r.wake = true;
+          r.state.needsDecision = true;
+          r.state.plan = [];
+          r.state.waitUntil = 0;
+          r.nav = undefined;
+          this.checkpoint(r, latest, 'conversation-request', {
+            id: conversationKey,
+            request: result.gameplayRequest,
+          });
+        }
       })
       .catch((e) => {
-        if (this.closed) return;
+        if (this.closed || controller.signal.aborted) return;
         this.budget.failed(reservation);
         r.state.pending = false;
         r.wake = true;
@@ -793,7 +1028,8 @@ export class Residents {
         if (current) {
           const player = current.players[r.state.playerId];
           if (player) {
-            player.online = false;
+            player.online = !r.state.inSpace;
+            r.active = player.online;
             player.speed = 0;
           }
           this.checkpoint(r, current, 'provider-error', {
@@ -853,7 +1089,10 @@ export class Residents {
       repeat: d.repeat,
       reconsiderSeconds: d.reconsiderSeconds,
     });
-    const recipient = replyTo || d.speech?.to || undefined;
+    // The initiating message fixes the channel, including public (undefined).
+    // A model's recipient suggestion must not privatize public replies or redirect DMs.
+    // replyTo was captured before the async call, so newer chat cannot reroute this answer.
+    const recipient = replyTo;
     if (
       d.speech &&
       allowSpeech((r.state.recovery ??= {}), d.speech.text, recipient, w.time, addressed)
@@ -885,6 +1124,9 @@ export class Residents {
               : 'Resting',
       model: r.config.model,
       provider: r.config.provider,
+      presence: r.config.presence,
+      nextVisitAt: r.state.presence?.phase === 'offline' ? r.state.presence.nextAt : undefined,
+      sessionEndsAt: r.state.presence?.phase !== 'offline' ? r.state.presence?.endsAt : undefined,
       conversationProvider: r.dialogue ? (r.dialogue.provider ?? 'anthropic') : undefined,
     }));
   }

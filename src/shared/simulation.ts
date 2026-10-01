@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { say } from './messages.ts';
+import { say, MAX_CHAT_LENGTH } from './messages.ts';
 export { say } from './messages.ts';
 import { productionStaff, productionSupplied, productionEfficiency } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
@@ -262,7 +262,7 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
-  let result = 'Done. Quietly competent.';
+  let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
     case 'farm': {
       farmAction(w, p, nearby(w, p, a.building), a);
@@ -964,7 +964,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'chat': {
       requireThat(!p.muted && !w.settings.chatLocked, 'Chat is currently muted');
-      const text = str(a.text, 300);
+      const text = str(a.text, MAX_CHAT_LENGTH);
       if (text.startsWith('*')) return command(w, p, text);
       const to = a.to === undefined ? undefined : str(a.to);
       requireThat(!to || w.players[to], 'Unknown recipient');
@@ -1242,6 +1242,45 @@ function cycle(w: World, b: Building, at: number) {
     }
   }
 }
+/** Exact need/health boundaries keep disconnect catch-up equivalent to live ticks.
+ * Split only at room expiry and death, not at every simulated second. */
+function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
+  let elapsed = 0;
+  while (elapsed < seconds) {
+    const current = shelter({ ...w, time: start + elapsed }, p);
+    if (!current) p.atHome = false;
+    const span = Math.min(seconds - elapsed, current ? current.until - start - elapsed : Infinity);
+    const needs = (target: Player, stock: Stock | undefined, duration: number) => {
+      if (stock)
+        return feedAtHome(target, stock, duration, w.settings.hungerRate, w.settings.thirstRate);
+      let healthy = duration;
+      for (const [need, rate] of [
+        ['hunger', w.settings.hungerRate],
+        ['thirst', w.settings.thirstRate],
+      ] as const) {
+        healthy = Math.min(
+          healthy,
+          target[need] >= 50000 ? 0 : rate > 0 ? (50000 - target[need]) / rate : duration,
+        );
+        target[need] = Math.min(50000, target[need] + rate * duration);
+      }
+      return Math.max(0, healthy);
+    };
+    const healthy = needs({ ...p }, current ? { ...current.stock } : undefined, span);
+    const healed = Math.min(60000, p.health + 2 * healthy);
+    const untilDeath = healthy + healed / 6;
+    const duration = Math.min(span, untilDeath);
+    needs(p, current?.stock, duration);
+    p.health = Math.max(
+      0,
+      Math.min(60000, p.health + 2 * Math.min(healthy, duration)) -
+        6 * Math.max(0, duration - healthy),
+    );
+    elapsed += duration;
+    if (untilDeath <= span) kill(w, p);
+  }
+  if (p.atHome && !shelter(w, p)) p.atHome = false;
+}
 export function advance(w: World, seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return;
   // Fixed economic boundaries make catch-up independent of client frame rate.
@@ -1257,27 +1296,9 @@ export function advance(w: World, seconds: number) {
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
-    const current = shelter({ ...w, time: start }, p);
-    if (current)
-      feedAtHome(
-        p,
-        current.stock,
-        Math.min(seconds, current.until - start),
-        w.settings.hungerRate,
-        w.settings.thirstRate,
-      );
-    if (p.atHome && !shelter(w, p)) p.atHome = false;
+    if (p.online) p.age += seconds / (600 * 365);
+    advanceSurvival(w, p, start, seconds);
     if (p.online) {
-      if (!current) {
-        p.hunger = Math.min(50000, p.hunger + w.settings.hungerRate * seconds);
-        p.thirst = Math.min(50000, p.thirst + w.settings.thirstRate * seconds);
-      }
-      p.health = clamp(
-        p.health + (p.hunger >= 50000 || p.thirst >= 50000 ? -6 : 2) * seconds,
-        0,
-        60000,
-      );
-      p.age += seconds / (600 * 365);
       p.energy = Math.min(65000, p.energy + 3000 * seconds);
       if (!p.health || p.age >= w.settings.maxAge) kill(w, p);
     }

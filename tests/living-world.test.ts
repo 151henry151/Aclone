@@ -12,7 +12,7 @@ import {
 import { advanceClimate, eveningLights, roadConditions } from '../src/shared/environment.ts';
 import { shelter } from '../src/shared/lodging.ts';
 
-test('offline residents keep smoke and consume stored provisions without offline death', () => {
+test('offline residents keep smoke and consume stores, but exhaustion can kill them', () => {
   const w = createWorld('living', 'Living', 'p'),
     p = addPlayer(w, 'p', 'Resident');
   const b = w.buildings.find((b) => b.kind === 'home')!;
@@ -27,12 +27,10 @@ test('offline residents keep smoke and consume stored provisions without offline
   assert.ok(b.stock.bread < 10);
   assert.ok(b.stock.water < 10);
   b.stock = {};
-  const health = p.health,
-    age = p.age;
   advance(w, 86400);
-  assert.equal(p.health, health);
-  assert.equal(p.age, age);
-  assert.equal(p.atHome, true);
+  assert.ok(p.deaths > 0);
+  assert.equal(p.online, false);
+  assert.equal(p.atHome, false);
 });
 test('lodging charges once, isolates guest stores, survives JSON and expires safely', () => {
   let w = createWorld('inn', 'Inn', 'o');

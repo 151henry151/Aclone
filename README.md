@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.14.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.15.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.15.0:** fifteen more AI neighbours, varied playing habits, stocked-home departure routines and chat-to-Jev delivery agreements. Offline starvation now applies to everyone. Building prices and wages show their saved values, residents stay visible during AI retries, public conversations support follow-ups, chat scrolling works, and replies allow 1,200 characters. [Enable the population and review survival rules](docs/NPCS.md).
 
 **New in 0.14.0:** all four AI neighbours share an adaptive Jev gameplay planner, including new resident **Elias Vale**. Mabel retains OpenAI conversation; the others use Claude. Chat models run only for addressed human messages, with duplicate prevention and bounded retries. Existing identities, memories and shared spending caps are preserved. See [setup and behavior](docs/NPCS.md).
 
@@ -68,18 +70,19 @@ The night sky has moving, seasonal stars and two nearby, phased moons. Starlight
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
 
-Version 0.14.0 gives **all four AI neighbours the same adaptive
-Jev planner**, with persistent outcomes and choices across work, trade, gathering,
-housing, business ownership and leisure. **Elias Vale** joins Mabel, Toby and Rowan.
-Their interests differ; their available careers do not. Residents reply when
-addressed and keep routine progress out of parish chat.
+The AI population now includes **19 distinct neighbours** with different economic
+inclinations. Mabel stays online; everyone else has varied daily and occasional
+long visits. Toby, Rowan and Elias play roughly three times as long as the new
+neighbours. They prepare supplies and shelter before leaving, and return sooner
+when unprepared. Chat agreements can become persistent Jev delivery plans.
 
-All enabled residents require `JEV_API_KEY` (or `TYPESAFE_API_KEY`). Mabel retains
-`OPENAI_API_KEY` for conversation; Toby, Rowan and Elias use `CLAUDE_API_KEY`
-(or `ANTHROPIC_API_KEY`). Enable them independently with `NPC_ENABLED`,
-`NPC_BAKER_ENABLED`, `NPC_FARMER_ENABLED` and `NPC_INDEPENDENT_ENABLED`.
-Existing pilot IDs and memories are preserved. All calls share the existing
-budget caps. See [setup, behavior and operator controls](docs/NPCS.md).
+All residents need `JEV_API_KEY` (or `TYPESAFE_API_KEY`). Mabel uses `OPENAI_API_KEY`
+for conversation; everyone else uses `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`).
+Keep `NPC_ENABLED`, `NPC_BAKER_ENABLED`, `NPC_FARMER_ENABLED` and
+`NPC_INDEPENDENT_ENABLED` for the original four. Add **`NPC_POPULATION_ENABLED=true`**
+to enable the new fifteen; `NPC_TIME_ZONE=America/New_York` controls habitual hours.
+Existing identities/memories and shared spending caps are preserved. See
+[setup, habits, survival and agreements](docs/NPCS.md).
 
 ## Performance and chat (0.11.0)
 
@@ -96,8 +99,14 @@ Static scenery and HUD work is reused, NPC routing checks fewer collision cells,
 and Lua events share lightweight runtime workers with isolated per-event state.
 Driving bursts no longer consume the separate action allowance.
 
-Scroll the main chat to read up to 100 recent messages. New arrivals keep your
-reading position; **jump to latest** returns to live chat.
+Scroll the main chat with the wheel or trackpad to read up to 100 recent messages.
+Chat scrolling does not zoom the camera. **Page Up/Page Down** also scroll history
+while composing a message. New arrivals keep your reading position; **jump to latest**
+returns to live chat. Public mentions of AI residents receive public replies;
+private conversations stay private. For two minutes after your latest turn, you can
+reply to that resident without repeating their name. Naming someone else switches
+the conversation. Routine actions no longer flash a generic success
+message; errors and specific results still appear.
 
 The driving display now separates **ms ping** from **FPS**. High ping suggests
 network/server delay; low FPS points to rendering/device load. Both can happen
@@ -235,7 +244,7 @@ Open **Pilot & preferences → Graphics** to cycle through **adaptive** (the def
 3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
 4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
 5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
-6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Click **At home · Go outside** above the chat to leave your house or rented room and resume driving or walking. Offline health loss, ageing and property decay pause; business and training continue.
+6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Click **At home · Go outside** above the chat to leave your house or rented room and resume driving or walking. Hunger, thirst and starvation damage continue offline: stock enough provisions before leaving. Offline ageing and passive property decay pause; business and training continue.
 7. Open **Resources** to find wood, stone, gravel and topsoil. Carry tools for timber/minerals. Deliver to businesses or build your own processing chain. Turn on **headlights (L)** outside town at night; wet or snowy roads slow you down.
 8. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
 9. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
@@ -263,7 +272,7 @@ If the operator enables SMTP, add an email address and follow its verification l
 
 The browser still stores a private **pilot key** for automatic reconnection. Export a fresh key after password sign-in and keep it private; sign-in rotates it. Key-only pilots remain supported. Losing both a key and password access without a verified recovery address still loses access to that identity.
 
-World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Personal health loss, ageing and owned-building decay pause when disconnected. Residents at home or in paid rooms still use stored provisions; running out cannot kill an offline pilot. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
+World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Hunger, thirst and starvation damage continue when disconnected. Stocked homes or paid rooms automatically feed their occupants; running out of supplies or an expired room can lead to death. Ageing and passive owned-building decay still pause offline. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
 
 ## What is included
 
@@ -278,7 +287,7 @@ World state, accounts and a money ledger are stored under `var/aclone.sqlite` by
 
 ## Optional AI resident
 
-Three independently enabled AI neighbours can drive, work, trade and chat under ordinary player rules: **Mabel Reed** (OpenAI) and **Toby Finch**, a male baker powered by Claude, and **Rowan Field**, a farmer using Jev for actions and Claude for conversation. Each keeps a separate persistent journal and working notebook, with the same controls, FAQ, gameplay and economy knowledge. Toby learns baking at school, seeks bakery work and saves toward his own business. Multi-step plans, sleeping in an empty parish, Claude prompt caching and shared daily/monthly cost caps limit API use. Each provider is billed at its own rates; API billing is separate from consumer subscriptions. See [setup, chat, budget and operator controls](docs/NPCS.md). Disabled by default; requires a server API key. A live OpenAI smoke test has verified chat, driving to work, three paid labour shifts from one plan, and memory persistence across a restart.
+Four independently enabled AI neighbours share the adaptive Jev gameplay planner: **Mabel Reed**, **Toby Finch**, **Rowan Field** and **Elias Vale**. Mabel uses OpenAI for conversation; the others use Claude. Each has a separate identity, persistent journal and notebook, and follows ordinary player rules. Career interests are preferences, not restrictions. Chat models are called only for addressed human messages, with durable retry limits and shared spending caps. See [setup, chat, budget and operator controls](docs/NPCS.md). All residents are disabled by default; server-side API keys are required.
 
 Version 0.11.1 expands Mabel's always-present knowledge to the full
 FAQ and economy guide, with live production/employment diagnostics and clearer

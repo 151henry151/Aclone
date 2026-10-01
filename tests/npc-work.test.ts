@@ -148,3 +148,30 @@ test('job renewal still enforces proximity, ownership, qualification and another
   p.job = 'other-job';
   assert.throws(() => act(w, p.id, { type: 'job', building: b.id }), /Quit your current job/);
 });
+
+test('saved admin wage reaches live NPC diagnosis, actual payroll and durable storage', async () => {
+  const { Store } = await import('../src/server/store.ts');
+  const { w, p, b } = millFixture();
+  const owner = addPlayer(w, 'owner', 'Owner');
+  owner.x = b.x;
+  owner.z = b.z;
+  b.investment = 5000;
+  act(w, p.id, { type: 'job', building: b.id });
+  act(w, owner.id, { type: 'buildingAdmin', building: b.id, wage: 1000 });
+  const report = workplace(w, p, b)!;
+  assert.equal(report.wage.grossDenarii, 10);
+  assert.equal(report.wage.netDenarii, 9);
+  assert.equal(report.ifYouWork.wagesRequired, 1000);
+  assert.match(report.summary, /10.00d total wages/);
+  const before = p.cash;
+  advance(w, 10);
+  assert.equal(p.cash - before, 900);
+  assert.equal(b.investment, 4000);
+  const store = new Store(':memory:');
+  try {
+    store.saveWorld(w);
+    assert.equal(store.loadWorlds()[0].world.buildings.find((v) => v.id === b.id)!.wage, 1000);
+  } finally {
+    store.close();
+  }
+});

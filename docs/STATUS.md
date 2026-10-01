@@ -4,6 +4,23 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Scheduled population and conversational agreements (0.15.0)
+
+The opt-in roster now supports nineteen residents with varied economic preferences.
+Mabel stays present; the other eighteen follow persistent real-world habits and
+prepare food, stores and housing before signing off. Unprepared residents return
+sooner. Offline hunger/thirst and starvation affect everyone, with stocked homes
+and unexpired rooms providing ordinary automatic feeding.
+
+Chat can record a durable goal or a concrete delivery agreement for Jev. Delivery
+choices respect ownership, capacity, price and buyer funding, and receipts record
+actual progress across restart and multiple loads. General goals remain guidance;
+a model's promise is never treated as a completed action. Tests use deterministic
+provider doubles, not a claim that real models always negotiate or act correctly.
+Shared budgets remain unchanged. See [NPC guide](NPCS.md).
+
+Saved wages now refresh independently of drafts; NPC wage context distinguishes gross, net and total payroll. AI retry/budget waits preserve visible character presence.
+
 ## Shared adaptive residents (0.14.0)
 
 Mabel, Toby, Rowan and new resident Elias share one Jev decision system. All can

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
-import { conversationTool, conversationOutputLimit, conversationDecision } from './conversation.ts';
+import {
+  conversationTool,
+  conversationOutputLimit,
+  conversationDecision,
+  conversationRequest,
+} from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export { outputLimit, turnTool } from './turn-tool.ts';
 export class OpenAIBrain implements Brain {
@@ -53,6 +58,10 @@ export class OpenAIBrain implements Brain {
       throw Error('AI response missing token accounting');
     return {
       decision,
+      gameplayRequest:
+        this.mode === 'conversation'
+          ? conversationRequest(JSON.parse(calls[0].arguments))
+          : undefined,
       inputTokens: body.usage.input_tokens,
       outputTokens: body.usage.output_tokens,
     };

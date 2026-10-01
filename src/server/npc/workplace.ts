@@ -66,6 +66,16 @@ export function workplace(w: World, p: Player, b: Building) {
     mode: b.kind === 'farm' ? 'seasonal plots' : 'automatic',
     // Farm output comes from actual plots, not the retained legacy recipe.
     recipe: b.kind === 'farm' ? { skill: recipe.skill, inputs: {}, outputs: {} } : recipe,
+    wage: {
+      grossHundredths: b.wage,
+      grossDenarii: b.wage / 100,
+      netDenarii: (b.wage - Math.floor(b.wage * w.settings.wageTax)) / 100,
+      basis:
+        b.kind === 'farm'
+          ? 'per worker per harvested plot'
+          : 'per worker per completed production cycle',
+      source: 'Live building settings; overrides remembered or default wages',
+    },
     inputSource: 'building stockroom',
     outputDestination: 'building stockroom',
     intervalSeconds: interval,

@@ -227,7 +227,7 @@ test('money and count settings reject fractional values before changing the worl
   }
 });
 
-test('offline absence preserves life, home supplies and property while production and tasks continue', () => {
+test('offline starvation resets the estate and cancels an unfinished task', () => {
   const { w, p } = setup();
   const b = w.buildings.find((b) => b.kind === 'mill')!;
   b.owner = p.id;
@@ -240,12 +240,12 @@ test('offline absence preserves life, home supplies and property while productio
   p.task = { kind: 'labour', end: w.time + 15 } as any;
   const cash = p.cash;
   advance(w, 86400 * 7);
-  assert.equal(p.deaths, 0);
-  assert.equal(p.health, 1);
-  assert.deepEqual(p.skills, ['miller']);
-  assert.equal(b.owner, p.id);
+  assert.ok(p.deaths > 0);
+  assert.ok(p.health > 0);
+  assert.deepEqual(p.skills, []);
+  assert.equal(b.owner, undefined);
   assert.equal(b.condition, 0.01);
   assert.ok(w.buildings.includes(b));
-  assert.equal(p.cash, cash + 4500);
+  assert.equal(p.cash, cash);
   assert.equal(p.task, undefined);
 });
