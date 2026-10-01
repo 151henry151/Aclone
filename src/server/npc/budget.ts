@@ -9,6 +9,13 @@ export const budgetSchema = z.object({
   inputUsdPerMillion: z.number().nonnegative().default(0.4),
   outputUsdPerMillion: z.number().nonnegative().default(1.6),
 });
+export const tokenRatesSchema = z.object({
+  inputUsdPerMillion: z.number().nonnegative(),
+  outputUsdPerMillion: z.number().nonnegative(),
+  cacheWriteMultiplier: z.number().nonnegative().default(1),
+  cacheReadMultiplier: z.number().nonnegative().default(1),
+});
+export type TokenRates = z.input<typeof tokenRatesSchema>;
 export type BudgetConfig = z.infer<typeof budgetSchema>;
 /** Population-wide durable reservations. A crash or ambiguous API error keeps
  * the full reservation charged, so restarting cannot reset or evade the cap. */
@@ -35,11 +42,20 @@ export class NpcBudget {
       ...this.config,
     };
   }
-  reserve(resident: string, inputBytes: number, outputLimit: number, now = Date.now()) {
+  reserve(
+    resident: string,
+    inputBytes: number,
+    outputLimit: number,
+    now = Date.now(),
+    rates: TokenRates = this.config,
+  ) {
+    const pricing = tokenRatesSchema.parse(rates);
     // UTF-8 bytes plus a fixed envelope allowance conservatively bound text token usage.
     const reserved =
-      ((inputBytes + 2048) * this.config.inputUsdPerMillion +
-        outputLimit * this.config.outputUsdPerMillion) /
+      ((inputBytes + 2048) *
+        pricing.inputUsdPerMillion *
+        Math.max(1, pricing.cacheWriteMultiplier, pricing.cacheReadMultiplier) +
+        outputLimit * pricing.outputUsdPerMillion) /
       1e6;
     return this.memory.store.transaction(() => {
       const u = this.usage(now);
@@ -51,22 +67,40 @@ export class NpcBudget {
         return undefined;
       const result = this.memory.store.db
         .prepare(
-          "INSERT INTO npc_calls(resident,at,reserved,charged,status) VALUES (?,?,?,?,'pending')",
+          "INSERT INTO npc_calls(resident,at,reserved,charged,rates,status) VALUES (?,?,?,?,?,'pending')",
         )
-        .run(resident, now, reserved, reserved);
+        .run(resident, now, reserved, reserved, JSON.stringify(pricing));
       return Number(result.lastInsertRowid);
     });
   }
-  settle(id: number, inputTokens: number, outputTokens: number) {
+  settle(
+    id: number,
+    inputTokens: number,
+    outputTokens: number,
+    cacheWriteTokens = 0,
+    cacheReadTokens = 0,
+  ) {
+    if (
+      ![inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens].every(
+        (n) => Number.isSafeInteger(n) && n >= 0,
+      )
+    )
+      throw Error('AI response missing token accounting');
+    const row = this.memory.store.db.prepare('SELECT rates FROM npc_calls WHERE id=?').get(id);
+    if (!row) throw Error('Unknown AI reservation');
+    const pricing = tokenRatesSchema.parse(row.rates ? JSON.parse(String(row.rates)) : this.config);
     const charged =
-      (inputTokens * this.config.inputUsdPerMillion +
-        outputTokens * this.config.outputUsdPerMillion) /
+      ((inputTokens +
+        cacheWriteTokens * pricing.cacheWriteMultiplier +
+        cacheReadTokens * pricing.cacheReadMultiplier) *
+        pricing.inputUsdPerMillion +
+        outputTokens * pricing.outputUsdPerMillion) /
       1e6;
     this.memory.store.db
       .prepare(
-        "UPDATE npc_calls SET charged=?,input_tokens=?,output_tokens=?,status='complete' WHERE id=?",
+        "UPDATE npc_calls SET charged=?,input_tokens=?,output_tokens=?,cache_write_tokens=?,cache_read_tokens=?,status='complete' WHERE id=?",
       )
-      .run(charged, inputTokens, outputTokens, id);
+      .run(charged, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens, id);
   }
   failed(id: number) {
     this.memory.store.db.prepare("UPDATE npc_calls SET status='uncertain' WHERE id=?").run(id);

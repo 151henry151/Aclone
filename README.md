@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.11.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.12.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.12.0:** meet **Toby Finch**, a Claude-powered baker with his own personality, persistent memory and normal economy gameplay alongside Mabel. Both residents share spending caps, with provider-specific accounting and Claude prompt caching. See [setup and operator guidance](docs/NPCS.md).
 
 **Fixed in 0.11.3:** accepting an existing job safely renews its shift without duplicate employees or wages. Mabel receives explicit guidance about expired shifts and the work action needed to renew them. See [AI workplace guidance](docs/NPCS.md).
 
@@ -61,6 +63,11 @@ The night sky has moving, seasonal stars and two nearby, phased moons. Starlight
 **New in 0.3.0:** detailed tractors, limestone cottages, slate roofs, textured meadows and gravel lanes, layered clouds and leafy village scenery, protected offline progress, optional password accounts and email recovery, and a repeatable 100-client load probe. See [CHANGELOG.md](CHANGELOG.md).
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
+
+To enable **Toby Finch**, the Claude-powered baker, alongside Mabel:
+Set `NPC_BAKER_ENABLED=true` and `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`) in the
+server environment. Their memories are separate and the spending cap is shared.
+See [AI neighbour setup](docs/NPCS.md).
 
 ## Performance and chat (0.11.0)
 
@@ -259,7 +266,7 @@ World state, accounts and a money ledger are stored under `var/aclone.sqlite` by
 
 ## Optional AI resident
 
-An opt-in OpenAI-powered resident, **Mabel Reed**, can drive, work, trade and chat using ordinary player rules. She keeps a persistent journal and a small working notebook, and can look up controls, FAQs, gameplay guides and current catalog defaults to help neighbours. Only one resident is configured; multi-step plans, sleeping in an empty parish and shared daily/monthly cost caps limit API use. API-key billing is separate from a ChatGPT subscription. See [setup, chat, budget and operator controls](docs/NPCS.md). Disabled by default; requires a server API key. A live OpenAI smoke test has verified chat, driving to work, three paid labour shifts from one plan, and memory persistence across a restart.
+Two independently enabled AI neighbours can drive, work, trade and chat under ordinary player rules: **Mabel Reed** (OpenAI) and **Toby Finch**, a male baker powered by Claude. Each keeps a separate persistent journal and working notebook, with the same controls, FAQ, gameplay and economy knowledge. Toby learns baking at school, seeks bakery work and saves toward his own business. Multi-step plans, sleeping in an empty parish, Claude prompt caching and shared daily/monthly cost caps limit API use. Each provider is billed at its own rates; API billing is separate from consumer subscriptions. See [setup, chat, budget and operator controls](docs/NPCS.md). Disabled by default; requires a server API key. A live OpenAI smoke test has verified chat, driving to work, three paid labour shifts from one plan, and memory persistence across a restart.
 
 Version 0.11.1 expands Mabel's always-present knowledge to the full
 FAQ and economy guide, with live production/employment diagnostics and clearer

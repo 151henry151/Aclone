@@ -4,6 +4,16 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Second AI resident (0.12.0)
+
+Toby Finch is an independently enabled Claude-powered baker alongside Mabel.
+The providers share bounded plans, normal game actions, recovery and a common
+spending allowance; private memories and credentials remain separate. Claude
+cache usage and per-call prices are accounted for. Automated tests cover school,
+bakery wages, coexistence, restart persistence, provider errors and billing migration.
+A three-request real Claude trial verified ordinary training, bread production,
+wages and private recall; see [trial details](NPCS.md#claude-baker-trial-2026-10-01).
+
 ## Shift renewal (0.11.3)
 
 Accepting an already-held job renews the active shift without adding duplicate

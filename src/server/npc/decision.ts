@@ -58,7 +58,19 @@ const action = z.discriminatedUnion('type', [
   z.object({ type: z.literal('paint'), ...building, color: id }).strict(),
 ]);
 export const stepSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('wait'), seconds: z.number().int().min(1).max(600) }).strict(),
+  z
+    .object({
+      kind: z.literal('wait'),
+      seconds: z
+        .number()
+        .int()
+        .min(1)
+        .max(600)
+        .describe(
+          'Seconds from 1 to 600 inclusive. Split longer waits into separate steps; never use 1200 in a single wait.',
+        ),
+    })
+    .strict(),
   z
     .object({
       kind: z.literal('travel'),
@@ -160,6 +172,9 @@ export interface BrainResult {
   decision: Decision;
   inputTokens: number;
   outputTokens: number;
+  /** Claude cache token counts are separate from uncached input tokens. */
+  cacheWriteTokens?: number;
+  cacheReadTokens?: number;
 }
 export interface Brain {
   decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult>;

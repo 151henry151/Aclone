@@ -1,24 +1,26 @@
-# AI neighbours: one-resident prototype
+# AI neighbours: Mabel and Toby
 
-The optional prototype creates **one** resident, **Mabel Reed**, in Puddlewick.
-She is a thrifty, sociable former tractor mechanic with dry humour, aiming for a
-long life, healthy savings and eventually her own business. The model chooses
-her destinations, activities, purchases and words. She has the same starter
-supplies, physics, collision, fuel, money, hunger, skill requirements and prices
-as an ordinary pilot. Her tractor and walking character use the normal models.
+Two optional residents can share Puddlewick. **Mabel Reed** uses OpenAI and keeps
+her existing identity and memories. **Toby Finch** uses Anthropic’s Claude: he is
+a patient, practical male baker with a goal of learning his trade, earning wages,
+staying healthy and saving toward a bakery of his own. Each has a separate pilot,
+personality, journal, notebook and plan. Both follow the ordinary player economy,
+physics, collision, skill requirements and prices; Toby learns `baker` at school
+rather than receiving free qualifications, money or a bakery. They use the normal
+tractor and walking models. Personality defines identity, not a new avatar model.
 
 This is an experimental economy agent, not a scripted tour guide or a promise
 of optimal play. Her supported actions include travel, walking/driving, food and
 fuel, labour/crafting, trading, skills, employment, property purchase, home,
 stock/investment, banking, gathering, farming and tractor paint. Combat, galaxy
 travel, construction, lodging bookings and world editing are not agent tools in
-this first version. New actions can be added without replacing her memory. She can explain these
+this first version. New actions can be added without replacing their memories. She can explain these
 other activities to human players using the game guide, even when her own tools
 do not let her perform them.
 
 ## Try it
 
-NPCs are **disabled by default**. No key means no AI requests. Use a server-side
+NPCs are **disabled by default**, with independent switches for Mabel and Toby. Merely adding a key does not start requests. Use a server-side
 OpenAI API key with API billing enabled. This integration uses API-key billing,
 separate from a ChatGPT subscription; it does not consume a ChatGPT plan's
 included usage. See [OpenAI pricing](https://learn.chatgpt.com/docs/pricing).
@@ -34,6 +36,20 @@ NPC_MONTHLY_USD=20
 NPC_DAILY_USD=0.60
 NPC_ACTIVE_ALONE=false
 ```
+
+To add Toby alongside Mabel, keep those settings and add:
+
+```dotenv
+NPC_BAKER_ENABLED=true
+CLAUDE_API_KEY=your-server-anthropic-key
+```
+
+`ANTHROPIC_API_KEY` is also accepted and takes precedence over `CLAUDE_API_KEY`.
+Toby defaults to `claude-haiku-4-5-20251001`. Claude API billing is separate from
+consumer subscriptions, and both residents share the existing Aclone spending
+caps. You can run Toby alone with `NPC_ENABLED=false` and
+`NPC_BAKER_ENABLED=true`. Keep `NPC_ID=mabel` and `NPC_BAKER_ID=toby` stable to
+retain their separate memories. No database reset is needed when adding him.
 
 Native development (Node 24.14+):
 
@@ -56,7 +72,7 @@ Compose reads `.env` and passes the listed settings to the server at runtime:
 
 Join Puddlewick. Mabel appears when a human is present. Open **AI resident · chat
 & memory info**, or **Game menu → AI neighbours**, then **Chat with Mabel Reed**
-to send a private message. **Back to parish chat** restores public chat. You can
+to send a private message. Toby has his own **Chat with Toby Finch** button; provider labels identify OpenAI and Claude. **Back to parish chat** restores public chat. You can
 also address her by first name in parish chat. Names and messages have an **AI**
 label. A reply takes API latency plus up to the 15-second decision cooldown;
 she may take longer if the budget is exhausted or the provider is unavailable.
@@ -68,7 +84,7 @@ records what actually happened.
 
 ## Helping other players
 
-Mabel receives the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) on every
+Both residents receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) on every
 decision, including controls, employment, production, ownership, farming, lodging,
 account help and activities. These core rules no longer depend on her knowing
 which terms to search for. Up to three additional excerpts each can address the
@@ -86,7 +102,7 @@ Waiting beside a building does not renew work.
 
 Workplace observations diagnose employment, qualification, active shifts,
 production timing, input shortages, output space and funding. A prospective
-wage shortfall includes the resident even before she takes the job. Custom
+wage shortfall includes the resident even before they take the job. Custom
 recipes and current world settings override defaults; farms are explicitly
 seasonal plots. Workplaces she owns, works at, plans to visit or is discussing
 are prioritised within the bounded selection. These are read-only facts: the
@@ -135,11 +151,22 @@ not just an instruction asking the model not to repeat itself.
 
 ## Token and spending controls
 
-The default model is `gpt-4.1-mini`, using the Responses API with one strict
+Mabel’s default model is `gpt-4.1-mini`, using the Responses API with one strict
 `plan_turn` tool and at most 2,200 output tokens. Default accounting rates are
 $0.40 per million input tokens and $1.60 per million output tokens, from the
 [model pricing page](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
-Cached-input discounts are deliberately ignored in local estimates.
+OpenAI cached-input discounts are deliberately ignored in local estimates.
+
+Toby defaults to Claude Haiku 4.5 at $1/million uncached input tokens and
+$5/million output tokens. Stable instructions and tool definitions use a
+five-minute prompt cache: writes cost 1.25× input and hits 0.1× input. Local
+accounting includes all three input categories and reserves at the higher
+cache-write rate before a request. Every reservation stores its own rates so a
+restart or a different resident cannot settle it using the wrong prices.
+See [Claude models](https://platform.claude.com/docs/en/models/overview) and
+[prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
+Pricing checked 2026-10-01; custom models require explicit rates. Cache savings
+apply only when the provider reports a cache hit; the cap does not assume one.
 
 - Plans have up to 12 steps and 30 bounded repeats. Routine movement and task
   completion run locally without an API call. Plans can last up to 30 minutes.
@@ -156,7 +183,7 @@ Cached-input discounts are deliberately ignored in local estimates.
   protections apply while asleep, paused, out of budget or awaiting an API retry.
 - The shared estimated-cost caps default to **$0.60 per UTC day** and **$20 per
   UTC calendar month**. Every request reserves a conservative byte-based input
-  estimate and maximum output cost in SQLite before calling OpenAI. Success
+  estimate and maximum output cost in SQLite before calling either provider. Success
   reconciles against returned token counts. An ambiguous failure or crash keeps
   its reservation charged; restarting does not reset the counters.
 
@@ -166,11 +193,11 @@ $4.38 in 30 days; continuous activity would be about $26.27 before this game's
 caps stop it. These are arithmetic examples, not measured gameplay averages.
 Longer context, conversation and recovery attempts change actual usage.
 
-Adding residents later does not multiply the shared allowance. They share less
+Adding Toby or future residents does not multiply the shared allowance. They share less
 thinking time under the same caps. The controller has a 50-resident ceiling and
 a concurrency regression fixture at that size; this is **not** a claim that 50
 continuously reasoning agents fit a $20 budget or a production load benchmark.
-Only one is created by the environment configuration today.
+The environment configuration supports these two residents; each is independently enabled.
 
 Local dollar accounting depends on correct model prices and applies only to
 this database's NPC calls. Keep provider-side account controls and inspect
@@ -203,6 +230,21 @@ All settings are server-only and read at startup:
 - `NPC_CALLS_PER_HOUR`: global rolling call cap, default 120.
 - `DATA_DIR`: same persistent game directory used by the server and operator CLI.
 
+### Toby’s configuration
+
+- `NPC_BAKER_ENABLED`: exactly `true` enables Toby, independently of Mabel.
+- `ANTHROPIC_API_KEY` or `CLAUDE_API_KEY`: server-only Claude API key.
+- `NPC_BAKER_ID` / `NPC_BAKER_NAME`: defaults `toby` / `Toby Finch`; must differ from Mabel’s ID and name. Names apply when first creating the pilot.
+- `NPC_BAKER_WORLD`: defaults to `NPC_WORLD`, then `puddlewick`.
+- `NPC_BAKER_MODEL`: default `claude-haiku-4-5-20251001`; `claude-haiku-4-5` alias also has built-in rates.
+- `NPC_BAKER_PERSONALITY`: optional replacement personality, 10–3,000 characters.
+- `NPC_BAKER_INTERVAL_MS`: default 15,000; range 5,000–300,000.
+- `NPC_BAKER_ACTIVE_ALONE`: default `false`; sleeps in an empty parish.
+- `NPC_BAKER_INPUT_USD_PER_MILLION` / `NPC_BAKER_OUTPUT_USD_PER_MILLION`: rate overrides; both required for a custom model. The five-minute cache write multiplier is 1.25 and read multiplier 0.1 (conservative for models with cheaper reads).
+
+Daily/monthly caps and call/concurrency limits are shared, not per character.
+Disabling one resident leaves the other running and preserves both histories.
+
 ## Operator controls and memory
 
 Run from the repository with the server's `DATA_DIR` exported (or use the same
@@ -210,6 +252,8 @@ Run from the repository with the server's `DATA_DIR` exported (or use the same
 
 ```sh
 npm run npc -- status
+npm run npc -- pause toby
+npm run npc -- resume toby
 npm run npc -- pause mabel
 npm run npc -- resume mabel
 npm run npc -- memory mabel
@@ -223,14 +267,14 @@ Pause/resume is durable and noticed within a second. In-flight results are
 ignored when paused; a request already sent can still incur a provider charge.
 An in-game moderator kick also pauses the NPC until operator resume. Gagging
 uses the normal chat rule. To remove the integration from play, set
-`NPC_ENABLED=false` and restart; her saved identity, property and journal remain.
+`NPC_ENABLED=false` for Mabel or `NPC_BAKER_ENABLED=false` for Toby and restart; saved identities, property and journals remain.
 
 Status shows local cost estimates, caps, recent call count, plan goal and memory
 count. Memory output contains private conversations: this CLI is for the host
 operator, never a public HTTP endpoint. The in-game status endpoint exposes
 identity/personality and generic activity only, not her notebook or journal.
 
-The journal retains visible parish chat, private messages to/from Mabel, chosen
+The journal retains visible parish chat, private messages to/from that resident, chosen
 plans, completed actions/results, journeys, failures and operator/personality
 changes. Other players' private conversations are excluded. Chat captured during
 normal game actions and the resident cursor save in the same transaction as the
@@ -247,19 +291,29 @@ Disabling the NPC does not delete memories. Persistent history means retrievable
 records, not guaranteed perfect recall by the model.
 
 The visible notice tells players that parish chat and messages to the resident
-are saved and relevant excerpts sent to OpenAI. Requests set `store: false`;
-this does not override OpenAI's separate platform data-retention policies.
+are saved and relevant excerpts sent to that resident’s provider (OpenAI for
+Mabel, Anthropic for Toby). Private conversations are not copied to the other
+resident. OpenAI requests set `store: false`; Claude uses stateless Messages
+requests with a five-minute cache of stable instructions. Neither setting
+replaces the provider’s own data-retention policies.
 
 ## Development and validation
 
 `Brain` is an injectable provider interface. `OpenAIBrain` handles the Responses
-wire format; `decision.ts` defines the bounded action vocabulary. `Residents`
+wire format; `AnthropicBrain` handles Claude Messages and cache usage. Claude’s
+full action union exceeds its strict grammar compilation limit, so field limits
+are explained in the tool schema and the original Zod validator rejects invalid
+turns before any speech or action. Explicit job/work examples prevent confusing
+qualified employment with a workhouse task. Both providers use
+`turn-tool.ts` and the same locally validated plan; `decision.ts` defines the bounded action vocabulary. `Residents`
 manages turns and applies shared `act`/`move` rules. `Navigator` uses cached A*
 paths, then ordinary steering/throttle physics. `NpcMemory` owns the journal and
 working state; `NpcBudget` reserves usage globally before async requests.
 
 ```sh
 npm run check
+# Optional, paid: school, bread production and private recall; three calls, $0.40 cap:
+node --env-file=.env --import tsx scripts/npc-baker-smoke.ts --live
 npm run test:e2e -- tests/browser/npc.spec.ts
 # Optional, paid: temporary database and synthetic chat, at most two API requests:
 node --env-file=.env --import tsx scripts/npc-smoke.ts --live
@@ -312,3 +366,16 @@ Prompt structure and contextual examples follow the
 The model and existing daily/monthly limits are unchanged. Richer turns cost
 more individually; repeated failed attempts also cost money, so judge changes
 against successful gameplay and measured usage rather than prompt length alone.
+
+### Claude baker trial (2026-10-01)
+
+An opt-in real Claude Haiku 4.5 trial used a disposable world and synthetic
+private chat. Toby selected school training, paid the ordinary 80d tuition,
+accepted bakery employment, converted 2 flour into 3 bread at the production
+boundary, earned a 19.80d net wage, and recalled the test owner’s favourite loaf
+in a private reply. The successful three-request run cost about $0.05063;
+later requests hit the 5,482-token stable prompt cache. Fixture positioning
+placed him near school/bakery entrances; navigation is tested separately.
+The earlier integration trials exposed invalid task/job forms and oversized waits;
+these remain rejected, and explicit action examples corrected the live trial.
+This demonstrates a short working scenario, not perfect long-term AI judgement.

@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-01
+
+### Added
+
+- Optional second AI neighbour Toby Finch, a male baker powered by Claude, with independent identity, personality, persistent memory and ordinary school, employment, trade and chat actions alongside Mabel.
+- Claude Messages integration, stable-prompt caching, separate provider labels and privacy guidance, and independent native/Compose configuration using a server-only Anthropic or Claude key.
+
+### Changed
+
+- Share the existing NPC spending caps across both providers while reserving and settling each call at its own persisted rates, including Claude cache writes and reads. Existing NPC histories and billing records migrate without a reset.
+
 ## [0.11.3] - 2026-10-01
 
 ### Fixed

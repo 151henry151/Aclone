@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { npcConfigSchema } from '../../src/server/npc/config.ts';
+import { npcConfigSchema, bakerDefaults } from '../../src/server/npc/config.ts';
 import type { BrainRequest } from '../../src/server/npc/decision.ts';
 
 test('AI identity, memory notice and private NPC chat work through real sockets', async ({
@@ -47,6 +47,29 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
             },
           },
         },
+        {
+          config: npcConfigSchema.parse({ ...bakerDefaults, intervalMs: 5000 }),
+          brain: {
+            async decide(request) {
+              const o = request.observation as any;
+              expect(JSON.stringify(o)).not.toContain('blue tractors');
+              return {
+                decision: {
+                  intent: 'Learn baking',
+                  notebook: 'I am Toby, the baker.',
+                  speech: o.currentConversation
+                    ? { text: 'Hello Robin, I am Toby Finch, the baker.', to: humanId }
+                    : null,
+                  plan: [{ kind: 'wait' as const, seconds: 600 }],
+                  repeat: 1,
+                  reconsiderSeconds: 600,
+                },
+                inputTokens: 200,
+                outputTokens: 50,
+              };
+            },
+          },
+        },
       ],
     },
   });
@@ -67,14 +90,24 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
     await expect(page.locator('#players')).toContainText('Mabel Reed');
-    await expect(page.locator('#players .ai-tag')).toHaveText('AI');
+    await expect(page.locator('#players')).toContainText('Toby Finch');
+    await expect(page.locator('#players .ai-tag')).toHaveText(['AI', 'AI']);
     await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
     await expect(page.getByRole('dialog', { name: 'AI neighbours.' })).toBeVisible();
     await expect(
-      page.getByText('Relevant excerpts and game observations are sent to OpenAI', {
+      page.getByText('Relevant excerpts and game observations are sent to that resident', {
         exact: false,
       }),
     ).toBeVisible();
+    await expect(page.locator('.npc-card').filter({ hasText: 'Toby Finch' })).toContainText(
+      'AI · Claude',
+    );
+    await expect(
+      page
+        .locator('.npc-card')
+        .filter({ has: page.getByRole('heading', { name: 'Mabel Reed AI · OpenAI' }) }),
+    ).toContainText('AI · OpenAI');
+    await page.screenshot({ path: 'test-results/ai-neighbours.png' });
     await page.getByRole('button', { name: 'Chat with Mabel Reed' }).click();
     await expect(page.locator('#chat-recipient')).toContainText('Private message to Mabel Reed');
     await page
@@ -101,6 +134,21 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     await page.screenshot({ path: 'test-results/npc-chat.png' });
     await page.getByRole('button', { name: 'Back to parish chat' }).click();
     await expect(page.locator('#chat-recipient')).toBeHidden();
+    await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
+    await page.getByRole('button', { name: 'Chat with Toby Finch' }).click();
+    await expect(page.locator('#chat-recipient')).toContainText('Private message to Toby Finch');
+    await page.getByRole('textbox', { name: 'Chat message' }).fill('Toby, introduce yourself.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(page.locator('#chat-log')).toContainText(
+      'Hello Robin, I am Toby Finch, the baker.',
+      { timeout: 20000 },
+    );
+    expect(app.residents!.memory.search('toby', 'blue tractors', null)).toEqual([]);
+    const tobyReply = w.messages.find(
+      (m) => m.text === 'Hello Robin, I am Toby Finch, the baker.',
+    )!;
+    expect(tobyReply.to).toBe(humanId);
+    expect(tobyReply.name).toBe('Toby Finch');
     expect(seen.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   } finally {

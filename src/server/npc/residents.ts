@@ -5,17 +5,18 @@ import { resourceNodes } from '../../shared/resources.ts';
 import type { Store } from '../store.ts';
 import type { Universe } from '../universe.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
-import { NpcBudget, budgetSchema, type BudgetConfig } from './budget.ts';
+import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
 import { decisionSchema, type Brain, type BrainResult, type Step } from './decision.ts';
 import type { NpcConfig } from './config.ts';
 import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
 import { instructions, observe } from './observation.ts';
-import { outputLimit, turnTool } from './openai.ts';
+import { outputLimit, turnTool } from './turn-tool.ts';
 export interface ResidentOptions {
   config: NpcConfig;
   brain: Brain;
+  rates?: TokenRates;
 }
 interface Resident extends ResidentOptions {
   state: ResidentState;
@@ -72,7 +73,7 @@ export class Residents {
             name: account.name,
             personality: c.personality,
             notebook: '',
-            intent: 'Settle in, stay healthy and build savings.',
+            intent: c.initialGoal,
             cursor: w.messageSeq ?? 0,
             nextAt: 0,
             plan: [],
@@ -418,7 +419,7 @@ export class Residents {
       r.cooldown = now + 60000;
       return;
     }
-    const reservation = this.budget.reserve(r.config.id, bytes, outputLimit, now);
+    const reservation = this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
     if (reservation === undefined) {
       p.online = false;
       r.active = false;
@@ -443,7 +444,13 @@ export class Residents {
       .decide(request, controller.signal)
       .then((result) => {
         if (this.closed) return;
-        this.budget.settle(reservation, result.inputTokens, result.outputTokens);
+        this.budget.settle(
+          reservation,
+          result.inputTokens,
+          result.outputTokens,
+          result.cacheWriteTokens,
+          result.cacheReadTokens,
+        );
         const current = this.worlds.get(r.state.world),
           player = current?.players[r.state.playerId];
         if (
@@ -554,6 +561,7 @@ export class Residents {
             ? 'Active'
             : 'Resting',
       model: r.config.model,
+      provider: r.config.provider,
     }));
   }
   async settled() {

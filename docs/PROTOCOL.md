@@ -130,7 +130,7 @@ only `self.roomPantries` (or the legacy recipient player) contains the pilot's s
 ## Optional AI resident (0.10.0)
 
 Authenticated `GET /api/npc` returns `{ residents: [...] }`. Entries expose
-`id`, `playerId`, `name`, `personality`, `world`, `online`, `status` and `model`;
+`id`, `playerId`, `name`, `personality`, `world`, `online`, `status`, `model` and `provider` (`openai` or `anthropic`);
 no notebook, private journal, API key or spending details are returned. An empty
 array means the server integration is disabled. Snapshots and chat messages can
 include `npc: true` for visible AI labels. Chat also carries an optional monotonic

@@ -52,6 +52,19 @@ export class NpcMemory {
       CREATE TABLE IF NOT EXISTS npc_control (resident TEXT PRIMARY KEY, paused INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS npc_calls (id INTEGER PRIMARY KEY AUTOINCREMENT, resident TEXT NOT NULL, at INTEGER NOT NULL, reserved REAL NOT NULL, charged REAL NOT NULL, input_tokens INTEGER NOT NULL DEFAULT 0, output_tokens INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS npc_calls_at ON npc_calls(at);`);
+    // Additive migration preserves old residents, journals and outstanding charges.
+    const columns = new Set(
+      store.db
+        .prepare('PRAGMA table_info(npc_calls)')
+        .all()
+        .map((r) => r.name),
+    );
+    for (const [name, type] of Object.entries({
+      rates: 'TEXT',
+      cache_write_tokens: 'INTEGER NOT NULL DEFAULT 0',
+      cache_read_tokens: 'INTEGER NOT NULL DEFAULT 0',
+    }))
+      if (!columns.has(name)) store.db.exec(`ALTER TABLE npc_calls ADD COLUMN ${name} ${type}`);
   }
   paused(id: string) {
     return !!this.store.db.prepare('SELECT paused FROM npc_control WHERE resident=?').get(id)

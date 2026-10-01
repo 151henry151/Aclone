@@ -218,7 +218,7 @@ multiple processes must not write to the same database.
 ## Optional AI resident
 
 The NPC prototype is disabled by default. See [AI neighbours](NPCS.md) for the
-server-only OpenAI key, one-resident configuration, spending caps, native and
+server-only OpenAI/Anthropic keys, independent Mabel/Toby configuration, shared spending caps, native and
 Compose startup, privacy notice and operator controls. The same persistent
 SQLite database stores resident identity, memories and usage reservations, so
 include it in normal backups. Use the same DATA_DIR for the server and NPC CLI.
