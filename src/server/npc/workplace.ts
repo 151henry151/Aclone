@@ -15,6 +15,9 @@ export function workplace(w: World, p: Player, b: Building) {
   const staff = productionStaff(w, b, next);
   const employedHere = p.job === b.id && b.employees.includes(p.id);
   const qualified = p.skills.includes(recipe.skill);
+  const workActive = employedHere && (!w.settings.activeWork || p.activeUntil >= w.time);
+  const workActiveNextCycle = employedHere && staff.some((q) => q.id === p.id);
+  const renewAction = employedHere ? { type: 'work' as const, building: b.id } : null;
   const jobBlockers: string[] = [];
   if (b.owner === p.id) jobBlockers.push('Owners cannot employ themselves');
   if (!qualified) jobBlockers.push(`Learn ${recipe.skill} at school first`);
@@ -23,6 +26,10 @@ export function workplace(w: World, p: Player, b: Building) {
   const blockers: string[] = [];
   if (b.construction) blockers.push('Construction is unfinished');
   if (b.kind !== 'farm') {
+    if (!b.government && !staff.length)
+      blockers.push(
+        'No active employees at the next production check; only slow unattended production can run',
+      );
     for (const [item, n] of Object.entries(recipe.inputs))
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item} in building stockroom`);
@@ -40,7 +47,11 @@ export function workplace(w: World, p: Player, b: Building) {
       ? 'This farm uses seasonal plots, not automatic wheat production.'
       : [
           employedHere
-            ? 'You have this job.'
+            ? !workActive
+              ? 'You still hold this job, but your shift has expired. Use work to renew it; waiting nearby does not renew a shift.'
+              : !workActiveNextCycle
+                ? 'Your shift is active now but expires before the next production check. Use work before then to earn wages.'
+                : 'Your shift is active through the next production check; this is not proof a batch has completed.'
             : 'You have NOT taken this job; a chat agreement does not count.',
           qualified ? `You are qualified (${recipe.skill}).` : `You lack ${recipe.skill}.`,
           `Inputs and outputs belong to the building stockroom, never your carried inventory.`,
@@ -63,7 +74,9 @@ export function workplace(w: World, p: Player, b: Building) {
     qualified,
     canTakeJob: !employedHere && jobBlockers.length === 0,
     jobBlockers,
-    workActive: employedHere && (!w.settings.activeWork || p.activeUntil >= w.time),
+    workActive,
+    workActiveNextCycle,
+    renewAction,
     workActiveUntil: employedHere && w.settings.activeWork ? p.activeUntil : null,
     activeEmployeesNextCycle: staff.length,
     efficiencyNextCycle: b.government || staff.length ? 1 : w.settings.offlineEfficiency,

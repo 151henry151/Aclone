@@ -94,3 +94,57 @@ test('farms are plots rather than automatic legacy wheat factories', () => {
     undefined,
   );
 });
+
+test('expired employment is explicit: waiting cannot renew the shift', () => {
+  const { w, p, b } = millFixture();
+  b.investment = 20000;
+  b.employees = [p.id];
+  p.job = b.id;
+  p.activeUntil = w.time - 40000;
+  const report = workplace(w, p, b)!;
+  assert.equal(report.workActive, false);
+  assert.equal(report.workActiveNextCycle, false);
+  assert.match(report.summary, /shift has expired/i);
+  assert.match(report.summary, /waiting.*does not renew/i);
+  assert.deepEqual(report.renewAction, { type: 'work', building: b.id });
+  assert.equal(report.efficiencyNextCycle, 0.01);
+  assert.ok(report.blockers.some((s) => /no active employees/i.test(s)));
+});
+
+test('accepting the same job renews an expired shift without duplicate staff or wages', () => {
+  const { w, p, b } = millFixture();
+  b.investment = 20000;
+  p.job = b.id;
+  p.activeUntil = w.time - 40000;
+  b.employees = [p.id, ...Array.from({ length: 15 }, (_, i) => `absent-${i}`)];
+  const cash = p.cash;
+  act(w, p.id, { type: 'job', building: b.id });
+  act(w, p.id, { type: 'job', building: b.id });
+  assert.equal(b.employees.length, 16);
+  assert.equal(b.employees.filter((id) => id === p.id).length, 1);
+  assert.equal(p.activeUntil, w.time + 1200);
+  assert.equal(p.cash, cash);
+  assert.equal(b.stock.flour, 29);
+  advance(w, 10);
+  assert.equal(b.stock.flour, 32);
+  assert.equal(b.stock.wheat, 7);
+  assert.equal(p.cash, cash + 1980);
+  assert.equal(b.investment, 17800);
+});
+
+test('job renewal still enforces proximity, ownership, qualification and another job', () => {
+  const { w, p, b } = millFixture();
+  p.job = b.id;
+  b.employees = [p.id];
+  p.x = b.x + 100;
+  assert.throws(() => act(w, p.id, { type: 'job', building: b.id }));
+  p.x = b.x;
+  b.owner = p.id;
+  assert.throws(() => act(w, p.id, { type: 'job', building: b.id }), /own building/);
+  b.owner = 'owner';
+  p.skills = [];
+  assert.throws(() => act(w, p.id, { type: 'job', building: b.id }), /Learn miller/);
+  p.skills = ['miller'];
+  p.job = 'other-job';
+  assert.throws(() => act(w, p.id, { type: 'job', building: b.id }), /Quit your current job/);
+});

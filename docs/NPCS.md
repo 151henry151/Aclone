@@ -78,6 +78,12 @@ She can still request a read-only `guide` lookup by topic or exact entry ID.
 Queries never become filesystem paths or web requests; search is local and uses
 no paid embeddings.
 
+Holding a job and having an active shift are distinct. Workplace summaries flag
+expired shifts or shifts that expire before the next batch, and supply the exact
+`work` action to renew them. Reaccepting an existing job also safely renews its
+shift without duplicate employment; neither action produces an instant batch.
+Waiting beside a building does not renew work.
+
 Workplace observations diagnose employment, qualification, active shifts,
 production timing, input shortages, output space and funding. A prospective
 wage shortfall includes the resident even before she takes the job. Custom

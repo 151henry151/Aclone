@@ -4,6 +4,13 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Shift renewal (0.11.3)
+
+Accepting an already-held job renews the active shift without adding duplicate
+employees or paying wages early. Mabel’s workplace summaries explicitly identify
+expired shifts and provide the renewal action. A controller regression reproduces
+the failed mill sequence and verifies flour production and wages after renewal.
+
 ## Production status (0.11.2)
 
 Building panels show current staffing efficiency, stock quantities and the next

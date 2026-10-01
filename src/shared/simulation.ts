@@ -455,7 +455,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'job': {
       const b = nearby(w, p, a.building);
       requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
-      requireThat(!p.job, 'Quit your current job first');
+      requireThat(!p.job || p.job === b.id, 'Quit your current job first');
       const recipe =
         b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
       requireThat(recipe, 'No work at this building');
@@ -463,10 +463,15 @@ export function act(w: World, id: string, a: Action): string {
         p.skills.includes(recipe.skill),
         'Learn ' + recipe.skill + ' at the school first',
       );
-      requireThat(b.employees.length < 16, 'All jobs filled');
-      b.employees.push(id);
+      // Reaccepting an existing job renews its shift without a second staff slot.
+      if (!b.employees.includes(id)) {
+        requireThat(b.employees.length < 16, 'All jobs filled');
+        b.employees.push(id);
+      }
       p.job = b.id;
       p.activeUntil = w.time + 2 * productionInterval(w, b);
+      result =
+        'Employed here and working for the next two cycles; production is scheduled, not instant.';
       break;
     }
     case 'quit': {

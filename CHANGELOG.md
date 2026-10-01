@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-10-01
+
+### Fixed
+
+- Renew an existing job safely when a worker accepts it again, without duplicate employees or wages. Make expired shifts and missing active staff explicit in AI workplace guidance so Mabel can distinguish holding a job from actually working.
+
 ## [0.11.2] - 2026-10-01
 
 ### Fixed

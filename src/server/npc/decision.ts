@@ -36,7 +36,7 @@ const action = z.discriminatedUnion('type', [
       type: z
         .enum(['job', 'work', 'buyBuilding', 'home'])
         .describe(
-          'job is the WORKER accepting qualified employment (no owner hire action); work renews two production cycles at your job. Production then consumes BUILDING inputs, creates BUILDING outputs and pays wages from BUILDING investment. home needs ownership; buyBuilding spends its quoted purchase price.',
+          'job is the WORKER accepting qualified employment (no owner hire action); work renews two production cycles at your EXISTING job, including an expired shift. A held job is not necessarily active; waiting cannot renew it. Production then consumes BUILDING inputs, creates BUILDING outputs and pays wages from BUILDING investment. home needs ownership; buyBuilding spends its quoted purchase price.',
         ),
       ...building,
     })

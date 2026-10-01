@@ -529,3 +529,60 @@ test('a looping model is throttled and silenced across restart, while a new priv
     s.store.close();
   }
 });
+
+test('an expired miller can replay job then work without aborting or extra AI calls', async () => {
+  let calls = 0;
+  const s = setup({
+    async decide(request) {
+      calls++;
+      const o = request.observation as any;
+      const b = o.nearbyBuildings.find((b: any) => b.kind === 'mill');
+      assert.equal(b.workplace.employedHere, true);
+      assert.equal(b.workplace.workActive, false);
+      assert.match(o.currentWork.find((q: any) => q.id === b.id).diagnosis, /shift has expired/);
+      return answer(
+        decision([
+          { kind: 'act', action: { type: 'job', building: b.id } },
+          { kind: 'act', action: { type: 'work', building: b.id } },
+          { kind: 'wait', seconds: 500 },
+        ]),
+      );
+    },
+  });
+  try {
+    const p = s.w.players[s.residents.status()[0].playerId];
+    const b = s.w.buildings.find((b) => b.kind === 'mill')!;
+    Object.assign(p, { x: b.x + 11, z: b.z, skills: ['miller'], job: b.id, activeUntil: 174267 });
+    Object.assign(b, {
+      owner: 'other',
+      employees: [p.id],
+      stock: { wheat: 50, flour: 0 },
+      investment: 19465,
+      wage: 1000,
+    });
+    s.w.time = 216151;
+    const cash = p.cash;
+    const now = Date.now();
+    s.residents.tick(0.05, now);
+    await s.residents.settled();
+    s.residents.tick(0.05, now + 500);
+    s.residents.tick(0.05, now + 1000);
+    s.residents.tick(0.05, now + 1500);
+    assert.equal(s.residents.memory.load('resident-0')!.lastOutcome!.ok, true);
+    assert.deepEqual(b.employees, [p.id]);
+    assert.equal(b.stock.flour, 0);
+    advance(s.w, 449);
+    assert.equal(b.stock.flour, 3);
+    assert.equal(b.stock.wheat, 45);
+    assert.equal(b.investment, 18465);
+    assert.equal(p.cash, cash + 900);
+    assert.equal(calls, 1);
+    assert.equal(
+      s.residents.memory.recent('resident-0', 20).some((e) => e.kind === 'failure'),
+      false,
+    );
+  } finally {
+    s.residents.close();
+    s.store.close();
+  }
+});
