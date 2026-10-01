@@ -60,7 +60,7 @@ export class TownLighting {
       geometries.forEach((g) => g.dispose());
     }
   }
-  update(w: World, camera: T.Vector3) {
+  update(w: World, focus: T.Vector3) {
     const day = calendar(w).dayOfYear,
       night = 1 - sunAt(w.settings.time, day).daylight;
     const byId = new Map(w.buildings.map((b) => [b.id, b]));
@@ -72,7 +72,7 @@ export class TownLighting {
         s.pane.material.emissiveIntensity = lit ? 2 : 0;
         return lit;
       })
-      .sort((a, b) => a.position.distanceToSquared(camera) - b.position.distanceToSquared(camera));
+      .sort((a, b) => a.position.distanceToSquared(focus) - b.position.distanceToSquared(focus));
     this.group.visible = active.length > 0;
     const counts = new Map<string, number>();
     const nearby = active.filter((s) => {
@@ -83,8 +83,16 @@ export class TownLighting {
     });
     this.pool.forEach((light, i) => {
       const source = nearby[i];
-      light.intensity = source ? (source.building ? 65 : 115) : 0;
+      light.intensity = source ? (source.building ? 65 : 55) : 0;
       if (source) {
+        // Shallower distance falloff keeps the wide skirt useful between lamps.
+        // Reduce output to retain the existing brightness directly underneath.
+        // Reapply both profiles: a pooled lamp may have been a window last frame.
+        const street = !source.building;
+        light.distance = street ? 70 : 22;
+        light.angle = street ? 1.55 : 1.12;
+        light.penumbra = street ? 0.18 : 0.72;
+        light.decay = street ? 0.8 : 1.4;
         light.position.copy(source.position);
         light.target.position.copy(source.target);
       }

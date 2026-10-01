@@ -2,6 +2,22 @@
 
 Aclone aims for a warm, weathered English countryside: natural ground materials, worn lanes, limestone cottages, slate roofs, leafy silhouettes and readable machinery. The original game's village, country-lane and castle screenshots were inspected as visual references; none of their pixels, textures or models ship with Aclone.
 
+## Night sky
+
+The night sky uses original procedural assets rather than astronomical photographs:
+`starfield.ts` creates a seeded atlas of 4,600 stars with varied magnitudes and
+colour temperatures. `sky.ts` shades two lunar discs using their surface normals
+and the actual sun direction, with procedural maria and crater detail. Stars and
+moons render behind the same cloud layer, in one sky draw. `astronomy.ts` defines
+a fictional 45° northern observer, 23.4° axial tilt, a 365-day year and a close
+moon pair with a 28-day synodic cycle and five-day mutual orbit. This is a
+readable fictional orbital model, not an N-body simulation or a recovered rule
+from the original game. The shared absolute calendar keeps it stable across
+reconnects. Ground moonlight reuses the sun's shadow-casting light at night;
+`sky-weather.ts` samples the same cloud texels as the sky shader to attenuate it.
+The apparent lunar radii (1.1° and 0.56°) are deliberately larger than Earth's
+Moon for readability. These assets are covered by the project's GPL license.
+
 ## Material textures
 
 The four original materials in `public/textures/` were generated with the built-in OpenAI image-generation tool on 2026-09-29. No reference images were submitted to that tool. They are distributed under this project's GPL-3.0-or-later license. They are generated illustrations of surfaces, not measured physical scans. Master PNGs were exported as WebP at quality 88 without resizing; the shipped set totals about 2.7 MiB. The original full-resolution PNG masters are included in `art/materials/` and in source archives; they are kept out of the browser bundle. Edit those masters and export the runtime WebP files with `convert art/materials/stone.png -quality 88 public/textures/stone.webp` (ImageMagick, only needed when re-exporting art). Generation prompts are preserved below for contributors.

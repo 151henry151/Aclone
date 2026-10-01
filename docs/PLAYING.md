@@ -9,10 +9,19 @@ The date and the default visual clock cross midnight together. World owners can
 change or freeze the **visual** day length without speeding up crops or ageing.
 
 Sunrise comes earlier in summer and later in winter. Sunlight moves east to west;
-night is genuinely dark outside pools of light. Turn on headlights with **L**. Street lamps stay on all night; occupied houses cast light from their windows until a varied evening bedtime. Weather fronts last three game days
+Overcast, moonless nights are very dark. On clear moonless nights, faint starlight lets you make out nearby ground and silhouettes. A bright full-moon night reveals the grass and terrain, with dimmer detail still visible in the shadows. Turn on headlights with **L** for a wide, long-range beam. Street lamps stay on all night, with a bright centre and broad, overlapping dim light across the gaps between lamps and beyond the roadside; occupied houses cast light from their windows until a varied evening bedtime. Weather fronts last three game days
 (about half an hour): rain, snow or clear skies, with seasonal temperatures.
 Some wet fronts become thunderstorms with lightning or windy snowstorms. Snow accumulates on the ground, rooftops and foliage and stays until positive temperatures gradually melt it. Wet roads dry over several game days. Rain and snow reduce ground-vehicle speed and steering grip; the clock reports road conditions. Autumn changes deciduous leaf colour; evergreen groves stay green.
 Weather is deterministic for each world's date, including after a server restart.
+
+The fictional stars move across the sky overnight and shift with the season.
+Two nearby moons, one about half the apparent size of the other, wax and wane
+over **28 game days** (4 hours 40 minutes at default speed). They orbit as a close
+pair, so their phases are similar; their separation shifts over five game days.
+Phases continue across seasons and years instead of resetting. A moon below the
+horizon provides no light, and clouds passing over a moon also dim its light on
+the ground. Starlight is weaker under cloudy skies. To watch the sky, switch to
+walking, press **C** for first-person view, and drag upward to look up.
 
 The ten-minute day and 365-day year follow the supplied historical information.
 The seasonal climate, crop durations and economic balance below are original

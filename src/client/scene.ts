@@ -3,13 +3,15 @@ import { streetLights } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
 import { bases } from '../shared/combat';
-import { calendar, weatherAt, sunAt, lightningAt } from '../shared/environment';
+import { calendar, weatherAt, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
 import { Precipitation } from './weather';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
+import { celestialAt } from '../shared/astronomy';
+import { nightIllumination } from './sky-weather';
 import { tractor, TRACTOR_EYE_HEIGHT, TRACTOR_SEAT_Z } from './tractor';
 import { SmokePlumes } from './smoke';
 import { tractorPaint } from '../shared/appearance';
@@ -19,7 +21,7 @@ import { MotionClock, MotionTrack } from './motion';
 import { createHuman, type HumanFigure } from './human';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeight, distance } from '../shared/simulation';
-import { vehicles, checkpoints } from '../shared/catalog';
+import { vehicles, checkpoints, defaults } from '../shared/catalog';
 import type { World, Player, Building } from '../shared/types';
 const material = (color: T.ColorRepresentation) =>
   new T.MeshStandardMaterial({ color, roughness: 0.85, flatShading: false });
@@ -110,7 +112,7 @@ export class GameScene {
   private space = new T.Group();
   private terrain?: T.Mesh;
   private sun = new T.DirectionalLight(0xffe9bb, 3);
-  private headlights = new T.SpotLight('#fff1b5', 45, 45, Math.PI / 5, 0.65, 1);
+  private headlights = new T.SpotLight('#fff1b5', 150, 110, Math.PI / 3.5, 0.65, 1);
   private lightning = new T.Line(
     new T.BufferGeometry().setFromPoints([
       new T.Vector3(0, 90, 0),
@@ -173,6 +175,7 @@ export class GameScene {
   zoom = 1;
   cameraMode = 0;
   orbit = 0;
+  private lookPitch = 0;
   onBuilding?: (id: string) => void;
   constructor(private container: HTMLElement) {
     this.renderer = new T.WebGLRenderer({
@@ -294,18 +297,26 @@ export class GameScene {
     this.resize();
     let dragging = false,
       lastX = 0,
+      lastY = 0,
       moved = 0;
     this.renderer.domElement.addEventListener('pointerdown', (e) => {
       dragging = true;
       lastX = e.clientX;
+      lastY = e.clientY;
       moved = 0;
     });
     window.addEventListener('pointerup', () => (dragging = false));
     this.renderer.domElement.addEventListener('pointermove', (e) => {
       if (dragging) {
         this.orbit += (e.clientX - lastX) * 0.007;
-        moved += Math.abs(e.clientX - lastX);
+        if (this.cameraMode === 1)
+          this.lookPitch = Math.max(
+            -1.1,
+            Math.min(1.4, this.lookPitch + (lastY - e.clientY) * 0.004),
+          );
+        moved += Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
         lastX = e.clientX;
+        lastY = e.clientY;
       }
     });
     this.renderer.domElement.addEventListener('click', (e) => {
@@ -800,9 +811,9 @@ export class GameScene {
         const facing = local.rotation.y;
         this.headlights.position.set(pos.x, pos.y + (local.userData.driver ? 1.7 : 2), pos.z);
         this.headlights.target.position.set(
-          pos.x + Math.sin(facing) * 20,
+          pos.x + Math.sin(facing) * 35,
           pos.y,
-          pos.z + Math.cos(facing) * 20,
+          pos.z + Math.cos(facing) * 35,
         );
         this.target.copy(pos);
         const walking = p.vehicle === 5;
@@ -835,7 +846,15 @@ export class GameScene {
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         local.userData.snapCamera = false;
         if (this.cameraMode === 1)
-          this.target.add(new T.Vector3(Math.sin(facing) * 30, 0, Math.cos(facing) * 30));
+          this.target
+            .copy(this.camera.position)
+            .add(
+              new T.Vector3(
+                Math.sin(heading) * Math.cos(this.lookPitch) * 30,
+                Math.sin(this.lookPitch) * 30,
+                Math.cos(heading) * Math.cos(this.lookPitch) * 30,
+              ),
+            );
         this.camera.lookAt(this.target);
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
@@ -863,14 +882,28 @@ export class GameScene {
       this.plumes.update(dt);
       const date = calendar(w),
         climate = weatherAt(w.id, date.absoluteDay),
-        solar = sunAt(w.settings.time, date.dayOfYear),
+        skyOffset = Math.max(-1, Math.min(1, motionTime - w.time)),
+        clock =
+          w.settings.time +
+          (w.settings.dayLength > 0 ? (skyOffset * 86400) / w.settings.dayLength : 0),
+        skySeconds = ((clock % 86400) + 86400) % 86400,
+        // Orbital seasons/phases follow the continuous saved calendar even if
+        // an owner freezes or changes the decorative clock's day length.
+        skyDay =
+          (w.time + skyOffset) / DAY_SECONDS + 59 + defaults.time / 86400 - skySeconds / 86400,
+        astronomy = celestialAt(skyDay, skySeconds),
+        solar = sunAt(skySeconds, skyDay),
         daylight = solar.daylight;
+      const drift = (w.time + skyOffset) * 0.001 * climate.wind;
+      const night = nightIllumination(astronomy, climate.clouds, drift);
       snowCover.value = w.climate?.snow ?? 0;
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =
           1 - (w.climate?.wetness ?? 0) * 0.45;
       this.townLighting.group.visible = true;
-      this.townLighting.update(w, this.camera.position);
+      // Spend the limited light budget where the player is looking, not behind
+      // their tractor at the chase camera (especially with four lights on low).
+      this.townLighting.update(w, this.target);
       const flash = lightningAt(motionTime, climate.storm && climate.precipitation === 'rain');
       autumnTint.value = climate.season === 'Autumn' ? 0.85 : climate.season === 'Winter' ? 0.5 : 0;
       this.lightning.visible = flash > 0;
@@ -882,9 +915,16 @@ export class GameScene {
         climate.intensity,
         climate.wind,
       );
-      this.sun.intensity = daylight * (3 - climate.clouds * 1.7);
+      const sunlight = daylight * (3 - climate.clouds * 1.7);
+      this.sun.intensity = sunlight + night.moonlight;
       this.sun.color.set(solar.twilight > 0.3 ? '#ffac68' : '#ffe9bb');
-      this.ambient.intensity = 0.002 + daylight * 1.05 + flash * 2.5;
+      this.sun.color.lerp(
+        new T.Color('#d2dfff'),
+        night.moonlight / Math.max(0.001, this.sun.intensity),
+      );
+      this.ambient.color.set('#b6cbd9').lerp(new T.Color('#b6c5df'), night.night);
+      this.ambient.groundColor.set('#7c8067').lerp(new T.Color('#657083'), night.night);
+      this.ambient.intensity = 0.002 + daylight * 1.05 + night.ambient + flash * 2.5;
       const sky = new T.Color('#b8ced9').multiplyScalar(0.001 + daylight * 0.9 + flash);
       sky.lerp(new T.Color('#c87458'), solar.twilight * 0.45);
       this.sky.position.copy(this.camera.position);
@@ -895,18 +935,32 @@ export class GameScene {
       this.sky.material.uniforms.daylight.value = daylight;
       this.sky.material.uniforms.sunDirection.value.fromArray(solar.direction).normalize();
       this.sky.material.uniforms.clouds.value = climate.clouds;
-      this.sky.material.uniforms.drift.value = this.elapsed * 0.001 * climate.wind;
+      this.sky.material.uniforms.drift.value = drift;
+      this.sky.material.uniforms.skyRotation.value.fromArray(astronomy.skyRotation);
+      this.sky.material.uniforms.night.value = night.night;
+      this.sky.material.uniforms.twinkle.value = w.time + skyOffset;
+      this.sky.material.uniforms.moonGlow.value =
+        astronomy.moons.reduce(
+          (sum, moon) => sum + moon.illuminated * Math.max(0, moon.direction[1]),
+          0,
+        ) * night.night;
+      for (const [i, key] of ['moonA', 'moonB'].entries()) {
+        const moon = astronomy.moons[i];
+        this.sky.material.uniforms[key].value.set(...moon.direction, moon.radius);
+      }
       this.scene.background = sky;
       this.scene.fog = new T.Fog(
         sky,
         climate.precipitation === 'clear' ? 125 : climate.storm ? 35 : 70,
         climate.precipitation === 'clear' ? 450 : climate.storm ? 140 : 260,
       );
-      this.sun.position.set(
-        p.x + solar.direction[0] * 110,
-        Math.max(2, solar.direction[1] * 110),
-        p.z + solar.direction[2] * 110,
-      );
+      // The nearby pair shares the existing shadow-casting directional light.
+      // Its weighted direction follows both moons without increasing the light budget.
+      this.sun.position.fromArray(solar.direction).multiplyScalar(sunlight);
+      this.sun.position.addScaledVector(new T.Vector3(...night.direction), night.moonlight);
+      this.sun.position.normalize().multiplyScalar(110);
+      this.sun.position.y = Math.max(2, this.sun.position.y);
+      this.sun.position.add(new T.Vector3(p.x, 0, p.z));
       this.sun.target.position.set(p.x, 0, p.z);
       if (
         now - this.shadowTime > 200 &&

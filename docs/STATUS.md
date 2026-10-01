@@ -24,6 +24,7 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 - Seasonal crop plots, irrigation, fertilizer, rotation, frost and delayed-harvest quality, with reserved paid harvest shifts and offline completion.
 - Seven-system route map, saved jump transit, owned-ship hangars, upgrades, shared station stocks, courier contracts, surveys and alien-ship unlocks.
 - Four seasons, deterministic rain/snow, snow cover, seasonal sunlight and sunrise/sunset.
+- Seasonal, rotating stars and two nearby moons with persistent phase cycles, cloud occlusion, starlight and moonlight; stronger headlights and broad streetlight pools.
 - Six selectable cottage styles, garage tractor paint and occupancy-driven chimney smoke.
 - Six-client Hornball, ordered race checkpoints and best laps, bite/reel fishing,
   and an original timing-based two-player Ultrakricket implementation.
@@ -65,6 +66,13 @@ Version 0.4.0 adds timber siding, paint choices, occupied/working chimney smoke,
 visible crop growth, seasonal foliage, snow coverage, precipitation and moving
 sunlight. Effects and projectiles use bounded batches. See [the player guide](PLAYING.md)
 for the new gameplay loops and their deliberately documented balance choices.
+
+Version 0.7.0 adds the fictional night sky, broader vehicle and street lighting,
+and first-person vertical mouse-look. Orbital tests cover seasonal movement,
+midnight/year continuity and lunar phases; rendered captures compare near-full,
+half and crescent moons, overcast skies, and the same ground view under moonlight
+and starlight. The sky uses an original simplified orbital model, described in
+[the art guide](ART.md).
 
 ## Implemented with a smaller scope than the spec
 

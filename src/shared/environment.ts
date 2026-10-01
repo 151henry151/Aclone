@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { defaults } from './catalog.ts';
+import { solarDirectionAt } from './astronomy';
 import type { World } from './types.ts';
 export const DAY_SECONDS = 600;
 export type Season = 'Winter' | 'Spring' | 'Summer' | 'Autumn';
@@ -39,12 +40,10 @@ export function weatherAt(world: string, absoluteDay: number) {
   };
 }
 export function sunAt(seconds: number, day: number) {
-  const hour = seconds / 3600;
-  const length = 12 + 4 * Math.cos(((day - 172) / 365) * Math.PI * 2);
-  const angle = ((hour - 12) / 12) * Math.PI;
-  const height = Math.cos(angle) - Math.cos((length * Math.PI) / 24);
+  const direction = solarDirectionAt(day, seconds),
+    height = direction[1];
   return {
-    direction: [-Math.sin(angle), height, 0.3] as [number, number, number],
+    direction,
     daylight: Math.max(0, Math.min(1, height * 3)),
     twilight: Math.max(0, 1 - Math.abs(height) * 5),
   };

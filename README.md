@@ -6,7 +6,21 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.6.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.7.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.7.0:** stronger, wider, longer-range headlights and much broader streetlight pools, with a slower fade that lights the gaps between lamps and the surrounding verges. See [CHANGELOG.md](CHANGELOG.md) for the release notes.
+
+The night sky has moving, seasonal stars and two nearby, phased moons. Starlight gives enough dim illumination to make out nearby ground; bright full moons reveal grass and terrain, including softer light in the shadows. Moving clouds obscure the sky and reduce that illumination. In first-person view, drag upward to look at the sky.
+
+<details>
+<summary>Night-sky previews (0.7.0)</summary>
+
+![The nearby moon pair and stars through moving clouds](docs/screenshots/twin-moons.png)
+![The same moons in their crescent phase](docs/screenshots/crescent-moons.png)
+![Grass visible under a clear full moon, with headlights off](docs/screenshots/moonlit-ground.png)
+![The same field under starlight alone](docs/screenshots/starlit-ground.png)
+
+</details>
 
 **Fixed in 0.6.1:** natural reverse steering, no self-employment or self-trading, and a 3% gross delivery margin from default building prices to Harbour stores. Owners use Stockroom and Building Admin; custom prices remain configurable.
 
@@ -165,7 +179,7 @@ The menu has a directory showing distances to every building. Transactions requi
 - Arrows / WASD: throttle and steering. Shift: boost.
 - E / Ctrl: interact. Enter / F2: chat. `*help`: supported commands.
 - Space: horn. Tab: primary weapon in a fighting world, otherwise horn. Number keys 1–6 select a weapon.
-- F4: engine. L: headlights. C: chase / first-person / overhead camera. Wheel: zoom.
+- F4: engine. L: headlights. C: chase / first-person / overhead camera. Wheel: zoom. Drag: orbit; in first-person view, look around and up/down.
 - Insert / Delete: climb / descend in a biplane or robocrow. Carry a jetpack to lift a ground vehicle.
 - R / F5: deploy a disposable robocrow or return to your body.
 - F3: reel when the fishing bite prompt appears.
@@ -211,6 +225,10 @@ npm run test:load    # isolated 100-client, 10-second local load probe
 ```
 
 The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The browser runner uses `tsx` for TypeScript server fixtures and runs one browser at a time to avoid competing software WebGL renderers. `SCREENSHOT_OUTPUT_DIR=/tmp/aclone-seasons npm run screenshots:seasons` validates farm harvesting and space travel while saving captures outside the documentation. `npm run screenshots:town` captures the expanded town and checks access to its public services using an isolated server. Unit and network tests use temporary databases and random ports.
+
+After `npm run build`, run `npx tsx scripts/night-lighting.ts` to capture repeatable midnight headlight and streetlight views plus a daytime comparison in `test-results/night-lighting`. It uses a disposable world, checks the real **L** toggle, and reports browser errors. `SCREENSHOT_OUTPUT_DIR` changes the destination, `SCREENSHOT_GPU=1` enables hardware rendering, and `SCREENSHOT_QUALITY=low` exercises the reduced light budget.
+
+`npx tsx scripts/night-sky.ts` captures natural near-full, half and crescent phases, an overcast sky, two hours of sky movement and daylight. It also compares the same ground view under full moons, starlight alone and overcast skies, with headlights off. It uses the same screenshot options and an isolated world, saving to `test-results/night-sky` by default.
 
 Tuning is in `data/*.json`. New behaviours need tests before or alongside implementation. Update `CHANGELOG.md`, review this README and affected guides, and keep the code formatted. No generated client build, saved accounts, reference screenshots or source-research exports belong in a release archive.
 

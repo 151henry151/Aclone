@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30
+
+### Added
+
+- A fictional star sky with varied brightness and colour, gentle twinkling, nightly rotation and seasonal drift. Clear skies cast faint starlight onto the landscape.
+- Two nearby moons of different sizes, with textured surfaces, sun-facing phases on a continuous 28-game-day cycle, and moonlight that follows their altitude and illumination. Moving clouds obscure the stars and moons and attenuate their ground light.
+- Drag vertically and horizontally in first-person view to look around and up at the sky.
+
+### Changed
+
+- Give headlights a stronger, wider beam with a longer reach. Streetlights retain their bright centre but use a much broader cone and slower brightness falloff to illuminate the gaps between lamps and verges beyond the road. House window lighting and the fixed light budget stay unchanged.
+- Select nearby town lights around the camera's focus so low-quality mode lights the road near the tractor instead of spending its smaller budget behind the chase camera.
+- Align seasonal sunrise, sunset and lunar illumination to the same tilted planetary sky model; night lighting reuses the existing directional shadow light.
+- Balance night illumination for visibility on a normal display: starlight reveals nearby ground and silhouettes, and a clear full-moon night reveals grass texture with softer light in the shadows. Overcast nights remain much darker.
+
 ## [0.6.1] - 2026-09-30
 
 ### Changed

@@ -47,6 +47,8 @@ try {
     'town.ts',
     'seasons.ts',
     'living-world.ts',
+    'night-lighting.ts',
+    'night-sky.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',
