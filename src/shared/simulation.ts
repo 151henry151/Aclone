@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { say } from './messages.ts';
+export { say } from './messages.ts';
 import { productionStaff, productionSupplied } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
@@ -51,11 +53,7 @@ export function log(
   if (!Number.isSafeInteger(amount) || amount < 0) throw Error('Invalid ledger amount');
   if (amount) w.ledger.push({ id: ++w.ledgerSeq, time: w.time, kind, amount, from, to, reason });
 }
-export function say(w: World, name: string, text: string, kind = 'system', to?: string) {
-  w.messageSeq = (w.messageSeq ?? 0) + 1;
-  w.messages.push({ id: w.messageSeq, name, text, kind, time: w.time, ...(to ? { to } : {}) });
-  if (w.messages.length > 100) w.messages.shift();
-}
+
 export function makeBuilding(id: string, kind: string, x: number, z: number): Building {
   const d = catalog[kind];
   if (!d) throw Error('Unknown building type');

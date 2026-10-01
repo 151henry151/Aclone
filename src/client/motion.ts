@@ -10,22 +10,42 @@ export class MotionClock {
   private lastServer = 0;
   private lastReceive?: number;
   private lastSample = 0;
+  private intervals: number[] = [];
+  private buffer = BUFFER_SECONDS;
+  private targetBuffer = BUFFER_SECONDS;
+  get bufferMs() {
+    return Math.round(this.buffer * 1000);
+  }
   receive(serverTime: number, receivedAt: number): boolean {
     const reset =
       this.lastReceive === undefined ||
       serverTime < this.lastServer ||
-      receivedAt - this.lastReceive > 1500 ||
-      Math.abs(serverTime - this.lastServer - (receivedAt - this.lastReceive) / 1000) > 0.5;
+      receivedAt - this.lastReceive > 1500;
     const offset = serverTime - receivedAt / 1000;
     if (reset) {
       this.offsets = [];
+      this.intervals = [];
+      this.buffer = this.targetBuffer = BUFFER_SECONDS;
       this.offset = offset;
       this.lastSample = receivedAt;
+    }
+    if (!reset && serverTime > this.lastServer) {
+      this.intervals.push(serverTime - this.lastServer);
+      if (this.intervals.length > 20) this.intervals.shift();
     }
     if (reset || serverTime > this.lastServer) {
       this.offsets.push(offset);
       if (this.offsets.length > 20) this.offsets.shift();
     }
+    const percentile = (values: number[], fraction: number) =>
+      [...values].sort((a, b) => a - b)[Math.floor((values.length - 1) * fraction)] ?? 0;
+    const jitter = Math.max(...this.offsets) - percentile(this.offsets, 0.1);
+    // Healthy links keep the existing 300 ms buffer. Only variable delivery or
+    // flow-controlled snapshot intervals call for more history (up to 800 ms).
+    this.targetBuffer = Math.min(
+      0.8,
+      Math.max(BUFFER_SECONDS, percentile(this.intervals, 0.9) + 0.1 + Math.max(0, jitter - 0.1)),
+    );
     this.lastServer = serverTime;
     this.lastReceive = receivedAt;
     return reset;
@@ -36,8 +56,15 @@ export class MotionClock {
     const target = Math.max(...this.offsets),
       step = (Math.max(0, now - this.lastSample) / 1000) * 0.05;
     this.offset += Math.max(-step, Math.min(step, target - this.offset));
+    const elapsed = Math.max(0, now - this.lastSample) / 1000;
+    // Grow smoothly instead of rewinding; recover slowly so isolated good packets
+    // don't make an unstable connection oscillate between buffer sizes.
+    this.buffer += Math.max(
+      -elapsed * 0.02,
+      Math.min(elapsed * 0.5, this.targetBuffer - this.buffer),
+    );
     this.lastSample = now;
-    return now / 1000 + this.offset - BUFFER_SECONDS;
+    return now / 1000 + this.offset - this.buffer;
   }
 }
 

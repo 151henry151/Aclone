@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { workerData, parentPort } from 'node:worker_threads';
-import { register } from 'tsx/esm/api';
-register();
+// Node 24 strips these few types natively; do not boot a TS loader and the entire game graph.
 const { WorldScript } = await import('./lua.ts');
-const { world, source, event, data } = workerData;
 parentPort.postMessage({ ready: true });
-parentPort.once('message', () => {
+parentPort.on('message', (job) => {
+  const { world, source, event, data } = workerData ?? job;
   try {
     const before = Object.fromEntries(
       Object.entries(world.players).map(([id, p]) => [id, p.kudos]),

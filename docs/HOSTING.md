@@ -174,17 +174,41 @@ child server with SIGKILL after a purchase acknowledgement and verifies the
 restored ownership and cash. Backups remain necessary
 for disk loss, corruption and operator mistakes.
 
+## Connection and multiplayer checks
+
 Run `npm run test:load` for 100 real connections, 20 input messages per second per
 client, and ten seconds of measurement. Override `LOAD_CLIENTS` (1–128) and
-`LOAD_SECONDS` (2–300). It creates and deletes its own temporary database. The
+`LOAD_SECONDS` (2–300). `LOAD_PROTOCOL=2` selects the previous wire format for
+comparison; the default is protocol 3. `LOAD_PARKED=1` keeps every tractor parked.
+The probe intentionally retains 20 Hz input to stress the server (the browser
+now sends fewer duplicate controls). It creates and deletes its own temporary database. The
 server runs in a separate process from synthetic clients. Output reports wire
 traffic, decoded state volume, frames, disconnections and server event-loop
 latency. This is a movement/broadcast probe, not a certification of heavy trading,
 hundreds of simultaneous password hashes, Lua workloads or long-term stability.
 
-The instance defaults to 128 simultaneous WebSocket connections. Slow clients
-are disconnected before accumulating large send queues. Protocol 2 shares world
-serialization, sends only changed fields/players, and negotiates compression.
+The instance defaults to 128 simultaneous WebSocket connections. Protocol 3
+shares field-level entity deltas and permits only three outstanding snapshots per
+client. Slower peers resume with current state without slowing fast peers; large
+send queues still trigger a reconnect. Older protocol 1/2 clients remain supported.
+Deploy server and built client together, then reload clients to negotiate protocol 3.
+No database migration or network setting is required.
+
+Run `npm run test:network` to exercise real compressed WebSocket traffic through
+a local TCP shaper: 64 kbit/s download, 16 kbit/s upload, 200 ms latency each way
+and up to 150 ms extra jitter each way. It checks driving, stopping, chat, recovery
+after withheld ACKs and an unaffected fast peer, on its own temporary database.
+It neither reads the operator's `.env` nor enables the AI resident. The shaper
+preserves TCP byte ordering; it does not simulate radio packet loss/retransmission.
+The browser suite also measures one versus three nearby tractors and exercises
+controls/chat over that shaped link. FPS depends on the test machine; it is
+recorded as diagnostic evidence rather than enforced as a universal threshold.
+
+For reports from real players, collect the in-game ping and FPS, graphics mode,
+device/browser and number of nearby players, preferably both alone and together.
+Compare server event-loop timing locally with the load probe. These short probes
+exclude paid AI calls, active trading load and first-visit asset downloads; they
+cannot establish production capacity or diagnose a particular ISP by themselves.
 Full reconnects always receive complete state; private player fields stay private.
 Capacity depends on host CPU, storage, active worlds and player behavior. Measure
 on deployment hardware before raising the connection ceiling or promising a
@@ -199,3 +223,16 @@ Compose startup, privacy notice and operator controls. The same persistent
 SQLite database stores resident identity, memories and usage reservations, so
 include it in normal backups. Use the same DATA_DIR for the server and NPC CLI.
 No changes to the `/aclone` proxy routes are required.
+
+Set `LOAD_NPC=1` on the local load probe to include one resident using a free,
+deterministic decision double, exercising real navigation, labour, persistence
+and script events without OpenAI calls. A useful reproduction is
+`LOAD_CLIENTS=3 LOAD_NPC=1 LOAD_SECONDS=25 npm run test:load`. This measures the
+controller and gameplay work, not provider latency or the live AI's decisions.
+
+A healthy game process can still stall on an overloaded host. Check `uptime`,
+`nproc`, `free -m`, `vmstat 1 5` and `/proc/pressure/{cpu,memory,io}` alongside the
+game service's memory and CPU. Full swap plus high memory pressure can stall Lua
+startup, snapshots and pings even when Aclone uses little RAM. Reduce competing
+workloads, limit their memory, or provide more capacity; changing graphics cannot
+fix server scheduling starvation. Avoid running load probes on the live host.

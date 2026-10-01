@@ -2,10 +2,14 @@
 
 ## Runtime boundaries
 
-The browser renders a Three.js scene and an HTML HUD. It sends input at 20 Hz and
-receives snapshots at 5 Hz. Rendering interpolates positions and camera motion.
-The server updates worlds at 20 Hz. A stalled browser's input expires after
-350 ms, preventing a disconnected tractor from accelerating indefinitely.
+The browser renders a Three.js scene and an HTML HUD. It polls input at 20 Hz,
+sends changes on the next poll, and repeats held controls at most 10 Hz (1 Hz when
+idle). A blocked browser upload retains only the latest unsent controls. Normal
+snapshot delivery is 5 Hz; protocol 3 permits only three unacknowledged snapshots
+per client. Rendering interpolates positions and camera motion. The server updates
+worlds at 20 Hz. Input expires after 500 ms in protocol 3 (350 ms in older clients),
+preventing a disconnected tractor from accelerating indefinitely while tolerating
+short delivery gaps.
 
 The current self-hosted distribution runs the universe service and independent
 world state machines **in one Node process**, on one HTTP/WebSocket origin. Each
@@ -94,7 +98,12 @@ CSP. Supply HTTPS at the reverse proxy for non-local use.
 Lua runs in a separate worker heap with instruction and deadline limits. It has
 no OS, files, modules, JavaScript bridge or network. A script failure becomes a
 single world notice and a 60-second automatic-event pause, not a server failure.
-Worker startup and Lua execution have separate bounded deadlines. See SCRIPTING.md for the smaller supported
+A per-server pool reuses up to two runtime workers with a bounded queue. Every
+job creates and closes a fresh Lua state; errors/timeouts discard the worker,
+and workers recycle after 100 jobs. Node's native type stripping loads the small
+sandbox directly, without a TypeScript loader or the whole simulation graph.
+Only script variables, time and player kudos cross into it. Worker startup and
+Lua execution have separate bounded deadlines. See SCRIPTING.md for the smaller supported
 API; the original event catalogue is not fully implemented.
 
 This alpha is tested for six simultaneous clients. It has not been load-tested
@@ -111,9 +120,16 @@ share a SQLite transaction. Existing account rows receive an indexed normalized
 name key without changing their IDs or saved property.
 
 `snapshots.ts` prepares public world fields once per broadcast and keeps each
-peer's previous frame. Private player state and private messages are added only
-for that recipient. Protocol 1 remains available for older clients. Sockets are
-bounded and slow receivers are disconnected instead of buffering indefinitely.
+peer's previous sent frame. Protocol 3 additionally patches individual fields
+within buildings and players, private self state, and omits unchanged private
+messages/accounts. Public entity deltas are serialized once for each shared pair
+of frames, cached with weak baseline keys; private projections never enter that
+cache. Protocols 1 and 2 remain available for older clients. A three-frame ACK
+window skips broadcasts for an overloaded peer without advancing its baseline.
+The next update compares current state with the last sent frame; no delta is
+silently dropped after encoding. World changes start a full baseline, with
+socket-wide monotonic sequence numbers rejecting stale/future ACKs. Send-buffer
+limits remain a final bound for connections that cannot keep up.
 The load probe uses a child server process so client JSON parsing does not count
 as server event-loop work.
 
@@ -130,7 +146,12 @@ batches include texture identity and surface properties. Performance mode disabl
 dynamic shadows and water animation, reduces plant density and uses a smaller
 framebuffer without multisample antialiasing. Detected software renderers use a
 30 FPS render target, matching performance mode, rather than a forced 10 FPS cap. Actual throughput depends on the device. Adaptive mode falls back after sustained
-slow frames; detailed mode keeps dynamic shadows enabled. See [art documentation](ART.md)
+slow frames. Dynamic shadows default off independently of quality; the saved
+shadow option enables them outside performance mode. Static countryside matrices
+are baked once while animated mill subtrees remain live. Town light selection
+runs on new snapshots or appreciable camera-focus movement, rather than every
+frame. Unchanged HUD sections retain their nodes, and the chat log appends only
+new rows while preserving scrollback. See [art documentation](ART.md)
 for asset provenance, prompts, texture ownership and visual verification.
 
 Screenshot capture defaults to adaptive mode. Set `SCREENSHOT_QUALITY=low` for
@@ -147,8 +168,12 @@ The local occupant is hidden in first-person views to avoid camera clipping.
 ## Movement presentation
 
 The server still simulates input at 20 Hz and broadcasts state at 5 Hz. The client
-stores up to eight poses per visible pilot and renders 300 ms behind its estimate
-of server simulation time. Position and vertical height are linearly interpolated;
+stores up to eight poses per visible pilot and normally renders 300 ms behind
+its estimate of server simulation time. Recent timestamp offsets and snapshot
+intervals increase that buffer smoothly, up to 800 ms, on jittery or flow-controlled
+connections. Buffer changes never rewind presentation time and decay gradually
+back to 300 ms when delivery stabilizes. Ordinary delayed packet bursts do not
+reset the entire motion history. Position and vertical height are linearly interpolated;
 heading follows the shortest angular path. Recent packet timestamps anchor the
 clock, with drift corrections capped at 5% to avoid following arrival-time jitter.
 The buffer trades some visual latency for steady travel without extra network
@@ -224,3 +249,14 @@ defaults. Observations include basic controls, bounded relevant guide excerpts
 and public world rules. A read-only guide step can retrieve another topic;
 player text never selects a filesystem path. Manuals are included in the Docker
 runtime and source archive. Update them alongside changes to game controls/rules.
+
+NPC navigation rasterizes each building's conservative bounding square and keeps
+exact rotated-volume collision checks within it. This avoids testing every map
+cell against every property, without changing paths or collision footprints.
+The terrain/obstacle grid is cached until geometry, layout or sea level changes.
+
+WebSocket controls and acknowledgements do not use the action token bucket.
+Actions permit a burst of 20, replenished at ten per second; a 512-message/second
+transport ceiling closes abusive floods rather than returning an error per input.
+Ping replies are limited separately. Input still expires and all action validation,
+economic transactions and persistence remain authoritative.

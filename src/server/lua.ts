@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { createRequire } from 'node:module';
 import type { World } from '../shared/types.ts';
-import { say } from '../shared/simulation.ts';
+import { say } from '../shared/messages.ts';
 const require = createRequire(import.meta.url);
 const { lua, lauxlib, lualib, to_luastring, to_jsstring } = require('fengari');
 // No filesystem, module loader, OS, dynamic compilation, JS bridge, or debug library.
@@ -10,10 +10,9 @@ export class WorldScript {
   private L: any;
   private handlers = new Map<string, number[]>();
   private count = 0;
-  constructor(
-    private world: World,
-    source: string,
-  ) {
+  private world: World;
+  constructor(world: World, source: string) {
+    this.world = world;
     if (source.length > 16384) throw Error('Script exceeds 16 KiB');
     this.L = lauxlib.luaL_newstate();
     lualib.luaL_openlibs(this.L);

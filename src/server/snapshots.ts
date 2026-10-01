@@ -2,6 +2,12 @@
 import { motorRunning, productionActivity, craftingBuildings } from '../shared/sound-state';
 import type { World, Player } from '../shared/types';
 import type { Account } from './universe';
+import {
+  diffFields,
+  serializeFields,
+  type SerializedFields,
+  type FieldPatch,
+} from '../shared/state-patch';
 export function publicBuildings(w: World) {
   const crafting = craftingBuildings(w);
   return w.buildings.map((building) => {
@@ -36,6 +42,10 @@ export function privatePlayer(w: World, p: Player) {
 export interface Frame {
   fields: Record<string, string>;
   players: Record<string, string>;
+  buildings: Record<string, SerializedFields>;
+  buildingOrder: string;
+  playerFields: Record<string, SerializedFields>;
+  compact?: WeakMap<Frame, { world: string[]; entities: string; order?: string }>;
 }
 /** Serialize shared world data once per broadcast, rather than once per recipient. */
 export function prepareFrame(w: World): Frame {
@@ -70,11 +80,24 @@ export function prepareFrame(w: World): Frame {
         age: Math.floor(p.age),
         lastHorn: p.lastHorn,
       });
-  return { fields, players: publicPlayers };
+  return {
+    fields,
+    players: publicPlayers,
+    buildings: Object.fromEntries(common.buildings.map((b) => [b.id, serializeFields(b)])),
+    buildingOrder: JSON.stringify(common.buildings.map((b) => b.id)),
+    playerFields: Object.fromEntries(
+      Object.entries(publicPlayers).map(([id, value]) => [id, serializeFields(JSON.parse(value))]),
+    ),
+  };
 }
 export class DeltaStream {
   private previous?: Frame;
+  private privateFields: Record<string, string> = {};
+  private selfFields: SerializedFields = {};
+  private accountJson?: string;
+  constructor(private compact = false) {}
   encode(w: World, account: Account, frame: Frame) {
+    if (this.compact) return this.encodeCompact(w, account, frame);
     const fields: string[] = [],
       changed: string[] = [];
     for (const [key, value] of Object.entries(frame.fields))
@@ -105,6 +128,88 @@ export class DeltaStream {
       JSON.stringify(account) +
       '}';
     this.previous = frame;
+    return result;
+  }
+  private encodeCompact(w: World, account: Account, frame: Frame) {
+    const me = w.players[account.id];
+    const privateFields = serializeFields({
+      messages: w.messages.filter((m) => !m.to || m.to === me.id || m.name === me.name),
+      ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
+      script: me.authority >= 20 ? w.script : '',
+      scriptVariables: {},
+    });
+    const fields: string[] = [];
+    const tail: string[] = [];
+    if (!this.previous) {
+      for (const [key, value] of Object.entries(frame.fields))
+        fields.push(JSON.stringify(key) + ':' + value);
+      fields.push(
+        '"players":{' +
+          Object.entries(frame.players)
+            .map(([id, value]) => JSON.stringify(id) + ':' + value)
+            .join(',') +
+          '}',
+      );
+    } else {
+      // All recipients on the same baseline share this work. A slow recipient can
+      // have an older baseline; weak keys don't retain a chain of past frames.
+      frame.compact ??= new WeakMap();
+      let shared = frame.compact.get(this.previous);
+      if (!shared) {
+        const entities = (
+          before: Record<string, SerializedFields>,
+          after: Record<string, SerializedFields>,
+        ) => {
+          const changes: Record<string, FieldPatch | null> = {};
+          for (const [id, value] of Object.entries(after)) {
+            const patch = diffFields(before[id] ?? {}, value);
+            if (patch) changes[id] = patch;
+          }
+          for (const id of Object.keys(before)) if (!after[id]) changes[id] = null;
+          return changes;
+        };
+        const order = frame.buildingOrder;
+        shared = {
+          world: Object.entries(frame.fields)
+            .filter(([key, value]) => key !== 'buildings' && this.previous!.fields[key] !== value)
+            .map(([key, value]) => JSON.stringify(key) + ':' + value),
+          entities: JSON.stringify({
+            buildings: entities(this.previous.buildings, frame.buildings),
+            players: entities(this.previous.playerFields, frame.playerFields),
+          }),
+          order: order === this.previous.buildingOrder ? undefined : order,
+        };
+        frame.compact.set(this.previous, shared);
+      }
+      fields.push(...shared.world);
+      tail.push('"entities":' + shared.entities);
+      if (shared.order) tail.push('"buildingOrder":' + shared.order);
+    }
+    for (const [key, value] of Object.entries(privateFields))
+      if (this.privateFields[key] !== value) fields.push(JSON.stringify(key) + ':' + value);
+    const self = privatePlayer(w, me),
+      selfFields = serializeFields(self);
+    if (!this.previous) tail.push('"self":' + JSON.stringify(self));
+    else {
+      const patch = diffFields(this.selfFields, selfFields);
+      if (patch) tail.push('"selfPatch":' + JSON.stringify(patch));
+    }
+    const accountJson = JSON.stringify(account);
+    if (this.accountJson !== accountJson) tail.push('"account":' + accountJson);
+    const result =
+      '{"type":"state","partial":' +
+      !!this.previous +
+      ',"me":' +
+      JSON.stringify(me.id) +
+      ',"world":{' +
+      fields.join(',') +
+      '}' +
+      (tail.length ? ',' + tail.join(',') : '') +
+      '}';
+    this.previous = frame;
+    this.privateFields = privateFields;
+    this.selfFields = selfFields;
+    this.accountJson = accountJson;
     return result;
   }
 }

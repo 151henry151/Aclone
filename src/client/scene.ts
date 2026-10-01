@@ -8,6 +8,7 @@ import { calendar, weatherAt, sunAt, lightningAt, DAY_SECONDS } from '../shared/
 import { Precipitation } from './weather';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
+import { freezeScenery } from './static-scene';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
@@ -149,6 +150,12 @@ export class GameScene {
   private stars: T.Points;
   private planets: T.Mesh[] = [];
   private lastTime = performance.now();
+  private fpsSince = performance.now();
+  private fpsFrames = 0;
+  renderFps = 0;
+  get motionBufferMs() {
+    return this.motionClock.bufferMs;
+  }
   private renderTime = 0;
   private slowFrames = 0;
   private adapted = false;
@@ -211,7 +218,7 @@ export class GameScene {
             1.5,
           ),
     );
-    this.renderer.shadowMap.enabled = !low;
+    this.renderer.shadowMap.enabled = !low && localStorage.getItem('aclone.shadows') === 'on';
     this.renderer.shadowMap.type = T.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.shadowMap.needsUpdate = true;
@@ -674,6 +681,12 @@ export class GameScene {
         g.add(picker);
       }
     }
+    const animated: T.Object3D[] = [];
+    for (const o of this.land.children) {
+      if (o.userData.blades) animated.push(o.userData.blades);
+      if (o.userData.clouds) animated.push(o);
+    }
+    freezeScenery(this.land, animated);
   }
   private building(b: Building) {
     const g = new T.Group();
@@ -790,6 +803,12 @@ export class GameScene {
         this.resize();
         document.documentElement.classList.add('performance');
       }
+    }
+    this.fpsFrames++;
+    if (now - this.fpsSince >= 1000) {
+      this.renderFps = Math.round((this.fpsFrames * 1000) / (now - this.fpsSince));
+      this.fpsFrames = 0;
+      this.fpsSince = now;
     }
     const dt = Math.min(0.1, (now - this.lastTime) / 1000);
     this.lastTime = now;
@@ -919,7 +938,6 @@ export class GameScene {
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =
           1 - (w.climate?.wetness ?? 0) * 0.45;
-      this.townLighting.group.visible = true;
       // Spend the limited light budget where the player is looking, not behind
       // their tractor at the chase camera (especially with four lights on low).
       this.townLighting.update(w, this.target);
@@ -968,11 +986,10 @@ export class GameScene {
         this.sky.material.uniforms[key].value.set(...moon.direction, moon.radius);
       }
       this.scene.background = sky;
-      this.scene.fog = new T.Fog(
-        sky,
-        climate.precipitation === 'clear' ? 125 : climate.storm ? 35 : 70,
-        climate.precipitation === 'clear' ? 450 : climate.storm ? 140 : 260,
-      );
+      if (!(this.scene.fog instanceof T.Fog)) this.scene.fog = new T.Fog(sky, 125, 450);
+      this.scene.fog.color.copy(sky);
+      this.scene.fog.near = climate.precipitation === 'clear' ? 125 : climate.storm ? 35 : 70;
+      this.scene.fog.far = climate.precipitation === 'clear' ? 450 : climate.storm ? 140 : 260;
       // The nearby pair shares the existing shadow-casting directional light.
       // Its weighted direction follows both moons without increasing the light budget.
       this.sun.position.fromArray(solar.direction).multiplyScalar(sunlight);
@@ -982,10 +999,13 @@ export class GameScene {
       this.sun.position.add(new T.Vector3(p.x, 0, p.z));
       this.sun.target.position.set(p.x, 0, p.z);
       if (
+        this.renderer.shadowMap.enabled &&
         now - this.shadowTime > 200 &&
         (now - this.shadowTime > 2000 ||
           this.shadowPosition.distanceTo(new T.Vector3(p.x, p.y, p.z)) > 0.2 ||
-          Object.values(w.players).some((q) => Math.abs(q.speed) > 0.1))
+          Object.values(w.players).some(
+            (q) => !q.atHome && Math.abs(q.speed) > 0.1 && distance(q, p) < 100,
+          ))
       ) {
         this.renderer.shadowMap.needsUpdate = true;
         this.shadowTime = now;

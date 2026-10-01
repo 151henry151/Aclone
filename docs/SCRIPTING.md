@@ -27,7 +27,12 @@ A script is limited to 16 KiB, 16 handlers per event, roughly 100,000 executed
 instructions per load/handler, a 32 MiB worker old-generation heap and a 1.5-second
 execution deadline starting after the worker runtime is ready. Worker startup has
 a separate 10-second deadline; both phases can be terminated without blocking the
-simulation. At most four script workers run at once. Empty scripts skip the worker.
+simulation. The server reuses at most two lightweight runtime workers, with a
+bounded queue of 32 waiting events. Each job still starts a fresh Lua state;
+script globals cannot leak between events or worlds. Failed/timed-out workers
+are discarded, and healthy runtimes recycle after 100 jobs. Empty scripts skip
+the worker. This avoids starting a TypeScript loader and cloning the entire
+world for each login or paid shift.
 
 If an automatic login or task event fails, the world gets one error notice and
 further automatic script events pause for 60 seconds. Events during that pause

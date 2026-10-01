@@ -760,7 +760,10 @@ kbd {
 #chat-log {
   height: 100px;
   padding: 10px 12px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .chat-line {
   font: 11px/1.7 monospace;
@@ -1972,4 +1975,11 @@ button span {
 .npc-card {
   border-top: 1px solid var(--line);
   padding: 12px 0;
+}
+
+#chat-latest {
+  width: 100%;
+  padding: 4px 10px;
+  font-size: 10px;
+  border-radius: 0;
 }

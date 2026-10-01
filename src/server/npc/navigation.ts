@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Input } from '../../shared/types.ts';
 import { terrainHeight, distance } from '../../shared/simulation.ts';
-import { blocksBuilding } from '../../shared/building-shapes.ts';
+import { blocksBuilding, buildingBounds, buildingPlan } from '../../shared/building-shapes.ts';
 import type { Point } from '../../shared/town.ts';
 const step = 4,
   size = 125,
@@ -17,6 +17,7 @@ const cache = new WeakMap<World, { key: string; clear: Uint8Array; heights: Floa
 function grid(w: World) {
   const key = JSON.stringify([
     w.settings.seaLevel,
+    w.townLayout,
     w.terrain,
     w.buildings.map((b) => [b.id, b.kind, b.style, b.x, b.z, b.rotation]),
   ]);
@@ -28,10 +29,26 @@ function grid(w: World) {
     const p = point(i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
-    clear[i] = +(
-      h >= w.settings.seaLevel + 0.05 &&
-      !w.buildings.some((b) => blocksBuilding(b, p.x, p.z, 0, 2.2))
+    clear[i] = +(h >= w.settings.seaLevel + 0.05);
+  }
+  // Rasterize only a building's conservative bounding square, then use the
+  // same exact rotated-volume collision test. Avoid cells × every building.
+  for (const b of w.buildings) {
+    const bounds = buildingBounds(buildingPlan(b));
+    const radius = Math.hypot(
+      Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 2.2,
+      Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 2.2,
     );
+    const minX = Math.max(0, Math.ceil((b.x - radius - origin) / step));
+    const maxX = Math.min(size - 1, Math.floor((b.x + radius - origin) / step));
+    const minZ = Math.max(0, Math.ceil((b.z - radius - origin) / step));
+    const maxZ = Math.min(size - 1, Math.floor((b.z + radius - origin) / step));
+    for (let z = minZ; z <= maxZ; z++)
+      for (let x = minX; x <= maxX; x++) {
+        const i = z * size + x;
+        if (clear[i] && blocksBuilding(b, origin + x * step, origin + z * step, 0, 2.2))
+          clear[i] = 0;
+      }
   }
   const value = { key, clear, heights };
   cache.set(w, value);

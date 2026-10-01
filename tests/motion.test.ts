@@ -88,3 +88,32 @@ test('a new world or long browser pause reanchors the clock', () => {
   assert.equal(clock.receive(10, 10100), true);
   assert.ok(Math.abs(clock.sample(10100) - 9.7) < 1e-8);
 });
+
+test('variable mobile delivery grows the buffer smoothly, recovers on stable links and never rewinds', () => {
+  const clock = new MotionClock();
+  let previous = -Infinity,
+    maxBuffer = 0;
+  // TCP preserves order even when several delayed snapshots arrive together.
+  let nextArrival = 0;
+  const packets = Array.from({ length: 300 }, (_, i) => {
+    const delay = i < 90 ? [0.2, 0.45, 0.25, 0.6, 0.2][i % 5] : 0.2;
+    nextArrival = Math.max(nextArrival, i * 0.2 + delay);
+    return { time: i * 0.2, at: nextArrival };
+  });
+  let packet = 0;
+  for (let frame = 0; frame < 3600; frame++) {
+    const now = frame / 60;
+    while (packet < packets.length && packets[packet].at <= now) {
+      const p = packets[packet++];
+      const reset = clock.receive(p.time, p.at * 1000);
+      if (packet > 1) assert.equal(reset, false, 'ordinary jitter must not reset all tracks');
+    }
+    if (!packet) continue;
+    const time = clock.sample(now * 1000);
+    assert.ok(time >= previous - 1e-8, 'display time went backwards');
+    previous = time;
+    maxBuffer = Math.max(maxBuffer, clock.bufferMs);
+  }
+  assert.ok(maxBuffer >= 500 && maxBuffer <= 800, 'buffer did not adapt to jitter');
+  assert.equal(clock.bufferMs, 300, 'healthy connection should return to normal latency');
+});

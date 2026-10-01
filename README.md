@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.10.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.11.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.11.0:** smaller network updates, bounded catch-up traffic, lighter rendering and NPC/script processing, and main-chat scrollback. Dynamic shadows default off; models, textures and lighting remain. See [performance and chat](#performance-and-chat-0110).
 
 **New in 0.10.0:** optional AI neighbour **Mabel Reed**, with persistent memory, normal economy gameplay, private chat and help with controls and common questions. Only one resident is configured, with shared spending limits and empty-parish sleep. See [NPC setup and operation](docs/NPCS.md) and [controls/FAQ](docs/FAQ.md).
 
@@ -53,6 +55,29 @@ The night sky has moving, seasonal stars and two nearby, phased moons. Starlight
 **New in 0.3.0:** detailed tractors, limestone cottages, slate roofs, textured meadows and gravel lanes, layered clouds and leafy village scenery, protected offline progress, optional password accounts and email recovery, and a repeatable 100-client load probe. See [CHANGELOG.md](CHANGELOG.md).
 
 This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
+
+## Performance and chat (0.11.0)
+
+Version 0.11.0 reduces duplicate world/chat traffic and bounds pending updates per
+player. Stable connections retain the usual 5 Hz snapshots; slower connections
+catch up with current state, and uneven delivery gets a gradually enlarged motion
+buffer. Controls still react on the next 50 ms input poll, with fewer repeated
+messages while holding a key or parked. No server setting is needed; older clients
+remain supported. See [protocol details](docs/PROTOCOL.md#compact-delivery-protocol-3-0110).
+
+Dynamic shadows now default off; an option enables them outside performance mode.
+Models, textures, contact shading, headlights and town lighting are retained.
+Static scenery and HUD work is reused, NPC routing checks fewer collision cells,
+and Lua events share lightweight runtime workers with isolated per-event state.
+Driving bursts no longer consume the separate action allowance.
+
+Scroll the main chat to read up to 100 recent messages. New arrivals keep your
+reading position; **jump to latest** returns to live chat.
+
+The driving display now separates **ms ping** from **FPS**. High ping suggests
+network/server delay; low FPS points to rendering/device load. Both can happen
+together. See [lag troubleshooting](docs/PLAYING.md#when-the-game-feels-laggy) and
+[repeatable hosting checks](docs/HOSTING.md#connection-and-multiplayer-checks).
 
 ## Screenshots
 
@@ -166,7 +191,7 @@ They open `http://YOUR-LAN-IP:3000`. Use HTTPS through a reverse proxy for an in
 
 ### Graphics
 
-Evergreen woodland uses branching spruce/fir silhouettes, fine needle sprays and bark textures generated in the browser. Performance mode keeps the same tree shapes with fewer secondary shoots; detailed mode adds fuller foliage and dynamic shadows. The [art guide](docs/ART.md#evergreen-woodland) explains the renderer and how to capture inspection views.
+Evergreen woodland uses branching spruce/fir silhouettes, fine needle sprays and bark textures generated in the browser. Performance mode keeps the same tree shapes with fewer secondary shoots; detailed mode adds fuller foliage; dynamic shadows are a separate opt-in setting. The [art guide](docs/ART.md#evergreen-woodland) explains the renderer and how to capture inspection views.
 
 <details>
 <summary>Evergreen woodland previews (0.8.1)</summary>
@@ -176,7 +201,7 @@ Evergreen woodland uses branching spruce/fir silhouettes, fine needle sprays and
 
 </details>
 
-Open **Pilot key & options → Graphics** to cycle through **adaptive** (the default, with automatic fallback), **detailed** (keeps dynamic shadows), and **performance** (lower resolution, fewer plants, contact shading). Detailed mode benefits from a hardware GPU. Detected software renderers use a smaller framebuffer and a capped render rate to leave time for controls. Every mode uses the same original material textures and detailed tractor model. Drag the view and scroll to inspect the scene; **C** cycles cameras. Press **H** for an unobstructed scenery view; **H** or **Escape** restores the HUD. The four textures add about 2.7 MiB to the first village visit and work under URL prefixes such as `/aclone/`.
+Open **Pilot & preferences → Graphics** to cycle through **adaptive** (the default, with automatic fallback), **detailed** (higher resolution and antialiasing), and **performance** (lower resolution, fewer plants, contact shading). Detailed mode benefits from a hardware GPU. Detected software renderers use a smaller framebuffer and a capped render rate to leave time for controls. Every mode uses the same original material textures and detailed tractor model. Drag the view and scroll to inspect the scene; **C** cycles cameras. Press **H** for an unobstructed scenery view; **H** or **Escape** restores the HUD. The four textures add about 2.7 MiB to the first village visit and work under URL prefixes such as `/aclone/`.
 
 ## Your first day
 
@@ -248,6 +273,7 @@ npx playwright install chromium
 # start the game in another terminal, then:
 npm run test:e2e
 npm run test:load    # isolated 100-client, 10-second local load probe
+npm run test:network # compressed TCP test: limited bandwidth, delay, jitter and a fast peer
 ```
 
 The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The map regression (`npm run test:e2e -- tests/browser/map.spec.ts`) also starts an isolated server and checks keyboard/click opening, live markers, custom building names, stable zoom/focus and mobile panning; it writes desktop and mobile captures to `test-results/`. The browser runner uses `tsx` for TypeScript server fixtures and runs one browser at a time to avoid competing software WebGL renderers. `SCREENSHOT_OUTPUT_DIR=/tmp/aclone-seasons npm run screenshots:seasons` validates farm harvesting and space travel while saving captures outside the documentation. `npm run screenshots:town` captures the expanded town and checks access to its public services using an isolated server. Unit and network tests use temporary databases and random ports.

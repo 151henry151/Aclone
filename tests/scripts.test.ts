@@ -97,3 +97,31 @@ test('an older successful event cannot clear backoff from a concurrent failure',
   assert.equal(calls, 3);
   assert.equal(world.messages.filter((m) => m.name === 'Script error').length, 1);
 });
+
+test('pooled runtimes bound concurrency, isolate each Lua invocation and recover from failure', async (t) => {
+  const { ScriptPool } = await import('../src/server/scripts.ts');
+  const pool = new ScriptPool(),
+    world = createWorld('pool', 'Pool', 'owner');
+  try {
+    const source =
+      'on("TaskStart", function(e) if leaked then announce("leak") else announce("clean") end; leaked=true; end)';
+    const cold = performance.now();
+    assert.deepEqual((await pool.run(world, source, 'TaskStart', {})).messages, ['clean']);
+    const coldMs = performance.now() - cold;
+    const warm = performance.now();
+    for (let i = 0; i < 5; i++)
+      assert.deepEqual((await pool.run(world, source, 'TaskStart', {})).messages, ['clean']);
+    t.diagnostic(
+      `Script runtime: cold ${coldMs.toFixed(1)} ms; warm mean ${((performance.now() - warm) / 5).toFixed(1)} ms`,
+    );
+    const results = await Promise.all(
+      Array.from({ length: 12 }, () => pool.run(world, source, 'TaskStart', {})),
+    );
+    assert.ok(results.every((r) => r.messages[0] === 'clean'));
+    await assert.rejects(pool.run(world, 'while true do end', 'TaskStart', {}), /budget/);
+    assert.deepEqual((await pool.run(world, source, 'TaskStart', {})).messages, ['clean']);
+  } finally {
+    await pool.close();
+  }
+  await assert.rejects(pool.run(world, '', 'TaskStart', {}), /closed/);
+});

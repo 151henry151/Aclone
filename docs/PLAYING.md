@@ -222,3 +222,42 @@ Mention Mabel in public chat to attract her attention. Replies can take several
 seconds; she sleeps when the parish is empty or her shared AI budget runs out.
 Parish chat and messages to her are retained, and relevant excerpts are sent to
 OpenAI. Other players' private conversations are excluded. See [the NPC guide](NPCS.md).
+
+## When the game feels laggy
+
+Look beside the engine/speed display: **ms ping** is the network round-trip time,
+and **FPS** is the number of frames this browser renders each second. Ping is
+sampled every five seconds; the first sample takes a moment. Hover over the
+speed display to see the current movement buffer too.
+
+- Low FPS, even with low ping: try **Pilot & preferences → Graphics → performance**,
+  close other graphics-heavy tabs, and check that browser hardware acceleration
+  is enabled. More visible tractors add rendering work, even when parked.
+- High or variable ping with steady FPS: compare Wi-Fi with wired internet, stop
+  large uploads/downloads, and try a different hotspot signal/location. Server
+  overload can also increase ping, so compare readings with another player.
+- Compare the same spot alone and with neighbours. If FPS drops only when they
+  arrive, report the device/browser, graphics mode, FPS and number of tractors.
+  If ping rises for everyone, report that to the server operator.
+
+The client automatically sends less duplicate data and limits stale
+updates in flight. Unstable delivery gradually increases the movement buffer;
+steady links keep the normal buffer. This helps smooth travel, but cannot remove
+internet round-trip delay or hide a complete outage. Loading the first village's
+textures is separate from ongoing gameplay bandwidth. Progress remains on the
+server; reconnecting retrieves current state without resending purchases.
+
+## Reading earlier chat
+
+Scroll inside the main chat window to read the server's recent history (up to
+100 messages, with private messages shown only to their participants). Click the
+log and use arrow keys, Page Up/Page Down, Home or End for keyboard scrolling.
+New messages leave your reading position alone; **New messages · jump to latest**
+returns to the bottom. At the bottom, chat follows new arrivals automatically.
+Switching parishes starts that parish's history. This is recent scrollback, not
+an unlimited chat archive.
+
+Dynamic shadows now default **off** to reduce GPU load. **Pilot & preferences →
+Dynamic shadows** can enable them outside performance graphics mode. Ground
+contact shading, textures, detailed models, headlights and street/window light
+remain available with dynamic shadows off.

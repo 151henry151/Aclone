@@ -140,3 +140,53 @@ Use the ordinary `{type: "chat", text, to: playerId}` action for private NPC cha
 or omit `to` for parish chat. Existing recipient filtering remains in force.
 NPC accounts cannot sign in through a pilot key. Operator pause and memory
 inspection are filesystem/CLI operations, not player-accessible API actions.
+
+## Compact delivery: protocol 3 (0.11.0)
+
+The current browser requests `protocol: 3`. Protocols 1 and 2 remain supported.
+Initial state and every world/reconnection baseline remain complete, including
+`self`, `account`, `world.players` and `world.buildings`. Each protocol 3 state
+also contains a socket-wide monotonic integer `sequence`. After merging and
+handling it, the browser sends `{ "type": "ack", "sequence": 123 }`.
+Acknowledgements are cumulative; stale or unsent sequence numbers are ignored.
+
+Later states use `partial: true` with these changes:
+
+- Changed top-level `world` fields replace their previous values. Unchanged chat,
+  script and ledger fields are omitted; changed arrays replace previous arrays.
+  Recipient filtering happens before comparison, including loss of authority.
+- `entities.buildings` and `entities.players` are ID maps. A null entry removes
+  that entity. Otherwise `{set: {field: value}, unset: ["removedField"]}` applies
+  shallow field replacements/deletions. Missing `set` or `unset` means no changes
+  of that kind. Nested objects/arrays replace as a whole. Actual JSON null values
+  are distinct from absent fields. New IDs start with an empty record.
+- `buildingOrder`, when present, lists all building IDs in authoritative order.
+  It accompanies additions, removals or reordering; `world.buildings` remains an
+  array in client state. It is not necessary to resend every building's contents.
+- `selfPatch` updates the recipient's previous **private** player record. Ignore
+  public entity changes for that player; their rounded pose must not replace
+  precise private state. The initial `self` remains a complete replacement.
+- `account` is omitted when unchanged; retain the previously delivered account.
+
+No more than three states are outstanding per client. When that window is full,
+the server skips generating further states for that peer and keeps its last sent
+baseline. After an ACK, the next regular broadcast includes all changes since
+that baseline, coalescing intermediate states. Other players retain their normal
+cadence. Actions still execute and return results immediately; they are never
+coalesced, replayed or acknowledged by snapshot ACKs. A new world's full baseline
+resets the window but never reuses sequence numbers on the same socket.
+
+The browser polls controls every 50 ms, sending changed input immediately on that
+poll and repeating unchanged active controls every 100 ms (idle every second).
+It skips input sends while `bufferedAmount` is nonzero, sending only current input
+when the upload clears. The protocol 3 dead-man timeout is 500 ms. Actual key
+release still sends on the next available poll. No client physics or financial
+authority is introduced. All negotiated WebSocket messages of at least 256 bytes
+are eligible for compression; no-context-takeover remains enabled.
+
+Driving and ACK packets have a separate transport ceiling from discrete actions.
+Action requests use a burst allowance of 20, replenished at ten per second;
+rejections retain the request correlation ID. Excessive total traffic (over 512
+messages in one second) closes the connection with code 4008. Ping responses are
+capped at four per second. Ordinary queued controls never generate one rate-limit
+error per packet, and the newest valid controls replace previous input.

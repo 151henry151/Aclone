@@ -8,6 +8,9 @@ import { WebSocket } from 'ws';
 
 const count = Number(process.env.LOAD_CLIENTS ?? 100);
 const duration = Number(process.env.LOAD_SECONDS ?? 10);
+const protocol = Number(process.env.LOAD_PROTOCOL ?? 3);
+const parked = process.env.LOAD_PARKED === '1';
+if (![2, 3].includes(protocol)) throw Error('Use LOAD_PROTOCOL=2 or 3');
 if (!Number.isInteger(count) || count < 1 || count > 128 || duration < 2 || duration > 300)
   throw Error('Use 1–128 clients and 2–300 seconds');
 const dir = mkdtempSync(join(tmpdir(), 'aclone-load-'));
@@ -42,12 +45,13 @@ try {
         socket.on('error', reject);
         socket.on('open', () =>
           socket.send(
-            JSON.stringify({ type: 'hello', protocol: 2, token: pilot.token, world: 'puddlewick' }),
+            JSON.stringify({ type: 'hello', protocol, token: pilot.token, world: 'puddlewick' }),
           ),
         );
         socket.on('message', (raw) => {
           const msg = JSON.parse(raw.toString());
           if (msg.type === 'state') {
+            if (msg.sequence) socket.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
             clearTimeout(timeout);
             resolve();
             if (measure) {
@@ -67,7 +71,11 @@ try {
           ws.send(
             JSON.stringify({
               type: 'input',
-              input: { throttle: i % 3 === 0 ? 0.5 : 0, steer: i % 2 ? 0.1 : -0.1, boost: false },
+              input: {
+                throttle: !parked && i % 3 === 0 ? 0.5 : 0,
+                steer: parked ? 0 : i % 2 ? 0.1 : -0.1,
+                boost: false,
+              },
             }),
           );
       }),
@@ -89,6 +97,8 @@ try {
     JSON.stringify(
       {
         clients: count,
+        protocol,
+        parked,
         seconds: +seconds.toFixed(1),
         frames,
         serverOutboundKiBPerSecond: +(bytes / 1024 / seconds).toFixed(1),

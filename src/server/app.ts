@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { SnapshotWindow } from './snapshot-window';
+import { ActionBudget } from './request-budget';
 import { Residents, type ResidentOptions } from './npc/residents.ts';
 import type { BudgetConfig } from './npc/budget.ts';
 import { motorRunning } from '../shared/sound-state';
@@ -24,7 +26,7 @@ import {
 } from '../shared/simulation.ts';
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
-import { runScript, ScriptEvents } from './scripts.ts';
+import { ScriptEvents, ScriptPool } from './scripts.ts';
 import {
   DeltaStream,
   prepareFrame,
@@ -48,9 +50,10 @@ const messageSchema = z.discriminatedUnion('type', [
     type: z.literal('hello'),
     token: z.string().max(100),
     world: z.string().max(80).optional(),
-    protocol: z.literal(2).optional(),
+    protocol: z.union([z.literal(2), z.literal(3)]).optional(),
   }),
   z.object({ type: z.literal('input'), input: inputSchema }),
+  z.object({ type: z.literal('ack'), sequence: z.number().int().nonnegative() }),
   z.object({
     type: z.literal('action'),
     request: z.number().int().optional(),
@@ -65,11 +68,14 @@ interface Peer {
   input: Input;
   inputAt: number;
   count: number;
+  actions: ActionBudget;
+  pingAt: number;
   window: number;
   alive: boolean;
   born: number;
   delta?: boolean;
   stream?: DeltaStream;
+  delivery?: SnapshotWindow;
 }
 export interface AppOptions {
   dataDir: string;
@@ -148,6 +154,7 @@ export async function createApp(options: AppOptions) {
     if (!w || !p.account) return;
     const me = w.players[p.account.id];
     if (p.delta) {
+      if (p.socket.readyState !== WebSocket.OPEN || (p.delivery && !p.delivery.ready)) return;
       if (p.socket.bufferedAmount > 256 * 1024) {
         p.socket.close(4005, 'Connection too slow; reconnecting');
         return;
@@ -157,8 +164,9 @@ export async function createApp(options: AppOptions) {
         frame = prepareFrame(w);
         frames.set(w.id, frame);
       }
-      p.stream ??= new DeltaStream();
-      send(p, p.stream.encode(w, p.account, frame));
+      p.stream ??= new DeltaStream(!!p.delivery);
+      const encoded = p.stream.encode(w, p.account, frame);
+      send(p, p.delivery ? '{"sequence":' + p.delivery.next() + ',' + encoded.slice(1) : encoded);
       return;
     }
     const players = Object.fromEntries(
@@ -218,6 +226,7 @@ export async function createApp(options: AppOptions) {
       }
       delete p.world;
       delete p.stream;
+      p.delivery?.reset();
     }
     p.input = { throttle: 0, steer: 0, boost: false };
   };
@@ -244,7 +253,8 @@ export async function createApp(options: AppOptions) {
     snapshot(p);
     void scriptEvent(w, 'PlayerLogin', { id: me.id, name: me.name });
   };
-  const scriptEvents = new ScriptEvents();
+  const scriptPool = new ScriptPool();
+  const scriptEvents = new ScriptEvents(scriptPool.run.bind(scriptPool));
   const scriptEvent = async (w: World, event: string, data: Record<string, string | number>) => {
     const result = await scriptEvents.run(w, event, data, () => worlds.get(w.id) === w);
     if (!result) return;
@@ -490,7 +500,7 @@ export async function createApp(options: AppOptions) {
     noServer: true,
     maxPayload: 32768,
     perMessageDeflate: {
-      threshold: 1024,
+      threshold: 256,
       serverNoContextTakeover: true,
       clientNoContextTakeover: true,
       concurrencyLimit: 4,
@@ -514,6 +524,8 @@ export async function createApp(options: AppOptions) {
       input: { throttle: 0, steer: 0, boost: false },
       inputAt: 0,
       count: 0,
+      actions: new ActionBudget(),
+      pingAt: 0,
       window: Date.now(),
       alive: true,
       born: Date.now(),
@@ -528,7 +540,10 @@ export async function createApp(options: AppOptions) {
           p.window = now;
           p.count = 0;
         }
-        if (++p.count > 65) throw Error('Too many requests');
+        if (++p.count > 512) {
+          socket.close(4008, 'Excessive network traffic');
+          return;
+        }
         const m = messageSchema.parse(JSON.parse(raw.toString()));
         if (m.type === 'hello') {
           if (p.account) throw Error('Already signed in');
@@ -541,7 +556,8 @@ export async function createApp(options: AppOptions) {
               other.socket.close(4001, 'Connected elsewhere');
             }
           p.account = a;
-          p.delta = m.protocol === 2;
+          p.delta = m.protocol === 2 || m.protocol === 3;
+          if (m.protocol === 3) p.delivery = new SnapshotWindow();
           if (m.world) {
             try {
               enter(p, m.world);
@@ -559,7 +575,13 @@ export async function createApp(options: AppOptions) {
         }
         if (!p.account) throw Error('Authenticate first');
         if (m.type === 'ping') {
+          if (now - p.pingAt < 250) return;
+          p.pingAt = now;
           send(p, { type: 'pong', at: m.at });
+          return;
+        }
+        if (m.type === 'ack') {
+          p.delivery?.ack(m.sequence);
           return;
         }
         if (m.type === 'input') {
@@ -570,6 +592,7 @@ export async function createApp(options: AppOptions) {
           return;
         }
         request = m.request;
+        if (!p.actions.allow(now)) throw Error('Too many actions; wait a moment');
         const a = m.action as Action;
         if (a.type === 'land') {
           enter(p, z.string().parse(a.world));
@@ -620,7 +643,7 @@ export async function createApp(options: AppOptions) {
         if (a.type === 'script') {
           if (w.owner !== p.account.id) throw Error('World owner required');
           const source = z.string().max(16384).parse(a.source);
-          await runScript(w, source, 'ScriptReload', {});
+          await scriptPool.run(w, source, 'ScriptReload', {});
           w.script = source;
           scriptEvents.reset(w);
           store.saveWorld(w);
@@ -715,7 +738,8 @@ export async function createApp(options: AppOptions) {
                 p.socket.close(4003, 'Removed by moderator');
                 continue;
               }
-              if (Date.now() - p.inputAt > 350) p.input = { throttle: 0, steer: 0, boost: false };
+              if (Date.now() - p.inputAt > (p.delivery ? 500 : 350))
+                p.input = { throttle: 0, steer: 0, boost: false };
               move(w, player, p.input, dt);
             }
           }
@@ -764,6 +788,7 @@ export async function createApp(options: AppOptions) {
   const close = async () => {
     if (timer) clearInterval(timer);
     residents?.close();
+    await scriptPool.close();
     clearInterval(backupTimer);
     for (const p of peers) {
       leave(p);

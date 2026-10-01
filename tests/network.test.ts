@@ -150,3 +150,56 @@ test('disconnecting a parked pilot removes it from legacy and delta views withou
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a burst of delayed driving packets cannot spend the action budget or flood the player with errors', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-input-burst-'));
+  const app = await createApp({ dataDir: dir, port: 0 });
+  const port = await app.listen(),
+    pilot = app.universe.register('Burst driver');
+  const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+  const errors: string[] = [];
+  ws.on('message', (raw) => {
+    const m = JSON.parse(raw.toString());
+    if (m.type === 'result' && !m.ok) errors.push(m.message);
+    if (m.type === 'state' && m.sequence)
+      ws.send(JSON.stringify({ type: 'ack', sequence: m.sequence }));
+  });
+  try {
+    app.worlds.get('puddlewick')!.script = '';
+    await new Promise((r) => ws.once('open', r));
+    let ready = next(ws, (m) => m.type === 'state');
+    ws.send(
+      JSON.stringify({ type: 'hello', protocol: 3, token: pilot.token, world: 'puddlewick' }),
+    );
+    await ready;
+    for (let i = 0; i < 150; i++)
+      ws.send(
+        JSON.stringify({
+          type: 'input',
+          input: { throttle: i === 149 ? 0 : 1, steer: 0, boost: false },
+        }),
+      );
+    ready = next(ws, (m) => m.type === 'result' && m.request === 1);
+    ws.send(
+      JSON.stringify({
+        type: 'action',
+        request: 1,
+        action: { type: 'chat', text: 'Still responsive' },
+      }),
+    );
+    assert.equal((await ready).ok, true);
+    assert.deepEqual(errors, []);
+    const limited = next(
+      ws,
+      (m) => m.type === 'result' && !m.ok && m.message.includes('Too many actions'),
+    );
+    for (let i = 0; i < 40; i++)
+      ws.send(JSON.stringify({ type: 'action', action: { type: 'lights' } }));
+    await limited;
+    assert.equal(ws.readyState, WebSocket.OPEN);
+  } finally {
+    ws.terminate();
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

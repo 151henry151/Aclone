@@ -13,6 +13,10 @@ type Source = {
 export class TownLighting {
   readonly group = new T.Group();
   private sources: Source[] = [];
+  private lastWorld?: World;
+  private lastClock = NaN;
+  private lastTime = NaN;
+  private lastFocus = new T.Vector3(Infinity, Infinity, Infinity);
   private pool: T.SpotLight[];
   constructor(limit = 12) {
     this.pool = Array.from({ length: limit }, () => {
@@ -22,6 +26,7 @@ export class TownLighting {
     });
   }
   reset(root: T.Group) {
+    this.lastWorld = undefined;
     this.sources = [];
     root.updateMatrixWorld(true);
     root.traverse((o) => {
@@ -61,6 +66,19 @@ export class TownLighting {
     }
   }
   update(w: World, focus: T.Vector3) {
+    // Snapshot state changes at 5 Hz. Reusing it between frames avoids sorting
+    // every window/streetlamp at 60 Hz while the focus barely moves.
+    if (
+      this.lastWorld === w &&
+      this.lastClock === w.settings.time &&
+      this.lastTime === w.time &&
+      this.lastFocus.distanceToSquared(focus) < 16
+    )
+      return;
+    this.lastWorld = w;
+    this.lastClock = w.settings.time;
+    this.lastTime = w.time;
+    this.lastFocus.copy(focus);
     const day = calendar(w).dayOfYear,
       night = 1 - sunAt(w.settings.time, day).daylight;
     const byId = new Map(w.buildings.map((b) => [b.id, b]));

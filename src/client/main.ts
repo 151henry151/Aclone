@@ -9,6 +9,9 @@ import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
 import { GameScene } from './scene';
+import { mergeState } from './state';
+import { InputStream } from './input-stream';
+import { ChatLog } from './chat-log';
 import { ParishMap } from './parish-map';
 import {
   items,
@@ -35,7 +38,7 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 let npcResidents:
   | {
       id: string;
@@ -154,23 +157,28 @@ async function api(path: string, options: RequestInit = {}) {
   if (!res.ok) throw Error(data.error ?? 'Request failed');
   return data;
 }
+let inputStream = new InputStream();
 async function connect() {
+  inputStream = new InputStream();
   clearTimeout(reconnectTimer);
   $('connection').textContent = 'CONNECTING';
   ws = new WebSocket(
     `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${withBase('/ws')}`,
   );
+  const socket = ws;
   ws.addEventListener('open', () => {
-    ws!.send(
+    if (ws !== socket) return;
+    socket.send(
       JSON.stringify({
         type: 'hello',
         token,
-        protocol: 2,
+        protocol: 3,
         world: localStorage.getItem('aclone.world') ?? undefined,
       }),
     );
   });
   ws.addEventListener('message', (e) => {
+    if (ws !== socket) return;
     const msg = JSON.parse(e.data);
     if (msg.type === 'welcome') {
       account = msg.account;
@@ -180,20 +188,17 @@ async function connect() {
       if (!world) showGalaxy();
     }
     if (msg.type === 'state') {
-      if (msg.partial && world) {
-        const players = { ...world.players, ...msg.world.players };
-        for (const id of Object.keys(players)) if (!players[id]) delete players[id];
-        world = { ...world, ...msg.world, players };
-      } else world = msg.world;
-      if (msg.self) world!.players[msg.me] = msg.self;
+      world = mergeState(world, msg);
       me = world!.players[msg.me];
-      account = msg.account;
+      if (msg.account) account = msg.account;
       inSpace = false;
       localStorage.setItem('aclone.world', world!.id);
       $('overlay').innerHTML = '';
       $('world-hud').hidden = false;
       scene.setWorld(world!, msg.me);
       updateHud();
+      if (msg.sequence !== undefined && ws?.readyState === WebSocket.OPEN)
+        ws.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
     }
     if (msg.type === 'space') {
       setChatRecipient();
@@ -221,6 +226,7 @@ async function connect() {
     if (msg.type === 'pong') ping = Math.round(performance.now() - msg.at);
   });
   ws.addEventListener('close', (e) => {
+    if (ws !== socket) return;
     $('connection').textContent = 'DISCONNECTED';
     sound.clear();
     keys.clear();
@@ -293,7 +299,14 @@ async function showGalaxy() {
         '',
       )}</div></div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Field guide', 'help')}</div></div></div>`;
 }
+const chatLog = new ChatLog($('chat-log'), $('chat-latest') as HTMLButtonElement);
 let previousTargetHtml = '';
+const hudHtml = new Map<string, string>();
+function setHudHtml(id: string, html: string) {
+  if (hudHtml.get(id) === html) return;
+  $(id).innerHTML = html;
+  hudHtml.set(id, html);
+}
 function updateHud() {
   if (!world || !me) return;
   $('location').textContent =
@@ -317,23 +330,33 @@ function updateHud() {
     ['Fuel', me.fuel / 64, 'fuel'],
     ['Energy', me.energy / 65000, 'energy'],
   ];
-  $('needs').innerHTML = bars
-    .map(
-      ([name, value, cls]) =>
-        `<div class="need"><label>${name}</label><div class="bar"><i class="${cls}" style="width:${Math.max(0, Math.min(100, value * 100))}%"></i></div><small>${Math.round(value * 100)}%</small></div>`,
-    )
-    .join('');
+  setHudHtml(
+    'needs',
+    bars
+      .map(
+        ([name, value, cls]) =>
+          `<div class="need"><label>${name}</label><div class="bar"><i class="${cls}" style="width:${Math.round(Math.max(0, Math.min(100, value * 100)) * 10) / 10}%"></i></div><small>${Math.round(value * 100)}%</small></div>`,
+      )
+      .join(''),
+  );
   const online = Object.values(world.players).filter((p) => p.online);
   $('player-count').textContent = String(online.length);
-  $('players').innerHTML = online
-    .slice(0, 8)
-    .map(
-      (p) =>
-        `<div class="player-row"><span>${p.id === me!.id ? '▸' : '·'} ${esc(p.name)}${p.npc ? ' <small class="ai-tag">AI</small>' : ''}</span><small>${p.kudos} kudos</small></div>`,
-    )
-    .join('');
-  $('driving').innerHTML =
-    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${ping} ms</small></span>`;
+  setHudHtml(
+    'players',
+    online
+      .slice(0, 8)
+      .map(
+        (p) =>
+          `<div class="player-row"><span>${p.id === me!.id ? '▸' : '·'} ${esc(p.name)}${p.npc ? ' <small class="ai-tag">AI</small>' : ''}</span><small>${p.kudos} kudos</small></div>`,
+      )
+      .join(''),
+  );
+  $('driving').title =
+    `Ping: round-trip network delay. FPS: rendered frames per second. Motion buffer: ${scene.motionBufferMs} ms; grows only on uneven connections.`;
+  setHudHtml(
+    'driving',
+    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${ping} ms ping · ${scene.renderFps} FPS</small></span>`,
+  );
   const target = scene.nearest();
   let targetHtml = me.task
     ? `<div class="task"><span>${esc(me.task.kind.toUpperCase())}</span><b>${Math.max(0, Math.ceil(me.task.end - world.time))}s</b></div>`
@@ -347,15 +370,16 @@ function updateHud() {
             'wide target-button',
           )
         : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
-  $('chat-log').innerHTML = world.messages
-    .slice(-5)
-    .map(
+  chatLog.update(
+    world.id,
+    world.messages.map(
       (m) =>
         `<div class="chat-line ${esc(m.kind)}"><b>${esc(m.name)}${m.npc ? ' · AI' : ''}</b>${m.to ? ' <small>private</small>' : ''} ${esc(m.text)}</div>`,
-    )
-    .join('');
-  $('chat-log').scrollTop = $('chat-log').scrollHeight;
-  $('bag').innerHTML =
+    ),
+  );
+
+  setHudHtml(
+    'bag',
     Object.entries(me.inventory)
       .filter(([, n]) => n > 0)
       .slice(0, 4)
@@ -364,7 +388,8 @@ function updateHud() {
           `<button data-do="use" data-id="${id}" title="Use ${esc(items[id]?.name)}"><span>${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
-    `<div class="carry">${carry(me)} / ${vehicles[me.vehicle].capacity} carried</div>`;
+      `<div class="carry">${carry(me)} / ${vehicles[me.vehicle].capacity} carried</div>`,
+  );
   $('objective').textContent = me.task
     ? 'A shift in progress. Take in the view.'
     : me.learning
@@ -530,7 +555,7 @@ function renderPanel() {
   if (panel === 'options') {
     modal(
       'Pilot & preferences.',
-      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound.status, 'sound')}<label>Sound volume <output id="sound-volume-value">${Math.round(sound.volume * 100)}%</output><input id="sound-volume" type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" aria-label="Sound volume"></label><p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}<p class="note">Graphics cycles through adaptive, detailed (fixed shadows), and performance. The server stores progress automatically, including when you disconnect.</p><hr>${account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
+      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound.status, 'sound')}<label>Sound volume <output id="sound-volume-value">${Math.round(sound.volume * 100)}%</output><input id="sound-volume" type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" aria-label="Sound volume"></label><p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
     );
     return;
   }
@@ -1103,6 +1128,13 @@ app.addEventListener('click', async (e) => {
         sound.toggle();
         renderPanel();
         break;
+      case 'shadows':
+        localStorage.setItem(
+          'aclone.shadows',
+          localStorage.getItem('aclone.shadows') === 'on' ? 'off' : 'on',
+        );
+        location.reload();
+        break;
       case 'quality':
         localStorage.setItem(
           'aclone.quality',
@@ -1318,6 +1350,11 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') (e.target as HTMLElement).blur();
     return;
   }
+  if (
+    (e.target as HTMLElement).closest('#chat-log') &&
+    ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)
+  )
+    return;
   // Let focused buttons use their native activation instead of honking or opening chat.
   if ((e.target as HTMLElement).closest('button') && [' ', 'Enter'].includes(e.key)) return;
   if (e.key === 'Escape') {
@@ -1440,19 +1477,19 @@ for (const b of document.querySelectorAll<HTMLElement>('[data-key]')) {
 }
 setInterval(() => {
   if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
-  const typing = panel || document.activeElement?.matches('input,textarea,select');
+  const typing = panel || document.activeElement?.matches('input,textarea,select,#chat-log');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
-  ws.send(
-    JSON.stringify({
-      type: 'input',
-      input: {
-        throttle: Number(held('ArrowUp', 'w', 'W')) - Number(held('ArrowDown', 's', 'S')),
-        steer: Number(held('ArrowLeft', 'a', 'A')) - Number(held('ArrowRight', 'd', 'D')),
-        boost: held('Shift'),
-        lift: Number(held('Insert')) - Number(held('Delete')),
-      },
-    }),
+  const packet = inputStream.encode(
+    {
+      throttle: Number(held('ArrowUp', 'w', 'W')) - Number(held('ArrowDown', 's', 'S')),
+      steer: Number(held('ArrowLeft', 'a', 'A')) - Number(held('ArrowRight', 'd', 'D')),
+      boost: held('Shift'),
+      lift: Number(held('Insert')) - Number(held('Delete')),
+    },
+    performance.now(),
+    ws.bufferedAmount,
   );
+  if (packet) ws.send(packet);
 }, 50);
 setInterval(() => {
   const timer = document.getElementById('jump-countdown');

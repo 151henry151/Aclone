@@ -6,6 +6,26 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-01
+
+### Changed
+
+- Reduce live-game bandwidth with field-level building/player updates and recipient-only changes to private state, accounts and chat. Shared delta generation and compression keep multiplayer broadcasts economical while retaining the normal update rate on healthy connections.
+- Bound each modern client's outstanding snapshots so slow connections catch up to current state instead of accumulating old updates. Driving controls send changes promptly, with fewer duplicate messages and no additional queued controls behind a blocked upload.
+- Adapt movement buffering to sustained network jitter, returning to the existing 300 ms buffer on stable connections. A short input timeout still stops unattended acceleration when delivery stalls.
+- Default dynamic shadows off, keeping contact shading, models, textures and local lighting. Retain an opt-in shadow switch outside performance mode. Cache static scenery transforms and unchanged HUD content, and avoid sorting every town light on every rendered frame.
+- Build NPC navigation obstacles only near buildings and reuse bounded lightweight Lua worker runtimes, with fresh isolated Lua state and the same execution limits for every event.
+
+### Fixed
+
+- Keep bursts of delayed driving/acknowledgement packets out of the purchase/chat action allowance, preventing ordinary catch-up traffic from flooding the player with “Too many requests” errors. Separate action and total-traffic limits remain enforced.
+
+### Added
+
+- Scrollable recent chat (up to the server's 100-message history), keyboard scrolling and a jump-to-latest button. New messages preserve a reader's position, and private-message filtering remains in force.
+- An FPS readout beside network ping, with player troubleshooting guidance to distinguish graphics load from network delay.
+- Real compressed-WebSocket tests over a bandwidth/latency/jitter-limited TCP link, mixed fast/slow-client coverage, browser checks with parked neighbours, and selectable old/new protocol load probes.
+
 ## [0.10.0] - 2026-10-01
 
 ### Added

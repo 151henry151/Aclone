@@ -4,6 +4,27 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Performance and chat (0.11.0)
+
+Compact field updates reduce repeated world, player and private-state traffic.
+Each modern client has a bounded acknowledgement window; slow peers catch up
+without delaying healthy peers. Driving bursts have a separate allowance from
+purchases and chat. Static scenery/HUD caching, faster NPC obstacle construction
+and reusable Lua runtimes reduce processing, while every Lua event retains fresh
+isolated state and execution limits. Dynamic shadows default off; models,
+textures, contact shading and local lights remain, with shadows available as an
+opt-in outside performance mode.
+
+Main chat supports scrolling and a jump-to-latest button for up to 100 recent
+messages, preserving the reader's position and private-message filtering. It is
+not an unlimited chat archive. Ping and FPS are displayed separately.
+
+Regression coverage includes compressed WebSockets through a bandwidth/latency/
+jitter-limited TCP link, mixed fast/slow peers, input bursts, parked neighbours,
+audio and browser scrollback. These local tests cannot establish performance on
+every device or compensate for a host with exhausted CPU, RAM or swap; see the
+[hosting checks](HOSTING.md#connection-and-multiplayer-checks).
+
 ## AI resident prototype (0.10.0)
 
 One optional OpenAI-powered economy resident with personality, chat, normal
@@ -61,7 +82,8 @@ The 0.3.0 renderer uses original generated meadow, gravel, limestone and slate
 materials, a detailed glazed tractor cab and treaded wheels, instanced foliage,
 cloud layers, a village fountain and textured cottage gables. See [art sources](ART.md)
 for prompts and implementation conventions. Adaptive, detailed and performance
-modes let players trade dynamic shadows and resolution against GPU cost. These
+modes let players trade resolution and scenery detail against GPU cost. Dynamic
+shadows are a separate opt-in outside performance mode. These
 are visual improvements to the existing game, not additional historical mechanics.
 
 Version 0.3.3 replaces the placeholder human and cab driver with a smoothly shaded,
