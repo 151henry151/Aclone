@@ -166,3 +166,11 @@ adjust volume. New browser profiles default to sound enabled. Hidden tabs,
 disconnected clients and space travel are silent. Audio samples are synthesized
 locally and cached; there are no audio download paths to configure for subpath
 hosting. Production remains an operator-managed pull/rebuild/restart.
+
+## 0.8.1 upgrade notes
+
+Rebuild the client with the existing `BASE_PATH=/aclone`, restart the service
+and refresh browsers. Evergreen geometry, bark and needle textures are generated
+locally; no new downloaded assets or dependencies are needed. There are no save,
+schema or protocol changes. Grove locations and other scenery placement are
+preserved. Performance mode keeps the same branch layout with fewer small sprays.

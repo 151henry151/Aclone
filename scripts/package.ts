@@ -49,6 +49,7 @@ try {
     'living-world.ts',
     'night-lighting.ts',
     'night-sky.ts',
+    'evergreens.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',

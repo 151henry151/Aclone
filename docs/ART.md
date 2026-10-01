@@ -46,6 +46,37 @@ reconnects. Ground moonlight reuses the sun's shadow-casting light at night;
 The apparent lunar radii (1.1° and 0.56°) are deliberately larger than Earth's
 Moon for readability. These assets are covered by the project's GPL license.
 
+## Evergreen woodland
+
+`evergreen.ts` replaces the former solid cones and circular foliage stamps with
+three seeded spruce/fir profiles. Tapered, gently curved trunks carry staggered
+branch tiers, drooping lower boughs and smaller ascending growth near the leader.
+Each bough carries irregular lateral shoots and a terminal spray. Original canvas
+textures draw woody axes and individual needles, plus fissured grey-brown bark;
+no photographs, external models or extra image downloads are required.
+
+Twisted, crossed cutout planes give each small spray volume. Alpha testing retains
+ragged edges and avoids transparent sorting. A modest back-light term approximates
+light transmission through needles, using scene lights rather than emissive glow.
+Seasonal shader decoration preserves this material's distinct shader cache key;
+needles retain their green tint in autumn and collect snow on upward surfaces.
+
+The whole woodland uses at most six instanced meshes (wood and needles for each
+profile), with no mesh per twig. Each tree has fewer than 11,000 triangles in
+detailed mode; performance mode removes selected secondary sprays and reduces
+branch sides/segments, staying below 80% of that geometry. It retains exactly the
+same trunk and bough layout. Seeded size, width, lean and rotation vary instances.
+Existing grove, grass and deciduous-tree placement remain stable.
+
+Run `SCREENSHOT_GPU=1 npx tsx scripts/evergreens.ts` for front, close, side, distant
+and snowy in-game views on a disposable development server. It selects an existing
+evergreen in the normal seeded countryside; it does not substitute a showcase
+model. `SCREENSHOT_QUALITY=low` checks performance geometry; omit
+`SCREENSHOT_GPU` to check software WebGL. `CHROMIUM_PATH` selects a local Chromium,
+and `SCREENSHOT_OUTPUT_DIR` changes the default `test-results/evergreens` folder.
+The captures inspect browser errors and report render counts. Geometry tests guard
+against non-finite vertices, oversized meshes and changed shapes between modes.
+
 ## Material textures
 
 The four original materials in `public/textures/` were generated with the built-in OpenAI image-generation tool on 2026-09-29. No reference images were submitted to that tool. They are distributed under this project's GPL-3.0-or-later license. They are generated illustrations of surfaces, not measured physical scans. Master PNGs were exported as WebP at quality 88 without resizing; the shipped set totals about 2.7 MiB. The original full-resolution PNG masters are included in `art/materials/` and in source archives; they are kept out of the browser bundle. Edit those masters and export the runtime WebP files with `convert art/materials/stone.png -quality 88 public/textures/stone.webp` (ImageMagick, only needed when re-exporting art). Generation prompts are preserved below for contributors.
@@ -158,7 +189,7 @@ independent of player count. Windows aim outward and down. Lights do not cast
 additional shadow maps. Unlit nights use almost no ambient light; headlamps remain
 available in every graphics mode. Lightning combines a brief cloud flash and bolt.
 
-Evergreen groves use layered alpha-tested needle sprays; birches use generated bark
+Evergreen groves now use the branched needle-spray models described above; birches use generated bark
 markings and narrower crowns. Spatial seed regions group species and sizes vary.
 These are code-generated original assets; no new external images are needed.
 

@@ -167,6 +167,7 @@ export const autumnTint = { value: 0 };
 /** Snow settles on upward faces; foliage also shifts colour with the season. */
 export function seasonalMaterial(mat: T.Material, foliage = false) {
   const previous = mat.onBeforeCompile;
+  const previousKey = mat.customProgramCacheKey();
   mat.onBeforeCompile = (shader, renderer) => {
     previous.call(mat, shader, renderer);
     shader.uniforms.snowCover = snowCover;
@@ -184,5 +185,5 @@ export function seasonalMaterial(mat: T.Material, foliage = false) {
       `#include <map_fragment>\n${foliage ? 'diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.65,.72,.35),autumnTint);' : ''}\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(.85,.91,.94),snowCover*${foliage ? '.6' : 'smoothstep(.25,.8,snowNormal.y)'});`,
     );
   };
-  mat.customProgramCacheKey = () => `seasonal-v1-${foliage}`;
+  mat.customProgramCacheKey = () => `${previousKey}:seasonal-v1-${foliage}`;
 }

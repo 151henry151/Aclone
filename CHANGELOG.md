@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-30
+
+### Fixed
+
+- Rebuild evergreen trees with irregular woody branches, smaller needle-covered shoots, tapered trunks and varied silhouettes, replacing the visible stacked cones and round leaf clusters. Detailed and performance graphics share the same branch shapes, and the foliage still receives snow without turning autumn orange.
+
 ## [0.8.0] - 2026-09-30
 
 ### Added

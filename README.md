@@ -6,7 +6,7 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.8.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.8.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 **New in 0.8.0:** synthesized engine idle and revs, nearby players’ motors and horns, and distinct machinery sounds tied to building production. Sound starts after a click or keypress, with a visible mute button and saved volume control. See [sound controls](docs/PLAYING.md#sound) and [release notes](CHANGELOG.md).
 
@@ -159,6 +159,16 @@ HOST=0.0.0.0 PORT=3000 npm start
 They open `http://YOUR-LAN-IP:3000`. Use HTTPS through a reverse proxy for an internet-facing instance; see [hosting and backups](docs/HOSTING.md). A running server continues simulating every world even when all players are offline.
 
 ### Graphics
+
+Evergreen woodland uses branching spruce/fir silhouettes, fine needle sprays and bark textures generated in the browser. Performance mode keeps the same tree shapes with fewer secondary shoots; detailed mode adds fuller foliage and dynamic shadows. The [art guide](docs/ART.md#evergreen-woodland) explains the renderer and how to capture inspection views.
+
+<details>
+<summary>Evergreen woodland previews (0.8.1)</summary>
+
+![Reworked evergreen branches and varied tree sizes](docs/screenshots/evergreen.png)
+![Needle-covered shoots and exposed woody branches up close](docs/screenshots/evergreen-close.png)
+
+</details>
 
 Open **Pilot key & options → Graphics** to cycle through **adaptive** (the default, with automatic fallback), **detailed** (keeps dynamic shadows), and **performance** (lower resolution, fewer plants, contact shading). Detailed mode benefits from a hardware GPU. Detected software renderers use a smaller framebuffer and a capped render rate to leave time for controls. Every mode uses the same original material textures and detailed tractor model. Drag the view and scroll to inspect the scene; **C** cycles cameras. Press **H** for an unobstructed scenery view; **H** or **Escape** restores the HUD. The four textures add about 2.7 MiB to the first village visit and work under URL prefixes such as `/aclone/`.
 

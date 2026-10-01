@@ -11,7 +11,7 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 - Player-built hotels/B&Bs, prepaid bookings, private guest stores, offline meals and safe expiry.
 - Finite natural-resource gathering, eight processing businesses, materials and professions connecting crops, industry and hospitality.
 - Occupied offline chimneys, varied evening windows, actual street/window illumination, dark nights, thunderstorms, persistent snow and weather-dependent driving.
-- Evergreen and deciduous groves, varied tree scales and new building silhouettes.
+- Evergreen and deciduous groves, varied tree scales and new building silhouettes. Evergreens now have irregular boughs, needle-covered shoots and original bark textures, with matching shapes in both graphics modes.
 
 - Persistent server-owned cash, inventory, building investment and stock.
 - Positive-quantity validation, transaction conservation, taxes and exact

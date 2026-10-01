@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { evergreens, type EvergreenSite } from './evergreen';
 import { resourceNodes } from '../shared/resources';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -15,7 +16,7 @@ function random(seed: number) {
   };
 }
 /** Crossed alpha-tested cards: crisp leaf/grass silhouettes without transparent sorting. */
-function foliage(grass: boolean, pine = false) {
+function foliage(grass: boolean) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
   const ctx = canvas.getContext('2d')!,
@@ -40,15 +41,7 @@ function foliage(grass: boolean, pine = false) {
       if (dx * dx + dy * dy > 1) continue;
       ctx.fillStyle = ['#788e42', '#90a253', '#58752f', '#a1ad60', '#677f3c'][i % 5];
       ctx.beginPath();
-      ctx.ellipse(
-        x,
-        y,
-        3 + rand() * 6,
-        pine ? 1.4 : 2 + rand() * 3,
-        rand() * Math.PI,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(x, y, 3 + rand() * 6, 2 + rand() * 3, rand() * Math.PI, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -67,7 +60,7 @@ function foliage(grass: boolean, pine = false) {
     geometry,
     material: new T.MeshLambertMaterial({
       map,
-      alphaTest: pine ? 0.18 : 0.45,
+      alphaTest: 0.45,
       side: T.DoubleSide,
       emissive: new T.Color(grass ? '#38451e' : '#35441d'),
       emissiveIntensity: 0,
@@ -125,9 +118,8 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     flowers: number[][] = [],
     trunks: number[][] = [],
     crowns: number[][] = [],
-    pines: number[][] = [],
+    pines: EvergreenSite[] = [],
     birches: number[][] = [],
-    pineCards: number[][] = [],
     rocks: number[][] = [];
   for (let i = 0; i < (low ? 2600 : 10000); i++) {
     const x = (rand() - 0.5) * 480,
@@ -145,27 +137,21 @@ export function countryside(root: T.Group, world: World, low: boolean) {
       const scale = 0.55 + rand() * 1.1;
       const species = Math.abs(Math.floor(x / 55) + Math.floor(z / 45)) % 3;
       if (species === 0) {
-        trunks.push([x, h, z, scale, 0]);
-        for (let level = 0; level < 5; level++)
-          pines.push([
-            x,
-            h + (2.8 + level * 1.1) * scale,
-            z,
-            scale * (1 - level * 0.15),
-            rand() * 6,
-          ]);
-        for (let j = 0; j < 28; j++) {
-          const level = j % 5,
-            a = j * 2.399,
-            r = (1.9 - level * 0.42) * scale;
-          pineCards.push([
-            x + Math.sin(a) * r,
-            h + (1.4 + level * 1.4) * scale,
-            z + Math.cos(a) * r,
-            2.4 * (1 - level * 0.18) * scale,
-            a,
-          ]);
-        }
+        // Keep five random draws here so existing grove and grass locations stay stable.
+        pines.push({
+          x,
+          y: h,
+          z,
+          scale,
+          rotation: rand() * 6,
+          variant: Math.floor(rand() * 3),
+          width: 0.88 + rand() * 0.24,
+          leanX: (rand() - 0.5) * 0.055,
+          leanZ: (rand() - 0.5) * 0.055,
+        });
+        const shade = contactShadow(8 * scale, 8 * scale, 0.23);
+        shade.position.set(x, h + 0.1, z);
+        shades.push(shade);
         continue;
       }
       if (species === 1) birches.push([x, h, z, scale, 0]);
@@ -224,13 +210,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   const trunk = new T.CylinderGeometry(0.15, 0.46, 5, 7);
   trunk.translate(0, 2.5, 0);
   scatter(trunk, mat('#625340'), trunks, true);
-  const sprays = foliage(false, true);
-  sprays.material.color.set('#638d6c');
-  sprays.material.userData.evergreen = true;
-  scatter(sprays.geometry, sprays.material, pineCards, true);
-  const needles = new T.MeshStandardMaterial({ color: '#315e47', roughness: 1 });
-  needles.userData.evergreen = true;
-  scatter(new T.ConeGeometry(1.35, 3, 14, 3), needles, pines, true);
+  evergreens(root, pines, low);
   const barkCanvas = document.createElement('canvas');
   barkCanvas.width = barkCanvas.height = 128;
   const bark = barkCanvas.getContext('2d')!;
