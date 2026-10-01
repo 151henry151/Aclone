@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { GameAudio } from './audio';
 import { streetLights } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
@@ -104,6 +105,8 @@ function pilotLabel(name: string) {
   return tag;
 }
 export class GameScene {
+  readonly audio = new GameAudio();
+  private audioFacing = new T.Vector3();
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
   readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 950);
@@ -357,6 +360,7 @@ export class GameScene {
   setWorld(world: World, me: string) {
     this.world = world;
     this.me = world.players[me];
+    this.audio.setWorld(world, me);
     this.sky.visible = true;
     this.fields.update(world, this.me);
     this.space.visible = false;
@@ -429,6 +433,7 @@ export class GameScene {
       }
   }
   setSpace() {
+    this.audio.clear();
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
     this.sky.visible = false;
@@ -856,6 +861,16 @@ export class GameScene {
               ),
             );
         this.camera.lookAt(this.target);
+        this.camera.getWorldDirection(this.audioFacing);
+        this.audio.update(
+          {
+            x: pos.x,
+            y: pos.y,
+            z: pos.z,
+            heading: Math.atan2(this.audioFacing.x, this.audioFacing.z),
+          },
+          (id) => this.meshes.get(id)?.position,
+        );
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(

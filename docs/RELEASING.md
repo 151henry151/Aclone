@@ -151,3 +151,18 @@ more navigable by starlight and moonlight. Cloud cover still dims natural light.
 In first-person view, drag vertically to look up. Night-sky and lighting capture
 scripts use disposable local worlds; their screenshots do not represent a
 production deployment. Production remains an operator-managed pull/rebuild/restart.
+
+## 0.8.0 upgrade notes
+
+No database migration, new dependency or external audio files are required. Pull,
+rebuild with `BASE_PATH=/aclone npm run build`, restart the Node service, and
+refresh clients. Restarting is necessary: snapshots now include public motor
+and production activity fields used by the new client audio. Saved accounts,
+property, inventories and settings remain intact.
+
+Sound starts after a click, tap or keypress. Previously saved mute preferences
+are respected; use the Sound button to enable it and Pilot & preferences to
+adjust volume. New browser profiles default to sound enabled. Hidden tabs,
+disconnected clients and space travel are silent. Audio samples are synthesized
+locally and cached; there are no audio download paths to configure for subpath
+hosting. Production remains an operator-managed pull/rebuild/restart.

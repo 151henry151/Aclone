@@ -2,6 +2,34 @@
 
 Aclone aims for a warm, weathered English countryside: natural ground materials, worn lanes, limestone cottages, slate roofs, leafy silhouettes and readable machinery. The original game's village, country-lane and castle screenshots were inspected as visual references; none of their pixels, textures or models ship with Aclone.
 
+## Synthesized sound
+
+All runtime sounds are original code-generated mono PCM under GPL-3.0-or-later;
+no recordings or external sample licenses are required. `sound-synthesis.ts`
+creates diesel combustion pulses with resonant harmonics and filtered noise,
+a two-tone horn, and saw/mill/hammer/furnace/pump loops. Buffers are cached per
+AudioContext and have blended loop boundaries. `audio.ts` applies gain ramps,
+smoothed playback-rate changes, stereo panning, a saved master volume and a
+compressor to keep crowded scenes controlled.
+
+`sound-scene.ts` selects at most 16 nearby continuous voices and 8 simultaneous
+horns, independently of graphics quality. Brief fade-out tails can overlap a
+replacement voice. Engines reach 110 metres, horns 150 metres and industry 90
+metres, with continuous attenuation to silence at the boundary. The listener
+stays at the player's rendered position, with the camera's viewing direction;
+zooming overhead doesn't make the player's tractor inaudible. Remote source
+positions use the same interpolation as the visible vehicles. No geometric
+wall occlusion is modeled; being indoors applies a simple outside-volume cut.
+
+`shared/sound-state.ts` projects running motors and production intensity from
+server state; stock and wage predicates are shared with economic production.
+Horn timestamps already present in snapshots identify accepted honks. Clients
+baseline them on arrival and consume them while muted, so they don't play a
+backlog. Context creation/resumption happens on a browser gesture; buffers and
+nodes are not allocated for inaudible distant sources. The browser audio test
+taps actual PCM after the output compressor and exercises a second WebSocket
+player, ignition, revs, distance, horns, supplies, mute persistence and disconnect.
+
 ## Night sky
 
 The night sky uses original procedural assets rather than astronomical photographs:

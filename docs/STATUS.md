@@ -6,6 +6,8 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
 ## Playable and covered by tests
 
+- Gesture-unlocked engine idle/revs, nearby multiplayer horns and motors, production-driven machinery, stereo/distance attenuation, mute and saved volume; browser tests measure actual mixed audio output.
+
 - Player-built hotels/B&Bs, prepaid bookings, private guest stores, offline meals and safe expiry.
 - Finite natural-resource gathering, eight processing businesses, materials and professions connecting crops, industry and hospitality.
 - Occupied offline chimneys, varied evening windows, actual street/window illumination, dark nights, thunderstorms, persistent snow and weather-dependent driving.

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { motorRunning } from '../shared/sound-state';
 import { leaveCombat } from '../shared/combat.ts';
 import { VERSION } from '../shared/version';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -176,6 +177,7 @@ export async function createApp(options: AppOptions) {
                 tractorPaint: q.tractorPaint,
                 atHome: q.atHome,
                 lights: q.lights,
+                engineRunning: motorRunning(w, q),
                 team: q.team,
                 game: q.game,
                 health: q.health,

@@ -41,6 +41,8 @@ export interface Player {
   fleet?: number[];
   tractorPaint?: string;
   engine: boolean;
+  /** Public snapshot projection for audible motors. */
+  engineRunning?: boolean;
   lights: boolean;
   task?: Task;
   team: number;
@@ -97,6 +99,8 @@ export interface Building {
   construction?: Stock;
   style?: string;
   smoking?: boolean;
+  /** Public snapshot projection: production intensity, zero when blocked. */
+  operating?: number;
   lodging?: {
     open: boolean;
     rate: number;

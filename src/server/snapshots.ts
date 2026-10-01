@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { motorRunning, productionActivity, craftingBuildings } from '../shared/sound-state';
 import type { World, Player } from '../shared/types';
 import type { Account } from './universe';
 export function publicBuildings(w: World) {
-  return w.buildings.map((b) =>
-    b.lodging
+  const crafting = craftingBuildings(w);
+  return w.buildings.map((building) => {
+    const b = { ...building, operating: productionActivity(w, building, crafting) };
+    return b.lodging
       ? {
           ...b,
           lodging: {
@@ -16,12 +19,13 @@ export function publicBuildings(w: World) {
             ),
           },
         }
-      : b,
-  );
+      : b;
+  });
 }
 export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
+    engineRunning: motorRunning(w, p),
     roomPantries: Object.fromEntries(
       w.buildings
         .filter((b) => b.lodging?.guests[p.id])
@@ -55,6 +59,7 @@ export function prepareFrame(w: World): Frame {
         tractorPaint: p.tractorPaint,
         atHome: p.atHome,
         lights: p.lights,
+        engineRunning: motorRunning(w, p),
         team: p.team,
         game: p.game,
         health: p.health,

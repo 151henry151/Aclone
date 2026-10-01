@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { productionStaff, productionSupplied } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
@@ -1216,9 +1217,7 @@ function cycle(w: World, b: Building, at: number) {
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
   removeOwnerEmployment(w, b);
-  const staff = b.employees
-    .map((id) => w.players[id])
-    .filter((p) => p && (!w.settings.activeWork || p.activeUntil >= at));
+  const staff = productionStaff(w, b, at);
   const efficiency = b.government ? 1 : staff.length ? 1 : w.settings.offlineEfficiency;
   b.efficiency = efficiency;
   b.progress += efficiency;
@@ -1226,12 +1225,7 @@ function cycle(w: World, b: Building, at: number) {
   const times = Math.floor(b.progress);
   b.progress -= times;
   for (let i = 0; i < times; i++) {
-    if (
-      Object.entries(r.inputs).some(([item, n]) => (b.stock[item] ?? 0) < n) ||
-      Object.entries(r.outputs).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) ||
-      b.investment < b.wage * staff.length
-    )
-      return;
+    if (!productionSupplied(b, r, staff.length)) return;
     for (const [item, n] of Object.entries(r.inputs)) stockAdd(b.stock, item, -n);
     for (const [item, n] of Object.entries(r.outputs)) stockAdd(b.stock, item, n);
     for (const p of staff) {

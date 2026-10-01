@@ -1,5 +1,31 @@
 # Living in the parish
 
+## Sound
+
+Sound is enabled by default and starts after a click, tap or keypress. The **Sound**
+button beside Engine, Lights and View shows whether sound is on, muted or waiting
+for a gesture. Use **Pilot & preferences** for the volume slider. Explicit mute
+and volume choices survive reloads in that browser; if you muted an older version,
+click Sound to enable it. A browser-tab mute or operating-system volume setting
+can still silence the game.
+
+Your engine idles while switched on and revs smoothly as you drive forward or
+reverse. **F4 / Engine** stops or starts it; running out of fuel, going indoors,
+walking or disconnecting silences it. **Space / Parp** sounds the horn. Nearby
+players hear accepted honks and running engines; sound gets quieter with distance
+and moves left/right as you look around. Entering a home muffles outside sounds.
+
+Sawmills buzz, mills rumble, workshops and quarries clatter, furnaces roar and
+pumps churn. Processing buildings sound active when they have recipe inputs,
+room for outputs and wage funds under the world's production rules. Unattended
+production is quieter; depleted, full or unfinished buildings are silent. Manual
+crafting also makes the forge audible while its worker is online. This follows
+economic activity, independently of the chimney's occupancy effect.
+
+Switching to a hidden tab, disconnecting or leaving for space stops the sound.
+Returning restarts current ambience after the connection resumes, without
+replaying horns that happened while you were away.
+
 ## Time and weather
 
 At default speed a game day takes **10 real minutes**. There are 365 days in a year

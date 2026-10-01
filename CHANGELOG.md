@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-30
+
+### Added
+
+- Original synthesized tractor engines with a diesel idle and smooth rev changes while driving. Nearby players' engines and horns fade with distance and pan with the view direction.
+- Working sawmills, mills, workshops, furnaces and other processing buildings have distinct machinery sounds. Activity follows production inputs, output space and wage funding, with quieter unattended operation and sound during manual crafting.
+- A visible Sound button and saved master-volume control in Pilot & preferences. Sound starts after a click or keypress and defaults on for browsers without an explicit mute preference.
+
+### Fixed
+
+- Share engine-running state with other players and play horns from accepted server actions, without duplicate local beeps or replaying old horns on arrival or reconnection. Silence vehicle and machinery loops on disconnect, space travel and hidden tabs.
+
 ## [0.7.0] - 2026-09-30
 
 ### Added

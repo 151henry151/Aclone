@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.7.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.8.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.8.0:** synthesized engine idle and revs, nearby players’ motors and horns, and distinct machinery sounds tied to building production. Sound starts after a click or keypress, with a visible mute button and saved volume control. See [sound controls](docs/PLAYING.md#sound) and [release notes](CHANGELOG.md).
 
 **New in 0.7.0:** stronger, wider, longer-range headlights and much broader streetlight pools, with a slower fade that lights the gaps between lamps and the surrounding verges. See [CHANGELOG.md](CHANGELOG.md) for the release notes.
 
@@ -185,7 +187,7 @@ The menu has a directory showing distances to every building. Transactions requi
 - F3: reel when the fishing bite prompt appears.
 - I: inventory. M: directory. F7: guide. F9: menu. F10: world editor. Esc: close a window.
 
-All important F-key actions have on-screen alternatives because browsers reserve some keys. Options include synthesized sound (off initially) and a performance graphics mode for integrated GPUs or software rendering.
+All important F-key actions have on-screen alternatives because browsers reserve some keys. Options include a performance graphics mode for integrated GPUs or software rendering. Sound starts after your first click or keypress, unless you previously muted it. Use the visible **Sound** button to mute/unmute; **Pilot & preferences** also has a saved volume slider. Engines idle and rev while driving, nearby players’ engines and horns have distance and stereo positioning, and supplied processing buildings make machinery sounds. Hidden tabs and disconnected sessions are silent. See [sound controls](docs/PLAYING.md#sound) for details.
 
 ## Keep your pilot
 
