@@ -1,13 +1,22 @@
-# AI neighbours: Mabel and Toby
+# AI neighbours: Mabel, Toby and Rowan
 
-Two optional residents can share Puddlewick. **Mabel Reed** uses OpenAI and keeps
+Three optional residents can share Puddlewick. **Mabel Reed** uses OpenAI and keeps
 her existing identity and memories. **Toby Finch** uses Anthropic’s Claude: he is
 a patient, practical male baker with a goal of learning his trade, earning wages,
 staying healthy and saving toward a bakery of his own. Each has a separate pilot,
-personality, journal, notebook and plan. Both follow the ordinary player economy,
+personality, journal, notebook and plan. All follow the ordinary player economy,
 physics, collision, skill requirements and prices; Toby learns `baker` at school
 rather than receiving free qualifications, money or a bakery. They use the normal
 tractor and walking models. Personality defines identity, not a new avatar model.
+
+**Rowan Field** is a patient, observant male farmer. TypeSafe Jev selects his
+next gameplay plan from currently feasible options; Claude gives him a natural
+conversational voice and working notebook. He has his own persistent pilot and
+journal. All three use ordinary skills, cash, inventories and ownership rules.
+Rowan can learn farming, join a farm, plant appropriate seasonal crops, water,
+fertilize and harvest for wages. He can save toward buying a farm, fund its seed
+account, collect its crops and sell them to other businesses. He does not get
+free qualifications or a free farm.
 
 This is an experimental economy agent, not a scripted tour guide or a promise
 of optimal play. Her supported actions include travel, walking/driving, food and
@@ -20,7 +29,7 @@ do not let her perform them.
 
 ## Try it
 
-NPCs are **disabled by default**, with independent switches for Mabel and Toby. Merely adding a key does not start requests. Use a server-side
+NPCs are **disabled by default**, with independent switches for Mabel, Toby and Rowan. Merely adding a key does not start requests. Use a server-side
 OpenAI API key with API billing enabled. This integration uses API-key billing,
 separate from a ChatGPT subscription; it does not consume a ChatGPT plan's
 included usage. See [OpenAI pricing](https://learn.chatgpt.com/docs/pricing).
@@ -46,7 +55,7 @@ CLAUDE_API_KEY=your-server-anthropic-key
 
 `ANTHROPIC_API_KEY` is also accepted and takes precedence over `CLAUDE_API_KEY`.
 Toby defaults to `claude-haiku-4-5-20251001`. Claude API billing is separate from
-consumer subscriptions, and both residents share the existing Aclone spending
+consumer subscriptions, and all residents share the existing Aclone spending
 caps. You can run Toby alone with `NPC_ENABLED=false` and
 `NPC_BAKER_ENABLED=true`. Keep `NPC_ID=mabel` and `NPC_BAKER_ID=toby` stable to
 retain their separate memories. No database reset is needed when adding him.
@@ -72,7 +81,7 @@ Compose reads `.env` and passes the listed settings to the server at runtime:
 
 Join Puddlewick. Mabel appears when a human is present. Open **AI resident · chat
 & memory info**, or **Game menu → AI neighbours**, then **Chat with Mabel Reed**
-to send a private message. Toby has his own **Chat with Toby Finch** button; provider labels identify OpenAI and Claude. **Back to parish chat** restores public chat. You can
+to send a private message. Toby has his own **Chat with Toby Finch** button; Rowan has his own chat button too. Provider labels identify OpenAI, Claude and Jev + Claude. **Back to parish chat** restores public chat. You can
 also address her by first name in parish chat. Names and messages have an **AI**
 label. A reply takes API latency plus up to the 15-second decision cooldown;
 she may take longer if the budget is exhausted or the provider is unavailable.
@@ -82,9 +91,79 @@ after a server restart. Inspect her actual actions and money with the operator
 commands below. The notebook is a fallible model summary; the event journal
 records what actually happened.
 
+## Rowan’s configuration
+
+Add these settings to the server's gitignored `.env` and restart normally:
+
+```dotenv
+NPC_FARMER_ENABLED=true
+JEV_API_KEY=your-server-typesafe-key
+CLAUDE_API_KEY=your-server-anthropic-key
+```
+
+Create a Jev key at the official [TypeSafe console](https://console.typesafe.ai/).
+`TYPESAFE_API_KEY` is also accepted and takes precedence over `JEV_API_KEY`.
+The existing Claude key can serve Toby and Rowan; adding Rowan does not enable
+Toby or Mabel automatically. Merely setting a key does not enable the farmer.
+Keep secrets server-side; `.env` is not committed or sent to browsers.
+
+- `NPC_FARMER_ENABLED`: exactly `true` enables Rowan, independently of the others.
+- `NPC_FARMER_ID` / `NPC_FARMER_NAME`: defaults `rowan` / `Rowan Field`.
+  Keep the ID stable; names apply at pilot creation and must be distinct.
+- `NPC_FARMER_WORLD`: defaults to `NPC_WORLD`, then `puddlewick`.
+- `NPC_FARMER_PERSONALITY`: optional replacement, 10–3,000 characters.
+- `NPC_FARMER_MODEL`: pinned default `jev-1.13.0`.
+- `NPC_FARMER_CHAT_MODEL`: default `claude-haiku-4-5-20251001`.
+- `NPC_FARMER_INTERVAL_MS`: minimum decision interval, default 15,000 (5,000–300,000).
+- `NPC_FARMER_ACTIVE_ALONE`: default `false`; sleep without human visitors.
+- `NPC_FARMER_INPUT_USD_PER_MILLION` / `NPC_FARMER_OUTPUT_USD_PER_MILLION`:
+  defaults 0.042 / 0; both required for a different Jev model or alias.
+- `NPC_FARMER_CHAT_INPUT_USD_PER_MILLION` / `NPC_FARMER_CHAT_OUTPUT_USD_PER_MILLION`:
+  defaults 1 / 5; both required for a different Claude model. Same cache accounting as Toby.
+
+All these variables are passed by Compose. Preserve Mabel and Toby's existing
+IDs and configurations; no database reset or schema migration is needed.
+Use **AI neighbours → Chat with Rowan Field**, or address Rowan in parish chat.
+The **Jev + Claude** badge explains his two providers. His visible parish chat,
+own private conversations and relevant game state may be sent to both providers;
+other residents do not receive his private conversations.
+
+### How the two providers cooperate
+
+The [Jev API](https://docs.typesafe.ai/api) selects one supplied option; it cannot
+write free-form dialogue. `farmer.ts` builds up to 100 plans from actual game
+state, filtering blocked actions, wrong seasons, missing qualifications, supplies,
+storage and wage funding. `jev.ts` validates the selected ID and probability/token
+fields. The controller then uses ordinary navigation and game actions; conditions
+are checked again when an action executes. No model can inject a new action through
+a choice ID. This is a bounded farming repertoire, not the full Mabel/Toby action
+catalog; Rowan can still explain other features using the shared guide.
+
+Jev sees current observations, recent results, failed steps, notebook and journal
+excerpts. A recall option searches his own older journal. It chooses plans lasting
+up to ten minutes for journeys, and normally reconsiders short actions after one
+minute. Hunger and thirst can wake it sooner. Crops use the same seasons, growth,
+rotation and weather as player farms; winter planting has no valid choices.
+Farm wages arrive after a 15-second ripe harvest, with crops in the farm's stockroom.
+
+Claude runs only when a human addresses Rowan. It receives the complete game guide,
+question, memories, actual results and Jev's selected future plan. Only its speech
+and notebook are accepted; its action plan cannot override Jev. Failed or budget-
+limited conversation leaves the selected gameplay plan intact, and the unanswered
+question remains available for a later scheduled turn. Private replies are forced
+back to the original sender even if the model requests public chat.
+
+Each Jev call and each Claude call has its own durable cost reservation, token
+accounting and hourly-call slot under the existing shared caps. Jev input pricing
+is $0.042/million, output free, checked 2026-10-01 against
+[TypeSafe's model reference](https://docs.typesafe.ai/models). At 6,000 input tokens,
+a Jev decision costs approximately $0.000252; conversation is additional Claude
+usage. This is an arithmetic example, not a measured monthly cost. Consumer
+subscriptions do not cover these API bills.
+
 ## Helping other players
 
-Both residents receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) on every
+Mabel and Toby receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) on every
 decision, including controls, employment, production, ownership, farming, lodging,
 account help and activities. These core rules no longer depend on her knowing
 which terms to search for. Up to three additional excerpts each can address the
@@ -183,7 +262,7 @@ apply only when the provider reports a cache hit; the cap does not assume one.
   protections apply while asleep, paused, out of budget or awaiting an API retry.
 - The shared estimated-cost caps default to **$0.60 per UTC day** and **$20 per
   UTC calendar month**. Every request reserves a conservative byte-based input
-  estimate and maximum output cost in SQLite before calling either provider. Success
+  estimate and maximum output cost in SQLite before calling a provider. Success
   reconciles against returned token counts. An ambiguous failure or crash keeps
   its reservation charged; restarting does not reset the counters.
 
@@ -193,11 +272,11 @@ $4.38 in 30 days; continuous activity would be about $26.27 before this game's
 caps stop it. These are arithmetic examples, not measured gameplay averages.
 Longer context, conversation and recovery attempts change actual usage.
 
-Adding Toby or future residents does not multiply the shared allowance. They share less
+Adding Toby, Rowan or future residents does not multiply the shared allowance. They share less
 thinking time under the same caps. The controller has a 50-resident ceiling and
 a concurrency regression fixture at that size; this is **not** a claim that 50
 continuously reasoning agents fit a $20 budget or a production load benchmark.
-The environment configuration supports these two residents; each is independently enabled.
+The environment configuration supports these three residents; each is independently enabled.
 
 Local dollar accounting depends on correct model prices and applies only to
 this database's NPC calls. Keep provider-side account controls and inspect
@@ -243,7 +322,7 @@ All settings are server-only and read at startup:
 - `NPC_BAKER_INPUT_USD_PER_MILLION` / `NPC_BAKER_OUTPUT_USD_PER_MILLION`: rate overrides; both required for a custom model. The five-minute cache write multiplier is 1.25 and read multiplier 0.1 (conservative for models with cheaper reads).
 
 Daily/monthly caps and call/concurrency limits are shared, not per character.
-Disabling one resident leaves the other running and preserves both histories.
+Disabling one resident leaves the others running and preserves all histories.
 
 ## Operator controls and memory
 
@@ -252,6 +331,9 @@ Run from the repository with the server's `DATA_DIR` exported (or use the same
 
 ```sh
 npm run npc -- status
+npm run npc -- pause rowan
+npm run npc -- resume rowan
+npm run npc -- memory rowan
 npm run npc -- pause toby
 npm run npc -- resume toby
 npm run npc -- pause mabel
@@ -267,7 +349,7 @@ Pause/resume is durable and noticed within a second. In-flight results are
 ignored when paused; a request already sent can still incur a provider charge.
 An in-game moderator kick also pauses the NPC until operator resume. Gagging
 uses the normal chat rule. To remove the integration from play, set
-`NPC_ENABLED=false` for Mabel or `NPC_BAKER_ENABLED=false` for Toby and restart; saved identities, property and journals remain.
+`NPC_ENABLED=false` for Mabel or `NPC_BAKER_ENABLED=false` for Toby or `NPC_FARMER_ENABLED=false` for Rowan and restart; saved identities, property and journals remain.
 
 Status shows local cost estimates, caps, recent call count, plan goal and memory
 count. Memory output contains private conversations: this CLI is for the host
@@ -379,3 +461,28 @@ placed him near school/bakery entrances; navigation is tested separately.
 The earlier integration trials exposed invalid task/job forms and oversized waits;
 these remain rejected, and explicit action examples corrected the live trial.
 This demonstrates a short working scenario, not perfect long-term AI judgement.
+
+## Jev farmer trial (2026-10-01)
+
+The live integration trial used a disposable in-memory parish and real Jev/Claude
+APIs. It placed Rowan at service entrances and advanced the test crop to ripeness;
+it did not modify production saves or grant skills or harvest wages. Four Jev
+choices trained farmer for 80d, accepted farm employment, planted potatoes and
+harvested 45 into the farm stockroom, earning 19.8d after tax. Two Claude calls
+supplied private dialogue. Controller restarts between stages preserved identity
+and memory. The successful six-call run cost an estimated $0.030271796; earlier
+tuning attempts incurred additional usage. This is an integration check, not a
+promise that an unsupervised resident will always make optimal decisions.
+
+To repeat (real API charges; at most four Jev plus two Claude calls and a $0.50
+local cap; `.env` must contain both keys):
+
+```sh
+node --env-file=.env --import tsx scripts/npc-farmer-smoke.ts --live
+```
+
+Automated tests additionally cover watering, fertilizer, seed funding, seasonal
+restrictions, wage/storage blockers, owner stock sales, restart memory, invalid
+provider output, separate call accounting and continued gameplay when dialogue
+fails or hits the budget. Browser tests use deterministic providers without
+paid requests and verify all three chat identities and private-message isolation.

@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { npcConfigSchema, bakerDefaults } from '../../src/server/npc/config.ts';
+import { npcConfigSchema, bakerDefaults, farmerDefaults } from '../../src/server/npc/config.ts';
 import type { BrainRequest } from '../../src/server/npc/decision.ts';
 
 test('AI identity, memory notice and private NPC chat work through real sockets', async ({
@@ -70,6 +70,50 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
             },
           },
         },
+        {
+          config: npcConfigSchema.parse({ ...farmerDefaults, intervalMs: 5000 }),
+          rates: { inputUsdPerMillion: 0.042, outputUsdPerMillion: 0 },
+          brain: {
+            async decide(request) {
+              expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
+              return {
+                decision: {
+                  intent: 'Tend crops',
+                  notebook: '',
+                  speech: null,
+                  plan: [{ kind: 'wait' as const, seconds: 600 }],
+                  repeat: 1,
+                  reconsiderSeconds: 600,
+                },
+                inputTokens: 100,
+                outputTokens: 20,
+              };
+            },
+          },
+          dialogue: {
+            rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
+            brain: {
+              async decide(request) {
+                expect(JSON.stringify(request.observation)).not.toContain('blue tractors');
+                return {
+                  decision: {
+                    intent: 'Conversation',
+                    notebook: 'Robin asked about farming.',
+                    speech: {
+                      text: 'I am Rowan Field. Jev chooses my farm work; Claude helps me chat.',
+                      to: humanId,
+                    },
+                    plan: [{ kind: 'wait' as const, seconds: 600 }],
+                    repeat: 1,
+                    reconsiderSeconds: 600,
+                  },
+                  inputTokens: 100,
+                  outputTokens: 20,
+                };
+              },
+            },
+          },
+        },
       ],
     },
   });
@@ -91,7 +135,8 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     await page.goto(`http://127.0.0.1:${port}`);
     await expect(page.locator('#players')).toContainText('Mabel Reed');
     await expect(page.locator('#players')).toContainText('Toby Finch');
-    await expect(page.locator('#players .ai-tag')).toHaveText(['AI', 'AI']);
+    await expect(page.locator('#players')).toContainText('Rowan Field');
+    await expect(page.locator('#players .ai-tag')).toHaveText(['AI', 'AI', 'AI']);
     await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
     await expect(page.getByRole('dialog', { name: 'AI neighbours.' })).toBeVisible();
     await expect(
@@ -107,6 +152,9 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
         .locator('.npc-card')
         .filter({ has: page.getByRole('heading', { name: 'Mabel Reed AI · OpenAI' }) }),
     ).toContainText('AI · OpenAI');
+    await expect(page.locator('.npc-card').filter({ hasText: 'Rowan Field' })).toContainText(
+      'AI · Jev + Claude',
+    );
     await page.screenshot({ path: 'test-results/ai-neighbours.png' });
     await page.getByRole('button', { name: 'Chat with Mabel Reed' }).click();
     await expect(page.locator('#chat-recipient')).toContainText('Private message to Mabel Reed');
@@ -149,6 +197,19 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     )!;
     expect(tobyReply.to).toBe(humanId);
     expect(tobyReply.name).toBe('Toby Finch');
+    await page.getByRole('button', { name: 'Back to parish chat' }).click();
+    await page.getByRole('button', { name: 'AI resident · chat & memory info' }).click();
+    await page.getByRole('button', { name: 'Chat with Rowan Field' }).click();
+    await page.getByRole('textbox', { name: 'Chat message' }).fill('Rowan, introduce yourself.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(page.locator('#chat-log')).toContainText(
+      'I am Rowan Field. Jev chooses my farm work; Claude helps me chat.',
+      { timeout: 20000 },
+    );
+    expect(app.residents!.memory.search('rowan', 'blue tractors', null)).toEqual([]);
+    const rowanReply = w.messages.find((m) => m.text.startsWith('I am Rowan Field.'))!;
+    expect(rowanReply.to).toBe(humanId);
+    expect(rowanReply.name).toBe('Rowan Field');
     expect(seen.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   } finally {

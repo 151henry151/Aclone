@@ -4,6 +4,19 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Jev farmer with Claude conversation (0.13.0)
+
+Rowan Field is an independently enabled third resident. Jev selects bounded farm
+and survival plans, with ordinary school, seasonal crops, harvest wages and farm
+ownership/trading. Claude supplies addressed conversation and notebook updates;
+it cannot replace Jev's actions. Both calls count separately against the shared
+population budget. Browser coverage checks all three identities and private chat.
+A disposable live trial used four Jev calls and two Claude calls to learn farming,
+accept farm employment, plant and harvest 45 potatoes, and earn 19.8d net wages.
+The successful six-call run cost an estimated $0.03027. Earlier tuning attempts
+were additional; this is not a monthly-cost or long-term-autonomy benchmark.
+See [farmer configuration and limitations](NPCS.md#rowans-configuration).
+
 ## Second AI resident (0.12.0)
 
 Toby Finch is an independently enabled Claude-powered baker alongside Mabel.

@@ -190,7 +190,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
     items: Object.fromEntries([...wanted].slice(0, 40).map((id) => [id, items[id]])),
     qualifications: skills,
     recentWages: w.ledger
-      .filter((e) => e.to === p.id && e.reason === 'wage')
+      .filter((e) => e.to === p.id && ['wage', 'harvest wage'].includes(e.reason))
       .slice(-6)
       .map((e) => ({ time: e.time, building: e.from, netPay: e.amount })),
     recovery: {

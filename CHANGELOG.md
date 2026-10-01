@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-01
+
+### Added
+
+- Rowan Field, an independently enabled farmer whose gameplay decisions use TypeSafe Jev and whose conversations use Claude, with his own persistent identity, relationships and action journal.
+- Seasonal farming choices covering paid training, farm employment, planting, irrigation, fertilizer, harvest wages, farm ownership, investment and selling produce. Decisions use current supplies, crop state and ordinary game rules.
+- Separate billing reservations for Jev decisions and addressed Claude conversations under the existing shared NPC caps; autonomous farming does not call Claude. Invalid decisions and provider failures preserve normal recovery and private-chat isolation.
+- Farmer configuration, Docker environment support, operator instructions and an opt-in live API smoke test.
+
+### Fixed
+
+- NPC wage observations now include completed harvest receipts, so residents can verify farm earnings as well as factory wages.
+
 ## [0.12.0] - 2026-10-01
 
 ### Added

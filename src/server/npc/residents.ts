@@ -12,11 +12,14 @@ import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts'
 import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
 import { instructions, observe } from './observation.ts';
+import { jevInstructions } from './jev.ts';
+import { farmerChoices, farmerSituation } from './farmer.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export interface ResidentOptions {
   config: NpcConfig;
   brain: Brain;
   rates?: TokenRates;
+  dialogue?: { brain: Brain; rates: TokenRates };
 }
 interface Resident extends ResidentOptions {
   state: ResidentState;
@@ -405,12 +408,26 @@ export class Residents {
     }
   }
   private think(r: Resident, w: World, p: Player, now: number) {
-    const request = {
+    const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
-      observation: observe(w, p, r.state, this.memory, r.config.id),
-    };
+      observation: {
+        ...observe(w, p, r.state, this.memory, r.config.id),
+        ...(r.config.provider === 'jev'
+          ? { farmerChoices: farmerChoices(w, p, r.state), farming: farmerSituation(w, p) }
+          : {}),
+      },
+    });
+    const { gameGuide: _guide, ...decisionObservation } = request.observation;
+    const decisionRequest =
+      r.config.provider === 'jev'
+        ? {
+            instructions: jevInstructions + '\nYour personality: ' + r.state.personality,
+            observation: decisionObservation,
+          }
+        : request;
     const bytes =
-      Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
+      Buffer.byteLength(JSON.stringify(decisionRequest)) +
+      Buffer.byteLength(JSON.stringify(turnTool));
     if (bytes > 96000) {
       p.online = false;
       p.speed = 0;
@@ -441,8 +458,8 @@ export class Residents {
     const controller = new AbortController();
     r.busy = controller;
     r.pending = r.brain
-      .decide(request, controller.signal)
-      .then((result) => {
+      .decide(decisionRequest, controller.signal)
+      .then(async (result) => {
         if (this.closed) return;
         this.budget.settle(
           reservation,
@@ -460,7 +477,68 @@ export class Residents {
           !player?.online
         )
           return;
-        this.accept(r, current, result, Date.now(), replyTo);
+        // Dialogue is a separately metered call, only for an addressed human.
+        // It cannot replace the action provider's choice or replay a whole plan.
+        if (r.dialogue && request.observation.currentConversation) {
+          const { farmerChoices: _choices, ...conversationObservation } = request.observation;
+          const dialogueRequest = {
+            instructions:
+              request.instructions +
+              '\nCONVERSATION ONLY: Jev has already chosen your actions. Reply to the current human question using the game guide and observed results. chosenPlan is a future intention, NOT completed work. Update your notebook with useful relationships/lessons. Return a harmless wait plan; your plan, intent and timing are ignored. Do not promise a different action. Never start a reply with a chat command.',
+            observation: { ...conversationObservation, chosenPlan: result.decision.plan },
+          };
+          const chatBytes =
+            Buffer.byteLength(JSON.stringify(dialogueRequest)) +
+            Buffer.byteLength(JSON.stringify(turnTool));
+          const chatReservation =
+            chatBytes <= 96000
+              ? this.budget.reserve(
+                  r.config.id,
+                  chatBytes,
+                  outputLimit,
+                  Date.now(),
+                  r.dialogue.rates,
+                )
+              : undefined;
+          if (chatReservation !== undefined) {
+            try {
+              const chat = await r.dialogue.brain.decide(dialogueRequest, controller.signal);
+              if (this.closed) return;
+              this.budget.settle(
+                chatReservation,
+                chat.inputTokens,
+                chat.outputTokens,
+                chat.cacheWriteTokens,
+                chat.cacheReadTokens,
+              );
+              const d = decisionSchema.parse(chat.decision);
+              if (d.speech?.text.trim().startsWith('*')) throw Error('Invalid conversation');
+              result = {
+                ...result,
+                decision: { ...result.decision, speech: d.speech, notebook: d.notebook },
+              };
+            } catch {
+              if (this.closed) return;
+              this.budget.failed(chatReservation);
+              this.checkpoint(r, this.worlds.get(r.state.world) ?? current, 'dialogue-error', {
+                message: 'Conversation unavailable; the selected gameplay plan is preserved.',
+              });
+            }
+          } else
+            this.checkpoint(r, this.worlds.get(r.state.world) ?? current, 'dialogue-budget', {
+              message: 'Conversation deferred by shared budget or context limit.',
+            });
+        }
+        // Another action may have rolled back/replaced the world during dialogue.
+        const latest = this.worlds.get(r.state.world);
+        if (
+          controller.signal.aborted ||
+          this.closed ||
+          this.memory.paused(r.config.id) ||
+          !latest?.players[r.state.playerId]?.online
+        )
+          return;
+        this.accept(r, latest, result, Date.now(), replyTo);
       })
       .catch((e) => {
         if (this.closed) return;
