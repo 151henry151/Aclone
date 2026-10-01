@@ -174,3 +174,12 @@ and refresh browsers. Evergreen geometry, bark and needle textures are generated
 locally; no new downloaded assets or dependencies are needed. There are no save,
 schema or protocol changes. Grove locations and other scenery placement are
 preserved. Performance mode keeps the same branch layout with fewer small sprays.
+
+## 0.9.0 upgrade notes
+
+No database or wire-protocol changes. Rebuild with the existing `BASE_PATH`
+(`BASE_PATH=/aclone npm run build` for hromp.com), restart the service to report
+its new version, and refresh browser clients. M now toggles an enlarged map;
+Parish Directory keeps its separate buttons. Existing worlds, custom properties
+and resource reserves are unchanged. Production remains an operator-managed
+pull/rebuild/restart deployment.

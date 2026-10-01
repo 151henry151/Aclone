@@ -6,6 +6,7 @@ systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
 ## Playable and covered by tests
 
+- Enlarged parish map (M or click minimap), with named buildings/resources, live player positions, zoom, panning and clickable building details. The directory remains separate.
 - Gesture-unlocked engine idle/revs, nearby multiplayer horns and motors, production-driven machinery, stereo/distance attenuation, mute and saved volume; browser tests measure actual mixed audio output.
 
 - Player-built hotels/B&Bs, prepaid bookings, private guest stores, offline meals and safe expiry.

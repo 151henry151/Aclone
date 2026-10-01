@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-30
+
+### Added
+
+- An enlarged parish map with named buildings and gathering grounds, the actual winding roads, race and Hornball landmarks, and live player positions. Click a building name to inspect it; zoom, drag or scroll to explore, use Find me to return to your position, and Fit parish to include custom properties.
+- Clickable minimaps and keyboard-accessible map controls, with readable labels and scrolling on small screens. Map zoom, scroll position and controls survive routine server updates.
+
+### Fixed
+
+- M now opens and closes the parish map instead of opening the Parish Directory. The directory remains available from its own buttons and the game menu.
+
 ## [0.8.1] - 2026-09-30
 
 ### Fixed

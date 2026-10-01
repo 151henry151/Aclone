@@ -26,6 +26,13 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#world-hud')).toBeVisible();
   await expect(page.locator('#cash')).toHaveText('18s 0d');
+  // Exercise the built client and configured URL prefix as well as the isolated map fixture.
+  await page.keyboard.press('m');
+  const map = page.getByRole('dialog', { name: 'Parish map.', exact: true });
+  await expect(map).toBeVisible();
+  await expect(map.getByRole('button', { name: 'Harbour stores', exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(map).toHaveCount(0);
   await expect.poll(() => textures.size).toBe(4);
   await expect
     .poll(

@@ -1,5 +1,25 @@
 # Living in the parish
 
+## Finding your way
+
+Press **M** or click/tap the minimap to open the **Parish map**. It shows the same
+roads as the world, names each building and labels woodland, stone, gravel and
+topsoil gathering grounds. Green resource dots show unobstructed sites; reserves
+can still be depleted, so use **Resources** for current amounts. The gold marker
+and arrow show your position and heading; pale blue dots show other online players.
+
+Use **+ / −** to zoom, drag with the mouse or swipe on a touch screen to pan, or
+scroll with a wheel/trackpad. Tab to the map itself and use the arrow keys to pan
+with the keyboard. **Find me** centres your position; **Fit parish** resets zoom
+and includes the parish's current buildings, gathering grounds and your position.
+On narrow screens, pan across the map to keep names readable. Long custom names
+have their full text in the building window and mouse tooltip.
+
+Click a building name to inspect it, then travel there to use it. Viewing a name
+on the map does not let you trade or work remotely. Press **M** again or **Esc**
+to close. **Parish directory** still opens the list of buildings and distances;
+its buttons remain in the map, journal and game menu.
+
 ## Sound
 
 Sound is enabled by default and starts after a click, tap or keypress. The **Sound**

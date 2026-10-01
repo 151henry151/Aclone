@@ -36,6 +36,7 @@ cross-service exchange; it is tracked as a remaining specification gap.
 - `src/client/buildings.ts`: original building silhouettes and facade details.
 - `src/client/scene.ts`: original models, terrain, camera and effects.
 - `src/client/human.ts`: shared walking/driver geometry, articulated walking and seated poses.
+- `src/client/parish-map.ts`, `map-layout.ts`: persistent map controls, SVG roads and player markers, native building buttons, bounds and deterministic label placement. Uses shared town roads and resource nodes; snapshots update player markers without replacing controls. Static layers rebuild only on property/layout changes, resize or explicit map navigation.
 - `src/client/main.ts`, `style.css`: input, panels, connection and responsive HUD.
 
 ## Economy invariants

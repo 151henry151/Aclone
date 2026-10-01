@@ -9,6 +9,7 @@ import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
 import { GameScene } from './scene';
+import { ParishMap } from './parish-map';
 import {
   items,
   recipes,
@@ -34,7 +35,8 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><canvas id="minimap" width="230" height="170" aria-label="World map"></canvas><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+let parishMap: ParishMap | undefined;
 let scene: GameScene;
 try {
   scene = new GameScene(document.querySelector('#viewport')!);
@@ -348,6 +350,7 @@ function updateHud() {
     $('objective').textContent =
       `${world.combat.mode} · ${me.team === 0 ? 'Rust' : 'Moss'} team · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
   drawMap();
+  parishMap?.update(world, me);
   if (
     me.game === 'fishing' &&
     me.fishAt !== undefined &&
@@ -417,6 +420,8 @@ function drawMap() {
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
 function openPanel(name: string) {
+  parishMap?.dispose();
+  parishMap = undefined;
   if (name === 'options' && token)
     void api('/api/auth/status')
       .then((r) => {
@@ -431,6 +436,8 @@ function openPanel(name: string) {
   renderPanel();
 }
 function closePanel() {
+  parishMap?.dispose();
+  parishMap = undefined;
   scene.paused = false;
   panel = '';
   $('modal-host').innerHTML = '';
@@ -478,7 +485,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -517,6 +524,18 @@ function renderPanel() {
       'Land first.',
       `<p>This is a planetside activity.</p>${button('Choose a world', 'galaxy')}`,
     );
+    return;
+  }
+  if (panel === 'map') {
+    if (!parishMap) {
+      modal('Parish map.', '<div id="parish-map"></div>', true);
+      $('modal-host').querySelector('.window')!.classList.add('map-window');
+      parishMap = new ParishMap($('parish-map'), world, me, (id) => {
+        selected = id;
+        openPanel('building');
+      });
+      $('modal-host').querySelector<HTMLButtonElement>('.close')!.focus();
+    } else parishMap.update(world, me);
     return;
   }
   const b = world.buildings.find((b) => b.id === selected);
@@ -610,7 +629,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Directory', 'directory')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -906,6 +925,7 @@ app.addEventListener('click', async (e) => {
     const panels = [
       'menu',
       'directory',
+      'map',
       'help',
       'options',
       'shipyard',
@@ -1250,7 +1270,7 @@ window.addEventListener('keydown', (e) => {
   if (panel && e.key === 'Tab') {
     const controls = [
       ...$('modal-host').querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input, select, textarea, summary, a[href]',
+        'button:not([disabled]), input, select, textarea, summary, a[href], [tabindex="0"]',
       ),
     ];
     if (controls.length) {
@@ -1306,8 +1326,9 @@ window.addEventListener('keydown', (e) => {
     openPanel('menu');
     return;
   }
-  if (key === 'm') {
-    openPanel('directory');
+  if (key === 'm' && world) {
+    if (panel === 'map') closePanel();
+    else openPanel('map');
     return;
   }
   if (key === 'i') {

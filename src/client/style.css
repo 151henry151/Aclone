@@ -1793,3 +1793,153 @@ button span {
   color: #c7d0b9;
   font-size: 0.85rem;
 }
+
+/* Parish atlas: native controls stay stable while live player markers move. */
+.minimap-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.minimap-button:hover {
+  filter: brightness(1.12);
+}
+.window.map-window {
+  width: min(1160px, 100%);
+}
+.map-window h2 {
+  margin-bottom: 12px;
+}
+.parish-map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.parish-map-tools .button-row {
+  margin: 0;
+  gap: 6px;
+  align-items: center;
+}
+.parish-map-zoom {
+  font: 11px monospace;
+  min-width: 40px;
+  text-align: center;
+}
+.parish-map-viewport {
+  max-height: 57vh;
+  overflow: auto;
+  border: 1px solid #bdc39988;
+  border-radius: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #b7ba8f #364a36;
+  cursor: grab;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+}
+.parish-map-viewport:active {
+  cursor: grabbing;
+}
+.parish-map-sheet {
+  position: relative;
+  user-select: none;
+}
+.parish-map-sheet > svg {
+  position: absolute;
+  inset: 0;
+}
+.parish-map-players {
+  pointer-events: none;
+}
+.parish-map-labels {
+  position: absolute;
+  inset: 0;
+}
+.parish-map-building-label,
+.parish-map-resource-label,
+.parish-map-landmark-label {
+  position: absolute;
+  padding: 4px 7px;
+  margin: 0;
+  border: 1px solid #b8b491;
+  border-radius: 3px;
+  background: #263c2fea;
+  color: #f4e8c5;
+  font: 12px/14px monospace;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.parish-map-building-label:hover,
+.parish-map-building-label:focus-visible {
+  z-index: 2;
+  background: #ece0b9;
+  color: #243b2d;
+  border-color: #fff2c7;
+}
+.parish-map-resource-label {
+  background: #344c32ed;
+  border-color: #96b282;
+  color: #d1eab4;
+  font-style: italic;
+  pointer-events: none;
+}
+.parish-map-key {
+  display: flex;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #dfddbc;
+}
+.parish-map-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.parish-map-key strong {
+  margin-left: auto;
+}
+.map-symbol {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #f5bd77;
+  border-radius: 50%;
+}
+.map-symbol.building {
+  background: #f0ddb0;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+.map-symbol.resource {
+  background: #a9cf86;
+}
+.map-symbol.player {
+  background: #b9ded7;
+}
+.map-window .parish-map-help {
+  font-size: 11px;
+  margin: 10px 0 0;
+}
+@media (max-width: 600px) {
+  .parish-map-tools button {
+    padding: 8px 10px;
+  }
+  .parish-map-viewport {
+    max-height: 47vh;
+  }
+}
+
+.parish-map-landmark-label {
+  background: #4e6247ed;
+  border-color: #a5b48a;
+  color: #e0e7bb;
+  pointer-events: none;
+}
