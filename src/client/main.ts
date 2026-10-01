@@ -35,7 +35,19 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" role="log" aria-live="polite"></div><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="300" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+let npcResidents:
+  | {
+      id: string;
+      playerId: string;
+      name: string;
+      personality: string;
+      world: string;
+      online: boolean;
+      status: string;
+    }[]
+  | undefined;
+let chatRecipient: { id: string; name: string } | undefined;
 let parishMap: ParishMap | undefined;
 let scene: GameScene;
 try {
@@ -84,6 +96,16 @@ const keys = new Set<string>();
 const $ = (id: string) => document.getElementById(id)!;
 declare const __ACLONE_BASE__: string;
 const withBase = (path: string) => publicPath(__ACLONE_BASE__, path);
+function setChatRecipient(recipient?: { id: string; name: string }) {
+  chatRecipient = recipient;
+  $('chat-recipient').hidden = !recipient;
+  $('chat-recipient').innerHTML = recipient
+    ? `Private message to ${esc(recipient.name)} ${button('Back to parish chat', 'chat-public')}`
+    : '';
+  ($('chat-input') as HTMLInputElement).placeholder = recipient
+    ? 'Message this AI resident…'
+    : 'Enter to chat · *help for commands';
+}
 function toast(text: string, error = false) {
   $('toast').textContent = text;
   $('toast').className = error ? 'show error' : 'show';
@@ -174,6 +196,7 @@ async function connect() {
       updateHud();
     }
     if (msg.type === 'space') {
+      setChatRecipient();
       account = msg.account;
       registry = msg.galaxy.worlds;
       market = msg.market;
@@ -306,7 +329,7 @@ function updateHud() {
     .slice(0, 8)
     .map(
       (p) =>
-        `<div class="player-row"><span>${p.id === me!.id ? '▸' : '·'} ${esc(p.name)}</span><small>${p.kudos} kudos</small></div>`,
+        `<div class="player-row"><span>${p.id === me!.id ? '▸' : '·'} ${esc(p.name)}${p.npc ? ' <small class="ai-tag">AI</small>' : ''}</span><small>${p.kudos} kudos</small></div>`,
     )
     .join('');
   $('driving').innerHTML =
@@ -326,7 +349,10 @@ function updateHud() {
         : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
   $('chat-log').innerHTML = world.messages
     .slice(-5)
-    .map((m) => `<div class="chat-line ${esc(m.kind)}"><b>${esc(m.name)}</b> ${esc(m.text)}</div>`)
+    .map(
+      (m) =>
+        `<div class="chat-line ${esc(m.kind)}"><b>${esc(m.name)}${m.npc ? ' · AI' : ''}</b>${m.to ? ' <small>private</small>' : ''} ${esc(m.text)}</div>`,
+    )
     .join('');
   $('chat-log').scrollTop = $('chat-log').scrollHeight;
   $('bag').innerHTML =
@@ -349,6 +375,8 @@ function updateHud() {
   if (me.game === 'combat' && world.combat)
     $('objective').textContent =
       `${world.combat.mode} · ${me.team === 0 ? 'Rust' : 'Moss'} team · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
+  $('npc-notice').hidden =
+    !Object.values(world.players).some((p) => p.npc) && !world.messages.some((m) => m.npc);
   drawMap();
   parishMap?.update(world, me);
   if (
@@ -420,6 +448,15 @@ function drawMap() {
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
 function openPanel(name: string) {
+  if (name === 'npc') {
+    npcResidents = undefined;
+    void api('/api/npc')
+      .then((r) => {
+        npcResidents = r.residents;
+        if (panel === 'npc') renderPanel();
+      })
+      .catch((e) => toast(e.message, true));
+  }
   parishMap?.dispose();
   parishMap = undefined;
   if (name === 'options' && token)
@@ -526,6 +563,14 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'npc') {
+    const residents = npcResidents?.filter((r) => r.world === world!.id);
+    modal(
+      'AI neighbours.',
+      `<p>These residents are AI agents with their own personalities, savings and memories. They drive, work and trade under the same rules as you.</p><p class="notice">Parish chat and messages sent to an AI are saved in its memory. Relevant excerpts and game observations are sent to OpenAI to decide its replies and actions.</p>${residents === undefined ? '<p>Loading residents…</p>' : residents.length ? residents.map((r) => `<article class="npc-card"><h3>${esc(r.name)} <small class="ai-tag">AI</small></h3><p>${esc(r.personality)}</p><p>${r.online ? 'In the parish' : 'Currently resting'} · ${esc(r.status)}</p>${button('Chat with ' + esc(r.name), 'npc-chat', `data-id="${esc(r.playerId)}"`)}</article>`).join('') : '<p>No AI resident is enabled in this parish. The server operator can enable the proof of concept.</p>'}<p class="note">Use the chat button for a private conversation, or mention their first name in parish chat. Replies can take a little time. Memories persist across restarts; the server operator can inspect and manage them.</p>${button('Refresh residents', 'npc')}`,
+    );
+    return;
+  }
   if (panel === 'map') {
     if (!parishMap) {
       modal('Parish map.', '<div id="parish-map"></div>', true);
@@ -629,7 +674,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -926,6 +971,7 @@ app.addEventListener('click', async (e) => {
       'menu',
       'directory',
       'map',
+      'npc',
       'help',
       'options',
       'shipyard',
@@ -942,6 +988,19 @@ app.addEventListener('click', async (e) => {
       return;
     }
     switch (action) {
+      case 'npc-chat': {
+        const resident = npcResidents?.find((r) => r.playerId === id);
+        if (resident) {
+          setChatRecipient({ id: resident.playerId, name: resident.name });
+          closePanel();
+          $('chat-input').focus();
+        }
+        break;
+      }
+      case 'chat-public':
+        setChatRecipient();
+        $('chat-input').focus();
+        break;
       case 'close':
         closePanel();
         break;
@@ -1151,7 +1210,7 @@ app.addEventListener('submit', async (e) => {
       await connect();
     } else if (form.id === 'chat-form') {
       const text = String(data.message).trim();
-      if (text) send({ type: 'chat', text });
+      if (text) send({ type: 'chat', text, ...(chatRecipient ? { to: chatRecipient.id } : {}) });
       form.reset();
       (form.querySelector('input') as HTMLInputElement).blur();
     } else if (form.id === 'create-form') {

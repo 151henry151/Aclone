@@ -1,0 +1,144 @@
+# Player questions and controls
+
+This guide describes Aclone's implemented defaults. World owners can change
+prices and rules; read the current building window before spending money.
+
+## Controls
+
+- **WASD / arrow keys:** drive, reverse and steer; **Shift:** boost, using more fuel.
+- **E / Ctrl:** open the nearby building. Click a building to inspect it; actions need proximity.
+- **Space / Parp:** horn. **Tab:** horn unless fighting is enabled, when it fires the selected weapon. Hold/release Tab for javelins; **1–6** select weapons. Tab inside a window moves keyboard focus.
+- **F4 / Engine:** start or stop the engine. **L / Lights:** headlights.
+- **C / View:** cycle camera; mouse wheel zooms; drag in first-person to look around/up.
+- **I / Inventory:** inventory, food/drink, vehicles and walking. **M** or click minimap: **Parish map**, with named buildings/resources; M again closes it. The **Parish Directory** is a separate list.
+- **Enter / F2:** chat; Enter sends. **F7:** Field guide. **F9:** game menu. **F10:** world-owner editor.
+- **F5 / R:** deploy/return from a carried robocrow. **F3:** reel when a fish bites.
+- **Insert / Delete:** climb/descend in flight. **H:** hide/show HUD for scenery. **Escape:** close windows and restore the HUD.
+- **Sound:** mute/unmute; volume in Pilot & preferences. Touch arrows steer/drive; use on-screen buttons where browsers reserve function keys.
+- Typing in a text field or having a game window open stops driving input. Focused buttons use Space/Enter normally instead of honking/opening chat.
+
+## What does Parp mean?
+
+Parp is the sound of a tractor horn. Press Space or the Parp button to honk.
+Nearby players hear it. In Hornball the horn pushes the ball away from you.
+It is not a character, mission or currency.
+
+## How do I start earning money?
+
+Use M and find the Odd Jobs Office, drive nearby, then E/Ctrl opens it. Click
+**Work a shift · 45d**. No qualification is needed; stay for the 15-second task.
+You cannot move during the shift. Buy food and water at Harbour stores as needed,
+and consume them through Inventory. Then learn a profession at the school and
+look for a matching job or save to buy a business. The first lesson costs 80d and
+takes one real minute; later lessons cost 160d and take 40 real minutes. The
+world's skill limit applies. Ordinary business wages need completed production,
+inputs, output room and money for wages; taking a job alone does not guarantee pay.
+
+## Why will my tractor not move? How do I leave my house and walk?
+
+Close open windows with Escape and leave the chat input before driving. Check
+connection, fuel and Engine/F4. Tasks lock movement until they finish. If at
+home or in a room, use **Go outside** in the nearby-building bar/window first.
+Going outside is different from switching vehicle. In **Inventory**, choose
+**Switch to walking** or **Return to tractor**. Use carried fuel from Inventory
+to refill a tractor; buying fuel without consuming it does not refill the tank.
+Rain, snow, collisions and slopes can affect travel. The game menu's **Return to
+town centre** can recover a stranded player. A repeated server error is a problem
+to report to the operator; Mabel cannot repair a running server for you.
+
+## Why can I not buy, sell or work at a building?
+
+Travel within 18m; map inspection does not enable remote trading. Buyers need
+money and cargo room, while the seller needs stock. A building buying your goods
+needs working capital, storage room and an offered buy price. Watch the displayed
+Buy/Sell buttons: the building's sell quote is what you pay. Player-set prices
+can differ from defaults. You cannot buy/sell goods or take paid employment at
+your **own** shop: use **Stockroom** to transfer goods and **Building Admin** for
+investment, prices and withdrawals. Owning a farm allows unpaid plot care and
+harvest. Buying your workplace ends your employment there. Production needs
+inputs, output space and funded wages; first learn the required profession.
+
+## What happens when I log out or the server restarts?
+
+Accounts, cash, inventories, property, skills, accepted tasks and journeys are
+saved. Successful discrete actions save immediately; movement/simulation save
+about every five seconds. Personal health loss and ageing pause offline. Home
+or paid-room supplies can still be consumed; running out cannot kill an offline
+pilot. Businesses and training continue subject to normal conditions. Restart
+catch-up is limited to 30 real days. Keep the same pilot identity when returning;
+creating a different name creates a different account.
+
+## How do I set a password or reset it by email?
+
+Open **Pilot & preferences** (Options & pilot key from the menu) and set a password
+of at least 12 characters. Existing passwords require the current password to
+change. If the operator has enabled email delivery, add a recovery address and
+verify its email link. **Forgot your password?** on sign-in sends a reset link
+only for a verified address; links expire after 30 minutes. Mabel cannot see,
+set or reset passwords. Never give her your password, API key or pilot recovery
+key. If email delivery is unavailable, the operator must configure it. Keep an
+exported pilot key privately; sign-in/password reset can invalidate older keys.
+
+## How do I keep healthy, store food and use a home?
+
+Use carried food/drink in Inventory. The HUD shows remaining hunger/thirst bars;
+consume supplies when low. Variety matters: repeated foods have reduced effect.
+For your own finished cottage, use Stockroom to deposit food/drink, then Go home.
+A paid hotel/B&B room has its own private pantry and Enter your room button.
+Being indoors slows hunger/thirst by 20% and supplies feed you as needed, including
+offline. Use Go outside to leave. Rooms expire after the prepaid stay; leftover
+pantry supplies remain collectible. Homes use exterior shelter, not a separately
+rendered indoor map. Keep provisions and fuel reserves while travelling.
+
+## How do I build, paint or customize things?
+
+Use **Build**, choose a building and, for cottages, a style. Construction costs,
+required materials, qualifications and world progression are shown; new businesses
+need stocking and funding. Some cottages have timber siding. Visit the garage
+for seven tractor paint choices (25d at defaults). Owners manage their own
+business through Building Admin. **F10** opens the editor, but only a world's
+owner has editing permissions; making a new world grants ownership of that world,
+not of public Puddlewick. There are no ordinary-player cash/admin cheats.
+
+## What are Hornball, racing, fishing and Ultrakricket?
+
+Use **Activities** to join and **Leave activity** to exit. Hornball is a team
+tractor ball game: drive near the ball and honk to push it toward the goal.
+Racing follows the ordered checkpoints; follow the next gate indication.
+Fishing needs carried Fishing tackle and a world with fishing enabled. Join,
+wait for a bite, then press F3/Reel within the eight-second bite window. Cargo
+space is needed for the catch.
+
+Ultrakricket is a two-player timing game using a grenade as the ball. The first
+player bowls and the second bats, using the Activities delivery/swing button.
+A delivery arrives after **three seconds**; a swing within 0.65 seconds of arrival
+scores six, otherwise the batter loses a life. The sign marks the activity ground.
+These are Aclone's current rules, not a claim of exact historical-game fidelity.
+
+## How do money and trading profits work?
+
+The interface uses denarii (d) and sheckles (s); normally 100d = 1s. Game-data
+integers are hundredths of one denarius, so 4500 internal units means 45d.
+Default shop goods can be delivered to Harbour stores for about 3% gross profit;
+fuel, taxes where applicable, time and available stock/capital matter. Buying
+and immediately reselling at the same harbour loses money. Actual quotes override
+this example. Galactic credits/cargo are separate from local cash/inventory;
+conversion is available at a spaceport, subject to the world's cap.
+
+## Can Mabel help with everything or act on my behalf?
+
+Mabel is an AI resident, visibly labelled AI. She can explain the controls and
+look up the bundled player guide, economy guide and item/building/recipe defaults.
+She can be mistaken: current game windows and actual results take precedence.
+Her own tools cover basic economy activities; she can explain combat, construction
+and galaxy travel but cannot perform those activities herself yet. Advice does
+not spend your money or operate your character. Questions need no purchase or
+movement on her part; she can answer while continuing her own work.
+
+Use AI neighbours to start a private chat, or mention Mabel in parish chat.
+Messages to her and parish chat are saved in her memory; relevant excerpts go
+to OpenAI. Never send credentials. She can be resting due to an empty parish,
+operator pause, API failure or a spending cap. Replies may take several seconds.
+There is no guarantee of an instant response, perfect recall or knowing every
+custom world's rules. When documentation does not cover something, she should
+say so and point to the Field guide or the server operator, rather than invent it.

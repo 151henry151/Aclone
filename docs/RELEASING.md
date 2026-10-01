@@ -183,3 +183,22 @@ its new version, and refresh browser clients. M now toggles an enlarged map;
 Parish Directory keeps its separate buttons. Existing worlds, custom properties
 and resource reserves are unchanged. Production remains an operator-managed
 pull/rebuild/restart deployment.
+
+## 0.10.0 upgrade notes
+
+Back up the database, pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart the Node service. Refresh browser clients for AI identity,
+private chat and the memory notice. Existing accounts and worlds are preserved;
+four additive NPC tables are created when the optional controller is enabled.
+SQLite backups include its memories, pause state and usage reservations.
+
+Enable **one** Mabel with `NPC_ENABLED=true` and `OPENAI_API_KEY` in the server's
+private environment. The development machine's `.env` is deliberately not pushed:
+configure the production host separately. Native `npm start` does not read `.env`
+automatically; use the service's EnvironmentFile or `node --env-file=.env --import tsx src/server/main.ts`. Docker Compose passes the listed settings from its `.env`.
+Keep `NPC_ID=mabel` stable and keep the same DATA_DIR across restarts. See
+[NPCS.md](NPCS.md) for spending limits and pause/usage commands.
+
+Ship `docs/FAQ.md`, `docs/PLAYING.md` and `docs/ECONOMY.md` with the server; they
+power the local help lookup. Docker and the source archive include them. The API
+key stays server-side; no browser build variable should contain it. Production
+remains an operator-managed pull/rebuild/restart deployment.

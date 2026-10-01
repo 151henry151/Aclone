@@ -85,13 +85,11 @@ both have distinct processing buildings. Coffee takes ten hours and is the most
 frost-sensitive crop. See [the farming guide](PLAYING.md#farming) for planting windows.
 
 After a plot's first harvest, install permanent drainage using **6 gravel**.
-Drainage removes its waterlogging penalty and survives future harvests. **6 topsoil
-
-- 1 compost** restores an empty plot, clearing its previous crop-family penalty
-  for the next planting. **1 compost** fertilizes a growing plot; if you carry none,
-  the 10d purchased-fertilizer fallback remains available. Fertilize once per crop
-  for the existing 33% yield bonus. These choices consume real goods; improvements
-  cannot be repeatedly applied to gain free items or stack bonuses.
+Drainage removes its waterlogging penalty and survives future harvests. **6 topsoil + 1 compost** restores an empty plot, clearing its previous crop-family penalty
+for the next planting. **1 compost** fertilizes a growing plot; if you carry none,
+the 10d purchased-fertilizer fallback remains available. Fertilize once per crop
+for the existing 33% yield bonus. These choices consume real goods; improvements
+cannot be repeatedly applied to gain free items or stack bonuses.
 
 ## Running a guesthouse
 

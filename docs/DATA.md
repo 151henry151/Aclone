@@ -83,3 +83,14 @@ from recipe skills, plus innkeeper, forester and excavator. Recipe times scale b
 `settings.productionSeconds / 600`; custom production uses its explicit interval.
 Existing public market/starport quotes gain the new items with zero stock, keeping
 custom existing prices and inventories intact.
+
+## AI resident persistence (0.10.0)
+
+Enabling the prototype adds four SQLite tables without rewriting ordinary saves:
+`npc_residents` stores identity, notebook and plan progress; `npc_journal` stores
+append-only observations and outcomes; `npc_control` stores operator pause state;
+`npc_calls` stores durable cost reservations and returned token counts. The meta
+key `npc-budget-config` records the active controller's rates and limits for the
+CLI. Player/account records have an optional `npc` flag; world chat has monotonic
+message IDs. All are included in normal backups. Never publish a populated
+database. See [memory and retention](NPCS.md#operator-controls-and-memory).

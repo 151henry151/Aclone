@@ -409,7 +409,11 @@ export class GameScene {
         mesh = undefined;
       }
       if (!mesh) {
-        mesh = this.vehicle(p.vehicle, p.id === me ? undefined : p.name, p.tractorPaint);
+        mesh = this.vehicle(
+          p.vehicle,
+          p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
+          p.tractorPaint,
+        );
         mesh.userData.paint = p.tractorPaint;
         mesh.userData.vehicle = p.vehicle;
         mesh.position.set(p.x, p.y, p.z);

@@ -5,6 +5,7 @@ import { galaxy } from '../shared/catalog.ts';
 import type { Stock } from '../shared/types.ts';
 import type { Store } from './store.ts';
 export interface Account {
+  npc?: boolean;
   id: string;
   name: string;
   credits: number;
@@ -56,6 +57,7 @@ export class Universe {
       .get(tokenHash(token));
     if (!r) return undefined;
     const a = JSON.parse(String(r.state)) as Account;
+    if (a.npc) return undefined;
     this.arrive(a);
     return a;
   }

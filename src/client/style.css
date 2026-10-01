@@ -1943,3 +1943,33 @@ button span {
   color: #e0e7bb;
   pointer-events: none;
 }
+
+.ai-tag {
+  color: #e2c582;
+  font: 10px monospace;
+  border: 1px solid #b6ae7555;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+#npc-notice button {
+  width: 100%;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 0;
+  font: 10px monospace;
+  color: #decf9b;
+}
+#chat-recipient {
+  padding: 5px 10px;
+  color: #e8cf96;
+  font-size: 11px;
+}
+#chat-recipient button {
+  padding: 2px 6px;
+  margin-left: 8px;
+  font-size: 10px;
+}
+.npc-card {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}

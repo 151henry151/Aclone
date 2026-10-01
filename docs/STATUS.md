@@ -4,6 +4,18 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## AI resident prototype (0.10.0)
+
+One optional OpenAI-powered economy resident with personality, chat, normal
+physics/actions, durable journal and shared spending controls. Automated tests
+use deterministic providers. An opt-in live OpenAI trial verified private chat,
+driving to the office, three normal paid labour shifts and memory persistence
+across restart. A further live test verified controls, password recovery, owner
+stock transfers and coffee-growing advice using the bundled guides; see [NPCS.md](NPCS.md). It does not yet control
+combat, space travel, construction or lodging bookings. Long-term independent
+survival and economic success need playtesting; a 50-resident scheduler fixture
+verifies concurrency limits rather than production capacity.
+
 ## Playable and covered by tests
 
 - Enlarged parish map (M or click minimap), with named buildings/resources, live player positions, zoom, panning and clickable building details. The directory remains separate.

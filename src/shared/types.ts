@@ -11,6 +11,8 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  /** Server-operated AI identity; no elevated permissions. */
+  npc?: boolean;
   id: string;
   name: string;
   authority: number;
@@ -167,7 +169,16 @@ export interface World {
   buildings: Building[];
   zones: Zone[];
   terrain: { x: number; z: number; radius: number; height: number }[];
-  messages: { name: string; text: string; kind: string; time: number; to?: string }[];
+  messageSeq?: number;
+  messages: {
+    id?: number;
+    name: string;
+    text: string;
+    kind: string;
+    time: number;
+    to?: string;
+    npc?: boolean;
+  }[];
   ledger: Ledger[];
   ledgerSeq: number;
   ball: { x: number; z: number; vx: number; vz: number };

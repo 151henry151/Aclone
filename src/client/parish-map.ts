@@ -382,7 +382,7 @@ export class ParishMap {
         transform: `translate(${this.x(p.x)} ${this.y(p.z)})`,
       });
       const title = svg('title');
-      title.textContent = self ? 'You' : p.name;
+      title.textContent = self ? 'You' : p.name + (p.npc ? ' · AI' : '');
       marker.append(title);
       marker.append(
         svg('circle', {

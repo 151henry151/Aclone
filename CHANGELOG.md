@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-01
+
+### Added
+
+- Optional AI neighbour Mabel Reed: a persistent personality who chooses multi-step plans, drives and walks through normal physics, earns wages, manages supplies and trades under ordinary player rules. Private in-game chat and visible AI labels make her identity clear.
+- A durable resident journal, searchable older memories and a compact working notebook, with transactional action progress and restart recovery. Chat notices explain memory storage and the OpenAI connection.
+- Server-only OpenAI integration with bounded requests, shared persistent spending caps, empty-parish sleep, operator pause/resume and usage/memory inspection. Exactly one resident is configured for this prototype; the controller supports a bounded future population without increasing its shared allowance.
+- A local game-help library for Mabel: always-available controls, automatic FAQ excerpts, searchable player/economy manuals and catalog defaults, with live world settings taking precedence. Read-only lookups preserve private reply routing and require no paid embeddings.
+- Automated provider, memory, navigation, economy, privacy, budget, guide and browser regressions, backup/restore coverage, opt-in live gameplay/help checks, and operator/developer documentation.
+
+### Fixed
+
+- Keep private NPC replies private through a guide lookup, and bound recalled memory excerpts so long histories and help text fit within the request budget.
+- Make NPC action schemas compatible with OpenAI's strict tool format; the live trial exposed unsupported union encoding that mocked API tests missed. Clarify building visits and casual labour so the resident uses safe service-range navigation and the correct wage action.
+
 ## [0.9.0] - 2026-09-30
 
 ### Added

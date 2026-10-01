@@ -20,7 +20,8 @@ RUN npm ci --include=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
-COPY scripts/backup.ts ./scripts/backup.ts
+COPY docs/FAQ.md docs/PLAYING.md docs/ECONOMY.md ./docs/
+COPY scripts/backup.ts scripts/npc.ts scripts/npc-smoke.ts scripts/npc-guide-smoke.ts ./scripts/
 COPY LICENSE COPYRIGHT THIRD_PARTY_NOTICES.md ./
 RUN mkdir -p /app/var && chown node:node /app/var
 USER node

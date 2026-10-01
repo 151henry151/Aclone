@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { Residents, type ResidentOptions } from './npc/residents.ts';
+import type { BudgetConfig } from './npc/budget.ts';
 import { motorRunning } from '../shared/sound-state';
 import { leaveCombat } from '../shared/combat.ts';
 import { VERSION } from '../shared/version';
@@ -78,6 +80,7 @@ export interface AppOptions {
   mailer?: Mailer;
   publicOrigin?: string;
   maxPeers?: number;
+  npc?: { residents: ResidentOptions[]; budget?: Partial<BudgetConfig> };
 }
 export async function createApp(options: AppOptions) {
   const dataDir = resolve(options.dataDir),
@@ -168,6 +171,7 @@ export async function createApp(options: AppOptions) {
             : {
                 id: q.id,
                 name: q.name,
+                npc: q.npc,
                 x: q.x,
                 y: q.y,
                 z: q.z,
@@ -268,6 +272,13 @@ export async function createApp(options: AppOptions) {
     }
     return Buffer.concat(chunks);
   };
+  const residents = options.npc
+    ? new Residents(store, universe, worlds, options.npc.residents, options.npc.budget)
+    : undefined;
+  if (residents)
+    residents.onTask = (w, id) => {
+      void scriptEvent(w, 'TaskStart', { id });
+    };
   const rate = new Map<string, { time: number; count: number }>();
   const server = createServer(async (req, res) => {
     let path: string;
@@ -284,6 +295,10 @@ export async function createApp(options: AppOptions) {
         return json(res, 403, { error: 'Origin not allowed' });
       if (path === '/api/health')
         return json(res, 200, { ok: true, version: VERSION, worlds: worlds.size });
+      if (path === '/api/npc' && req.method === 'GET') {
+        auth(req);
+        return json(res, 200, { residents: residents?.status() ?? [] });
+      }
       if (path.startsWith('/api/auth/')) {
         if (path === '/api/auth/status' && req.method === 'GET')
           return json(res, 200, accounts.status(auth(req).id));
@@ -643,11 +658,10 @@ export async function createApp(options: AppOptions) {
             p.account.credits += n;
             message = `Converted to ${n} galactic credits.`;
           } else message = act(w, p.account.id, a);
-          store.saveWorld(
-            w,
-            Date.now() / 1000,
-            a.type === 'exchange' ? () => universe.save(p.account!) : undefined,
-          );
+          store.saveWorld(w, Date.now() / 1000, () => {
+            if (a.type === 'exchange') universe.save(p.account!);
+            residents?.capture(w);
+          });
         } catch (e) {
           p.account = accountBefore;
           worlds.set(w.id, before);
@@ -706,6 +720,7 @@ export async function createApp(options: AppOptions) {
             }
           }
           for (const w of worlds.values()) advance(w, dt);
+          residents?.tick(dt);
           counter++;
           if (counter % 4 === 0) {
             const frames = new Map<string, Frame>();
@@ -748,6 +763,7 @@ export async function createApp(options: AppOptions) {
     });
   const close = async () => {
     if (timer) clearInterval(timer);
+    residents?.close();
     clearInterval(backupTimer);
     for (const p of peers) {
       leave(p);
@@ -759,7 +775,7 @@ export async function createApp(options: AppOptions) {
     if (server.listening) await new Promise<void>((r) => server.close(() => r()));
     store.close();
   };
-  return { server, worlds, store, universe, accounts, listen, close };
+  return { server, worlds, store, universe, accounts, residents, listen, close };
 }
 function mime(path: string) {
   return (

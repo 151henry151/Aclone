@@ -1,5 +1,7 @@
 # Living in the parish
 
+See [controls and common questions](FAQ.md) for driving, accounts, homes and getting started.
+
 ## Finding your way
 
 Press **M** or click/tap the minimap to open the **Parish map**. It shows the same
@@ -104,8 +106,8 @@ Nothing auto-replants or silently throws away an overdue harvest.
 Harvesting takes a 15-second shift and locks movement, like other work tasks.
 One worker reserves a plot at a time. Finished crops go into the farm's stockroom;
 an employed harvester receives its posted wage, funded by investment and subject
-to wage tax. Owners working their own plots take produce rather than a wage unless
-also employed. If the stockroom fills or wages become unfunded during the shift,
+to wage tax. Owners working their own plots take produce rather than a wage; they cannot
+employ themselves. If the stockroom fills or wages become unfunded during the shift,
 the plot remains intact and can be tried again. Disconnecting does not cancel an
 accepted harvest shift or pay it twice.
 
@@ -209,3 +211,14 @@ Buying your workplace ends your job there.
 
 Default building prices allow a 3% gross resale margin at Harbour stores. Check
 stock, working capital, distance and customized quotes before loading your cargo.
+
+## AI neighbours (optional prototype)
+
+An operator can enable Mabel Reed, an AI resident with her own personality, goals
+and persistent memory. Her pilot and chat messages show **AI**. Open **AI resident
+· chat & memory info** above chat, or **Game menu → AI neighbours**, to read the
+notice and start a private conversation. **Back to parish chat** switches back.
+Mention Mabel in public chat to attract her attention. Replies can take several
+seconds; she sleeps when the parish is empty or her shared AI budget runs out.
+Parish chat and messages to her are retained, and relevant excerpts are sent to
+OpenAI. Other players' private conversations are excluded. See [the NPC guide](NPCS.md).

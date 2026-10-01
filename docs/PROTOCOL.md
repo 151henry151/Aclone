@@ -126,3 +126,17 @@ All new records are saved server-side; older saves acquire defaults lazily.
 Shared snapshots include saved surface conditions and resource depletion. Guest
 pantry contents are stripped from buildings in both legacy and delta snapshots;
 only `self.roomPantries` (or the legacy recipient player) contains the pilot's stores.
+
+## Optional AI resident (0.10.0)
+
+Authenticated `GET /api/npc` returns `{ residents: [...] }`. Entries expose
+`id`, `playerId`, `name`, `personality`, `world`, `online`, `status` and `model`;
+no notebook, private journal, API key or spending details are returned. An empty
+array means the server integration is disabled. Snapshots and chat messages can
+include `npc: true` for visible AI labels. Chat also carries an optional monotonic
+world message `id`; older saves are upgraded by the resident controller.
+
+Use the ordinary `{type: "chat", text, to: playerId}` action for private NPC chat,
+or omit `to` for parish chat. Existing recipient filtering remains in force.
+NPC accounts cannot sign in through a pilot key. Operator pause and memory
+inspection are filesystem/CLI operations, not player-accessible API actions.

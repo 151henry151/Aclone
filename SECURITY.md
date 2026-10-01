@@ -31,3 +31,12 @@ The recovery design follows the [OWASP forgot-password guidance](https://cheatsh
 The browser's automatic sign-in key is still a bearer secret in local storage;
 protect the host from cross-site scripting and serve public instances over HTTPS.
 Password reset and sign-out revoke keys, so old exported recovery keys stop working.
+
+The optional AI resident uses a server-only OpenAI key and `store: false` API
+requests. Model tools are allowlisted game actions with bounded schemas and
+ordinary authority, ownership, proximity and currency checks; there is no shell,
+filesystem, arbitrary HTTP or administrator tool. Chat is untrusted input and
+cannot grant the NPC extra permissions. NPC accounts cannot authenticate as
+human pilots. Local journals include private messages addressed to the resident;
+operator CLI output and backups must stay private. Players see AI labels and a
+memory/provider notice. See [NPC data handling and budgets](docs/NPCS.md).

@@ -50,6 +50,7 @@ export function prepareFrame(w: World): Frame {
       publicPlayers[p.id] = JSON.stringify({
         id: p.id,
         name: p.name,
+        npc: p.npc,
         x: +p.x.toFixed(2),
         y: +p.y.toFixed(2),
         z: +p.z.toFixed(2),

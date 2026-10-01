@@ -52,7 +52,8 @@ export function log(
   if (amount) w.ledger.push({ id: ++w.ledgerSeq, time: w.time, kind, amount, from, to, reason });
 }
 export function say(w: World, name: string, text: string, kind = 'system', to?: string) {
-  w.messages.push({ name, text, kind, time: w.time, ...(to ? { to } : {}) });
+  w.messageSeq = (w.messageSeq ?? 0) + 1;
+  w.messages.push({ id: w.messageSeq, name, text, kind, time: w.time, ...(to ? { to } : {}) });
   if (w.messages.length > 100) w.messages.shift();
 }
 export function makeBuilding(id: string, kind: string, x: number, z: number): Building {
@@ -965,6 +966,7 @@ export function act(w: World, id: string, a: Action): string {
       const to = a.to === undefined ? undefined : str(a.to);
       requireThat(!to || w.players[to], 'Unknown recipient');
       say(w, p.name, text, 'chat', to);
+      if (p.npc) w.messages.at(-1)!.npc = true;
       break;
     }
     case 'command':

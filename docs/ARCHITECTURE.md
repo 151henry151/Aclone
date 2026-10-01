@@ -202,3 +202,25 @@ Particle counts, light counts and scenery instances remain bounded. Public
 building snapshots redact guest stocks; the private pilot projection carries
 only that pilot's pantries. Lodging is protected against demolition, decay and
 combat destruction while guest property could otherwise become inaccessible.
+
+## Optional resident controller
+
+`src/server/npc/` separates provider I/O, validated plan schemas, bounded world
+observations, durable memory, shared budget reservations, navigation and turn
+scheduling. The native entry point configures exactly one resident when enabled.
+Plans execute through the existing `act` and `move` functions. AI calls run
+asynchronously behind a shared concurrency ceiling; movement does not call the
+provider. Every paid call reserves estimated cost durably before dispatch.
+
+World actions, memory cursors and resident action progress save atomically.
+Chat carries monotonic world message IDs for journal deduplication, independently
+of the client's bounded chat ring. Credentials never enter observations or
+snapshots. Public snapshots expose only an AI flag; the authenticated NPC endpoint
+provides identity/personality and generic status. Detailed design and extension
+boundaries are in [the NPC guide](NPCS.md#development-and-validation).
+
+`npc/knowledge.ts` indexes fixed bundled player manuals and current catalog
+defaults. Observations include basic controls, bounded relevant guide excerpts
+and public world rules. A read-only guide step can retrieve another topic;
+player text never selects a filesystem path. Manuals are included in the Docker
+runtime and source archive. Update them alongside changes to game controls/rules.
