@@ -72,7 +72,8 @@ employees do not buy the mill's inputs or fund its wages from their own wallets.
 Default mill wages are **22d per active employee per successful cycle**, before
 wage tax. Check inputs, flour storage space, active staff and working capital.
 For example, 14.59d investment is 7.41d short of one 22d wage. Work activates a
-period of employment; it does not instantly finish a batch. Unstaffed businesses
+period of employment; it does not instantly finish a batch. The building window
+shows current staffing efficiency and a countdown to the next production check. Unstaffed businesses
 may produce very slowly at the world's offline-efficiency setting. Owners cannot
 employ themselves. Farms use seasonal plots, and public gathering grounds offer
 logs, stone, gravel and dirt; wheat cannot be gathered from a wild resource node.

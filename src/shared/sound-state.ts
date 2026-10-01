@@ -22,6 +22,15 @@ export function productionStaff(w: World, b: Building, at: number) {
     .filter((p) => p && p.id !== b.owner && (!w.settings.activeWork || p.activeUntil >= at));
 }
 
+/** Staffing efficiency right now; supply checks still determine whether a batch runs. */
+export function productionEfficiency(
+  w: World,
+  b: Building,
+  staff = productionStaff(w, b, w.time).length,
+): number {
+  return b.government || staff ? 1 : w.settings.offlineEfficiency;
+}
+
 /** Shared by the economic cycle and its audible activity projection. */
 export function productionSupplied(b: Building, r: Recipe, staff: number): boolean {
   return (
@@ -38,7 +47,7 @@ export function productionActivity(w: World, b: Building, crafting = new Set<str
   if (!r) return 0;
   const staff = productionStaff(w, b, w.time);
   if (!productionSupplied(b, r, staff.length)) return 0;
-  return b.government || staff.length ? 1 : w.settings.offlineEfficiency;
+  return productionEfficiency(w, b, staff.length);
 }
 
 /** One scan per broadcast, including hand crafting which consumes inputs up front. */

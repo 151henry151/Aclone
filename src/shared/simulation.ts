@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { say } from './messages.ts';
 export { say } from './messages.ts';
-import { productionStaff, productionSupplied } from './sound-state';
+import { productionStaff, productionSupplied, productionEfficiency } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
@@ -1218,7 +1218,7 @@ function cycle(w: World, b: Building, at: number) {
   if (!r || b.construction || b.kind === 'farm') return;
   removeOwnerEmployment(w, b);
   const staff = productionStaff(w, b, at);
-  const efficiency = b.government ? 1 : staff.length ? 1 : w.settings.offlineEfficiency;
+  const efficiency = productionEfficiency(w, b, staff.length);
   b.efficiency = efficiency;
   b.progress += efficiency;
   if (b.progress < 1) return;

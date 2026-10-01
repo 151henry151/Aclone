@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-10-01
+
+### Fixed
+
+- Show current staffing efficiency immediately after a worker takes, renews, quits or lets a job expire, rather than displaying the previous production cycle's value. Add the next production-check countdown and explain that batches require stock, space and funded wages.
+
 ## [0.11.1] - 2026-10-01
 
 ### Changed

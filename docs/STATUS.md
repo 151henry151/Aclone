@@ -4,6 +4,13 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Production status (0.11.2)
+
+Building panels show current staffing efficiency, stock quantities and the next
+production-check countdown, refreshing while open. Staffing changes do not create
+an immediate batch; production still checks supplies, output space and wage
+funding at the scheduled boundary. Unit and browser regressions cover this flow.
+
 ## Resident guidance and recovery (0.11.1)
 
 Mabel receives complete FAQ/economy fundamentals, live job and production

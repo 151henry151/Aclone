@@ -404,6 +404,19 @@ function updateHud() {
     !Object.values(world.players).some((p) => p.npc) && !world.messages.some((m) => m.npc);
   drawMap();
   parishMap?.update(world, me);
+  // Update read-only building facts without rebuilding focused forms/buttons.
+  const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
+  if (shown) {
+    const facts: [string, string][] = [
+      ['[data-building-efficiency]', `${Math.round(shown.efficiency * 100)}%`],
+      ['[data-building-investment]', money(shown.investment)],
+      ['[data-production-status]', productionStatus(world, shown)],
+    ];
+    for (const [selector, text] of facts) {
+      const element = $('modal-host').querySelector(selector);
+      if (element && element.textContent !== text) element.textContent = text;
+    }
+  }
   if (
     me.game === 'fishing' &&
     me.fishAt !== undefined &&
@@ -711,13 +724,23 @@ function renderPanel() {
     return;
   }
 }
+function productionStatus(w: World, b: Building) {
+  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  if (!recipe || b.kind === 'farm') return '';
+  const interval = productionInterval(w, b);
+  const remaining = Math.ceil(interval - (w.time % interval));
+  const stock = [...new Set([...Object.keys(recipe.inputs), ...Object.keys(recipe.outputs)])]
+    .map((id) => `${b.stock[id] ?? 0} ${items[id]?.name ?? id}`)
+    .join(' · ');
+  return `Next production check in ${Math.floor(remaining / 60)}m ${remaining % 60}s. Stockroom: ${stock}.`;
+}
 function buildingWindow(b: Building) {
   if (!me || !world) return;
   const near = distance(me, b) < 18,
     selfOwned = b.owner === me.id,
     owned = selfOwned || me.authority === 20;
   const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info'];
-  let html = `<div class="building-meta"><span>OWNER <b>${esc(b.government ? 'Parish' : (world.players[b.owner ?? '']?.name ?? (b.owner ? 'Another player' : 'Unclaimed')))}</b></span><span>INVESTMENT <b>${money(b.investment)}</b></span><span>EFFICIENCY <b>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
+  let html = `<div class="building-meta"><span>OWNER <b>${esc(b.government ? 'Parish' : (world.players[b.owner ?? '']?.name ?? (b.owner ? 'Another player' : 'Unclaimed')))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
       .map(([i, n]) => `${n} ${items[i].name}`)
@@ -838,15 +861,18 @@ function buildingWindow(b: Building) {
         button('Parish activities', 'activities');
     if ((!b.owner || b.forSale) && b.owner !== me.id && !b.government)
       html += `<div class="purchase"><span>This building is for sale.<b>${money(b.price)}</b></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
-    if (b.recipe && b.kind !== 'farm') {
-      const r = b.production ?? recipes[b.recipe];
+    if ((b.recipe || b.production) && b.kind !== 'farm') {
+      const r = b.production ?? recipes[b.recipe!];
+      const interval = productionInterval(world, b);
       html += `<h3>Production</h3><p>${
         Object.entries(r.inputs)
           .map(([k, n]) => `${n} ${esc(items[k].name)}`)
           .join(' + ') || 'Raw extraction'
       } → ${Object.entries(r.outputs)
         .map(([k, n]) => `${n} ${esc(items[k].name)}`)
-        .join(' + ')} · ${productionInterval(world, b) / 60} minutes · ${esc(r.skill)}</p>`;
+        .join(
+          ' + ',
+        )} · ${interval / 60} minutes · ${esc(r.skill)}</p><p class="note"><span data-production-status>${esc(productionStatus(world, b))}</span> Batches use this building's stockroom and need inputs, output space and funded wages. Efficiency shows current staffing; taking a job does not finish a batch immediately.</p>`;
     }
     if (!selfOwned && (b.recipe || b.production))
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;

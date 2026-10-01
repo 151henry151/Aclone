@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { motorRunning, productionActivity, craftingBuildings } from '../shared/sound-state';
+import {
+  motorRunning,
+  productionActivity,
+  craftingBuildings,
+  productionEfficiency,
+} from '../shared/sound-state';
 import type { World, Player } from '../shared/types';
 import type { Account } from './universe';
 import {
@@ -11,7 +16,14 @@ import {
 export function publicBuildings(w: World) {
   const crafting = craftingBuildings(w);
   return w.buildings.map((building) => {
-    const b = { ...building, operating: productionActivity(w, building, crafting) };
+    const b = {
+      ...building,
+      operating: productionActivity(w, building, crafting),
+      efficiency:
+        building.kind !== 'farm' && (building.production || building.recipe)
+          ? productionEfficiency(w, building)
+          : building.efficiency,
+    };
     return b.lodging
       ? {
           ...b,

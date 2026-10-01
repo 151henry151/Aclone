@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { createWorld, addPlayer } from '../../src/shared/simulation.ts';
+import { createWorld, addPlayer, act } from '../../src/shared/simulation.ts';
 
 test('owners get stock and capital controls instead of self-trading and employment', async ({
   page,
@@ -19,6 +19,7 @@ test('owners get stock and capital controls instead of self-trading and employme
       b = w.buildings.find((b) => b.kind === 'mill')!;
     b.owner = p.id;
     b.stock.flour = 10;
+    b.efficiency = 0.01;
     p.inventory.wheat = 5;
     p.x = b.x;
     p.z = b.z + 13;
@@ -36,6 +37,16 @@ test('owners get stock and capital controls instead of self-trading and employme
     await expect(page.locator('#target')).toContainText(b.name);
     await page.keyboard.press('e');
     await expect(page.getByRole('dialog')).toContainText('Your business');
+    await expect(page.locator('.building-meta')).toContainText('1%');
+    await expect(page.getByRole('dialog')).toContainText('Next production check in');
+    const worker = addPlayer(w, 'miller', 'Test miller');
+    worker.skills = ['miller'];
+    worker.x = b.x;
+    worker.z = b.z + 12;
+    act(w, worker.id, { type: 'job', building: b.id });
+    await expect(page.locator('.building-meta')).toContainText('100%');
+    expect(b.stock.flour).toBe(10);
+    await page.screenshot({ path: 'test-results/mill-production-status.png' });
     await expect(page.locator('[data-do="trade"],[data-do="job"],[data-do="work"]')).toHaveCount(0);
     await page.getByRole('button', { name: 'Stockroom', exact: true }).click();
     await page.locator('form[data-action="stock"] select[name="item"]').selectOption('wheat');

@@ -151,3 +151,36 @@ test('compact updates omit unchanged chat and account data and shrink a busy par
   }
   assert.ok(after < before * 0.3, `${after} should be less than 30% of ${before}`);
 });
+
+test('building snapshots show current staffing efficiency before the next production cycle', async () => {
+  const { act, advance } = await import('../src/shared/simulation.ts');
+  const { publicBuildings } = await import('../src/server/snapshots.ts');
+  const w = createWorld('mill-status', 'Mill status', 'owner');
+  const b = w.buildings.find((b) => b.kind === 'mill')!;
+  const p = addPlayer(w, 'worker', 'Mabel');
+  p.x = b.x;
+  p.z = b.z;
+  p.skills = ['miller'];
+  b.owner = 'owner';
+  b.stock = { wheat: 12, flour: 0 };
+  b.investment = 21465;
+  b.wage = 1000;
+  b.efficiency = 0.01;
+  w.time = 100;
+  const current = () => publicBuildings(w).find((q) => q.id === b.id)!;
+  assert.equal(current().efficiency, 0.01);
+  act(w, p.id, { type: 'job', building: b.id });
+  act(w, p.id, { type: 'work', building: b.id });
+  assert.equal(current().efficiency, 1, 'display updates immediately, not after ten minutes');
+  assert.equal(b.efficiency, 0.01, 'projection does not alter economic progress');
+  assert.equal(b.stock.flour, 0, 'employment does not create an instant batch');
+  advance(w, 500);
+  assert.equal(b.stock.flour, 3);
+  assert.equal(b.stock.wheat, 7);
+  p.activeUntil = w.time - 1;
+  assert.equal(current().efficiency, 0.01, 'expired active work is reflected immediately');
+  w.settings.activeWork = false;
+  assert.equal(current().efficiency, 1);
+  act(w, p.id, { type: 'quit' });
+  assert.equal(current().efficiency, 0.01);
+});
