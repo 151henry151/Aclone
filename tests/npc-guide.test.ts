@@ -12,8 +12,17 @@ test('NPC always knows the controls and retrieves relevant player help without t
   assert.ok(
     guide.excerpts.some((e) => /verified/i.test(e.text) && /Forgot your password/i.test(e.text)),
   );
-  assert.ok(JSON.stringify(guide).length < 11000);
+  assert.ok(JSON.stringify(guide).length < 35000);
   assert.ok(gameGuide('').excerpts.length === 0);
+  const core = gameGuide('')
+    .fundamentals.map((e) => e.text)
+    .join('\n');
+  assert.match(core, /Take this job/);
+  assert.match(core, /Work two cycles/);
+  assert.match(core, /5 wheat/);
+  assert.match(core, /Stockroom/);
+  assert.match(core, /Ultrakricket/);
+  assert.match(core, /offline/i);
 });
 test('guide lookup covers FAQ, economy and defaults directly from the catalog', () => {
   for (const [query, expected] of [
@@ -82,13 +91,67 @@ test('long memory excerpts and help fit the resident request budget together', a
     const request = { instructions: instructions + 'P'.repeat(3000), observation };
     assert.ok(
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool)) <
-        60000,
+        96000,
     );
     assert.equal(observation.moreRecallAvailable, true);
     assert.equal(observation.recalled?.length, 8);
     assert.equal(state.recall.length, 20, 'full stored results stay intact');
   } finally {
     residents.close();
+    store.close();
+  }
+});
+
+test('a distant workplace remains in context even when local buildings crowd the selection', async () => {
+  const { Store } = await import('../src/server/store.ts');
+  const { NpcMemory } = await import('../src/server/npc/memory.ts');
+  const { observe } = await import('../src/server/npc/observation.ts');
+  const { createWorld, addPlayer } = await import('../src/shared/simulation.ts');
+  const store = new Store(':memory:');
+  try {
+    const memory = new NpcMemory(store);
+    const w = createWorld('puddlewick', 'Test', 'owner');
+    const p = addPlayer(w, 'resident', 'Mabel');
+    const b = w.buildings.find((b) => b.kind === 'mill')!;
+    b.owner = 'owner';
+    b.x = 150;
+    b.z = 100;
+    b.investment = 1459;
+    b.stock = { wheat: 12, flour: 29 };
+    p.x = 0;
+    p.z = 0;
+    p.job = b.id;
+    p.skills = ['miller'];
+    b.employees = [p.id];
+    for (let i = 0; i < 20; i++)
+      w.buildings.push({ ...w.buildings[0], id: 'near-' + i, x: 1, z: 1 });
+    const state = {
+      playerId: p.id,
+      world: w.id,
+      name: p.name,
+      personality: 'Helpful',
+      notebook: '',
+      intent: 'Work at the mill',
+      cursor: 0,
+      nextAt: 0,
+      plan: [],
+      index: 0,
+      repeats: 0,
+      until: 0,
+      waitUntil: 0,
+      status: 'Ready',
+      errors: 0,
+      helpQuestion: 'Mabel, why is my mill stalled?',
+      questionFrom: 'owner',
+    };
+    const o = observe(w, p, state, memory, 'mabel');
+    assert.equal(o.nearbyBuildings[0].id, b.id);
+    assert.equal(o.currentWork[0].questionerOwnsBuilding, true);
+    assert.match(o.currentWork[0].diagnosis!, /7\.41d/);
+    assert.ok(o.nearbyBuildings.length <= 12);
+    assert.equal(o.currentConversation!.speakerId, 'owner');
+    assert.equal(o.currentConversation!.replyTo, null, 'public conversation stays public');
+  } finally {
     store.close();
   }
 });

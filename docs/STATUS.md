@@ -4,6 +4,19 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Resident guidance and recovery (0.11.1)
+
+Mabel receives complete FAQ/economy fundamentals, live job and production
+conditions, her actual action results and wage receipts. Real-model trials
+verified mill diagnosis, ordinary paid flour production, custom-recipe blockers
+and common player questions. Model advice remains fallible; see [NPC validation](NPCS.md#development-and-validation).
+
+Repeated failures persist across restarts, back off further decisions and
+block recently failed steps. Duplicate autonomous announcements are suppressed;
+new human questions can still wake her without removing the action blocks.
+Regression tests use a deliberately repeating provider to verify this behavior.
+Already-in-range service visits no longer need another path or a running engine.
+
 ## Performance and chat (0.11.0)
 
 Compact field updates reduce repeated world, player and private-state traffic.

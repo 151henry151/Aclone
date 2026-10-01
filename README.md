@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.11.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.11.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.11.1:** Mabel gets complete FAQ/economy knowledge, live workplace diagnostics and persistent action feedback. Failed plans back off and duplicate announcements are suppressed. See [AI neighbour guidance and recovery](docs/NPCS.md).
 
 **New in 0.11.0:** smaller network updates, bounded catch-up traffic, lighter rendering and NPC/script processing, and main-chat scrollback. Dynamic shadows default off; models, textures and lighting remain. See [performance and chat](#performance-and-chat-0110).
 
@@ -254,6 +256,12 @@ World state, accounts and a money ledger are stored under `var/aclone.sqlite` by
 ## Optional AI resident
 
 An opt-in OpenAI-powered resident, **Mabel Reed**, can drive, work, trade and chat using ordinary player rules. She keeps a persistent journal and a small working notebook, and can look up controls, FAQs, gameplay guides and current catalog defaults to help neighbours. Only one resident is configured; multi-step plans, sleeping in an empty parish and shared daily/monthly cost caps limit API use. API-key billing is separate from a ChatGPT subscription. See [setup, chat, budget and operator controls](docs/NPCS.md). Disabled by default; requires a server API key. A live OpenAI smoke test has verified chat, driving to work, three paid labour shifts from one plan, and memory persistence across a restart.
+
+Version 0.11.1 expands Mabel's always-present knowledge to the full
+FAQ and economy guide, with live production/employment diagnostics and clearer
+success/failure feedback. Repeated failures now back off, recently failed steps
+are temporarily blocked, and duplicate autonomous announcements are suppressed. See [the NPC guide](docs/NPCS.md#helping-other-players)
+and [mill troubleshooting](docs/FAQ.md#why-is-my-flour-mill-not-making-flour).
 
 ![Mabel identified as AI, with private help chat in a disposable local browser test](docs/screenshots/npc-chat.png)
 

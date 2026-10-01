@@ -313,6 +313,8 @@ test('Mabel receives help for addressed questions and can look up more without g
   assert.match(initial.gameGuide.controls, /F4/);
   assert.ok(initial.gameGuide.excerpts.some((e: any) => /sawmill/i.test(e.text)));
   assert.equal(initial.worldRules.maxSkills, s.w.settings.maxSkills);
+  assert.equal(initial.currentConversation.speakerId, 'ada');
+  assert.match(initial.currentConversation.question, /sawmill/i);
   s.residents.tick(0.05, now + 500);
   s.residents.tick(0.05, now + 6000);
   await s.residents.settled();
@@ -356,5 +358,174 @@ test('SQLite backup restores NPC identity, journal, pause state and charged budg
     s.residents.close();
     s.store.close();
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resident observes mill diagnosis, accepts employment and records verifiable production wages', async () => {
+  const s = setup({
+    async decide(request) {
+      const o = request.observation as any;
+      const b = o.nearbyBuildings.find((b: any) => b.kind === 'mill');
+      assert.equal(b.workplace.employedHere, false);
+      assert.equal(b.workplace.ifYouWork.capitalShortfall, 0);
+      assert.match(JSON.stringify(o.gameGuide.fundamentals), /Work two cycles/);
+      return answer(
+        decision([
+          { kind: 'act', action: { type: 'job', building: b.id } },
+          { kind: 'act', action: { type: 'work', building: b.id } },
+          { kind: 'wait', seconds: 20 },
+        ]),
+      );
+    },
+  });
+  try {
+    const p = s.w.players[s.residents.status()[0].playerId];
+    const b = s.w.buildings.find((b) => b.kind === 'mill')!;
+    p.x = b.x;
+    p.z = b.z;
+    p.skills = ['miller'];
+    b.owner = 'other';
+    b.stock = { wheat: 12, flour: 29 };
+    b.investment = 11000;
+    s.w.time = 590;
+    const now = Date.now();
+    s.residents.tick(0.05, now);
+    await s.residents.settled();
+    s.residents.tick(0.05, now + 500);
+    s.residents.tick(0.05, now + 1000);
+    const journal = s.residents.memory.recent('resident-0', 20);
+    const job = journal.find((e) => (e.data as any).action?.type === 'job')!.data as any;
+    assert.equal(job.before.job, null);
+    assert.equal(job.after.job, b.id);
+    assert.equal(job.after.building.employedHere, true);
+    advance(s.w, 10);
+    const { observe } = await import('../src/server/npc/observation.ts');
+    const o = observe(
+      s.w,
+      p,
+      s.residents.memory.load('resident-0')!,
+      s.residents.memory,
+      'resident-0',
+    );
+    assert.equal(o.nearbyBuildings.find((q) => q.id === b.id)!.stock.flour, 32);
+    assert.equal(o.recentWages.at(-1)!.netPay, 1980);
+    assert.equal(o.lastOutcome!.ok, true);
+  } finally {
+    s.residents.close();
+    s.store.close();
+  }
+});
+
+test('failed workplace actions retain the attempted action through chat and restart', async () => {
+  const s = setup({
+    async decide() {
+      return answer(
+        decision([{ kind: 'act', action: { type: 'task', building: 'mill', task: 'craft' } }]),
+      );
+    },
+  });
+  const p = s.w.players[s.residents.status()[0].playerId];
+  const b = s.w.buildings.find((b) => b.kind === 'mill')!;
+  b.id = 'mill';
+  p.x = b.x;
+  p.z = b.z;
+  const now = Date.now();
+  s.residents.tick(0.05, now);
+  await s.residents.settled();
+  s.residents.tick(0.05, now + 500);
+  const outcome = s.residents.memory.load('resident-0')!.lastOutcome!;
+  assert.equal(outcome.ok, false);
+  assert.match(outcome.message, /Wrong workplace/);
+  assert.deepEqual(outcome.attempted, {
+    kind: 'act',
+    action: { type: 'task', building: 'mill', task: 'craft' },
+  });
+  s.residents.close();
+  const resumed = new Residents(s.store, s.universe, s.worlds, [
+    {
+      config: s.configs[0],
+      brain: {
+        async decide(request) {
+          assert.deepEqual((request.observation as any).lastOutcome, outcome);
+          return answer({
+            ...decision([{ kind: 'wait', seconds: 60 }]),
+            speech: { text: 'I used the wrong task; I need a miller job.', to: null },
+          });
+        },
+      },
+    },
+  ]);
+  try {
+    resumed.tick(0.05, now + 6000);
+    await resumed.settled();
+    assert.deepEqual(
+      resumed.memory.load('resident-0')!.lastOutcome,
+      outcome,
+      'speech cannot hide the failed action',
+    );
+  } finally {
+    resumed.close();
+    s.store.close();
+  }
+});
+
+test('a looping model is throttled and silenced across restart, while a new private question still gets an answer', async () => {
+  let calls = 0;
+  const brain: Brain = {
+    async decide(request) {
+      calls++;
+      const o = request.observation as any;
+      if (o.currentConversation) {
+        assert.ok(o.recovery.blockedSteps.length);
+        return answer({
+          ...decision([{ kind: 'wait', seconds: 60 }]),
+          speech: { text: 'That route failed; I need a different destination.', to: 'reader' },
+        });
+      }
+      return answer({
+        ...decision([
+          { kind: 'act', action: { type: 'outside' } },
+          { kind: 'travel', destination: 'missing' },
+        ]),
+        speech: { text: 'I will walk to the mill and make flour.', to: null },
+      });
+    },
+  };
+  const s = setup(brain);
+  const now = Date.now();
+  const id = s.residents.status()[0].playerId;
+  // Several minutes of simulation would previously trigger a decision and chat
+  // every minimum interval. No-op outside actions must not clear the failures.
+  for (let i = 0; i < 600; i++) {
+    advance(s.worlds.get(s.w.id)!, 0.5);
+    s.residents.tick(0.05, now + i * 500);
+    await s.residents.settled();
+  }
+  assert.ok(calls <= 6, `retry requests should back off, got ${calls}`);
+  assert.equal(s.w.messages.filter((m) => m.npc).length, 1, 'one autonomous announcement');
+  const saved = s.residents.memory.load('resident-0')!;
+  assert.ok(saved.recovery!.retryAt! > s.w.time);
+  assert.ok(saved.recovery!.failures!.some((f) => f.until > s.w.time));
+  s.residents.close();
+  const resumed = new Residents(s.store, s.universe, s.worlds, [{ config: s.configs[0], brain }]);
+  try {
+    const before = calls;
+    resumed.tick(0.05, now + 400000);
+    await resumed.settled();
+    assert.equal(calls, before, 'restart retains recovery wait');
+    const human = addPlayer(s.w, 'reader', 'Reader');
+    human.online = true;
+    say(s.w, human.name, 'Can you explain what went wrong?', 'chat', id);
+    resumed.tick(0.05, now + 401000);
+    await resumed.settled();
+    assert.equal(calls, before + 1, 'human question wakes a resting resident');
+    assert.equal(s.w.messages.at(-1)!.to, 'reader');
+    assert.match(s.w.messages.at(-1)!.text, /route failed/);
+    assert.ok(
+      resumed.memory.load('resident-0')!.recovery!.failures!.some((f) => f.until > s.w.time),
+    );
+  } finally {
+    resumed.close();
+    s.store.close();
   }
 });

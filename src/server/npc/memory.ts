@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Store } from '../store.ts';
+import type { Recovery } from './recovery.ts';
 import type { Step } from './decision.ts';
 export interface ResidentState {
+  recovery?: Recovery;
+  lastOutcome?: {
+    time: number;
+    ok: boolean;
+    message: string;
+    attempted?: Step;
+    repeats: number;
+  };
   helpQuestion?: string;
+  questionFrom?: string;
   guideQuery?: string;
   needsDecision?: boolean;
   pending?: boolean;

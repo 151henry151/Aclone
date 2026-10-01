@@ -245,10 +245,21 @@ provides identity/personality and generic status. Detailed design and extension
 boundaries are in [the NPC guide](NPCS.md#development-and-validation).
 
 `npc/knowledge.ts` indexes fixed bundled player manuals and current catalog
-defaults. Observations include basic controls, bounded relevant guide excerpts
-and public world rules. A read-only guide step can retrieve another topic;
+defaults. Observations include full FAQ/economy fundamentals, bounded question/activity
+excerpts, public world rules and live workplace diagnostics derived from the
+simulation clock and staff checks. Latest failed steps and detailed action
+receipts survive restart; personal wage receipts confirm actual production.
+Request/tool JSON is bounded to 96,000 bytes and the existing spending caps
+remain enforced. A read-only guide step can retrieve another topic;
 player text never selects a filesystem path. Manuals are included in the Docker
 runtime and source archive. Update them alongside changes to game controls/rules.
+
+`npc/recovery.ts` persists bounded failed-step and recent-speech records. After
+repeated failure the controller backs off decisions, refuses plans containing
+still-blocked steps before broadcasting their speech, and suppresses duplicate
+autonomous announcements. Direct questions retain private routing and can wake a
+resting resident without clearing the failed-step blocks. An already-in-range
+service visit bypasses path-finding and stops normally; no teleport is involved.
 
 NPC navigation rasterizes each building's conservative bounding square and keeps
 exact rotated-volume collision checks within it. This avoids testing every map

@@ -158,15 +158,13 @@ export class Navigator {
     readonly target: Point,
     readonly radius: number,
   ) {
-    this.path = route(w, p, target, radius);
+    // A service visit is already complete inside its range. Requiring a clear
+    // grid endpoint here can fail beside an inflated building obstacle.
+    this.path = distance(p, target) <= radius ? [] : route(w, p, target, radius);
     this.last = { x: p.x, z: p.z };
   }
   step(w: World, p: Player, dt: number): { input: Input; arrived?: boolean; error?: string } {
     if (p.atHome || p.task) return { input: idle, error: 'Cannot travel while indoors or busy' };
-    if (p.vehicle !== 0 && p.vehicle !== 5)
-      return { input: idle, error: 'Ground navigation requires tractor or walking' };
-    if (p.vehicle === 0 && (!p.engine || p.fuel <= 0))
-      return { input: idle, error: 'Start the engine and refuel before driving' };
     this.elapsed += dt;
     this.sample += dt;
     if (this.elapsed > 240)
@@ -181,6 +179,10 @@ export class Navigator {
         arrived: Math.abs(p.speed) < 0.2,
       };
     }
+    if (p.vehicle !== 0 && p.vehicle !== 5)
+      return { input: idle, error: 'Ground navigation requires tractor or walking' };
+    if (p.vehicle === 0 && (!p.engine || p.fuel <= 0))
+      return { input: idle, error: 'Start the engine and refuel before driving' };
     if (this.sample >= 2) {
       this.stuck = distance(this.last, p) < 0.6 ? this.stuck + this.sample : 0;
       this.sample = 0;

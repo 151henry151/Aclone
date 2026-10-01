@@ -2,7 +2,11 @@
 import { z } from 'zod';
 const id = z.string().min(1).max(80),
   quantity = z.number().int().min(1).max(10000);
-const building = { building: id };
+const building = {
+  building: id.describe(
+    'Exact building id from directory/nearbyBuildings, such as b6. Never its display name.',
+  ),
+};
 const transfer = { ...building, direction: z.enum(['deposit', 'withdraw']) };
 const action = z.discriminatedUnion('type', [
   z.object({ type: z.literal('use'), item: id }).strict(),
@@ -15,9 +19,28 @@ const action = z.discriminatedUnion('type', [
       direction: z.enum(['buy', 'sell']),
     })
     .strict(),
-  z.object({ type: z.literal('task'), ...building, task: z.enum(['labour', 'craft']) }).strict(),
+  z
+    .object({
+      type: z.literal('task'),
+      ...building,
+      task: z
+        .enum(['labour', 'craft'])
+        .describe(
+          'labour: 15-second public workhouse shift. craft: forge-only personal steel/wood toolmaking. Never use task for milling or other automatic factory production.',
+        ),
+    })
+    .strict(),
   z.object({ type: z.literal('learn'), ...building, skill: id }).strict(),
-  z.object({ type: z.enum(['job', 'work', 'buyBuilding', 'home']), ...building }).strict(),
+  z
+    .object({
+      type: z
+        .enum(['job', 'work', 'buyBuilding', 'home'])
+        .describe(
+          'job is the WORKER accepting qualified employment (no owner hire action); work renews two production cycles at your job. Production then consumes BUILDING inputs, creates BUILDING outputs and pays wages from BUILDING investment. home needs ownership; buyBuilding spends its quoted purchase price.',
+        ),
+      ...building,
+    })
+    .strict(),
   z.object({ type: z.enum(['quit', 'outside', 'engine', 'lights', 'horn']) }).strict(),
   z.object({ type: z.literal('gather'), node: id }).strict(),
   z.object({ type: z.literal('vehicle'), slot: z.union([z.literal(0), z.literal(5)]) }).strict(),
@@ -40,7 +63,7 @@ export const stepSchema = z.discriminatedUnion('kind', [
     .object({
       kind: z.literal('travel'),
       destination: id.describe(
-        'Use travel for ALL building/resource visits: supply the observed ID. It finds a safe stopping place in service range. Do not use move to aim at a building centre.',
+        'Use travel for ALL building/resource visits: supply the exact observed id (for example b6), NEVER its name (for example Hank’s Flour mill). It finds a safe stopping place in service range. Do not use move to aim at a building centre.',
       ),
     })
     .strict(),

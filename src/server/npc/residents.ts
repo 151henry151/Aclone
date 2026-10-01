@@ -6,8 +6,10 @@ import type { Store } from '../store.ts';
 import type { Universe } from '../universe.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type BudgetConfig } from './budget.ts';
-import { decisionSchema, type Brain, type BrainResult } from './decision.ts';
+import { decisionSchema, type Brain, type BrainResult, type Step } from './decision.ts';
 import type { NpcConfig } from './config.ts';
+import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
+import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
 import { instructions, observe } from './observation.ts';
 import { outputLimit, turnTool } from './openai.ts';
@@ -18,6 +20,7 @@ export interface ResidentOptions {
 interface Resident extends ResidentOptions {
   state: ResidentState;
   nav?: Navigator;
+  navOrigin?: { x: number; z: number };
   busy?: AbortController;
   pending?: Promise<void>;
   wake: boolean;
@@ -129,6 +132,10 @@ export class Residents {
           r.wake = true;
           r.state.needsDecision = true;
           r.state.helpQuestion = m.text;
+          r.state.questionFrom = sender.id;
+          // A person can ask about the problem immediately; the failed-step
+          // block remains, so chatting cannot restart the same action loop.
+          if (r.state.recovery) r.state.recovery.retryAt = 0;
           r.state.replyTo = m.to === r.state.playerId ? sender.id : undefined;
         }
       }
@@ -142,7 +149,22 @@ export class Residents {
       this.memory.save(r.config.id, r.state);
     });
   }
-  private failure(r: Resident, w: World, message: string) {
+  private failure(r: Resident, w: World, message: string, attempted = r.state.plan[r.state.index]) {
+    failStep((r.state.recovery ??= {}), w.time, attempted, message);
+    const previous = r.state.lastOutcome;
+    r.state.lastOutcome = {
+      time: w.time,
+      ok: false,
+      message,
+      attempted,
+      repeats:
+        previous &&
+        !previous.ok &&
+        previous.message === message &&
+        JSON.stringify(previous.attempted) === JSON.stringify(attempted)
+          ? previous.repeats + 1
+          : 1,
+    };
     r.nav = undefined;
     r.state.plan = [];
     r.state.index = 0;
@@ -150,32 +172,75 @@ export class Residents {
     r.wake = true;
     r.state.needsDecision = true;
     r.state.status = message;
-    this.checkpoint(r, w, 'failure', { message });
+    this.checkpoint(r, w, 'failure', r.state.lastOutcome);
   }
   private perform(r: Resident, w: World, a: Action, advanceStep: boolean) {
     const before = structuredClone(w),
       stateBefore = structuredClone(r.state);
     try {
       const p = w.players[r.state.playerId],
-        stats = { cash: p.cash, inventory: { ...p.inventory }, health: p.health };
+        stats = this.actionStats(w, p, a);
       const result = act(w, p.id, a);
-      if (advanceStep) r.state.index++;
+      if (advanceStep) {
+        // Engine toggles, outside when already outside, and work refreshes are
+        // not evidence that a failed journey or production goal has succeeded.
+        if (
+          stats.cash !== p.cash ||
+          JSON.stringify(stats.inventory) !== JSON.stringify(p.inventory) ||
+          stats.job !== (p.job ?? null) ||
+          JSON.stringify(stats.learning) !== JSON.stringify(p.learning ?? null) ||
+          JSON.stringify(stats.task) !== JSON.stringify(p.task ?? null)
+        )
+          madeProgress((r.state.recovery ??= {}));
+        r.state.index++;
+        r.state.lastOutcome = {
+          time: w.time,
+          ok: true,
+          message: result,
+          attempted: { kind: 'act', action: a } as Step,
+          repeats: 1,
+        };
+      }
       if (p.task) r.state.observedTask = JSON.stringify(p.task);
       this.checkpoint(r, w, 'action', {
         action: a,
         result,
         before: stats,
-        after: { cash: p.cash, inventory: p.inventory, health: p.health },
+        after: this.actionStats(w, p, a),
       });
     } catch (e) {
       this.worlds.set(w.id, before);
       r.state = stateBefore;
-      this.failure(r, before, (e as Error).message.slice(0, 250));
+      this.failure(r, before, (e as Error).message.slice(0, 250), {
+        kind: 'act',
+        action: a,
+      } as Step);
       return false;
     }
     // A script hook cannot roll back an already committed action.
     if (a.type === 'task') this.onTask?.(w, r.state.playerId);
     return true;
+  }
+  private actionStats(w: World, p: Player, a: Action) {
+    const b = w.buildings.find((b) => b.id === a.building);
+    return {
+      cash: p.cash,
+      inventory: { ...p.inventory },
+      health: p.health,
+      job: p.job ?? null,
+      activeUntil: p.activeUntil,
+      skills: [...p.skills],
+      learning: p.learning ? { ...p.learning } : null,
+      task: p.task ? { ...p.task } : null,
+      building: b
+        ? {
+            id: b.id,
+            stock: { ...b.stock },
+            investment: b.investment,
+            employedHere: b.employees.includes(p.id),
+          }
+        : undefined,
+    };
   }
   tick(dt: number, now = Date.now()) {
     if (this.closed) return;
@@ -189,6 +254,8 @@ export class Residents {
         if (result.error) this.failure(r, w, result.error);
         else if (result.arrived) {
           r.nav = undefined;
+          if (r.navOrigin && distance(r.navOrigin, p) >= 4) madeProgress((r.state.recovery ??= {}));
+          r.navOrigin = undefined;
           r.state.index++;
           this.checkpoint(r, w, 'arrival', { x: p.x, z: p.z });
         }
@@ -251,10 +318,11 @@ export class Residents {
         r.wake = true;
         r.state.needsDecision = true;
         r.nav = undefined;
+        if (r.state.recovery) r.state.recovery.retryAt = 0;
         this.checkpoint(r, w, 'needs', { hunger: p.hunger, thirst: p.thirst, health: p.health });
       }
       r.state.critical = critical;
-      if (r.busy) continue;
+      if (r.busy || w.time < (r.state.recovery?.retryAt ?? 0)) continue;
       if (r.wake || (now >= r.state.nextAt && (!r.state.plan.length || now >= r.state.until))) {
         if (now - r.lastCall < r.config.intervalMs) continue;
         if (this.residents.filter((q) => q.busy).length >= this.budget.config.concurrency) continue;
@@ -277,6 +345,16 @@ export class Residents {
       }
     }
     const step = r.state.plan[r.state.index];
+    const blocked = blockedStep(r.state.recovery, step, w.time);
+    if (blocked) {
+      this.failure(
+        r,
+        w,
+        `Recently failed step is resting until world time ${Math.ceil(blocked.until)}: ${blocked.message}`,
+        step,
+      );
+      return;
+    }
     r.state.status = r.state.intent;
     try {
       if (step.kind === 'wait') {
@@ -315,6 +393,7 @@ export class Residents {
         if (!target) throw Error('Destination does not exist');
         const position = { x: target.x, z: target.z };
         r.nav = new Navigator(w, p, position, radius);
+        r.navOrigin = { x: p.x, z: p.z };
         this.checkpoint(r, w, 'journey', {
           target: position,
           mode: p.vehicle === 5 ? 'walking' : 'driving',
@@ -331,7 +410,7 @@ export class Residents {
     };
     const bytes =
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
-    if (bytes > 60000) {
+    if (bytes > 96000) {
       p.online = false;
       p.speed = 0;
       r.active = false;
@@ -413,6 +492,19 @@ export class Residents {
     const d = decisionSchema.parse(result.decision);
     if (d.speech?.text.trim().startsWith('*')) throw Error('NPC speech cannot run chat commands');
     r.state.pending = false;
+    const addressed = !!r.state.helpQuestion;
+    const rejected = d.plan.find((s) => blockedStep(r.state.recovery, s, w.time));
+    if (rejected) {
+      this.failure(
+        r,
+        w,
+        'Plan repeats a recently failed step; choose another approach or wait for its retry time',
+        rejected,
+      );
+      // Preserve addressed questions for a corrected answer; do not broadcast
+      // the rejected plan's promise or silently change the model's strategy.
+      return;
+    }
     if (d.speech && r.state.replyTo === replyTo) delete r.state.replyTo;
     r.state.notebook = d.notebook;
     r.state.intent = d.intent;
@@ -433,11 +525,15 @@ export class Residents {
       repeat: d.repeat,
       reconsiderSeconds: d.reconsiderSeconds,
     });
-    if (d.speech) {
+    const recipient = replyTo || d.speech?.to || undefined;
+    if (
+      d.speech &&
+      allowSpeech((r.state.recovery ??= {}), d.speech.text, recipient, w.time, addressed)
+    ) {
       const a: Action = {
         type: 'chat',
         text: d.speech.text,
-        ...(replyTo || d.speech.to ? { to: replyTo || d.speech.to } : {}),
+        ...(recipient ? { to: recipient } : {}),
       };
       this.perform(r, w, a, false);
     }

@@ -111,14 +111,19 @@ export function searchGuide(query: string): Entry[] {
   }
   return found;
 }
-export function gameGuide(query: string) {
+export function gameGuide(query: string, activityQuery = '') {
   const docs = corpus().filter((e) => e.source.startsWith('docs/'));
   return {
     version: VERSION,
+    // Core rules must not depend on the agent knowing which question to search for.
+    fundamentals: docs.filter(
+      (e) => e.source.startsWith('docs/FAQ.md') || e.source.startsWith('docs/ECONOMY.md'),
+    ),
     controls: docs.find((e) => e.id === 'faq:controls')!.text,
     topics: docs.map(({ id, title }) => ({ id, title })),
     catalogLookup:
       'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
     excerpts: searchGuide(query),
+    activityExcerpts: activityQuery ? searchGuide(activityQuery) : [],
   };
 }

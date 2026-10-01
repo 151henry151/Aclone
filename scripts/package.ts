@@ -53,6 +53,7 @@ try {
     'npc.ts',
     'npc-smoke.ts',
     'npc-guide-smoke.ts',
+    'npc-work-smoke.ts',
     'load.ts',
     'load-server.ts',
     'test-proxy.ts',

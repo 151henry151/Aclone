@@ -68,27 +68,64 @@ records what actually happened.
 
 ## Helping other players
 
-Mabel always receives the basic [controls](FAQ.md#controls) and a short guide
-index. Addressed questions automatically select up to three relevant excerpts
-from the bundled [FAQ](FAQ.md), [player guide](PLAYING.md), [economy guide](ECONOMY.md)
-and current item/building/recipe/vehicle/weapon/crop data. She can also request a
-read-only `guide` lookup by topic or exact entry ID. Lookup queries never become
-filesystem paths or web requests. This uses local keyword search, not paid
-embeddings, and limits excerpt text to 6,500 characters per turn.
+Mabel receives the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) on every
+decision, including controls, employment, production, ownership, farming, lodging,
+account help and activities. These core rules no longer depend on her knowing
+which terms to search for. Up to three additional excerpts each can address the
+player's question and her current activity, using the [player guide](PLAYING.md)
+and current catalog data. Each excerpt group is bounded to 6,500 characters.
+She can still request a read-only `guide` lookup by topic or exact entry ID.
+Queries never become filesystem paths or web requests; search is local and uses
+no paid embeddings.
 
-She is instructed to answer briefly in character, explain human controls rather
-than take actions on the questioner's behalf, and acknowledge missing information.
-Her observations include relevant current world settings; live quotes/rules take
-precedence over defaults. Advice is still model-generated and can be mistaken.
-Player chat and building names cannot edit the reference library. Private reply
-routing survives an extra lookup turn, and lookup requests are journaled.
+Workplace observations diagnose employment, qualification, active shifts,
+production timing, input shortages, output space and funding. A prospective
+wage shortfall includes the resident even before she takes the job. Custom
+recipes and current world settings override defaults; farms are explicitly
+seasonal plots. Workplaces she owns, works at, plans to visit or is discussing
+are prioritised within the bounded selection. These are read-only facts: the
+model still decides what to do and all actions pass normal game validation.
 
-Developers: keep these three manuals accurate as gameplay changes. They are read
-from fixed paths once per process and shipped in the source archive and Docker
-runtime. Restart after changing them. Catalog entries come directly from game
-data; the legacy automatic farm recipe is excluded because farms use plots.
-Tests cover common questions, bounded context, reference sources and the runtime
-lookup/reply path. The full manuals are never sent on every model turn.
+Her latest outcome retains the attempted action and error through chat and
+restart. Action journals include job/shift/skill changes and affected building
+stock/capital; recent personal wage receipts confirm actual payment. This helps
+her distinguish agreeing to work, accepting a job and completing production.
+Player claims and notebook summaries are fallible; current observations take
+precedence. She should own mistakes, explain the cause and next step, and use
+occasional gentle humour without repetitive announcements or invented memories.
+Advice remains model-generated and can be wrong. Private routing survives an
+extra lookup turn, and other players' private data is not added to these reports.
+
+Developers: keep these manuals accurate as gameplay changes. Fixed-path files
+are read once per process and shipped in the source archive and Docker runtime;
+restart after edits. Catalog entries use game data; the legacy automatic farm
+recipe is excluded. `workplace.ts` uses the simulation's production interval and
+staff rules. Update its diagnostic tests when those mechanics change.
+
+## Recovery from failed plans
+
+A failed action or route is saved with its attempted step. A second failure of
+the same step temporarily blocks it for five minutes of world time; further
+failures extend that block up to thirty minutes. Nearby failed ground waypoints
+share an eight-metre cell so tiny coordinate changes do not evade the check.
+New plans containing blocked steps are rejected before their promises are sent
+to chat. The model sees the blocked steps and remaining retry times and must
+choose an alternative or wait; the controller does not invent another strategy.
+
+Repeated failures also delay autonomous decisions: 30 seconds after the second
+failure, then 60, 120 and so on up to ten minutes. Recovery history is bounded to
+16 steps and survives restart. No-op outside/engine/work-refresh actions and
+arrival at an already-reached waypoint do not count as progress. Meaningful game
+actions or travelling at least four metres clear the general wait, while the
+individual failed-step blocks stay in force until their own expiry.
+
+Repeated or near-identical autonomous announcements to the same recipient are
+suppressed for ten minutes, with at most eight recent speech fingerprints saved.
+Repeated failures also silence autonomous announcements until progress occurs.
+A new addressed human question or newly critical needs can bypass the general
+retry wait; questions can receive answers, but cannot remove failed-step blocks.
+Normal shared request/spending caps still apply. This is a controller safeguard,
+not just an instruction asking the model not to repeat itself.
 
 ## Token and spending controls
 
@@ -100,8 +137,9 @@ Cached-input discounts are deliberately ignored in local estimates.
 
 - Plans have up to 12 steps and 30 bounded repeats. Routine movement and task
   completion run locally without an API call. Plans can last up to 30 minutes.
-- Only a small notebook, recent journal excerpts, relevant nearby details and
-  a compact world directory enter each request. Old memories use local SQLite
+- The full FAQ/economy fundamentals, a small notebook, recent journal excerpts,
+  selected workplace details and a compact directory enter each request. Total
+  request/tool JSON is capped at 96,000 UTF-8 bytes (not tokens). Old memories use local SQLite
   keyword search and pagination (up to eight excerpts per turn); there is no paid embedding/vector service.
 - Addressed human messages, failed actions and newly critical needs can wake her.
   NPC chat does not trigger another NPC automatically. The minimum request
@@ -221,6 +259,9 @@ npm run test:e2e -- tests/browser/npc.spec.ts
 node --env-file=.env --import tsx scripts/npc-smoke.ts --live
 # Optional, paid: four FAQ questions, up to eight API requests including lookups:
 node --env-file=.env --import tsx scripts/npc-guide-smoke.ts --live
+# Optional, paid: mill diagnosis, employment/production and custom-recipe blockers;
+# synthetic in-memory world, up to six requests, $0.25 conservative cap per run:
+node --env-file=.env --import tsx scripts/npc-work-smoke.ts --live
 ```
 
 Unit tests use deterministic providers: no credentials or API costs. They cover
@@ -248,3 +289,20 @@ It used four requests with a local estimate of $0.010442 in total. Automated
 backup/restore testing also covers identity, private journal, pause and spending
 reservations together. These samples do not establish long-term cost or perfect
 help accuracy.
+
+The 0.11.1 expanded-knowledge trial used the real model against a synthetic
+mill: it identified the absent job and 7.41d capital shortfall, chose employment
+and active work after funding, and the normal simulation produced 3 flour from
+5 wheat and paid 19.80d net wages. It also identified missing wheat, output space
+and wages for a changed recipe. That three-request sample cost approximately
+$0.0161 at the configured accounting rates. A further four-question controls,
+recovery, ownership and coffee-growing trial passed at about $0.0209. Earlier
+iterations exposed misleading hiring advice and a display name used as a travel
+ID; explicit actor roles and target-ID instructions were added. These limited
+samples demonstrate improvement, not guaranteed advice or long-term reliability.
+
+Prompt structure and contextual examples follow the
+[official OpenAI prompt engineering guidance](https://developers.openai.com/api/docs/guides/prompt-engineering).
+The model and existing daily/monthly limits are unchanged. Richer turns cost
+more individually; repeated failed attempts also cost money, so judge changes
+against successful gameplay and measured usage rather than prompt length alone.

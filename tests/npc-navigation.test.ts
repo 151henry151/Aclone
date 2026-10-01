@@ -34,3 +34,21 @@ test('NPC refuses a submerged destination', () => {
     p = addPlayer(w, 'npc', 'Mabel');
   assert.throws(() => new Navigator(w, p, { x: 10, z: 220 }, 3), /route/);
 });
+
+test('already in service range needs no new path or running engine, even beside a blocked grid cell', () => {
+  const w = createWorld('nav-close', 'Navigation', 'server');
+  const p = addPlayer(w, 'npc', 'Mabel');
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  p.x = mill.x - 6;
+  p.z = mill.z;
+  p.speed = 0;
+  p.engine = false;
+  // No traversable grid cells: stopping here is still a no-op, not a journey.
+  w.settings.seaLevel = 1000;
+  const before = { x: p.x, z: p.z };
+  const nav = new Navigator(w, p, mill, 12);
+  assert.equal(nav.step(w, p, 0.05).arrived, true);
+  assert.deepEqual({ x: p.x, z: p.z }, before);
+  p.atHome = true;
+  assert.match(nav.step(w, p, 0.05).error!, /indoors/);
+});

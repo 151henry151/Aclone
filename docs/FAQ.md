@@ -58,6 +58,25 @@ investment, prices and withdrawals. Owning a farm allows unpaid plot care and
 harvest. Buying your workplace ends your employment there. Production needs
 inputs, output space and funded wages; first learn the required profession.
 
+## Why is my flour mill not making flour?
+
+Wheat belongs in the mill's **Stockroom**, not the employee's inventory. A mill
+normally consumes **5 wheat** and makes **3 flour**, stored at the mill, on each
+successful **10-real-minute** production cycle. World rules or custom recipes can
+change quantities and timing. There is no personal "mill flour" crafting task.
+
+A worker must learn **miller** at school, visit the mill, choose **Take this job**, then
+**Work two cycles** to renew active employment. Agreeing in chat is not taking a
+job. Workers accept jobs themselves; the owner has no hire button. The owner supplies inputs and invests wage money using **Building Admin**;
+employees do not buy the mill's inputs or fund its wages from their own wallets.
+Default mill wages are **22d per active employee per successful cycle**, before
+wage tax. Check inputs, flour storage space, active staff and working capital.
+For example, 14.59d investment is 7.41d short of one 22d wage. Work activates a
+period of employment; it does not instantly finish a batch. Unstaffed businesses
+may produce very slowly at the world's offline-efficiency setting. Owners cannot
+employ themselves. Farms use seasonal plots, and public gathering grounds offer
+logs, stone, gravel and dirt; wheat cannot be gathered from a wild resource node.
+
 ## What happens when I log out or the server restarts?
 
 Accounts, cash, inventories, property, skills, accepted tasks and journeys are

@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-01
+
+### Changed
+
+- Give Mabel the complete FAQ and economy fundamentals on every decision, with additional context for her work and player questions. Refine her neighbourly personality to acknowledge mistakes, explain practical next steps and distinguish promises from confirmed results.
+- Increase the bounded NPC request allowance from 60,000 to 96,000 bytes for richer guidance and feedback, retaining the existing model, decision cadence and shared spending caps.
+
+### Fixed
+
+- Stop repeated NPC failures from causing rapid model retries and duplicate chat announcements. Persist bounded failed-step history and retry delays, reject recently failed plan steps, and keep direct human questions responsive without clearing the failed-action blocks.
+- Finish NPC service visits immediately when already in range instead of requiring a new route beside a building; stationary visits no longer require starting the tractor engine.
+- Explain automatic mill/factory production, worker-accepted jobs, active shifts and owner-funded wages to AI residents. Include live workplace diagnoses, custom recipes, next-cycle timing, capital shortfalls, storage constraints and recent personal wage receipts instead of leaving the agent to infer them from raw stock.
+- Preserve attempted actions and their errors across chat and restart, and record employment, skills and affected building stock alongside action outcomes so residents can correct mistaken plans.
+
 ## [0.11.0] - 2026-10-01
 
 ### Changed
