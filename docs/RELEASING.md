@@ -4,6 +4,16 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.18.0
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the existing service. Refresh browser clients to load the rocket, landing pad and
+terminal cladding. The server also needs the update for the rocket and gantry
+collision volumes. Existing spaceports gain the new appearance automatically;
+no database migration, new dependency or configuration change is required from
+0.17.1. The terminal entrance and takeoff action remain in the same place.
+Production deployment remains operator-managed.
+
 ## Deploying 0.17.1
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

@@ -3,6 +3,7 @@ import * as T from 'three';
 import { buildingPlan, type BuildingVolume } from '../shared/building-shapes';
 import type { Building } from '../shared/types';
 import { surface } from './materials';
+import { spaceportModel } from './spaceport';
 
 /** Original metre-scale village kit. Door/window dimensions never scale with the shell. */
 export function buildingModel(b: Building, finish: typeof surface = surface) {
@@ -28,6 +29,13 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize());
   }
   function wallFinish(m: T.Mesh<T.BufferGeometry, T.Material | T.Material[]>) {
+    if (b.kind === 'starport') {
+      const material = m.material as T.MeshStandardMaterial;
+      material.color.set(plan.wall);
+      material.roughness = 0.55;
+      material.metalness = 0.25;
+      return m;
+    }
     if (plan.siding === 'wood') {
       const material = m.material as T.MeshStandardMaterial;
       material.color.set(plan.wall);
@@ -411,6 +419,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     );
   }
   if (b.kind === 'starport') {
+    root.add(spaceportModel());
+    box(main.width + 0.2, 0.32, main.depth + 0.2, '#517b7e', 0, 3.1, 0);
+    for (const x of [-5, -3, -1, 1, 3, 5]) box(0.045, 2.7, 0.04, '#829d9c', x, 1.4, front);
     const tower = plan.volumes[1];
     for (const side of [-1, 1])
       box(

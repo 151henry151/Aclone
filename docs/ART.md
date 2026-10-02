@@ -2,6 +2,27 @@
 
 Aclone aims for a warm, weathered English countryside: natural ground materials, worn lanes, limestone cottages, slate roofs, leafy silhouettes and readable machinery. The original game's village, country-lane and castle screenshots were inspected as visual references; none of their pixels, textures or models ship with Aclone.
 
+## Spaceport apron (0.18.0)
+
+![Rocket and landing pad beside the spaceport terminal](screenshots/spaceport-day.png)
+![Spaceport apron markers at night](screenshots/spaceport-night.png)
+
+`src/client/spaceport.ts` builds an original ten-metre retro rocket with a smooth
+lathed hull, swept fins, splayed landing struts, nozzle, blue cockpit windows and
+a teal/orange livery. A circular marked landing pad, service gantry and inset
+amber beacons sit beside the existing control tower. The terminal uses painted
+metal cladding. No external models, textures or downloads are added.
+
+The opaque geometry joins the existing static scenery batches. Beacons use an
+emissive material, with no extra dynamic lights, shadow maps or particle updates.
+The shared building plan includes the apron for vegetation clearance and the
+rocket/gantry for collision and picking; the outer pad remains walkable. These
+are visual spaceport fixtures, not an additional player-pilotable vehicle.
+
+Run `CHROMIUM_PATH=/usr/bin/chromium TEST_GPU=1 npm run test:e2e -- tests/browser/spaceport.spec.ts`
+to capture `test-results/spaceport-day.png` and `spaceport-night.png` on a disposable
+world and verify that terminal access and takeoff still work.
+
 ## Synthesized sound
 
 All runtime sounds are original code-generated mono PCM under GPL-3.0-or-later;

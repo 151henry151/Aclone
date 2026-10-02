@@ -17,7 +17,11 @@ export interface BuildingPlan {
   trim: string;
   doorHeight: number;
   siding: 'stone' | 'wood';
+  fixtures?: BuildingVolume[];
+  apron?: { x: number; z: number; radius: number };
 }
+/** Metre-scale spaceport apron; the thin pad is walkable, its rocket/gantry are solid. */
+export const spaceportApron = { x: -11, z: -1, radius: 5.3 };
 const volume = (
   width: number,
   depth: number,
@@ -211,15 +215,35 @@ export function buildingPlan(b: { kind: string; id: string; style?: string }): B
     siding = chosen.siding as 'stone' | 'wood';
     volumes[0].roof = chosen.roof as BuildingVolume['roof'];
   }
-  const plan = { style, volumes, wall, trim, siding, doorHeight: 2.1 };
+  const plan: BuildingPlan = { style, volumes, wall, trim, siding, doorHeight: 2.1 };
+  if (b.kind === 'starport') {
+    plan.apron = spaceportApron;
+    plan.fixtures = [
+      volume(4.6, 4.6, 10.4, 0, 'flat', spaceportApron.x, spaceportApron.z),
+      volume(1, 1.6, 6.8, 0, 'flat', -7.4, -3.8),
+    ];
+  }
   plans.set(key, plan);
   return plan;
 }
 export function buildingBounds(plan: BuildingPlan) {
-  const minX = Math.min(...plan.volumes.map((v) => v.x - v.width / 2));
-  const maxX = Math.max(...plan.volumes.map((v) => v.x + v.width / 2));
-  const minZ = Math.min(...plan.volumes.map((v) => v.z - v.depth / 2));
-  const maxZ = Math.max(...plan.volumes.map((v) => v.z + v.depth / 2));
+  const volumes = [...plan.volumes, ...(plan.fixtures ?? [])];
+  const minX = Math.min(
+    ...volumes.map((v) => v.x - v.width / 2),
+    plan.apron ? plan.apron.x - plan.apron.radius : Infinity,
+  );
+  const maxX = Math.max(
+    ...volumes.map((v) => v.x + v.width / 2),
+    plan.apron ? plan.apron.x + plan.apron.radius : -Infinity,
+  );
+  const minZ = Math.min(
+    ...volumes.map((v) => v.z - v.depth / 2),
+    plan.apron ? plan.apron.z - plan.apron.radius : Infinity,
+  );
+  const maxZ = Math.max(
+    ...volumes.map((v) => v.z + v.depth / 2),
+    plan.apron ? plan.apron.z + plan.apron.radius : -Infinity,
+  );
   return {
     minX,
     maxX,
@@ -227,7 +251,7 @@ export function buildingBounds(plan: BuildingPlan) {
     maxZ,
     width: maxX - minX,
     depth: maxZ - minZ,
-    height: Math.max(...plan.volumes.map((v) => v.eaves + v.rise)),
+    height: Math.max(...volumes.map((v) => v.eaves + v.rise)),
   };
 }
 export function buildingPenetration(
@@ -244,7 +268,8 @@ export function buildingPenetration(
   const lx = dx * c - dz * s,
     lz = dx * s + dz * c;
   let penetration = 0;
-  for (const v of buildingPlan(b).volumes) {
+  const plan = buildingPlan(b);
+  for (const v of [...plan.volumes, ...(plan.fixtures ?? [])]) {
     if (height >= v.eaves + v.rise) continue;
     penetration = Math.max(
       penetration,

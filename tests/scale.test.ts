@@ -6,6 +6,7 @@ import {
   buildingBounds,
   blocksBuilding,
   buildingBlocksMovement,
+  spaceportApron,
 } from '../src/shared/building-shapes.ts';
 import { buildings } from '../src/shared/catalog.ts';
 
@@ -14,7 +15,7 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
   for (const kind of Object.keys(buildings)) {
     const plan = buildingPlan({ kind, id: 'b1' });
     const bounds = buildingBounds(plan);
-    assert.ok(bounds.width > 0 && bounds.width <= 15);
+    assert.ok(bounds.width > 0 && bounds.width <= (kind === 'starport' ? 23 : 15));
     assert.ok(bounds.depth > 0 && bounds.depth <= 15);
     assert.ok(bounds.height > 0 && bounds.height <= 12);
     shapes.add(JSON.stringify(plan.volumes));
@@ -27,6 +28,17 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
     buildingPlan({ kind: 'home', id: 'same' }),
     buildingPlan({ kind: 'home', id: 'same' }),
   );
+});
+test('spaceport rocket is solid, its apron is walkable, and the terminal entrance stays clear', () => {
+  const b = { id: 'port', kind: 'starport', x: 0, z: 0, rotation: 0 };
+  assert.equal(blocksBuilding(b, spaceportApron.x, spaceportApron.z, 0, 0.25), true);
+  assert.equal(blocksBuilding(b, spaceportApron.x - 4, spaceportApron.z, 0, 0.25), false);
+  assert.equal(blocksBuilding(b, 0, 5, 0, 0.25), false);
+  assert.equal(blocksBuilding(b, spaceportApron.x, spaceportApron.z, 11, 0.25), false);
+  b.rotation = Math.PI / 2;
+  assert.equal(blocksBuilding(b, spaceportApron.z, -spaceportApron.x, 0, 0.25), true);
+  const bounds = buildingBounds(buildingPlan(b));
+  assert.ok(bounds.minX <= spaceportApron.x - spaceportApron.radius);
 });
 test('collision follows rotated walls, wings and building height rather than a fixed circle', () => {
   const b = { id: 'b1', kind: 'garage', x: 10, z: 20, rotation: Math.PI / 2 };

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-01
+
+### Changed
+
+- Give spaceports a metal-clad terminal and a dedicated landing apron with an original retro rocket, swept fins, landing legs, cockpit windows, a service gantry and illuminated pad markers. Keep the terminal entrance and pad perimeter accessible; rockets and gantries have matching collision and picking volumes.
+
 ## [0.17.1] - 2026-10-01
 
 ### Fixed

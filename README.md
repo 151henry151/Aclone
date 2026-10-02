@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.17.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.18.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.18.0:** a distinctive spaceport rocket and marked landing pad, with metal terminal cladding and illuminated apron markers. See the [art guide and screenshots](docs/ART.md#spaceport-apron-0180) and [upgrade instructions](docs/RELEASING.md#deploying-0180).
 
 **Fixed in 0.17.1:** fishing has a centered Reel in button that highlights when a fish bites, and buildings display their owner's name even when the owner is offline. See [upgrade instructions](docs/RELEASING.md#deploying-0171).
 

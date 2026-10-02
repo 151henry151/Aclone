@@ -689,7 +689,8 @@ export class GameScene {
 
     for (const g of this.buildingMeshes) {
       const b = w.buildings.find((b) => b.id === g.userData.building)!;
-      for (const v of buildingPlan(b).volumes) {
+      const plan = buildingPlan(b);
+      for (const v of [...plan.volumes, ...(plan.fixtures ?? [])]) {
         const height = v.eaves + v.rise;
         const picker = new T.Mesh(new T.BoxGeometry(v.width, height, v.depth), material('#ffffff'));
         picker.position.set(v.x, height / 2, v.z);
