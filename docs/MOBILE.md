@@ -33,7 +33,8 @@ as a keyboard; movement, fuel and collision rules are unchanged.
 
 Only the clock, cash/status, speed, navigation and driving controls stay visible.
 A nearby-building button appears below the clock. Tap it to trade, work or enter;
-when indoors it becomes **Go outside**. Fishing bites and task progress appear here too.
+when indoors it becomes **Go outside**. Task progress appears here too. While fishing,
+a centered **Reel in** button lights up when a fish bites; tap it within eight seconds.
 
 - **Map** opens the named parish map. Swipe to pan, use +/− to zoom, or open
   **Parish directory** for a list with larger targets and distances.

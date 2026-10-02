@@ -18,6 +18,7 @@ export function publicBuildings(w: World) {
   return w.buildings.map((building) => {
     const b = {
       ...building,
+      ownerName: building.owner ? w.players[building.owner]?.name : undefined,
       operating: productionActivity(w, building, crafting),
       efficiency:
         building.kind !== 'farm' && (building.production || building.recipe)

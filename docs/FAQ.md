@@ -130,7 +130,7 @@ Use **Activities** to join and **Leave activity** to exit. Hornball is a team
 tractor ball game: drive near the ball and honk to push it toward the goal.
 Racing follows the ordered checkpoints; follow the next gate indication.
 Fishing needs carried Fishing tackle and a world with fishing enabled. Join,
-wait for a bite, then press F3/Reel within the eight-second bite window. Cargo
+wait for a bite, then tap the centered Reel in button or press F3 within the eight-second bite window. Cargo
 space is needed for the catch.
 
 Ultrakricket is a two-player timing game using a grenade as the ball. The first

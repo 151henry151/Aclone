@@ -44,6 +44,12 @@ const esc = (v: unknown) =>
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
 app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+document
+  .getElementById('world-hud')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button></section>',
+  );
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
   | {
@@ -355,6 +361,13 @@ function setHudHtml(id: string, html: string) {
   $(id).innerHTML = html;
   hudHtml.set(id, html);
 }
+function buildingOwner(b: Building) {
+  return b.government
+    ? 'Parish'
+    : b.owner
+      ? (b.ownerName ?? world?.players[b.owner]?.name ?? 'Unknown owner')
+      : 'Unclaimed';
+}
 function updateHud() {
   if (!world || !me) return;
   $('location').textContent = mobile.active
@@ -502,6 +515,7 @@ function updateHud() {
   const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
   if (shown) {
     const facts: [string, string][] = [
+      ['[data-building-owner]', buildingOwner(shown)],
       ['[data-building-efficiency]', `${Math.round(shown.efficiency * 100)}%`],
       ['[data-building-investment]', money(shown.investment)],
       ['[data-production-status]', productionStatus(world, shown)],
@@ -511,13 +525,17 @@ function updateHud() {
       if (element && element.textContent !== text) element.textContent = text;
     }
   }
-  if (
+  const bite =
     me.game === 'fishing' &&
     me.fishAt !== undefined &&
     world.time >= me.fishAt &&
-    world.time <= (me.fishUntil ?? 0)
-  )
-    targetHtml = button('Fish! Reel in <kbd>F3</kbd>', 'reel', '', 'wide target-button');
+    world.time <= (me.fishUntil ?? 0);
+  $('fishing-control').hidden = me.game !== 'fishing' || !!panel || !!mobile.drawer;
+  $('fishing-control').classList.toggle('biting', bite);
+  ($('fishing-reel') as HTMLButtonElement).disabled = !bite;
+  const fishingStatus = bite ? 'Fish! Reel in now.' : 'Waiting for a bite…';
+  if ($('fishing-status').textContent !== fishingStatus)
+    $('fishing-status').textContent = fishingStatus;
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
   if (me.race)
@@ -931,7 +949,7 @@ function buildingWindow(b: Building) {
     selfOwned = b.owner === me.id,
     owned = selfOwned || me.authority === 20;
   const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info'];
-  let html = `<div class="building-meta"><span>OWNER <b>${esc(b.government ? 'Parish' : (world.players[b.owner ?? '']?.name ?? (b.owner ? 'Another player' : 'Unclaimed')))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
+  let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
       .map(([i, n]) => `${n} ${items[i].name}`)

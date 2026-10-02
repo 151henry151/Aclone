@@ -83,6 +83,8 @@ export interface Building {
   z: number;
   rotation: number;
   owner?: string;
+  /** Public snapshot projection, including owners who are currently offline. */
+  ownerName?: string;
   price: number;
   investment: number;
   stock: Stock;

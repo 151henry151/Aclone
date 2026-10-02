@@ -4,6 +4,27 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer } from '../src/shared/simulation.ts';
 import { DeltaStream, prepareFrame } from '../src/server/snapshots.ts';
 import type { Account } from '../src/server/universe.ts';
+
+test('building owner names survive offline filtering and follow transfers without private data', () => {
+  const w = createWorld('owners', 'Owners', 'viewer');
+  addPlayer(w, 'viewer', 'Viewer').online = true;
+  const owner = addPlayer(w, 'owner', 'Offline owner');
+  owner.online = false;
+  owner.inventory.gold = 888;
+  const building = w.buildings[0];
+  building.government = false;
+  building.owner = owner.id;
+  const snapshot = () => JSON.parse(prepareFrame(w).fields.buildings)[0];
+  assert.equal(snapshot().ownerName, 'Offline owner');
+  assert.equal(prepareFrame(w).players.owner, undefined);
+  assert.equal(snapshot().inventory, undefined);
+  owner.name = 'Renamed owner';
+  assert.equal(snapshot().ownerName, 'Renamed owner');
+  building.owner = 'viewer';
+  assert.equal(snapshot().ownerName, 'Viewer');
+  delete building.owner;
+  assert.equal(snapshot().ownerName, undefined);
+});
 for (const compact of [false, true])
   test(`protocol ${compact ? 3 : 2} isolates private inventory, messages and scripts, including reconnects`, () => {
     const w = createWorld('delta', 'Delta', 'a');

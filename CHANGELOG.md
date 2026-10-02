@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-10-01
+
+### Fixed
+
+- Show a prominent centered Reel in control while fishing, with a waiting indicator and a highlighted bite prompt. Catch fish directly without reopening Activities on desktop or mobile.
+- Show each building owner's display name even when that player is offline. Keep names current during ownership changes without exposing offline players' private state.
+
 ## [0.17.0] - 2026-10-01
 
 ### Added

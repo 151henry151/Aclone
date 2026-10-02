@@ -483,6 +483,40 @@ kbd {
 #world-hud canvas {
   pointer-events: auto;
 }
+#fishing-control {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  max-width: calc(100% - 32px);
+  padding: 14px 20px;
+  text-align: center;
+  color: #efe9cf;
+  background: #20362cf2;
+  border: 1px solid #a8b394;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px #0006;
+}
+#fishing-status {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+#fishing-reel {
+  min-height: 54px;
+  min-width: 160px;
+  font-size: 20px;
+  font-weight: bold;
+  touch-action: manipulation;
+}
+#fishing-control.biting {
+  border-color: #edcf7e;
+}
+#fishing-control.biting button {
+  color: #243322;
+  background: #edcf7e;
+  border-color: #ffe8a9;
+}
 .location {
   position: absolute;
   top: 26px;

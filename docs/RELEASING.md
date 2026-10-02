@@ -4,6 +4,14 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.17.1
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. Refresh browser clients for the centered fishing control and building
+owner names. The server must also restart to supply offline owners' display names.
+There are no new dependencies, settings or data migrations from 0.17.0.
+Production deployment remains operator-managed.
+
 ## Deploying 0.17.0
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
