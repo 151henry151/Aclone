@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { items } from './catalog.ts';
+import { buildings, items } from './catalog.ts';
 import data from '../../data/crops.json';
 import { calendar, DAY_SECONDS, weatherAt } from './environment.ts';
 import type { World, Building, Player, Action } from './types.ts';
@@ -19,6 +19,8 @@ export const crops: Record<
     description: string;
   }
 > = data;
+/** Imported fertilizer is a fallback; locally produced compost should be cheaper. */
+export const fertilizerPrice = buildings.market.sell.compost;
 export interface Plot {
   crop?: string;
   planted: number;
@@ -124,7 +126,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
       previous: old?.previous,
       drainage: old?.drainage,
     };
-    b.sell[key] ??= items[key].price;
+    b.sell[key] ??= buildings.farm.sell[key] ?? items[key].price;
     return;
   }
   check(old?.crop, 'This plot is empty');
@@ -139,9 +141,12 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     check(w.time < plot.ready && !plot.fertilized, 'Fertilize once during growth');
     if ((p.inventory.compost ?? 0) > 0) p.inventory.compost--;
     else {
-      check(b.investment >= 1000, 'Carry compost or fund 10d of fertilizer');
-      b.investment -= 1000;
-      log(w, 'sink', 1000, b.id, 'merchant', 'fertilizer');
+      check(
+        b.investment >= fertilizerPrice,
+        `Carry compost or fund ${fertilizerPrice / 100}d of fertilizer`,
+      );
+      b.investment -= fertilizerPrice;
+      log(w, 'sink', fertilizerPrice, b.id, 'merchant', 'fertilizer');
     }
     plot.fertilized = true;
   } else if (op === 'harvest') {

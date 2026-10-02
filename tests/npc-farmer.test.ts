@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, advance, say } from '../src/shared/simulation.ts';
-import { crops, cropStatus } from '../src/shared/farming.ts';
+import { crops, cropStatus, fertilizerPrice } from '../src/shared/farming.ts';
 import { calendar, DAY_SECONDS } from '../src/shared/environment.ts';
 import { farmerChoices } from '../src/server/npc/farmer.ts';
 import { JevBrain } from '../src/server/npc/jev.ts';
@@ -96,7 +96,7 @@ test('farmer learns normally, tends a seasonal crop and earns verified harvest w
   assert.equal(farm.plots![0].water, 1);
   run('Fertilize wheat');
   assert.equal(farm.plots![0].fertilized, true);
-  assert.equal(farm.investment, investment - seed - 1000);
+  assert.equal(farm.investment, investment - seed - fertilizerPrice);
   w.time = farm.plots![0].ready;
   const amount = cropStatus(w, farm, 0).yield;
   const cash = p.cash;

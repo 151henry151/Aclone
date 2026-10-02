@@ -27,13 +27,52 @@ to move goods without a sale. Use **Building Admin** to invest cash, collect
 profit, set wages and set buy/sell prices. There are no automatic sales or unlimited
 new-item stocks in public markets.
 
-Default selling prices outside Harbour stores use each item's reference price.
-Harbour stores buys at 103% of that price and sells at 112% (rounded to the nearest
-hundredth of a denarius). For example, buy bread for 48d at a bakery and sell it
-at the harbour for 49.44d: 1.44d gross profit per loaf. Fuel, travel time, available
-stock, cargo capacity and the harbour's working capital still matter. Buying from
-and selling back to the harbour loses money. Player-set prices can remove or
-increase this margin; check the displayed quotes before making a delivery.
+## Default trade prices (0.15.3)
+
+The reference price in `data/items.json` is a producer's wholesale asking price.
+Local processors pay **112%** of that reference for their inputs: buying wheat at
+5d from a farm and delivering it to a default mill paying 5.60d leaves the haulier
+0.60d per unit before travel costs. The mill sells flour at 22.50d; a default bakery
+pays 25.20d. These quotes leave a reason to connect local businesses.
+
+Each factory recipe is priced to cover its posted ingredient bids, **one active
+worker's gross wage**, and the default **7% sales tax** (5% world + 2% parish).
+At the normal batch size, net output sales retain at least 25% above those costs.
+For example, a mill pays 28d for five wheat plus 22d in wages; three flour sold at
+22.50d return about 62.78d after tax, leaving about 12.78d for its investment.
+Wage tax is withheld from the worker's gross wage, not charged again to the employer.
+Multiple employees all receive wages without increasing batch output, so excessive
+staffing can still lose money. Repairs, travel, food, shortages, custom taxes and
+owner-edited quotes also affect actual profit; the default balance is not a guarantee.
+
+Harbour stores pays **90%** of reference for recipe ingredients and **103%** for
+finished goods; the spaceport pays **85%** and **101%** respectively. They sell at
+**155%** and **165%**. Raw materials and intermediate goods therefore earn more
+when delivered to local consumers. Finished bread can still be bought at the bakery
+for 48d and exported at the harbour for 49.44d, but a pub pays 53.76d. Buying imports
+at one outlet and immediately exporting them through the other loses money.
+
+Pubs, B&Bs, hotels and garages have restocking bids for their relevant goods.
+They normally buy at 112% and sell at **135%** of producer reference, covering sales
+tax and a retail margin while undercutting imported finished goods. Garages stock
+fuel and tools when supplied; hospitality outlets buy food and drinks. Newly added
+listings start with whatever stock is actually present, including zero.
+
+**Water is an essential import exception:** there is currently no water-producing
+building. Harbour water costs 7.75d; processors and lodging businesses pay 8.68d,
+allowing delivery from the harbour. Lodging resells it at 10.47d for convenience.
+Water's imported cost is included in factory margins. Logs, gravel and topsoil can
+instead be gathered and sold directly to their local consumers. All six farm crops
+have default sell listings; seed costs, seasonal yield, irrigation and harvest wages
+remain ordinary farm expenses. Prices do not spawn goods, move cargo automatically,
+or replenish a business's capital. Employees/owners and hauliers must supply demand.
+
+On the first load of an older world, pricing revision 2 replaces buy/sell lists on
+unowned and treasury-run public buildings. **Every player-owned business is skipped,
+including NPC-owned businesses and owner-edited or unchanged prices.** Stock, money,
+wages, employment and ownership are retained. The saved revision prevents repeated
+repricing after future edits. An owned business with incompatible old bids may still
+need its owner to adjust them; changing reference prices does not rewrite its quotes.
 
 Owners cannot buy from or sell to their own property, hire themselves, refresh
 their own work shifts or start workplace tasks there. Use Stockroom for goods and
@@ -87,7 +126,7 @@ frost-sensitive crop. See [the farming guide](PLAYING.md#farming) for planting w
 After a plot's first harvest, install permanent drainage using **6 gravel**.
 Drainage removes its waterlogging penalty and survives future harvests. **6 topsoil + 1 compost** restores an empty plot, clearing its previous crop-family penalty
 for the next planting. **1 compost** fertilizes a growing plot; if you carry none,
-the 10d purchased-fertilizer fallback remains available. Fertilize once per crop
+the imported-fertilizer fallback costs the default Harbour compost price (currently 39.53d), so buying locally produced compost at 25.50d is cheaper. Fertilize once per crop
 for the existing 33% yield bonus. These choices consume real goods; improvements
 cannot be repeatedly applied to gain free items or stack bonuses.
 

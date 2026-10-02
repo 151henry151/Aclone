@@ -4,6 +4,23 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.15.3
+
+Back up the SQLite database, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, and restart the existing service. Refresh browser
+clients for updated catalog reference prices. No new environment variables are needed.
+The first world load upgrades unowned and treasury-run public buy/sell lists to
+pricing revision 2. All player-owned businesses (including NPC-owned ones) keep
+their prices and wages exactly; cash, stock and ownership are unchanged. The
+revision is saved with the world and prevents repeat migrations. Restore the
+pre-upgrade database backup as well as code if rolling back the price migration.
+
+Existing owned businesses can retain incompatible old bids; their owners must
+adjust those themselves. As observed before release, Puddlewick's owned mill and
+bakery are both protected. NPCs also validate new delivery promises before replying,
+and explain existing blocked requests once without another speech-model call.
+Production deployment remains an operator-managed pull/rebuild/restart.
+
 ## Deploying 0.15.2
 
 Pull both repair commits, rebuild with `BASE_PATH=/aclone npm run build`, and

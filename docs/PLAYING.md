@@ -92,7 +92,7 @@ Stockroom tab moves your produce into your tractor for delivery to other shops.
 
 Seeds use farm investment. Irrigation uses three carried water per treatment,
 up to three treatments per plot. Rain contributes moisture; thirstier crops need
-more care. One fertilizer treatment uses a carried compost, or costs 10d if you have none, and adds 33% to yield. Repeating a
+more care. One fertilizer treatment uses a carried compost, or costs the default Harbour compost price (currently 39.53d) if you have none, and adds 33% to yield. Repeating a
 crop family in the same plot reduces yield by 20%; rotate families between harvests.
 Frost during growth lowers yield, so planting warm crops late in their window
 has a consequence. Growth itself continues in cold weather; this is not a dormant
@@ -209,8 +209,10 @@ profit. You cannot buy/sell goods or take paid work at your own property.
 Qualified farm owners can still manage and harvest their own plots unpaid.
 Buying your workplace ends your job there.
 
-Default building prices allow a 3% gross resale margin at Harbour stores. Check
-stock, working capital, distance and customized quotes before loading your cargo.
+Default local processors pay more for ingredients than producers charge, leaving
+a 12% gross haulage margin. Local consumers normally beat export outlets; finished
+goods can still earn a smaller margin at Harbour stores. Check stock, working
+capital, distance and customized quotes before loading. See [the pricing guide](ECONOMY.md#default-trade-prices-0153).
 
 ## AI neighbours (optional prototype)
 

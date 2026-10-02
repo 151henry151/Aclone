@@ -11,6 +11,7 @@ import {
 } from '../src/shared/simulation.ts';
 import {
   commitmentChoices,
+  deliveryBlocker,
   recordCommitment,
   checkCommitmentPrice,
   recordDelivery,
@@ -213,6 +214,13 @@ test('conversation agreement wakes Jev exactly once, survives restart and drives
     r.tick(0.5, now);
     await r.settled();
     assert.equal(speechCalls, 1);
+    const acknowledgement = w.messages
+      .filter((m) => m.name === p.name && m.kind === 'chat')
+      .at(-1)!;
+    assert.match(acknowledgement.text, /still needs to be planned/);
+    assert.match(acknowledgement.text, /nothing has been delivered/);
+    assert.equal(acknowledgement.to, undefined);
+    assert.equal(r.memory.load('rowan')!.commitments![0].replyTo, null);
     assert.equal(r.memory.load('rowan')!.commitments![0].delivered, 0);
     r.close();
     r = new Residents(store, universe, worlds, options);
@@ -232,6 +240,208 @@ test('conversation agreement wakes Jev exactly once, survives restart and drives
     assert.ok(decisions >= 3);
   } finally {
     r.close();
+    store.close();
+  }
+});
+
+test('delivery validation distinguishes employment from stock ownership and reports specific blockers', () => {
+  const { w, p, farm, mill } = setup();
+  farm.owner = undefined;
+  p.job = farm.id;
+  assert.match(deliveryBlocker(w, p, delivery.delivery, 118, true)!, /do not own.*employee/i);
+  farm.owner = p.id;
+  farm.stock.wheat = 12;
+  assert.match(deliveryBlocker(w, p, delivery.delivery, 118, true)!, /12.*118/);
+  farm.stock.wheat = 118;
+  mill.investment = 100;
+  assert.match(deliveryBlocker(w, p, delivery.delivery, 118, true)!, /investment/);
+  mill.investment = 100000;
+  mill.stock.wheat = mill.capacity;
+  assert.match(deliveryBlocker(w, p, delivery.delivery, 118, true)!, /storage/);
+  mill.stock.wheat = 0;
+  assert.equal(deliveryBlocker(w, p, delivery.delivery, 118, true), undefined);
+  p.inventory.wheat = 118;
+  farm.owner = undefined;
+  assert.equal(deliveryBlocker(w, p, delivery.delivery, 118, true), undefined);
+});
+
+for (const privateChat of [false, true]) {
+  test(`an employee cannot promise farm goods in ${privateChat ? 'private' : 'public'} chat, even with a hallucinated reply`, async () => {
+    const store = new Store(':memory:'),
+      universe = new Universe(store),
+      { w, farm } = setup();
+    delete w.players.farmer;
+    const human = addPlayer(w, 'human', 'Hank');
+    human.online = true;
+    let chatCalls = 0;
+    const idle = {
+      intent: 'Rest',
+      notebook: '',
+      speech: null,
+      plan: [{ kind: 'wait' as const, seconds: 180 }],
+      repeat: 1,
+      reconsiderSeconds: 180,
+    };
+    const residents = new Residents(store, universe, new Map([[w.id, w]]), [
+      {
+        config: npcConfigSchema.parse({
+          id: 'rowan',
+          name: 'Rowan Field',
+          provider: 'jev',
+          activeAlone: true,
+          intervalMs: 5000,
+        }),
+        brain: {
+          async decide() {
+            return { decision: idle, inputTokens: 1, outputTokens: 0 };
+          },
+        },
+        dialogue: {
+          rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
+          brain: {
+            async decide(request: any) {
+              chatCalls++;
+              const observed = request.observation.nearbyBuildings.find(
+                (b: any) => b.id === farm.id,
+              );
+              assert.match(observed.stockAccess, /Employee only/);
+              assert.equal(request.observation.availableDeliveryStock.ownedStockrooms.length, 0);
+              return {
+                decision: {
+                  ...idle,
+                  speech: { text: 'All 118 wheat are mine. I am loading them now!', to: null },
+                },
+                gameplayRequest: delivery,
+                inputTokens: 1,
+                outputTokens: 1,
+              };
+            },
+          },
+        },
+      },
+    ]);
+    try {
+      const p = w.players[residents.status()[0].playerId];
+      farm.owner = undefined;
+      p.job = farm.id;
+      say(
+        w,
+        human.name,
+        'Rowan, bring 118 wheat to my mill at 6d each.',
+        'chat',
+        privateChat ? p.id : undefined,
+      );
+      residents.capture(w);
+      residents.tick(0.5, Date.now());
+      await residents.settled();
+      const replies = w.messages.filter((m) => m.name === p.name && m.kind === 'chat');
+      assert.equal(chatCalls, 1);
+      assert.equal(replies.length, 1);
+      assert.match(replies[0].text, /do not own.*employee/);
+      assert.doesNotMatch(replies[0].text, /loading them now/);
+      assert.equal(replies[0].to, privateChat ? human.id : undefined);
+      assert.equal(residents.memory.load('rowan')!.commitments?.length ?? 0, 0);
+      assert.equal(farm.stock.wheat, 118);
+    } finally {
+      residents.close();
+      store.close();
+    }
+  });
+}
+
+test('recheck live ownership after the chat call and persist one legacy blocker notice across restart without speech calls', async (t) => {
+  let now = Date.now(),
+    chatCalls = 0;
+  t.mock.method(Date, 'now', () => now);
+  const store = new Store(':memory:'),
+    universe = new Universe(store),
+    { w, farm } = setup();
+  delete w.players.farmer;
+  const human = addPlayer(w, 'human', 'Hank');
+  human.online = true;
+  const worlds = new Map([[w.id, w]]);
+  const idle = {
+    intent: 'Rest',
+    notebook: '',
+    speech: null,
+    plan: [{ kind: 'wait' as const, seconds: 60 }],
+    repeat: 1,
+    reconsiderSeconds: 60,
+  };
+  const options = [
+    {
+      config: npcConfigSchema.parse({
+        id: 'rowan',
+        name: 'Rowan Field',
+        provider: 'jev',
+        activeAlone: true,
+        intervalMs: 5000,
+      }),
+      brain: {
+        async decide() {
+          return { decision: idle, inputTokens: 1, outputTokens: 0 };
+        },
+      },
+      dialogue: {
+        rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
+        brain: {
+          async decide(request: any) {
+            chatCalls++;
+            assert.equal(request.observation.availableDeliveryStock.ownedStockrooms[0].id, farm.id);
+            // A sale/transferred property while the provider is thinking invalidates its snapshot.
+            farm.owner = 'someone-else';
+            return {
+              decision: { ...idle, speech: { text: 'I am bringing the wheat now.', to: null } },
+              gameplayRequest: delivery,
+              inputTokens: 1,
+              outputTokens: 1,
+            };
+          },
+        },
+      },
+    },
+  ];
+  let residents = new Residents(store, universe, worlds, options);
+  try {
+    const p = w.players[residents.status()[0].playerId];
+    farm.owner = p.id;
+    say(w, human.name, 'Rowan, please deliver the wheat.', 'chat');
+    residents.capture(w);
+    residents.tick(0.5, now);
+    await residents.settled();
+    assert.equal(chatCalls, 1);
+    assert.match(
+      w.messages.filter((m) => m.name === p.name && m.kind === 'chat').at(-1)!.text,
+      /do not own/,
+    );
+    assert.equal(residents.memory.load('rowan')!.commitments?.length ?? 0, 0);
+    residents.close();
+    // Old agreements without a saved reply channel must not leak into public chat.
+    const state = residents.memory.load('rowan')!;
+    recordCommitment(state, delivery, 'legacy', human.id, w);
+    state.commitments![0].status = 'blocked';
+    state.commitments![0].outcome = 'Old generic error';
+    state.helpQuestion = undefined;
+    state.needsDecision = true;
+    state.plan = [];
+    residents.memory.save('rowan', state);
+    for (let i = 0; i < 2; i++) {
+      now += 300000;
+      residents = new Residents(store, universe, worlds, options);
+      residents.tick(0.5, now);
+      await residents.settled();
+      residents.close();
+    }
+    const notices = w.messages.filter(
+      (m) => m.name === p.name && m.text.startsWith('My delivery is blocked:'),
+    );
+    assert.equal(notices.length, 1);
+    assert.match(notices[0].text, /do not own/);
+    assert.equal(notices[0].to, human.id);
+    assert.equal(chatCalls, 1);
+    assert.equal(residents.memory.load('rowan')!.commitments![0].blockedNoticeSent, true);
+  } finally {
+    residents.close();
     store.close();
   }
 });

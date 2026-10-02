@@ -5,7 +5,7 @@ import { resourceNodes, resourceAmount } from '../shared/resources';
 import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
 import { calendar, weatherAt } from '../shared/environment';
-import { crops, cropStatus } from '../shared/farming';
+import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
 import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
@@ -879,7 +879,7 @@ function buildingWindow(b: Building) {
           const attrs = `data-building="${b.id}" data-plot="${i}"`;
           return `<article><h3>Plot ${i + 1} · ${plot?.crop ? esc(crops[plot.crop].name) : 'Fallow'}</h3>${
             plot?.crop
-              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button('Fertilize · compost or 10d', 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
               : `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
                   'crop',
                   Object.entries(crops)

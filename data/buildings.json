@@ -4,84 +4,84 @@
     "price": 80000,
     "capacity": 500,
     "buy": {
-      "wheat": 824,
-      "flour": 2060,
+      "wheat": 450,
+      "flour": 2025,
       "bread": 4944,
-      "water": 515,
-      "tea": 2884,
-      "logs": 824,
-      "wood": 1442,
-      "stone": 618,
-      "blocks": 2369,
-      "ore": 515,
-      "steel": 4944,
-      "tools": 14420,
-      "hops": 1236,
+      "water": 450,
+      "tea": 2520,
+      "logs": 720,
+      "wood": 1260,
+      "stone": 540,
+      "blocks": 2935,
+      "ore": 540,
+      "steel": 6727,
+      "tools": 16582,
+      "hops": 1080,
       "beer": 4635,
-      "fuel": 2060,
+      "fuel": 1800,
       "fish": 1236,
       "largeFish": 5150,
       "tackle": 9270,
       "rc": 15450,
       "jetpack": 82400,
-      "electronics": 10300,
-      "rareEarth": 6180,
-      "shipParts": 41200,
+      "electronics": 14535,
+      "rareEarth": 5400,
+      "shipParts": 87910,
       "concrete": 2678,
       "steak": 3811,
       "cows": 20600,
-      "grapes": 2060,
-      "potatoes": 1545,
-      "coffee": 3296,
-      "gravel": 412,
-      "dirt": 258,
-      "compost": 1545,
+      "grapes": 1800,
+      "potatoes": 1350,
+      "coffee": 2880,
+      "gravel": 360,
+      "dirt": 225,
+      "compost": 2626,
       "bricks": 2060,
-      "furniture": 12360,
-      "wine": 3914,
+      "furniture": 13699,
+      "wine": 6463,
       "meals": 5356,
-      "teaBlend": 3914,
-      "roastCoffee": 4635
+      "teaBlend": 6746,
+      "roastCoffee": 8214
     },
     "sell": {
-      "wheat": 896,
-      "flour": 2240,
-      "bread": 5376,
-      "water": 560,
-      "tea": 3136,
-      "logs": 896,
-      "wood": 1568,
-      "stone": 672,
-      "blocks": 2576,
-      "ore": 560,
-      "steel": 5376,
-      "tools": 15680,
-      "hops": 1344,
-      "beer": 5040,
-      "fuel": 2240,
-      "fish": 1344,
-      "largeFish": 5600,
-      "tackle": 10080,
-      "rc": 16800,
-      "jetpack": 89600,
-      "electronics": 11200,
-      "rareEarth": 6720,
-      "shipParts": 44800,
-      "concrete": 2912,
-      "steak": 4144,
-      "cows": 22400,
-      "grapes": 2240,
-      "potatoes": 1680,
-      "coffee": 3584,
-      "gravel": 448,
-      "dirt": 280,
-      "compost": 1680,
-      "bricks": 2240,
-      "furniture": 13440,
-      "wine": 4256,
-      "meals": 5824,
-      "teaBlend": 4256,
-      "roastCoffee": 5040
+      "wheat": 775,
+      "flour": 3488,
+      "bread": 7440,
+      "water": 775,
+      "tea": 4340,
+      "logs": 1240,
+      "wood": 2170,
+      "stone": 930,
+      "blocks": 4418,
+      "ore": 930,
+      "steel": 11587,
+      "tools": 28559,
+      "hops": 1860,
+      "beer": 6975,
+      "fuel": 3100,
+      "fish": 1860,
+      "largeFish": 7750,
+      "tackle": 13950,
+      "rc": 23250,
+      "jetpack": 124000,
+      "electronics": 25033,
+      "rareEarth": 9300,
+      "shipParts": 132293,
+      "concrete": 4030,
+      "steak": 5735,
+      "cows": 31000,
+      "grapes": 3100,
+      "potatoes": 2325,
+      "coffee": 4960,
+      "gravel": 620,
+      "dirt": 388,
+      "compost": 3953,
+      "bricks": 3100,
+      "furniture": 20615,
+      "wine": 9727,
+      "meals": 8060,
+      "teaBlend": 10153,
+      "roastCoffee": 12362
     },
     "stock": {
       "wheat": 60,
@@ -184,11 +184,23 @@
     "name": "The Unsteady Axle",
     "price": 80000,
     "capacity": 500,
-    "buy": {},
+    "buy": {
+      "beer": 5040,
+      "bread": 5376,
+      "tea": 3136,
+      "wine": 7028,
+      "meals": 5824,
+      "teaBlend": 7336,
+      "roastCoffee": 8932
+    },
     "sell": {
-      "beer": 4500,
-      "bread": 4800,
-      "tea": 2800
+      "beer": 6075,
+      "bread": 6480,
+      "tea": 3780,
+      "wine": 8472,
+      "meals": 7020,
+      "teaBlend": 8843,
+      "roastCoffee": 10767
     },
     "stock": {
       "beer": 60,
@@ -208,8 +220,14 @@
     "name": "Spanner & Sons",
     "price": 80000,
     "capacity": 500,
-    "buy": {},
-    "sell": {},
+    "buy": {
+      "fuel": 2240,
+      "tools": 20636
+    },
+    "sell": {
+      "fuel": 2700,
+      "tools": 24874
+    },
     "stock": {},
     "recipe": null,
     "wage": 2200,
@@ -225,84 +243,84 @@
     "price": 80000,
     "capacity": 500,
     "buy": {
-      "wheat": 480,
-      "flour": 1200,
-      "bread": 2880,
-      "water": 300,
-      "tea": 1680,
-      "logs": 480,
-      "wood": 840,
-      "stone": 360,
-      "blocks": 1380,
-      "ore": 300,
-      "steel": 2880,
-      "tools": 8400,
-      "hops": 720,
-      "beer": 2700,
-      "fuel": 1200,
-      "fish": 720,
-      "largeFish": 3000,
-      "tackle": 5400,
-      "rc": 9000,
-      "jetpack": 48000,
-      "electronics": 6000,
-      "rareEarth": 3600,
-      "shipParts": 24000,
-      "concrete": 1560,
-      "steak": 2220,
-      "cows": 12000,
-      "grapes": 1200,
-      "gravel": 240,
-      "dirt": 150,
-      "compost": 900,
-      "bricks": 1200,
-      "furniture": 7200,
-      "wine": 2280,
-      "meals": 3120,
-      "teaBlend": 2280,
-      "roastCoffee": 2700,
-      "potatoes": 900,
-      "coffee": 1920
+      "wheat": 425,
+      "flour": 1912,
+      "bread": 4848,
+      "water": 425,
+      "tea": 2380,
+      "logs": 680,
+      "wood": 1190,
+      "stone": 510,
+      "blocks": 2878,
+      "ore": 510,
+      "steel": 6353,
+      "tools": 15661,
+      "hops": 1020,
+      "beer": 4545,
+      "fuel": 1700,
+      "fish": 1212,
+      "largeFish": 5050,
+      "tackle": 9090,
+      "rc": 15150,
+      "jetpack": 80800,
+      "electronics": 13727,
+      "rareEarth": 5100,
+      "shipParts": 86203,
+      "concrete": 2626,
+      "steak": 3737,
+      "cows": 20200,
+      "grapes": 1700,
+      "potatoes": 1275,
+      "coffee": 2720,
+      "gravel": 340,
+      "dirt": 212,
+      "compost": 2575,
+      "bricks": 2020,
+      "furniture": 13433,
+      "wine": 6337,
+      "meals": 5252,
+      "teaBlend": 6615,
+      "roastCoffee": 8054
     },
     "sell": {
-      "wheat": 800,
-      "flour": 2000,
-      "bread": 4800,
-      "water": 500,
-      "tea": 2800,
-      "logs": 800,
-      "wood": 1400,
-      "stone": 600,
-      "blocks": 2300,
-      "ore": 500,
-      "steel": 4800,
-      "tools": 14000,
-      "hops": 1200,
-      "beer": 4500,
-      "fuel": 2000,
-      "fish": 1200,
-      "largeFish": 5000,
-      "tackle": 9000,
-      "rc": 15000,
-      "jetpack": 80000,
-      "electronics": 10000,
-      "rareEarth": 6000,
-      "shipParts": 40000,
-      "concrete": 2600,
-      "steak": 3700,
-      "cows": 20000,
-      "grapes": 2000,
-      "gravel": 400,
-      "dirt": 250,
-      "compost": 1500,
-      "bricks": 2000,
-      "furniture": 12000,
-      "wine": 3800,
-      "meals": 5200,
-      "teaBlend": 3800,
-      "roastCoffee": 4500,
-      "potatoes": 1500,
-      "coffee": 3200
+      "wheat": 825,
+      "flour": 3713,
+      "bread": 7920,
+      "water": 825,
+      "tea": 4620,
+      "logs": 1320,
+      "wood": 2310,
+      "stone": 990,
+      "blocks": 4703,
+      "ore": 990,
+      "steel": 12334,
+      "tools": 30402,
+      "hops": 1980,
+      "beer": 7425,
+      "fuel": 3300,
+      "fish": 1980,
+      "largeFish": 8250,
+      "tackle": 14850,
+      "rc": 24750,
+      "jetpack": 132000,
+      "electronics": 26648,
+      "rareEarth": 9900,
+      "shipParts": 140828,
+      "concrete": 4290,
+      "steak": 6105,
+      "cows": 33000,
+      "grapes": 3300,
+      "potatoes": 2475,
+      "coffee": 5280,
+      "gravel": 660,
+      "dirt": 413,
+      "compost": 4208,
+      "bricks": 3300,
+      "furniture": 21945,
+      "wine": 10354,
+      "meals": 8580,
+      "teaBlend": 10808,
+      "roastCoffee": 13159
     },
     "stock": {
       "wheat": 60,
@@ -391,7 +409,12 @@
     "capacity": 500,
     "buy": {},
     "sell": {
-      "wheat": 800
+      "wheat": 500,
+      "potatoes": 1500,
+      "hops": 1200,
+      "grapes": 2000,
+      "tea": 2800,
+      "coffee": 3200
     },
     "stock": {
       "wheat": 20
@@ -410,10 +433,10 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "wheat": 520
+      "wheat": 560
     },
     "sell": {
-      "flour": 2000
+      "flour": 2250
     },
     "stock": {
       "flour": 20,
@@ -433,7 +456,7 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "flour": 1300
+      "flour": 2520
     },
     "sell": {
       "bread": 4800
@@ -456,7 +479,7 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "logs": 520
+      "logs": 896
     },
     "sell": {
       "wood": 1400
@@ -499,10 +522,10 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "stone": 390
+      "stone": 672
     },
     "sell": {
-      "blocks": 2300
+      "blocks": 2850
     },
     "stock": {
       "blocks": 20,
@@ -523,7 +546,7 @@
     "capacity": 500,
     "buy": {},
     "sell": {
-      "ore": 500
+      "ore": 600
     },
     "stock": {
       "ore": 20
@@ -542,10 +565,10 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "ore": 325
+      "ore": 672
     },
     "sell": {
-      "steel": 4800
+      "steel": 7475
     },
     "stock": {
       "steel": 20,
@@ -565,7 +588,7 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "hops": 780
+      "hops": 1344
     },
     "sell": {
       "beer": 4500
@@ -588,11 +611,11 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "steel": 3120,
-      "wood": 910
+      "steel": 8372,
+      "wood": 1568
     },
     "sell": {
-      "tools": 14000
+      "tools": 18425
     },
     "stock": {
       "tools": 20,
@@ -613,7 +636,7 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "ore": 325
+      "ore": 672
     },
     "sell": {
       "fuel": 2000
@@ -656,11 +679,11 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "rareEarth": 3900,
-      "steel": 3120
+      "rareEarth": 6720,
+      "steel": 8372
     },
     "sell": {
-      "electronics": 10000
+      "electronics": 16150
     },
     "stock": {
       "electronics": 20,
@@ -681,11 +704,11 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "electronics": 6500,
-      "steel": 3120
+      "electronics": 18088,
+      "steel": 8372
     },
     "sell": {
-      "shipParts": 40000
+      "shipParts": 85350
     },
     "stock": {
       "electronics": 20,
@@ -802,11 +825,11 @@
     "price": 100000,
     "capacity": 500,
     "buy": {
-      "dirt": 175,
-      "potatoes": 1050
+      "dirt": 280,
+      "potatoes": 1680
     },
     "sell": {
-      "compost": 1500
+      "compost": 2550
     },
     "stock": {},
     "recipe": "composter",
@@ -823,8 +846,8 @@
     "price": 100000,
     "capacity": 500,
     "buy": {
-      "dirt": 175,
-      "fuel": 1400
+      "dirt": 280,
+      "fuel": 2240
     },
     "sell": {
       "bricks": 2000
@@ -844,9 +867,9 @@
     "price": 100000,
     "capacity": 500,
     "buy": {
-      "gravel": 280,
-      "stone": 420,
-      "water": 350
+      "gravel": 448,
+      "stone": 672,
+      "water": 868
     },
     "sell": {
       "concrete": 2600
@@ -867,11 +890,11 @@
     "price": 140000,
     "capacity": 500,
     "buy": {
-      "wood": 980,
-      "tools": 9800
+      "wood": 1568,
+      "tools": 20636
     },
     "sell": {
-      "furniture": 12000
+      "furniture": 13300
     },
     "stock": {},
     "recipe": "carpenter",
@@ -885,15 +908,15 @@
     "color": "#d5c5a2"
   },
   "winery": {
-    "name": "Vintner\u2019s press",
+    "name": "Vintner’s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
-      "grapes": 1400,
-      "wood": 980
+      "grapes": 2240,
+      "wood": 1568
     },
     "sell": {
-      "wine": 3800
+      "wine": 6275
     },
     "stock": {},
     "recipe": "winery",
@@ -911,9 +934,9 @@
     "price": 100000,
     "capacity": 500,
     "buy": {
-      "potatoes": 1050,
-      "flour": 1400,
-      "water": 350
+      "potatoes": 1680,
+      "flour": 2520,
+      "water": 868
     },
     "sell": {
       "meals": 5200
@@ -934,11 +957,11 @@
     "price": 100000,
     "capacity": 500,
     "buy": {
-      "tea": 1960,
-      "water": 350
+      "tea": 3136,
+      "water": 868
     },
     "sell": {
-      "teaBlend": 3800
+      "teaBlend": 6550
     },
     "stock": {},
     "recipe": "teaHouse",
@@ -956,11 +979,11 @@
     "price": 140000,
     "capacity": 500,
     "buy": {
-      "coffee": 2240,
-      "fuel": 1400
+      "coffee": 3584,
+      "fuel": 2240
     },
     "sell": {
-      "roastCoffee": 4500
+      "roastCoffee": 7975
     },
     "stock": {},
     "recipe": "roastery",
@@ -978,16 +1001,16 @@
     "price": 160000,
     "capacity": 500,
     "buy": {
-      "meals": 3640,
-      "water": 350,
-      "teaBlend": 2660,
-      "roastCoffee": 3150
+      "meals": 5824,
+      "water": 868,
+      "teaBlend": 7336,
+      "roastCoffee": 8932
     },
     "sell": {
-      "meals": 5200,
-      "water": 500,
-      "teaBlend": 3800,
-      "roastCoffee": 4500
+      "meals": 7020,
+      "water": 1047,
+      "teaBlend": 8843,
+      "roastCoffee": 10767
     },
     "stock": {
       "meals": 0,
@@ -1011,16 +1034,16 @@
     "price": 360000,
     "capacity": 500,
     "buy": {
-      "meals": 3640,
-      "water": 350,
-      "teaBlend": 2660,
-      "roastCoffee": 3150
+      "meals": 5824,
+      "water": 868,
+      "teaBlend": 7336,
+      "roastCoffee": 8932
     },
     "sell": {
-      "meals": 5200,
-      "water": 500,
-      "teaBlend": 3800,
-      "roastCoffee": 4500
+      "meals": 7020,
+      "water": 1047,
+      "teaBlend": 8843,
+      "roastCoffee": 10767
     },
     "stock": {
       "meals": 0,

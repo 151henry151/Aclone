@@ -27,6 +27,7 @@ test('large gameplay context fits the wire limit without losing candidate action
       conversationHistory: Array(8).fill({ text: 'a'.repeat(1200) }),
       nearbyBuildings: Array(12).fill({ stock: 'x'.repeat(2500) }),
       gameGuide: 'x'.repeat(50000),
+      availableDeliveryStock: { ownedStockrooms: 'x'.repeat(50000) },
     },
   };
   const body = jevPayload(request, 'jev-latest');
@@ -35,6 +36,7 @@ test('large gameplay context fits the wire limit without losing candidate action
   assert.deepEqual(body.state.self, request.observation.self);
   assert.deepEqual(body.state.commitments, request.observation.commitments);
   assert.equal(body.state.journal, undefined);
+  assert.equal(body.state.availableDeliveryStock, undefined);
   const brain = new JevBrain('test', 'jev-latest', async (_url, options) => {
     assert.deepEqual(JSON.parse(String(options?.body)), body);
     return Response.json({

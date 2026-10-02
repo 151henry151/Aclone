@@ -4,7 +4,7 @@ import { canCarry, distance } from '../../shared/simulation.ts';
 import { economyChoices } from './economy-choices.ts';
 import { items, skills } from '../../shared/catalog.ts';
 import { calendar } from '../../shared/environment.ts';
-import { crops, cropStatus } from '../../shared/farming.ts';
+import { crops, cropStatus, fertilizerPrice } from '../../shared/farming.ts';
 import type { ResidentState } from './memory.ts';
 import { blockedStep } from './recovery.ts';
 import type { Step } from './decision.ts';
@@ -207,9 +207,12 @@ export function gameplayChoices(
               `Water ${current!.crop} at ${b.name} plot ${plot + 1}; consumes 3 carried water. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
               visit(b, [farm('water')]),
             );
-          if (!current!.fertilized && ((p.inventory.compost ?? 0) > 0 || b.investment >= 1000))
+          if (
+            !current!.fertilized &&
+            ((p.inventory.compost ?? 0) > 0 || b.investment >= fertilizerPrice)
+          )
             add(
-              `Fertilize ${current!.crop} at ${b.name} plot ${plot + 1}; costs one carried compost or 1000 farm investment; increases yield.`,
+              `Fertilize ${current!.crop} at ${b.name} plot ${plot + 1}; costs one carried compost or ${fertilizerPrice} farm investment; increases yield.`,
               visit(b, [farm('fertilize')]),
             );
         } else if (

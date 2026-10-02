@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.15.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.15.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.15.3:** local supply-chain prices now support profitable production and haulage, with less attractive import/export fallbacks. Existing public and unowned businesses migrate once; every player-owned price is preserved. NPC delivery promises are checked against live stock ownership and buyer terms. See [pricing and limits](docs/ECONOMY.md#default-trade-prices-0153) and [upgrade instructions](docs/RELEASING.md#deploying-0153).
 
 **Fixed in 0.15.2:** repeated trades keep list scroll position; gameplay forms remember edited amounts and choices across actions and reopened dialogs during the browser session.
 
@@ -50,7 +52,7 @@ The night sky has moving, seasonal stars and two nearby, phased moons. Starlight
 
 </details>
 
-**Fixed in 0.6.1:** natural reverse steering, no self-employment or self-trading, and a 3% gross delivery margin from default building prices to Harbour stores. Owners use Stockroom and Building Admin; custom prices remain configurable.
+**Fixed in 0.6.1:** natural reverse steering, no self-employment or self-trading, and a small finished-goods delivery margin to Harbour stores (pricing revised in 0.15.3). Owners use Stockroom and Building Admin; custom prices remain configurable.
 
 **New in 0.6.0:** an approximately eight-times-larger town footprint with winding roads, dispersed businesses, roadside lights and a matching parish map. Existing starter properties retain their owners and contents when relocated; custom lots stay in place.
 
@@ -79,6 +81,9 @@ inclinations. Mabel stays online; everyone else has varied daily and occasional
 long visits. Toby, Rowan and Elias play roughly three times as long as the new
 neighbours. They prepare supplies and shelter before leaving, and return sooner
 when unprepared. Chat agreements can become persistent Jev delivery plans.
+Delivery requests are checked against live ownership, stock and buyer terms before
+acceptance; being employed at a farm does not give an NPC its crops. Blocked
+agreements receive a one-time explanation without an extra chat-model call.
 
 All residents need `JEV_API_KEY` (or `TYPESAFE_API_KEY`). Mabel uses `OPENAI_API_KEY`
 for conversation; everyone else uses `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`).

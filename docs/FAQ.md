@@ -142,10 +142,12 @@ These are Aclone's current rules, not a claim of exact historical-game fidelity.
 
 The interface uses denarii (d) and sheckles (s); normally 100d = 1s. Game-data
 integers are hundredths of one denarius, so 4500 internal units means 45d.
-Default shop goods can be delivered to Harbour stores for about 3% gross profit;
-fuel, taxes where applicable, time and available stock/capital matter. Buying
-and immediately reselling at the same harbour loses money. Actual quotes override
-this example. Galactic credits/cargo are separate from local cash/inventory;
+Local processors normally pay 12% above producer wholesale prices, so supplying
+local businesses beats exporting their ingredients. Harbour stores offers a smaller
+3% gross delivery margin on finished goods; it pays less for intermediate goods.
+Imports cost more than local production. Water is currently an import-only input.
+Fuel, taxes, time and available stock/capital matter; actual quotes override defaults.
+Buying and immediately reselling at the same harbour loses money. Galactic credits/cargo are separate from local cash/inventory;
 conversion is available at a spaceport, subject to the world's cap.
 
 ## Can Mabel help with everything or act on my behalf?

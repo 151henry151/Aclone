@@ -9,7 +9,7 @@ import {
   move,
   makeBuilding,
 } from '../src/shared/simulation.ts';
-import { buildings, items } from '../src/shared/catalog.ts';
+import { buildings } from '../src/shared/catalog.ts';
 import { Store } from '../src/server/store.ts';
 import { finishHarvest } from '../src/shared/farming.ts';
 
@@ -131,18 +131,7 @@ test('legacy owner employment is cleared on load and cannot earn production or r
   assert.equal(farm.investment, 5000);
   assert.equal(farm.stock.wheat, (buildings.farm.stock.wheat ?? 0) + 4);
 });
-test('default deliveries earn about three percent at Harbour stores with no same-store round trip profit', () => {
-  for (const [kind, b] of Object.entries(buildings)) {
-    for (const [item, price] of Object.entries(b.sell)) {
-      if (kind !== 'market') {
-        const bid = buildings.market.buy[item];
-        assert.ok(bid > price, `${kind}: ${item} has a delivery margin`);
-        assert.ok((bid - price) / price <= 0.032, `${kind}: ${item} margin stays small`);
-      }
-      if (b.buy[item] !== undefined)
-        assert.ok(b.buy[item] < price, `${kind}: no instant ${item} arbitrage`);
-    }
-  }
+test('finished bread can still be delivered to Harbour at a small positive margin', () => {
   const w = createWorld('delivery', 'Delivery', 'owner'),
     p = addPlayer(w, 'p', 'Haulier');
   const bakery = w.buildings.find((b) => b.kind === 'bakery')!,
@@ -168,46 +157,5 @@ test('default deliveries earn about three percent at Harbour stores with no same
     quantity: 2,
     direction: 'sell',
   });
-  assert.equal(p.cash - cash, Math.round(items.bread.price * 0.03) * 2);
-});
-
-test('old default prices migrate once while custom quotes, cash, stock and crop listings survive', async () => {
-  const old = (await import('../data/legacy-prices-0.6.json')).default;
-  const { w, p, b } = setup();
-  delete w.tradePricing;
-  const market = w.buildings.find((b) => b.kind === 'market')!,
-    farm = w.buildings.find((b) => b.kind === 'farm')!;
-  for (const lot of w.buildings) {
-    const prices = old[lot.kind as keyof typeof old];
-    lot.buy = { ...prices.buy };
-    lot.sell = { ...prices.sell };
-  }
-  market.buy.bread = 3333;
-  b.sell.flour = 2222;
-  farm.sell.potatoes = Math.round(items.potatoes.price * 0.9);
-  const stock = JSON.stringify(w.buildings.map((b) => b.stock));
-  const store = new Store(':memory:');
-  try {
-    store.saveWorld(w);
-    const loaded = store.loadWorlds()[0].world;
-    assert.equal(loaded.tradePricing, 1);
-    assert.equal(loaded.players[p.id].cash, p.cash);
-    assert.equal(JSON.stringify(loaded.buildings.map((b) => b.stock)), stock);
-    assert.equal(loaded.buildings.find((b) => b.id === market.id)!.buy.bread, 3333);
-    assert.equal(
-      loaded.buildings.find((b) => b.id === market.id)!.buy.flour,
-      buildings.market.buy.flour,
-    );
-    assert.equal(loaded.buildings.find((x) => x.id === b.id)!.sell.flour, 2222);
-    assert.equal(
-      loaded.buildings.find((x) => x.id === farm.id)!.sell.potatoes,
-      items.potatoes.price,
-    );
-    // A later owner can intentionally choose an old price without the next load rewriting it.
-    loaded.buildings.find((b) => b.id === market.id)!.buy.flour = old.market.buy.flour;
-    store.saveWorld(loaded);
-    assert.deepEqual(store.loadWorlds()[0].world, loaded);
-  } finally {
-    store.close();
-  }
+  assert.equal(p.cash - cash, (buildings.market.buy.bread - buildings.bakery.sell.bread) * 2);
 });

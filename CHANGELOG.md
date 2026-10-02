@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-10-01
+
+### Fixed
+
+- Align default processor bids, supplier asks, retail prices and export/import quotes across every production chain. Factory prices cover default ingredients, one worker and sales tax, while local deliveries pay more than exporting intermediate goods. Include imported water in costs, add useful hospitality/garage restocking bids, and price fallback fertilizer above locally made compost.
+- Upgrade existing unowned and treasury-run businesses to the new price lists once at startup. Preserve all human- and NPC-owned prices, along with stock, money and wages; later edits survive reloads.
+
+- Validate NPC delivery agreements before replying, using current ownership, accessible stock, posted prices, buyer funding and storage. Employees no longer promise to withdraw their employer’s goods; replies distinguish a recorded request from an actual delivery.
+- Explain blocked deliveries once to the requester without extra AI calls. Remember notices across restarts, preserve public/private channels, and give existing agreements specific reasons instead of a generic stock/funding error.
+
 ## [0.15.2] - 2026-10-01
 
 ### Fixed

@@ -99,7 +99,7 @@ export function createWorld(
     players: {},
     buildings: [],
     townLayout: 2,
-    tradePricing: 1,
+    tradePricing: 2,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],

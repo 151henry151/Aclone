@@ -24,6 +24,7 @@ import { initialPresence, beginVisit } from './habits.ts';
 import { preferChoices } from './preferences.ts';
 import {
   commitmentChoices,
+  deliveryBlocker,
   recordCommitment,
   checkCommitmentPrice,
   recordDelivery,
@@ -336,7 +337,28 @@ export class Residents {
   private choices(r: Resident, w: World, p: Player) {
     const a = this.account(r);
     if (r.state.inSpace) return spaceChoices(a, this.worlds, this.universe);
-    const choices = [...commitmentChoices(w, p, r.state), ...adaptiveChoices(w, p, r.state)];
+    const deliveries = commitmentChoices(w, p, r.state);
+    // A failed human agreement merits one factual notice, not another model call
+    // or recurring public activity narration. Legacy channels default to private.
+    const blocked = r.state.commitments?.find(
+      (c) =>
+        c.world === w.id &&
+        c.delivery &&
+        c.status === 'blocked' &&
+        !c.blockedNoticeSent &&
+        w.players[c.speakerId]?.online &&
+        !p.task,
+    );
+    if (blocked && !p.muted && !w.settings.chatLocked) {
+      act(w, p.id, {
+        type: 'chat',
+        text: `My delivery is blocked: ${blocked.outcome} ${blocked.delivered}/${blocked.delivery!.quantity} ${blocked.delivery!.item} delivered.`,
+        ...(blocked.replyTo === null ? {} : { to: blocked.speakerId }),
+      });
+      blocked.blockedNoticeSent = true;
+      this.checkpoint(r, w, 'delivery-blocked', { id: blocked.id, outcome: blocked.outcome });
+    }
+    const choices = [...deliveries, ...adaptiveChoices(w, p, r.state)];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (port && !p.task && !p.atHome && !p.game) {
       const prep: Step[] =
@@ -1022,6 +1044,49 @@ export class Residents {
           (!latest.players[r.state.playerId]?.online && !r.state.inSpace)
         )
           return;
+        // Validate against the world AFTER the asynchronous reply: ownership,
+        // stock and prices may have changed while the model was thinking.
+        const proposal = result.gameplayRequest;
+        let recorded = false;
+        if (proposal && conversation?.speakerId && conversationKey) {
+          const player = latest.players[r.state.playerId];
+          const reason =
+            !proposal.cancel && proposal.delivery
+              ? deliveryBlocker(latest, player, proposal.delivery, proposal.delivery.quantity, true)
+              : undefined;
+          if (!reason)
+            recorded = recordCommitment(
+              r.state,
+              proposal,
+              conversationKey,
+              conversation.speakerId,
+              latest,
+              replyTo ?? null,
+            );
+          if (proposal.delivery || proposal.cancel || !recorded) {
+            const text = reason
+              ? `I need to correct that before agreeing: ${reason} I have not accepted this delivery.`
+              : !recorded
+                ? 'I have not added a new agreement: it is already recorded, there is no matching request to cancel, or my four unfinished requests need attention first. Please ask about my existing agreements.'
+                : proposal.cancel
+                  ? 'I have cancelled your latest unfinished request.'
+                  : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and the buyer has the posted price, investment and storage for the order. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
+            result = {
+              ...result,
+              decision: { ...result.decision, speech: { text, to: replyTo ?? null } },
+            };
+          }
+          this.checkpoint(
+            r,
+            latest,
+            recorded ? 'conversation-request' : 'conversation-request-declined',
+            {
+              id: conversationKey,
+              request: proposal,
+              reason: reason ?? (recorded ? undefined : 'No new agreement recorded'),
+            },
+          );
+        }
         this.accept(r, latest, result, Date.now(), replyTo, chatOnly);
         if (
           chatOnly &&
@@ -1030,29 +1095,14 @@ export class Residents {
           r.wake = true;
           r.state.needsDecision = true;
         }
-        if (
-          result.gameplayRequest &&
-          conversation?.speakerId &&
-          conversationKey &&
-          recordCommitment(
-            r.state,
-            result.gameplayRequest,
-            conversationKey,
-            conversation.speakerId,
-            latest,
-          )
-        ) {
-          // One extra gameplay decision only when a new agreement is recorded.
-          // Speech was already answered, so this must not call the chat model again.
+        if (recorded) {
+          // One extra gameplay decision only for a recorded agreement; no chat call.
           r.wake = true;
           r.state.needsDecision = true;
           r.state.plan = [];
           r.state.waitUntil = 0;
           r.nav = undefined;
-          this.checkpoint(r, latest, 'conversation-request', {
-            id: conversationKey,
-            request: result.gameplayRequest,
-          });
+          this.checkpoint(r, latest);
         }
       })
       .catch((e) => {

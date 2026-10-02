@@ -31,6 +31,9 @@ export interface Commitment extends GameplayRequest {
   status: 'pending' | 'blocked' | 'completed' | 'cancelled';
   delivered: number;
   outcome: string;
+  /** Null is public; absent on legacy agreements, which default to private notices. */
+  replyTo?: string | null;
+  blockedNoticeSent?: boolean;
 }
 export function recordCommitment(
   state: ResidentState,
@@ -38,6 +41,7 @@ export function recordCommitment(
   id: string,
   speakerId: string,
   w: World,
+  replyTo?: string | null,
 ) {
   request = gameplayRequestSchema.parse(request);
   const all = (state.commitments ??= []);
@@ -67,12 +71,62 @@ export function recordCommitment(
     id,
     speakerId,
     world: w.id,
+    replyTo,
     status: 'pending',
     delivered: 0,
     outcome: 'Requested in conversation; Jev must choose a feasible plan. No goods delivered yet.',
   });
   state.commitments = all.slice(-20);
   return true;
+}
+type Delivery = NonNullable<GameplayRequest['delivery']>;
+function deliverySource(w: World, p: Player, d: Delivery) {
+  return d.sourceBuilding
+    ? w.buildings.find((b) => b.id === d.sourceBuilding && b.owner === p.id && !b.construction)
+    : w.buildings.find((b) => b.owner === p.id && !b.construction && b.stock[d.item] > 0);
+}
+/** Same live facts for conversation admission and each subsequent delivery load. */
+export function deliveryBlocker(
+  w: World,
+  p: Player,
+  d: Delivery,
+  remaining: number,
+  wholeAgreement = false,
+): string | undefined {
+  if (!items[d.item]) return 'I cannot identify that item. Please clarify what you want delivered.';
+  const buyer = w.buildings.find((b) => b.id === d.destinationBuilding && !b.construction);
+  if (!buyer) return 'The destination building is unavailable. We need another buyer.';
+  if (buyer.owner === p.id)
+    return 'I own the destination, so I must deposit stock there rather than sell to myself.';
+  if (!Number.isSafeInteger(buyer.buy[d.item]) || buyer.buy[d.item] < d.unitPrice)
+    return `The destination does not offer the agreed minimum of ${d.unitPrice / 100}d per item. Its owner needs to set the posted buy price.`;
+  const carried = p.inventory[d.item] ?? 0;
+  const source = deliverySource(w, p, d);
+  if ((wholeAgreement ? carried < remaining : carried === 0) && d.sourceBuilding && !source) {
+    const building = w.buildings.find((b) => b.id === d.sourceBuilding);
+    if (building && building.owner !== p.id)
+      return `I do not own ${building.name}, so I cannot withdraw its stock${p.job === building.id ? ' even as an employee' : ''}. I would need to buy goods normally before offering them for delivery.`;
+    return 'My source building is unavailable or still under construction. I need accessible stock first.';
+  }
+  const available =
+    carried +
+    (wholeAgreement && !d.sourceBuilding
+      ? w.buildings
+          .filter((b) => b.owner === p.id && !b.construction)
+          .reduce((total, b) => total + (b.stock[d.item] ?? 0), 0)
+      : (source?.stock[d.item] ?? 0));
+  const needed = wholeAgreement ? remaining : 1;
+  if (available < needed)
+    return `I have access to only ${available} ${d.item}, but ${remaining} remain to deliver. We need to agree a smaller amount or wait until I obtain more.`;
+  const space = buyer.capacity - (buyer.stock[d.item] ?? 0);
+  if (space < needed)
+    return `The buyer has storage space for only ${Math.max(0, space)} more ${d.item}. Its owner needs to clear stock or reduce the order.`;
+  const cost = needed * buyer.buy[d.item];
+  if (buyer.investment < cost)
+    return `The buyer needs ${(cost - buyer.investment) / 100}d more investment to pay for ${needed} ${d.item}. Its owner needs to fund the building.`;
+  if (!carried && !canCarry(p, d.item, 1))
+    return 'My cargo is full. I need to make room before loading.';
+  if (p.task) return 'I need to finish my current timed task before loading.';
 }
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 /** Fully accounted deliveries, possibly in several loads; ordinary action validation still applies. */
@@ -86,23 +140,13 @@ export function commitmentChoices(w: World, p: Player, state: ResidentState): Fa
       c.status = 'blocked';
       c.outcome = reason;
     };
-    if (!items[d.item]) {
-      block('Unknown item; clarify the agreement.');
+    const reason = deliveryBlocker(w, p, d, d.quantity - c.delivered);
+    if (reason) {
+      block(reason);
       continue;
     }
-    if (!buyer || buyer.owner === p.id) {
-      block('Buyer unavailable or is my own property.');
-      continue;
-    }
-    if (!Number.isSafeInteger(buyer.buy[d.item]) || buyer.buy[d.item] < d.unitPrice) {
-      block(
-        'The building’s posted buy price is below the agreed minimum. Ask its owner to set the price.',
-      );
-      continue;
-    }
-    const source = d.sourceBuilding
-      ? w.buildings.find((b) => b.id === d.sourceBuilding && b.owner === p.id && !b.construction)
-      : w.buildings.find((b) => b.owner === p.id && !b.construction && b.stock[d.item] > 0);
+    if (!buyer) continue;
+    const source = deliverySource(w, p, d);
     const carried = p.inventory[d.item] ?? 0;
     const remaining = d.quantity - c.delivered;
     let quantity = Math.min(
@@ -114,10 +158,6 @@ export function commitmentChoices(w: World, p: Player, state: ResidentState): Fa
     while (quantity > carried && !canCarry(p, d.item, quantity - carried)) quantity--;
     if (quantity <= 0) {
       block('Waiting for my stock, cargo space, buyer storage or funded working capital.');
-      continue;
-    }
-    if (p.task) {
-      block('Finish the current timed task before loading.');
       continue;
     }
     const plan: Step[] = [

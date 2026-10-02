@@ -40,6 +40,7 @@ export function jevPayload(request: BrainRequest, model: string) {
     choices: supplied,
     farmerChoices,
     gameGuide: _guide,
+    availableDeliveryStock: _deliveryStock,
     conversationHistory: _chat,
     journal: _journal,
     recalled: _recalled,

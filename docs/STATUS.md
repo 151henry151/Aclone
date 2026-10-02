@@ -227,6 +227,14 @@ and starlight. The sky uses an original simplified orbital model, described in
   simulation. Different world processes and public registry registration need a
   federation protocol.
 
+## Planned water supply
+
+A water-producing business is not implemented yet. When added, waterworks must
+be built directly on a shoreline next to water. Enforce siting in authoritative
+server construction validation and reflect it in the build preview and NPC
+construction choices; inland placement must fail for everyone. Fuel, staffing
+and production quantities remain to be designed. Until then, water is imported.
+
 ## Deliberately not invented
 
 The supplied spec leaves Bongosquares and Netrek rules unknown. Aclone does not

@@ -69,6 +69,24 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   expect(errors).toEqual([]);
 });
 test('world creation, owner editor, safe Lua and live terrain changes', async ({ page }) => {
+  let terrainRequest: number | undefined;
+  let terrainAccepted = false;
+  page.on('websocket', (socket) => {
+    socket.on('framesent', ({ payload }) => {
+      const message = JSON.parse(String(payload));
+      if (message.type === 'action' && message.action?.type === 'terrain')
+        terrainRequest = message.request;
+    });
+    socket.on('framereceived', ({ payload }) => {
+      const message = JSON.parse(String(payload));
+      if (
+        message.type === 'result' &&
+        terrainRequest !== undefined &&
+        message.request === terrainRequest
+      )
+        terrainAccepted = message.ok === true;
+    });
+  });
   await page.goto('./');
   await page
     .getByLabel('Pilot name', { exact: true })
@@ -84,7 +102,9 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   ).toBeVisible();
   await page.getByRole('button', { name: 'Landscape', exact: true }).click();
   await page.getByRole('button', { name: 'Apply terrain brush' }).click();
-  await expect(page.locator('#toast')).toContainText('Done');
+  // Routine success intentionally has no toast; verify the matching server acknowledgement.
+  await expect.poll(() => terrainAccepted).toBe(true);
+  await expect(page.locator('#toast')).not.toContainText('Done');
   await page.getByRole('button', { name: 'Script', exact: true }).click();
   await page
     .getByLabel('World script', { exact: true })

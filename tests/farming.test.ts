@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, advance } from '../src/shared/simulation.ts';
-import { cropStatus } from '../src/shared/farming.ts';
+import { cropStatus, fertilizerPrice } from '../src/shared/farming.ts';
 function setup() {
   const w = createWorld('f', 'Farm', 'o');
   const p = addPlayer(w, 'o', 'Farmer');
@@ -132,4 +132,19 @@ test('gravel drainage and compost/topsoil amendments consume real resources and 
   act(w, p.id, { type: 'farm', building: b.id, plot: 0, operation: 'harvest' });
   advance(w, 15);
   assert.equal(b.plots[0].drainage, true);
+});
+
+test('fallback fertilizer uses the import quote while carried local compost avoids that expense', () => {
+  const { w, p, b } = setup();
+  act(w, p.id, { type: 'farm', building: b.id, operation: 'plant', plot: 0, crop: 'wheat' });
+  const cash = b.investment;
+  act(w, p.id, { type: 'farm', building: b.id, operation: 'fertilize', plot: 0 });
+  assert.equal(b.investment, cash - fertilizerPrice);
+  assert.equal(w.ledger.at(-1)!.amount, fertilizerPrice);
+  act(w, p.id, { type: 'farm', building: b.id, operation: 'plant', plot: 1, crop: 'wheat' });
+  const beforeCompost = b.investment;
+  p.inventory.compost = 1;
+  act(w, p.id, { type: 'farm', building: b.id, operation: 'fertilize', plot: 1 });
+  assert.equal(b.investment, beforeCompost);
+  assert.equal(p.inventory.compost, 0);
 });

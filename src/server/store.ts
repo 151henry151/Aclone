@@ -49,7 +49,11 @@ export class Store {
         migrateTown(world);
         migrateEconomy(world);
         for (const b of world.buildings)
-          if (b.government && ['market', 'starport'].includes(b.kind))
+          if (
+            b.government &&
+            (!b.owner || b.owner === 'treasury') &&
+            ['market', 'starport'].includes(b.kind)
+          )
             for (const key of [
               'potatoes',
               'coffee',

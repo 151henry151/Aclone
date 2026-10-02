@@ -2,12 +2,12 @@
   "wheat": {
     "name": "Wheat",
     "weight": 1,
-    "price": 800
+    "price": 500
   },
   "flour": {
     "name": "Flour",
     "weight": 1,
-    "price": 2000
+    "price": 2250
   },
   "bread": {
     "name": "Bread",
@@ -48,22 +48,22 @@
   "blocks": {
     "name": "Stone blocks",
     "weight": 2,
-    "price": 2300
+    "price": 2850
   },
   "ore": {
     "name": "Metal ore",
     "weight": 2,
-    "price": 500
+    "price": 600
   },
   "steel": {
     "name": "Steel",
     "weight": 2,
-    "price": 4800
+    "price": 7475
   },
   "tools": {
     "name": "Tools",
     "weight": 2,
-    "price": 14000
+    "price": 18425
   },
   "hops": {
     "name": "Hops",
@@ -115,7 +115,7 @@
   "electronics": {
     "name": "Electronics",
     "weight": 1,
-    "price": 10000
+    "price": 16150
   },
   "rareEarth": {
     "name": "Rare earth",
@@ -125,7 +125,7 @@
   "shipParts": {
     "name": "Ship parts",
     "weight": 5,
-    "price": 40000
+    "price": 85350
   },
   "concrete": {
     "name": "Concrete",
@@ -174,7 +174,7 @@
   "compost": {
     "name": "Compost",
     "weight": 2,
-    "price": 1500
+    "price": 2550
   },
   "bricks": {
     "name": "Fired bricks",
@@ -184,12 +184,12 @@
   "furniture": {
     "name": "Furniture",
     "weight": 8,
-    "price": 12000
+    "price": 13300
   },
   "wine": {
     "name": "Wine",
     "weight": 1,
-    "price": 3800,
+    "price": 6275,
     "drink": 20000
   },
   "meals": {
@@ -201,13 +201,13 @@
   "teaBlend": {
     "name": "Packed tea",
     "weight": 1,
-    "price": 3800,
+    "price": 6550,
     "drink": 24000
   },
   "roastCoffee": {
     "name": "Roasted coffee",
     "weight": 1,
-    "price": 4500,
+    "price": 7975,
     "drink": 28000
   }
 }

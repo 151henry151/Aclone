@@ -103,7 +103,22 @@ quantity in the same transaction as the world action; a promise, failed trade or
 server restart cannot count as delivery. The buyer must post at least the agreed
 price, have investment to pay and have storage space. Normal taxes still apply.
 The price is checked again at execution, and nobody can withdraw another owner's
-farm stock. Ask the resident about progress or blockers; they remain quiet otherwise.
+farm stock.
+
+Before a new delivery is accepted, the server checks the **current** world again
+(after the conversation model finishes): the full quantity must be carried or in
+owned stockrooms, with the posted price, buyer funding and storage to match.
+Employment grants no right to withdraw an employer's stock. If the resident would
+need to buy goods first, it must explain that prerequisite instead of promising to
+load the employer's crops. Invalid proposals receive a factual explanation and are
+not added to the delivery queue; valid proposals acknowledge planning, not departure
+or completion. Jev still chooses actions and survival remains a priority.
+
+An existing delivery that becomes blocked gets one factual notice when its
+requester is online in the parish. This uses no additional AI call and is remembered
+across restarts. It follows the original chat channel; legacy agreements without a
+saved channel default to private. Temporary timed work does not trigger a notice.
+Ask for subsequent progress or changed blockers; residents otherwise stay quiet.
 
 General goals are retained as planner guidance, without inventing a completion
 receipt. Up to four unfinished requests and twenty recent agreements are retained.
