@@ -129,9 +129,12 @@ not of public Puddlewick. There are no ordinary-player cash/admin cheats.
 Use **Activities** to join and **Leave activity** to exit. Hornball is a team
 tractor ball game: drive near the ball and honk to push it toward the goal.
 Racing follows the ordered checkpoints; follow the next gate indication.
-Fishing needs carried Fishing tackle and a world with fishing enabled. Join,
-wait for a bite, then tap the centered Reel in button or press F3 within the eight-second bite window. Cargo
-space is needed for the catch.
+Fishing needs carried Fishing tackle and a world with fishing enabled. Drive onto
+the dock and use the centered **Cast a line** button, or click the dock / press
+E or Ctrl to open its panel. Wait for a bite, then tap **Reel in** or press F3 within
+the eight-second bite window. Use **Stop fishing** beside Reel in to leave and move
+again. These floating controls are separate from chat and need no Activities menu.
+Cargo space is needed for the catch.
 
 Ultrakricket is a two-player timing game using a grenade as the ball. The first
 player bowls and the second bats, using the Activities delivery/swing button.

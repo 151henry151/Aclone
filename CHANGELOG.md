@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-02
+
+### Changed
+
+- Rebuild robocrows as detailed industrial scouts with layered metal flight feathers, exposed supports, ducted lift fans, optical sensors and gripping claws. Keep the moving model compact and batch its mechanical detail to limit rendering cost.
+- Replace the small retro spaceport rocket with a 32-metre industrial cargo launcher: segmented metal tanks, weathered panels, exposed feed pipes, five engine bells, hydraulic landing supports and a tall offset service tower. Enlarge the apron and matching collision volumes while keeping the terminal entrance and its name readable.
+
+### Fixed
+
+- Make the fishing dock support tractors and pedestrians with a sloped shore approach, shared deck height and a clickable Fishing dock target accessible with E/Ctrl. Add prominent floating Cast a line, Reel in and Stop fishing controls at the center of the game view on desktop and mobile, separate from chat and Activities.
+
 ## [0.18.0] - 2026-10-01
 
 ### Changed

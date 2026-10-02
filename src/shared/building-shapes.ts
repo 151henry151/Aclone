@@ -21,7 +21,11 @@ export interface BuildingPlan {
   apron?: { x: number; z: number; radius: number };
 }
 /** Metre-scale spaceport apron; the thin pad is walkable, its rocket/gantry are solid. */
-export const spaceportApron = { x: -11, z: -1, radius: 5.3 };
+export const spaceportApron = { x: -18, z: -5, radius: 10 };
+export const spaceportHardware = {
+  tower: { x: -12, z: -9.5, height: 26.4 },
+  tank: { x: -12, z: -0.5 },
+};
 const volume = (
   width: number,
   depth: number,
@@ -219,8 +223,9 @@ export function buildingPlan(b: { kind: string; id: string; style?: string }): B
   if (b.kind === 'starport') {
     plan.apron = spaceportApron;
     plan.fixtures = [
-      volume(4.6, 4.6, 10.4, 0, 'flat', spaceportApron.x, spaceportApron.z),
-      volume(1, 1.6, 6.8, 0, 'flat', -7.4, -3.8),
+      volume(9.2, 9.2, 32.1, 0, 'flat', spaceportApron.x, spaceportApron.z),
+      volume(3.2, 3.2, 26.7, 0, 'flat', spaceportHardware.tower.x, spaceportHardware.tower.z),
+      volume(2.2, 4, 4.6, 0, 'flat', spaceportHardware.tank.x, spaceportHardware.tank.z + 0.9),
     ];
   }
   plans.set(key, plan);

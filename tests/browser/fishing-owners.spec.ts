@@ -65,7 +65,7 @@ for (const mobile of [false, true])
       const reel = page.locator('#fishing-reel');
       await expect(reel).toBeVisible();
       await expect(reel).toBeDisabled();
-      const box = (await reel.boundingBox())!;
+      const box = (await page.locator('#fishing-control').boundingBox())!;
       const view = page.viewportSize()!;
       expect(Math.abs(box.x + box.width / 2 - view.width / 2)).toBeLessThan(2);
       expect(Math.abs(box.y + box.height / 2 - view.height / 2)).toBeLessThan(view.height * 0.15);

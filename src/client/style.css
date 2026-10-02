@@ -502,6 +502,19 @@ kbd {
   margin: 0 0 10px;
   font-size: 15px;
 }
+.fishing-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+#fishing-stop {
+  min-height: 54px;
+  min-width: 130px;
+  font-size: 16px;
+  touch-action: manipulation;
+}
+#fishing-cast,
 #fishing-reel {
   min-height: 54px;
   min-width: 160px;
@@ -512,7 +525,7 @@ kbd {
 #fishing-control.biting {
   border-color: #edcf7e;
 }
-#fishing-control.biting button {
+#fishing-control.biting #fishing-reel {
   color: #243322;
   background: #edcf7e;
   border-color: #ffe8a9;

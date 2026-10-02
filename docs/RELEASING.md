@@ -4,6 +4,20 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.19.0
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the existing service. Refresh browser clients for the industrial rocket,
+robocrows and floating fishing controls. Update client and server together:
+the enlarged rocket collision volumes and fishing dock support surface are shared
+by rendering and movement. Existing spaceports and docks update automatically;
+no database migration, dependency or environment change is required from 0.18.0.
+
+Check that tractors drive onto the dock, E/Ctrl opens it, and Cast a line,
+Reel in and Stop fishing work directly from the centered controls. Check robocrow
+deployment/return and spaceport takeoff. Production deployment remains
+operator-managed.
+
 ## Deploying 0.18.0
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

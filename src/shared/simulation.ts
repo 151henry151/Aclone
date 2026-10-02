@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { terrainHeight } from './terrain.ts';
+import { fishingDock, travelHeight } from './dock';
 export { terrainHeight } from './terrain.ts';
 import { waterworksSite } from './shoreline.ts';
 import { say, MAX_CHAT_LENGTH } from './messages.ts';
@@ -659,8 +660,9 @@ export function act(w: World, id: string, a: Action): string {
       if (game === 'fishing') {
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
-        p.x = 20;
-        p.z = 153;
+        p.x = fishingDock.x;
+        p.z = fishingDock.z + 2;
+        p.y = travelHeight(w, p.x, p.z);
         const mode = w.settings.fishingMode;
         p.fishAt =
           w.time +
@@ -1107,10 +1109,11 @@ export function command(w: World, p: Player, text: string): string {
   return 'Command applied.';
 }
 export function move(w: World, p: Player, input: Input, dt: number) {
+  if (p.game === 'fishing') p.y = travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
   const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] },
-    ground = terrainHeight(w, p.x, p.z),
+    ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
     water = ground < w.settings.seaLevel;
   const throttle = clamp(input.throttle, -1, 1);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
@@ -1158,6 +1161,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   ) {
     p.x = nx;
     p.z = nz;
+    if (v.mode !== 3) p.y = Math.max(p.y, travelHeight(w, p.x, p.z));
   } else p.speed *= -0.2;
   if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < w.settings.seaLevel - 1) {
     p.x = 0;

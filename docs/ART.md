@@ -2,6 +2,60 @@
 
 Aclone aims for a warm, weathered English countryside: natural ground materials, worn lanes, limestone cottages, slate roofs, leafy silhouettes and readable machinery. The original game's village, country-lane and castle screenshots were inspected as visual references; none of their pixels, textures or models ship with Aclone.
 
+## Industrial robocrows (0.19.0)
+
+![Mechanical robocrow in flight beside the spaceport](screenshots/industrial-robocrow.png)
+
+`src/client/robocrow.ts` replaces the diamond-and-bar placeholder with an original
+mechanical bird: overlapping metal flight feathers, exposed spars and actuators,
+armoured ducted fans, a camera head with shaded cyan lenses, cooling vents,
+fasteners, a battery cassette, split tail vanes and folded gripping claws.
+An amber service cover and offset antenna add asymmetry. The roughly 5.2-metre
+wingspan stays readable in the existing scouting view.
+
+Fixed geometry is merged by material: seven body draws and two moving fan draws,
+6,228 triangles in total. Only the two impellers rotate each frame; there are no
+extra lights, transparent effects, downloads or animation allocations. All assets
+are original procedural geometry under GPL-3.0-or-later. The upgrade applies to
+local and remote robocrows, including custom vehicle slots using the robocrow mode.
+
+Deployment, flight physics, inventory use and return-to-body controls are unchanged:
+**R / F5** deploys or returns, **Insert / Delete** changes altitude. On touch screens
+use **Actions → Toggle robocrow** and the flight controls. The browser test deploys,
+climbs, moves and returns through the real input path, and captures this in-game
+view of another scout using the same model:
+
+`CHROMIUM_PATH=/usr/bin/chromium TEST_GPU=1 npm run test:e2e -- tests/browser/robocrow.spec.ts`
+
+## Industrial spaceport (0.19.0)
+
+![Industrial cargo launcher with a tractor for scale](screenshots/industrial-spaceport-day.png)
+![Industrial spaceport at night](screenshots/industrial-spaceport-night.png)
+
+The replacement spacecraft stands 32 metres tall, about eleven tractor heights,
+with a 5.4-metre tank diameter and a 20-metre apron. Its cylindrical core supports
+an asymmetric arrangement of service covers, thermal panels, exposed plumbing,
+a 26-metre truss tower, umbilicals and a ground supply tank. Five open engine
+bells, cooling rings and braced hydraulic legs replace the retro fins and single
+nozzle. The crew hatch is two metres tall rather than scaled up with the ship.
+
+All geometry and the subtle brushed-metal/runoff texture are original procedural
+assets under the project's GPL license. A shared 128 × 256 texture and eleven
+opaque materials keep the model compatible with static scenery batching. The
+geometry test caps the apron kit at 45,000 triangles; no animated machinery,
+additional dynamic lights or external downloads are introduced.
+
+Shared collision/picking volumes cover the larger rocket, tower and supply tank.
+The outer apron remains walkable, and the spaceport name stays above the terminal.
+Existing spaceports acquire the design on update; deploy client and server together
+for matching collision. Saved pilots inside an enlarged footprint can move outward.
+The rocket remains scenery; use the terminal's **Take off to space** action to travel.
+
+Run `CHROMIUM_PATH=/usr/bin/chromium TEST_GPU=1 npm run test:e2e -- tests/browser/spaceport.spec.ts`
+to capture `test-results/industrial-spaceport-day.png` and
+`industrial-spaceport-night.png` in a disposable world and verify terminal access
+and takeoff. The daytime image includes an ordinary tractor beside the pad for scale.
+
 ## Spaceport apron (0.18.0)
 
 ![Rocket and landing pad beside the spaceport terminal](screenshots/spaceport-day.png)
@@ -18,10 +72,6 @@ emissive material, with no extra dynamic lights, shadow maps or particle updates
 The shared building plan includes the apron for vegetation clearance and the
 rocket/gantry for collision and picking; the outer pad remains walkable. These
 are visual spaceport fixtures, not an additional player-pilotable vehicle.
-
-Run `CHROMIUM_PATH=/usr/bin/chromium TEST_GPU=1 npm run test:e2e -- tests/browser/spaceport.spec.ts`
-to capture `test-results/spaceport-day.png` and `spaceport-night.png` on a disposable
-world and verify that terminal access and takeoff still work.
 
 ## Synthesized sound
 

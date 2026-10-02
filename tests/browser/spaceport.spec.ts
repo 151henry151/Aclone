@@ -24,9 +24,15 @@ test('spaceport apron renders by day and night and its terminal remains accessib
     w.time = (day - 59 - 42200 / 86400) * 600;
     const portBuilding = w.buildings.find((b) => b.kind === 'starport')!;
     const p = addPlayer(w, account.id, account.name);
-    p.x = portBuilding.x - 7;
-    p.z = portBuilding.z + 18;
+    p.x = portBuilding.x - 12;
+    p.z = portBuilding.z + 48;
     p.heading = Math.PI;
+    p.vehicle = 5;
+    const parked = addPlayer(w, 'apron-inspector', 'Apron inspector');
+    parked.x = portBuilding.x - 24;
+    parked.z = portBuilding.z + 5;
+    parked.heading = 0.5;
+    parked.online = true;
     app.worlds.set(w.id, w);
     const port = await app.listen();
     await page.addInitScript(
@@ -42,16 +48,17 @@ test('spaceport apron renders by day and night and its terminal remains accessib
     await page.goto(`http://127.0.0.1:${port}`);
     await expect(page.locator('#world-hud')).toBeVisible();
     await page.keyboard.press('h');
+    await page.keyboard.press('c');
     await page.mouse.move(700, 380);
     await page.mouse.down();
-    await page.mouse.move(670, 380, { steps: 12 });
+    await page.mouse.move(687, 329, { steps: 12 });
     await page.mouse.up();
     await page.waitForTimeout(3000);
     await expect(page.locator('#toast')).toHaveCSS('opacity', '0');
-    await page.screenshot({ path: 'test-results/spaceport-day.png' });
+    await page.screenshot({ path: 'test-results/industrial-spaceport-day.png' });
     w.settings.time = 0;
     await page.waitForTimeout(1600);
-    await page.screenshot({ path: 'test-results/spaceport-night.png' });
+    await page.screenshot({ path: 'test-results/industrial-spaceport-night.png' });
     w.settings.time = 43200;
     await page.keyboard.press('h');
     p.x = portBuilding.x;

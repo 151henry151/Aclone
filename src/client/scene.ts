@@ -19,8 +19,10 @@ import { SmokePlumes } from './smoke';
 import { tractorPaint } from '../shared/appearance';
 import { buildingModel } from './buildings';
 import { buildingPlan } from '../shared/building-shapes';
+import { fishingDock, dockHeight, travelHeight, nearFishingDock } from '../shared/dock';
 import { MotionClock, MotionTrack } from './motion';
 import { createHuman, type HumanFigure } from './human';
+import { createRobocrow, type RobocrowFigure } from './robocrow';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeight, distance } from '../shared/simulation';
 import { vehicles, checkpoints, defaults } from '../shared/catalog';
@@ -602,10 +604,36 @@ export class GameScene {
       this.land.add(g);
     }
     const dock = new T.Group();
-    box(dock, 16, 0.5, 22, '#938060', 0, 0, 0);
-    for (let i = -1; i <= 1; i++) box(dock, 0.4, 5, 0.4, '#705b43', i * 7, -2, 10);
-    dock.position.set(20, 0.1, 151);
-    const fishing = label('ANGLING · AMBITION OPTIONAL');
+    const deck = dockHeight(w);
+    dock.position.set(fishingDock.x, deck, fishingDock.z);
+    dock.userData.building = fishingDock.id;
+    box(dock, fishingDock.width, 0.3, fishingDock.depth, '#705b43', 0, -0.18, 0);
+    for (let z = -10.75; z < 11; z += 0.5)
+      box(dock, fishingDock.width, 0.06, 0.47, '#938060', 0, -0.03, z);
+    for (const x of [-7, 7])
+      for (const z of [-9, 0, 10]) {
+        const bottom = Math.min(terrainHeight(w, fishingDock.x + x, fishingDock.z + z), deck - 1);
+        box(dock, 0.4, deck - bottom + 0.75, 0.4, '#705b43', x, (bottom - deck + 0.75) / 2, z);
+      }
+    // A sloped boardwalk joins the dry shore to exactly the same support surface as physics.
+    const positions: number[] = [];
+    for (let z = fishingDock.rampStart; z < fishingDock.shore; z += 0.5) {
+      const a = [-8, travelHeight(w, fishingDock.x - 8, z) - deck, z - fishingDock.z];
+      const b = [8, travelHeight(w, fishingDock.x + 8, z) - deck, z - fishingDock.z];
+      const c = [-8, travelHeight(w, fishingDock.x - 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
+      const d = [8, travelHeight(w, fishingDock.x + 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
+      positions.push(...a, ...c, ...b, ...b, ...c, ...d);
+    }
+    const ramp = new T.BufferGeometry();
+    ramp.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    ramp.computeVertexNormals();
+    // Supply UVs so the ramp can join the ordinary static geometry batches.
+    ramp.setAttribute(
+      'uv',
+      new T.Float32BufferAttribute(new Float32Array((positions.length / 3) * 2), 2),
+    );
+    dock.add(new T.Mesh(ramp, material('#938060')));
+    const fishing = label('FISHING DOCK · ANGLING');
     fishing.position.y = 6;
     dock.add(fishing);
     this.land.add(dock);
@@ -701,6 +729,15 @@ export class GameScene {
         g.add(picker);
       }
     }
+    // Add picking after static batching so the clickable surface survives merging.
+    const dockPicker = new T.Mesh(
+      new T.BoxGeometry(fishingDock.width, 0.5, fishingDock.depth),
+      material('#ffffff'),
+    );
+    dockPicker.position.y = -0.1;
+    dockPicker.visible = false;
+    dock.add(dockPicker);
+    this.buildingMeshes.push(dock);
     const animated: T.Object3D[] = [];
     for (const o of this.land.children) {
       if (o.userData.blades) animated.push(o.userData.blades);
@@ -760,7 +797,8 @@ export class GameScene {
     g.userData.chimneys = model.userData.chimneys ?? [];
     const bounds = new T.Box3().setFromObject(g);
     const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.65);
-    sign.position.set(0, bounds.max.y + 1.1, 0);
+    // Keep the terminal name readable at the door, not above the tall spacecraft.
+    sign.position.set(0, b.kind === 'starport' ? 8 : bounds.max.y + 1.1, 0);
     g.add(sign);
     return g;
   }
@@ -790,9 +828,9 @@ export class GameScene {
       box(g, 3, 1, 6, v.color, 0, 0.5, 0);
       box(g, 2, 1.8, 2, '#d6cfae', 0, 1.8, -1);
     } else if (v.mode === 6) {
-      const body = new T.Mesh(new T.OctahedronGeometry(1.2), material('#768b8d'));
-      g.add(body);
-      box(g, 4, 0.1, 1, '#555f65', 0, 0, 0);
+      const crow = createRobocrow();
+      g.add(crow.group);
+      g.userData.robocrow = crow;
     } else {
       tractor(g, tractorPaint(paint)?.color ?? v.color);
       if (v.mode === 5) box(g, 4, 0.6, 5, '#454d42', 0, 0.4, 0);
@@ -847,6 +885,7 @@ export class GameScene {
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
         (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
+        (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
         // Keep the player's own face/driver out of the first-person camera.
         const occupant =
           (mesh.userData.human as HumanFigure | undefined)?.group ?? mesh.userData.driver;
@@ -1135,7 +1174,7 @@ export class GameScene {
   }
   nearest() {
     if (!this.world || !this.me) return undefined;
-    return this.world.buildings
+    return [...this.world.buildings, ...(nearFishingDock(this.world, this.me) ? [fishingDock] : [])]
       .filter((b) => distance(b, this.me!) < 18)
       .sort((a, b) => distance(a, this.me!) - distance(b, this.me!))[0];
   }

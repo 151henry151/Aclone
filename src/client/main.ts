@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
+import { fishingDock, nearFishingDock } from '../shared/dock';
 import { resourceNodes, resourceAmount } from '../shared/resources';
 import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
@@ -48,7 +49,7 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button></section>',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
   );
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
@@ -530,10 +531,25 @@ function updateHud() {
     me.fishAt !== undefined &&
     world.time >= me.fishAt &&
     world.time <= (me.fishUntil ?? 0);
-  $('fishing-control').hidden = me.game !== 'fishing' || !!panel || !!mobile.drawer;
+  const fishing = me.game === 'fishing';
+  const atDock = nearFishingDock(world, me) && !me.atHome && !me.task && !me.game;
+  $('fishing-control').hidden = (!fishing && !atDock) || !!panel || !!mobile.drawer;
+  $('fishing-cast').hidden = fishing;
+  $('fishing-stop').hidden = !fishing;
+  $('fishing-reel').hidden = !fishing;
+  ($('fishing-cast') as HTMLButtonElement).disabled =
+    !me.inventory.tackle || world.settings.fishingMode === 0;
   $('fishing-control').classList.toggle('biting', bite);
   ($('fishing-reel') as HTMLButtonElement).disabled = !bite;
-  const fishingStatus = bite ? 'Fish! Reel in now.' : 'Waiting for a bite…';
+  const fishingStatus = fishing
+    ? bite
+      ? 'Fish! Reel in now.'
+      : 'Waiting for a bite…'
+    : world.settings.fishingMode === 0
+      ? 'Fishing is disabled in this parish.'
+      : me.inventory.tackle
+        ? 'Fishing dock · Ready to cast.'
+        : 'Bring Fishing tackle from Harbour stores.';
   if ($('fishing-status').textContent !== fishingStatus)
     $('fishing-status').textContent = fishingStatus;
   if (me.game === 'hornball')
@@ -804,6 +820,13 @@ function renderPanel() {
       });
       $('modal-host').querySelector<HTMLButtonElement>('.close')!.focus();
     } else parishMap.update(world, me);
+    return;
+  }
+  if (panel === 'fishing-dock') {
+    modal(
+      'Fishing dock',
+      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}`,
+    );
     return;
   }
   const b = world.buildings.find((b) => b.id === selected);
@@ -1289,8 +1312,7 @@ app.addEventListener('click', async (e) => {
         renderPanel();
         break;
       case 'building':
-        selected = id!;
-        openPanel('building');
+        openInteraction(id!);
         break;
       case 'land':
         send({ type: 'land', world: id });
@@ -1602,10 +1624,11 @@ function download(name: string, content: string) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 $('brand-button').addEventListener('click', () => openPanel(world ? 'menu' : 'options'));
-scene.onBuilding = (id) => {
+function openInteraction(id: string) {
   selected = id;
-  openPanel('building');
-};
+  openPanel(id === fishingDock.id ? 'fishing-dock' : 'building');
+}
+scene.onBuilding = openInteraction;
 window.addEventListener('keydown', (e) => {
   if ((e.target as HTMLElement).matches('input,textarea,select')) {
     if (e.key === 'Escape') (e.target as HTMLElement).blur();
@@ -1700,10 +1723,7 @@ window.addEventListener('keydown', (e) => {
   if (!world || panel || mobile.drawer) return;
   if (key === 'e' || key === 'control') {
     const b = scene.nearest();
-    if (b) {
-      selected = b.id;
-      openPanel('building');
-    }
+    if (b) openInteraction(b.id);
   }
   if (key === 'f4') send({ type: 'engine' });
   if (key === 'l') send({ type: 'lights' });

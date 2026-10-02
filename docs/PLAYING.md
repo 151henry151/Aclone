@@ -9,6 +9,26 @@ Chat and Actions along the bottom. Tap cash for needs; tap the nearby-building
 prompt to interact. See the [complete mobile guide](MOBILE.md) for touch controls,
 chat, aircraft, weapons, camera gestures and account setup.
 
+## Fishing at the dock
+
+Drive or walk up the boardwalk onto the fishing dock on the south shore. The deck
+supports your tractor above the water. Buy and carry **Fishing tackle** from
+Harbour stores first.
+
+Near the dock, **Cast a line** floats near the center of the screen. While fishing,
+the same floating panel shows **Reel in** and **Stop fishing**. Reel in highlights
+when a fish bites; tap/click it or press **F3** within eight seconds. Leave room
+in your inventory for the catch. Stop fishing releases you to move again; you can
+cast again immediately. These controls are separate from the chat window and work
+on desktop and phones without opening a menu.
+
+You can also click the dock itself, tap its nearby-target prompt, or press **E / Ctrl**
+to open the Fishing dock panel and choose **Cast a line**. Activities remains an
+alternative entry point. If fishing is disabled in the world or you lack tackle,
+the direct cast control explains why it is unavailable.
+
+![Floating fishing controls on a phone](screenshots/dock-fishing-phone.png)
+
 ## Finding your way
 
 Press **M** or click/tap the minimap to open the **Parish map**. It shows the same
