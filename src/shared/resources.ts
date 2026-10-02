@@ -32,20 +32,28 @@ export function resourceAmount(w: World, n: ResourceNode) {
       )
     : n.capacity;
 }
-export function gather(w: World, p: Player, id: string) {
-  const n = resourceNodes.find((n) => n.id === id);
-  if (!n || distance(p, n) > 10 || Math.abs(p.y - terrainHeight(w, p.x, p.z)) > 3)
-    throw Error('Move close to a marked gathering ground');
-  if (p.task || p.atHome || p.game || p.hitch || p.crowBody)
-    throw Error('Finish your activity first');
-  if (w.buildings.some((b) => distance(b, n) < 12))
-    throw Error('Buildings obstruct this gathering ground');
-  if (n.item !== 'dirt' && !(p.inventory.tools > 0))
-    throw Error('Carry tools to gather logs, gravel or stone');
+/** Read-only eligibility shared by the HUD and authoritative gathering action. */
+export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
   const amount = p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
   const available = resourceAmount(w, n);
-  if (available < amount) throw Error('This ground needs time to replenish');
-  if (!canCarry(p, n.item, amount)) throw Error('Make room in your cargo');
+  let reason: string | undefined;
+  if (distance(p, n) > 10 || Math.abs(p.y - terrainHeight(w, p.x, p.z)) > 3)
+    reason = 'Move close to a marked gathering ground';
+  else if (p.task || p.atHome || p.game || p.hitch || p.crowBody)
+    reason = 'Finish your activity first';
+  else if (w.buildings.some((b) => distance(b, n) < 12))
+    reason = 'Buildings obstruct this gathering ground';
+  else if (n.item !== 'dirt' && !(p.inventory.tools > 0))
+    reason = 'Carry tools to gather logs, gravel or stone';
+  else if (available < amount) reason = 'This ground needs time to replenish';
+  else if (!canCarry(p, n.item, amount)) reason = 'Make room in your cargo';
+  return { amount, available, seconds: amount === 6 ? 12 : 20, reason };
+}
+export function gather(w: World, p: Player, id: string) {
+  const n = resourceNodes.find((n) => n.id === id);
+  if (!n) throw Error('Move close to a marked gathering ground');
+  const { amount, available, seconds, reason } = gatheringStatus(w, p, n);
+  if (reason) throw Error(reason);
   w.resources ??= {};
   w.resources[n.id] = { amount: available - amount, updated: w.time };
   p.task = {
@@ -53,7 +61,7 @@ export function gather(w: World, p: Player, id: string) {
     resource: n.id,
     item: n.item,
     amount,
-    end: w.time + (amount === 6 ? 12 : 20),
+    end: w.time + seconds,
   };
   p.speed = 0;
 }

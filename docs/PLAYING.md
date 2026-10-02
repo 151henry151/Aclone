@@ -9,6 +9,22 @@ Chat and Actions along the bottom. Tap cash for needs; tap the nearby-building
 prompt to interact. See the [complete mobile guide](MOBILE.md) for touch controls,
 chat, aircraft, weapons, camera gestures and account setup.
 
+## Gathering resources
+
+Pull within ten metres of logs, stone, gravel or a topsoil patch. A floating HUD
+prompt identifies the resource and its remaining reserves. Click or tap **Gather**
+to start directly; a countdown and progress bar show the task, and the button
+becomes available again after the load reaches your inventory. Moving away hides
+the prompt. These controls work on desktop and phones, separately from chat.
+
+Carry **Tools** for logs, stone and gravel; dirt can be gathered by hand. Buy tools
+from a stocked Harbour store or forge. The prompt explains missing tools, full
+cargo, obstructed sites or depleted reserves. Forester (logs) or Excavator (other
+resources) improves a load from three items in twenty seconds to six in twelve.
+The Resources menu remains available for finding more distant sites.
+
+![Direct gathering control on a phone](screenshots/gather-hud-phone.png)
+
 ## Fishing at the dock
 
 Drive or walk up the boardwalk onto the fishing dock on the south shore. The deck

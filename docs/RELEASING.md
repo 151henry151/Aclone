@@ -4,6 +4,14 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.19.1
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the
+existing service, and refresh browser clients. No new settings, dependencies or
+data migration are required. Check a nearby gathering ground: Gather should be
+visible directly on the HUD, with tool/cargo feedback and a progress indicator.
+Production deployment remains operator-managed.
+
 ## Deploying 0.19.0
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

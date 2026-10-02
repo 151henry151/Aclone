@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-10-02
+
+### Fixed
+
+- Show a direct Gather control when approaching logs, stone, gravel or topsoil, including available reserves, load size and gathering progress. Explain missing tools, full cargo and depleted grounds on desktop and mobile; the HUD and Resources menu use the same eligibility checks as the server.
+
 ## [0.19.0] - 2026-10-02
 
 ### Changed

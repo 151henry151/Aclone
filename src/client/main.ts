@@ -2,7 +2,7 @@
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { fishingDock, nearFishingDock } from '../shared/dock';
-import { resourceNodes, resourceAmount } from '../shared/resources';
+import { resourceNodes, gatheringStatus } from '../shared/resources';
 import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
@@ -28,7 +28,7 @@ import {
   galaxy,
   weapons,
 } from '../shared/catalog';
-import { money, carry, distance, productionInterval } from '../shared/simulation';
+import { money, carry, distance, terrainHeight, productionInterval } from '../shared/simulation';
 import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
 import type { Account } from '../server/universe';
@@ -50,6 +50,12 @@ document
   .insertAdjacentHTML(
     'beforeend',
     '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
+  );
+document
+  .getElementById('world-hud')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="resource-control" hidden aria-label="Nearby resource"><strong id="resource-name"></strong><p id="resource-stock"></p><p id="resource-status" role="status"></p><progress id="resource-progress" aria-label="Gathering progress" hidden></progress><button id="resource-gather" type="button" data-do="gather" aria-describedby="resource-status">Gather</button></section>',
   );
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
@@ -552,6 +558,57 @@ function updateHud() {
         : 'Bring Fishing tackle from Harbour stores.';
   if ($('fishing-status').textContent !== fishingStatus)
     $('fishing-status').textContent = fishingStatus;
+  const gathering = me.task?.kind === 'gather' ? me.task : undefined;
+  const resource = gathering
+    ? resourceNodes.find((n) => n.id === gathering.resource)
+    : resourceNodes
+        .filter((n) => distance(me!, n) <= 10)
+        .sort((a, b) => distance(me!, a) - distance(me!, b))[0];
+  $('resource-control').hidden =
+    !resource ||
+    !!panel ||
+    !!mobile.drawer ||
+    !!me.atHome ||
+    !!me.game ||
+    !!me.crowBody ||
+    (!!me.task && !gathering) ||
+    Math.abs(me.y - terrainHeight(world, me.x, me.z)) > 3;
+  if (resource) {
+    const status = gatheringStatus(world, me, resource);
+    const remaining = gathering ? Math.max(0, Math.ceil(gathering.end - world.time)) : 0;
+    const item = items[resource.item].name;
+    const texts: [string, string][] = [
+      ['resource-name', `${resource.name} · ${item}`],
+      [
+        'resource-stock',
+        `${status.available}/${resource.capacity} available · ${Math.round(distance(me, resource))}m away`,
+      ],
+      [
+        'resource-status',
+        gathering
+          ? `Gathering ${gathering.amount} ${item.toLowerCase()} · ${remaining}s remaining`
+          : (status.reason ??
+            `${status.amount} ${item.toLowerCase()} per load · ${status.seconds} seconds`),
+      ],
+      [
+        'resource-gather',
+        gathering ? 'Gathering…' : `Gather ${status.amount} ${item.toLowerCase()}`,
+      ],
+    ];
+    for (const [id, text] of texts) if ($(id).textContent !== text) $(id).textContent = text;
+    const gatherButton = $('resource-gather') as HTMLButtonElement;
+    gatherButton.dataset.id = resource.id;
+    gatherButton.disabled = !!status.reason;
+    const progress = $('resource-progress') as HTMLProgressElement;
+    progress.hidden = !gathering;
+    if (gathering) {
+      progress.max = gathering.amount === 6 ? 12 : 20;
+      progress.value = Math.max(
+        0,
+        Math.min(progress.max, progress.max - (gathering.end - world.time)),
+      );
+    }
+  }
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
   if (me.race)
@@ -862,10 +919,10 @@ function renderPanel() {
         ...resourceNodes,
       ]
         .sort((a, b) => distance(me!, a) - distance(me!, b))
-        .map(
-          (n) =>
-            `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${resourceAmount(world!, n)}/${n.capacity} available</p>${button('Gather', 'gather', `data-id="${n.id}" ${distance(me!, n) > 10 ? 'disabled' : ''}`)}</article>`,
-        )
+        .map((n) => {
+          const status = gatheringStatus(world!, me!, n);
+          return `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${status.available}/${n.capacity} available</p><p>${esc(status.reason ?? `${status.amount} per load · ${status.seconds} seconds`)}</p>${button('Gather', 'gather', `data-id="${n.id}" ${status.reason ? 'disabled' : ''}`)}</article>`;
+        })
         .join(
           '',
         )}</div><h3>Where it goes</h3><p>Logs → sawmill → timber → furniture. Stone and gravel → concrete works. Topsoil → brick kiln or composting yard. Gravel drains farm plots; topsoil and compost restore soil. Sell to a funded business or carry materials to your own stockroom.</p>`,
