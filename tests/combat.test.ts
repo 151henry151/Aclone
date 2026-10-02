@@ -136,3 +136,12 @@ test('leaving via town reset drops a flag; drone and aerial objective exploits a
   advance(w, 1);
   assert.equal(w.combat!.scores[0], 0);
 });
+
+test('a new weapon press restarts an abandoned charge rather than inheriting its power', () => {
+  const { w, a } = setup();
+  act(w, a.id, { type: 'chargeWeapon', weapon: 'javelin' });
+  advance(w, 2);
+  act(w, a.id, { type: 'chargeWeapon', weapon: 'javelin' });
+  act(w, a.id, { type: 'fire', weapon: 'javelin' });
+  assert.equal(w.projectiles.at(-1)!.power, 0.5);
+});

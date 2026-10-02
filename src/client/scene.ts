@@ -305,32 +305,51 @@ export class GameScene {
     this.actors.visible = false;
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
-    let dragging = false,
-      lastX = 0,
-      lastY = 0,
-      moved = 0;
+    const pointers = new Map<number, { x: number; y: number }>();
+    let moved = 0;
+    const span = () => {
+      const [a, b] = [...pointers.values()];
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    };
     this.renderer.domElement.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      moved = 0;
+      if (e.button !== 0 || this.paused) return;
+      if (!pointers.size) moved = 0;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      this.renderer.domElement.setPointerCapture(e.pointerId);
+      if (pointers.size > 1) moved = 100; // A pinch never selects a building.
     });
-    window.addEventListener('pointerup', () => (dragging = false));
+    const release = (e: PointerEvent) => pointers.delete(e.pointerId);
+    this.renderer.domElement.addEventListener('pointerup', release);
+    this.renderer.domElement.addEventListener('pointercancel', (e) => {
+      moved = 100;
+      release(e);
+    });
+    this.renderer.domElement.addEventListener('lostpointercapture', release);
+    window.addEventListener('blur', () => {
+      pointers.clear();
+      moved = 100;
+    });
     this.renderer.domElement.addEventListener('pointermove', (e) => {
-      if (dragging) {
-        this.orbit += (e.clientX - lastX) * 0.007;
+      const previous = pointers.get(e.pointerId);
+      if (!previous || this.paused) return;
+      const before = span();
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size > 1) {
+        const after = span();
+        if (before > 0 && after > 0)
+          this.zoom = Math.min(2.8, Math.max(0.55, (this.zoom * before) / after));
+      } else {
+        this.orbit += (e.clientX - previous.x) * 0.007;
         if (this.cameraMode === 1)
           this.lookPitch = Math.max(
             -1.1,
-            Math.min(1.4, this.lookPitch + (lastY - e.clientY) * 0.004),
+            Math.min(1.4, this.lookPitch + (previous.y - e.clientY) * 0.004),
           );
-        moved += Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY);
-        lastX = e.clientX;
-        lastY = e.clientY;
+        moved += Math.abs(e.clientX - previous.x) + Math.abs(e.clientY - previous.y);
       }
     });
     this.renderer.domElement.addEventListener('click', (e) => {
-      if (moved > 5 || !this.world) return;
+      if (moved > 5 || !this.world || this.paused) return;
       const rect = this.renderer.domElement.getBoundingClientRect();
       const ray = new T.Raycaster();
       ray.setFromCamera(

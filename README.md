@@ -6,7 +6,17 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.16.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.17.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**New in 0.17.0:** a compact mobile HUD, two-thumb driving, touch camera gestures and keyboard-aware chat/menu sheets. All game menus remain accessible on phones and tablets; full-size desktop controls retain their layout. See the [mobile guide](docs/MOBILE.md) and [upgrade instructions](docs/RELEASING.md#deploying-0170).
+
+<details>
+<summary>Mobile interface previews (0.17.0)</summary>
+
+![Portrait phone interface with separate steering and throttle](docs/screenshots/mobile-portrait.png)
+![Landscape phone interface with compact menus and a clear driving view](docs/screenshots/mobile-landscape.png)
+
+</details>
 
 **New in 0.16.0:** shoreline-only waterworks produce local water from fuel, with a new pump operator skill, shoreline checks for players and NPCs, and profitable local delivery prices. See [building and operating waterworks](docs/PLAYING.md#water-supply) and [upgrade instructions](docs/RELEASING.md#deploying-0160).
 

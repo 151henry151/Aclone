@@ -146,7 +146,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
       .toBeGreaterThan(0.005);
     await page.waitForTimeout(600);
     expect(await shots()).toBe(beforeHorn + 1); // repeated snapshots must not repeat a honk
-    await page.locator('[data-do="horn"]').click();
+    await page.getByRole('button', { name: 'Parp Space' }).click();
     await expect.poll(shots).toBe(beforeHorn + 2);
     // Stocked government sawmill runs; exhausted input/output storage stops it.
     saw.stock = { logs: 30 };

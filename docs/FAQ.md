@@ -14,6 +14,7 @@ prices and rules; read the current building window before spending money.
 - **Enter / F2:** chat; Enter sends. **F7:** Field guide. **F9:** game menu. **F10:** world-owner editor.
 - **F5 / R:** deploy/return from a carried robocrow. **F3:** reel when a fish bites.
 - **Insert / Delete:** climb/descend in flight. **H:** hide/show HUD for scenery. **Escape:** close windows and restore the HUD.
+- **Mobile:** left arrows steer, right arrows drive/reverse; hold both to turn. Map, Bag, Chat and Actions open panels. Tap cash for needs. Actions includes engine, lights, walking, camera, weapons and every menu. Drag scenery to look; pinch to zoom. Tap Done or × to return. See [mobile play](MOBILE.md).
 - **Sound:** mute/unmute; volume in Pilot & preferences. Touch arrows steer/drive; use on-screen buttons where browsers reserve function keys.
 - Typing in a text field or having a game window open stops driving input. Focused buttons use Space/Enter normally instead of honking/opening chat.
 

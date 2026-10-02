@@ -10,6 +10,8 @@ import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
 import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
+import './mobile.css';
+import { MobileUI } from './mobile';
 import { GameScene } from './scene';
 import { mergeState } from './state';
 import { InputStream } from './input-stream';
@@ -41,7 +43,7 @@ const esc = (v: unknown) =>
   );
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav><div class="touch-drive" aria-label="Touch driving controls"><button data-key="ArrowUp" aria-label="Accelerate">↑</button><div><button data-key="ArrowLeft" aria-label="Turn left">←</button><button data-key="ArrowDown" aria-label="Reverse">↓</button><button data-key="ArrowRight" aria-label="Turn right">→</button></div></div></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
   | {
@@ -109,6 +111,35 @@ const keys = new Set<string>();
 const $ = (id: string) => document.getElementById(id)!;
 declare const __ACLONE_BASE__: string;
 const withBase = (path: string) => publicPath(__ACLONE_BASE__, path);
+let touchWeapon: string | undefined;
+const mobile = new MobileUI(
+  () => {
+    keys.clear();
+    mobile.reset();
+    scene.paused = true;
+  },
+  (phase) => {
+    if (phase === 'start' && world?.settings.fighting && !panel) {
+      touchWeapon = weapon;
+      send({ type: weapon === 'javelin' ? 'chargeWeapon' : 'fire', weapon });
+      if (weapon !== 'javelin') sound.weapon();
+    } else {
+      if (phase === 'end' && touchWeapon === 'javelin' && world && !panel) {
+        send({ type: 'fire', weapon: touchWeapon });
+        sound.weapon();
+      }
+      touchWeapon = undefined;
+    }
+  },
+);
+function focusChat() {
+  if (mobile.active) {
+    closePanel();
+    mobile.open('chat');
+  }
+  $('chat-input').focus();
+}
+
 function setChatRecipient(recipient?: { id: string; name: string }) {
   chatRecipient = recipient;
   $('chat-recipient').hidden = !recipient;
@@ -178,6 +209,8 @@ async function connect() {
   const socket = ws;
   ws.addEventListener('open', () => {
     if (ws !== socket) return;
+    mobile.reset();
+    if (mobile.active) keys.clear();
     socket.send(
       JSON.stringify({
         type: 'hello',
@@ -242,6 +275,7 @@ async function connect() {
     $('connection').textContent = 'DISCONNECTED';
     sound.clear();
     keys.clear();
+    mobile.reset();
     if (e.code === 4004) {
       token = '';
       localStorage.removeItem('aclone.pilot');
@@ -263,12 +297,14 @@ async function connect() {
   });
 }
 function login() {
+  mobile.close();
   scene.setSpace();
   $('world-hud').hidden = true;
   $('overlay').innerHTML =
     `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p><form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
 }
 async function showGalaxy() {
+  mobile.close();
   inSpace = true;
   scene.setSpace();
   $('world-hud').hidden = true;
@@ -321,19 +357,64 @@ function setHudHtml(id: string, html: string) {
 }
 function updateHud() {
   if (!world || !me) return;
-  $('location').textContent =
-    world.name +
-    ' · ' +
-    (distance(me, { x: 0, z: 0 }) < (world.townLayout === 2 ? 245 : 80)
-      ? 'In the parish of Puddlewick'
-      : 'Out in the sticks');
+  $('location').textContent = mobile.active
+    ? world.name
+    : world.name +
+      ' · ' +
+      (distance(me, { x: 0, z: 0 }) < (world.townLayout === 2 ? 245 : 80)
+        ? 'In the parish of Puddlewick'
+        : 'Out in the sticks');
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
     `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation} · ${weatherAt(world.id, calendar(world).absoluteDay).storm ? 'STORM · ' : ''}${(world.climate?.snow ?? 0) > 0.05 ? 'Snow on roads · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
+  $('mobile-calendar').textContent = $('clock').textContent;
+  if (mobile.active) {
+    $('clock').title = $('clock').textContent ?? '';
+    $('clock').textContent =
+      `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation}${weatherAt(world.id, calendar(world).absoluteDay).storm ? ' storm' : ''}`;
+  }
   $('pilot-name').textContent = me.name;
   $('age').textContent = 'Age ' + Math.floor(me.age);
   $('cash').textContent = money(me.cash, world.settings.denariiPerSheckle);
+  $('mobile-cash').textContent = $('cash').textContent;
+  const urgent =
+    me.thirst > 35000
+      ? 'Drink soon'
+      : me.hunger > 35000
+        ? 'Eat soon'
+        : me.health < 20000
+          ? 'Low health'
+          : me.fuel < 8 && vehicles[me.vehicle].fuel
+            ? 'Low fuel'
+            : 'Pilot status';
+  $('mobile-vitals').textContent = urgent;
+  $('mobile-status').classList.toggle('needs-attention', urgent !== 'Pilot status');
+  $('mobile-flight').hidden = ![2, 6].includes(vehicles[me.vehicle].mode);
+  $('mobile-combat').hidden = !world.settings.fighting;
+  mobile.messages(world.id, JSON.stringify(world.messages.at(-1)) ?? '');
+  if (panel === 'mobile-actions') {
+    for (const [selector, text, action] of [
+      ['[data-do=engine]', me.engine ? 'Stop engine' : 'Start engine', 'engine'],
+      ['[data-do=lights]', me.lights ? 'Turn lights off' : 'Turn lights on', 'lights'],
+      [
+        '[data-do=walk], [data-do=tractor]',
+        me.vehicle === 5 ? 'Return to tractor' : 'Walk on foot',
+        me.vehicle === 5 ? 'tractor' : 'walk',
+      ],
+    ]) {
+      const b = $('modal-host').querySelector<HTMLButtonElement>(selector);
+      if (b) {
+        b.textContent = text;
+        b.dataset.do = action;
+      }
+    }
+  }
+  const immobile = !!(me.atHome || me.task || me.health <= 0);
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-hold]'))
+    b.disabled = immobile;
+  if (immobile) mobile.reset();
+
   const bars: [string, number, string][] = [
     ['Health', me.health / 60000, 'health'],
     ['Hunger', me.hunger / 50000, 'hunger'],
@@ -367,7 +448,7 @@ function updateHud() {
     `Ping: round-trip network delay. FPS: rendered frames per second. Motion buffer: ${scene.motionBufferMs} ms; grows only on uneven connections.`;
   setHudHtml(
     'driving',
-    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${ping} ms ping · ${scene.renderFps} FPS</small></span>`,
+    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
   );
   const target = scene.nearest();
   let targetHtml = me.task
@@ -412,9 +493,10 @@ function updateHud() {
   if (me.game === 'combat' && world.combat)
     $('objective').textContent =
       `${world.combat.mode} · ${me.team === 0 ? 'Rust' : 'Moss'} team · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
+  $('mobile-objective').textContent = $('objective').textContent;
   $('npc-notice').hidden =
     !Object.values(world.players).some((p) => p.npc) && !world.messages.some((m) => m.npc);
-  drawMap();
+  if (!mobile.active) drawMap();
   parishMap?.update(world, me);
   // Update read-only building facts without rebuilding focused forms/buttons.
   const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
@@ -498,6 +580,8 @@ function drawMap() {
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
 function openPanel(name: string) {
+  mobile.close();
+  mobile.setBlocked(true);
   if (name === 'npc') {
     npcResidents = undefined;
     void api('/api/npc')
@@ -527,6 +611,7 @@ function closePanel() {
   parishMap?.dispose();
   parishMap = undefined;
   scene.paused = false;
+  mobile.setBlocked(false);
   panel = '';
   $('modal-host').innerHTML = '';
 }
@@ -642,7 +727,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Your life and property are protected while disconnected. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -706,6 +791,27 @@ function renderPanel() {
   const b = world.buildings.find((b) => b.id === selected);
   if (panel === 'building' && b) {
     buildingWindow(b);
+    return;
+  }
+  if (panel === 'mobile-actions') {
+    modal(
+      'On the move.',
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button(me.vehicle === 5 ? 'Return to tractor' : 'Walk on foot', me.vehicle === 5 ? 'tractor' : 'walk')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+        world.settings.fighting
+          ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
+              weapons,
+            )
+              .map(([id, w]) =>
+                button(
+                  esc(w.name),
+                  'select-weapon',
+                  `data-id="${id}" aria-pressed="${id === weapon}"`,
+                ),
+              )
+              .join('')}</div>`
+          : ''
+      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
+    );
     return;
   }
   if (panel === 'resources') {
@@ -1120,6 +1226,7 @@ app.addEventListener('click', async (e) => {
   try {
     const panels = [
       'menu',
+      'mobile-actions',
       'directory',
       'map',
       'npc',
@@ -1144,13 +1251,13 @@ app.addEventListener('click', async (e) => {
         if (resident) {
           setChatRecipient({ id: resident.playerId, name: resident.name });
           closePanel();
-          $('chat-input').focus();
+          focusChat();
         }
         break;
       }
       case 'chat-public':
         setChatRecipient();
-        $('chat-input').focus();
+        focusChat();
         break;
       case 'close':
         closePanel();
@@ -1182,6 +1289,13 @@ app.addEventListener('click', async (e) => {
       case 'ship':
         send({ type: 'ship', ship: id });
         closePanel();
+        break;
+      case 'select-weapon':
+        if (id && weapons[id]) weapon = id;
+        closePanel();
+        break;
+      case 'camera-zoom':
+        scene.zoom = Math.max(0.55, Math.min(2.8, scene.zoom + (id === 'in' ? -0.25 : 0.25)));
         break;
       case 'camera':
         scene.cameraMode = (scene.cameraMode + 1) % 3;
@@ -1371,7 +1485,9 @@ app.addEventListener('submit', async (e) => {
       const text = String(data.message).trim();
       if (text) send({ type: 'chat', text, ...(chatRecipient ? { to: chatRecipient.id } : {}) });
       form.reset();
-      (form.querySelector('input') as HTMLInputElement).blur();
+      if (mobile.active)
+        (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
+      else (form.querySelector('input') as HTMLInputElement).blur();
     } else if (form.id === 'create-form') {
       const result = await api('/api/worlds', { method: 'POST', body: JSON.stringify(data) });
       toast('Your world is ready. Find it in the Hearth system.');
@@ -1484,9 +1600,14 @@ window.addEventListener('keydown', (e) => {
     return;
   // Let focused buttons use their native activation instead of honking or opening chat.
   if ((e.target as HTMLElement).closest('button') && [' ', 'Enter'].includes(e.key)) return;
+  if (mobile.drawer) {
+    if (e.key === 'Escape') mobile.close();
+    return;
+  }
   if (e.key === 'Escape') {
     document.documentElement.classList.remove('scenery-view');
     closePanel();
+    mobile.close();
     return;
   }
   if (e.repeat) return;
@@ -1534,7 +1655,7 @@ window.addEventListener('keydown', (e) => {
   if (handled.includes(key)) e.preventDefault();
   keys.add(e.key);
   if (key === 'enter' || key === 'f2') {
-    $('chat-input').focus();
+    focusChat();
     return;
   }
   if (key === 'f7') {
@@ -1558,7 +1679,7 @@ window.addEventListener('keydown', (e) => {
     openPanel('inventory');
     return;
   }
-  if (!world || panel) return;
+  if (!world || panel || mobile.drawer) return;
   if (key === 'e' || key === 'control') {
     const b = scene.nearest();
     if (b) {
@@ -1585,33 +1706,54 @@ window.addEventListener('keydown', (e) => {
   }
 });
 window.addEventListener('keyup', (e) => {
+  const wasHeld = keys.has(e.key);
   keys.delete(e.key);
-  if (e.key === 'Tab' && weapon === 'javelin' && world && !panel) send({ type: 'fire', weapon });
+  if (wasHeld && e.key === 'Tab' && weapon === 'javelin' && world && !panel && !mobile.drawer)
+    send({ type: 'fire', weapon });
 });
 window.addEventListener('blur', () => keys.clear());
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
   sound.setActive(!document.hidden);
 });
-for (const b of document.querySelectorAll<HTMLElement>('[data-key]')) {
-  b.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    keys.add(b.dataset.key!);
-    b.setPointerCapture(e.pointerId);
-  });
-  b.addEventListener('pointerup', () => keys.delete(b.dataset.key!));
-  b.addEventListener('pointercancel', () => keys.delete(b.dataset.key!));
-}
 setInterval(() => {
   if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
-  const typing = panel || document.activeElement?.matches('input,textarea,select,#chat-log');
+  scene.paused = !!(panel || mobile.drawer);
+  const typing =
+    panel || mobile.drawer || document.activeElement?.matches('input,textarea,select,#chat-log');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
+  const touch = mobile.input();
   const packet = inputStream.encode(
     {
-      throttle: Number(held('ArrowUp', 'w', 'W')) - Number(held('ArrowDown', 's', 'S')),
-      steer: Number(held('ArrowLeft', 'a', 'A')) - Number(held('ArrowRight', 'd', 'D')),
-      boost: held('Shift'),
-      lift: Number(held('Insert')) - Number(held('Delete')),
+      throttle: typing
+        ? 0
+        : Math.max(
+            -1,
+            Math.min(
+              1,
+              touch.throttle +
+                Number(held('ArrowUp', 'w', 'W')) -
+                Number(held('ArrowDown', 's', 'S')),
+            ),
+          ),
+      steer: typing
+        ? 0
+        : Math.max(
+            -1,
+            Math.min(
+              1,
+              touch.steer +
+                Number(held('ArrowLeft', 'a', 'A')) -
+                Number(held('ArrowRight', 'd', 'D')),
+            ),
+          ),
+      boost: !typing && (touch.boost || held('Shift')),
+      lift: typing
+        ? 0
+        : Math.max(
+            -1,
+            Math.min(1, (touch.lift ?? 0) + Number(held('Insert')) - Number(held('Delete'))),
+          ),
     },
     performance.now(),
     ws.bufferedAmount,

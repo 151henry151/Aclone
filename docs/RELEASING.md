@@ -4,6 +4,21 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.17.0
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the existing service. Refresh browser clients to load the mobile controls and
+layout. No new dependencies, credentials, environment variables or data migrations
+are required when upgrading from 0.16.0. Earlier upgrades retain the migrations
+described below; back up the database before upgrading as usual.
+
+Check portrait and landscape driving, chat with the on-screen keyboard, and
+building trading/admin on your phone. Full desktop screens keep their ordinary
+HUD and keyboard/mouse controls. Chromium touch and desktop regression tests pass;
+physical Android/iOS browser chrome, keyboard and sustained performance still need
+device testing. See the [mobile guide](MOBILE.md). Production deployment remains
+an operator-managed pull/rebuild/restart.
+
 ## Deploying 0.16.0
 
 Back up the SQLite database, pull, run `npm ci`, rebuild with

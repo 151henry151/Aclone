@@ -97,7 +97,10 @@ test('the parish map opens with M or a click and keeps navigation through live u
     await expect(page.getByRole('dialog', { name: 'Parish directory.' })).toBeVisible();
     await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Open parish map', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: 'Mobile game navigation' })
+      .getByRole('button', { name: 'Map', exact: true })
+      .click();
     await expect(map).toBeVisible();
     const viewport = map.locator('.parish-map-viewport');
     await expect.poll(() => viewport.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);

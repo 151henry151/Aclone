@@ -1,0 +1,673 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* All compact-layout changes are scoped: the desktop HUD remains untouched. */
+.mobile-only {
+  display: none;
+}
+.mobile-ui {
+  --edge: 10px;
+  --dock: calc(58px + env(safe-area-inset-bottom, 0px));
+}
+.mobile-ui body {
+  overscroll-behavior: none;
+}
+.mobile-ui #app {
+  height: 100dvh;
+}
+.mobile-ui #viewport canvas {
+  touch-action: none;
+}
+.mobile-ui .mobile-only {
+  display: block;
+}
+.mobile-ui button,
+.mobile-ui summary {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.mobile-ui button {
+  font-size: 14px;
+}
+.mobile-ui input,
+.mobile-ui select,
+.mobile-ui textarea {
+  font-size: 16px;
+  min-height: 44px;
+}
+.mobile-ui input[type='checkbox'] {
+  min-height: 24px;
+  width: 24px;
+}
+.mobile-ui select {
+  text-overflow: ellipsis;
+}
+.mobile-ui kbd {
+  display: none;
+}
+.mobile-ui .brand {
+  top: max(8px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+}
+.mobile-ui .brand #brand-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.mobile-ui .brand strong {
+  display: none;
+}
+.mobile-ui .brand-icon {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  font-size: 32px;
+  line-height: 30px;
+}
+.mobile-ui .brand #connection {
+  display: block;
+  position: absolute;
+  top: 44px;
+  left: 0;
+  font-size: 8px;
+  padding: 3px;
+}
+.mobile-ui .location {
+  top: max(9px, env(safe-area-inset-top));
+  left: calc(64px + env(safe-area-inset-left));
+  right: calc(122px + env(safe-area-inset-right));
+  width: auto;
+  min-width: 0;
+  transform: none;
+  text-align: left;
+}
+.mobile-ui .location .eyebrow {
+  display: none;
+}
+.mobile-ui .location b {
+  font:
+    bold 13px/1.3 Arial,
+    sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 3px 0;
+}
+.mobile-ui #clock {
+  display: block;
+  font-size: 10px;
+  line-height: 1.35;
+  max-height: 28px;
+  overflow: hidden;
+}
+.mobile-ui .left-panel,
+.mobile-ui .inventory-panel,
+.mobile-ui .quickbar,
+.mobile-ui .status-panel,
+.mobile-ui .chat-panel {
+  display: none;
+}
+.mobile-ui .mobile-top {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+}
+.mobile-ui #mobile-status {
+  max-width: 116px;
+  padding: 6px 10px;
+  background: #1d3026eb;
+  text-align: right;
+}
+.mobile-ui #mobile-cash {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+}
+.mobile-ui #mobile-vitals {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.mobile-ui .needs-attention {
+  border-color: #ffc285;
+  color: #ffe0ab;
+}
+.mobile-ui #mobile-target {
+  position: absolute;
+  top: calc(72px + env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-right));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.mobile-ui #target {
+  max-width: 420px;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+.mobile-ui #target:has(.hint) {
+  display: none;
+}
+.mobile-ui #target button,
+.mobile-ui #target .task {
+  background: #263a2fed;
+  padding: 10px 14px;
+  border: 1px solid #bdc5a259;
+  border-radius: 8px;
+  font-size: 13px;
+  min-height: 44px;
+}
+.mobile-ui .bottom-left {
+  left: max(12px, env(safe-area-inset-left));
+  bottom: calc(var(--dock) + 150px);
+  width: auto;
+}
+.mobile-ui .bottom-left .button-row,
+.mobile-ui .tourney {
+  display: none;
+}
+.mobile-ui #driving {
+  gap: 8px;
+}
+.mobile-ui #driving > strong {
+  font-size: 23px;
+}
+.mobile-ui #driving > span {
+  max-width: 170px;
+  font-size: 10px;
+}
+.mobile-ui #driving > span small {
+  font-size: 9px;
+}
+.mobile-ui .mobile-nav {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 6px max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+    max(8px, env(safe-area-inset-left));
+  background: #1b2c24f5;
+  border-top: 1px solid #b3bea745;
+}
+.mobile-ui .mobile-nav button {
+  min-width: 0;
+  text-align: center;
+  padding: 8px 4px;
+}
+.mobile-ui .mobile-drive {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mobile-ui .mobile-drive button {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  background: #203629dc;
+  border: 1px solid #b6cbb280;
+  border-radius: 14px;
+  text-align: center;
+  padding: 8px;
+  min-width: 56px;
+  min-height: 56px;
+  box-shadow: 0 2px 8px #0004;
+}
+.mobile-ui .mobile-drive button[aria-pressed='true'] {
+  background: #d6c081;
+  color: #1c3022;
+  border-color: #f9e8b8;
+}
+.mobile-ui .mobile-steering {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: calc(var(--dock) + 14px);
+}
+.mobile-ui .mobile-steering > div {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.mobile-ui .mobile-steering [data-hold='left'],
+.mobile-ui .mobile-steering [data-hold='right'] {
+  width: 62px;
+  height: 62px;
+  font-size: 22px;
+}
+.mobile-ui .mobile-drive .drive-extras button {
+  width: 62px;
+  min-height: 44px;
+  font-size: 12px;
+}
+.mobile-ui .mobile-pedals {
+  position: absolute;
+  bottom: calc(var(--dock) + 10px);
+  right: max(12px, env(safe-area-inset-right));
+  display: grid;
+  width: 70px;
+  gap: 2px;
+  text-align: center;
+}
+.mobile-ui .mobile-pedals button {
+  height: 56px;
+  font-size: 26px;
+}
+.mobile-ui .mobile-pedals span {
+  color: #f3edd8;
+  font-size: 9px;
+  text-shadow: 0 1px 2px #000;
+}
+.mobile-ui #mobile-flight {
+  position: absolute;
+  bottom: calc(var(--dock) + 12px);
+  right: calc(92px + env(safe-area-inset-right));
+  display: grid;
+  gap: 8px;
+}
+.mobile-ui #mobile-flight button {
+  min-width: 58px;
+  font-size: 11px;
+}
+.mobile-ui #mobile-combat {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(var(--dock) + 151px);
+}
+.mobile-ui #mobile-combat button {
+  background: #7d4039e6;
+  min-height: 48px;
+}
+.mobile-ui .mobile-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background: #09150fa8;
+  z-index: 7;
+}
+.mobile-ui.mobile-chat-open .mobile-drive,
+.mobile-ui.mobile-status-open .mobile-drive,
+.mobile-ui.mobile-modal .mobile-drive,
+.mobile-ui.mobile-modal .mobile-nav,
+.mobile-ui.mobile-modal #mobile-target {
+  visibility: hidden;
+}
+.mobile-ui.mobile-chat-open .chat-panel,
+.mobile-ui.mobile-status-open .status-panel {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 8;
+  top: calc(var(--visible-top, 0px) + max(8px, env(safe-area-inset-top)));
+  bottom: auto;
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  width: auto;
+  min-width: 0;
+  height: calc(
+    var(--visible-height, 100dvh) - max(8px, env(safe-area-inset-top)) -
+      max(8px, env(safe-area-inset-bottom))
+  );
+  max-width: 620px;
+  margin: 0 auto;
+  transform: none;
+  padding: 0;
+  background: #20362c;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.mobile-ui .mobile-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: #1a2e24;
+  border-bottom: 1px solid var(--line);
+}
+.mobile-ui #chat-log {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  padding: 12px;
+  touch-action: pan-y;
+}
+.mobile-ui .chat-line {
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.mobile-ui #chat-form {
+  flex-shrink: 0;
+  padding: 8px;
+  gap: 6px;
+  background: #1a2e24;
+}
+.mobile-ui #chat-form input {
+  min-width: 0;
+  font-size: 16px;
+  padding: 10px 6px;
+}
+.mobile-ui #chat-form button {
+  min-width: 48px;
+  min-height: 48px;
+}
+.mobile-ui #chat-latest,
+.mobile-ui #chat-recipient,
+.mobile-ui #npc-notice {
+  flex-shrink: 0;
+}
+.mobile-ui #chat-recipient {
+  padding: 8px;
+  overflow-wrap: anywhere;
+}
+.mobile-ui #npc-notice button {
+  font-size: 12px;
+}
+.mobile-ui.mobile-status-open .status-panel {
+  overflow-y: auto;
+  display: block;
+  padding: 0 16px 16px;
+}
+.mobile-ui .status-panel .mobile-sheet-header {
+  margin: 0 -16px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.mobile-ui .status-panel .pilot {
+  font-size: 14px;
+}
+.mobile-ui .status-panel .cash b {
+  font-size: 30px;
+}
+.mobile-ui .status-panel .need {
+  margin: 16px 0;
+  gap: 12px;
+}
+.mobile-ui .status-panel .need label {
+  width: 80px;
+  font-size: 14px;
+}
+.mobile-ui .status-panel .need small {
+  font-size: 12px;
+}
+.mobile-ui .status-panel .player-heading,
+.mobile-ui .status-panel #players {
+  display: block;
+}
+.mobile-ui .status-panel .player-row {
+  padding: 6px 0;
+  font-size: 13px;
+}
+/* Every game menu shares a scrollable, keyboard-safe sheet with a reachable close button. */
+.mobile-ui .modal-backdrop {
+  padding: 0;
+  top: var(--visible-top, 0px);
+  bottom: auto;
+  height: var(--visible-height, 100dvh);
+  align-items: stretch;
+}
+.mobile-ui .window,
+.mobile-ui .window.large,
+.mobile-ui .window.map-window {
+  width: 100%;
+  max-width: 760px;
+  min-width: 0;
+  max-height: 100%;
+  margin: 0 auto;
+  padding: 0 max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  border-radius: 0;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.mobile-ui .window > header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #263a2f;
+  padding: max(6px, env(safe-area-inset-top)) 0 6px;
+  margin: 0 0 10px;
+}
+.mobile-ui .window > header .close {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 30px;
+}
+.mobile-ui .window h2 {
+  font-size: 27px;
+  overflow-wrap: anywhere;
+}
+.mobile-ui .window button {
+  font-size: 14px;
+}
+.mobile-ui .window p,
+.mobile-ui .window label,
+.mobile-ui .window li {
+  font-size: 14px;
+}
+.mobile-ui .window small {
+  font-size: 12px;
+}
+.mobile-ui .window form,
+.mobile-ui .window section,
+.mobile-ui .window article,
+.mobile-ui .window label {
+  min-width: 0;
+}
+.mobile-ui .guide-grid,
+.mobile-ui .admin-grid,
+.mobile-ui .trade-columns,
+.mobile-ui .activity-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.mobile-ui .settings-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mobile-ui .menu-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mobile-ui .tabs {
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  touch-action: pan-x;
+  padding-bottom: 4px;
+}
+.mobile-ui .tabs button {
+  flex-shrink: 0;
+  padding: 12px;
+}
+.mobile-ui .building-meta {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.mobile-ui .trade-list {
+  max-height: 45dvh;
+  min-height: 160px;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.mobile-ui .trade-row {
+  font-size: 14px;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.mobile-ui .trade-row > b {
+  font-size: 13px;
+}
+.mobile-ui .trade-row button {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 8px;
+}
+.mobile-ui .trade-row small {
+  font-size: 11px;
+}
+.mobile-ui .directory {
+  max-height: none;
+  overflow: visible;
+}
+.mobile-ui .directory > button {
+  width: 100%;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.mobile-ui .directory > button > span:first-child {
+  min-width: 0;
+  flex: 1;
+}
+.mobile-ui .directory > button > b,
+.mobile-ui .directory > button > span:last-child {
+  flex-shrink: 0;
+}
+.mobile-ui .employment {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.mobile-ui .item-list > div {
+  gap: 12px;
+}
+.mobile-ui .item-list > div > span {
+  min-width: 0;
+}
+.mobile-ui .ledger > div {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.mobile-ui .parish-map-viewport {
+  max-height: none;
+  height: 48dvh;
+  min-height: 180px;
+}
+/* Map labels follow the atlas's collision layout; zoom / directory provide larger targets. */
+.mobile-ui .parish-map-building-label {
+  min-height: 0;
+  font-size: 12px;
+}
+.mobile-ui .parish-map-tools button {
+  padding: 10px;
+}
+.mobile-ui .asset-list img,
+.mobile-ui .asset-list audio {
+  max-width: 100%;
+}
+.mobile-ui .landing,
+.mobile-ui .galaxy-view {
+  padding: calc(80px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+}
+.mobile-ui .landing {
+  display: block;
+  overflow: auto;
+}
+.mobile-ui .landing footer {
+  position: static;
+  display: block;
+  margin-top: 30px;
+}
+.mobile-ui .landing h1 {
+  font-size: 42px;
+  line-height: 1.1;
+}
+.mobile-ui .landing-copy p {
+  font-size: 14px;
+}
+.mobile-ui .login-card {
+  width: 100%;
+  max-width: 500px;
+  margin: 22px auto;
+}
+.mobile-ui .galaxy-heading {
+  display: block;
+}
+.mobile-ui .galaxy-heading h1 {
+  font-size: 30px;
+}
+.mobile-ui .pilot-card {
+  display: block;
+  margin-bottom: 16px;
+}
+.mobile-ui .world-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+.mobile-ui .galaxy-bottom {
+  display: block;
+}
+.mobile-ui .galaxy-bottom .button-row {
+  margin-top: 16px;
+}
+.mobile-ui #toast {
+  bottom: calc(var(--dock) + 156px);
+  max-width: calc(100% - 24px);
+  width: max-content;
+  font-size: 13px;
+  pointer-events: none;
+}
+.mobile-ui.mobile-modal #toast,
+.mobile-ui.mobile-chat-open #toast {
+  top: calc(var(--visible-top, 0px) + 68px);
+  bottom: auto;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-ui {
+    --dock: calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+  .mobile-ui .mobile-nav {
+    left: 25%;
+    right: 25%;
+    border-radius: 10px 10px 0 0;
+    padding: 2px 4px max(2px, env(safe-area-inset-bottom));
+  }
+  .mobile-ui .mobile-steering,
+  .mobile-ui .mobile-pedals {
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .mobile-ui .mobile-steering .drive-extras {
+    margin-top: 0;
+  }
+  .mobile-ui #mobile-combat {
+    bottom: calc(147px + env(safe-area-inset-bottom));
+  }
+  .mobile-ui #mobile-flight {
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .mobile-ui .bottom-left {
+    bottom: 8px;
+    left: calc(158px + env(safe-area-inset-left));
+  }
+  .mobile-ui #driving > span {
+    display: none;
+  }
+  .mobile-ui #mobile-target {
+    top: calc(65px + env(safe-area-inset-top));
+    left: 25%;
+    right: 25%;
+  }
+  .mobile-ui #toast {
+    bottom: 64px;
+  }
+}
+.mobile-ui #overlay:not(:empty) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--visible-top, 0px);
+  height: var(--visible-height, 100dvh);
+  bottom: auto;
+}
+.mobile-ui .location {
+  background: #1b3026cf;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+.mobile-ui #chat-form {
+  height: auto;
+  min-height: 64px;
+}

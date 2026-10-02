@@ -271,3 +271,11 @@ Actions permit a burst of 20, replenished at ten per second; a 512-message/secon
 transport ceiling closes abusive floods rather than returning an error per input.
 Ping replies are limited separately. Input still expires and all action validation,
 economic transactions and persistence remain authoritative.
+
+## Mobile interface
+
+The client layers compact HUD controls over the same simulation, snapshot and form
+paths. `mobile.ts` isolates pointer capture, safe cancellation, visual viewport
+changes and mobile drawers; `mobile.css` is scoped to its media-query-driven class.
+Desktop panels are reused for chat/status, and building forms keep `PanelMemory`.
+See [mobile architecture and test coverage](MOBILE.md#developer-notes-and-verification).

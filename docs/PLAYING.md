@@ -2,6 +2,13 @@
 
 See [controls and common questions](FAQ.md) for driving, accounts, homes and getting started.
 
+## Phones and tablets
+
+Use the compact HUD: steering on the left, throttle on the right, and Map, Bag,
+Chat and Actions along the bottom. Tap cash for needs; tap the nearby-building
+prompt to interact. See the [complete mobile guide](MOBILE.md) for touch controls,
+chat, aircraft, weapons, camera gestures and account setup.
+
 ## Finding your way
 
 Press **M** or click/tap the minimap to open the **Parish map**. It shows the same

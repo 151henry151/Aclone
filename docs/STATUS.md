@@ -4,6 +4,19 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## Adaptive mobile interface (0.17.0)
+
+Phones and touch tablets use a compact HUD, independent steering/throttle controls,
+camera drag/pinch gestures and scrollable menu/chat sheets. Existing desktop panels
+and keyboard/mouse controls remain available at full desktop sizes. All gameplay,
+account and world menus are reachable from the compact navigation.
+
+Browser coverage exercises simultaneous touches, interrupted inputs, flight and
+weapons, trading/admin state, chat history, portrait/landscape, small keyboard-sized
+viewports and restoration of the desktop HUD. Physical Android/iOS keyboard,
+browser toolbar and sustained performance checks remain necessary before claiming
+device-specific compatibility. See the [mobile guide](MOBILE.md).
+
 ## Scheduled population and conversational agreements (0.15.0)
 
 The opt-in roster now supports nineteen residents with varied economic preferences.

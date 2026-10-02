@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-01
+
+### Added
+
+- A compact phone/tablet HUD with on-demand chat and pilot status, map/bag/actions navigation, and prominent nearby-building, fishing and home-exit actions.
+- Separate touch steering and throttle, boost, flight controls and press/release weapons. Camera dragging and pinch zoom support multiple pointers; input releases safely on interruption, cancellation or opening a panel.
+- Mobile menu sheets with larger controls, swipeable tabs, readable forms, retained trade/admin drafts, safe-area spacing and virtual-keyboard-aware sizing. All existing gameplay and account menus remain available.
+
+### Fixed
+
+- Keep desktop HUD layout and keyboard/mouse controls while adapting compact layouts to portrait, landscape and touch tablets. Restore the ordinary HUD when resizing back to desktop.
+- Restart a javelin charge on a fresh press so a cancelled touch cannot silently retain a fully charged throw. Tabbing through chat or menus no longer releases a weapon.
+- Correct in-game help about offline survival: stocked housing is needed, and hunger/thirst damage continues while signed off.
+
 ## [0.16.0] - 2026-10-01
 
 ### Added

@@ -878,9 +878,6 @@ kbd {
 .quickbar kbd {
   font-size: 8px;
 }
-.touch-drive {
-  display: none;
-}
 .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -1721,35 +1718,6 @@ button span {
   }
   .window h2 {
     font-size: 23px;
-  }
-}
-@media (pointer: coarse) {
-  .touch-drive {
-    display: block;
-    position: absolute;
-    bottom: 260px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    pointer-events: auto;
-    touch-action: none;
-  }
-  .touch-drive button {
-    width: 40px;
-    height: 38px;
-    text-align: center;
-    background: #253b2dcc;
-    margin: 2px;
-  }
-  .touch-drive > button {
-    display: block;
-    margin: 2px auto;
-  }
-  .quickbar {
-    top: 280px;
-  }
-  .bottom-left {
-    bottom: 183px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

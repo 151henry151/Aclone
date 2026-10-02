@@ -82,7 +82,8 @@ export function fireWeapon(w: World, p: Player, a: Action) {
   if (!Object.hasOwn(weapons, key)) throw Error('Unknown weapon');
   if (a.type === 'chargeWeapon') {
     if (key !== 'javelin') throw Error('Only javelins charge');
-    if (!p.weaponCharge) p.weaponCharge = { weapon: key, start: w.time };
+    // A fresh deliberate press starts a fresh charge, including after a cancelled touch.
+    p.weaponCharge = { weapon: key, start: w.time };
     return;
   }
   if (p.game === 'combat' && w.combat?.restart) throw Error('Wait for the next round');
