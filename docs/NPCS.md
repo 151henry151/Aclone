@@ -287,6 +287,38 @@ Optional overrides: `NPC_INDEPENDENT_ID` (`elias`), `NPC_INDEPENDENT_NAME`
 (1 / 5; custom models require both). Compose forwards these settings. Keep IDs
 stable. All four share the existing daily/monthly/hourly caps, not four separate budgets.
 
+### Survival and economic decisions (0.19.2)
+
+Every gameplay decision now includes a compact `life` briefing: live hunger/thirst
+rates and time until starvation **outdoors without consumption**, effective next
+serving values (including repeated-food penalties), carried provisions, nearest
+and cheapest stocked food/drink sources, a suggested living-cash reserve, and a
+shortlist of jobs with net wages, skill requirements and production blockers.
+This briefing and the last three outcome summaries survive request-size trimming.
+The broader parish survey may still be trimmed. Null survival time means needs
+are not rising; it is never a claim of invulnerability. Session readiness separately
+accounts for shelter stores and room expiry.
+
+The controller wakes the planner when needs reach 25,000 or danger is within ten
+minutes, instead of waiting for 40,000. This is a threshold transition, not a new
+per-tick model call. Stocked shelter can safely feed residents without waking Jev.
+Jev is directed to eat/drink before optional work, protect living cash, compare
+travel and tuition with funded wages, and learn from actual health/cash outcomes.
+Personality still guides career choice. Urgent meal errands buy one serving and
+consume it in the same plan; reserve shopping offers several foods and filters
+empty shops before choosing destinations. Optional sales, production deposits and
+crop watering retain personal provisions. A home/room can receive all supplies
+when the resident is comfortably fed, and departure preparation remains unchanged.
+Owners can buy missing recipe inputs and deliver them into their own stockroom;
+employees do not acquire rights to employer stock or pay its input bill.
+
+No new model, speech call, budget setting, free supplies, immunity or migration is
+introduced. Better context is not a guarantee of sound model decisions: budgets,
+provider outages, inaccessible shops or an exhausted economy can still leave an
+NPC in danger. Local tests exercise real purchase/use/deposit and survival rules
+with deterministic choices; actual Jev play needs observation after deployment.
+The full suite was deliberately deferred for this release.
+
 ### How the providers cooperate
 
 The [Jev API](https://docs.typesafe.ai/api) chooses one supplied option;
@@ -298,7 +330,8 @@ total provider request size is still bounded. `jev.ts` validates the selected ID
 probabilities and usage. Unknown options never execute. Conditions are rechecked
 at execution, so a neighbour buying the last supplies can invalidate a plan.
 
-All residents see their own recent results, failures, notebook and journal.
+All residents retain their own results, failures, notebook and journal. Jev receives
+compact outcome summaries; full journal text is omitted from its bounded request.
 A bounded durable experience summary compares actual cash, savings and health
 changes with their prior goal. Full history remains searchable, not all loaded
 into every request. Routine movement, fishing bite timing and production waiting

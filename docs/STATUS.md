@@ -4,6 +4,16 @@ Aclone is a playable development alpha. The supplied design spec describes a
 much larger historical game. This page deliberately distinguishes working
 systems from unfinished fidelity work; the project is not ready to claim 1.0.
 
+## NPC survival guidance (0.19.2)
+
+Jev now receives protected survival forecasts, nutrition, stocked food sources,
+job pay/blockers and recent results. Ordinary plans can purchase and consume meals
+or deliver inputs to owned businesses. Personal provisions are kept out of optional
+sales and factory deposits; needs trigger earlier replanning. Focused tests cover
+these mechanics, existing careers, provider isolation, request limits and scheduled
+homecoming. Real-model survival and profitability still require live observation;
+no full-suite or paid-provider run was made for this change.
+
 ## Adaptive mobile interface (0.17.0)
 
 Phones and touch tablets use a compact HUD, independent steering/throttle controls,

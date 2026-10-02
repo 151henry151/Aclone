@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { lifeBriefing } from './strategy.ts';
 import { workplace } from './workplace.ts';
 import { gameGuide } from './knowledge.ts';
 import type { World, Player } from '../../shared/types.ts';
@@ -120,6 +121,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       exchangeRate: w.settings.exchangeRate,
       exchangeCap: w.settings.exchangeCap,
     },
+    life: lifeBriefing(w, p),
     time: w.time,
     calendar: calendar(w),
     weather: weatherAt(w.id, calendar(w).absoluteDay),

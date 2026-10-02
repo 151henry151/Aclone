@@ -2,6 +2,7 @@
 import type { Building, Player, World } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { economyChoices } from './economy-choices.ts';
+import { nextNutrition, spareSupplies } from './strategy.ts';
 import { items, skills } from '../../shared/catalog.ts';
 import { calendar } from '../../shared/environment.ts';
 import { crops, cropStatus, fertilizerPrice } from '../../shared/farming.ts';
@@ -86,45 +87,57 @@ export function gameplayChoices(
         (def.fuel && p.fuel <= 64 - def.fuel))
     )
       add(
-        `Use carried ${def.name}: reduces hunger by ${def.food ?? 0}, thirst by ${def.drink ?? 0}, or adds ${def.fuel ?? 0} fuel. Current deficits: hunger ${p.hunger}, thirst ${p.thirst}, fuel ${p.fuel}.`,
+        `Use carried ${def.name}: reduces hunger by ${nextNutrition(p, item).food}, thirst by ${nextNutrition(p, item).drink}, or adds ${def.fuel ?? 0} fuel. Current deficits: hunger ${p.hunger}, thirst ${p.thirst}, fuel ${p.fuel}.`,
         [action({ type: 'use', item })],
       );
   }
-  // Stock only modest reserves, including water for crops; never endlessly buy supplies.
-  for (const [item, target] of [
-    ['bread', 3],
-    ['water', 9],
-    ['fuel', 2],
-  ] as const) {
-    const needed = target - (p.inventory[item] ?? 0);
+  // Compare ALL stocked sources before bounding alternatives; include varied diets.
+  for (const [item, def] of Object.entries(items).filter(([, d]) => d.food || d.drink || d.fuel)) {
+    const target = def.fuel ? 2 : def.drink ? 6 : 3;
+    const nutrient = def.fuel ? 'fuel' : def.drink ? 'drink' : 'food';
+    const carried = Object.entries(p.inventory).reduce(
+      (sum, [id, n]) => sum + (items[id]?.[nutrient] ? n : 0),
+      0,
+    );
+    const needed = target - carried;
     if (needed <= 0) continue;
-    for (const b of buildings
-      .filter(
-        (b) =>
-          b.owner !== p.id &&
-          b.kind !== 'starport' &&
-          Number.isSafeInteger(b.sell[item]) &&
-          b.sell[item] >= 0,
-      )
-      .slice(0, 2)) {
+    const nutrition = nextNutrition(p, item);
+    const consume =
+      !def.fuel &&
+      ((nutrition.food > 0 && p.hunger >= Math.min(15000, nutrition.food / 2)) ||
+        (nutrition.drink > 0 && p.thirst >= Math.min(15000, nutrition.drink / 2)));
+    const shops = buildings.filter(
+      (b) =>
+        b.owner !== p.id &&
+        b.kind !== 'starport' &&
+        b.stock[item] > 0 &&
+        Number.isSafeInteger(b.sell[item]) &&
+        b.sell[item] >= 0 &&
+        p.cash >= b.sell[item],
+    );
+    const nearest = [...shops].sort((a, b) => distance(p, a) - distance(p, b))[0];
+    const cheapest = [...shops].sort((a, b) => a.sell[item] - b.sell[item])[0];
+    for (const b of new Set([nearest, cheapest])) {
+      if (!b) continue;
       let n = Math.min(
-        needed,
-        b.stock[item] ?? 0,
+        consume ? 1 : needed,
+        b.stock[item],
         b.sell[item] ? Math.floor(p.cash / b.sell[item]) : needed,
       );
       while (n > 0 && !canCarry(p, item, n)) n--;
       if (n)
         add(
-          `Buy ${n} ${item} at ${b.name} (${b.id}) for ${n * b.sell[item]} cash units.`,
+          `${consume ? 'Buy and consume' : 'Restock'} ${item}: ${n} for ${n * b.sell[item]} at ${b.name} (${Math.round(distance(p, b))}m); next serving restores ${nutrition.food} hunger / ${nutrition.drink} thirst. Cash left ${p.cash - n * b.sell[item]}.`,
           visit(b, [
             action({ type: 'trade', building: b.id, item, quantity: n, direction: 'buy' }),
+            ...(consume ? [action({ type: 'use', item })] : []),
           ]),
         );
     }
   }
   for (const b of buildings.filter((b) => b.kind === 'workhouse' && b.owner !== p.id).slice(0, 2))
     add(
-      `Earn cash with a 15-second public labour shift at ${b.name}; useful for tuition and supplies.`,
+      `Earn 4500 cash with a 15-second public labour shift at ${b.name}; useful for tuition and supplies.`,
       visit(b, [
         action({ type: 'task', building: b.id, task: 'labour' }),
         { kind: 'wait', seconds: 15 },
@@ -202,9 +215,9 @@ export function gameplayChoices(
                 visit(b, [farm('plant', crop)]),
               );
         } else if (status.state === 'growing') {
-          if ((current?.water ?? 0) < 3 && (p.inventory.water ?? 0) >= 3)
+          if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water') >= 3)
             add(
-              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; consumes 3 carried water. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
+              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; consumes 3 carried water, keeping 2 to drink. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
               visit(b, [farm('water')]),
             );
           if (

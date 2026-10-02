@@ -15,6 +15,7 @@ import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts'
 import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
 import { instructions, conversationInstructions, observe } from './observation.ts';
+import { careNeeded } from './strategy.ts';
 import { jevInstructions } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
@@ -584,7 +585,7 @@ export class Residents {
       if (r.state.observedDeaths !== undefined && p.deaths !== r.state.observedDeaths)
         this.failure(r, w, 'Life ended; review what went wrong');
       r.state.observedDeaths = p.deaths;
-      const critical = p.hunger >= 40000 || p.thirst >= 40000 || p.health < 30000;
+      const critical = careNeeded(w, p);
       if (critical && !r.state.critical) {
         r.wake = true;
         r.state.needsDecision = true;
@@ -835,6 +836,7 @@ export class Residents {
       observation: {
         ...observe(w, p, r.state, this.memory, r.config.id),
         experiences: r.state.experiences,
+        lessons: r.state.experiences?.slice(-3).map((e) => ({ ...e, goal: e.goal.slice(0, 180) })),
         careerPreference: r.config.preference,
         commitments: r.state.commitments,
         session: r.state.presence

@@ -365,8 +365,13 @@ test('career guidance favours different actions without removing any alternative
       result.map((c) => c.plan),
       choices.map((c) => c.plan),
     );
+    for (let i = 0; i < result.length; i++)
+      assert.ok(
+        result[i].description.startsWith(choices[i].description),
+        'Short wire descriptions retain the actual action before preference guidance',
+      );
     assert.deepEqual(
-      result.filter((c) => c.description.startsWith('[Fits')).map((c) => c.id),
+      result.filter((c) => c.description.includes('[Fits')).map((c) => c.id),
       [id],
     );
   }

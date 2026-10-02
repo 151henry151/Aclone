@@ -9,6 +9,7 @@ import type { ResidentState } from './memory.ts';
 import { gameplayChoices, type FarmerChoice } from './farmer.ts';
 import { operation, operationAction } from './player-operations.ts';
 import { blockedStep } from './recovery.ts';
+import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 
@@ -160,12 +161,15 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       for (const [item, n] of Object.entries(p.inventory))
         if (
           n > 0 &&
-          (items[item]?.food ||
-            items[item]?.drink ||
+          ((b.kind === 'home' && (items[item]?.food || items[item]?.drink)) ||
             b.kind === 'warehouse' ||
             (b.production ?? recipes[b.recipe ?? ''])?.inputs[item])
         ) {
-          const quantity = Math.min(n, 10, b.capacity - (b.stock[item] ?? 0));
+          const quantity = Math.min(
+            b.kind === 'home' && p.hunger < 15000 && p.thirst < 15000 ? n : spareSupplies(p, item),
+            10,
+            b.capacity - (b.stock[item] ?? 0),
+          );
           if (quantity > 0)
             add(
               'storage',
@@ -248,7 +252,9 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             for (const direction of ['deposit', 'withdraw'] as const) {
               const quantity = Math.min(
                 3,
-                (direction === 'deposit' ? p.inventory : booking.stock)[item] ?? 0,
+                direction === 'deposit' && (p.hunger >= 15000 || p.thirst >= 15000)
+                  ? spareSupplies(p, item)
+                  : ((direction === 'deposit' ? p.inventory : booking.stock)[item] ?? 0),
               );
               if (quantity > 0)
                 add(

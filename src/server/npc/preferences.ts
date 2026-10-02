@@ -25,7 +25,7 @@ export function preferChoices(choices: FarmerChoice[], preference: Preference, j
     return preferred
       ? {
           ...choice,
-          description: `[Fits my ${preference} inclination; compare actual costs and results.] ${choice.description}`,
+          description: `${choice.description} [Fits my ${preference} inclination; compare actual costs and results.]`,
         }
       : choice;
   });

@@ -4,6 +4,15 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.19.2
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. No new environment variables, database migration or AI-provider
+changes are needed. Existing NPC identities and budgets remain intact. Observe
+meal/drink errands and job choices after deployment; local deterministic checks
+cannot guarantee a model's economic success. The full suite was deferred at the
+owner's request. Production deployment remains operator-managed.
+
 ## Deploying 0.19.1
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the

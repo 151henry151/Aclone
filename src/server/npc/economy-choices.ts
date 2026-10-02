@@ -4,6 +4,7 @@ import { canCarry, distance } from '../../shared/simulation.ts';
 import { items, recipes } from '../../shared/catalog.ts';
 import { resourceNodes, resourceAmount } from '../../shared/resources.ts';
 import type { Step } from './decision.ts';
+import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
 type Act = Extract<Step, { kind: 'act' }>['action'];
 export type AddChoice = (description: string, plan: Step[], reconsiderSeconds?: number) => void;
@@ -61,7 +62,48 @@ export function economyChoices(
           ]),
         );
       for (const [item, quantity] of Object.entries(recipe.inputs)) {
-        const n = Math.min(p.inventory[item] ?? 0, b.capacity - (b.stock[item] ?? 0), quantity * 4);
+        const missing = Math.min(
+          quantity * 2 - (b.stock[item] ?? 0),
+          b.capacity - (b.stock[item] ?? 0),
+        );
+        const seller = buildings
+          .filter(
+            (v) =>
+              v.owner !== p.id &&
+              v.kind !== 'starport' &&
+              v.stock[item] > 0 &&
+              Number.isSafeInteger(v.sell[item]) &&
+              v.sell[item] >= 0,
+          )
+          .sort((a, b) => a.sell[item] - b.sell[item])[0];
+        if (missing > 0 && seller) {
+          let load = Math.min(
+            missing,
+            seller.stock[item],
+            seller.sell[item]
+              ? Math.floor(Math.max(0, p.cash - 12000) / seller.sell[item])
+              : missing,
+          );
+          while (load > 0 && !canCarry(p, item, load)) load--;
+          if (load > 0)
+            add(
+              `Supply my ${b.name}: buy and deliver ${load} ${item} from ${seller.name}, cost ${load * seller.sell[item]}, cash left ${p.cash - load * seller.sell[item]}. Building still needs funded workers and output buyers.`,
+              [
+                ...visit(seller, [
+                  act({
+                    type: 'trade',
+                    building: seller.id,
+                    direction: 'buy',
+                    item,
+                    quantity: load,
+                  }),
+                ]),
+                { kind: 'travel', destination: b.id },
+                act({ type: 'stock', building: b.id, direction: 'deposit', item, quantity: load }),
+              ],
+            );
+        }
+        const n = Math.min(spareSupplies(p, item), b.capacity - (b.stock[item] ?? 0), quantity * 4);
         if (n > 0)
           add(
             `Deposit ${n} carried ${item} into my ${b.name}'s stockroom for production.`,
@@ -139,11 +181,12 @@ export function economyChoices(
     );
     if (!b) continue;
     const n = Math.min(
-      count,
+      spareSupplies(p, item),
       25,
       Math.floor(b.investment / b.buy[item]),
       b.capacity - (b.stock[item] ?? 0),
     );
+    if (n <= 0) continue;
     add(
       `Sell ${n} carried ${items[item]?.name ?? item} at ${b.name} for ${n * b.buy[item]}.`,
       visit(b, [act({ type: 'trade', building: b.id, direction: 'sell', item, quantity: n })]),

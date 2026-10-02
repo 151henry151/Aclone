@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-10-02
+
+### Fixed
+
+- Give Jev a compact survival and economy briefing with live need deadlines, effective nutrition, stocked suppliers, actual job wages and blockers, and recent outcomes that survive context trimming. Reconsider plans earlier when food or drink is needed.
+- Offer varied buy-and-eat errands, preserve carried meals and drinking water during optional sales and business errands, and let owners buy and deliver missing production inputs in one plan. Keep actual action descriptions ahead of personality hints so shortened choices remain understandable.
+
 ## [0.19.1] - 2026-10-02
 
 ### Fixed
