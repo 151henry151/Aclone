@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.15.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.15.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.15.1:** NPC chat responds independently of gameplay planning failures. Jev context is bounded to avoid oversized requests while retaining every candidate action.
 
 **New in 0.15.0:** fifteen more AI neighbours, varied playing habits, stocked-home departure routines and chat-to-Jev delivery agreements. Offline starvation now applies to everyone. Building prices and wages show their saved values, residents stay visible during AI retries, public conversations support follow-ups, chat scrolling works, and replies allow 1,200 characters. [Enable the population and review survival rules](docs/NPCS.md).
 

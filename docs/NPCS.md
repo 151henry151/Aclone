@@ -91,7 +91,7 @@ are per completed production cycle; farm wages are per harvested plot.
 ## Agreements made in chat
 
 A conversation model can record a durable requested goal or structured delivery
-agreement for Jev. This wakes one new gameplay decision; it does not execute a
+agreement for Jev. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement wakes one new gameplay decision; it does not execute a
 chat model's arbitrary actions or call speech again. Jev sees the agreement,
 remaining quantity and real blockers, alongside its ordinary opportunities.
 
@@ -630,3 +630,13 @@ restrictions, wage/storage blockers, owner stock sales, restart memory, invalid
 provider output, separate call accounting and continued gameplay when dialogue
 fails or hits the budget. Browser tests use deterministic providers without
 paid requests and verify all three chat identities and private-message isolation.
+
+## Gameplay request size
+
+Jev receives candidate descriptions; their executable steps stay on the server.
+The complete request is limited to 24,000 UTF-8 bytes, with redundant journals,
+chat history and optional duplicated context removed first. If necessary, option
+descriptions shorten while every candidate remains available. Live needs and
+commitments remain in context. The complete conversation guide and history still
+go to the chat model. This avoids the production `max_tokens_exceeded` rejection.
+TypeSafe documents its context constraints in the [model reference](https://docs.typesafe.ai/models).

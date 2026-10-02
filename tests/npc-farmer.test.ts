@@ -346,7 +346,7 @@ for (const mode of ['success', 'error', 'budget'] as const)
     ];
     let residents = new Residents(store, universe, worlds, options, {
       dailyUsd: 2,
-      callsPerHour: mode === 'budget' ? 2 : 120,
+      callsPerHour: mode === 'budget' ? 1 : 120,
     });
     try {
       const now = Date.now();
@@ -360,7 +360,7 @@ for (const mode of ['success', 'error', 'budget'] as const)
       residents.capture(w);
       residents.tick(0.05, now + 6000);
       await residents.settled();
-      assert.equal(gameCalls, 2);
+      assert.equal(gameCalls, 1, 'Replying does not require another gameplay call');
       assert.equal(chatCalls, mode === 'budget' ? 0 : 1);
       const state = residents.memory.load('rowan')!;
       assert.deepEqual(
@@ -370,10 +370,10 @@ for (const mode of ['success', 'error', 'budget'] as const)
       );
       assert.equal(state.errors, 0, 'Dialogue failure does not disable gameplay');
       const rows = store.db.prepare('SELECT * FROM npc_calls ORDER BY id').all();
-      assert.equal(rows.length, mode === 'budget' ? 2 : 3);
+      assert.equal(rows.length, mode === 'budget' ? 1 : 2);
       assert.equal(rows[0].charged, (100 * 0.042) / 1e6);
       if (mode === 'success') {
-        assert.ok(Math.abs(Number(rows[2].charged) - 0.0004) < 1e-9);
+        assert.ok(Math.abs(Number(rows[1].charged) - 0.0004) < 1e-9);
         const message = w.messages.find((m) => m.text === 'I remember your orchard.')!;
         assert.equal(message.to, human.id, 'Private route wins over model public-chat request');
         assert.equal(state.helpQuestion, undefined);

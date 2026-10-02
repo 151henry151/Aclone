@@ -547,7 +547,7 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
-      if (now < r.cooldown) continue;
+      if (now < r.cooldown && !this.dialogueDue(r, now)) continue;
       p.online = !r.state.inSpace;
       r.active = true;
       if (r.state.inSpace) this.universe.arrive(this.account(r));
@@ -571,8 +571,13 @@ export class Residents {
         this.checkpoint(r, w, 'needs', { hunger: p.hunger, thirst: p.thirst, health: p.health });
       }
       r.state.critical = critical;
-      if (r.busy || w.time < (r.state.recovery?.retryAt ?? 0)) continue;
-      if (r.wake || (now >= r.state.nextAt && (!r.state.plan.length || now >= r.state.until))) {
+      if (r.busy || (w.time < (r.state.recovery?.retryAt ?? 0) && !this.dialogueDue(r, now)))
+        continue;
+      if (
+        r.wake ||
+        this.dialogueDue(r, now) ||
+        (now >= r.state.nextAt && (!r.state.plan.length || now >= r.state.until))
+      ) {
         if (now - r.lastCall < r.config.intervalMs) continue;
         if (this.residents.filter((q) => q.busy).length >= this.budget.config.concurrency) continue;
         this.think(r, w, p, now);
@@ -768,7 +773,18 @@ export class Residents {
       this.failure(r, w, (e as Error).message.slice(0, 250));
     }
   }
+  private dialogueDue(r: Resident, now: number) {
+    if (!r.dialogue || !r.state.helpQuestion) return false;
+    const key = `${r.state.world}:${r.state.conversationId ?? `${r.state.questionFrom}:${r.state.helpQuestion}`}`;
+    const attempt = r.state.dialogueAttempt;
+    return (
+      !attempt ||
+      attempt.key !== key ||
+      (!attempt.done && attempt.attempts < 3 && now >= attempt.nextAt)
+    );
+  }
   private think(r: Resident, w: World, p: Player, now: number) {
+    const chatOnly = this.dialogueDue(r, now);
     const snapshot = {
       time: w.time,
       cash: p.cash,
@@ -833,7 +849,7 @@ export class Residents {
     const bytes =
       Buffer.byteLength(JSON.stringify(decisionRequest)) +
       (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
-    if (bytes > 96000) {
+    if (!chatOnly && bytes > 96000) {
       // Model availability is not a logout. Preserve visible presence and back off.
       p.online = !r.state.inSpace;
       p.speed = 0;
@@ -842,8 +858,10 @@ export class Residents {
       r.cooldown = now + 60000;
       return;
     }
-    const reservation = this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
-    if (reservation === undefined) {
+    const reservation = chatOnly
+      ? undefined
+      : this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
+    if (!chatOnly && reservation === undefined) {
       p.online = !r.state.inSpace;
       r.active = p.online;
       p.speed = 0;
@@ -859,21 +877,37 @@ export class Residents {
     r.state.pending = true;
     const replyTo = r.state.replyTo;
     this.checkpoint(r, w);
-    r.nav = undefined;
-    r.state.status = 'Thinking';
+    if (!chatOnly) r.nav = undefined;
+    r.state.status = chatOnly ? 'Replying' : 'Thinking';
     const controller = new AbortController();
     r.busy = controller;
-    r.pending = r.brain
-      .decide(decisionRequest, controller.signal)
+    const pending: Promise<BrainResult> = chatOnly
+      ? Promise.resolve({
+          decision: {
+            intent: r.state.intent,
+            notebook: r.state.notebook,
+            speech: null,
+            plan: r.state.plan.slice(r.state.index).length
+              ? r.state.plan.slice(r.state.index)
+              : [{ kind: 'wait', seconds: 60 }],
+            repeat: 1,
+            reconsiderSeconds: 60,
+          },
+          inputTokens: 0,
+          outputTokens: 0,
+        })
+      : r.brain.decide(decisionRequest, controller.signal);
+    r.pending = pending
       .then(async (result) => {
         if (this.closed) return;
-        this.budget.settle(
-          reservation,
-          result.inputTokens,
-          result.outputTokens,
-          result.cacheWriteTokens,
-          result.cacheReadTokens,
-        );
+        if (reservation !== undefined)
+          this.budget.settle(
+            reservation,
+            result.inputTokens,
+            result.outputTokens,
+            result.cacheWriteTokens,
+            result.cacheReadTokens,
+          );
         const current = this.worlds.get(r.state.world),
           player = current?.players[r.state.playerId];
         if (
@@ -988,7 +1022,14 @@ export class Residents {
           (!latest.players[r.state.playerId]?.online && !r.state.inSpace)
         )
           return;
-        this.accept(r, latest, result, Date.now(), replyTo);
+        this.accept(r, latest, result, Date.now(), replyTo, chatOnly);
+        if (
+          chatOnly &&
+          (!r.state.plan.length || now >= r.state.until || p.hunger >= 40000 || p.thirst >= 40000)
+        ) {
+          r.wake = true;
+          r.state.needsDecision = true;
+        }
         if (
           result.gameplayRequest &&
           conversation?.speakerId &&
@@ -1016,7 +1057,7 @@ export class Residents {
       })
       .catch((e) => {
         if (this.closed || controller.signal.aborted) return;
-        this.budget.failed(reservation);
+        if (reservation !== undefined) this.budget.failed(reservation);
         r.state.pending = false;
         r.wake = true;
         r.state.needsDecision = true;
@@ -1035,7 +1076,7 @@ export class Residents {
           this.checkpoint(r, current, 'provider-error', {
             message:
               e instanceof Error &&
-              /^AI (provider HTTP [0-9]+|response incomplete|response did not contain one valid turn|response missing token accounting)$/.test(
+              /^AI (provider HTTP [0-9]+|gameplay context exceeds (local size|provider token) limit|response incomplete|response did not contain one valid turn|response missing token accounting)$/.test(
                 e.message,
               )
                 ? e.message
@@ -1048,7 +1089,14 @@ export class Residents {
         r.pending = undefined;
       });
   }
-  private accept(r: Resident, w: World, result: BrainResult, now: number, replyTo?: string) {
+  private accept(
+    r: Resident,
+    w: World,
+    result: BrainResult,
+    now: number,
+    replyTo?: string,
+    chatOnly = false,
+  ) {
     const d = decisionSchema.parse(result.decision);
     if (d.speech?.text.trim().startsWith('*')) throw Error('NPC speech cannot run chat commands');
     r.state.pending = false;
@@ -1056,7 +1104,7 @@ export class Residents {
     // Public activity narration is never an autonomous side effect of a plan.
     // Apply to every provider, including old adapters and malformed chat replies.
     if (!addressed) d.speech = null;
-    const rejected = d.plan.find((s) => blockedStep(r.state.recovery, s, w.time));
+    const rejected = !chatOnly && d.plan.find((s) => blockedStep(r.state.recovery, s, w.time));
     if (rejected) {
       this.failure(
         r,
@@ -1070,20 +1118,22 @@ export class Residents {
     }
     if (d.speech && r.state.replyTo === replyTo) delete r.state.replyTo;
     r.state.notebook = d.notebook;
-    r.state.intent = d.intent;
-    r.state.plan = d.plan;
-    delete r.state.fishCaught;
-    r.state.index = 0;
-    r.state.repeats = d.repeat;
-    r.state.until = now + d.reconsiderSeconds * 1000;
-    r.state.nextAt = r.state.until;
-    r.state.waitUntil = 0;
-    r.state.errors = 0;
-    r.state.recall = undefined;
-    r.state.guideQuery = undefined;
+    if (!chatOnly) {
+      r.state.intent = d.intent;
+      r.state.plan = d.plan;
+      delete r.state.fishCaught;
+      r.state.index = 0;
+      r.state.repeats = d.repeat;
+      r.state.until = now + d.reconsiderSeconds * 1000;
+      r.state.nextAt = r.state.until;
+      r.state.waitUntil = 0;
+      r.state.errors = 0;
+      r.state.recall = undefined;
+      r.state.guideQuery = undefined;
+    }
     if (d.speech && !r.wake) r.state.helpQuestion = undefined;
     r.state.status = d.intent;
-    this.checkpoint(r, w, 'decision', {
+    this.checkpoint(r, w, chatOnly ? 'conversation' : 'decision', {
       intent: d.intent,
       plan: d.plan,
       repeat: d.repeat,

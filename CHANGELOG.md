@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-01
+
+### Fixed
+
+- NPC replies no longer wait for a successful gameplay decision or its retry cooldown. Addressed conversation preserves the current action plan and remains independently metered under shared limits.
+- Keep Jev requests within a conservative wire-size bound by omitting redundant chat/journal data and local execution steps. Preserve all candidate actions, live needs and agreements; tolerate rounded probability totals for large choice sets.
+
 ## [0.15.0] - 2026-10-01
 
 ### Added
