@@ -236,3 +236,13 @@ game service's memory and CPU. Full swap plus high memory pressure can stall Lua
 startup, snapshots and pings even when Aclone uses little RAM. Reduce competing
 workloads, limit their memory, or provide more capacity; changing graphics cannot
 fix server scheduling starvation. Avoid running load probes on the live host.
+
+## Connected galaxies (0.20.0)
+
+A host can optionally publish its galaxy identity and connect trusted peers. Set
+`GALAXY_URL` (stable HTTPS URL including any base path), `GALAXY_NAME` and
+`GALAXY_PEERS_FILE` (path to a JSON array of peer names, URLs and public keys).
+Leave `GALAXY_URL` unset to keep federation disabled. The signing key lives in the
+SQLite backup; never share it or copy it into client settings. Read the full
+[galaxy setup, trust and recovery guide](GALAXIES.md) before connecting hosts.
+Existing games require no peer configuration and retain all local progress.

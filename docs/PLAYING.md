@@ -359,3 +359,15 @@ reopening a dialog in the same browser session. Refreshing the page or signing
 out clears these drafts. Passwords, recovery keys and selected files are excluded.
 Saved wage/price notices still show the server's current settings; editing a draft
 does not apply it until you press its save button.
+
+## Creator worlds and other galaxies (0.20.0)
+
+Create a world from the galaxy directory, then open F10 or Menu → World editor.
+The [creator guide](WORLD_BUILDING.md) covers arena presets, custom objects and
+models, visual behaviors, production chains and portable world designs.
+
+To visit another host, take off from a spaceport and choose a configured entry
+under Other galaxies. Confirm arrival on the destination. Your character’s name
+and home identity travel; money, items, skills and property stay saved separately
+on each host. Returning to your home account requires its saved pilot key or
+normal sign-in. See [travelling between galaxies](GALAXIES.md#player-journey).

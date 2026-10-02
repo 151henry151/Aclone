@@ -39,6 +39,25 @@ export function weatherAt(world: string, absoluteDay: number) {
     snowCover: Math.max(0, Math.min(1, (-warmth - 0.45) * 2)),
   };
 }
+/** Owner weather overrides affect visuals, farming and road conditions together. */
+export function worldWeather(w: Pick<World, 'id' | 'creator'>, day: number) {
+  const natural = weatherAt(w.id, day),
+    mode = w.creator?.weather ?? 'natural';
+  if (mode === 'natural') return natural;
+  const snow = mode === 'snow' || mode === 'snowstorm',
+    wet = mode !== 'clear',
+    storm = mode.endsWith('storm');
+  return {
+    ...natural,
+    precipitation: snow ? 'snow' : wet ? 'rain' : 'clear',
+    temperature: snow ? -5 : Math.max(6, natural.temperature),
+    storm,
+    intensity: wet ? (storm ? 1 : 0.6) : 0,
+    clouds: wet ? 0.95 : 0.05,
+    wind: storm ? 3 : wet ? 1 : 0.3,
+    snowCover: snow ? 1 : 0,
+  };
+}
 export function sunAt(seconds: number, day: number) {
   const direction = solarDirectionAt(day, seconds),
     height = direction[1];
@@ -58,7 +77,7 @@ export function advanceClimate(w: World, start: number, end: number) {
     const boundary = (day + 1 - 59 - defaults.time / 86400) * DAY_SECONDS;
     const next = Math.min(end, Math.max(at + 1e-6, boundary));
     const dt = next - at,
-      weather = weatherAt(w.id, day);
+      weather = worldWeather(w, day);
     const snowing = weather.precipitation === 'snow';
     const melt = Math.max(0, weather.temperature) / 90000;
     w.climate.snow = Math.max(

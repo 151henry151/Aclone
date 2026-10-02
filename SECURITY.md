@@ -40,3 +40,18 @@ cannot grant the NPC extra permissions. NPC accounts cannot authenticate as
 human pilots. Local journals include private messages addressed to the resident;
 operator CLI output and backups must stay private. Players see AI labels and a
 memory/provider notice. See [NPC data handling and budgets](docs/NPCS.md).
+
+## Optional federation and creator content (unreleased)
+
+Galaxy connections use operator-pinned Ed25519 keys. A trusted host can assert
+visiting identities whose passports it has seen, but cannot authenticate native
+home accounts. Keep the signing key/database private; do not connect untrusted
+servers as peers. Visitors do not import currency, privileges or inventory. See
+[the trust and recovery guide](docs/GALAXIES.md).
+
+World creators may install bounded Lua and uploaded visual content in their own
+world. GLB uploads reject external media references, node cycles and unsupported
+animation/extension paths; dimensions and geometry budgets limit resource use.
+This does not make arbitrary scenes cheap to render. Scripts remain isolated
+from networking, filesystem access and account operations. Only validated bounded
+effects return to the simulation. Designs never import account or player records.

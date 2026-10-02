@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { creatorAction, creatorEvent, tickCreator, creatorBlocksSegment } from './creator.ts';
 import { terrainHeight } from './terrain.ts';
 import { fishingDock, travelHeight } from './dock';
 export { terrainHeight } from './terrain.ts';
@@ -257,6 +258,12 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (
+    ['creator', 'creatorBuilding', 'creatorRemove', 'creatorRecipe', 'interactObject'].includes(
+      type,
+    )
+  )
+    return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
     case 'farm': {
@@ -828,6 +835,7 @@ export function act(w: World, id: string, a: Action): string {
         'Guests must check out and collect their supplies first',
       );
       w.buildings = w.buildings.filter((x) => x !== b);
+      if (w.creator) w.creator.rules = w.creator.rules.filter((r) => r.target !== b.id);
       break;
     }
     case 'settings': {
@@ -1149,6 +1157,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -250, 250),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -250, 250);
   if (
+    !creatorBlocksSegment(w, p, { x: nx, z: nz, y: p.y }, p.vehicle === 5 ? 0.25 : 1.3, true) &&
     !w.buildings.some((b) =>
       buildingBlocksMovement(
         b,
@@ -1309,6 +1318,7 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
@@ -1325,6 +1335,7 @@ export function advance(w: World, seconds: number) {
     }
     if (p.task && p.task.end <= end) {
       const t = p.task;
+      if (p.online) creatorEvent(w, 'task', p, t.building ?? t.resource ?? '');
       if (t.kind === 'gather') {
         finishGather(p);
         continue;

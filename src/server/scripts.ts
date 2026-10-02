@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { effectSchema } from '../shared/creator.ts';
 import { Worker } from 'node:worker_threads';
 import type { World } from '../shared/types.ts';
 import { say } from '../shared/simulation.ts';
 export interface ScriptResult {
+  effects?: { player?: string; effect: Record<string, unknown> }[];
   messages: string[];
   variables: Record<string, number>;
   kudos: Record<string, number>;
@@ -83,7 +85,18 @@ function scriptJob(
       messages: [],
       scriptVariables: { ...world.scriptVariables },
       players: Object.fromEntries(
-        Object.entries(world.players).map(([id, p]) => [id, { kudos: p.kudos }]),
+        Object.entries(world.players).map(([id, p]) => [
+          id,
+          {
+            kudos: p.kudos,
+            x: p.x,
+            z: p.z,
+            health: p.health,
+            hunger: p.hunger,
+            thirst: p.thirst,
+            team: p.team,
+          },
+        ]),
       ),
     },
     source,
@@ -205,6 +218,7 @@ export class ScriptEvents {
     if (failure?.source === source && this.now() < failure.retryAt) return;
     try {
       const result = await this.execute(world, source, event, data);
+      for (const e of result.effects ?? []) effectSchema.parse(e.effect);
       if (!isCurrent() || source !== world.script) return;
       // An older in-flight success must not undo a newer failure’s backoff.
       if (this.failures.get(world) === failure) this.reset(world);

@@ -195,3 +195,26 @@ rejections retain the request correlation ID. Excessive total traffic (over 512
 messages in one second) closes the connection with code 4008. Ping responses are
 capped at four per second. Ordinary queued controls never generate one rate-limit
 error per packet, and the newest valid controls replace previous input.
+
+## Creator and federation extensions (0.20.0)
+
+Optional `world.creator` version 1 contains validated models, objects, rules,
+environment and arena configuration. Older worlds omit it. `scriptInteraction`
+is a public boolean indicating building interaction hooks without exposing Lua
+source. Actions `creator`, `creatorBuilding`, `creatorRecipe` and `creatorRemove`
+require the world owner. `interactObject` is available to nearby ordinary players
+and names either a placed object or building. Large owner documents have a
+512 KiB WebSocket ceiling; other players retain a 32 KiB request ceiling.
+The ordinary action rate limits still apply.
+
+`GET /api/design/:world` requires owner authentication. `POST /api/worlds` accepts
+optional validated settings or a version-1 world design and creates a new world.
+No import modifies an existing world.
+
+Optional federation exposes `GET /api/federation` (public descriptor/destinations),
+`POST /api/federation/depart` (authenticated, destination URL),
+`POST /api/federation/preview` (ticket, read-only) and
+`POST /api/federation/arrive` (ticket; native Bearer authentication required on
+home return). Arrival returns the host-local account/key. Tickets are single-use,
+Ed25519-signed and expire after two minutes. These endpoints use existing origin
+and rate checks. See [the protocol and trust details](GALAXIES.md).

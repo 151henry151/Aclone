@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { Federation, type FederationConfig } from './federation.ts';
+import { applyDesign, applyPreset, configureRules, exportDesign } from './world-design.ts';
+import { validateVisualAsset } from './asset-validation.ts';
+import { creatorEvent, drainCreatorScripts, effectSchema, applyEffect } from '../shared/creator.ts';
 import { SnapshotWindow } from './snapshot-window';
 import { ActionBudget } from './request-budget';
 import { Residents, type ResidentOptions } from './npc/residents.ts';
@@ -79,6 +83,7 @@ interface Peer {
 }
 export interface AppOptions {
   dataDir: string;
+  federation?: FederationConfig;
   port?: number;
   host?: string;
   dev?: boolean;
@@ -93,6 +98,9 @@ export async function createApp(options: AppOptions) {
     store = new Store(join(dataDir, 'aclone.sqlite')),
     universe = new Universe(store),
     worlds = new Map<string, World>();
+  const federation = options.federation
+    ? new Federation(store, universe, options.federation)
+    : undefined;
   for (const { world, saved } of store.loadWorlds()) {
     for (const p of Object.values(world.players)) p.online = false;
     let remaining = Math.min(Math.max(0, Date.now() / 1000 - saved), 86400 * 30);
@@ -207,6 +215,7 @@ export async function createApp(options: AppOptions) {
       players,
       ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
       script: me.authority >= 20 ? w.script : '',
+      scriptInteraction: w.script.includes('ObjectInteract'),
       scriptVariables: {},
       messages: w.messages.filter((m) => !m.to || m.to === me.id || m.name === me.name),
     };
@@ -251,18 +260,46 @@ export async function createApp(options: AppOptions) {
     say(w, 'Parish notice', me.name + ' arrived.');
     store.saveWorld(w);
     snapshot(p);
+    creatorEvent(w, 'login', me);
     void scriptEvent(w, 'PlayerLogin', { id: me.id, name: me.name });
   };
   const scriptPool = new ScriptPool();
   const scriptEvents = new ScriptEvents(scriptPool.run.bind(scriptPool));
-  const scriptEvent = async (w: World, event: string, data: Record<string, string | number>) => {
+  const executeScriptEvent = async (
+    w: World,
+    event: string,
+    data: Record<string, string | number>,
+  ) => {
     const result = await scriptEvents.run(w, event, data, () => worlds.get(w.id) === w);
     if (!result) return;
+    const effects = (result.effects ?? [])
+      .slice(0, 32)
+      .map((e) => ({ player: e.player, effect: effectSchema.parse(e.effect) }));
+    for (const e of effects) applyEffect(w, e.player ? w.players[e.player] : undefined, e.effect);
     for (const message of result.messages) say(w, 'World script', message);
     w.scriptVariables = result.variables;
     for (const [id, kudos] of Object.entries(result.kudos)) {
       if (w.players[id]) w.players[id].kudos += kudos;
     }
+  };
+  // Serialize each world's execution AND application. A second event must observe
+  // the variables committed by the first; bounded queues prevent trigger floods.
+  const scriptQueues = new WeakMap<World, { tail: Promise<void>; pending: number }>();
+  const scriptEvent = (w: World, event: string, data: Record<string, string | number>) => {
+    let q = scriptQueues.get(w);
+    if (!q) {
+      q = { tail: Promise.resolve(), pending: 0 };
+      scriptQueues.set(w, q);
+    }
+    if (q.pending >= 32) return Promise.resolve();
+    q.pending++;
+    q.tail = q.tail
+      .then(() => executeScriptEvent(w, event, data))
+      .catch(() => {})
+      .finally(() => {
+        q!.pending--;
+      });
+    return q.tail;
   };
   const json = (res: ServerResponse, status: number, data: unknown) => {
     res.writeHead(status, {
@@ -379,20 +416,75 @@ export async function createApp(options: AppOptions) {
         const data = JSON.parse((await body(req)).toString());
         return json(res, 201, universe.register(String(data.name ?? '')));
       }
+      if (path === '/api/federation' && req.method === 'GET')
+        return json(
+          res,
+          200,
+          federation ? { enabled: true, ...federation.directory() } : { enabled: false },
+        );
+      if (path === '/api/federation/depart' && req.method === 'POST') {
+        if (!federation) throw Error('This host has not enabled galaxy connections');
+        const account = auth(req),
+          data = JSON.parse((await body(req)).toString());
+        if ([...peers].some((p) => p.account?.id === account.id && p.world))
+          throw Error('Take off from a spaceport before travelling to another galaxy');
+        return json(res, 200, federation.issue(account, String(data.destination)));
+      }
+      if (path === '/api/federation/preview' && req.method === 'POST') {
+        if (!federation) throw Error('Galaxy connections are disabled');
+        const data = JSON.parse((await body(req)).toString());
+        return json(res, 200, federation.preview(z.string().max(6000).parse(data.ticket)));
+      }
+      if (path === '/api/federation/arrive' && req.method === 'POST') {
+        if (!federation) throw Error('This host has not enabled galaxy connections');
+        const data = JSON.parse((await body(req)).toString());
+        const localToken = req.headers.authorization?.replace(/^Bearer /, '') ?? '';
+        const native = universe.authenticate(localToken);
+        const result = federation.arrive(
+          z.string().max(6000).parse(data.ticket),
+          native ? { account: native, token: localToken } : undefined,
+        );
+        revoke(result.account.id);
+        return json(res, 200, result);
+      }
       if (path === '/api/session') return json(res, 200, { account: auth(req) });
       if (path === '/api/galaxy') return json(res, 200, { ...galaxy, worlds: registry() });
       if (path === '/api/worlds' && req.method === 'POST') {
         const a = auth(req),
-          data = JSON.parse((await body(req)).toString());
+          data = JSON.parse((await body(req, 512 * 1024)).toString());
         const name = z.string().trim().min(2).max(48).parse(data.name),
-          template = z.enum(['economy', 'combat', 'playground']).parse(data.template);
+          template = z
+            .enum(['economy', 'combat', 'playground', 'ctf', 'capture', 'blank'])
+            .parse(data.template);
         if (worlds.size >= 100 || [...worlds.values()].filter((w) => w.owner === a.id).length >= 8)
           throw Error('World creation limit reached');
         const id = randomUUID(),
-          w = createWorld(id, name, a.id, template);
+          w = createWorld(
+            id,
+            name,
+            a.id,
+            ['ctf', 'capture'].includes(template)
+              ? 'combat'
+              : template === 'blank'
+                ? 'playground'
+                : template,
+          );
+        applyPreset(w, template);
+        if (data.design) {
+          applyDesign(w, data.design);
+          const checked = await scriptPool.run(w, w.script, 'ScriptReload', {});
+          for (const e of checked.effects ?? []) effectSchema.parse(e.effect);
+        }
+        if (data.settings) configureRules(w, data.settings);
         worlds.set(id, w);
         store.saveWorld(w);
         return json(res, 201, { id, name });
+      }
+      if (path.startsWith('/api/design/') && req.method === 'GET') {
+        const a = auth(req),
+          w = worlds.get(path.split('/')[3]);
+        if (!w || w.owner !== a.id) throw Error('World owner required');
+        return json(res, 200, exportDesign(w));
       }
       if (path.startsWith('/api/assets/') && req.method === 'POST') {
         const a = auth(req),
@@ -418,6 +510,7 @@ export async function createApp(options: AppOptions) {
           throw Error('Invalid JPEG');
         if (type === 'model/gltf-binary' && buf.subarray(0, 4).toString() !== 'glTF')
           throw Error('Invalid GLB');
+        validateVisualAsset(buf, type);
         const hash = createHash('sha256').update(buf).digest('hex'),
           file = hash + types[type];
         await mkdir(join(dataDir, 'assets'), { recursive: true });
@@ -498,7 +591,7 @@ export async function createApp(options: AppOptions) {
   }
   const wss = new WebSocketServer({
     noServer: true,
-    maxPayload: 32768,
+    maxPayload: 524288,
     perMessageDeflate: {
       threshold: 256,
       serverNoContextTakeover: true,
@@ -508,6 +601,8 @@ export async function createApp(options: AppOptions) {
     },
   });
   server.on('upgrade', (req, socket, head) => {
+    if (options.dev && req.headers['sec-websocket-protocol'] === 'vite-hmr' && allowedOrigin(req))
+      return; // Vite handles its own authenticated development channel.
     if (req.url?.split('?')[0] !== '/ws' || !allowedOrigin(req)) {
       socket.destroy();
       return;
@@ -544,6 +639,12 @@ export async function createApp(options: AppOptions) {
           socket.close(4008, 'Excessive network traffic');
           return;
         }
+        // Oversized documents are reserved for authenticated world creators.
+        if (
+          (Array.isArray(raw) ? raw.reduce((n, b) => n + b.length, 0) : raw.byteLength) > 32768 &&
+          (!p.world || worlds.get(p.world)?.owner !== p.account?.id)
+        )
+          throw Error('Large requests require world ownership');
         const m = messageSchema.parse(JSON.parse(raw.toString()));
         if (m.type === 'hello') {
           if (p.account) throw Error('Already signed in');
@@ -643,7 +744,8 @@ export async function createApp(options: AppOptions) {
         if (a.type === 'script') {
           if (w.owner !== p.account.id) throw Error('World owner required');
           const source = z.string().max(16384).parse(a.source);
-          await scriptPool.run(w, source, 'ScriptReload', {});
+          const checked = await scriptPool.run(w, source, 'ScriptReload', {});
+          for (const e of checked.effects ?? []) effectSchema.parse(e.effect);
           w.script = source;
           scriptEvents.reset(w);
           store.saveWorld(w);
@@ -706,7 +808,10 @@ export async function createApp(options: AppOptions) {
   let vite: Awaited<ReturnType<(typeof import('vite'))['createServer']>> | undefined;
   if (options.dev) {
     const module = await import('vite');
-    vite = await module.createServer({ server: { middlewareMode: true }, appType: 'spa' });
+    vite = await module.createServer({
+      server: { middlewareMode: true, hmr: { server } },
+      appType: 'spa',
+    });
   }
   let counter = 0,
     last = performance.now();
@@ -743,7 +848,17 @@ export async function createApp(options: AppOptions) {
               move(w, player, p.input, dt);
             }
           }
-          for (const w of worlds.values()) advance(w, dt);
+          for (const w of worlds.values()) {
+            advance(w, dt);
+            for (const event of drainCreatorScripts(w))
+              void scriptEvent(w, event.event, event.data).catch(() => {});
+            if (
+              counter % 100 === 0 &&
+              Object.values(w.players).some((p) => p.online) &&
+              w.script.includes('Timer')
+            )
+              void scriptEvent(w, 'Timer', { time: w.time }).catch(() => {});
+          }
           residents?.tick(dt);
           counter++;
           if (counter % 4 === 0) {

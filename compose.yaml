@@ -6,6 +6,9 @@ services:
       args:
         BASE_PATH: ${BASE_PATH:-/}
     environment:
+      GALAXY_NAME: ${GALAXY_NAME:-Aclone galaxy}
+      GALAXY_URL: ${GALAXY_URL:-}
+      GALAXY_PEERS_FILE: ${GALAXY_PEERS_FILE:-}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

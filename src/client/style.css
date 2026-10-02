@@ -2049,3 +2049,40 @@ button span {
   font-size: 15px;
   color: #c9d3c0;
 }
+
+/* Creator controls stay within the shared responsive dialog. */
+#creator-preview {
+  min-height: 260px;
+  border: 1px solid #6d806255;
+  border-radius: 6px;
+  background: #192c2588;
+  overflow: hidden;
+}
+#creator-preview canvas {
+  display: block;
+  max-width: 100%;
+  touch-action: none;
+}
+.creator-part {
+  border: 1px solid #6d806255;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 10px 0;
+}
+.creator-part summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.creator-parts input[type='color'] {
+  padding: 4px;
+  height: 44px;
+}
+#creator-rule-form label[hidden] {
+  display: none;
+}
+.arrival-card {
+  border: 1px solid #ceb87966;
+  padding: 18px;
+  margin-bottom: 24px;
+  border-radius: 6px;
+}

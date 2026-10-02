@@ -17,11 +17,19 @@ world has its own players, rules, terrain, building economy, editor owner and
 script. The universe owns pilot identity, ship cargo, credits and star-system
 location. World selection switches the active simulation subscription.
 
-This deliberately makes installation a single command and lets the local/world
-credit exchange share a database. It is **not** federation with independently
-hosted world processes. Splitting the universe into a separate service requires
-signed session tickets, explicit trust between operators and transactional
-cross-service exchange; it is tracked as a remaining specification gap.
+Each host keeps its own single-process simulation and transactional SQLite economy.
+Optional federation connects independently hosted galaxies with pinned Ed25519
+keys, signed home passports and short-lived single-use arrival tickets. Visiting
+pilots retain a canonical identity but have independent local economy/progress.
+There is no distributed currency ledger or cross-server balance transfer. Native
+home-account returns require native authentication. See [Galaxies](GALAXIES.md).
+
+The creator studio stores a versioned optional `World.creator` document with
+bounded models, objects, arena settings and visual behavior rules. Old saves need
+no migration. Shared validation controls every edit; pure effects run in the
+simulation. Lua returns a separately validated effect batch, applied in per-world
+order. Design exports omit accounts, inventory and all private runtime state.
+See [World building](WORLD_BUILDING.md).
 
 ## Code map
 

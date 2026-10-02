@@ -4,6 +4,31 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.20.0
+
+Back up the SQLite database and uploaded assets, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, restart the service and refresh browser clients.
+Update the client and server together. Existing worlds keep their current designs;
+creator configuration is optional and becomes part of normal world saves. No new
+dependencies or AI credentials are required.
+
+Create a separate test world and open **Editor / F10** to try the creator studio.
+See [World building](WORLD_BUILDING.md) for presets, models, rules and design
+transfer. Uploaded static GLB and image files now undergo stricter validation.
+
+Galaxy connections stay disabled unless configured. Follow [Connecting galaxies](GALAXIES.md)
+to set `GALAXY_URL`, `GALAXY_NAME` and `GALAXY_PEERS_FILE` and exchange pinned public
+keys with trusted operators. Enabling federation creates its tables and persistent
+signing key automatically and restricts the database/journals to service-account
+access (0600). Preserve that key in backups. Character identity travels; wealth,
+inventory, skills and property remain local to each galaxy.
+
+Validation included 289 automated tests, 33 browser scenarios across the full run
+and focused reruns, desktop/phone creator checks, two-host travel and return, and
+a production build under `/aclone`. One outdated browser assertion was corrected
+for the existing centered labour countdown and passed on rerun. Production
+deployment remains operator-managed.
+
 ## Deploying 0.19.3
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the

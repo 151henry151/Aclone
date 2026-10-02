@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { creatorModel } from './creator-model';
 import { GameAudio } from './audio';
 import { streetLights } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
-import { bases } from '../shared/combat';
-import { calendar, weatherAt, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
+import { combatBases } from '../shared/combat';
+import { calendar, worldWeather, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
 import { Precipitation } from './weather';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
@@ -414,7 +415,11 @@ export class GameScene {
         )
         .join(',') +
       ':' +
-      world.settings.seaLevel;
+      world.settings.seaLevel +
+      ':' +
+      JSON.stringify(world.creator ?? {}) +
+      ':' +
+      world.buildings.map((b) => b.creatorModel ?? '').join(',');
     if (this.revision !== rev) {
       this.revision = rev;
       this.buildWorld(world);
@@ -436,12 +441,30 @@ export class GameScene {
         this.meshes.delete(p.id);
         mesh = undefined;
       }
+      const visual = world.creator?.models.find(
+        (m) => m.id === world.creator?.vehicleModels[p.vehicle],
+      );
+      const visualKey = JSON.stringify(visual ?? null);
+      if (mesh && mesh.userData.creatorKey !== visualKey) {
+        this.actors.remove(mesh);
+        dispose(mesh);
+        this.meshes.delete(p.id);
+        mesh = undefined;
+      }
       if (!mesh) {
-        mesh = this.vehicle(
-          p.vehicle,
-          p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
-          p.tractorPaint,
-        );
+        mesh = visual
+          ? creatorModel(visual, world)
+          : this.vehicle(
+              p.vehicle,
+              p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
+              p.tractorPaint,
+            );
+        mesh.userData.creatorKey = visualKey;
+        if (visual && p.id !== me) {
+          const tag = label(p.name + (p.npc ? ' · AI' : ''));
+          tag.position.y = visual.height + 1;
+          mesh.add(tag);
+        }
         mesh.userData.paint = p.tractorPaint;
         mesh.userData.vehicle = p.vehicle;
         mesh.position.set(p.x, p.y, p.z);
@@ -514,7 +537,8 @@ export class GameScene {
     this.waterBase = new Float32Array(sea.geometry.attributes.position.array);
     this.land.add(sea);
     for (const b of w.buildings) {
-      const g = this.building(b);
+      const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
+      const g = custom ? creatorModel(custom, w) : this.building(b);
       g.position.set(b.x, terrainHeight(w, b.x, b.z), b.z);
       g.rotation.y = b.rotation;
       g.userData.building = b.id;
@@ -662,7 +686,7 @@ export class GameScene {
         return;
       let parent: T.Object3D | null = o;
       while (parent) {
-        if (parent.userData.blades) return;
+        if (parent.userData.blades || parent.userData.creatorModel) return;
         parent = parent.parent;
       }
       const key = [
@@ -698,7 +722,7 @@ export class GameScene {
       }
     }
     this.townLighting.reset(this.land);
-    countryside(this.land, w, this.low);
+    if (w.creator?.scenery !== false) countryside(this.land, w, this.low);
     const seasonal = new Set<T.Material>();
     this.land.traverse((o) => {
       if (o instanceof T.Mesh && o !== this.terrain && o !== this.water)
@@ -738,6 +762,29 @@ export class GameScene {
     dockPicker.visible = false;
     dock.add(dockPicker);
     this.buildingMeshes.push(dock);
+    for (const o of w.creator?.objects ?? []) {
+      if (!o.visible) continue;
+      const model = w.creator!.models.find((m) => m.id === o.model);
+      if (!model) continue;
+      const g = creatorModel(model, w);
+      g.position.set(o.x, terrainHeight(w, o.x, o.z) + o.y, o.z);
+      g.rotation.y = (o.yaw * Math.PI) / 180;
+      g.scale.setScalar(o.scale);
+      g.userData.building = 'object:' + o.id;
+      this.land.add(g);
+      this.buildingMeshes.push(g);
+      const picker = new T.Mesh(
+        new T.BoxGeometry(model.width, model.height, model.depth),
+        material('#ffffff'),
+      );
+      picker.position.y = model.height / 2;
+      picker.visible = false;
+      g.add(picker);
+      const sign = label(o.name);
+      sign.position.y = model.height + 1;
+      g.add(sign);
+    }
+
     const animated: T.Object3D[] = [];
     for (const o of this.land.children) {
       if (o.userData.blades) animated.push(o.userData.blades);
@@ -978,7 +1025,7 @@ export class GameScene {
       }
       this.plumes.update(dt);
       const date = calendar(w),
-        climate = weatherAt(w.id, date.absoluteDay),
+        climate = worldWeather(w, date.absoluteDay),
         skyOffset = Math.max(-1, Math.min(1, motionTime - w.time)),
         clock =
           w.settings.time +
@@ -1070,17 +1117,23 @@ export class GameScene {
         this.shadowTime = now;
         this.shadowPosition.set(p.x, p.y, p.z);
       }
+      const bases = combatBases(w);
       const mode = w.combat?.mode ?? '';
-      if (this.combatMarkers.userData.mode !== mode) {
+      const markerKey = mode + JSON.stringify(w.creator?.arena ?? {});
+      if (this.combatMarkers.userData.mode !== markerKey) {
         dispose(this.combatMarkers);
         this.combatMarkers.clear();
-        this.combatMarkers.userData.mode = mode;
+        this.combatMarkers.userData.mode = markerKey;
         if (mode)
           for (let i = 0; i < 3; i++) {
-            const at = i < 2 ? bases[i] : { x: 0, z: -110 };
+            const at = i < 2 ? bases[i] : (w.creator?.arena.capture ?? { x: 0, z: -110 });
             const marker = new T.Group();
             const ring = new T.Mesh(
-              new T.RingGeometry(i === 2 ? 11.5 : 7.5, i === 2 ? 12 : 8, 48),
+              new T.RingGeometry(
+                i === 2 ? (w.creator?.arena.capture.radius ?? 12) - 0.5 : 7.5,
+                i === 2 ? (w.creator?.arena.capture.radius ?? 12) : 8,
+                48,
+              ),
               new T.MeshBasicMaterial({
                 color: i === 0 ? '#dd7455' : i === 1 ? '#9ab976' : '#ecd998',
                 side: T.DoubleSide,
@@ -1093,7 +1146,11 @@ export class GameScene {
               cylinder(marker, 0.08, 4, '#e7dfc8', 0, 2, 0);
               box(marker, 1.8, 1.1, 0.07, i === 0 ? '#b6533e' : '#70924f', 0.9, 3.4, 0);
             }
-            const sign = label(i === 2 ? 'CAPTURE POINT' : i === 0 ? 'RUST BASE' : 'MOSS BASE');
+            const sign = label(
+              i === 2
+                ? 'CAPTURE POINT'
+                : (w.creator?.arena.teams[i] ?? (i === 0 ? 'Rust' : 'Moss')) + ' BASE',
+            );
             sign.position.y = 5;
             marker.add(sign);
             marker.position.set(at.x, terrainHeight(w, at.x, at.z), at.z);
@@ -1174,13 +1231,20 @@ export class GameScene {
   }
   nearest() {
     if (!this.world || !this.me) return undefined;
-    return [...this.world.buildings, ...(nearFishingDock(this.world, this.me) ? [fishingDock] : [])]
+    return [
+      ...this.world.buildings,
+      ...(this.world.creator?.objects
+        .filter((o) => o.visible)
+        .map((o) => ({ ...o, id: 'object:' + o.id })) ?? []),
+      ...(nearFishingDock(this.world, this.me) ? [fishingDock] : []),
+    ]
       .filter((b) => distance(b, this.me!) < 18)
       .sort((a, b) => distance(a, this.me!) - distance(b, this.me!))[0];
   }
 }
 function dispose(root: T.Object3D) {
   root.traverse((o) => {
+    o.userData.disposed = true;
     if (o instanceof T.Mesh || o instanceof T.Sprite || o instanceof T.Line) {
       if (o instanceof T.InstancedMesh) o.dispose();
       if ('geometry' in o && !o.geometry?.userData.shared) o.geometry?.dispose();

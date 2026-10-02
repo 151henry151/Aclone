@@ -232,23 +232,22 @@ and starlight. The sky uses an original simplified orbital model, described in
 - Tribes/families currently store group names. Hitching and item gifts exist in
   the protocol; richer membership permissions, negotiated barter and their
   dedicated UI are unfinished.
-- The editor changes live rules, terrain brushes, buildings, recipes and vehicle
-  physics. It does not yet import arbitrary heightmaps, paint roads/forests or
-  bind uploaded GLB models to building/vehicle definitions. Safe and no-build
-  zones enforce rules; other zone types are stored markers.
-- Uploaded image/audio assets can be previewed and GLB files downloaded.
-  Automatic scene assignment, world radio, welcome images and scripted books
-  remain future work.
-- Lua supports PlayerLogin, TaskStart and ScriptReload with announcements,
-  numeric world variables and reputation changes. The full historical event and
-  command catalogue, timers, transaction cancellation and scripted OSD are not
-  wired. Worker limits protect the host from runaway handlers.
+- The 0.20.0 creator studio adds primitive/uploaded visuals, model assignment,
+  placed interactive objects, editable arena rules, visual triggers, production
+  forms and design export/import. Heightmap uploads, road painting, custom
+  character animation and new arbitrary item definitions remain outside its scope.
+- Images and static embedded GLB bind to scenery, buildings and vehicle slots;
+  audio remains preview/download only. World radio and scripted books remain open.
+- Lua adds interaction, entry, task-completion and timer events and bounded creator
+  effects. Transaction cancellation, custom OSD and the full historical command
+  catalogue are not implemented. Worker limits and per-world queues protect play.
 - Crop plots now have dated harvests and seasonal planting windows. Perennial
   dormancy, livestock, richer diets, exact historical crop balance and precise
   historic death/estate behaviour still need fidelity work.
 - Space is a functional map and trading layer, not a real-time cockpit flight
-  simulation. Different world processes and public registry registration need a
-  federation protocol.
+  simulation. Trusted hosts can connect as galaxies using signed character visits in the
+  0.20.0 release. Cross-galaxy wealth transfer and public registry discovery
+  are not implemented.
 
 ## Water supply (0.16.0)
 
@@ -275,7 +274,7 @@ archives are local research material and are excluded from the public source.
 ## Before a stable 1.0
 
 Complete required fidelity features above, expand game-module and rendering
-boundaries, add save migrations and world export/import, soak-test offline
+boundaries, expand save migrations and world-design portability, soak-test offline
 production and survival over long periods, load-test tens to hundreds of players,
 review script/upload/auth abuse resistance and sustained trading load, and playtest the three core scenarios:
 a sustainable business after days away, six-player Hornball, and a created world

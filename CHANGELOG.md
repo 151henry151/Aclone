@@ -6,6 +6,24 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-02
+
+### Added
+
+- Add a world creator studio with arena presets, configurable teams/bases/victory rules and weapons, reusable shape or uploaded GLB/image models, interactive scenery, building and vehicle appearances, remote building layout editing and a visual production recipe editor.
+- Add no-code interaction, entry, timer, login and task rules, plus bounded Lua effects for supplies, health, needs, teleporting, score and visibility. Add environment/road controls and portable world-design export/import without player data.
+- Add optional trusted-galaxy connections: signed single-use travel tickets, persistent visiting characters, explicit browser arrival and authenticated return to the home pilot. Keep each galaxy’s economy and progress independent. Include host setup and player/developer guides.
+
+### Fixed
+
+- Serialize world-script execution and result application so overlapping events cannot lose saved variable updates.
+- Keep acknowledgements from earlier actions from replacing a newly opened editor tab or an input being edited.
+
+### Security
+
+- Validate uploaded visual dimensions, embedded-only static GLB structure and geometry budgets before scene use. Reject external media references and cyclic model hierarchies.
+- Pin peer signing keys, validate home passports and destination-specific expiring tickets, and consume arrivals transactionally. Visiting identity cannot authenticate a native account or import authority/balances.
+
 ## [0.19.3] - 2026-10-02
 
 ### Fixed

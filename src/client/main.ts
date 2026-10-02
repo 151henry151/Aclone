@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { creatorControls } from './creator-editor';
+import {
+  creatorTabs,
+  creatorPanel,
+  creatorClick,
+  creatorSubmit,
+  creatorMemoryKey,
+  creationFields,
+  settingsData,
+  refreshCreatorPreview,
+  closeCreatorPreview,
+} from './creator-editor';
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { fishingDock, nearFishingDock } from '../shared/dock';
@@ -6,7 +18,7 @@ import { resourceNodes, gatheringStatus } from '../shared/resources';
 import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
-import { calendar, weatherAt } from '../shared/environment';
+import { calendar, worldWeather } from '../shared/environment';
 import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
 import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
@@ -122,6 +134,11 @@ let accountStatus:
     }
   | undefined;
 const recovery = new URLSearchParams(location.hash.slice(1));
+const arrivalTicket = recovery.get('arrival') ?? sessionStorage.getItem('aclone.arrival');
+if (recovery.has('arrival')) {
+  sessionStorage.setItem('aclone.arrival', arrivalTicket!);
+  history.replaceState(null, '', location.pathname + location.search);
+}
 const recoveryToken = recovery.get('reset') ?? recovery.get('verify');
 if (recoveryToken) history.replaceState(null, '', location.pathname + location.search);
 const sound = scene.audio;
@@ -197,12 +214,16 @@ document.addEventListener('input', (e) => {
   const input = e.target as HTMLInputElement;
   if (input.id === 'sound-volume') sound.setVolume(Number(input.value) / 100);
 });
+const actionViews = new Map<number, string | undefined>();
 function send(action: Action) {
   if (ws?.readyState !== WebSocket.OPEN) {
     toast('Connection unavailable. Reconnect before making changes.', true);
     return;
   }
-  ws.send(JSON.stringify({ type: 'action', request: ++request, action }));
+  const id = ++request;
+  actionViews.set(id, $('modal-host').dataset.viewKey);
+  if (actionViews.size > 128) actionViews.delete(actionViews.keys().next().value!);
+  ws.send(JSON.stringify({ type: 'action', request: id, action }));
 }
 async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(withBase(path), {
@@ -280,7 +301,14 @@ async function connect() {
     if (msg.type === 'result') {
       if (msg.message && !['Parp.', 'Done. Quietly competent.'].includes(msg.message))
         toast(msg.message, !msg.ok);
-      if (msg.ok && panel) setTimeout(() => renderPanel(), 100);
+      const view = actionViews.get(msg.request);
+      actionViews.delete(msg.request);
+      if (msg.ok && panel && view === $('modal-host').dataset.viewKey)
+        setTimeout(() => {
+          // A prior action must never replace a newly opened tab or an input being edited.
+          const editing = document.activeElement?.matches('input,select,textarea');
+          if (panel && view === $('modal-host').dataset.viewKey && !editing) renderPanel();
+        }, 100);
       if (!msg.ok && msg.message.includes('Invalid pilot key')) {
         token = '';
         localStorage.removeItem('aclone.pilot');
@@ -322,18 +350,29 @@ function login() {
   $('overlay').innerHTML =
     `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p><form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
 }
+let connectedGalaxies: {
+  enabled: boolean;
+  name?: string;
+  url?: string;
+  peers?: { name: string; url: string }[];
+} = { enabled: false };
 async function showGalaxy() {
   mobile.close();
   inSpace = true;
   scene.setSpace();
   $('world-hud').hidden = true;
   try {
-    registry = (await api('/api/galaxy')).worlds;
+    const [directory, connections] = await Promise.all([
+      api('/api/galaxy'),
+      api('/api/federation'),
+    ]);
+    registry = directory.worlds;
+    connectedGalaxies = connections;
   } catch {}
   if (!account) return;
   const system = galaxy.systems.find((s) => s.id === account!.system)!;
   $('overlay').innerHTML =
-    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">GALACTIC DIRECTORY / ${esc(system.name.toUpperCase())} SYSTEM</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div>${account.transit ? `<div class="notice">Jumping to ${esc(galaxy.systems.find((s) => s.id === account!.transit!.destination)?.name)}. <span id="jump-countdown">${Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000))}</span>s until arrival. Your flight is saved if you disconnect.</div>` : ''}<div class="star-map"><svg viewBox="0 0 700 260" role="img" aria-label="Galaxy map; bright routes are within your current jump range">${galaxy.systems
+    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">${esc(connectedGalaxies.name ?? 'GALACTIC DIRECTORY')} / ${esc(system.name.toUpperCase())} SYSTEM</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.traveler?.name ?? account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div>${account.transit ? `<div class="notice">Jumping to ${esc(galaxy.systems.find((s) => s.id === account!.transit!.destination)?.name)}. <span id="jump-countdown">${Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000))}</span>s until arrival. Your flight is saved if you disconnect.</div>` : ''}<div class="star-map"><svg viewBox="0 0 700 260" role="img" aria-label="Galaxy map; bright routes are within your current jump range">${galaxy.systems
       .flatMap((s, i) =>
         galaxy.systems
           .slice(i + 1)
@@ -364,7 +403,7 @@ async function showGalaxy() {
       )
       .join(
         '',
-      )}</div></div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Field guide', 'help')}</div></div></div>`;
+      )}</div>${connectedGalaxies.enabled ? `<h3>Other galaxies</h3><p>Visit connected servers with your character passport. Money, inventory, businesses and skills stay saved in each galaxy. Return here to resume them.</p><div class="button-row">${connectedGalaxies.peers?.map((g) => button('Travel to ' + esc(g.name), 'galaxy-travel', `data-id="${esc(g.url)}" ${account!.transit ? 'disabled' : ''}`)).join('') || '<p>No connections configured by this host.</p>'}</div>` : ''}${account.traveler ? `<p>Visiting character: ${esc(account.traveler.name)} · home galaxy ${esc(account.traveler.home)}</p>` : ''}${sessionStorage.getItem('aclone.arrival') ? button('Complete pending galaxy arrival', 'galaxy-arrival') : ''}</div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Field guide', 'help')}</div></div></div>`;
 }
 const chatLog = new ChatLog($('chat-log'), $('chat-latest') as HTMLButtonElement);
 let previousTargetHtml = '';
@@ -393,12 +432,12 @@ function updateHud() {
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
-    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation} · ${weatherAt(world.id, calendar(world).absoluteDay).storm ? 'STORM · ' : ''}${(world.climate?.snow ?? 0) > 0.05 ? 'Snow on roads · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
+    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${worldWeather(world, calendar(world).absoluteDay).precipitation} · ${worldWeather(world, calendar(world).absoluteDay).storm ? 'STORM · ' : ''}${(world.climate?.snow ?? 0) > 0.05 ? 'Snow on roads · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
   $('mobile-calendar').textContent = $('clock').textContent;
   if (mobile.active) {
     $('clock').title = $('clock').textContent ?? '';
     $('clock').textContent =
-      `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · ${weatherAt(world.id, calendar(world).absoluteDay).precipitation}${weatherAt(world.id, calendar(world).absoluteDay).storm ? ' storm' : ''}`;
+      `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · ${worldWeather(world, calendar(world).absoluteDay).precipitation}${worldWeather(world, calendar(world).absoluteDay).storm ? ' storm' : ''}`;
   }
   $('pilot-name').textContent = me.name;
   $('age').textContent = 'Age ' + Math.floor(me.age);
@@ -535,7 +574,7 @@ function updateHud() {
         : 'Earn cash at the Odd Jobs Office. Learn a skill at the school. Own a business. In roughly that order.';
   if (me.game === 'combat' && world.combat)
     $('objective').textContent =
-      `${world.combat.mode} · ${me.team === 0 ? 'Rust' : 'Moss'} team · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
+      `${world.combat.mode} · ${world.creator?.arena.teams[me.team] ?? (me.team === 0 ? 'Rust' : 'Moss')} team · ${world.creator?.arena.teams[0] ?? 'Rust'} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${world.creator?.arena.teams[1] ?? 'Moss'}. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
   $('mobile-objective').textContent = $('objective').textContent;
   $('npc-notice').hidden =
     !Object.values(world.players).some((p) => p.npc) && !world.messages.some((m) => m.npc);
@@ -712,6 +751,7 @@ function openPanel(name: string) {
   renderPanel();
 }
 function closePanel() {
+  closeCreatorPreview();
   panelMemory.capture();
   parishMap?.dispose();
   parishMap = undefined;
@@ -721,6 +761,7 @@ function closePanel() {
   $('modal-host').innerHTML = '';
 }
 function modal(title: string, content: string, wide = false) {
+  closeCreatorPreview();
   panelMemory.capture();
   $('modal-host').innerHTML =
     `<div class="modal-backdrop"><section class="window ${wide ? 'large' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><span class="eyebrow">ACLONE / ${esc(world?.name ?? 'UNIVERSE')}</span>${button('×', 'close', 'aria-label="Close dialog"', 'close')}</header><h2>${esc(title)}</h2>${content}</section></div>`;
@@ -731,6 +772,7 @@ function modal(title: string, content: string, wide = false) {
       panel,
       panel === 'building' ? selected : '',
       tab,
+      panel === 'editor' ? creatorMemoryKey() : '',
     ]),
   );
 }
@@ -817,15 +859,7 @@ function renderPanel() {
   if (panel === 'create') {
     modal(
       'A parish of your own.',
-      `<p>Start from a template. You become its owner, with live editing and a Lua world script. Friends can find it in the Hearth system.</p><form id="create-form">${field('World name', 'name', '', 'text', 'required maxlength="48" placeholder="e.g. Lesser Wobbleton"')}${select(
-        'template',
-        [
-          ['economy', 'Persistent economy'],
-          ['combat', 'Tractor combat'],
-          ['playground', 'Vehicle playground'],
-        ],
-        'Starting template',
-      )}<button class="primary">Create world</button></form>`,
+      `<p>Start from a template. You become its owner, with live editing and a Lua world script. Friends can find it in the Hearth system.</p><form id="create-form">${field('World name', 'name', '', 'text', 'required maxlength="48" placeholder="e.g. Lesser Wobbleton"')}${creationFields()}<button class="primary">Create world</button></form>`,
     );
     return;
   }
@@ -898,6 +932,15 @@ function renderPanel() {
       'Fishing dock',
       `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}`,
     );
+    return;
+  }
+  if (panel === 'creator-object') {
+    const o = world.creator?.objects.find((o) => 'object:' + o.id === selected);
+    if (o)
+      modal(
+        o.name,
+        `<p>Custom world object. Approach it to interact.</p>${button(esc(o.prompt), 'interactObject', `data-id="${o.id}"`)}`,
+      );
     return;
   }
   const b = world.buildings.find((b) => b.id === selected);
@@ -973,7 +1016,7 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced Rust and Moss teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · Rust ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} Moss · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
+      `${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced ${esc(world.creator?.arena.teams[0] ?? 'Rust')} and ${esc(world.creator?.arena.teams[1] ?? 'Moss')} teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} ${world.creator ? `Win at ${world.creator.arena.scoreLimit} points; rounds last ${world.creator.arena.roundSeconds} seconds. ${world.creator.arena.mode === 'open' ? 'Choose a mode below.' : 'Fixed mode: ' + esc(world.creator.arena.mode) + '.'}` : 'Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.'}</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · ${esc(world.creator?.arena.teams[0] ?? 'Rust')} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${esc(world.creator?.arena.teams[1] ?? 'Moss')} · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
         world.raceBest,
       )
         .map(([n, t]) => `${esc(n)} ${t.toFixed(1)}s`)
@@ -1230,6 +1273,16 @@ function buildingWindow(b: Building) {
           tradingSelection!.side,
         )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
       : '<p>Only the owner may manage this building.</p>';
+  if (
+    tab === 'Main' &&
+    (world.creator?.rules.some((r) => r.enabled && r.event === 'interact' && r.target === b.id) ||
+      world.scriptInteraction)
+  )
+    html += button(
+      'World interaction',
+      'interactObject',
+      `data-id="${esc(b.id)}" ${!near ? 'disabled' : ''}`,
+    );
   if (tab === 'Building Admin' && owned && !b.government)
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
   if (tab === 'Extra Info')
@@ -1246,33 +1299,21 @@ function editorWindow() {
     );
     return;
   }
-  if (tab === 'Vehicles' || tab === 'Production') {
-    const navigation = `<nav class="tabs">${['Rules', 'Landscape', 'Buildings', 'Production', 'Vehicles', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t ? 'active' : '')).join('')}</nav>`;
+  if (tab === 'Main') tab = 'Start here';
+  if (creatorTabs.includes(tab)) {
     modal(
-      'Your world. Your peculiar rules.',
-      navigation +
-        (tab === 'Vehicles'
-          ? `<p>Tune any of the 24 vehicle slots. Physics updates apply to everyone on this world.</p><form data-action="vehicleTuning">${select(
-              'slot',
-              vehicles.map((v, i) => [String(i), `${i + 1}. ${v.name}`]),
-              'Vehicle slot',
-            )}${field('Top speed (m/s)', 'speed', 13, 'number', 'min="1" max="100"')}${field('Acceleration', 'acceleration', 6, 'number', 'min="1" max="50"')}${field('Turn rate', 'turn', 1.7, 'number', 'min="0.1" max="6" step="0.1"')}${field('Armour percent', 'armour', 100, 'number', 'min="10" max="1000"')}${field('Fuel per second', 'fuel', 0.012, 'number', 'min="0" max="1" step="0.001"')}<button>Apply vehicle physics</button></form>`
-          : `<p>Stand near the building to edit its production. Inputs and outputs are item-id to quantity maps. Outputs must fit its storage capacity.</p><form data-action="production">${select(
-              'building',
-              world.buildings.map((b) => [b.id, b.name]),
-              'Building',
-            )}${field('Inputs (JSON)', 'inputs', '{"wheat":5}')}${field('Outputs (JSON)', 'outputs', '{"flour":3}')}${field('Cycle seconds', 'seconds', 600, 'number', 'min="10" max="86400"')}${select(
-              'skill',
-              skills.map((s) => [s, s]),
-              'Required profession',
-            )}<button>Apply production recipe</button></form>`),
+      'World creator studio',
+      `<nav class="tabs">${[...creatorTabs, 'Rules', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>` +
+        creatorPanel(world, me, tab),
       true,
     );
+    creatorControls(world);
+    if (tab === 'Workshop') refreshCreatorPreview(world);
     return;
   }
   modal(
     'Your world. Your peculiar rules.',
-    `<nav class="tabs">${['Rules', 'Landscape', 'Buildings', 'Production', 'Vehicles', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t || (tab === 'Main' && t === 'Rules') ? 'active' : '')).join('')}</nav>${
+    `<nav class="tabs">${[...creatorTabs, 'Rules', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t || (tab === 'Main' && t === 'Rules') ? 'active' : '')).join('')}</nav>${
       tab === 'Main' || tab === 'Rules'
         ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
             world.settings,
@@ -1314,9 +1355,9 @@ function editorWindow() {
                   'Zone type',
                 )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}${field('Radius', 'radius', 20, 'number', 'min="1" max="100"')}<button>Place zone</button></form><p>${world.zones.map((z) => esc(`${z.kind} at ${z.x}, ${z.z} (${z.radius}m)`)).join(' · ')}</p>`
               : tab === 'Script'
-                ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart. Functions: on, announce, getvar, setvar, kudos. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
+                ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart, TaskComplete, ObjectInteract, ZoneEnter, Timer. Functions: on, announce, getvar, setvar, kudos, heal, needs, give, teleport, score, object_visible, player_value. See the World Building and Scripting guides for examples. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
                 : tab === 'Assets'
-                  ? `<p>Upload original PNG, JPEG, MP3 or GLB assets (2 MiB each, 32 per world). Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · GLB</a>`)).join('')}</div>`
+                  ? `<p>Upload original PNG, JPEG, MP3 or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. GLB: static, embedded media only, up to 128 mesh primitives; no extensions or animations. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · GLB</a>`)).join('')}</div>`
                   : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
                       .slice(-25)
                       .reverse()
@@ -1336,6 +1377,19 @@ app.addEventListener('click', async (e) => {
     id = el.dataset.id,
     building = el.dataset.building;
   try {
+    if (action.startsWith('creator:') && world) {
+      const op = action.slice(8);
+      if (op === 'export') {
+        download(
+          'aclone-world-design.json',
+          JSON.stringify(await api('/api/design/' + world.id), null, 2),
+        );
+        return;
+      }
+      creatorClick(op, id ?? '', world, send);
+      renderPanel();
+      return;
+    }
     const panels = [
       'menu',
       'mobile-actions',
@@ -1358,6 +1412,27 @@ app.addEventListener('click', async (e) => {
       return;
     }
     switch (action) {
+      case 'galaxy-travel': {
+        const trip = await api('/api/federation/depart', {
+          method: 'POST',
+          body: JSON.stringify({ destination: id }),
+        });
+        if (account && !account.traveler) localStorage.setItem('aclone.homePilot', token);
+        location.assign(trip.url);
+        break;
+      }
+      case 'galaxy-arrival':
+        await showArrival();
+        break;
+      case 'arrival-cancel':
+        sessionStorage.removeItem('aclone.arrival');
+        if (token) void connect();
+        else login();
+        break;
+      case 'interactObject':
+        send({ type: 'interactObject', object: id });
+        closePanel();
+        break;
       case 'npc-chat': {
         const resident = npcResidents?.find((r) => r.playerId === id);
         if (resident) {
@@ -1541,7 +1616,23 @@ app.addEventListener('submit', async (e) => {
   const form = e.target as HTMLFormElement,
     data = Object.fromEntries(new FormData(form).entries());
   try {
-    if (form.id === 'register-form') {
+    if (form.id === 'arrival-form') {
+      const ticket = sessionStorage.getItem('aclone.arrival');
+      const local =
+        form.dataset.home === 'true' ? (localStorage.getItem('aclone.homePilot') ?? token) : token;
+      const result = await api('/api/federation/arrive', {
+        method: 'POST',
+        headers: { authorization: 'Bearer ' + local },
+        body: JSON.stringify({ ticket }),
+      });
+      if (token && account && !account.traveler) localStorage.setItem('aclone.homePilot', token);
+      token = result.token;
+      account = result.account;
+      localStorage.setItem('aclone.pilot', token);
+      localStorage.removeItem('aclone.world');
+      sessionStorage.removeItem('aclone.arrival');
+      await connect();
+    } else if (form.id === 'register-form') {
       const result = await api('/api/register', { method: 'POST', body: JSON.stringify(data) });
       token = result.token;
       account = result.account;
@@ -1553,7 +1644,8 @@ app.addEventListener('submit', async (e) => {
       account = result.account;
       localStorage.setItem('aclone.pilot', token);
       localStorage.removeItem('aclone.world');
-      await connect();
+      if (sessionStorage.getItem('aclone.arrival')) await showArrival();
+      else await connect();
     } else if (form.id === 'account-form') {
       accountStatus = await api('/api/auth/configure', {
         method: 'POST',
@@ -1592,7 +1684,8 @@ app.addEventListener('submit', async (e) => {
       account = r.account;
       localStorage.setItem('aclone.pilot', token);
       localStorage.removeItem('aclone.world');
-      await connect();
+      if (sessionStorage.getItem('aclone.arrival')) await showArrival();
+      else await connect();
     } else if (form.id === 'chat-form') {
       const text = String(data.message).trim();
       if (text) send({ type: 'chat', text, ...(chatRecipient ? { to: chatRecipient.id } : {}) });
@@ -1600,8 +1693,30 @@ app.addEventListener('submit', async (e) => {
       if (mobile.active)
         (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
       else (form.querySelector('input') as HTMLInputElement).blur();
+    } else if (form.id === 'creator-import-form') {
+      const file = data.file as File;
+      if (file.size > 512 * 1024) throw Error('Design file is too large');
+      await api('/api/worlds', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: data.name,
+          template: 'blank',
+          design: JSON.parse(await file.text()),
+        }),
+      });
+      toast('Imported world created in the Hearth system.');
+    } else if (form.id.startsWith('creator-') && world) {
+      const action = creatorSubmit(form, world);
+      if (action) send(action);
     } else if (form.id === 'create-form') {
-      const result = await api('/api/worlds', { method: 'POST', body: JSON.stringify(data) });
+      const result = await api('/api/worlds', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: data.name,
+          template: data.template,
+          ...(data.customSettings ? { settings: settingsData(form) } : {}),
+        }),
+      });
       toast('Your world is ready. Find it in the Hearth system.');
       closePanel();
       if (inSpace) {
@@ -1698,7 +1813,13 @@ function download(name: string, content: string) {
 $('brand-button').addEventListener('click', () => openPanel(world ? 'menu' : 'options'));
 function openInteraction(id: string) {
   selected = id;
-  openPanel(id === fishingDock.id ? 'fishing-dock' : 'building');
+  openPanel(
+    id.startsWith('object:')
+      ? 'creator-object'
+      : id === fishingDock.id
+        ? 'fishing-dock'
+        : 'building',
+  );
 }
 scene.onBuilding = openInteraction;
 window.addEventListener('keydown', (e) => {
@@ -1879,7 +2000,35 @@ setInterval(() => {
   if (ws?.readyState === WebSocket.OPEN)
     ws.send(JSON.stringify({ type: 'ping', at: performance.now() }));
 }, 5000);
-if (recoveryToken) {
+async function showArrival() {
+  login();
+  try {
+    if (token) {
+      try {
+        const current = await api('/api/session');
+        account = current.account;
+        if (!account!.traveler) localStorage.setItem('aclone.homePilot', token);
+      } catch {
+        /* A saved visitor key can expire; home sign-in remains available. */
+      }
+    }
+    const info = await api('/api/federation/preview', {
+      method: 'POST',
+      body: JSON.stringify({ ticket: sessionStorage.getItem('aclone.arrival') }),
+    });
+    const card = document.querySelector('.login-card')!;
+    card.insertAdjacentHTML(
+      'afterbegin',
+      `<section class="arrival-card"><h2>Arrive in ${esc(info.destination)}</h2><p>Character: <b>${esc(info.name)}</b><br>Home: ${esc(info.home)}</p><p>Your progress is saved separately in each galaxy. ${info.returningHome ? 'Your saved home pilot key or home sign-in is required to return.' : 'This uses a visiting pilot; it does not replace your home account.'}</p><form id="arrival-form" data-home="${info.returningHome}"><button class="primary">Continue as ${esc(info.name)}</button></form>${button('Cancel arrival', 'arrival-cancel')}</section>`,
+    );
+  } catch (e) {
+    sessionStorage.removeItem('aclone.arrival');
+    toast((e as Error).message, true);
+  }
+}
+if (arrivalTicket) {
+  void showArrival();
+} else if (recoveryToken) {
   login();
   const card = document.querySelector('.login-card')!;
   card.innerHTML = `<h2>${recovery.has('reset') ? 'Choose a new password' : 'Verify your recovery email'}</h2><form id="recovery-form">${recovery.has('reset') ? '<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>' : '<p>Confirm that you want this address to recover your Aclone pilot.</p>'}<button class="primary">${recovery.has('reset') ? 'Reset password' : 'Verify email'}</button></form>`;
@@ -1894,3 +2043,17 @@ if (recoveryToken) {
       login();
     });
 } else login();
+
+let creatorPreviewTimer: ReturnType<typeof setTimeout> | undefined;
+app.addEventListener('input', (e) => {
+  if ((e.target as HTMLElement).closest('#creator-model-form') && world) {
+    clearTimeout(creatorPreviewTimer);
+    creatorPreviewTimer = setTimeout(() => {
+      if (world && panel === 'editor' && tab === 'Workshop') refreshCreatorPreview(world);
+    }, 250);
+  }
+});
+
+app.addEventListener('change', (e) => {
+  if (world) creatorControls(world, e.target as HTMLElement);
+});

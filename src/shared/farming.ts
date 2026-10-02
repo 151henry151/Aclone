@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings, items } from './catalog.ts';
 import data from '../../data/crops.json';
-import { calendar, DAY_SECONDS, weatherAt } from './environment.ts';
+import { calendar, DAY_SECONDS, worldWeather } from './environment.ts';
 import type { World, Building, Player, Action } from './types.ts';
 import { distance, log, say } from './simulation.ts';
 export const crops: Record<
@@ -40,7 +40,7 @@ export function cropStatus(w: World, b: Building, index: number) {
     frost = 0;
   const first = calendar({ time: p.planted }).absoluteDay;
   for (let day = 0; day < c.days; day++) {
-    const v = weatherAt(w.id, first + day);
+    const v = worldWeather(w, first + day);
     rain += v.precipitation === 'rain' ? 1 : 0;
     frost += v.temperature < 0 ? 1 : 0;
   }

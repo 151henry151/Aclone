@@ -6,7 +6,7 @@ import type { World, Player } from '../../shared/types.ts';
 import { items, recipes, skills } from '../../shared/catalog.ts';
 import { distance, carry } from '../../shared/simulation.ts';
 import { resourceNodes, resourceAmount } from '../../shared/resources.ts';
-import { calendar, weatherAt } from '../../shared/environment.ts';
+import { calendar, worldWeather } from '../../shared/environment.ts';
 import type { ResidentState, NpcMemory } from './memory.ts';
 
 export const instructions = `You control one AI resident in Aclone, a persistent multiplayer economy game. Your enduring aims are a long healthy life, growing legitimate net wealth, and relationships consistent with your personality. You are openly an AI NPC; never pretend to be a human operator.
@@ -124,7 +124,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
     life: lifeBriefing(w, p),
     time: w.time,
     calendar: calendar(w),
-    weather: weatherAt(w.id, calendar(w).absoluteDay),
+    weather: worldWeather(w, calendar(w).absoluteDay),
     name: w.name,
     self: {
       id: p.id,

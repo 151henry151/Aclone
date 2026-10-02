@@ -97,9 +97,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
   await expect(page.locator('#world-hud')).toBeVisible();
   await page.getByRole('button', { name: 'Editor F10' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Your world. Your peculiar rules.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'World creator studio' })).toBeVisible();
   await page.getByRole('button', { name: 'Landscape', exact: true }).click();
   await page.getByRole('button', { name: 'Apply terrain brush' }).click();
   // Routine success intentionally has no toast; verify the matching server acknowledgement.
@@ -123,7 +121,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await expect(page.locator('#target')).toContainText('Odd Jobs Office');
   await page.keyboard.press('e');
   await page.getByRole('button', { name: 'Work a shift · 45d' }).click();
-  await expect(page.locator('#target')).toContainText('LABOUR');
+  await expect(page.locator('#task-name')).toContainText('Working a labour shift');
   await expect(page.locator('#cash')).toHaveText('18s 45d', { timeout: 22000 });
 });
 test('small viewport can register and navigate', async ({ page }) => {

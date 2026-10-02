@@ -64,6 +64,7 @@ export interface Frame {
 export function prepareFrame(w: World): Frame {
   const { players, ledger, script, scriptVariables, messages, ...common } = w;
   common.buildings = publicBuildings(w);
+  common.scriptInteraction = w.script.includes('ObjectInteract');
   const fields = Object.fromEntries(
     Object.entries(common).map(([key, value]) => [key, JSON.stringify(value)]),
   );

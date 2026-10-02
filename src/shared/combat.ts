@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { creatorBlocksSegment } from './creator.ts';
 import { blocksBuilding } from './building-shapes.ts';
 import { weapons, vehicles } from './catalog.ts';
 import { distance, damage, terrainHeight, log, say } from './simulation.ts';
@@ -25,15 +26,17 @@ export const bases = [
   { x: -100, z: -110 },
   { x: 100, z: -110 },
 ];
+export const combatBases = (w: World) => w.creator?.arena.bases ?? bases;
+const duration = (w: World) => w.creator?.arena.roundSeconds ?? 600;
 export function combatSpawn(w: World, p: Player) {
-  p.x = bases[p.team].x;
-  p.z = bases[p.team].z;
+  p.x = combatBases(w)[p.team].x;
+  p.z = combatBases(w)[p.team].z;
   p.y = terrainHeight(w, p.x, p.z);
   p.health = 60000;
   p.energy = 65000;
   p.speed = 0;
   p.vehicle = p.combatVehicle ?? 0;
-  p.invulnerableUntil = w.time + 3;
+  p.invulnerableUntil = w.time + (w.creator?.arena.protectionSeconds ?? 3);
   p.ammo = { ...ammunition };
   delete p.weaponCharge;
 }
@@ -49,6 +52,7 @@ export function leaveCombat(w: World, p: Player) {
 }
 export function joinCombat(w: World, p: Player, mode: string) {
   if (!w.settings.fighting) throw Error('Fighting is disabled');
+  if (w.creator?.arena.mode && w.creator.arena.mode !== 'open') mode = w.creator.arena.mode;
   if (!['deathmatch', 'capture', 'ctf'].includes(mode)) throw Error('Choose a combat mode');
   if (p.task || p.game || p.crowBody || p.hitch)
     throw Error('Finish or leave your current activity first');
@@ -60,8 +64,8 @@ export function joinCombat(w: World, p: Player, mode: string) {
       mode: mode as CombatMode,
       scores: [0, 0],
       round: (w.combat?.round ?? 0) + 1,
-      ends: w.time + 600,
-      flags: bases.map((v) => ({ ...v })),
+      ends: w.time + duration(w),
+      flags: combatBases(w).map((v) => ({ ...v })),
     };
   p.team =
     others.filter((q) => q.team === 0).length <= others.filter((q) => q.team === 1).length ? 0 : 1;
@@ -80,6 +84,8 @@ export function fireWeapon(w: World, p: Player, a: Action) {
   const key = String(a.weapon),
     def = weapons[key];
   if (!Object.hasOwn(weapons, key)) throw Error('Unknown weapon');
+  if (w.creator && !w.creator.arena.weapons.includes(key as any))
+    throw Error('That weapon is disabled by this world creator');
   if (a.type === 'chargeWeapon') {
     if (key !== 'javelin') throw Error('Only javelins charge');
     // A fresh deliberate press starts a fresh charge, including after a cancelled touch.
@@ -179,7 +185,7 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
       left -= dt;
       shot.ttl -= dt;
       shot.age = (shot.age ?? 0) + dt;
-      const from = { x: shot.x, z: shot.z };
+      const from = { x: shot.x, y: shot.y, z: shot.z };
       shot.x += shot.vx * dt;
       shot.z += shot.vz * dt;
       shot.y += shot.vy * dt;
@@ -196,6 +202,10 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
           return Math.hypot(from.x + t * dx - z.x, from.z + t * dz - z.z) < z.radius;
         })
       ) {
+        shot.ttl = 0;
+        break;
+      }
+      if (creatorBlocksSegment(w, from, shot, 0)) {
         shot.ttl = 0;
         break;
       }
@@ -260,10 +270,10 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
     if (w.time >= c.restart) {
       c.scores = [0, 0];
       c.round++;
-      c.ends = w.time + 600;
+      c.ends = w.time + duration(w);
       delete c.winner;
       delete c.restart;
-      c.flags = bases.map((b) => ({ ...b }));
+      c.flags = combatBases(w).map((b) => ({ ...b }));
       for (const p of joined) combatSpawn(w, p);
     }
     return;
@@ -274,7 +284,13 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
   }
   if (c.mode === 'capture') {
     const teams = new Set(
-      grounded.filter((p) => distance(p, { x: 0, z: -110 }) < 12).map((p) => p.team),
+      grounded
+        .filter(
+          (p) =>
+            distance(p, w.creator?.arena.capture ?? { x: 0, z: -110 }) <
+            (w.creator?.arena.capture.radius ?? 12),
+        )
+        .map((p) => p.team),
     );
     if (teams.size === 1) c.scores[[...teams][0]] += seconds;
   }
@@ -288,12 +304,12 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
         const home = c.flags[carrier.team];
         if (
           grounded.includes(carrier) &&
-          distance(carrier, bases[carrier.team]) < 8 &&
+          distance(carrier, combatBases(w)[carrier.team]) < 8 &&
           !home.carrier &&
-          distance(home, bases[carrier.team]) < 1
+          distance(home, combatBases(w)[carrier.team]) < 1
         ) {
           c.scores[carrier.team]++;
-          c.flags[team] = { ...bases[team] };
+          c.flags[team] = { ...combatBases(w)[team] };
           say(w, 'Capture the flag', `${carrier.name} brought the flag home.`);
         }
       } else {
@@ -301,13 +317,13 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
           delete f.carrier;
           f.dropped = w.time;
         }
-        if (f.dropped && w.time - f.dropped > 30) {
-          c.flags[team] = { ...bases[team] };
+        if (f.dropped && w.time - f.dropped > (w.creator?.arena.flagReturnSeconds ?? 30)) {
+          c.flags[team] = { ...combatBases(w)[team] };
           continue;
         }
         const defender = grounded.find((p) => p.team === team && distance(p, f) < 5);
-        if (defender && distance(f, bases[team]) > 1) {
-          c.flags[team] = { ...bases[team] };
+        if (defender && distance(f, combatBases(w)[team]) > 1) {
+          c.flags[team] = { ...combatBases(w)[team] };
           continue;
         }
         const thief = grounded.find((p) => p.team !== team && distance(p, f) < 5);
@@ -318,14 +334,15 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
         }
       }
     }
-  const limit = c.mode === 'capture' ? 120 : c.mode === 'ctf' ? 3 : 10;
+  const limit =
+    w.creator?.arena.scoreLimit ?? (c.mode === 'capture' ? 120 : c.mode === 'ctf' ? 3 : 10);
   if (c.scores.some((s) => s >= limit) || w.time >= c.ends) {
     c.winner = c.scores[0] === c.scores[1] ? -1 : c.scores[0] > c.scores[1] ? 0 : 1;
     c.restart = w.time + 15;
     say(
       w,
       'Combat marshal',
-      `Round ${c.round}: ${c.winner < 0 ? 'draw' : c.winner === 0 ? 'Rust wins' : 'Moss wins'}. Next round in 15 seconds.`,
+      `Round ${c.round}: ${c.winner < 0 ? 'draw' : (w.creator?.arena.teams[c.winner] ?? (c.winner === 0 ? 'Rust' : 'Moss')) + ' wins'}. Next round in 15 seconds.`,
     );
     for (const p of joined) if (p.team === c.winner) p.kudos += 5;
     w.projectiles = [];

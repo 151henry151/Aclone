@@ -36,7 +36,23 @@ const volume = (
   z = 0,
 ): BuildingVolume => ({ width, depth, eaves, rise, roof, x, z });
 const plans = new Map<string, BuildingPlan>();
-export function buildingPlan(b: { kind: string; id: string; style?: string }): BuildingPlan {
+export function buildingPlan(b: {
+  kind: string;
+  id: string;
+  style?: string;
+  creatorBounds?: { width: number; depth: number; height: number };
+}): BuildingPlan {
+  if (b.creatorBounds)
+    return {
+      style: 'custom',
+      volumes: [
+        volume(b.creatorBounds.width, b.creatorBounds.depth, b.creatorBounds.height, 0, 'flat'),
+      ],
+      wall: '#aaaaaa',
+      trim: '#555555',
+      doorHeight: 2,
+      siding: 'stone',
+    };
   let seed = 0;
   for (const c of b.id) seed = (Math.imul(seed, 31) + c.charCodeAt(0)) >>> 0;
   const variant = seed % 3;

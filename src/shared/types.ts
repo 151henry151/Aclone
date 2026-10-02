@@ -76,6 +76,8 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  creatorModel?: string;
+  creatorBounds?: { width: number; depth: number; height: number };
   id: string;
   kind: string;
   name: string;
@@ -156,6 +158,9 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  /** Public projection; Lua source remains owner-only. */
+  scriptInteraction?: boolean;
+  creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
   tradePricing?: 1 | 2 | 3;
   schemaVersion: 1;

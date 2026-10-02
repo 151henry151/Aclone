@@ -5,6 +5,7 @@ import { galaxy } from '../shared/catalog.ts';
 import type { Stock } from '../shared/types.ts';
 import type { Store } from './store.ts';
 export interface Account {
+  traveler?: { home: string; subject: string; name: string; certificate: string };
   npc?: boolean;
   id: string;
   name: string;

@@ -14,6 +14,7 @@ parentPort.on('message', (job) => {
     parentPort.postMessage({
       messages: world.messages.map((m) => m.text),
       variables: world.scriptVariables,
+      effects: script.effects,
       kudos: Object.fromEntries(
         Object.entries(world.players).map(([id, p]) => [id, p.kudos - before[id]]),
       ),

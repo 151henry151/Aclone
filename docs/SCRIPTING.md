@@ -48,9 +48,74 @@ is removed to reduce allocation-based abuse. Ordinary Lua strings still work.
 The worker reinitializes the script for each event. Use `getvar`/`setvar` for
 state that must survive invocations; Lua global variables are ephemeral. Avoid
 side effects at top level. The script is isolated from the live simulation:
-only bounded messages, persistent numeric variables and reputation changes are
-returned. A stale result from a replaced world or script is discarded.
+only bounded messages, persistent numeric variables, reputation changes and
+validated creator effects are returned. A stale result from a replaced world or script is discarded.
 
 This is an intentionally smaller API than the original server's event catalogue.
 Arbitrary admin commands, transaction cancellation, player variables, custom OSD,
-script timers, cutscenes and the full set of historical events are not yet wired.
+cutscenes and the full set of historical events are not yet wired. The additional
+creator events and timer are documented below.
+
+## Creator effects and events (0.20.0)
+
+The studio adds `TaskComplete` (`id`, `target`: building/resource ID or empty),
+`ObjectInteract` (`id`, `target`: object/building ID), `ZoneEnter` (`id`, `target`:
+zone/trigger ID) and `Timer` (`time`: world simulation seconds). Timer runs every
+five real seconds while someone is online; it is not an offline catch-up loop.
+Zone entry is sampled once per simulation second. Interactions are checked for
+proximity and current player activity before reaching Lua. The design export
+contains the IDs used in target comparisons.
+
+Additional functions:
+
+- `player_value(id, field)` reads `x`, `z`, `health`, `hunger`, `thirst`, `team`
+  or `kudos` from the event's simulation snapshot; unknown fields/players return 0.
+- `heal(id, amount)` adjusts health by an integer −60,000…60,000, clamped to
+  1…60,000. Use normal combat for death/estate behavior.
+- `needs(id, amount)` adjusts both hunger and thirst by −50,000…50,000; lower
+  values mean better-fed/hydrated. Results clamp to 0…50,000.
+- `give(id, itemId, quantity)` gives/removes −100…100 known items, subject to
+  carried quantity and cargo capacity. It does not transfer another player's goods.
+- `teleport(id, x, z)` places an available player on the terrain at coordinates
+  −240…240. Busy, sheltered, hitching and robocrow players are not teleported.
+- `score(team, amount)` adjusts team 0/1's current combat (or Hornball) score by
+  −100…100, clamped at zero.
+- `object_visible(objectId, boolean)` shows/hides a custom placed object, including
+  its collision and proximity trigger.
+
+Example: a cooldown-controlled medical station. Replace the ID with your object
+ID from the world design, then click that object in the world:
+
+```lua
+on("Timer", function(e)
+  setvar("clock", e.time)
+end)
+on("ObjectInteract", function(e)
+  if e.target == "medical-station" and player_value(e.id, "health") < 40000 then
+    local now = getvar("clock")
+    if now >= getvar("nextHeal") then
+      heal(e.id, 10000)
+      announce("Medical station ready. Mind the machinery.")
+      setvar("nextHeal", now + 30)
+    end
+  end
+end)
+```
+
+This example deliberately uses a station-wide cooldown. Per-player cooldowns
+are already available without code in **Behaviors**. Do not build an unbounded
+map of players in Lua: the persistent variable budget is 64 numbers.
+
+Scripts return at most 32 effects per event. The server validates the complete
+batch before applying any effect. Invalid effects fail the event and use the
+normal automatic-event pause. Execution and application are serialized per world
+so concurrent events see the previous event's committed variables. Each world's
+waiting queue is capped at 32 events; overflow is dropped to protect simulation
+latency. The host-wide two-worker pool still applies. Validation/reload runs
+`ScriptReload` in an isolated preview, validates its effects and installs the
+source; preview effects are not applied to live players.
+
+No-code rules and Lua coexist. No-code effects apply immediately, then a queued
+Lua event observes the resulting state when a worker becomes available. Lua has
+no cross-galaxy account privileges and cannot issue travel tickets. Scripts are
+world-local programs, not arbitrary server plugins.

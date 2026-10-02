@@ -7,6 +7,7 @@ const { lua, lauxlib, lualib, to_luastring, to_jsstring } = require('fengari');
 // No filesystem, module loader, OS, dynamic compilation, JS bridge, or debug library.
 // Instruction and heap-growth limits apply to both loading and every event invocation.
 export class WorldScript {
+  readonly effects: { player?: string; effect: Record<string, unknown> }[] = [];
   private L: any;
   private handlers = new Map<string, number[]>();
   private count = 0;
@@ -57,6 +58,7 @@ export class WorldScript {
       const key = this.string(L, 1).slice(0, 40),
         v = lua.lua_tonumber(L, 2);
       if (
+        ['__proto__', 'constructor', 'prototype'].includes(key) ||
         !Number.isFinite(v) ||
         (Object.keys(this.world.scriptVariables).length >= 64 &&
           !(key in this.world.scriptVariables))
@@ -64,6 +66,56 @@ export class WorldScript {
         return lauxlib.luaL_error(L, to_luastring('Variable limit'));
       this.world.scriptVariables[key] = v;
       return 0;
+    });
+    const effect = (L: any, player: string | undefined, value: Record<string, unknown>) => {
+      if (this.effects.length >= 32) return lauxlib.luaL_error(L, to_luastring('Effect limit'));
+      this.effects.push({ player, effect: value });
+      return 0;
+    };
+    this.fn('heal', (L: any) =>
+      effect(L, this.string(L, 1), { type: 'heal', amount: lua.lua_tonumber(L, 2) }),
+    );
+    this.fn('needs', (L: any) =>
+      effect(L, this.string(L, 1), { type: 'needs', amount: lua.lua_tonumber(L, 2) }),
+    );
+    this.fn('give', (L: any) =>
+      effect(L, this.string(L, 1), {
+        type: 'item',
+        item: this.string(L, 2),
+        quantity: lua.lua_tonumber(L, 3),
+      }),
+    );
+    this.fn('teleport', (L: any) =>
+      effect(L, this.string(L, 1), {
+        type: 'teleport',
+        x: lua.lua_tonumber(L, 2),
+        z: lua.lua_tonumber(L, 3),
+      }),
+    );
+    this.fn('score', (L: any) =>
+      effect(L, undefined, {
+        type: 'score',
+        team: lua.lua_tonumber(L, 1),
+        amount: lua.lua_tonumber(L, 2),
+      }),
+    );
+    this.fn('object_visible', (L: any) =>
+      effect(L, undefined, {
+        type: 'visibility',
+        object: this.string(L, 1),
+        visible: !!lua.lua_toboolean(L, 2),
+      }),
+    );
+    this.fn('player_value', (L: any) => {
+      const p = this.world.players[this.string(L, 1)],
+        key = this.string(L, 2);
+      lua.lua_pushnumber(
+        L,
+        p && ['x', 'z', 'health', 'hunger', 'thirst', 'team', 'kudos'].includes(key)
+          ? Number((p as any)[key] ?? 0)
+          : 0,
+      );
+      return 1;
     });
     this.fn('kudos', (L: any) => {
       const p = this.world.players[this.string(L, 1)],
