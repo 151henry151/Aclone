@@ -9,11 +9,22 @@ Chat and Actions along the bottom. Tap cash for needs; tap the nearby-building
 prompt to interact. See the [complete mobile guide](MOBILE.md) for touch controls,
 chat, aircraft, weapons, camera gestures and account setup.
 
+## Timed tasks
+
+Gathering, public labour, crafting and harvesting show their task name and a large
+seconds-remaining countdown in a floating card at the center of the screen. It is
+separate from chat and works on desktop and phones. Menus temporarily hide the
+card; close the menu to see it again. Starting a harvest closes its building menu
+automatically. The card disappears after the server confirms completion; if the
+timer reaches zero first, it shows **Finishing…**. No extra click is needed.
+
+![Large task countdown on a phone](screenshots/task-countdown-phone.png)
+
 ## Gathering resources
 
 Pull within ten metres of logs, stone, gravel or a topsoil patch. A floating HUD
 prompt identifies the resource and its remaining reserves. Click or tap **Gather**
-to start directly; a countdown and progress bar show the task, and the button
+to start directly; a large centered countdown shows the task, and the Gather prompt
 becomes available again after the load reaches your inventory. Moving away hides
 the prompt. These controls work on desktop and phones, separately from chat.
 

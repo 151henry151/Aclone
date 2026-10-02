@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-10-02
+
+### Fixed
+
+- Move timed-task countdowns out of chat into a prominent centered card with large digits on desktop and mobile. Gathering, labour, crafting and harvesting share the display; gathering returns to its Gather prompt after completion, and starting a harvest closes its menu to reveal the countdown.
+
 ## [0.19.2] - 2026-10-02
 
 ### Fixed

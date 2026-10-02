@@ -4,6 +4,16 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.19.3
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the
+service, and refresh browser clients. No new settings or database migration are
+needed. This includes the 0.19.2 NPC guidance fixes. Check a labour shift or Gather:
+the large countdown should appear at the center of the screen and clear on task
+completion, with no countdown attached to chat. Focused desktop/phone browser
+checks and NPC regressions were used; the full suite was deliberately deferred.
+Production deployment remains operator-managed.
+
 ## Deploying 0.19.2
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

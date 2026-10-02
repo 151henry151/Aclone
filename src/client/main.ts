@@ -55,7 +55,13 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="resource-control" hidden aria-label="Nearby resource"><strong id="resource-name"></strong><p id="resource-stock"></p><p id="resource-status" role="status"></p><progress id="resource-progress" aria-label="Gathering progress" hidden></progress><button id="resource-gather" type="button" data-do="gather" aria-describedby="resource-status">Gather</button></section>',
+    '<section id="resource-control" hidden aria-label="Nearby resource"><strong id="resource-name"></strong><p id="resource-stock"></p><p id="resource-status" role="status"></p><button id="resource-gather" type="button" data-do="gather" aria-describedby="resource-status">Gather</button></section>',
+  );
+document
+  .getElementById('world-hud')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span></section>',
   );
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
@@ -471,18 +477,35 @@ function updateHud() {
     `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
   );
   const target = scene.nearest();
-  let targetHtml = me.task
-    ? `<div class="task"><span>${esc(me.task.kind.toUpperCase())}</span><b>${Math.max(0, Math.ceil(me.task.end - world.time))}s</b></div>`
-    : me.atHome
-      ? button('At home · Go outside', 'outside', '', 'wide')
-      : target
-        ? button(
-            `<kbd>Ctrl / E</kbd> ${esc(target.name)} <span>↗</span>`,
-            'building',
-            `data-id="${target.id}"`,
-            'wide target-button',
-          )
-        : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
+  let targetHtml = me.atHome
+    ? button('At home · Go outside', 'outside', '', 'wide')
+    : target && !me.task
+      ? button(
+          `<kbd>Ctrl / E</kbd> ${esc(target.name)} <span>↗</span>`,
+          'building',
+          `data-id="${target.id}"`,
+          'wide target-button',
+        )
+      : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
+  $('task-control').hidden = !me.task || !!panel || !!mobile.drawer;
+  if (me.task) {
+    const remaining = Math.max(0, Math.ceil(me.task.end - world.time));
+    const label =
+      me.task.kind === 'gather'
+        ? `Gathering ${me.task.amount ?? ''} ${items[resourceNodes.find((n) => n.id === me!.task!.resource)?.item ?? '']?.name ?? 'resources'}`
+        : ((
+            {
+              labour: 'Working a labour shift',
+              craft: 'Crafting tools',
+              harvest: 'Harvesting crops',
+            } as Record<string, string>
+          )[me.task.kind] ?? me.task.kind.replace(/_/g, ' '));
+    if ($('task-name').textContent !== label) $('task-name').textContent = label;
+    const time = remaining > 0 ? String(remaining) : 'Finishing…';
+    if ($('task-countdown').textContent !== time) $('task-countdown').textContent = time;
+    $('task-countdown').classList.toggle('finishing', remaining === 0);
+    $('task-caption').hidden = remaining === 0;
+  }
   chatLog.update(
     world.id,
     world.messages.map(
@@ -571,7 +594,7 @@ function updateHud() {
     !!me.atHome ||
     !!me.game ||
     !!me.crowBody ||
-    (!!me.task && !gathering) ||
+    !!me.task ||
     Math.abs(me.y - terrainHeight(world, me.x, me.z)) > 3;
   if (resource) {
     const status = gatheringStatus(world, me, resource);
@@ -599,15 +622,6 @@ function updateHud() {
     const gatherButton = $('resource-gather') as HTMLButtonElement;
     gatherButton.dataset.id = resource.id;
     gatherButton.disabled = !!status.reason;
-    const progress = $('resource-progress') as HTMLProgressElement;
-    progress.hidden = !gathering;
-    if (gathering) {
-      progress.max = gathering.amount === 6 ? 12 : 20;
-      progress.value = Math.max(
-        0,
-        Math.min(progress.max, progress.max - (gathering.end - world.time)),
-      );
-    }
   }
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
@@ -1439,6 +1453,7 @@ app.addEventListener('click', async (e) => {
         break;
       case 'farm':
         send({ type: 'farm', building, plot: Number(el.dataset.plot), operation: id });
+        if (id === 'harvest') closePanel();
         break;
       case 'paint':
         send({ type: 'paint', building, color: id });

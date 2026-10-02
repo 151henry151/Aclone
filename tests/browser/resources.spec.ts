@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { createWorld, addPlayer, terrainHeight } from '../../src/shared/simulation.ts';
+import { createWorld, addPlayer, terrainHeight, act } from '../../src/shared/simulation.ts';
 import { resourceNodes } from '../../src/shared/resources.ts';
 
 for (const mobile of [false, true])
@@ -74,13 +74,27 @@ for (const mobile of [false, true])
         if (mobile) await gather.tap();
         else await gather.click();
         await expect.poll(() => p.task?.resource).toBe(n.id);
-        await expect(gather).toBeDisabled();
-        await expect(page.locator('#resource-progress')).toBeVisible();
+        await expect(page.locator('#resource-control')).toBeHidden();
+        await expect(page.locator('#task-control')).toBeVisible();
+        await expect(page.locator('#task-name')).toContainText('Gathering 3');
+        await expect(page.locator('#task-countdown')).toHaveText(/^[0-9]+$/);
+        expect(
+          await page
+            .locator('#task-countdown')
+            .evaluate((e) => parseFloat(getComputedStyle(e).fontSize)),
+        ).toBeGreaterThanOrEqual(42);
+        expect(
+          await page.locator('#task-control').evaluate((e) => !!e.closest('.chat-panel')),
+        ).toBe(false);
+        if (item === 'logs')
+          await page.screenshot({
+            path: `test-results/task-countdown-${mobile ? 'phone' : 'desktop'}.png`,
+          });
         // Finish the server-owned task promptly; the duration is covered by unit tests.
         p.task!.end = w.time + 0.25;
         await expect.poll(() => p.inventory[item]).toBe(3);
         await expect(gather).toBeEnabled();
-        await expect(page.locator('#resource-progress')).toBeHidden();
+        await expect(page.locator('#task-control')).toBeHidden();
       }
       p.skills = ['excavator'];
       await expect(gather).toContainText('Gather 6');
@@ -96,6 +110,22 @@ for (const mobile of [false, true])
       p.x = 0;
       p.z = 0;
       await expect(page.locator('#resource-control')).toBeHidden();
+      const office = w.buildings.find((b) => b.kind === 'workhouse')!;
+      p.x = office.x;
+      p.z = office.z;
+      p.y = terrainHeight(w, p.x, p.z);
+      const prior = p.cash;
+      act(w, p.id, { type: 'task', building: office.id, task: 'labour' });
+      await expect(page.locator('#task-control')).toBeVisible();
+      await expect(page.locator('#task-name')).toHaveText('Working a labour shift');
+      await expect(page.locator('#target .task')).toHaveCount(0);
+      const box = (await page.locator('#task-control').boundingBox())!;
+      const size = page.viewportSize()!;
+      expect(Math.abs(box.x + box.width / 2 - size.width / 2)).toBeLessThan(2);
+      expect(Math.abs(box.y + box.height / 2 - size.height / 2)).toBeLessThan(2);
+      p.task!.end = w.time + 0.25;
+      await expect.poll(() => p.cash).toBe(prior + 4500);
+      await expect(page.locator('#task-control')).toBeHidden();
       expect(errors).toEqual([]);
     } finally {
       await context.close();
