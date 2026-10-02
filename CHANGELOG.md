@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-10-01
+
+### Fixed
+
+- Preserve trade-list and dialog scroll positions after buying, selling and other successful actions.
+- Keep edited quantities, investment/withdrawal choices, stock transfers and other gameplay form drafts across refreshes, tab switches and reopened dialogs within the browser session. Separate drafts by pilot, world, building and tab; untouched fields continue reflecting live defaults, and credentials/files are never retained.
+
 ## [0.15.1] - 2026-10-01
 
 ### Fixed

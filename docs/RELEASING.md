@@ -4,6 +4,13 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.15.2
+
+Pull both repair commits, rebuild with `BASE_PATH=/aclone npm run build`, and
+restart the service. Refresh browser clients for retained form values and scroll
+positions. No new environment settings or data migrations are required. NPC chat
+no longer waits for a gameplay request to succeed; existing spending caps remain.
+
 ## Deploying 0.15.0
 
 Back up the SQLite database, pull the release, run `npm ci`, rebuild with

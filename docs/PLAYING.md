@@ -265,3 +265,14 @@ Dynamic shadows now default **off** to reduce GPU load. **Pilot & preferences â†
 Dynamic shadows** can enable them outside performance graphics mode. Ground
 contact shading, textures, detailed models, headlights and street/window light
 remain available with dynamic shadows off.
+
+## Repeating transactions
+
+After a sale or purchase, the goods list stays at the same scroll position and
+keeps your quantity. Building Admin retains the amount and **Collect earnings**
+selection; stock transfers and other gameplay forms retain your edited choices
+as well. Drafts are separate for each building and tab and survive closing and
+reopening a dialog in the same browser session. Refreshing the page or signing
+out clears these drafts. Passwords, recovery keys and selected files are excluded.
+Saved wage/price notices still show the server's current settings; editing a draft
+does not apply it until you press its save button.
