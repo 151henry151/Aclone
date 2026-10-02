@@ -27,7 +27,7 @@ to move goods without a sale. Use **Building Admin** to invest cash, collect
 profit, set wages and set buy/sell prices. There are no automatic sales or unlimited
 new-item stocks in public markets.
 
-## Default trade prices (0.15.3)
+## Default trade prices (0.16.0)
 
 The reference price in `data/items.json` is a producer's wholesale asking price.
 Local processors pay **112%** of that reference for their inputs: buying wheat at
@@ -58,11 +58,13 @@ tax and a retail margin while undercutting imported finished goods. Garages stoc
 fuel and tools when supplied; hospitality outlets buy food and drinks. Newly added
 listings start with whatever stock is actually present, including zero.
 
-**Water is an essential import exception:** there is currently no water-producing
-building. Harbour water costs 7.75d; processors and lodging businesses pay 8.68d,
-allowing delivery from the harbour. Lodging resells it at 10.47d for convenience.
-Water's imported cost is included in factory margins. Logs, gravel and topsoil can
-instead be gathered and sold directly to their local consumers. All six farm crops
+**Water supply (0.16.0):** shoreline waterworks sell water at 5d. Processors
+and lodging businesses buy at 5.60d; lodging resells at 6.75d. Harbour water remains
+7.75d, an emergency import rather than a profitable source for local resale.
+A staffed batch costs 22.40d of fuel plus 22d wages; twelve water return 55.80d
+after default sales tax, leaving 11.40d. No waterworks is spawned automatically;
+until someone builds and supplies one, players can still import water. Logs,
+gravel and topsoil can be gathered and sold directly to their local consumers. All six farm crops
 have default sell listings; seed costs, seasonal yield, irrigation and harvest wages
 remain ordinary farm expenses. Prices do not spawn goods, move cargo automatically,
 or replenish a business's capital. Employees/owners and hauliers must supply demand.
@@ -73,6 +75,11 @@ including NPC-owned businesses and owner-edited or unchanged prices.** Stock, mo
 wages, employment and ownership are retained. The saved revision prevents repeated
 repricing after future edits. An owned business with incompatible old bids may still
 need its owner to adjust them; changing reference prices does not rewrite its quotes.
+
+The 0.16.0 waterworks upgrade adds pricing revision 3. It replaces only old
+default water bids of 8.68d and lodging asks of 10.47d on unowned/public buildings;
+other custom quotes and every human/NPC-owned business remain untouched. Worlds
+older than revision 2 receive the full current defaults in one migration.
 
 Owners cannot buy from or sell to their own property, hire themselves, refresh
 their own work shifts or start workplace tasks there. Use Stockroom for goods and
@@ -87,6 +94,9 @@ happen only on successful production. Learn the corresponding profession at scho
 
 ## Connected industries
 
+- **Shoreline waterworks / pump operator:** 1 fuel → 12 water. Build on dry ground
+  directly beside water; a dry intake or flooded foundation stops production.
+  Water supplies households, lodging, irrigation, kitchens, tea and concrete.
 - **Sawmill / lumberjack:** 2 logs → 4 timber. Timber builds structures and feeds
   tool and furniture workshops. The existing tool workshop uses steel and timber.
 - **Stonemason / mason:** 3 stone → 2 blocks, used for foundations and larger buildings.

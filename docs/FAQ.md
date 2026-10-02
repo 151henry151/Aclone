@@ -145,10 +145,20 @@ integers are hundredths of one denarius, so 4500 internal units means 45d.
 Local processors normally pay 12% above producer wholesale prices, so supplying
 local businesses beats exporting their ingredients. Harbour stores offers a smaller
 3% gross delivery margin on finished goods; it pays less for intermediate goods.
-Imports cost more than local production. Water is currently an import-only input.
+Imports cost more than local production. Waterworks (0.16.0) provide local water; imports remain available before one is built.
 Fuel, taxes, time and available stock/capital matter; actual quotes override defaults.
 Buying and immediately reselling at the same harbour loses money. Galactic credits/cargo are separate from local cash/inventory;
 conversion is available at a spaceport, subject to the world's cap.
+
+## How do I produce water?
+
+Build a **Shoreline waterworks** (0.16.0) on dry ground directly beside water.
+The Build panel shows whether your position is suitable; inland or submerged
+sites are rejected. Deliver its construction materials, then put fuel in its
+stockroom and fund wages. An employee with **pump operator** training makes
+12 water from 1 fuel every ten real minutes at default speed. Owners manage stock
+and funding rather than employing themselves. Default water sells for 5d; local
+buyers pay 5.60d. A dry intake or flooded foundation pauses production.
 
 ## Can Mabel help with everything or act on my behalf?
 

@@ -11,6 +11,7 @@ import {
   advance,
   productionInterval,
 } from '../src/shared/simulation.ts';
+import { waterworksSite } from '../src/shared/shoreline.ts';
 import { Store } from '../src/server/store.ts';
 
 const ports = new Set(['market', 'starport']);
@@ -46,16 +47,8 @@ test('every processor input has a profitable supply route, and local delivery be
         );
       }
       if (!sources.length) {
-        // Water has no domestic producer; logs, dirt and gravel are gatherable.
-        if (item === 'water')
-          assert.ok(
-            b.buy[item] > buildings.market.sell[item],
-            `${kind}: water import haulage pays`,
-          );
-        else {
-          assert.ok(['logs', 'dirt', 'gravel'].includes(item), `Missing source for ${item}`);
-          assert.ok(b.buy[item] > buildings.market.buy[item], `${kind}: rewards gathering locally`);
-        }
+        assert.ok(['logs', 'dirt', 'gravel'].includes(item), `Missing source for ${item}`);
+        assert.ok(b.buy[item] > buildings.market.buy[item], `${kind}: rewards gathering locally`);
       }
     }
   }
@@ -68,13 +61,17 @@ test('every actual production batch pays its input suppliers and worker and reta
     const w = createWorld(`balance-${kind}`, 'Balance', 'owner');
     w.settings.hungerRate = w.settings.thirstRate = 0;
     const b = makeBuilding('business', kind, 0, 0);
+    if (kind === 'waterworks') {
+      b.z = 144;
+      b.rotation = waterworksSite(w, b)!.rotation;
+    }
     b.stock = {};
     b.investment = 10000000;
     w.buildings = [b];
     const supplier = addPlayer(w, 'supplier', 'Supplier'),
       worker = addPlayer(w, 'worker', 'Worker');
     supplier.x = worker.x = 0;
-    supplier.z = worker.z = 0;
+    supplier.z = worker.z = b.z;
     supplier.cash = 10000000;
     worker.skills = [recipe.skill];
     const initial = b.investment;
@@ -170,7 +167,7 @@ for (const version of [undefined, 1] as const) {
     try {
       store.saveWorld(w);
       const loaded = store.loadWorlds()[0].world;
-      assert.equal(loaded.tradePricing, 2);
+      assert.equal(loaded.tradePricing, 3);
       assert.deepEqual(
         loaded.buildings.filter((b) => [mill.id, bakery.id].includes(b.id)),
         protectedBuildings,

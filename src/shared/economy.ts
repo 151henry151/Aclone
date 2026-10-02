@@ -16,14 +16,21 @@ export function removeOwnerEmployment(w: World, b: Building) {
 /** Upgrade public/unowned quotes once; every player-owned price is sacrosanct. */
 export function migrateEconomy(w: World) {
   for (const b of w.buildings) removeOwnerEmployment(w, b);
-  if ((w.tradePricing ?? 0) >= 2) return;
+  if ((w.tradePricing ?? 0) >= 3) return;
   for (const b of w.buildings) {
     // Treasury is the built-in public operator, not a human or NPC business owner.
     if (b.owner && !(b.government && b.owner === 'treasury')) continue;
     const current = buildings[b.kind];
     if (!current) continue;
-    b.buy = { ...current.buy };
-    b.sell = { ...current.sell };
+    if ((w.tradePricing ?? 0) < 2) {
+      b.buy = { ...current.buy };
+      b.sell = { ...current.sell };
+    } else {
+      // A domestic producer replaces the old import-cost water bids only.
+      // Preserve unrelated edits and non-default quotes on unowned businesses.
+      if (b.buy.water === 868 && current.buy.water === 560) b.buy.water = 560;
+      if (['bnb', 'hotel'].includes(b.kind) && b.sell.water === 1047) b.sell.water = 675;
+    }
   }
-  w.tradePricing = 2;
+  w.tradePricing = 3;
 }

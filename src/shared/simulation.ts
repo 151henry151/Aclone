@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { terrainHeight } from './terrain.ts';
+export { terrainHeight } from './terrain.ts';
+import { waterworksSite } from './shoreline.ts';
 import { say, MAX_CHAT_LENGTH } from './messages.ts';
 export { say } from './messages.ts';
 import { productionStaff, productionSupplied, productionEfficiency } from './sound-state';
@@ -32,16 +35,7 @@ export function money(value: number, rate = 100) {
 export function damage(value: number, armour: number) {
   return (value * 100) / Math.max(1, armour);
 }
-export function terrainHeight(w: World, x: number, z: number) {
-  const hills = Math.sin(x * 0.021) * Math.cos(z * 0.019) * 8 + Math.sin(x * 0.047 + z * 0.025) * 3;
-  const plateau = w.townLayout === 2 ? 230 : 120;
-  const flat = 1 - clamp((Math.max(Math.abs(x), Math.abs(z)) - plateau) / 80, 0, 1);
-  let h = hills * (1 - flat) + 0.15;
-  if (z > 140) h -= (z - 140) * 0.2;
-  for (const t of w.terrain)
-    h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
-  return h;
-}
+
 export function log(
   w: World,
   kind: Ledger['kind'],
@@ -99,7 +93,7 @@ export function createWorld(
     players: {},
     buildings: [],
     townLayout: 2,
-    tradePricing: 2,
+    tradePricing: 3,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -756,16 +750,26 @@ export function act(w: World, id: string, a: Action): string {
     case 'construct': {
       const kind = str(a.kind),
         def = catalog[kind];
+      const site =
+        kind === 'waterworks' && (a.x !== undefined || a.z !== undefined)
+          ? { x: num(a.x, -240, 240), z: num(a.z, -240, 240) }
+          : p;
+      requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
       const style = kind === 'home' && a.style !== undefined ? str(a.style) : undefined;
       requireThat(style === undefined || cottageStyle(style), 'Choose a cottage style');
       requireThat(def && def.tier <= w.tier, 'Building unavailable at this civilization tier');
       requireThat(
-        !w.zones.some((z) => z.kind === 'noBuild' && distance(p, z) < z.radius),
+        !w.zones.some((z) => z.kind === 'noBuild' && distance(site, z) < z.radius),
         'Construction prohibited in this zone',
       );
       requireThat(
-        w.buildings.every((b) => distance(p, b) > 12),
+        w.buildings.every((b) => distance(site, b) > 12),
         'Too close to another building',
+      );
+      const shore = kind === 'waterworks' ? waterworksSite(w, site) : undefined;
+      requireThat(
+        kind !== 'waterworks' || shore,
+        'Waterworks require dry ground directly on a shoreline with water within 10 metres',
       );
       const home = ['home', 'warehouse'].includes(kind);
       requireThat(
@@ -779,14 +783,15 @@ export function act(w: World, id: string, a: Action): string {
         'Property limit reached',
       );
       charge(w, p, Math.round(def.price * (1 + w.towns[0].tax)), 'construction');
-      const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, p.x, p.z);
+      const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, site.x, site.z);
       b.owner = id;
+      if (shore) b.rotation = shore.rotation;
       if (style) b.style = style;
       b.investment = 0;
       b.stock = {};
       b.construction = { ...def.materials };
       w.buildings.push(b);
-      result = 'Construction site placed. Deliver wood and stone blocks.';
+      result = 'Construction site placed. Deliver the materials listed at the site.';
       break;
     }
     case 'supply': {
@@ -902,7 +907,10 @@ export function act(w: World, id: string, a: Action): string {
         z = num(a.z, -250, 250);
       requireThat(catalog[kind], 'Unknown building');
       requireThat(w.buildings.length < 500, 'Building limit reached');
+      const shore = kind === 'waterworks' ? waterworksSite(w, { x, z }) : undefined;
+      requireThat(kind !== 'waterworks' || shore, 'Waterworks require a dry shoreline site');
       const b = makeBuilding('editor' + ++w.revision, kind, x, z);
+      if (shore) b.rotation = shore.rotation;
       b.owner = id;
       w.buildings.push(b);
       break;
@@ -1221,6 +1229,10 @@ export function productionInterval(w: World, b: Building) {
 function cycle(w: World, b: Building, at: number) {
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
+  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) {
+    b.efficiency = 0;
+    return;
+  }
   removeOwnerEmployment(w, b);
   const staff = productionStaff(w, b, at);
   const efficiency = productionEfficiency(w, b, staff.length);

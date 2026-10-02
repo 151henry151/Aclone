@@ -227,13 +227,16 @@ and starlight. The sky uses an original simplified orbital model, described in
   simulation. Different world processes and public registry registration need a
   federation protocol.
 
-## Planned water supply
+## Water supply (0.16.0)
 
-A water-producing business is not implemented yet. When added, waterworks must
-be built directly on a shoreline next to water. Enforce siting in authoritative
-server construction validation and reflect it in the build preview and NPC
-construction choices; inland placement must fail for everyone. Fuel, staffing
-and production quantities remain to be designed. Until then, water is imported.
+Shoreline waterworks are buildable businesses with fuel inputs, water output and
+pump operator training. Shared terrain checks enforce dry foundations and a wet
+intake for player, editor and NPC placement; dry/flooded sites stop producing.
+NPC construction choices survey shoreline sites and use ordinary construction,
+stockroom, employment and trading actions. There is no automatic waterworks in
+existing worlds: a player or NPC must build and supply one. This fuel-powered
+pumping abstraction is an original gameplay choice; plumbing networks, water
+purity and reservoirs are not simulated.
 
 ## Deliberately not invented
 

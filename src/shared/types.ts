@@ -155,7 +155,7 @@ export interface Settings {
 }
 export interface World {
   townLayout?: 1 | 2;
-  tradePricing?: 1 | 2;
+  tradePricing?: 1 | 2 | 3;
   schemaVersion: 1;
   id: string;
   name: string;

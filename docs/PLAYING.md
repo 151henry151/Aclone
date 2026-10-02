@@ -76,6 +76,33 @@ The seasonal climate, crop durations and economic balance below are original
 Aclone choices, not recovered historical constants. They give a crop several
 hours to mature while letting a player see multiple seasons during a few sessions.
 
+## Water supply
+
+The **Shoreline waterworks** (0.16.0) must stand on dry ground directly beside
+water, with room for its foundation and a submerged intake within ten metres
+behind it. Open **Build** near the shore: the option reports whether the site is
+suitable and is disabled inland. The game turns the intake toward water for you.
+Edited inland ponds also count; no-build zones and normal property limits apply.
+
+The base price is **1,200d plus parish construction tax**. Deliver **8 timber,
+8 stone blocks, 2 steel and 6 gravel** to finish construction. Use its Stockroom
+to deposit fuel and Building Admin to invest wage funds. Hire a player or NPC who
+has learned **pump operator** at school; owners cannot work at their own business.
+At full efficiency, each ten-minute cycle consumes **1 fuel**, pays the posted
+wage (default 22d gross) and produces **12 water** into the building's stockroom.
+Unattended production follows the world's usual reduced-efficiency rules.
+
+Default waterworks water sells for **5d**. Local industrial and lodging buyers
+pay **5.60d**, making delivery worthwhile; households and farm irrigation also
+use water. Businesses still need actual stock, capital and buyers. Construction
+does not create free supplies, and existing worlds do not receive a free building.
+Harbour imports remain available until a local supplier opens.
+
+If terrain editing or a changed water level dries the intake or floods the
+foundation, production and machinery sound stop. The building status explains
+the problem; restoring suitable terrain/water resumes production. No fuel or
+wages are consumed by a failed batch.
+
 ## Farming
 
 Learn **farmer** at the school, then buy a farm or take a job at one. Farms have

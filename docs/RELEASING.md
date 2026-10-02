@@ -4,6 +4,26 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.16.0
+
+Back up the SQLite database, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, and restart the existing service. Refresh
+browser clients for the waterworks construction option and graphics. No new
+dependencies, credentials or environment variables are required.
+
+On the first world load, pricing revision 3 updates only old default water bids
+of 8.68d to 5.60d and lodging asks of 10.47d to 6.75d on unowned/public buildings.
+Every human- or NPC-owned business, and unrelated custom prices, remain intact.
+Worlds predating revision 2 receive the complete current default price lists for
+unowned/public buildings. Stock, capital, wages and ownership are preserved.
+Restore the pre-upgrade database backup as well as code if rolling back.
+
+No waterworks is created automatically. Players or NPCs build one on a dry
+shoreline, deliver materials, supply fuel and fund its operator's wages.
+Harbour imports remain available before a local producer opens. See
+[waterworks instructions](PLAYING.md#water-supply). Production deployment remains
+an operator-managed pull/rebuild/restart.
+
 ## Deploying 0.15.3
 
 Back up the SQLite database, pull, run `npm ci`, rebuild with

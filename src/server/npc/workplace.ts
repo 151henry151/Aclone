@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { waterworksSite } from '../../shared/shoreline.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { productionInterval } from '../../shared/simulation.ts';
@@ -24,6 +25,10 @@ export function workplace(w: World, p: Player, b: Building) {
   if (p.job && !employedHere) jobBlockers.push('Quit your other job before taking this one');
   if (!employedHere && b.employees.length >= 16) jobBlockers.push('All jobs filled');
   const blockers: string[] = [];
+  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
+    blockers.push(
+      'Water intake is dry or the pump house is flooded; restore a dry shoreline with water behind the building.',
+    );
   if (b.construction) blockers.push('Construction is unfinished');
   if (b.kind !== 'farm') {
     if (!b.government && !staff.length)
@@ -89,7 +94,12 @@ export function workplace(w: World, p: Player, b: Building) {
     renewAction,
     workActiveUntil: employedHere && w.settings.activeWork ? p.activeUntil : null,
     activeEmployeesNextCycle: staff.length,
-    efficiencyNextCycle: b.government || staff.length ? 1 : w.settings.offlineEfficiency,
+    efficiencyNextCycle:
+      b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)
+        ? 0
+        : b.government || staff.length
+          ? 1
+          : w.settings.offlineEfficiency,
     fractionalProgress: b.progress,
     blockers,
     ifYouWork: { wagesRequired, capitalShortfall: Math.max(0, wagesRequired - b.investment) },

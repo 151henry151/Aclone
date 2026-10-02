@@ -13,6 +13,12 @@ test('NPC always knows the controls and retrieves relevant player help without t
     guide.excerpts.some((e) => /verified/i.test(e.text) && /Forgot your password/i.test(e.text)),
   );
   assert.ok(JSON.stringify(guide).length < 35000);
+  const combined = gameGuide('How do I produce water?', 'How do I produce water?');
+  const ids = [...combined.fundamentals, ...combined.excerpts, ...combined.activityExcerpts].map(
+    (e) => e.id,
+  );
+  assert.equal(new Set(ids).size, ids.length, 'guide sections are not sent multiple times');
+  assert.ok(!ids.includes('faq:controls'), 'controls are included separately');
   assert.ok(gameGuide('').excerpts.length === 0);
   const core = gameGuide('')
     .fundamentals.map((e) => e.text)
@@ -34,6 +40,8 @@ test('guide lookup covers FAQ, economy and defaults directly from the catalog', 
     ['Ultrakricket rules', /three seconds/],
     ['hotel booking pantry', /1–24/],
     ['recipe:sawmill', /"logs":2/],
+    ['recipe:waterworks', /"water":12/],
+    ['How do I produce water?', /shoreline/i],
     ['jump between stars', /parsec/],
   ] as const) {
     assert.match(

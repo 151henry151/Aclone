@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { waterworksSite } from './shoreline.ts';
 import { recipes, vehicles } from './catalog';
 import type { Building, Player, Recipe, World } from './types';
 
@@ -28,6 +29,7 @@ export function productionEfficiency(
   b: Building,
   staff = productionStaff(w, b, w.time).length,
 ): number {
+  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
   return b.government || staff ? 1 : w.settings.offlineEfficiency;
 }
 
@@ -42,6 +44,7 @@ export function productionSupplied(b: Building, r: Recipe, staff: number): boole
 
 export function productionActivity(w: World, b: Building, crafting = new Set<string>()): number {
   if (b.construction || b.condition <= 0 || b.kind === 'farm') return 0;
+  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
   if (crafting.has(b.id)) return 1;
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r) return 0;

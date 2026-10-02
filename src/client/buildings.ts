@@ -350,6 +350,22 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       cylinder(0.24, 0.45, '#998350', 0, 5.6, -0.32);
     }
   }
+  if (b.kind === 'waterworks') {
+    // Original pump-house kit: insulated tank, pressure bands, pump and buried intake.
+    cylinder(1.05, 1.7, '#759b9c', 1.65, 4.75, -0.8);
+    for (const y of [4, 4.75, 5.5])
+      mesh(new T.TorusGeometry(1.07, 0.055, 5, 20), '#d1d6c4', 1.65, y, -0.8).rotation.x =
+        Math.PI / 2;
+    cylinder(0.22, 0.28, '#465d62', 1.65, 5.72, -0.8);
+    box(1.1, 0.8, 1, '#567c83', -2.4, 0.6, -3.25);
+    const intake = cylinder(0.13, 1.8, '#748281', -2.4, 0.48, -4.1);
+    intake.rotation.x = Math.PI / 2;
+    cylinder(0.18, 0.65, '#647574', -2.4, 0.325, -4.9);
+    box(1.25, 0.16, 0.85, '#a6aca2', -2.4, 0.08, -4.7);
+    const valve = mesh(new T.TorusGeometry(0.25, 0.045, 5, 16), '#9e5e45', -2.4, 1.18, -3.7);
+    valve.rotation.x = Math.PI / 2;
+    box(0.95, 0.5, 0.1, '#35535d', 0, 2.6, front + 0.08);
+  }
   if (b.kind === 'mill') {
     chimney(4.5, -1, 5.2);
     // A mill wheel gives a recognizable silhouette without adding animated draw calls.

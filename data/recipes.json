@@ -245,5 +245,16 @@
     "skill": "roaster",
     "seconds": 900,
     "tier": 1
+  },
+  "waterworks": {
+    "inputs": {
+      "fuel": 1
+    },
+    "outputs": {
+      "water": 12
+    },
+    "skill": "pump operator",
+    "seconds": 600,
+    "tier": 0
   }
 }

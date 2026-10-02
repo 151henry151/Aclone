@@ -869,7 +869,7 @@
     "buy": {
       "gravel": 448,
       "stone": 672,
-      "water": 868
+      "water": 560
     },
     "sell": {
       "concrete": 2600
@@ -936,7 +936,7 @@
     "buy": {
       "potatoes": 1680,
       "flour": 2520,
-      "water": 868
+      "water": 560
     },
     "sell": {
       "meals": 5200
@@ -958,7 +958,7 @@
     "capacity": 500,
     "buy": {
       "tea": 3136,
-      "water": 868
+      "water": 560
     },
     "sell": {
       "teaBlend": 6550
@@ -1002,13 +1002,13 @@
     "capacity": 500,
     "buy": {
       "meals": 5824,
-      "water": 868,
+      "water": 560,
       "teaBlend": 7336,
       "roastCoffee": 8932
     },
     "sell": {
       "meals": 7020,
-      "water": 1047,
+      "water": 675,
       "teaBlend": 8843,
       "roastCoffee": 10767
     },
@@ -1035,13 +1035,13 @@
     "capacity": 500,
     "buy": {
       "meals": 5824,
-      "water": 868,
+      "water": 560,
       "teaBlend": 7336,
       "roastCoffee": 8932
     },
     "sell": {
       "meals": 7020,
-      "water": 1047,
+      "water": 675,
       "teaBlend": 8843,
       "roastCoffee": 10767
     },
@@ -1062,5 +1062,27 @@
     },
     "tier": 1,
     "color": "#d5c5a2"
+  },
+  "waterworks": {
+    "name": "Shoreline waterworks",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "fuel": 2240
+    },
+    "sell": {
+      "water": 500
+    },
+    "stock": {},
+    "recipe": "waterworks",
+    "wage": 2200,
+    "materials": {
+      "wood": 8,
+      "blocks": 8,
+      "steel": 2,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#87a9a8"
   }
 }

@@ -2,6 +2,7 @@
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { resourceNodes, resourceAmount } from '../shared/resources';
+import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, route, stationPrice, spaceGoods } from '../shared/galaxy';
 import { calendar, weatherAt } from '../shared/environment';
@@ -766,15 +767,16 @@ function renderPanel() {
     return;
   }
   if (panel === 'construction') {
+    const waterSite = waterworksSite(world, me);
     modal(
       'Build something useful.',
-      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply wood and stone blocks to finish construction. Stand on clear ground first.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
+      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply the listed materials to finish construction. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
         definitions,
       )
         .filter(([, d]) => d.tier <= world!.tier)
         .map(
           ([id, d]) =>
-            `<button data-do="construct" data-id="${id}"><span><b>${esc(d.name)}</b><small>${Object.entries(
+            `<button data-do="construct" data-id="${id}" ${id === 'waterworks' && !waterSite ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
               d.materials,
             )
               .map(([i, n]) => `${n} ${items[i].name}`)
@@ -808,6 +810,8 @@ function renderPanel() {
 function productionStatus(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm') return '';
+  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
+    return 'Production paused: the intake is dry or the pump house is flooded. Restore dry shoreline terrain with water behind the building.';
   const interval = productionInterval(w, b);
   const remaining = Math.ceil(interval - (w.time % interval));
   const stock = [...new Set([...Object.keys(recipe.inputs), ...Object.keys(recipe.outputs)])]

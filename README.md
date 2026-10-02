@@ -6,9 +6,11 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.15.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.16.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
-**Fixed in 0.15.3:** local supply-chain prices now support profitable production and haulage, with less attractive import/export fallbacks. Existing public and unowned businesses migrate once; every player-owned price is preserved. NPC delivery promises are checked against live stock ownership and buyer terms. See [pricing and limits](docs/ECONOMY.md#default-trade-prices-0153) and [upgrade instructions](docs/RELEASING.md#deploying-0153).
+**New in 0.16.0:** shoreline-only waterworks produce local water from fuel, with a new pump operator skill, shoreline checks for players and NPCs, and profitable local delivery prices. See [building and operating waterworks](docs/PLAYING.md#water-supply) and [upgrade instructions](docs/RELEASING.md#deploying-0160).
+
+**Fixed in 0.15.3:** local supply-chain prices now support profitable production and haulage, with less attractive import/export fallbacks. Existing public and unowned businesses migrate once; every player-owned price is preserved. NPC delivery promises are checked against live stock ownership and buyer terms. See [pricing and limits](docs/ECONOMY.md#default-trade-prices-0160) and [upgrade instructions](docs/RELEASING.md#deploying-0153).
 
 **Fixed in 0.15.2:** repeated trades keep list scroll position; gameplay forms remember edited amounts and choices across actions and reopened dialogs during the browser session.
 

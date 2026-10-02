@@ -44,6 +44,7 @@ const machinery: Record<string, LoopSound['kind']> = {
   rareMine: 'hammer',
   forge: 'furnace',
   refinery: 'pump',
+  waterworks: 'pump',
   brewery: 'pump',
   winery: 'pump',
   concreteWorks: 'mill',

@@ -157,6 +157,11 @@ export function buildingPlan(b: { kind: string; id: string; style?: string }): B
       volumes = [volume(8.5, 6.5, 3.4, 1.4)];
       trim = '#52727b';
       break;
+    case 'waterworks':
+      volumes = [volume(8, 6, 3.3, 0.7, 'shed')];
+      wall = '#c8d2cf';
+      trim = '#446f78';
+      break;
     case 'refinery':
       volumes = [volume(7, 6, 3.5, 0.6, 'flat'), volume(3.4, 4, 6, 0, 'flat', 5.2, -1)];
       wall = '#acb9b5';

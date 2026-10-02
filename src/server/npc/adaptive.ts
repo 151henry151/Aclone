@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
+import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
 import { act, canCarry, distance } from '../../shared/simulation.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -325,19 +326,26 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       w.buildings.every((b) => distance(v, b) > 20) &&
       !w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius),
   );
-  if (site && !buildings.some((b) => b.owner === p.id && b.construction))
-    for (const [kind, def] of Object.entries(catalog))
-      if (def.tier <= w.tier && p.cash > def.price + 20000)
-        for (const style of kind === 'home' ? appearance.cottages.map((c) => c.id) : [undefined])
-          add(
-            'construction',
-            `Build ${def.name}${style ? ` (${style})` : ''}: base ${def.price} plus town tax and materials ${JSON.stringify(def.materials)}; an unfinished site earns nothing.`,
-            [
-              ...prep,
-              { kind: 'move', ...site },
-              operation('construct', { kind, ...(style ? { style } : {}) }),
-            ],
-          );
+  if (!buildings.some((b) => b.owner === p.id && b.construction))
+    for (const [kind, def] of Object.entries(catalog)) {
+      if (def.tier > w.tier || p.cash <= def.price + 20000) continue;
+      const location = kind === 'waterworks' ? nearestWaterworksSite(w, p) : site;
+      if (!location) continue;
+      for (const style of kind === 'home' ? appearance.cottages.map((c) => c.id) : [undefined])
+        add(
+          'construction',
+          `Build ${def.name}${style ? ` (${style})` : ''}: base ${def.price} plus town tax and materials ${JSON.stringify(def.materials)}; an unfinished site earns nothing.${kind === 'waterworks' ? ' Travel to a surveyed dry shoreline; fuel and a pump operator produce water for local businesses.' : ''}`,
+          [
+            ...prep,
+            { kind: 'move', ...location },
+            operation('construct', {
+              kind,
+              ...(style ? { style } : {}),
+              ...(kind === 'waterworks' ? location : {}),
+            }),
+          ],
+        );
+    }
   if (p.inventory.tackle > 0 && w.settings.fishingMode > 0)
     add(
       'leisure',

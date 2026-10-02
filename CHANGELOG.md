@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-01
+
+### Added
+
+- Build a shoreline waterworks with a distinct pump house, rooftop tank and working machinery audio. A trained pump operator turns one fuel into twelve water every ten minutes, supplying homes, lodging and other industries.
+- Require dry shoreline foundations and a submerged intake for all waterworks construction, including editor placement and NPC plans. Terrain or water-level changes that flood the building or dry the intake pause production without consuming fuel or wages.
+
+### Changed
+
+- Offer water at 5d from waterworks, with 5.60d local input bids and 6.75d lodging retail quotes. Upgrade only the previous default water quotes on unowned/public businesses; preserve every owned business and unrelated custom quote.
+- Avoid sending duplicate guide sections to NPC chat models as the player manual grows, retaining controls and relevant help within the existing context budget.
+- Show shoreline eligibility in the Build panel and explain an unusable intake in workplace status. NPCs survey valid coastal sites and can build, supply, staff and trade with waterworks through ordinary game actions.
+
 ## [0.15.3] - 2026-10-01
 
 ### Fixed

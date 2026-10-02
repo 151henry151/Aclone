@@ -98,6 +98,8 @@ export const playerOperations = [
 const operationParameter = z
   .object({
     name: z.enum([
+      'x',
+      'z',
       'building',
       'price',
       'name',
@@ -167,7 +169,7 @@ export const stepSchema = z.discriminatedUnion('kind', [
         .describe(
           'Open-ground waypoint only. To visit a building or resource use travel with its ID instead.',
         ),
-      z: z.number().min(-245).max(140),
+      z: z.number().min(-245).max(245),
     })
     .strict(),
   z.object({ kind: z.literal('act'), action }).strict(),
