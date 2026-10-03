@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-10-02
+
+### Fixed
+
+- Connect NPC chat agreements for employment to persistent school, training and job-change plans. Check tuition, qualifications, skill limits and vacancies; record completion only after real employment. Prioritize ready agreements over optional errands while preserving survival and logout routines.
+- Replace unsupported action promises with truthful queue acknowledgements or explanations. Explain blocked requests without extra conversation calls, preserve public/private replies, and keep old delivery agreements compatible.
+
 ## [0.21.0] - 2026-10-02
 
 ### Added

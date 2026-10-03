@@ -90,8 +90,7 @@ are per completed production cycle; farm wages are per harvested plot.
 
 ## Agreements made in chat
 
-A conversation model can record a durable requested goal or structured delivery
-agreement for Jev. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement wakes one new gameplay decision; it does not execute a
+A conversation model can record a structured delivery agreement for Jev. Version 0.21.1 also supports a concrete employment request with optional training. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement wakes one new gameplay decision; it does not execute a
 chat model's arbitrary actions or call speech again. Jev sees the agreement,
 remaining quantity and real blockers, alongside its ordinary opportunities.
 
@@ -120,8 +119,33 @@ across restarts. It follows the original chat channel; legacy agreements without
 saved channel default to private. Temporary timed work does not trigger a notice.
 Ask for subsequent progress or changed blockers; residents otherwise stay quiet.
 
-General goals are retained as planner guidance, without inventing a completion
-receipt. Up to four unfinished requests and twenty recent agreements are retained.
+With version 0.21.1, “learn milling and take the job at my mill” becomes a
+persistent request naming that exact workplace. The server derives its skill from
+the current recipe, checks tuition, skill slots and vacancies, and offers Jev
+separate steps to visit school, pay tuition, wait for the real qualification,
+travel to the employer and accept the job. A previous job is kept until the
+resident arrives qualified at the new employer. First qualifications take one
+minute; subsequent ones take forty minutes. No extra speech calls are made for
+those steps. Restarting preserves the request and course progress. Completion
+means a verified qualification and active employment, not a completed production
+batch or a lifetime promise to keep that job.
+
+When healthy, residents choose among ready accepted agreements before unrelated
+rest, shopping or cosmetic changes. Food, water, failed-route cooldowns and
+scheduled departure still take precedence. Blocked requests remain in memory
+with a concrete reason; they do not grant free money, skills or ownership. Ask for
+progress rather than assuming an acknowledgement proves departure.
+
+Chat must include the structured request when agreeing to deliveries or
+employment. The server acknowledges the actual queue result. A check for common
+unrecorded first-person action promises replaces them with a correction; this is
+a backstop, not a general natural-language executor. Other requests are discussed
+as suggestions, not accepted as executable agreements. Older summary-only notes
+are marked blocked with an explanation instead of pretending they will run. Old
+promises that never recorded a request cannot be recovered automatically: ask
+again after upgrading, naming the workplace and whether training is desired.
+
+Up to four unfinished executable requests and twenty recent agreements are retained.
 A player can ask to cancel their latest unfinished request; another player cannot
 cancel it. Requests are intentions, not guaranteed acceptance or instant success.
 

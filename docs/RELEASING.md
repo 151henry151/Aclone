@@ -4,6 +4,22 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.21.1
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. No credentials or NPC identity changes are needed. Existing delivery
+agreements and memories remain readable. Employment requests now queue actual
+school/training/job steps, with survival and scheduled logout still taking priority.
+Old spoken promises without a recorded request cannot be recovered automatically:
+ask the resident again, naming the workplace and whether they should learn its skill.
+Check the acknowledged queue result and ask for progress; a promise is not proof
+of employment or production. See [NPC agreements](NPCS.md#agreements-made-in-chat).
+
+TypeScript and all 299 automated tests passed, including real NPC navigation,
+forty-minute training, job changes, restart persistence, delivery regressions and
+one-call conversation accounting. Tests use fake providers, not paid AI calls.
+Production deployment remains operator-managed.
+
 ## Deploying 0.21.0
 
 Back up the database, pull, run `npm ci`, rebuild with

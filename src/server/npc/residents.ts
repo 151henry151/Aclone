@@ -19,12 +19,15 @@ import { careNeeded } from './strategy.ts';
 import { jevInstructions } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
-import { conversationTool, conversationOutputLimit } from './conversation.ts';
+import { conversationTool, conversationOutputLimit, unqueuedPromise } from './conversation.ts';
 import { operationAction } from './player-operations.ts';
 import { initialPresence, beginVisit } from './habits.ts';
 import { preferChoices } from './preferences.ts';
 import {
   commitmentChoices,
+  employmentBlocker,
+  refreshEmployment,
+  focusCommitments,
   deliveryBlocker,
   recordCommitment,
   checkCommitmentPrice,
@@ -282,6 +285,7 @@ export class Residents {
         stats = this.actionStats(w, p, a);
       checkCommitmentPrice(w, r.state, a);
       const result = act(w, p.id, a);
+      refreshEmployment(w, p, r.state);
       if (recordDelivery(r.state, w.id, a)) {
         r.wake = true;
         r.state.needsDecision = true;
@@ -344,7 +348,6 @@ export class Residents {
     const blocked = r.state.commitments?.find(
       (c) =>
         c.world === w.id &&
-        c.delivery &&
         c.status === 'blocked' &&
         !c.blockedNoticeSent &&
         w.players[c.speakerId]?.online &&
@@ -353,7 +356,9 @@ export class Residents {
     if (blocked && !p.muted && !w.settings.chatLocked) {
       act(w, p.id, {
         type: 'chat',
-        text: `My delivery is blocked: ${blocked.outcome} ${blocked.delivered}/${blocked.delivery!.quantity} ${blocked.delivery!.item} delivered.`,
+        text: blocked.delivery
+          ? `My delivery is blocked: ${blocked.outcome} ${blocked.delivered}/${blocked.delivery.quantity} ${blocked.delivery.item} delivered.`
+          : `My agreed task is blocked: ${blocked.outcome}`,
         ...(blocked.replyTo === null ? {} : { to: blocked.speakerId }),
       });
       blocked.blockedNoticeSent = true;
@@ -391,11 +396,7 @@ export class Residents {
           reconsiderSeconds: 600,
         });
     }
-    return preferChoices(
-      choices.filter((c) => !c.plan.some((s) => blockedStep(r.state.recovery, s, w.time))),
-      r.config.preference,
-      p.job,
-    );
+    return preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job);
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
     const stateBefore = structuredClone(r.state),
@@ -1065,14 +1066,23 @@ export class Residents {
               latest,
               replyTo ?? null,
             );
-          if (proposal.delivery || proposal.cancel || !recorded) {
+          if (recorded && proposal.employment && !proposal.cancel) {
+            refreshEmployment(latest, player, r.state);
+            const queued = r.state.commitments?.find((c) => c.id === conversationKey);
+            if (queued?.status === 'blocked') queued.blockedNoticeSent = true;
+          }
+          if (proposal.delivery || proposal.employment || proposal.cancel || !recorded) {
             const text = reason
               ? `I need to correct that before agreeing: ${reason} I have not accepted this delivery.`
               : !recorded
-                ? 'I have not added a new agreement: it is already recorded, there is no matching request to cancel, or my four unfinished requests need attention first. Please ask about my existing agreements.'
+                ? !proposal.delivery && !proposal.employment && !proposal.cancel
+                  ? 'I have not queued an action for that request. I can track a concrete goods delivery or training followed by a job at a named workplace; other suggestions do not become executable agreements yet.'
+                  : 'I have not added a new agreement: it is already recorded, there is no matching request to cancel, or my four unfinished requests need attention first. Please ask about my existing agreements.'
                 : proposal.cancel
                   ? 'I have cancelled your latest unfinished request.'
-                  : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and the buyer has the posted price, investment and storage for the order. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
+                  : proposal.employment
+                    ? `I have queued your request to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(latest, player, proposal.employment) ?? 'Jev will plan the steps, with food, water and safe logout taking priority.'} This confirms the request, not that I have started studying or changed jobs.`
+                    : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and the buyer has the posted price, investment and storage for the order. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
             result = {
               ...result,
               decision: { ...result.decision, speech: { text, to: replyTo ?? null } },
@@ -1088,6 +1098,23 @@ export class Residents {
               reason: reason ?? (recorded ? undefined : 'No new agreement recorded'),
             },
           );
+        }
+        if (
+          !proposal &&
+          conversation &&
+          result.decision.speech &&
+          unqueuedPromise(result.decision.speech.text)
+        ) {
+          result = {
+            ...result,
+            decision: {
+              ...result.decision,
+              speech: {
+                text: 'I need to correct that: I have not queued a new gameplay action from this message. A plan mentioned in chat is not an action. Please give me the workplace for a job/training request, or the goods and destination for a delivery, so I can record it properly.',
+                to: replyTo ?? null,
+              },
+            },
+          };
         }
         this.accept(r, latest, result, Date.now(), replyTo, chatOnly);
         if (

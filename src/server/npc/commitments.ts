@@ -1,16 +1,30 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { canCarry, distance } from '../../shared/simulation.ts';
-import { items } from '../../shared/catalog.ts';
+import { items, recipes, skills } from '../../shared/catalog.ts';
+import { operation } from './player-operations.ts';
+import { careNeeded } from './strategy.ts';
+import { blockedStep } from './recovery.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import type { ResidentState } from './memory.ts';
 import type { Step } from './decision.ts';
 import type { FarmerChoice } from './farmer.ts';
 const id = z.string().min(1).max(80);
+export const employmentRequestSchema = z
+  .object({
+    building: id.describe(
+      'Exact observed employer building ID; the required skill comes from its current recipe.',
+    ),
+    train: z
+      .boolean()
+      .describe('True only when agreeing to learn the required skill if it is missing.'),
+  })
+  .strict();
 export const gameplayRequestSchema = z
   .object({
     summary: z.string().min(1).max(600),
     cancel: z.boolean(),
+    employment: employmentRequestSchema.nullable().optional(),
     delivery: z
       .object({
         item: id,
@@ -55,17 +69,24 @@ export function recordCommitment(
     previous.outcome = 'Cancelled at the requesting player’s instruction.';
     return true;
   }
+  if ((!request.delivery && !request.employment) || (request.delivery && request.employment))
+    return false;
   if (
     all.some(
       (c) =>
         ['pending', 'blocked'].includes(c.status) &&
         c.speakerId === speakerId &&
         c.summary === request.summary &&
-        JSON.stringify(c.delivery) === JSON.stringify(request.delivery),
+        JSON.stringify(c.delivery) === JSON.stringify(request.delivery) &&
+        JSON.stringify(c.employment) === JSON.stringify(request.employment),
     )
   )
     return false;
-  if (all.filter((c) => ['pending', 'blocked'].includes(c.status)).length >= 4) return false;
+  if (
+    all.filter((c) => (c.delivery || c.employment) && ['pending', 'blocked'].includes(c.status))
+      .length >= 4
+  )
+    return false;
   all.push({
     ...request,
     id,
@@ -74,7 +95,9 @@ export function recordCommitment(
     replyTo,
     status: 'pending',
     delivered: 0,
-    outcome: 'Requested in conversation; Jev must choose a feasible plan. No goods delivered yet.',
+    outcome: request.employment
+      ? 'Employment requested; training and the job have not started.'
+      : 'Requested in conversation; Jev must choose a feasible plan. No goods delivered yet.',
   });
   state.commitments = all.slice(-20);
   return true;
@@ -128,12 +151,133 @@ export function deliveryBlocker(
     return 'My cargo is full. I need to make room before loading.';
   if (p.task) return 'I need to finish my current timed task before loading.';
 }
+type Employment = z.infer<typeof employmentRequestSchema>;
+export function employmentBlocker(w: World, p: Player, request: Employment): string | undefined {
+  const b = w.buildings.find((b) => b.id === request.building && !b.construction);
+  const recipe = b && (b.production ?? recipes[b.recipe ?? '']);
+  if (!b || !recipe)
+    return 'That building does not currently offer a finished, qualified workplace.';
+  if (b.owner === p.id) return 'I own that building and cannot employ myself.';
+  if (!b.employees.includes(p.id) && b.employees.length >= 16)
+    return 'All staff positions at that building are filled.';
+  if (!p.skills.includes(recipe.skill)) {
+    if (!request.train)
+      return `I need the ${recipe.skill} qualification; training was not included in this request.`;
+    if (!skills.includes(recipe.skill))
+      return 'The required qualification is not available at school.';
+    if (p.learning && p.learning.skill !== recipe.skill)
+      return `I am already studying ${p.learning.skill}; that course must finish first.`;
+    if (!p.learning) {
+      if (p.skills.length >= w.settings.maxSkills)
+        return `I have reached the ${w.settings.maxSkills}-skill limit and cannot learn ${recipe.skill}.`;
+      if (p.cash < (p.skills.length ? 16000 : 8000))
+        return 'I do not have enough cash for tuition yet.';
+      if (!w.buildings.some((b) => b.kind === 'school' && !b.construction))
+        return 'There is no finished school available.';
+    }
+  }
+  return undefined;
+}
+function prep(p: Player): Step[] {
+  return [
+    ...(p.atHome ? [{ kind: 'act' as const, action: { type: 'outside' as const } }] : []),
+    ...(p.game ? [operation('leaveGame')] : []),
+    ...(p.hitch ? [operation('detach')] : []),
+    ...(p.crowBody ? [operation('crow')] : []),
+    ...(p.vehicle !== 5 && p.fuel <= 0
+      ? [{ kind: 'act' as const, action: { type: 'vehicle' as const, slot: 5 as const } }]
+      : p.vehicle !== 5 && !p.engine
+        ? [{ kind: 'act' as const, action: { type: 'engine' as const } }]
+        : []),
+  ];
+}
+function employmentChoice(w: World, p: Player, c: Commitment): FarmerChoice | undefined {
+  const request = c.employment!;
+  const reason = employmentBlocker(w, p, request);
+  if (reason) {
+    c.status = 'blocked';
+    c.outcome = reason;
+    return;
+  }
+  const b = w.buildings.find((b) => b.id === request.building)!;
+  const recipe = b.production ?? recipes[b.recipe!];
+  const plan = prep(p);
+  let description: string;
+  if (!p.skills.includes(recipe.skill)) {
+    if (p.learning) {
+      const seconds = Math.max(1, Math.min(300, Math.ceil(p.learning.end - w.time)));
+      description = `Continue the agreed ${recipe.skill} course, then take the job at ${b.name}. ${Math.max(0, Math.ceil(p.learning.end - w.time))} seconds of training remain.`;
+      plan.length = 0;
+      plan.push({ kind: 'wait', seconds });
+    } else {
+      const school = w.buildings
+        .filter((b) => b.kind === 'school' && !b.construction)
+        .sort((a, b) => distance(p, a) - distance(p, b))[0];
+      description = `Study ${recipe.skill} at ${school.name} for the agreed job at ${b.name}. Tuition ${p.skills.length ? 160 : 80}d; course ${p.skills.length ? 40 : 1} minutes. Qualification and employment are not complete yet.`;
+      plan.push(
+        { kind: 'travel', destination: school.id },
+        action({ type: 'learn', building: school.id, skill: recipe.skill }),
+      );
+    }
+  } else if (
+    p.job === b.id &&
+    b.employees.includes(p.id) &&
+    (!w.settings.activeWork || p.activeUntil > w.time)
+  ) {
+    c.status = 'completed';
+    c.outcome = `Qualified as ${recipe.skill} and actually employed with an active shift at ${b.name}. This confirms the job, not finished production.`;
+    return;
+  } else {
+    description = `Take the agreed ${recipe.skill} job at ${b.name}, wage ${b.wage / 100}d per cycle. Already qualified; renew here or leave the previous job only after reaching the new employer.`;
+    plan.push({ kind: 'travel', destination: b.id });
+    if (p.job && p.job !== b.id) plan.push(action({ type: 'quit' }));
+    plan.push(action({ type: p.job === b.id ? 'work' : 'job', building: b.id }));
+  }
+  c.status = 'pending';
+  c.outcome = description;
+  return {
+    id: `commitment_${c.id}`,
+    description: `Agreed employment: ${description}`,
+    plan,
+    reconsiderSeconds: 600,
+  };
+}
+/** Accepted work is an executable queue, not a suggestion to compete with repainting or rest.
+ * Jev still selects a plan; survival and blocked-route recovery retain the full action menu. */
+export function focusCommitments(
+  w: World,
+  p: Player,
+  state: ResidentState,
+  choices: FarmerChoice[],
+) {
+  const available = choices.filter(
+    (c) => !c.plan.some((s) => blockedStep(state.recovery, s, w.time)),
+  );
+  const agreed = available.filter((c) => c.id.startsWith('commitment_'));
+  return !p.task && !careNeeded(w, p) && agreed.length ? agreed : available;
+}
+export function refreshEmployment(w: World, p: Player, state: ResidentState) {
+  for (const c of state.commitments ?? [])
+    if (c.world === w.id && c.employment && ['pending', 'blocked'].includes(c.status))
+      employmentChoice(w, p, c);
+}
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 /** Fully accounted deliveries, possibly in several loads; ordinary action validation still applies. */
 export function commitmentChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
   const choices: FarmerChoice[] = [];
   for (const c of state.commitments ?? []) {
-    if (c.world !== w.id || !c.delivery || !['pending', 'blocked'].includes(c.status)) continue;
+    if (c.world !== w.id || !['pending', 'blocked'].includes(c.status)) continue;
+    if (c.employment) {
+      const choice = employmentChoice(w, p, c);
+      if (choice) choices.push(choice);
+      continue;
+    }
+    if (!c.delivery) {
+      c.status = 'blocked';
+      c.outcome =
+        'This older request was only a note, not an executable agreement. Please ask again for a specific delivery or a job and any required training.';
+      continue;
+    }
     const d = c.delivery,
       buyer = w.buildings.find((b) => b.id === d.destinationBuilding && !b.construction);
     const block = (reason: string) => {
@@ -193,7 +337,16 @@ export function commitmentChoices(w: World, p: Player, state: ResidentState): Fa
       reconsiderSeconds: 600,
     });
   }
-  return choices;
+  return choices.filter((choice) => {
+    const failure = choice.plan
+      .map((step) => blockedStep(state.recovery, step, w.time))
+      .find(Boolean);
+    if (!failure) return true;
+    const c = state.commitments!.find((c) => `commitment_${c.id}` === choice.id)!;
+    c.status = 'blocked';
+    c.outcome = `The planned step failed: ${failure.message}. I will reconsider after the retry cooldown.`;
+    return false;
+  });
 }
 export function checkCommitmentPrice(w: World, state: ResidentState, a: Action) {
   if (a.type !== 'trade' || a.direction !== 'sell') return;
