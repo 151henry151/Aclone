@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-10-03
+
+### Added
+
+- Set a destination on the parish map and follow a direction arrow and distance while driving. Waypoints appear on both maps, persist per world in your browser, support touch and keyboard, and can be cleared on the HUD. Dragging to pan does not place a waypoint.
+
 ## [0.38.0] - 2026-10-03
 
 ### Added

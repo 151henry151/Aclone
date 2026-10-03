@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.38.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.39.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -18,7 +18,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Choose cargo, courier, explorer or shielded spacecraft with distinct fuel/time tradeoffs and travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
 - Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, uploaded GLB/OBJ models and PNG/JPEG textures, custom goods/professions/building templates, production-chain diagnostics, visual behavior rules, ordered quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. API billing and operator spending limits are separate from consumer subscriptions.
-- Play with desktop controls or a compact touch interface. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
+- Play with desktop controls or a compact touch interface. Mark map waypoints and follow their direction and distance while driving. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 

@@ -2107,3 +2107,71 @@ button span {
   margin: 0;
   text-align: right;
 }
+
+#waypoint-hud {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 8px 12px;
+  border: 1px solid #c4b17a88;
+  border-radius: 8px;
+  background: #1b3026dd;
+  color: #ffe791;
+  pointer-events: auto;
+}
+#waypoint-hud[hidden] {
+  display: none;
+}
+#waypoint-hud b,
+#waypoint-hud small {
+  display: block;
+}
+#waypoint-hud b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+#waypoint-hud small {
+  font-size: 11px;
+  color: #eee4c6;
+}
+#waypoint-arrow {
+  font: bold 32px/1 sans-serif;
+}
+#waypoint-clear {
+  min-width: 36px;
+  padding: 4px;
+  font-size: 22px;
+}
+.mobile-ui #waypoint-hud {
+  top: calc(126px + env(safe-area-inset-top));
+  padding: 5px 10px;
+  gap: 8px;
+}
+.mobile-ui #waypoint-clear {
+  min-width: 44px;
+  min-height: 44px;
+}
+.mobile-ui #waypoint-hud b {
+  max-width: 185px;
+  font-size: 13px;
+}
+.parish-map-resource-label {
+  pointer-events: auto;
+}
+.parish-map-tools [aria-pressed='true'] {
+  background: #e0c583;
+  color: #20372b;
+}
+
+.mobile-ui.mobile-modal #waypoint-hud,
+.mobile-ui.mobile-chat-open #waypoint-hud,
+.mobile-ui.mobile-status-open #waypoint-hud {
+  display: none;
+}

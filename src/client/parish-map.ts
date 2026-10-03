@@ -5,6 +5,7 @@ import { resourceNodes } from '../shared/resources';
 import { checkpoints } from '../shared/catalog';
 import { mapBounds, placeMapLabels, type MapBounds } from './map-layout';
 
+import type { Waypoint } from './waypoint';
 const ns = 'http://www.w3.org/2000/svg';
 function svg(tag: string, attrs: Record<string, string | number> = {}) {
   const node = document.createElementNS(ns, tag);
@@ -23,6 +24,7 @@ export class ParishMap {
   private bounds: MapBounds;
   private signature = '';
   private zoom = 1;
+  private choosing = false;
   private width = 900;
   private height = 600;
   private scale = 1;
@@ -35,11 +37,12 @@ export class ParishMap {
     w: World,
     me: Player,
     openBuilding: (id: string) => void,
+    private navigation?: { get: () => Waypoint | undefined; set: (point?: Waypoint) => void },
   ) {
     this.world = w;
     this.me = me;
     this.bounds = mapBounds(w, me);
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name to inspect</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Drag or scroll to explore · zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="choose" aria-pressed="false">Choose waypoint</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name to inspect</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Click empty ground to mark a destination, or Choose waypoint then a name. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag or scroll to explore · zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     host.addEventListener(
@@ -47,6 +50,14 @@ export class ParishMap {
       (e) => {
         const button = (e.target as Element).closest<HTMLButtonElement>('button');
         if (!button) return;
+        if (button.dataset.wx && (this.choosing || !button.dataset.site)) {
+          this.mark({
+            x: Number(button.dataset.wx),
+            z: Number(button.dataset.wz),
+            name: button.textContent ?? 'Waypoint',
+          });
+          return;
+        }
         if (button.dataset.site) {
           openBuilding(button.dataset.site);
           return;
@@ -54,6 +65,19 @@ export class ParishMap {
         const action = button.dataset.map;
         if (!action) return;
         const centre = this.centre();
+        if (action === 'choose') {
+          this.choosing = !this.choosing;
+          button.setAttribute('aria-pressed', String(this.choosing));
+          return;
+        }
+        if (action === 'clear') {
+          this.mark();
+          return;
+        }
+        if (action === 'centre') {
+          this.mark({ ...centre, name: 'Map waypoint' });
+          return;
+        }
         if (action === 'in') this.zoom = Math.min(3, this.zoom + 0.5);
         if (action === 'out') this.zoom = Math.max(1, this.zoom - 0.5);
         if (action === 'fit' || action === 'you') this.bounds = mapBounds(this.world, this.me);
@@ -79,6 +103,33 @@ export class ParishMap {
         left: e.key === 'ArrowLeft' ? -80 : e.key === 'ArrowRight' ? 80 : 0,
         top: e.key === 'ArrowUp' ? -80 : e.key === 'ArrowDown' ? 80 : 0,
       });
+    });
+    let tap: { id: number; x: number; y: number } | undefined;
+    this.viewport.addEventListener('pointerdown', (e) => {
+      if (!e.isPrimary || e.button !== 0) {
+        tap = undefined;
+        return;
+      }
+      if (!(e.target as Element).closest('button'))
+        tap = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    });
+    this.viewport.addEventListener('pointermove', (e) => {
+      if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap = undefined;
+    });
+    this.viewport.addEventListener('pointercancel', () => {
+      tap = undefined;
+    });
+    this.viewport.addEventListener('pointerup', (e) => {
+      if (tap?.id === e.pointerId) {
+        const rect = this.sheet.getBoundingClientRect();
+        this.mark({
+          x: this.bounds.x + (e.clientX - rect.left - this.offsetX) / this.scale,
+          z: this.bounds.z + (e.clientY - rect.top - this.offsetY) / this.scale,
+          name: 'Map waypoint',
+        });
+      }
+      tap = undefined;
+      drag = undefined;
     });
     let drag: { x: number; y: number; left: number; top: number } | undefined;
     this.viewport.addEventListener('pointerdown', (e) => {
@@ -135,6 +186,13 @@ export class ParishMap {
       this.draw();
       this.panTo(centre.x, centre.z);
     }
+    this.updatePlayers();
+  }
+  private mark(point?: Waypoint) {
+    if (point && (Math.abs(point.x) > 250 || Math.abs(point.z) > 250)) return;
+    this.navigation?.set(point);
+    this.choosing = false;
+    this.host.querySelector('[data-map=choose]')?.setAttribute('aria-pressed', 'false');
     this.updatePlayers();
   }
   private x(x: number) {
@@ -325,13 +383,15 @@ export class ParishMap {
           'stroke-opacity': 0.75,
         }),
       );
-      const label = document.createElement(site.category === 'building' ? 'button' : 'span');
+      const label = document.createElement('button');
       label.className = `parish-map-${site.category}-label`;
       label.textContent = site.name;
       label.title = `${site.name} · ${site.kind} · (${Math.round(site.x)}, ${Math.round(site.z)})`;
       if (label instanceof HTMLButtonElement) {
         label.type = 'button';
-        label.dataset.site = site.id;
+        if (site.category === 'building') label.dataset.site = site.id;
+        label.dataset.wx = String(site.x);
+        label.dataset.wz = String(site.z);
       }
       Object.assign(label.style, {
         left: `${box.left}px`,
@@ -373,6 +433,35 @@ export class ParishMap {
   }
   private updatePlayers() {
     this.players.replaceChildren();
+    const goal = this.navigation?.get();
+    (this.host.querySelector('[data-map=clear]') as HTMLButtonElement).disabled = !goal;
+    if (goal) {
+      const marker = svg('g', {
+        'data-waypoint-marker': '',
+        transform: `translate(${this.x(goal.x)} ${this.y(goal.z)})`,
+      });
+      marker.append(
+        svg('path', {
+          d: 'M0 -12L9 0L0 12L-9 0Z',
+          fill: '#ffe791',
+          stroke: '#142a23',
+          'stroke-width': 3,
+        }),
+      );
+      const title = svg('title');
+      title.textContent = goal.name;
+      marker.append(title);
+      this.players.append(
+        svg('path', {
+          d: `M${this.x(this.me.x)} ${this.y(this.me.z)}L${this.x(goal.x)} ${this.y(goal.z)}`,
+          stroke: '#ffe791',
+          'stroke-width': 2,
+          'stroke-dasharray': '4 6',
+          opacity: 0.7,
+        }),
+        marker,
+      );
+    }
     for (const p of Object.values(this.world.players)) {
       const self = p.id === this.me.id;
       if (!self && !p.online) continue;

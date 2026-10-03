@@ -1,3 +1,4 @@
+import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
 let socialPane = 'letters';
 import {
@@ -98,6 +99,17 @@ document
     'beforeend',
     '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span></section>',
   );
+const waypoints = new Waypoints(localStorage);
+document
+  .getElementById('world-hud')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="waypoint-hud" hidden aria-label="Waypoint guidance"><span id="waypoint-arrow" aria-hidden="true">↑</span><span><b id="waypoint-name"></b><small id="waypoint-distance"></small></span><button type="button" id="waypoint-clear" aria-label="Clear waypoint">×</button></section>',
+  );
+document.getElementById('waypoint-clear')!.addEventListener('click', () => {
+  waypoints.set();
+  updateHud();
+});
 const panelMemory = new PanelMemory(document.getElementById('modal-host')!);
 let npcResidents:
   | {
@@ -450,6 +462,19 @@ function buildingOwner(b: Building) {
 }
 function updateHud() {
   if (!world || !me) return;
+  waypoints.selectWorld(world.id);
+  const goal = waypoints.point;
+  $('waypoint-hud').hidden = !goal || !mapAvailable(world, me);
+  if (goal) {
+    const guidance = waypointGuidance(me, goal);
+    $('waypoint-name').textContent = goal.name;
+    $('waypoint-distance').textContent =
+      guidance.metres <= 10
+        ? 'Arrived · within 10m'
+        : `${Math.round(guidance.metres)}m · straight-line direction`;
+    $('waypoint-arrow').style.transform = `rotate(${guidance.degrees}deg)`;
+    $('waypoint-arrow').style.opacity = guidance.metres <= 10 ? '0.3' : '1';
+  }
   $('location').textContent = mobile.active
     ? world.name
     : world.name +
@@ -753,6 +778,14 @@ function drawMap() {
     ctx.arc(sx(p.x), sz(p.z), p.id === me.id ? 4 : 2, 0, Math.PI * 2);
     ctx.fill();
   }
+  const goal = waypoints.point;
+  if (goal) {
+    ctx.strokeStyle = '#ffe791';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(sx(goal.x), sz(goal.z), 6, 0, Math.PI * 2);
+    ctx.stroke();
+  }
   ctx.font = '9px monospace';
   ctx.fillStyle = '#f0e6c4';
   ctx.fillText('PUDDLEWICK', sx(-30), sz(-22));
@@ -1012,10 +1045,22 @@ function renderPanel() {
     if (!parishMap) {
       modal('Parish map.', '<div id="parish-map"></div>', true);
       $('modal-host').querySelector('.window')!.classList.add('map-window');
-      parishMap = new ParishMap($('parish-map'), world, me, (id) => {
-        selected = id;
-        openPanel('building');
-      });
+      parishMap = new ParishMap(
+        $('parish-map'),
+        world,
+        me,
+        (id) => {
+          selected = id;
+          openPanel('building');
+        },
+        {
+          get: () => waypoints.point,
+          set: (point) => {
+            waypoints.set(point);
+            updateHud();
+          },
+        },
+      );
       $('modal-host').querySelector<HTMLButtonElement>('.close')!.focus();
     } else parishMap.update(world, me);
     return;
