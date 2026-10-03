@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-10-03
+
+### Added
+
+- A shared world-time cargo launch every three or four game days, with powered ascent, engine plumes, spreading pad smoke and a landing half a day later. Joining or reconnecting shows the current flight phase; the spaceport panel lists its status. Moving rocket geometry is batched separately from static ground equipment.
+
 ## [0.40.0] - 2026-10-03
 
 ### Added

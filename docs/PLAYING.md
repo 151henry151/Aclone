@@ -214,3 +214,7 @@ Create a family or accept a leader's invitation. Leaders invite/remove residents
 A trade offer names seller/buyer, goods, quantity and unit price. The recipient sees the total and must accept. Offers don't reserve goods or cash; either party can cancel. Both must be online, stopped outside within 15m at similar height and free of activities when accepting. The server checks actual stock, cash and cargo before transferring both sides together, once. Offers expire in five minutes or become invalid on a new life. Limit: eight outgoing offers; maximum total 1,000,000d. NPCs may accept or decline through their planner, not automatically. Goods-for-goods barter is not included.
 
 Sunrise and sunset colour the sky and clouds around the sun, fading through an afterglow. Clouds soften these colours; night visibility still depends on moonlight, starlight and nearby lamps.
+
+### Spaceport cargo launches
+
+The parked cargo ship launches every three or four economic game days (30–40 real minutes at the fixed calendar rate), returning to the pad half a day after departure. All clients see the same phase, including when joining during flight. The spaceport panel shows status and time to the next launch. The pad remains a reserved solid area even while the ship is away. This is an ambient cargo service; player travel, bookings and inventories are unaffected.

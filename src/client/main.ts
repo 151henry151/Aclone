@@ -1,3 +1,4 @@
+import { spaceportFlight } from '../shared/spaceport-flight';
 import { herdSpec, herdNeeds } from '../shared/livestock';
 import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
@@ -1359,6 +1360,10 @@ function buildingWindow(b: Building) {
     }
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
+    if (b.kind === 'starport') {
+      const flight = spaceportFlight(world.id, world.time);
+      html += `<h3>Cargo launcher</h3><p>${flight.phase === 'docked' ? `Next launch in ${Math.ceil((flight.next - world.time) / 60)} minutes.` : flight.phase === 'away' ? 'Cargo ship in flight; returning to the pad half a game day after departure.' : `Cargo ship: ${flight.phase}.`} The service departs every three or four game days. Keep clear of the reserved launch pad; this ambient flight does not change your own travel bookings.</p>`;
+    }
     const herd = herdSpec(b);
     if (herd) {
       const needs = herdNeeds(b);

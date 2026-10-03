@@ -1,3 +1,4 @@
+import type { RocketFlight } from './rocket-flight';
 import { LivestockScene } from './livestock-scene';
 import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
 import { waitForTextures, failedTextures } from './materials';
@@ -187,6 +188,8 @@ export class GameScene {
   private precipitation = new Precipitation();
   private fields = new FarmFields();
   private livestock = new LivestockScene();
+  private flights: RocketFlight[] = [];
+  private flightSnapshotAt = 0;
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
   private waterBase?: Float32Array;
@@ -402,6 +405,7 @@ export class GameScene {
       performance.mark('aclone-world-loading');
     }
     this.world = world;
+    this.flightSnapshotAt = performance.now();
     this.me = world.players[me];
     this.audio.setWorld(world, me);
     this.sky.visible = true;
@@ -604,6 +608,7 @@ export class GameScene {
     this.fields.reset();
     this.livestock.reset();
     this.buildingMeshes = [];
+    this.flights = [];
     this.labelsHidden = false;
     this.renderer.shadowMap.needsUpdate = true;
     const geometry = new T.PlaneGeometry(540, 540, 128, 128);
@@ -781,7 +786,12 @@ export class GameScene {
         return;
       let parent: T.Object3D | null = o;
       while (parent) {
-        if (parent.userData.blades || parent.userData.creatorModel) return;
+        if (
+          parent.userData.blades ||
+          parent.userData.creatorModel ||
+          parent.userData.animatedFlight
+        )
+          return;
         parent = parent.parent;
       }
       const key = [
@@ -886,6 +896,10 @@ export class GameScene {
       if (o.userData.blades) animated.push(o.userData.blades);
       if (o.userData.clouds) animated.push(o);
     }
+    this.land.traverse((o) => {
+      if (o.userData.animatedFlight) animated.push(o);
+      if (o.userData.flight) this.flights.push(o.userData.flight);
+    });
     freezeScenery(this.land, animated);
   }
   private building(b: Building) {
@@ -1023,6 +1037,11 @@ export class GameScene {
       const w = this.world,
         p = this.me;
       this.livestock.animate(this.elapsed);
+      for (const flight of this.flights)
+        flight.update(
+          w.id,
+          w.time + Math.min(1, Math.max(0, (now - this.flightSnapshotAt) / 1000)),
+        );
       const motionTime = this.motionClock.sample(now);
       for (const mesh of this.meshes.values()) {
         const pose = (mesh.userData.motion as MotionTrack).sample(motionTime)!;

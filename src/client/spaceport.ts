@@ -1,3 +1,5 @@
+import { RocketFlight } from './rocket-flight';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { spaceportApron, spaceportHardware, spaceportScale } from '../shared/building-shapes';
@@ -30,11 +32,11 @@ function metalWeathering() {
   hullTexture.minFilter = T.LinearMipmapLinearFilter;
   hullTexture.generateMipmaps = true;
   hullTexture.needsUpdate = true;
+  hullTexture.userData.shared = true;
   return hullTexture;
 }
 
-/** Original metre-scale cargo launcher and ground equipment. All geometry is static,
- * opaque and batchable; no extra lights, downloads or per-frame machinery updates. */
+/** Original cargo launcher: ground equipment is static; the locally batched rocket can fly. */
 export function spaceportModel() {
   const root = new T.Group();
   root.name = 'Spaceport landing apron';
@@ -158,6 +160,7 @@ export function spaceportModel() {
 
   const rocket = new T.Group();
   rocket.name = 'Cargo rocket';
+  rocket.userData.animatedFlight = true;
   root.add(rocket);
   parent = rocket;
   // A cylindrical tank stack, structural interstage and blunt cargo fairing. The
@@ -358,5 +361,41 @@ export function spaceportModel() {
   box(1.3, 1.5, 1.1, 'panel', tank.x, 0.9, tank.z + 2);
   for (let i = 0; i < 6; i++) box(0.9, 0.06, 0.025, 'dark', tank.x, 0.6 + i * 0.15, tank.z + 2.56);
   strut(new T.Vector3(tank.x, 0.6, tank.z), new T.Vector3(x + 2.8, 0.6, z + 1), 0.13, 'pipe');
+  // Batch the vehicle in its own local coordinates so moving it does not rebuild town geometry.
+  rocket.updateMatrixWorld(true);
+  const hatch = rocket.getObjectByName('Crew access hatch')!.parent!;
+  const groups = new Map<T.Material, T.BufferGeometry[]>();
+  rocket.traverse((o) => {
+    let ancestor: T.Object3D | null = o;
+    while (ancestor) {
+      if (ancestor === hatch) return;
+      ancestor = ancestor.parent;
+    }
+    if (o instanceof T.Mesh) {
+      const m = o.material as T.Material;
+      const list = groups.get(m) ?? [];
+      list.push(
+        (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(
+          o.matrixWorld.clone().premultiply(new T.Matrix4().copy(rocket.matrixWorld).invert()),
+        ),
+      );
+      groups.set(m, list);
+      o.geometry.dispose();
+    }
+  });
+  rocket.clear();
+  if (hatch) rocket.add(hatch);
+  for (const [m, pieces] of groups) {
+    const g = mergeGeometries(pieces);
+    pieces.forEach((p) => p.dispose());
+    if (g) {
+      const mesh = new T.Mesh(g, m.clone());
+      mesh.receiveShadow = true;
+      rocket.add(mesh);
+    }
+  }
+  const flight = new RocketFlight(rocket);
+  root.add(flight.group);
+  root.userData.flight = flight;
   return root;
 }
