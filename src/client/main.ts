@@ -1350,7 +1350,7 @@ function editorWindow() {
     'Your world. Your peculiar rules.',
     `<nav class="tabs">${[...creatorTabs, 'Rules', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t || (tab === 'Main' && t === 'Rules') ? 'active' : '')).join('')}</nav>${
       tab === 'Main' || tab === 'Rules'
-        ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
+        ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here. Death retention values run from 0 (lose all) to 1 (keep all). Set hunger/thirst rates to 0 to disable needs. maxOfflineDays uses real days; 0 disables the absence limit.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
             world.settings,
           )
             .map(([k, v]) =>

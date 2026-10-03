@@ -894,6 +894,8 @@ export function act(w: World, id: string, a: Action): string {
             'offlineEfficiency',
             'estateEquityShare',
             'estateAnnualDiscount',
+            'deathCashRetention',
+            'deathBankRetention',
           ].includes(key)
         )
           num(v, 0, 1);
@@ -1301,14 +1303,25 @@ function kill(w: World, p: Player, comic = false) {
     );
   } else {
     p.age = 18;
-    p.skills = [];
-    p.inventory = {};
-    delete p.learning;
-    delete p.job;
-    forecloseEstate(w, p);
+    if (w.settings.loseSkillsOnDeath) {
+      p.skills = [];
+      delete p.learning;
+    }
+    if (w.settings.loseInventoryOnDeath) p.inventory = {};
+    if (w.settings.loseJobOnDeath) {
+      delete p.job;
+      p.activeUntil = 0;
+    }
+    const cashLoss = p.cash - Math.floor(p.cash * w.settings.deathCashRetention);
+    const bankLoss = p.bank - Math.floor(p.bank * w.settings.deathBankRetention);
+    p.cash -= cashLoss;
+    p.bank -= bankLoss;
+    log(w, 'sink', cashLoss, p.id, 'treasury', 'death cash loss');
+    log(w, 'sink', bankLoss, p.id + ':bank', 'treasury', 'death savings loss');
+    if (w.settings.losePropertyOnDeath) forecloseEstate(w, p);
     for (const b of w.buildings) {
-      b.employees = b.employees.filter((id) => id !== p.id);
-      if (b.owner === p.id) {
+      if (w.settings.loseJobOnDeath) b.employees = b.employees.filter((id) => id !== p.id);
+      if (w.settings.losePropertyOnDeath && b.owner === p.id) {
         if (roomCount(b)) {
           if (b.lodging) b.lodging.open = false;
           continue;
@@ -1324,7 +1337,7 @@ function kill(w: World, p: Player, comic = false) {
     say(
       w,
       'Parish notice',
-      `${p.name} has begun a new life. Their cash survives; their qualifications do not.`,
+      `${p.name} has begun a new life. This world ${w.settings.loseSkillsOnDeath ? 'clears' : 'preserves'} qualifications and ${w.settings.losePropertyOnDeath ? 'releases ordinary property' : 'preserves property'}.`,
     );
   }
 }
@@ -1418,9 +1431,29 @@ export function advance(w: World, seconds: number) {
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
-    if (p.online) p.age += seconds / (600 * 365);
-    advanceLoans(w, p, start, end);
-    advanceSurvival(w, p, start, seconds);
+    if (p.online) {
+      p.age += seconds / (600 * 365);
+      p.lastSeen = end;
+      delete p.inactivityProcessed;
+    }
+    const absenceAt = p.lastSeen + w.settings.maxOfflineDays * 86400;
+    const absenceDue =
+      !p.online &&
+      w.settings.maxOfflineDays > 0 &&
+      end >= absenceAt &&
+      p.inactivityProcessed !== p.lastSeen;
+    const boundary = absenceDue ? Math.max(start, absenceAt) : end;
+    // Apply the absence penalty at its deadline, after earlier loan payments and
+    // survival, then simulate the rest of the absence in the new life.
+    advanceLoans(w, p, start, boundary);
+    advanceSurvival(w, p, start, boundary - start);
+    if (absenceDue) {
+      p.inactivityProcessed = p.lastSeen;
+      say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
+      kill(w, p);
+      advanceLoans(w, p, boundary, end);
+      advanceSurvival(w, p, boundary, end - boundary);
+    }
     if (p.online) {
       p.energy = Math.min(65000, p.energy + 3000 * seconds);
       if (!p.health || p.age >= w.settings.maxAge) kill(w, p);

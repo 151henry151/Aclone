@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-03
+
+### Added
+
+- Configure skill, inventory, job and property loss on death, cash/savings retention, and an optional real-day offline absence limit. Existing defaults and Puddlewick's survival/estate behavior stay intact.
+
 ## [0.28.0] - 2026-10-03
 
 ### Added

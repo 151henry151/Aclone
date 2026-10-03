@@ -28,5 +28,12 @@
   "killReward": 0,
   "retainEstateContents": false,
   "estateEquityShare": 0,
-  "estateAnnualDiscount": 0
+  "estateAnnualDiscount": 0,
+  "loseSkillsOnDeath": true,
+  "loseInventoryOnDeath": true,
+  "loseJobOnDeath": true,
+  "losePropertyOnDeath": true,
+  "deathCashRetention": 1,
+  "deathBankRetention": 1,
+  "maxOfflineDays": 0
 }

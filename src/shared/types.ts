@@ -75,6 +75,7 @@ export interface Player {
   muted: boolean;
   online: boolean;
   lastSeen: number;
+  inactivityProcessed?: number;
   lastFood?: string;
   repeats: number;
   importDay: number;
@@ -138,6 +139,13 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  loseSkillsOnDeath: boolean;
+  loseInventoryOnDeath: boolean;
+  loseJobOnDeath: boolean;
+  losePropertyOnDeath: boolean;
+  deathCashRetention: number;
+  deathBankRetention: number;
+  maxOfflineDays: number;
   retainEstateContents: boolean;
   estateEquityShare: number;
   estateAnnualDiscount: number;

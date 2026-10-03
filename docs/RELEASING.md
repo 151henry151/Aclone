@@ -25,8 +25,8 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.28.0
+## Current upgrade: 0.29.0
 
-Adds static OBJ uploads and optional PNG/JPEG textures. No dependency changes or destructive migrations. Back up uploaded assets with the database; restart and refresh clients together. Existing GLB and primitive visuals remain supported. Historical upgrade details remain in the release notes.
+Adds independently configurable death retention and optional offline absence limits. Existing worlds receive defaults that preserve their current death behavior; Puddlewick remains unchanged. No destructive migration or dependency change. The preceding release adds static OBJ uploads and optional PNG/JPEG textures; back up uploaded assets with the database. Restart and refresh clients together.
 
 For older upgrades, review the [upgrade archive](RELEASE_NOTES.md#upgrade-archive), especially schema 2 (0.3.0), seasonal farms (0.4.0), town relocation (0.6.0), offline starvation (0.15.0), pricing (0.15.3/0.16.0), and starter-property cleanup (0.21.2). NPC manuals are bundled runtime inputs: restart after editing FAQ, Playing or Economy.
