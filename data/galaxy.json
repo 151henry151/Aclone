@@ -4,43 +4,50 @@
       "id": "hearth",
       "name": "Hearth",
       "x": 0,
-      "y": 0
+      "y": 0,
+      "hazard": 0
     },
     {
       "id": "brindle",
       "name": "Brindle",
       "x": 3,
-      "y": 2
+      "y": 2,
+      "hazard": 0
     },
     {
       "id": "farthing",
       "name": "Farthing",
       "x": 7,
-      "y": -1
+      "y": -1,
+      "hazard": 1
     },
     {
       "id": "loam",
       "name": "Loam",
       "x": -3,
-      "y": 2
+      "y": 2,
+      "hazard": 0
     },
     {
       "id": "lantern",
       "name": "Lantern",
       "x": 6,
-      "y": 5
+      "y": 5,
+      "hazard": 2
     },
     {
       "id": "rime",
       "name": "Rime",
       "x": 10,
-      "y": 4
+      "y": 4,
+      "hazard": 3
     },
     {
       "id": "vessel",
       "name": "The Vessel",
       "x": 15,
-      "y": 7
+      "y": 7,
+      "hazard": 4
     }
   ],
   "ships": [
@@ -49,21 +56,66 @@
       "name": "Modest shuttle",
       "range": 4,
       "capacity": 20,
-      "price": 0
+      "price": 0,
+      "role": "Starter transport",
+      "fuelPerPc": 1,
+      "secondsPerPc": 2,
+      "shield": 0
     },
     {
       "id": "hauler",
       "name": "Cargo apology",
       "range": 8,
       "capacity": 80,
-      "price": 200
+      "price": 200,
+      "role": "Economical bulk transport",
+      "fuelPerPc": 0.65,
+      "secondsPerPc": 3,
+      "shield": 0.1
+    },
+    {
+      "id": "courier",
+      "name": "Needle courier",
+      "range": 7,
+      "capacity": 25,
+      "price": 240,
+      "role": "Fast parcel delivery",
+      "fuelPerPc": 1.25,
+      "secondsPerPc": 1,
+      "shield": 0.1
+    },
+    {
+      "id": "explorer",
+      "name": "Longview explorer",
+      "range": 12,
+      "capacity": 35,
+      "price": 450,
+      "role": "Long-range survey",
+      "fuelPerPc": 0.85,
+      "secondsPerPc": 1.5,
+      "shield": 0.4
+    },
+    {
+      "id": "escort",
+      "name": "Breakwater escort",
+      "range": 8,
+      "capacity": 40,
+      "price": 320,
+      "role": "Shielded frontier transport",
+      "fuelPerPc": 1.1,
+      "secondsPerPc": 2,
+      "shield": 1
     },
     {
       "id": "alien",
       "name": "Unidentified teapot",
       "range": 20,
       "capacity": 120,
-      "price": 900
+      "price": 900,
+      "role": "Advanced relic scout",
+      "fuelPerPc": 0.65,
+      "secondsPerPc": 1,
+      "shield": 0.8
     }
   ]
 }

@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-10-03
+
+### Added
+
+- Differentiate shuttle, hauler, courier, explorer and shielded escort journeys by range, hold size, fuel and time. Frontier shielding costs are predictable and included in route quotes; NPC travel uses the same quotes. Preserve the starter's 20 cargo spaces and existing saved journeys.
+
+### Fixed
+
+- Price every leg of suggested space routes and require sufficient actual fuel funding when accepting courier work.
+
 ## [0.36.1] - 2026-10-03
 
 ### Fixed

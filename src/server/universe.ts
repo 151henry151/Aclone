@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
-import { shipStats, stationPrice, spaceGoods } from '../shared/galaxy.ts';
+import { shipStats, stationPrice, spaceGoods, jumpQuote } from '../shared/galaxy.ts';
 import { galaxy } from '../shared/catalog.ts';
 import type { Stock } from '../shared/types.ts';
 import type { Store } from './store.ts';
@@ -95,12 +95,10 @@ export class Universe {
       const from = galaxy.systems.find((s) => s.id === d.system),
         to = galaxy.systems.find((s) => s.id === target);
       if (!from || !to || from === to) throw Error('Choose another star system');
-      const distance = Math.hypot(to.x - from.x, to.y - from.y);
-      if (distance > shipStats(d).range) throw Error('Outside your ship’s jump range');
-      const cost = Math.ceil(distance);
+      const { cost, seconds } = jumpQuote(d, from.id, to.id);
       if (d.credits < cost) throw Error('Not enough credits for jump fuel');
       d.credits -= cost;
-      d.transit = { destination: to.id, arrives: Date.now() / 1000 + 6 + cost * 2 };
+      d.transit = { destination: to.id, arrives: Date.now() / 1000 + seconds };
     });
   }
   arrive(a: Account, now = Date.now() / 1000) {
@@ -184,7 +182,8 @@ export class Universe {
         const to = options[Math.floor((d.visited?.length ?? 0) % options.length)];
         if (!to) throw Error('Upgrade your drive first');
         const fuel = Math.ceil(Math.hypot(to.x - from.x, to.y - from.y));
-        if (d.credits < fuel) throw Error('Keep enough credits for delivery fuel');
+        if (d.credits < jumpQuote(d, from.id, to.id).cost)
+          throw Error('Keep enough credits for delivery fuel');
         d.mission = { origin: d.system, destination: to.id, quantity: 10, reward: 20 + fuel * 3 };
       } else if (operation === 'deliver') {
         if (!d.mission || d.system !== d.mission.destination)

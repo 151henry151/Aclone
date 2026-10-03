@@ -188,3 +188,11 @@ Bring **Steel** spare parts from a steelworks or shop. Each garage service consu
 World owners may require **driver**, **pilot**, or **boatmaster** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. The basic tractor and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick doesn't require these licences.
 
 Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d, and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.
+
+## Choosing a spacecraft
+
+The free shuttle keeps 20 cargo spaces and a 4pc drive. The 200cr hauler carries 80, travels slowly and uses 0.65cr/pc. The 240cr courier carries 25 and halves ordinary cruise time at 1.25cr/pc. The 450cr explorer trades a 35-space hold for 12pc range. The 320cr escort carries 40 and has full frontier shielding. The relic-unlocked alien scout remains a late upgrade. Hangars and fleet-wide fittings persist.
+
+Each jump costs rounded-up distance × hull fuel rate, plus rounded-up `2 × route hazard × (1 − shielding)`. The route hazard is the higher of its endpoint ratings (0–4). This models predictable shield-energy expenditure, not random damage, piracy or combat. Travel takes six departure seconds plus rounded-up distance × hull seconds/pc, rounded up again. Shipyard shows each hull's values; jump buttons show exact credits and seconds. Suggested multi-stop routes total every leg, but each jump must be taken separately. Routes minimize stops, not necessarily fuel.
+
+Couriers still reserve ten cargo spaces. Their rewards depend on route distance, not the hull chosen, so efficient ships improve margins. Missions and journeys survive disconnection; an already saved arrival time is unchanged by this upgrade.

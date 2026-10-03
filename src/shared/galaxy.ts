@@ -31,3 +31,43 @@ export function stationPrice(system: string, item: string) {
   const buy = Math.ceil(((items[item]?.price ?? 10000) / 1000) * multiplier);
   return { buy, sell: Math.max(1, buy - 2) };
 }
+
+/** Predictable shield expenditure, not random damage or combat. */
+export function jumpQuote(
+  a: { ship: string; upgrades?: Record<string, number> },
+  fromId: string,
+  toId: string,
+) {
+  const from = galaxy.systems.find((s) => s.id === fromId),
+    to = galaxy.systems.find((s) => s.id === toId);
+  if (!from || !to || from === to) throw Error('Choose another star system');
+  const ship = shipStats(a),
+    distance = Math.hypot(to.x - from.x, to.y - from.y);
+  if (distance > ship.range) throw Error('Outside your ship’s jump range');
+  const hazard = Math.max(from.hazard, to.hazard),
+    hazardCost = Math.ceil(hazard * 2 * (1 - ship.shield));
+  return {
+    distance,
+    hazard,
+    hazardCost,
+    cost: Math.max(1, Math.ceil(distance * ship.fuelPerPc)) + hazardCost,
+    seconds: 6 + Math.ceil(Math.ceil(distance) * ship.secondsPerPc),
+  };
+}
+/** Fewest-jump route with every leg priced using the same rule as the server. */
+export function routeQuote(
+  a: { ship: string; upgrades?: Record<string, number> },
+  from: string,
+  to: string,
+) {
+  const path = route(from, to, shipStats(a).range);
+  if (!path.length) return;
+  let cost = 0,
+    seconds = 0;
+  for (let i = 1; i < path.length; i++) {
+    const leg = jumpQuote(a, path[i - 1], path[i]);
+    cost += leg.cost;
+    seconds += leg.seconds;
+  }
+  return { path, cost, seconds };
+}

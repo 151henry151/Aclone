@@ -3,7 +3,7 @@ import type { Account, Universe } from '../universe.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import type { FarmerChoice } from './farmer.ts';
 import { galaxy } from '../../shared/catalog.ts';
-import { shipStats, spaceGoods, stationPrice } from '../../shared/galaxy.ts';
+import { shipStats, spaceGoods, stationPrice, jumpQuote } from '../../shared/galaxy.ts';
 import { operation } from './player-operations.ts';
 import { distance, log } from '../../shared/simulation.ts';
 export const spaceOperations = new Set([
@@ -106,9 +106,9 @@ export function spaceChoices(
     add('Survey this system once for 15 credits and possible frontier relic.', 'survey');
   for (const s of galaxy.systems) {
     const d = Math.hypot(s.x - from.x, s.y - from.y);
-    if (s.id !== a.system && d <= stats.range && a.credits >= Math.ceil(d))
+    if (s.id !== a.system && d <= stats.range && a.credits >= jumpQuote(a, a.system, s.id).cost)
       add(
-        `Jump to ${s.name} for ${Math.ceil(d)} credits; ${a.mission?.destination === s.id ? 'current delivery destination' : ''}`,
+        `Jump to ${s.name} for ${jumpQuote(a, a.system, s.id).cost} credits and ${jumpQuote(a, a.system, s.id).seconds} seconds; ${a.mission?.destination === s.id ? 'current delivery destination' : ''}`,
         'jump',
         { system: s.id },
       );
@@ -158,9 +158,13 @@ export function spaceChoices(
       (a.hangar?.includes(ship.id) || a.credits >= ship.price) &&
       (ship.id !== 'alien' || (a.discoveries?.length ?? 0) >= 3)
     )
-      add(`Select or buy ${ship.name}, listed price ${ship.price} credits.`, 'ship', {
-        ship: ship.id,
-      });
+      add(
+        `Select or buy ${ship.name}, listed price ${ship.price} credits. ${ship.role}; range ${ship.range}, cargo ${ship.capacity}, base fuel ${ship.fuelPerPc} cr/pc, cruise ${ship.secondsPerPc} s/pc, shielding ${Math.round(ship.shield * 100)}%.`,
+        'ship',
+        {
+          ship: ship.id,
+        },
+      );
   if (
     a.system !== 'hearth' &&
     !a.mission &&

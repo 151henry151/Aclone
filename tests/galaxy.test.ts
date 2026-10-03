@@ -85,3 +85,52 @@ test('jumps persist in transit, block station actions and finish once after reco
     s.close();
   }
 });
+
+test('hull roles trade range, cargo, journey time and fuel while preserving starter cargo', async () => {
+  const { jumpQuote, routeQuote } = await import('../src/shared/galaxy.ts');
+  const quote = (ship: string) => jumpQuote({ ship }, 'hearth', 'brindle');
+  assert.equal(shipStats({ ship: 'shuttle' }).capacity, 20);
+  assert.ok(quote('hauler').cost < quote('shuttle').cost);
+  assert.ok(quote('courier').seconds < quote('hauler').seconds);
+  assert.ok(shipStats({ ship: 'explorer' }).range > shipStats({ ship: 'courier' }).range);
+  const risk = (ship: string) => jumpQuote({ ship }, 'rime', 'vessel');
+  assert.ok(risk('escort').hazardCost < risk('hauler').hazardCost);
+  const trip = routeQuote({ ship: 'shuttle', upgrades: { drive: 2 } }, 'hearth', 'vessel')!;
+  assert.ok(trip.path.length > 2);
+  assert.equal(
+    trip.cost,
+    trip.path
+      .slice(1)
+      .reduce(
+        (sum, to, i) =>
+          sum + jumpQuote({ ship: 'shuttle', upgrades: { drive: 2 } }, trip.path[i], to).cost,
+        0,
+      ),
+  );
+  assert.equal(routeQuote({ ship: 'shuttle' }, 'hearth', 'vessel'), undefined);
+});
+test('actual jump charges the displayed hull quote atomically and retains saved arrival', async () => {
+  const { jumpQuote } = await import('../src/shared/galaxy.ts');
+  const store = new Store(':memory:');
+  try {
+    const u = new Universe(store),
+      { account: a, token } = u.register('Role tester');
+    a.credits = 1000;
+    u.buyShip(a, 'courier');
+    const expected = jumpQuote(a, a.system, 'brindle'),
+      before = a.credits,
+      time = Date.now() / 1000;
+    u.travel(a, 'brindle');
+    assert.equal(a.credits, before - expected.cost);
+    assert.ok(Math.abs(a.transit!.arrives - time - expected.seconds) < 1);
+    assert.equal(u.authenticate(token)!.transit!.arrives, a.transit!.arrives);
+    assert.throws(() => u.buyShip(a, 'shuttle'), /transit/);
+    u.arrive(a, Infinity);
+    a.credits = 0;
+    const snapshot = JSON.stringify(a);
+    assert.throws(() => u.travel(a, 'hearth'), /fuel/);
+    assert.equal(JSON.stringify(a), snapshot);
+  } finally {
+    store.close();
+  }
+});
