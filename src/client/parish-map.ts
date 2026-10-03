@@ -251,18 +251,17 @@ export class ParishMap {
       kind: b.kind,
       category: 'building',
     }));
-    for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
-      const nodes = available.filter((n) => n.item === item);
-      if (nodes.length)
-        sites.push({
-          id: `resource-${item}`,
-          name: nodes[0].name,
-          x: nodes.reduce((s, n) => s + n.x, 0) / nodes.length,
-          z: nodes.reduce((s, n) => s + n.z, 0) / nodes.length,
-          kind: item === 'logs' ? 'Wood / logs' : item === 'dirt' ? 'Dirt' : item,
-          category: 'resource',
-        });
-    }
+    // Gathering grounds are scattered, so a resource-type centroid may be
+    // empty land. Anchor every name and leader line to an actual site.
+    for (const n of available)
+      sites.push({
+        id: n.id,
+        name: n.name,
+        x: n.x,
+        z: n.z,
+        kind: n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item,
+        category: 'resource',
+      });
     sites.push(
       {
         id: 'hornball',

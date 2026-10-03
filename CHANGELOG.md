@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.27.3] - 2026-10-03
+
+### Fixed
+
+- Label each gathering ground at its actual map location; resource names no longer point to empty land between widely scattered sites.
+
 ## [0.27.2] - 2026-10-03
 
 ### Fixed

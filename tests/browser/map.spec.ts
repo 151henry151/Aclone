@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation.ts';
+import { resourceNodes } from '../../src/shared/resources.ts';
 
 test('the parish map opens with M or a click and keeps navigation through live updates', async ({
   page,
@@ -37,10 +38,18 @@ test('the parish map opens with M or a click and keeps navigation through live u
     await expect(page.getByRole('dialog', { name: 'Parish directory.' })).toHaveCount(0);
     for (const b of w.buildings)
       await expect(map.getByRole('button', { name: b.name, exact: true })).toBeVisible();
-    for (const name of ['Woodland clearing', 'Stone outcrop', 'Gravel hollow', 'Exposed topsoil'])
+    const resourceLabels = map.locator('.parish-map-resource-label');
+    await expect(resourceLabels).toHaveCount(resourceNodes.length);
+    // Every label points to a real ground, never the empty centre of a type's
+    // widely separated sites. Coordinates also match the gathering action.
+    for (const n of resourceNodes) {
+      const kind = n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item;
       await expect(
-        map.locator('.parish-map-resource-label').filter({ hasText: name }),
+        resourceLabels.and(
+          map.getByTitle(`${n.name} · ${kind} · (${n.x}, ${n.z})`, { exact: true }),
+        ),
       ).toBeVisible();
+    }
     await expect(
       map.locator('[data-player-id]').filter({ has: page.locator('title', { hasText: 'You' }) }),
     ).toHaveCount(1);

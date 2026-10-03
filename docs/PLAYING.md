@@ -30,7 +30,7 @@ Carry Fishing tackle and visit the dock in a fishing-enabled world. Its deck sup
 
 ## Finding your way
 
-**M** or the minimap opens the enlarged parish map; M/Esc closes it. Named buildings/resources, roads and player markers update live. Pan by dragging/swiping or focus the map and use arrow keys; use +/− or wheel to zoom. **Find me** centres your marker; **Fit parish** resets bounds. Gold shows you/heading, pale blue other players, green unobstructed resources (not necessarily stocked). Click a building name to inspect; travel there for transactions (within 18m). Long names remain available in details/tooltips. The separate **Parish directory** lists distances and is accessible from map, journal and menu.
+**M** or the minimap opens the enlarged parish map; M/Esc closes it. Named buildings/resources, roads and player markers update live. Pan by dragging/swiping or focus the map and use arrow keys; use +/− or wheel to zoom. **Find me** centres your marker; **Fit parish** resets bounds. Gold shows you/heading, pale blue other players, green unobstructed resources (not necessarily stocked). Each resource label has a line pointing to its actual gathering ground; follow the marker, not the displaced label. Click a building name to inspect; travel there for transactions (within 18m). Long names remain available in details/tooltips. The separate **Parish directory** lists distances and is accessible from map, journal and menu.
 
 ## Sound
 
