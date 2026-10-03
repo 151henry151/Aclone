@@ -17,7 +17,9 @@ export const employmentRequestSchema = z
     ),
     train: z
       .boolean()
-      .describe('True only when agreeing to learn the required skill if it is missing.'),
+      .describe(
+        'Permission to learn the required skill if missing. Set true when agreeing to a request to train/study/learn and work, even if already qualified; the engine skips unnecessary training. False means accept employment WITHOUT permission to train.',
+      ),
   })
   .strict();
 export const gameplayRequestSchema = z
@@ -76,17 +78,39 @@ export function recordCommitment(
       (c) =>
         ['pending', 'blocked'].includes(c.status) &&
         c.speakerId === speakerId &&
+        c.world === w.id &&
+        c.replyTo === replyTo &&
         c.summary === request.summary &&
         JSON.stringify(c.delivery) === JSON.stringify(request.delivery) &&
         JSON.stringify(c.employment) === JSON.stringify(request.employment),
     )
   )
     return false;
+  // A clarification replaces this speaker's existing request for the same job,
+  // rather than filling the queue with contradictory copies of the agreement.
+  const replaced = request.employment
+    ? all.filter(
+        (c) =>
+          c.world === w.id &&
+          c.speakerId === speakerId &&
+          c.replyTo === replyTo &&
+          ['pending', 'blocked'].includes(c.status) &&
+          c.employment?.building === request.employment!.building,
+      )
+    : [];
   if (
-    all.filter((c) => (c.delivery || c.employment) && ['pending', 'blocked'].includes(c.status))
-      .length >= 4
+    all.filter(
+      (c) =>
+        !replaced.includes(c) &&
+        (c.delivery || c.employment) &&
+        ['pending', 'blocked'].includes(c.status),
+    ).length >= 4
   )
     return false;
+  for (const c of replaced) {
+    c.status = 'cancelled';
+    c.outcome = 'Replaced by the newer employment agreement with this player.';
+  }
   all.push({
     ...request,
     id,

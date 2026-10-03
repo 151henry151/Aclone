@@ -6,7 +6,9 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.23.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.23.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+
+**Fixed in 0.23.1:** NPCs distinguish their current qualifications from school courses and old-life memories. Clarified training agreements replace blocked job requests, and outdated replies are discarded after character-state changes. See [current character facts](docs/NPCS.md#current-character-facts-and-retraining) and [upgrade instructions](docs/RELEASING.md#deploying-0231).
 
 **New in 0.23.0:** natural gathering grounds replace the rows of resource piles: woodland clearings, chipped boulders, gravel hollows and exposed soil banks, placed away from town buildings and roads. Existing reserves and gathering tasks survive the move. See [screenshots and art details](docs/ART.md#natural-gathering-grounds).
 
@@ -347,6 +349,11 @@ and [mill troubleshooting](docs/FAQ.md#why-is-my-flour-mill-not-making-flour).
 The screenshot uses a scripted test reply to verify the interface. Separate live OpenAI tests verify gameplay and answers about controls, recovery, ownership and crops.
 
 ## Contribute
+
+The NPC qualification correction separates current qualifications from school courses
+and historical memories, and lets a clarified training agreement replace blocked
+job requests. See [current character facts](docs/NPCS.md#current-character-facts-and-retraining)
+for the behavior and upgrade limits.
 
 The countryside redesign replaces resource piles with woodland clearings,
 stone outcrops, gravel hollows and exposed soil banks away from village buildings.

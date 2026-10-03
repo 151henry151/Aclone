@@ -16,6 +16,7 @@ import { distance } from '../../shared/simulation.ts';
 import { Navigator } from './navigation.ts';
 import { instructions, conversationInstructions, observe } from './observation.ts';
 import { careNeeded } from './strategy.ts';
+import { characterRevision } from './character-facts.ts';
 import { jevInstructions } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
@@ -558,6 +559,27 @@ export class Residents {
         p.online = false;
       }
       if (!p) continue;
+      if (r.state.observedDeaths !== undefined && p.deaths !== r.state.observedDeaths) {
+        // A previous-life plan or reply must not reappear after resurrection,
+        // including replies already in flight when the death happened.
+        r.busy?.abort();
+        delete r.state.pendingAgreementReply;
+        delete r.state.dialogueAttempt;
+        delete r.state.observedTask;
+        delete r.state.evaluation;
+        delete r.state.recovery;
+        r.state.plan = [];
+        r.state.intent = 'Begin a new life; reassess my qualifications, work and supplies.';
+        r.state.pending = false;
+        r.state.observedDeaths = p.deaths;
+        r.cooldown = 0;
+        this.failure(
+          r,
+          w,
+          'My life ended. Recheck my current skills, job and supplies before continuing.',
+        );
+      }
+      r.state.observedDeaths = p.deaths;
       if (r.active && !p.online && !r.state.inSpace) {
         this.memory.pause(r.config.id, true);
         r.active = false;
@@ -632,9 +654,6 @@ export class Residents {
           skills: p.skills,
         });
       }
-      if (r.state.observedDeaths !== undefined && p.deaths !== r.state.observedDeaths)
-        this.failure(r, w, 'Life ended; review what went wrong');
-      r.state.observedDeaths = p.deaths;
       const critical = careNeeded(w, p);
       if (critical && !r.state.critical) {
         r.wake = true;
@@ -857,6 +876,24 @@ export class Residents {
     );
   }
   private think(r: Resident, w: World, p: Player, now: number) {
+    const revision = characterRevision(p);
+    const discardStaleReply = (world: World) => {
+      const player = world.players[r.state.playerId];
+      if (player && characterRevision(player) === revision) return false;
+      delete r.state.dialogueAttempt;
+      delete r.state.pendingAgreementReply;
+      r.state.pending = false;
+      r.state.plan = [];
+      r.state.waitUntil = 0;
+      r.nav = undefined;
+      r.wake = true;
+      r.state.needsDecision = true;
+      this.checkpoint(r, world, 'stale-decision', {
+        reason:
+          'Character qualifications, life or employment changed while thinking; recheck current facts.',
+      });
+      return true;
+    };
     const chatOnly = this.dialogueDue(r, now);
     const snapshot = {
       time: w.time,
@@ -1129,6 +1166,7 @@ export class Residents {
           return;
         // Validate against the world AFTER the asynchronous reply: ownership,
         // stock and prices may have changed while the model was thinking.
+        if (discardStaleReply(latest)) return;
         if (conversation?.speakerId && conversationCompleted) {
           rememberConversation(
             r.state,
@@ -1252,6 +1290,7 @@ export class Residents {
           (!finalWorld.players[r.state.playerId]?.online && !r.state.inSpace)
         )
           return;
+        if (discardStaleReply(finalWorld)) return;
         this.accept(r, finalWorld, result, Date.now(), replyTo, chatOnly);
         if (
           chatOnly &&

@@ -4,6 +4,29 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.23.1
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. Production deployment remains operator-managed. No new credentials,
+dependencies, memory wipe or database reset are required.
+
+NPC dialogue now receives current qualifications separately from available school
+courses. Older unclassified and prior-life summaries remain archived but are not
+used as current character facts. Death invalidates pending plans/replies; changes
+to qualifications, study or employment also invalidate replies still being generated.
+A clarified employment agreement replaces unfinished copies for the same player,
+workplace, world and chat channel.
+
+Existing live agreements are not rewritten retroactively. After upgrading, ask
+Mabel to **train as a miller and work at Hank's Flour mill** again. Check that she
+starts a real course and then accepts the job; speech alone is not proof of action.
+
+Validation: all 120 NPC tests passed, plus TypeScript, formatting and the `/aclone`
+production build. Regressions cover death during a pending reply, stale memory,
+paid retraining and verified employment. A bounded isolated OpenAI replay of the
+reported exchange returned the correct training-enabled request; no test messages
+or state changes were sent to production.
+
 ## Deploying 0.23.0
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the

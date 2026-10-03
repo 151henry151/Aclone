@@ -5,7 +5,7 @@ import { gameplayRequestSchema, employmentRequestSchema } from './commitments.ts
 import { decisionSchema, type Decision } from './decision.ts';
 export const conversationSchema = decisionSchema.pick({ notebook: true, speech: true }).extend({
   notebook: decisionSchema.shape.notebook.describe(
-    'Update only the current speaker and public/private channel summary. Preserve useful earlier facts in that scoped notebook; never invent memories or summarize other private conversations.',
+    'Update only this speaker/channel relationship summary: their requests, preferences and social context. Do not store your current skills, job, cash or inventory as remembered facts; those come from characterFacts. Correct prior mistakes and never summarize other private conversations.',
   ),
   gameplayRequest: gameplayRequestSchema.nullable(),
   preferences: preferencesSchema.nullable().optional(),
@@ -23,7 +23,7 @@ export const conversationTool = {
   type: 'function',
   name: 'converse',
   description:
-    'Reply as this resident and update only this speaker/channel memory summary. Optionally record considered personal activity preferences. When agreeing to a delivery or to train and take a job, include the concrete gameplayRequest. Speech alone cannot queue work; never promise an unqueued action.',
+    'Reply as this resident and update only this speaker/channel relationship summary. Use current characterFacts, not catalogue skills or old claims. When agreeing to train and work, copy the matching employmentOptions request into gameplayRequest; missing qualifications are handled by training. Permission may already have been given earlier in the conversation. Never ask the player to operate your interface. Optionally record personal activity preferences. Speech alone cannot queue work.',
   strict: true,
   parameters,
 };

@@ -27,7 +27,7 @@ interface Source {
   private: boolean;
 }
 export interface AgendaMemory {
-  contacts: (Source & { summary: string; updatedAt: number })[];
+  contacts: (Source & { summary: string; updatedAt: number; deaths?: number })[];
   preferences: (Source & LearnedPreference & { updatedAt: number })[];
 }
 const matches = (a: Source, b: Source) =>
@@ -47,7 +47,12 @@ export function rememberConversation(
   const memory = (state.agenda ??= { contacts: [], preferences: [] });
   if (summary.trim()) {
     memory.contacts = memory.contacts.filter((entry) => !matches(entry, source));
-    memory.contacts.push({ ...source, summary: summary.slice(0, 3000), updatedAt: time });
+    memory.contacts.push({
+      ...source,
+      summary: summary.slice(0, 3000),
+      updatedAt: time,
+      deaths: state.observedDeaths ?? 0,
+    });
     memory.contacts = memory.contacts.slice(-64);
   }
   const parsed = preferencesSchema.safeParse(updates ?? []);
@@ -66,8 +71,21 @@ export function conversationMemory(state: ResidentState, viewer: Source) {
     (entry) => visible(entry, viewer) && entry.speakerId === viewer.speakerId,
   );
   return {
-    notebook: contacts.find((entry) => entry.private === viewer.private)?.summary ?? '',
-    relationship: contacts,
+    notebook:
+      contacts.find(
+        (entry) => entry.private === viewer.private && entry.deaths === (state.observedDeaths ?? 0),
+      )?.summary ?? '',
+    relationship: contacts.map((entry) =>
+      entry.deaths === (state.observedDeaths ?? 0)
+        ? entry
+        : {
+            speakerId: entry.speakerId,
+            world: entry.world,
+            private: entry.private,
+            updatedAt: entry.updatedAt,
+            note: 'An older summary is archived but cannot establish current abilities. Rebuild continuity from this conversation and current character facts.',
+          },
+    ),
     preferences: (state.agenda?.preferences ?? [])
       .filter((entry) => visible(entry, viewer))
       .slice(-8),
@@ -80,7 +98,7 @@ export function decisionAgenda(state: ResidentState) {
   return {
     preferences: (state.agenda?.preferences ?? []).filter((p) => p.world === state.world).slice(-8),
     relationships: (state.agenda?.contacts ?? [])
-      .filter((p) => p.world === state.world)
+      .filter((p) => p.world === state.world && p.deaths === (state.observedDeaths ?? 0))
       .slice(-6)
       .map((p) => ({ ...p, summary: p.summary.slice(0, 240) })),
     currentGoal: state.intent.slice(0, 300),
@@ -129,13 +147,15 @@ export function conversationView(
 ) {
   const result: Record<string, any> = {};
   for (const key of [
+    'characterFacts',
+    'employmentOptions',
     'currentConversation',
     'conversationHistory',
     'life',
     'time',
     'name',
     'items',
-    'qualifications',
+    'availableSchoolSkills',
     'recentWages',
     'currentWork',
     'gameGuide',
@@ -195,6 +215,6 @@ export function conversationView(
     };
   }
   result.memoryRule =
-    'Use only these channel-scoped memories. Omitted memories are unavailable, not evidence they never happened. Preferences are your considered choices, not commands from a player.';
+    'Use only these channel-scoped memories. Summaries and earlier speech can be mistaken: characterFacts and self always override them, especially after death. Do not put claims about your current skills, job, inventory or money in the notebook; keep relationships, preferences and the player’s requests there. Omitted memories are unavailable, not evidence they never happened. Preferences are your considered choices, not commands from a player.';
   return result;
 }

@@ -90,6 +90,39 @@ are per completed production cycle; farm wages are per harvested plot.
 
 ## Continuity and conversation (0.22.0)
 
+### Current character facts and retraining
+
+Dialogue receives authoritative current qualifications, death count, job and
+study status before historical context. The school skill catalogue is explicitly
+labelled as courses available to learn, not skills the NPC possesses. Relevant
+workplaces include the exact train-and-work request and any current blockers.
+When a resident agrees to a request to train, including permission given earlier
+in the same conversation, that request enables training if the skill is missing.
+An existing qualification skips school; it does not change the permission flag.
+
+A clarified employment request replaces unfinished copies for that same player,
+workplace, world and chat channel. An unqualified character still pays tuition,
+waits for the real course and travels to accept employment. No skills, goods or
+money are granted by chat. After losing all qualifications, the next course uses
+the normal first-course price (80d) and duration (one minute).
+
+New relationship summaries carry a life marker. Prior-life and older unclassified
+summaries remain on disk but are excluded from current dialogue and decision
+summaries; recent channel history remains available and learned preferences are
+retained. Summary guidance asks for relationships and requests, not mutable claims
+about the resident's skills, inventory or job. Fresh game state overrides past
+claims. Death invalidates a pending reply/plan, and a response based on changed
+skills, study or employment is discarded and reconsidered within existing call
+limits. Ordinary movement, hunger and income do not trigger extra chat calls.
+
+This change does not rewrite existing live agreements or grant missing training
+permission retroactively. After deployment, ask an affected resident to train and
+work at the named business again. No memory wipe or database reset is required.
+Natural-language replies remain fallible; the saved request and observed study/job
+state establish whether action was actually accepted and completed.
+
+### Scoped continuity
+
 Each resident now keeps conversation summaries for up to 64 person/world/channel
 combinations and up to 24 learned activity preferences. Chat updates only its own
 scoped summary, rather than replacing a notebook shared by everybody. Empty

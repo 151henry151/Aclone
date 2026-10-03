@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-10-03
+
+### Fixed
+
+- Give NPC dialogue explicit current qualifications, study status and available employment/training requests. Distinguish the school catalogue from acquired skills, so an NPC who lost qualifications on death can agree to retrain instead of claiming to still have them.
+- Keep old-life or unclassified relationship summaries archived rather than treating them as current character facts. Discard in-flight replies and plans when life, skills, study or employment changes, and replace earlier blocked copies when a player clarifies an employment agreement.
+
 ## [0.23.0] - 2026-10-03
 
 ### Changed
