@@ -112,3 +112,22 @@ test('quest death policies reset only configured progress', () => {
   assert.equal(currentProgress(p, q), undefined);
   assert.ok(currentProgress(p, retained));
 });
+
+test('build access requirements reject construction before charging or creating a site', () => {
+  const { w, p } = setup();
+  p.x = 210;
+  p.z = -220;
+  w.creator!.guards = [
+    guardSchema.parse({
+      id: 'build-intro',
+      action: 'build',
+      target: 'home',
+      item: 'steel',
+      quantity: 1,
+      message: 'Carry a permit token first.',
+    }),
+  ];
+  const before = structuredClone(w);
+  assert.throws(() => act(w, p.id, { type: 'construct', kind: 'home' }), /permit token/);
+  assert.deepEqual(w, before);
+});

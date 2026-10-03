@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-10-03
+
+### Fixed
+
+- Enforce creator “build” access requirements on construction requests before charging cash or creating a building site.
+
 ## [0.33.0] - 2026-10-03
 
 ### Added

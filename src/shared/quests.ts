@@ -68,7 +68,8 @@ export function currentProgress(p: Player, q: Quest) {
 /** Guards are pure, synchronous predicates: cancellation happens before any economic mutation. */
 export function checkActionGuards(w: World, p: Player, a: Action) {
   for (const g of w.creator?.guards ?? []) {
-    if (g.action !== a.type || (g.target && ![a.building, a.object, a.kind].includes(g.target)))
+    const action = g.action === 'build' ? 'construct' : g.action;
+    if (action !== a.type || (g.target && ![a.building, a.object, a.kind].includes(g.target)))
       continue;
     if (
       (g.skill && !p.skills.includes(g.skill)) ||
