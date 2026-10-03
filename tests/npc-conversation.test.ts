@@ -421,3 +421,90 @@ test('long NPC and human chat use the same 1200-character limit without truncati
   assert.throws(() => act(w, human.id, { type: 'chat', text: 'x'.repeat(1201) }), /Invalid text/);
   assert.throws(() => decisionSchema.parse({ ...d, speech: { text: 'x'.repeat(1201), to: null } }));
 });
+
+test('scheduled residents answer while preparing to leave, then depart after bounded chat grace', async (t) => {
+  let now = Date.parse('2026-10-03T18:00:00Z'),
+    chatCalls = 0;
+  t.mock.method(Date, 'now', () => now);
+  const store = new Store(':memory:'),
+    w = createWorld('puddlewick', 'Town', 'owner'),
+    worlds = new Map([[w.id, w]]),
+    universe = new Universe(store);
+  const config = npcConfigSchema.parse({
+    id: 'mina',
+    name: 'Mina Shaw',
+    provider: 'jev',
+    presence: 'scheduled',
+    intervalMs: 5000,
+  });
+  const idle = {
+    intent: 'Rest',
+    notebook: '',
+    speech: null,
+    plan: [{ kind: 'wait' as const, seconds: 60 }],
+    repeat: 1,
+    reconsiderSeconds: 60,
+  };
+  let release: (() => void) | undefined;
+  const r = new Residents(store, universe, worlds, [
+    {
+      config,
+      brain: {
+        async decide() {
+          return { decision: idle, inputTokens: 1, outputTokens: 1 };
+        },
+      },
+      dialogue: {
+        rates: { inputUsdPerMillion: 0.4, outputUsdPerMillion: 1.6 },
+        brain: {
+          async decide() {
+            chatCalls++;
+            await new Promise<void>((resolve) => {
+              release = resolve;
+            });
+            return {
+              decision: {
+                ...idle,
+                speech: { text: 'Hello Robin, I am getting ready to head home.', to: null },
+              },
+              inputTokens: 20,
+              outputTokens: 5,
+            };
+          },
+        },
+      },
+    },
+  ]);
+  try {
+    const human = addPlayer(w, 'human', 'Robin');
+    now = r.memory.load('mina')!.presence!.nextAt;
+    r.tick(0.5, now);
+    await r.settled();
+    const visit = r.memory.load('mina')!.presence!;
+    now = visit.preparationUntil - 1000;
+    say(w, human.name, 'Mina, hello!', 'chat');
+    r.capture(w);
+    r.tick(0.5, now);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    assert.equal(chatCalls, 1, 'preparing phase must not swallow the queued question');
+    now += 2000;
+    r.tick(0.5, now);
+    assert.equal(
+      w.players[r.status()[0].playerId].online,
+      true,
+      'in-flight reply gets a short grace period',
+    );
+    release!();
+    await r.settled();
+    assert.equal(w.messages.filter((m) => m.name === 'Mina Shaw' && m.kind === 'chat').length, 1);
+    now = visit.preparationUntil + 120001;
+    r.tick(0.5, now);
+    await r.settled();
+    assert.equal(w.players[r.status()[0].playerId].online, false);
+    assert.equal(chatCalls, 1, 'no unsolicited departure-model calls');
+  } finally {
+    release?.();
+    r.close();
+    store.close();
+  }
+});

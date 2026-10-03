@@ -56,6 +56,7 @@ interface Resident extends ResidentOptions {
   nav?: Navigator;
   navOrigin?: { x: number; z: number };
   busy?: AbortController;
+  chatBusy?: boolean;
   pending?: Promise<void>;
   wake: boolean;
   lastCall: number;
@@ -634,6 +635,19 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
+      // A survival errand must not silence an online resident either. Only the
+      // addressed conversation is requested; routine care keeps running locally.
+      if (
+        !r.busy &&
+        this.dialogueDue(r, now) &&
+        now - r.lastCall >= r.config.intervalMs &&
+        this.residents.filter((q) => q.busy).length < this.budget.config.concurrency
+      ) {
+        p.online = !r.state.inSpace;
+        r.active = p.online;
+        this.think(r, w, p, now);
+        continue;
+      }
       // Eating, drinking and finishing an emergency errand never wait for API credits.
       if (!r.state.inSpace && (r.caring || careNeeded(w, p))) {
         if (r.caring && r.state.plan.length && r.state.index < r.state.plan.length) {
@@ -765,7 +779,7 @@ export class Residents {
     if (s.phase === 'playing' && now >= s.endsAt - 5 * 60000) {
       s.phase = 'preparing';
       r.caring = false;
-      r.busy?.abort();
+      if (!r.chatBusy) r.busy?.abort();
       r.nav = undefined;
       r.state.plan = [];
       r.state.waitUntil = 0;
@@ -779,9 +793,13 @@ export class Residents {
     if (s.phase !== 'preparing') return false;
     const away = Math.max(600, (s.nextRegularAt - now) / 1000);
     const ready = offlineReadiness(w, p, away);
+    // Leaving preparations still count as being online. Let addressed chat run,
+    // including while travelling home, but never extend a visit indefinitely.
+    const chatGrace = !!r.state.helpQuestion && now < s.preparationUntil + 60000;
     if (
-      now >= s.preparationUntil ||
-      (now >= s.endsAt && ready.atHome && ready.stocked && ready.comfortable)
+      !chatGrace &&
+      (now >= s.preparationUntil ||
+        (now >= s.endsAt && ready.atHome && ready.stocked && ready.comfortable))
     ) {
       const seconds = returnDelay(w, p, away);
       s.phase = 'offline';
@@ -797,6 +815,14 @@ export class Residents {
       r.state.plan = [];
       r.state.needsDecision = false;
       r.state.pending = false;
+      if (r.state.helpQuestion && r.state.questionFrom)
+        say(
+          w,
+          'AI notice',
+          `${r.state.name} had to log off before replying. Please try again on their next visit.`,
+          'system',
+          r.state.questionFrom,
+        );
       r.state.helpQuestion = undefined;
       r.state.replyTo = undefined;
       r.state.publicConversations = [];
@@ -810,6 +836,15 @@ export class Residents {
     }
     p.online = !r.state.inSpace;
     r.active = true;
+    if (
+      !r.busy &&
+      this.dialogueDue(r, now) &&
+      now - r.lastCall >= r.config.intervalMs &&
+      this.residents.filter((q) => q.busy).length < this.budget.config.concurrency
+    ) {
+      this.think(r, w, p, now);
+      return true;
+    }
     if (r.busy || r.nav || p.task || now < r.state.waitUntil) return true;
     if (r.state.inSpace) {
       const a = this.account(r);
@@ -1071,6 +1106,7 @@ export class Residents {
     r.state.status = chatOnly ? 'Replying' : 'Thinking';
     const controller = new AbortController();
     r.busy = controller;
+    r.chatBusy = chatOnly;
     const pending: Promise<BrainResult> = chatOnly
       ? Promise.resolve({
           decision: {
@@ -1195,7 +1231,21 @@ export class Residents {
             } catch {
               if (this.closed) return;
               this.budget.failed(chatReservation);
-              this.checkpoint(r, this.worlds.get(r.state.world) ?? current, 'dialogue-error', {
+              const latest = this.worlds.get(r.state.world) ?? current;
+              const noticeKey = `${conversationKey}:failure:${count >= 3 ? 'final' : 'retry'}`;
+              if (conversation.speakerId && r.state.dialogueNoticeKey !== noticeKey) {
+                say(
+                  latest,
+                  'AI notice',
+                  count >= 3
+                    ? `${r.state.name} still cannot reply right now. Please try again later.`
+                    : `${r.state.name} received your message but could not reply just now. A retry is scheduled.`,
+                  'system',
+                  conversation.speakerId,
+                );
+                r.state.dialogueNoticeKey = noticeKey;
+              }
+              this.checkpoint(r, latest, 'dialogue-error', {
                 message: 'Conversation unavailable; the selected gameplay plan is preserved.',
               });
             }
@@ -1409,6 +1459,7 @@ export class Residents {
       })
       .finally(() => {
         r.busy = undefined;
+        r.chatBusy = false;
         r.pending = undefined;
       });
   }

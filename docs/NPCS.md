@@ -87,7 +87,7 @@ Ready accepted requests outrank unrelated shopping/rest/cosmetics when healthy. 
 
 ## Chat routing
 
-Residents respond to addressed humans, not routine activity or other NPCs. Public mentions receive public replies; private messages receive private replies. Routing follows the initiating channel, not the model's suggested recipient. Gameplay narration stays in journals.
+Residents respond to addressed humans, not routine activity or other NPCs. They can reply while preparing to leave or running survival errands. Pending conversation can delay departure only until one minute past the preparation deadline; departure and repeated provider failures give the sender a private notice. Public mentions receive public replies; private messages receive private replies. Routing follows the initiating channel, not the model's suggested recipient. Gameplay narration stays in journals.
 
 Unnamed public follow-ups go to the same resident for two real minutes after the player's last turn. Naming another person, private messaging or multiple names clears that listener. Group mentions may get individual replies but do not create a group follow-up. Windows persist with original expiry and are bounded to 64 players/resident. These are deterministic name/time rules, not semantic intent recognition; routing makes no model calls. Up to eight recent channel turns accompany a reply; private turns never enter public history. Messages are limited to 1,200 characters.
 

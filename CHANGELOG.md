@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-10-03
+
+### Fixed
+
+- Let online NPCs answer addressed messages while preparing to log off or running survival errands. Allow a bounded departure grace period for replies and send private notices when a provider failure or departure prevents a response.
+
 ## [0.29.0] - 2026-10-03
 
 ### Added
