@@ -15,7 +15,7 @@ import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { countrySky } from './sky';
 import { celestialAt } from '../shared/astronomy';
-import { nightIllumination } from './sky-weather';
+import { twilightAt, nightIllumination } from './sky-weather';
 import { tractor, TRACTOR_EYE_HEIGHT, TRACTOR_SEAT_Z } from './tractor';
 import { SmokePlumes } from './smoke';
 import { tractorPaint } from '../shared/appearance';
@@ -1062,24 +1062,27 @@ export class GameScene {
         climate.intensity,
         climate.wind,
       );
+      const twilight = twilightAt(solar.direction[1], climate.clouds);
       const sunlight = daylight * (3 - climate.clouds * 1.7);
       this.sun.intensity = sunlight + night.moonlight;
-      this.sun.color.set(solar.twilight > 0.3 ? '#ffac68' : '#ffe9bb');
+      this.sun.color.set('#ffe9bb').lerp(new T.Color('#ffab65'), twilight.warmth);
       this.sun.color.lerp(
         new T.Color('#d2dfff'),
         night.moonlight / Math.max(0.001, this.sun.intensity),
       );
       this.ambient.color.set('#b6cbd9').lerp(new T.Color('#b6c5df'), night.night);
       this.ambient.groundColor.set('#7c8067').lerp(new T.Color('#657083'), night.night);
-      this.ambient.intensity = 0.002 + daylight * 1.05 + night.ambient + flash * 2.5;
+      this.ambient.intensity =
+        0.002 + daylight * 1.05 + night.ambient + twilight.ambient + flash * 2.5;
       const sky = new T.Color('#b8ced9').multiplyScalar(0.001 + daylight * 0.9 + flash);
-      sky.lerp(new T.Color('#c87458'), solar.twilight * 0.45);
+      sky.lerp(new T.Color('#ba847a'), twilight.glow * 0.22);
       this.sky.position.copy(this.camera.position);
       this.sky.material.uniforms.horizon.value.copy(sky);
       this.sky.material.uniforms.zenith.value
         .set('#458fc2')
         .multiplyScalar(0.003 + daylight * 0.9 + flash);
       this.sky.material.uniforms.daylight.value = daylight;
+      this.sky.material.uniforms.twilight.value = twilight.glow;
       this.sky.material.uniforms.sunDirection.value.fromArray(solar.direction).normalize();
       this.sky.material.uniforms.clouds.value = climate.clouds;
       this.sky.material.uniforms.drift.value = drift;

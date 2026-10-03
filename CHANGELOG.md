@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-10-03
+
+### Changed
+
+- Enrich sunrise and sunset with directional gold, rose and blue sky bands, sunlit cloud edges, a softer afterglow and gradual golden-hour lighting. Reuse existing cloud noise and lighting; full night and midday keep their previous illumination.
+
 ## [0.39.0] - 2026-10-03
 
 ### Added

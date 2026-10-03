@@ -5,6 +5,16 @@ export function smooth(a: number, b: number, x: number) {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 }
+/** Smooth golden-hour envelope; full night/day and dense weather stay unaffected. */
+export function twilightAt(height: number, clouds: number) {
+  const envelope = smooth(-0.2, -0.035, height) * (1 - smooth(0.035, 0.28, height));
+  const transmission = 1 - Math.max(0, Math.min(1, clouds)) * 0.65;
+  return {
+    glow: envelope * transmission,
+    ambient: envelope * transmission * 0.16,
+    warmth: 1 - smooth(0.025, 0.32, height),
+  };
+}
 function noise(x: number, y: number) {
   const ix = Math.floor(x),
     iy = Math.floor(y),
