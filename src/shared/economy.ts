@@ -16,6 +16,16 @@ export function removeOwnerEmployment(w: World, b: Building) {
 /** Upgrade public/unowned quotes once; every player-owned price is sacrosanct. */
 export function migrateEconomy(w: World) {
   for (const b of w.buildings) removeOwnerEmployment(w, b);
+  if (!w.livestockPricing) {
+    for (const b of w.buildings)
+      if (['market', 'starport'].includes(b.kind) && b.government && b.owner === 'treasury') {
+        for (const id of ['feed', 'milk', 'cheese', 'dairyMeals']) {
+          b.buy[id] ??= buildings[b.kind].buy[id];
+          b.sell[id] ??= buildings[b.kind].sell[id];
+        }
+      }
+    w.livestockPricing = 1;
+  }
   if ((w.tradePricing ?? 0) >= 3) return;
   for (const b of w.buildings) {
     // Treasury is the built-in public operator, not a human or NPC business owner.

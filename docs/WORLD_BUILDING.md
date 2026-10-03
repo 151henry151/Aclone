@@ -171,7 +171,7 @@ In **Access rules**, require a qualification, carried item or minimum Lua progre
 
 ## World catalogues and building templates
 
-**Catalogue** defines up to 32 custom goods and 16 professions. IDs start with `custom:` and stay stable; built-in goods/skills are unchanged. Goods have a label, short icon, weight, reference price and optional food/drink/fuel effect. Professions have a label, tuition, lesson duration and up to eight prerequisites; cycles are rejected. Schools show actual course prices and prerequisites.
+**Catalogue** defines up to 32 custom goods and 16 professions. IDs start with `custom:` and stay stable; built-in goods/skills are unchanged. Goods have a label, short icon, weight, reference price and optional food/drink/fuel effect. Health effects range from −6000 to +6000 per serving, and maximum-health changes from −600 to +600; the latter accumulate only within ±6000 for the current life and reset on death. Inventory shows these effects. Professions have a label, tuition, lesson duration and up to eight prerequisites; cycles are rejected. Schools show actual course prices and prerequisites.
 
 Use custom definitions in **Production**, behavior item effects, quest rewards, shop quotes and building stock. Custom supplies obey cargo limits and feed sheltered players offline. Referenced definitions cannot be deleted; changes to weight/value/effects apply to existing goods. Recipes in use must retain valid professions and items. Lua source is not statically analyzed; update scripts yourself when changing their referenced definitions.
 

@@ -1,3 +1,4 @@
+import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -25,6 +26,7 @@ export function gameplayChoices(
   state: ResidentState,
   vocation: 'general' | 'baker' | 'farmer' | 'independent',
 ): FarmerChoice[] {
+  const items = worldItems(w);
   const choices: FarmerChoice[] = [];
   const add = (description: string, plan: Step[], reconsiderSeconds?: number) => {
     if (choices.length < 100 && !plan.some((s) => blockedStep(state.recovery, s, w.time)))
@@ -88,7 +90,7 @@ export function gameplayChoices(
         (def.fuel && p.fuel <= 64 - def.fuel))
     )
       add(
-        `Use carried ${def.name}: reduces hunger by ${nextNutrition(p, item).food}, thirst by ${nextNutrition(p, item).drink}, or adds ${def.fuel ?? 0} fuel. Current deficits: hunger ${p.hunger}, thirst ${p.thirst}, fuel ${p.fuel}.`,
+        `Use carried ${def.name}: reduces hunger by ${nextNutrition(p, item, w).food}, thirst by ${nextNutrition(p, item, w).drink}, or adds ${def.fuel ?? 0} fuel. Current deficits: hunger ${p.hunger}, thirst ${p.thirst}, fuel ${p.fuel}.`,
         [action({ type: 'use', item })],
       );
   }
@@ -102,7 +104,7 @@ export function gameplayChoices(
     );
     const needed = target - carried;
     if (needed <= 0) continue;
-    const nutrition = nextNutrition(p, item);
+    const nutrition = nextNutrition(p, item, w);
     const consume =
       !def.fuel &&
       ((nutrition.food > 0 && p.hunger >= Math.min(15000, nutrition.food / 2)) ||
@@ -215,7 +217,7 @@ export function gameplayChoices(
                 visit(b, [farm('plant', crop)]),
               );
         } else if (status.state === 'growing') {
-          if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water') >= 3)
+          if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
             add(
               `Water ${current!.crop} at ${b.name} plot ${plot + 1}; consumes 3 carried water, keeping 2 to drink. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
               visit(b, [farm('water')]),

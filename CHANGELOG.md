@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-03
+
+### Added
+
+- Build feed mills, dairy barns, cheese dairies and country cafés. Herds consume feed/water, need qualified care, lose condition under neglect and can breed replacement cattle. Production, wages, trade and upkeep appear in ordinary business records.
+- Configure food's current-health and bounded per-life maximum-health effects, visible in inventory. Milk, cheese and dairy suppers add distinct nutrition choices. Sheltered feeding advances at meal/health boundaries so offline catch-up matches live ticks.
+
+### Fixed
+
+- Include world-local foods in NPC urgent care, reserve planning and nutrition forecasts; expose the actual health maximum and dairy care requirements to their decisions.
+
 ## [0.34.0] - 2026-10-03
 
 ### Added

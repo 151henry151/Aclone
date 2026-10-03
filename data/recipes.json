@@ -256,5 +256,53 @@
     "skill": "pump operator",
     "seconds": 600,
     "tier": 0
+  },
+  "feedmill": {
+    "inputs": {
+      "wheat": 3
+    },
+    "outputs": {
+      "feed": 6
+    },
+    "skill": "miller",
+    "seconds": 600,
+    "tier": 0
+  },
+  "dairy": {
+    "inputs": {
+      "feed": 2,
+      "water": 2
+    },
+    "outputs": {
+      "milk": 6
+    },
+    "skill": "livestock farmer",
+    "seconds": 600,
+    "tier": 0
+  },
+  "creamery": {
+    "inputs": {
+      "milk": 3,
+      "fuel": 1
+    },
+    "outputs": {
+      "cheese": 3
+    },
+    "skill": "cheesemaker",
+    "seconds": 600,
+    "tier": 0
+  },
+  "dairyKitchen": {
+    "inputs": {
+      "cheese": 2,
+      "potatoes": 3,
+      "water": 1
+    },
+    "outputs": {
+      "dairyMeals": 4
+    },
+    "skill": "cook",
+    "seconds": 600,
+    "tier": 0
   }
 }

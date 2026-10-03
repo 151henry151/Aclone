@@ -1,3 +1,4 @@
+import { maximumHealth } from './nutrition.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorBlocksSegment } from './creator.ts';
 import { blocksBuilding } from './building-shapes.ts';
@@ -32,7 +33,7 @@ export function combatSpawn(w: World, p: Player) {
   p.x = combatBases(w)[p.team].x;
   p.z = combatBases(w)[p.team].z;
   p.y = terrainHeight(w, p.x, p.z);
-  p.health = 60000;
+  p.health = maximumHealth(p);
   p.energy = 65000;
   p.speed = 0;
   p.vehicle = p.combatVehicle ?? 0;

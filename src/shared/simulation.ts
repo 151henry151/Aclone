@@ -1,3 +1,5 @@
+import { tendHerd, breedHerd, birthHerd } from './livestock.ts';
+import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
 import { landscapeAction } from './landscape.ts';
 import {
   worldItems,
@@ -39,7 +41,7 @@ import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
-import { shelter, lodgingAction, feedAtHome, roomCount } from './lodging.ts';
+import { shelter, lodgingAction, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
 import {
   items,
@@ -139,6 +141,7 @@ export function createWorld(
     buildings: [],
     townLayout: 2,
     tradePricing: 3,
+    livestockPricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -289,7 +292,10 @@ function grant(w: World, p: Player, amount: number, reason: string) {
 function usable(w: World, p: Player, item: string) {
   const def = worldItems(w)[item];
   requireThat(def && (p.inventory[item] ?? 0) > 0, 'You do not carry that item');
-  requireThat(def.food || def.drink || def.fuel, 'That item is equipment or a trade good');
+  requireThat(
+    def.food || def.drink || def.fuel || def.health || def.maxHealth,
+    'That item is equipment or a trade good',
+  );
   if (def.fuel) {
     requireThat(p.fuel < 64, 'The tank is full');
     p.fuel = Math.min(64, p.fuel + def.fuel);
@@ -300,6 +306,7 @@ function usable(w: World, p: Player, item: string) {
     p.hunger = Math.max(0, p.hunger - (def.food ?? 0) * scale);
     p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * scale);
   }
+  nutritionEffects(p, def);
   stockAdd(p.inventory, item, -1);
 }
 // All request validation precedes mutation. The server additionally wraps actions in a transaction.
@@ -324,6 +331,14 @@ export function act(w: World, id: string, a: Action): string {
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'livestock': {
+      const b = nearby(w, p, a.building);
+      requireThat(a.operation === 'breed', 'Unknown livestock operation');
+      const cost = breedHerd(w, p, b);
+      log(w, 'sink', cost, b.id, 'treasury', 'livestock breeding');
+      result = 'Breeding arranged. Keep the herd fed and cared for during the next hour.';
+      break;
+    }
     case 'fulfilOrder':
       result = fulfilOrder(w, p, a);
       break;
@@ -349,6 +364,11 @@ export function act(w: World, id: string, a: Action): string {
       const day = Math.floor(w.time / 600);
       const imports = p.importDay === day ? p.imports : 0;
       if (buying) {
+        if (b.kind === 'dairy' && item === 'cows')
+          requireThat(
+            (b.stock.cows ?? 0) - n >= 2,
+            'The dairy keeps two breeding cows; only surplus cattle are for sale',
+          );
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
         requireThat(canCarry(p, item, n, w), 'Cargo hold is full');
@@ -1278,7 +1298,7 @@ export function command(w: World, p: Player, text: string): string {
       break;
     }
     case 'sethealth':
-      target().health = num(Number(args[1]), 1, 60000);
+      target().health = num(Number(args[1]), 1, maximumHealth(target()));
       break;
     case 'setvehicle':
       target().vehicle = num(Number(args[1]), 0, 23, true);
@@ -1381,6 +1401,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury') {
   if (!comic)
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
+  delete p.nutrition;
   p.ammo = { ...ammunition };
   p.invulnerableUntil = w.time + 3;
   p.health = 60000;
@@ -1461,6 +1482,12 @@ function cycle(w: World, b: Building, at: number) {
   }
   removeOwnerEmployment(w, b);
   const staff = productionStaff(w, b, at);
+  const healthyHerd = tendHerd(w, b, staff.length, at);
+  birthHerd(w, b, at);
+  if (!healthyHerd) {
+    b.efficiency = 0;
+    return;
+  }
   const efficiency = productionEfficiency(w, b, staff.length);
   b.efficiency = efficiency;
   b.progress += efficiency;
@@ -1468,12 +1495,17 @@ function cycle(w: World, b: Building, at: number) {
   const times = Math.floor(b.progress);
   b.progress -= times;
   for (let i = 0; i < times; i++) {
-    if (!productionSupplied(b, r, staff.length)) return;
-    for (const [item, n] of Object.entries(r.inputs)) stockAdd(b.stock, item, -n);
+    if (!productionSupplied(b, r, staff.length, true)) return;
+    const inputs = Object.fromEntries(
+      Object.entries(r.inputs).filter(
+        ([id]) => b.kind !== 'dairy' || !['feed', 'water'].includes(id),
+      ),
+    );
+    for (const [item, n] of Object.entries(inputs)) stockAdd(b.stock, item, -n);
     for (const [item, n] of Object.entries(r.outputs)) stockAdd(b.stock, item, n);
     const statement = accounts(w, b);
     statement.batches++;
-    addQuantities(statement.consumed, r.inputs);
+    addQuantities(statement.consumed, inputs);
     addQuantities(statement.produced, r.outputs);
     for (const p of staff) {
       const tax = Math.floor(b.wage * w.settings.wageTax);
@@ -1491,38 +1523,34 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
   while (elapsed < seconds) {
     const current = shelter({ ...w, time: start + elapsed }, p);
     if (!current) p.atHome = false;
-    const span = Math.min(seconds - elapsed, current ? current.until - start - elapsed : Infinity);
-    const needs = (target: Player, stock: Stock | undefined, duration: number) => {
-      if (stock)
-        return feedAtHome(target, stock, duration, w.settings.hungerRate, w.settings.thirstRate, w);
-      let healthy = duration;
-      for (const [need, rate] of [
-        ['hunger', w.settings.hungerRate],
-        ['thirst', w.settings.thirstRate],
-      ] as const) {
-        healthy = Math.min(
-          healthy,
-          target[need] >= 50000 ? 0 : rate > 0 ? (50000 - target[need]) / rate : duration,
-        );
-        target[need] = Math.min(50000, target[need] + rate * duration);
-      }
-      return Math.max(0, healthy);
-    };
-    const healthy = needs({ ...p }, current ? { ...current.stock } : undefined, span);
-    const healed = Math.min(60000, p.health + 2 * healthy);
-    const untilDeath = healthy + healed / 6;
-    const duration = Math.min(span, untilDeath);
-    needs(p, current?.stock, duration);
-    p.health = Math.max(
-      0,
-      Math.min(60000, p.health + 2 * Math.min(healthy, duration)) -
-        6 * Math.max(0, duration - healthy),
+    // Snap numerical boundaries so a near-zero duration cannot stall catch-up.
+    for (const need of ['hunger', 'thirst'] as const) {
+      for (const boundary of [30000, 50000])
+        if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
+    }
+    if (current) feedShelterNow(w, p, current.stock);
+    const hungerRate = w.settings.hungerRate * (current ? 0.8 : 1),
+      thirstRate = w.settings.thirstRate * (current ? 0.8 : 1);
+    const starving = p.hunger >= 50000 || p.thirst >= 50000;
+    const boundary = (value: number, rate: number) =>
+      value < 50000 && rate > 0 ? (50000 - value) / rate : Infinity;
+    const duration = Math.min(
+      seconds - elapsed,
+      current ? current.until - start - elapsed : Infinity,
+      current ? nextShelterMeal(w, p, current.stock, hungerRate, thirstRate) : Infinity,
+      boundary(p.hunger, hungerRate),
+      boundary(p.thirst, thirstRate),
+      starving ? p.health / 6 : Infinity,
     );
+    p.hunger = Math.min(50000, p.hunger + hungerRate * duration);
+    p.thirst = Math.min(50000, p.thirst + thirstRate * duration);
+    p.health = Math.max(0, Math.min(maximumHealth(p), p.health + (starving ? -6 : 2) * duration));
     elapsed += duration;
-    if (untilDeath <= span) kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation');
+    if (p.health <= 1e-7) kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation');
   }
   if (p.atHome && !shelter(w, p)) p.atHome = false;
 }
+
 export function advance(w: World, seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return;
   // Fixed economic boundaries make catch-up independent of client frame rate.

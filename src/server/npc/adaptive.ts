@@ -248,7 +248,9 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             (b.production ?? recipes[b.recipe ?? ''])?.inputs[item])
         ) {
           const quantity = Math.min(
-            b.kind === 'home' && p.hunger < 15000 && p.thirst < 15000 ? n : spareSupplies(p, item),
+            b.kind === 'home' && p.hunger < 15000 && p.thirst < 15000
+              ? n
+              : spareSupplies(p, item, w),
             10,
             b.capacity - (b.stock[item] ?? 0),
           );
@@ -335,7 +337,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
               const quantity = Math.min(
                 3,
                 direction === 'deposit' && (p.hunger >= 15000 || p.thirst >= 15000)
-                  ? spareSupplies(p, item)
+                  ? spareSupplies(p, item, w)
                   : ((direction === 'deposit' ? p.inventory : booking.stock)[item] ?? 0),
               );
               if (quantity > 0)

@@ -1,3 +1,4 @@
+import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creditProfile } from '../../shared/loans.ts';
 import { propertyQuote } from '../../shared/property.ts';
@@ -10,7 +11,8 @@ import { workplace } from './workplace.ts';
 import { offlineReadiness } from './homecoming.ts';
 
 /** Match usable(): the third consecutive serving of the same food OR drink is halved. */
-export function nextNutrition(p: Player, item: string) {
+export function nextNutrition(p: Player, item: string, w?: World) {
+  const items = worldItems(w);
   const scale = p.lastFood === item && p.repeats >= 1 ? 0.5 : 1;
   return { food: (items[item]?.food ?? 0) * scale, drink: (items[item]?.drink ?? 0) * scale };
 }
@@ -33,7 +35,8 @@ export function careNeeded(w: World, p: Player) {
   return p.hunger >= 25000 || p.thirst >= 25000 || secondsToDamage(w, p) <= 600 || p.health < 30000;
 }
 /** Surplus for optional sales/production: keep at least one meal and two drinks of each kind. */
-export function spareSupplies(p: Player, item: string) {
+export function spareSupplies(p: Player, item: string, w?: World) {
+  const items = worldItems(w);
   return Math.max(
     0,
     (p.inventory[item] ?? 0) - (items[item]?.drink ? 2 : items[item]?.food ? 1 : 0),
@@ -41,13 +44,14 @@ export function spareSupplies(p: Player, item: string) {
 }
 /** Small, protected Jev context. All prices/rates are live; none of these forecasts grant supplies. */
 export function lifeBriefing(w: World, p: Player) {
+  const items = worldItems(w);
   const carried = Object.entries(p.inventory)
     .filter(([item, n]) => n > 0 && (items[item]?.food || items[item]?.drink))
     .map(([item, count]) => ({
       item,
       count,
-      nextFood: nextNutrition(p, item).food,
-      nextDrink: nextNutrition(p, item).drink,
+      nextFood: nextNutrition(p, item, w).food,
+      nextDrink: nextNutrition(p, item, w).drink,
     }));
   const supplies = Object.entries(items)
     .filter(([, def]) => def.food || def.drink)
@@ -71,7 +75,7 @@ export function lifeBriefing(w: World, p: Player) {
           price: b.sell[item],
           stock: b.stock[item],
           metres: Math.round(distance(p, b)),
-          ...nextNutrition(p, item),
+          ...nextNutrition(p, item, w),
         }));
     });
   const meal = supplies
@@ -91,7 +95,7 @@ export function lifeBriefing(w: World, p: Player) {
       hungerPerSecond: w.settings.hungerRate,
       thirstPerSecond: w.settings.thirstRate,
       healthRule:
-        'Below starvation, health recovers 2/second to 60000; at starvation it loses 6/second, online or offline. Waiting outdoors cannot lower needs.',
+        'Below starvation, health recovers 2/second to its current nutritional maximum (normally 60000); at starvation it loses 6/second, online or offline. Waiting outdoors cannot lower needs.',
       carried,
       supplies,
       suggestedLivingCash: Math.max(12000, (meal?.price ?? 0) * 3 + (drink?.price ?? 0) * 6),

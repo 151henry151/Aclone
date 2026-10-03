@@ -1,3 +1,4 @@
+import { herdNeeds } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import { productionStaff, productionEfficiency } from './sound-state.ts';
@@ -22,7 +23,7 @@ export interface BusinessAccounts {
 }
 export interface LifeEvent {
   time: number;
-  kind: 'death' | 'estate' | 'property' | 'trade' | 'job' | 'qualification';
+  kind: 'death' | 'estate' | 'property' | 'trade' | 'job' | 'qualification' | 'livestock';
   text: string;
   building?: string;
   item?: string;
@@ -102,6 +103,14 @@ export function productionReport(w: World, b: Building) {
   if (b.kind === 'farm') return ['Seasonal plots need tending and manual harvest'];
   if (!r) return ['No automatic production recipe'];
   const blockers: string[] = [];
+  if (b.kind === 'dairy') {
+    if ((b.stock.cows ?? 0) < 2) blockers.push('Two cows are required for the milking stalls');
+    if ((b.herdCondition ?? 100) < 40)
+      blockers.push('Herd condition is too low: fund feed, water and qualified care');
+    for (const [item, n] of Object.entries(herdNeeds(b)))
+      if ((b.stock[item] ?? 0) < n)
+        blockers.push(`Herd maintenance needs ${n} ${item} each check, even when output is full`);
+  }
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
     blockers.push('Water intake is dry or the pump house is flooded');
   for (const [item, n] of Object.entries(r.inputs))

@@ -1,3 +1,4 @@
+import { maximumHealth, nutritionDescription } from '../shared/nutrition';
 import { landscapeEditor, landscapeControls } from './landscape-editor';
 import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
 import { questList } from './quests';
@@ -498,7 +499,7 @@ function updateHud() {
   if (immobile) mobile.reset();
 
   const bars: [string, number, string][] = [
-    ['Health', me.health / 60000, 'health'],
+    ['Health', me.health / maximumHealth(me), 'health'],
     ['Hunger', me.hunger / 50000, 'hunger'],
     ['Thirst', me.thirst / 50000, 'thirst'],
     ['Wellbeing', 1 - (me.hunger + me.thirst) / 100000, 'wellbeing'],
@@ -1064,7 +1065,7 @@ function renderPanel() {
             .filter(([, n]) => n)
             .map(
               ([id, n]) =>
-                `<div><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each</small></span><strong>${n}</strong>${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel ? 'disabled' : ''}`)}</div>`,
+                `<div><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each · ${esc(nutritionDescription(items[id] ?? { name: id, weight: 0, price: 0 }))}</small></span><strong>${n}</strong>${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}</div>`,
             )
             .join(
               '',
@@ -1249,6 +1250,8 @@ function buildingWindow(b: Building) {
     }
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
+    if (b.kind === 'dairy')
+      html += `<h3>Dairy herd</h3><p>${b.stock.cows ?? 0} cows · ${b.herdCondition ?? 100}% condition. Two cows fill the milking stalls; extras are reserves. Every cow consumes one feed and one water each production check, even when output is full or work is unattended. Qualified active workers restore condition; neglect can kill cattle. Milk needs at least 40% condition.</p>${b.breedingEnd ? `<p>Calf due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep herd condition above 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 feed + 4 water + 20d · one hour</button></form>` : ''}`;
     if (b.kind === 'home')
       html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (roomCount(b)) {

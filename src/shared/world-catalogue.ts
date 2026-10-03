@@ -52,6 +52,8 @@ export const catalogueSchema = z.object({
         icon: z.string().max(8).default(''),
         weight: z.number().int().min(1).max(1000),
         price: z.number().int().min(1).max(1000000),
+        health: z.number().int().min(-6000).max(6000).optional(),
+        maxHealth: z.number().int().min(-600).max(600).optional(),
         food: z.number().int().min(0).max(50000).optional(),
         drink: z.number().int().min(0).max(50000).optional(),
         fuel: z.number().int().min(0).max(64).optional(),

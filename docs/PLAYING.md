@@ -168,3 +168,13 @@ At public Harbour stores, open **Parish supply orders** to see funded maintenanc
 World / F9 → **Quests** lists a world's stories and objectives. Accept one, follow its steps in order, then collect the reward with enough cargo space. Each quest states whether death resets it. World creators can also require items, qualifications or progress before allowing certain actions; a rejected action explains what is missing.
 
 World creators may add local goods, courses and building designs. Schools show each course's actual price, duration and prerequisites. Custom food/drink can be consumed or stocked at home like standard supplies; cargo weight and production rules still apply. These definitions belong to that world only.
+
+## Dairy and nutrition
+
+Build a **Feed mill** (wheat → cattle feed), **Dairy barn** (feed + water → milk), **Cheese dairy** (milk + fuel → cheese), or **Country café** (cheese + potatoes + water → suppers). Learn miller, livestock farmer, cheesemaker or cook and hire qualified workers. These are player-built businesses, not extra starter properties.
+
+Stock a barn with two cows, bought from Harbour stores or another dairy. Two stalls produce six milk per check. Every cow, including reserves, consumes one feed and one water each check even when milk storage is full or workers are absent. Fund wages and keep workers active: supplied/staffed care restores 4 condition, supplied/unattended loses 0.1, and missing feed/water loses 8. Milk needs 40% condition; reaching zero loses a cow. Sell surplus milk and keep the supply chain funded.
+
+A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80% condition, four feed, four water and 20d investment. Keep parents at 60% condition and leave stock space for one hour. Success adds a tradable cow; failure consumes the breeding cost. Shop sales reserve the last two cows, while owners retain stockroom control. Extra cows add upkeep without expanding the stalls.
+
+Inventory lists each food's effects. Milk restores some health; cheese and dairy suppers also increase maximum health for this life. Nutrition changes the usual 60000 ceiling by at most ±6000 and resets on death. Custom foods may have clearly labelled negative effects, but consumption alone cannot reduce health below one. Ordinary hunger/thirst can still kill. Homes prefer a different available food and feed at the usual threshold; sheltered meals receive full food/drink value. Outdoor repeated servings still lose half their hunger/thirst benefit from the third serving.

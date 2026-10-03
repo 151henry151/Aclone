@@ -86,11 +86,14 @@ export interface Player {
   inactivityProcessed?: number;
   lastFood?: string;
   repeats: number;
+  nutrition?: number;
   importDay: number;
   imports: number;
 }
 export interface Building {
   templateId?: string;
+  herdCondition?: number;
+  breedingEnd?: number;
   productionStatus?: string[];
   accounts?: import('./reports.ts').BusinessAccounts;
   lien?: { borrower: string; loan: string };
@@ -204,6 +207,7 @@ export interface World {
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
   tradePricing?: 1 | 2 | 3;
+  livestockPricing?: 1;
   estateRulesVersion?: 1;
   /** Default Puddlewick building types already supplied; never replenish on restart. */
   parishServices?: string[];
@@ -273,6 +277,8 @@ export interface ItemDef {
   name: string;
   weight: number;
   price: number;
+  health?: number;
+  maxHealth?: number;
   food?: number;
   drink?: number;
   fuel?: number;

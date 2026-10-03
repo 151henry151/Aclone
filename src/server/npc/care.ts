@@ -1,3 +1,4 @@
+import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { availableSupply } from '../../shared/harbour-supply.ts';
 import { items } from '../../shared/catalog.ts';
@@ -29,6 +30,7 @@ export function visitBuilding(p: Player, b: Building, steps: Step[]): Step[] {
 /** Ordinary self-care is a routine, not a paid strategic decision. No gifts or immunity.
  * Resolve the most urgent nutrient first, including alternatives at the spaceport. */
 export function carePlan(w: World, p: Player): Step[] {
+  const items = worldItems(w);
   if (p.task || (p.hunger < 25000 && p.thirst < 25000)) return [];
   const needs = (
     [
@@ -39,10 +41,10 @@ export function carePlan(w: World, p: Player): Step[] {
     .filter(([, n]) => n >= 25000)
     .sort((a, b) => b[1] - a[1]);
   for (const [nutrient] of needs) {
-    const food = Object.keys(items).filter((i) => nextNutrition(p, i)[nutrient] > 0);
+    const food = Object.keys(items).filter((i) => nextNutrition(p, i, w)[nutrient] > 0);
     const carried = food
       .filter((i) => p.inventory[i] > 0)
-      .sort((a, b) => nextNutrition(p, b)[nutrient] - nextNutrition(p, a)[nutrient])[0];
+      .sort((a, b) => nextNutrition(p, b, w)[nutrient] - nextNutrition(p, a, w)[nutrient])[0];
     if (carried) return [act({ type: 'use', item: carried })];
     const sources = w.buildings
       .filter((b) => !b.construction)
@@ -58,7 +60,7 @@ export function carePlan(w: World, p: Player): Step[] {
               item,
               own,
               price,
-              score: distance(p, b) + (price / nextNutrition(p, item)[nutrient]) * 1000,
+              score: distance(p, b) + (price / nextNutrition(p, item, w)[nutrient]) * 1000,
             },
           ];
         }),

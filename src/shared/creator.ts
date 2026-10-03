@@ -1,3 +1,4 @@
+import { maximumHealth } from './nutrition.ts';
 import { landscapeBlocks, scatterObjects } from './landscape.ts';
 import {
   catalogueItemId,
@@ -274,7 +275,7 @@ export function applyEffect(w: World, p: Player | undefined, effect: Effect) {
       scores[team] = Math.max(0, scores[team] + e.amount);
     }
   } else if (p) {
-    if (e.type === 'heal') p.health = Math.max(1, Math.min(60000, p.health + e.amount));
+    if (e.type === 'heal') p.health = Math.max(1, Math.min(maximumHealth(p), p.health + e.amount));
     if (e.type === 'needs') {
       p.hunger = Math.max(0, Math.min(50000, p.hunger + e.amount));
       p.thirst = Math.max(0, Math.min(50000, p.thirst + e.amount));

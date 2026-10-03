@@ -41,7 +41,11 @@
       "wine": 6463,
       "meals": 5356,
       "teaBlend": 6746,
-      "roastCoffee": 8214
+      "roastCoffee": 8214,
+      "feed": 900,
+      "milk": 1350,
+      "cheese": 3870,
+      "dairyMeals": 6180
     },
     "sell": {
       "wheat": 775,
@@ -81,7 +85,11 @@
       "wine": 9727,
       "meals": 8060,
       "teaBlend": 10153,
-      "roastCoffee": 12362
+      "roastCoffee": 12362,
+      "feed": 1550,
+      "milk": 2325,
+      "cheese": 6665,
+      "dairyMeals": 9300
     },
     "stock": {
       "wheat": 60,
@@ -121,7 +129,11 @@
       "wine": 0,
       "meals": 0,
       "teaBlend": 0,
-      "roastCoffee": 0
+      "roastCoffee": 0,
+      "feed": 0,
+      "milk": 0,
+      "cheese": 0,
+      "dairyMeals": 0
     },
     "recipe": null,
     "wage": 2200,
@@ -280,7 +292,11 @@
       "wine": 6337,
       "meals": 5252,
       "teaBlend": 6615,
-      "roastCoffee": 8054
+      "roastCoffee": 8054,
+      "feed": 900,
+      "milk": 1350,
+      "cheese": 3870,
+      "dairyMeals": 6180
     },
     "sell": {
       "wheat": 825,
@@ -320,7 +336,11 @@
       "wine": 10354,
       "meals": 8580,
       "teaBlend": 10808,
-      "roastCoffee": 13159
+      "roastCoffee": 13159,
+      "feed": 1650,
+      "milk": 2475,
+      "cheese": 7095,
+      "dairyMeals": 9900
     },
     "stock": {
       "wheat": 60,
@@ -360,7 +380,11 @@
       "teaBlend": 0,
       "roastCoffee": 0,
       "potatoes": 0,
-      "coffee": 0
+      "coffee": 0,
+      "feed": 0,
+      "milk": 0,
+      "cheese": 0,
+      "dairyMeals": 0
     },
     "recipe": null,
     "wage": 2200,
@@ -908,7 +932,7 @@
     "color": "#d5c5a2"
   },
   "winery": {
-    "name": "Vintner’s press",
+    "name": "Vintner\u2019s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
@@ -1084,5 +1108,99 @@
     },
     "tier": 0,
     "color": "#87a9a8"
+  },
+  "feedmill": {
+    "name": "Feed mill",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "wheat": 560
+    },
+    "sell": {
+      "feed": 1000
+    },
+    "stock": {},
+    "recipe": "feedmill",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "dairy": {
+    "name": "Dairy barn",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "feed": 1120,
+      "water": 560,
+      "cows": 22400
+    },
+    "sell": {
+      "milk": 1500,
+      "cows": 26000
+    },
+    "stock": {},
+    "recipe": "dairy",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "creamery": {
+    "name": "Cheese dairy",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "milk": 1680,
+      "fuel": 2240
+    },
+    "sell": {
+      "cheese": 4300
+    },
+    "stock": {},
+    "recipe": "creamery",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "dairyKitchen": {
+    "name": "Country caf\u00e9",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "cheese": 4816,
+      "potatoes": 1680,
+      "water": 560
+    },
+    "sell": {
+      "dairyMeals": 6000
+    },
+    "stock": {},
+    "recipe": "dairyKitchen",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
   }
 }

@@ -62,7 +62,10 @@ export function economyChoices(
             act({ type: 'investment', building: b.id, direction: 'deposit', amount: 5000 }),
           ]),
         );
-      for (const [item, quantity] of Object.entries(recipe.inputs)) {
+      for (const [item, quantity] of Object.entries({
+        ...recipe.inputs,
+        ...(b.kind === 'dairy' ? { cows: 1 } : {}),
+      })) {
         const missing = Math.min(
           quantity * 2 - (b.stock[item] ?? 0),
           b.capacity - (b.stock[item] ?? 0),
@@ -104,7 +107,11 @@ export function economyChoices(
               ],
             );
         }
-        const n = Math.min(spareSupplies(p, item), b.capacity - (b.stock[item] ?? 0), quantity * 4);
+        const n = Math.min(
+          spareSupplies(p, item, w),
+          b.capacity - (b.stock[item] ?? 0),
+          quantity * 4,
+        );
         if (n > 0)
           add(
             `Deposit ${n} carried ${item} into my ${b.name}'s stockroom for production.`,
@@ -182,7 +189,7 @@ export function economyChoices(
     );
     if (!b) continue;
     const n = Math.min(
-      spareSupplies(p, item),
+      spareSupplies(p, item, w),
       25,
       Math.floor(b.investment / b.buy[item]),
       b.capacity - (b.stock[item] ?? 0),

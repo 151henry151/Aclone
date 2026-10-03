@@ -65,7 +65,7 @@ test('every actual production batch pays its input suppliers and worker and reta
       b.z = 144;
       b.rotation = waterworksSite(w, b)!.rotation;
     }
-    b.stock = {};
+    b.stock = kind === 'dairy' ? { cows: 2 } : {}; // Retained livestock is startup capital, not a batch input.
     b.investment = 10000000;
     w.buildings = [b];
     const supplier = addPlayer(w, 'supplier', 'Supplier'),

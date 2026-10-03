@@ -1,3 +1,4 @@
+import { herdReady } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
 import { recipes, vehicles } from './catalog';
@@ -29,14 +30,25 @@ export function productionEfficiency(
   b: Building,
   staff = productionStaff(w, b, w.time).length,
 ): number {
+  if (!herdReady(b)) return 0;
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
   return b.government || staff ? 1 : w.settings.offlineEfficiency;
 }
 
 /** Shared by the economic cycle and its audible activity projection. */
-export function productionSupplied(b: Building, r: Recipe, staff: number): boolean {
+export function productionSupplied(
+  b: Building,
+  r: Recipe,
+  staff: number,
+  upkeepPaid = false,
+): boolean {
   return (
-    !Object.entries(r.inputs).some(([item, n]) => (b.stock[item] ?? 0) < n) &&
+    herdReady(b) &&
+    !Object.entries(r.inputs).some(
+      ([item, n]) =>
+        !(upkeepPaid && b.kind === 'dairy' && ['feed', 'water'].includes(item)) &&
+        (b.stock[item] ?? 0) < n,
+    ) &&
     !Object.entries(r.outputs).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&
     b.investment >= b.wage * staff
   );

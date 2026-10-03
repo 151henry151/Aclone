@@ -28,7 +28,7 @@ export function catalogueEditor(w: World, itemId: string, skillId: string) {
     )
     .join(
       '',
-    )}</div><form id="creator-catalogue-item-form">${input('Stable ID', 'definitionId', itemId || 'custom:herbal_tea', 'text', item ? 'readonly' : '')}${input('Name', 'name', item?.name ?? 'Herbal tea')}${input('Icon (short text or emoji)', 'icon', item?.icon ?? '🍵', 'text', 'maxlength="8"')}${input('Cargo weight', 'weight', item?.weight ?? 1, 'number', 'min="1" max="1000"')}${input('Reference price in denarii', 'price', (item?.price ?? 1000) / 100, 'number', 'min="0.01" max="10000" step="0.01"')}${input('Food relief', 'food', item?.food ?? 0, 'number', 'min="0" max="50000"')}${input('Thirst relief', 'drink', item?.drink ?? 0, 'number', 'min="0" max="50000"')}${input('Fuel units', 'fuel', item?.fuel ?? 0, 'number', 'min="0" max="64"')}<button>Save item</button></form>${item ? `<button data-do="creator:deleteCatalogueItem" data-id="${esc(itemId)}">Remove item</button>` : ''}<h3>Professions</h3><div class="button-row"><button data-do="creator:catalogueSkill" data-id="">New profession</button>${Object.entries(
+    )}</div><form id="creator-catalogue-item-form">${input('Stable ID', 'definitionId', itemId || 'custom:herbal_tea', 'text', item ? 'readonly' : '')}${input('Name', 'name', item?.name ?? 'Herbal tea')}${input('Icon (short text or emoji)', 'icon', item?.icon ?? '🍵', 'text', 'maxlength="8"')}${input('Cargo weight', 'weight', item?.weight ?? 1, 'number', 'min="1" max="1000"')}${input('Reference price in denarii', 'price', (item?.price ?? 1000) / 100, 'number', 'min="0.01" max="10000" step="0.01"')}${input('Food relief', 'food', item?.food ?? 0, 'number', 'min="0" max="50000"')}${input('Thirst relief', 'drink', item?.drink ?? 0, 'number', 'min="0" max="50000"')}${input('Health per serving', 'health', item?.health ?? 0, 'number', 'min="-6000" max="6000"')}${input('Maximum health per serving (this life)', 'maxHealth', item?.maxHealth ?? 0, 'number', 'min="-600" max="600"')}${input('Fuel units', 'fuel', item?.fuel ?? 0, 'number', 'min="0" max="64"')}<button>Save item</button></form>${item ? `<button data-do="creator:deleteCatalogueItem" data-id="${esc(itemId)}">Remove item</button>` : ''}<h3>Professions</h3><div class="button-row"><button data-do="creator:catalogueSkill" data-id="">New profession</button>${Object.entries(
     c.skills,
   )
     .map(
@@ -85,6 +85,8 @@ export function catalogueForm(w: World, form: HTMLFormElement): Action {
       icon: str('icon'),
       weight: num('weight'),
       price: Math.round(num('price') * 100),
+      health: num('health'),
+      maxHealth: num('maxHealth'),
       food: num('food'),
       drink: num('drink'),
       fuel: num('fuel'),

@@ -110,6 +110,7 @@ export function buildingPlan(b: {
       trim = '#45684f';
       break;
     case 'roastery':
+    case 'dairyKitchen':
     case 'kitchen':
       volumes = [volume(7, 6, 5.2, 1.5), volume(3, 4, 2.6, 0.6, 'shed', 5, 0)];
       wall = '#d1af95';
@@ -132,6 +133,7 @@ export function buildingPlan(b: {
       volumes = [volume(9.4, 6.2, 3.1, 1.35, 'hip')];
       trim = '#687c50';
       break;
+    case 'creamery':
     case 'bakery':
       volumes = [volume(6.8, 6, 3, 1.8), volume(2.6, 4, 2.4, 0.65, 'shed', 4.5, -1)];
       wall = '#ead2ba';
@@ -146,11 +148,13 @@ export function buildingPlan(b: {
       wall = '#b9b5a4';
       trim = '#705b49';
       break;
+    case 'dairy':
     case 'farm':
       volumes = [volume(10.5, 7.8, 3.8, 2.8)];
       wall = '#9d624b';
       trim = '#ded1ae';
       break;
+    case 'feedmill':
     case 'mill':
       volumes = [volume(5.2, 5.2, 7.2, 2), volume(4.3, 5.8, 3, 1.4, 'gable', 4.5, 0)];
       break;
