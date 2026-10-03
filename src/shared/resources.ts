@@ -11,14 +11,49 @@ export interface ResourceNode {
   regrowth: number;
 }
 /** Surveyed public gathering grounds; shared stable IDs make depletion survive restarts. */
-export const resourceNodes: ResourceNode[] = ['logs', 'stone', 'gravel', 'dirt'].flatMap(
-  (item, k) =>
-    Array.from({ length: 6 }, (_, i) => ({
+const gatheringSites: Record<string, [number, number][]> = {
+  logs: [
+    [-204, -74],
+    [-224, -118],
+    [-179, -136],
+    [-164, -194],
+    [-216, -205],
+    [-125, -199],
+  ],
+  stone: [
+    [221, -170],
+    [156, -200],
+    [100, -174],
+    [201, -45],
+    [206, 20],
+    [183, 38],
+  ],
+  gravel: [
+    [-221, 125],
+    [-184, 101],
+    [-217, 4],
+    [185, 104],
+    [225, 84],
+    [230, -83],
+  ],
+  dirt: [
+    [-145, 126],
+    [-150, -53],
+    [-78, -224],
+    [66, -229],
+    [151, -151],
+    [171, 61],
+  ],
+};
+export const resourceNodes: ResourceNode[] = Object.entries(gatheringSites).flatMap(
+  ([item, positions], k) =>
+    positions.map(([x, z], i) => ({
+      // Retain existing depletion/task/NPC IDs when relocating the old town grids.
       id: `${item}-${i}`,
       item,
-      name: ['Woodland', 'Stone outcrop', 'Gravel bank', 'Topsoil patch'][k],
-      x: [-118, 115, 110, -110][k] + (i % 3) * 9,
-      z: [-80, -25, 92, 98][k] + Math.floor(i / 3) * 10,
+      name: ['Woodland clearing', 'Stone outcrop', 'Gravel hollow', 'Exposed topsoil'][k],
+      x,
+      z,
       capacity: item === 'logs' ? 18 : 30,
       regrowth: item === 'logs' ? 1800 : 600,
     })),

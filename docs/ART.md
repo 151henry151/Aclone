@@ -2,6 +2,37 @@
 
 Aclone aims for a warm, weathered English countryside: natural ground materials, worn lanes, limestone cottages, slate roofs, leafy silhouettes and readable machinery. The original game's village, country-lane and castle screenshots were inspected as visual references; none of their pixels, textures or models ship with Aclone.
 
+## Natural gathering grounds
+
+![Woodland clearing with felled timber and scattered firewood](screenshots/woodland-clearing.png)
+![Chipped stone outcrop and loose spalls](screenshots/stone-outcrop.png)
+
+`src/client/resource-scenery.ts` authors four original resource landscapes: a
+mixed-age grove around a felled tree and firewood rounds; weathered, chipped
+boulders with loose spalls; a gravel hollow with a partly loaded wheelbarrow; and
+an exposed earth bank with roots, clods and a shovel. Bark, end grain, foliage,
+rock, soil and gravel use original procedural textures under GPL-3.0-or-later.
+No purchased models, remote textures or additional lighting are needed.
+
+Each site has a stable variant and at most five material batches, under 5,000
+triangles in detailed mode and fewer in performance mode. Textures and materials
+are shared across sites. Geometry follows terrain height; surrounding incidental
+grass and trees leave clearings open. Existing seasonal material effects apply.
+
+The 24 sites in `src/shared/resources.ts` have irregular positions around the
+outskirts, at least 20 metres from road edges and 35 metres from starter building
+centres. All remain within 150 metres of a road. The shared locations update the
+map, gathering HUD and NPC navigation together. Existing IDs, capacity and
+regrowth intervals are preserved, including saved depletion and reserved loads
+in unfinished tasks. Deploy client and server together; no database reset is
+needed. Custom-world terrain/buildings can still obstruct a site as before.
+
+Run `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:resources` for actual
+in-game captures of each site and a HUD gathering check, using a temporary server
+and database. Output goes to `test-results/resources`; override it with
+`SCREENSHOT_OUTPUT_DIR`. Geometry, placement, navigation and save compatibility
+are covered by `tests/resource-scenery.test.ts`.
+
 ## Industrial robocrows (0.19.0)
 
 ![Mechanical robocrow in flight beside the spaceport](screenshots/industrial-robocrow.png)

@@ -4,6 +4,20 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.23.0
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, restart the
+service and refresh browser clients. Production deployment remains operator-managed.
+No database reset, new dependency or configuration is needed. Resources move to
+new shared coordinates while retaining their IDs, saved depletion and unfinished
+gathering loads. Update client and server together so the map, HUD, NPC destinations
+and scenery agree. Custom buildings and terrain can still obstruct a site.
+
+Validation: 22 focused resource, map and NPC tests, TypeScript, formatting and
+the `/aclone` production build pass. The disposable browser walkthrough captures
+all four models and completes a real HUD-triggered gravel gathering task without
+page errors. Both quality modes have tested geometry budgets.
+
 ## Deploying 0.22.0
 
 Back up the database, pull, run `npm ci`, rebuild with

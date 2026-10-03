@@ -1,6 +1,6 @@
 {
   "name": "aclone",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "private": true,
   "type": "module",
   "description": "A small, persistent universe with an unreasonable number of tractors.",
@@ -27,6 +27,7 @@
     "screenshots:town": "tsx scripts/town.ts",
     "screenshots:living": "tsx scripts/living-world.ts",
     "screenshots:seasons": "tsx scripts/seasons.ts",
+    "screenshots:resources": "tsx scripts/resources.ts",
     "npc": "tsx scripts/npc.ts",
     "npc:smoke": "tsx scripts/npc-smoke.ts"
   },

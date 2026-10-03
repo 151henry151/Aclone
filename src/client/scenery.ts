@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { evergreens, type EvergreenSite } from './evergreen';
 import { resourceNodes } from '../shared/resources';
+import { resourceScenery } from './resource-scenery';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingPlan, buildingBounds } from '../shared/building-shapes';
@@ -110,6 +111,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   const roadDistance = (x: number, z: number) => distanceToRoad(roads, x, z);
   const clear = (x: number, z: number, margin: number) =>
     roadDistance(x, z) > margin &&
+    resourceNodes.every((n) => Math.hypot(n.x - x, n.z - z) > 7 + margin) &&
     Math.hypot(x, z) > 16 &&
     !(x > 56 && x < 124 && z > 16 && z < 74) &&
     !(x > 45 && x < 105 && z < -55 && z > -92) &&
@@ -238,36 +240,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     rocks,
     true,
   );
-  for (const node of resourceNodes) {
-    if (world.buildings.some((b) => Math.hypot(b.x - node.x, b.z - node.z) < 12)) continue;
-    const y = terrainHeight(world, node.x, node.z);
-    if (node.item === 'logs') {
-      for (let j = 0; j < 5; j++) {
-        const log = new T.Mesh(new T.CylinderGeometry(0.26, 0.3, 3.4, 10), mat('#795939'));
-        log.rotation.z = Math.PI / 2;
-        log.position.set(node.x, y + 0.3 + (j > 2 ? 0.55 : 0), node.z + (j % 3) * 0.55);
-        log.castShadow = true;
-        root.add(log);
-      }
-    } else {
-      const mound = new T.Mesh(
-        new T.SphereGeometry(2.8, 14, 8),
-        new T.MeshStandardMaterial({
-          color: node.item === 'dirt' ? '#78603f' : node.item === 'gravel' ? '#a5a18f' : '#8b9389',
-          map: texture('stone'),
-          roughness: 1,
-        }),
-      );
-      mound.scale.y = node.item === 'stone' ? 0.5 : 0.13;
-      mound.position.set(node.x, y, node.z);
-      mound.receiveShadow = true;
-      mound.castShadow = true;
-      root.add(mound);
-    }
-    const post = new T.Mesh(new T.BoxGeometry(0.12, 1.4, 0.12), mat('#b6a279'));
-    post.position.set(node.x + 3, y + 0.7, node.z);
-    root.add(post);
-  }
+  resourceScenery(root, world, low);
   const hedges: number[][] = [],
     fence: number[][] = [],
     rails: number[][] = [];

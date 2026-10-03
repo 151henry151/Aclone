@@ -22,6 +22,11 @@ timer reaches zero first, it shows **Finishing…**. No extra click is needed.
 
 ## Gathering resources
 
+Gathering grounds lie off the roads around the outskirts. Look for small woodland
+clearings with felled timber, chipped stone outcrops, gravel hollows with a
+wheelbarrow, and exposed topsoil banks. The parish map (**M**) and Resources menu
+mark their locations; the woodland clearings yield Logs and topsoil yields Dirt.
+
 Pull within ten metres of logs, stone, gravel or a topsoil patch. A floating HUD
 prompt identifies the resource and its remaining reserves. Click or tap **Gather**
 to start directly; a large centered countdown shows the task, and the Gather prompt

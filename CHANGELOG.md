@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-03
+
+### Changed
+
+- Replace town-side resource rows with irregular gathering grounds on the outskirts: woodland clearings with felled timber, chipped boulders, gravel hollows with wheelbarrows, and exposed topsoil with roots and a shovel. Keep existing resource IDs and saved reserves while updating map, HUD and NPC destinations together.
+- Give each gathering ground varied procedural geometry and original surface textures, with shared materials and reduced geometry in performance mode.
+
 ## [0.22.0] - 2026-10-03
 
 ### Added
