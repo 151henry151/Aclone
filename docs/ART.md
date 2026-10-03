@@ -17,7 +17,7 @@ Warm, weathered countryside, readable machinery and consistent metre-scale forms
 
 ## Industrial spaceport (0.19.0)
 
-`client/spaceport.ts`: 32m cargo launcher (~11 tractor heights), 5.4m tank, 20m apron, asymmetric panels/plumbing, 26m truss/umbilicals, ground tank, five open engine bells/cooling rings and hydraulic legs. Crew hatch stays 2m. A shared 128×256 brushed-metal/runoff texture plus eleven opaque materials joins static batches; kit <45,000 triangles, no new lights/animation/downloads.
+`client/spaceport.ts`: ~193m cargo launcher (six times its earlier size), 120m apron, asymmetric panels/plumbing, ~158m truss/umbilicals, service tank, five engine bells and hydraulic legs. Crew hatch stays 2m. The industrial terminal adds cargo, control and utility wings. Shared materials join static batches; the launch kit remains below 45,000 triangles without new lights or animation. Shared footprints keep solid hardware and the walkable pad inside the starter map.
 
 Shared collision/picking covers rocket/tower/tank; apron is walkable, label/entrance stay at terminal. Trapped saved pilots can move outward. The rocket is scenery: terminal Take off handles travel. [Day](screenshots/industrial-spaceport-day.png), [night](screenshots/industrial-spaceport-night.png).
 
@@ -143,5 +143,3 @@ Actual renderer captures; many use staged disposable worlds. They demonstrate vi
 - [Wood cottage](screenshots/wood-cottage.png)
 - [Woodland clearing](screenshots/woodland-clearing.png)
 - [Woodland](screenshots/woodland.png)
-
-The spaceport now has a six-times-larger launcher (~193 metres), a separate cargo hangar, control tower, utility wing and industrial roof/pipe details. Access hatches and terminal entrances stay human-sized. The launch apron sits inside the starter world's boundary and uses solid fixtures with a walkable pad; static mesh/material budgets keep rendering cost bounded.

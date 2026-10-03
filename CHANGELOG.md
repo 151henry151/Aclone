@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-10-03
+
+### Fixed
+
+- Correct the art reference to match the enlarged launcher and industrial terminal, replacing obsolete dimensions.
+
 ## [0.27.1] - 2026-10-03
 
 ### Fixed
