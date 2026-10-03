@@ -29,7 +29,7 @@ try {
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Village scale review');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   const key = await page.evaluate(() => localStorage.getItem('aclone.pilot'));
   const session = await page.request.get(base + '/api/session', {
     headers: { authorization: 'Bearer ' + key },

@@ -137,7 +137,7 @@ for (const format of ['glb', 'obj'] as const)
         { token, id: w.id },
       );
       await page.goto(url);
-      await expect(page.locator('#world-hud')).toBeVisible();
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await expect.poll(() => loaded).toBe(true);
       await page.keyboard.press('h');
       await page.screenshot({ path: `test-results/creator-${format}.png` });

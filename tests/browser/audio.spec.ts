@@ -130,7 +130,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     const soundButton = page.locator('.bottom-left [data-do="sound"]');
     await expect(soundButton).toHaveText('Sound: tap to start');
     expect(await page.evaluate(() => (window as any).__audioProbe.contexts.length)).toBe(0);

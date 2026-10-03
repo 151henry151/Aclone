@@ -30,7 +30,7 @@ try {
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Character review');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   await page.getByRole('button', { name: 'Switch to walking' }).click();
   await expect(page.locator('#driving')).toContainText('On foot');

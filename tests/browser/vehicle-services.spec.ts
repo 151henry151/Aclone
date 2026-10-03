@@ -28,7 +28,7 @@ test('garage repairs and optional maps are usable on a phone', async ({ page }) 
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('m');
     await expect(page.getByText(/This world requires a Parish map/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();

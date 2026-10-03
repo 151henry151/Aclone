@@ -26,7 +26,7 @@ test('default Puddlewick exposes the intended starter roster and production at t
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('m');
     const map = page.getByRole('dialog', { name: 'Parish map.', exact: true });
     await expect(map).toBeVisible();

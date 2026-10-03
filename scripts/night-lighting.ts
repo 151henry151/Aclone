@@ -55,7 +55,7 @@ try {
     { token, world: w.id, quality: process.env.SCREENSHOT_QUALITY ?? 'high' },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.keyboard.press('h');
   await page.waitForTimeout(2500);
   await page.screenshot({ path: join(output, 'headlights-off.png') });

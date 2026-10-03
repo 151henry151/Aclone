@@ -8,10 +8,50 @@ import { publicPath } from '../shared/public-path';
 
 // Texture ownership lasts for the renderer's lifetime, across world rebuilds.
 const textures = new Map<string, T.Texture>();
+const pendingTextures: Promise<void>[] = [];
+export const failedTextures = new Set<string>();
+export async function waitForTextures() {
+  await Promise.all(pendingTextures);
+}
 export function texture(name: string) {
   let map = textures.get(name);
   if (!map) {
-    map = new T.TextureLoader().load(publicPath(__ACLONE_BASE__, `/textures/${name}.webp`));
+    let finish!: () => void;
+    pendingTextures.push(
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    let finished = false,
+      failed = false;
+    const fallback = () => {
+      const image = document.createElement('canvas');
+      image.width = image.height = 2;
+      const ctx = image.getContext('2d')!;
+      ctx.fillStyle = name === 'meadow' ? '#65764d' : '#8e806a';
+      ctx.fillRect(0, 0, 2, 2);
+      map!.image = image;
+      map!.needsUpdate = true;
+      failedTextures.add(name);
+    };
+    const complete = (error = false) => {
+      if (finished) {
+        if (failed) fallback();
+        return;
+      }
+      finished = true;
+      failed = error;
+      clearTimeout(timeout);
+      if (error) fallback();
+      finish();
+    };
+    const timeout = setTimeout(() => complete(true), 45000);
+    map = new T.TextureLoader().load(
+      publicPath(__ACLONE_BASE__, `/textures/${name}.webp`),
+      () => complete(),
+      undefined,
+      () => complete(true),
+    );
     map.wrapS = map.wrapT = T.RepeatWrapping;
     map.colorSpace = T.SRGBColorSpace;
     map.anisotropy = 4;
@@ -115,17 +155,21 @@ function surfaceTexture(w: World) {
 export const snowCover = { value: 0 };
 export function groundMaterial(w: World) {
   const mask = roadTexture(w),
-    surface = surfaceTexture(w);
+    surface = surfaceTexture(w),
+    meadow = texture('meadow'),
+    gravel = texture('gravel'),
+    noise = noiseTexture();
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
+  mat.userData.warmTextures = [mask, surface, meadow, gravel, noise];
   mat.addEventListener('dispose', () => {
     mask.dispose();
     surface.dispose();
   });
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.snowCover = snowCover;
-    shader.uniforms.groundNoise = { value: noiseTexture() };
-    shader.uniforms.meadow = { value: texture('meadow') };
-    shader.uniforms.gravel = { value: texture('gravel') };
+    shader.uniforms.groundNoise = { value: noise };
+    shader.uniforms.meadow = { value: meadow };
+    shader.uniforms.gravel = { value: gravel };
     shader.uniforms.shore = { value: w.settings.seaLevel };
     shader.uniforms.roadMask = { value: mask };
     shader.uniforms.surfaceMask = { value: surface };

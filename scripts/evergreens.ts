@@ -50,7 +50,7 @@ try {
     { token, world: w.id, quality },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   // Inspect the actual countryside generator to locate existing trees; render the game normally.
   const sites = await page.evaluate(
     async ({ world, low }) => {

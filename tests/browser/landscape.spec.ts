@@ -25,7 +25,7 @@ test('mobile landscape editor draws paths, paints ground, previews a heightmap a
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Landscape', exact: true }).click();
     await page.getByLabel('Map points').fill('-80,-190; -30,-170; 40,-190');

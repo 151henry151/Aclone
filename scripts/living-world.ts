@@ -64,7 +64,7 @@ try {
     { token, world: w.id },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.keyboard.press('e');
   await expect(page.getByRole('dialog')).toContainText('3 guest rooms');
   await page.getByLabel('Real hours').fill('2');

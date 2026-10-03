@@ -38,7 +38,7 @@ test('waterworks build preview enforces shoreline placement and the finished bui
       { token, world: w.id },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.getByRole('button', { name: 'Build', exact: true }).click();
     const build = page.locator('[data-do=construct][data-id=waterworks]');
     await expect(build).toBeDisabled();

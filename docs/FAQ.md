@@ -98,3 +98,7 @@ Select their online name or **World/F9 → Players & roadside help** (mobile: Ac
 ## Can I borrow from the bank?
 
 At a bank, request a loan quote, review APR/monthly payment/security, then accept. Fixed-rate loans use 6–60 bank months; one month is about 5.07 real hours. Automatic repayments use bank savings, including offline. Keep those savings funded. Early repayment has no fee. Score, verified earnings, existing debt and reserves determine eligibility; mortgages pledge at most 75% of a finished building's structural value. Missed payments harm credit; three months in arrears can foreclose collateral. Debt survives death. [Loan details](ECONOMY.md#loans-and-credit).
+
+## Why does entering a world show a loading screen?
+
+The browser downloads textures, uploads them to the graphics card and prepares daylight/night lighting before enabling driving. Progress appears while that work finishes; failed textures use plain fallback surfaces. Slow connections or software rendering take longer. If play remains slow afterward, enable browser hardware acceleration or choose performance graphics in Pilot & preferences.

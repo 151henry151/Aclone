@@ -368,7 +368,8 @@ test('resident observes mill diagnosis, accepts employment and records verifiabl
       const b = o.nearbyBuildings.find((b: any) => b.kind === 'mill');
       assert.equal(b.workplace.employedHere, false);
       assert.equal(b.workplace.ifYouWork.capitalShortfall, 0);
-      assert.match(JSON.stringify(o.gameGuide.fundamentals), /Work two cycles/);
+      // Guide retrieval deduplicates relevant sections out of fundamentals.
+      assert.match(JSON.stringify(o.gameGuide), /Work two cycles/);
       return answer(
         decision([
           { kind: 'act', action: { type: 'job', building: b.id } },
@@ -394,7 +395,9 @@ test('resident observes mill diagnosis, accepts employment and records verifiabl
     s.residents.tick(0.05, now + 500);
     s.residents.tick(0.05, now + 1000);
     const journal = s.residents.memory.recent('resident-0', 20);
-    const job = journal.find((e) => (e.data as any).action?.type === 'job')!.data as any;
+    const jobEntry = journal.find((e) => (e.data as any).action?.type === 'job');
+    assert.ok(jobEntry, 'The resident must accept the job before wages can be checked');
+    const job = jobEntry.data as any;
     assert.equal(job.before.job, null);
     assert.equal(job.after.job, b.id);
     assert.equal(job.after.building.employedHere, true);

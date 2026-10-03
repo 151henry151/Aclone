@@ -64,7 +64,7 @@ test('leaving a home or rented room works across live updates and after reconnec
       await expect.poll(() => p.atHome).toBe(false);
       await expect(outside).toHaveCount(0, { timeout: 15000 });
       await page.reload();
-      await expect(page.locator('#world-hud')).toBeVisible();
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await expect(outside).toHaveCount(0, { timeout: 15000 });
     }
     const startZ = p.z;

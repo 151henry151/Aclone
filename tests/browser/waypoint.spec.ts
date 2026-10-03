@@ -32,7 +32,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('m');
     const map = page.locator('#parish-map');
     await map.getByRole('button', { name: 'Choose waypoint', exact: true }).click();
@@ -73,7 +73,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await page.getByRole('button', { name: 'Clear waypoint', exact: true }).tap();
     await expect(page.locator('#waypoint-hud')).toBeHidden();
     await page.reload();
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('#waypoint-hud')).toBeHidden();
   } finally {
     await context.close();

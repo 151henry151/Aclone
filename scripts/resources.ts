@@ -50,7 +50,7 @@ try {
     { token, world: w.id },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.keyboard.press('h');
   for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
     const node = resourceNodes.find((n) => n.item === item)!;

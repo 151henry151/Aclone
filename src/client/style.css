@@ -2175,3 +2175,26 @@ button span {
 .mobile-ui.mobile-status-open #waypoint-hud {
   display: none;
 }
+
+#startup-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #14271bf5;
+  color: #eee4c6;
+  padding: 24px;
+  text-align: center;
+}
+#startup-loading[hidden] {
+  display: none;
+}
+#startup-loading h2 {
+  font:
+    24px Georgia,
+    serif;
+}
+#startup-loading p {
+  color: #b5c3a6;
+}

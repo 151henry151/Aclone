@@ -48,7 +48,7 @@ test('industrial robocrow renders in flight and deploys, climbs and returns norm
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('r');
     await expect.poll(() => p.vehicle).toBe(7);
     expect(p.inventory.rc).toBe(1);

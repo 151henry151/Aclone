@@ -28,7 +28,7 @@ test('mobile suppliers can inspect and fulfil a funded parish order', async ({ p
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.locator('#brand-button').click();
     await page.getByRole('button', { name: 'Parish supply orders', exact: true }).click();
     const form = page.locator('form[data-action="fulfilOrder"]').first();

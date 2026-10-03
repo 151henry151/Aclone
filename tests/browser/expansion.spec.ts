@@ -50,7 +50,7 @@ test('cottage styles, garage paint and combat choices survive real server action
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Expansion browser');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   const key = await page.evaluate(() => localStorage.getItem('aclone.pilot'));
   const response = await page.request.get('./api/session', {
     headers: { authorization: 'Bearer ' + key },

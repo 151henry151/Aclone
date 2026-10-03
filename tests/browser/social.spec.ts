@@ -42,7 +42,7 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
       t = await right.newPage();
     for (const p of [s, t]) {
       await p.goto(`http://127.0.0.1:${port}`);
-      await expect(p.locator('#world-hud')).toBeVisible();
+      await expect(p.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await p.keyboard.press('F9');
       await p.getByRole('button', { name: 'Mail, family & trades', exact: true }).click();
     }

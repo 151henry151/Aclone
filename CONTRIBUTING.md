@@ -42,6 +42,8 @@ CI limits unit-test concurrency to two and runs browser checks on separate runne
 
 Use performance graphics for functional tests on software rendering; `TEST_GPU=1` enables detailed capture where supported. Wait for observable UI state after a server mutation or viewport resize. Hold finite task fixtures until assertions finish, then explicitly test completion; do not depend on screenshot speed or add retries to conceal a failure.
 
+For cold-load diagnostics, run `npm run build` then `CHROMIUM_PATH=/usr/bin/chromium npm run profile:startup`. This creates a disposable parish with eight extra tractors and saves CPU, frame, resource and readiness timings under `test-results/startup`. `PROFILE_GPU=1` requests hardware rendering; inspect the recorded renderer before comparing results. `PROFILE_SECONDS=25` shortens the default minute. Browser entry assertions allow up to 60 seconds for preparation; ordinary interaction waits remain unchanged.
+
 ## Sending changes
 
 Open an issue describing substantial changes, then a focused pull request with

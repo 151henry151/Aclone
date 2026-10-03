@@ -24,7 +24,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await expect(page.getByRole('heading', { name: 'Somewhere to call home.' })).toBeVisible();
   await page.screenshot({ path: 'test-results/galaxy.png' });
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await expect(page.locator('#cash')).toHaveText('18s 0d');
   // Exercise the built client and configured URL prefix as well as the isolated map fixture.
   await page.keyboard.press('m');
@@ -45,7 +45,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.keyboard.press('h');
   await expect(page.locator('#world-hud')).toBeHidden();
   await page.keyboard.press('Escape');
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.keyboard.down('ArrowDown');
   await page.waitForTimeout(1800);
   await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
@@ -64,7 +64,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await expect(page.locator('#clock')).toContainText('RUST 0 : 0 MOSS');
   await page.getByRole('button', { name: 'Parp Space' }).click();
   await page.reload();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await expect(page.locator('#clock')).toContainText('RUST');
   expect(errors).toEqual([]);
 });
@@ -95,7 +95,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Browser Parish');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.getByRole('button', { name: 'Editor F10' }).click();
   await expect(page.getByRole('heading', { name: 'World creator studio' })).toBeVisible();
   await page.getByRole('button', { name: 'Landscape', exact: true }).click();
@@ -133,7 +133,7 @@ test('small viewport can register and navigate', async ({ page }) => {
     .fill('Mobile ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.screenshot({ path: 'test-results/mobile.png' });
 });
 
@@ -164,7 +164,7 @@ test('pilot nameplates and disconnects match the live parish list', async ({ pag
     .fill('Observer ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await expect(page.locator('#chat-log')).toContainText(
     'Welcome to the parish. Mind the tractor.',
     { timeout: 15000 },
@@ -206,7 +206,7 @@ test('walking character can move, change camera and return to the tractor', asyn
     .fill('Walker ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   await page.getByRole('button', { name: 'Switch to walking' }).click();
   await expect(page.locator('#driving')).toContainText('On foot');

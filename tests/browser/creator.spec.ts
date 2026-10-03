@@ -38,7 +38,7 @@ for (const mobile of [false, true])
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`http://127.0.0.1:${port}`);
-      await expect(page.locator('#world-hud')).toBeVisible();
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       // The same editor is reachable through desktop keyboard and the mobile menu.
       if (mobile) {
         await page.getByRole('button', { name: 'Open game menu' }).click();

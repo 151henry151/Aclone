@@ -1,3 +1,5 @@
+import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
+import { waitForTextures, failedTextures } from './materials';
 import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorModel } from './creator-model';
@@ -177,6 +179,9 @@ export class GameScene {
   private world?: World;
   private me?: Player;
   paused = false;
+  ready = true;
+  onLoading?: (message?: string, warning?: string) => void;
+  private warmGeneration = 0;
   private sky = countrySky();
   private precipitation = new Precipitation();
   private fields = new FarmFields();
@@ -388,11 +393,16 @@ export class GameScene {
     this.camera.updateProjectionMatrix();
   }
   setWorld(world: World, me: string) {
+    const entering = this.lastWorld !== world.id;
+    if (entering) {
+      this.ready = false;
+      this.onLoading?.('Preparing the parish…');
+      performance.mark('aclone-world-loading');
+    }
     this.world = world;
     this.me = world.players[me];
     this.audio.setWorld(world, me);
     this.sky.visible = true;
-    this.fields.update(world, this.me);
     this.space.visible = false;
     this.land.visible = true;
     this.actors.visible = true;
@@ -422,7 +432,8 @@ export class GameScene {
       JSON.stringify(world.creator ?? {}) +
       ':' +
       world.buildings.map((b) => b.creatorModel ?? '').join(',');
-    if (this.revision !== rev) {
+    const rebuilt = this.revision !== rev;
+    if (rebuilt) {
       this.revision = rev;
       this.buildWorld(world);
     }
@@ -434,6 +445,7 @@ export class GameScene {
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
+    this.fields.update(world, this.me);
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
       let mesh = this.meshes.get(p.id);
@@ -488,8 +500,82 @@ export class GameScene {
         dispose(mesh);
         this.meshes.delete(id);
       }
+    if (entering || (rebuilt && !this.ready)) void this.prepareWorld();
+  }
+  private async prepareWorld() {
+    const generation = ++this.warmGeneration;
+    const current = () => generation === this.warmGeneration && !!this.world;
+    try {
+      await yieldFrame();
+      if (!current()) return;
+      this.onLoading?.('Loading countryside textures…');
+      await waitForTextures();
+      if (!current()) return;
+      const done = await uploadTextures(
+        sceneTextures(this.scene),
+        (texture) => this.renderer.initTexture(texture),
+        current,
+        (i, total) =>
+          this.onLoading?.(`Preparing scenery… ${Math.round((i / Math.max(1, total)) * 100)}%`),
+      );
+      if (!done) return;
+      // Establish fog, camera and light positions before compiling the first view.
+      this.renderTime = -Infinity;
+      this.frame();
+      this.onLoading?.('Preparing daylight and night lighting…');
+      const lamps = this.townLighting.group.visible,
+        headlights = this.headlights.visible;
+      try {
+        for (const night of [false, true])
+          for (const beam of [false, true]) {
+            if (!current()) return;
+            this.townLighting.group.visible = night;
+            this.headlights.visible = beam;
+            await this.renderer.compileAsync(this.scene, this.camera);
+            if (!current()) return;
+            // A compiled program can still defer GPU uploads/JIT until its first draw.
+            this.townLighting.group.visible = night;
+            this.headlights.visible = beam;
+            this.renderer.render(this.scene, this.camera);
+            if (!(await finishGpuWork(this.renderer.getContext(), current))) return;
+          }
+      } finally {
+        this.townLighting.group.visible = lamps;
+        this.headlights.visible = headlights;
+      }
+      if (!current()) return;
+      this.onLoading?.('Finishing the view…');
+      this.renderTime = -Infinity;
+      this.frame();
+      this.renderer.render(this.scene, this.camera);
+      if (!(await finishGpuWork(this.renderer.getContext(), current))) return;
+      await yieldFrame();
+      if (!current()) return;
+      this.ready = true;
+      this.lastTime = performance.now();
+      this.slowFrames = 0;
+      performance.mark('aclone-world-ready');
+      this.onLoading?.(
+        undefined,
+        failedTextures.size
+          ? 'Some scenery textures could not load. Plain surfaces are in use; reload to retry.'
+          : undefined,
+      );
+    } catch (error) {
+      if (!current()) return;
+      console.warn('Scenery preparation failed', error);
+      this.ready = true;
+      this.lastTime = performance.now();
+      this.onLoading?.(
+        undefined,
+        'Scenery preparation was interrupted. The view may take a moment to settle.',
+      );
+    }
   }
   setSpace() {
+    ++this.warmGeneration;
+    this.ready = true;
+    this.onLoading?.();
     this.audio.clear();
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
@@ -901,7 +987,12 @@ export class GameScene {
     if (sinceRender < interval) return;
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
     this.renderTime = now - (sinceRender % interval);
-    if (!this.low && !this.paused && localStorage.getItem('aclone.quality') !== 'high') {
+    if (
+      this.ready &&
+      !this.low &&
+      !this.paused &&
+      localStorage.getItem('aclone.quality') !== 'high'
+    ) {
       this.slowFrames =
         now - this.lastTime > 180 ? this.slowFrames + 1 : Math.max(0, this.slowFrames - 1);
       if (this.slowFrames >= 6) {
@@ -1232,6 +1323,7 @@ export class GameScene {
       this.stars.rotation.y += dt * 0.008;
       for (const p of this.planets) p.rotation.y += dt * 0.06;
     }
+    if (!this.ready) return;
     this.renderer.render(this.scene, this.camera);
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);

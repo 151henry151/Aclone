@@ -46,7 +46,7 @@ test('spaceport apron renders by day and night and its terminal remains accessib
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('h');
     await page.keyboard.press('c');
     await page.mouse.move(700, 380);

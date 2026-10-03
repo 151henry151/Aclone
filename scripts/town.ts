@@ -51,7 +51,7 @@ try {
     { token, world: w.id },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   mkdirSync('docs/screenshots', { recursive: true });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: 'docs/screenshots/sprawling-town.png' });

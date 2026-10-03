@@ -30,7 +30,7 @@ test('nutrition fields and dairy care are usable from game panels', async ({ pag
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Catalogue', exact: true }).click();
     const form = page.locator('#creator-catalogue-item-form');

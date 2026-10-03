@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.39.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.39.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -71,7 +71,7 @@ Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, i
 3. Learn a profession at school, take a funded job or save to buy a business.
 4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**
 
-Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
+On entering a world, a short loading screen prepares scenery and lighting before driving controls become available. Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
 
 ## Contribute
 

@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-10-03
+
+### Fixed
+
+- Prepare countryside textures and daylight/headlight graphics before enabling driving, instead of uploading and compiling them during the first moments of play. Show loading progress, keep controls neutral and audio quiet, and fall back to plain surfaces if a texture fails.
+- Avoid building nearby farm scenery twice on arrival. Add a repeatable cold-load profile and explicit readiness waits in browser tests.
+
 ## [0.39.1] - 2026-10-03
 
 ### Changed

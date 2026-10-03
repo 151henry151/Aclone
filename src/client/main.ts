@@ -180,6 +180,24 @@ const sound = scene.audio;
 let weapon = 'plasma';
 const keys = new Set<string>();
 const $ = (id: string) => document.getElementById(id)!;
+app.insertAdjacentHTML(
+  'beforeend',
+  '<section id="startup-loading" hidden role="status" aria-live="polite"><div><span class="eyebrow">ENTERING THE PARISH</span><h2 id="startup-message">Preparing scenery…</h2><p>The controls will be ready in a moment.</p></div></section>',
+);
+scene.onLoading = (message, warning) => {
+  if ($('startup-loading').hidden === !!message) sound.setActive(!message && !document.hidden);
+  $('startup-loading').hidden = !message;
+  $('world-hud').hidden = !!message || !world;
+  if (message) {
+    $('startup-message').textContent = message;
+    keys.clear();
+  } else {
+    keys.clear();
+    mobile.reset();
+    if (warning) toast(warning, true);
+  }
+};
+
 declare const __ACLONE_BASE__: string;
 const withBase = (path: string) => publicPath(__ACLONE_BASE__, path);
 let touchWeapon: string | undefined;
@@ -314,8 +332,9 @@ async function connect() {
       inSpace = false;
       localStorage.setItem('aclone.world', world!.id);
       $('overlay').innerHTML = '';
-      $('world-hud').hidden = false;
+      $('world-hud').hidden = !scene.ready;
       scene.setWorld(world!, msg.me);
+      $('world-hud').hidden = !scene.ready;
       updateHud();
       refreshTradingPrices();
       if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
@@ -2104,6 +2123,7 @@ window.addEventListener('keydown', (e) => {
     mobile.close();
     return;
   }
+  if (world && !scene.ready) return;
   if (e.key.startsWith('Arrow')) e.preventDefault();
   if (e.repeat) return;
   if (panel && e.key === 'Tab') {
@@ -2174,7 +2194,7 @@ window.addEventListener('keydown', (e) => {
     openPanel('inventory');
     return;
   }
-  if (!world || panel || mobile.drawer) return;
+  if (!world || !scene.ready || panel || mobile.drawer) return;
   if (key === 'e' || key === 'control') {
     const b = scene.nearest();
     if (b) openInteraction(b.id);
@@ -2206,12 +2226,16 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('blur', () => keys.clear());
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
-  sound.setActive(!document.hidden);
+  sound.setActive(!document.hidden && scene.ready);
 });
 setInterval(() => {
   if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
   scene.paused = !!(panel || mobile.drawer);
-  const typing = panel || mobile.drawer || document.activeElement?.matches('input,textarea,select');
+  const typing =
+    !scene.ready ||
+    panel ||
+    mobile.drawer ||
+    document.activeElement?.matches('input,textarea,select');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
   const touch = mobile.input();
   const packet = inputStream.encode(

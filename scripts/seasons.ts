@@ -61,7 +61,7 @@ try {
     { token, world: w.id },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible();
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.keyboard.press('h');
   await page.mouse.wheel(0, -450);
   await expect(page.locator('#toast')).not.toHaveClass(/show/, { timeout: 15000 });
