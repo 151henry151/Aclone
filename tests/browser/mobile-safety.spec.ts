@@ -178,6 +178,9 @@ test('touch input releases safely, aircraft and weapons work, and tablet/desktop
       await expect(pc.locator('.chat-panel #target')).toHaveCount(1);
       await pc.screenshot({ path: 'test-results/mobile-desktop-regression.png' });
       await pc.setViewportSize({ width: 600, height: 800 });
+      // SwiftShader can delay the resize/media-query task while rebuilding the
+      // render target. Wait for the actual layout transition, not a fixed sleep.
+      await expect(pc.locator('html')).toHaveClass(/mobile-ui/, { timeout: 15000 });
       await expect(pc.locator('.mobile-nav')).toBeVisible();
       await pc.setViewportSize({ width: 1440, height: 900 });
       await expect(pc.locator('.left-panel')).toBeVisible();

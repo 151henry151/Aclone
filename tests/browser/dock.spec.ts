@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer, terrainHeight } from '../../src/shared/simulation.ts';
-import { dockHeight } from '../../src/shared/dock.ts';
+import { dockHeight, travelHeight } from '../../src/shared/dock.ts';
 
 for (const mobile of [false, true])
   test(`${mobile ? 'phone' : 'desktop'} dock supports driving and direct floating fishing controls`, async ({
@@ -66,10 +66,28 @@ for (const mobile of [false, true])
           ).toBeVisible();
           await page.getByRole('button', { name: 'Close dialog' }).click();
         }
-        await page.keyboard.down('w');
-        await expect.poll(() => p.z, { timeout: 15000 }).toBeGreaterThan(148);
-        await page.keyboard.up('w');
-        expect(p.y).toBeGreaterThanOrEqual(dockHeight(w) - 0.01);
+        // Sample the first crossing on the simulation's timer, not after a slow
+        // software-rendered browser has returned a keyboard command. By then the
+        // tractor can already have driven beyond the end of the dock.
+        let crossing: { z: number; y: number } | undefined;
+        const sample = setInterval(() => {
+          if (!crossing && p.z >= 148) crossing = { z: p.z, y: p.y };
+        }, 10);
+        try {
+          await page.keyboard.down('w');
+          await expect.poll(() => crossing, { timeout: 15000 }).toBeDefined();
+          await page.keyboard.up('w');
+          expect(crossing!.z).toBeLessThan(162);
+          expect(crossing!.y).toBeGreaterThanOrEqual(dockHeight(w) - 0.01);
+        } finally {
+          clearInterval(sample);
+          await page.keyboard.up('w');
+        }
+        // Start the independent fishing-controls checks stationary on the deck.
+        p.x = 20;
+        p.z = 148;
+        p.y = travelHeight(w, p.x, p.z);
+        p.speed = 0;
       } else {
         await activate('#target button');
         await expect(page.getByRole('dialog', { name: 'Fishing dock', exact: true })).toBeVisible();

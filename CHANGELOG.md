@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-10-03
+
+### Fixed
+
+- Stabilize browser checks on software-rendered CI: measure tractor height while it crosses the dock, and wait for the responsive layout transition after resizing. Keep the driving and fishing assertions intact.
+
 ## [0.32.0] - 2026-10-03
 
 ### Added
