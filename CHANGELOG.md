@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-10-03
+
+### Fixed
+
+- Bound the always-present NPC guide independently of manual growth. Keep everyday rules available and retrieve detailed economy/banking sections on demand so expanded documentation does not exceed conversation budgets.
+
 ## [0.27.0] - 2026-10-03
 
 ### Added

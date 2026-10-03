@@ -124,14 +124,23 @@ export function gameGuide(query: string, activityQuery = '') {
     ...excerpts.map((e) => e.id),
     ...activityExcerpts.map((e) => e.id),
   ]);
+  // Keep the everyday FAQ available without silently turning every new manual
+  // section into permanent context. Detailed economy topics remain searchable.
+  let remaining = 12500;
+  const fundamentals = docs.filter((e) => {
+    if (
+      separate.has(e.id) ||
+      !(e.source.startsWith('docs/FAQ.md') || e.source.startsWith('docs/ECONOMY.md'))
+    )
+      return false;
+    if (e.text.length > remaining) return false;
+    remaining -= e.text.length;
+    return true;
+  });
   return {
     version: VERSION,
     // Core rules must not depend on the agent knowing which question to search for.
-    fundamentals: docs.filter(
-      (e) =>
-        !separate.has(e.id) &&
-        (e.source.startsWith('docs/FAQ.md') || e.source.startsWith('docs/ECONOMY.md')),
-    ),
+    fundamentals,
     controls: docs.find((e) => e.id === 'faq:controls')!.text,
     topics: docs.map(({ id, title }) => ({ id, title })),
     catalogLookup:

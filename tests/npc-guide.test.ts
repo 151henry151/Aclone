@@ -13,6 +13,13 @@ test('NPC always knows the controls and retrieves relevant player help without t
     guide.excerpts.some((e) => /verified/i.test(e.text) && /Forgot your password/i.test(e.text)),
   );
   assert.ok(JSON.stringify(guide).length < 35000);
+  assert.ok(guide.fundamentals.reduce((n, e) => n + e.text.length, 0) <= 12500);
+  assert.match(
+    searchGuide('loans credit mortgage')
+      .map((e) => e.text)
+      .join('\n'),
+    /repayment|instalment/,
+  );
   const combined = gameGuide('How do I produce water?', 'How do I produce water?');
   const ids = [...combined.fundamentals, ...combined.excerpts, ...combined.activityExcerpts].map(
     (e) => e.id,
