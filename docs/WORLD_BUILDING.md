@@ -148,3 +148,7 @@ Developer entry points: `shared/creator.ts` owns validation/actions/effects;
 `server/world-design.ts` owns portable layouts; `server/asset-validation.ts`
 checks renderable uploads. Test changes to all four paths: authoritative action,
 saved/reloaded state, browser controls and untrusted input rejection.
+
+## Player assistance rules
+
+**Allow Money Gifts** (`allowMoneyGifts`) and **Allow Player Refuelling** (`allowPlayerRefuelling`) are independent boolean rules in creation's custom settings and **Editor → Rules**. Both default to true, including when loading older saves. Disabling a rule immediately prevents its action for all players, including AI residents; re-enabling it needs no restart. Existing explicit choices are preserved when loading a world. Money gifts conserve total cash and are recorded as transfers in the ledger; refuelling consumes carried Fuel and never creates free supplies.

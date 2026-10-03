@@ -8,6 +8,8 @@
   "fighting": false,
   "locked": false,
   "chatLocked": false,
+  "allowMoneyGifts": true,
+  "allowPlayerRefuelling": true,
   "seaLevel": -2,
   "hungerRate": 1.8,
   "thirstRate": 2.5,

@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-03
+
+### Added
+
+- Give money directly to another online player in the same parish, with exact cash transfers and private receipts. Help stranded neighbours by using carried Fuel to refill their nearby, stationary vehicle. Both actions are available from player names and the Players & roadside help menu on desktop and mobile.
+- Let world owners independently enable money gifts and player refuelling during creation or in the world editor. Both default to enabled, including in existing worlds.
+
 ## [0.23.1] - 2026-10-03
 
 ### Fixed

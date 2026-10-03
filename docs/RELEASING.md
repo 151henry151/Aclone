@@ -4,6 +4,17 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.24.0
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. Deployment remains operator-managed. No new dependencies or database
+reset are required. Existing worlds enable cash gifts and roadside refuelling by
+default; owners may disable either under Editor → Rules. Refresh browser clients
+to see player-name buttons and the Players & roadside help menu.
+
+Validation: focused simulation, privacy, persistence and NPC tests, desktop and
+phone browser checks, TypeScript and the `/aclone` production build passed.
+
 ## Deploying 0.23.1
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

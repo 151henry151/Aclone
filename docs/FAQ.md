@@ -207,3 +207,9 @@ Building Admin shows the saved wage separately from the editable field. Press
 production cycle (per harvested plot at farms); wage tax reduces what the worker
 receives. AI neighbours receive the live saved gross/net wage and total staff
 wage bill separately. Their old chat messages remain historical statements.
+
+## Can I give money to someone or refuel a stranded player?
+
+Yes, if this world's rules allow it. Click their name in the online list or use **World/F9 → Players & roadside help** (**Actions → Players & roadside help** on mobile). Cash gifts go directly from cash in hand to an online player in this parish, without fees, at any distance. Enter denarii with at most two decimal places. Both players get a private receipt.
+
+For roadside help, buy and carry Fuel from a stocked shop or garage, stop within 15 metres at the same height, and choose **Use 1 Fuel to refuel…**. Both players must be outside and stopped, without another activity, passenger ride or robocrow scouting. One Fuel restores up to eight tank units (64 maximum; excess is consumed). No fuel is taken from the helper's tank. The other player must be in a fuel-powered vehicle. World owners can disable gifts and refuelling independently under **Editor → Rules**.

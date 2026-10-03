@@ -413,3 +413,12 @@ hotel) to retain only the two approved additions. Purchased buildings and custom
 plots are protected, even if a player later relinquishes them. An active task or
 occupied building defers removal until a later restart; jobs at removed buildings
 are cleared. No catalogue type is deleted or banned from future construction.
+
+## Helping other players
+
+Click another player's name in the online list, or open **World (F9) → Players & roadside help**. On a phone, use **Actions → Players & roadside help**. The directory includes everyone currently online in your parish, including AI residents. It also offers private chat.
+
+- **Give money:** enter denarii and send cash in hand, with up to two decimal places (0.01d through 1,000,000d per gift). Gifts work at any distance within the same parish and have no tax or fee. They are gifts, not loans or purchases, and do not transfer bank savings or galactic credits. Both players must be online. Each receives a private chat receipt. The entered amount stays put for another gift.
+- **Roadside refuelling:** carry Fuel bought from a stocked shop or garage and stop within 15 metres of the other vehicle at the same height. Both players must be outside, stationary, and free of other activities (including fishing, work tasks, scouting and passenger rides). Click **Use 1 Fuel to refuel…**. One carried Fuel supplies up to eight tank units, capped at 64; excess is consumed as with self-refuelling. Walking and vehicles that use no fuel cannot receive it. You do not drain your own vehicle's tank.
+
+Buttons explain missing supplies, distance, full tanks, disconnected recipients or disabled rules. The server checks everything again when an action arrives. Gifts and fuel changes persist with the world; private receipts remain in its recent chat history. World owners can separately disable **Allow Money Gifts** and **Allow Player Refuelling** under **Editor → Rules**; both are enabled by default.

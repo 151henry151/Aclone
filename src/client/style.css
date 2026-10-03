@@ -725,6 +725,16 @@ kbd {
   font-size: 10px;
   margin-top: 11px;
 }
+.player-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .player-row small {
   font: 8px monospace;
   color: #b5c198;

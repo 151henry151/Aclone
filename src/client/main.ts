@@ -11,6 +11,8 @@ import {
   refreshCreatorPreview,
   closeCreatorPreview,
 } from './creator-editor';
+import { giftAmount } from '../shared/player-aid';
+import { playerAidPanel, refreshPlayerAid } from './player-aid';
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { fishingDock, nearFishingDock } from '../shared/dock';
@@ -281,6 +283,7 @@ async function connect() {
       scene.setWorld(world!, msg.me);
       updateHud();
       refreshTradingPrices();
+      if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
       if (msg.sequence !== undefined && ws?.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
     }
@@ -505,7 +508,7 @@ function updateHud() {
       .slice(0, 8)
       .map(
         (p) =>
-          `<div class="player-row"><span>${p.id === me!.id ? '▸' : '·'} ${esc(p.name)}${p.npc ? ' <small class="ai-tag">AI</small>' : ''}</span><small>${p.kudos} kudos</small></div>`,
+          `<div class="player-row">${p.id === me!.id ? `<span>▸ ${esc(p.name)}</span>` : button(`${esc(p.name)}${p.npc ? ' <small class="ai-tag">AI</small>' : ''}`, 'player', `data-id="${esc(p.id)}"`, 'player-link')}<small>${p.kudos} kudos</small></div>`,
       )
       .join(''),
   );
@@ -770,7 +773,7 @@ function modal(title: string, content: string, wide = false) {
       account?.id ?? 'anonymous',
       world?.id ?? 'space',
       panel,
-      panel === 'building' ? selected : '',
+      ['building', 'player'].includes(panel) ? selected : '',
       tab,
       panel === 'editor' ? creatorMemoryKey() : '',
     ]),
@@ -847,6 +850,7 @@ app.addEventListener('change', (event) => {
   refreshTradingPrices();
 });
 app.addEventListener('input', (event) => {
+  if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
   const input = event.target as HTMLInputElement;
   if (
     (input.name === 'priceDenarii' && input.closest('form[data-price-editor]')) ||
@@ -943,6 +947,23 @@ function renderPanel() {
       );
     return;
   }
+  if (panel === 'players') {
+    const others = Object.values(world.players).filter((p) => p.online && p.id !== me!.id);
+    modal(
+      'Players & roadside help',
+      `<p>Select a player to give money, help refuel their vehicle, or chat privately.</p><div class="directory">${others.map((p) => button(`${esc(p.name)}${p.npc ? ' · AI' : ''}<small>${Math.round(distance(me!, p))} m away</small>`, 'player', `data-id="${esc(p.id)}"`)).join('') || '<p>No other players are online in this parish.</p>'}</div>`,
+    );
+    return;
+  }
+  if (panel === 'player') {
+    const target = world.players[selected];
+    modal(
+      target?.name ?? 'Player unavailable',
+      target ? playerAidPanel(target) : '<p>This player has left the parish.</p>',
+    );
+    refreshPlayerAid($('modal-host'), world, me, selected);
+    return;
+  }
   const b = world.buildings.find((b) => b.id === selected);
   if (panel === 'building' && b) {
     buildingWindow(b);
@@ -965,7 +986,7 @@ function renderPanel() {
               )
               .join('')}</div>`
           : ''
-      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
+      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
     );
     return;
   }
@@ -1056,7 +1077,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -1320,7 +1341,7 @@ function editorWindow() {
           )
             .map(([k, v]) =>
               typeof v === 'boolean'
-                ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k}</label>`
+                ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</label>`
                 : k === 'weaponMode'
                   ? select(
                       k,
@@ -1396,6 +1417,7 @@ app.addEventListener('click', async (e) => {
       'directory',
       'map',
       'npc',
+      'players',
       'help',
       'options',
       'shipyard',
@@ -1432,6 +1454,22 @@ app.addEventListener('click', async (e) => {
       case 'interactObject':
         send({ type: 'interactObject', object: id });
         closePanel();
+        break;
+      case 'player':
+        selected = id!;
+        openPanel('player');
+        break;
+      case 'player-chat': {
+        const target = world?.players[id!];
+        if (target) {
+          setChatRecipient({ id: target.id, name: target.name });
+          closePanel();
+          focusChat();
+        }
+        break;
+      }
+      case 'refuelPlayer':
+        send({ type: 'refuelPlayer', player: id });
         break;
       case 'npc-chat': {
         const resident = npcResidents?.find((r) => r.playerId === id);
@@ -1723,6 +1761,12 @@ app.addEventListener('submit', async (e) => {
         await showGalaxy();
         if (account?.system === 'hearth') send({ type: 'land', world: result.id });
       } else toast('World created. Take off from the spaceport to visit it.');
+    } else if (form.id === 'money-gift-form') {
+      send({
+        type: 'giveMoney',
+        player: form.dataset.player,
+        amount: giftAmount(String(data.denarii)),
+      });
     } else if (form.id === 'settings-form') {
       const patch: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(world!.settings))

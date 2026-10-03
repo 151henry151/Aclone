@@ -139,6 +139,8 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
         .join(' ')} ${state.lastOutcome?.message ?? ''}`,
     ),
     worldRules: {
+      allowMoneyGifts: w.settings.allowMoneyGifts !== false,
+      allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,
       fishingMode: w.settings.fishingMode,
       maxSkills: w.settings.maxSkills,

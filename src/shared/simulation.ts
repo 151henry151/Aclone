@@ -10,6 +10,7 @@ import { productionStaff, productionSupplied, productionEfficiency } from './sou
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
 import { gather, finishGather } from './resources.ts';
+import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
 import { shelter, lodgingAction, feedAtHome, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
@@ -966,6 +967,55 @@ export function act(w: World, id: string, a: Action): string {
     case 'detach':
       delete p.hitch;
       break;
+    case 'giveMoney': {
+      const target = w.players[str(a.player)],
+        n = num(a.amount, 1, MAX_MONEY_GIFT, true);
+      const reason = moneyGiftReason(w, p, target);
+      requireThat(!reason, reason ?? 'Cannot give money');
+      requireThat(p.cash >= n, 'Not enough cash in hand');
+      requireThat(Number.isSafeInteger(target.cash + n), 'Recipient cash limit reached');
+      p.cash -= n;
+      target.cash += n;
+      log(w, 'transfer', n, p.id, target.id, 'player gift');
+      say(
+        w,
+        'Money gift',
+        `${p.name} gave you ${money(n, w.settings.denariiPerSheckle)}.`,
+        'system',
+        target.id,
+      );
+      say(
+        w,
+        'Money gift',
+        `You gave ${target.name} ${money(n, w.settings.denariiPerSheckle)}.`,
+        'system',
+        p.id,
+      );
+      break;
+    }
+    case 'refuelPlayer': {
+      const target = w.players[str(a.player)],
+        status = refuellingStatus(w, p, target);
+      requireThat(!status.reason, status.reason ?? 'Cannot refuel');
+      stockAdd(p.inventory, 'fuel', -1);
+      target.fuel = Math.min(64, target.fuel + status.units);
+      const amount = Number(status.units.toFixed(2));
+      say(
+        w,
+        'Roadside help',
+        `${p.name} refuelled your vehicle (+${amount} fuel).`,
+        'system',
+        target.id,
+      );
+      say(
+        w,
+        'Roadside help',
+        `You used 1 Fuel to refuel ${target.name} (+${amount} fuel).`,
+        'system',
+        p.id,
+      );
+      break;
+    }
     case 'give': {
       const target = w.players[String(a.player)],
         item = str(a.item),

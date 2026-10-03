@@ -83,6 +83,8 @@ export const playerOperations = [
   'hitch',
   'detach',
   'give',
+  'giveMoney',
+  'refuelPlayer',
   'respawn',
   'exchange',
   'takeoff',

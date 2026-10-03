@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { refuelRecipientReady } from '../shared/player-aid.ts';
 import {
   motorRunning,
   productionActivity,
@@ -81,6 +82,7 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         vehicle: p.vehicle,
+        canReceiveFuel: refuelRecipientReady(p),
         tractorPaint: p.tractorPaint,
         atHome: p.atHome,
         lights: p.lights,

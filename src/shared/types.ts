@@ -26,6 +26,8 @@ export interface Player {
   heading: number;
   speed: number;
   fuel: number;
+  /** Public snapshot hint; exact fuel and private activity details stay private. */
+  canReceiveFuel?: boolean;
   health: number;
   hunger: number;
   thirst: number;
@@ -142,6 +144,8 @@ export interface Settings {
   killReward?: number;
   locked: boolean;
   chatLocked: boolean;
+  allowMoneyGifts?: boolean;
+  allowPlayerRefuelling?: boolean;
   seaLevel: number;
   hungerRate: number;
   thirstRate: number;

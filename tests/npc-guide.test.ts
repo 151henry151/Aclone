@@ -33,6 +33,7 @@ test('NPC always knows the controls and retrieves relevant player help without t
 test('guide lookup covers FAQ, economy and defaults directly from the catalog', () => {
   for (const [query, expected] of [
     ['What does parp mean?', /horn/i],
+    ['Can I give money to someone or refuel a stranded player?', /Players & roadside help/],
     ['Why can I not sell to my own shop?', /Stockroom/],
     ['How do I leave my house and walk?', /Go outside/],
     ['What happens when I log out offline?', /ageing/],
