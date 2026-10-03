@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.42.1] - 2026-10-03
+
+### Fixed
+
+- Open chat at its latest messages after the loading screen finishes, even when history arrived while the HUD was hidden. Keep deliberate scrollback unchanged during later updates.
+
 ## [0.42.0] - 2026-10-03
 
 ### Added

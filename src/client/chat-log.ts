@@ -3,6 +3,7 @@
  * The server supplies its bounded, privacy-filtered recent history. */
 export class ChatLog {
   private world = '';
+  private followOnReveal = false;
   private keys: string[] = [];
   constructor(
     private element: HTMLElement,
@@ -51,6 +52,13 @@ export class ChatLog {
     return this.element.scrollHeight - this.element.scrollTop - this.element.clientHeight < 12;
   }
   update(world: string, lines: string[]) {
+    // A hidden HUD has zero scroll dimensions. Defer only the initial/world-reset
+    // jump until layout exists; subsequent updates retain deliberate scrollback.
+    if (this.followOnReveal && this.element.clientHeight > 0) {
+      this.element.scrollTop = this.element.scrollHeight;
+      this.followOnReveal = false;
+      this.latest.hidden = true;
+    }
     const reset = world !== this.world;
     if (!reset && lines.length === this.keys.length && lines.every((v, i) => v === this.keys[i]))
       return;
@@ -58,6 +66,7 @@ export class ChatLog {
     const top = this.element.scrollTop;
     let removedHeight = 0;
     if (reset) {
+      this.followOnReveal = this.element.clientHeight === 0;
       this.element.replaceChildren();
       this.keys = [];
     }

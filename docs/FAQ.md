@@ -83,6 +83,10 @@ Permitted chat is stored and relevant context goes to Jev plus OpenAI (Mabel) or
 
 Building Admin shows current quotes and loads the selected item's saved buy/sell price. Empty means no listing; zero means free. Amounts use denarii/decimals. Drafts and scroll positions persist through repeated transactions, but editing is not saving.
 
+## How do I read earlier chat?
+
+Chat opens at the newest messages after loading a world. Scroll back with the wheel or PgUp/PgDn; incoming messages preserve your reading position until you choose **jump to latest**.
+
 ## Can an AI follow through on a deal made in chat?
 
 Yes: deliveries and employment with optional training are executable requests. State item/quantity/buyer/price or exact workplace and training permission. A seller must own enough goods; employment does not confer stock rights. Buyers need posted price, capital and room. Trips may split loads; only successful trades count. Ask progress/blockers or cancel your latest unfinished request. Survival/schedules/budgets still apply; other goals are suggestions. [Agreements](NPCS.md#agreements-made-in-chat).
