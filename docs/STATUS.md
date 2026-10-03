@@ -4,6 +4,7 @@ Aclone is a playable development alpha, not complete historical parity or a stab
 
 ## Playable and covered by tests
 
+- **Social:** world-local offline mail, invitation-managed families, family chat and explicitly accepted cash-for-goods offers. No shared family estates or goods-for-goods barter.
 - **Spacecraft:** six hulls with time/fuel/range/cargo tradeoffs and predictable frontier shielding costs. No cockpit flight, missiles, ECM or piracy.
 - **Vehicles:** per-slot distance/condition, steel-part garage/roadside repairs, passenger controls and optional licence/map rules; parking and offline time cause no wear.
 - **Economy:** authoritative integer cash, tax/ledger conservation, inventory, investment, stock, production, wages, active/unattended work, skills, tasks, banks and budgeted parish procurement. Player cash gifts and carried-Fuel roadside help have independent world rules. Private business statements, return reports and structured personal history explain activity after the reporting upgrade.

@@ -1,3 +1,4 @@
+import { families, personalOffers, familyInvites } from '../shared/social.ts';
 import { repairRecipientReady } from '../shared/vehicle-services.ts';
 import { productionReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -50,6 +51,8 @@ export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
     departure: undefined,
+    familyInvites: familyInvites(w, p),
+    tradeOffers: personalOffers(w, p),
     statements: Object.fromEntries(
       w.buildings
         .filter((b) => b.owner === p.id || p.authority >= 20)
@@ -74,7 +77,28 @@ export interface Frame {
 }
 /** Serialize shared world data once per broadcast, rather than once per recipient. */
 export function prepareFrame(w: World): Frame {
-  const { players, ledger, script, scriptVariables, messages, landscapeHistory, ...common } = w;
+  const {
+    players,
+    ledger,
+    script,
+    scriptVariables,
+    messages,
+    landscapeHistory,
+    families: _families,
+    tradeOffers: _offers,
+    ...common
+  } = w;
+  const publicFamilies = Object.fromEntries(
+    Object.entries(families(w)).map(([id, f]) => [id, { ...f, invited: [] }]),
+  );
+  Object.assign(common, {
+    families: publicFamilies,
+    familyNames: Object.fromEntries(
+      Object.values(families(w)).flatMap((f) =>
+        f.members.map((id) => [id, w.players[id]?.name ?? id]),
+      ),
+    ),
+  });
   common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);
   common.scriptInteraction = w.script.includes('ObjectInteract');

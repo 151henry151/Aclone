@@ -1,3 +1,5 @@
+import { socialHtml, showSocialPane } from './social';
+let socialPane = 'letters';
 import {
   mapAvailable,
   vehicleCondition,
@@ -842,7 +844,22 @@ function refreshBusinessDetails() {
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
 let questSignature = '';
+let socialSignature = '';
 function refreshTradingPrices() {
+  if (panel === 'social' && world && me) {
+    const key = JSON.stringify([
+      me.mail,
+      me.sentMail,
+      me.familyInvites,
+      me.tradeOffers,
+      me.family,
+      world.families,
+    ]);
+    if (key !== socialSignature && !document.activeElement?.matches('input,select,textarea')) {
+      socialSignature = key;
+      renderPanel();
+    }
+  }
   if (panel === 'quests' && world && me) {
     const key = JSON.stringify([world.creator?.quests, me.quests]);
     if (key !== questSignature) {
@@ -1019,6 +1036,11 @@ function renderPanel() {
       );
     return;
   }
+  if (panel === 'social') {
+    modal('Mail, family & trades', socialHtml(world, me));
+    showSocialPane($('modal-host'), socialPane);
+    return;
+  }
   if (panel === 'players') {
     const others = Object.values(world.players).filter((p) => p.online && p.id !== me!.id);
     modal(
@@ -1058,7 +1080,7 @@ function renderPanel() {
               )
               .join('')}</div>`
           : ''
-      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
+      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
     );
     return;
   }
@@ -1161,14 +1183,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
-        'kind',
-        [
-          ['tribe', 'Tribe'],
-          ['family', 'Family'],
-        ],
-        'Community',
-      )}${field('Group name', 'name', '', 'text', 'required maxlength="32"')}<button>Join / create group</button></form><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1522,6 +1537,7 @@ app.addEventListener('click', async (e) => {
     const panels = [
       'menu',
       'reports',
+      'social',
       'quests',
       'procurement',
       'mobile-actions',
@@ -1545,6 +1561,24 @@ app.addEventListener('click', async (e) => {
       return;
     }
     switch (action) {
+      case 'social-tab':
+        socialPane = ['letters', 'family', 'trades'].includes(id!) ? id! : 'letters';
+        showSocialPane($('modal-host'), socialPane);
+        break;
+      case 'deleteMail':
+        send({ type: action, message: id, folder: el.dataset.folder });
+        break;
+      case 'acceptTrade':
+      case 'cancelTrade':
+        send({ type: action, offer: id });
+        break;
+      case 'family-join':
+      case 'family-decline':
+      case 'family-leave':
+      case 'family-remove':
+        send({ type: 'family', operation: action.slice(7), family: id, player: id });
+        break;
+
       case 'galaxy-travel': {
         const trip = await api('/api/federation/depart', {
           method: 'POST',

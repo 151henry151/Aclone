@@ -1,3 +1,4 @@
+import { personalOffers, familyInvites } from '../../shared/social.ts';
 import { vehicleCondition } from '../../shared/vehicle-services.ts';
 import { orderAllowance } from '../../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -67,6 +68,25 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     list.push({ id: '', description, plan, reconsiderSeconds });
     groups.set(group, list);
   };
+  for (const offer of personalOffers(w, p).filter((o) => o.to === p.id)) {
+    add(
+      'trade',
+      `Accept offered ${offer.quantity} ${offer.item} for ${offer.quantity * offer.price} total: I ${offer.buyer === p.id ? 'pay for' : 'sell'} these goods. Compare the price and my supplies.`,
+      [operation('acceptTrade', { offer: offer.id })],
+      30,
+    );
+    add(
+      'trade',
+      `Decline trade offer ${offer.id} without exchanging anything.`,
+      [operation('cancelTrade', { offer: offer.id })],
+      30,
+    );
+  }
+  for (const invitation of familyInvites(w, p))
+    if (!p.family)
+      add('social', `Join ${invitation.name} using their invitation; no sharing of assets.`, [
+        operation('family', { operation: 'join', family: invitation.id }),
+      ]);
   const buildings = [...w.buildings].sort((a, b) => distance(p, a) - distance(p, b));
   const shops = buildings.filter((b) => !b.construction && b.owner !== p.id);
   const collection = buildings.find((b) => b.id === w.procurement?.building);

@@ -11,6 +11,11 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  mail?: import('./social.ts').Mail[];
+  sentMail?: import('./social.ts').Mail[];
+  mailSentAt?: number;
+  familyInvites?: { id: string; name: string }[];
+  tradeOffers?: import('./social.ts').TradeOffer[];
   quests?: Record<string, import('./quests.ts').QuestProgress>;
   /** Private world-local Lua progress. */
   scriptState?: Record<string, number>;
@@ -201,6 +206,10 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  familyNames?: Record<string, string>;
+  socialSequence?: number;
+  families?: Record<string, import('./social.ts').Family>;
+  tradeOffers?: import('./social.ts').TradeOffer[];
   landscape?: import('./landscape.ts').Landscape;
   landscapeHistory?: import('./landscape.ts').Landscape[];
   landscapeUndo?: boolean;

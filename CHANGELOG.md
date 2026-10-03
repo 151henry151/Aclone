@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-10-03
+
+### Added
+
+- Send durable private mail, create invitation-based families and exchange goods for an agreed price through explicit trade offers. Shared desktop/mobile panels preserve drafts; trades revalidate stock, money, cargo, proximity and life before an atomic exchange.
+- Preserve existing family memberships, transfer leadership when a leader leaves, and let NPCs consider invitations and received trade offers through their normal decision planner.
+
 ## [0.37.0] - 2026-10-03
 
 ### Added

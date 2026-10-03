@@ -1,3 +1,4 @@
+import { socialAction } from './social.ts';
 import {
   vehicleCondition,
   vehicleRecord,
@@ -1170,10 +1171,19 @@ export function act(w: World, id: string, a: Action): string {
       }
       break;
     }
+    case 'postMail':
+    case 'deleteMail':
+    case 'family':
+    case 'offerTrade':
+    case 'acceptTrade':
+    case 'cancelTrade':
+      return socialAction(w, p, a);
     case 'group': {
       const kind = str(a.kind);
       requireThat(['tribe', 'family'].includes(kind), 'Unknown group');
-      p[kind as 'tribe' | 'family'] = str(a.name, 32);
+      if (kind === 'family')
+        return socialAction(w, p, { type: 'family', operation: 'create', name: a.name });
+      p.tribe = str(a.name, 32);
       break;
     }
     case 'hitch': {
