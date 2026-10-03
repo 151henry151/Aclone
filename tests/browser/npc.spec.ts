@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { conversationMemory } from '../../src/server/npc/agenda.ts';
 import { test, expect } from '@playwright/test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -256,7 +257,11 @@ test('AI identity, memory notice and private NPC chat work through real sockets'
     const reply = w.messages.find((m) => m.text === 'Robin, I will remember your blue tractors.')!;
     expect(reply.npc).toBe(true);
     expect(reply.to).toBe(humanId);
-    expect(app.residents!.memory.load('mabel')!.notebook).toContain('blue tractors');
+    const memory = app.residents!.memory.load('mabel')!;
+    const viewer = { world: w.id, speakerId: humanId, private: true };
+    expect(conversationMemory(memory, viewer).notebook).toContain('blue tractors');
+    expect(conversationMemory(memory, { ...viewer, private: false }).notebook).toBe('');
+    expect(conversationMemory(memory, { ...viewer, speakerId: 'someone-else' }).notebook).toBe('');
     await page
       .getByRole('textbox', { name: 'Chat message' })
       .fill('Mabel, which key opens the full parish map and which switches headlights?');

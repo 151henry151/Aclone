@@ -8,7 +8,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,26 +17,68 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check
-      - run: npm run check
+      - run: npx tsc --noEmit
+      # Leave CPU time for the real worker deadlines exercised by the tests.
+      - run: node --import tsx --test --test-concurrency=2 tests/*.test.ts
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: root-1
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=1/2
+          - name: root-2
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=2/2
+          - name: subpath
+            base_path: /aclone
+            url: http://127.0.0.1:3013/aclone/
+            # These suites exercise the deployed build through TEST_URL. Other
+            # suites start their own isolated servers and run in the root shards.
+            tests: tests/browser/game.spec.ts tests/browser/expansion.spec.ts
+    name: Browser (${{ matrix.name }})
+    env:
+      BASE_PATH: ${{ matrix.base_path }}
+      TEST_URL: ${{ matrix.url }}
+      DATA_DIR: /tmp/aclone-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: DATA_DIR=/tmp/aclone-ci npm start > /tmp/aclone.log 2>&1 &
-      - run: |
+      - name: Start disposable game server
+        run: npm start > /tmp/aclone.log 2>&1 &
+      - name: Start subpath proxy
+        if: matrix.base_path != ''
+        run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
+      - name: Wait for health endpoint
+        run: |
           for attempt in $(seq 1 30); do
-            curl -sf http://127.0.0.1:3000/api/health && break
+            if curl --fail --silent --max-time 2 "${TEST_URL}api/health"; then
+              exit 0
+            fi
             sleep 1
           done
-          npm run test:e2e
-      - run: BASE_PATH=/aclone npm run build
-      - run: UPSTREAM_PORT=3000 PROXY_PORT=3013 node --import tsx scripts/test-proxy.ts > /tmp/aclone-proxy.log 2>&1 &
-      - run: |
-          for attempt in $(seq 1 30); do
-            curl -sf http://127.0.0.1:3013/aclone/api/health && break
-            sleep 1
-          done
-          TEST_URL=http://127.0.0.1:3013/aclone/ npm run test:e2e
+          cat /tmp/aclone.log
+          exit 1
+      # One software WebGL browser per runner; split across machines, not workers.
+      # Playwright's deadline leaves time to upload diagnostics before the job limit.
+      - run: npm run test:e2e -- --global-timeout=900000 ${{ matrix.tests }}
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() || cancelled()
         with:
-          name: browser-test-evidence
-          path: test-results/
+          name: browser-test-evidence-${{ matrix.name }}
+          path: |
+            test-results/
+            /tmp/aclone.log
+            /tmp/aclone-proxy.log

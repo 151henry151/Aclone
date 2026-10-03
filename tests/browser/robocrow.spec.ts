@@ -38,12 +38,12 @@ test('industrial robocrow renders in flight and deploys, climbs and returns norm
     app.worlds.set(w.id, w);
     const port = await app.listen();
     await page.addInitScript(
-      ({ token, world }) => {
+      ({ token, world, quality }) => {
         localStorage.setItem('aclone.pilot', token);
         localStorage.setItem('aclone.world', world);
-        localStorage.setItem('aclone.quality', 'high');
+        localStorage.setItem('aclone.quality', quality);
       },
-      { token, world: w.id },
+      { token, world: w.id, quality: process.env.TEST_GPU === '1' ? 'high' : 'low' },
     );
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));

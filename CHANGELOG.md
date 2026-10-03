@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-10-03
+
+### Fixed
+
+- Split CI into unit/type/format checks, two isolated browser shards and a dedicated subpath deployment check. Give browser tests time to finish and upload diagnostics, fail explicitly when the test server never becomes healthy, and retain server logs alongside failed or cancelled browser evidence.
+- Update browser assertions for renamed gathering grounds and private, per-player NPC memory. Wait for asynchronous resize/editor updates; use performance graphics on software renderers and hold timed-task fixtures until inspection finishes. Capture short horn audio on the audio thread so rendering stalls cannot hide it from the test.
+
 ## [0.24.1] - 2026-10-03
 
 ### Changed

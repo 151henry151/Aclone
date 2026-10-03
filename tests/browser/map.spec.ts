@@ -37,7 +37,7 @@ test('the parish map opens with M or a click and keeps navigation through live u
     await expect(page.getByRole('dialog', { name: 'Parish directory.' })).toHaveCount(0);
     for (const b of w.buildings)
       await expect(map.getByRole('button', { name: b.name, exact: true })).toBeVisible();
-    for (const name of ['Woodland', 'Stone outcrop', 'Gravel bank', 'Topsoil patch'])
+    for (const name of ['Woodland clearing', 'Stone outcrop', 'Gravel hollow', 'Exposed topsoil'])
       await expect(
         map.locator('.parish-map-resource-label').filter({ hasText: name }),
       ).toBeVisible();

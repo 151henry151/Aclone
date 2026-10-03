@@ -36,6 +36,12 @@ Use `npm run format` for the source, tests and maintained docs. Do not reformat
 research archives. TypeScript is strict. Use SPDX headers on new code files.
 JSON and other files that cannot contain comments are covered by COPYRIGHT.
 
+## CI browser checks
+
+CI limits unit-test concurrency to two and runs browser checks on separate runners. Each browser shard uses one software renderer; `--shard=1/2` or `--shard=2/2` reproduces the split. A separate `/aclone/` job runs `game.spec.ts` and `expansion.spec.ts` against the prefixed production build; other browser suites start isolated servers themselves. Server health must succeed before tests start. Failures/cancellations retain screenshots, traces and server logs.
+
+Use performance graphics for functional tests on software rendering; `TEST_GPU=1` enables detailed capture where supported. Wait for observable UI state after a server mutation or viewport resize. Hold finite task fixtures until assertions finish, then explicitly test completion; do not depend on screenshot speed or add retries to conceal a failure.
+
 ## Sending changes
 
 Open an issue describing substantial changes, then a focused pull request with

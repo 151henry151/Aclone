@@ -31,6 +31,7 @@ for (const mobile of [false, true])
         ({ token, id }) => {
           localStorage.setItem('aclone.pilot', token);
           localStorage.setItem('aclone.world', id);
+          localStorage.setItem('aclone.quality', 'low');
         },
         { token, id: w.id },
       );
@@ -49,7 +50,11 @@ for (const mobile of [false, true])
       await expect(page.locator('#creator-preview canvas')).toBeVisible();
       await page.getByRole('button', { name: 'Save model', exact: true }).click();
       await expect.poll(() => w.creator?.models[0]?.name).toBe('Copper pine');
-      await page.locator('#creator-preview').scrollIntoViewIfNeeded();
+      // Saving redraws the workshop after the authoritative state changes.
+      await expect(async () => {
+        await page.locator('#creator-preview').scrollIntoViewIfNeeded();
+        await expect(page.locator('#creator-preview')).toBeInViewport();
+      }).toPass({ timeout: 10000 });
       await page.screenshot({
         path: `test-results/creator-workshop-${mobile ? 'phone' : 'desktop'}.png`,
       });

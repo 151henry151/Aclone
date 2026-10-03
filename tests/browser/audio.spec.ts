@@ -10,6 +10,8 @@ import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulatio
 test('audible engines, shared horns and supplied machinery through the real browser mixer', async ({
   page,
 }) => {
+  // This exercises sound and controls, not full-resolution scenery capture.
+  await page.setViewportSize({ width: 960, height: 600 });
   const dir = mkdtempSync(join(tmpdir(), 'aclone-audio-test-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
   let neighbour: WebSocket | undefined;
@@ -17,6 +19,10 @@ test('audible engines, shared horns and supplied machinery through the real brow
     const { account, token } = app.universe.register('Sound driver');
     const w = createWorld('audio-test', 'Audio test', account.id);
     w.script = '';
+    // Keep the audio fixture supplied and independent of weather/production clocks.
+    w.settings.productionSeconds = 3600;
+    w.settings.dayLength = 0;
+    w.settings.time = 43200;
     const p = addPlayer(w, account.id, account.name);
     p.x = -220;
     p.z = -180;
@@ -38,11 +44,15 @@ test('audible engines, shared horns and supplied machinery through the real brow
           sources: { source: AudioBufferSourceNode; ended: boolean }[];
           analyser?: AnalyserNode;
           peaks: number[];
+          peak: number;
+          ready: boolean;
         } = ((window as any).__audioProbe = {
           contexts: [],
           sources: [],
           analyser: undefined,
           peaks: [],
+          peak: 0,
+          ready: false,
         });
         const Native = window.AudioContext;
         window.AudioContext = class extends Native {
@@ -51,6 +61,39 @@ test('audible engines, shared horns and supplied machinery through the real brow
             probe.contexts.push(this);
             probe.analyser = this.createAnalyser();
             probe.analyser.fftSize = 2048;
+            // Measure in the audio thread: a short horn can finish while software
+            // WebGL blocks the main thread, between two AnalyserNode samples.
+            const url = URL.createObjectURL(
+              new Blob(
+                [
+                  `
+              class Meter extends AudioWorkletProcessor {
+                peak = 0;
+                frames = 0;
+                process(inputs) {
+                  const samples = inputs[0]?.[0];
+                  if (samples) this.peak = Math.max(this.peak, Math.sqrt(samples.reduce((sum, x) => sum + x*x, 0) / samples.length));
+                  if (++this.frames === 8) { this.port.postMessage(this.peak); this.frames = 0; this.peak = 0; }
+                  return true;
+                }
+              }
+              registerProcessor('test-meter', Meter);
+            `,
+                ],
+                { type: 'text/javascript' },
+              ),
+            );
+            void this.audioWorklet.addModule(url).then(() => {
+              URL.revokeObjectURL(url);
+              const meter = new AudioWorkletNode(this, 'test-meter');
+              meter.port.onmessage = ({ data }) => {
+                probe.peak = Math.max(probe.peak, data);
+              };
+              probe.analyser!.connect(meter);
+              // The meter outputs silence; it observes rather than doubles playback.
+              meter.connect(this.destination);
+              probe.ready = true;
+            });
           }
           createBufferSource() {
             const source = super.createBufferSource();
@@ -65,7 +108,11 @@ test('audible engines, shared horns and supplied machinery through the real brow
         const connect = AudioNode.prototype.connect;
         AudioNode.prototype.connect = function (this: AudioNode, ...args: any[]) {
           const result = (connect as any).apply(this, args);
-          if (args[0] === this.context.destination && probe.analyser)
+          if (
+            args[0] === this.context.destination &&
+            probe.analyser &&
+            !(this instanceof AudioWorkletNode)
+          )
             (connect as any).call(this, probe.analyser);
           return result;
         } as typeof connect;
@@ -89,6 +136,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     expect(await page.evaluate(() => (window as any).__audioProbe.contexts.length)).toBe(0);
     await soundButton.click();
     await expect(soundButton).toHaveText('Sound: on');
+    await expect.poll(() => page.evaluate(() => (window as any).__audioProbe.ready)).toBe(true);
     const rms = () =>
       page.evaluate(() => {
         const values: number[] = (window as any).__audioProbe.peaks;
@@ -109,14 +157,16 @@ test('audible engines, shared horns and supplied machinery through the real brow
     await expect.poll(loops).toBe(1);
     await page.keyboard.down('ArrowUp');
     await expect
-      .poll(() =>
-        page.evaluate(() =>
-          Math.max(
-            ...(window as any).__audioProbe.sources
-              .filter((s: any) => s.source.loop && !s.ended)
-              .map((s: any) => s.source.playbackRate.value),
+      .poll(
+        () =>
+          page.evaluate(() =>
+            Math.max(
+              ...(window as any).__audioProbe.sources
+                .filter((s: any) => s.source.loop && !s.ended)
+                .map((s: any) => s.source.playbackRate.value),
+            ),
           ),
-        ),
+        { timeout: 15000 },
       )
       .toBeGreaterThan(1.1);
     await page.keyboard.up('ArrowUp');
@@ -139,10 +189,13 @@ test('audible engines, shared horns and supplied machinery through the real brow
     q.x = p.x + 8;
     q.engine = false;
     const beforeHorn = await shots();
+    await page.evaluate(() => {
+      (window as any).__audioProbe.peak = 0;
+    });
     neighbour.send(JSON.stringify({ type: 'action', action: { type: 'horn' } }));
     await expect.poll(shots).toBe(beforeHorn + 1);
     await expect
-      .poll(() => page.evaluate(() => Math.max(...(window as any).__audioProbe.peaks)))
+      .poll(() => page.evaluate(() => (window as any).__audioProbe.peak))
       .toBeGreaterThan(0.005);
     await page.waitForTimeout(600);
     expect(await shots()).toBe(beforeHorn + 1); // repeated snapshots must not repeat a honk

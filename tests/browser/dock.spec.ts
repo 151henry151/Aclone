@@ -34,12 +34,12 @@ for (const mobile of [false, true])
       app.worlds.set(w.id, w);
       const port = await app.listen();
       await page.addInitScript(
-        ({ token, world }) => {
+        ({ token, world, quality }) => {
           localStorage.setItem('aclone.pilot', token);
           localStorage.setItem('aclone.world', world);
-          localStorage.setItem('aclone.quality', 'high');
+          localStorage.setItem('aclone.quality', quality);
         },
-        { token, world: w.id },
+        { token, world: w.id, quality: process.env.TEST_GPU === '1' ? 'high' : 'low' },
       );
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
@@ -67,7 +67,7 @@ for (const mobile of [false, true])
           await page.getByRole('button', { name: 'Close dialog' }).click();
         }
         await page.keyboard.down('w');
-        await expect.poll(() => p.z).toBeGreaterThan(148);
+        await expect.poll(() => p.z, { timeout: 15000 }).toBeGreaterThan(148);
         await page.keyboard.up('w');
         expect(p.y).toBeGreaterThanOrEqual(dockHeight(w) - 0.01);
       } else {

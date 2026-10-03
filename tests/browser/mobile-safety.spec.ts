@@ -151,8 +151,13 @@ test('touch input releases safely, aircraft and weapons work, and tablet/desktop
     await page.locator('#mobile-chat').tap();
     await page.locator('#chat-input').fill('Small screen');
     await page.setViewportSize({ width: 320, height: 310 });
-    const send = (await page.getByRole('button', { name: 'Send message' }).boundingBox())!;
-    expect(send.y + send.height).toBeLessThanOrEqual(310);
+    // visualViewport resize and the layout update arrive asynchronously.
+    await expect
+      .poll(async () => {
+        const send = await page.getByRole('button', { name: 'Send message' }).boundingBox();
+        return send ? send.y + send.height : Infinity;
+      })
+      .toBeLessThanOrEqual(310);
     await page.getByRole('button', { name: 'Send message' }).tap();
     await expect(page.locator('#chat-log')).toContainText('Small screen');
     await page.getByRole('button', { name: 'Close parish chat' }).tap();

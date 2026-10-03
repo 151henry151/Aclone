@@ -40,12 +40,12 @@ for (const mobile of [false, true])
       app.worlds.set(w.id, w);
       const port = await app.listen();
       await page.addInitScript(
-        ({ token, world }) => {
+        ({ token, world, quality }) => {
           localStorage.setItem('aclone.pilot', token);
           localStorage.setItem('aclone.world', world);
-          localStorage.setItem('aclone.quality', 'high');
+          localStorage.setItem('aclone.quality', quality);
         },
-        { token, world: w.id },
+        { token, world: w.id, quality: process.env.TEST_GPU === '1' ? 'high' : 'low' },
       );
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
@@ -74,6 +74,9 @@ for (const mobile of [false, true])
         if (mobile) await gather.tap();
         else await gather.click();
         await expect.poll(() => p.task?.resource).toBe(n.id);
+        // Hold the fixture open through screenshots on software rendering; the
+        // real duration is checked in simulation tests and completion below.
+        p.task!.end = w.time + 300;
         await expect(page.locator('#resource-control')).toBeHidden();
         await expect(page.locator('#task-control')).toBeVisible();
         await expect(page.locator('#task-name')).toContainText('Gathering 3');
@@ -116,6 +119,7 @@ for (const mobile of [false, true])
       p.y = terrainHeight(w, p.x, p.z);
       const prior = p.cash;
       act(w, p.id, { type: 'task', building: office.id, task: 'labour' });
+      p.task!.end = w.time + 300;
       await expect(page.locator('#task-control')).toBeVisible();
       await expect(page.locator('#task-name')).toHaveText('Working a labour shift');
       await expect(page.locator('#target .task')).toHaveCount(0);
