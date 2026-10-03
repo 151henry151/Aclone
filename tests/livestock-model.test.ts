@@ -27,7 +27,7 @@ test('animal rigs have natural metre scales, finite geometry and a bounded draw/
     const size = box.getSize(new T.Vector3());
     assert.ok(size.y < (kind === 'cows' ? 1.85 : kind === 'chickens' ? 0.85 : 1.3));
     assert.ok(size.y > (kind === 'cows' ? 1.5 : kind === 'chickens' ? 0.6 : 0.8));
-    assert.ok(triangles < 18000, `${kind}: ${triangles}`);
+    assert.ok(triangles < 8500, `${kind}: ${triangles}`);
     assert.ok(parts.length <= 7);
   }
 });
@@ -61,4 +61,20 @@ test('visible herds follow stock, removal and world changes without rebuilding g
   );
   view.reset();
   assert.ok(view.group.children.every((c) => (c as T.InstancedMesh).count === 0));
+});
+
+test('cow legs taper continuously from broad upper limbs to narrow ankles', () => {
+  for (const leg of animalModel('cows').filter((p) => p.motion === 'leg')) {
+    const positions = leg.geometry.attributes.position;
+    const span = (height: number) => {
+      const xs: number[] = [];
+      for (let i = 0; i < positions.count; i++)
+        if (Math.abs(positions.getY(i) + leg.pivot.y - height) < 0.001) xs.push(positions.getX(i));
+      assert.ok(xs.length > 0);
+      return Math.max(...xs) - Math.min(...xs);
+    };
+    assert.ok(span(1.06) > span(0.25) * 3);
+    assert.ok(span(0.61) > span(0.25) * 1.8);
+    leg.geometry.dispose();
+  }
 });

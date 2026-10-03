@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-10-03
+
+### Changed
+
+- Reduce tractor, driver, livestock and building geometry; shared textures now supply tyre tread, grille slats, rim bolts, coat detail, timber siding, door panels and window frames. Give cows broad shoulders/thighs tapering to slender ankles. Keep articulated wheels/animals and independently lit window panes. Add repeatable model budgets and close-up captures.
+
 ## [0.41.0] - 2026-10-03
 
 ### Added

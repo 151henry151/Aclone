@@ -1,3 +1,4 @@
+import { detailTexture } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Original metre-scale livestock. Smooth anatomy, coloured coat geometry, seven rig parts.
 import * as T from 'three';
@@ -75,7 +76,11 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
     rx = 0,
     rz = 0,
   ) {
-    const g = new T.SphereGeometry(1, wool ? 36 : 20, wool ? 24 : 12);
+    const g = new T.SphereGeometry(
+      1,
+      Math.max(sx, sy, sz) > 0.24 ? 20 : 10,
+      Math.max(sx, sy, sz) > 0.24 ? 12 : 6,
+    );
     g.scale(sx, sy, sz);
     g.rotateX(rx);
     g.rotateZ(rz);
@@ -85,7 +90,7 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
   function bone(a: number[], b: number[], r1: number, r2: number, color: string) {
     const from = new T.Vector3(...a),
       to = new T.Vector3(...b),
-      g = new T.CylinderGeometry(r2, r1, from.distanceTo(to), 10);
+      g = new T.CylinderGeometry(r2, r1, from.distanceTo(to), 6);
     g.applyQuaternion(
       new T.Quaternion().setFromUnitVectors(
         new T.Vector3(0, 1, 0),
@@ -282,40 +287,73 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
       const x = side * width * 0.7,
         top = bird ? 0.24 : h - 0.06,
         joint = bird ? 0.105 : cow ? 0.47 : sheep ? 0.28 : 0.21;
-      if (!bird)
+      if (cow) {
+        // A continuous shoulder/thigh taper, broad near the body and slender only
+        // below the knee/hock. One low-segment surface avoids a ball-on-a-stick leg.
+        const profile = [
+          [0, 0.07],
+          [0.05, 0.09],
+          [0.046, 0.25],
+          [0.072, 0.47],
+          [0.1, 0.61],
+          [z < 0 ? 0.17 : 0.145, 0.82],
+          [z < 0 ? 0.22 : 0.19, 1.06],
+          [0.155, 1.26],
+          [0, 1.34],
+        ];
+        const leg = new T.LatheGeometry(
+          profile.map(([r, y]) => new T.Vector2(r, y)),
+          10,
+        );
+        const positions = leg.getAttribute('position');
+        for (let i = 0; i < positions.count; i++) {
+          const y = positions.getY(i);
+          const bend = z < 0 ? -0.09 * Math.exp(-(((y - 0.47) / 0.23) ** 2)) : 0;
+          positions.setXYZ(
+            i,
+            positions.getX(i) + x,
+            y,
+            positions.getZ(i) * (y > 0.61 ? 1.25 : 1) + z + bend,
+          );
+        }
+        leg.computeVertexNormals();
+        add(leg, coat, true);
+      } else {
+        if (!bird)
+          oval(
+            x,
+            top - 0.06,
+            z,
+            cow ? 0.12 : 0.085,
+            cow ? 0.25 : 0.16,
+            cow ? 0.16 : 0.12,
+            sheep ? skin : coat,
+            cow,
+          );
+        bone(
+          [x, top, z],
+          [x, joint, z - (z < 0 ? 0.09 : 0)],
+          bird ? 0.024 : cow ? 0.09 : 0.05,
+          bird ? 0.016 : cow ? 0.052 : 0.04,
+          bird || sheep ? skin : coat,
+        );
         oval(
           x,
-          top - 0.06,
-          z,
-          cow ? 0.12 : 0.085,
-          cow ? 0.25 : 0.16,
-          cow ? 0.16 : 0.12,
-          sheep ? skin : coat,
-          cow,
+          joint,
+          z - (z < 0 ? 0.09 : 0),
+          bird ? 0.018 : cow ? 0.047 : 0.033,
+          bird ? 0.027 : cow ? 0.06 : 0.045,
+          bird ? 0.018 : cow ? 0.045 : 0.033,
+          bird || sheep ? skin : coat,
         );
-      bone(
-        [x, top, z],
-        [x, joint, z - (z < 0 ? 0.09 : 0)],
-        bird ? 0.024 : cow ? 0.09 : 0.05,
-        bird ? 0.016 : cow ? 0.052 : 0.04,
-        bird || sheep ? skin : coat,
-      );
-      oval(
-        x,
-        joint,
-        z - (z < 0 ? 0.09 : 0),
-        bird ? 0.018 : cow ? 0.047 : 0.033,
-        bird ? 0.027 : cow ? 0.06 : 0.045,
-        bird ? 0.018 : cow ? 0.045 : 0.033,
-        bird || sheep ? skin : coat,
-      );
-      bone(
-        [x, joint, z - (z < 0 ? 0.09 : 0)],
-        [x, 0.085, z + 0.02],
-        bird ? 0.016 : cow ? 0.045 : 0.03,
-        bird ? 0.012 : cow ? 0.04 : 0.03,
-        bird || sheep ? skin : coat,
-      );
+        bone(
+          [x, joint, z - (z < 0 ? 0.09 : 0)],
+          [x, 0.085, z + 0.02],
+          bird ? 0.016 : cow ? 0.045 : 0.03,
+          bird ? 0.012 : cow ? 0.04 : 0.03,
+          bird || sheep ? skin : coat,
+        );
+      }
       if (bird) {
         for (let t = -1; t <= 1; t++)
           bone([x, 0.045, z], [x + t * 0.038, 0.018, z + 0.08], 0.01, 0.004, skin);
@@ -323,12 +361,12 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
       } else
         for (const toe of [-1, 1])
           oval(
-            x + toe * (cow ? 0.032 : 0.021),
+            x + toe * (cow ? 0.04 : 0.021),
             0.063,
             z + 0.048,
-            cow ? 0.03 : 0.021,
+            cow ? 0.04 : 0.021,
             0.046,
-            cow ? 0.088 : 0.054,
+            cow ? 0.1 : 0.054,
             hoof,
           );
       finish('leg', [x, top, z], side * (z < 0 ? -1 : 1));
@@ -368,38 +406,30 @@ export function animalModel(kind: AnimalKind): AnimalPart[] {
   return parts;
 }
 
-/** Fragment coat detail avoids angular vertex-painted markings at close range. */
+/** One baked atlas lookup replaces per-pixel trigonometric fur/feather noise. */
 export function animalMaterial() {
+  const atlas = detailTexture('livestock');
   const m = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
-  m.customProgramCacheKey = () => 'livestock-coat-v1';
+  m.userData.warmTextures = [atlas];
+  m.customProgramCacheKey = () => 'livestock-atlas-v2';
   m.onBeforeCompile = (shader) => {
+    shader.uniforms.coatAtlas = { value: atlas };
     shader.vertexShader = 'attribute vec4 coatData; varying vec4 vCoat;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
       '#include <begin_vertex>\nvCoat=coatData;',
     );
-    shader.fragmentShader = 'varying vec4 vCoat;\n' + shader.fragmentShader;
+    shader.fragmentShader =
+      'varying vec4 vCoat; uniform sampler2D coatAtlas;\n' + shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
       `#include <color_fragment>
-   vec3 q=vCoat.xyz;
-   float grain=sin(q.x*230.0+sin(q.z*83.0))*sin(q.y*190.0+q.z*91.0);
-   float detail=1.0-smoothstep(.01,.045,length(fwidth(q)));
-   if(vCoat.w>.5 && vCoat.w<1.5){
-     float marking=sin(q.x*6.0+sin(q.z*4.0))*cos(q.y*5.0-q.z*3.0)+.35*sin(q.z*10.0+q.x*3.0);
-     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.018,.021,.016),smoothstep(.14,.22,marking));
-     diffuseColor.rgb*=1.0+grain*.035*detail;
-   } else if(vCoat.w>1.5 && vCoat.w<2.5){
-     float curl=sin(q.x*170.0+sin(q.y*90.0))*cos(q.z*150.0+sin(q.x*100.0));
-     diffuseColor.rgb*=.88+detail*(curl*.1+grain*.04);
-   } else if(vCoat.w>2.5 && vCoat.w<3.5){
-     float mud=(1.0-smoothstep(.08,.5,q.y))*(.3+.15*sin(q.z*17.0+q.x*24.0));
-     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.14,.095,.065),mud);
-     diffuseColor.rgb*=1.0+grain*.04*detail;
-   } else if(vCoat.w>3.5){
-     float feathers=pow(abs(sin(q.y*65.0+sin(q.z*38.0)*1.8)),10.0);
-     diffuseColor.rgb*=1.0-detail*(feathers*.2+grain*.045);
-   }
+    if(vCoat.w>.5){
+      float tile=clamp(floor(vCoat.w-.5),0.,3.);
+      vec2 coords=fract(vec2(vCoat.z*.6+vCoat.x*.25,vCoat.y*.65));
+      coords.x=(tile+clamp(coords.x,.002,.998))*.25;
+      diffuseColor.rgb*=texture2D(coatAtlas,coords).rgb;
+    }
   `,
     );
   };

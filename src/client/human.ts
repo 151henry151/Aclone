@@ -71,9 +71,9 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
     ry: number,
     rz: number,
     mat = fabric,
-    segments = 16,
+    segments = 12,
   ) {
-    const part = mesh(parent, new T.SphereGeometry(1, segments, 8), color, mat);
+    const part = mesh(parent, new T.SphereGeometry(1, segments, 6), color, mat);
     part.position.set(x, y, z);
     part.scale.set(rx, ry, rz);
     return part;
@@ -86,7 +86,7 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
     mat = fabric,
   ) {
     const curve = new T.SplineCurve(points.map(([r, y]) => new T.Vector2(r, y)));
-    const part = mesh(parent, new T.LatheGeometry(curve.getPoints(18), 18), color, mat);
+    const part = mesh(parent, new T.LatheGeometry(curve.getPoints(12), 12), color, mat);
     part.scale.z = depth;
     return part;
   }
@@ -147,11 +147,11 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
     mesh(torso, collar, colors.shirt);
     const pocket = mesh(
       torso,
-      new RoundedBoxGeometry(0.113, 0.125, 0.017, 2, 0.008),
+      new RoundedBoxGeometry(0.113, 0.125, 0.017, 1, 0.008),
       colors.jacket,
     );
     pocket.position.set(side * 0.1, 0.331, 0.123);
-    const flap = mesh(torso, new RoundedBoxGeometry(0.121, 0.031, 0.02, 2, 0.007), colors.seam);
+    const flap = mesh(torso, new RoundedBoxGeometry(0.121, 0.031, 0.02, 1, 0.007), colors.seam);
     flap.position.set(side * 0.1, 0.382, 0.134);
   }
   oval(torso, colors.seam, 0, 0.285, 0.126, 0.012, 0.19, 0.008);
@@ -195,7 +195,7 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
   oval(head, '#bc866e', 0, -0.065, 0.08, 0.029, 0.006, 0.01, skin);
   const hair = mesh(
     head,
-    new T.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.51),
+    new T.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.51),
     colors.hair,
   );
   hair.scale.set(0.108, 0.15, 0.1);

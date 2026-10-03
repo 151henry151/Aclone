@@ -147,3 +147,9 @@ Actual renderer captures; many use staged disposable worlds. They demonstrate vi
 ## Livestock
 
 Original articulated cow, sheep, pig and chicken meshes use smooth anatomy, procedural coat/fleece/feather detail and shared instanced rendering. No downloaded animal assets. `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:livestock` captures close-ups of the actual meshes with preview lighting in `test-results/livestock/`; the browser livestock test captures the live game.
+
+## Geometry and texture budgets
+
+Grilles, tread, wheel bolts, doors, siding and window frames use cached procedural textures. Window emissive masks keep frames dark and panes lit. Animal coats share one atlas; limbs remain separately animated. No per-frame texture generation or extra downloads.
+
+`npm run profile:models` measures triangles before scenery batching: tractor with driver 14,262 (formerly 29,824); cow 5,704, sheep 3,916, pig 4,156 and chicken 4,044 (formerly 13,464–15,768); sample cottage 248 (formerly 1,514). These geometry counts are not FPS promises. `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:models` captures tractor/cottage/day/night close-ups in `test-results/models/`. Preview lighting includes shadows; game shadows remain optional.

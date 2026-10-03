@@ -1,3 +1,4 @@
+import { detailTexture, detailMaterial, sidingMaterial } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { buildingPlan, type BuildingVolume } from '../shared/building-shapes';
@@ -36,11 +37,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       material.metalness = 0.25;
       return m;
     }
-    if (plan.siding === 'wood') {
-      const material = m.material as T.MeshStandardMaterial;
-      material.color.set(plan.wall);
-      return m;
-    }
+    if (plan.siding === 'wood') return sidingMaterial(m, plan.wall);
     return finish(m, 'stone', 3, b.construction ? '#a6a18d' : plan.wall);
   }
   function roof(v: BuildingVolume) {
@@ -139,20 +136,6 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
             v.z + side * (v.depth / 2 + 0.015),
           ),
         );
-        if (plan.siding === 'wood') {
-          for (let y = 0.2; y < h - 0.1; y += 0.22) {
-            const width = v.width * (1 - y / h);
-            box(
-              width,
-              0.025,
-              0.025,
-              plan.trim,
-              v.x,
-              v.eaves + y,
-              v.z + side * (v.depth / 2 + 0.045),
-            );
-          }
-        }
         if (side < 0) face.rotation.y = Math.PI;
         (face.material as T.Material).side = T.DoubleSide;
       }
@@ -166,25 +149,22 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     for (const side of [-1, 1]) box(0.12, 0.15, 2 * d, '#d2c8af', v.x + side * w, v.eaves, v.z);
   }
   function window(x: number, y: number, z: number, width = 1.05, angle = 0) {
-    const group = new T.Group();
-    const start = root.children.length;
-    box(width + 0.18, 1.36, 0.16, '#e2d5b8', 0, 0, 0);
-    const pane = box(width, 1.16, 0.18, '#405e62', 0, 0, 0.03);
-    pane.material.roughness = 0.24;
+    const m = detailMaterial('window');
+    m.emissiveMap = detailTexture('window-light');
+    m.roughness = 0.45;
+    const pane = new T.Mesh(new T.PlaneGeometry(width + 0.22, 1.42), m);
+    pane.position.set(x + Math.sin(angle) * 0.06, y, z + Math.cos(angle) * 0.06);
+    pane.rotation.y = angle;
     pane.userData.lightSource = b.id;
-    box(0.065, 1.2, 0.08, '#e2d5b8', 0, 0, 0.15);
-    box(width, 0.065, 0.08, '#e2d5b8', 0, 0, 0.15);
-    box(width + 0.28, 0.12, 0.32, '#bcb49c', 0, -0.7, 0.06);
-    for (const child of root.children.slice(start)) group.add(child);
-    group.position.set(x, y, z);
-    group.rotation.y = angle;
-    root.add(group);
+    root.add(pane);
   }
   function door(x: number, z: number) {
-    box(1.17, plan.doorHeight + 0.13, 0.18, '#c9bd9d', x, (plan.doorHeight + 0.13) / 2, z);
-    box(0.96, plan.doorHeight, 0.21, plan.trim, x, plan.doorHeight / 2, z + 0.02);
-    for (const y of [0.55, 1.45]) box(0.69, 0.65, 0.04, '#46574b', x, y, z + 0.145);
-    box(0.06, 0.06, 0.08, '#d6b764', x + 0.31, 1.02, z + 0.19);
+    const panel = new T.Mesh(
+      new T.PlaneGeometry(1.17, plan.doorHeight + 0.13),
+      detailMaterial('door', plan.trim),
+    );
+    panel.position.set(x, (plan.doorHeight + 0.13) / 2, z + 0.12);
+    root.add(panel);
     box(1.5, 0.12, 0.65, '#aaa58f', x, 0.06, z + 0.25);
   }
   function chimney(x: number, z: number, top: number) {
@@ -218,13 +198,6 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   }
   for (const v of plan.volumes) {
     wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z));
-    if (plan.siding === 'wood' && !b.construction) {
-      for (let y = 0.22; y < v.eaves; y += 0.22)
-        for (const side of [-1, 1]) {
-          box(v.width, 0.025, 0.04, plan.trim, v.x, y, v.z + side * (v.depth / 2 + 0.015));
-          box(0.04, 0.025, v.depth, plan.trim, v.x + side * (v.width / 2 + 0.015), y, v.z);
-        }
-    }
     box(v.width + 0.15, 0.2, v.depth + 0.15, '#9d9f8e', v.x, 0.1, v.z);
     if (b.construction) {
       for (const side of [-1, 1])

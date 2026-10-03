@@ -1,6 +1,6 @@
 {
   "name": "aclone",
-  "version": "0.41.0",
+  "version": "0.41.1",
   "private": true,
   "type": "module",
   "description": "A small, persistent universe with an unreasonable number of tractors.",
@@ -33,7 +33,9 @@
     "screenshots:twilight": "tsx scripts/twilight.ts",
     "profile:startup": "tsx scripts/startup-profile.ts",
     "screenshots:livestock": "tsx scripts/livestock.ts",
-    "screenshots:rocket": "tsx scripts/rocket.ts"
+    "screenshots:rocket": "tsx scripts/rocket.ts",
+    "screenshots:models": "tsx scripts/model-preview.ts",
+    "profile:models": "tsx scripts/model-budget.ts"
   },
   "dependencies": {
     "fengari": "^0.1.4",

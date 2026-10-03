@@ -1,3 +1,4 @@
+import { detailTexture, detailMaterial } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -9,10 +10,16 @@ export const TRACTOR_EYE_HEIGHT = 2.5;
 export const TRACTOR_SEAT_Z = -0.85 * TRACTOR_SCALE;
 /** Original detailed model. +Z is forward; wheel groups rotate about their X axle. */
 export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
-  const paint = new T.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.22 });
+  const paint = new T.MeshStandardMaterial({
+    color,
+    map: detailTexture('paint'),
+    roughness: 0.32,
+    metalness: 0.22,
+  });
   const cream = new T.MeshStandardMaterial({ color: '#e0d4b6', roughness: 0.5, metalness: 0.15 });
   const steel = new T.MeshStandardMaterial({ color: '#454945', roughness: 0.46, metalness: 0.5 });
-  const rubber = new T.MeshStandardMaterial({ color: '#242822', roughness: 0.95 });
+  const rubber = detailMaterial('tyre', '#ffffff', 0.025);
+  const rimFinish = detailMaterial('rim', '#e0d4b6', 0.012);
   const black = new T.MeshStandardMaterial({ color: '#333a35', roughness: 0.72 });
   const glass = new T.MeshStandardMaterial({
     color: '#a9cbd4',
@@ -50,7 +57,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   ) =>
     add(
       parent,
-      round ? new RoundedBoxGeometry(w, h, d, 2, round) : new T.BoxGeometry(w, h, d),
+      round ? new RoundedBoxGeometry(w, h, d, 1, round) : new T.BoxGeometry(w, h, d),
       mat,
       x,
       y,
@@ -58,17 +65,24 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
     );
   box(g, 1.65, 0.45, 3.75, steel, 0, 1, 0, 0.08);
   box(g, 1.6, 1.12, 2.18, paint, 0, 1.77, 0.99, 0.17);
-  // Raised bonnet seam, radiator surround, black inset and individual grille bars.
+  // Bonnet silhouette stays geometric; radiator slats are a shared relief texture.
   box(g, 0.045, 0.025, 2, cream, 0, 2.34, 1);
   box(g, 1.5, 0.92, 0.1, cream, 0, 1.74, 2.1, 0.05);
   box(g, 1.28, 0.72, 0.12, black, 0, 1.74, 2.17);
-  for (let i = 0; i < 10; i++) box(g, 0.048, 0.69, 0.025, steel, -0.56 + i * 0.124, 1.74, 2.24);
+  add(g, new T.PlaneGeometry(1.28, 0.72), detailMaterial('grille'), 0, 1.74, 2.235);
   box(g, 1.95, 0.23, 0.28, steel, 0, 0.99, 2.26, 0.04);
-  // Engine vents and a narrow maker stripe are geometry, readable at driving distance.
+  // Vent detail is textured; the maker stripe, fenders and cab retain their silhouette.
   for (const side of [-1, 1]) {
     box(g, 0.035, 0.09, 1.75, cream, side * 0.809, 2.05, 1.05);
-    for (let i = 0; i < 7; i++)
-      box(g, 0.04, 0.25, 0.04, black, side * 0.818, 1.69, 0.55 + i * 0.15);
+    const vents = add(
+      g,
+      new T.PlaneGeometry(1.2, 0.3),
+      detailMaterial('vents'),
+      side * 0.819,
+      1.69,
+      1,
+    );
+    vents.rotation.y = (side * Math.PI) / 2;
     box(g, 0.54, 0.16, 2.15, paint, side * 1.08, 2.14, -1, 0.09);
     box(g, 0.11, 0.82, 1.6, paint, side * 0.86, 1.71, -1);
     box(g, 0.48, 0.13, 0.8, steel, side * 1.04, 0.73, -0.4);
@@ -140,7 +154,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   steering.rotation.x = -0.8;
   const pipe = add(g, new T.CylinderGeometry(0.08, 0.095, 1.22, 10), steel, -0.57, 2.73, 0.78);
   box(g, 0.3, 0.12, 0.24, black, pipe.position.x, 3.37, 0.78, 0.04);
-  // Rounded sidewalls, recessed hubs, wheel bolts and alternating chevron lugs.
+  // Low-segment sidewalls with baked chevron tread and rim bolts; wheel groups still rotate.
   for (const x of [-1.22, 1.22])
     for (const z of [-1.15, 1.37]) {
       const rear = z < 0,
@@ -153,7 +167,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
       (g.userData.wheels ??= []).push(assembly);
       const tire = add(
         assembly,
-        new T.TorusGeometry(r - width * 0.36, width * 0.36, 8, 24),
+        new T.TorusGeometry(r - width * 0.36, width * 0.36, 6, 20),
         rubber,
         0,
         0,
@@ -162,34 +176,18 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
       tire.rotation.y = Math.PI / 2;
       const fill = add(
         assembly,
-        new T.CylinderGeometry(r * 0.76, r * 0.76, width * 0.84, 24),
+        new T.CylinderGeometry(r * 0.76, r * 0.76, width * 0.84, 16),
         rubber,
         0,
         0,
         0,
       );
       fill.rotation.z = Math.PI / 2;
-      for (let i = 0; i < 18; i++)
-        for (const side of [-1, 1]) {
-          const a = (i * Math.PI) / 9 + side * 0.08,
-            lug = box(
-              assembly,
-              width * 0.58,
-              0.12,
-              rear ? 0.29 : 0.2,
-              rubber,
-              side * width * 0.22,
-              Math.cos(a) * (r - 0.04),
-              Math.sin(a) * (r - 0.04),
-              0,
-            );
-          lug.rotation.set(a, side * 0.42, 0);
-        }
       for (const side of [-1, 1]) {
         const rim = add(
           assembly,
-          new T.CylinderGeometry(r * 0.47, r * 0.47, 0.08, 20),
-          cream,
+          new T.CylinderGeometry(r * 0.47, r * 0.47, 0.08, 16),
+          rimFinish,
           side * width * 0.47,
           0,
           0,
@@ -204,18 +202,6 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
           0,
         );
         hub.rotation.z = Math.PI / 2;
-        for (let j = 0; j < 6; j++) {
-          const a = (j * Math.PI) / 3;
-          const bolt = add(
-            assembly,
-            new T.CylinderGeometry(0.035, 0.035, 0.05, 6),
-            steel,
-            side * width * 0.55,
-            Math.sin(a) * r * 0.31,
-            Math.cos(a) * r * 0.31,
-          );
-          bolt.rotation.z = Math.PI / 2;
-        }
       }
       batch(assembly);
     }
