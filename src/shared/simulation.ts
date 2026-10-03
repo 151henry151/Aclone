@@ -1,3 +1,4 @@
+import { drinkAlcohol, intoxicatedSteer } from './intoxication.ts';
 import { socialAction } from './social.ts';
 import {
   vehicleCondition,
@@ -322,6 +323,7 @@ function usable(w: World, p: Player, item: string) {
     p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * scale);
   }
   nutritionEffects(p, def);
+  drinkAlcohol(p, item, w.time);
   stockAdd(p.inventory, item, -1);
 }
 // All request validation precedes mutation. The server additionally wraps actions in a transaction.
@@ -1433,7 +1435,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     dt;
   p.speed = clamp(p.speed, -cap * 0.4, cap);
   p.heading +=
-    clamp(input.steer, -1, 1) *
+    intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
     surface.grip *
     (input.boost ? 1.15 : 1) *
@@ -1494,6 +1496,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury') {
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
   delete p.nutrition;
+  delete p.alcohol;
   p.ammo = { ...ammunition };
   p.invulnerableUntil = w.time + 3;
   p.health = 60000;
@@ -1618,7 +1621,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
       for (const boundary of [30000, 50000])
         if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
     }
-    if (current) feedShelterNow(w, p, current.stock);
+    if (current) feedShelterNow(w, p, current.stock, start + elapsed);
     const hungerRate = w.settings.hungerRate * (current ? 0.8 : 1),
       thirstRate = w.settings.thirstRate * (current ? 0.8 : 1);
     const starving = p.hunger >= 50000 || p.thirst >= 50000;

@@ -1,3 +1,5 @@
+import { DrunkVision } from './drunk-vision';
+import { impairment } from '../shared/intoxication';
 import type { RocketFlight } from './rocket-flight';
 import { LivestockScene } from './livestock-scene';
 import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
@@ -115,6 +117,7 @@ function pilotLabel(name: string) {
 }
 export class GameScene {
   readonly audio = new GameAudio();
+  readonly drunkVision = new DrunkVision();
   private audioFacing = new T.Vector3();
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
@@ -1350,7 +1353,16 @@ export class GameScene {
       for (const p of this.planets) p.rotation.y += dt * 0.06;
     }
     if (!this.ready) return;
-    this.renderer.render(this.scene, this.camera);
+    this.drunkVision.render(
+      this.renderer,
+      this.scene,
+      this.camera,
+      this.world && this.me
+        ? impairment(this.me, this.world.time + Math.min(1, (now - this.flightSnapshotAt) / 1000))
+        : 0,
+      dt,
+    );
+
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
   }

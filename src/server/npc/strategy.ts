@@ -1,3 +1,4 @@
+import { alcoholLevel, alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creditProfile } from '../../shared/loans.ts';
@@ -52,6 +53,7 @@ export function lifeBriefing(w: World, p: Player) {
       count,
       nextFood: nextNutrition(p, item, w).food,
       nextDrink: nextNutrition(p, item, w).drink,
+      alcohol: alcoholDose(item),
     }));
   const supplies = Object.entries(items)
     .filter(([, def]) => def.food || def.drink)
@@ -87,6 +89,9 @@ export function lifeBriefing(w: World, p: Player) {
   const time = secondsToDamage(w, p);
   return {
     survival: {
+      alcohol: Math.round(alcoholLevel(p, w.time)),
+      alcoholRule:
+        'Beer and wine accumulate intoxication, impairing steering and vision. Prefer water or other nonalcoholic drinks for thirst. Only time clears alcohol; a sober wait is safer than driving.',
       needsAttention: careNeeded(w, p),
       sheltered: !!shelter(w, p),
       secondsToDamageOutside: Number.isFinite(time) ? Math.floor(time) : null,

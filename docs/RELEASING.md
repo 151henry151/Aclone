@@ -25,7 +25,13 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.35.0
+## Current upgrade: 0.42.0
+
+Alcohol state is an optional field in existing world saves; everyone starts sober on upgrade. No reset, stock migration or SQL change is required. Update clients and server together for steering and visual feedback. Visual comfort settings are local to each browser. The preceding 0.41.1 model changes need no world migration.
+
+## Earlier upgrades
+
+### 0.35.0
 
 0.35.0 adds player-built dairy supply chains and opt-in custom nutrition effects. Existing characters retain their normal 60000 health ceiling. Only missing new-goods quotes at government Harbour/spaceport outlets are added once; existing prices, privately owned shops and stocks are preserved. No new buildings are inserted into Puddlewick.
 

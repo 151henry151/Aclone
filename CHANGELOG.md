@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-10-03
+
+### Added
+
+- Accumulating beer/wine intoxication with authoritative steering drift and reduced control, scene warble, gentle roll, blur and double vision. Effects increase with repeated drinks and fade over time, including offline; the HUD remains sharp. Reduced-motion and saved reduced/off visual preferences leave gameplay impairment intact.
+- Show intoxication status and alcohol warnings; NPC self-care and stocked homes prefer nonalcoholic drinks, and NPC planners receive their current condition.
+
 ## [0.41.1] - 2026-10-03
 
 ### Changed

@@ -1,3 +1,4 @@
+import { alcoholDose, drinkAlcohol } from './intoxication.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, ItemDef, Stock, World } from './types.ts';
 import { worldItems } from './world-catalogue.ts';
@@ -21,7 +22,7 @@ export function nutritionDescription(d: ItemDef) {
 }
 /** Threshold feeding is instantaneous; survival advances to the next threshold.
  * Bulk servings avoid unbounded loops for creator goods with tiny food effects. */
-export function feedShelterNow(w: World, p: Player, stock: Stock) {
+export function feedShelterNow(w: World, p: Player, stock: Stock, at = w.time) {
   const items = worldItems(w);
   for (const [need, nutrient] of [
     ['hunger', 'food'],
@@ -30,7 +31,10 @@ export function feedShelterNow(w: World, p: Player, stock: Stock) {
     if (p[need] < 30000) continue;
     const choices = Object.entries(items)
       .filter(([key, d]) => (stock[key] ?? 0) > 0 && (d[nutrient] ?? 0) > 0)
-      .sort(([a], [b]) => Number(a === p.lastFood) - Number(b === p.lastFood));
+      .sort(
+        ([a], [b]) =>
+          alcoholDose(a) - alcoholDose(b) || Number(a === p.lastFood) - Number(b === p.lastFood),
+      );
     for (const [key, d] of choices) {
       if (p[need] < 30000) break;
       const count = Math.min(
@@ -41,6 +45,7 @@ export function feedShelterNow(w: World, p: Player, stock: Stock) {
       p.hunger = Math.max(0, p.hunger - (d.food ?? 0) * count);
       p.thirst = Math.max(0, p.thirst - (d.drink ?? 0) * count);
       nutritionEffects(p, d, count);
+      drinkAlcohol(p, key, at, count);
       p.lastFood = key;
       p.repeats = 0;
     }

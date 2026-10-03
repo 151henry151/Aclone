@@ -1,3 +1,4 @@
+import { alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { availableSupply } from '../../shared/harbour-supply.ts';
@@ -44,7 +45,11 @@ export function carePlan(w: World, p: Player): Step[] {
     const food = Object.keys(items).filter((i) => nextNutrition(p, i, w)[nutrient] > 0);
     const carried = food
       .filter((i) => p.inventory[i] > 0)
-      .sort((a, b) => nextNutrition(p, b, w)[nutrient] - nextNutrition(p, a, w)[nutrient])[0];
+      .sort(
+        (a, b) =>
+          alcoholDose(a) - alcoholDose(b) ||
+          nextNutrition(p, b, w)[nutrient] - nextNutrition(p, a, w)[nutrient],
+      )[0];
     if (carried) return [act({ type: 'use', item: carried })];
     const sources = w.buildings
       .filter((b) => !b.construction)
@@ -65,7 +70,7 @@ export function carePlan(w: World, p: Player): Step[] {
           ];
         }),
       )
-      .sort((a, b) => a.score - b.score);
+      .sort((a, b) => alcoholDose(a.item) - alcoholDose(b.item) || a.score - b.score);
     const source = sources[0];
     if (source)
       return visitBuilding(p, source.b, [

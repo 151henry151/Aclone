@@ -14,6 +14,14 @@ When reversing a wheeled vehicle, steering follows actual backward speed, includ
 
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
+## Beer, wine and intoxication
+
+Repeated beer or wine consumption makes steering drift and respond less accurately. Wine is stronger; effects accumulate rather than resetting between drinks. Increasing intoxication adds slow scenery sway/warping, blur and double vision; menus and chat stay sharp. Walking keeps normal controls but still has visual effects. The HUD shows **Tipsy**, **Drunk** or **Very drunk**.
+
+Only time sobers you up, including time offline. From the maximum level, steering impairment clears in about 15 real minutes and all alcohol clears in 20; water relieves thirst without instantly curing intoxication. These are game rules, not real alcohol measurements. Death starts a sober new life. Homes prefer nonalcoholic provisions but will use beer/wine if those are the only drinks stocked.
+
+**F9 → Options & pilot key → Drunk visual effects** cycles Automatic, Reduced and Off. Automatic respects your device’s reduced-motion setting. Reduced removes motion/double vision and retains mild softening; Off removes visual effects. Neither changes server-side steering impairment.
+
 ## Timed tasks
 
 Labour, gathering and harvesting lock movement while a large centered countdown shows progress. Menus temporarily hide it; completion clears it. Disconnecting does not cancel accepted work or duplicate rewards. Starting a harvest closes its panel. If the timer reaches zero before server confirmation, **Finishing…** remains until completion; no extra click. Pending loads can require cargo space before delivery.

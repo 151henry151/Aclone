@@ -2198,3 +2198,15 @@ button span {
 #startup-loading p {
   color: #b5c3a6;
 }
+
+#intoxication-status {
+  width: fit-content;
+  max-width: min(24rem, 90vw);
+  margin: 0.4rem 0;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #cda968;
+  background: #352f25e8;
+  color: #f4d8a0;
+  font-size: 0.8rem;
+  pointer-events: none;
+}

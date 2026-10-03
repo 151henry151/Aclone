@@ -44,6 +44,8 @@ export interface Player {
   fuel: number;
   /** Public snapshot hint; exact fuel and private activity details stay private. */
   canReceiveFuel?: boolean;
+  /** Persistent alcohol level and dose time in world seconds; absent in old saves. */
+  alcohol?: { level: number; at: number };
   health: number;
   hunger: number;
   thirst: number;

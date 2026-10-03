@@ -102,3 +102,7 @@ At a bank, request a loan quote, review APR/monthly payment/security, then accep
 ## Why does entering a world show a loading screen?
 
 The browser downloads textures, uploads them to the graphics card and prepares daylight/night lighting before enabling driving. Progress appears while that work finishes; failed textures use plain fallback surfaces. Slow connections or software rendering take longer. If play remains slow afterward, enable browser hardware acceleration or choose performance graphics in Pilot & preferences.
+
+## Why is my view wobbling after drinking?
+
+Beer and wine accumulate intoxication: steering weaves and the scenery distorts, blurs and doubles. Water relieves thirst but only time clears alcohol, including while offline. Wait rather than drive if badly affected. Choose reduced/off visuals in **F9 → Options & pilot key → Drunk visual effects**; steering impairment still applies. Stock homes with water or other nonalcoholic drinks.
