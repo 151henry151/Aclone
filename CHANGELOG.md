@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.3] - 2026-10-03
+
+### Fixed
+
+- Keep account settings open when the initial space snapshot arrives, and wait for account security details before offering password inputs so late responses cannot erase a new password.
+
 ## [0.24.2] - 2026-10-03
 
 ### Fixed

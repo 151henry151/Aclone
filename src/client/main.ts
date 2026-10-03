@@ -292,11 +292,13 @@ async function connect() {
       account = msg.account;
       registry = msg.galaxy.worlds;
       market = msg.market;
+      const leavingWorld = !!world;
       world = undefined;
       me = undefined;
       localStorage.removeItem('aclone.world');
       const reopen = panel === 'shipyard';
-      closePanel();
+      // Initial space snapshots must not dismiss an account form opened during login.
+      if (leavingWorld || reopen) closePanel();
       void showGalaxy().then(() => {
         if (reopen) openPanel('shipyard');
       });
@@ -740,13 +742,15 @@ function openPanel(name: string) {
   }
   parishMap?.dispose();
   parishMap = undefined;
-  if (name === 'options' && token)
+  if (name === 'options' && token) {
+    accountStatus = undefined;
     void api('/api/auth/status')
       .then((r) => {
         accountStatus = r;
         if (panel === 'options') renderPanel();
       })
       .catch((e) => toast(e.message, true));
+  }
   scene.paused = true;
   panel = name;
   tab = 'Main';
@@ -878,7 +882,7 @@ function renderPanel() {
   if (panel === 'options') {
     modal(
       'Pilot & preferences.',
-      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound.status, 'sound')}<label>Sound volume <output id="sound-volume-value">${Math.round(sound.volume * 100)}%</output><input id="sound-volume" type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" aria-label="Sound volume"></label><p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
+      `<p>Save your pilot key somewhere private. It is the key to your identity and property. Anyone who has it can play as you.</p>${button('Download pilot recovery key', 'exportKey', '', 'primary')}${button(sound.status, 'sound')}<label>Sound volume <output id="sound-volume-value">${Math.round(sound.volume * 100)}%</output><input id="sound-volume" type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" aria-label="Sound volume"></label><p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account && !accountStatus ? '<p>Loading account security…</p>' : account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
     );
     return;
   }
