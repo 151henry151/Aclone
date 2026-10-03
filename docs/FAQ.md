@@ -94,3 +94,7 @@ Press **Save details**. The live saved wage is separate from your draft: gross p
 ## Can I give money to someone or refuel a stranded player?
 
 Select their online name or **World/F9 → Players & roadside help** (mobile: Actions). Gifts use cash in hand, at any parish distance, with two-decimal denarii and private receipts. Refuelling uses one carried Fuel (up to 8 tank units, cap 64, surplus consumed), not the helper's tank. Both must be online, outside, stopped, within 15m/same height and free of other activities; target needs a fuel-powered vehicle. Owners can disable either in Editor → Rules. [Player assistance](PLAYING.md#helping-other-players).
+
+## Can I borrow from the bank?
+
+At a bank, request a loan quote, review APR/monthly payment/security, then accept. Fixed-rate loans use 6–60 bank months; one month is about 5.07 real hours. Automatic repayments use bank savings, including offline. Keep those savings funded. Early repayment has no fee. Score, verified earnings, existing debt and reserves determine eligibility; mortgages pledge at most 75% of a finished building's structural value. Missed payments harm credit; three months in arrears can foreclose collateral. Debt survives death. [Loan details](ECONOMY.md#loans-and-credit).

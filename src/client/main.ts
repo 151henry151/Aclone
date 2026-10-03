@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
+import { bankLoans, bankQuote } from './bank';
 import { propertyQuote } from '../shared/property';
 import { creatorControls } from './creator-editor';
 import {
@@ -1233,6 +1234,7 @@ function buildingWindow(b: Building) {
           ['withdraw', 'Withdraw'],
         ],
       )}<button>Transfer</button></form>`;
+    if (b.kind === 'bank') html += bankLoans(world, me, b);
     if (b.kind === 'town')
       html += `<p>Parish tax: ${Math.round(world.towns[0].tax * 100)}% · Residents: ${world.towns[0].residents.length}</p>${button('Become a resident', 'town', `data-building="${b.id}" data-id="join"`)}${button('Stand for mayor', 'town', `data-building="${b.id}" data-id="stand"`)}<form data-action="town">${hidden('building', b.id)}${hidden('operation', 'tax')}${field('Tax (0–0.5)', 'tax', world.towns[0].tax, 'number', 'min="0" max="0.5" step="0.01"')}<button>Set tax as mayor</button></form>`;
     if (b.kind === 'pub')
@@ -1743,6 +1745,17 @@ app.addEventListener('submit', async (e) => {
       if (mobile.active)
         (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
       else (form.querySelector('input') as HTMLInputElement).blur();
+    } else if (form.id === 'loan-quote-form' && world && me) {
+      const b = world.buildings.find((b) => b.id === String(data.building));
+      if (b)
+        $('loan-quote-result').innerHTML = bankQuote(
+          world,
+          me,
+          b,
+          Math.round(Number(data.denarii) * 100),
+          Number(data.months),
+          String(data.collateral || '') || undefined,
+        );
     } else if (form.id === 'creator-import-form') {
       const file = data.file as File;
       if (file.size > 512 * 1024) throw Error('Design file is too large');
@@ -1828,9 +1841,12 @@ app.addEventListener('submit', async (e) => {
           'armour',
           'fuel',
           'seconds',
+          'months',
+          'apr',
+          'payment',
         ].includes(k)
           ? Number(v)
-          : k === 'buy' || k === 'open'
+          : ['buy', 'open', 'accepted', 'autoPay', 'enabled'].includes(k)
             ? v === 'true'
             : v;
       }

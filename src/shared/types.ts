@@ -11,6 +11,9 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  credit?: import('./loans').CreditRecord;
+  loans?: import('./loans').Loan[];
+  loanSequence?: number;
   /** Server-operated AI identity; no elevated permissions. */
   npc?: boolean;
   id: string;
@@ -78,6 +81,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  lien?: { borrower: string; loan: string };
   estate?: { since: number; base: number };
   creatorModel?: string;
   creatorBounds?: { width: number; depth: number; height: number };

@@ -84,8 +84,8 @@ CLI. Player/account records have an optional `npc` flag; world chat has monotoni
 message IDs. All are included in normal backups. Never publish a populated
 database. See [memory and retention](NPCS.md#operator-controls-and-memory).
 
-## Estate persistence
+## Estate and lending persistence
 
-`Building.estate` holds the unclaimed date and base price; current stock/investment determine equity at quote/purchase time. `World.estateRulesVersion` marks the one-time Puddlewick defaults migration. `retainEstateContents` is boolean; `estateEquityShare` and `estateAnnualDiscount` are 0–1.
+`Building.estate` holds the unclaimed date and base price; current stock/investment determine equity at quote/purchase time. `World.estateRulesVersion` marks the one-time Puddlewick defaults migration. `retainEstateContents` is boolean; `estateEquityShare` and `estateAnnualDiscount` are 0–1. `World.harbourShipment` prevents duplicate periodic imports on restart.
 
-`World.harbourShipment` prevents duplicate periodic imports on restart.
+Private `Player.credit`, `loans` and `loanSequence` persist observed earnings/employment, repayment history, principal/interest, next instalment, arrears and loan IDs. `Building.lien` links collateral to borrower/loan. Accounting is integer money with fractional interest carried between ticks; scheduled boundaries support offline catch-up. Save/restore the entire database; deleting individual debt/lien records breaks financial relationships.

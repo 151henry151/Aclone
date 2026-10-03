@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { harbourSupply, emergencyImport } from './harbour-supply.ts';
+import {
+  recordCreditIncome,
+  advanceLoans,
+  loanAction,
+  settleForeclosure,
+  forecloseEstate,
+} from './loans.ts';
 import { propertyQuote, releaseEstate, migrateEstates } from './property.ts';
+import { harbourSupply, emergencyImport } from './harbour-supply.ts';
 import { creatorAction, creatorEvent, tickCreator, creatorBlocksSegment } from './creator.ts';
 import { terrainHeight } from './terrain.ts';
 import { fishingDock, travelHeight } from './dock';
@@ -50,6 +57,7 @@ export function log(
   reason: string,
 ) {
   if (!Number.isSafeInteger(amount) || amount < 0) throw Error('Invalid ledger amount');
+  if (amount) recordCreditIncome(w, to, amount, reason);
   if (amount) w.ledger.push({ id: ++w.ledgerSeq, time: w.time, kind, amount, from, to, reason });
 }
 
@@ -351,7 +359,9 @@ export function act(w: World, id: string, a: Action): string {
         'Property limit reached',
       );
       const seller = b.owner && w.players[b.owner];
-      if (seller) {
+      if (settleForeclosure(w, b, p, price)) {
+        // Foreclosure receipts already allocate bank recovery and former-owner surplus.
+      } else if (seller) {
         p.cash -= price;
         seller.cash += price;
         log(w, 'transfer', price, p.id, seller.id, 'property sale');
@@ -367,6 +377,7 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       owns(p, b);
       requireThat(!b.government, 'Government property is not for sale');
+      requireThat(!b.lien, 'Repay the mortgage before listing this property');
       b.price = num(a.price, 1, 100000000, true);
       b.forSale = true;
       result = 'Property listed for sale.';
@@ -576,6 +587,11 @@ export function act(w: World, id: string, a: Action): string {
     case 'outside':
       p.atHome = false;
       break;
+    case 'loan': {
+      const b = nearby(w, p, a.building);
+      result = loanAction(w, p, b, a);
+      break;
+    }
     case 'bank': {
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'bank', 'Visit the bank');
@@ -839,6 +855,13 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       owns(p, b);
       requireThat(!b.government, 'Government buildings cannot be demolished');
+      requireThat(!b.lien, 'Repay the mortgage before demolishing this property');
+      requireThat(
+        !Object.values(w.players).some((p) =>
+          p.loans?.some((l) => l.bank === b.id && l.status !== 'paid'),
+        ),
+        'Outstanding loans must be settled before demolishing this bank',
+      );
       requireThat(
         !Object.values(b.lodging?.guests ?? {}).some(
           (g) => g.until > w.time || Object.values(g.stock).some((n) => n > 0),
@@ -1282,6 +1305,7 @@ function kill(w: World, p: Player, comic = false) {
     p.inventory = {};
     delete p.learning;
     delete p.job;
+    forecloseEstate(w, p);
     for (const b of w.buildings) {
       b.employees = b.employees.filter((id) => id !== p.id);
       if (b.owner === p.id) {
@@ -1395,6 +1419,7 @@ export function advance(w: World, seconds: number) {
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
     if (p.online) p.age += seconds / (600 * 365);
+    advanceLoans(w, p, start, end);
     advanceSurvival(w, p, start, seconds);
     if (p.online) {
       p.energy = Math.min(65000, p.energy + 3000 * seconds);

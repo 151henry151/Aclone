@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { loanQuote } from '../../shared/loans.ts';
+import { operation } from './player-operations.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import { homecomingPlan, offlineReadiness } from './homecoming.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -46,6 +48,21 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       list.push({ id: `enterprise_${list.length}`, description, plan, reconsiderSeconds });
   };
   const living = 20000;
+  for (const loan of p.loans ?? []) {
+    const bank = w.buildings.find((b) => b.id === loan.bank);
+    if (!bank || loan.status === 'paid') continue;
+    const amount = Math.min(
+      loan.due || loan.principal + loan.interest,
+      Math.max(0, p.cash - living),
+    );
+    if (amount > 0)
+      add(
+        `Repay my loan: ${amount} toward ${loan.due ? 'overdue instalments' : 'principal'}; protect my credit and collateral.`,
+        visitBuilding(p, bank, [
+          operation('loan', { building: bank.id, operation: 'repay', loan: loan.id, amount }),
+        ]),
+      );
+  }
   const home = w.buildings.find((b) => b.kind === 'home' && b.owner === p.id && !b.construction);
   if (home && !offlineReadiness(w, p, 86400).stocked) {
     const pantry = homecomingPlan(w, p, 86400);
@@ -155,6 +172,38 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     }
     if (b.owner !== p.id) continue;
     const reserve = estimate?.reserve ?? Math.max(20000, b.wage * 6);
+    const bank = w.buildings.find((s) => s.kind === 'bank' && !s.construction);
+    const shortfall = Math.max(0, reserve - b.investment - Math.max(0, p.cash - living));
+    if (
+      bank &&
+      shortfall >= 1000 &&
+      shortfall <= 10000 &&
+      estimate &&
+      estimate.margin > 0 &&
+      !p.loans?.some((l) => l.status !== 'paid')
+    ) {
+      const q = loanQuote(w, p, bank, shortfall, 12);
+      if (q.approved && q.payment * 3 < estimate.margin * 20)
+        add(
+          `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} per bank month for 12 months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
+          [
+            ...visitBuilding(p, bank, [
+              operation('loan', {
+                building: bank.id,
+                operation: 'borrow',
+                amount: shortfall,
+                months: 12,
+                apr: q.apr,
+                payment: q.payment,
+                accepted: true,
+                autoPay: true,
+              }),
+            ]),
+            { kind: 'travel', destination: b.id },
+            act({ type: 'investment', building: b.id, direction: 'deposit', amount: shortfall }),
+          ],
+        );
+    }
     const deposit = Math.min(
       10000,
       Math.max(0, reserve - b.investment),
@@ -247,6 +296,7 @@ export function economicMenu(
       n += 90;
     if (c.description.startsWith('Supply shortage!')) n += 80;
     if (c.description.startsWith('Acquire and fund')) n += preference === 'owner' ? 90 : 45;
+    if (c.description.startsWith('Repay my loan')) n += 98;
     if (/^(Fund my|Supply my|Sell my output)/.test(c.description)) n += 95;
     if (c.description.startsWith('Operate ')) n += preference === 'employee' ? 80 : 50;
     if (c.description.includes('[Fits my')) n += 20;

@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.26.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.27.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -12,7 +12,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 ## What you can do
 
-- Build an economy: gather materials, grow six crops, process goods, set prices/wages and run shops or guesthouses.
+- Build an economy: gather materials, grow six crops, process goods, set prices/wages and run shops or guesthouses. Banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, day/night lighting, survival and stocked homes that feed you offline. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag.
 - Travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.

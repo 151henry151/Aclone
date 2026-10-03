@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-03
+
+### Added
+
+- Add fixed-rate bank loans and mortgages with affordability checks, employment and repayment-based credit scores, scheduled offline payments, early repayment, arrears and foreclosure. Preserve debts across death and allocate foreclosure proceeds to lenders and former owners; expose quotes, repayment controls and conservative NPC financing choices.
+
 ## [0.26.1] - 2026-10-03
 
 ### Fixed

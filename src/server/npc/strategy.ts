@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { creditProfile } from '../../shared/loans.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import { businessEstimate } from './enterprise.ts';
 import { items } from '../../shared/catalog.ts';
@@ -97,6 +98,8 @@ export function lifeBriefing(w: World, p: Player) {
       reserveAvailable: !!meal && !!drink,
     },
     economy: {
+      credit: creditProfile(w, p),
+      loans: p.loans?.filter((l) => l.status !== 'paid'),
       businesses: w.buildings
         .filter((b) => !b.government && !b.construction)
         .map((b) => ({

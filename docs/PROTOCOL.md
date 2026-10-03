@@ -49,7 +49,7 @@ Perform a discrete action:
 
 `request` is optional and is echoed in result messages. It is a correlation ID, not a replay/idempotency key. The client does not automatically resend actions after reconnecting; it requests fresh state instead. Do not retry a timed-out purchase blindly.
 
-Local actions (`src/shared/simulation.ts`): trade, use, buyBuilding, investment, stock, buildingAdmin, job, quit, work, learn, task, home, outside, bank, vehicle, engine, lights, crow, joinGame, leaveGame, horn, reel, kricket, fire, construct, supply, repair, demolish, settings, terrain, zone, place, town, group, hitch, detach, give, giveMoney, refuelPlayer, chat, command and respawn.
+Local actions (`src/shared/simulation.ts`): trade, use, buyBuilding, investment, stock, buildingAdmin, job, quit, work, learn, task, home, outside, bank, loan, vehicle, engine, lights, crow, joinGame, leaveGame, horn, reel, kricket, fire, construct, supply, repair, demolish, settings, terrain, zone, place, town, group, hitch, detach, give, giveMoney, refuelPlayer, chat, command and respawn.
 
 Universe actions: land, takeoff, jump, ship, spaceTrade, exchange and script. Form handlers/integration tests supply examples. Socket authentication determines the actor, never a supplied player ID.
 
@@ -140,3 +140,7 @@ Optional federation exposes `GET /api/federation` (public descriptor/destination
 - `giveMoney`: `{player, amount}`; safe integer hundredths, 1–100000000, another online player in this world, sufficient cash and safe recipient balance. No fee/tax; transfer ledger plus private receipts.
 - `refuelPlayer`: `{player}`; one carried Fuel, stationary outdoor players within 15m and 3m height difference, no tasks/games/scouting/passengers, fuel-powered target with room below 64. Adds at most eight units.
 - World rules `allowMoneyGifts`/`allowPlayerRefuelling` independently gate actions (defaults true). Public `canReceiveFuel` is a readiness hint; exact fuel/inventory/cash stay private. Server checks actual state.
+
+## Bank loans
+
+`loan` actions require proximity to `building` (a bank). `operation: "borrow"` includes integer `amount`, `months` (6/12/24/36/60), optional `collateral` building ID, quoted numeric `apr` and `payment`, boolean `accepted: true`, and optional boolean `autoPay`. The server rechecks eligibility and rejects stale terms. `operation: "repay"` takes `loan` ID and integer `amount`; `operation: "autopay"` takes `loan` ID and boolean `enabled`. Quotes use `shared/loans.ts`. Credit and loan details are private to the pilot; public buildings expose only their collateral lien reference.
