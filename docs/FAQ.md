@@ -10,7 +10,7 @@ Live building quotes and world rules override these defaults. This concise refer
 - **F4 / Engine:** start or stop the engine. **L / Lights:** headlights.
 - **C / View:** cycle camera; mouse wheel zooms; drag in first-person to look around/up.
 - **I / Inventory:** inventory, food/drink, vehicles and walking. **M** or click minimap: **Parish map**, with named buildings/resources; M again closes it. The **Parish Directory** is a separate list.
-- **Enter / F2:** chat; Enter sends. **F7:** Field guide. **F9:** game menu. **F10:** world-owner editor.
+- **Enter / F2:** chat; Enter sends. **PgUp/PgDn:** scroll chat; arrows still drive when the chat log is focused. **F7:** Field guide. **F9:** game menu. **F10:** world-owner editor.
 - **F5 / R:** deploy/return from a carried robocrow. **F3:** reel when a fish bites.
 - **Insert / Delete:** climb/descend in flight; carried jetpacks let ground vehicles lift. **H:** hide/show HUD for scenery. **Escape:** close windows and restore the HUD.
 - **Mobile:** left arrows steer, right arrows drive/reverse; hold both to turn. Map, Bag, Chat and Actions open panels. Tap cash for needs. Actions includes engine, lights, walking, camera, weapons and every menu. Drag scenery to look; pinch to zoom. Tap Done or × to return. See [mobile play](MOBILE.md).

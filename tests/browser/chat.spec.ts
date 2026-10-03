@@ -53,6 +53,19 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
     const input = page.getByRole('textbox', { name: 'Chat message' });
     await expect(input).toHaveAttribute('maxlength', '1200');
     await input.fill('Unsent draft');
+    const pilotState = w.players[pilot.account.id];
+    pilotState.engine = true;
+    const startingZ = pilotState.z;
+    await chat.focus();
+    const scrollBeforeDriving = await chat.evaluate((el) => el.scrollTop);
+    await page.keyboard.down('ArrowUp');
+    await page.keyboard.down('ArrowUp'); // native key-repeat must not scroll the log either
+    await expect
+      .poll(() => Math.abs(pilotState.z - startingZ), { timeout: 15000 })
+      .toBeGreaterThan(1);
+    await page.keyboard.up('ArrowUp');
+    expect(await chat.evaluate((el) => el.scrollTop)).toBe(scrollBeforeDriving);
+    await input.focus();
     const beforePage = await chat.evaluate((el) => el.scrollTop);
     await page.keyboard.press('PageUp');
     await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(beforePage);

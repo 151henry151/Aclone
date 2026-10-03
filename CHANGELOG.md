@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.5] - 2026-10-03
+
+### Fixed
+
+- Keep arrow keys dedicated to driving when the chat log has focus; use PgUp/PgDn for chat scrolling without moving focus or losing a draft.
+
 ## [0.24.4] - 2026-10-03
 
 ### Fixed

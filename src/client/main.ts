@@ -1877,7 +1877,7 @@ window.addEventListener('keydown', (e) => {
   }
   if (
     (e.target as HTMLElement).closest('#chat-log') &&
-    ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)
+    ['PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)
   )
     return;
   // Let focused buttons use their native activation instead of honking or opening chat.
@@ -1892,6 +1892,7 @@ window.addEventListener('keydown', (e) => {
     mobile.close();
     return;
   }
+  if (e.key.startsWith('Arrow')) e.preventDefault();
   if (e.repeat) return;
   if (panel && e.key === 'Tab') {
     const controls = [
@@ -1998,8 +1999,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => {
   if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
   scene.paused = !!(panel || mobile.drawer);
-  const typing =
-    panel || mobile.drawer || document.activeElement?.matches('input,textarea,select,#chat-log');
+  const typing = panel || mobile.drawer || document.activeElement?.matches('input,textarea,select');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
   const touch = mobile.input();
   const packet = inputStream.encode(
