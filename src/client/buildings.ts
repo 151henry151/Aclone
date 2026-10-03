@@ -420,7 +420,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   }
   if (b.kind === 'starport') {
     root.add(spaceportModel());
-    box(main.width + 0.2, 0.32, main.depth + 0.2, '#517b7e', 0, 3.1, 0);
+    box(main.width + 0.2, 0.32, main.depth + 0.2, '#517b7e', 0, main.eaves, 0);
     for (const x of [-5, -3, -1, 1, 3, 5]) box(0.045, 2.7, 0.04, '#829d9c', x, 1.4, front);
     const tower = plan.volumes[1];
     for (const side of [-1, 1])
@@ -430,19 +430,58 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
         0.08,
         '#4e777a',
         tower.x,
-        5.9,
+        tower.eaves - 1,
         tower.z + (side * tower.depth) / 2,
       );
-    cylinder(0.045, 1.6, '#596861', tower.x, 7.6, tower.z);
+    cylinder(0.045, 1.6, '#596861', tower.x, tower.eaves + 0.9, tower.z);
     const dish = mesh(
       new T.SphereGeometry(0.7, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
       '#d3d4c6',
       tower.x,
-      7.25,
+      tower.eaves + 0.6,
       tower.z,
     );
     dish.rotation.x = -0.7;
     for (const x of [-4, 4]) box(0.18, 2.2, 0.18, '#657d73', x, 1.1, front + 0.7);
+    // Cargo hangar, roller shutters, wall ribs and roof plant distinguish the port
+    // from village buildings. These static parts share its existing scenery batches.
+    const hangar = plan.volumes[2],
+      face = hangar.z + hangar.depth / 2 + 0.07;
+    for (const dx of [-7, 7]) {
+      box(10, 9.5, 0.18, '#293c42', hangar.x + dx, 4.75, face);
+      for (let y = 0.4; y < 9.4; y += 0.55)
+        box(9.7, 0.065, 0.12, '#637477', hangar.x + dx, y, face + 0.12);
+      box(10.5, 0.3, 0.5, '#bfa65c', hangar.x + dx, 9.8, face + 0.2);
+    }
+    for (let x = -hangar.width / 2; x <= hangar.width / 2; x += 2)
+      box(
+        0.14,
+        hangar.eaves,
+        0.18,
+        '#737f80',
+        hangar.x + x,
+        hangar.eaves / 2,
+        hangar.z - hangar.depth / 2 - 0.1,
+      );
+    for (let z = -10; z <= 10; z += 2)
+      box(
+        0.18,
+        hangar.eaves,
+        0.12,
+        '#737f80',
+        hangar.x + hangar.width / 2 + 0.1,
+        hangar.eaves / 2,
+        hangar.z + z,
+      );
+    for (const x of [-6, 5]) {
+      box(3.5, 1.4, 2.8, '#6c7675', x, main.eaves + 0.9, -3);
+      for (let i = 0; i < 6; i++)
+        box(3.2, 0.07, 0.08, '#303e40', x, main.eaves + 0.5 + i * 0.18, -1.55);
+    }
+    // A loading canopy and pipe bridge sit inside the shared collision volumes.
+    box(28.2, 0.25, 2.2, '#6a7b7b', hangar.x, 10, face + 0.4);
+    for (const x of [17, 41]) box(0.25, 10, 0.25, '#929b95', x, 5, face + 1);
+    for (const x of [1.8, 2.6]) cylinder(0.25, 7.5, '#858f8c', x, 3.75, -22);
   }
   return root;
 }

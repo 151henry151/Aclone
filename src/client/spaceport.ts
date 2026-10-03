@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
-import { spaceportApron, spaceportHardware } from '../shared/building-shapes';
+import { spaceportApron, spaceportHardware, spaceportScale } from '../shared/building-shapes';
 
 let hullTexture: T.DataTexture | undefined;
 /** Subtle brushed metal and runoff streaks, generated once without a canvas or asset download. */
@@ -38,6 +38,7 @@ function metalWeathering() {
 export function spaceportModel() {
   const root = new T.Group();
   root.name = 'Spaceport landing apron';
+  root.scale.setScalar(spaceportScale);
   const colors = {
     shell: '#aaaead',
     paint: '#c4c3b9',
@@ -109,7 +110,9 @@ export function spaceportModel() {
       0,
       z,
     );
-  const { x, z, radius } = spaceportApron;
+  const x = spaceportApron.x / spaceportScale,
+    z = spaceportApron.z / spaceportScale,
+    radius = spaceportApron.radius / spaceportScale;
   cylinder(radius, radius, 0.18, 'pad', x, 0.09, z, 80);
   // Concrete expansion joints, a scorched blast plate and a restrained safety boundary.
   for (let d = -8; d <= 8; d += 4) {
@@ -219,11 +222,22 @@ export function spaceportModel() {
   box(0.95, 2.7, 0.6, 'steel', x + 0.8, 7.5, z + 2.67);
   for (let i = 0; i < 9; i++) box(0.77, 0.07, 0.065, 'dark', x + 0.8, 6.5 + i * 0.25, z + 3);
   // Human-sized access hatch, hinges and short maintenance steps; no giant portholes.
+  const accessStart = rocket.children.length;
   box(1.24, 2.23, 0.15, 'dark', x, 24.15, z + 2.9);
   box(1.02, 2.02, 0.16, 'panel', x, 24.15, z + 3).name = 'Crew access hatch';
   for (const y of [23.6, 24.6]) box(0.18, 0.24, 0.13, 'steel', x - 0.55, y, z + 3.13);
   box(0.22, 0.055, 0.08, 'dark', x + 0.28, 24.1, z + 3.13);
   for (let y = 21.5; y <= 23; y += 0.32) box(0.48, 0.045, 0.2, 'steel', x, y, z + 2.91);
+  // Keep crew equipment human-sized even though the cargo launch vehicle grew.
+  const access = new T.Group();
+  const anchor = new T.Vector3(x, 24.15, z + 2.9);
+  for (const child of rocket.children.slice(accessStart)) {
+    child.position.sub(anchor);
+    access.add(child);
+  }
+  access.position.copy(anchor);
+  access.scale.setScalar(1 / spaceportScale);
+  rocket.add(access);
   // Unequal service covers and vertical identification bars break up the fairing.
   box(0.8, 1.2, 0.1, 'shell', x + 1.35, 26.8, z + 2.61).rotation.y = 0.47;
   for (const [dx, h] of [
@@ -281,7 +295,15 @@ export function spaceportModel() {
   }
 
   parent = root;
-  const { tower, tank } = spaceportHardware;
+  const tower = {
+    x: spaceportHardware.tower.x / spaceportScale,
+    z: spaceportHardware.tower.z / spaceportScale,
+    height: spaceportHardware.tower.height / spaceportScale,
+  };
+  const tank = {
+    x: spaceportHardware.tank.x / spaceportScale,
+    z: spaceportHardware.tank.z / spaceportScale,
+  };
   // One side-mounted steel service tower: open trusswork, grated platforms and
   // handrails. Its offset silhouette is deliberately different from the rocket.
   for (const dx of [-1.2, 1.2])

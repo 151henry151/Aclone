@@ -143,3 +143,5 @@ Actual renderer captures; many use staged disposable worlds. They demonstrate vi
 - [Wood cottage](screenshots/wood-cottage.png)
 - [Woodland clearing](screenshots/woodland-clearing.png)
 - [Woodland](screenshots/woodland.png)
+
+The spaceport now has a six-times-larger launcher (~193 metres), a separate cargo hangar, control tower, utility wing and industrial roof/pipe details. Access hatches and terminal entrances stay human-sized. The launch apron sits inside the starter world's boundary and uses solid fixtures with a walkable pad; static mesh/material budgets keep rendering cost bounded.

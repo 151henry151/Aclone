@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.26.1] - 2026-10-03
+
+### Fixed
+
+- Enlarge the industrial spaceport launcher sixfold, add a cargo hangar, control tower and utility wing, and keep human-sized access, solid machinery, a walkable apron and an accessible terminal within the starter map.
+
 ## [0.26.0] - 2026-10-03
 
 ### Added
