@@ -239,5 +239,10 @@
     "drink": 3000,
     "health": 1000,
     "maxHealth": 150
+  },
+  "parishMap": {
+    "name": "Parish map",
+    "weight": 0,
+    "price": 1000
   }
 }

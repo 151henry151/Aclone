@@ -45,7 +45,8 @@
       "feed": 900,
       "milk": 1350,
       "cheese": 3870,
-      "dairyMeals": 6180
+      "dairyMeals": 6180,
+      "parishMap": 900
     },
     "sell": {
       "wheat": 775,
@@ -89,7 +90,8 @@
       "feed": 1550,
       "milk": 2325,
       "cheese": 6665,
-      "dairyMeals": 9300
+      "dairyMeals": 9300,
+      "parishMap": 1550
     },
     "stock": {
       "wheat": 60,
@@ -133,7 +135,8 @@
       "feed": 0,
       "milk": 0,
       "cheese": 0,
-      "dairyMeals": 0
+      "dairyMeals": 0,
+      "parishMap": 20
     },
     "recipe": null,
     "wage": 2200,
@@ -296,7 +299,8 @@
       "feed": 900,
       "milk": 1350,
       "cheese": 3870,
-      "dairyMeals": 6180
+      "dairyMeals": 6180,
+      "parishMap": 900
     },
     "sell": {
       "wheat": 825,
@@ -340,7 +344,8 @@
       "feed": 1650,
       "milk": 2475,
       "cheese": 7095,
-      "dairyMeals": 9900
+      "dairyMeals": 9900,
+      "parishMap": 1650
     },
     "stock": {
       "wheat": 60,
@@ -384,7 +389,8 @@
       "feed": 0,
       "milk": 0,
       "cheese": 0,
-      "dairyMeals": 0
+      "dairyMeals": 0,
+      "parishMap": 20
     },
     "recipe": null,
     "wage": 2200,

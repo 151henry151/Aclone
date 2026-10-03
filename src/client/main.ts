@@ -1,3 +1,11 @@
+import {
+  mapAvailable,
+  vehicleCondition,
+  requiredLicence,
+  maintainable,
+  SERVICE_FEE,
+  MAP_PRICE,
+} from '../shared/vehicle-services';
 import { maximumHealth, nutritionDescription } from '../shared/nutrition';
 import { landscapeEditor, landscapeControls } from './landscape-editor';
 import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
@@ -697,6 +705,14 @@ function drawMap() {
     ctx = c.getContext('2d')!;
   ctx.fillStyle = '#4e6247';
   ctx.fillRect(0, 0, 230, 170);
+  if (!mapAvailable(world, me)) {
+    ctx.fillStyle = '#eee4c6';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Buy a map at a garage', 115, 85);
+    ctx.textAlign = 'start';
+    return;
+  }
   const scale = world.townLayout === 2 ? 0.31 : 0.6;
   const sx = (x: number) => 115 + x * scale,
     sz = (z: number) => (world!.townLayout === 2 ? 85 : 65) + z * scale;
@@ -967,6 +983,15 @@ function renderPanel() {
     return;
   }
   if (panel === 'map') {
+    if (!mapAvailable(world, me)) {
+      parishMap?.dispose();
+      parishMap = undefined;
+      modal(
+        'Parish map.',
+        '<p>This world requires a Parish map in your inventory. Garages print one for 10d.</p>',
+      );
+      return;
+    }
     if (!parishMap) {
       modal('Parish map.', '<div id="parish-map"></div>', true);
       $('modal-host').querySelector('.window')!.classList.add('map-window');
@@ -998,7 +1023,7 @@ function renderPanel() {
     const others = Object.values(world.players).filter((p) => p.online && p.id !== me!.id);
     modal(
       'Players & roadside help',
-      `<p>Select a player to give money, help refuel their vehicle, or chat privately.</p><div class="directory">${others.map((p) => button(`${esc(p.name)}${p.npc ? ' · AI' : ''}<small>${Math.round(distance(me!, p))} m away</small>`, 'player', `data-id="${esc(p.id)}"`)).join('') || '<p>No other players are online in this parish.</p>'}</div>`,
+      `<p>Select a player to give money, help refuel or repair their vehicle, hitch a ride, or chat privately.</p><div class="directory">${others.map((p) => button(`${esc(p.name)}${p.npc ? ' · AI' : ''}<small>${Math.round(distance(me!, p))} m away</small>`, 'player', `data-id="${esc(p.id)}"`)).join('') || '<p>No other players are online in this parish.</p>'}</div>`,
     );
     return;
   }
@@ -1217,13 +1242,17 @@ function buildingWindow(b: Building) {
         .slice(0, 6)
         .map((v, i) =>
           button(
-            `${esc(v.name)} <span>${(me!.fleet ?? [0, 5]).includes(i) ? 'Owned' : money(v.price)}</span>`,
+            `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(me!.fleet ?? [0, 5]).includes(i) ? 'Owned' : money(v.price)}</span>`,
             'vehicle',
             `data-id="${i}" data-building="${b.id}"`,
             'wide',
           ),
         )
         .join('')}</div>`;
+    if (b.kind === 'garage') {
+      const record = me!.fleetState?.[me!.vehicle];
+      html += `<h3>Vehicle service</h3><p>${esc(vehicles[me!.vehicle].name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
+    }
     if (b.kind === 'garage')
       html += `<h3>Tractor paint shop</h3><p>A fresh finish costs ${money(appearance.paintPrice)}. Your choice stays with your tractor when you leave or sign out.</p><div class="paint-options">${appearance.paints.map((p) => `<button data-do="paint" data-id="${p.id}" data-building="${b.id}" ${!near || me!.tractorPaint === p.id ? 'disabled' : ''}><span class="paint-chip" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
     if (b.kind === 'farm') {
@@ -1550,8 +1579,13 @@ app.addEventListener('click', async (e) => {
         }
         break;
       }
+      case 'detach':
+        send({ type: 'detach' });
+        break;
+      case 'repairVehicle':
+      case 'hitch':
       case 'refuelPlayer':
-        send({ type: 'refuelPlayer', player: id });
+        send({ type: action, player: id });
         break;
       case 'npc-chat': {
         const resident = npcResidents?.find((r) => r.playerId === id);
@@ -1623,6 +1657,10 @@ app.addEventListener('click', async (e) => {
           ),
           direction: el.dataset.direction,
         });
+        break;
+      case 'serviceVehicle':
+      case 'buyMap':
+        send({ type: action, building });
         break;
       case 'vehicle':
         send({ type: 'vehicle', slot: Number(id), building });

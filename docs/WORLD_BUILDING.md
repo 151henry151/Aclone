@@ -188,3 +188,7 @@ Paint circular grass, gravel, soil or sand patches; the first map point sets the
 Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness maps between your low/high heights; the server stores a 33 × 33 grid across the playable square. Blue preview cells are below sea level. **Apply previewed heightmap** replaces the procedural base; existing height brushes remain additive. Terrain, buildings and water checks use the same heights. Review shoreline businesses before applying.
 
 **Undo last landscape edit** restores one of the last four saved path/surface/barrier/scatter/heightmap states, including after a restart. Remove individual features below the editor; remove older height brushes in Layout. Edits are free and caretaker-only. Limits: 16 paths, 16 barriers, 128 control points total, 1,200 metres of barriers, 64 surface brushes and 128 scattered instances. Exported designs include the current layout, not undo history.
+
+## Vehicle rules
+
+Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences** (driver/pilot/boatmaster required for advanced slots according to their configured movement mode) and **Require map item** (hide visitor maps unless carrying a Parish map). Defaults enable gentle wear but leave licences and map ownership optional. Basic tractor, walking, ostrich and disposable robocrow controls are exempt from licences. Creator maps remain available for editing. Garage map printing and steel-part servicing are ordinary paid services, also available on existing saves.

@@ -15,7 +15,16 @@ export const weapons: Record<string, WeaponDef> = weaponData;
 export const defaults: Settings = settingsData;
 export const galaxy = galaxyData;
 export const skills = [
-  ...new Set([...Object.values(recipes).map((r) => r.skill), 'innkeeper', 'forester', 'excavator']),
+  ...new Set([
+    ...Object.values(recipes).map((r) => r.skill),
+    'innkeeper',
+    'forester',
+    'excavator',
+    'mechanic',
+    'driver',
+    'pilot',
+    'boatmaster',
+  ]),
 ];
 export const checkpoints = [
   { x: -75, z: -20 },

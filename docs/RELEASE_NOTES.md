@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## Upgrading to 0.36.0
+
+Back up the database and assets, then use the usual pull/build/restart procedure. Vehicle records initialize lazily; existing condition is not guessed from character age. New rules retain unrestricted Puddlewick maps and basic driving. The upgrade adds missing map quotes only to treasury-run public outlets, preserving private prices and inventories; existing garages can print maps and accept carried Steel for service. No world reset is needed.
+
 ## Feature history
 
 **New in 0.24.0:** player-to-player cash gifts and roadside refuelling, with independent world-owner controls. See [helping other players](PLAYING.md#helping-other-players).

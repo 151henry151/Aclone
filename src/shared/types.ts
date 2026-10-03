@@ -54,6 +54,8 @@ export interface Player {
   roomPantries?: Record<string, Stock>;
   vehicle: number;
   fleet?: number[];
+  fleetState?: Record<number, import('./vehicle-services.ts').VehicleRecord>;
+  canReceiveRepair?: boolean;
   tractorPaint?: string;
   engine: boolean;
   /** Public snapshot projection for audible motors. */
@@ -154,6 +156,9 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  vehicleMaintenance: boolean;
+  vehicleLicences: boolean;
+  requireMapItem: boolean;
   parishOrders: boolean;
   parishOrderBudget: number;
   resetScriptOnDeath: boolean;
@@ -207,6 +212,7 @@ export interface World {
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
   tradePricing?: 1 | 2 | 3;
+  vehicleServicesPricing?: 1;
   livestockPricing?: 1;
   estateRulesVersion?: 1;
   /** Default Puddlewick building types already supplied; never replenish on restart. */

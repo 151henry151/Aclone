@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-10-03
+
+### Added
+
+- Track each vehicle's distance, age since first recorded use and condition. Distance wear modestly affects speed/fuel; garages earn service fees and mechanics use carried steel parts for roadside repairs. Player panels include passenger boarding and disembarking.
+- Let world creators disable wear or require advanced-vehicle qualifications and a carried map. Puddlewick retains free maps and basic driving. NPCs can plan maintenance and obtain maps; existing private prices are preserved.
+
 ## [0.35.0] - 2026-10-03
 
 ### Added

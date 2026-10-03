@@ -1,3 +1,4 @@
+import { vehicleCondition } from '../../shared/vehicle-services.ts';
 import { orderAllowance } from '../../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
@@ -51,6 +52,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           if (b) {
             q.x = b.x;
             q.z = b.z;
+            q.speed = 0;
           }
         } else if (s.kind === 'move') {
           q.x = s.x;
@@ -364,6 +366,41 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       }
     }
     if (b.kind === 'garage') {
+      if (vehicleCondition(p) < 80) {
+        if (p.inventory.steel > 0)
+          add(
+            'maintenance',
+            `Service my vehicle at ${b.name} using 1 Steel and 1000 labour; restores up to 25 condition. Current ${vehicleCondition(p).toFixed(1)}%.`,
+            visit(b, [operation('serviceVehicle', { building: b.id })]),
+          );
+        else {
+          const supplier = shops.find((s) => s.sell.steel > 0 && s.stock.steel > 0);
+          if (supplier)
+            add(
+              'maintenance',
+              `Buy 1 Steel spare part from ${supplier.name} then service my vehicle at ${b.name}.`,
+              [
+                ...visit(supplier, [
+                  action({
+                    type: 'trade',
+                    building: supplier.id,
+                    item: 'steel',
+                    quantity: 1,
+                    direction: 'buy',
+                  }),
+                ]),
+                { kind: 'travel', destination: b.id },
+                operation('serviceVehicle', { building: b.id }),
+              ],
+            );
+        }
+      }
+      if (w.settings.requireMapItem && !p.inventory.parishMap)
+        add(
+          'equipment',
+          `Buy a Parish map at ${b.name} for 1000.`,
+          visit(b, [operation('buyMap', { building: b.id })]),
+        );
       if (p.cash > 20000)
         for (const paint of appearance.paints)
           if (p.tractorPaint !== paint.id)
@@ -480,6 +517,10 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   for (const q of Object.values(w.players).filter(
     (q) => q.id !== p.id && q.online && distance(p, q) < 15,
   )) {
+    if (p.skills.includes('mechanic') && p.inventory.steel > 0 && p.inventory.tools > 0)
+      add('social', `Help repair ${q.name}'s vehicle with 1 Steel.`, [
+        operation('repairVehicle', { player: q.id }),
+      ]);
     if (!p.hitch)
       add('social', `Hitch a ride with nearby ${q.name}.`, [operation('hitch', { player: q.id })]);
     if (p.inventory.bread > 2)

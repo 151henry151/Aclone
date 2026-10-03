@@ -38,5 +38,8 @@
   "maxOfflineDays": 0,
   "parishOrders": false,
   "parishOrderBudget": 120000,
-  "resetScriptOnDeath": true
+  "resetScriptOnDeath": true,
+  "vehicleMaintenance": true,
+  "vehicleLicences": false,
+  "requireMapItem": false
 }

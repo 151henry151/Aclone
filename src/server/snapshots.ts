@@ -1,3 +1,4 @@
+import { repairRecipientReady } from '../shared/vehicle-services.ts';
 import { productionReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { refuelRecipientReady } from '../shared/player-aid.ts';
@@ -94,6 +95,7 @@ export function prepareFrame(w: World): Frame {
         speed: +p.speed.toFixed(2),
         vehicle: p.vehicle,
         canReceiveFuel: refuelRecipientReady(p),
+        canReceiveRepair: repairRecipientReady(p),
         tractorPaint: p.tractorPaint,
         atHome: p.atHome,
         lights: p.lights,

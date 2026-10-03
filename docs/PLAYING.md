@@ -178,3 +178,13 @@ Stock a barn with two cows, bought from Harbour stores or another dairy. Two sta
 A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80% condition, four feed, four water and 20d investment. Keep parents at 60% condition and leave stock space for one hour. Success adds a tradable cow; failure consumes the breeding cost. Shop sales reserve the last two cows, while owners retain stockroom control. Extra cows add upkeep without expanding the stalls.
 
 Inventory lists each food's effects. Milk restores some health; cheese and dairy suppers also increase maximum health for this life. Nutrition changes the usual 60000 ceiling by at most ±6000 and resets on death. Custom foods may have clearly labelled negative effects, but consumption alone cannot reduce health below one. Ordinary hunger/thirst can still kill. Homes prefer a different available food and feed at the usual threshold; sheltered meals receive full food/drink value. Outdoor repeated servings still lose half their hunger/thirst benefit from the third serving.
+
+## Vehicle care and roadside services
+
+Garage **Vehicle service** shows current condition, recorded kilometres and elapsed hours since first recorded use (old vehicles start with no invented history). Ordinary powered travel loses 0.2 condition points per kilometre. Parking, offline time and minigames cause no wear. At zero condition, top speed is 70% and fuel use is 30% higher; you can still reach help. Other damage/armour rules are separate.
+
+Bring **Steel** spare parts from a steelworks or shop. Each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
+
+World owners may require **driver**, **pilot**, or **boatmaster** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. The basic tractor and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick doesn't require these licences.
+
+Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d, and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.

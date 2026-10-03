@@ -1,3 +1,15 @@
+import {
+  vehicleCondition,
+  vehicleRecord,
+  recordTravel,
+  requiredLicence,
+  repairStatus,
+  repairRecipientReady,
+  restoreVehicle,
+  stoppedOutside,
+  SERVICE_FEE,
+  MAP_PRICE,
+} from './vehicle-services.ts';
 import { tendHerd, breedHerd, birthHerd } from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
 import { landscapeAction } from './landscape.ts';
@@ -142,6 +154,7 @@ export function createWorld(
     townLayout: 2,
     tradePricing: 3,
     livestockPricing: 1,
+    vehicleServicesPricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -730,6 +743,50 @@ export function act(w: World, id: string, a: Action): string {
       result = 'Fresh paint. Same dependable tractor.';
       break;
     }
+    case 'buyMap': {
+      const b = nearby(w, p, a.building);
+      requireThat(b.kind === 'garage' && !b.construction, 'Visit a completed garage');
+      requireThat(!(p.inventory.parishMap > 0), 'You already carry a parish map');
+      requireThat(p.cash >= MAP_PRICE, 'Not enough cash');
+      p.cash -= MAP_PRICE;
+      b.investment += MAP_PRICE;
+      stockAdd(p.inventory, 'parishMap', 1);
+      log(w, 'transfer', MAP_PRICE, p.id, b.id, 'map printing');
+      break;
+    }
+    case 'serviceVehicle': {
+      const b = nearby(w, p, a.building);
+      requireThat(b.kind === 'garage' && !b.construction, 'Visit a completed garage');
+      requireThat(
+        repairRecipientReady(p),
+        'Stop an available vehicle outside below full condition',
+      );
+      requireThat(p.inventory.steel > 0, 'Carry Steel spare parts');
+      const fee = b.owner === p.id ? 0 : SERVICE_FEE;
+      requireThat(p.cash >= fee, 'Not enough cash');
+      p.cash -= fee;
+      b.investment += fee;
+      stockAdd(p.inventory, 'steel', -1);
+      restoreVehicle(w, p);
+      log(w, 'transfer', fee, p.id, b.id, 'vehicle service');
+      break;
+    }
+    case 'repairVehicle': {
+      const target = w.players[str(a.player)],
+        status = repairStatus(w, p, target);
+      requireThat(!status.reason, status.reason ?? 'Cannot repair');
+      stockAdd(p.inventory, 'steel', -1);
+      restoreVehicle(w, target);
+      say(
+        w,
+        'Roadside help',
+        `${p.name} repaired your vehicle with Steel spare parts.`,
+        'system',
+        target.id,
+      );
+      say(w, 'Roadside help', `You repaired ${target.name}'s vehicle.`, 'system', p.id);
+      break;
+    }
     case 'vehicle': {
       const slot = num(a.slot, 0, 23, true);
       requireThat(
@@ -737,6 +794,11 @@ export function act(w: World, id: string, a: Action): string {
         'Arena combat uses tractors or walking',
       );
       requireThat(slot !== 7 && slot !== 6, 'Use a robocrow item; ostriches happen by accident');
+      const licence = requiredLicence(w, slot);
+      requireThat(
+        !licence || p.skills.includes(licence),
+        `Learn ${licence} at school to drive this vehicle`,
+      );
       const fleet = p.fleet ?? [0, 5];
       requireThat(
         carry(p, w) <= vehicles[slot].capacity,
@@ -752,6 +814,7 @@ export function act(w: World, id: string, a: Action): string {
       }
       p.fleet = fleet;
       p.vehicle = slot;
+      vehicleRecord(w, p);
       p.speed = 0;
       p.y = terrainHeight(w, p.x, p.z);
       break;
@@ -1117,7 +1180,13 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
       const target = w.players[String(a.player)];
       requireThat(
-        target && target.id !== id && distance(p, target) < 10 && !target.hitch,
+        target &&
+          target.id !== id &&
+          stoppedOutside(p) &&
+          stoppedOutside(target) &&
+          target.vehicle !== 5 &&
+          distance(p, target) < 10 &&
+          Math.abs(p.y - target.y) <= 3,
         'No nearby driver',
       );
       requireThat(
@@ -1334,6 +1403,12 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   if (p.game === 'fishing') p.y = travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
+  const licence = requiredLicence(w, p.vehicle);
+  if (licence && !p.skills.includes(licence)) {
+    p.speed = 0;
+    return;
+  }
+  const condition = w.settings.vehicleMaintenance && !p.game ? vehicleCondition(p) : 100;
   const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] },
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
     water = ground < w.settings.seaLevel;
@@ -1341,7 +1416,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const surface =
     [0, 1, 4].includes(v.mode) && p.y <= ground + 1 ? roadConditions(w) : { speed: 1, grip: 1 };
-  const cap = v.speed * (input.boost ? 1.7 : 1) * surface.speed;
+  const cap = v.speed * (input.boost ? 1.7 : 1) * surface.speed * (0.7 + condition * 0.003);
   p.speed +=
     ((powered ? throttle : 0) * v.acceleration * surface.grip - p.speed * (throttle ? 0.13 : 1.8)) *
     dt;
@@ -1382,6 +1457,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
       ),
     )
   ) {
+    recordTravel(w, p, Math.hypot(nx - p.x, nz - p.z));
     p.x = nx;
     p.z = nz;
     if (v.mode !== 3) p.y = Math.max(p.y, travelHeight(w, p.x, p.z));
@@ -1394,7 +1470,12 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   if (powered)
     p.fuel = Math.max(
       0,
-      p.fuel - (Math.abs(p.speed) / v.speed) * v.fuel * (input.boost ? 2 : 1) * dt,
+      p.fuel -
+        (Math.abs(p.speed) / v.speed) *
+          v.fuel *
+          (input.boost ? 2 : 1) *
+          (1 + (100 - condition) * 0.003) *
+          dt,
     );
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury') {
