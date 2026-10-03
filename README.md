@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.31.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.32.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -16,7 +16,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Live in a persistent world with seasons, storms, day/night lighting, survival and stocked homes that feed you offline. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag.
 - Travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
-- Create worlds with terrain, custom models, uploaded GLB/OBJ models and PNG/JPEG textures, editable recipes, visual behavior rules and optional Lua scripts.
+- Create worlds with terrain, custom models, uploaded GLB/OBJ models and PNG/JPEG textures, editable recipes, visual behavior rules, ordered quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. API billing and operator spending limits are separate from consumer subscriptions.
 - Play with desktop controls or a compact touch interface. Give neighbours money or help refuel their vehicles.
 

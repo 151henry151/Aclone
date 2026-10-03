@@ -1,3 +1,4 @@
+import { questEditor, questForm, guardsEditor } from './quests';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { defaults, items, vehicles, recipes, skills } from '../shared/catalog';
 import { defaultCreator, blueprintSchema, partSchema, type Blueprint } from '../shared/creator';
@@ -22,6 +23,8 @@ export const creatorTabs = [
   'Workshop',
   'Objects',
   'Behaviors',
+  'Quests',
+  'Access rules',
   'Layout',
   'Production',
   'Vehicles',
@@ -31,6 +34,8 @@ let draft: Blueprint | undefined,
   contextWorld = '',
   objectId = '',
   ruleId = '',
+  questId = '',
+  guardId = '',
   buildingId = '',
   recipeId = '',
   vehicleSlot = 0,
@@ -163,6 +168,8 @@ export function creatorPanel(w: World, p: Player, tab: string) {
     draft = undefined;
     objectId = '';
     ruleId = '';
+    questId = '';
+    guardId = '';
     buildingId = '';
     recipeId = '';
     vehicleSlot = 0;
@@ -209,6 +216,8 @@ export function creatorPanel(w: World, p: Player, tab: string) {
     const o = c.objects.find((o) => o.id === objectId);
     return `<p>Place reusable models as trees, obstacles, signs or interactive objects. Buildings that trade/produce goods belong in Buildings/Layout. Solid objects use the collision radius and model height.</p><div class="button-row">${button('New object', 'object', '')}${c.objects.map((o) => button(o.name, 'object', o.id)).join('')}</div><form id="creator-object-form">${field('Name', 'name', o?.name ?? 'My object')}${select('Model', 'model', modelOptions, o?.model)}<div class="settings-grid">${coord('x', o?.x ?? Math.round(p.x + 8))}${coord('z', o?.z ?? Math.round(p.z))}${field('Height above terrain', 'y', o?.y ?? 0, 'number', 'step="0.1"')}${field('Rotation degrees', 'yaw', o?.yaw ?? 0, 'number')}${field('Scale', 'scale', o?.scale ?? 1, 'number', 'min="0.1" max="4" step="0.1"')}${field('Collision / trigger radius', 'radius', o?.radius ?? 2, 'number', 'min="0.2" max="30" step="0.1"')}</div>${field('Interaction button text', 'prompt', o?.prompt ?? 'Interact')}<label class="check"><input type="checkbox" name="solid" ${o?.solid ? 'checked' : ''}>Solid obstacle</label><label class="check"><input type="checkbox" name="visible" ${o?.visible !== false ? 'checked' : ''}>Visible</label><button>${o ? 'Update' : 'Place'} object</button>${o ? button('Duplicate nearby', 'duplicateObject', o.id) + button('Delete object', 'deleteObject', o.id) : ''}</form>`;
   }
+  if (tab === 'Quests') return questEditor(w, questId);
+  if (tab === 'Access rules') return guardsEditor(w, guardId);
   if (tab === 'Behaviors') {
     const r = c.rules.find((r) => r.id === ruleId),
       e = r?.effects[0];
@@ -327,7 +336,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   return '';
 }
 export function creatorClick(action: string, value: string, w: World, send: (a: Action) => void) {
-  const c = structuredClone(w.creator ?? defaultCreator());
+  const c = structuredClone({ ...defaultCreator(), ...w.creator });
   readDraft();
   if (action === 'starter') draft = starters(value);
   if (action === 'model') draft = structuredClone(c.models.find((m) => m.id === value));
@@ -335,6 +344,18 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     draft.parts.push(partSchema.parse({ shape: 'box' }));
   if (action === 'removePart' && draft) draft.parts.splice(Number(value), 1);
   if (action === 'object') objectId = value;
+  if (action === 'quest') questId = value;
+  if (action === 'guard') guardId = value;
+  if (action === 'deleteQuest') {
+    c.quests = c.quests.filter((q) => q.id !== value);
+    send({ type: 'creator', creator: c });
+    questId = '';
+  }
+  if (action === 'deleteGuard') {
+    c.guards = c.guards.filter((g) => g.id !== value);
+    send({ type: 'creator', creator: c });
+    guardId = '';
+  }
   if (action === 'rule') ruleId = value;
   if (action === 'duplicateObject') {
     const o = c.objects.find((o) => o.id === value);
@@ -379,11 +400,29 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
-  const c = structuredClone(w.creator ?? defaultCreator()),
+  const c = structuredClone({ ...defaultCreator(), ...w.creator }),
     d = new FormData(form),
     str = (k: string) => String(d.get(k) ?? ''),
     num = (k: string) => Number(d.get(k));
-  if (form.id === 'creator-model-form') {
+  if (form.id === 'creator-quest-form') {
+    const q = questForm(form, questId);
+    c.quests = [...c.quests.filter((old) => old.id !== q.id), q];
+    questId = q.id;
+  } else if (form.id === 'creator-guard-form') {
+    const g = {
+      id: guardId || crypto.randomUUID(),
+      action: str('action') as 'trade',
+      target: str('target'),
+      skill: str('skill'),
+      item: str('item'),
+      quantity: num('quantity'),
+      variable: str('variable'),
+      minimum: num('minimum'),
+      message: str('message'),
+    };
+    c.guards = [...c.guards.filter((old) => old.id !== g.id), g];
+    guardId = g.id;
+  } else if (form.id === 'creator-model-form') {
     readDraft();
     const model = blueprintSchema.parse(draft);
     c.models = [...c.models.filter((m) => m.id !== model.id), model];

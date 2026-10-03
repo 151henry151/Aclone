@@ -9,11 +9,20 @@ parentPort.on('message', (job) => {
     const before = Object.fromEntries(
       Object.entries(world.players).map(([id, p]) => [id, p.kudos]),
     );
-    const script = new WorldScript(world, source);
+    const script = new WorldScript(world, source, data.id);
     script.emit(event, data);
     parentPort.postMessage({
       messages: world.messages.map((m) => m.text),
       variables: world.scriptVariables,
+      playerVariables:
+        data.id && world.players[data.id]
+          ? {
+              [data.id]: {
+                deaths: world.players[data.id].deaths,
+                values: world.players[data.id].scriptState ?? {},
+              },
+            }
+          : {},
       effects: script.effects,
       kudos: Object.fromEntries(
         Object.entries(world.players).map(([id, p]) => [id, p.kudos - before[id]]),

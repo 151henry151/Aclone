@@ -12,7 +12,7 @@ export class WorldScript {
   private handlers = new Map<string, number[]>();
   private count = 0;
   private world: World;
-  constructor(world: World, source: string) {
+  constructor(world: World, source: string, eventPlayer?: string) {
     this.world = world;
     if (source.length > 16384) throw Error('Script exceeds 16 KiB');
     this.L = lauxlib.luaL_newstate();
@@ -65,6 +65,40 @@ export class WorldScript {
       )
         return lauxlib.luaL_error(L, to_luastring('Variable limit'));
       this.world.scriptVariables[key] = v;
+      return 0;
+    });
+    const player = (L: any) => {
+      const id = this.string(L, 1);
+      if (id !== eventPlayer || !this.world.players[id])
+        lauxlib.luaL_error(L, to_luastring('Queries and progress require the event player'));
+      return this.world.players[id];
+    };
+    this.fn('inventory_count', (L: any) => {
+      lua.lua_pushnumber(L, player(L).inventory[this.string(L, 2)] ?? 0);
+      return 1;
+    });
+    this.fn('has_skill', (L: any) => {
+      lua.lua_pushboolean(L, player(L).skills.includes(this.string(L, 2)));
+      return 1;
+    });
+    this.fn('getplayer', (L: any) => {
+      lua.lua_pushnumber(L, player(L).scriptState?.[this.string(L, 2)] ?? 0);
+      return 1;
+    });
+    this.fn('setplayer', (L: any) => {
+      const p = player(L),
+        key = this.string(L, 2),
+        value = lua.lua_tonumber(L, 3);
+      const state = (p.scriptState ??= {});
+      if (
+        !/^[a-zA-Z0-9_-]{1,40}$/.test(key) ||
+        ['__proto__', 'constructor', 'prototype'].includes(key) ||
+        !Number.isFinite(value) ||
+        Math.abs(value) > 1e12 ||
+        (!Object.hasOwn(state, key) && Object.keys(state).length >= 64)
+      )
+        return lauxlib.luaL_error(L, to_luastring('Player variable limit'));
+      state[key] = value;
       return 0;
     });
     const effect = (L: any, player: string | undefined, value: Record<string, unknown>) => {

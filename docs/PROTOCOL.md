@@ -150,3 +150,7 @@ OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally refere
 ## Parish delivery
 
 `fulfilOrder` accepts `building`, `order` and positive integer `quantity`. The server validates the current round, public collection point/proximity, allowance, escrow and carried stock, then atomically consumes goods and transfers payment.
+
+## Quests
+
+`quest` accepts a `quest` ID and `operation: "accept" | "claim"`. The server verifies the current definition, ordered progress, prior claim and total reward capacity. Definitions live in the creator payload; player counters and Lua progress are recipient-private. Creator action requirements run before normal action validation or mutation.

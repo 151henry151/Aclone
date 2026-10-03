@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-10-03
+
+### Added
+
+- Create ordered quests and item/reputation rewards without scripting, with private saved progress and configurable death resets. Set action requirements that reject trades or other actions before changing money or inventory.
+- Give Lua bounded per-player variables, inventory/skill queries and verified trade, job, qualification, construction and death events. Ignore results from previous lives; emit gathering completion only after cargo is delivered.
+
 ## [0.31.0] - 2026-10-03
 
 ### Added

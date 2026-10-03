@@ -4,6 +4,7 @@ import { Worker } from 'node:worker_threads';
 import type { World } from '../shared/types.ts';
 import { say } from '../shared/simulation.ts';
 export interface ScriptResult {
+  playerVariables?: Record<string, { deaths: number; values: Record<string, number> }>;
   effects?: { player?: string; effect: Record<string, unknown> }[];
   messages: string[];
   variables: Record<string, number>;
@@ -76,8 +77,8 @@ function scriptJob(
   event: string,
   data: Record<string, string | number>,
 ) {
-  // The sandbox exposes only these values. Never clone terrain, property stock,
-  // private inventories or the rest of the simulation just to run a chat hook.
+  // Only the event player exposes private inventory, skills and progress to Lua.
+  // No terrain, building stock, account secrets or other private player state.
   return {
     world: {
       time: world.time,
@@ -88,6 +89,14 @@ function scriptJob(
         Object.entries(world.players).map(([id, p]) => [
           id,
           {
+            ...(id === data.id
+              ? {
+                  deaths: p.deaths,
+                  inventory: { ...p.inventory },
+                  skills: [...p.skills],
+                  scriptState: { ...p.scriptState },
+                }
+              : {}),
             kudos: p.kudos,
             x: p.x,
             z: p.z,
@@ -236,5 +245,13 @@ export class ScriptEvents {
           '. Automatic scripts paused for 60 seconds; the world owner can validate and reload to retry now.',
       );
     }
+  }
+}
+
+/** A worker finishing after death must never resurrect progress from the old life. */
+export function applyPlayerVariables(world: World, result: ScriptResult) {
+  for (const [id, update] of Object.entries(result.playerVariables ?? {})) {
+    const p = world.players[id];
+    if (p && p.deaths === update.deaths) p.scriptState = { ...update.values };
   }
 }

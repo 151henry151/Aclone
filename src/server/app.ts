@@ -32,7 +32,7 @@ import {
 } from '../shared/simulation.ts';
 import { galaxy } from '../shared/catalog.ts';
 import type { World, Input, Action } from '../shared/types.ts';
-import { ScriptEvents, ScriptPool } from './scripts.ts';
+import { ScriptEvents, ScriptPool, applyPlayerVariables } from './scripts.ts';
 import {
   DeltaStream,
   prepareFrame,
@@ -275,7 +275,11 @@ export async function createApp(options: AppOptions) {
     event: string,
     data: Record<string, string | number>,
   ) => {
-    const result = await scriptEvents.run(w, event, data, () => worlds.get(w.id) === w);
+    const current = () =>
+      worlds.get(w.id) === w &&
+      (data.life === undefined || w.players[String(data.id)]?.deaths === data.life);
+    if (!current()) return;
+    const result = await scriptEvents.run(w, event, data, current);
     if (!result) return;
     const effects = (result.effects ?? [])
       .slice(0, 32)
@@ -283,9 +287,11 @@ export async function createApp(options: AppOptions) {
     for (const e of effects) applyEffect(w, e.player ? w.players[e.player] : undefined, e.effect);
     for (const message of result.messages) say(w, 'World script', message);
     w.scriptVariables = result.variables;
+    applyPlayerVariables(w, result);
     for (const [id, kudos] of Object.entries(result.kudos)) {
       if (w.players[id]) w.players[id].kudos += kudos;
     }
+    store.saveWorld(w);
   };
   // Serialize each world's execution AND application. A second event must observe
   // the variables committed by the first; bounded queues prevent trigger floods.

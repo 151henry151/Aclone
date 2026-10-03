@@ -11,6 +11,9 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  quests?: Record<string, import('./quests.ts').QuestProgress>;
+  /** Private world-local Lua progress. */
+  scriptState?: Record<string, number>;
   history?: import('./reports.ts').LifeEvent[];
   departure?: import('./reports.ts').Departure;
   awayReport?: import('./reports.ts').AwayReport;
@@ -149,6 +152,7 @@ export interface Zone {
 export interface Settings {
   parishOrders: boolean;
   parishOrderBudget: number;
+  resetScriptOnDeath: boolean;
   loseSkillsOnDeath: boolean;
   loseInventoryOnDeath: boolean;
   loseJobOnDeath: boolean;

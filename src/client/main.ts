@@ -1,3 +1,4 @@
+import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -817,7 +818,15 @@ function refreshBusinessDetails() {
   form.querySelector('[data-saved-wage]')!.textContent =
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
+let questSignature = '';
 function refreshTradingPrices() {
+  if (panel === 'quests' && world && me) {
+    const key = JSON.stringify([world.creator?.quests, me.quests]);
+    if (key !== questSignature) {
+      questSignature = key;
+      renderPanel();
+    }
+  }
   const expiry = app.querySelector('[data-parish-expires]');
   if (expiry && world?.procurement)
     expiry.textContent = String(
@@ -1109,6 +1118,10 @@ function renderPanel() {
     modal('Parish supply orders', procurementHtml(world, me));
     return;
   }
+  if (panel === 'quests') {
+    modal('Quests', questList(world, me));
+    return;
+  }
   if (panel === 'reports') {
     modal('Journal & reports', journalHtml(world, me));
     return;
@@ -1116,7 +1129,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -1339,6 +1352,9 @@ function buildingWindow(b: Building) {
   if (
     tab === 'Main' &&
     (world.creator?.rules.some((r) => r.enabled && r.event === 'interact' && r.target === b.id) ||
+      world.creator?.quests?.some((q) =>
+        q.steps.some((s) => s.event === 'interact' && (!s.target || s.target === b.id)),
+      ) ||
       world.scriptInteraction)
   )
     html += button(
@@ -1458,6 +1474,7 @@ app.addEventListener('click', async (e) => {
     const panels = [
       'menu',
       'reports',
+      'quests',
       'procurement',
       'mobile-actions',
       'directory',

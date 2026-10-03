@@ -10,7 +10,7 @@ Aclone is a playable development alpha, not complete historical parity or a stab
 - **Vehicles/activities:** 24 vehicle slots, five main control families, purchased fleets, fuel/boost, walking, robocrows, ostriches, six-player Hornball, racing/lap records, fishing and two-player Ultrakricket.
 - **Combat:** six weapons, armour, safe zones, energy/ammunition, charged javelins, grenades/mines, blast damage, deathmatch/capture/CTF, teams and respawns.
 - **Space:** seven systems, routes, saved jumps, ships/upgrades, shared station stocks, credit conversion, courier contracts, surveys and alien-ship unlocks. Trusted-host federation carries identity with separate local progress.
-- **Creator tools:** presets, terrain, buildings, zones, recipes, vehicle tuning, uploaded/primitive visuals, interactive objects, visual rules, Lua and portable designs.
+- **Creator tools:** presets, terrain, buildings, zones, recipes, vehicle tuning, uploaded/primitive visuals, interactive objects, visual rules, ordered quests, pre-action requirements, persistent Lua progress and portable designs.
 - **Presentation:** original scenery, varied buildings/trees, animated humans, industrial spacecraft/robocrows, storms, snow/traction, stars/twin moons, local lights, smoke and synthesized positional audio.
 - **Interface/accounts:** named map, directories, chat scrollback, saved form drafts, desktop/touch layouts, optional passwords, verified-email recovery, pilot keys, backups and bounded restart catch-up.
 - **Optional AI:** 19 distinct residents, shared adaptive Jev decisions, OpenAI/Claude conversation, durable scoped memory, schedules, supplies/homecoming, validated delivery/employment agreements and shared spending limits.
@@ -24,7 +24,7 @@ Current defaults and operations: [Playing](PLAYING.md), [Economy](ECONOMY.md), [
 - Robocrows use one built-in drone type, not eight ranks. Detailed vehicle weapon loadouts, extra reward systems and sustained competitive balance need work.
 - Town membership, first-candidate mayor and tax exist; full elections, leases, wars, territory, turrets and protected town zoning are incomplete. Tribes/families store names; richer membership, negotiated barter and dedicated hitch/item-gift UI are unfinished.
 - Creators cannot paint roads, upload heightmaps/animated character rigs, define arbitrary inventory items, run shader scripts or arbitrary client JavaScript. Uploaded audio is preview/download only; world radio and scripted books remain open.
-- Lua lacks transaction cancellation, custom OSD, cutscenes, player variables, arbitrary admin commands and the full historical event catalogue.
+- Lua lacks asynchronous transaction cancellation, custom OSD, cutscenes, arbitrary admin commands and the full historical event catalogue.
 - Farming lacks livestock, perennial dormancy and exact historical crop/diet/death balance. Waterworks abstract fuel-powered pumping; no plumbing, purity or reservoirs. Homes/rooms use exterior shelter, not interior maps.
 - Space is a map/trading layer, not cockpit flight. NPC candidates cover ordinary action families but bounded quantities/routes, not exhaustive plans or expert combat. General errands, loans and autonomous negotiation are not executable chat agreements.
 

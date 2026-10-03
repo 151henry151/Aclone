@@ -1,3 +1,4 @@
+import { checkActionGuards, questAction, questEvent, resetQuests } from './quests.ts';
 import { fulfilOrder, refreshOrders, migrateProcurement } from './procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { accounts, recordMoney, recordLife, addQuantities } from './reports.ts';
@@ -10,7 +11,13 @@ import {
 } from './loans.ts';
 import { propertyQuote, releaseEstate, migrateEstates } from './property.ts';
 import { harbourSupply, emergencyImport } from './harbour-supply.ts';
-import { creatorAction, creatorEvent, tickCreator, creatorBlocksSegment } from './creator.ts';
+import {
+  creatorAction,
+  creatorEvent,
+  tickCreator,
+  creatorBlocksSegment,
+  queueCreatorScript,
+} from './creator.ts';
 import { terrainHeight } from './terrain.ts';
 import { fishingDock, travelHeight } from './dock';
 export { terrainHeight } from './terrain.ts';
@@ -287,6 +294,8 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  checkActionGuards(w, p, a);
+  if (type === 'quest') return questAction(w, p, a);
   if (
     ['creator', 'creatorBuilding', 'creatorRemove', 'creatorRecipe', 'interactObject'].includes(
       type,
@@ -358,6 +367,15 @@ export function act(w: World, id: string, a: Action): string {
         stockAdd(p.inventory, item, -n);
         log(w, 'transfer', total, b.id, id, 'sale', { building: b.id, item, quantity: n });
       }
+      questEvent(w, p, buying ? 'buy' : 'sell', b.id, item, n);
+      queueCreatorScript(w, 'TradeComplete', {
+        id,
+        building: b.id,
+        item,
+        quantity: n,
+        amount: total,
+        direction: a.direction as string,
+      });
       addQuantities(buying ? accounts(w, b).sold : accounts(w, b).bought, { [item]: n });
       result = `${buying ? 'Bought' : 'Sold'} ${n} ${items[item].name} for ${money(total, w.settings.denariiPerSheckle)}.`;
       recordLife(w, p, {
@@ -540,6 +558,8 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (p.job !== b.id)
         recordLife(w, p, { kind: 'job', building: b.id, text: `Took a job at ${b.name}` });
+      if (p.job !== b.id) questEvent(w, p, 'job', b.id);
+      queueCreatorScript(w, 'JobChanged', { id, building: b.id, previous: p.job ?? '' });
       p.job = b.id;
       p.activeUntil = w.time + 2 * productionInterval(w, b);
       result =
@@ -551,6 +571,7 @@ export function act(w: World, id: string, a: Action): string {
         const b = w.buildings.find((b) => b.id === p.job);
         if (b) b.employees = b.employees.filter((e) => e !== id);
         recordLife(w, p, { kind: 'job', building: p.job, text: `Left job at ${b?.name ?? p.job}` });
+        queueCreatorScript(w, 'JobChanged', { id, building: '', previous: p.job });
         delete p.job;
       }
       break;
@@ -889,6 +910,8 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (Object.values(b.construction).every((n) => !n)) {
         delete b.construction;
+        questEvent(w, p, 'build', b.kind);
+        queueCreatorScript(w, 'BuildingComplete', { id, building: b.id, kind: b.kind });
         result = 'Building complete. Civilisation marches on.';
       }
       break;
@@ -1354,6 +1377,9 @@ function kill(w: World, p: Player, comic = false, cause = 'injury') {
         : `${p.name} has become an ostrich. These things happen.`,
     );
   } else {
+    resetQuests(w, p);
+    if (w.settings.resetScriptOnDeath) p.scriptState = {};
+    queueCreatorScript(w, 'PlayerDeath', { id: p.id, cause, deaths: p.deaths });
     p.age = 18;
     if (w.settings.loseSkillsOnDeath) {
       p.skills = [];
@@ -1518,15 +1544,19 @@ export function advance(w: World, seconds: number) {
     }
     if (p.learning && p.learning.end <= end) {
       p.skills.push(p.learning.skill);
+      questEvent(w, p, 'study', p.learning.skill);
+      queueCreatorScript(w, 'SkillLearned', { id: p.id, skill: p.learning.skill });
       recordLife(w, p, { kind: 'qualification', text: `Qualified as ${p.learning.skill}` });
       say(w, 'School', `${p.name} qualified as ${p.learning.skill}.`);
       delete p.learning;
     }
     if (p.task && p.task.end <= end) {
       const t = p.task;
-      if (p.online) creatorEvent(w, 'task', p, t.building ?? t.resource ?? '');
       if (t.kind === 'gather') {
-        finishGather(p);
+        if (finishGather(p)) {
+          questEvent(w, p, 'gather', t.resource ?? '', t.item, t.amount);
+          if (p.online) creatorEvent(w, 'task', p, t.resource ?? '');
+        }
         continue;
       }
       delete p.task;
@@ -1540,6 +1570,7 @@ export function advance(w: World, seconds: number) {
           t.kind === 'logging' ? 'logs' : t.kind === 'quarrying' ? 'stone' : 'tools',
           t.kind === 'craft' ? 1 : 3,
         );
+      if (p.online) creatorEvent(w, 'task', p, t.building ?? t.resource ?? '');
     }
     if (p.hitch) {
       const driver = w.players[p.hitch];

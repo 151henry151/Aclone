@@ -31,7 +31,7 @@ Handlers use `on(eventName, function(e) ... end)`.
 - No OS, I/O, debug, package, require, filesystem, JavaScript bridge, network, dynamic loading, coroutines or string library (ordinary strings still work).
 - Globals reset each event: persist numbers through getvar/setvar; avoid top-level effects. Replaced-world/script results are discarded.
 
-This is a smaller API than the historical catalogue. No arbitrary admin commands, transaction cancellation, player variables, custom OSD or cutscenes.
+This is a smaller API than the historical catalogue. No arbitrary admin commands, asynchronous Lua transaction cancellation, custom OSD or cutscenes. Use synchronous **Access rules** to reject actions safely before mutation.
 
 ## Creator effects and events (0.20.0)
 
@@ -79,12 +79,32 @@ on("ObjectInteract", function(e)
 end)
 ```
 
-This example deliberately uses a station-wide cooldown. Per-player cooldowns
-are already available without code in **Behaviors**. Do not build an unbounded
-map of players in Lua: the persistent variable budget is 64 numbers.
+This example deliberately uses a station-wide cooldown. Per-player cooldowns are available without code in **Behaviors**. Use `getplayer`/`setplayer` for saved individual progress; each player has a separate 64-number budget.
 
 ## Effect ordering
 
 At most 32 effects/event; validate the whole batch before applying any. Invalid batches use normal automatic-event backoff. Execution/application are serialized per world so jobs see committed variables; its queue caps at 32 and drops overflow. The host still has only two workers.
 
 Reload previews ScriptReload in isolation, validates results, then installs source without applying preview effects. No-code effects apply first; queued Lua observes their resulting state. No cross-galaxy credentials or travel-ticket privileges.
+
+## Player progress and gameplay events
+
+`getplayer(e.id, key)` reads a world-local number (default zero); `setplayer(e.id, key, value)` saves it. Keys use 1–40 letters/digits/underscores/hyphens; each player has 64 keys, finite values bounded to ±10¹². `inventory_count(e.id, item)` and `has_skill(e.id, skill)` query the event player's snapshot. These four functions accept only the triggering player's ID, not another player. Progress persists through disconnect/restart; `resetScriptOnDeath` defaults true. Queued events and results from previous lives are discarded.
+
+Additional events, after successful gameplay:
+
+- `TradeComplete`: id, building, item, quantity, amount (hundredths of a denarius), direction (`buy`/`sell`).
+- `JobChanged`: id, building, previous; empty building means quitting. Renewal is also reported.
+- `SkillLearned`: id, skill.
+- `BuildingComplete`: id, building, kind.
+- `PlayerDeath`: id, cause, deaths; ordinary death only, after progress reset.
+
+```lua
+on("TradeComplete", function(e)
+  if e.direction == "sell" and e.item == "wheat" then
+    setplayer(e.id, "wheatDelivered", getplayer(e.id, "wheatDelivered") + e.quantity)
+  end
+end)
+```
+
+Events observe current state when their serialized worker starts, not a frozen transaction history; use event quantities/prices for the completed transaction. Existing queue/deadline limits apply and overflow/backoff can drop events. Use the authoritative no-code quest objectives for guaranteed progression, not Lua as a financial ledger. Action requirements read the last committed progress value; workers never suspend a trade mid-transaction.

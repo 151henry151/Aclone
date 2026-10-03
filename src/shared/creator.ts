@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
+import { questSchema, guardSchema, questEvent } from './quests.ts';
 import type { World, Player, Action } from './types.ts';
 import { items, vehicles, skills } from './catalog.ts';
 import { terrainHeight } from './terrain.ts';
@@ -119,6 +120,8 @@ export const creatorSchema = z.object({
     .enum(['natural', 'clear', 'rain', 'snow', 'thunderstorm', 'snowstorm'])
     .default('natural'),
   arena: arenaSchema.default(() => arenaSchema.parse({})),
+  quests: z.array(questSchema).max(32).default([]),
+  guards: z.array(guardSchema).max(32).default([]),
   models: z.array(blueprintSchema).max(64).default([]),
   objects: z.array(objectSchema).max(128).default([]),
   rules: z.array(ruleSchema).max(64).default([]),
@@ -131,7 +134,7 @@ export type CreatorRule = z.infer<typeof ruleSchema>;
 export const defaultCreator = () => creatorSchema.parse({});
 export function validateCreator(w: World, input: unknown) {
   const c = creatorSchema.parse(input);
-  for (const list of [c.models, c.objects, c.rules])
+  for (const list of [c.models, c.objects, c.rules, c.quests, c.guards])
     if (new Set(list.map((v) => v.id)).size !== list.length)
       throw Error('Each object, model and rule needs a unique ID');
   for (const m of c.models)
@@ -183,7 +186,16 @@ const eventQueues = new WeakMap<
 export function queueCreatorScript(w: World, event: string, data: Record<string, string | number>) {
   if (!w.script.includes(event)) return;
   const queue = eventQueues.get(w) ?? [];
-  if (queue.length < 32) queue.push({ event, data });
+  if (queue.length < 32)
+    queue.push({
+      event,
+      data: {
+        ...data,
+        ...(typeof data.id === 'string' && w.players[data.id]
+          ? { life: w.players[data.id].deaths }
+          : {}),
+      },
+    });
   eventQueues.set(w, queue);
 }
 export function drainCreatorScripts(w: World) {
@@ -366,6 +378,7 @@ export function creatorAction(w: World, p: Player, a: Action) {
     )
       throw Error('Approach this object to interact');
     creatorEvent(w, 'interact', p, o.id);
+    questEvent(w, p, 'interact', o.id);
     return '';
   }
   if (w.owner !== p.id) throw Error('World owner required');

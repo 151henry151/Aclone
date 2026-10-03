@@ -37,5 +37,6 @@
   "deathBankRetention": 1,
   "maxOfflineDays": 0,
   "parishOrders": false,
-  "parishOrderBudget": 120000
+  "parishOrderBudget": 120000,
+  "resetScriptOnDeath": true
 }

@@ -128,7 +128,7 @@ test('entry and timer rules run once per boundary/cooldown, exclude offline play
   w.script = 'on("ObjectInteract", function(e) end)';
   creatorEvent(w, 'interact', guest, 'oak');
   assert.deepEqual(drainCreatorScripts(w), [
-    { event: 'ObjectInteract', data: { id: guest.id, target: 'oak' } },
+    { event: 'ObjectInteract', data: { id: guest.id, target: 'oak', life: guest.deaths } },
   ]);
   assert.equal(drainCreatorScripts(w).length, 0);
 });

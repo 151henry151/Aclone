@@ -162,3 +162,7 @@ A building’s **Statement** tab shows current production blockers. Owners and w
 ## Parish supply orders
 
 At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. Each order limits your share during its first half-hour and expires after one real hour.
+
+## Creator quests
+
+World / F9 → **Quests** lists a world's stories and objectives. Accept one, follow its steps in order, then collect the reward with enough cargo space. Each quest states whether death resets it. World creators can also require items, qualifications or progress before allowing certain actions; a rejected action explains what is missing.

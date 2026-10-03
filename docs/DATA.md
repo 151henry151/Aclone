@@ -97,3 +97,7 @@ Business accounts persist on buildings; personal history (80 events), departure 
 ## Procurement persistence
 
 `World.procurement` retains the funded round, delivery counts and supplier allowances across saves. `procurementVersion` applies the one-time Puddlewick enablement. Hourly grants and expired escrow appear explicitly in the ledger; purchases do not alter shop prices or stock.
+
+## Creator progress
+
+World creator definitions include up to 32 quests and 32 action requirements. Private `Player.quests` records ordered objective counters, definition identity and reward claims. Private `Player.scriptState` holds up to 64 numeric variables. Neither is exported in portable world designs or other players' snapshots. Both persist in existing world JSON, without an SQL schema change.
