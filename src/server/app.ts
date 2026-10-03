@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { completePuddlewick } from './parish-services.ts';
 import { Federation, type FederationConfig } from './federation.ts';
 import { applyDesign, applyPreset, configureRules, exportDesign } from './world-design.ts';
 import { validateVisualAsset } from './asset-validation.ts';
@@ -122,6 +123,7 @@ export async function createApp(options: AppOptions) {
       store.saveWorld(w);
     }
   }
+  for (const world of worlds.values()) if (completePuddlewick(world)) store.saveWorld(world);
   const accounts = new Accounts(
     store,
     universe,

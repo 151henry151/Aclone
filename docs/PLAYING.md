@@ -371,3 +371,29 @@ under Other galaxies. Confirm arrival on the destination. Your character’s nam
 and home identity travel; money, items, skills and property stay saved separately
 on each host. Returning to your home account requires its saved pilot key or
 normal sign-in. See [travelling between galaxies](GALAXIES.md#player-journey).
+
+## Puddlewick services
+
+Version 0.21.0 fills out the default, server-owned Puddlewick with all 40 current
+catalogue building types. This includes a **Stonemason** (3 stone → 2 stone blocks)
+and **Shoreline waterworks** (1 fuel → 12 water), each with a ten-minute batch at
+default production speed. Find them with **M** or the Parish directory. Locations
+are selected around existing buildings and roads; the waterworks has a dry
+foundation and an intake reaching the sea.
+
+New production businesses have finite opening materials, products and wage
+capital. Learn the matching skill at school (**mason** or **pump operator**) and
+take a job there for full-speed production. Supply inputs through ordinary trade;
+unowned businesses can be purchased and managed. Existing businesses are not
+restocked or refinanced by this update, including player-owned mills and farms.
+Hotels and B&Bs need an owner with the innkeeper skill to open bookings. Catalogue
+objects such as noticeboards, portals and turrets are also present; adding them
+does not implement any previously unfinished special behavior.
+
+After a pull/rebuild/restart, the server adds missing types to an existing
+Puddlewick once. It preserves player properties, stock, prices and wages, and
+avoids roads, gathering grounds, activity areas, parked characters, no-build
+zones and custom solid scenery. Completed additions are saved: later demolition
+or depleted stock does not cause a replacement or refill. If edited terrain or
+occupied land leaves no suitable site, that type stays pending until a future
+restart after space becomes available. Other worlds are not expanded.

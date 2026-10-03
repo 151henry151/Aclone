@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-02
+
+### Added
+
+- Complete the default Puddlewick parish with every missing catalogue building, including a stonemason and a shoreline waterworks. New production businesses receive finite opening supplies and wage funding and remain available to buy. Startup upgrades preserve existing properties and prices, avoid occupied/protected plots and remember completed additions without refilling or recreating them on restart.
+
 ## [0.20.0] - 2026-10-02
 
 ### Added

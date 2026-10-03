@@ -4,6 +4,27 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.21.0
+
+Back up the database, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, restart the service and refresh browser clients.
+No new environment variables or dependencies are required. Production deployment
+remains operator-managed.
+
+Startup adds the missing catalogue building types to the default server-owned
+Puddlewick, including the stonemason and shoreline waterworks. New producers have
+finite opening supplies and wage capital. Existing businesses retain their owners,
+stock, prices, wages and locations. The server saves a completion record so
+restarts do not refill stock or recreate demolished buildings. Types without a
+safe site remain pending for a future restart; other worlds remain unchanged.
+
+Open the parish map with **M** to find the new businesses. See
+[Puddlewick services](PLAYING.md#puddlewick-services) for production and staffing.
+Validation: 21 focused tests, the browser catalogue/production check, TypeScript,
+formatting and the `/aclone` production build passed. For rollback, restore the
+pre-upgrade database as well as the code to remove the new properties and their
+opening capital together.
+
 ## Deploying 0.20.0
 
 Back up the SQLite database and uploaded assets, pull, run `npm ci`, rebuild with

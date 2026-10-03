@@ -163,6 +163,8 @@ export interface World {
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
   tradePricing?: 1 | 2 | 3;
+  /** Default Puddlewick building types already supplied; never replenish on restart. */
+  parishServices?: string[];
   schemaVersion: 1;
   id: string;
   name: string;

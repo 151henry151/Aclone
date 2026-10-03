@@ -246,3 +246,15 @@ Leave `GALAXY_URL` unset to keep federation disabled. The signing key lives in t
 SQLite backup; never share it or copy it into client settings. Read the full
 [galaxy setup, trust and recovery guide](GALAXIES.md) before connecting hosts.
 Existing games require no peer configuration and retain all local progress.
+
+## Default parish services (0.21.0)
+
+Startup completes missing building types only in the default `puddlewick` economy
+world owned by `server`. Back up, pull, rebuild for the deployment's `BASE_PATH`
+and restart normally. No environment change or manual database edit is required.
+The server saves successful additions and a per-type completion record before
+accepting players. Existing businesses, including owned properties and custom
+prices, are left intact. Finite opening stock and production capital are supplied
+only for newly added businesses. There is no automatic replenishment on restart.
+Invalid or occupied sites are skipped and retried at a later startup. Player-made
+worlds and imported designs retain their own layouts. See [Puddlewick services](PLAYING.md#puddlewick-services).
