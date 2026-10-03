@@ -223,6 +223,7 @@ export interface World {
   tradePricing?: 1 | 2 | 3;
   vehicleServicesPricing?: 1;
   livestockPricing?: 1;
+  animalPricing?: 1;
   estateRulesVersion?: 1;
   /** Default Puddlewick building types already supplied; never replenish on restart. */
   parishServices?: string[];

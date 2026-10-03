@@ -1,3 +1,4 @@
+import { herdSpec, herdNeeds } from '../shared/livestock';
 import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
 let socialPane = 'letters';
@@ -1358,8 +1359,11 @@ function buildingWindow(b: Building) {
     }
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
-    if (b.kind === 'dairy')
-      html += `<h3>Dairy herd</h3><p>${b.stock.cows ?? 0} cows · ${b.herdCondition ?? 100}% condition. Two cows fill the milking stalls; extras are reserves. Every cow consumes one feed and one water each production check, even when output is full or work is unattended. Qualified active workers restore condition; neglect can kill cattle. Milk needs at least 40% condition.</p>${b.breedingEnd ? `<p>Calf due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep herd condition above 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 feed + 4 water + 20d · one hour</button></form>` : ''}`;
+    const herd = herdSpec(b);
+    if (herd) {
+      const needs = herdNeeds(b);
+      html += `<h3>${b.kind === 'dairy' ? 'Dairy herd' : 'Livestock'}</h3><p>${b.stock[herd.animal] ?? 0} ${herd.animal} · ${b.herdCondition ?? 100}% condition. Production needs ${herd.minimum} animals and at least 40% condition. The whole herd consumes ${needs.feed} feed and ${needs.water} water each production check, including when output is full. Qualified workers restore condition; neglect can kill animals.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 feed + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
+    }
     if (b.kind === 'home')
       html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (roomCount(b)) {

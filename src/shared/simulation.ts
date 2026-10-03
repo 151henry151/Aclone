@@ -11,7 +11,7 @@ import {
   SERVICE_FEE,
   MAP_PRICE,
 } from './vehicle-services.ts';
-import { tendHerd, breedHerd, birthHerd } from './livestock.ts';
+import { herdSpec, tendHerd, breedHerd, birthHerd } from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
 import { landscapeAction } from './landscape.ts';
 import {
@@ -155,6 +155,7 @@ export function createWorld(
     townLayout: 2,
     tradePricing: 3,
     livestockPricing: 1,
+    animalPricing: 1,
     vehicleServicesPricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
@@ -378,10 +379,10 @@ export function act(w: World, id: string, a: Action): string {
       const day = Math.floor(w.time / 600);
       const imports = p.importDay === day ? p.imports : 0;
       if (buying) {
-        if (b.kind === 'dairy' && item === 'cows')
+        if (herdSpec(b)?.animal === item)
           requireThat(
-            (b.stock.cows ?? 0) - n >= 2,
-            'The dairy keeps two breeding cows; only surplus cattle are for sale',
+            (b.stock[item] ?? 0) - n >= herdSpec(b)!.minimum,
+            `This herd keeps ${herdSpec(b)!.minimum} breeding ${item}; only surplus animals are for sale`,
           );
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
@@ -1588,9 +1589,7 @@ function cycle(w: World, b: Building, at: number) {
   for (let i = 0; i < times; i++) {
     if (!productionSupplied(b, r, staff.length, true)) return;
     const inputs = Object.fromEntries(
-      Object.entries(r.inputs).filter(
-        ([id]) => b.kind !== 'dairy' || !['feed', 'water'].includes(id),
-      ),
+      Object.entries(r.inputs).filter(([id]) => !herdSpec(b) || !['feed', 'water'].includes(id)),
     );
     for (const [item, n] of Object.entries(inputs)) stockAdd(b.stock, item, -n);
     for (const [item, n] of Object.entries(r.outputs)) stockAdd(b.stock, item, n);

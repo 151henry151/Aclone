@@ -304,5 +304,41 @@
     "skill": "cook",
     "seconds": 600,
     "tier": 0
+  },
+  "sheepfold": {
+    "inputs": {
+      "feed": 2,
+      "water": 2
+    },
+    "outputs": {
+      "wool": 4
+    },
+    "skill": "livestock farmer",
+    "seconds": 600,
+    "tier": 0
+  },
+  "piggery": {
+    "inputs": {
+      "feed": 4,
+      "water": 2
+    },
+    "outputs": {
+      "compost": 5
+    },
+    "skill": "livestock farmer",
+    "seconds": 600,
+    "tier": 0
+  },
+  "henhouse": {
+    "inputs": {
+      "feed": 2,
+      "water": 2
+    },
+    "outputs": {
+      "eggs": 6
+    },
+    "skill": "livestock farmer",
+    "seconds": 600,
+    "tier": 0
   }
 }

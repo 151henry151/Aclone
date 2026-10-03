@@ -1,3 +1,4 @@
+import { LivestockScene } from './livestock-scene';
 import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
 import { waitForTextures, failedTextures } from './materials';
 import { addLandscape } from './landscape-scene';
@@ -185,6 +186,7 @@ export class GameScene {
   private sky = countrySky();
   private precipitation = new Precipitation();
   private fields = new FarmFields();
+  private livestock = new LivestockScene();
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
   private waterBase?: Float32Array;
@@ -442,10 +444,12 @@ export class GameScene {
       this.lastWorld = world.id;
       this.plumes.clear();
       this.fields.reset();
+      this.livestock.reset();
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
     this.fields.update(world, this.me);
+    this.livestock.update(world, this.me);
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
       let mesh = this.meshes.get(p.id);
@@ -598,6 +602,7 @@ export class GameScene {
     dispose(this.land);
     this.land.clear();
     this.fields.reset();
+    this.livestock.reset();
     this.buildingMeshes = [];
     this.labelsHidden = false;
     this.renderer.shadowMap.needsUpdate = true;
@@ -826,6 +831,7 @@ export class GameScene {
             seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
           }
     });
+    if (!this.livestock.group.parent) this.actors.add(this.livestock.group);
     if (!this.fields.group.parent) this.actors.add(this.fields.group);
     if (!this.combatMarkers.parent) this.actors.add(this.combatMarkers);
 
@@ -1016,6 +1022,7 @@ export class GameScene {
     if (this.world && this.me) {
       const w = this.world,
         p = this.me;
+      this.livestock.animate(this.elapsed);
       const motionTime = this.motionClock.sample(now);
       for (const mesh of this.meshes.values()) {
         const pose = (mesh.userData.motion as MotionTrack).sample(motionTime)!;

@@ -28,7 +28,7 @@ Current defaults and operations: [Playing](PLAYING.md), [Economy](ECONOMY.md), [
 - Town membership, first-candidate mayor and tax exist; full elections, leases, wars, territory, turrets and protected town zoning are incomplete. Tribes/families store names; richer membership, negotiated barter and dedicated hitch/item-gift UI are unfinished.
 - Creators cannot paint roads, upload heightmaps/animated character rigs, run shader scripts or arbitrary client JavaScript. Uploaded audio is preview/download only; world radio and scripted books remain open.
 - Lua lacks asynchronous transaction cancellation, custom OSD, cutscenes, arbitrary admin commands and the full historical event catalogue.
-- Farming lacks livestock, perennial dormancy and exact historical crop/diet/death balance. Waterworks abstract fuel-powered pumping; no plumbing, purity or reservoirs. Homes/rooms use exterior shelter, not interior maps.
+- Livestock has visible cows/sheep/pigs/chickens, care, breeding and production; individual ages, sexes and genetics are abstracted. Farming still lacks perennial dormancy and exact historical crop/diet/death balance. Waterworks abstract fuel-powered pumping; no plumbing, purity or reservoirs. Homes/rooms use exterior shelter, not interior maps.
 - Space is a map/trading layer, not cockpit flight. NPC candidates cover ordinary action families but bounded quantities/routes, not exhaustive plans or expert combat. General errands, loans and autonomous negotiation are not executable chat agreements.
 
 ## Deliberately not invented

@@ -1,3 +1,4 @@
+import { herdSpec } from '../src/shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -65,7 +66,8 @@ test('every actual production batch pays its input suppliers and worker and reta
       b.z = 144;
       b.rotation = waterworksSite(w, b)!.rotation;
     }
-    b.stock = kind === 'dairy' ? { cows: 2 } : {}; // Retained livestock is startup capital, not a batch input.
+    const herd = herdSpec(b);
+    b.stock = herd ? { [herd.animal]: herd.minimum } : {}; // Retained livestock is startup capital, not a batch input.
     b.investment = 10000000;
     w.buildings = [b];
     const supplier = addPlayer(w, 'supplier', 'Supplier'),

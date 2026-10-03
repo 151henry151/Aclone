@@ -143,3 +143,7 @@ Actual renderer captures; many use staged disposable worlds. They demonstrate vi
 - [Wood cottage](screenshots/wood-cottage.png)
 - [Woodland clearing](screenshots/woodland-clearing.png)
 - [Woodland](screenshots/woodland.png)
+
+## Livestock
+
+Original articulated cow, sheep, pig and chicken meshes use smooth anatomy, procedural coat/fleece/feather detail and shared instanced rendering. No downloaded animal assets. `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:livestock` captures close-ups of the actual meshes with preview lighting in `test-results/livestock/`; the browser livestock test captures the live game.

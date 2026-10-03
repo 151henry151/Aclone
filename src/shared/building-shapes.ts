@@ -86,6 +86,26 @@ export function buildingPlan(b: {
       wall = '#d6c1a1';
       trim = '#435a57';
       break;
+    case 'dairy':
+      volumes = [volume(9, 12, 3.3, 2.2), volume(3, 7, 2.5, 0.7, 'shed', 6, -1)];
+      wall = '#b3a58a';
+      trim = '#59625a';
+      break;
+    case 'sheepfold':
+      volumes = [volume(8, 7, 2.6, 1.8), volume(4, 5, 2.2, 0.5, 'shed', 5, 0)];
+      wall = '#998971';
+      trim = '#485347';
+      break;
+    case 'piggery':
+      volumes = [volume(10, 6, 2.5, 1.3)];
+      wall = '#b8a489';
+      trim = '#695b4c';
+      break;
+    case 'henhouse':
+      volumes = [volume(5, 4, 2.2, 1.2)];
+      wall = '#ae7852';
+      trim = '#605346';
+      break;
     case 'composter':
       volumes = [volume(5, 5, 2.6, 0.7, 'shed'), volume(5, 4, 1, 0, 'flat', 5, 0)];
       wall = '#8c9772';
@@ -148,7 +168,6 @@ export function buildingPlan(b: {
       wall = '#b9b5a4';
       trim = '#705b49';
       break;
-    case 'dairy':
     case 'farm':
       volumes = [volume(10.5, 7.8, 3.8, 2.8)];
       wall = '#9d624b';
@@ -236,7 +255,19 @@ export function buildingPlan(b: {
       volumes = [volume(7, 5.8, 2.8, 1.6)];
   }
   let siding: 'stone' | 'wood' = 'stone';
-  if (['bnb', 'teaHouse', 'carpenter', 'composter'].includes(b.kind)) siding = 'wood';
+  if (
+    [
+      'bnb',
+      'teaHouse',
+      'carpenter',
+      'composter',
+      'dairy',
+      'sheepfold',
+      'piggery',
+      'henhouse',
+    ].includes(b.kind)
+  )
+    siding = 'wood';
   if (b.kind === 'home') {
     const chosen =
       cottageStyle(b.style ?? '') ?? appearance.cottages[seed % appearance.cottages.length];

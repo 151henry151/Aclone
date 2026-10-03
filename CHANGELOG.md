@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-10-03
+
+### Added
+
+- Visible articulated cows, sheep, pigs and chickens with coat detail and natural idle movement, tied to actual livestock stock. Share geometry and bound nearby herds to keep rendering costs predictable.
+- Player-built sheepfolds, pig farms and henhouses; feeding, condition, breeding, wool, manure compost and eggs, with profitable default recipes and NPC operating guidance. Public ports gain starter animal quotes and stock once; player-owned prices and existing herds are preserved.
+
 ## [0.39.2] - 2026-10-03
 
 ### Fixed

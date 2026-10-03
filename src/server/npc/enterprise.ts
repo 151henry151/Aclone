@@ -1,4 +1,4 @@
-import { herdNeeds, herdReady } from '../../shared/livestock.ts';
+import { herdSpec, herdNeeds, herdReady } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { loanQuote } from '../../shared/loans.ts';
 import { operation } from './player-operations.ts';
@@ -39,12 +39,17 @@ export function businessEstimate(w: World, b: Building) {
   }
   const wages = b.wage * Math.max(1, productionStaff(w, b, w.time).length);
   let setup = 0;
-  if (b.kind === 'dairy' && (b.stock.cows ?? 0) < 2) {
+  const herd = herdSpec(b);
+  if (herd && (b.stock[herd.animal] ?? 0) < herd.minimum) {
     const sellers = w.buildings.filter(
-      (s) => s.sell.cows > 0 && (s.stock.cows ?? 0) >= 2 - (b.stock.cows ?? 0),
+      (s) =>
+        s.sell[herd.animal] > 0 &&
+        (s.stock[herd.animal] ?? 0) >= herd.minimum - (b.stock[herd.animal] ?? 0),
     );
     if (!sellers.length) return;
-    setup = (2 - (b.stock.cows ?? 0)) * Math.min(...sellers.map((s) => s.sell.cows));
+    setup =
+      (herd.minimum - (b.stock[herd.animal] ?? 0)) *
+      Math.min(...sellers.map((s) => s.sell[herd.animal]));
   }
   const reserve = Math.ceil((inputs + wages) * 6) + setup;
   return { inputs, wages, revenue, margin: revenue - inputs - wages, reserve, skill: recipe.skill };
@@ -110,20 +115,21 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   )) {
     const recipe = b.production ?? recipes[b.recipe!];
     if (!recipe) continue;
+    const herd = herdSpec(b);
     if (
-      b.kind === 'dairy' &&
+      herd &&
       b.owner === p.id &&
       p.skills.includes('livestock farmer') &&
       !b.breedingEnd &&
-      (b.stock.cows ?? 0) >= 2 &&
-      (b.stock.cows ?? 0) < 4 &&
+      (b.stock[herd.animal] ?? 0) >= herd.minimum &&
+      (b.stock[herd.animal] ?? 0) < herd.minimum + 2 &&
       (b.herdCondition ?? 100) >= 80 &&
       b.investment > 15000 &&
       b.stock.feed >= 20 &&
       b.stock.water >= 20
     )
       add(
-        `Breed a replacement calf at my ${b.name}; invest 4 feed, 4 water and 2000 and keep the herd healthy for an hour.`,
+        `Breed a replacement ${herd.young} at my ${b.name}; invest 4 feed, 4 water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
         visitBuilding(p, b, [operation('livestock', { building: b.id, operation: 'breed' })]),
       );
     const estimate = businessEstimate(w, b);
@@ -244,7 +250,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       );
     for (const [item, perBatch] of Object.entries({
       ...recipe.inputs,
-      ...(b.kind === 'dairy' ? { ...herdNeeds(b), cows: 2 } : {}),
+      ...(herd ? { ...herdNeeds(b), [herd.animal]: herd.minimum } : {}),
     })) {
       const seller = w.buildings
         .filter(
@@ -253,7 +259,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         .sort((a, b) => a.sell[item] - b.sell[item])[0];
       if (!seller) continue;
       let n = Math.min(
-        Math.max(0, perBatch * (item === 'cows' ? 1 : 6) - (b.stock[item] ?? 0)),
+        Math.max(0, perBatch * (item === herd?.animal ? 1 : 6) - (b.stock[item] ?? 0)),
         seller.stock[item],
         b.capacity - (b.stock[item] ?? 0),
         seller.sell[item] ? Math.floor(Math.max(0, p.cash - living) / seller.sell[item]) : 100,

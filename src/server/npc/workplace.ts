@@ -1,4 +1,4 @@
-import { herdReady, herdNeeds } from '../../shared/livestock.ts';
+import { herdSpec, herdReady, herdNeeds } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from '../../shared/shoreline.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -26,13 +26,14 @@ export function workplace(w: World, p: Player, b: Building) {
   if (p.job && !employedHere) jobBlockers.push('Quit your other job before taking this one');
   if (!employedHere && b.employees.length >= 16) jobBlockers.push('All jobs filled');
   const blockers: string[] = [];
-  if (b.kind === 'dairy') {
+  const herd = herdSpec(b);
+  if (herd) {
     if (!herdReady(b))
       blockers.push(
-        'Milk requires two cows and herd condition of at least 40%; keep feed, water and qualified care available',
+        `Production requires ${herd.minimum} ${herd.animal} and 40% herd condition; keep feed, water and qualified care available`,
       );
     blockers.push(
-      `Dairy herd condition ${b.herdCondition ?? 100}%; ${b.stock.cows ?? 0} cows. Each check consumes ${herdNeeds(b).feed} feed and ${herdNeeds(b).water} water, even when milk output is full. Two milking stalls; extra cows only add upkeep.`,
+      `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} feed and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
     );
   }
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))

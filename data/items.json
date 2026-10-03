@@ -211,7 +211,7 @@
     "drink": 28000
   },
   "feed": {
-    "name": "Cattle feed",
+    "name": "Livestock feed",
     "weight": 1,
     "price": 1000
   },
@@ -244,5 +244,32 @@
     "name": "Parish map",
     "weight": 0,
     "price": 1000
+  },
+  "sheep": {
+    "name": "Sheep",
+    "weight": 3,
+    "price": 14000
+  },
+  "pigs": {
+    "name": "Pigs",
+    "weight": 4,
+    "price": 16000
+  },
+  "chickens": {
+    "name": "Chickens",
+    "weight": 1,
+    "price": 3000
+  },
+  "wool": {
+    "name": "Wool",
+    "weight": 1,
+    "price": 2400
+  },
+  "eggs": {
+    "name": "Eggs",
+    "weight": 1,
+    "price": 1600,
+    "food": 6000,
+    "health": 100
   }
 }

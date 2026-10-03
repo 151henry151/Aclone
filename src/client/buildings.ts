@@ -252,6 +252,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     'factory',
     'forge',
     'workshop',
+    'dairy',
+    'sheepfold',
+    'piggery',
   ].includes(b.kind);
   if (shed) {
     const bays = ['garage', 'warehouse', 'factory', 'shipyard'].includes(b.kind)
@@ -417,6 +420,23 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     (root.userData.chimneys ??= []).push(
       new T.Vector3(main.width * 0.35, height + 0.2, -main.depth * 0.3),
     );
+  }
+  if (['dairy', 'sheepfold', 'piggery', 'henhouse'].includes(b.kind)) {
+    // Trough and hay stores sit against the building, within its standing yard.
+    const x = main.width / 2 + 0.5;
+    box(0.8, 0.4, 2.4, '#737a73', x, 0.2, -1);
+    box(0.65, 0.03, 2.2, '#688e92', x, 0.4, -1);
+    for (let i = 0; i < 3; i++) {
+      const bale = cylinder(0.46, 0.8, '#ba9f5e', -main.width / 2 - 0.5, 0.46, -1 + i * 0.9);
+      bale.rotation.z = Math.PI / 2;
+    }
+    if (b.kind === 'henhouse') {
+      box(0.5, 0.65, 0.04, '#352c24', 1, 0.33, front + 0.09);
+      const ramp = box(0.7, 0.08, 1.2, '#826c4a', 1, 0.13, front + 0.6);
+      ramp.rotation.x = -0.2;
+      for (let i = 0; i < 5; i++)
+        box(0.68, 0.03, 0.06, '#b99e70', 1, 0.2 - i * 0.035, front + 0.2 + i * 0.22);
+    }
   }
   if (b.kind === 'starport') {
     root.add(spaceportModel());

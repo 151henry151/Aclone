@@ -24,6 +24,17 @@ export function migrateEconomy(w: World) {
       }
     w.vehicleServicesPricing = 1;
   }
+  if (!w.animalPricing) {
+    for (const b of w.buildings)
+      if (['market', 'starport'].includes(b.kind) && b.government && b.owner === 'treasury') {
+        for (const id of ['sheep', 'pigs', 'chickens', 'wool', 'eggs']) {
+          b.buy[id] ??= buildings[b.kind].buy[id];
+          b.sell[id] ??= buildings[b.kind].sell[id];
+          b.stock[id] ??= buildings[b.kind].stock[id] ?? 0;
+        }
+      }
+    w.animalPricing = 1;
+  }
   if (!w.livestockPricing) {
     for (const b of w.buildings)
       if (['market', 'starport'].includes(b.kind) && b.government && b.owner === 'treasury') {

@@ -131,3 +131,47 @@ test('new public livestock quotes migrate once without replacing operator prices
   migrateEconomy(w);
   assert.equal(publicShop.sell.milk, undefined);
 });
+
+test('sheep, pigs and chickens consume their own upkeep and produce useful goods while keeping breeding stock', () => {
+  for (const [kind, animal, count, product, output, feed] of [
+    ['sheepfold', 'sheep', 2, 'wool', 4, 2],
+    ['piggery', 'pigs', 2, 'compost', 5, 4],
+    ['henhouse', 'chickens', 4, 'eggs', 6, 2],
+  ] as const) {
+    const { w, p, owner } = setup();
+    const b = makeBuilding(kind, kind, 0, 0);
+    b.owner = owner.id;
+    b.investment = 100000;
+    b.stock = { [animal]: count, feed: 100, water: 100 };
+    w.buildings = [b];
+    delete p.job;
+    act(w, p.id, { type: 'job', building: b.id });
+    advance(w, 600);
+    assert.equal(b.stock[animal], count);
+    assert.equal(b.stock[product], output);
+    assert.equal(b.stock.feed, 100 - feed);
+    assert.equal(b.stock.water, 98);
+    assert.throws(
+      () =>
+        act(w, p.id, {
+          type: 'trade',
+          building: b.id,
+          direction: 'buy',
+          item: animal,
+          quantity: 1,
+        }),
+      /breeding/,
+    );
+    owner.skills = ['livestock farmer'];
+    owner.x = owner.z = 0;
+    act(w, owner.id, { type: 'livestock', operation: 'breed', building: b.id });
+    const due = b.breedingEnd!;
+    p.activeUntil = due + 600;
+    advance(w, due - w.time);
+    assert.equal(b.stock[animal], count + 1);
+    const loaded = structuredClone(w);
+    advance(w, 6000);
+    for (let i = 0; i < 10; i++) advance(loaded, 600);
+    assert.deepEqual(w.buildings[0].stock, loaded.buildings[0].stock);
+  }
+});

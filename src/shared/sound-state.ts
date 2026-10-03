@@ -1,4 +1,4 @@
-import { herdReady } from './livestock.ts';
+import { herdSpec, herdReady } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
 import { recipes, vehicles } from './catalog';
@@ -46,7 +46,7 @@ export function productionSupplied(
     herdReady(b) &&
     !Object.entries(r.inputs).some(
       ([item, n]) =>
-        !(upkeepPaid && b.kind === 'dairy' && ['feed', 'water'].includes(item)) &&
+        !(upkeepPaid && herdSpec(b) && ['feed', 'water'].includes(item)) &&
         (b.stock[item] ?? 0) < n,
     ) &&
     !Object.entries(r.outputs).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&

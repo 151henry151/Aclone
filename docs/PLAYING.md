@@ -69,7 +69,7 @@ Learn **farmer**, then own or work at a farm. Each has four plots; Main provides
 
 Seeds draw farm investment. Irrigate with 3 carried water, up to three treatments. Rain helps; crops differ in demand, frost and wet-soil sensitivity. One compost fertilizes for +33% yield; lacking compost buys imported fertilizer at Harbour's default compost price (39.53d). Repeating a crop family loses 20% yield; rotate or restore soil. [Economy](ECONOMY.md#crops-and-soil) explains drainage/restoration.
 
-Yield estimates use the world's weather calendar. Frost harms yield but never halts growth. Crops keep full quality for six real hours after ripening, then lose up to 35%; they remain harvestable and never automatically replant. No perennial dormancy/livestock simulation.
+Yield estimates use the world's weather calendar. Frost harms yield but never halts growth. Crops keep full quality for six real hours after ripening, then lose up to 35%; they remain harvestable and never automatically replant. Perennial dormancy is not simulated. Livestock uses separate buildings and care cycles.
 
 Harvest is a saved 15-second task, one worker/plot. Produce enters the farm stockroom; employed harvesters receive funded, taxed wages. Owners harvest unpaid. Insufficient output room/payroll at completion leaves the plot intact. Disconnects cannot double-pay. Farms no longer produce automatic wheat; existing stock is retained, and new market crop listings start empty.
 
@@ -169,11 +169,19 @@ World / F9 → **Quests** lists a world's stories and objectives. Accept one, fo
 
 World creators may add local goods, courses and building designs. Schools show each course's actual price, duration and prerequisites. Custom food/drink can be consumed or stocked at home like standard supplies; cargo weight and production rules still apply. These definitions belong to that world only.
 
-## Dairy and nutrition
+## Livestock and nutrition
 
-Build a **Feed mill** (wheat → cattle feed), **Dairy barn** (feed + water → milk), **Cheese dairy** (milk + fuel → cheese), or **Country café** (cheese + potatoes + water → suppers). Learn miller, livestock farmer, cheesemaker or cook and hire qualified workers. These are player-built businesses, not extra starter properties.
+Build a **Feed mill** (wheat → livestock feed), **Dairy barn** (feed + water → milk), **Cheese dairy** (milk + fuel → cheese), or **Country café** (cheese + potatoes + water → suppers). Learn miller, livestock farmer, cheesemaker or cook and hire qualified workers. These are player-built businesses, not extra starter properties.
 
 Stock a barn with two cows, bought from Harbour stores or another dairy. Two stalls produce six milk per check. Every cow, including reserves, consumes one feed and one water each check even when milk storage is full or workers are absent. Fund wages and keep workers active: supplied/staffed care restores 4 condition, supplied/unattended loses 0.1, and missing feed/water loses 8. Milk needs 40% condition; reaching zero loses a cow. Sell surplus milk and keep the supply chain funded.
+
+**Sheepfolds** keep two sheep and turn 2 feed + 2 water into 4 wool. **Pig farms** keep two pigs and turn 4 feed + 2 water into 5 compost (collected manure for crop fertilizer). **Henhouses** keep four chickens and turn 2 feed + 2 water into 6 edible eggs. These are ten-minute checks at default world speed; one livestock farmer can staff any species. Buy starter animals at Harbour stores or the spaceport, then trade locally with breeders. New livestock buildings are player-built; existing properties are not reset.
+
+The same health rules apply to all herds. Every animal consumes upkeep, even if output storage is full: cows/sheep each need 1 feed + 1 water; pigs 2 feed + 1 water; chickens half a feed + half a water, rounded up for the whole flock. Extra animals do not expand production capacity. Ordinary buyers cannot purchase the breeding stock, but owners can withdraw it deliberately.
+
+Healthy qualified owners/employees can arrange one birth at a time using 4 feed + 4 water and investment: calf 20d/60 minutes, lamb 18d/50 minutes, piglet 20d/40 minutes, chick 6d/30 minutes. Births are checked on production ticks; keep the required parents, storage space and at least 60% condition until then. Newborns join ordinary livestock stock; age/sex/genetics are abstracted.
+
+Cows, sheep, pigs and chickens appear near their completed housing, with grazing/pecking, breathing, short walks and tail movement. Stock changes update the herd without rebuilding the town. Up to eight per nearby building and 48 total are displayed in available dry, level space away from roads and buildings; the stockroom always gives the full count. Models are visual, not obstacles or individual controllable animals.
 
 A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80% condition, four feed, four water and 20d investment. Keep parents at 60% condition and leave stock space for one hour. Success adds a tradable cow; failure consumes the breeding cost. Shop sales reserve the last two cows, while owners retain stockroom control. Extra cows add upkeep without expanding the stalls.
 

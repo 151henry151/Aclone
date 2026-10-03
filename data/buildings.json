@@ -46,7 +46,12 @@
       "milk": 1350,
       "cheese": 3870,
       "dairyMeals": 6180,
-      "parishMap": 900
+      "parishMap": 900,
+      "sheep": 14420,
+      "pigs": 16480,
+      "chickens": 3090,
+      "wool": 2472,
+      "eggs": 1648
     },
     "sell": {
       "wheat": 775,
@@ -91,7 +96,12 @@
       "milk": 2325,
       "cheese": 6665,
       "dairyMeals": 9300,
-      "parishMap": 1550
+      "parishMap": 1550,
+      "sheep": 21700,
+      "pigs": 24800,
+      "chickens": 4650,
+      "wool": 3720,
+      "eggs": 2480
     },
     "stock": {
       "wheat": 60,
@@ -136,7 +146,12 @@
       "milk": 0,
       "cheese": 0,
       "dairyMeals": 0,
-      "parishMap": 20
+      "parishMap": 20,
+      "sheep": 20,
+      "pigs": 20,
+      "chickens": 20,
+      "wool": 0,
+      "eggs": 0
     },
     "recipe": null,
     "wage": 2200,
@@ -300,7 +315,12 @@
       "milk": 1350,
       "cheese": 3870,
       "dairyMeals": 6180,
-      "parishMap": 900
+      "parishMap": 900,
+      "sheep": 14420,
+      "pigs": 16480,
+      "chickens": 3090,
+      "wool": 2472,
+      "eggs": 1648
     },
     "sell": {
       "wheat": 825,
@@ -345,7 +365,12 @@
       "milk": 2475,
       "cheese": 7095,
       "dairyMeals": 9900,
-      "parishMap": 1650
+      "parishMap": 1650,
+      "sheep": 23100,
+      "pigs": 26400,
+      "chickens": 4950,
+      "wool": 3960,
+      "eggs": 2640
     },
     "stock": {
       "wheat": 60,
@@ -390,7 +415,12 @@
       "milk": 0,
       "cheese": 0,
       "dairyMeals": 0,
-      "parishMap": 20
+      "parishMap": 20,
+      "sheep": 20,
+      "pigs": 20,
+      "chickens": 20,
+      "wool": 0,
+      "eggs": 0
     },
     "recipe": null,
     "wage": 2200,
@@ -1199,6 +1229,81 @@
     },
     "stock": {},
     "recipe": "dairyKitchen",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "sheepfold": {
+    "name": "Sheepfold",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "feed": 1120,
+      "water": 560,
+      "sheep": 15680
+    },
+    "sell": {
+      "wool": 2400,
+      "sheep": 18200
+    },
+    "stock": {},
+    "recipe": "sheepfold",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "piggery": {
+    "name": "Pig farm",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "feed": 1120,
+      "water": 560,
+      "pigs": 17920
+    },
+    "sell": {
+      "compost": 2550,
+      "pigs": 20800
+    },
+    "stock": {},
+    "recipe": "piggery",
+    "wage": 2200,
+    "materials": {
+      "wood": 10,
+      "blocks": 8,
+      "tools": 1,
+      "gravel": 6
+    },
+    "tier": 0,
+    "color": "#b29c75"
+  },
+  "henhouse": {
+    "name": "Henhouse",
+    "price": 80000,
+    "capacity": 500,
+    "buy": {
+      "feed": 1120,
+      "water": 560,
+      "chickens": 3360
+    },
+    "sell": {
+      "eggs": 1600,
+      "chickens": 3900
+    },
+    "stock": {},
+    "recipe": "henhouse",
     "wage": 2200,
     "materials": {
       "wood": 10,

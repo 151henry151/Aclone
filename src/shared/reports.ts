@@ -1,4 +1,4 @@
-import { herdNeeds } from './livestock.ts';
+import { herdSpec, herdNeeds } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import { productionStaff, productionEfficiency } from './sound-state.ts';
@@ -103,8 +103,14 @@ export function productionReport(w: World, b: Building) {
   if (b.kind === 'farm') return ['Seasonal plots need tending and manual harvest'];
   if (!r) return ['No automatic production recipe'];
   const blockers: string[] = [];
-  if (b.kind === 'dairy') {
-    if ((b.stock.cows ?? 0) < 2) blockers.push('Two cows are required for the milking stalls');
+  if (herdSpec(b)) {
+    const spec = herdSpec(b)!;
+    if ((b.stock[spec.animal] ?? 0) < spec.minimum)
+      blockers.push(
+        spec.animal === 'cows'
+          ? 'Two cows are required for the milking stalls'
+          : `${spec.minimum} ${spec.animal} are required for production`,
+      );
     if ((b.herdCondition ?? 100) < 40)
       blockers.push('Herd condition is too low: fund feed, water and qualified care');
     for (const [item, n] of Object.entries(herdNeeds(b)))
