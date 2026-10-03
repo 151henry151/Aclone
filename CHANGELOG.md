@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-03
+
+### Changed
+
+- Replace the release-heavy README with a short introduction, setup/play instructions and a complete documentation index. Move historical release/upgrade and NPC trial records into release notes, keep art prompts in a dedicated reference, and condense the guides around current behavior without duplicating topic details.
+- Correct stale guidance on offline survival, the AI population, seeded waterworks and connected galaxies; retain historical descriptions in the release archive.
+
 ## [0.24.0] - 2026-10-03
 
 ### Added

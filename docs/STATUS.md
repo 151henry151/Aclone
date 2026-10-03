@@ -1,282 +1,43 @@
 # Implementation status
 
-Aclone is a playable development alpha. The supplied design spec describes a
-much larger historical game. This page deliberately distinguishes working
-systems from unfinished fidelity work; the project is not ready to claim 1.0.
-
-## NPC survival guidance (0.19.2)
-
-Jev now receives protected survival forecasts, nutrition, stocked food sources,
-job pay/blockers and recent results. Ordinary plans can purchase and consume meals
-or deliver inputs to owned businesses. Personal provisions are kept out of optional
-sales and factory deposits; needs trigger earlier replanning. Focused tests cover
-these mechanics, existing careers, provider isolation, request limits and scheduled
-homecoming. Real-model survival and profitability still require live observation;
-no full-suite or paid-provider run was made for this change.
-
-## Adaptive mobile interface (0.17.0)
-
-Phones and touch tablets use a compact HUD, independent steering/throttle controls,
-camera drag/pinch gestures and scrollable menu/chat sheets. Existing desktop panels
-and keyboard/mouse controls remain available at full desktop sizes. All gameplay,
-account and world menus are reachable from the compact navigation.
-
-Browser coverage exercises simultaneous touches, interrupted inputs, flight and
-weapons, trading/admin state, chat history, portrait/landscape, small keyboard-sized
-viewports and restoration of the desktop HUD. Physical Android/iOS keyboard,
-browser toolbar and sustained performance checks remain necessary before claiming
-device-specific compatibility. See the [mobile guide](MOBILE.md).
-
-## Scheduled population and conversational agreements (0.15.0)
-
-The opt-in roster now supports nineteen residents with varied economic preferences.
-Mabel stays present; the other eighteen follow persistent real-world habits and
-prepare food, stores and housing before signing off. Unprepared residents return
-sooner. Offline hunger/thirst and starvation affect everyone, with stocked homes
-and unexpired rooms providing ordinary automatic feeding.
-
-Chat can record a durable goal or a concrete delivery agreement for Jev. Delivery
-choices respect ownership, capacity, price and buyer funding, and receipts record
-actual progress across restart and multiple loads. General goals remain guidance;
-a model's promise is never treated as a completed action. Tests use deterministic
-provider doubles, not a claim that real models always negotiate or act correctly.
-Shared budgets remain unchanged. See [NPC guide](NPCS.md).
-
-Saved wages now refresh independently of drafts; NPC wage context distinguishes gross, net and total payroll. AI retry/budget waits preserve visible character presence.
-
-## Shared adaptive residents (0.14.0)
-
-Mabel, Toby, Rowan and new resident Elias share one Jev decision system. All can
-reconsider careers, purchases, business ownership, housing and leisure using
-current opportunities and durable outcome feedback. OpenAI supplies Mabel's
-conversation; Claude supplies the others. Conversation is addressed-only and
-cannot replace the chosen gameplay plan. Configuration remains opt-in and uses
-existing shared spending caps. See [NPC guide](NPCS.md).
-
-Plans expose ordinary gameplay action families, including space journeys, but
-use bounded candidate quantities and destinations; they are not an exhaustive
-search or a promise of expert combat or profitable long-term play. Validation
-checks legal game actions, real receipts, privacy and persistence.
-
-## Jev farmer with Claude conversation (0.13.0)
-
-Rowan Field is an independently enabled third resident. Jev selects bounded farm
-and survival plans, with ordinary school, seasonal crops, harvest wages and farm
-ownership/trading. Claude supplies addressed conversation and notebook updates;
-it cannot replace Jev's actions. Both calls count separately against the shared
-population budget. Browser coverage checks all three identities and private chat.
-A disposable live trial used four Jev calls and two Claude calls to learn farming,
-accept farm employment, plant and harvest 45 potatoes, and earn 19.8d net wages.
-The successful six-call run cost an estimated $0.03027. Earlier tuning attempts
-were additional; this is not a monthly-cost or long-term-autonomy benchmark.
-See [farmer configuration and limitations](NPCS.md#rowans-configuration).
-
-## Second AI resident (0.12.0)
-
-Toby Finch is an independently enabled Claude-powered baker alongside Mabel.
-The providers share bounded plans, normal game actions, recovery and a common
-spending allowance; private memories and credentials remain separate. Claude
-cache usage and per-call prices are accounted for. Automated tests cover school,
-bakery wages, coexistence, restart persistence, provider errors and billing migration.
-A three-request real Claude trial verified ordinary training, bread production,
-wages and private recall; see [trial details](NPCS.md#claude-baker-trial-2026-10-01).
-
-## Shift renewal (0.11.3)
-
-Accepting an already-held job renews the active shift without adding duplicate
-employees or paying wages early. Mabel’s workplace summaries explicitly identify
-expired shifts and provide the renewal action. A controller regression reproduces
-the failed mill sequence and verifies flour production and wages after renewal.
-
-## Production status (0.11.2)
-
-Building panels show current staffing efficiency, stock quantities and the next
-production-check countdown, refreshing while open. Staffing changes do not create
-an immediate batch; production still checks supplies, output space and wage
-funding at the scheduled boundary. Unit and browser regressions cover this flow.
-
-## Resident guidance and recovery (0.11.1)
-
-Mabel receives complete FAQ/economy fundamentals, live job and production
-conditions, her actual action results and wage receipts. Real-model trials
-verified mill diagnosis, ordinary paid flour production, custom-recipe blockers
-and common player questions. Model advice remains fallible; see [NPC validation](NPCS.md#development-and-validation).
-
-Repeated failures persist across restarts, back off further decisions and
-block recently failed steps. Duplicate autonomous announcements are suppressed;
-new human questions can still wake her without removing the action blocks.
-Regression tests use a deliberately repeating provider to verify this behavior.
-Already-in-range service visits no longer need another path or a running engine.
-
-## Performance and chat (0.11.0)
-
-Compact field updates reduce repeated world, player and private-state traffic.
-Each modern client has a bounded acknowledgement window; slow peers catch up
-without delaying healthy peers. Driving bursts have a separate allowance from
-purchases and chat. Static scenery/HUD caching, faster NPC obstacle construction
-and reusable Lua runtimes reduce processing, while every Lua event retains fresh
-isolated state and execution limits. Dynamic shadows default off; models,
-textures, contact shading and local lights remain, with shadows available as an
-opt-in outside performance mode.
-
-Main chat supports scrolling and a jump-to-latest button for up to 100 recent
-messages, preserving the reader's position and private-message filtering. It is
-not an unlimited chat archive. Ping and FPS are displayed separately.
-
-Regression coverage includes compressed WebSockets through a bandwidth/latency/
-jitter-limited TCP link, mixed fast/slow peers, input bursts, parked neighbours,
-audio and browser scrollback. These local tests cannot establish performance on
-every device or compensate for a host with exhausted CPU, RAM or swap; see the
-[hosting checks](HOSTING.md#connection-and-multiplayer-checks).
-
-## AI resident prototype (0.10.0)
-
-One optional OpenAI-powered economy resident with personality, chat, normal
-physics/actions, durable journal and shared spending controls. Automated tests
-use deterministic providers. An opt-in live OpenAI trial verified private chat,
-driving to the office, three normal paid labour shifts and memory persistence
-across restart. A further live test verified controls, password recovery, owner
-stock transfers and coffee-growing advice using the bundled guides; see [NPCS.md](NPCS.md). It does not yet control
-combat, space travel, construction or lodging bookings. Long-term independent
-survival and economic success need playtesting; a 50-resident scheduler fixture
-verifies concurrency limits rather than production capacity.
+Aclone is a playable development alpha, not complete historical parity or a stable 1.0. [Release notes](RELEASE_NOTES.md) retain feature history and historical test evidence; current instructions live in the topic guides.
 
 ## Playable and covered by tests
 
-- Enlarged parish map (M or click minimap), with named buildings/resources, live player positions, zoom, panning and clickable building details. The directory remains separate.
-- Gesture-unlocked engine idle/revs, nearby multiplayer horns and motors, production-driven machinery, stereo/distance attenuation, mute and saved volume; browser tests measure actual mixed audio output.
+- **Economy:** authoritative integer cash, tax/ledger conservation, inventory, investment, stock, production, wages, active/unattended work, skills, tasks and banks. Player cash gifts and carried-Fuel roadside help have independent world rules.
+- **Property/survival:** construction, materials, repair, sales, home provisions, death/estates, hotels/B&Bs, prepaid rooms and private pantries. Offline needs and starvation continue; ageing/passive property decay pause.
+- **Countryside:** seasonal crops, finite gathering grounds, material industries, shoreline waterworks, rotating crop families, irrigation, compost/drainage, delayed harvest quality and saved harvest tasks.
+- **Vehicles/activities:** 24 vehicle slots, five main control families, purchased fleets, fuel/boost, walking, robocrows, ostriches, six-player Hornball, racing/lap records, fishing and two-player Ultrakricket.
+- **Combat:** six weapons, armour, safe zones, energy/ammunition, charged javelins, grenades/mines, blast damage, deathmatch/capture/CTF, teams and respawns.
+- **Space:** seven systems, routes, saved jumps, ships/upgrades, shared station stocks, credit conversion, courier contracts, surveys and alien-ship unlocks. Trusted-host federation carries identity with separate local progress.
+- **Creator tools:** presets, terrain, buildings, zones, recipes, vehicle tuning, uploaded/primitive visuals, interactive objects, visual rules, Lua and portable designs.
+- **Presentation:** original scenery, varied buildings/trees, animated humans, industrial spacecraft/robocrows, storms, snow/traction, stars/twin moons, local lights, smoke and synthesized positional audio.
+- **Interface/accounts:** named map, directories, chat scrollback, saved form drafts, desktop/touch layouts, optional passwords, verified-email recovery, pilot keys, backups and bounded restart catch-up.
+- **Optional AI:** 19 distinct residents, shared adaptive Jev decisions, OpenAI/Claude conversation, durable scoped memory, schedules, supplies/homecoming, validated delivery/employment agreements and shared spending limits.
 
-- Player-built hotels/B&Bs, prepaid bookings, private guest stores, offline meals and safe expiry.
-- Finite natural-resource gathering, eight processing businesses, materials and professions connecting crops, industry and hospitality.
-- Occupied offline chimneys, varied evening windows, actual street/window illumination, dark nights, thunderstorms, persistent snow and weather-dependent driving.
-- Evergreen and deciduous groves, varied tree scales and new building silhouettes. Evergreens now have irregular boughs, needle-covered shoots and original bark textures, with matching shapes in both graphics modes.
-
-- Persistent server-owned cash, inventory, building investment and stock.
-- Positive-quantity validation, transaction conservation, taxes and exact
-  fractional-denarius wages.
-- Input/output production, funding and storage checks, active employment,
-  low-efficiency unattended production, timed skills and resource tasks.
-- Buying unclaimed properties, listing and selling property to another player,
-  construction materials, repair, decay, home supplies and life/death resets.
-- Twenty-four vehicle slots, five primary control families, fuel/boost,
-  persistent purchased vehicles, walking, disposable robocrows and ostriches.
-- Safe-zone/fighting checks, energy or ammunition, charged javelins, bouncing grenades, armed mines, blast damage, armour, and balanced deathmatch/capture/CTF rounds.
-- Seasonal crop plots, irrigation, fertilizer, rotation, frost and delayed-harvest quality, with reserved paid harvest shifts and offline completion.
-- Seven-system route map, saved jump transit, owned-ship hangars, upgrades, shared station stocks, courier contracts, surveys and alien-ship unlocks.
-- Four seasons, deterministic rain/snow, snow cover, seasonal sunlight and sunrise/sunset.
-- Seasonal, rotating stars and two nearby moons with persistent phase cycles, cloud occlusion, starlight and moonlight; stronger headlights and broad streetlight pools.
-- Six selectable cottage styles, garage tractor paint and occupancy-driven chimney smoke.
-- Six-client Hornball, ordered race checkpoints and best laps, bite/reel fishing,
-  and an original timing-based two-player Ultrakricket implementation.
-- Optional password login, verified SMTP recovery, hashed pilot-key identities, multiplayer chat, command authority, world
-  creation and separate per-world progress.
-- SQLite persistence, transactional ledger, online backup/restore, bounded
-  offline catch-up and atomic planet-cash / universe-credit conversion.
-- Galaxy registry, landing, spaceports, systems, jump range, ships and cargo trade.
-- Owner settings, terrain brushes, building placement, custom production recipes,
-  per-world vehicle physics, safe/no-build zones, Lua and asset uploads.
-
-Browser tests exercise the real rendered client and live server rather than a
-mock game state. Unit and integration tests focus on critical invariants; they
-do not establish production-scale security or long-term economic balance.
-
-## Graphics and the current working tree
-
-The 0.3.0 renderer uses original generated meadow, gravel, limestone and slate
-materials, a detailed glazed tractor cab and treaded wheels, instanced foliage,
-cloud layers, a village fountain and textured cottage gables. See [art sources](ART.md)
-for prompts and implementation conventions. Adaptive, detailed and performance
-modes let players trade resolution and scenery detail against GPU cost. Dynamic
-shadows are a separate opt-in outside performance mode. These
-are visual improvements to the existing game, not additional historical mechanics.
-
-Version 0.3.3 replaces the placeholder human and cab driver with a smoothly shaded,
-original workwear figure, detailed face and hands, and a seated driving pose.
-Walking has articulated legs and arm swing driven by displayed motion, a closer
-chase camera and a human-height first-person view. Figures remain stylized;
-they are not photorealistic scans. Shared geometry and batched drivers keep the
-additional rendering cost bounded. Browser tests cover switching to walking,
-moving, changing cameras and returning to the tractor.
-
-Version 0.3.4 adds distinct building footprints and roof forms,
-consistent doors and windows, a compact tractor cab, human-scale street furniture,
-and footprint-aware movement collision. It changes existing presentation and
-navigation without adding historical game systems.
-
-Version 0.4.0 adds timber siding, paint choices, occupied/working chimney smoke,
-visible crop growth, seasonal foliage, snow coverage, precipitation and moving
-sunlight. Effects and projectiles use bounded batches. See [the player guide](PLAYING.md)
-for the new gameplay loops and their deliberately documented balance choices.
-
-Version 0.7.0 adds the fictional night sky, broader vehicle and street lighting,
-and first-person vertical mouse-look. Orbital tests cover seasonal movement,
-midnight/year continuity and lunar phases; rendered captures compare near-full,
-half and crescent moons, overcast skies, and the same ground view under moonlight
-and starlight. The sky uses an original simplified orbital model, described in
-[the art guide](ART.md).
+Current defaults and operations: [Playing](PLAYING.md), [Economy](ECONOMY.md), [World building](WORLD_BUILDING.md), [NPCs](NPCS.md).
 
 ## Implemented with a smaller scope than the spec
 
-- Worlds are logically isolated simulations in one host process. Independent
-  world-server federation and central identity trust are not implemented.
-- Flight is arcade climb/descend, without a full lift/bank/pitch aerodynamic
-  model. Ground collision uses simple footprints; terrain rolling, water
-  buoyancy, trailer physics, balloon handling and robust lag compensation need
-  further work.
-- Robocrow control uses one built-in drone type rather than eight ranked types.
-  Detailed per-vehicle weapon loadouts, additional reward sources and sustained
-  competitive balance testing remain to be developed.
-- Town membership, a first-candidate mayor and town tax exist. Full scheduled
-  elections, leases, war declarations, territorial battles, turrets and
-  protected town zoning do not yet have complete gameplay.
-- Tribes/families currently store group names. Hitching and item gifts exist in
-  the protocol; richer membership permissions, negotiated barter and their
-  dedicated UI are unfinished.
-- The 0.20.0 creator studio adds primitive/uploaded visuals, model assignment,
-  placed interactive objects, editable arena rules, visual triggers, production
-  forms and design export/import. Heightmap uploads, road painting, custom
-  character animation and new arbitrary item definitions remain outside its scope.
-- Images and static embedded GLB bind to scenery, buildings and vehicle slots;
-  audio remains preview/download only. World radio and scripted books remain open.
-- Lua adds interaction, entry, task-completion and timer events and bounded creator
-  effects. Transaction cancellation, custom OSD and the full historical command
-  catalogue are not implemented. Worker limits and per-world queues protect play.
-- Crop plots now have dated harvests and seasonal planting windows. Perennial
-  dormancy, livestock, richer diets, exact historical crop balance and precise
-  historic death/estate behaviour still need fidelity work.
-- Space is a functional map and trading layer, not a real-time cockpit flight
-  simulation. Trusted hosts can connect as galaxies using signed character visits in the
-  0.20.0 release. Cross-galaxy wealth transfer and public registry discovery
-  are not implemented.
-
-## Water supply (0.16.0)
-
-Shoreline waterworks are buildable businesses with fuel inputs, water output and
-pump operator training. Shared terrain checks enforce dry foundations and a wet
-intake for player, editor and NPC placement; dry/flooded sites stop producing.
-NPC construction choices survey shoreline sites and use ordinary construction,
-stockroom, employment and trading actions. There is no automatic waterworks in
-existing worlds: a player or NPC must build and supply one. This fuel-powered
-pumping abstraction is an original gameplay choice; plumbing networks, water
-purity and reservoirs are not simulated.
+- Each host runs one process/SQLite economy; federation is explicit peer trust, not a central registry, distributed ledger or wealth transfer.
+- Flight is arcade climb/descend. Full aerodynamics, buoyancy, terrain rolling, trailers, balloons and robust lag compensation remain open.
+- Robocrows use one built-in drone type, not eight ranks. Detailed vehicle weapon loadouts, extra reward systems and sustained competitive balance need work.
+- Town membership, first-candidate mayor and tax exist; full elections, leases, wars, territory, turrets and protected town zoning are incomplete. Tribes/families store names; richer membership, negotiated barter and dedicated hitch/item-gift UI are unfinished.
+- Creators cannot paint roads, upload heightmaps/animated character rigs, define arbitrary inventory items, run shader scripts or arbitrary client JavaScript. Uploaded audio is preview/download only; world radio and scripted books remain open.
+- Lua lacks transaction cancellation, custom OSD, cutscenes, player variables, arbitrary admin commands and the full historical event catalogue.
+- Farming lacks livestock, perennial dormancy and exact historical crop/diet/death balance. Waterworks abstract fuel-powered pumping; no plumbing, purity or reservoirs. Homes/rooms use exterior shelter, not interior maps.
+- Space is a map/trading layer, not cockpit flight. NPC candidates cover ordinary action families but bounded quantities/routes, not exhaustive plans or expert combat. General errands, loans and autonomous negotiation are not executable chat agreements.
 
 ## Deliberately not invented
 
-The supplied spec leaves Bongosquares and Netrek rules unknown. Aclone does not
-pretend a new invented game is a recovered original implementation. Historical
-prices, crow tuning, civilization triggers and other uncertain numbers should
-be changed in the data files as reliable evidence becomes available.
+Bongosquares and Netrek rules are unknown in the supplied spec. Uncertain historical prices, crow tuning and civilization triggers remain data/fidelity work, not claimed reconstructions. The climate, crop balance and Ultrakricket timing include original choices.
 
-There is no copied original asset, paid membership system, invasive machine
-fingerprinting, or dependency on the original game infrastructure. Reference
-archives are local research material and are excluded from the public source.
+No original-game assets, paid membership system, invasive machine fingerprinting or dependency on original infrastructure. Research archives are excluded from public releases.
 
 ## Before a stable 1.0
 
-Complete required fidelity features above, expand game-module and rendering
-boundaries, expand save migrations and world-design portability, soak-test offline
-production and survival over long periods, load-test tens to hundreds of players,
-review script/upload/auth abuse resistance and sustained trading load, and playtest the three core scenarios:
-a sustainable business after days away, six-player Hornball, and a created world
-that friends reach through space. Keep every remaining claim explicit in the
-release notes rather than treating a successful build as completion of the spec.
+Finish required fidelity gaps; strengthen migrations/module boundaries and design portability; soak-test survival, production and trading; review script/upload/auth abuse resistance; measure capacity on real hosts. Chromium emulation does not establish physical Android/iOS keyboard, toolbar or thermal behavior.
+
+Deterministic NPC tests prove mechanics, privacy and budgets—not human realism, profitable autonomy or perfect advice. Short paid trials are documented in [NPC validation](NPCS.md#development-and-validation); a 50-resident scheduler fixture is not a production benchmark.
+
+Playtest sustainable businesses after days offline, six-player Hornball, and friends reaching a created world through space. A passing build alone is not completion of the spec.

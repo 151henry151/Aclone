@@ -1,9 +1,6 @@
 # World creator studio
 
-The creator studio extends the live owner editor. These features are available
-starting with version 0.20.0.
-Only the world owner can save designs, models, rules and layouts. Ordinary
-visitors can use objects and play games without editor permissions.
+Owners edit designs/models/rules/layouts; visitors interact and play without edit permission. Test in a separate world and export before major edits.
 
 ## Start a world
 
@@ -16,9 +13,7 @@ spaceport. The blank canvas clears that village too; terrain, the shoreline and
 existing activity landmarks remain. Each host permits eight worlds per owner
 and 100 worlds total.
 
-Land, then open **Editor / F10**. On a phone, use **Menu → World editor**. Changes
-apply immediately to visitors and are saved with the world. Use a separate test
-world before changing a busy parish; export a design before major edits.
+Land, then open **Editor / F10**. On a phone, use **Menu → World editor**. Edits apply live and persist.
 
 ## Build a capture-the-flag arena
 
@@ -68,13 +63,11 @@ Failed GLB loads retain a wireframe placeholder.
   steering, armour and fuel settings. The appearance changes the visual model;
   the existing vehicle slot determines movement and gameplay behavior.
 - **Production:** select a building, profession and batch duration, then choose
-  up to eight input and output items with quantities. No JSON is required.
-  Recipes use the normal stockroom, wages, capacity and production scheduler.
+  up to eight input and output items with quantities. Recipes use normal stockroom/payroll/capacity/scheduling without JSON.
   Farms keep their crop-plot mechanics. Editing a recipe resets batch progress.
 
 You cannot delete a model while objects, buildings or vehicle slots still use it.
-Uploaded media belongs to its world; download/exporting a design does not include
-media binaries or credentials. Upload the media separately on another server.
+Designs do not bundle media; upload/reassign it on another server.
 
 ## Add behavior without code
 
@@ -136,10 +129,7 @@ up to 256 nodes, 128 primitives, 32 materials and eight textures, with a combine
 300,000 accessor-element budget. No external URLs, compression/extensions,
 skinning, animation, sparse accessors or morph targets are accepted.
 
-These bounds do not guarantee a frame rate: repeated detailed imports can still
-be expensive on phones. Prefer a few colors and simple shapes for repeated
-scenery. Model parts sharing a color are merged for rendering. Models are visual
-assemblies, not custom physics engines. Road painting, heightmap uploads, imported
+Detailed repeated imports can slow phones despite these limits. Use few colors/simple shapes; same-color parts merge. Models change visuals, not the physics engine. Road painting, heightmap uploads, imported
 character animation rigs, shader scripts, arbitrary new inventory items and
 arbitrary client JavaScript are outside this editor.
 

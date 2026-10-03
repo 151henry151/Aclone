@@ -2,26 +2,14 @@
 
 ## Native installation
 
-Install Node.js 24.14+, copy the source, run `npm ci && npm run build`, and start
-with `npm start`. No Redis, database service or graphics device is required.
+Node.js **24.14+**, `npm ci`, `npm run build`, `npm start`. No external database, Redis or GPU required. Run one unprivileged process per database; dev mode is not public hosting mode.
 
-Environment variables:
+- `HOST=127.0.0.1`, `PORT=3000`: bind address/port. Use 0.0.0.0 for intentional LAN access.
+- `DATA_DIR=var`: database/assets, relative to working directory; use an absolute service path.
+- `PUBLIC_ORIGIN`: external URL including deployment prefix/trailing slash, for recovery links and allowed browser origin. Preserve Host at the proxy.
+- `BASE_PATH=/`: **build-time** client prefix. Rebuild if changed. Node always serves `/`, `/api/`, `/ws`, `/world-assets/` at root; proxies strip the external prefix.
 
-- `HOST`: bind address, default `127.0.0.1`.
-- `PORT`: TCP port, default `3000`.
-- `DATA_DIR`: persistent database/assets directory, default `var` relative to the
-  working directory. Use an absolute path in a service definition.
-- `PUBLIC_ORIGIN`: external public URL, including any deployment prefix, used
-  for recovery links and allowed browser origin. Prefer preserving Host at the proxy.
-- `BASE_PATH`: public URL prefix baked into the client at build time, default `/`.
-  Set it when the game is mounted under a path (`BASE_PATH=/aclone npm run build`).
-  The Node process still serves `/`, `/api/`, `/ws`, and `/world-assets/` at its
-  own root. The reverse proxy must strip that prefix before forwarding. Rebuild
-  after changing `BASE_PATH`.
-
-The operator's filesystem owns the instance, but public template worlds have no
-player owner. Create a world through the client to obtain in-game owner access.
-Do not turn the first anonymous visitor into an administrator.
+Native commands inherit exported variables; `.env` needs `node --env-file=.env --import tsx src/server/main.ts` or a service EnvironmentFile. Public template worlds have no player owner; creating a world grants authority only there. Never promote the first anonymous visitor to administrator.
 
 ## Docker
 
@@ -30,16 +18,11 @@ docker compose up --build -d
 docker compose logs -f
 ```
 
-The compose file binds only to loopback and uses a named persistent volume.
-Place an HTTPS reverse proxy in front. To allow LAN clients without a proxy,
-explicitly change the port mapping to `3000:3000`. The image runs as the Node
-non-root user. The container build, health endpoint, static client delivery, registration and
-live SQLite backup have been smoke-tested. Validate TLS and storage permissions
-on your own deployment host.
+Compose binds loopback, uses a persistent named volume and runs as non-root Node. Add HTTPS proxy; intentionally change mapping to `3000:3000` for direct LAN access. Validate host TLS/permissions. Image health/static delivery/registration/online backup have smoke coverage.
 
 ## Reverse proxy
 
-Example Caddy configuration for your own hostname:
+Root-host Caddy example:
 
 ```caddy
 play.example.org {
@@ -47,8 +30,7 @@ play.example.org {
 }
 ```
 
-For `https://hromp.com/aclone`, build with `BASE_PATH=/aclone npm run build`
-and strip the prefix in the proxy. An equivalent Caddy route is:
+For `https://hromp.com/aclone/`, build `BASE_PATH=/aclone npm run build`, set `PUBLIC_ORIGIN=https://hromp.com/aclone/`, and merge this into existing site routes:
 
 ```caddy
 hromp.com {
@@ -59,83 +41,36 @@ hromp.com {
 }
 ```
 
-Set `PUBLIC_ORIGIN=https://hromp.com/aclone/` for email links. Keep the trailing
-slash redirect: relative browser navigation and assets must stay under the
-prefix. Pass WebSocket upgrades through `/aclone/ws`. This configuration must be
-merged into the host's existing routes rather than replacing other hosted sites.
-For Docker builds, pass `--build-arg BASE_PATH=/aclone` or set Compose's `BASE_PATH`
-environment variable before `docker compose up --build`.
+Keep the slash redirect and WebSocket upgrades through `/aclone/ws`. Caddy supplies TLS; you supply domain/DNS. Docker accepts `--build-arg BASE_PATH=/aclone` or Compose's BASE_PATH environment. Pilot credentials belong in bearer headers/first WebSocket message, never URLs/proxy logs.
 
-Caddy handles TLS and WebSocket upgrades. The hostname and DNS must be yours.
-This is a configuration example; the repository does not provision a domain.
-Do not put pilot credentials in proxy logs. HTTP authentication uses a bearer
-header and WebSocket authentication uses the first message, not query strings.
-
-For a Linux service use a dedicated unprivileged user, the repository as the
-working directory, `node --import tsx src/server/main.ts` as ExecStart, and a
-writable DATA_DIR. Send SIGTERM to stop; wait for graceful shutdown before
-replacing binaries or restoring data. Run a single process per database.
+Linux service: dedicated user, repository WorkingDirectory, `node --import tsx src/server/main.ts` ExecStart, private environment and writable DATA_DIR. SIGTERM saves gracefully; wait before replacing binaries/restoring data. [Release/deployment checklist](RELEASING.md).
 
 ## Backups
 
-The server saves an online SQLite backup every hour under
-`DATA_DIR/backups/snapshot-TIMESTAMP.sqlite` and keeps 24 scheduled snapshots.
-Manual backups use SQLite's backup API too, so a running WAL database is safe:
+Hourly SQLite online backups go to `DATA_DIR/backups/snapshot-TIMESTAMP.sqlite`; retain 24 scheduled copies. Manual copies are not pruned:
 
 ```sh
 npm run backup
-# Or choose a destination:
 npm run backup -- /path/to/private/backup.sqlite
 ```
 
-Manual backups are not removed by scheduled retention. Copy backups off-machine
-and periodically restore one into a test DATA_DIR. Keep the `assets/` directory
-alongside database backups: uploaded binary assets are separate files. Pilot key
-hashes and account names live in the database; treat backups as private.
+Both use SQLite's backup API safely on a running WAL database. Back up `assets/` separately, copy off-host and periodically test restore. Accounts, credentials/emails, NPC memories and federation keys make backups private.
 
-To restore:
-
-1. Stop the server cleanly.
-2. Preserve the existing DATA_DIR as a rollback copy.
-3. Create a **new** DATA_DIR and copy the chosen backup to `aclone.sqlite`.
-4. Restore the corresponding `assets/` directory. Do not copy old `-wal` or
-   `-shm` files over a database backup.
-5. Start with `DATA_DIR=/path/to/restored npm start` and verify health, pilot
-   login, cash, inventory, buildings and the ledger before allowing players in.
-
-The server catches up at most 30 real days after downtime. A new world is not
-silently substituted for a corrupted database or unknown schema version.
+Restore with the server stopped: preserve existing DATA_DIR, create a new directory, copy the snapshot as `aclone.sqlite` and matching `assets/`, **not old -wal/-shm files**. Start `DATA_DIR=/path/to/restored npm start`; verify health, login, cash, stock/property and ledger before admitting players. Corrupt/unknown schemas fail rather than silently starting a replacement world. Catch-up caps at 30 real days.
 
 ## Operational limits
 
-This alpha has multiplayer regression tests and a configurable 100-client load
-probe. It is not a production-scale certification. Worlds share a Node process
-and SQLite file. Bounds include 100 worlds per instance, 8 created
-worlds per pilot, 500 placed buildings, 128 zones, 256 terrain brushes, 32 uploaded
-assets per world, and 2 MiB per upload. Monitor disk usage: retained historical
-ledger entries and manual backups are not automatically pruned.
+100 worlds/instance, 8 created worlds/pilot, 500 buildings, 128 zones, 256 terrain brushes, 32 assets/world at 2 MiB each. Historical ledger/manual backups grow without pruning. Creator/GLB bounds are in [World building](WORLD_BUILDING.md#practical-limits-and-extension-points).
 
-Each request is validated and rate-limited, but anonymous registration is not a
-full abuse-prevention service. Deploy additional access control at the proxy
-for a private instance. No invasive device fingerprint or raw-machine tracking
-is collected. Account-farming detection remains an open security task.
+Anonymous registration/rate limits are not full abuse prevention. Private hosts should add proxy access controls. No invasive device fingerprinting; account-farming detection remains open. Test capacity on your hardware before raising the 128-WebSocket default; independent communities should use independent instances, never multiple writers to one database.
 
 ## Accounts and recovery email
 
-Before upgrading, take a database backup. The account-name index migrates schema 1
-to schema 2 without changing pilot IDs. Roll back older binaries by restoring a
-pre-upgrade backup; old versions intentionally reject the migrated schema.
+Passwords are optional; existing keys work. Players configure passwords and verified recovery email in Pilot & preferences. Verification lasts 24h; reset links are single-use/30m. Reset/logout revoke keys and disconnect sessions; password sign-in rotates keys too. Exported keys then need replacing.
 
-Passwords are optional; existing pilot keys continue to work. Players set a
-password under Pilot & preferences and can add a recovery email when configured.
-The email must be verified before it can reset a password. Verification links last
-24 hours; reset links last 30 minutes and are single-use. Resetting a password or
-signing out revokes the pilot key and disconnects existing sessions. Password
-sign-in also rotates the key, so previously exported keys need replacing.
+Private service environment:
 
-Configure these environment variables in your private service environment:
-
-```sh
+```dotenv
 PUBLIC_ORIGIN=https://game.example.com/aclone/
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
@@ -144,120 +79,40 @@ SMTP_PASSWORD=your-smtp-password
 MAIL_FROM="Aclone <pilots@example.com>"
 ```
 
-Use your real public URL, including a trailing slash and deployment subpath if
-applicable. Links use this configured URL, never a request Host header. Port 587
-requires STARTTLS; port 465 uses TLS immediately. Certificate validation stays
-enabled. Configure a sender your provider authorizes, including its recommended
-DNS records. SMTP is optional: without it the UI still supports passwords and
-key export, and explains that email recovery is unavailable. Do not commit these
-values. Compose deployments must explicitly pass these variables to the service.
-No live email provider is bundled or provisioned by Aclone.
+Links use PUBLIC_ORIGIN, never untrusted Host. Port 587 requires STARTTLS; 465 immediate TLS; certificate validation stays on. Authorize the sender/DNS with your provider. Compose must pass mail variables explicitly; no provider is bundled. Without SMTP, passwords/key export still work and recovery is marked unavailable.
 
-Reset requests have the same public response for unknown and verified addresses;
-delivery runs asynchronously and failures produce a generic server log message.
-Repeated reset mail to the same account is limited to once per minute. Account
-POSTs are limited to 60 per IP per minute; password hashing has four concurrent
-slots. Configure a trusted reverse proxy correctly for visitors behind it.
-Credentials and recovery-token hashes are separate from publicly streamed game
-state. Backups now also contain private email addresses and password hashes.
+Unknown/verified reset addresses get the same public response. Delivery is async with generic failure logs, max one mail/account/minute. Account POSTs cap at 60/IP/minute; hashing at four concurrent slots. Configure trusted proxy addressing correctly. Credential/recovery hashes are separate from streamed game state. Schema 1→2 migration preserves pilot IDs; rollback requires a pre-migration backup.
 
 ## Offline progress and capacity testing
 
-Disconnecting stops movement and immediately saves the world. Hunger, thirst and starvation damage continue offline; ageing and passive
-property decay pause while offline; jobs, production, lessons and
-pending tasks still advance. A lost connection is detected by heartbeat within
-roughly a minute, so this is not a way to pause combat instantly. A graceful
-server stop saves all worlds. A hard process/host failure can lose up to five
-seconds of movement or ongoing simulation; acknowledged economic actions are
-saved transactionally with full SQLite synchronization. An automated test kills a
-child server with SIGKILL after a purchase acknowledgement and verifies the
-restored ownership and cash. Backups remain necessary
-for disk loss, corruption and operator mistakes.
+Disconnect stops motion/saves; heartbeat detects loss within ~one minute (not instant combat immunity). Needs/starvation continue; stocked shelter feeds occupants. Offline ageing/passive decay pause, but jobs/production/study/tasks advance. Graceful stop saves all; hard failure can lose ~5s movement/simulation, while acknowledged actions are transactional/FULL-sync. SIGKILL durability tests cover this, not disk corruption/loss/operator mistakes.
 
 ## Connection and multiplayer checks
 
-Run `npm run test:load` for 100 real connections, 20 input messages per second per
-client, and ten seconds of measurement. Override `LOAD_CLIENTS` (1–128) and
-`LOAD_SECONDS` (2–300). `LOAD_PROTOCOL=2` selects the previous wire format for
-comparison; the default is protocol 3. `LOAD_PARKED=1` keeps every tractor parked.
-The probe intentionally retains 20 Hz input to stress the server (the browser
-now sends fewer duplicate controls). It creates and deletes its own temporary database. The
-server runs in a separate process from synthetic clients. Output reports wire
-traffic, decoded state volume, frames, disconnections and server event-loop
-latency. This is a movement/broadcast probe, not a certification of heavy trading,
-hundreds of simultaneous password hashes, Lua workloads or long-term stability.
+Run locally, not on a live host:
 
-The instance defaults to 128 simultaneous WebSocket connections. Protocol 3
-shares field-level entity deltas and permits only three outstanding snapshots per
-client. Slower peers resume with current state without slowing fast peers; large
-send queues still trigger a reconnect. Older protocol 1/2 clients remain supported.
-Deploy server and built client together, then reload clients to negotiate protocol 3.
-No database migration or network setting is required.
+```sh
+npm run test:load
+npm run test:network
+LOAD_CLIENTS=3 LOAD_NPC=1 LOAD_SECONDS=25 npm run test:load
+```
 
-Run `npm run test:network` to exercise real compressed WebSocket traffic through
-a local TCP shaper: 64 kbit/s download, 16 kbit/s upload, 200 ms latency each way
-and up to 150 ms extra jitter each way. It checks driving, stopping, chat, recovery
-after withheld ACKs and an unaffected fast peer, on its own temporary database.
-It neither reads the operator's `.env` nor enables the AI resident. The shaper
-preserves TCP byte ordering; it does not simulate radio packet loss/retransmission.
-The browser suite also measures one versus three nearby tractors and exercises
-controls/chat over that shaped link. FPS depends on the test machine; it is
-recorded as diagnostic evidence rather than enforced as a universal threshold.
+Load probe defaults: 100 clients, 10s, 20 Hz stress input (more than normal browser duplicates). `LOAD_CLIENTS=1–128`, `LOAD_SECONDS=2–300`, `LOAD_PROTOCOL=2` for old-wire comparison (default 3), `LOAD_PARKED=1` for idle tractors, `LOAD_NPC=1` for one free deterministic resident. It owns a temporary DB and separate server process; reports wire/decoded traffic, frames, disconnects and event-loop latency. No paid AI, heavy trading, hashes, Lua soak or first-load asset benchmark.
 
-For reports from real players, collect the in-game ping and FPS, graphics mode,
-device/browser and number of nearby players, preferably both alone and together.
-Compare server event-loop timing locally with the load probe. These short probes
-exclude paid AI calls, active trading load and first-visit asset downloads; they
-cannot establish production capacity or diagnose a particular ISP by themselves.
-Full reconnects always receive complete state; private player fields stay private.
-Capacity depends on host CPU, storage, active worlds and player behavior. Measure
-on deployment hardware before raising the connection ceiling or promising a
-particular concurrency level. Scale separate communities on independent instances;
-multiple processes must not write to the same database.
+Network test shapes compressed TCP to 64/16 kbit/s down/up, 200ms latency plus ≤150ms jitter each way. It checks driving/stopping/chat/ACK recovery and unaffected fast peers, without .env or AI. Byte order is preserved; radio loss/retransmission is not modeled. Browser tests compare one/three tractors and shaped input/chat; FPS is diagnostic, not a universal threshold.
+
+Protocol 3 shares deltas and keeps three outstanding snapshots/peer; slow peers resume from current state, excessive send queues reconnect. Older clients still work. Deploy client/server together; reconnect starts full private-filtered state. [Wire details](PROTOCOL.md#compact-delivery-protocol-3-0110).
+
+For complaints collect ping/FPS, graphics mode, device/browser and nearby players, alone/together. Inspect `uptime`, `nproc`, `free -m`, `vmstat 1 5`, `/proc/pressure/{cpu,memory,io}` and service CPU/RAM. Full swap/host pressure can stall scripts/pings even with small game RAM. Reduce competing workloads or add capacity; graphics changes cannot fix host starvation. Short probes do not certify production capacity or an ISP.
 
 ## Optional AI resident
 
-The NPC prototype is disabled by default. See [AI neighbours](NPCS.md) for the
-server-only OpenAI/Anthropic/TypeSafe keys, Mabel/Toby/Rowan/Elias and optional fifteen-neighbour configuration, shared spending caps, native and
-Compose startup, privacy notice and operator controls. The same persistent
-SQLite database stores resident identity, memories and usage reservations, so
-include it in normal backups. Use the same DATA_DIR for the server and NPC CLI.
-No changes to the `/aclone` proxy routes are required. To add the new fifteen neighbours, set `NPC_POPULATION_ENABLED=true` in the server environment and restart. `NPC_TIME_ZONE` defaults to `America/New_York`. Existing enabled Mabel stays online; Toby, Rowan and Elias move to scheduled sessions. Spending caps are unchanged. Provision player homes before an extended absence: offline starvation now applies, including restart catch-up.
-
-Set `LOAD_NPC=1` on the local load probe to include one resident using a free,
-deterministic decision double, exercising real navigation, labour, persistence
-and script events without OpenAI calls. A useful reproduction is
-`LOAD_CLIENTS=3 LOAD_NPC=1 LOAD_SECONDS=25 npm run test:load`. This measures the
-controller and gameplay work, not provider latency or the live AI's decisions.
-
-A healthy game process can still stall on an overloaded host. Check `uptime`,
-`nproc`, `free -m`, `vmstat 1 5` and `/proc/pressure/{cpu,memory,io}` alongside the
-game service's memory and CPU. Full swap plus high memory pressure can stall Lua
-startup, snapshots and pings even when Aclone uses little RAM. Reduce competing
-workloads, limit their memory, or provide more capacity; changing graphics cannot
-fix server scheduling starvation. Avoid running load probes on the live host.
+[NPC setup](NPCS.md) owns keys, enable switches, schedules, budgets and CLI. Keep the same DATA_DIR for server/CLI; SQLite backups include memory/usage. No proxy changes. `NPC_POPULATION_ENABLED=true` enables fifteen more; default timezone America/New_York, original IDs/budgets retained. Provision homes before absences: offline starvation applies during normal play and catch-up.
 
 ## Connected galaxies (0.20.0)
 
-A host can optionally publish its galaxy identity and connect trusted peers. Set
-`GALAXY_URL` (stable HTTPS URL including any base path), `GALAXY_NAME` and
-`GALAXY_PEERS_FILE` (path to a JSON array of peer names, URLs and public keys).
-Leave `GALAXY_URL` unset to keep federation disabled. The signing key lives in the
-SQLite backup; never share it or copy it into client settings. Read the full
-[galaxy setup, trust and recovery guide](GALAXIES.md) before connecting hosts.
-Existing games require no peer configuration and retain all local progress.
+Optional `GALAXY_URL`, `GALAXY_NAME`, `GALAXY_PEERS_FILE`; unset URL disables federation. [Galaxies](GALAXIES.md) owns trust, key pinning and recovery. Signing keys stay in private SQLite backups, never clients. Local progress needs no peers.
 
 ## Default parish services (0.21.2)
 
-Startup adds only a missing stonemason and waterworks in the default `puddlewick`
-economy world owned by `server`, and retires the accidental extra public starter
-properties from 0.21.0 plus the original council. Back up, pull, rebuild for the deployment's `BASE_PATH`
-and restart normally. No environment change or manual database edit is required.
-The server saves successful additions and a per-type completion record before
-accepting players. Purchased properties and custom-built plots keep all their state. Cleanup
-records protect them on later restarts; active tasks and occupants defer removal.
-Jobs pointing at a removed workplace are cleared and its investment is logged as
-a sink. Retained businesses and their custom prices are unchanged. Finite opening stock and production capital are supplied
-only for newly added businesses. There is no automatic replenishment on restart.
-Invalid or occupied sites are skipped and retried at a later startup. Player-made
-worlds and imported designs retain their own layouts. See [Puddlewick services](PLAYING.md#puddlewick-services).
+Only default server-owned Puddlewick receives missing stonemason/waterworks plus one-time cleanup of accidental excess public starters. Purchased/custom properties are preserved; active occupants/tasks defer cleanup. Completion records prevent restocking/recreation, blocked sites retry later; other worlds retain layouts. [Player service guide](PLAYING.md#puddlewick-services) and [migration scope](RELEASE_NOTES.md#puddlewick-cleanup-scope).

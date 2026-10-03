@@ -2,234 +2,38 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-**Play the alpha:** [hromp.com/aclone](https://hromp.com/aclone)
+[Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
+**Version 0.24.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
-**Version 0.24.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
-**New in 0.24.0:** player-to-player cash gifts and roadside refuelling, with independent world-owner controls. See [helping other players](docs/PLAYING.md#helping-other-players).
+![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
-**Fixed in 0.23.1:** NPCs distinguish their current qualifications from school courses and old-life memories. Clarified training agreements replace blocked job requests, and outdated replies are discarded after character-state changes. See [current character facts](docs/NPCS.md#current-character-facts-and-retraining) and [upgrade instructions](docs/RELEASING.md#deploying-0231).
+## What you can do
 
-**New in 0.23.0:** natural gathering grounds replace the rows of resource piles: woodland clearings, chipped boulders, gravel hollows and exposed soil banks, placed away from town buildings and roads. Existing reserves and gathering tasks survive the move. See [screenshots and art details](docs/ART.md#natural-gathering-grounds).
+- Build an economy: gather materials, grow six crops, process goods, set prices/wages and run shops or guesthouses.
+- Live in a persistent world with seasons, storms, day/night lighting, survival and stocked homes that feed you offline.
+- Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag.
+- Travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
+- Create worlds with terrain, custom models, uploaded visuals, editable recipes, visual behavior rules and optional Lua scripts.
+- Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. API billing and operator spending limits are separate from consumer subscriptions.
+- Play with desktop controls or a compact touch interface. Give neighbours money or help refuel their vehicles.
 
-**New in 0.22.0:** channel-scoped relationship memory, learned gameplay preferences, natural replies to validated agreements, and fewer redundant planning calls. Player conversations receive scheduling priority; ordinary chat remains one call and agreements use at most one additional wording call within the same budget. See [NPC continuity and conversation](docs/NPCS.md#continuity-and-conversation-0220).
-
-**Fixed in 0.21.3:** NPC agreement replies use in-character language, with clear task status and no references to separate AI providers. See [upgrade instructions](docs/RELEASING.md#deploying-0213).
-
-**Fixed in 0.21.1:** NPCs can queue a concrete request to learn a workplace’s skill and take its job, with verified training/employment progress. Ready agreements take priority over optional errands, and chat distinguishes a queued request from actual action. See [NPC agreements](docs/NPCS.md#agreements-made-in-chat).
-
-**Fixed in 0.21.2:** Puddlewick returns to its intended starter roster, keeping the stonemason and shoreline waterworks. Excess automatic additions and the public council are removed once where still public or unowned; purchased and custom-built businesses are preserved. All building types remain available for later player construction. See [Puddlewick services](docs/PLAYING.md#puddlewick-services) for operation and [upgrade instructions](docs/RELEASING.md#deploying-0212).
-
-**New in 0.20.0:** a world creator studio with custom models, interactive objects, visual behavior rules, arena configuration, production editing and reusable designs; plus opt-in travel between self-hosted galaxies. See [World building](docs/WORLD_BUILDING.md) and [Connecting galaxies](docs/GALAXIES.md) for usage, hosting and explicit limits. See [upgrade instructions](docs/RELEASING.md#deploying-0200).
-
-**Fixed in 0.19.3:** gathering, labour and other timed tasks show a large countdown in the center of the screen, separate from chat, on desktop and mobile. See [task progress](docs/PLAYING.md#timed-tasks) and [upgrade instructions](docs/RELEASING.md#deploying-0193).
-
-**Fixed in 0.19.2:** Jev receives clearer survival deadlines, food choices, job economics and outcome feedback. NPCs can buy and eat in one errand, preserve personal provisions and deliver inputs to their own businesses. See [decision guidance and limits](docs/NPCS.md#survival-and-economic-decisions-0192).
-
-**Fixed in 0.19.1:** nearby gathering grounds now show a direct Gather button, available reserves, progress and explanations for blocked gathering. No Resources menu is needed. See [gathering resources](docs/PLAYING.md#gathering-resources) and [upgrade instructions](docs/RELEASING.md#deploying-0191).
-
-**New in 0.19.0:** a full-scale industrial cargo rocket replaces the retro spaceport model, and robocrows gain detailed mechanical wings, sensors and rotating lift fans. See the [rocket scale comparison](docs/ART.md#industrial-spaceport-0190) and [robocrow preview](docs/ART.md#industrial-robocrows-0190).
-
-**Also in 0.19.0:** drive onto the fishing dock, click it or press E/Ctrl, and use the centered Cast a line, Reel in and Stop fishing buttons without opening Activities. See [fishing at the dock](docs/PLAYING.md#fishing-at-the-dock) and [upgrade instructions](docs/RELEASING.md#deploying-0190).
-
-**New in 0.18.0:** a distinctive spaceport rocket and marked landing pad, with metal terminal cladding and illuminated apron markers. See the [art guide and screenshots](docs/ART.md#spaceport-apron-0180) and [upgrade instructions](docs/RELEASING.md#deploying-0180).
-
-**Fixed in 0.17.1:** fishing has a centered Reel in button that highlights when a fish bites, and buildings display their owner's name even when the owner is offline. See [upgrade instructions](docs/RELEASING.md#deploying-0171).
-
-**New in 0.17.0:** a compact mobile HUD, two-thumb driving, touch camera gestures and keyboard-aware chat/menu sheets. All game menus remain accessible on phones and tablets; full-size desktop controls retain their layout. See the [mobile guide](docs/MOBILE.md) and [upgrade instructions](docs/RELEASING.md#deploying-0170).
+This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
 <details>
-<summary>Mobile interface previews (0.17.0)</summary>
+<summary>More gameplay screenshots</summary>
 
-![Portrait phone interface with separate steering and throttle](docs/screenshots/mobile-portrait.png)
-![Landscape phone interface with compact menus and a clear driving view](docs/screenshots/mobile-landscape.png)
+![Trading at the flour mill](docs/screenshots/trading.png)
+![Portrait phone controls](docs/screenshots/mobile-portrait.png)
+![Named parish map](docs/screenshots/parish-map.png)
+
+[Full screenshot gallery and asset sources](docs/ART.md)
 
 </details>
 
-**New in 0.16.0:** shoreline-only waterworks produce local water from fuel, with a new pump operator skill, shoreline checks for players and NPCs, and profitable local delivery prices. See [building and operating waterworks](docs/PLAYING.md#water-supply) and [upgrade instructions](docs/RELEASING.md#deploying-0160).
-
-**Fixed in 0.15.3:** local supply-chain prices now support profitable production and haulage, with less attractive import/export fallbacks. Existing public and unowned businesses migrate once; every player-owned price is preserved. NPC delivery promises are checked against live stock ownership and buyer terms. See [pricing and limits](docs/ECONOMY.md#default-trade-prices-0160) and [upgrade instructions](docs/RELEASING.md#deploying-0153).
-
-**Fixed in 0.15.2:** repeated trades keep list scroll position; gameplay forms remember edited amounts and choices across actions and reopened dialogs during the browser session.
-
-**Fixed in 0.15.1:** NPC chat responds independently of gameplay planning failures. Jev context is bounded to avoid oversized requests while retaining every candidate action.
-
-**New in 0.15.0:** fifteen more AI neighbours, varied playing habits, stocked-home departure routines and chat-to-Jev delivery agreements. Offline starvation now applies to everyone. Building prices and wages show their saved values, residents stay visible during AI retries, public conversations support follow-ups, chat scrolling works, and replies allow 1,200 characters. [Enable the population and review survival rules](docs/NPCS.md).
-
-**New in 0.14.0:** all four AI neighbours share an adaptive Jev gameplay planner, including new resident **Elias Vale**. Mabel retains OpenAI conversation; the others use Claude. Chat models run only for addressed human messages, with duplicate prevention and bounded retries. Existing identities, memories and shared spending caps are preserved. See [setup and behavior](docs/NPCS.md).
-
-**New in 0.13.0:** meet **Rowan Field**, a farmer with Jev choosing his actions and Claude handling conversation. He learns farming, tends seasonal plots and can save toward his own farm; all three AI neighbours share the existing spending caps. See [farmer setup](docs/NPCS.md#rowans-configuration).
-
-**New in 0.12.0:** meet **Toby Finch**, a Claude-powered baker with his own personality, persistent memory and normal economy gameplay alongside Mabel. Both residents share spending caps, with provider-specific accounting and Claude prompt caching. See [setup and operator guidance](docs/NPCS.md).
-
-**Fixed in 0.11.3:** accepting an existing job safely renews its shift without duplicate employees or wages. Mabel receives explicit guidance about expired shifts and the work action needed to renew them. See [AI workplace guidance](docs/NPCS.md).
-
-**Fixed in 0.11.2:** building efficiency reflects current staffing immediately, and open building panels show a live production-check countdown and stock quantities. Production still happens on its scheduled cycle. See [mill production guidance](docs/FAQ.md).
-
-**Fixed in 0.11.1:** Mabel gets complete FAQ/economy knowledge, live workplace diagnostics and persistent action feedback. Failed plans back off and duplicate announcements are suppressed. See [AI neighbour guidance and recovery](docs/NPCS.md).
-
-**New in 0.11.0:** smaller network updates, bounded catch-up traffic, lighter rendering and NPC/script processing, and main-chat scrollback. Dynamic shadows default off; models, textures and lighting remain. See [performance and chat](#performance-and-chat-0110).
-
-**New in 0.10.0:** optional AI neighbour **Mabel Reed**, with persistent memory, normal economy gameplay, private chat and help with controls and common questions. The original resident is independently configured, with shared spending limits and empty-parish sleep. See [NPC setup and operation](docs/NPCS.md) and [controls/FAQ](docs/FAQ.md).
-
-**New in 0.9.0:** press **M** or click the minimap for an enlarged parish map with building and resource names, live player markers, zoom and panning. Click a building name to inspect it. The Parish Directory remains a separate view. See [map controls](docs/PLAYING.md#finding-your-way).
-
-![Enlarged parish map with named buildings, roads and gathering grounds](docs/screenshots/parish-map.png)
-
-**New in 0.8.0:** synthesized engine idle and revs, nearby players’ motors and horns, and distinct machinery sounds tied to building production. Sound starts after a click or keypress, with a visible mute button and saved volume control. See [sound controls](docs/PLAYING.md#sound) and [release notes](CHANGELOG.md).
-
-**New in 0.7.0:** stronger, wider, longer-range headlights and much broader streetlight pools, with a slower fade that lights the gaps between lamps and the surrounding verges. See [CHANGELOG.md](CHANGELOG.md) for the release notes.
-
-The night sky has moving, seasonal stars and two nearby, phased moons. Starlight gives enough dim illumination to make out nearby ground; bright full moons reveal grass and terrain, including softer light in the shadows. Moving clouds obscure the sky and reduce that illumination. In first-person view, drag upward to look at the sky.
-
-<details>
-<summary>Night-sky previews (0.7.0)</summary>
-
-![The nearby moon pair and stars through moving clouds](docs/screenshots/twin-moons.png)
-![The same moons in their crescent phase](docs/screenshots/crescent-moons.png)
-![Grass visible under a clear full moon, with headlights off](docs/screenshots/moonlit-ground.png)
-![The same field under starlight alone](docs/screenshots/starlit-ground.png)
-
-</details>
-
-**Fixed in 0.6.1:** natural reverse steering, no self-employment or self-trading, and a small finished-goods delivery margin to Harbour stores (pricing revised in 0.15.3). Owners use Stockroom and Building Admin; custom prices remain configurable.
-
-**New in 0.6.0:** an approximately eight-times-larger town footprint with winding roads, dispersed businesses, roadside lights and a matching parish map. Existing starter properties retain their owners and contents when relocated; custom lots stay in place.
-
-![Expanded town and winding lanes](docs/screenshots/town-overview.png)
-
-**Fixed in 0.5.1:** reliable Go outside buttons during live updates, plus Space/Enter activation of focused buttons.
-
-**New in 0.5.0:** truly dark nights with working street/window lights, persistent snow and storm traction, varied woodland, finite gathering grounds, eight new processing businesses, richer crops, and player-run hotels/B&Bs with offline room provisions. See the [economy and lodging guide](docs/ECONOMY.md).
-
-**New in 0.4.0:** seasonal farming and weather, team combat modes, an expanded galaxy with saved journeys and contracts, cottage styles, tractor paint and conditional chimney smoke. See the [player guide](docs/PLAYING.md) for timing, controls and balance decisions.
-
-**Updated in 0.3.4:** compact tractor proportions and a varied village of cottages, shops, civic buildings and industrial sheds, with consistent human-scale doors, windows and street furniture. New buildings retain existing identities, ownership and inventories.
-
-**Fixed in 0.3.3:** smoothly shaded walking characters and cab drivers with natural proportions, facial and clothing detail, animated limbs, and a closer walking camera. Use **Inventory → Switch to walking** or **Return to tractor**.
-
-**Fixed in 0.3.2:** smoother tractor movement and camera tracking between network updates, with software/performance rendering targeting up to 30 FPS. A short 300 ms visual buffer absorbs modest packet jitter; physics and saved positions remain server-owned.
-
-**Fixed in 0.3.1:** fewer false Lua timeouts during worker startup, automatic backoff for failing scripts, and distinct pilot nameplates. Other tractors with a PILOT tag are connected players; they disappear on disconnect while keeping their saved progress.
-
-**New in 0.3.0:** detailed tractors, limestone cottages, slate roofs, textured meadows and gravel lanes, layered clouds and leafy village scenery, protected offline progress, optional password accounts and email recovery, and a repeatable 100-client load probe. See [CHANGELOG.md](CHANGELOG.md).
-
-This is a playable first implementation, not a claim of complete historical feature parity. Read [implementation status](docs/STATUS.md) for the supported mechanics and remaining specification gaps. The game has no dependency on the original servers, accounts, binaries or assets.
-
-The AI population now includes **19 distinct neighbours** with different economic
-inclinations. Mabel stays online; everyone else has varied daily and occasional
-long visits. Toby, Rowan and Elias play roughly three times as long as the new
-neighbours. They prepare supplies and shelter before leaving, and return sooner
-when unprepared. Chat agreements can become persistent Jev delivery plans.
-Delivery requests are checked against live ownership, stock and buyer terms before
-acceptance; being employed at a farm does not give an NPC its crops. Blocked
-agreements receive a one-time explanation without an extra chat-model call.
-
-All residents need `JEV_API_KEY` (or `TYPESAFE_API_KEY`). Mabel uses `OPENAI_API_KEY`
-for conversation; everyone else uses `CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`).
-Keep `NPC_ENABLED`, `NPC_BAKER_ENABLED`, `NPC_FARMER_ENABLED` and
-`NPC_INDEPENDENT_ENABLED` for the original four. Add **`NPC_POPULATION_ENABLED=true`**
-to enable the new fifteen; `NPC_TIME_ZONE=America/New_York` controls habitual hours.
-Existing identities/memories and shared spending caps are preserved. See
-[setup, habits, survival and agreements](docs/NPCS.md).
-
-## Performance and chat (0.11.0)
-
-Version 0.11.0 reduces duplicate world/chat traffic and bounds pending updates per
-player. Stable connections retain the usual 5 Hz snapshots; slower connections
-catch up with current state, and uneven delivery gets a gradually enlarged motion
-buffer. Controls still react on the next 50 ms input poll, with fewer repeated
-messages while holding a key or parked. No server setting is needed; older clients
-remain supported. See [protocol details](docs/PROTOCOL.md#compact-delivery-protocol-3-0110).
-
-Dynamic shadows now default off; an option enables them outside performance mode.
-Models, textures, contact shading, headlights and town lighting are retained.
-Static scenery and HUD work is reused, NPC routing checks fewer collision cells,
-and Lua events share lightweight runtime workers with isolated per-event state.
-Driving bursts no longer consume the separate action allowance.
-
-Scroll the main chat with the wheel or trackpad to read up to 100 recent messages.
-Chat scrolling does not zoom the camera. **Page Up/Page Down** also scroll history
-while composing a message. New arrivals keep your reading position; **jump to latest**
-returns to live chat. Public mentions of AI residents receive public replies;
-private conversations stay private. For two minutes after your latest turn, you can
-reply to that resident without repeating their name. Naming someone else switches
-the conversation. Routine actions no longer flash a generic success
-message; errors and specific results still appear.
-
-The driving display now separates **ms ping** from **FPS**. High ping suggests
-network/server delay; low FPS points to rendering/device load. Both can happen
-together. See [lag troubleshooting](docs/PLAYING.md#when-the-game-feels-laggy) and
-[repeatable hosting checks](docs/HOSTING.md#connection-and-multiplayer-checks).
-
-## Screenshots
-
-Actual gameplay, with original models, material textures and interface. The first image uses detailed graphics and the H-key scenery view:
-
-![Detailed-mode countryside, a glazed tractor cab and weathered village materials](docs/screenshots/scenery.png)
-
-![A tractor in Little Puddlewick, with the parish map, player status and inventory](docs/screenshots/parish.png)
-
-![A working flour mill showing stock, prices, investment and property purchase](docs/screenshots/trading.png)
-
-<details>
-<summary>Village variety, character detail, galaxy directory and live world editor</summary>
-
-These gameplay captures show the scale and architecture update in 0.3.4.
-
-![Village buildings at distinct heights and footprints](docs/screenshots/village.png)
-
-![Human beside a cottage with a full-height doorway](docs/screenshots/human-scale.png)
-
-![Two-storey pub with a side wing and timber framing](docs/screenshots/pub.png)
-
-![Mill tower and original timber mill wheel](docs/screenshots/mill.png)
-
-![Original walking character with work clothes and articulated limbs](docs/screenshots/character.png)
-
-![Walking pose captured from the live renderer](docs/screenshots/walking.png)
-
-![Seated driver visible through the tractor cab](docs/screenshots/driver.png)
-
-![Galaxy directory with persistent worlds and world creation](docs/screenshots/galaxy.png)
-
-![Owner editor for world rules](docs/screenshots/editor.png)
-
-</details>
-
-<details>
-<summary>Gameplay expansion</summary>
-
-Staged gameplay in a disposable local world, using the actual renderer and server:
-
-![Timber cottage and blue tractor](docs/screenshots/wood-cottage.png)
-![Winter snow on the village](docs/screenshots/winter.png)
-![Sunset lighting](docs/screenshots/sunset.png)
-![Growing crops beside a farm](docs/screenshots/farm-plots.png)
-![Crop care and harvest controls](docs/screenshots/farming.png)
-![Seven-system galaxy and jump routes](docs/screenshots/galaxy-routes.png)
-
-</details>
-
-<details>
-<summary>Night lighting, storms, woodland and guesthouses (0.5.0)</summary>
-
-Staged local worlds running the released gameplay code:
-
-![An occupied guesthouse at dusk](docs/screenshots/evening-inn.png)
-![Street lights and cottage windows illuminate the village](docs/screenshots/night-town.png)
-![Snowstorm with accumulated snow](docs/screenshots/snowstorm.png)
-![Player-built timber bed and breakfast](docs/screenshots/guesthouse.png)
-![Room booking and a guest's private pantry](docs/screenshots/lodging.png)
-![Gathering grounds and their remaining reserves](docs/screenshots/gathering.png)
-
-</details>
-
-## Play locally
-
-Install Node.js 24.14 or newer, then clone and run:
+## Run locally
 
 ```sh
 git clone https://github.com/151henry151/Aclone.git
@@ -238,156 +42,79 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. Create a pilot, land in Puddlewick, and press **F7** or **How things work** for the field guide. No account service, paid service, API key, or separate database installation is required. Node provides SQLite; its experimental-feature notice on Node 24 is expected.
-
-If port 3000 is occupied:
-
-```sh
-PORT=3007 npm run dev
-```
-
-For a production build:
+Open **http://127.0.0.1:3000**. Development mode reloads client code. For a production build:
 
 ```sh
 npm run build
 npm start
 ```
 
-### Docker deployment
+State lives in `var/aclone.sqlite`; keep this directory between runs. For LAN access, start with `HOST=0.0.0.0 npm start` and use the host's LAN address. Native startup inherits environment variables; to load a private `.env`, use `node --env-file=.env --import tsx src/server/main.ts` (add `--dev` for development).
+
+## Deploy
+
+Use a single Node process per database behind an HTTPS reverse proxy, or `docker compose up --build -d` with its persistent volume. For a URL such as `https://hromp.com/aclone/`:
 
 ```sh
-docker compose up --build -d
-docker compose logs -f
+BASE_PATH=/aclone npm run build
+PUBLIC_ORIGIN=https://hromp.com/aclone/ npm start
 ```
 
-Compose keeps the SQLite database and uploads in a named volume and binds to
-`127.0.0.1:3000`. Put an HTTPS reverse proxy in front for public access. The
-[deployment guide](docs/HOSTING.md) covers native services, TLS, environment
-variables, backups and restoration. GitHub Pages cannot host the authoritative
-Node/WebSocket server.
+The proxy must strip `/aclone` before forwarding, including WebSocket requests, and redirect `/aclone` to `/aclone/`. See [hosting](docs/HOSTING.md) for proxy examples, environment variables, SMTP, backups and restore; [releasing](docs/RELEASING.md) covers upgrades. Production deployment is operator-managed.
 
-The server serves the compiled client and WebSocket API together. Development mode serves the client through Vite. The default bind address is loopback. To let other devices on your LAN connect:
+## Start playing
 
-```sh
-HOST=0.0.0.0 PORT=3000 npm start
-```
+Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter**. On mobile, use the steering/throttle buttons and **Actions** menu.
 
-They open `http://YOUR-LAN-IP:3000`. Use HTTPS through a reverse proxy for an internet-facing instance; see [hosting and backups](docs/HOSTING.md). A running server continues simulating every world even when all players are offline.
+1. Work a 15-second shift at the Odd Jobs Office for 45d.
+2. Buy food and water at Harbour stores; consume them from Inventory.
+3. Learn a profession at school, take a funded job or save to buy a business.
+4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**
 
-### Graphics
-
-Evergreen woodland uses branching spruce/fir silhouettes, fine needle sprays and bark textures generated in the browser. Performance mode keeps the same tree shapes with fewer secondary shoots; detailed mode adds fuller foliage; dynamic shadows are a separate opt-in setting. The [art guide](docs/ART.md#evergreen-woodland) explains the renderer and how to capture inspection views.
-
-<details>
-<summary>Evergreen woodland previews (0.8.1)</summary>
-
-![Reworked evergreen branches and varied tree sizes](docs/screenshots/evergreen.png)
-![Needle-covered shoots and exposed woody branches up close](docs/screenshots/evergreen-close.png)
-
-</details>
-
-Open **Pilot & preferences → Graphics** to cycle through **adaptive** (the default, with automatic fallback), **detailed** (higher resolution and antialiasing), and **performance** (lower resolution, fewer plants, contact shading). Detailed mode benefits from a hardware GPU. Detected software renderers use a smaller framebuffer and a capped render rate to leave time for controls. Every mode uses the same original material textures and detailed tractor model. Drag the view and scroll to inspect the scene; **C** cycles cameras. Press **H** for an unobstructed scenery view; **H** or **Escape** restores the HUD. The four textures add about 2.7 MiB to the first village visit and work under URL prefixes such as `/aclone/`.
-
-## Your first day
-
-1. Drive with **arrows** or **WASD**. **Shift** boosts; it also uses more fuel. Drag the view, use the mouse wheel to zoom, or press **C** to change camera.
-2. Drive near the **Odd Jobs Office**, north of the village green. **E / Ctrl** opens a nearby building. A 15-second shift pays 45d.
-3. Buy bread and water from **Harbour stores**. Use them from your inventory. Bread reduces hunger; water reduces thirst. Eating the same thing repeatedly reduces its benefit.
-4. Learn a profession at the **school**. The first qualification costs 80d and takes a real minute. Later qualifications take forty minutes and cost 160d. These onboarding values are original tuning, not a historical claim.
-5. Take a job, then choose **Work two cycles**. Wages are paid only on successful, funded production cycles. Farm staff instead earn wages by completing harvest shifts. Buy an unclaimed business, supply its inputs and fund its investment account. Set your own trading prices.
-6. Buy a house and put food and drink in its Stockroom. **Go home** to use its supplies, including while offline. You can also book a room at a player-run B&B or hotel and store your own provisions. Click **At home · Go outside** above the chat to leave your house or rented room and resume driving or walking. Hunger, thirst and starvation damage continue offline: stock enough provisions before leaving. Offline ageing and passive property decay pause; business and training continue.
-7. Open **Resources** to find wood, stone, gravel and topsoil. Carry tools for timber/minerals. Deliver to businesses or build your own processing chain. Turn on **headlights (L)** outside town at night; wet or snowy roads slow you down.
-8. Choose **Activities** for Hornball, the circuit, fishing, or two-player Ultrakricket. Hornball uses your horn, not a gun.
-9. Drive to the **spaceport** to exchange local cash for galactic credits or take off. Create a world from the galaxy directory; **F10** opens its owner editor.
-
-The menu has a directory showing distances to every building. Transactions require proximity; opening a distant building only inspects it. On touch screens there are driving buttons. Desktop keyboard and mouse remain the primary interface.
-
-## Controls
-
-- Arrows / WASD: throttle and steering. Shift: boost.
-- E / Ctrl: interact. Enter / F2: chat. `*help`: supported commands.
-- Space: horn. Tab: primary weapon in a fighting world, otherwise horn. Number keys 1–6 select a weapon.
-- F4: engine. L: headlights. C: chase / first-person / overhead camera. Wheel: zoom. Drag: orbit; in first-person view, look around and up/down.
-- Insert / Delete: climb / descend in a biplane or robocrow. Carry a jetpack to lift a ground vehicle.
-- R / F5: deploy a disposable robocrow or return to your body.
-- F3: reel when the fishing bite prompt appears.
-- I: inventory. M / click minimap: parish map. F7: guide. F9: menu. F10: world editor. Esc: close a window.
-
-All important F-key actions have on-screen alternatives because browsers reserve some keys. Options include a performance graphics mode for integrated GPUs or software rendering. Sound starts after your first click or keypress, unless you previously muted it. Use the visible **Sound** button to mute/unmute; **Pilot & preferences** also has a saved volume slider. Engines idle and rev while driving, nearby players’ engines and horns have distance and stereo positioning, and supplied processing buildings make machinery sounds. Hidden tabs and disconnected sessions are silent. See [sound controls](docs/PLAYING.md#sound) for details.
-
-## Keep your pilot
-
-Start with a pilot name, then open **Pilot & preferences** to set a password of at least 12 characters. Returning players can sign in by pilot name and password. You keep the same inventory, properties, skills and credits when adding a password to an existing pilot.
-
-If the operator enables SMTP, add an email address and follow its verification link. **Forgot your password?** emails a single-use reset link valid for 30 minutes. Password resets and signing out invalidate old pilot keys and active connections. Email delivery needs operator configuration; it is not available automatically on a fresh local install. See [account and email setup](docs/HOSTING.md#accounts-and-recovery-email).
-
-The browser still stores a private **pilot key** for automatic reconnection. Export a fresh key after password sign-in and keep it private; sign-in rotates it. Key-only pilots remain supported. Losing both a key and password access without a verified recovery address still loses access to that identity.
-
-World state, accounts and a money ledger are stored under `var/aclone.sqlite` by default. Acknowledged world actions save immediately; movement and ongoing simulation save every five seconds. Graceful shutdown saves all worlds. The server makes hourly SQLite backups and retains the most recent 24. Hunger, thirst and starvation damage continue when disconnected. Stocked homes or paid rooms automatically feed their occupants; running out of supplies or an expired room can lead to death. Ageing and passive owned-building decay still pause offline. Production and pending rewards continue. Offline restart catch-up is bounded to 30 real days; see hosting documentation for recovery details.
-
-## What is included
-
-- A Three.js client with original low-poly scenery, a 128 × 128 terrain mesh, day/night lighting, chase cameras, tractor smoke, map, chat, inventory and building windows.
-- Authoritative multiplayer simulation: clients request actions and send bounded control inputs; the server owns position, money, stock, damage and timers.
-- Integer currency with sheckle/denarius formatting, taxes, investment, wages, 22 production recipes (farms use seasonal plots), tasks, skills, construction, banks, home stores and survival.
-- 24 data-defined vehicle slots; tractor, car, biplane, boat, hovercraft, walking, ostrich and robocrow modes. Six data-defined weapons and safe zones.
-- Hornball, checkpoint racing, fishing and a simple original Ultrakricket ruleset.
-- Persistent pilot identities, three star systems, planet travel, credit conversion, three ships and station cargo trading.
-- World creation from economy/combat/playground templates, live owner settings, terrain brushes, placement, zones, prices, wages, asset uploads and isolated Lua event handlers.
-- GPL licensing, unit and real WebSocket integration tests, browser tests, CI, Docker packaging, developer and operator documentation.
-
-## Optional AI resident
-
-Four independently enabled AI neighbours share the adaptive Jev gameplay planner: **Mabel Reed**, **Toby Finch**, **Rowan Field** and **Elias Vale**. Mabel uses OpenAI for conversation; the others use Claude. Each has a separate identity, persistent journal and notebook, and follows ordinary player rules. Career interests are preferences, not restrictions. Chat models are called only for addressed human messages, with durable retry limits and shared spending caps. See [setup, chat, budget and operator controls](docs/NPCS.md). All residents are disabled by default; server-side API keys are required.
-
-Version 0.11.1 expands Mabel's always-present knowledge to the full
-FAQ and economy guide, with live production/employment diagnostics and clearer
-success/failure feedback. Repeated failures now back off, recently failed steps
-are temporarily blocked, and duplicate autonomous announcements are suppressed. See [the NPC guide](docs/NPCS.md#helping-other-players)
-and [mill troubleshooting](docs/FAQ.md#why-is-my-flour-mill-not-making-flour).
-
-![Mabel identified as AI, with private help chat in a disposable local browser test](docs/screenshots/npc-chat.png)
-
-The screenshot uses a scripted test reply to verify the interface. Separate live OpenAI tests verify gameplay and answers about controls, recovery, ownership and crops.
+Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
 
 ## Contribute
 
-The NPC qualification correction separates current qualifications from school courses
-and historical memories, and lets a clarified training agreement replace blocked
-job requests. See [current character facts](docs/NPCS.md#current-character-facts-and-retraining)
-for the behavior and upgrade limits.
-
-The countryside redesign replaces resource piles with woodland clearings,
-stone outcrops, gravel hollows and exposed soil banks away from village buildings.
-Run `npm run screenshots:resources` to inspect all four in a disposable game and
-verify gathering through the HUD. See [the art guide](docs/ART.md#natural-gathering-grounds)
-for geometry budgets and saved-world compatibility.
-
-The gameplay expansion is described in [the player guide](docs/PLAYING.md) and [the changelog](CHANGELOG.md).
-
-See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), [data tuning](docs/DATA.md), [protocol](docs/PROTOCOL.md) and [Lua scripting](docs/SCRIPTING.md).
+Start with [CONTRIBUTING](CONTRIBUTING.md). Use tests for new behavior, keep money/state changes authoritative on the server, and update the relevant guide and changelog. No credentials, saved accounts or original-game research assets belong in commits or releases.
 
 ```sh
-npm run check        # strict TypeScript + unit/integration tests
+npm run check
 npm run format:check
 npm run build
 npx playwright install chromium
-# start the game in another terminal, then:
+# Start a disposable test server before browser tests:
 npm run test:e2e
-npm run test:load    # isolated 100-client, 10-second local load probe
-npm run test:network # compressed TCP test: limited bandwidth, delay, jitter and a fast peer
 ```
 
-The browser suite creates disposable pilots and worlds: point it at a test instance, not your production parish. `TEST_URL` changes its target and `CHROMIUM_PATH` optionally selects a local Chromium executable. The home-exit regression starts its own temporary server and checks mouse and keyboard activation during live updates, reconnection and resumed movement. Run it independently with `npm run test:e2e -- tests/browser/home.spec.ts`. The map regression (`npm run test:e2e -- tests/browser/map.spec.ts`) also starts an isolated server and checks keyboard/click opening, live markers, custom building names, stable zoom/focus and mobile panning; it writes desktop and mobile captures to `test-results/`. The browser runner uses `tsx` for TypeScript server fixtures and runs one browser at a time to avoid competing software WebGL renderers. `SCREENSHOT_OUTPUT_DIR=/tmp/aclone-seasons npm run screenshots:seasons` validates farm harvesting and space travel while saving captures outside the documentation. `npm run screenshots:town` captures the expanded town and checks access to its public services using an isolated server. Unit and network tests use temporary databases and random ports.
+Browser tests may create pilots and worlds: never target production. `TEST_URL` selects the server; `CHROMIUM_PATH` selects an installed Chromium. Load/network checks are in [Hosting](docs/HOSTING.md#connection-and-multiplayer-checks); visual capture commands are in [Art](docs/ART.md#reviewing-visual-changes).
 
-After `npm run build`, run `npx tsx scripts/night-lighting.ts` to capture repeatable midnight headlight and streetlight views plus a daytime comparison in `test-results/night-lighting`. It uses a disposable world, checks the real **L** toggle, and reports browser errors. `SCREENSHOT_OUTPUT_DIR` changes the destination, `SCREENSHOT_GPU=1` enables hardware rendering, and `SCREENSHOT_QUALITY=low` exercises the reduced light budget.
+## Documentation
 
-`npx tsx scripts/night-sky.ts` captures natural near-full, half and crescent phases, an overcast sky, two hours of sky movement and daylight. It also compares the same ground view under full moons, starlight alone and overcast skies, with headlights off. It uses the same screenshot options and an isolated world, saving to `test-results/night-sky` by default.
+### Players and world creators
 
-Tuning is in `data/*.json`. New behaviours need tests before or alongside implementation. Update `CHANGELOG.md`, review this README and affected guides, and keep the code formatted. No generated client build, saved accounts, reference screenshots or source-research exports belong in a release archive.
+- [Playing](docs/PLAYING.md) — getting started, activities, farming, travel and survival.
+- [Controls and FAQ](docs/FAQ.md) — key bindings and quick troubleshooting; also used by NPC help.
+- [Mobile](docs/MOBILE.md) — touch controls, menus and device checks.
+- [Economy](docs/ECONOMY.md) — prices, production chains, materials and lodging.
+- [World building](docs/WORLD_BUILDING.md) — creator studio, custom models, rules and design transfer.
+- [Scripting](docs/SCRIPTING.md) — Lua events, effects, examples and limits.
 
-## Licensing and acknowledgements
+### Hosts and developers
 
-Aclone code, configuration, documentation and original generated art/audio are **GPL-3.0-or-later**, unless a file explicitly states otherwise. See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Contributions use the same license.
+- [Hosting](docs/HOSTING.md) — installation, HTTPS, email, backups and capacity checks.
+- [Connected galaxies](docs/GALAXIES.md) — cross-server visits, trust and recovery.
+- [AI neighbours](docs/NPCS.md) — setup, personality/memory, schedules, budgets and diagnostics.
+- [Architecture](docs/ARCHITECTURE.md) — code map, authority, persistence and rendering boundaries.
+- [Data](docs/DATA.md) — catalogs, units, saved fields and tuning.
+- [Protocol](docs/PROTOCOL.md) — HTTP, actions and WebSocket snapshots.
+- [Art](docs/ART.md) — models, rendering budgets, captures and screenshot gallery.
+- [Texture prompts](docs/TEXTURE_PROMPTS.md) — original generation prompts and source provenance.
+- [Status](docs/STATUS.md) — supported systems, limits and remaining fidelity work.
+- [Releasing](docs/RELEASING.md) — checks, packaging and deployment procedure.
+- [Release notes](docs/RELEASE_NOTES.md) — historical features, migrations and validation records.
 
-_A tractor / The Universal_ belongs to its respective creators. Aclone is independent and is not endorsed by them. Research material under `sources/` and the supplied design spec are reference material, **not relicensed by Aclone** and not included in the client or release archive. The World Owners' Manual is attributed in the research spec; Aclone's guides use original wording.
+## License
+
+Code, configuration, documentation and original generated art/audio are **GPL-3.0-or-later**, unless a file says otherwise. See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT), [third-party notices](THIRD_PARTY_NOTICES.md) and [security policy](SECURITY.md). Contributions use the same license.
+
+_A tractor / The Universal_ belongs to its creators; Aclone is independent and not endorsed by them. The supplied spec and `sources/` are research, not relicensed assets, and are excluded from the client and release archive. The World Owners' Manual is attributed in the research spec; these guides use original wording.

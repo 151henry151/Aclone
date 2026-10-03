@@ -2,288 +2,74 @@
 
 ## Runtime boundaries
 
-The browser renders a Three.js scene and an HTML HUD. It polls input at 20 Hz,
-sends changes on the next poll, and repeats held controls at most 10 Hz (1 Hz when
-idle). A blocked browser upload retains only the latest unsent controls. Normal
-snapshot delivery is 5 Hz; protocol 3 permits only three unacknowledged snapshots
-per client. Rendering interpolates positions and camera motion. The server updates
-worlds at 20 Hz. Input expires after 500 ms in protocol 3 (350 ms in older clients),
-preventing a disconnected tractor from accelerating indefinitely while tolerating
-short delivery gaps.
+One Node process hosts HTTP/WebSocket, the universe and independent world state machines; SQLite stores them transactionally. Worlds own terrain, economy, players, rules and scripts. The universe owns identities, galactic credits, ships and cargo. Clients render Three.js plus HTML and request actions; the server owns physics, money, stock, timers and damage.
 
-The current self-hosted distribution runs the universe service and independent
-world state machines **in one Node process**, on one HTTP/WebSocket origin. Each
-world has its own players, rules, terrain, building economy, editor owner and
-script. The universe owns pilot identity, ship cargo, credits and star-system
-location. World selection switches the active simulation subscription.
+Simulation/input polling run at 20 Hz; snapshots normally at 5 Hz. Protocol 3 limits each peer to three unacknowledged states and expires controls after 500 ms (older protocols: 350 ms). Slow peers catch up without stalling others. [Protocol](PROTOCOL.md) specifies deltas, input rates, privacy and limits.
 
-Each host keeps its own single-process simulation and transactional SQLite economy.
-Optional federation connects independently hosted galaxies with pinned Ed25519
-keys, signed home passports and short-lived single-use arrival tickets. Visiting
-pilots retain a canonical identity but have independent local economy/progress.
-There is no distributed currency ledger or cross-server balance transfer. Native
-home-account returns require native authentication. See [Galaxies](GALAXIES.md).
-
-The creator studio stores a versioned optional `World.creator` document with
-bounded models, objects, arena settings and visual behavior rules. Old saves need
-no migration. Shared validation controls every edit; pure effects run in the
-simulation. Lua returns a separately validated effect batch, applied in per-world
-order. Design exports omit accounts, inventory and all private runtime state.
-See [World building](WORLD_BUILDING.md).
+Optional [federation](GALAXIES.md) uses pinned Ed25519 hosts and single-use arrival tickets. Identity travels; economies remain independent. Native home returns require native authentication. [Creator designs](WORLD_BUILDING.md) are bounded optional `World.creator` documents; exports omit private runtime state.
 
 ## Code map
 
-- `src/shared/types.ts`: persisted domain records and request types.
-- `src/shared/catalog.ts`, `data/`: original default content and tuning.
-- `src/shared/simulation.ts`: pure synchronous actions, validation, motion,
-  accounting, production, survival and minigames. No network or filesystem.
-- `src/shared/environment.ts`, `farming.ts`, `combat.ts`, `galaxy.ts`: calendar, crop lifecycle, match/weapon rules and route/trade calculations.
-- `src/server/store.ts`: SQLite schema, transactional snapshots, append-only
-  ledger, online backups.
-- `src/server/universe.ts`: token hashes, pilot records, ships, jumps and trading.
-- `src/server/app.ts`: HTTP endpoints, WebSocket authentication, scheduling,
-  request rollback, snapshot projection and static files.
-- `src/server/lua.ts`, `scripts.ts`, `script-worker.mjs`: isolated scripting.
-- `src/shared/building-shapes.ts`: deterministic metre-scale building volumes shared by rendering, picking, planting and movement collision.
-- `src/client/buildings.ts`: original building silhouettes and facade details.
-- `src/client/scene.ts`: original models, terrain, camera and effects.
-- `src/client/human.ts`: shared walking/driver geometry, articulated walking and seated poses.
-- `src/client/parish-map.ts`, `map-layout.ts`: persistent map controls, SVG roads and player markers, native building buttons, bounds and deterministic label placement. Uses shared town roads and resource nodes; snapshots update player markers without replacing controls. Static layers rebuild only on property/layout changes, resize or explicit map navigation.
-- `src/client/main.ts`, `style.css`: input, panels, connection and responsive HUD.
+- `shared/types.ts`, `shared/catalog.ts`, `data/`: saved records, defaults and tuning.
+- `shared/simulation.ts`: synchronous validation, actions, accounting, survival and movement; no I/O.
+- `shared/environment.ts`, `farming.ts`, `combat.ts`, `galaxy.ts`: calendar, crops, combat and travel.
+- `shared/resources.ts`, `lodging.ts`, `player-aid.ts`: gathering, guest stores and player assistance.
+- `shared/building-shapes.ts`: metre-scale volumes shared by visuals, picking, clearance and collision.
+- `shared/creator.ts`: design validation/actions/effects; `server/world-design.ts`: portable exports.
+- `server/store.ts`: schema, snapshots, durable ledger and online backups.
+- `server/universe.ts`, `accounts.ts`, `mail.ts`: identities, space economy, credentials and optional SMTP.
+- `server/app.ts`, `snapshots.ts`: transport, scheduling, rollback and private/public projections.
+- `server/lua.ts`, `scripts.ts`, `script-worker.mjs`: bounded isolated script execution.
+- `server/npc/`: providers, plans, memory, budgets, A* navigation and scheduling; [NPC guide](NPCS.md).
+- `client/scene.ts`, `buildings.ts`, `tractor.ts`, `human.ts`: rendering and models; [Art](ART.md).
+- `client/main.ts`, `style.css`, `panel-memory.ts`: HUD, forms and session drafts.
+- `client/parish-map.ts`, `map-layout.ts`: stable map controls, shared roads/resources, labels and live markers.
+- `client/mobile.ts`, `mobile.css`: pointer ownership and compact layout; [Mobile](MOBILE.md#developer-notes-and-verification).
+
+Paths above are under `src/` unless noted.
 
 ## Economy invariants
 
-Cash uses safe integer **hundredths of a denarius**. A wage of 0.25d is 25 units;
-1s at the default 100d/s rate is 10,000 units. Item counts are positive integers.
-Tax is rounded down once on the total transaction. Never round each item and
-multiply afterward.
+Cash is safe integer hundredths of a denarius: 0.25d = 25, default 1s = 10,000. Quantities are integers. Round tax down once on the total transaction, not per item.
 
-Every cash change has a faucet, transfer or sink ledger entry. A trade debit
-must equal its investment credit plus tax sink. Building purchases and tuition
-are sinks; task wages are faucets; funded employee wages are transfers plus a
-tax sink. A world's initial seeded stock and building capital are startup
-endowments, not ongoing production. Real inventory scarcity applies after that.
+Cash changes use faucet/transfer/sink ledger entries. Trade debit = investment credit + tax; purchases/tuition are sinks, labour rewards faucets, funded wages transfers plus tax. Initial stock/capital are finite endowments. Gifts conserve cash; refuelling consumes inventory.
 
-Requests validate before mutation. The server also snapshots the world before
-an action and restores it if an action throws. SQLite saves world snapshots and
-new ledger rows in one transaction, with `(world,id)` uniqueness preventing
-ledger duplication. The recent in-memory ledger is bounded; the durable ledger
-is not silently truncated.
+Validate before mutation. The server also restores a pre-action snapshot on exceptions. World changes and ledger inserts share a SQLite transaction; `(world,id)` prevents duplicate ledger rows. Only the in-memory ledger is bounded.
 
-Production uses fixed world-clock boundaries. Recipes consume their inputs only
-when all inputs, output storage and wage funds are available. Active work gives
-a funded employee two production cycles; an unattended building progresses at
-its configurable low-efficiency rate. Owners collect sales receipts from the
-investment pot. Goods do not spontaneously sell while everyone is offline.
+Production checks inputs, output room and payroll at scheduled boundaries. Active shifts cover two building cycles; unattended production uses reduced efficiency. Goods do not sell automatically. [Economy](ECONOMY.md) owns balance details.
 
 ## Persistence and time
 
-The schema has an explicit version. Incompatible versions are rejected rather
-than silently interpreted. World snapshots save each action, periodically, and
-at graceful shutdown. WAL allows consistent online backup through Node's SQLite
-backup API. Restore is an operator action with the server stopped.
+Actions save before acknowledgement; movement/simulation autosave every five seconds and on graceful shutdown. WAL/FULL synchronization and SQLite's online backup API protect acknowledged actions. Unknown schemas are rejected. [Hosting](HOSTING.md#backups) covers restore.
 
-Restart catch-up advances in 60-second increments for up to 30 real days. This
-bounds long-outage work and avoids applying an entire month of home food and
-survival as one giant step. During normal operation the world clock is advanced
-with elapsed monotonic time, with a 250 ms bound per tick to protect against
-extreme stalls. Game dates use a 600-second day; visual day length is separately
-tunable and can be frozen.
+Restart catch-up uses 60-second steps, capped at 30 real days. Running ticks use monotonic elapsed time capped at 250 ms. The economic calendar has 600-second days; visual day length is independent. Survival splits at food exhaustion, room expiry and death. Offline needs/damage continue; ageing and passive owned-property decay pause.
+
+Harvests reserve plots in saved tasks, rechecking capacity, payroll and permissions at completion. Failed harvests preserve crops. Climate/yields depend on saved time. Universe writes use a copied account inside a transaction; only committed state replaces the connected account. Station stock shares that transaction. Saved wall-clock jump arrivals settle once after reconnect or a live timer.
 
 ## Security and limits
 
-A pilot key is 256 random bits. Only its SHA-256 hash is stored server-side.
-Display names are reserved case-insensitively. A new WebSocket must authenticate;
-only one active connection per pilot is allowed. Clients cannot claim authority.
-Created-world owners are assigned level 20 in that world only.
+Pilot keys have 256 random bits and stored SHA-256 hashes; names use an indexed normalized case-insensitive key. One socket per pilot; world-owner authority (20) is world-local. Password scrypt concurrency is bounded; reset consumption, password replacement and key revocation share a transaction. Mail tests capture messages without real delivery.
 
-Requests have payload, rate, coordinate, quantity and finite-number limits.
-The server enforces building proximity and owner/admin checks. HTML text is
-escaped. Uploads use generated content-hash filenames, an allowlist, size limits
-and no executable formats. Production responses restrict resource origins with
-CSP. Supply HTTPS at the reverse proxy for non-local use.
-
-Lua runs in a separate worker heap with instruction and deadline limits. It has
-no OS, files, modules, JavaScript bridge or network. A script failure becomes a
-single world notice and a 60-second automatic-event pause, not a server failure.
-A per-server pool reuses up to two runtime workers with a bounded queue. Every
-job creates and closes a fresh Lua state; errors/timeouts discard the worker,
-and workers recycle after 100 jobs. Node's native type stripping loads the small
-sandbox directly, without a TypeScript loader or the whole simulation graph.
-Only script variables, time and player kudos cross into it. Worker startup and
-Lua execution have separate bounded deadlines. See SCRIPTING.md for the smaller supported
-API; the original event catalogue is not fully implemented.
-
-This alpha is tested for six simultaneous clients. It has not been load-tested
-or hardened for hundreds of untrusted public players. Development mode is not
-a public hosting mode.
-
-## Playability update
-
-`accounts.ts` separates private credentials and recovery hashes from public
-universe account state. Async scrypt work has a bounded concurrency budget.
-`mail.ts` is the optional SMTP adapter; tests inject a capturing transport and
-never send real mail. Reset consumption, password replacement and key revocation
-share a SQLite transaction. Existing account rows receive an indexed normalized
-name key without changing their IDs or saved property.
-
-`snapshots.ts` prepares public world fields once per broadcast and keeps each
-peer's previous sent frame. Protocol 3 additionally patches individual fields
-within buildings and players, private self state, and omits unchanged private
-messages/accounts. Public entity deltas are serialized once for each shared pair
-of frames, cached with weak baseline keys; private projections never enter that
-cache. Protocols 1 and 2 remain available for older clients. A three-frame ACK
-window skips broadcasts for an overloaded peer without advancing its baseline.
-The next update compares current state with the last sent frame; no delta is
-silently dropped after encoding. World changes start a full baseline, with
-socket-wide monotonic sequence numbers rejecting stale/future ACKs. Send-buffer
-limits remain a final bound for connections that cannot keep up.
-The load probe uses a child server process so client JSON parsing does not count
-as server event-loop work.
-
-Offline hunger/thirst and starvation damage use the same survival simulation as online players; only ageing remains paused. Sheltered residents consume provisions. Disconnects save, restart
-marks all pilots offline before catch-up, and SQLite FULL synchronization protects
-acknowledged actions. The durability test exercises actual disconnect and restart;
-the economy tests separately exercise long offline progression.
-
-`materials.ts` supplies shared, base-path-aware material textures and the blended
-terrain shader. `scenery.ts` supplies deterministic instanced foliage and batched
-contact shading; `sky.ts` and `noise.ts` supply atmospheric clouds. `tractor.ts`
-batches the detailed body and each animated wheel separately. Static scenery
-batches include texture identity and surface properties. Performance mode disables
-dynamic shadows and water animation, reduces plant density and uses a smaller
-framebuffer without multisample antialiasing. Detected software renderers use a
-30 FPS render target, matching performance mode, rather than a forced 10 FPS cap. Actual throughput depends on the device. Adaptive mode falls back after sustained
-slow frames. Dynamic shadows default off independently of quality; the saved
-shadow option enables them outside performance mode. Static countryside matrices
-are baked once while animated mill subtrees remain live. Town light selection
-runs on new snapshots or appreciable camera-focus movement, rather than every
-frame. Unchanged HUD sections retain their nodes, and the chat log appends only
-new rows while preserving scrollback. See [art documentation](ART.md)
-for asset provenance, prompts, texture ownership and visual verification.
-
-Screenshot capture defaults to adaptive mode. Set `SCREENSHOT_QUALITY=low` for
-performance or `high` for detailed. The capture checks for rendering errors before
-writing gameplay screenshots.
-
-Human figures share immutable geometry and materials for the lifetime of the page.
-Each walker clones only the object hierarchy so joint animation remains independent;
-scene disposal respects the shared-resource flags. Seated drivers are baked into
-three material draws. Walking uses displayed travel to animate two-bone legs and
-counter-swinging arms, with a closer camera and a first-person eye height of 1.68 m.
-The local occupant is hidden in first-person views to avoid camera clipping.
+Requests enforce payload/rate/finite-number/proximity/ownership bounds. HTML is escaped. Uploads use content hashes, allowlisted formats and size limits; CSP restricts production origins. HTTPS is supplied by the proxy. [Scripting](SCRIPTING.md) specifies worker isolation, effect validation and failure backoff. Development mode is not public hosting mode.
 
 ## Movement presentation
 
-The server still simulates input at 20 Hz and broadcasts state at 5 Hz. The client
-stores up to eight poses per visible pilot and normally renders 300 ms behind
-its estimate of server simulation time. Recent timestamp offsets and snapshot
-intervals increase that buffer smoothly, up to 800 ms, on jittery or flow-controlled
-connections. Buffer changes never rewind presentation time and decay gradually
-back to 300 ms when delivery stabilizes. Ordinary delayed packet bursts do not
-reset the entire motion history. Position and vertical height are linearly interpolated;
-heading follows the shortest angular path. Recent packet timestamps anchor the
-clock, with drift corrections capped at 5% to avoid following arrival-time jitter.
-The buffer trades some visual latency for steady travel without extra network
-traffic. This is visual interpolation, not client-side physics prediction.
+Each visible pilot retains eight poses. Interpolation normally runs 300 ms behind server time, increasing smoothly to 800 ms for jitter and decaying after recovery. Time never rewinds; clock correction is capped at 5%. Positions interpolate linearly and headings use the shortest arc. Camera, wheels and headlights follow displayed motion. This adds visual latency, not client physics prediction.
 
-The camera, cockpit view, headlights and wheel rotation use displayed motion.
-Large position discontinuities, vehicle/world changes and long update gaps reset
-the history. Missing updates drain the buffer and hold the last authoritative
-position; the client does not extrapolate through walls or continue driving after
-losing its connection. Interactions, physics and persistence still use server state.
-`tests/motion.test.ts` exercises steady motion at multiple frame rates, packet
-jitter, angle wrapping, teleports, disconnections and clock resets.
+Teleports, vehicle/world changes and long gaps reset history. Exhausted buffers hold the last authoritative pose rather than extrapolating through walls. `tests/motion.test.ts` covers frame rates, jitter, angles and resets.
 
-Building plans keep existing building IDs, positions, inventories and ownership.
-Collision transforms movement into each building's local frame and checks its
-individual volumes. A pilot already inside a newly enlarged or edited footprint
-may reduce penetration to escape; outside pilots cannot enter. This is still
-simple footprint collision, not a mesh physics engine. The plan cache is keyed
-by building kind and bounded visual variant, not individual player or building ID.
+Collision checks rotated building volumes. Pilots caught inside changed footprints may move outward; outsiders cannot enter. Cached plans use kind/bounded variant, not player IDs. This is footprint collision, not mesh physics.
 
-## Expansion persistence
+## Rendering and bounded work
 
-Crop harvests reserve a plot and complete through the existing saved task system.
-Capacity, funds and permission are checked again at completion; a failed harvest
-leaves the crop available. Growth and climate are derived from saved simulation
-time, so catch-up tick sizes do not change yields. Offline starvation continues; ageing remains paused. Survival integration splits at food exhaustion, room expiry and death rather than applying end-of-period needs to the entire interval.
+Immutable geometry/materials are shared; walkers clone joint hierarchies, drivers batch into three draws. Static scenery is batched by surface and texture identity; animated mill subtrees remain live. Seasonal uniforms avoid rebuilding the world. Map static layers rebuild only for layout/resize/navigation; HUD nodes and chat append incrementally.
 
-Universe mutations operate on a copy inside a SQLite transaction. The connected
-account is replaced only after commit. Station stock changes share that transaction.
-Jumps save their destination and wall-clock arrival before departure; reconnecting
-or the live timer settles a due arrival once. Contracts and discoveries stay in the
-account snapshot. No new external services or database schema are required.
+Performance mode reduces framebuffer/foliage and disables water animation and dynamic shadows. Software rendering targets 30 FPS; adaptive mode falls back on sustained slow frames. Dynamic shadows are separately opt-in outside performance mode. Device throughput varies.
 
-Smoke (128 particles), precipitation (900 particles) and ordnance (512 instances)
-use fixed render pools. Nearby crop fields rebuild only when their crop/growth stage
-changes. Snow and autumn colours use shared shader uniforms, avoiding seasonal
-world rebuilds. Combat simulation expires ordnance during large offline catch-up
-steps instead of inflicting offline kills.
+Fixed pools: 128 smoke particles, 900 precipitation particles, 512 ordnance instances; town lighting uses 12 spotlights (4 in performance mode). Crop geometry changes only at growth stages. Offline catch-up expires ordnance instead of inflicting offline combat kills. [Art](ART.md) documents ownership, budgets and visual checks.
 
-## Living-world expansion (0.5.0)
+NPC actions/cursors/progress save atomically; paid calls reserve shared budgets before asynchronous dispatch. Routing caches terrain/building geometry until layout or sea level changes. Fixed-path manuals feed bounded local help lookup; credentials and other players' private conversations never enter public snapshots. See [NPC development](NPCS.md#development-and-validation).
 
-`environment.ts` integrates saved snow/wetness at exact weather boundaries.
-Movement reads these authoritative surface conditions. `lodging.ts` owns room
-booking, guest-stock permissions and bounded provision consumption; offline
-residents cannot die or age from unattended needs. `resources.ts` owns stable
-finite gathering grounds and delayed delivery. Accepted tasks and reservations
-use the same immediate world-save boundary as other acknowledged actions.
+## Validation scope
 
-`TownLighting` merges window panes per building and reuses twelve spotlights (four in performance mode), disabling the pool in daylight.
-Particle counts, light counts and scenery instances remain bounded. Public
-building snapshots redact guest stocks; the private pilot projection carries
-only that pilot's pantries. Lodging is protected against demolition, decay and
-combat destruction while guest property could otherwise become inaccessible.
-
-## Optional resident controller
-
-`src/server/npc/` separates provider I/O, validated plan schemas, bounded world
-observations, durable memory, shared budget reservations, navigation and turn
-scheduling. The native entry point configures exactly one resident when enabled.
-Plans execute through the existing `act` and `move` functions. AI calls run
-asynchronously behind a shared concurrency ceiling; movement does not call the
-provider. Every paid call reserves estimated cost durably before dispatch.
-
-World actions, memory cursors and resident action progress save atomically.
-Chat carries monotonic world message IDs for journal deduplication, independently
-of the client's bounded chat ring. Credentials never enter observations or
-snapshots. Public snapshots expose only an AI flag; the authenticated NPC endpoint
-provides identity/personality and generic status. Detailed design and extension
-boundaries are in [the NPC guide](NPCS.md#development-and-validation).
-
-`npc/knowledge.ts` indexes fixed bundled player manuals and current catalog
-defaults. Observations include full FAQ/economy fundamentals, bounded question/activity
-excerpts, public world rules and live workplace diagnostics derived from the
-simulation clock and staff checks. Latest failed steps and detailed action
-receipts survive restart; personal wage receipts confirm actual production.
-Request/tool JSON is bounded to 96,000 bytes and the existing spending caps
-remain enforced. A read-only guide step can retrieve another topic;
-player text never selects a filesystem path. Manuals are included in the Docker
-runtime and source archive. Update them alongside changes to game controls/rules.
-
-`npc/recovery.ts` persists bounded failed-step and recent-speech records. After
-repeated failure the controller backs off decisions, refuses plans containing
-still-blocked steps before broadcasting their speech, and suppresses duplicate
-autonomous announcements. Direct questions retain private routing and can wake a
-resting resident without clearing the failed-step blocks. An already-in-range
-service visit bypasses path-finding and stops normally; no teleport is involved.
-
-NPC navigation rasterizes each building's conservative bounding square and keeps
-exact rotated-volume collision checks within it. This avoids testing every map
-cell against every property, without changing paths or collision footprints.
-The terrain/obstacle grid is cached until geometry, layout or sea level changes.
-
-WebSocket controls and acknowledgements do not use the action token bucket.
-Actions permit a burst of 20, replenished at ten per second; a 512-message/second
-transport ceiling closes abusive floods rather than returning an error per input.
-Ping replies are limited separately. Input still expires and all action validation,
-economic transactions and persistence remain authoritative.
-
-## Mobile interface
-
-The client layers compact HUD controls over the same simulation, snapshot and form
-paths. `mobile.ts` isolates pointer capture, safe cancellation, visual viewport
-changes and mobile drawers; `mobile.css` is scoped to its media-query-driven class.
-Desktop panels are reused for chat/status, and building forms keep `PanelMemory`.
-See [mobile architecture and test coverage](MOBILE.md#developer-notes-and-verification).
+Unit, transaction, real-socket, browser and configurable 100-client movement probes cover critical behavior. They do not certify heavy production trading, hostile public scale or long-term AI/economic balance. See [Status](STATUS.md) and [capacity checks](HOSTING.md#connection-and-multiplayer-checks).

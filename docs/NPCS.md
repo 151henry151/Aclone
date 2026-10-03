@@ -1,805 +1,200 @@
-# AI neighbours and their playing habits
+# AI neighbours
 
-Aclone supports Mabel, Toby, Rowan, Elias and an optional **15-person population**.
-Everyone uses the adaptive Jev gameplay planner. Mabel uses OpenAI for conversation;
-everyone else uses Claude. Each has a stable identity, personality, memory, savings,
-property and independent history. Adding residents preserves existing accounts.
+Up to **19 optional residents** use Jev for gameplay; Mabel uses OpenAI for conversation and the others use Claude. Each has a stable identity, personality, property and persistent history. All obey ordinary costs, permissions, physics and survival. API billing is separate from ChatGPT/Claude subscriptions.
 
-Enable the new population alongside whichever original residents you want:
+## Try it
+
+NPCs are disabled by default. Keys alone do not enable them. In the server's private, gitignored `.env`:
 
 ```dotenv
+NPC_ENABLED=true
+JEV_API_KEY=your-server-typesafe-key
+OPENAI_API_KEY=your-server-openai-key
+NPC_MONTHLY_USD=20
+NPC_DAILY_USD=0.60
+# Optional additional residents:
+NPC_BAKER_ENABLED=true
+NPC_FARMER_ENABLED=true
+NPC_INDEPENDENT_ENABLED=true
 NPC_POPULATION_ENABLED=true
+CLAUDE_API_KEY=your-server-anthropic-key
 NPC_TIME_ZONE=America/New_York
 ```
 
-The new population requires `JEV_API_KEY` (or `TYPESAFE_API_KEY`) and
-`CLAUDE_API_KEY` (or `ANTHROPIC_API_KEY`). It uses the existing Jev configuration
-and Claude Haiku 4.5 for conversation. This switch defaults to false; keys alone
-never enable new residents. Native environment files and Compose support it.
+Keep only the switches you want. Never use `VITE_` variables for secrets. Native startup does not automatically load `.env`:
 
-The new neighbours are:
+```sh
+node --env-file=.env --import tsx src/server/main.ts --dev
+# Production, after building with your existing BASE_PATH:
+node --env-file=.env --import tsx src/server/main.ts
+```
 
-- **Ada Mercer, Felix Dunn and Iris Bell:** traders. Ada keeps careful margins,
-  Felix explores markets, and Iris prefers conservative staple-goods routes.
-- **Beatrice Holt, Oscar Pike and Nora Ash:** prospective business owners.
-  Beatrice values well-run operations, Oscar likes production chains, and Nora
-  hopes to run a guesthouse.
-- **Silas Moss, Hazel Flint and Jasper Brook:** gatherers. Silas prefers forestry,
-  Hazel watches stone/gravel demand, and Jasper enjoys fishing and exploration.
-- **Edith Ward, Arthur Hale and Mina Shaw:** steady employees. They favour useful
-  qualifications, reliable wages and maintaining productive jobs.
-- **Clara Fen and Owen Marsh:** farmers. Clara favours careful rotation and Owen
-  experiments with crops and market timing.
-- **Lena Wren:** a curious generalist who compares careers and enjoys occasional leisure.
+A service may use its own environment-file setting. Compose forwards listed settings at runtime: `docker compose up --build -d`; keys are not build arguments. Preserve DATA_DIR and resident IDs. [Hosting](HOSTING.md) covers deployment.
 
-These are soft preferences, reinforced in Jev's candidate descriptions, not
-restrictions or promises of optimal AI behaviour. All legal career choices remain
-available. Mabel remains a former mechanic, Toby a keen baker, Rowan a farmer and
-Elias an adaptable generalist.
+Use **AI neighbours** for private chat, or name a resident in parish chat. AI badges remain visible. Replies take provider latency/cooldown and may be unavailable under budget caps or outages. Inspect actual results rather than trusting promises.
+
+## Residents
+
+Mabel Reed is a former mechanic; Toby Finch a keen baker; Rowan Field a farmer; Elias Vale an adaptable generalist. The population switch adds:
+
+- **Traders:** Ada Mercer (careful margins), Felix Dunn (exploration), Iris Bell (conservative staples).
+- **Business owners:** Beatrice Holt (operations), Oscar Pike (production chains), Nora Ash (guesthouse ambitions).
+- **Gatherers:** Silas Moss (forestry), Hazel Flint (minerals), Jasper Brook (fishing/exploration).
+- **Employees:** Edith Ward, Arthur Hale, Mina Shaw (qualifications and reliable long-term wages).
+- **Farmers:** Clara Fen (rotation), Owen Marsh (crop/market experiments).
+- **Generalist:** Lena Wren (career comparisons and leisure).
+
+Interests are soft preferences, not career restrictions or guarantees of success.
 
 ## Presence and survival
 
-Mabel stays online, even in an empty parish, unless the operator pauses her or the
-service stops. A spending cap/provider outage can prevent replies and decisions;
-remaining visible does not bypass caps. Thinking, failed requests and retry delays do not disconnect an active resident. The other 18 follow real-world schedules,
-independent of accelerated game days and human visitors. The configured IANA time
-zone controls preferred hours and accounts for daylight saving time.
+Mabel stays online even alone unless paused or the service stops. Thinking, retries and exhausted budgets do not make active residents disappear. The other eighteen follow saved real-world schedules in `NPC_TIME_ZONE`, including DST, independently of accelerated game days or human visitors.
 
-New neighbours normally visit for roughly 25–45 minutes, with individual variation.
-Their first visit lasts 2–3 hours. Later visits have a 17–26% chance of being long:
-roughly once or twice a week on average, not a guaranteed weekly appointment.
-Toby, Rowan and Elias have a 3× duration multiplier: about 100 minutes normally and
-6–9 hours for long visits. Ada, Edith and Arthur keep relatively predictable hours;
-Felix, Jasper and Lena vary much more. Others favour their own mornings, afternoons
-or evenings. Initial arrivals are staggered across their next habitual day, rather
-than spawning everybody into a simultaneous session.
+New neighbours usually visit 25–45 minutes; first visits last 2–3 hours. Subsequent visits have a 17–26% long-session chance (roughly once/twice weekly, not guaranteed). Toby/Rowan/Elias play 3× longer: about 100 minutes normally, 6–9 hours on long visits. Ada/Edith/Arthur are more predictable; Felix/Jasper/Lena more variable. Initial arrivals stagger over the next habitual day. Restarts preserve visits/expiry and do not replay first sessions; pre-existing pilots get an initial active visit when scheduling is introduced.
 
-Visits and expiry timestamps persist in SQLite. Restarting does not reroll a visit
-or replay the first long session. New accounts enter the world only at their first
-arrival; existing pilots receive an initial active visit when schedules are introduced.
-The AI neighbours panel shows expected return times; `npm run npc -- status` shows
-saved presence details. Offline messages are remembered but do not wake the chat
-model or bypass a schedule. Contact a resident again when they are online.
+Five minutes before departure, local errands eat/drink, buy provisions, stock a home/room and travel inside; space visitors try to land. Affordable rooms may be booked. Preparation uses no AI calls and extends visits at most ten minutes. No shelter, poor stores, expiring rooms or urgent needs trigger 10–60-minute welfare returns (or an earlier regular visit). Welfare gameplay still uses shared budgets. Offline messages are retained but do not wake a resident; contact them again when online.
 
-Five minutes before a session ends, the resident starts preparing to leave. Local,
-bounded errands consume carried food/water, buy affordable supplies, stock their
-own house or booked room, and drive/walk home through ordinary game actions. They
-may book a room if one is available and affordable. Their general Jev goals include
-earning money and establishing housing before this point. There are no free goods,
-teleports or special ownership permissions. Preparation may extend a visit by at
-most ten minutes; failed routes, missing goods and unaffordable lodging cannot
-keep them online forever. In space they try to land before preparing.
-
-Hunger, thirst and starvation damage now continue **for every player, online or
-offline**. Homes slow needs by 20% and automatically consume stored food/drink;
-rooms use only that guest's stores and stop providing shelter at booking expiry.
-Running out can cause ordinary death, loss of skills and estate consequences.
-Ageing and passive owned-building decay still pause offline. NPCs follow the same
-rules. Inadequate stores, no shelter, expiring rooms or severe needs bring an NPC
-back for a short welfare visit in 10–60 minutes (or sooner if the regular visit is
-due). These extra visits can increase total daily play time. Preparation uses no
-AI calls; gameplay during a welfare visit still uses the shared caps.
-
-## Building wages
-
-The NPC's live workplace report gives the saved gross wage per worker, the net
-wage after tax and the total wage bill for all staff as separate values. Live
-values override remembered/default figures. Building Admin shows the saved wage
-separately from your draft: press **Save details** to apply a change. Factory wages
-are per completed production cycle; farm wages are per harvested plot.
+Offline hunger/thirst/starvation apply to everyone. Homes slow needs by 20%; stocked homes and unexpired room pantries feed residents. Empty stores can cause death and lost skills/estate consequences. Offline ageing and passive property decay pause. The AI panel/CLI reports return times.
 
 ## Continuity and conversation (0.22.0)
 
 ### Current character facts and retraining
 
-Dialogue receives authoritative current qualifications, death count, job and
-study status before historical context. The school skill catalogue is explicitly
-labelled as courses available to learn, not skills the NPC possesses. Relevant
-workplaces include the exact train-and-work request and any current blockers.
-When a resident agrees to a request to train, including permission given earlier
-in the same conversation, that request enables training if the skill is missing.
-An existing qualification skips school; it does not change the permission flag.
+Dialogue receives current skills, death count, job and study status before history. School courses are labelled available, not acquired. Live workplace wages distinguish gross per worker, net after tax and total payroll; drafts only apply after **Save details**. Factory pay is per completed batch, farm pay per harvested plot.
 
-A clarified employment request replaces unfinished copies for that same player,
-workplace, world and chat channel. An unqualified character still pays tuition,
-waits for the real course and travels to accept employment. No skills, goods or
-money are granted by chat. After losing all qualifications, the next course uses
-the normal first-course price (80d) and duration (one minute).
+A request to train enables tuition/study if the skill is missing; existing qualifications skip school. Clarification replaces unfinished requests for the same person/workplace/world/channel. Retraining after losing all skills uses the ordinary 80d, one-minute first course. Chat grants nothing.
 
-New relationship summaries carry a life marker. Prior-life and older unclassified
-summaries remain on disk but are excluded from current dialogue and decision
-summaries; recent channel history remains available and learned preferences are
-retained. Summary guidance asks for relationships and requests, not mutable claims
-about the resident's skills, inventory or job. Fresh game state overrides past
-claims. Death invalidates a pending reply/plan, and a response based on changed
-skills, study or employment is discarded and reconsidered within existing call
-limits. Ordinary movement, hunger and income do not trigger extra chat calls.
-
-This change does not rewrite existing live agreements or grant missing training
-permission retroactively. After deployment, ask an affected resident to train and
-work at the named business again. No memory wipe or database reset is required.
-Natural-language replies remain fallible; the saved request and observed study/job
-state establish whether action was actually accepted and completed.
+Summaries have life markers. Prior-life/unclassified notes stay on disk but are excluded from current summaries; recent channel history and preferences remain. Death invalidates pending plans/replies; changed skills/study/employment discard stale replies within call limits. Ordinary movement, needs and income do not trigger more chat. Old agreements are not rewritten: ask again with explicit training permission after upgrading.
 
 ### Scoped continuity
 
-Each resident now keeps conversation summaries for up to 64 person/world/channel
-combinations and up to 24 learned activity preferences. Chat updates only its own
-scoped summary, rather than replacing a notebook shared by everybody. Empty
-summaries preserve existing notes. The server assigns the speaker, world and
-privacy scope; models cannot relabel private material as public. Public replies
-exclude private summaries, raw journals, mixed legacy notebooks and private
-agreements. A private reply receives only that speaker's private memories plus
-permitted public context. Old notebooks and full journals remain on disk for the
-operator, but unclassified old notes are not automatically promoted into public
-memory. Recent conversation history on the correct channel remains available.
+Each resident retains up to 64 person/world/channel summaries and 24 learned preferences. Empty summaries preserve notes. Public replies exclude private summaries, raw journals, mixed legacy notebooks and private agreements. Private replies receive that speaker's private context plus permitted public context. Models cannot relabel privacy scope.
 
-Residents can form soft preferences for employment, trading, gathering, farming,
-fishing, business, housing and leisure. The conversation model should record its
-own considered inclination, not blindly adopt a player's instruction. Gameplay
-receives bounded preferences, relationship summaries, the current goal and recent
-outcomes. Relevant options indicate whether they fit a learned preference, without
-copying private reasons into their descriptions. Survival and accepted obligations
-still take precedence; a preference never grants permission or guarantees a choice.
-No background reflection or extra conversation calls are scheduled for this memory.
+Preferences cover employment, trading, gathering, farming, fishing, business, housing and leisure. They represent the character's considered inclinations, not blind obedience; descriptions do not expose private reasons. Survival and accepted obligations take precedence. No background reflection calls run.
 
-For a delivery, employment or cancellation proposal, the server first records or
-rejects the agreement using current game rules. It then permits one separately
-budgeted reply call to phrase that result in the resident's personality. This call
-cannot add another agreement or change gameplay. If unavailable, invalid or over
-budget, the factual acknowledgement is used instead. Its pending delivery is saved
-with the agreement and cleared with the actual chat action, so a restart during
-wording does not lose the reply or duplicate the agreement. Ordinary conversation
-still takes one call; providers remain OpenAI for Mabel and Claude for the others.
-Generated phrasing remains fallible, so actual game outcomes remain authoritative.
-
-Addressed chat takes the next available request slot, with oldest-call order
-breaking ties. In-flight requests, resident intervals and the shared hourly/daily/
-monthly limits still apply; this is priority, not a latency guarantee or extra
-spending allowance. Chat turns no longer generate gameplay candidates or reset
-economic measurement windows. A sole safe accepted next plan runs locally without
-asking Jev to select it; survival/recovery or competing agreements can still require
-selection. These shortcuts preserve normal movement, tuition, stock, wages and
-production checks. They add no free resources or survival immunity.
-
-This is an incremental foundation. Persistent high-level strategy, general errands,
-loans, autonomous negotiation and ambient NPC conversations are not implemented by
-this change. Delivery and employment remain the executable chat agreement types.
-The guide is retrieved locally before conversation; chat has no interactive lookup
-loop. A narrow unsupported-promise backstop remains, with common conversational
-idioms exempted. AI labels and quiet-neighbour behavior remain in place.
-
-Regression scenarios in `tests/npc-agenda.test.ts`, `npc-employment.test.ts` and
-`npc-commitments.test.ts` cover private/public isolation, persistence, preference
-propagation into Jev's wire payload, scheduling priority, bounded calls, safe
-fallbacks and actual training/employment/delivery. They use fake provider responses;
-they verify the machinery, not the subjective realism of live model dialogue.
+Addressed chat gets the next available request slot, oldest call first, subject to current requests/cooldowns/shared caps. It does not build gameplay candidates or reset income-measurement windows. Ordinary conversation takes one call; an agreement may use one extra budgeted wording call after validation. That call cannot change the agreement. Saved factual fallback replies survive interruption without duplicating requests. A sole safe agreed next plan executes locally; competing agreements/survival/recovery can still need Jev.
 
 ## Agreements made in chat
 
-Residents speak as a single character in the first person. Dialogue and server-generated acknowledgements describe agreements, practical obstacles and verified progress without naming providers or describing separate chat and decision systems. AI badges and operator diagnostics remain available; this voice guidance does not let residents claim that an agreed task has already happened.
+Residents speak as one character, without naming providers or separate decision/chat machinery; AI badges and operator diagnostics remain. Replies distinguish intentions, queued requests and verified results.
 
-A conversation model can record a structured delivery agreement for Jev. Version 0.21.1 also supports a concrete employment request with optional training. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement schedules its next gameplay step; it does not execute a
-chat model's arbitrary actions. One bounded wording call can follow validation. Jev sees the agreement,
-remaining quantity and real blockers, alongside its ordinary opportunities.
+Executable agreements are **deliveries**, **employment with optional training**, and cancellation of the requester's latest unfinished request. General goals remain guidance; other errands, loans and autonomous negotiation are not implemented. Up to four unfinished executable requests and twenty recent agreements are retained. Another player cannot cancel yours.
 
-For example, an agreed 118 wheat at 6d each becomes a delivery with an exact buyer
-building ID, owned source building (or carried stock), quantity and minimum posted
-buy price of 600 hundredths. Jev can choose a capacity-limited loading/travel/sale
-plan. It takes multiple loads if necessary. Each successful sale advances the saved
-quantity in the same transaction as the world action; a promise, failed trade or
-server restart cannot count as delivery. The buyer must post at least the agreed
-price, have investment to pay and have storage space. Normal taxes still apply.
-The price is checked again at execution, and nobody can withdraw another owner's
-farm stock.
+- **Delivery:** name item, amount, buyer and minimum posted price. For 118 wheat at 6d, the server records exact building/source IDs and price 600 internal units. Before accepting, it rechecks owned/carried stock for the whole quantity, buyer price, funding and capacity. Employees cannot take employer stock. Loading/travel/sales use normal capacity/taxes, with multiple trips if needed; each successful sale atomically advances progress. Execution rechecks price/conditions. Invalid requests get an explanation; a blocked existing request gets one saved, channel-matched notice when its requester is online, without another AI call. Timed work alone does not trigger a blockage notice.
+- **Employment:** “learn milling and take the job at my mill” names a workplace. The server derives its current skill, tuition, available skill slots and vacancies. Plans visit school, pay, wait, travel and accept employment; the old job remains until arrival qualified. First study takes one minute, later courses forty. Completion means qualified active employment, not a finished batch or lifetime commitment. Restart preserves requests and courses.
 
-Before a new delivery is accepted, the server checks the **current** world again
-(after the conversation model finishes): the full quantity must be carried or in
-owned stockrooms, with the posted price, buyer funding and storage to match.
-Employment grants no right to withdraw an employer's stock. If the resident would
-need to buy goods first, it must explain that prerequisite instead of promising to
-load the employer's crops. Invalid proposals receive a factual explanation and are
-not added to the delivery queue; valid proposals acknowledge planning, not departure
-or completion. Multiple options still go to Jev; a sole safe agreed plan can run locally. Survival remains a priority.
+Ready accepted requests outrank unrelated shopping/rest/cosmetics when healthy. Food, water, route cooldowns and departure still take precedence. Blocked requests retain reasons. A promise without a structured request cannot execute: a narrow first-person-promise check corrects common cases, but is not a general language executor. Legacy summary-only requests are marked blocked; ask again if no request was recorded.
 
-An existing delivery that becomes blocked gets one factual notice when its
-requester is online in the parish. This uses no additional AI call and is remembered
-across restarts. It follows the original chat channel; legacy agreements without a
-saved channel default to private. Temporary timed work does not trigger a notice.
-Ask for subsequent progress or changed blockers; residents otherwise stay quiet.
+## Chat routing
 
-With version 0.21.1, “learn milling and take the job at my mill” becomes a
-persistent request naming that exact workplace. The server derives its skill from
-the current recipe, checks tuition, skill slots and vacancies, and offers Jev
-separate steps to visit school, pay tuition, wait for the real qualification,
-travel to the employer and accept the job. A previous job is kept until the
-resident arrives qualified at the new employer. First qualifications take one
-minute; subsequent ones take forty minutes. No extra speech calls are made for
-those steps. Restarting preserves the request and course progress. Completion
-means a verified qualification and active employment, not a completed production
-batch or a lifetime promise to keep that job.
+Residents respond to addressed humans, not routine activity or other NPCs. Public mentions receive public replies; private messages receive private replies. Routing follows the initiating channel, not the model's suggested recipient. Gameplay narration stays in journals.
 
-When healthy, residents choose among ready accepted agreements before unrelated
-rest, shopping or cosmetic changes. Food, water, failed-route cooldowns and
-scheduled departure still take precedence. Blocked requests remain in memory
-with a concrete reason; they do not grant free money, skills or ownership. Ask for
-progress rather than assuming an acknowledgement proves departure.
-
-Chat must include the structured request when agreeing to deliveries or
-employment. The server acknowledges the actual queue result. A check for common
-unrecorded first-person action promises replaces them with a correction; this is
-a backstop, not a general natural-language executor. Other requests are discussed
-as suggestions, not accepted as executable agreements. Older summary-only notes
-are marked blocked with an explanation instead of pretending they will run. Old
-promises that never recorded a request cannot be recovered automatically: ask
-again after upgrading, naming the workplace and whether training is desired.
-
-Up to four unfinished executable requests and twenty recent agreements are retained.
-A player can ask to cancel their latest unfinished request; another player cannot
-cancel it. Requests are intentions, not guaranteed acceptance or instant success.
-
-The common planner surveys qualifications, wages, shortages, funding, travel
-costs, market spreads and available property. It records actual cash/bank/health
-changes between decisions and retains action receipts and failures. Estimates
-are labelled separately from actual income. Jev chooses among bounded feasible
-plans; this is experimental decision-making, not guaranteed optimal play.
-
-Choices include all ordinary gameplay action families: employment and school,
-resource gathering and tool purchases, trades, seasonal farming, owned-business
-stock/capital/prices/wages, construction and deliveries, property sales/repairs,
-rooms and personal provisions, home life, bank savings, fishing and eating fish,
-vehicles and paint, social/game/combat actions, and space travel/trade/contracts.
-Admin/editor/account-management commands are not NPC actions. Candidate plans
-use practical quantities and parameters, not every possible combination a human
-could enter. Fast games and combat have basic actions rather than expert tactics.
-The same authoritative simulation checks affordability, distance, ownership,
-capacity and qualifications at execution; there are no free supplies or wages.
-
-**Quiet neighbours:** residents speak only in response to a human naming them in
-parish chat, continuing a recent public conversation, or messaging them privately. The controller suppresses unsolicited
-activity narration even if a provider generates it. Public mentions receive public replies; private requests receive
-private replies. The initiating channel controls routing, never the model’s recipient suggestion. Intentions/results remain in their journals, not chat broadcasts.
-
-Public follow-ups use a two-minute window after the player's latest turn, measured
-in real time. Each player has at most one current resident listener per parish;
-other players and NPC messages cannot keep that window alive. Naming another
-person, sending a private message, or naming multiple residents clears the old
-listener. Group mentions can receive individual replies but do not start a shared
-follow-up window. These are deterministic name/window rules, not semantic intent
-classification: an unnamed message during the window is treated as a follow-up.
-Windows survive restarts with their original expiry and are bounded to 64 recent
-players per resident. Routing costs no model tokens, does not poll a speech model,
-and leaves existing reply budgets and retry limits in place. Up to eight recent
-chat turns on the current channel accompany a reply, separately from action
-history; private turns are excluded from public conversation history.
-
-## Try it
-
-NPCs are **disabled by default**, with independent switches for the original four and one population switch for the fifteen newcomers. Merely adding a key does not start requests. Use a server-side
-OpenAI API key with API billing enabled. This integration uses API-key billing,
-separate from a ChatGPT subscription; it does not consume a ChatGPT plan's
-included usage. See [OpenAI pricing](https://learn.chatgpt.com/docs/pricing).
-
-Put these settings in the repository's gitignored `.env`, replacing the key
-placeholder privately. Never add an API key to a `VITE_` variable, a client file,
-a screenshot or a commit.
-
-```dotenv
-NPC_ENABLED=true
-OPENAI_API_KEY=your-server-api-key
-JEV_API_KEY=your-server-typesafe-key
-NPC_MONTHLY_USD=20
-NPC_DAILY_USD=0.60
-NPC_ACTIVE_ALONE=false
-```
-
-To add Toby alongside Mabel, keep those settings and add:
-
-```dotenv
-NPC_BAKER_ENABLED=true
-CLAUDE_API_KEY=your-server-anthropic-key
-```
-
-`ANTHROPIC_API_KEY` is also accepted and takes precedence over `CLAUDE_API_KEY`.
-Toby defaults to `claude-haiku-4-5-20251001`. Claude API billing is separate from
-consumer subscriptions, and all residents share the existing Aclone spending
-caps. You can run Toby alone with `NPC_ENABLED=false` and
-`NPC_BAKER_ENABLED=true`. Keep `NPC_ID=mabel` and `NPC_BAKER_ID=toby` stable to
-retain their separate memories. No database reset is needed when adding him.
-
-Native development (Node 24.14+):
-
-```sh
-node --env-file=.env --import tsx src/server/main.ts --dev
-```
-
-Production under `/aclone`:
-
-```sh
-BASE_PATH=/aclone npm run build
-node --env-file=.env --import tsx src/server/main.ts
-```
-
-The usual `npm start`/`npm run dev` inherit exported environment variables; they
-do **not** automatically read `.env`. A service can instead use its environment
-file setting. Keep the existing [prefix-stripping proxy](HOSTING.md#reverse-proxy).
-Compose reads `.env` and passes the listed settings to the server at runtime:
-`docker compose up --build -d`. The key is not a Docker build argument.
-
-Join Puddlewick. Enabled Mabel remains online, and other residents arrive according to their habits. Open **AI resident · chat
-& memory info**, or **Game menu → AI neighbours**, then **Chat with Mabel Reed**
-to send a private message. Toby has his own **Chat with Toby Finch** button; Rowan has his own chat button too. Elias also has his own chat button. Provider labels identify **Jev + OpenAI** and **Jev + Claude**. **Back to parish chat** restores public chat. You can
-also address her by first name in parish chat. Names and messages have an **AI**
-label. A reply takes API latency plus up to the 15-second decision cooldown;
-she may take longer if the budget is exhausted or the provider is unavailable.
-
-Try introducing yourself, asking her to explain her plan, then meeting her again
-after a server restart. Inspect her actual actions and money with the operator
-commands below. The notebook is a fallible model summary; the event journal
-records what actually happened.
-
-## Rowan’s configuration
-
-Add these settings to the server's gitignored `.env` and restart normally:
-
-```dotenv
-NPC_FARMER_ENABLED=true
-JEV_API_KEY=your-server-typesafe-key
-CLAUDE_API_KEY=your-server-anthropic-key
-```
-
-Create a Jev key at the official [TypeSafe console](https://console.typesafe.ai/).
-`TYPESAFE_API_KEY` is also accepted and takes precedence over `JEV_API_KEY`.
-The existing Claude key can serve Toby and Rowan; adding Rowan does not enable
-Toby or Mabel automatically. Merely setting a key does not enable the farmer.
-Keep secrets server-side; `.env` is not committed or sent to browsers.
-
-- `NPC_FARMER_ENABLED`: exactly `true` enables Rowan, independently of the others.
-- `NPC_FARMER_ID` / `NPC_FARMER_NAME`: defaults `rowan` / `Rowan Field`.
-  Keep the ID stable; names apply at pilot creation and must be distinct.
-- `NPC_FARMER_WORLD`: defaults to `NPC_WORLD`, then `puddlewick`.
-- `NPC_FARMER_PERSONALITY`: optional replacement, 10–3,000 characters.
-- `NPC_FARMER_MODEL`: optional Jev override; inherits `NPC_JEV_MODEL` (default `jev-1.13.0`).
-- `NPC_FARMER_CHAT_MODEL`: default `claude-haiku-4-5-20251001`.
-- `NPC_FARMER_INTERVAL_MS`: minimum decision interval, default 15,000 (5,000–300,000).
-- `NPC_FARMER_ACTIVE_ALONE`: legacy flag; scheduled visits now run even without human visitors.
-- `NPC_FARMER_INPUT_USD_PER_MILLION` / `NPC_FARMER_OUTPUT_USD_PER_MILLION`:
-  defaults 0.042 / 0; both required for a different Jev model or alias.
-- `NPC_FARMER_CHAT_INPUT_USD_PER_MILLION` / `NPC_FARMER_CHAT_OUTPUT_USD_PER_MILLION`:
-  defaults 1 / 5; both required for a different Claude model. Same cache accounting as Toby.
-
-All these variables are passed by Compose. Preserve Mabel and Toby's existing
-IDs and configurations; no database reset or schema migration is needed.
-Use **AI neighbours → Chat with Rowan Field**, or address Rowan in parish chat.
-The **Jev + Claude** badge explains his two providers. His visible parish chat,
-own private conversations and relevant game state may be sent to both providers;
-other residents do not receive his private conversations.
+Unnamed public follow-ups go to the same resident for two real minutes after the player's last turn. Naming another person, private messaging or multiple names clears that listener. Group mentions may get individual replies but do not create a group follow-up. Windows persist with original expiry and are bounded to 64 players/resident. These are deterministic name/time rules, not semantic intent recognition; routing makes no model calls. Up to eight recent channel turns accompany a reply; private turns never enter public history. Messages are limited to 1,200 characters.
 
 ## Shared planner and Elias configuration
 
-Every enabled resident now requires `JEV_API_KEY` (or `TYPESAFE_API_KEY`), including
-Mabel and Toby. Their existing `NPC_MODEL` / `NPC_BAKER_MODEL` variables select
-conversation models only; their associated price variables meter those calls.
-`NPC_JEV_MODEL` defaults to `jev-1.13.0`. Shared gameplay rates are
-`NPC_JEV_INPUT_USD_PER_MILLION=0.042` and `NPC_JEV_OUTPUT_USD_PER_MILLION=0`.
-A custom model requires both explicit rates. Rowan's older Jev model/rate overrides
-remain supported. Changing providers does not change saved IDs or erase memories.
+The planner surveys skills, funded wages, shortages, prices, travel, property and recent cash/bank/health outcomes. Candidates cover ordinary economy, construction, housing, food, fishing, vehicles/paint, social/game/combat and space actions; no admin/editor/account management. Quantities/routes are bounded, not an exhaustive search or expert tactics. Estimates are distinct from receipts.
 
-To add the fourth resident, using the existing Jev and Claude keys:
+`NPC_JEV_MODEL=jev-1.13.0` defaults to accounting rates `NPC_JEV_INPUT_USD_PER_MILLION=0.042`, `NPC_JEV_OUTPUT_USD_PER_MILLION=0`. A custom model requires both rates. `TYPESAFE_API_KEY` takes precedence over `JEV_API_KEY`; create a key through the [TypeSafe console](https://console.typesafe.ai/).
 
-```dotenv
-NPC_INDEPENDENT_ENABLED=true
-```
-
-Optional overrides: `NPC_INDEPENDENT_ID` (`elias`), `NPC_INDEPENDENT_NAME`
-(`Elias Vale`), `NPC_INDEPENDENT_WORLD` (inherits `NPC_WORLD`),
-`NPC_INDEPENDENT_PERSONALITY`, `NPC_INDEPENDENT_INTERVAL_MS` (15000),
-`NPC_INDEPENDENT_ACTIVE_ALONE` (false), `NPC_INDEPENDENT_CHAT_MODEL`
-(`claude-haiku-4-5-20251001`), and
-`NPC_INDEPENDENT_CHAT_INPUT_USD_PER_MILLION` / `NPC_INDEPENDENT_CHAT_OUTPUT_USD_PER_MILLION`
-(1 / 5; custom models require both). Compose forwards these settings. Keep IDs
-stable. All four share the existing daily/monthly/hourly caps, not four separate budgets.
+Elias uses the `NPC_INDEPENDENT_` prefix: `ENABLED`, `ID` (elias), `NAME` (Elias Vale), `WORLD` (inherits NPC_WORLD), `PERSONALITY`, `INTERVAL_MS` (15000), legacy `ACTIVE_ALONE` (false), `CHAT_MODEL` (claude-haiku-4-5-20251001), `CHAT_INPUT_USD_PER_MILLION` / `CHAT_OUTPUT_USD_PER_MILLION` (1 / 5). Compose forwards these settings.
 
 ### Survival and economic decisions (0.19.2)
 
-Every gameplay decision now includes a compact `life` briefing: live hunger/thirst
-rates and time until starvation **outdoors without consumption**, effective next
-serving values (including repeated-food penalties), carried provisions, nearest
-and cheapest stocked food/drink sources, a suggested living-cash reserve, and a
-shortlist of jobs with net wages, skill requirements and production blockers.
-This briefing and the last three outcome summaries survive request-size trimming.
-The broader parish survey may still be trimmed. Null survival time means needs
-are not rising; it is never a claim of invulnerability. Session readiness separately
-accounts for shelter stores and room expiry.
+Each decision has a protected `life` briefing: outdoor time to starvation without eating, effective servings/repeat-food penalties, provisions, cheap/near stocked sources, living-cash reserve, job wages/skills/blockers and the last three outcomes. Broader surveys may be trimmed; null survival time means no rising needs, not immunity. Shelter/room expiry are assessed separately.
 
-The controller wakes the planner when needs reach 25,000 or danger is within ten
-minutes, instead of waiting for 40,000. This is a threshold transition, not a new
-per-tick model call. Stocked shelter can safely feed residents without waking Jev.
-Jev is directed to eat/drink before optional work, protect living cash, compare
-travel and tuition with funded wages, and learn from actual health/cash outcomes.
-Personality still guides career choice. Urgent meal errands buy one serving and
-consume it in the same plan; reserve shopping offers several foods and filters
-empty shops before choosing destinations. Optional sales, production deposits and
-crop watering retain personal provisions. A home/room can receive all supplies
-when the resident is comfortably fed, and departure preparation remains unchanged.
-Owners can buy missing recipe inputs and deliver them into their own stockroom;
-employees do not acquire rights to employer stock or pay its input bill.
-
-No new model, speech call, budget setting, free supplies, immunity or migration is
-introduced. Better context is not a guarantee of sound model decisions: budgets,
-provider outages, inaccessible shops or an exhausted economy can still leave an
-NPC in danger. Local tests exercise real purchase/use/deposit and survival rules
-with deterministic choices; actual Jev play needs observation after deployment.
-The full suite was deliberately deferred for this release.
+Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked shelter can feed safely without waking Jev. Urgent errands buy/eat in one plan. Optional sales, factory deposits and watering retain personal provisions; a comfortably fed resident may stock all supplies at home. Owners can buy/deposit inputs for their own business; workers neither own employer stock nor fund its inputs. Budgets, shortages, inaccessible shops and poor choices can still kill an NPC.
 
 ### How the providers cooperate
 
-The [Jev API](https://docs.typesafe.ai/api) chooses one supplied option;
-it does not generate dialogue. `adaptive.ts`, `farmer.ts`, `economy-choices.ts`
-and `space.ts` build a bounded catalog from the current parish/account.
-A category round-robin preserves variety when many shops have stock. Local
-choices are limited to 200 and roughly 48 KB, with two optional spaceport plans;
-total provider request size is still bounded. `jev.ts` validates the selected ID,
-probabilities and usage. Unknown options never execute. Conditions are rechecked
-at execution, so a neighbour buying the last supplies can invalidate a plan.
+Jev chooses a validated supplied option ID, not dialogue. `adaptive.ts`, `farmer.ts`, `economy-choices.ts` and `space.ts` create candidates with category round-robin: up to 200 local options (~48 KB server-side) plus two optional spaceport plans. Executable steps stay on the server. The complete Jev request is limited to **24,000 UTF-8 bytes**: redundant context goes first, then descriptions shorten without removing choices; needs/commitments remain. Unknown IDs never execute; all conditions are rechecked.
 
-All residents retain their own results, failures, notebook and journal. Jev receives
-compact outcome summaries; full journal text is omitted from its bounded request.
-A bounded durable experience summary compares actual cash, savings and health
-changes with their prior goal. Full history remains searchable, not all loaded
-into every request. Routine movement, fishing bite timing and production waiting
-run locally. Existing jobs have explicit renewal and production-boundary waits.
-Farming still requires explicit tending and harvest under ordinary seasonal rules.
+Local code handles movement, bites, waits and shift renewal. Plans allow 12 steps, 30 repeats and up to 30 minutes. Durable experience compares actual results with goals; full history is searchable rather than loaded every turn.
 
-OpenAI or Claude runs **only for an addressed human conversation**, receiving
-bundled help, current observations, memories and Jev's chosen future plan.
-The small `converse` tool returns speech, a channel-scoped notebook, optional learned preferences and an optional gameplay request. A request is durable guidance for the next Jev decision; it cannot replace
-Jev's actions. Failed/capped chat preserves gameplay; an addressed human receives
-one private budget notice per question if the chat budget cannot be reserved.
-Unsolicited speech is also rejected by the controller, independent of prompts.
-After the bounded agreement reply, completed questions never trigger another conversation call. Provider failures
-back off for one minute, then five minutes, with at most three attempts per
-message. These markers persist across restarts. A new human message can try again.
-
-Calls have separate durable reservations and usage accounting under one shared
-budget. Adding residents does not raise its limits. API charges are separate
-from ChatGPT/Claude subscriptions. No new provider calls occur when disabled.
+OpenAI/Claude runs only for addressed conversation, using the strict `converse` vocabulary: speech, scoped notebook, preferences and optional request. Failed/capped chat does not stop gameplay. Failed calls retry after one minute, then five, at most three attempts/message, saved across restart; a new message may try again. Budget failure sends one private notice/question. Completed questions do not generate more calls after the optional agreement wording.
 
 ## Helping other players
 
-Both conversation providers receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) when answering an addressed question, including controls, employment, production, ownership, farming, lodging,
-account help and activities. These core rules no longer depend on her knowing
-which terms to search for. Up to three additional excerpts each can address the
-player's question and her current activity, using the [player guide](PLAYING.md)
-and current catalog data. Each excerpt group is bounded to 6,500 characters.
-The server selects these excerpts before the call; the conversation tool cannot
-request an additional guide or recall lookup. Legacy gameplay adapters retain
-those steps. Queries never become filesystem paths or web requests; search is
-local and uses no paid embeddings.
+Both chat providers receive complete [FAQ](FAQ.md)/[Economy](ECONOMY.md) fundamentals, controls, current rules/workplace diagnostics, and up to three question excerpts plus three activity excerpts (6,500 characters/group) from bundled Playing/catalog data. Guides load once at startup; restart after edits. Queries cannot become paths or web requests; no paid embeddings. Chat has no interactive lookup loop; legacy gameplay adapters retain guide/recall steps.
 
-Holding a job and having an active shift are distinct. Workplace summaries flag
-expired shifts or shifts that expire before the next batch, and supply the exact
-`work` action to renew them. Reaccepting an existing job also safely renews its
-shift without duplicate employment; neither action produces an instant batch.
-Waiting beside a building does not renew work.
-
-Workplace observations diagnose employment, qualification, active shifts,
-production timing, input shortages, output space and funding. A prospective
-wage shortfall includes the resident even before they take the job. Custom
-recipes and current world settings override defaults; farms are explicitly
-seasonal plots. Workplaces she owns, works at, plans to visit or is discussing
-are prioritised within the bounded selection. These are read-only facts: the
-model still decides what to do and all actions pass normal game validation.
-
-Her gameplay state retains the attempted action and error through restart; chat
-uses scoped agreement progress, current workplace diagnoses and wage receipts. Action journals include job/shift/skill changes and affected building
-stock/capital; recent personal wage receipts confirm actual payment. This helps
-her distinguish agreeing to work, accepting a job and completing production.
-Player claims and notebook summaries are fallible; current observations take
-precedence. She should own mistakes, explain the cause and next step, and use
-occasional gentle humour without repetitive announcements or invented memories.
-Advice remains model-generated and can be wrong. Private routing survives the
-optional receipt reply, and other players' private memories are excluded in code.
-
-Developers: keep these manuals accurate as gameplay changes. Fixed-path files
-are read once per process and shipped in the source archive and Docker runtime;
-restart after edits. Catalog entries use game data; the legacy automatic farm
-recipe is excluded. `workplace.ts` uses the simulation's production interval and
-staff rules. Update its diagnostic tests when those mechanics change.
+Workplace context prioritizes owned/employed/planned/discussed buildings, reports missing skills/inputs/output room/payroll, includes a prospective worker in wage costs, and distinguishes jobs from active shifts. `work` or reaccepting the same job renews a shift without duplicate employment/pay; waiting nearby does not. Custom recipes/live settings override defaults; farms use plots. Receipts record actual stock/cash/skills/shift changes and wages. Advice remains fallible; live state beats memory/player claims.
 
 ## Recovery from failed plans
 
-A failed action or route is saved with its attempted step. A second failure of
-the same step temporarily blocks it for five minutes of world time; further
-failures extend that block up to thirty minutes. Nearby failed ground waypoints
-share an eight-metre cell so tiny coordinate changes do not evade the check.
-New plans containing blocked steps are rejected before their promises are sent
-to chat. The model sees the blocked steps and remaining retry times and must
-choose an alternative or wait; the controller does not invent another strategy.
+Repeated identical failures block that step for five world minutes, extending to thirty; nearby failed waypoints share an eight-metre cell. Reject plans containing blocked steps. General decision delays grow 30, 60, 120 seconds…to ten minutes after the second failure. Keep 16 failed steps across restarts. Meaningful actions or four metres of travel clear general delay; no-op toggles/work refresh/already-reached waypoints do not. Individual blocks keep their own expiry.
 
-Repeated failures also delay autonomous decisions: 30 seconds after the second
-failure, then 60, 120 and so on up to ten minutes. Recovery history is bounded to
-16 steps and survives restart. No-op outside/engine/work-refresh actions and
-arrival at an already-reached waypoint do not count as progress. Meaningful game
-actions or travelling at least four metres clear the general wait, while the
-individual failed-step blocks stay in force until their own expiry.
-
-Repeated or near-identical autonomous announcements to the same recipient are
-suppressed for ten minutes, with at most eight recent speech fingerprints saved.
-Repeated failures also silence autonomous announcements until progress occurs.
-A new addressed human question or newly critical needs can bypass the general
-retry wait; questions can receive answers, but cannot remove failed-step blocks.
-Normal shared request/spending caps still apply. This is a controller safeguard,
-not just an instruction asking the model not to repeat itself.
+A new human question or critical needs can bypass general delay, not step blocks or caps. Legacy duplicate-speech protection keeps eight fingerprints, suppressing near-identical autonomous messages for ten minutes and until progress after repeated failure; configured residents are addressed-only.
 
 ## Token and spending controls
 
-Mabel’s conversation model defaults to `gpt-4.1-mini`, using the Responses API
-with the strict `converse` tool and at most 2,200 output tokens. Jev handles her gameplay. Default accounting rates are
-$0.40 per million input tokens and $1.60 per million output tokens, from the
-[model pricing page](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
-OpenAI cached-input discounts are deliberately ignored in local estimates.
+Defaults are local accounting rates, not a live provider-price quote (Claude rates last checked 2026-10-01). Custom models require explicit input/output rates; inspect actual provider billing too.
 
-Toby, Rowan and Elias use Claude Haiku 4.5 for conversation by default at $1/million uncached input tokens and
-$5/million output tokens. Stable instructions and tool definitions use a
-five-minute prompt cache: writes cost 1.25× input and hits 0.1× input. Local
-accounting includes all three input categories and reserves at the higher
-cache-write rate before a request. Every reservation stores its own rates so a
-restart or a different resident cannot settle it using the wrong prices.
-See [Claude models](https://platform.claude.com/docs/en/models/overview) and
-[prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
-Pricing checked 2026-10-01; custom models require explicit rates. Cache savings
-apply only when the provider reports a cache hit; the cap does not assume one.
+- Mabel: `gpt-4.1-mini`, Responses API, max 2,200 output tokens, $0.40/$1.60 per million input/output; ignores cached-input discounts. [Model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
+- Others: `claude-haiku-4-5-20251001`, $1/$5 input/output; five-minute stable-prompt cache at 1.25× writes and 0.1× reads. Reservations use write rates; settlement uses reported categories. [Claude models](https://platform.claude.com/docs/en/models/overview), [caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
+- Shared defaults: **$0.60/UTC day, $20/UTC calendar month, 120 rolling calls/hour, two concurrent requests**, minimum interval 15 seconds. Adding residents divides this allowance; zero daily/monthly caps prevent calls.
+- Reserve conservative byte-based input plus max output cost durably before dispatch; settle returned usage with the reservation's own rates. Ambiguous errors/crashes retain the charge. Restart does not reset accounting.
+- Conversation/tool JSON is capped at 96,000 UTF-8 bytes, with scoped memories, selected workplaces and directory; no raw journals/legacy notebook. Local journal recall is keyword/paginated, at most eight excerpts/turn.
 
-- Plans have up to 12 steps and 30 bounded repeats. Routine movement and task
-  completion run locally without an API call. Plans can last up to 30 minutes.
-- Conversation receives FAQ/economy fundamentals, scoped memories, selected
-  workplace details and a compact directory. Raw journals and mixed legacy
-  notebooks are excluded from conversation. Total
-  request/tool JSON is capped at 96,000 UTF-8 bytes (not tokens). Old memories use local SQLite
-  keyword search and pagination (up to eight excerpts per turn); there is no paid embedding/vector service.
-- Addressed human messages, failed actions and newly critical needs can wake her.
-  NPC chat does not trigger another NPC automatically. The minimum request
-  interval defaults to 15 seconds, and the entire population shares a rolling
-  120-call/hour ceiling and two concurrent requests.
-- Mabel remains present without human visitors; others follow their schedules.
-  `NPC_*_ACTIVE_ALONE` flags are retained for compatibility but no longer govern
-  configured residents. Hunger/thirst and starvation do not pause during absences.
-- The shared estimated-cost caps default to **$0.60 per UTC day** and **$20 per
-  UTC calendar month**. Every request reserves a conservative byte-based input
-  estimate and maximum output cost in SQLite before calling a provider. Success
-  reconciles against returned token counts. An ambiguous failure or crash keeps
-  its reservation charged; restarting does not reset the counters.
-
-For conversation scale only, a hypothetical 6,000-input/400-output-token OpenAI reply
-costs $0.00304 at those rates. A 6,000-input Jev decision costs about $0.000252.
-These examples omit differences in actual prompt size and Claude cache use. One turn every five minutes for four hours/day would be about
-$4.38 in 30 days; continuous activity would be about $26.27 before this game's
-caps stop it. These are arithmetic examples, not measured gameplay averages.
-Longer context, conversation and recovery attempts change actual usage.
-
-Adding Toby, Rowan, Elias or future residents does not multiply the shared allowance. They share less
-thinking time under the same caps. The controller has a 50-resident ceiling and
-a concurrency regression fixture at that size; this is **not** a claim that 50
-continuously reasoning agents fit a $20 budget or a production load benchmark.
-The environment supports nineteen residents: the original four have individual switches and the fifteen newcomers share `NPC_POPULATION_ENABLED`. Schedules reduce simultaneous activity; the caps remain shared.
-
-Local dollar accounting depends on correct model prices and applies only to
-this database's NPC calls. Keep provider-side account controls and inspect
-actual provider usage too; other applications, changed pricing, taxes and a
-restored older database can differ from local totals. Use one server process
-per database. Daily/monthly limits of zero prevent new calls.
+Illustrative 6,000-input/400-output OpenAI reply: $0.00304; 6,000-input Jev choice: $0.000252. The former every five minutes for four hours/day is ~$4.38/30 days; continuously ~$26.27 before caps. Actual context, retries and cache hits vary. The 50-resident scheduler limit/fixture is not a $20 continuous-operation or capacity claim. Local totals cover only this database and depend on rates; taxes, other apps or restoring older backups can differ. Use provider-side controls and one process/database.
 
 ## Configuration
 
-All settings are server-only and read at startup:
+Read at startup. All switches require exactly `true`. Keys never enter observations or client assets.
 
-- `NPC_ENABLED`: exactly `true` enables the resident; otherwise disabled.
-- `OPENAI_API_KEY`: required when enabled. Legacy `OPENAI_KEY` is accepted natively.
-- `NPC_ID`: stable memory key, default `mabel`. **Keep this unchanged across
-  restarts.** A different ID means a different resident, not a rename.
-- `NPC_NAME`: initial pilot name, default `Mabel Reed`; must not collide with an
-  existing account. Existing resident names remain their saved account names.
-- `NPC_WORLD`: existing economy world ID, default `puddlewick`. Changing this configured home world is rejected. In-game space travel can change
-  the current world; its separate local state and galactic account persist across restarts.
-- `NPC_PERSONALITY`: optional replacement personality text (10–3,000 characters).
-  Changes are journaled. Native environment supports it; add it to Compose's
-  environment list if you want an override there.
-- `NPC_MODEL`: default `gpt-4.1-mini`. A custom model must support Responses strict
-  function tools. Supply both `NPC_INPUT_USD_PER_MILLION` and
-  `NPC_OUTPUT_USD_PER_MILLION` with its current rates. Update Compose's rate values
-  too when changing its model; those defaults describe only GPT-4.1 mini.
-- `NPC_INTERVAL_MS`: minimum 5,000, maximum 300,000; default 15,000.
-- `NPC_ACTIVE_ALONE`: legacy compatibility flag; Mabel now stays online without visitors.
-- `NPC_MONTHLY_USD`, `NPC_DAILY_USD`: estimated spending caps, defaults 20 and 0.60.
-- `NPC_CALLS_PER_HOUR`: global rolling call cap, default 120.
-- `DATA_DIR`: same persistent game directory used by the server and operator CLI.
+- Mabel: `NPC_ENABLED`; `OPENAI_API_KEY` (native legacy alias `OPENAI_KEY`); `NPC_ID=mabel`, `NPC_NAME=Mabel Reed`, `NPC_WORLD=puddlewick`, optional `NPC_PERSONALITY` (10–3,000 characters).
+- `NPC_MODEL=gpt-4.1-mini` selects Mabel's conversation model (Responses strict tools required). Custom models need both `NPC_INPUT_USD_PER_MILLION` / `NPC_OUTPUT_USD_PER_MILLION`; update Compose rates too. Add personality overrides to Compose's environment if needed.
+- `NPC_INTERVAL_MS=15000`, range 5,000–300,000; `NPC_MONTHLY_USD=20`, `NPC_DAILY_USD=0.60`, `NPC_CALLS_PER_HOUR=120`; server/CLI share `DATA_DIR`.
+- `NPC_POPULATION_ENABLED=false`, `NPC_TIME_ZONE=America/New_York`; newcomers use shared Jev settings and Claude Haiku 4.5.
+- `ANTHROPIC_API_KEY` overrides `CLAUDE_API_KEY`; shared by enabled Claude residents.
+- `NPC_*_ACTIVE_ALONE` flags are legacy compatibility settings: Mabel stays present and scheduled residents visit even alone.
+
+IDs are permanent memory keys, not renames. Initial names must be unique; existing saved names remain. Configured home-world changes are rejected, but in-game travel persists separate local progress. Disabling residents preserves identities/property/history. Personality edits are journaled.
 
 ### Toby’s configuration
 
-- `NPC_BAKER_ENABLED`: exactly `true` enables Toby, independently of Mabel.
-- `ANTHROPIC_API_KEY` or `CLAUDE_API_KEY`: server-only Claude API key.
-- `NPC_BAKER_ID` / `NPC_BAKER_NAME`: defaults `toby` / `Toby Finch`; must differ from Mabel’s ID and name. Names apply when first creating the pilot.
-- `NPC_BAKER_WORLD`: defaults to `NPC_WORLD`, then `puddlewick`.
-- `NPC_BAKER_MODEL`: default `claude-haiku-4-5-20251001`; `claude-haiku-4-5` alias also has built-in rates.
-- `NPC_BAKER_PERSONALITY`: optional replacement personality, 10–3,000 characters.
-- `NPC_BAKER_INTERVAL_MS`: default 15,000; range 5,000–300,000.
-- `NPC_BAKER_ACTIVE_ALONE`: legacy flag; scheduled visits now run even without human visitors.
-- `NPC_BAKER_INPUT_USD_PER_MILLION` / `NPC_BAKER_OUTPUT_USD_PER_MILLION`: rate overrides; both required for a custom model. The five-minute cache write multiplier is 1.25 and read multiplier 0.1 (conservative for models with cheaper reads).
+Prefix `NPC_BAKER_`: `ENABLED`; `ID=toby`; `NAME=Toby Finch`; `WORLD` inherits NPC_WORLD; optional `PERSONALITY`; `INTERVAL_MS=15000` (5,000–300,000); legacy `ACTIVE_ALONE`; `MODEL=claude-haiku-4-5-20251001` (alias `claude-haiku-4-5` also has built-in rates); `INPUT_USD_PER_MILLION` / `OUTPUT_USD_PER_MILLION` for custom conversation rates. Cache multipliers remain 1.25/0.1. Independent of Mabel; budgets are shared.
 
-Daily/monthly caps and call/concurrency limits are shared, not per character.
-Disabling one resident leaves the others running and preserves all histories.
+## Rowan’s configuration
+
+Prefix `NPC_FARMER_`: `ENABLED`; `ID=rowan`; `NAME=Rowan Field`; `WORLD` inherits NPC_WORLD; optional `PERSONALITY`; `INTERVAL_MS=15000` (5,000–300,000); legacy `ACTIVE_ALONE`; `MODEL` inherits NPC_JEV_MODEL; `CHAT_MODEL=claude-haiku-4-5-20251001`. Jev `INPUT_USD_PER_MILLION` / `OUTPUT_USD_PER_MILLION` default 0.042/0; Claude `CHAT_INPUT_USD_PER_MILLION` / `CHAT_OUTPUT_USD_PER_MILLION` default 1/5. Custom models need both rates. Compose forwards these overrides; enabling Rowan does not enable others. Both providers may receive his permitted context, never another resident's private conversations.
 
 ## Operator controls and memory
 
-Run from the repository with the server's `DATA_DIR` exported (or use the same
-`node --env-file=.env --import tsx scripts/npc.ts ...` form):
+With the server's DATA_DIR/environment (or `node --env-file=.env --import tsx scripts/npc.ts ...`):
 
 ```sh
 npm run npc -- status
 npm run npc -- pause rowan
 npm run npc -- resume rowan
-npm run npc -- memory rowan
-npm run npc -- pause toby
-npm run npc -- resume toby
-npm run npc -- pause mabel
-npm run npc -- resume mabel
 npm run npc -- memory mabel
 npm run npc -- memory mabel 'blue tractors'
-# Search earlier matching entries, before a journal ID from previous output:
-npm run npc -- memory mabel 'blue tractors' 1234
+npm run npc -- memory mabel 'blue tractors' 1234 # earlier than journal ID
 ```
 
-In Docker, prefix these commands with `docker compose exec aclone`.
-Pause/resume is durable and noticed within a second. In-flight results are
-ignored when paused; a request already sent can still incur a provider charge.
-An in-game moderator kick also pauses the NPC until operator resume. Gagging
-uses the normal chat rule. To remove the integration from play, set
-`NPC_ENABLED=false` for Mabel, `NPC_BAKER_ENABLED=false` for Toby, `NPC_FARMER_ENABLED=false` for Rowan or `NPC_INDEPENDENT_ENABLED=false` for Elias and restart; saved identities, property and journals remain.
+Any resident ID works; Docker prefixes commands with `docker compose exec aclone`. Pause/resume persists and is noticed within a second. Paused results are ignored but already-sent calls may charge. Moderator kicks pause until resume; gagging uses normal chat rules. Status shows costs/caps/calls/plans/memory counts. Private memory is operator-only; the public endpoint exposes identity/personality/generic activity, not journals.
 
-Status shows local cost estimates, caps, recent call count, plan goal and memory
-count. Memory output contains private conversations: this CLI is for the host
-operator, never a public HTTP endpoint. The in-game status endpoint exposes
-identity/personality and generic activity only, not her notebook or journal.
+Journals retain visible parish chat, that resident's private conversation, plans/results, journeys/errors and operator/personality edits indefinitely. Chat/cursor and action/progress commit atomically with world changes; navigation uses five-second autosave and may repeat travel, not committed purchases. Backups include memory. Monitor disk; there is no automatic pruning or player erasure UI. Deletion requires handling journal, notebook, agenda summaries, recall excerpts and backups together. Persistence is retrievability, not perfect model recall.
 
-The journal retains visible parish chat, private messages to/from that resident, chosen
-plans, completed actions/results, journeys, failures and operator/personality
-changes. Other players' private conversations are excluded. Chat captured during
-normal game actions and the resident cursor save in the same transaction as the
-world. Action results and plan progress are also committed together. Navigation
-progress uses the usual five-second world autosave; restarting may repeat a route
-but does not replay a committed purchase or job-start step.
-
-Memory lives in `aclone.sqlite` and is included in ordinary game backups.
-History is retained indefinitely, so disk use grows with conversation/activity;
-monitor the database and backups. There is no automatic pruning or player-facing
-erasure tool in this prototype. Deletion requests require operator handling of
-the journal, notebook, scoped agenda memories, saved recall excerpts and retained backups together.
-Disabling the NPC does not delete memories. Persistent history means retrievable
-records, not guaranteed perfect recall by the model.
-
-The visible notice tells players that parish chat and messages to the resident
-are saved and relevant excerpts sent to TypeSafe/Jev for decisions, and OpenAI
-for Mabel’s conversation or Anthropic for Toby, Rowan and Elias’s conversations. Private conversations are not copied to the other
-resident. OpenAI requests set `store: false`; Claude uses stateless Messages
-requests with a five-minute cache of stable instructions. Neither setting
-replaces the provider’s own data-retention policies.
+The player notice discloses saved chat and relevant excerpts sent to TypeSafe/Jev and the resident's conversation provider. OpenAI uses `store:false`; Claude uses stateless Messages plus stable-prompt cache. These do not replace provider retention policies.
 
 ## Development and validation
 
-`Brain` is an injectable provider interface. `OpenAIBrain` handles the Responses
-wire format; `AnthropicBrain` handles Claude Messages and cache usage. Claude’s
-full action union exceeds its strict grammar compilation limit, so field limits
-are explained in the tool schema and the original Zod validator rejects invalid
-turns before any speech or action. Explicit job/work examples prevent confusing
-qualified employment with a workhouse task. Legacy smoke adapters retain `turn-tool.ts`; configured residents use
-`conversation.ts` for speech and `jev.ts` for gameplay; `decision.ts` defines the bounded action vocabulary. `Residents`
-manages turns and applies shared `act`/`move` rules. `Navigator` uses cached A*
-paths, then ordinary steering/throttle physics. `NpcMemory` owns the journal and
-working state; `NpcBudget` reserves usage globally before async requests.
+`Brain` is injectable; `OpenAIBrain`/`AnthropicBrain` handle provider formats and usage. Legacy `turn-tool.ts` smoke adapters support the full action union (Claude uses described field bounds plus Zod validation because its strict grammar cannot compile that union). Configured residents use `conversation.ts`, `jev.ts` and `decision.ts`. `Residents` executes shared `act`/`move`; `Navigator` uses cached A* plus normal steering; `NpcMemory` persists state and `NpcBudget` reserves globally.
 
-```sh
-npm run check
-# Legacy provider-only trials below do not exercise the shared adaptive planner.
-# Optional, paid: school, bread production and private recall; three calls, $0.40 cap:
-node --env-file=.env --import tsx scripts/npc-baker-smoke.ts --live
-npm run test:e2e -- tests/browser/npc.spec.ts
-# Optional, paid: temporary database and synthetic chat, at most two API requests:
-node --env-file=.env --import tsx scripts/npc-smoke.ts --live
-# Optional, paid: four FAQ questions, up to eight API requests including lookups:
-node --env-file=.env --import tsx scripts/npc-guide-smoke.ts --live
-# Optional, paid: mill diagnosis, employment/production and custom-recipe blockers;
-# synthetic in-memory world, up to six requests, $0.25 conservative cap per run:
-node --env-file=.env --import tsx scripts/npc-work-smoke.ts --live
-```
-
-Unit tests use deterministic providers: no credentials or API costs. They cover
-ordinary driving/wages/supplies, journal retrieval, restart identity, shared
-budgets, bounded concurrency, private replies, invalid actions, moderator pause,
-provider failure and strict API serialization. The browser fixture uses real
-HTTP/WebSocket/UI paths with a deterministic provider, and writes
-`test-results/npc-chat.png`. It demonstrates integration, not model intelligence.
-The opt-in live smoke test checks a real validated model plan and durable memory;
-long-term economic skill still needs playtesting and tuning.
-
-A live GPT-4.1 mini trial verified private chat, driving to the Odd Jobs Office,
-three completed labour shifts (13,500 internal currency units earned), and
-journal/notebook persistence after reopening the database. That successful
-four-minute simulated gameplay trial used one model request, with a locally
-estimated cost of $0.0016668. This is one sample, not a long-term cost forecast.
-The trial also exposed an unsupported `oneOf` schema emitted by Zod; the adapter
-now emits equivalent `anyOf` branches for disjoint action types, and a regression
-test checks the wire schema. The smoke runner reports sanitized provider error
-codes/parameters on rejection, never the API key or provider error message body.
-
-A separate live guide trial answered controls (M/L/Parp), verified-email password
-recovery, owner stockroom transfers and spring coffee planting/60-day growth.
-It used four requests with a local estimate of $0.010442 in total. Automated
-backup/restore testing also covers identity, private journal, pause and spending
-reservations together. These samples do not establish long-term cost or perfect
-help accuracy.
-
-The 0.11.1 expanded-knowledge trial used the real model against a synthetic
-mill: it identified the absent job and 7.41d capital shortfall, chose employment
-and active work after funding, and the normal simulation produced 3 flour from
-5 wheat and paid 19.80d net wages. It also identified missing wheat, output space
-and wages for a changed recipe. That three-request sample cost approximately
-$0.0161 at the configured accounting rates. A further four-question controls,
-recovery, ownership and coffee-growing trial passed at about $0.0209. Earlier
-iterations exposed misleading hiring advice and a display name used as a travel
-ID; explicit actor roles and target-ID instructions were added. These limited
-samples demonstrate improvement, not guaranteed advice or long-term reliability.
-
-Prompt structure and contextual examples follow the
-[official OpenAI prompt engineering guidance](https://developers.openai.com/api/docs/guides/prompt-engineering).
-The model and existing daily/monthly limits are unchanged. Richer turns cost
-more individually; repeated failed attempts also cost money, so judge changes
-against successful gameplay and measured usage rather than prompt length alone.
-
-### Claude baker trial (2026-10-01)
-
-An opt-in real Claude Haiku 4.5 trial used a disposable world and synthetic
-private chat. Toby selected school training, paid the ordinary 80d tuition,
-accepted bakery employment, converted 2 flour into 3 bread at the production
-boundary, earned a 19.80d net wage, and recalled the test owner’s favourite loaf
-in a private reply. The successful three-request run cost about $0.05063;
-later requests hit the 5,482-token stable prompt cache. Fixture positioning
-placed him near school/bakery entrances; navigation is tested separately.
-The earlier integration trials exposed invalid task/job forms and oversized waits;
-these remain rejected, and explicit action examples corrected the live trial.
-This demonstrates a short working scenario, not perfect long-term AI judgement.
-
-## Jev farmer trial (2026-10-01)
-
-The live integration trial used a disposable in-memory parish and real Jev/Claude
-APIs. It placed Rowan at service entrances and advanced the test crop to ripeness;
-it did not modify production saves or grant skills or harvest wages. Four Jev
-choices trained farmer for 80d, accepted farm employment, planted potatoes and
-harvested 45 into the farm stockroom, earning 19.8d after tax. Two Claude calls
-supplied private dialogue. Controller restarts between stages preserved identity
-and memory. The successful six-call run cost an estimated $0.030271796; earlier
-tuning attempts incurred additional usage. This is an integration check, not a
-promise that an unsupervised resident will always make optimal decisions.
-
-To repeat (real API charges; at most four Jev plus two Claude calls and a $0.50
-local cap; `.env` must contain both keys):
-
-```sh
-node --env-file=.env --import tsx scripts/npc-farmer-smoke.ts --live
-```
-
-Automated tests additionally cover watering, fertilizer, seed funding, seasonal
-restrictions, wage/storage blockers, owner stock sales, restart memory, invalid
-provider output, separate call accounting and continued gameplay when dialogue
-fails or hits the budget. Browser tests use deterministic providers without
-paid requests and verify all three chat identities and private-message isolation.
+Run `npm run check` and `npm run test:e2e -- tests/browser/npc.spec.ts`. Deterministic providers test legality, privacy, memory, failures, schedules, budgets and concurrency without keys/charges. Browser evidence uses real HTTP/WebSocket/UI, not live model intelligence. Paid legacy provider-only trial limits and measured results are retained in [release notes](RELEASE_NOTES.md#historical-npc-provider-trials); they do not test the entire current adaptive planner. Long-term survival, profitability and natural dialogue need live playtesting.
 
 ## Gameplay request size
 
-Jev receives candidate descriptions; their executable steps stay on the server.
-The complete request is limited to 24,000 UTF-8 bytes, with redundant journals,
-chat history and optional duplicated context removed first. If necessary, option
-descriptions shorten while every candidate remains available. Live needs and
-commitments remain in context. The complete conversation guide and history still
-go to the chat model. This avoids the production `max_tokens_exceeded` rejection.
-TypeSafe documents its context constraints in the [model reference](https://docs.typesafe.ai/models).
+The current Jev wire limit is 24,000 UTF-8 bytes; conversation/tool JSON remains 96,000. See [provider cooperation](#how-the-providers-cooperate). Keep protected needs/commitments and all candidate IDs when trimming; do not fix oversized requests by silently dropping careers.
+
+### Optional paid smoke commands
+
+Run `node --env-file=.env --import tsx scripts/SCRIPT.ts --live` with one of:
+
+- `npc-smoke`: temporary database/synthetic chat, at most two requests.
+- `npc-baker-smoke`: school, bread and private recall; three calls, $0.40 cap.
+- `npc-guide-smoke`: four FAQ questions, up to eight calls including lookups.
+- `npc-work-smoke`: synthetic mill/custom-recipe diagnosis, at most six requests, $0.25 cap.
+- `npc-farmer-smoke`: four Jev + two Claude calls, $0.50 cap; requires both keys.
+
+These are explicit opt-in API charges; they never target production saves. Historical results are in the release archive.

@@ -1,31 +1,21 @@
 # Materials, businesses and lodging
 
-All quantities below are the default data pack. A world owner can change the
-production speed and recipes. Prices are integer hundredths of a denarius in
-JSON; the interface displays denarii. These are Aclone balance choices, not
-claims about undocumented historical game mechanics.
+Defaults below are original Aclone tuning; live recipes, taxes and quotes override them. JSON money is integer hundredths of a denarius; UI amounts are denarii.
 
 ## Gather, deliver, produce
 
-Open **Resources** in the top bar to see distances, map coordinates and reserves.
-Drive within 10m of a marked ground. Logs, stone and gravel need one carried tool;
+Use Resources/M for locations and reserves, then the nearby HUD Gather button within 10m. Logs, stone and gravel need one carried tool;
 topsoil can be gathered by hand. A basic load is three units after 20 seconds.
-Learn **forester** for timber or **excavator** for minerals/soil to gather six in
-12 seconds. Tools are reusable for gathering. Cargo capacity is checked before
-starting and again at completion. If you fill your cargo during a shift, free
-space to let the reserved load finish; it is not silently discarded.
+Foresters (wood) and excavators (minerals/soil) gather six in 12 seconds. Tools are reusable for gathering. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
 
 Each woodland ground holds 18 logs and regrows three per 30 real minutes. Each
 mineral/soil ground holds 30 and replenishes three per ten minutes. There are six
 grounds of each kind. Reserves are shared, saved and recover offline. Buildings
-within 12m obstruct extraction. Survey posts, log stacks and mineral/earth mounds
-mark the locations; scenic trees are not individually destructible.
+within 12m obstruct extraction. Woodland clearings, chipped outcrops, gravel hollows and soil banks mark sites; scenic trees are not individually destructible.
 
-Sell cargo to a business through its Main trading tab. It must offer a buy price,
-have working capital and stockroom space. Owners must use **Stockroom**
+Sell through Main to a buyer with a posted price, capital and space. Owners must use **Stockroom**
 to move goods without a sale. Use **Building Admin** to invest cash, collect
-profit, set wages and set buy/sell prices. There are no automatic sales or unlimited
-new-item stocks in public markets.
+profit, set wages and set buy/sell prices. Sales and restocking are not automatic.
 
 ## Default trade prices (0.16.0)
 
@@ -62,24 +52,13 @@ listings start with whatever stock is actually present, including zero.
 and lodging businesses buy at 5.60d; lodging resells at 6.75d. Harbour water remains
 7.75d, an emergency import rather than a profitable source for local resale.
 A staffed batch costs 22.40d of fuel plus 22d wages; twelve water return 55.80d
-after default sales tax, leaving 11.40d. No waterworks is spawned automatically;
-until someone builds and supplies one, players can still import water. Logs,
+after default sales tax, leaving 11.40d. Puddlewick includes a seeded waterworks; other worlds may need one built. Harbour imports remain available. Logs,
 gravel and topsoil can be gathered and sold directly to their local consumers. All six farm crops
 have default sell listings; seed costs, seasonal yield, irrigation and harvest wages
 remain ordinary farm expenses. Prices do not spawn goods, move cargo automatically,
 or replenish a business's capital. Employees/owners and hauliers must supply demand.
 
-On the first load of an older world, pricing revision 2 replaces buy/sell lists on
-unowned and treasury-run public buildings. **Every player-owned business is skipped,
-including NPC-owned businesses and owner-edited or unchanged prices.** Stock, money,
-wages, employment and ownership are retained. The saved revision prevents repeated
-repricing after future edits. An owned business with incompatible old bids may still
-need its owner to adjust them; changing reference prices does not rewrite its quotes.
-
-The 0.16.0 waterworks upgrade adds pricing revision 3. It replaces only old
-default water bids of 8.68d and lodging asks of 10.47d on unowned/public buildings;
-other custom quotes and every human/NPC-owned business remain untouched. Worlds
-older than revision 2 receive the full current defaults in one migration.
+Older public-price migrations preserve every human/NPC-owned business; see [upgrade notes](RELEASE_NOTES.md#deploying-0153). Owners may need to adjust incompatible old quotes themselves.
 
 Owners cannot buy from or sell to their own property, hire themselves, refresh
 their own work shifts or start workplace tasks there. Use Stockroom for goods and

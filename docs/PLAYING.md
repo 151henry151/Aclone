@@ -1,424 +1,154 @@
-# Living in the parish
+# Playing Aclone
 
-See [controls and common questions](FAQ.md) for driving, accounts, homes and getting started.
+Start with a pilot name; keep its private recovery key and set a password in **Pilot & preferences**. Verified email recovery requires host mail setup. See [controls/FAQ](FAQ.md) and [touch controls](MOBILE.md).
 
-## Phones and tablets
+## Your first day
 
-Use the compact HUD: steering on the left, throttle on the right, and Map, Bag,
-Chat and Actions along the bottom. Tap cash for needs; tap the nearby-building
-prompt to interact. See the [complete mobile guide](MOBILE.md) for touch controls,
-chat, aircraft, weapons, camera gestures and account setup.
+1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 45d.
+2. Buy bread/water at Harbour stores and use them from Inventory. Variety reduces repeat-food penalties; keep fuel reserves too.
+3. Learn a profession at school: first qualification 80d/one real minute, later ones 160d/40 minutes, subject to skill limits.
+4. Take a job and **Work two cycles**, or buy a business, stock inputs and fund wages. Actual production pays wages; signing up alone does not.
+5. Stock a cottage or rented room and enter before logging off. Hunger, thirst and starvation continue offline; provisions feed you automatically. **Go outside** restores movement.
+
+When reversing a wheeled vehicle, steering follows actual backward speed, including while braking.
+
+State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
 ## Timed tasks
 
-Gathering, public labour, crafting and harvesting show their task name and a large
-seconds-remaining countdown in a floating card at the center of the screen. It is
-separate from chat and works on desktop and phones. Menus temporarily hide the
-card; close the menu to see it again. Starting a harvest closes its building menu
-automatically. The card disappears after the server confirms completion; if the
-timer reaches zero first, it shows **Finishing…**. No extra click is needed.
-
-![Large task countdown on a phone](screenshots/task-countdown-phone.png)
+Labour, gathering and harvesting lock movement while a large centered countdown shows progress. Menus temporarily hide it; completion clears it. Disconnecting does not cancel accepted work or duplicate rewards. Starting a harvest closes its panel. If the timer reaches zero before server confirmation, **Finishing…** remains until completion; no extra click. Pending loads can require cargo space before delivery.
 
 ## Gathering resources
 
-Gathering grounds lie off the roads around the outskirts. Look for small woodland
-clearings with felled timber, chipped stone outcrops, gravel hollows with a
-wheelbarrow, and exposed topsoil banks. The parish map (**M**) and Resources menu
-mark their locations; the woodland clearings yield Logs and topsoil yields Dirt.
+Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil grounds outside town. Approach within 10m for a direct HUD **Gather** button, reserve count and tool/cargo feedback. No menu is needed. Logs/stone/gravel require carried Tools from stocked Harbour stores or a forge; topsoil is hand-gatherable. Scenic trees are not individually cuttable.
 
-Pull within ten metres of logs, stone, gravel or a topsoil patch. A floating HUD
-prompt identifies the resource and its remaining reserves. Click or tap **Gather**
-to start directly; a large centered countdown shows the task, and the Gather prompt
-becomes available again after the load reaches your inventory. Moving away hides
-the prompt. These controls work on desktop and phones, separately from chat.
-
-Carry **Tools** for logs, stone and gravel; dirt can be gathered by hand. Buy tools
-from a stocked Harbour store or forge. The prompt explains missing tools, full
-cargo, obstructed sites or depleted reserves. Forester (logs) or Excavator (other
-resources) improves a load from three items in twenty seconds to six in twelve.
-The Resources menu remains available for finding more distant sites.
-
-![Direct gathering control on a phone](screenshots/gather-hud-phone.png)
+Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. Tools are reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
 
 ## Fishing at the dock
 
-Drive or walk up the boardwalk onto the fishing dock on the south shore. The deck
-supports your tractor above the water. Buy and carry **Fishing tackle** from
-Harbour stores first.
-
-Near the dock, **Cast a line** floats near the center of the screen. While fishing,
-the same floating panel shows **Reel in** and **Stop fishing**. Reel in highlights
-when a fish bites; tap/click it or press **F3** within eight seconds. Leave room
-in your inventory for the catch. Stop fishing releases you to move again; you can
-cast again immediately. These controls are separate from the chat window and work
-on desktop and phones without opening a menu.
-
-You can also click the dock itself, tap its nearby-target prompt, or press **E / Ctrl**
-to open the Fishing dock panel and choose **Cast a line**. Activities remains an
-alternative entry point. If fishing is disabled in the world or you lack tackle,
-the direct cast control explains why it is unavailable.
-
-![Floating fishing controls on a phone](screenshots/dock-fishing-phone.png)
+Carry Fishing tackle and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones.
 
 ## Finding your way
 
-Press **M** or click/tap the minimap to open the **Parish map**. It shows the same
-roads as the world, names each building and labels woodland, stone, gravel and
-topsoil gathering grounds. Green resource dots show unobstructed sites; reserves
-can still be depleted, so use **Resources** for current amounts. The gold marker
-and arrow show your position and heading; pale blue dots show other online players.
-
-Use **+ / −** to zoom, drag with the mouse or swipe on a touch screen to pan, or
-scroll with a wheel/trackpad. Tab to the map itself and use the arrow keys to pan
-with the keyboard. **Find me** centres your position; **Fit parish** resets zoom
-and includes the parish's current buildings, gathering grounds and your position.
-On narrow screens, pan across the map to keep names readable. Long custom names
-have their full text in the building window and mouse tooltip.
-
-Click a building name to inspect it, then travel there to use it. Viewing a name
-on the map does not let you trade or work remotely. Press **M** again or **Esc**
-to close. **Parish directory** still opens the list of buildings and distances;
-its buttons remain in the map, journal and game menu.
+**M** or the minimap opens the enlarged parish map; M/Esc closes it. Named buildings/resources, roads and player markers update live. Pan by dragging/swiping or focus the map and use arrow keys; use +/− or wheel to zoom. **Find me** centres your marker; **Fit parish** resets bounds. Gold shows you/heading, pale blue other players, green unobstructed resources (not necessarily stocked). Click a building name to inspect; travel there for transactions (within 18m). Long names remain available in details/tooltips. The separate **Parish directory** lists distances and is accessible from map, journal and menu.
 
 ## Sound
 
-Sound is enabled by default and starts after a click, tap or keypress. The **Sound**
-button beside Engine, Lights and View shows whether sound is on, muted or waiting
-for a gesture. Use **Pilot & preferences** for the volume slider. Explicit mute
-and volume choices survive reloads in that browser; if you muted an older version,
-click Sound to enable it. A browser-tab mute or operating-system volume setting
-can still silence the game.
+Sound starts after a click/tap/key; mute and volume persist in **Pilot & preferences**. Check browser/OS volume too. **F4** toggles engine, **Space/Parp** honks. Engines idle/rev, nearby vehicles/horns pan with direction and fade with distance; homes muffle outside sound. Walking, no fuel, indoors, disconnect, hidden tabs and space silence relevant motors/ambience. Returning plays current sounds, not missed horns.
 
-Your engine idles while switched on and revs smoothly as you drive forward or
-reverse. **F4 / Engine** stops or starts it; running out of fuel, going indoors,
-walking or disconnecting silences it. **Space / Parp** sounds the horn. Nearby
-players hear accepted honks and running engines; sound gets quieter with distance
-and moves left/right as you look around. Entering a home muffles outside sounds.
-
-Sawmills buzz, mills rumble, workshops and quarries clatter, furnaces roar and
-pumps churn. Processing buildings sound active when they have recipe inputs,
-room for outputs and wage funds under the world's production rules. Unattended
-production is quieter; depleted, full or unfinished buildings are silent. Manual
-crafting also makes the forge audible while its worker is online. This follows
-economic activity, independently of the chimney's occupancy effect.
-
-Switching to a hidden tab, disconnecting or leaving for space stops the sound.
-Returning restarts current ambience after the connection resumes, without
-replaying horns that happened while you were away.
+Supplied mills/sawmills/workshops/furnaces/pumps make distinct machinery sounds. Missing inputs, full output stores, unfunded wages or unfinished construction silence them; unattended production is quieter. Manual forge tasks also sound while their worker is online. Sound follows production, not chimney occupancy.
 
 ## Time and weather
 
-At default speed a game day takes **10 real minutes**. There are 365 days in a year
-(60 hours 50 minutes), starting on the first day of spring in a new world. Spring,
-summer and autumn each last about 15 hours 20 minutes; winter lasts 15 hours.
-The date and the default visual clock cross midnight together. World owners can
-change or freeze the **visual** day length without speeding up crops or ageing.
+Default day: **10 real minutes**; 365-day year: **60h 50m**. New worlds start in spring. Spring/summer/autumn each last ~15h 20m, winter 15h. Owners may change/freeze the visual clock without accelerating crops or ageing. Default visual midnight matches date change.
 
-Sunrise comes earlier in summer and later in winter. Sunlight moves east to west;
-Overcast, moonless nights are very dark. On clear moonless nights, faint starlight lets you make out nearby ground and silhouettes. A bright full-moon night reveals the grass and terrain, with dimmer detail still visible in the shadows. Turn on headlights with **L** for a wide, long-range beam. Street lamps stay on all night, with a bright centre and broad, overlapping dim light across the gaps between lamps and beyond the roadside; occupied houses cast light from their windows until a varied evening bedtime. Weather fronts last three game days
-(about half an hour): rain, snow or clear skies, with seasonal temperatures.
-Some wet fronts become thunderstorms with lightning or windy snowstorms. Snow accumulates on the ground, rooftops and foliage and stays until positive temperatures gradually melt it. Wet roads dry over several game days. Rain and snow reduce ground-vehicle speed and steering grip; the clock reports road conditions. Autumn changes deciduous leaf colour; evergreen groves stay green.
-Weather is deterministic for each world's date, including after a server restart.
+Sunrise/sunset vary by season. Clear moonless nights have faint starlight; full moons reveal terrain. Clouds/horizon reduce natural light; overcast moonless countryside is very dark. Use **L/headlights**. Streetlights run all night; occupied-house windows shine until varied bedtimes. Occupants left inside keep chimney smoke even offline; workplace chimneys smoke when an employed player is online, within 18m and on an active shift.
 
-The fictional stars move across the sky overnight and shift with the season.
-Two nearby moons, one about half the apparent size of the other, wax and wane
-over **28 game days** (4 hours 40 minutes at default speed). They orbit as a close
-pair, so their phases are similar; their separation shifts over five game days.
-Phases continue across seasons and years instead of resetting. A moon below the
-horizon provides no light, and clouds passing over a moon also dim its light on
-the ground. Starlight is weaker under cloudy skies. To watch the sky, switch to
-walking, press **C** for first-person view, and drag upward to look up.
+Seeded three-day weather fronts (~30 real minutes) bring clear/rain/snow, seasonal temperatures and occasional thunderstorms/lightning or windy snowstorms. Snow accumulates on ground/roofs/foliage and gradually melts above freezing; wet roads dry over several days. Wet/snowy surfaces reduce speed/grip. Deciduous trees tint in autumn; evergreen groves stay green. Climate survives reconnect/restart.
 
-The ten-minute day and 365-day year follow the supplied historical information.
-The seasonal climate, crop durations and economic balance below are original
-Aclone choices, not recovered historical constants. They give a crop several
-hours to mature while letting a player see multiple seasons during a few sessions.
+Stars move nightly/seasonally. Two nearby moons (one about half-size) share a 28-day phase cycle (4h 40m), with a five-day mutual orbit; neither resets at year boundaries. First-person camera drag looks upward. The calendar follows supplied historical information; climate, crop durations and balance are original tuning.
 
 ## Water supply
 
-The **Shoreline waterworks** (0.16.0) must stand on dry ground directly beside
-water, with room for its foundation and a submerged intake within ten metres
-behind it. Open **Build** near the shore: the option reports whether the site is
-suitable and is disabled inland. The game turns the intake toward water for you.
-Edited inland ponds also count; no-build zones and normal property limits apply.
+Build **Shoreline waterworks** on dry ground with room for foundations and a submerged intake within ten metres behind it; the game points the intake toward water. Inland edited ponds count. The Build panel rejects unsuitable, submerged or no-build sites.
 
-The base price is **1,200d plus parish construction tax**. Deliver **8 timber,
-8 stone blocks, 2 steel and 6 gravel** to finish construction. Use its Stockroom
-to deposit fuel and Building Admin to invest wage funds. Hire a player or NPC who
-has learned **pump operator** at school; owners cannot work at their own business.
-At full efficiency, each ten-minute cycle consumes **1 fuel**, pays the posted
-wage (default 22d gross) and produces **12 water** into the building's stockroom.
-Unattended production follows the world's usual reduced-efficiency rules.
+Cost: **1,200d plus construction tax**, then **8 timber, 8 blocks, 2 steel, 6 gravel**. Deposit fuel and wage capital; hire a **pump operator** (owners cannot employ themselves). A full-speed ten-minute batch consumes 1 fuel, pays the posted wage (default 22d gross), and produces 12 water. Dry intake/flooded foundations stop production/sound without consuming inputs/payroll; fixing terrain resumes it.
 
-Default waterworks water sells for **5d**. Local industrial and lodging buyers
-pay **5.60d**, making delivery worthwhile; households and farm irrigation also
-use water. Businesses still need actual stock, capital and buyers. Construction
-does not create free supplies, and existing worlds do not receive a free building.
-Harbour imports remain available until a local supplier opens.
-
-If terrain editing or a changed water level dries the intake or floods the
-foundation, production and machinery sound stop. The building status explains
-the problem; restoring suitable terrain/water resumes production. No fuel or
-wages are consumed by a failed batch.
+Water sells at 5d; local processors/lodging bid 5.60d. Harbour imports remain available. Construction grants no supplies; Puddlewick's seeded service is the exception described [below](#puddlewick-services). [Economy](ECONOMY.md) covers margins.
 
 ## Farming
 
-Learn **farmer** at the school, then buy a farm or take a job at one. Farms have
-four independent plots. Visit the farm and open its Main tab to plant, irrigate,
-fertilize or harvest. Its Building Admin tab funds the investment account; the
-Stockroom tab moves your produce into your tractor for delivery to other shops.
+Learn **farmer**, then own or work at a farm. Each has four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce.
 
-- Wheat: spring/autumn sowing, 18 days (3 hours), grain family.
-- Potatoes: spring/summer, 12 days (2 hours), root family.
-- Hops: spring/summer, 30 days (5 hours), vine family.
-- Grapes: spring, 48 days (8 hours), vine family.
-- Tea: spring/summer, 36 days (6 hours), leaf family.
-- Coffee: spring, 60 days (10 hours), bean family.
+- **Wheat:** spring/autumn, 18 days (3h), grain; flour/bread.
+- **Potatoes:** spring/summer, 12 days (2h), root; meals/compost.
+- **Hops:** spring/summer, 30 days (5h), vine; beer.
+- **Grapes:** spring, 48 days (8h), vine; wine.
+- **Tea:** spring/summer, 36 days (6h), leaf; packed tea.
+- **Coffee:** spring, 60 days (10h), bean; roasted coffee.
 
-Seeds use farm investment. Irrigation uses three carried water per treatment,
-up to three treatments per plot. Rain contributes moisture; thirstier crops need
-more care. One fertilizer treatment uses a carried compost, or costs the default Harbour compost price (currently 39.53d) if you have none, and adds 33% to yield. Repeating a
-crop family in the same plot reduces yield by 20%; rotate families between harvests.
-Frost during growth lowers yield, so planting warm crops late in their window
-has a consequence. Growth itself continues in cold weather; this is not a dormant
-perennial or livestock simulation.
+Seeds draw farm investment. Irrigate with 3 carried water, up to three treatments. Rain helps; crops differ in demand, frost and wet-soil sensitivity. One compost fertilizes for +33% yield; lacking compost buys imported fertilizer at Harbour's default compost price (39.53d). Repeating a crop family loses 20% yield; rotate or restore soil. [Economy](ECONOMY.md#crops-and-soil) explains drainage/restoration.
 
-The displayed yield is an estimate using that world's weather calendar. Crops
-retain full quality for **six real hours after ripening**. Later crops gradually
-lose up to 35% of their quality-adjusted yield, then remain harvestable indefinitely.
-Nothing auto-replants or silently throws away an overdue harvest.
+Yield estimates use the world's weather calendar. Frost harms yield but never halts growth. Crops keep full quality for six real hours after ripening, then lose up to 35%; they remain harvestable and never automatically replant. No perennial dormancy/livestock simulation.
 
-Harvesting takes a 15-second shift and locks movement, like other work tasks.
-One worker reserves a plot at a time. Finished crops go into the farm's stockroom;
-an employed harvester receives its posted wage, funded by investment and subject
-to wage tax. Owners working their own plots take produce rather than a wage; they cannot
-employ themselves. If the stockroom fills or wages become unfunded during the shift,
-the plot remains intact and can be tried again. Disconnecting does not cancel an
-accepted harvest shift or pay it twice.
-
-Wheat supplies mills, hops supply breweries, potatoes supply kitchens/compost, grapes supply wineries, tea supplies blending houses and coffee supplies roasteries. These goods can also be sold through shops or your farm's configured prices. See [resources, crop care and industry](ECONOMY.md) for drainage, soil improvements and processing recipes. New coffee and
-potato market listings begin empty: farmers must supply them. Existing farm stock
-is retained on upgrade, but automatic wheat production is replaced by these plots.
+Harvest is a saved 15-second task, one worker/plot. Produce enters the farm stockroom; employed harvesters receive funded, taxed wages. Owners harvest unpaid. Insufficient output room/payroll at completion leaves the plot intact. Disconnects cannot double-pay. Farms no longer produce automatic wheat; existing stock is retained, and new market crop listings start empty.
 
 ## Competitive play
 
-A world owner must enable **fighting**. In Activities, join **Team deathmatch**,
-**Capture point**, or **Capture the flag**. Teams auto-balance when joining.
-Rust and Moss bases are west and east of the northern arena. The capture point
-is at its centre. You keep your property and qualifications during arena deaths.
+Enable fighting in world rules, then join **Team deathmatch**, **Capture point** or **Capture the flag** through Activities. Teams balance automatically; default Rust/Moss bases lie west/east of the northern arena. Arena deaths preserve property/skills.
 
-Use **1–6** to select machine gun, grenade, plasma, rocket, javelin or mine.
-**Tab** fires; **hold and release Tab** to charge a javelin. Grenades bounce before
-exploding. Mines arm after 1.5 seconds and expire after 90 seconds. Explosions have
-area damage with distance falloff. Armour applies the original damage × 100 / armour
-relationship. Safe zones, occupied homes and teammates are protected. Arena shots
-cannot harm non-participants or their buildings. Leaving an activity cancels its
-in-flight weapons. Outside a match, fighting-enabled worlds allow open combat
-and damage to unprotected private buildings.
+**1–6** select machine gun, grenade, plasma, rocket, javelin, mine. **Tab** fires; hold/release for javelins. Grenades bounce; mines arm in 1.5s and expire after 90s. Blast damage falls with distance; damage scales ×100/armour. Safe zones, occupied homes and teammates are protected. Arena shots cannot hit outsiders/buildings; leaving cancels in-flight weapons. Open combat outside matches can damage unprotected private buildings.
 
-The default mode consumes regenerating energy out of 65,000. Owners can choose
-`weaponMode = ammo` for ammunition per life. Garage refits cost 25d. Arena respawns
-restore health and ammunition with three seconds of protection; firing or picking
-up a flag removes protection. Switching activity is explicit through Leave activity.
+Defaults use regenerating energy (65,000); `weaponMode=ammo` gives ammunition per life. Garage refits cost 25d. Respawns restore health/ammo with three seconds' protection; firing/picking up a flag ends protection.
 
-- Deathmatch: first team to 10 kills.
-- Capture point: earn seconds while your team alone occupies the 12m circle;
-  reach 120 seconds. Contested points do not score.
-- Capture the flag: take the enemy flag to your base while your own flag is home;
-  first to three captures wins. Touch a dropped friendly flag to return it.
-  Dropped flags also return after 30 seconds. Death, leaving and disconnect drop flags.
+- Deathmatch: 10 team kills.
+- Capture point: 120 uncontested seconds in the 12m circle.
+- CTF: 3 captures; your own flag must be home. Touch dropped friendly flags to return them; automatic return after 30s. Death/leave/disconnect drop flags.
 
-Rounds last ten real minutes, pause scoring when either team has no online players,
-and restart after a 15-second result interval. Winners receive five kudos. Optional
-`killReward` is integer hundredths of a denarius paid by the treasury (default zero);
-a victim can trigger a cash reward at most once per 30 seconds. These are original
-alpha match rules; town wars, turrets and detailed vehicle weapon loadouts remain
-separate fidelity work.
+Rounds last ten real minutes, pause scoring if either team is empty, then restart after 15s. Winners earn 5 kudos. Optional treasury `killReward` defaults zero; each victim can reward at most once/30s. Custom arenas can change settings. Town wars/turrets/loadouts remain incomplete.
+
+Hornball, ordered-checkpoint racing and Ultrakricket controls/rules are in [FAQ](FAQ.md#what-are-hornball-racing-fishing-and-ultrakricket).
 
 ## Travelling between stars
 
-Drive to the spaceport and take off. The galaxy map shows seven systems, direct
-routes within your jump range, and intermediate stops for more distant destinations.
-A jump costs one credit per rounded-up parsec and takes **6 + 2 × fuel-cost seconds**.
-Fuel is included in this fee. Arrival is saved and completes after reconnecting;
-station trading and landing are unavailable during transit.
+Take off at a spaceport. Seven-system routes show reachable jumps/intermediate stops. A jump costs 1cr per rounded-up parsec (fuel included) and takes **6 + 2 × fuel-cost seconds**. Saved arrival settles after reconnect; no trading/landing during transit.
 
-The **Shipyard & space trade** panel provides:
+**Shipyard & space trade** offers:
 
-- Owned ships: buying a ship adds it to your hangar. Switching back is free, provided
-  all your cargo and contract packages fit.
-- Drive and hold upgrades: three levels each, adding 2pc or 20 cargo spaces per level.
-  These fleet-wide fittings remain installed when switching ships.
-- Station trading: three goods with explicit buy/sell quotes and a spread. Stations
-  specialize in different goods. Supply is shared between players and replenishes
-  20 units per real hour, up to 200; stations buy until their warehouse reaches 400.
-- Courier contracts: reserve ten cargo spaces, deliver to a directly reachable
-  system and receive the quoted reward. Contracts do not expire offline. Cancellation
-  removes the sealed packages without charging a penalty or paying a reward.
-- Surveys: survey each system once for 15cr. Lantern, Rime and The Vessel each reveal
-  a relic; collecting all three unlocks purchase of the alien ship.
-- Rescue: an empty ship with no contract and under 10cr can return to Hearth for free.
-  This prevents a penniless pilot becoming permanently stranded.
+- A hangar: purchased ships remain owned; switching is free if cargo/contracts fit.
+- Three drive/hold upgrade levels, each +2pc/+20 cargo, retained across ships.
+- Three trade goods with station-specific quotes/spreads; shared stock replenishes 20/hour to 200, buyers fill to 400.
+- Courier jobs: ten sealed cargo spaces, directly reachable destination, quoted reward. No offline expiry; cancel removes packages without reward/penalty.
+- One survey/system for 15cr. Relics at Lantern, Rime and The Vessel unlock alien-ship purchase.
+- Free Hearth rescue for an empty ship with no contract and less than 10cr.
 
-Space trading and contracts use galactic credits and cargo, separately from your
-planetary tractor inventory. Station and account writes are atomic. Local cash
-conversion at a spaceport retains the world's daily cap. This release does not add
-space dogfighting or unrestricted conversion of owner-created world wealth.
+Galactic credits/cargo are separate from local cash/inventory; spaceports convert subject to world caps. Account/station writes are atomic. [Connected galaxies](GALAXIES.md#player-journey) explains inter-server visits.
 
-## Making it your own
+## Appearance and property
 
-Choose one of six stone/wood cottage styles in **Build** before selecting Small
-cottage. Styles have the same construction cost. Existing cottages get stable,
-varied appearances; their owners, stock and locations stay intact. The garage offers
-seven tractor paint colours for 25d, saved with your planetary pilot.
+Choose among six cottage styles, including timber siding, at the same construction cost when building. Saved cottages keep their identity/stock/location; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Farm owners may tend/harvest unpaid.
 
-A cottage chimney smokes while its owner is inside, including after logout. Booked guests keep B&B/hotel fires active too. Workplace chimneys smoke while an employed player is online, within 18m and on an active shift. Offline residents eat from home or room supplies, but can starve if food or drink runs out. Needs and starvation damage continue offline; ageing still pauses. [Running and staying at a guesthouse](ECONOMY.md#running-a-guesthouse) explains booking, food stores and checkout.
-
-## Finding your way around town
-
-The parish covers roughly eight times its original area. Follow the winding lanes
-and use the minimap or Directory to locate dispersed shops and workplaces. Street
-lights follow the lanes; headlights help between them. The buildings and tractors
-retain their original scale. The Hornball pitch, racing checkpoints and gathering
-grounds remain at their established locations.
-
-## Driving and running your business
-
-Wheeled vehicles reverse their steering response when rolling backwards, like
-a steering wheel on a reversing tractor. This follows actual speed, so it still
-applies while braking from reverse into forward. Walking and aircraft controls
-are unchanged.
-
-Owners use **Stockroom** to move goods and **Building Admin** for investment and
-profit. You cannot buy/sell goods or take paid work at your own property.
-Qualified farm owners can still manage and harvest their own plots unpaid.
-Buying your workplace ends your job there.
-
-Default local processors pay more for ingredients than producers charge, leaving
-a 12% gross haulage margin. Local consumers normally beat export outlets; finished
-goods can still earn a smaller margin at Harbour stores. Check stock, working
-capital, distance and customized quotes before loading. See [the pricing guide](ECONOMY.md#default-trade-prices-0153).
+Buy unclaimed property or player-listed buildings, repair them and supply construction materials. Homes and rooms use exterior shelter, not separate interior maps. [Economy](ECONOMY.md) covers business management and guesthouse rules.
 
 ## AI neighbours (optional prototype)
 
-An operator can enable Mabel Reed, an AI resident with her own personality, goals
-and persistent memory. Her pilot and chat messages show **AI**. Open **AI resident
-· chat & memory info** above chat, or **Game menu → AI neighbours**, to read the
-notice and start a private conversation. **Back to parish chat** switches back.
-Mention an AI resident by name in public chat for a public reply; a private conversation receives private replies. You can continue without repeating the name for two minutes after your latest message. Naming another person or starting a private chat ends that public thread. After a longer pause, name the resident again. Replies can take several
-seconds; she sleeps when the parish is empty or her shared AI budget runs out.
-Parish chat and messages to her are retained, and relevant excerpts are sent to
-OpenAI. Other players' private conversations are excluded. See [the NPC guide](NPCS.md).
+Enabled AI residents have labelled names, persistent memory and ordinary player rules. Name one in public chat for a public reply; **AI neighbours** starts private chat. Unnamed public follow-ups work for two minutes after your last turn; another named person/private conversation switches routing. Messages allow 1,200 characters; longer submissions are rejected, not truncated.
 
-Chat messages can contain up to **1,200 characters**. NPCs use the same limit and are instructed to finish their answers within it. Longer submissions are rejected rather than silently cut off.
+Mabel stays present; others have habits. Budget caps/outages may prevent responses. Relevant public/addressed private context is saved and sent to Jev plus that resident's OpenAI/Claude provider; other players' private conversations are excluded. Delivery and training/job requests can become executable agreements, but speech is not proof of action. See [NPCs](NPCS.md).
 
 ## When the game feels laggy
 
-Look beside the engine/speed display: **ms ping** is the network round-trip time,
-and **FPS** is the number of frames this browser renders each second. Ping is
-sampled every five seconds; the first sample takes a moment. Hover over the
-speed display to see the current movement buffer too.
+The speed display separates **ms ping** (sampled every five seconds) and **FPS**; its tooltip shows interpolation buffer.
 
-- Low FPS, even with low ping: try **Pilot & preferences → Graphics → performance**,
-  close other graphics-heavy tabs, and check that browser hardware acceleration
-  is enabled. More visible tractors add rendering work, even when parked.
-- High or variable ping with steady FPS: compare Wi-Fi with wired internet, stop
-  large uploads/downloads, and try a different hotspot signal/location. Server
-  overload can also increase ping, so compare readings with another player.
-- Compare the same spot alone and with neighbours. If FPS drops only when they
-  arrive, report the device/browser, graphics mode, FPS and number of tractors.
-  If ping rises for everyone, report that to the server operator.
+- Low FPS: choose Performance graphics, close heavy tabs, check browser hardware acceleration. Compare alone versus nearby tractors.
+- High/variable ping: compare wired/Wi-Fi, stop large transfers, check hotspot signal and other players' readings. All-player spikes may mean server overload.
+- Report device/browser, graphics mode, ping/FPS and nearby player count. [Host checks](HOSTING.md#connection-and-multiplayer-checks) distinguish server load.
 
-The client automatically sends less duplicate data and limits stale
-updates in flight. Unstable delivery gradually increases the movement buffer;
-steady links keep the normal buffer. This helps smooth travel, but cannot remove
-internet round-trip delay or hide a complete outage. Loading the first village's
-textures is separate from ongoing gameplay bandwidth. Progress remains on the
-server; reconnecting retrieves current state without resending purchases.
+Adaptive graphics reduce sustained slow rendering. Dynamic shadows default off and can be enabled outside Performance mode; models/textures/contact shading/local lights remain. Motion buffering smooths jitter but cannot remove round-trip latency/outages. Reconnect gets current state without replaying purchases; first-visit textures (~2.7 MiB) are separate traffic.
 
 ## Reading earlier chat
 
-Scroll inside the main chat window to read the server's recent history (up to
-100 messages, with private messages shown only to their participants). Click the
-log and use arrow keys, Page Up/Page Down, Home or End for keyboard scrolling.
-Page Up/Page Down also work while typing a message and preserve your draft.
-A wheel or trackpad over the chat panel scrolls messages; it does not zoom the camera.
-New messages leave your reading position alone; **New messages · jump to latest**
-returns to the bottom. At the bottom, chat follows new arrivals automatically.
-Switching parishes starts that parish's history. This is recent scrollback, not
-an unlimited chat archive.
-
-Dynamic shadows now default **off** to reduce GPU load. **Pilot & preferences →
-Dynamic shadows** can enable them outside performance graphics mode. Ground
-contact shading, textures, detailed models, headlights and street/window light
-remain available with dynamic shadows off.
+Scroll inside chat (no camera zoom). Focus the log for arrows, Page Up/Down, Home/End; Page Up/Down also work while typing without losing drafts. New arrivals preserve your reading position; **jump to latest** resumes follow. Up to 100 recent messages, filtered for privacy; changing parish changes history. Not an unlimited archive.
 
 ## Repeating transactions
 
-After a sale or purchase, the goods list stays at the same scroll position and
-keeps your quantity. Building Admin retains the amount and **Collect earnings**
-selection; stock transfers and other gameplay forms retain your edited choices
-as well. Drafts are separate for each building and tab and survive closing and
-reopening a dialog in the same browser session. Refreshing the page or signing
-out clears these drafts. Passwords, recovery keys and selected files are excluded.
-Saved wage/price notices still show the server's current settings; editing a draft
-does not apply it until you press its save button.
+Trading lists keep scroll/quantity; admin/stock/gameplay forms retain edited amounts/choices per building/tab during the browser session, including reopening. Refresh/sign-out clears drafts. Passwords, keys and selected files are excluded. Saved wage/price displays stay live; draft edits require Save.
 
 ## Creator worlds and other galaxies (0.20.0)
 
-Create a world from the galaxy directory, then open F10 or Menu → World editor.
-The [creator guide](WORLD_BUILDING.md) covers arena presets, custom objects and
-models, visual behaviors, production chains and portable world designs.
-
-To visit another host, take off from a spaceport and choose a configured entry
-under Other galaxies. Confirm arrival on the destination. Your character’s name
-and home identity travel; money, items, skills and property stay saved separately
-on each host. Returning to your home account requires its saved pilot key or
-normal sign-in. See [travelling between galaxies](GALAXIES.md#player-journey).
+Create through the galaxy directory; **F10 / World editor** opens owner tools. [World building](WORLD_BUILDING.md) covers models/rules/recipes/design import. Other galaxies require host configuration; identity travels but wealth/skills/property stay local. [Galaxies](GALAXIES.md) covers confirmation and native-home authentication.
 
 ## Puddlewick services
 
-Version 0.21.2 restores the original starter roster, minus the public council,
-and limits automatic additions to a **Stonemason** (3 stone → 2 stone blocks)
-and **Shoreline waterworks** (1 fuel → 12 water), each with a ten-minute batch at
-default production speed. Find them with **M** or the Parish directory. Locations
-are selected around existing buildings and roads; the waterworks has a dry
-foundation and an intake reaching the sea.
+Default server-owned Puddlewick adds only missing **Stonemason** (3 stone → 2 blocks) and **Shoreline waterworks** (1 fuel → 12 water), ten-minute batches at defaults. Find them with M. Train mason/pump operator for paid work. New seeded services receive finite initial supplies/capital; existing businesses are never refilled on restart. Other catalog businesses await player development.
 
-New production businesses have finite opening materials, products and wage
-capital. Learn the matching skill at school (**mason** or **pump operator**) and
-take a job there for full-speed production. Supply inputs through ordinary trade;
-unowned businesses can be purchased and managed. Existing businesses are not
-restocked or refinanced by this update, including player-owned mills and farms.
-Other production businesses, hotels/B&Bs and special catalogue objects are left
-for players to build as the parish develops. Building rules, skills and civilization
-tiers still apply. Existing purchased properties remain in place.
-
-After a pull/rebuild/restart, the server adds either of these two services if
-missing and not previously supplied. It also removes excess automatic additions
-from 0.21.0 and the original public council once, where still unowned or treasury-owned. It preserves player properties, stock, prices and wages, and
-avoids roads, gathering grounds, activity areas, parked characters, no-build
-zones and custom solid scenery. Completed additions are saved: later demolition
-or depleted stock does not cause a replacement or refill. If edited terrain or
-occupied land leaves no suitable site, that type stays pending until a future
-restart after space becomes available. Other worlds are not expanded.
-
-The cleanup removes public starter noticeboards, tool workshops, wineries,
-furniture workshops, B&Bs, rare-earth mines, electronics works, brick kilns,
-the council, iron mines, tea houses, curious trees, turrets, refineries, concrete
-works, kitchens, roasteries and breweries. It also undoes the other unintended
-0.21.0 additions (warehouse, portal, supply cache, composting yard, shipyard and
-hotel) to retain only the two approved additions. Purchased buildings and custom
-plots are protected, even if a player later relinquishes them. An active task or
-occupied building defers removal until a later restart; jobs at removed buildings
-are cleared. No catalogue type is deleted or banned from future construction.
+Startup preserves purchased/custom properties, skips blocked sites and retries pending placements later. Completed additions are recorded: demolition/depletion does not recreate/refill them. Other worlds are untouched. The one-time 0.21.2 cleanup and exact removal scope are in [release notes](RELEASE_NOTES.md#puddlewick-cleanup-scope); owners retain prices/stock/wages. No catalog building type is banned.
 
 ## Helping other players
 
-Click another player's name in the online list, or open **World (F9) → Players & roadside help**. On a phone, use **Actions → Players & roadside help**. The directory includes everyone currently online in your parish, including AI residents. It also offers private chat.
+Click an online player's name or **World/F9 → Players & roadside help** (**Actions** on mobile). Includes NPCs and private chat.
 
-- **Give money:** enter denarii and send cash in hand, with up to two decimal places (0.01d through 1,000,000d per gift). Gifts work at any distance within the same parish and have no tax or fee. They are gifts, not loans or purchases, and do not transfer bank savings or galactic credits. Both players must be online. Each receives a private chat receipt. The entered amount stays put for another gift.
-- **Roadside refuelling:** carry Fuel bought from a stocked shop or garage and stop within 15 metres of the other vehicle at the same height. Both players must be outside, stationary, and free of other activities (including fishing, work tasks, scouting and passenger rides). Click **Use 1 Fuel to refuel…**. One carried Fuel supplies up to eight tank units, capped at 64; excess is consumed as with self-refuelling. Walking and vehicles that use no fuel cannot receive it. You do not drain your own vehicle's tank.
+- **Give money:** 0.01d–1,000,000d, two decimals, from cash in hand to another online player anywhere in this parish. No tax/fee; not a loan, bank withdrawal or galactic transfer. Both get private receipts; input values stay set.
+- **Refuel:** carry Fuel from a stocked shop/garage; stop within 15m and at the same height. Both must be outside, stationary and free of tasks/games/passenger rides/scouting. One Fuel adds up to 8 tank units, capped at 64; surplus is consumed, not taken from your own tank. Only fuel-powered vehicles qualify.
 
-Buttons explain missing supplies, distance, full tanks, disconnected recipients or disabled rules. The server checks everything again when an action arrives. Gifts and fuel changes persist with the world; private receipts remain in its recent chat history. World owners can separately disable **Allow Money Gifts** and **Allow Player Refuelling** under **Editor → Rules**; both are enabled by default.
+Buttons explain blockers; the server rechecks on receipt and saves transfers. Owners independently control both features under Editor → Rules (enabled by default). Receipts remain in recent chat.

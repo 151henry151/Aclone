@@ -1,74 +1,30 @@
-# Hosting a galaxy and visiting other servers
+# Connected galaxies
 
-Every Aclone server hosts a galaxy containing its own worlds. Federation is an
-optional connection between explicitly trusted hosts. It is disabled until the
-operator configures a public galaxy URL. Version 0.20.0 supports
-character visits and return journeys through the existing galaxy directory.
+Each server hosts its own galaxy/worlds. Federation is opt-in, between explicitly trusted hosts; unset `GALAXY_URL` keeps it disabled.
 
 ## What travels
 
-A character carries a signed passport identifying its home galaxy, permanent
-home account ID and display name. The destination creates a persistent visiting
-pilot for that identity. Returning visits resume the same local progress.
-**Cash, galactic credits, ships, inventory, skills, health, property and NPC
-memories remain in the galaxy where they were earned.** Cross-galaxy trade or
-wealth transfer is not implemented. A visitor begins with that host’s ordinary
-starting pilot and world rules, just as a first visit to a new local world does.
-This prevents a custom or compromised host from minting money in another galaxy.
-
-World characters left behind still follow normal offline survival rules. Stock
-and enter a home before leaving a character unattended, or take off normally.
-Federation does not freeze abandoned characters or automatically supply them.
+Signed passports carry home-galaxy identity, permanent account ID and display name. Repeat visits resume the same destination pilot. **Cash, credits, ships, inventory, skills, health, property and NPC memories stay in their original galaxy**; visitors start under destination defaults. No cross-server wealth minting/transfer. Characters left planetside still need offline provisions; stock/enter shelter or take off normally.
 
 ## Player journey
 
-1. Take off at a spaceport to enter the galaxy directory. Finish any local star
-   jump first.
-2. Under **Other galaxies**, choose a connected destination. Travel opens that
-   host’s game page. Your passport ticket expires after two minutes.
-3. Check the displayed character/home and choose **Continue as …**. Arrival is
-   explicit; opening a link alone does not replace the current browser session.
-4. Choose a world there and play. To return, take off and choose your home galaxy.
-   Your home pilot key saved in that browser completes the return. On a different
-   browser, sign in to the home account or restore its pilot key first, then
-   complete the pending arrival. A foreign host cannot sign you into your native
-   home account.
+1. Take off at a spaceport, finish any pending jump, choose **Other galaxies**.
+2. The destination opens; confirm **Continue as …** within the ticket's two-minute life. Opening a link alone does not replace your session.
+3. Play there; return via its galaxy directory. Native home access requires your saved home key or ordinary home login (on another browser, authenticate then finish arrival).
 
-Keep your normal pilot-key backup/password. The browser preserves a native pilot
-key separately when switching to a visiting character. Only one visiting session
-for an identity remains active on a host: a fresh arrival rotates its visitor
-key and closes the previous connection. A nickname suffix is used internally to
-avoid local name conflicts; that unique visitor name is also used in world chat,
-so private-message addressing cannot be confused with a native resident. The
-galaxy directory shows the original passport name.
-If a ticket expires or the response is lost, return to the source directory and
-start another trip. Progress is saved independently of the short-lived ticket.
+Keep password/key backups. Browser storage preserves a native key separately from the visitor key. New visitor arrival rotates its key and closes the previous connection. Visitor nicknames gain a conflict-avoiding suffix used in local chat; the directory shows the original passport name. Lost/expired tickets require another departure, not lost progress.
 
 ## Connect two hosts
 
-First install each server normally using [Hosting](HOSTING.md), with HTTPS and
-its own persistent data directory. Do not share a SQLite file across servers.
-Use separate origins for separate instances; browser account storage is scoped
-to the origin. Choose a stable URL including the deployment path:
+Install each with HTTPS, a distinct origin and persistent database—never share SQLite; browser keys are origin-scoped. Set privately:
 
-```sh
+```dotenv
 GALAXY_NAME="Hearth Galaxy"
 GALAXY_URL="https://hearth.example/aclone"
 GALAXY_PEERS_FILE="/srv/aclone/galaxy-peers.json"
 ```
 
-Supply these variables to the service’s environment. An empty peers file is
-simply `[]`. Restart the service, then open:
-
-```text
-https://hearth.example/aclone/api/federation
-```
-
-The public response includes `protocol: 1`, name, canonical URL and an Ed25519
-**public** key. Exchange this descriptor with the other operator through a
-trusted channel; verify the URL and fingerprint/key independently. Neither API
-keys nor account tokens should be shared. Put the other host’s descriptor in
-each host’s peer file (extra descriptor fields are ignored):
+Start with peers `[]`; restart and read `https://hearth.example/aclone/api/federation`. It returns protocol 1, name, canonical URL and Ed25519 **public** key. Exchange/independently verify descriptors through trusted channels; never exchange account/API secrets. Each host pins the other:
 
 ```json
 [
@@ -80,23 +36,13 @@ each host’s peer file (extra descriptor fields are ignored):
 ]
 ```
 
-Configure both directions and restart each service. The directory displays the
-configured destinations. For multi-hop travel, the destination must trust both
-the immediate departing host **and** the character’s original home host. Trust
-is not automatically transitive. Up to 32 peers can be configured per host.
-Removing a peer stops new tickets from that issuer/home; it does not delete saved
-visitor characters or automatically revoke already authenticated sessions.
+Extra descriptor fields are ignored. Restart both. Up to 32 peers; multi-hop requires trust in both the departing and original home host—trust is not transitive. Removing a peer prevents new tickets, not deletion of saved visitors or automatic revocation of active sessions.
 
-`GALAXY_URL` must use HTTPS, except loopback HTTP for local testing. `BASE_PATH`
-still controls the client build; e.g. `BASE_PATH=/aclone npm run build`. Your
-proxy must strip `/aclone` before forwarding, including `/api/federation` and
-all other existing routes. No cross-origin API/CORS exception is needed because
-the browser navigates to each destination before calling its API.
+URLs require HTTPS except loopback testing. Build BASE_PATH normally and strip the prefix at the proxy, including federation routes. Travel navigates to destination before API calls, so no CORS exception is needed. [Hosting](HOSTING.md#reverse-proxy).
 
 ### Docker Compose
 
-The standard Compose file passes galaxy settings through. For the peers file,
-add an override beside your deployment compose file:
+Compose forwards galaxy settings; mount the peer file read-only with an override:
 
 ```yaml
 services:
@@ -107,48 +53,18 @@ services:
       - ./galaxy-peers.json:/app/galaxy-peers.json:ro
 ```
 
-Run with both files, for example
-`docker compose -f compose.yaml -f compose.galaxy.yaml up --build -d`.
-`GALAXY_NAME` and `GALAXY_URL` can come from Compose’s `.env`. The public peer file
-contains no credentials; protect it against unauthorized edits because it defines
-which hosts are trusted.
+`docker compose -f compose.yaml -f compose.galaxy.yaml up --build -d`; name/URL can use Compose .env. Peer descriptors are public, but prevent unauthorized edits to this trust policy.
 
 ## Trust, storage and recovery
 
-This is a private federation of trusted operators, not a permissionless public
-identity network. A trusted departing server can impersonate visiting identities
-whose passports it has seen. It still cannot authenticate a native home account.
-Only connect servers whose operators and security you trust. Visitors receive
-ordinary accounts and world permissions; no authority is imported in tickets.
+A trusted departing host can impersonate visitor identities whose passports it has seen, but cannot authenticate a native home account. Visitors import no authority. This is trusted-operator federation, not permissionless identity.
 
-The server generates its signing key once in the database’s `meta` table. Normal
-SQLite backups preserve it, visitor mappings, progress and consumed ticket IDs.
-Enabling federation restricts the database and its existing SQLite journal files
-to mode 0600, readable/writable by the service account. Run backup tooling as that
-account and keep exported backups private. Keep the database backed up. Replacing the database/key or changing
-the canonical URL changes galaxy identity: peers must pin the new key, and old
-passports may no longer work. Do not regenerate keys casually. Restore the same
-database/key to resume the same galaxy.
+Signing keys, visitor mappings/progress and consumed ticket IDs live in SQLite backups. Enabling federation sets database/existing journal files to 0600; run backup tools as the service user. Restoring the same database/key preserves galaxy identity. Changing URL/key requires repinning and may invalidate old passports; do not regenerate casually.
 
-Tickets use an issuer signature, audience URL, UUID nonce, issuance/expiry and a
-separately signed home passport. Destinations pin keys locally, verify both
-signatures, reject wrong audiences/expired tickets, and consume each ticket once
-in the same SQLite transaction that creates or resumes the visitor. Tickets
-travel in a URL fragment, which is removed immediately and is not sent in HTTP
-requests/referrers. Treat an unused ticket as sensitive until its two-minute
-expiry. Native pilot keys never go to another galaxy. Hosts do not fetch URLs
-supplied by visitors, so travel cannot be used as a server-side network proxy.
-Keep server clocks synchronized; issuance permits 30 seconds of forward skew.
+Tickets carry issuer signature, audience URL, UUID nonce, issue/expiry and separately signed home passport. Both signatures/keys/audience/expiry are checked; consumption and visitor creation/resume share one transaction. Tickets travel in URL fragments, removed immediately (not HTTP/referrers); treat unused tickets as sensitive. Native keys never leave home. Servers never fetch visitor-supplied URLs. Synchronize clocks; at most 30s forward skew allowed.
 
-Independent servers remain authoritative over their local economy. There is no
-global registry service, single shared inventory, distributed transaction ledger,
-automatic peer discovery or guarantee that a peer will be online. If a peer is
-down, the original host and all saved local progress remain available.
+No global registry, shared inventory, distributed ledger, automatic discovery or peer-availability guarantee. A down peer does not lose original-host progress.
 
 ## Developer checks
 
-`tests/federation.test.ts` covers identity/progress across three hosts, native
-return authentication, tampering, replay, expiry, untrusted keys, restart keys
-and database rollback. `tests/browser/federation.spec.ts` travels between two
-real local servers, checks explicit arrival, native-key preservation and saved
-progress on repeat visits. These tests use temporary databases and no AI APIs.
+`tests/federation.test.ts`: three-host identity/progress, native authentication, tamper/replay/expiry/trust, restart keys and rollback. `tests/browser/federation.spec.ts`: two real servers, explicit arrival, preserved native keys and repeat-visit progress. Temporary databases, no AI charges.

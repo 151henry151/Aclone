@@ -22,20 +22,9 @@ Prices are internal units: 48d is written as `4800`; 12s is `120000` at the
 normal exchange rate. Item quantities, cargo capacities and wages must not be
 negative. Do not change unit conventions without a migration.
 
-The default production interval is 600 real seconds. World-level production
-interval currently controls the shared boundary for all recipes. A building's
-stored input/output definition references the default recipe catalog; edits to
-catalog recipes apply after server restart. Stock and trading-price edits to
-existing buildings persist in that world's snapshot.
+Production defaults to 600 real seconds, with catalog intervals scaled by `productionSeconds / 600`. Catalog recipe edits apply after restart; saved stock and business quotes persist. Prices, handling, travel, lessons, crops and Ultrakricket timing include original tuning, not recovered historical constants.
 
-Confirmed and reported mechanisms from the supplied spec informed the design.
-Unspecified prices, recipes, mass/handling values, travel prices, first-lesson
-timing, available crops and Ultrakricket timing are original tuning. Do not
-present these numbers as recovered original-game data.
-
-To add a recipe: write conservation/storage/wage tests, add its item definitions,
-add the recipe and building, add a procedural visual if needed, test the UI and
-update the guides. Do not embed special-case prices in client HTML.
+To add a recipe: test conservation/storage/wages, add items/recipe/building/visuals, check UI and update guides. Keep prices in catalogs, not client HTML.
 
 The live editor can also save a per-building production override (input/output
 maps, profession and a 10–86,400-second interval) and per-world vehicle speed,

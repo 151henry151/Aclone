@@ -23,38 +23,15 @@ Handlers use `on(eventName, function(e) ... end)`.
 - `setvar(name, number)` writes one of up to 64 world variables.
 - `kudos(playerId, amount)` adjusts reputation by up to 100 per call.
 
-A script is limited to 16 KiB, 16 handlers per event, roughly 100,000 executed
-instructions per load/handler, a 32 MiB worker old-generation heap and a 1.5-second
-execution deadline starting after the worker runtime is ready. Worker startup has
-a separate 10-second deadline; both phases can be terminated without blocking the
-simulation. The server reuses at most two lightweight runtime workers, with a
-bounded queue of 32 waiting events. Each job still starts a fresh Lua state;
-script globals cannot leak between events or worlds. Failed/timed-out workers
-are discarded, and healthy runtimes recycle after 100 jobs. Empty scripts skip
-the worker. This avoids starting a TypeScript loader and cloning the entire
-world for each login or paid shift.
+## Runtime and limits
 
-If an automatic login or task event fails, the world gets one error notice and
-further automatic script events pause for 60 seconds. Events during that pause
-are skipped, not queued for later replay. A successful **Validate & reload Lua**
-clears the pause immediately, including when reinstalling the same source.
-Repeated failures already in flight do not produce duplicate notices during the
-pause. Normal gameplay continues. Existing chat history is retained, so old error
-messages may remain visible after an upgrade; check for new notices after landing.
-No `os`, `io`, `debug`, `package`, `require`, filesystem, JavaScript bridge,
-network, dynamic source loading or coroutines are exposed. The string library
-is removed to reduce allocation-based abuse. Ordinary Lua strings still work.
+- 16 KiB source; 16 handlers/event; ~100,000 instructions/load or handler; 32 MiB worker heap; 1.5s execution deadline after readiness, separate 10s startup deadline.
+- At most two reusable workers and 32 queued events. Fresh Lua state per job; recycle healthy workers after 100 jobs, discard failed/timed-out ones. Empty scripts skip workers. No full-world clone or TypeScript loader per event.
+- Automatic failures emit one notice and pause events for 60s; paused events are dropped. Successful Validate & reload clears the pause even for identical source. Gameplay continues; historical errors remain in chat.
+- No OS, I/O, debug, package, require, filesystem, JavaScript bridge, network, dynamic loading, coroutines or string library (ordinary strings still work).
+- Globals reset each event: persist numbers through getvar/setvar; avoid top-level effects. Replaced-world/script results are discarded.
 
-The worker reinitializes the script for each event. Use `getvar`/`setvar` for
-state that must survive invocations; Lua global variables are ephemeral. Avoid
-side effects at top level. The script is isolated from the live simulation:
-only bounded messages, persistent numeric variables, reputation changes and
-validated creator effects are returned. A stale result from a replaced world or script is discarded.
-
-This is an intentionally smaller API than the original server's event catalogue.
-Arbitrary admin commands, transaction cancellation, player variables, custom OSD,
-cutscenes and the full set of historical events are not yet wired. The additional
-creator events and timer are documented below.
+This is a smaller API than the historical catalogue. No arbitrary admin commands, transaction cancellation, player variables, custom OSD or cutscenes.
 
 ## Creator effects and events (0.20.0)
 
@@ -106,16 +83,8 @@ This example deliberately uses a station-wide cooldown. Per-player cooldowns
 are already available without code in **Behaviors**. Do not build an unbounded
 map of players in Lua: the persistent variable budget is 64 numbers.
 
-Scripts return at most 32 effects per event. The server validates the complete
-batch before applying any effect. Invalid effects fail the event and use the
-normal automatic-event pause. Execution and application are serialized per world
-so concurrent events see the previous event's committed variables. Each world's
-waiting queue is capped at 32 events; overflow is dropped to protect simulation
-latency. The host-wide two-worker pool still applies. Validation/reload runs
-`ScriptReload` in an isolated preview, validates its effects and installs the
-source; preview effects are not applied to live players.
+## Effect ordering
 
-No-code rules and Lua coexist. No-code effects apply immediately, then a queued
-Lua event observes the resulting state when a worker becomes available. Lua has
-no cross-galaxy account privileges and cannot issue travel tickets. Scripts are
-world-local programs, not arbitrary server plugins.
+At most 32 effects/event; validate the whole batch before applying any. Invalid batches use normal automatic-event backoff. Execution/application are serialized per world so jobs see committed variables; its queue caps at 32 and drops overflow. The host still has only two workers.
+
+Reload previews ScriptReload in isolation, validates results, then installs source without applying preview effects. No-code effects apply first; queued Lua observes their resulting state. No cross-galaxy credentials or travel-ticket privileges.
