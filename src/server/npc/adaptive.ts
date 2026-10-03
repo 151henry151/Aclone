@@ -1,3 +1,4 @@
+import { orderAllowance } from '../../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import { businessEstimate } from './enterprise.ts';
@@ -66,6 +67,80 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   };
   const buildings = [...w.buildings].sort((a, b) => distance(p, a) - distance(p, b));
   const shops = buildings.filter((b) => !b.construction && b.owner !== p.id);
+  const collection = buildings.find((b) => b.id === w.procurement?.building);
+  if (collection && w.settings.parishOrders && w.procurement && w.time < w.procurement.expiresAt) {
+    for (const order of w.procurement.orders) {
+      const allowance = orderAllowance(w, p, order);
+      const carried = Math.min(allowance, p.inventory[order.item] ?? 0);
+      const deliver = (quantity: number) =>
+        visit(collection, [
+          operation('fulfilOrder', { building: collection.id, order: order.id, quantity }),
+        ]);
+      if (carried > 0)
+        add(
+          'procurement',
+          `Sell ${carried} carried ${order.item} to the funded parish project ${order.project} for ${carried * order.unitPrice}; deadline in ${Math.floor((w.procurement.expiresAt - w.time) / 60)} minutes.`,
+          deliver(carried),
+          60,
+        );
+      const suppliers = buildings
+        .filter(
+          (b) =>
+            !b.government &&
+            !b.construction &&
+            b.stock[order.item] > 0 &&
+            (b.owner === p.id ||
+              (Number.isSafeInteger(b.sell[order.item]) &&
+                b.sell[order.item] >= 0 &&
+                b.sell[order.item] < order.unitPrice)),
+        )
+        .sort(
+          (a, b) =>
+            (a.owner === p.id ? 0 : a.sell[order.item]) -
+            (b.owner === p.id ? 0 : b.sell[order.item]),
+        );
+      const source = suppliers[0];
+      if (!source) continue;
+      const owned = source.owner === p.id,
+        cost = owned ? 0 : source.sell[order.item];
+      let quantity = Math.min(
+        allowance,
+        source.stock[order.item],
+        20,
+        cost ? Math.floor(Math.max(0, p.cash - 8000) / cost) : 20,
+      );
+      while (quantity > 0 && !canCarry(p, order.item, quantity)) quantity--;
+      if (quantity > 0)
+        add(
+          'procurement',
+          `Supply ${order.project}: ${owned ? 'collect my output' : 'buy locally'} at ${source.name}, deliver ${quantity} ${order.item} for ${order.unitPrice * quantity}. ${owned ? 'Receipts before production costs' : 'Trading margin before travel'}: ${(order.unitPrice - cost) * quantity}. Limited public budget; quote may expire or fill before arrival.`,
+          [
+            ...visit(source, [
+              action(
+                owned
+                  ? {
+                      type: 'stock',
+                      building: source.id,
+                      item: order.item,
+                      quantity,
+                      direction: 'withdraw',
+                    }
+                  : {
+                      type: 'trade',
+                      building: source.id,
+                      item: order.item,
+                      quantity,
+                      direction: 'buy',
+                    },
+              ),
+            ]),
+            { kind: 'travel', destination: collection.id },
+            operation('fulfilOrder', { building: collection.id, order: order.id, quantity }),
+          ],
+          120,
+        );
+    }
+  }
   // Every stocked good is accessible, including tools, tackle and construction supplies.
   for (const [item, def] of Object.entries(items)) {
     const sellers = shops
@@ -475,6 +550,7 @@ export function parishSurvey(w: World, p: Player) {
   return {
     objective:
       'Long healthy life, sustainable net wealth, relationships and affordable leisure. Interests are preferences, never career restrictions. Re-evaluate shortages and opportunities without needless job hopping.',
+    parishOrders: w.settings.parishOrders ? w.procurement : undefined,
     cashUnits:
       '100 = 1 denarius; all estimates exclude travel, living costs and competition unless stated.',
     jobs: w.buildings

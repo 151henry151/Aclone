@@ -93,3 +93,7 @@ Private `Player.credit`, `loans` and `loanSequence` persist observed earnings/em
 Death and inactivity rules: `loseSkillsOnDeath`, `loseInventoryOnDeath`, `loseJobOnDeath`, `losePropertyOnDeath` default true; `deathCashRetention`/`deathBankRetention` default 1 (range 0–1); `maxOfflineDays` defaults 0 (disabled, otherwise real days). `Player.inactivityProcessed` records the last-seen epoch already penalized, avoiding repeated inactivity deaths during one absence. Connected players refresh `lastSeen`; ordinary offline survival still runs independently.
 
 Business accounts persist on buildings; personal history (80 events), departure baselines and the latest return report persist on players. Snapshots strip account/departure details from public buildings/players; only owners and world caretakers receive statements. SQLite ledger records now include an optional JSON `details` column (building, item, quantity); existing records remain valid. Back up before upgrading; older executables with positional ledger inserts require the matching older database backup.
+
+## Procurement persistence
+
+`World.procurement` retains the funded round, delivery counts and supplier allowances across saves. `procurementVersion` applies the one-time Puddlewick enablement. Hourly grants and expired escrow appear explicitly in the ledger; purchases do not alter shop prices or stock.

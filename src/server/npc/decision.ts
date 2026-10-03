@@ -62,6 +62,7 @@ const action = z.discriminatedUnion('type', [
 /** Ordinary player operations only. Editor, moderation, account and arbitrary commands are excluded. */
 export const playerOperations = [
   'listProperty',
+  'fulfilOrder',
   'loan',
   'buildingAdmin',
   'lodging',
@@ -104,6 +105,7 @@ const operationParameter = z
       'x',
       'z',
       'building',
+      'order',
       'price',
       'name',
       'wage',

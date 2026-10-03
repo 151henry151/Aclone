@@ -35,5 +35,7 @@
   "losePropertyOnDeath": true,
   "deathCashRetention": 1,
   "deathBankRetention": 1,
-  "maxOfflineDays": 0
+  "maxOfflineDays": 0,
+  "parishOrders": false,
+  "parishOrderBudget": 120000
 }

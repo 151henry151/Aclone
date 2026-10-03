@@ -1,3 +1,4 @@
+import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
@@ -817,6 +818,11 @@ function refreshBusinessDetails() {
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
 function refreshTradingPrices() {
+  const expiry = app.querySelector('[data-parish-expires]');
+  if (expiry && world?.procurement)
+    expiry.textContent = String(
+      Math.max(0, Math.ceil((world.procurement.expiresAt - world.time) / 60)),
+    );
   const statement = app.querySelector<HTMLElement>('[data-business-statement]');
   if (statement && world && me) {
     const b = world.buildings.find((b) => b.id === statement.dataset.businessStatement);
@@ -1099,6 +1105,10 @@ function renderPanel() {
     editorWindow();
     return;
   }
+  if (panel === 'procurement') {
+    modal('Parish supply orders', procurementHtml(world, me));
+    return;
+  }
   if (panel === 'reports') {
     modal('Journal & reports', journalHtml(world, me));
     return;
@@ -1106,7 +1116,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -1148,6 +1158,8 @@ function buildingWindow(b: Building) {
     return;
   }
   if (tab === 'Main') {
+    if (world.settings.parishOrders && world.procurement?.building === b.id)
+      html += button('Parish supply orders', 'procurement');
     if (selfOwned)
       html +=
         '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages.</p>';
@@ -1446,6 +1458,7 @@ app.addEventListener('click', async (e) => {
     const panels = [
       'menu',
       'reports',
+      'procurement',
       'mobile-actions',
       'directory',
       'map',

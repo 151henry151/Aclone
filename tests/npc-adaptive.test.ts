@@ -1,3 +1,4 @@
+import { refreshOrders } from '../src/shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -337,4 +338,27 @@ test('a resident visiting a different template can restart without resetting the
     r.close();
     store.close();
   }
+});
+
+test('parish supply plans buy from a local supplier and return to the collection point', () => {
+  const { w, p, choices, run } = fixture();
+  w.settings.parishOrders = true;
+  refreshOrders(w);
+  const order = w.procurement!.orders.find((o) => o.item === 'wood')!;
+  const source = w.buildings.find((b) => b.kind === 'sawmill')!;
+  source.stock.wood = 20;
+  source.sell.wood = 500;
+  const harbour = w.buildings.find((b) => b.id === w.procurement!.building)!;
+  p.x = harbour.x;
+  p.z = harbour.z;
+  const choice = choices().find((c) => c.description.startsWith('Supply Replace public benches'));
+  assert.ok(
+    choice,
+    'a funded profitable local delivery is available even when starting at Harbour',
+  );
+  const before = p.cash;
+  run(choice.plan);
+  assert.ok(order.delivered > 0);
+  assert.equal(p.cash - before, (order.unitPrice - 500) * order.delivered);
+  assert.equal(p.x, harbour.x);
 });

@@ -301,6 +301,8 @@ export function economicMenu(
     if (c.description.startsWith('Operate ')) n += preference === 'employee' ? 80 : 50;
     if (c.description.includes('[Fits my')) n += 20;
     if (c.description.startsWith('Trade route:')) n += 35;
+    if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'fulfilOrder'))
+      n += preference === 'trader' ? 65 : 30;
     if (c.description.startsWith('Gather ')) n += preference === 'gatherer' ? 45 : 10;
     if (c.description.startsWith('Learn ')) n -= 15;
     return n;

@@ -173,3 +173,7 @@ The design uses ordinary amortization and ability-to-repay concepts ([CFPB expla
 ## Business statements
 
 **Statement** separates sales receipts (net of buyer-paid sales tax), materials, net wages, payroll tax, imports, other flows and owner capital. Operating cash flow excludes deposits/withdrawals; it is not accrual profit because unsold stock has not been valued as income. Counters survive restart and ownership transfer with the business. Automatic recipe batches track input/output quantities; seasonal harvests are separate, with their payments included in cash flow. Current blockers are diagnosed server-side, including input shortages, output capacity, wages, staffing and shoreline access.
+
+## Parish maintenance orders
+
+Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. Early in each hour, each supplier can fill at most half an order; the remaining demand opens to everyone in the second half-hour. Orders share a fixed hourly budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.

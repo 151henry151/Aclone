@@ -146,3 +146,7 @@ Optional federation exposes `GET /api/federation` (public descriptor/destination
 `loan` actions require proximity to `building` (a bank). `operation: "borrow"` includes integer `amount`, `months` (6/12/24/36/60), optional `collateral` building ID, quoted numeric `apr` and `payment`, boolean `accepted: true`, and optional boolean `autoPay`. The server rechecks eligibility and rejects stale terms. `operation: "repay"` takes `loan` ID and integer `amount`; `operation: "autopay"` takes `loan` ID and boolean `enabled`. Quotes use `shared/loans.ts`. Credit and loan details are private to the pilot; public buildings expose only their collateral lien reference.
 
 OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally references an image asset in the same world and is valid only with an OBJ `asset`. No OBJ/MTL filenames resolve to server files or third-party URLs.
+
+## Parish delivery
+
+`fulfilOrder` accepts `building`, `order` and positive integer `quantity`. The server validates the current round, public collection point/proximity, allowance, escrow and carried stock, then atomically consumes goods and transfers payment.

@@ -1,3 +1,4 @@
+import { fulfilOrder, refreshOrders, migrateProcurement } from './procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { accounts, recordMoney, recordLife, addQuantities } from './reports.ts';
 import {
@@ -160,6 +161,7 @@ export function createWorld(
     w.buildings.push(b);
   });
   migrateEstates(w);
+  migrateProcurement(w);
   if (template === 'combat') w.settings.fighting = true;
   if (template === 'playground') w.settings.hungerRate = w.settings.thirstRate = 0;
   say(w, 'Parish notice', 'Welcome to ' + name + '. A small world. Plenty to get on with.');
@@ -293,6 +295,9 @@ export function act(w: World, id: string, a: Action): string {
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'fulfilOrder':
+      result = fulfilOrder(w, p, a);
+      break;
     case 'farm': {
       farmAction(w, p, nearby(w, p, a.building), a);
       break;
@@ -947,6 +952,7 @@ export function act(w: World, id: string, a: Action): string {
           num(v, 1, 1e6);
         if (
           [
+            'parishOrderBudget',
             'startingCash',
             'denariiPerSheckle',
             'maxBuildings',
@@ -1477,6 +1483,7 @@ export function advance(w: World, seconds: number) {
   advanceClimate(w, start, end);
   w.time = end;
   harbourSupply(w, end);
+  refreshOrders(w);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;

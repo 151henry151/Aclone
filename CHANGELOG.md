@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-03
+
+### Added
+
+- Fund rotating parish maintenance orders with hourly budgets, shared demand and early per-player delivery limits. Players and NPCs can supply local goods at Harbour stores; expired funding never accumulates during downtime.
+
 ## [0.30.0] - 2026-10-03
 
 ### Added

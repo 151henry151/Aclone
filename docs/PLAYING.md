@@ -158,3 +158,7 @@ Buttons explain blockers; the server rechecks on receipt and saves transfers. Ow
 Open **World/F9 → Journal & reports** for your last return report and recent personal history. It explains deaths, released properties, trades, jobs and qualifications. Your report compares cash, savings and still-owned businesses across a disconnect.
 
 A building’s **Statement** tab shows current production blockers. Owners and world caretakers also see operating cash flow, capital movements, traded goods and completed automatic batches. It updates as business activity arrives. Accounts begin with this upgrade; old transactions are not reconstructed.
+
+## Parish supply orders
+
+At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. Each order limits your share during its first half-hour and expires after one real hour.

@@ -147,6 +147,8 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  parishOrders: boolean;
+  parishOrderBudget: number;
   loseSkillsOnDeath: boolean;
   loseInventoryOnDeath: boolean;
   loseJobOnDeath: boolean;
@@ -186,6 +188,8 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  procurementVersion?: 1;
+  procurement?: import('./procurement.ts').Procurement;
   /** Public projection; Lua source remains owner-only. */
   scriptInteraction?: boolean;
   creator?: import('./creator.ts').Creator;
