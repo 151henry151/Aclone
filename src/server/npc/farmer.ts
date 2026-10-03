@@ -110,7 +110,6 @@ export function gameplayChoices(
     const shops = buildings.filter(
       (b) =>
         b.owner !== p.id &&
-        b.kind !== 'starport' &&
         b.stock[item] > 0 &&
         Number.isSafeInteger(b.sell[item]) &&
         b.sell[item] >= 0 &&

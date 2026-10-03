@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { emergencyImport } from '../shared/harbour-supply';
 import { propertyQuote } from '../shared/property';
 import { creatorControls } from './creator-editor';
 import {
@@ -1142,7 +1143,7 @@ function buildingWindow(b: Building) {
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock</small></span><b>${money(price)}</b><button data-do="trade" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
               )
               .join('')}</div></section>`,
         )

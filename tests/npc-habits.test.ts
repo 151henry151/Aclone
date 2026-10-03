@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { items } from '../src/shared/catalog.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -137,13 +138,16 @@ test('homecoming eats first, buys real goods, stocks and enters a home; offline 
   assert.equal(ready.atHome, true);
   assert.equal(ready.comfortable, true);
   assert.ok(p.cash < initial);
-  assert.ok(b.stock.bread > 0 && b.stock.water > 0);
+  assert.ok(Object.entries(b.stock).some(([item, n]) => n > 0 && items[item]?.food));
+  assert.ok(Object.entries(b.stock).some(([item, n]) => n > 0 && items[item]?.drink));
   assert.equal(returnDelay(w, p, 43200), 43200);
-  const bread = b.stock.bread,
-    water = b.stock.water;
+  const nutrients = (kind: 'food' | 'drink') =>
+    Object.entries(b.stock).reduce((n, [item, count]) => n + count * (items[item]?.[kind] ?? 0), 0);
+  const food = nutrients('food'),
+    drink = nutrients('drink');
   p.online = false;
   advance(w, 43200);
-  assert.ok(b.stock.bread < bread && b.stock.water < water);
+  assert.ok(nutrients('food') < food && nutrients('drink') < drink);
   assert.ok(p.hunger < 30000 && p.thirst < 30000);
 });
 

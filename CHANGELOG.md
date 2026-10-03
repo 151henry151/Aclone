@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-03
+
+### Added
+
+- Give NPCs model-free emergency self-care, practical home provisioning and costed business plans that retain working capital, supply inputs and sell outputs. Add paid Harbour shortage shipments and expensive on-demand bread/water imports so empty government shelves do not make supplies unobtainable.
+
 ## [0.25.0] - 2026-10-03
 
 ### Added

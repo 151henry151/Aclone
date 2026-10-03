@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { workplace } from './workplace.ts';
+import { economicMenu } from './enterprise.ts';
+import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import { act, addPlayer, move, say } from '../../shared/simulation.ts';
 import { resourceNodes } from '../../shared/resources.ts';
@@ -58,6 +61,9 @@ interface Resident extends ResidentOptions {
   lastCall: number;
   cooldown: number;
   active: boolean;
+  caring?: boolean;
+  careCheckAt?: number;
+  shiftCheckAt?: number;
 }
 export class Residents {
   readonly memory: NpcMemory;
@@ -127,8 +133,8 @@ export class Residents {
         }
       } else delete state.presence;
       state.originWorld ??= c.world;
-      if (c.provider === 'jev' && state.behaviorVersion !== 1) state.needsDecision = true;
-      state.behaviorVersion = 1;
+      if (c.provider === 'jev' && state.behaviorVersion !== 2) state.needsDecision = true;
+      state.behaviorVersion = 2;
       if (state.decisionProvider !== c.provider) state.needsDecision = true;
       state.decisionProvider = c.provider;
       if (state.personality !== c.personality) {
@@ -420,7 +426,12 @@ export class Residents {
     }
     return learnedChoices(
       r.state,
-      preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
+      economicMenu(
+        w,
+        p,
+        preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
+        r.config.preference,
+      ),
     );
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
@@ -573,6 +584,7 @@ export class Residents {
         r.state.pending = false;
         r.state.observedDeaths = p.deaths;
         r.cooldown = 0;
+        r.caring = false;
         this.failure(
           r,
           w,
@@ -622,6 +634,62 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
+      // Eating, drinking and finishing an emergency errand never wait for API credits.
+      if (!r.state.inSpace && (r.caring || careNeeded(w, p))) {
+        if (r.caring && r.state.plan.length && r.state.index < r.state.plan.length) {
+          if (!r.nav && !p.task && now >= r.state.waitUntil) this.runStep(r, w, p, now);
+          continue;
+        }
+        if (r.caring) {
+          r.caring = false;
+          r.wake = true;
+        }
+        if (!p.task && now >= (r.careCheckAt ?? 0)) {
+          r.careCheckAt = now + 10000;
+          const plan = carePlan(w, p);
+          if (plan.length && !plan.some((s) => blockedStep(r.state.recovery, s, w.time))) {
+            r.busy?.abort();
+            r.nav = undefined;
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.waitUntil = 0;
+            r.state.pending = false;
+            r.wake = false;
+            r.caring = true;
+            p.online = true;
+            r.active = true;
+            this.checkpoint(r, w, 'self-care', { hunger: p.hunger, thirst: p.thirst });
+            this.runStep(r, w, p, now);
+            continue;
+          }
+        }
+      }
+      // Continuing a chosen, supplied job is routine; no paid call just to renew a shift.
+      if (
+        now < r.cooldown &&
+        !r.busy &&
+        !r.nav &&
+        !p.task &&
+        !r.state.inSpace &&
+        !careNeeded(w, p) &&
+        p.job &&
+        now >= (r.shiftCheckAt ?? 0)
+      ) {
+        r.shiftCheckAt = now + 60000;
+        const b = w.buildings.find((b) => b.id === p.job);
+        const job = b && workplace(w, p, b);
+        if (
+          b &&
+          job?.qualified &&
+          job.employedHere &&
+          !job.workActiveNextCycle &&
+          Math.hypot(p.x - b.x, p.z - b.z) < 14 &&
+          !job.ifYouWork.capitalShortfall &&
+          !job.blockers.some((v) => !v.startsWith('No active employees'))
+        )
+          this.perform(r, w, { type: 'work', building: b.id }, false);
+      }
       if (now < r.cooldown && !this.dialogueDue(r, now)) continue;
       p.online = !r.state.inSpace;
       r.active = true;
@@ -696,6 +764,7 @@ export class Residents {
     }
     if (s.phase === 'playing' && now >= s.endsAt - 5 * 60000) {
       s.phase = 'preparing';
+      r.caring = false;
       r.busy?.abort();
       r.nav = undefined;
       r.state.plan = [];

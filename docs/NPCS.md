@@ -198,3 +198,9 @@ Run `node --env-file=.env --import tsx scripts/SCRIPT.ts --live` with one of:
 - `npc-farmer-smoke`: four Jev + two Claude calls, $0.50 cap; requires both keys.
 
 These are explicit opt-in API charges; they never target production saves. Historical results are in the release archive.
+
+## Survival and operating businesses
+
+Routine self-care runs locally, before paid decision cooldowns: consume carried supplies, visit a stocked shop (including expensive Harbour emergency imports), use bank savings, or earn emergency meal money. It uses ordinary actions, travel and prices; no invulnerability or free inventory. A qualified worker already at a funded, stocked workplace can renew shifts during a model budget cooldown. Offline survival remains governed by home/room stores.
+
+Jev receives a bounded, rotating shortlist with intact costs instead of hundreds of truncated descriptions. Choices include provisioning a home with varied food/drink, funded productive jobs and training, acquiring a business with six batches of reserves, delivering inputs, and selling outputs to solvent buyers. Owned-business upkeep and personality preferences affect ranking. Blocked production is not an attractive endless waiting plan. Existing pilots reconsider old plans once after this upgrade.

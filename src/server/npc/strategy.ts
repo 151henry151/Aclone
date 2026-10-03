@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../../shared/property.ts';
+import { businessEstimate } from './enterprise.ts';
 import { items } from '../../shared/catalog.ts';
 import { distance } from '../../shared/simulation.ts';
 import { shelter } from '../../shared/lodging.ts';
@@ -53,7 +55,6 @@ export function lifeBriefing(w: World, p: Player) {
         (b) =>
           !b.construction &&
           b.owner !== p.id &&
-          b.kind !== 'starport' &&
           b.stock[item] > 0 &&
           Number.isSafeInteger(b.sell[item]) &&
           b.sell[item] >= 0,
@@ -96,6 +97,17 @@ export function lifeBriefing(w: World, p: Player) {
       reserveAvailable: !!meal && !!drink,
     },
     economy: {
+      businesses: w.buildings
+        .filter((b) => !b.government && !b.construction)
+        .map((b) => ({
+          id: b.id,
+          owner: b.owner ?? null,
+          price: propertyQuote(w, b).total,
+          ...businessEstimate(w, b),
+        }))
+        .filter((b) => b.margin !== undefined)
+        .sort((a, b) => (b.margin ?? 0) - (a.margin ?? 0))
+        .slice(0, 8),
       jobs: w.buildings
         .filter(
           (b) =>

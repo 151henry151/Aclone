@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.25.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.26.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -67,7 +67,7 @@ The proxy must strip `/aclone` before forwarding, including WebSocket requests, 
 Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter**. On mobile, use the steering/throttle buttons and **Actions** menu.
 
 1. Work a 15-second shift at the Odd Jobs Office for 45d.
-2. Buy food and water at Harbour stores; consume them from Inventory.
+2. Buy food and water at Harbour stores; consume them from Inventory. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.
 3. Learn a profession at school, take a funded job or save to buy a business.
 4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**
 

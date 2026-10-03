@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { carePlan } from './care.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { shelter, roomCount } from '../../shared/lodging.ts';
@@ -20,7 +21,7 @@ function home(w: World, p: Player) {
 }
 function nutrition(stock: Stock, nutrient: 'food' | 'drink') {
   return Object.entries(stock).reduce(
-    (n, [item, count]) => n + count * (items[item]?.[nutrient] ?? 0),
+    (n, [item, count]) => n + count * (items[item]?.[nutrient] ?? 0) * 0.5,
     0,
   );
 }
@@ -72,6 +73,8 @@ export function returnDelay(w: World, p: Player, plannedSeconds: number) {
  * Running locally means a depleted AI budget cannot strand an already-planned logout. */
 export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[] {
   if (p.task) return [{ kind: 'wait', seconds: Math.max(1, Math.min(60, p.task.end - w.time)) }];
+  const care = carePlan(w, p);
+  if (care.length) return care;
   const visit = (b: Building, steps: Step[]): Step[] => [
     ...(p.atHome ? [action({ type: 'outside' })] : []),
     ...(p.game ? [operation('leaveGame')] : []),
@@ -93,17 +96,41 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
     )
       return [action({ type: 'use', item })];
   const b = home(w, p);
-  for (const [item, need, nutrient, rate] of [
-    ['bread', p.hunger, 'food', w.settings.hungerRate],
-    ['water', p.thirst, 'drink', w.settings.thirstRate],
+  for (const [need, nutrient, rate] of [
+    [p.hunger, 'food', w.settings.hungerRate],
+    [p.thirst, 'drink', w.settings.thirstRate],
   ] as const) {
+    const alternatives = Object.keys(items).filter(
+      (item) =>
+        items[item][nutrient] &&
+        ((p.inventory[item] ?? 0) > 0 ||
+          w.buildings.some(
+            (s) => !s.construction && s.owner !== p.id && s.stock[item] > 0 && s.sell[item] >= 0,
+          )),
+    );
+    const price = (item: string) =>
+      (p.inventory[item] ?? 0) > 0
+        ? 0
+        : Math.min(
+            ...w.buildings
+              .filter(
+                (s) =>
+                  !s.construction && s.owner !== p.id && s.stock[item] > 0 && s.sell[item] >= 0,
+              )
+              .map((s) => s.sell[item]),
+          );
+    const item =
+      alternatives.sort(
+        (a, b) => price(a) / items[a][nutrient]! - price(b) / items[b][nutrient]!,
+      )[0] ?? (nutrient === 'food' ? 'bread' : 'water');
     const stock = b ? (b.kind === 'home' ? b.stock : b.lodging!.guests[p.id].stock) : {};
     const target = b
       ? Math.ceil(
           Math.max(
             0,
             need + (awaySeconds + 900) * rate * 0.8 - 20000 - nutrition(stock, nutrient),
-          ) / items[item][nutrient]!,
+          ) /
+            (items[item][nutrient]! * 0.5),
         )
       : need >= 15000
         ? 2

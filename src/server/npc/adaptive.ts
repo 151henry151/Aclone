@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
+import { businessEstimate } from './enterprise.ts';
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
 import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
@@ -156,7 +157,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           `List my ${b.name} for sale at ${b.price}; this changes my business strategy.`,
           visit(b, [operation('listProperty', { building: b.id, price: b.price })]),
         );
-      if (b.investment > 10000)
+      if (b.investment - 5000 > (businessEstimate(w, b)?.reserve ?? 20000))
         add(
           'management',
           `Withdraw 5000 spare capital from ${b.name}; retain wages and input funding.`,

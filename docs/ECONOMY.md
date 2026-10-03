@@ -153,3 +153,9 @@ Puddlewick keeps a deceased owner's ordinary buildings' stock and working capita
 An unclaimed estate costs `(base building price + equity share × current equity) × (1 − annual discount)^whole years`, rounded to an internal money unit, minimum one. Puddlewick uses 90% and 5%. Equity is investment plus stock valued at item catalogue prices, not editable shop quotes. Cheap sales reduce goods value while adding only actual receipts, so the asking price drops accordingly. A game year is 365 ten-minute days (~60.83 real hours), independent of the decorative clock. Player-listed asking prices are not discounted.
 
 Existing unclaimed properties start their clock at upgrade; ownership, stock and shop quotes are preserved. Previously erased estates cannot be reconstructed by this migration.
+
+## Public shortage supplies
+
+Puddlewick's public Harbour imports small paid shipments of scarce bread, water and fuel every 30 real minutes, counting local stocks first. Bread/water can also be imported on demand at the posted, expensive Harbour retail price, even with empty shelves or no treasury working capital: the buyer's payment funds that delivery. There are no free player supplies. This fallback only applies to the server-owned public parish and government Harbour, and refuses quotes that undercut catalogue prices or enable guaranteed re-export to a public buyer. Private shops and prices are untouched.
+
+This safety net buys time for waterworks, farms and processors to operate. It does not guarantee every commodity is always stocked or every NPC business succeeds. Local suppliers still offer better terms; production needs skills, active labour, inputs, wages and customers.

@@ -71,7 +71,7 @@ Normally 100 denarii (d) = 1 sheckle (s); internal 4500 = 45d. Local processors 
 
 ## How do I produce water?
 
-Build **Shoreline waterworks** on dry ground with its intake in adjacent water. Supply construction materials, stock fuel, fund wages and hire a **pump operator**; owners cannot work there. Default batch: 1 fuel → 12 water in ten minutes; asks 5d, local bids 5.60d. Dry intakes/flooded foundations halt production. Puddlewick has a seeded service; elsewhere build one or import. [Waterworks](PLAYING.md#water-supply).
+Build **Shoreline waterworks** on dry ground with its intake in adjacent water. Supply construction materials, stock fuel, fund wages and hire a **pump operator**; owners cannot work there. Default batch: 1 fuel → 12 water in ten minutes; asks 5d, local bids 5.60d. Dry intakes/flooded foundations halt production. Puddlewick has a seeded service. Public Harbour stores offer more expensive emergency bread/water imports even if their shelves are empty; local producers remain cheaper. Elsewhere build a producer or import. [Waterworks](PLAYING.md#water-supply).
 
 ## Can Mabel help with everything or act on my behalf?
 

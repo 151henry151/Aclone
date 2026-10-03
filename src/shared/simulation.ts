@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { harbourSupply, emergencyImport } from './harbour-supply.ts';
 import { propertyQuote, releaseEstate, migrateEstates } from './property.ts';
 import { creatorAction, creatorEvent, tickCreator, creatorBlocksSegment } from './creator.ts';
 import { terrainHeight } from './terrain.ts';
@@ -291,7 +292,7 @@ export function act(w: World, id: string, a: Action): string {
       const day = Math.floor(w.time / 600);
       const imports = p.importDay === day ? p.imports : 0;
       if (buying) {
-        requireThat((b.stock[item] ?? 0) >= n, 'Not enough stock');
+        requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
         requireThat(canCarry(p, item, n), 'Cargo hold is full');
         if (b.kind === 'starport')
@@ -303,8 +304,13 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (buying) {
         const tax = Math.floor(total * clamp(w.settings.salesTax + (w.towns[0]?.tax ?? 0), 0, 1));
+        const imported = emergencyImport(w, b, item) ? Math.max(0, n - (b.stock[item] ?? 0)) : 0;
+        const importCost = imported ? Math.floor((((total - tax) * imported) / n) * 0.8) : 0;
+        if (imported) stockAdd(b.stock, item, imported);
         p.cash -= total;
-        b.investment += total - tax;
+        b.investment += total - tax - importCost;
+        if (importCost)
+          log(w, 'sink', importCost, b.id, 'imports', `emergency shipment: ${imported} ${item}`);
         stockAdd(b.stock, item, -n);
         stockAdd(p.inventory, item, n);
         log(w, 'transfer', total - tax, id, b.id, 'purchase');
@@ -1383,6 +1389,7 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  harbourSupply(w, end);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;

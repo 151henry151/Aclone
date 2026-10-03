@@ -87,3 +87,5 @@ database. See [memory and retention](NPCS.md#operator-controls-and-memory).
 ## Estate persistence
 
 `Building.estate` holds the unclaimed date and base price; current stock/investment determine equity at quote/purchase time. `World.estateRulesVersion` marks the one-time Puddlewick defaults migration. `retainEstateContents` is boolean; `estateEquityShare` and `estateAnnualDiscount` are 0–1.
+
+`World.harbourShipment` prevents duplicate periodic imports on restart.

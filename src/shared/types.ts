@@ -174,6 +174,8 @@ export interface World {
   estateRulesVersion?: 1;
   /** Default Puddlewick building types already supplied; never replenish on restart. */
   parishServices?: string[];
+  /** Last half-hour public shortage shipment, persisted across restarts. */
+  harbourShipment?: number;
   /** One-time retirement of excess public starter types; purchased property is protected. */
   parishRetired?: string[];
   schemaVersion: 1;
