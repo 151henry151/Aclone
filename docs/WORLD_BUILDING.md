@@ -32,7 +32,7 @@ Land, then open **Editor / F10**. On a phone, use **Menu → World editor**. Edi
    round/score settings across modes.
 
 In **Rules**, configure taxation, starting cash, professions, survival, building
-limits, combat, sea level and the decorative day clock. The farming calendar
+limits, combat, sea level and the decorative day clock. Estate rules choose whether stock/investment survive death, their share of an unclaimed asking price, and the yearly discount. The farming calendar
 remains independent of the decorative clock. In **Layout**, switch generated
 vegetation and roads/streetlights on or off, or choose natural weather, clear
 skies, rain, snow or a storm. Weather overrides affect crops, accumulated snow

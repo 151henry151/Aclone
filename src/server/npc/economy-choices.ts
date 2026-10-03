@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../../shared/property.ts';
 import type { World, Player, Building } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { items, recipes } from '../../shared/catalog.ts';
@@ -126,12 +127,12 @@ export function economyChoices(
     } else if (
       !b.government &&
       (!b.owner || b.forSale) &&
-      p.cash >= b.price + 20000 &&
+      p.cash >= propertyQuote(w, b).total + 20000 &&
       w.buildings.filter((v) => v.owner === p.id && !['home', 'warehouse'].includes(v.kind))
         .length < w.settings.maxBuildings
     )
       add(
-        `Buy ${b.name} (${b.id}) for ${b.price}, retaining at least 20000 for living and business supplies.`,
+        `Buy ${b.name} (${b.id}) for ${propertyQuote(w, b).total}, retaining at least 20000 for living and business supplies.`,
         visit(b, [act({ type: 'buyBuilding', building: b.id })]),
       );
   }

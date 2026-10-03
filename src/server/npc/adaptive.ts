@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../../shared/property.ts';
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
 import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
@@ -122,10 +123,15 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     }
   }
   for (const b of buildings) {
-    if (b.owner !== p.id && !b.government && (!b.owner || b.forSale) && p.cash >= b.price + 20000)
+    if (
+      b.owner !== p.id &&
+      !b.government &&
+      (!b.owner || b.forSale) &&
+      p.cash >= propertyQuote(w, b).total + 20000
+    )
       add(
         'property',
-        `Buy ${b.name} (${b.kind}) for ${b.price}; keep a reserve. Ownership alone does not fund or staff a business.`,
+        `Buy ${b.name} (${b.kind}) for ${propertyQuote(w, b).total}; keep a reserve. Ownership alone does not fund or staff a business.`,
         visit(b, [action({ type: 'buyBuilding', building: b.id })]),
       );
     if (b.owner === p.id) {
@@ -501,7 +507,7 @@ export function parishSurvey(w: World, p: Player) {
         id: b.id,
         kind: b.kind,
         owned: b.owner === p.id,
-        price: b.price,
+        price: propertyQuote(w, b).total,
         construction: b.construction,
         investment: b.investment,
       })),

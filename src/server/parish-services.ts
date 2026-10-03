@@ -164,6 +164,7 @@ export function completePuddlewick(w: World): boolean {
     sites.sort((a, b) => a.road - b.road || a.z - b.z || a.x - b.x);
     const site = sites[0];
     if (!site) continue;
+    b.estate = { since: w.time, base: b.price };
     b.x = site.x;
     b.z = site.z;
     if (kind === 'waterworks') b.rotation = waterworksSite(w, site)!.rotation;

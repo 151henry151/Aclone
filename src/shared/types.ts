@@ -78,6 +78,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  estate?: { since: number; base: number };
   creatorModel?: string;
   creatorBounds?: { width: number; depth: number; height: number };
   id: string;
@@ -133,6 +134,9 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  retainEstateContents: boolean;
+  estateEquityShare: number;
+  estateAnnualDiscount: number;
   dayLength: number;
   time: number;
   denariiPerSheckle: number;
@@ -167,6 +171,7 @@ export interface World {
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
   tradePricing?: 1 | 2 | 3;
+  estateRulesVersion?: 1;
   /** Default Puddlewick building types already supplied; never replenish on restart. */
   parishServices?: string[];
   /** One-time retirement of excess public starter types; purchased property is protected. */

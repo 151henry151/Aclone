@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../shared/property';
 import { creatorControls } from './creator-editor';
 import {
   creatorTabs,
@@ -813,6 +814,12 @@ function refreshBusinessDetails() {
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
 function refreshTradingPrices() {
+  for (const el of app.querySelectorAll<HTMLElement>('[data-property-quote]')) {
+    const b = world?.buildings.find((b) => b.id === el.dataset.propertyQuote);
+    if (!world || !b) continue;
+    const q = propertyQuote(world, b);
+    el.innerHTML = `This building is for sale.<b>${money(q.total)}</b>${b.estate && !b.owner ? `<small>Base ${money(q.base)} + ${Math.round(world.settings.estateEquityShare * 100)}% of goods ${money(q.goods)} and investment ${money(q.cash)} · ${q.years} years unclaimed, ${Math.round((1 - q.discount) * 100)}% discount. Price follows current contents.</small>` : ''}`;
+  }
   refreshBusinessDetails();
   const form = app.querySelector<HTMLFormElement>('form[data-price-editor]');
   const b = world?.buildings.find((b) => b.id === form?.dataset.priceEditor);
@@ -1232,7 +1239,7 @@ function buildingWindow(b: Building) {
         '<p>Welcome to The Unsteady Axle. There is beer, a noticeboard, and absolutely no dress code.</p>' +
         button('Parish activities', 'activities');
     if ((!b.owner || b.forSale) && b.owner !== me.id && !b.government)
-      html += `<div class="purchase"><span>This building is for sale.<b>${money(b.price)}</b></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
+      html += `<div class="purchase"><span data-property-quote="${b.id}"></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
     if ((b.recipe || b.production) && b.kind !== 'farm') {
       const r = b.production ?? recipes[b.recipe!];
       const interval = productionInterval(world, b);

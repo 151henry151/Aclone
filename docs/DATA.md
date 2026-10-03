@@ -83,3 +83,7 @@ key `npc-budget-config` records the active controller's rates and limits for the
 CLI. Player/account records have an optional `npc` flag; world chat has monotonic
 message IDs. All are included in normal backups. Never publish a populated
 database. See [memory and retention](NPCS.md#operator-controls-and-memory).
+
+## Estate persistence
+
+`Building.estate` holds the unclaimed date and base price; current stock/investment determine equity at quote/purchase time. `World.estateRulesVersion` marks the one-time Puddlewick defaults migration. `retainEstateContents` is boolean; `estateEquityShare` and `estateAnnualDiscount` are 0–1.

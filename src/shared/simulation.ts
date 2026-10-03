@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote, releaseEstate, migrateEstates } from './property.ts';
 import { creatorAction, creatorEvent, tickCreator, creatorBlocksSegment } from './creator.ts';
 import { terrainHeight } from './terrain.ts';
 import { fishingDock, travelHeight } from './dock';
@@ -134,6 +135,7 @@ export function createWorld(
     }
     w.buildings.push(b);
   });
+  migrateEstates(w);
   if (template === 'combat') w.settings.fighting = true;
   if (template === 'playground') w.settings.hungerRate = w.settings.thirstRate = 0;
   say(w, 'Parish notice', 'Welcome to ' + name + '. A small world. Plenty to get on with.');
@@ -329,7 +331,8 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       requireThat(!b.government && b.owner !== id, 'This property is not for sale');
       requireThat(!b.owner || b.forSale, 'The owner has not listed this property');
-      requireThat(p.cash >= b.price, 'Not enough cash');
+      const price = propertyQuote(w, b).total;
+      requireThat(p.cash >= price, 'Not enough cash');
       const homes = b.kind === 'home' || b.kind === 'warehouse';
       requireThat(
         w.buildings.filter(
@@ -343,11 +346,12 @@ export function act(w: World, id: string, a: Action): string {
       );
       const seller = b.owner && w.players[b.owner];
       if (seller) {
-        p.cash -= b.price;
-        seller.cash += b.price;
-        log(w, 'transfer', b.price, p.id, seller.id, 'property sale');
-      } else charge(w, p, b.price, 'property purchase');
+        p.cash -= price;
+        seller.cash += price;
+        log(w, 'transfer', price, p.id, seller.id, 'property sale');
+      } else charge(w, p, price, 'property purchase');
       b.owner = id;
+      delete b.estate;
       removeOwnerEmployment(w, b);
       b.forSale = false;
       result = `You now own ${b.name}. Bring a broom.`;
@@ -854,7 +858,16 @@ export function act(w: World, id: string, a: Action): string {
             'Choose energy or ammo',
           );
         else num(v, key === 'seaLevel' ? -50 : 0, key === 'startingCash' ? 1e8 : 1e6);
-        if (['salesTax', 'wageTax', 'offlineEfficiency'].includes(key)) num(v, 0, 1);
+        if (
+          [
+            'salesTax',
+            'wageTax',
+            'offlineEfficiency',
+            'estateEquityShare',
+            'estateAnnualDiscount',
+          ].includes(key)
+        )
+          num(v, 0, 1);
         if (['denariiPerSheckle', 'productionSeconds', 'maxAge', 'exchangeRate'].includes(key))
           num(v, 1, 1e6);
         if (
@@ -1270,10 +1283,12 @@ function kill(w: World, p: Player, comic = false) {
           if (b.lodging) b.lodging.open = false;
           continue;
         }
-        b.stock = {};
-        log(w, 'sink', b.investment, b.id, 'treasury', 'estate closure');
-        b.investment = 0;
-        delete b.owner;
+        if (!w.settings.retainEstateContents) {
+          b.stock = {};
+          log(w, 'sink', b.investment, b.id, 'treasury', 'estate closure');
+          b.investment = 0;
+        }
+        releaseEstate(w, b);
       }
     }
     say(

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-03
+
+### Added
+
+- Preserve building contents and investment after death in Puddlewick. Price unclaimed estates from base value plus 90% of current catalogue-valued equity, with a compounded 5% reduction each game year; expose configurable world rules and live quotes without changing player asking prices.
+
 ## [0.24.5] - 2026-10-03
 
 ### Fixed

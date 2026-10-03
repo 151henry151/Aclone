@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../../shared/property.ts';
 import { lifeBriefing } from './strategy.ts';
 import { characterFacts } from './character-facts.ts';
 import { workplace } from './workplace.ts';
@@ -210,7 +211,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       z: b.z,
       distance: Math.round(distance(p, b)),
       owned: b.owner === p.id,
-      price: !b.owner || b.forSale ? b.price : null,
+      price: !b.owner || b.forSale ? propertyQuote(w, b).total : null,
     })),
     nearbyBuildings: selected.map((b) => ({
       id: b.id,

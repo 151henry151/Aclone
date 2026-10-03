@@ -45,7 +45,7 @@ Accounts/property/inventory/skills/tasks/journeys persist. Actions save immediat
 
 ## Why did my business become unclaimed?
 
-Outside arena/comic knockouts, death starts a new life: cash survives, but skills, carried goods and jobs are lost. Owned businesses lose their stock, investment and owner; their names and posted prices remain. Homes/inns are retained (inn bookings close to new guests). Check for the parish “begun a new life” notice. Stock your home or room before logging off; offline starvation can trigger this rule.
+Outside arena/comic knockouts, death starts a new life: cash survives, but skills, carried goods and jobs are lost. In Puddlewick, ordinary businesses and homes become unclaimed but keep their stock and investment; names and posted prices remain. The asking price adds 90% of current contents/investment to the base building value, then falls 5% each unclaimed game year. Other worlds configure whether contents survive and how they affect price; hotels and B&Bs are retained but close to new bookings. Check for the parish “begun a new life” notice. Stock your home or room before logging off; offline starvation can trigger this rule. This upgrade cannot restore stores already erased under the previous rule.
 
 ## How do I set a password or reset it by email?
 

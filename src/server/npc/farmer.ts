@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { propertyQuote } from '../../shared/property.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { economyChoices } from './economy-choices.ts';
@@ -175,12 +176,12 @@ export function gameplayChoices(
       !own &&
       !b.government &&
       (!b.owner || b.forSale) &&
-      p.cash >= b.price + 20000 &&
+      p.cash >= propertyQuote(w, b).total + 20000 &&
       w.buildings.filter((v) => v.owner === p.id && !['home', 'warehouse'].includes(v.kind))
         .length < w.settings.maxBuildings
     )
       add(
-        `Buy ${b.name} for ${b.price}; retain at least 20000 for living and seed costs.`,
+        `Buy ${b.name} for ${propertyQuote(w, b).total}; retain at least 20000 for living and seed costs.`,
         visit(b, [action({ type: 'buyBuilding', building: b.id })]),
       );
     if (own && b.investment < 10000 && p.cash > 15000)

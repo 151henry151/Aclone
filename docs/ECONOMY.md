@@ -145,3 +145,11 @@ Room reservations and provisions survive restarts and property sales. A lodging
 building containing paid stays or guest supplies cannot be demolished. Its condition
 cannot fall below 1%, protecting those supplies; the owner should still repair it.
 Hotels use the same exterior shelter model as homes; there is no interior submap.
+
+## Unclaimed estates
+
+Puddlewick keeps a deceased owner's ordinary buildings' stock and working capital. Ownership is released; skills and carried goods still reset. Hotels/B&Bs retain their existing protected-guest rules. Other worlds choose `retainEstateContents`, `estateEquityShare` and `estateAnnualDiscount` in Rules.
+
+An unclaimed estate costs `(base building price + equity share × current equity) × (1 − annual discount)^whole years`, rounded to an internal money unit, minimum one. Puddlewick uses 90% and 5%. Equity is investment plus stock valued at item catalogue prices, not editable shop quotes. Cheap sales reduce goods value while adding only actual receipts, so the asking price drops accordingly. A game year is 365 ten-minute days (~60.83 real hours), independent of the decorative clock. Player-listed asking prices are not discounted.
+
+Existing unclaimed properties start their clock at upgrade; ownership, stock and shop quotes are preserved. Previously erased estates cannot be reconstructed by this migration.

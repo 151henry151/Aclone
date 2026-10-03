@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { migrateEstates } from '../shared/property.ts';
 import { migrateEconomy } from '../shared/economy.ts';
 import { migrateTown } from '../shared/town.ts';
 import { DatabaseSync, backup } from 'node:sqlite';
@@ -48,6 +49,7 @@ export class Store {
         world.settings = { ...defaults, ...world.settings };
         migrateTown(world);
         migrateEconomy(world);
+        migrateEstates(world);
         for (const b of world.buildings)
           if (
             b.government &&

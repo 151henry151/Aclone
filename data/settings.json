@@ -25,5 +25,8 @@
   "exchangeRate": 100,
   "exchangeCap": 100,
   "weaponMode": "energy",
-  "killReward": 0
+  "killReward": 0,
+  "retainEstateContents": false,
+  "estateEquityShare": 0,
+  "estateAnnualDiscount": 0
 }
