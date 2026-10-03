@@ -1,3 +1,4 @@
+import { worldItems } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { items } from './catalog.ts';
 import { canCarry, log } from './simulation.ts';
@@ -12,6 +13,7 @@ export function shelter(w: World, p: Player) {
   if (guest && guest.until > w.time) return { b, stock: guest.stock, until: guest.until };
 }
 export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
+  const items = worldItems(w);
   const check = (ok: unknown, message: string) => {
     if (!ok) throw Error(message);
   };
@@ -63,7 +65,7 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
       from = deposit ? p.inventory : guest.stock,
       to = deposit ? guest.stock : p.inventory;
     check((from[item] ?? 0) >= n, 'Not enough supplies');
-    check(deposit ? (to[item] ?? 0) + n <= 100 : canCarry(p, item, n), 'Storage full');
+    check(deposit ? (to[item] ?? 0) + n <= 100 : canCarry(p, item, n, w), 'Storage full');
     if (deposit) check(guest.until > w.time, 'Renew your booking before storing more supplies');
     from[item] -= n;
     to[item] = (to[item] ?? 0) + n;
@@ -81,6 +83,7 @@ export function feedAtHome(
   seconds: number,
   hungerRate: number,
   thirstRate: number,
+  w?: World,
 ) {
   let healthySeconds = seconds;
   for (const [need, nutrient, rate] of [
@@ -88,7 +91,7 @@ export function feedAtHome(
     ['thirst', 'drink', thirstRate],
   ] as const) {
     let value = p[need] + seconds * rate * 0.8;
-    for (const [key, def] of Object.entries(items)) {
+    for (const [key, def] of Object.entries(worldItems(w))) {
       if (!def[nutrient] || value < 30000) continue;
       const count = Math.min(stock[key] ?? 0, Math.floor((value - 30000) / def[nutrient]!) + 1);
       stock[key] = (stock[key] ?? 0) - count;

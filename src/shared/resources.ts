@@ -81,7 +81,7 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
   else if (n.item !== 'dirt' && !(p.inventory.tools > 0))
     reason = 'Carry tools to gather logs, gravel or stone';
   else if (available < amount) reason = 'This ground needs time to replenish';
-  else if (!canCarry(p, n.item, amount)) reason = 'Make room in your cargo';
+  else if (!canCarry(p, n.item, amount, w)) reason = 'Make room in your cargo';
   return { amount, available, seconds: amount === 6 ? 12 : 20, reason };
 }
 export function gather(w: World, p: Player, id: string) {
@@ -100,9 +100,9 @@ export function gather(w: World, p: Player, id: string) {
   };
   p.speed = 0;
 }
-export function finishGather(p: Player) {
+export function finishGather(p: Player, w?: World) {
   const t = p.task!;
-  if (!t.item || !t.amount || !canCarry(p, t.item, t.amount)) return false;
+  if (!t.item || !t.amount || !canCarry(p, t.item, t.amount, w)) return false;
   p.inventory[t.item] = (p.inventory[t.item] ?? 0) + t.amount;
   delete p.task;
   return true;

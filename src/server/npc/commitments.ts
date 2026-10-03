@@ -171,7 +171,7 @@ export function deliveryBlocker(
   const cost = needed * buyer.buy[d.item];
   if (buyer.investment < cost)
     return `The buyer needs ${(cost - buyer.investment) / 100}d more investment to pay for ${needed} ${d.item}. Its owner needs to fund the building.`;
-  if (!carried && !canCarry(p, d.item, 1))
+  if (!carried && !canCarry(p, d.item, 1, w))
     return 'My cargo is full. I need to make room before loading.';
   if (p.task) return 'I need to finish my current timed task before loading.';
 }
@@ -323,7 +323,7 @@ export function commitmentChoices(w: World, p: Player, state: ResidentState): Fa
       buyer.capacity - (buyer.stock[d.item] ?? 0),
       buyer.buy[d.item] ? Math.floor(buyer.investment / buyer.buy[d.item]) : remaining,
     );
-    while (quantity > carried && !canCarry(p, d.item, quantity - carried)) quantity--;
+    while (quantity > carried && !canCarry(p, d.item, quantity - carried, w)) quantity--;
     if (quantity <= 0) {
       block('Waiting for my stock, cargo space, buyer storage or funded working capital.');
       continue;

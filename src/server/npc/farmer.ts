@@ -124,7 +124,7 @@ export function gameplayChoices(
         b.stock[item],
         b.sell[item] ? Math.floor(p.cash / b.sell[item]) : needed,
       );
-      while (n > 0 && !canCarry(p, item, n)) n--;
+      while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n)
         add(
           `${consume ? 'Buy and consume' : 'Restock'} ${item}: ${n} for ${n * b.sell[item]} at ${b.name} (${Math.round(distance(p, b))}m); next serving restores ${nutrition.food} hunger / ${nutrition.drink} thirst. Cash left ${p.cash - n * b.sell[item]}.`,
@@ -241,7 +241,7 @@ export function gameplayChoices(
     if (own)
       for (const crop of Object.keys(crops)) {
         let n = Math.min(b.stock[crop] ?? 0, 25);
-        while (n && !canCarry(p, crop, n)) n--;
+        while (n && !canCarry(p, crop, n, w)) n--;
         if (n)
           add(
             `Collect ${n} ${crop} from my farm ${b.name} for sale elsewhere.`,

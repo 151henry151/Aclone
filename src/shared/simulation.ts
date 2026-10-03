@@ -1,3 +1,11 @@
+import {
+  worldItems,
+  worldSkills,
+  skillLesson,
+  setCatalogue,
+  worldBuildings,
+  applyBuildingTemplate,
+} from './world-catalogue.ts';
 import { checkActionGuards, questAction, questEvent, resetQuests } from './quests.ts';
 import { fulfilOrder, refreshOrders, migrateProcurement } from './procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -255,11 +263,15 @@ function nearby(w: World, p: Player, id: unknown) {
 function owns(p: Player, b: Building) {
   requireThat(p.authority >= 20 || b.owner === p.id, 'Only the building owner can do that');
 }
-export function canCarry(p: Player, item: string, n: number) {
-  return carry(p) + items[item].weight * n <= vehicles[p.vehicle].capacity;
+export function canCarry(p: Player, item: string, n: number, w?: World) {
+  const def = worldItems(w)[item];
+  return !!def && carry(p, w) + def.weight * n <= vehicles[p.vehicle].capacity;
 }
-export function carry(p: Player) {
-  return Object.entries(p.inventory).reduce((s, [k, n]) => s + (items[k]?.weight ?? 0) * n, 0);
+export function carry(p: Player, w?: World) {
+  return Object.entries(p.inventory).reduce(
+    (s, [k, n]) => s + (worldItems(w)[k]?.weight ?? 0) * n,
+    0,
+  );
 }
 function stockAdd(stock: Stock, item: string, n: number) {
   stock[item] = (stock[item] ?? 0) + n;
@@ -274,7 +286,7 @@ function grant(w: World, p: Player, amount: number, reason: string) {
   log(w, 'faucet', amount, 'treasury', p.id, reason);
 }
 function usable(w: World, p: Player, item: string) {
-  const def = items[item];
+  const def = worldItems(w)[item];
   requireThat(def && (p.inventory[item] ?? 0) > 0, 'You do not carry that item');
   requireThat(def.food || def.drink || def.fuel, 'That item is equipment or a trade good');
   if (def.fuel) {
@@ -291,10 +303,16 @@ function usable(w: World, p: Player, item: string) {
 }
 // All request validation precedes mutation. The server additionally wraps actions in a transaction.
 export function act(w: World, id: string, a: Action): string {
+  const items = worldItems(w),
+    skills = worldSkills(w);
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
   checkActionGuards(w, p, a);
+  if (type === 'catalogue') {
+    setCatalogue(w, p, a.catalogue);
+    return 'World catalogue saved.';
+  }
   if (type === 'quest') return questAction(w, p, a);
   if (
     ['creator', 'creatorBuilding', 'creatorRemove', 'creatorRecipe', 'interactObject'].includes(
@@ -331,7 +349,7 @@ export function act(w: World, id: string, a: Action): string {
       if (buying) {
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
-        requireThat(canCarry(p, item, n), 'Cargo hold is full');
+        requireThat(canCarry(p, item, n, w), 'Cargo hold is full');
         if (b.kind === 'starport')
           requireThat(imports + n <= w.settings.importCap, 'Daily port import limit reached');
       } else {
@@ -516,7 +534,7 @@ export function act(w: World, id: string, a: Action): string {
       const source = put ? p.inventory : b.stock;
       requireThat((source[item] ?? 0) >= n, 'Not enough stock');
       requireThat(
-        put ? (b.stock[item] ?? 0) + n <= b.capacity : canCarry(p, item, n),
+        put ? (b.stock[item] ?? 0) + n <= b.capacity : canCarry(p, item, n, w),
         'Storage full',
       );
       stockAdd(source, item, -n);
@@ -593,8 +611,13 @@ export function act(w: World, id: string, a: Action): string {
         !p.learning && !p.skills.includes(skill) && p.skills.length < w.settings.maxSkills,
         'Already learning, already qualified, or skill limit reached',
       );
-      charge(w, p, p.skills.length ? 16000 : 8000, 'tuition');
-      p.learning = { skill, end: w.time + (p.skills.length ? 2400 : 60) };
+      const lesson = skillLesson(w, p, skill);
+      requireThat(
+        lesson.prerequisites.every((s) => p.skills.includes(s)),
+        'Learn prerequisites first: ' + lesson.prerequisites.join(', '),
+      );
+      charge(w, p, lesson.price, 'tuition');
+      p.learning = { skill, end: w.time + lesson.seconds };
       break;
     }
     case 'gather': {
@@ -626,11 +649,11 @@ export function act(w: World, id: string, a: Action): string {
           (p.inventory.steel ?? 0) >= 1 && (p.inventory.wood ?? 0) >= 2,
           'Requires 1 steel and 2 wood',
         );
-        requireThat(canCarry(p, 'tools', 1), 'Cargo full');
+        requireThat(canCarry(p, 'tools', 1, w), 'Cargo full');
         stockAdd(p.inventory, 'steel', -1);
         stockAdd(p.inventory, 'wood', -2);
       } else if (task !== 'labour')
-        requireThat(canCarry(p, task === 'logging' ? 'logs' : 'stone', 3), 'Cargo full');
+        requireThat(canCarry(p, task === 'logging' ? 'logs' : 'stone', 3, w), 'Cargo full');
       p.task = { kind: task, end: w.time + 15, building: b.id };
       p.speed = 0;
       result = 'A bit of honest work. 15 seconds.';
@@ -694,7 +717,7 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(slot !== 7 && slot !== 6, 'Use a robocrow item; ostriches happen by accident');
       const fleet = p.fleet ?? [0, 5];
       requireThat(
-        carry(p) <= vehicles[slot].capacity,
+        carry(p, w) <= vehicles[slot].capacity,
         'Unload cargo before changing to a smaller vehicle',
       );
       if (slot !== 5 && slot !== 0) {
@@ -812,7 +835,7 @@ export function act(w: World, id: string, a: Action): string {
         w.time >= p.fishAt && w.time <= (p.fishUntil ?? 0),
         'No bite yet, or that one got away',
       );
-      requireThat(canCarry(p, 'fish', 1), 'Cargo full');
+      requireThat(canCarry(p, 'fish', 1, w), 'Cargo full');
       stockAdd(p.inventory, 'fish', 1);
       p.kudos++;
       p.fishAt = w.time + 20;
@@ -854,8 +877,9 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'construct': {
-      const kind = str(a.kind),
-        def = catalog[kind];
+      const requested = str(a.kind),
+        kind = w.catalogue?.templates[requested]?.base ?? requested,
+        def = worldBuildings(w)[requested];
       const site =
         kind === 'waterworks' && (a.x !== undefined || a.z !== undefined)
           ? { x: num(a.x, -240, 240), z: num(a.z, -240, 240) }
@@ -890,6 +914,7 @@ export function act(w: World, id: string, a: Action): string {
       );
       charge(w, p, Math.round(def.price * (1 + w.towns[0].tax)), 'construction');
       const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, site.x, site.z);
+      applyBuildingTemplate(w, b, requested);
       b.owner = id;
       if (shore) b.rotation = shore.rotation;
       if (style) b.style = style;
@@ -910,7 +935,7 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (Object.values(b.construction).every((n) => !n)) {
         delete b.construction;
-        questEvent(w, p, 'build', b.kind);
+        questEvent(w, p, 'build', b.templateId ?? b.kind);
         queueCreatorScript(w, 'BuildingComplete', { id, building: b.id, kind: b.kind });
         result = 'Building complete. Civilisation marches on.';
       }
@@ -1142,7 +1167,7 @@ export function act(w: World, id: string, a: Action): string {
         'Recipient must be nearby',
       );
       requireThat(items[item] && (p.inventory[item] ?? 0) >= n, 'Not enough items');
-      requireThat(canCarry(target, item, n), 'Recipient cargo full');
+      requireThat(canCarry(target, item, n, w), 'Recipient cargo full');
       stockAdd(p.inventory, item, -n);
       stockAdd(target.inventory, item, n);
       break;
@@ -1246,7 +1271,7 @@ export function command(w: World, p: Player, text: string): string {
       const t = target(),
         item = args[1],
         n = qty(Number(args[2]));
-      requireThat(items[item] && canCarry(t, item, n), 'Unknown item or cargo full');
+      requireThat(worldItems(w)[item] && canCarry(t, item, n, w), 'Unknown item or cargo full');
       stockAdd(t.inventory, item, n);
       break;
     }
@@ -1467,7 +1492,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
     const span = Math.min(seconds - elapsed, current ? current.until - start - elapsed : Infinity);
     const needs = (target: Player, stock: Stock | undefined, duration: number) => {
       if (stock)
-        return feedAtHome(target, stock, duration, w.settings.hungerRate, w.settings.thirstRate);
+        return feedAtHome(target, stock, duration, w.settings.hungerRate, w.settings.thirstRate, w);
       let healthy = duration;
       for (const [need, rate] of [
         ['hunger', w.settings.hungerRate],
@@ -1553,7 +1578,7 @@ export function advance(w: World, seconds: number) {
     if (p.task && p.task.end <= end) {
       const t = p.task;
       if (t.kind === 'gather') {
-        if (finishGather(p)) {
+        if (finishGather(p, w)) {
           questEvent(w, p, 'gather', t.resource ?? '', t.item, t.amount);
           if (p.online) creatorEvent(w, 'task', p, t.resource ?? '');
         }
@@ -1595,7 +1620,8 @@ export function advance(w: World, seconds: number) {
       }
     }
     if (p.game === 'fishing' && p.fishUntil !== undefined && end > p.fishUntil) {
-      if (w.settings.fishingMode === 2 && canCarry(p, 'fish', 1)) stockAdd(p.inventory, 'fish', 1);
+      if (w.settings.fishingMode === 2 && canCarry(p, 'fish', 1, w))
+        stockAdd(p.inventory, 'fish', 1);
       p.fishAt = end + (w.settings.fishingMode === 5 ? 20 : 90);
       p.fishUntil = p.fishAt + 8;
     }

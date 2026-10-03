@@ -101,3 +101,7 @@ Business accounts persist on buildings; personal history (80 events), departure 
 ## Creator progress
 
 World creator definitions include up to 32 quests and 32 action requirements. Private `Player.quests` records ordered objective counters, definition identity and reward claims. Private `Player.scriptState` holds up to 64 numeric variables. Neither is exported in portable world designs or other players' snapshots. Both persist in existing world JSON, without an SQL schema change.
+
+## World-local catalogues
+
+`World.catalogue` contains `items`, `skills` and `templates`, keyed by `custom:[a-z][a-z0-9_-]{0,31}`. Definitions are validated, bounded and saved in world JSON. They never mutate the built-in catalogue or another world's data. Resolvers combine built-in and local definitions; cargo/consumption callers must pass their world. Custom definitions cannot be removed while referenced by saved inventory, buildings, learning, recipes, creator rules or templates. Template instances retain their base rendering kind and `templateId`; custom production remains an explicit per-building recipe.

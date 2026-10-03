@@ -1,3 +1,10 @@
+import {
+  catalogueItemId,
+  catalogueSkillId,
+  worldItems,
+  worldSkills,
+  validateRecipe,
+} from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { questSchema, guardSchema, questEvent } from './quests.ts';
@@ -31,16 +38,13 @@ export const arenaSchema = z.object({
     .default(['machine', 'grenade', 'plasma', 'rocket', 'javelin', 'mine']),
 });
 const recipeStock = z
-  .record(
-    z.string().refine((k) => Object.hasOwn(items, k)),
-    z.number().int().min(1).max(1000),
-  )
+  .record(catalogueItemId, z.number().int().min(1).max(1000))
   .refine((v) => Object.keys(v).length <= 8);
 export const creatorRecipeSchema = z.object({
   inputs: recipeStock,
   outputs: recipeStock.refine((v) => Object.keys(v).length > 0),
   seconds: z.number().int().min(10).max(86400),
-  skill: z.string().refine((v) => skills.includes(v)),
+  skill: catalogueSkillId,
 });
 export const partSchema = z.object({
   shape: z.enum(['box', 'sphere', 'cylinder', 'cone']),
@@ -85,7 +89,7 @@ export const effectSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('needs'), amount: z.number().int().min(-50000).max(50000) }),
   z.object({
     type: z.literal('item'),
-    item: z.string().refine((v) => Object.hasOwn(items, v)),
+    item: catalogueItemId,
     quantity: z.number().int().min(-100).max(100),
   }),
   z.object({ type: z.literal('teleport'), x: coordinate, z: coordinate }),
@@ -109,7 +113,7 @@ export const ruleSchema = z.object({
     .string()
     .max(40)
     .default('')
-    .refine((v) => !v || Object.hasOwn(items, v)),
+    .refine((v) => !v || catalogueItemId.safeParse(v).success),
   effects: z.array(effectSchema).min(1).max(8),
 });
 export const creatorSchema = z.object({
@@ -133,7 +137,31 @@ export type CreatorObject = z.infer<typeof objectSchema>;
 export type CreatorRule = z.infer<typeof ruleSchema>;
 export const defaultCreator = () => creatorSchema.parse({});
 export function validateCreator(w: World, input: unknown) {
-  const c = creatorSchema.parse(input);
+  const c = creatorSchema.parse(input),
+    defs = worldItems(w),
+    professions = worldSkills(w);
+  const item = (id: string) => {
+    if (id && !Object.hasOwn(defs, id)) throw Error('Unknown world item: ' + id);
+  };
+  const skill = (id: string) => {
+    if (id && !professions.includes(id)) throw Error('Unknown world profession: ' + id);
+  };
+  for (const r of c.rules) {
+    item(r.requiredItem);
+    for (const e of r.effects) if (e.type === 'item') item(e.item);
+  }
+  for (const q of c.quests) {
+    for (const s of q.steps) {
+      item(s.item);
+      if (s.event === 'study' && s.target) skill(s.target);
+    }
+    for (const id of Object.keys(q.rewards)) item(id);
+  }
+  for (const g of c.guards) {
+    item(g.item);
+    skill(g.skill);
+  }
+
   for (const list of [c.models, c.objects, c.rules, c.quests, c.guards])
     if (new Set(list.map((v) => v.id)).size !== list.length)
       throw Error('Each object, model and rule needs a unique ID');
@@ -162,6 +190,9 @@ export function validateCreator(w: World, input: unknown) {
   for (const b of w.buildings)
     if (b.creatorModel && !models.has(b.creatorModel))
       throw Error('Unbind this model from its building before removing it');
+  for (const t of Object.values(w.catalogue?.templates ?? {}))
+    if (t.creatorModel && !models.has(t.creatorModel))
+      throw Error('Unbind the template visual before removing its model');
   const targets = new Set([...c.objects, ...w.zones, ...w.buildings].map((v) => v.id));
   for (const r of c.rules) {
     if (['enter', 'interact'].includes(r.event) && !targets.has(r.target))
@@ -218,8 +249,14 @@ function runtime(w: World) {
 export function resetCreatorRuntime(w: World) {
   runtimes.delete(w);
 }
-export function applyEffect(w: World, p: Player | undefined, effect: Effect) {
+export function validateEffect(w: World, effect: unknown) {
   const e = effectSchema.parse(effect);
+  if (e.type === 'item' && !Object.hasOwn(worldItems(w), e.item)) throw Error('Unknown world item');
+  return e;
+}
+export function applyEffect(w: World, p: Player | undefined, effect: Effect) {
+  const e = validateEffect(w, effect),
+    items = worldItems(w);
   if (e.type === 'message') say(w, 'World behavior', e.text, 'notice', p?.id);
   else if (e.type === 'visibility') {
     const o = w.creator?.objects.find((o) => o.id === e.object);
@@ -421,6 +458,7 @@ export function creatorAction(w: World, p: Player, a: Action) {
     const b = w.buildings.find((b) => b.id === a.building);
     if (!b || b.kind === 'farm') throw Error('Choose a production building; farms use crop plots');
     const recipe = creatorRecipeSchema.parse(a.recipe);
+    validateRecipe(w, recipe);
     if (Object.values(recipe.outputs).reduce((n, q) => n + q, 0) > b.capacity)
       throw Error('Output batch exceeds building storage');
     b.production = { ...recipe, tier: 0 };

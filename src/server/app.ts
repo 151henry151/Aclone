@@ -4,7 +4,13 @@ import { completePuddlewick } from './parish-services.ts';
 import { Federation, type FederationConfig } from './federation.ts';
 import { applyDesign, applyPreset, configureRules, exportDesign } from './world-design.ts';
 import { validateVisualAsset } from './asset-validation.ts';
-import { creatorEvent, drainCreatorScripts, effectSchema, applyEffect } from '../shared/creator.ts';
+import {
+  creatorEvent,
+  drainCreatorScripts,
+  effectSchema,
+  applyEffect,
+  validateEffect,
+} from '../shared/creator.ts';
 import { SnapshotWindow } from './snapshot-window';
 import { ActionBudget } from './request-budget';
 import { Residents, type ResidentOptions } from './npc/residents.ts';
@@ -283,7 +289,7 @@ export async function createApp(options: AppOptions) {
     if (!result) return;
     const effects = (result.effects ?? [])
       .slice(0, 32)
-      .map((e) => ({ player: e.player, effect: effectSchema.parse(e.effect) }));
+      .map((e) => ({ player: e.player, effect: validateEffect(w, e.effect) }));
     for (const e of effects) applyEffect(w, e.player ? w.players[e.player] : undefined, e.effect);
     for (const message of result.messages) say(w, 'World script', message);
     w.scriptVariables = result.variables;
@@ -484,7 +490,7 @@ export async function createApp(options: AppOptions) {
         if (data.design) {
           applyDesign(w, data.design);
           const checked = await scriptPool.run(w, w.script, 'ScriptReload', {});
-          for (const e of checked.effects ?? []) effectSchema.parse(e.effect);
+          for (const e of checked.effects ?? []) validateEffect(w, e.effect);
         }
         if (data.settings) configureRules(w, data.settings);
         worlds.set(id, w);
@@ -757,7 +763,7 @@ export async function createApp(options: AppOptions) {
           if (w.owner !== p.account.id) throw Error('World owner required');
           const source = z.string().max(16384).parse(a.source);
           const checked = await scriptPool.run(w, source, 'ScriptReload', {});
-          for (const e of checked.effects ?? []) effectSchema.parse(e.effect);
+          for (const e of checked.effects ?? []) validateEffect(w, e.effect);
           w.script = source;
           scriptEvents.reset(w);
           store.saveWorld(w);

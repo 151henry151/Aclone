@@ -85,7 +85,7 @@ export function economyChoices(
               ? Math.floor(Math.max(0, p.cash - 12000) / seller.sell[item])
               : missing,
           );
-          while (load > 0 && !canCarry(p, item, load)) load--;
+          while (load > 0 && !canCarry(p, item, load, w)) load--;
           if (load > 0)
             add(
               `Supply my ${b.name}: buy and deliver ${load} ${item} from ${seller.name}, cost ${load * seller.sell[item]}, cash left ${p.cash - load * seller.sell[item]}. Building still needs funded workers and output buyers.`,
@@ -115,7 +115,7 @@ export function economyChoices(
       }
       for (const item of Object.keys(recipe.outputs)) {
         let n = Math.min(b.stock[item] ?? 0, 20);
-        while (n > 0 && !canCarry(p, item, n)) n--;
+        while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
           add(
             `Collect ${n} ${item} from my ${b.name} for sale or personal use.`,
@@ -160,7 +160,7 @@ export function economyChoices(
         b.stock[item],
         b.sell[item] ? Math.floor(Math.max(0, p.cash - 12000) / b.sell[item]) : 5,
       );
-      if (n > 0 && canCarry(p, item, n))
+      if (n > 0 && canCarry(p, item, n, w))
         add(
           `Buy ${n} ${item} from ${b.name} for ${n * b.sell[item]} for gathering or supplying my business; preserve living cash.`,
           visit(b, [act({ type: 'trade', building: b.id, direction: 'buy', item, quantity: n })]),
@@ -205,6 +205,7 @@ export function economyChoices(
           p,
           n.item,
           p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3,
+          w,
         ),
     )
     .slice(0, 4)) {

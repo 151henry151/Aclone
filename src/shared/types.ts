@@ -90,6 +90,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  templateId?: string;
   productionStatus?: string[];
   accounts?: import('./reports.ts').BusinessAccounts;
   lien?: { borrower: string; loan: string };
@@ -192,6 +193,7 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  catalogue?: import('./world-catalogue.ts').Catalogue;
   procurementVersion?: 1;
   procurement?: import('./procurement.ts').Procurement;
   /** Public projection; Lua source remains owner-only. */
@@ -264,6 +266,7 @@ export interface World {
 }
 export type Action = { type: string; [key: string]: unknown };
 export interface ItemDef {
+  icon?: string;
   name: string;
   weight: number;
   price: number;

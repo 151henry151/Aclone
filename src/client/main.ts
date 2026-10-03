@@ -1,3 +1,4 @@
+import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
@@ -40,11 +41,11 @@ import { ChatLog } from './chat-log';
 import { PanelMemory } from './panel-memory';
 import { ParishMap } from './parish-map';
 import {
-  items,
+  items as defaultItems,
   recipes,
   vehicles,
   buildings as definitions,
-  skills,
+  skills as defaultSkills,
   galaxy,
   weapons,
 } from '../shared/catalog';
@@ -62,6 +63,8 @@ const esc = (v: unknown) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
   );
+let items = defaultItems,
+  skills = defaultSkills;
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
 app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
@@ -281,6 +284,8 @@ async function connect() {
     if (msg.type === 'state') {
       world = mergeState(world, msg);
       me = world!.players[msg.me];
+      items = worldItems(world!);
+      skills = worldSkills(world!);
       if (msg.account) account = msg.account;
       inSpace = false;
       localStorage.setItem('aclone.world', world!.id);
@@ -571,10 +576,10 @@ function updateHud() {
       .slice(0, 4)
       .map(
         ([id, n]) =>
-          `<button data-do="use" data-id="${id}" title="Use ${esc(items[id]?.name)}"><span>${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
+          `<button data-do="use" data-id="${id}" title="Use ${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
-      `<div class="carry">${carry(me)} / ${vehicles[me.vehicle].capacity} carried</div>`,
+      `<div class="carry">${carry(me, world!)} / ${vehicles[me.vehicle].capacity} carried</div>`,
   );
   $('objective').textContent = me.task
     ? 'A shift in progress. Take in the view.'
@@ -1052,18 +1057,18 @@ function renderPanel() {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
       panel === 'inventory'
-        ? `<p>${carry(me)} of ${vehicles[me.vehicle].capacity} capacity · ${esc(vehicles[me.vehicle].name)}</p><div class="item-list">${Object.entries(
+        ? `<p>${carry(me, world!)} of ${vehicles[me.vehicle].capacity} capacity · ${esc(vehicles[me.vehicle].name)}</p><div class="item-list">${Object.entries(
             me.inventory,
           )
             .filter(([, n]) => n)
             .map(
               ([id, n]) =>
-                `<div><span><b>${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each</small></span><strong>${n}</strong>${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel ? 'disabled' : ''}`)}</div>`,
+                `<div><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each</small></span><strong>${n}</strong>${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel ? 'disabled' : ''}`)}</div>`,
             )
             .join(
               '',
             )}</div>${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
-        : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
+        : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
   }
@@ -1093,7 +1098,7 @@ function renderPanel() {
     modal(
       'Build something useful.',
       `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply the listed materials to finish construction. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
-        definitions,
+        worldBuildings(world!),
       )
         .filter(([, d]) => d.tier <= world!.tier)
         .map(
@@ -1101,7 +1106,7 @@ function renderPanel() {
             `<button data-do="construct" data-id="${id}" ${id === 'waterworks' && !waterSite ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
               d.materials,
             )
-              .map(([i, n]) => `${n} ${items[i].name}`)
+              .map(([i, n]) => `${n} ${esc(items[i].name)}`)
               .join(
                 ' + ',
               )}</small></span><b>${money(Math.round(d.price * (1 + world!.towns[0].tax)))}</b></button>`,
@@ -1162,7 +1167,7 @@ function buildingWindow(b: Building) {
   let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
-      .map(([i, n]) => `${n} ${items[i].name}`)
+      .map(([i, n]) => `${n} ${esc(items[i].name)}`)
       .join(
         ', ',
       )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}"`)}`;
@@ -1185,7 +1190,7 @@ function buildingWindow(b: Building) {
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
               )
               .join('')}</div></section>`,
         )
@@ -1195,7 +1200,16 @@ function buildingWindow(b: Building) {
     if (b.kind === 'workhouse' && !selfOwned)
       html += `<p>Unskilled labour. A 15-second task pays 45d. You will be quite still while working.</p>${button('Work a shift · 45d', 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
     if (b.kind === 'school')
-      html += `<p>First qualification: 80d and one minute. Later qualifications: 160d and forty minutes. Up to ${world.settings.maxSkills} skills.</p><div class="menu-grid">${skills.map((s) => button(s, 'learn', `data-id="${s}" data-building="${b.id}" ${me!.skills.includes(s) || me!.learning ? 'disabled' : ''}`)).join('')}</div>`;
+      html += `<p>First qualification: 80d and one minute. Later standard qualifications: 160d and forty minutes. Custom courses use the prices and times below. Up to ${world.settings.maxSkills} skills.</p><div class="menu-grid">${skills
+        .map((s) => {
+          const lesson = skillLesson(world!, me!, s);
+          return button(
+            `${esc(lesson.name)} · ${money(lesson.price)} · ${lesson.seconds}s${lesson.prerequisites.length ? ' · requires ' + esc(lesson.prerequisites.join(', ')) : ''}`,
+            'learn',
+            `data-id="${esc(s)}" data-building="${b.id}" ${me!.skills.includes(s) || me!.learning || !lesson.prerequisites.every((s) => me!.skills.includes(s)) ? 'disabled' : ''}`,
+          );
+        })
+        .join('')}</div>`;
     if (b.kind === 'garage')
       html += `<div class="directory">${vehicles
         .slice(0, 6)

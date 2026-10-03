@@ -154,3 +154,7 @@ OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally refere
 ## Quests
 
 `quest` accepts a `quest` ID and `operation: "accept" | "claim"`. The server verifies the current definition, ordered progress, prior claim and total reward capacity. Definitions live in the creator payload; player counters and Lua progress are recipient-private. Creator action requirements run before normal action validation or mutation.
+
+## Local catalogue editing
+
+`catalogue` is world-owner-only and accepts a complete `catalogue` containing bounded `items`, `skills` and `templates` maps. References/prerequisites are validated before replacing the prior definition set. `construct.kind` can use a local template ID. Standard trade, stock, use, learn, production and quest actions resolve goods/professions in their current world.

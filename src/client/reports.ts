@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cashFlow, productionReport } from '../shared/reports';
 import { money } from '../shared/simulation';
-import { items } from '../shared/catalog';
+import { worldItems } from '../shared/world-catalogue';
 import type { World, Player, Building, Stock } from '../shared/types';
 const amount = (value: number, rate = 100) => (value < 0 ? '-' : '') + money(Math.abs(value), rate);
 const esc = (s: string) =>
@@ -9,9 +9,9 @@ const esc = (s: string) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
   );
-const goods = (stock: Stock) =>
+const goods = (stock: Stock, w: World) =>
   Object.entries(stock)
-    .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
+    .map(([i, n]) => `${n} ${esc(worldItems(w)[i]?.name ?? i)}`)
     .join(', ') || 'None';
 export function statementHtml(w: World, p: Player, b: Building) {
   const a = p.statements?.[b.id];
@@ -43,7 +43,7 @@ export function statementHtml(w: World, p: Player, b: Building) {
       )
       .join(
         '',
-      )}</dl><p>${a.batches} automatic batches completed.</p><ul><li>Inputs consumed: ${goods(a.consumed)}</li><li>Outputs made: ${goods(a.produced)}</li><li>Goods purchased: ${goods(a.bought)}</li><li>Goods sold: ${goods(a.sold)}</li></ul>`
+      )}</dl><p>${a.batches} automatic batches completed.</p><ul><li>Inputs consumed: ${goods(a.consumed, w)}</li><li>Outputs made: ${goods(a.produced, w)}</li><li>Goods purchased: ${goods(a.bought, w)}</li><li>Goods sold: ${goods(a.sold, w)}</li></ul>`
   );
 }
 export function journalHtml(w: World, p: Player) {

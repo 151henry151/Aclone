@@ -1,3 +1,11 @@
+import {
+  catalogueEditor,
+  catalogueForm,
+  diagnosticsHtml,
+  templatesEditor,
+} from './catalogue-editor';
+import { catalogueSchema } from '../shared/world-catalogue';
+import { worldItems, worldSkills } from '../shared/world-catalogue';
 import { questEditor, questForm, guardsEditor } from './quests';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { defaults, items, vehicles, recipes, skills } from '../shared/catalog';
@@ -27,6 +35,8 @@ export const creatorTabs = [
   'Access rules',
   'Layout',
   'Production',
+  'Catalogue',
+  'Building templates',
   'Vehicles',
   'Transfer',
 ];
@@ -35,6 +45,9 @@ let draft: Blueprint | undefined,
   objectId = '',
   ruleId = '',
   questId = '',
+  catalogueItemId = '',
+  catalogueSkillId = '',
+  templateId = '',
   guardId = '',
   buildingId = '',
   recipeId = '',
@@ -164,11 +177,16 @@ export function refreshCreatorPreview(w: World) {
   }
 }
 export function creatorPanel(w: World, p: Player, tab: string) {
+  const items = worldItems(w),
+    skills = worldSkills(w);
   if (contextWorld !== w.id) {
     draft = undefined;
     objectId = '';
     ruleId = '';
     questId = '';
+    catalogueItemId = '';
+    catalogueSkillId = '';
+    templateId = '';
     guardId = '';
     buildingId = '';
     recipeId = '';
@@ -300,10 +318,12 @@ export function creatorPanel(w: World, p: Player, tab: string) {
       ]),
       c.weather,
     )}<button>Save scenery</button></form><h3>Remove individual landscape edits</h3><p>Removing a zone also removes behavior rules targeting that zone.</p>${w.zones.map((z) => `<p>${esc(z.kind)} · ${z.x}, ${z.z} ${button('Remove', 'deleteZone', z.id)}</p>`).join('')}${w.terrain.map((t, i) => `<p>Brush ${i + 1}: ${t.x}, ${t.z}, height ${t.height} ${button('Undo brush', 'deleteTerrain', String(i))}</p>`).join('')}`;
+  if (tab === 'Building templates') return templatesEditor(w, templateId);
+  if (tab === 'Catalogue') return catalogueEditor(w, catalogueItemId, catalogueSkillId);
   if (tab === 'Production') {
     const b =
       w.buildings.find((b) => b.id === recipeId && b.kind !== 'farm') ??
-      w.buildings.find((b) => b.production || recipes[b.recipe ?? '']);
+      w.buildings.find((b) => b.kind !== 'farm' && (b.production || recipes[b.recipe ?? '']));
     const recipe = b?.production ?? recipes[b?.recipe ?? ''];
     const rows = (side: 'inputs' | 'outputs') =>
       Array.from({ length: 8 }, (_, i) => {
@@ -320,7 +340,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
       'skill',
       skills.map((s) => [s, s]),
       recipe?.skill,
-    )}<details open><summary>Inputs</summary>${rows('inputs')}</details><details open><summary>Outputs</summary>${rows('outputs')}</details><button>Save production recipe</button></form>`;
+    )}<details open><summary>Inputs</summary>${rows('inputs')}</details><details open><summary>Outputs</summary>${rows('outputs')}</details><button>Save production recipe</button></form>${b ? diagnosticsHtml(w, b) : ''}`;
   }
   if (tab === 'Vehicles') {
     const v = { ...vehicles[vehicleSlot], ...w.vehicleTuning?.[vehicleSlot] };
@@ -344,6 +364,19 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     draft.parts.push(partSchema.parse({ shape: 'box' }));
   if (action === 'removePart' && draft) draft.parts.splice(Number(value), 1);
   if (action === 'object') objectId = value;
+  if (action === 'template') templateId = value;
+  if (action === 'deleteTemplate') {
+    const catalogue = structuredClone(w.catalogue ?? catalogueSchema.parse({}));
+    delete catalogue.templates[value];
+    send({ type: 'catalogue', catalogue });
+  }
+  if (action === 'catalogueItem') catalogueItemId = value;
+  if (action === 'catalogueSkill') catalogueSkillId = value;
+  if (action === 'deleteCatalogueItem' || action === 'deleteCatalogueSkill') {
+    const catalogue = structuredClone(w.catalogue ?? catalogueSchema.parse({}));
+    delete (action === 'deleteCatalogueItem' ? catalogue.items : catalogue.skills)[value];
+    send({ type: 'catalogue', catalogue });
+  }
   if (action === 'quest') questId = value;
   if (action === 'guard') guardId = value;
   if (action === 'deleteQuest') {
@@ -400,6 +433,7 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
+  if (form.id.startsWith('creator-catalogue-')) return catalogueForm(w, form);
   const c = structuredClone({ ...defaultCreator(), ...w.creator }),
     d = new FormData(form),
     str = (k: string) => String(d.get(k) ?? ''),

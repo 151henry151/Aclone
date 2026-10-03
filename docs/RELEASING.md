@@ -25,7 +25,9 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.32.1
+## Current upgrade: 0.33.0
+
+0.33.0 adds opt-in world catalogues, building templates and production diagnostics. Existing worlds retain their standard goods, prices and professions; no reset or new Puddlewick custom content is introduced. Definitions persist in existing world JSON.
 
 0.32.1 stabilizes browser verification without gameplay changes. The 0.32.0 feature release adds opt-in creator quests, action requirements and per-player Lua progress. Existing worlds receive empty quest/requirement lists; Lua progress resets on death by default. No existing character economy or property is reset.
 

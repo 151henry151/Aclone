@@ -1,3 +1,4 @@
+import { worldItems, worldSkills } from '../shared/world-catalogue';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import { items, skills, buildings } from '../shared/catalog';
@@ -12,9 +13,9 @@ const field = (label: string, key: string, value: unknown, type = 'text', extra 
   `<label>${esc(label)}<input name="${key}" type="${type}" value="${esc(value)}" ${extra}></label>`;
 const select = (label: string, key: string, options: [string, string][], value = '') =>
   `<label>${esc(label)}<select name="${key}">${options.map(([id, label]) => `<option value="${esc(id)}" ${id === value ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>`;
-const itemOptions: [string, string][] = [
+const itemOptions = (w: World): [string, string][] => [
   ['', 'Any / none'],
-  ...Object.entries(items).map(([id, i]): [string, string] => [id, i.name]),
+  ...Object.entries(worldItems(w)).map(([id, i]): [string, string] => [id, i.name]),
 ];
 function targets(w: World): [string, string][] {
   return [
@@ -24,7 +25,7 @@ function targets(w: World): [string, string][] {
     ...resourceNodes.map(
       (n) => [n.id, 'Gathering ground: ' + n.name + ' (' + n.id + ')'] as [string, string],
     ),
-    ...skills.map((s) => [s, 'Qualification: ' + s] as [string, string]),
+    ...worldSkills(w).map((s) => [s, 'Qualification: ' + s] as [string, string]),
     ...Object.entries(buildings).map(
       ([id, b]) => [id, 'Building type: ' + b.name] as [string, string],
     ),
@@ -40,6 +41,7 @@ function targetLabel(w: World, target: string) {
   );
 }
 export function questList(w: World, p: Player) {
+  const items = worldItems(w);
   return `<p>Follow objectives in order. Only actions after accepting count. Revised quests start fresh; each lists whether progress resets on death.</p>${
     (w.creator?.quests ?? [])
       .map((q) => {
@@ -60,11 +62,11 @@ export function questEditor(w: World, id: string) {
     { length: 8 },
     (_, i) => {
       const s = q?.steps[i];
-      return `<details ${i === 0 ? 'open' : ''}><summary>Objective ${i + 1}</summary>${select('Action', `event${i}`, [['', 'Unused'], ...objectives.map((s) => [s, s] as [string, string])], s?.event ?? (i === 0 ? 'gather' : ''))}${select('Target (optional)', `target${i}`, targets(w), s?.target ?? '')}${select('Item', `item${i}`, itemOptions, s?.item ?? '')}${field('Quantity', `quantity${i}`, s?.quantity ?? 1, 'number', 'min="1" max="10000"')}</details>`;
+      return `<details ${i === 0 ? 'open' : ''}><summary>Objective ${i + 1}</summary>${select('Action', `event${i}`, [['', 'Unused'], ...objectives.map((s) => [s, s] as [string, string])], s?.event ?? (i === 0 ? 'gather' : ''))}${select('Target (optional)', `target${i}`, targets(w), s?.target ?? '')}${select('Item', `item${i}`, itemOptions(w), s?.item ?? '')}${field('Quantity', `quantity${i}`, s?.quantity ?? 1, 'number', 'min="1" max="10000"')}</details>`;
     },
   ).join('')}<h3>Rewards</h3>${Array.from({ length: 8 }, (_, i) => {
     const r = Object.entries(q?.rewards ?? {})[i];
-    return `<details ${i === 0 ? 'open' : ''}><summary>Item reward ${i + 1}</summary>${select('Item', `reward${i}`, itemOptions, r?.[0] ?? '')}${field('Quantity', `amount${i}`, r?.[1] ?? 1, 'number', 'min="1" max="100"')}</details>`;
+    return `<details ${i === 0 ? 'open' : ''}><summary>Item reward ${i + 1}</summary>${select('Item', `reward${i}`, itemOptions(w), r?.[0] ?? '')}${field('Quantity', `amount${i}`, r?.[1] ?? 1, 'number', 'min="1" max="100"')}</details>`;
   }).join(
     '',
   )}${field('Reputation reward', 'kudos', q?.kudos ?? 1, 'number', 'min="0" max="20"')}<button>Save quest</button></form>${q ? `<button data-do="creator:deleteQuest" data-id="${esc(id)}">Remove quest</button>` : ''}`;
@@ -99,5 +101,5 @@ export function guardsEditor(w: World, id: string) {
     'action',
     ['trade', 'job', 'learn', 'build', 'interactObject'].map((s) => [s, s]),
     g?.action ?? 'trade',
-  )}${select('Target', 'target', targets(w), g?.target ?? '')}${select('Required qualification', 'skill', [['', 'None'], ...skills.map((s) => [s, s] as [string, string])], g?.skill ?? '')}${select('Required carried item', 'item', itemOptions, g?.item ?? '')}${field('Item quantity', 'quantity', g?.quantity ?? 1, 'number', 'min="1" max="1000"')}${field('Player variable (optional)', 'variable', g?.variable ?? '')}${field('Minimum variable value', 'minimum', g?.minimum ?? 1, 'number')}${field('Explain the restriction', 'message', g?.message ?? 'Complete the introduction first.')}<button>Save requirement</button></form>${g ? `<button data-do="creator:deleteGuard" data-id="${esc(id)}">Remove requirement</button>` : ''}`;
+  )}${select('Target', 'target', targets(w), g?.target ?? '')}${select('Required qualification', 'skill', [['', 'None'], ...worldSkills(w).map((s) => [s, s] as [string, string])], g?.skill ?? '')}${select('Required carried item', 'item', itemOptions(w), g?.item ?? '')}${field('Item quantity', 'quantity', g?.quantity ?? 1, 'number', 'min="1" max="1000"')}${field('Player variable (optional)', 'variable', g?.variable ?? '')}${field('Minimum variable value', 'minimum', g?.minimum ?? 1, 'number')}${field('Explain the restriction', 'message', g?.message ?? 'Complete the introduction first.')}<button>Save requirement</button></form>${g ? `<button data-do="creator:deleteGuard" data-id="${esc(id)}">Remove requirement</button>` : ''}`;
 }

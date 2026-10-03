@@ -1,3 +1,4 @@
+import { catalogueItemId, catalogueSkillId, worldItems } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { items, skills, vehicles } from './catalog.ts';
@@ -21,17 +22,14 @@ export const questSchema = z.object({
         item: z
           .string()
           .default('')
-          .refine((s) => !s || Object.hasOwn(items, s)),
+          .refine((s) => !s || catalogueItemId.safeParse(s).success),
         quantity: z.number().int().min(1).max(10000).default(1),
       }),
     )
     .min(1)
     .max(8),
   rewards: z
-    .record(
-      z.string().refine((s) => Object.hasOwn(items, s)),
-      z.number().int().min(1).max(100),
-    )
+    .record(catalogueItemId, z.number().int().min(1).max(100))
     .refine((v) => Object.keys(v).length <= 8)
     .default({}),
   kudos: z.number().int().min(0).max(20).default(0),
@@ -43,11 +41,11 @@ export const guardSchema = z.object({
   skill: z
     .string()
     .default('')
-    .refine((s) => !s || skills.includes(s)),
+    .refine((s) => !s || catalogueSkillId.safeParse(s).success),
   item: z
     .string()
     .default('')
-    .refine((s) => !s || Object.hasOwn(items, s)),
+    .refine((s) => !s || catalogueItemId.safeParse(s).success),
   quantity: z.number().int().min(1).max(1000).default(1),
   variable: z.string().max(40).default(''),
   minimum: z.number().finite().min(-1e12).max(1e12).default(1),
@@ -106,6 +104,7 @@ export function questEvent(
   }
 }
 export function questAction(w: World, p: Player, a: Action) {
+  const items = worldItems(w);
   const q = w.creator?.quests?.find((q) => q.id === a.quest);
   if (!q) throw Error('Quest is no longer available');
   const state = currentProgress(p, q);

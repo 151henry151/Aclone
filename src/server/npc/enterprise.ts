@@ -229,7 +229,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         b.capacity - (b.stock[item] ?? 0),
         seller.sell[item] ? Math.floor(Math.max(0, p.cash - living) / seller.sell[item]) : 100,
       );
-      while (n > 0 && !canCarry(p, item, n)) n--;
+      while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n)
         add(
           `Supply my ${b.name}: buy and deliver ${n} ${item} for ${n * seller.sell[item]}; replenish six batches, protect meals.`,
@@ -260,7 +260,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
       );
-      while (n > 0 && !canCarry(p, item, n)) n--;
+      while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n)
         add(
           `Sell my output: collect ${n} ${item} at ${b.name} and deliver to ${buyer.name} for ${n * buyer.buy[item]}; replenish business capital afterward.`,

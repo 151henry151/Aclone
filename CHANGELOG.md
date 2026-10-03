@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-10-03
+
+### Added
+
+- Define world-local goods, professions with prerequisites and tuition, and reusable building templates through creator forms. Custom goods participate in trade, cargo, consumption, sheltered feeding, estates, production and quest rewards; designs retain their definitions without changing other worlds.
+- Inspect production-chain costs, margins, missing buying prices and available local suppliers in the production editor. Prevent deleting definitions still used by players, buildings or rules.
+
 ## [0.32.1] - 2026-10-03
 
 ### Fixed

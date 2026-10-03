@@ -174,7 +174,7 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
           shop.stock[item],
           shop.sell[item] ? Math.floor(p.cash / shop.sell[item]) : 20,
         );
-        while (n > 0 && !canCarry(p, item, n)) n--;
+        while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
           return visit(shop, [
             action({ type: 'trade', building: shop.id, item, quantity: n, direction: 'buy' }),

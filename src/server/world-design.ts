@@ -1,20 +1,25 @@
+import {
+  catalogueSchema,
+  catalogueItemId,
+  catalogueSkillId,
+  worldItems,
+  validateRecipe,
+  setCatalogue,
+} from '../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { creatorSchema, defaultCreator, validateCreator } from '../shared/creator.ts';
 import { act, addPlayer, makeBuilding } from '../shared/simulation.ts';
 import { buildings as catalog, items, skills } from '../shared/catalog.ts';
-import type { World } from '../shared/types.ts';
+import type { World, Player } from '../shared/types.ts';
 const coordinate = z.number().min(-250).max(250);
-const stock = z.record(
-  z.string().refine((k) => Object.hasOwn(items, k)),
-  z.number().int().min(0).max(100000000),
-);
+const stock = z.record(catalogueItemId, z.number().int().min(0).max(100000000));
 const recipe = z
   .object({
     inputs: stock,
     outputs: stock,
     seconds: z.number().int().min(10).max(86400),
-    skill: z.string().refine((s) => skills.includes(s)),
+    skill: catalogueSkillId,
     tier: z.number().int().min(0).max(10),
   })
   .refine(
@@ -25,6 +30,7 @@ const recipe = z
       [...Object.values(r.inputs), ...Object.values(r.outputs)].every((n) => n >= 1 && n <= 1000),
   );
 const designSchema = z.object({
+  catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
   format: z.literal('aclone-world-design'),
   version: z.literal(1),
   settings: z
@@ -56,6 +62,10 @@ const designSchema = z.object({
       z.object({
         id: z.string().regex(/^[\w-]{1,64}$/),
         kind: z.string().refine((v) => Object.hasOwn(catalog, v)),
+        templateId: z
+          .string()
+          .regex(/^custom:[a-z][a-z0-9_-]{0,31}$/)
+          .optional(),
         name: z.string().min(1).max(64),
         x: coordinate,
         z: coordinate,
@@ -112,6 +122,7 @@ export function exportDesign(w: World) {
         ];
     }
   return {
+    catalogue: w.catalogue ?? catalogueSchema.parse({}),
     format: 'aclone-world-design',
     version: 1,
     tier: w.tier,
@@ -130,6 +141,7 @@ export function exportDesign(w: World) {
         z,
         rotation,
         creatorModel,
+        templateId,
         style,
         buy,
         sell,
@@ -144,6 +156,7 @@ export function exportDesign(w: World) {
         z,
         rotation,
         creatorModel,
+        templateId,
         style,
         buy,
         sell,
@@ -162,6 +175,16 @@ export function applyDesign(w: World, input: unknown) {
     new Set(d.zones.map((z) => z.id)).size !== d.zones.length
   )
     throw Error('Duplicate layout IDs');
+  w.creator = d.creator;
+  setCatalogue(w, { id: w.owner } as Player, d.catalogue);
+  for (const b of d.buildings)
+    if (b.templateId && !d.catalogue.templates[b.templateId])
+      throw Error('Unknown building template');
+  for (const b of d.buildings) {
+    if (b.production) validateRecipe(w, b.production);
+    for (const id of [...Object.keys(b.buy ?? {}), ...Object.keys(b.sell ?? {})])
+      if (!Object.hasOwn(worldItems(w), id)) throw Error('Unknown world item: ' + id);
+  }
   w.terrain = d.terrain;
   w.zones = d.zones;
   w.tier = d.tier;

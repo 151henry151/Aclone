@@ -166,3 +166,5 @@ At public Harbour stores, open **Parish supply orders** to see funded maintenanc
 ## Creator quests
 
 World / F9 → **Quests** lists a world's stories and objectives. Accept one, follow its steps in order, then collect the reward with enough cargo space. Each quest states whether death resets it. World creators can also require items, qualifications or progress before allowing certain actions; a rejected action explains what is missing.
+
+World creators may add local goods, courses and building designs. Schools show each course's actual price, duration and prerequisites. Custom food/drink can be consumed or stocked at home like standard supplies; cargo weight and production rules still apply. These definitions belong to that world only.

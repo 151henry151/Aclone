@@ -109,7 +109,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         20,
         cost ? Math.floor(Math.max(0, p.cash - 8000) / cost) : 20,
       );
-      while (quantity > 0 && !canCarry(p, order.item, quantity)) quantity--;
+      while (quantity > 0 && !canCarry(p, order.item, quantity, w)) quantity--;
       if (quantity > 0)
         add(
           'procurement',
@@ -159,7 +159,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     if (
       quantity > 0 &&
       (p.inventory[item] ?? 0) < Math.max(needed, 3) &&
-      canCarry(p, item, quantity)
+      canCarry(p, item, quantity, w)
     )
       add(
         'supplies',
@@ -183,7 +183,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         buyer.capacity - (buyer.stock[item] ?? 0),
         b.sell[item] ? Math.floor(Math.max(0, p.cash - 12000) / b.sell[item]) : 10,
       );
-      while (n > 0 && !canCarry(p, item, n)) n--;
+      while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n > 0)
         add(
           'trade',
@@ -264,7 +264,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       for (const [item, n] of Object.entries(b.stock))
         if (n > 0) {
           const quantity = Math.min(n, 5);
-          if (canCarry(p, item, quantity))
+          if (canCarry(p, item, quantity, w))
             add(
               'storage',
               `Withdraw ${quantity} ${item} from my ${b.name}.`,

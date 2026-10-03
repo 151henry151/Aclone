@@ -1,3 +1,4 @@
+import { worldItems, worldBuildings } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recordLife } from './reports.ts';
 import { buildings, items } from './catalog.ts';
@@ -7,7 +8,7 @@ export const PROPERTY_YEAR = DAY_SECONDS * 365;
 /** Catalogue valuation cannot be inflated by editing the building's own shop quotes. */
 export function propertyQuote(w: World, b: Building) {
   const goods = Object.entries(b.stock).reduce(
-    (n, [item, count]) => n + Math.max(0, count) * (items[item]?.price ?? 0),
+    (n, [item, count]) => n + Math.max(0, count) * (worldItems(w)[item]?.price ?? 0),
     0,
   );
   const equity = goods + Math.max(0, b.investment);
@@ -39,7 +40,7 @@ export function releaseEstate(w: World, b: Building, cause = 'death') {
     });
   delete b.owner;
   b.forSale = false;
-  b.estate = { since: w.time, base: buildings[b.kind]?.price ?? b.price };
+  b.estate = { since: w.time, base: worldBuildings(w)[b.templateId ?? b.kind]?.price ?? b.price };
 }
 /** Only set host-parish defaults once; future world-owner edits survive reload. */
 export function migrateEstates(w: World) {

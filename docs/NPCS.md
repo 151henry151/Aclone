@@ -208,3 +208,5 @@ Jev receives a bounded, rotating shortlist with intact costs instead of hundreds
 Credit/debt appears in private observations. Ordinary loan actions are available, with conservative working-capital quotes for profitable owned businesses and repayment choices that protect living money. Earnings forecasts are estimates, not promises; staffing, travel, changing stock and buyers still matter. Human-like decision quality and long-term profitability require live playtesting; no paid model trial was part of this upgrade.
 
 The always-present player guide has a 12,500-character fundamentals budget. Additional FAQ/economy details remain searchable; expanding documentation does not automatically expand every model call.
+
+In custom worlds, observations include local course definitions and cargo checks use local item weights. Existing adaptive plans can handle ordinary custom-item trade/production actions, but arbitrary creator quests or scripted requirements are not guaranteed to produce useful autonomous plans.

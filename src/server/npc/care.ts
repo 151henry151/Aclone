@@ -49,7 +49,7 @@ export function carePlan(w: World, p: Player): Step[] {
       .flatMap((b) =>
         food.flatMap((item) => {
           const own = b.owner === p.id;
-          if (!(availableSupply(w, b, item) > 0) || !canCarry(p, item, 1)) return [];
+          if (!(availableSupply(w, b, item) > 0) || !canCarry(p, item, 1, w)) return [];
           const price = own ? 0 : b.sell[item];
           if (!Number.isSafeInteger(price) || price < 0 || price > p.cash) return [];
           return [
