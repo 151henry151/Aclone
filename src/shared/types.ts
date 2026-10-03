@@ -165,6 +165,8 @@ export interface World {
   tradePricing?: 1 | 2 | 3;
   /** Default Puddlewick building types already supplied; never replenish on restart. */
   parishServices?: string[];
+  /** One-time retirement of excess public starter types; purchased property is protected. */
+  parishRetired?: string[];
   schemaVersion: 1;
   id: string;
   name: string;

@@ -374,8 +374,8 @@ normal sign-in. See [travelling between galaxies](GALAXIES.md#player-journey).
 
 ## Puddlewick services
 
-Version 0.21.0 fills out the default, server-owned Puddlewick with all 40 current
-catalogue building types. This includes a **Stonemason** (3 stone → 2 stone blocks)
+Version 0.21.2 restores the original starter roster, minus the public council,
+and limits automatic additions to a **Stonemason** (3 stone → 2 stone blocks)
 and **Shoreline waterworks** (1 fuel → 12 water), each with a ten-minute batch at
 default production speed. Find them with **M** or the Parish directory. Locations
 are selected around existing buildings and roads; the waterworks has a dry
@@ -386,14 +386,25 @@ capital. Learn the matching skill at school (**mason** or **pump operator**) and
 take a job there for full-speed production. Supply inputs through ordinary trade;
 unowned businesses can be purchased and managed. Existing businesses are not
 restocked or refinanced by this update, including player-owned mills and farms.
-Hotels and B&Bs need an owner with the innkeeper skill to open bookings. Catalogue
-objects such as noticeboards, portals and turrets are also present; adding them
-does not implement any previously unfinished special behavior.
+Other production businesses, hotels/B&Bs and special catalogue objects are left
+for players to build as the parish develops. Building rules, skills and civilization
+tiers still apply. Existing purchased properties remain in place.
 
-After a pull/rebuild/restart, the server adds missing types to an existing
-Puddlewick once. It preserves player properties, stock, prices and wages, and
+After a pull/rebuild/restart, the server adds either of these two services if
+missing and not previously supplied. It also removes excess automatic additions
+from 0.21.0 and the original public council once, where still unowned or treasury-owned. It preserves player properties, stock, prices and wages, and
 avoids roads, gathering grounds, activity areas, parked characters, no-build
 zones and custom solid scenery. Completed additions are saved: later demolition
 or depleted stock does not cause a replacement or refill. If edited terrain or
 occupied land leaves no suitable site, that type stays pending until a future
 restart after space becomes available. Other worlds are not expanded.
+
+The cleanup removes public starter noticeboards, tool workshops, wineries,
+furniture workshops, B&Bs, rare-earth mines, electronics works, brick kilns,
+the council, iron mines, tea houses, curious trees, turrets, refineries, concrete
+works, kitchens, roasteries and breweries. It also undoes the other unintended
+0.21.0 additions (warehouse, portal, supply cache, composting yard, shipyard and
+hotel) to retain only the two approved additions. Purchased buildings and custom
+plots are protected, even if a player later relinquishes them. An active task or
+occupied building defers removal until a later restart; jobs at removed buildings
+are cleared. No catalogue type is deleted or banned from future construction.

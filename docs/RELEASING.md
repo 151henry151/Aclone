@@ -4,6 +4,28 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.21.2
+
+Back up the database, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, restart and refresh browser clients. The cleanup
+runs automatically before players connect; no new configuration is required.
+Production deployment remains operator-managed.
+
+Only the default server-owned Puddlewick is affected. The automatic initializer
+now adds just the stonemason and shoreline waterworks. Excess public additions
+from 0.21.0 and the original public council are retired once. Purchased properties
+and custom-built plots remain, including their prices, stock and investment.
+Occupied buildings and active tasks defer removal to a later restart. Jobs at
+removed workplaces are cleared; removed investment is recorded in the ledger.
+All building types remain available for later player construction. See the exact
+[cleanup scope](PLAYING.md#puddlewick-services).
+
+Seventeen focused migration, town and waterworks tests, the browser roster and
+production check, TypeScript, formatting and the `/aclone` production build pass.
+The separate 0.21.1 NPC fix passed all 299 automated tests before this cleanup.
+To undo removed starter properties, restore the pre-upgrade database along with
+the old code; a code rollback alone cannot restore removed stock or capital.
+
 ## Deploying 0.21.1
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

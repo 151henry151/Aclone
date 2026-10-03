@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { buildings } from '../../src/shared/catalog.ts';
 
-test('default Puddlewick exposes every building on the map and production at the new services', async ({
+test('default Puddlewick exposes the intended starter roster and production at the two new services', async ({
   page,
 }) => {
   const dir = mkdtempSync(join(tmpdir(), 'aclone-parish-browser-'));
@@ -30,8 +30,12 @@ test('default Puddlewick exposes every building on the map and production at the
     await page.keyboard.press('m');
     const map = page.getByRole('dialog', { name: 'Parish map.', exact: true });
     await expect(map).toBeVisible();
-    for (const definition of Object.values(buildings))
+    for (const definition of w.buildings)
       await expect(map.getByRole('button', { name: definition.name, exact: true })).toBeVisible();
+    for (const kind of ['town', 'workshop', 'hotel', 'brewery', 'factory'])
+      await expect(
+        map.getByRole('button', { name: buildings[kind].name, exact: true }),
+      ).toHaveCount(0);
     for (const kind of ['mason', 'waterworks']) {
       await map.getByRole('button', { name: buildings[kind].name, exact: true }).click();
       const panel = page.getByRole('dialog', { name: buildings[kind].name, exact: true });

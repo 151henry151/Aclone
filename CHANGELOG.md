@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.21.2] - 2026-10-02
+
+### Fixed
+
+- Restore Puddlewick’s intended starter roster: automatically add only the stonemason and shoreline waterworks. Retire the excess unowned/public buildings introduced by 0.21.0 and the public council while keeping every catalogue type available for players to build later.
+- Preserve purchased and custom-built properties during the one-time cleanup, defer occupied buildings or running tasks, clear jobs at removed workplaces and account for retired public investment without replenishing stock on restart.
+
 ## [0.21.1] - 2026-10-02
 
 ### Fixed

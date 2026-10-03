@@ -10,7 +10,11 @@ import {
   productionInterval,
   makeBuilding,
 } from '../src/shared/simulation.ts';
-import { completePuddlewick } from '../src/server/parish-services.ts';
+import {
+  completePuddlewick,
+  starterServices,
+  retiredStarterTypes,
+} from '../src/server/parish-services.ts';
 import { waterworksSite } from '../src/shared/shoreline.ts';
 import { roadDistance, townRoads } from '../src/shared/town.ts';
 import { buildingBounds, buildingPlan } from '../src/shared/building-shapes.ts';
@@ -21,11 +25,18 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const parish = () => createWorld('puddlewick', 'Puddlewick', 'server');
-test('Puddlewick gains every missing catalogue building with usable shoreline waterworks and funded production', () => {
+const wanted = () =>
+  new Set([
+    ...parish()
+      .buildings.filter((b) => b.kind !== 'town')
+      .map((b) => b.kind),
+    ...starterServices,
+  ]);
+test('Puddlewick adds only the approved services and removes the public council', () => {
   const w = parish(),
-    originals = structuredClone(w.buildings);
+    originals = structuredClone(w.buildings.filter((b) => b.kind !== 'town'));
   assert.equal(completePuddlewick(w), true);
-  assert.deepEqual(new Set(w.buildings.map((b) => b.kind)), new Set(Object.keys(buildings)));
+  assert.deepEqual(new Set(w.buildings.map((b) => b.kind)), wanted());
   assert.deepEqual(w.buildings.slice(0, originals.length), originals);
   const added = w.buildings.slice(originals.length);
   for (const b of added) {
@@ -78,7 +89,7 @@ test('upgrade preserves owned businesses, survives reload and does not respawn d
   const mason = makeBuilding('player-mason', 'mason', -192, 48);
   mason.owner = 'hank';
   w.buildings.push(mason);
-  const before = structuredClone(w.buildings);
+  const before = structuredClone(w.buildings.filter((b) => b.kind !== 'town'));
   completePuddlewick(w);
   assert.deepEqual(w.buildings.slice(0, before.length), before);
   assert.equal(w.buildings.filter((b) => b.kind === 'mason').length, 1);
@@ -104,7 +115,7 @@ test('parish completion respects occupied plots, parked players, no-build zones 
   p.z = 48;
   w.zones.push({ id: 'reserved', kind: 'noBuild', x: 0, z: -160, radius: 65 });
   completePuddlewick(w);
-  assert.equal(new Set(w.buildings.map((b) => b.kind)).size, Object.keys(buildings).length);
+  assert.equal(new Set(w.buildings.map((b) => b.kind)).size, wanted().size);
   for (const b of w.buildings.filter((b) => b.id.startsWith('parish-'))) {
     assert.ok(Math.hypot(b.x - p.x, b.z - p.z) > 16);
     assert.ok(Math.hypot(b.x, b.z + 160) > 65);
@@ -144,7 +155,7 @@ test('server startup upgrades the saved live parish and persists the completion 
     const app = await createApp({ dataDir: dir, port: 0 });
     try {
       const live = app.worlds.get('puddlewick')!;
-      assert.deepEqual(new Set(live.buildings.map((b) => b.kind)), new Set(Object.keys(buildings)));
+      assert.deepEqual(new Set(live.buildings.map((b) => b.kind)), wanted());
       assert.equal(live.buildings.find((b) => b.kind === 'mill')!.buy.wheat, 600);
       const saved = app.store.loadWorlds().find((entry) => entry.world.id === 'puddlewick')!.world;
       assert.deepEqual(saved.parishServices, live.parishServices);
@@ -155,4 +166,85 @@ test('server startup upgrades the saved live parish and persists the completion 
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+function previousParish() {
+  const w = parish();
+  for (const kind of Object.keys(buildings)) {
+    if (w.buildings.some((b) => b.kind === kind)) continue;
+    const b = makeBuilding('parish-' + kind, kind, -192, 48);
+    if (kind === 'waterworks') {
+      b.x = -216;
+      b.z = 144;
+      b.rotation = Math.PI;
+    }
+    b.investment = 22000;
+    w.buildings.push(b);
+  }
+  w.parishServices = Object.keys(buildings);
+  return w;
+}
+test('retire all accidental public additions once, preserve purchased and custom properties, and clear removed jobs', () => {
+  const w = previousParish();
+  const p = addPlayer(w, 'worker', 'Worker');
+  p.job = 'parish-brewery';
+  p.activeUntil = 600;
+  const carpenter = w.buildings.find((b) => b.kind === 'carpenter')!;
+  carpenter.owner = p.id;
+  carpenter.stock.wood = 82;
+  carpenter.investment = 77231;
+  const owned = structuredClone(carpenter);
+  const custom = makeBuilding('custom-notice', 'notice', 10, 30);
+  w.buildings.push(custom);
+  const initialCash = p.cash;
+  completePuddlewick(w);
+  assert.deepEqual(
+    w.buildings.find((b) => b.id === carpenter.id),
+    owned,
+  );
+  assert.deepEqual(
+    w.buildings.find((b) => b.id === custom.id),
+    custom,
+  );
+  for (const kind of retiredStarterTypes)
+    if (kind !== 'carpenter' && kind !== 'notice')
+      assert.ok(!w.buildings.some((b) => b.kind === kind), kind);
+  assert.equal(p.job, undefined);
+  assert.equal(p.activeUntil, 0);
+  assert.equal(p.cash, initialCash);
+  assert.equal(
+    w.ledger
+      .filter((e) => e.reason === 'retired parish starter building')
+      .reduce((n, e) => n + e.amount, 0),
+    250000 + (retiredStarterTypes.length - 2) * 22000,
+  );
+  const store = new Store(':memory:');
+  try {
+    store.saveWorld(w);
+    const restored = store.loadWorlds()[0].world;
+    assert.equal(completePuddlewick(restored), false);
+    assert.deepEqual(restored, w);
+    // Do not delete a protected property if its owner subsequently relinquishes it.
+    delete restored.buildings.find((b) => b.id === carpenter.id)!.owner;
+    assert.equal(completePuddlewick(restored), false);
+    assert.ok(restored.buildings.some((b) => b.id === carpenter.id));
+  } finally {
+    store.close();
+  }
+});
+test('cleanup defers a building with an active task and leaves player-made worlds untouched', () => {
+  const w = previousParish(),
+    p = addPlayer(w, 'worker', 'Worker');
+  p.task = { kind: 'craft', building: 'parish-workshop', end: 10 };
+  completePuddlewick(w);
+  assert.ok(w.buildings.some((b) => b.kind === 'workshop'));
+  assert.ok(!w.parishRetired?.includes('workshop'));
+  delete p.task;
+  completePuddlewick(w);
+  assert.ok(!w.buildings.some((b) => b.kind === 'workshop'));
+  const custom = previousParish();
+  custom.owner = 'player';
+  const before = structuredClone(custom);
+  assert.equal(completePuddlewick(custom), false);
+  assert.deepEqual(custom, before);
 });

@@ -6,11 +6,11 @@
 
 Aclone is an independent, open-source browser game inspired by the economy and vehicle playgrounds of _A tractor / The Universal_. Run a business, drive a tractor, employ your neighbours, play Hornball, or make a world with your own rules. The code, models, material textures and synthesized sounds are original. Texture provenance and generation prompts are documented in [the art guide](docs/ART.md).
 
-**Version 0.21.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.21.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 **Fixed in 0.21.1:** NPCs can queue a concrete request to learn a workplace’s skill and take its job, with verified training/employment progress. Ready agreements take priority over optional errands, and chat distinguishes a queued request from actual action. See [NPC agreements](docs/NPCS.md#agreements-made-in-chat).
 
-**New in 0.21.0:** the default Puddlewick parish gains its missing building types, including stone-block production and a shoreline water supply. Existing businesses keep their owners and settings. See [Puddlewick services](docs/PLAYING.md#puddlewick-services) for operation and [upgrade instructions](docs/RELEASING.md#deploying-0210).
+**Fixed in 0.21.2:** Puddlewick returns to its intended starter roster, keeping the stonemason and shoreline waterworks. Excess automatic additions and the public council are removed once where still public or unowned; purchased and custom-built businesses are preserved. All building types remain available for later player construction. See [Puddlewick services](docs/PLAYING.md#puddlewick-services) for operation and [upgrade instructions](docs/RELEASING.md#deploying-0212).
 
 **New in 0.20.0:** a world creator studio with custom models, interactive objects, visual behavior rules, arena configuration, production editing and reusable designs; plus opt-in travel between self-hosted galaxies. See [World building](docs/WORLD_BUILDING.md) and [Connecting galaxies](docs/GALAXIES.md) for usage, hosting and explicit limits. See [upgrade instructions](docs/RELEASING.md#deploying-0200).
 
