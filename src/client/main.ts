@@ -1392,7 +1392,7 @@ function editorWindow() {
               : tab === 'Script'
                 ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart, TaskComplete, ObjectInteract, ZoneEnter, Timer. Functions: on, announce, getvar, setvar, kudos, heal, needs, give, teleport, score, object_visible, player_value. See the World Building and Scripting guides for examples. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
                 : tab === 'Assets'
-                  ? `<p>Upload original PNG, JPEG, MP3 or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. GLB: static, embedded media only, up to 128 mesh primitives; no extensions or animations. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · GLB</a>`)).join('')}</div>`
+                  ? `<p>Upload original PNG, JPEG, MP3, OBJ or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. OBJ: static faces, up to 50,000 triangles; select a PNG/JPEG texture atlas in Workshop. GLB: static, embedded media only, up to 128 mesh primitives; no extensions or animations. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb,.obj" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · ${a.type === 'model/obj' ? 'OBJ' : 'GLB'}</a>`)).join('')}</div>`
                   : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
                       .slice(-25)
                       .reverse()
@@ -1812,7 +1812,11 @@ app.addEventListener('submit', async (e) => {
         method: 'POST',
         headers: {
           authorization: 'Bearer ' + token,
-          'content-type': file.type || 'model/gltf-binary',
+          'content-type': /\.obj$/i.test(file.name)
+            ? 'model/obj'
+            : /\.glb$/i.test(file.name)
+              ? 'model/gltf-binary'
+              : file.type,
           'x-asset-name': encodeURIComponent(file.name),
         },
         body: file,

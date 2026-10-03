@@ -95,6 +95,7 @@ export function exportDesign(w: World) {
   for (const m of creator.models)
     if (m.asset) {
       delete m.asset;
+      delete m.texture;
       if (!m.parts.length)
         m.parts = [
           {

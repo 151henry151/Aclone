@@ -501,8 +501,9 @@ export async function createApp(options: AppOptions) {
           'image/jpeg': '.jpg',
           'audio/mpeg': '.mp3',
           'model/gltf-binary': '.glb',
+          'model/obj': '.obj',
         };
-        if (!types[type]) throw Error('Only PNG, JPEG, MP3 and GLB files supported');
+        if (!types[type]) throw Error('Only PNG, JPEG, MP3, OBJ and GLB files supported');
         if (
           type === 'image/png' &&
           !buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
@@ -546,7 +547,7 @@ export async function createApp(options: AppOptions) {
       }
       if (path.startsWith('/api/')) return json(res, 404, { error: 'Endpoint not found' });
       if (path.startsWith('/world-assets/')) {
-        if (!/^\/world-assets\/[a-f0-9]{64}\.(png|jpg|mp3|glb)$/.test(path))
+        if (!/^\/world-assets\/[a-f0-9]{64}\.(png|jpg|mp3|glb|obj)$/.test(path))
           return json(res, 404, { error: 'Asset not found' });
         const file = join(dataDir, 'assets', path.split('/').at(-1)!),
           buf = await readFile(file);
@@ -931,6 +932,7 @@ function mime(path: string) {
         '.jpg': 'image/jpeg',
         '.mp3': 'audio/mpeg',
         '.glb': 'model/gltf-binary',
+        '.obj': 'model/obj',
         '.svg': 'image/svg+xml',
         '.json': 'application/json',
       } as Record<string, string>

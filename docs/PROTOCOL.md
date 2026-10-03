@@ -11,7 +11,7 @@ The protocol is a development API and may change before 1.0. All endpoints share
 - `GET /api/galaxy`: systems, ships and public world registry.
 - `POST /api/worlds` (authenticated), `{ "name": "My parish", "template":
 "economy" }`: create a world. Templates: economy, combat, playground.
-- `POST /api/assets/WORLD_ID` (owner): raw PNG/JPEG/MP3/GLB bytes and matching
+- `POST /api/assets/WORLD_ID` (owner): raw PNG/JPEG/MP3/GLB/OBJ bytes and matching
   Content-Type. Optional percent-encoded `X-Asset-Name`. Maximum 2 MiB, 32 assets.
 - `GET /api/ledger/WORLD_ID` (owner): latest 10,000 persisted money entries.
 
@@ -144,3 +144,5 @@ Optional federation exposes `GET /api/federation` (public descriptor/destination
 ## Bank loans
 
 `loan` actions require proximity to `building` (a bank). `operation: "borrow"` includes integer `amount`, `months` (6/12/24/36/60), optional `collateral` building ID, quoted numeric `apr` and `payment`, boolean `accepted: true`, and optional boolean `autoPay`. The server rechecks eligibility and rejects stale terms. `operation: "repay"` takes `loan` ID and integer `amount`; `operation: "autopay"` takes `loan` ID and boolean `enabled`. Quotes use `shared/loans.ts`. Credit and loan details are private to the pilot; public buildings expose only their collateral lien reference.
+
+OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally references an image asset in the same world and is valid only with an OBJ `asset`. No OBJ/MTL filenames resolve to server files or third-party URLs.

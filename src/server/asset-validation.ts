@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { parseObj } from '../shared/obj.ts';
 /** Only self-contained, bounded visual media may be rendered as world objects. */
 export function validateVisualAsset(buf: Buffer, type: string) {
   const dimensions = (width: number, height: number) => {
@@ -34,6 +35,10 @@ export function validateVisualAsset(buf: Buffer, type: string) {
       pos += len + 2;
     }
     if (!found) throw Error('Unsupported or malformed JPEG');
+  }
+  if (type === 'model/obj') {
+    parseObj(new TextDecoder('utf-8', { fatal: true }).decode(buf));
+    return;
   }
   if (type !== 'model/gltf-binary') return;
   if (

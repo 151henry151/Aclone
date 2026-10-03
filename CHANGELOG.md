@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-03
+
+### Added
+
+- Upload static Wavefront OBJ models and assign PNG/JPEG UV texture atlases in Workshop. Visitors load and cache visuals automatically, with visible placeholders during download; server validation bounds geometry and prevents external material/file loading.
+
 ## [0.27.3] - 2026-10-03
 
 ### Fixed

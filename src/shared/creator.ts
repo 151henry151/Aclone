@@ -58,6 +58,7 @@ export const blueprintSchema = z
     name,
     parts: z.array(partSchema).max(32).default([]),
     asset: z.string().max(64).optional(),
+    texture: z.string().max(64).optional(),
     width: z.number().min(0.2).max(60).default(4),
     height: z.number().min(0.2).max(60).default(4),
     depth: z.number().min(0.2).max(60).default(4),
@@ -138,10 +139,18 @@ export function validateCreator(w: World, input: unknown) {
       m.asset &&
       !w.assets.some(
         (a) =>
-          a.id === m.asset && ['image/png', 'image/jpeg', 'model/gltf-binary'].includes(a.type),
+          a.id === m.asset &&
+          ['image/png', 'image/jpeg', 'model/gltf-binary', 'model/obj'].includes(a.type),
       )
     )
       throw Error('Choose a visual asset uploaded to this world');
+  for (const m of c.models)
+    if (
+      m.texture &&
+      (!w.assets.some((a) => a.id === m.asset && a.type === 'model/obj') ||
+        !w.assets.some((a) => a.id === m.texture && ['image/png', 'image/jpeg'].includes(a.type)))
+    )
+      throw Error('OBJ textures must be PNG/JPEG assets uploaded to this world');
   const models = new Set(c.models.map((m) => m.id));
   for (const o of c.objects)
     if (!models.has(o.model)) throw Error('Object refers to a missing model');
