@@ -1,3 +1,4 @@
+import { productionReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { refuelRecipientReady } from '../shared/player-aid.ts';
 import {
@@ -17,8 +18,10 @@ import {
 export function publicBuildings(w: World) {
   const crafting = craftingBuildings(w);
   return w.buildings.map((building) => {
+    const { accounts: _privateAccounts, ...publicBuilding } = building;
     const b = {
-      ...building,
+      ...publicBuilding,
+      productionStatus: productionReport(w, building),
       ownerName: building.owner ? w.players[building.owner]?.name : undefined,
       operating: productionActivity(w, building, crafting),
       efficiency:
@@ -45,6 +48,13 @@ export function publicBuildings(w: World) {
 export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
+    departure: undefined,
+    statements: Object.fromEntries(
+      w.buildings
+        .filter((b) => b.owner === p.id || p.authority >= 20)
+        .filter((b) => b.accounts)
+        .map((b) => [b.id, b.accounts]),
+    ),
     engineRunning: motorRunning(w, p),
     roomPantries: Object.fromEntries(
       w.buildings

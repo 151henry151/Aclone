@@ -219,7 +219,7 @@ export function foreclose(w: World, p: Player, l: Loan, at = w.time) {
     : undefined;
   l.status = b ? 'foreclosed' : 'default';
   if (b) {
-    releaseEstate(w, b);
+    releaseEstate(w, b, 'loan foreclosure');
     b.estate!.since = at;
     if (p.home === b.id) p.atHome = false;
     if (b.lodging) b.lodging.open = false;

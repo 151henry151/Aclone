@@ -1,3 +1,4 @@
+import { cashFlow } from '../../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import { lifeBriefing } from './strategy.ts';
@@ -86,6 +87,16 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
   ]);
   return {
     characterFacts: characterFacts(w, p),
+    verifiedHistory: (p.history ?? []).slice(-4),
+    businessResults: selected
+      .filter((b) => b.owner === p.id && b.accounts)
+      .map((b) => ({
+        building: b.id,
+        since: b.accounts!.since,
+        operatingCashFlow: cashFlow(b.accounts!),
+        batches: b.accounts!.batches,
+        produced: b.accounts!.produced,
+      })),
     employmentOptions: selected.flatMap((b) => {
       const recipe = b.production ?? recipes[b.recipe ?? ''];
       if (!recipe || b.owner === p.id || b.construction) return [];

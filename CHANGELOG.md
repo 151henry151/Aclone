@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-03
+
+### Added
+
+- Add private return reports, personal event history and business statements covering sales, materials, wages, taxes, capital and production. Diagnose shortages from live server state, retain item/quantity details in transaction records, and give NPCs verified recent history and business results.
+
 ## [0.29.1] - 2026-10-03
 
 ### Fixed

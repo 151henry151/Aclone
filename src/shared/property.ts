@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { recordLife } from './reports.ts';
 import { buildings, items } from './catalog.ts';
 import { DAY_SECONDS } from './environment.ts';
 import type { Building, World } from './types.ts';
@@ -27,7 +28,15 @@ export function propertyQuote(w: World, b: Building) {
     total: Math.max(1, Math.round((base + premium) * discount)),
   };
 }
-export function releaseEstate(w: World, b: Building) {
+export function releaseEstate(w: World, b: Building, cause = 'death') {
+  const previous = b.owner && w.players[b.owner];
+  if (previous)
+    recordLife(w, previous, {
+      kind: 'estate',
+      cause,
+      building: b.id,
+      text: `${b.name} became unclaimed after ${cause}. ${w.settings.retainEstateContents ? 'Contents and investment remain with the building.' : 'Estate contents follow this world’s death rules.'}`,
+    });
   delete b.owner;
   b.forSale = false;
   b.estate = { since: w.time, base: buildings[b.kind]?.price ?? b.price };

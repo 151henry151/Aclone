@@ -448,3 +448,22 @@ test('restart during receipt wording delivers the saved acknowledgement once wit
     store.close();
   }
 });
+
+test('conversation gets verified life changes without private errand receipts', () => {
+  const view = conversationView(
+    {
+      verifiedHistory: [
+        { kind: 'death', text: 'New life after dehydration' },
+        { kind: 'trade', text: 'PRIVATE_DELIVERY' },
+        { kind: 'job', text: 'PRIVATE_JOB_AGREEMENT' },
+      ],
+      businessResults: [{ building: 'mill', batches: 2 }],
+    },
+    state(),
+    'human',
+    false,
+  );
+  assert.equal(view.verifiedHistory.length, 1);
+  assert.equal(view.businessResults[0].batches, 2);
+  assert.ok(!JSON.stringify(view).includes('PRIVATE_'));
+});

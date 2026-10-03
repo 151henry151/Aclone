@@ -1,3 +1,4 @@
+import { statementHtml, journalHtml } from './reports';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
 import { bankLoans, bankQuote } from './bank';
@@ -816,6 +817,17 @@ function refreshBusinessDetails() {
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
 function refreshTradingPrices() {
+  const statement = app.querySelector<HTMLElement>('[data-business-statement]');
+  if (statement && world && me) {
+    const b = world.buildings.find((b) => b.id === statement.dataset.businessStatement);
+    if (b) {
+      const signature = JSON.stringify([b.productionStatus, me.statements?.[b.id]]);
+      if (statement.dataset.signature !== signature) {
+        statement.innerHTML = statementHtml(world, me, b);
+        statement.dataset.signature = signature;
+      }
+    }
+  }
   for (const el of app.querySelectorAll<HTMLElement>('[data-property-quote]')) {
     const b = world?.buildings.find((b) => b.id === el.dataset.propertyQuote);
     if (!world || !b) continue;
@@ -1087,10 +1099,14 @@ function renderPanel() {
     editorWindow();
     return;
   }
+  if (panel === 'reports') {
+    modal('Journal & reports', journalHtml(world, me));
+    return;
+  }
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><form data-action="group">${select(
         'kind',
         [
           ['tribe', 'Tribe'],
@@ -1119,7 +1135,7 @@ function buildingWindow(b: Building) {
   const near = distance(me, b) < 18,
     selfOwned = b.owner === me.id,
     owned = selfOwned || me.authority === 20;
-  const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info'];
+  const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info', 'Statement'];
   let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
@@ -1320,6 +1336,8 @@ function buildingWindow(b: Building) {
     );
   if (tab === 'Building Admin' && owned && !b.government)
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
+  if (tab === 'Statement')
+    html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;
   if (tab === 'Extra Info')
     html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Active workers give full efficiency. Unstaffed businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
   modal(b.name, html, true);
@@ -1427,6 +1445,7 @@ app.addEventListener('click', async (e) => {
     }
     const panels = [
       'menu',
+      'reports',
       'mobile-actions',
       'directory',
       'map',

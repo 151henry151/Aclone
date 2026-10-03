@@ -1,3 +1,4 @@
+import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { completePuddlewick } from './parish-services.ts';
 import { Federation, type FederationConfig } from './federation.ts';
@@ -232,6 +233,7 @@ export async function createApp(options: AppOptions) {
         me.speed = 0;
         me.online = false;
         me.lastSeen = w.time;
+        leaveReport(w, me);
         say(w, 'Parish notice', me.name + ' has left.');
         store.saveWorld(w);
       }
@@ -258,6 +260,7 @@ export async function createApp(options: AppOptions) {
         leave(other);
         other.socket.close(4001, 'Connected elsewhere');
       }
+    returnReport(w, me);
     me.online = true;
     say(w, 'Parish notice', me.name + ' arrived.');
     store.saveWorld(w);

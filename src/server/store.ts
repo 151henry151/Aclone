@@ -39,6 +39,13 @@ export class Store {
       });
     }
     this.db.prepare("UPDATE meta SET value='2' WHERE key='schema'").run();
+    if (
+      !this.db
+        .prepare('PRAGMA table_info(ledger)')
+        .all()
+        .some((c) => c.name === 'details')
+    )
+      this.db.exec('ALTER TABLE ledger ADD COLUMN details TEXT');
   }
   loadWorlds() {
     return this.db
@@ -99,9 +106,21 @@ export class Store {
   saveWorld(w: World, now = Date.now() / 1000, withinTransaction?: () => void) {
     this.transaction(() => {
       withinTransaction?.();
-      const insert = this.db.prepare('INSERT OR IGNORE INTO ledger VALUES (?,?,?,?,?,?,?,?)');
+      const insert = this.db.prepare(
+        'INSERT OR IGNORE INTO ledger (world,id,time,kind,amount,sender,recipient,reason,details) VALUES (?,?,?,?,?,?,?,?,?)',
+      );
       for (const l of w.ledger)
-        insert.run(w.id, l.id, l.time, l.kind, l.amount, l.from, l.to, l.reason);
+        insert.run(
+          w.id,
+          l.id,
+          l.time,
+          l.kind,
+          l.amount,
+          l.from,
+          l.to,
+          l.reason,
+          l.details ? JSON.stringify(l.details) : null,
+        );
       this.db
         .prepare('INSERT OR REPLACE INTO worlds VALUES (?,?,?)')
         .run(w.id, JSON.stringify({ ...w, ledger: w.ledger.slice(-100) }), now);

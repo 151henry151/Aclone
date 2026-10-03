@@ -11,6 +11,11 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  history?: import('./reports.ts').LifeEvent[];
+  departure?: import('./reports.ts').Departure;
+  awayReport?: import('./reports.ts').AwayReport;
+  /** Private snapshot projection for owned businesses. */
+  statements?: Record<string, import('./reports.ts').BusinessAccounts>;
   credit?: import('./loans').CreditRecord;
   loans?: import('./loans').Loan[];
   loanSequence?: number;
@@ -82,6 +87,8 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  productionStatus?: string[];
+  accounts?: import('./reports.ts').BusinessAccounts;
   lien?: { borrower: string; loan: string };
   estate?: { since: number; base: number };
   creatorModel?: string;
@@ -123,6 +130,7 @@ export interface Building {
   plots?: import('./farming.ts').Plot[];
 }
 export interface Ledger {
+  details?: { building?: string; item?: string; quantity?: number };
   id: number;
   time: number;
   kind: 'faucet' | 'transfer' | 'sink';

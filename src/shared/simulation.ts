@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { accounts, recordMoney, recordLife, addQuantities } from './reports.ts';
 import {
   recordCreditIncome,
   advanceLoans,
@@ -55,10 +56,24 @@ export function log(
   from: string,
   to: string,
   reason: string,
+  details?: Ledger['details'],
 ) {
   if (!Number.isSafeInteger(amount) || amount < 0) throw Error('Invalid ledger amount');
   if (amount) recordCreditIncome(w, to, amount, reason);
-  if (amount) w.ledger.push({ id: ++w.ledgerSeq, time: w.time, kind, amount, from, to, reason });
+  if (amount) {
+    const entry = {
+      id: ++w.ledgerSeq,
+      time: w.time,
+      kind,
+      amount,
+      from,
+      to,
+      reason,
+      ...(details ? { details } : {}),
+    };
+    w.ledger.push(entry);
+    recordMoney(w, entry);
+  }
 }
 
 export function makeBuilding(id: string, kind: string, x: number, z: number): Building {
@@ -321,8 +336,12 @@ export function act(w: World, id: string, a: Action): string {
           log(w, 'sink', importCost, b.id, 'imports', `emergency shipment: ${imported} ${item}`);
         stockAdd(b.stock, item, -n);
         stockAdd(p.inventory, item, n);
-        log(w, 'transfer', total - tax, id, b.id, 'purchase');
-        log(w, 'sink', tax, id, 'treasury', 'sales tax');
+        log(w, 'transfer', total - tax, id, b.id, 'purchase', {
+          building: b.id,
+          item,
+          quantity: n,
+        });
+        log(w, 'sink', tax, id, 'treasury', 'sales tax', { building: b.id, item, quantity: n });
         if (b.kind === 'starport') {
           p.importDay = day;
           p.imports = imports + n;
@@ -332,9 +351,18 @@ export function act(w: World, id: string, a: Action): string {
         b.investment -= total;
         stockAdd(b.stock, item, n);
         stockAdd(p.inventory, item, -n);
-        log(w, 'transfer', total, b.id, id, 'sale');
+        log(w, 'transfer', total, b.id, id, 'sale', { building: b.id, item, quantity: n });
       }
+      addQuantities(buying ? accounts(w, b).sold : accounts(w, b).bought, { [item]: n });
       result = `${buying ? 'Bought' : 'Sold'} ${n} ${items[item].name} for ${money(total, w.settings.denariiPerSheckle)}.`;
+      recordLife(w, p, {
+        kind: 'trade',
+        text: result,
+        building: b.id,
+        item,
+        quantity: n,
+        amount: total,
+      });
       break;
     }
     case 'use':
@@ -366,6 +394,19 @@ export function act(w: World, id: string, a: Action): string {
         seller.cash += price;
         log(w, 'transfer', price, p.id, seller.id, 'property sale');
       } else charge(w, p, price, 'property purchase');
+      if (seller)
+        recordLife(w, seller, {
+          kind: 'property',
+          building: b.id,
+          text: `Sold ${b.name}`,
+          amount: price,
+        });
+      recordLife(w, p, {
+        kind: 'property',
+        building: b.id,
+        text: `Purchased ${b.name}`,
+        amount: price,
+      });
       b.owner = id;
       delete b.estate;
       removeOwnerEmployment(w, b);
@@ -492,6 +533,8 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(b.employees.length < 16, 'All jobs filled');
         b.employees.push(id);
       }
+      if (p.job !== b.id)
+        recordLife(w, p, { kind: 'job', building: b.id, text: `Took a job at ${b.name}` });
       p.job = b.id;
       p.activeUntil = w.time + 2 * productionInterval(w, b);
       result =
@@ -502,6 +545,7 @@ export function act(w: World, id: string, a: Action): string {
       if (p.job) {
         const b = w.buildings.find((b) => b.id === p.job);
         if (b) b.employees = b.employees.filter((e) => e !== id);
+        recordLife(w, p, { kind: 'job', building: p.job, text: `Left job at ${b?.name ?? p.job}` });
         delete p.job;
       }
       break;
@@ -1277,7 +1321,9 @@ export function move(w: World, p: Player, input: Input, dt: number) {
       p.fuel - (Math.abs(p.speed) / v.speed) * v.fuel * (input.boost ? 2 : 1) * dt,
     );
 }
-function kill(w: World, p: Player, comic = false) {
+function kill(w: World, p: Player, comic = false, cause = 'injury') {
+  if (!comic)
+    recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
   p.ammo = { ...ammunition };
   p.invulnerableUntil = w.time + 3;
@@ -1366,6 +1412,10 @@ function cycle(w: World, b: Building, at: number) {
     if (!productionSupplied(b, r, staff.length)) return;
     for (const [item, n] of Object.entries(r.inputs)) stockAdd(b.stock, item, -n);
     for (const [item, n] of Object.entries(r.outputs)) stockAdd(b.stock, item, n);
+    const statement = accounts(w, b);
+    statement.batches++;
+    addQuantities(statement.consumed, r.inputs);
+    addQuantities(statement.produced, r.outputs);
     for (const p of staff) {
       const tax = Math.floor(b.wage * w.settings.wageTax);
       b.investment -= b.wage;
@@ -1410,7 +1460,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
         6 * Math.max(0, duration - healthy),
     );
     elapsed += duration;
-    if (untilDeath <= span) kill(w, p);
+    if (untilDeath <= span) kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation');
   }
   if (p.atHome && !shelter(w, p)) p.atHome = false;
 }
@@ -1450,16 +1500,18 @@ export function advance(w: World, seconds: number) {
     if (absenceDue) {
       p.inactivityProcessed = p.lastSeen;
       say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
-      kill(w, p);
+      kill(w, p, false, 'offline absence limit');
       advanceLoans(w, p, boundary, end);
       advanceSurvival(w, p, boundary, end - boundary);
     }
     if (p.online) {
       p.energy = Math.min(65000, p.energy + 3000 * seconds);
-      if (!p.health || p.age >= w.settings.maxAge) kill(w, p);
+      if (!p.health || p.age >= w.settings.maxAge)
+        kill(w, p, false, p.age >= w.settings.maxAge ? 'old age' : 'injury');
     }
     if (p.learning && p.learning.end <= end) {
       p.skills.push(p.learning.skill);
+      recordLife(w, p, { kind: 'qualification', text: `Qualified as ${p.learning.skill}` });
       say(w, 'School', `${p.name} qualified as ${p.learning.skill}.`);
       delete p.learning;
     }

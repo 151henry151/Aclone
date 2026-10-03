@@ -2096,3 +2096,14 @@ button span {
   margin-bottom: 24px;
   border-radius: 6px;
 }
+
+.business-accounts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.business-accounts dd {
+  margin: 0;
+  text-align: right;
+}

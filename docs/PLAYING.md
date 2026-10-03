@@ -152,3 +152,9 @@ Click an online player's name or **World/F9 → Players & roadside help** (**Act
 - **Refuel:** carry Fuel from a stocked shop/garage; stop within 15m and at the same height. Both must be outside, stationary and free of tasks/games/passenger rides/scouting. One Fuel adds up to 8 tank units, capped at 64; surplus is consumed, not taken from your own tank. Only fuel-powered vehicles qualify.
 
 Buttons explain blockers; the server rechecks on receipt and saves transfers. Owners independently control both features under Editor → Rules (enabled by default). Receipts remain in recent chat.
+
+## Journal and statements
+
+Open **World/F9 → Journal & reports** for your last return report and recent personal history. It explains deaths, released properties, trades, jobs and qualifications. Your report compares cash, savings and still-owned businesses across a disconnect.
+
+A building’s **Statement** tab shows current production blockers. Owners and world caretakers also see operating cash flow, capital movements, traded goods and completed automatic batches. It updates as business activity arrives. Accounts begin with this upgrade; old transactions are not reconstructed.

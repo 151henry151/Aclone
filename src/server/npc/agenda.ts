@@ -148,6 +148,7 @@ export function conversationView(
   const result: Record<string, any> = {};
   for (const key of [
     'characterFacts',
+    'businessResults',
     'employmentOptions',
     'currentConversation',
     'conversationHistory',
@@ -178,6 +179,11 @@ export function conversationView(
     'enduringGoal',
   ])
     if (observation[key] !== undefined) result[key] = observation[key];
+  // Trade/job receipts can reveal terms of another person's private agreement.
+  // Life changes are safe factual context; detailed receipts stay with gameplay.
+  result.verifiedHistory = observation.verifiedHistory?.filter((e: { kind: string }) =>
+    ['death', 'estate', 'qualification'].includes(e.kind),
+  );
   const viewer = { world: state.world, speakerId, private: privateChat };
   Object.assign(result, conversationMemory(state, viewer));
   result.commitments = state.commitments?.filter(

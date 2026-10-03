@@ -4,7 +4,7 @@ Aclone is a playable development alpha, not complete historical parity or a stab
 
 ## Playable and covered by tests
 
-- **Economy:** authoritative integer cash, tax/ledger conservation, inventory, investment, stock, production, wages, active/unattended work, skills, tasks and banks. Player cash gifts and carried-Fuel roadside help have independent world rules.
+- **Economy:** authoritative integer cash, tax/ledger conservation, inventory, investment, stock, production, wages, active/unattended work, skills, tasks and banks. Player cash gifts and carried-Fuel roadside help have independent world rules. Private business statements, return reports and structured personal history explain activity after the reporting upgrade.
 - **Property/survival:** construction, materials, repair, sales, home provisions, death/estates, hotels/B&Bs, prepaid rooms and private pantries. Offline needs and starvation continue; ageing/passive property decay pause.
 - **Countryside:** seasonal crops, finite gathering grounds, material industries, shoreline waterworks, rotating crop families, irrigation, compost/drainage, delayed harvest quality and saved harvest tasks.
 - **Vehicles/activities:** 24 vehicle slots, five main control families, purchased fleets, fuel/boost, walking, robocrows, ostriches, six-player Hornball, racing/lap records, fishing and two-player Ultrakricket.
