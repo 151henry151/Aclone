@@ -40,6 +40,7 @@ test('parked neighbours and a throttled internet link retain playable controls a
       { token: pilot.token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('#driving')).toContainText('FPS');
     const sample = async () => {
       const samples: number[] = [];
@@ -81,6 +82,7 @@ test('parked neighbours and a throttled internet link retain playable controls a
       { proxyPort: proxy.port },
     );
     await page.reload();
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('#player-count')).toHaveText('3', { timeout: 20000 });
     const initialZ = p.z;
     await page.keyboard.down('ArrowDown');

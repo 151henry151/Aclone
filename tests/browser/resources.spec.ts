@@ -50,6 +50,7 @@ for (const mobile of [false, true])
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`http://127.0.0.1:${port}`);
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       const gather = page.locator('#resource-gather');
       const status = page.locator('#resource-status');
       await expect(gather).toBeVisible();

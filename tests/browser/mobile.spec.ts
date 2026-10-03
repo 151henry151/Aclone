@@ -68,6 +68,7 @@ test('phone controls, mobile sheets and touch conversations support real gamepla
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('html')).toHaveClass(/mobile-ui/);
     await expect(page.locator('.mobile-nav')).toBeVisible();
     await expect(page.locator('.left-panel')).toBeHidden();

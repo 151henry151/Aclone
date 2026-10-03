@@ -27,6 +27,7 @@ test('a returning owner can read private history and a business statement', asyn
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('#pilot-name')).toHaveText('Bookkeeper');
     await page.keyboard.press('F9');
     await page.getByRole('button', { name: 'Journal & reports' }).click();

@@ -37,6 +37,7 @@ test('leaving a home or rented room works across live updates and after reconnec
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
+    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     const outside = page.getByRole('button', { name: 'At home · Go outside' });
     for (const kind of ['home', 'bnb', 'hotel']) {
       b.kind = kind;
@@ -50,6 +51,7 @@ test('leaving a home or rented room works across live updates and after reconnec
       }
       p.atHome = true;
       await page.reload();
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await expect(outside).toBeVisible();
       // Hold through several snapshots: replacing the node loses the click or focus.
       if (kind === 'bnb') {

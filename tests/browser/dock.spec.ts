@@ -44,6 +44,7 @@ for (const mobile of [false, true])
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`http://127.0.0.1:${port}`);
+      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await expect(page.locator('#target')).toContainText('Fishing dock');
       const activate = async (selector: string) =>
         mobile ? page.locator(selector).tap() : page.locator(selector).click();

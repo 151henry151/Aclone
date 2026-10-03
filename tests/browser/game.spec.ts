@@ -185,8 +185,11 @@ test('pilot nameplates and disconnects match the live parish list', async ({ pag
     await expect(page.locator('#players')).toContainText(name);
     await expect(page.locator('#player-count')).toHaveText('2');
     await page.screenshot({ path: 'test-results/pilot-nameplate.png' });
-    pilot.close();
-    await expect(page.locator('#players')).not.toContainText(name);
+    await new Promise<void>((resolve) => {
+      pilot.once('close', () => resolve());
+      pilot.close();
+    });
+    await expect(page.locator('#players')).not.toContainText(name, { timeout: 15000 });
     await expect(page.locator('#player-count')).toHaveText('1');
     await expect(page.locator('#chat-log')).not.toContainText('Script error');
   } finally {

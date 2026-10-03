@@ -49,7 +49,7 @@ test('nutrition fields and dairy care are usable from game panels', async ({ pag
     await expect(page.getByRole('heading', { name: 'Dairy herd' })).toBeVisible();
     await page.getByRole('button', { name: /Arrange breeding/ }).click();
     await expect.poll(() => b.breedingEnd).toBeGreaterThan(w.time);
-    await expect(page.getByText(/Calf due in/)).toBeVisible();
+    await expect(page.getByText(/calf due in/i)).toBeVisible();
     await page.getByRole('heading', { name: 'Dairy herd' }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/dairy-care-panel.png' });
   } finally {

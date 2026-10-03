@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
+import { defaultCreator } from '../../src/shared/creator.ts';
 import { addPlayer } from '../../src/shared/simulation.ts';
 test('desktop and phone can exchange mail, family invitations and an approved trade', async ({
   browser,
@@ -26,6 +27,11 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
     a.inventory = { wheat: 20 };
     a.cash = b.cash = 10000;
     w.script = '';
+    // Exercise social transactions, not two competing full-town GPU warmups.
+    w.creator = defaultCreator();
+    w.creator.scenery = false;
+    w.creator.roads = false;
+    w.buildings = [];
     const offline = addPlayer(w, 'offline', 'Offline friend');
     offline.online = false;
     app.store.saveWorld(w);
@@ -41,6 +47,7 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
     const s = await left.newPage(),
       t = await right.newPage();
     for (const p of [s, t]) {
+      await p.bringToFront();
       await p.goto(`http://127.0.0.1:${port}`);
       await expect(p.locator('#world-hud')).toBeVisible({ timeout: 60000 });
       await p.keyboard.press('F9');

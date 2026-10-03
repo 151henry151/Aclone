@@ -25,9 +25,9 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.42.0
+## Current upgrade: 0.42.2
 
-Alcohol state is an optional field in existing world saves; everyone starts sober on upgrade. No reset, stock migration or SQL change is required. Update clients and server together for steering and visual feedback. Visual comfort settings are local to each browser. The preceding 0.41.1 model changes need no world migration.
+0.42.1 corrects chat position after loading; 0.42.2 updates browser regression checks. Alcohol state introduced in 0.42.0 is an optional field in existing world saves; everyone starts sober on upgrade. No reset, stock migration or SQL change is required. Update clients and server together for steering and visual feedback. Visual comfort settings are local to each browser. The preceding 0.41.1 model changes need no world migration.
 
 ## Earlier upgrades
 

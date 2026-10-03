@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.42.2] - 2026-10-03
+
+### Fixed
+
+- Make browser regressions wait for graphics readiness before interacting, await actual socket closure when checking disconnected pilots, and match the current livestock breeding label. Keep the two-player social fixture focused on real mail/family/trade transactions without two full-town renderer warmups competing on CI.
+
 ## [0.42.1] - 2026-10-03
 
 ### Fixed
