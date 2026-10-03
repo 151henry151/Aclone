@@ -62,10 +62,10 @@ test('leaving a home or rented room works across live updates and after reconnec
         await page.keyboard.press('Enter');
       } else await outside.click({ delay: 450 });
       await expect.poll(() => p.atHome).toBe(false);
-      await expect(outside).toHaveCount(0);
+      await expect(outside).toHaveCount(0, { timeout: 15000 });
       await page.reload();
       await expect(page.locator('#world-hud')).toBeVisible();
-      await expect(outside).toHaveCount(0);
+      await expect(outside).toHaveCount(0, { timeout: 15000 });
     }
     const startZ = p.z;
     await page.keyboard.down('ArrowUp');

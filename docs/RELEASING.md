@@ -25,7 +25,7 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.24.2
+## Current upgrade: 0.24.4
 
 Documentation and CI/browser-test repairs only; no data migration or dependency changes. Restart to load the corrected NPC help guides. Historical upgrade details, provider trials and original texture prompts remain linked from the README.
 

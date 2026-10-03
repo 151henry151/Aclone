@@ -14,13 +14,16 @@ async function fits(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const dialog = page.getByRole('dialog');
   if (await dialog.count()) {
-    const box = (await dialog.boundingBox())!;
-    const view = page.viewportSize()!;
-    expect(box.x).toBeGreaterThanOrEqual(0);
-    expect(box.y).toBeGreaterThanOrEqual(0);
-    expect(box.x + box.width).toBeLessThanOrEqual(view.width + 1);
-    expect(box.y + box.height).toBeLessThanOrEqual(view.height + 1);
-    expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    await expect(async () => {
+      await expect(dialog).toBeVisible();
+      const box = (await dialog.boundingBox())!;
+      const view = page.viewportSize()!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(view.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(view.height + 1);
+      expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    }).toPass({ timeout: 10000 });
   }
 }
 

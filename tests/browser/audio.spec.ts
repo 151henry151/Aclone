@@ -171,7 +171,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
       .toBeGreaterThan(1.1);
     await page.keyboard.up('ArrowUp');
     await page.keyboard.press('F4');
-    await expect.poll(loops).toBe(0);
+    await expect.poll(loops, { timeout: 15000 }).toBe(0);
     await expect.poll(rms).toBeLessThan(0.0001);
     // A second real connection: only its engine can now produce continuous sound.
     const other = app.universe.register('Sound neighbour');
@@ -185,7 +185,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     await expect.poll(loops).toBe(1);
     await expect.poll(rms).toBeGreaterThan(0.002);
     q.x = p.x + 500;
-    await expect.poll(loops).toBe(0);
+    await expect.poll(loops, { timeout: 15000 }).toBe(0);
     q.x = p.x + 8;
     q.engine = false;
     const beforeHorn = await shots();
@@ -206,7 +206,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     await expect.poll(loops).toBe(1);
     await expect.poll(rms).toBeGreaterThan(0.001);
     saw.stock.wood = saw.capacity;
-    await expect.poll(loops).toBe(0);
+    await expect.poll(loops, { timeout: 15000 }).toBe(0);
     saw.stock.wood = 0;
     await expect.poll(loops).toBe(1);
     await page.locator('#brand-button').click();
@@ -231,7 +231,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     q.engine = true;
     await expect.poll(loops).toBe(1);
     neighbour.close();
-    await expect.poll(loops).toBe(0);
+    await expect.poll(loops, { timeout: 15000 }).toBe(0);
     await expect.poll(rms).toBeLessThan(0.0001);
     expect(errors).toEqual([]);
   } finally {

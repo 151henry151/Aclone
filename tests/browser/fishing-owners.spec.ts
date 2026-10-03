@@ -70,7 +70,8 @@ for (const mobile of [false, true])
       expect(Math.abs(box.x + box.width / 2 - view.width / 2)).toBeLessThan(2);
       expect(Math.abs(box.y + box.height / 2 - view.height / 2)).toBeLessThan(view.height * 0.15);
       p.fishAt = w.time;
-      p.fishUntil = w.time + 8;
+      // Keep the bite open through software-renderer screenshots; timing is covered in simulation tests.
+      p.fishUntil = w.time + 300;
       await expect(reel).toBeEnabled();
       await expect(page.locator('#fishing-status')).toHaveText('Fish! Reel in now.');
       await page.screenshot({ path: `test-results/fishing-${mobile ? 'phone' : 'desktop'}.png` });

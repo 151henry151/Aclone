@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.24.4] - 2026-10-03
+
+### Fixed
+
+- Make browser checks tolerate delayed software-renderer snapshots and asynchronous mobile relayouts. Hold the fishing bite fixture open during screenshots rather than racing its eight-second gameplay window.
+
 ## [0.24.3] - 2026-10-03
 
 ### Fixed
