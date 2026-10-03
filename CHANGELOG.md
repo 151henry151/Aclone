@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-10-03
+
+### Added
+
+- Draw curved or straight paths, paint ground surfaces, place fence/wall lines and scatter Workshop models in a touch-friendly landscape editor. Preview grayscale heightmaps before applying; undo the last four landscape edits.
+- Share saved terrain and barriers across rendering, maps, vehicle/projectile collision and NPC navigation. Bound edit sizes and avoid placing scattered models on roads, buildings or water; include landscape definitions in world-design exports.
+
 ## [0.33.1] - 2026-10-03
 
 ### Fixed

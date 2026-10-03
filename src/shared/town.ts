@@ -1,3 +1,4 @@
+import { landscapeRoads } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
 import { blocksBuilding } from './building-shapes.ts';
@@ -166,8 +167,11 @@ const legacyRoads: Road[] = [
     ? { a: { x: x - w / 2, z }, b: { x: x + w / 2, z }, width: d }
     : { a: { x, z: z - d / 2 }, b: { x, z: z + d / 2 }, width: w },
 );
-export function townRoads(w: Pick<World, 'townLayout' | 'creator'>): readonly Road[] {
-  return w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads;
+export function townRoads(w: Pick<World, 'townLayout' | 'creator' | 'landscape'>): readonly Road[] {
+  return [
+    ...(w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads),
+    ...landscapeRoads(w),
+  ];
 }
 export function roadDistance(roads: readonly Road[], x: number, z: number) {
   let closest = Infinity;

@@ -25,7 +25,9 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.33.1
+## Current upgrade: 0.34.0
+
+0.34.0 adds opt-in landscape authoring and saved four-step undo. Existing terrain and scenery remain unchanged until edited; no reset or SQL migration is required.
 
 0.33.1 corrects construction access-rule enforcement; no migration is needed. 0.33.0 adds opt-in world catalogues, building templates and production diagnostics. Existing worlds retain their standard goods, prices and professions; no reset or new Puddlewick custom content is introduced. Definitions persist in existing world JSON.
 

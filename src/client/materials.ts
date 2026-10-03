@@ -77,10 +77,36 @@ function roadTexture(w: World) {
       ctx.stroke();
     }
   }
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(512, 512, 13 * scale, 0, Math.PI * 2);
-  ctx.fill();
+  if (w.creator?.roads !== false) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(512, 512, 13 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const map = new T.CanvasTexture(canvas);
+  map.generateMipmaps = false;
+  map.minFilter = map.magFilter = T.LinearFilter;
+  return map;
+}
+function surfaceTexture(w: World) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1024;
+  const ctx = canvas.getContext('2d')!;
+  for (const s of w.landscape?.surfaces ?? []) {
+    const x = ((s.x + 270) * 1024) / 540,
+      y = ((s.z + 270) * 1024) / 540,
+      r = (s.radius * 1024) / 540;
+    const color = { grass: '0,0,0', gravel: '255,0,0', soil: '0,255,0', sand: '0,0,255' }[
+      s.material
+    ];
+    const gradient = ctx.createRadialGradient(x, y, r * 0.85, x, y, r);
+    gradient.addColorStop(0, `rgba(${color},1)`);
+    gradient.addColorStop(1, `rgba(${color},0)`);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
   const map = new T.CanvasTexture(canvas);
   map.generateMipmaps = false;
   map.minFilter = map.magFilter = T.LinearFilter;
@@ -88,9 +114,13 @@ function roadTexture(w: World) {
 }
 export const snowCover = { value: 0 };
 export function groundMaterial(w: World) {
-  const mask = roadTexture(w);
+  const mask = roadTexture(w),
+    surface = surfaceTexture(w);
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
-  mat.addEventListener('dispose', () => mask.dispose());
+  mat.addEventListener('dispose', () => {
+    mask.dispose();
+    surface.dispose();
+  });
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.snowCover = snowCover;
     shader.uniforms.groundNoise = { value: noiseTexture() };
@@ -98,6 +128,7 @@ export function groundMaterial(w: World) {
     shader.uniforms.gravel = { value: texture('gravel') };
     shader.uniforms.shore = { value: w.settings.seaLevel };
     shader.uniforms.roadMask = { value: mask };
+    shader.uniforms.surfaceMask = { value: surface };
     shader.vertexShader = 'varying vec3 groundPosition;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
@@ -105,7 +136,7 @@ export function groundMaterial(w: World) {
     );
     shader.fragmentShader =
       `
-      uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
@@ -117,16 +148,21 @@ export function groundMaterial(w: World) {
       // Gravel wears away into the turf; noise breaks up the verge at two scales.
       float verge=noise(p*1.9)*.7+noise(p*.32)*1.4;
       float road=smoothstep(.16,.84,texture2D(roadMask,vec2(.5+p.x/540.,.5-p.y/540.)).r+verge*.06);
-      road=max(road,1.-smoothstep(12.,14.,length(p)));
+
       float beach=1.-smoothstep(shore+.3,shore+1.7,groundPosition.y);
       vec3 turf=texture2D(meadow,p/5.).rgb;
       turf*=mix(vec3(.68,.74,.52),vec3(1.06,1.03,.88),noise(p*.045));
       vec3 grit=texture2D(gravel,p/6.).rgb;
-      diffuseColor.rgb*=mix(mix(turf,grit,max(road,beach)),vec3(.85,.91,.94),snowCover*(1.-road*.25));
+      vec4 brush=texture2D(surfaceMask,vec2(.5+p.x/540.,.5-p.y/540.));
+      vec3 painted=mix(turf,grit,brush.r);
+      painted=mix(painted,grit*vec3(.58,.39,.24),brush.g);
+      painted=mix(painted,grit*vec3(1.12,1.02,.72),brush.b);
+      vec3 base=mix(mix(turf,grit,max(road,beach)),painted,brush.a);
+      diffuseColor.rgb*=mix(base,vec3(.85,.91,.94),snowCover*(1.-road*.25));
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v2';
+  mat.customProgramCacheKey = () => 'countryside-ground-v3';
   return mat;
 }
 

@@ -178,3 +178,13 @@ Use custom definitions in **Production**, behavior item effects, quest rewards, 
 **Building templates** copies a building's base type, recipe, shop prices and visual into a reusable construction option. Give it a `custom:` ID, name, construction price, wage and materials. Future buildings use the template; existing buildings retain their settings. Templates obey ordinary siting, shoreline, material and property-limit rules. At most 32 are allowed, and a template with existing buildings cannot be removed.
 
 The **Production chain check** estimates one staffed batch using input bids, output asking prices, sales tax and wages, and lists possible suppliers. It flags missing bids/suppliers and nonpositive margins. It is a planning estimate, not guaranteed profit: delivery costs, unsold stock, shortages, repairs and idle time remain relevant. Catalogue definitions and templates travel with exported designs; accounts and inventories do not.
+
+## Landscape editor
+
+In **Landscape**, tap the map to mark points or enter X,Z pairs (−250…250). Draw a curved/straight gravel path or a timber fence/stone wall. Set width and barrier height. New paths appear on parish maps and receive streetlights; generated roads can be disabled separately in Layout. Solid barriers stop ground movement and shots; NPC routes avoid them.
+
+Paint circular grass, gravel, soil or sand patches; the first map point sets the brush centre. Scatter a Workshop tree/rock model with a seed, count and scale. Rotation/size vary deterministically; roads, buildings, water and overlaps are avoided. Crowded areas can yield fewer instances. Solid scatter uses the model's bounds; editing terrain/layout may reposition it.
+
+Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness maps between your low/high heights; the server stores a 33 × 33 grid across the playable square. Blue preview cells are below sea level. **Apply previewed heightmap** replaces the procedural base; existing height brushes remain additive. Terrain, buildings and water checks use the same heights. Review shoreline businesses before applying.
+
+**Undo last landscape edit** restores one of the last four saved path/surface/barrier/scatter/heightmap states, including after a restart. Remove individual features below the editor; remove older height brushes in Layout. Edits are free and caretaker-only. Limits: 16 paths, 16 barriers, 128 control points total, 1,200 metres of barriers, 64 surface brushes and 128 scattered instances. Exported designs include the current layout, not undo history.

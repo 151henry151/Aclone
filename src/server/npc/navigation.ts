@@ -1,3 +1,4 @@
+import { creatorBlocks } from '../../shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Input } from '../../shared/types.ts';
 import { terrainHeight, distance } from '../../shared/simulation.ts';
@@ -19,6 +20,9 @@ function grid(w: World) {
     w.settings.seaLevel,
     w.townLayout,
     w.terrain,
+    w.landscape,
+    w.creator?.objects,
+    w.creator?.models.map((m) => [m.id, m.width, m.height, m.depth]),
     w.buildings.map((b) => [b.id, b.kind, b.style, b.x, b.z, b.rotation]),
   ]);
   const previous = cache.get(w);
@@ -29,7 +33,7 @@ function grid(w: World) {
     const p = point(i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
-    clear[i] = +(h >= w.settings.seaLevel + 0.05);
+    clear[i] = +(h >= w.settings.seaLevel + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2));
   }
   // Rasterize only a building's conservative bounding square, then use the
   // same exact rotated-volume collision test. Avoid cells × every building.

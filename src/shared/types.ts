@@ -193,6 +193,9 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  landscape?: import('./landscape.ts').Landscape;
+  landscapeHistory?: import('./landscape.ts').Landscape[];
+  landscapeUndo?: boolean;
   catalogue?: import('./world-catalogue.ts').Catalogue;
   procurementVersion?: 1;
   procurement?: import('./procurement.ts').Procurement;

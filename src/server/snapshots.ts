@@ -73,7 +73,8 @@ export interface Frame {
 }
 /** Serialize shared world data once per broadcast, rather than once per recipient. */
 export function prepareFrame(w: World): Frame {
-  const { players, ledger, script, scriptVariables, messages, ...common } = w;
+  const { players, ledger, script, scriptVariables, messages, landscapeHistory, ...common } = w;
+  common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);
   common.scriptInteraction = w.script.includes('ObjectInteract');
   const fields = Object.fromEntries(

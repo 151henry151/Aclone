@@ -52,3 +52,37 @@ test('already in service range needs no new path or running engine, even beside 
   p.atHome = true;
   assert.match(nav.step(w, p, 0.05).error!, /indoors/);
 });
+
+test('NPC plans around creator fences instead of driving into them', async () => {
+  const { landscapeSchema } = await import('../src/shared/landscape.ts');
+  const w = createWorld('fenced', 'Fenced', 'owner'),
+    p = addPlayer(w, 'npc', 'Visitor');
+  w.buildings = [];
+  p.x = -30;
+  p.z = -50;
+  p.y = terrainHeight(w, p.x, p.z);
+  w.landscape = landscapeSchema.parse({
+    barriers: [
+      {
+        id: 'wall',
+        points: [
+          { x: 0, z: -70 },
+          { x: 0, z: -30 },
+        ],
+        height: 3,
+      },
+    ],
+  });
+  const nav = new Navigator(w, p, { x: 30, z: -50 }, 3);
+  let arrived = false;
+  for (let i = 0; i < 6000; i++) {
+    const result = nav.step(w, p, 0.05);
+    assert.equal(result.error, undefined);
+    move(w, p, result.input, 0.05);
+    if (result.arrived) {
+      arrived = true;
+      break;
+    }
+  }
+  assert.ok(arrived);
+});

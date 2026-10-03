@@ -1,3 +1,4 @@
+import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorModel } from './creator-model';
 import { GameAudio } from './audio';
@@ -399,6 +400,7 @@ export class GameScene {
       world.id +
       ':' +
       JSON.stringify(world.terrain) +
+      JSON.stringify(world.landscape ?? {}) +
       ':' +
       world.buildings
         .map(
@@ -671,6 +673,8 @@ export class GameScene {
       this.land.add(g);
     }
     // Bake static geometry by material: dozens of draw calls instead of hundreds.
+    this.land.updateMatrixWorld(true);
+    addLandscape(this.land, w);
     this.land.updateMatrixWorld(true);
     const batches = new Map<string, { geometries: T.BufferGeometry[]; material: T.Material }>();
     const originals: T.Mesh[] = [];

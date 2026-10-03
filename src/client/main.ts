@@ -1,3 +1,4 @@
+import { landscapeEditor, landscapeControls } from './landscape-editor';
 import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
@@ -1429,7 +1430,7 @@ function editorWindow() {
             )
             .join('')}</div><button class="primary">Apply changes to server</button></form>`
         : tab === 'Landscape'
-          ? `<p>Raise or lower a circular area of the shared 128 × 128 heightmap. Coordinates run −250 to 250.</p><form data-action="terrain">${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}${field('Brush radius', 'radius', 20, 'number', 'min="1" max="100"')}${field('Height change', 'height', 5, 'number', 'min="-30" max="30"')}<button>Apply terrain brush</button></form>`
+          ? landscapeEditor(world, me)
           : tab === 'Buildings'
             ? `<form data-action="place">${select(
                 'kind',
@@ -1464,6 +1465,7 @@ function editorWindow() {
     }`,
     true,
   );
+  if (tab === 'Landscape') landscapeControls(world, send);
 }
 app.addEventListener('click', async (e) => {
   const el = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-do]');

@@ -1,3 +1,4 @@
+import { landscapeSchema, validateLandscape } from '../shared/landscape.ts';
 import {
   catalogueSchema,
   catalogueItemId,
@@ -30,6 +31,7 @@ const recipe = z
       [...Object.values(r.inputs), ...Object.values(r.outputs)].every((n) => n >= 1 && n <= 1000),
   );
 const designSchema = z.object({
+  landscape: landscapeSchema.default(() => landscapeSchema.parse({})),
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
   format: z.literal('aclone-world-design'),
   version: z.literal(1),
@@ -129,6 +131,7 @@ export function exportDesign(w: World) {
     vehicleTuning: w.vehicleTuning ?? {},
     settings: w.settings,
     terrain: w.terrain,
+    landscape: w.landscape,
     zones: w.zones,
     creator,
     script: w.script,
@@ -185,6 +188,7 @@ export function applyDesign(w: World, input: unknown) {
     for (const id of [...Object.keys(b.buy ?? {}), ...Object.keys(b.sell ?? {})])
       if (!Object.hasOwn(worldItems(w), id)) throw Error('Unknown world item: ' + id);
   }
+  w.landscape = validateLandscape(w, d.landscape);
   w.terrain = d.terrain;
   w.zones = d.zones;
   w.tier = d.tier;

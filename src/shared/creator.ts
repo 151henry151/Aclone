@@ -1,3 +1,4 @@
+import { landscapeBlocks, scatterObjects } from './landscape.ts';
 import {
   catalogueItemId,
   catalogueSkillId,
@@ -183,6 +184,8 @@ export function validateCreator(w: World, input: unknown) {
     )
       throw Error('OBJ textures must be PNG/JPEG assets uploaded to this world');
   const models = new Set(c.models.map((m) => m.id));
+  for (const s of w.landscape?.scatter ?? [])
+    if (!c.models.some((m) => m.id === s.model)) throw Error('Model is used by landscape scatter');
   for (const o of c.objects)
     if (!models.has(o.model)) throw Error('Object refers to a missing model');
   for (const model of Object.values(c.vehicleModels))
@@ -375,7 +378,8 @@ export function creatorBlocksSegment(
   allowEscape = false,
 ) {
   return (
-    w.creator?.objects.some((o) => {
+    landscapeBlocks(w, from, to, padding, allowEscape) ||
+    [...(w.creator?.objects ?? []), ...scatterObjects(w)].some((o) => {
       if (!o.visible || !o.solid) return false;
       const radius = o.radius * o.scale + padding,
         dx = to.x - from.x,
@@ -398,7 +402,7 @@ export function creatorBlocksSegment(
         y >= bottom - 2 &&
         y < bottom + (w.creator!.models.find((m) => m.id === o.model)?.height ?? 4) * o.scale
       );
-    }) ?? false
+    })
   );
 }
 export function creatorAction(w: World, p: Player, a: Action) {

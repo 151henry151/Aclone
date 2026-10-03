@@ -1,3 +1,4 @@
+import { landscapeAction } from './landscape.ts';
 import {
   worldItems,
   worldSkills,
@@ -309,6 +310,7 @@ export function act(w: World, id: string, a: Action): string {
   requireThat(p, 'Unknown player');
   const type = a.type;
   checkActionGuards(w, p, a);
+  if (type === 'landscape') return landscapeAction(w, p, a);
   if (type === 'catalogue') {
     setCatalogue(w, p, a.catalogue);
     return 'World catalogue saved.';
