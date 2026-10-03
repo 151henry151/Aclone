@@ -24,6 +24,12 @@ import { operationAction } from './player-operations.ts';
 import { initialPresence, beginVisit } from './habits.ts';
 import { preferChoices } from './preferences.ts';
 import {
+  conversationView,
+  decisionAgenda,
+  learnedChoices,
+  rememberConversation,
+} from './agenda.ts';
+import {
   commitmentChoices,
   employmentBlocker,
   refreshEmployment,
@@ -285,6 +291,19 @@ export class Residents {
         stats = this.actionStats(w, p, a);
       checkCommitmentPrice(w, r.state, a);
       const result = act(w, p.id, a);
+      const pendingReply = r.state.pendingAgreementReply;
+      if (
+        a.type === 'chat' &&
+        pendingReply?.world === w.id &&
+        pendingReply.text === a.text &&
+        pendingReply.to === a.to
+      ) {
+        delete r.state.pendingAgreementReply;
+        if (r.state.conversationId === pendingReply.conversationId) {
+          r.state.helpQuestion = undefined;
+          r.state.replyTo = undefined;
+        }
+      }
       refreshEmployment(w, p, r.state);
       if (recordDelivery(r.state, w.id, a)) {
         r.wake = true;
@@ -364,6 +383,8 @@ export class Residents {
       blocked.blockedNoticeSent = true;
       this.checkpoint(r, w, 'delivery-blocked', { id: blocked.id, outcome: blocked.outcome });
     }
+    const agreed = focusCommitments(w, p, r.state, deliveries);
+    if (!p.task && !careNeeded(w, p) && agreed.length) return learnedChoices(r.state, agreed);
     const choices = [...deliveries, ...adaptiveChoices(w, p, r.state)];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (port && !p.task && !p.atHome && !p.game) {
@@ -396,7 +417,10 @@ export class Residents {
           reconsiderSeconds: 600,
         });
     }
-    return preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job);
+    return learnedChoices(
+      r.state,
+      preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
+    );
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
     const stateBefore = structuredClone(r.state),
@@ -512,8 +536,13 @@ export class Residents {
     }
     if (now < this.pollAt) return;
     this.pollAt = now + 500;
-    // Oldest request first prevents a chatty NPC from monopolising the shared queue.
-    for (const r of [...this.residents].sort((a, b) => a.lastCall - b.lastCall)) {
+    // Addressed players get the next free slot; oldest call breaks ties. Running
+    // requests are not aborted and every call still shares the hard spending cap.
+    for (const r of [...this.residents].sort(
+      (a, b) =>
+        Number(this.dialogueDue(b, now)) - Number(this.dialogueDue(a, now)) ||
+        a.lastCall - b.lastCall,
+    )) {
       const w = this.worlds.get(r.state.world);
       if (!w) continue;
       let p = w.players[r.state.playerId];
@@ -574,6 +603,26 @@ export class Residents {
       if (now < r.cooldown && !this.dialogueDue(r, now)) continue;
       p.online = !r.state.inSpace;
       r.active = true;
+      const pendingReply = r.state.pendingAgreementReply;
+      if (
+        !r.busy &&
+        pendingReply?.world === w.id &&
+        !p.muted &&
+        !w.settings.chatLocked &&
+        !r.state.inSpace
+      ) {
+        this.perform(
+          r,
+          w,
+          {
+            type: 'chat',
+            text: pendingReply.text,
+            ...(pendingReply.to ? { to: pendingReply.to } : {}),
+          },
+          false,
+        );
+        continue;
+      }
       if (r.state.inSpace) this.universe.arrive(this.account(r));
       if (r.state.observedTask && !p.task) {
         delete r.state.observedTask;
@@ -818,7 +867,7 @@ export class Residents {
       job: p.job ?? null,
     };
     const prior = r.state.evaluation;
-    if (prior) {
+    if (prior && !chatOnly) {
       const result = {
         goal: r.state.intent,
         elapsedSeconds: Math.max(0, w.time - prior.time),
@@ -831,11 +880,12 @@ export class Residents {
       r.state.experiences = [...(r.state.experiences ?? []), result].slice(-8);
       this.memory.append(r.config.id, w.time, 'evaluation', result);
     }
-    r.state.evaluation = snapshot;
+    if (!chatOnly) r.state.evaluation = snapshot;
     const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
       observation: {
         ...observe(w, p, r.state, this.memory, r.config.id),
+        agenda: decisionAgenda(r.state),
         experiences: r.state.experiences,
         lessons: r.state.experiences?.slice(-3).map((e) => ({ ...e, goal: e.goal.slice(0, 180) })),
         careerPreference: r.config.preference,
@@ -851,7 +901,7 @@ export class Residents {
               ),
             }
           : undefined,
-        ...(r.config.provider === 'jev'
+        ...(!chatOnly && r.config.provider === 'jev'
           ? {
               choices: this.choices(r, w, p),
               space: { inSpace: !!r.state.inSpace, account: this.account(r) },
@@ -883,10 +933,19 @@ export class Residents {
       r.cooldown = now + 60000;
       return;
     }
-    const reservation = chatOnly
-      ? undefined
-      : this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
-    if (!chatOnly && reservation === undefined) {
+    const choices = 'choices' in request.observation ? request.observation.choices : undefined;
+    const localChoice =
+      !chatOnly &&
+      r.config.provider === 'jev' &&
+      choices?.length === 1 &&
+      choices[0].id.startsWith('commitment_')
+        ? choices[0]
+        : undefined;
+    const reservation =
+      chatOnly || localChoice
+        ? undefined
+        : this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
+    if (!chatOnly && !localChoice && reservation === undefined) {
       p.online = !r.state.inSpace;
       r.active = p.online;
       p.speed = 0;
@@ -921,7 +980,20 @@ export class Residents {
           inputTokens: 0,
           outputTokens: 0,
         })
-      : r.brain.decide(decisionRequest, controller.signal);
+      : localChoice
+        ? Promise.resolve({
+            decision: {
+              intent: localChoice.description.slice(0, 300),
+              notebook: r.state.notebook,
+              speech: null,
+              plan: localChoice.plan,
+              repeat: 1,
+              reconsiderSeconds: localChoice.reconsiderSeconds ?? 600,
+            },
+            inputTokens: 0,
+            outputTokens: 0,
+          })
+        : r.brain.decide(decisionRequest, controller.signal);
     r.pending = pending
       .then(async (result) => {
         if (this.closed) return;
@@ -945,6 +1017,7 @@ export class Residents {
           return;
         // Dialogue is a separately metered call, only for an addressed human.
         // It cannot replace the action provider's choice or replay a whole plan.
+        let conversationCompleted = false;
         const conversation = request.observation.currentConversation;
         const conversationKey = conversation
           ? `${r.state.world}:${conversation.id ?? `${conversation.speakerId}:${conversation.question}`}`
@@ -956,10 +1029,15 @@ export class Residents {
           conversation &&
           (!attempt || (!attempt.done && attempt.attempts < 3 && Date.now() >= attempt.nextAt))
         ) {
-          const { choices: _choices, ...conversationObservation } = request.observation;
+          const conversationObservation = conversationView(
+            request.observation,
+            r.state,
+            conversation.speakerId ?? '',
+            !!replyTo,
+          );
           const dialogueRequest = {
             instructions: conversationInstructions + '\nYour personality: ' + r.state.personality,
-            observation: { ...conversationObservation, chosenPlan: result.decision.plan },
+            observation: conversationObservation,
           };
           const chatBytes =
             Buffer.byteLength(JSON.stringify(dialogueRequest)) +
@@ -996,6 +1074,7 @@ export class Residents {
               const d = decisionSchema.parse(chat.decision);
               if (d.speech?.text.trim().startsWith('*')) throw Error('Invalid conversation');
               r.state.dialogueAttempt.done = true;
+              conversationCompleted = true;
               // Even a deliberate silent reply is a completed conversation, not a reason to poll chat again.
               if (!d.speech && r.state.conversationId === conversation.id) {
                 r.state.helpQuestion = undefined;
@@ -1004,6 +1083,7 @@ export class Residents {
               result = {
                 ...result,
                 gameplayRequest: chat.gameplayRequest,
+                preferences: chat.preferences,
                 decision: { ...result.decision, speech: d.speech, notebook: d.notebook },
               };
             } catch {
@@ -1049,6 +1129,15 @@ export class Residents {
           return;
         // Validate against the world AFTER the asynchronous reply: ownership,
         // stock and prices may have changed while the model was thinking.
+        if (conversation?.speakerId && conversationCompleted) {
+          rememberConversation(
+            r.state,
+            { speakerId: conversation.speakerId, world: latest.id, private: !!replyTo },
+            result.decision.notebook,
+            result.preferences,
+            latest.time,
+          );
+        }
         const proposal = result.gameplayRequest;
         let recorded = false;
         if (proposal && conversation?.speakerId && conversationKey) {
@@ -1088,6 +1177,20 @@ export class Residents {
               decision: { ...result.decision, speech: { text, to: replyTo ?? null } },
             };
           }
+          if (result.decision.speech)
+            r.state.pendingAgreementReply = {
+              world: latest.id,
+              text: result.decision.speech.text,
+              to: replyTo,
+              conversationId: conversation.id,
+            };
+          if (recorded) {
+            r.state.needsDecision = true;
+            r.wake = true;
+            r.state.plan = [];
+            r.state.waitUntil = 0;
+            r.nav = undefined;
+          }
           this.checkpoint(
             r,
             latest,
@@ -1098,6 +1201,30 @@ export class Residents {
               reason: reason ?? (recorded ? undefined : 'No new agreement recorded'),
             },
           );
+          // The agreement is durable before spending on its wording. A failed or
+          // budget-limited reply uses the factual acknowledgement above, never a
+          // new proposal, duplicate agreement, or unbounded model loop.
+          const spoken = await this.phraseAgreement(
+            r,
+            latest,
+            conversation,
+            replyTo,
+            {
+              accepted: recorded,
+              request: proposal,
+              status:
+                recorded && proposal.cancel
+                  ? 'cancelled'
+                  : (r.state.commitments?.find((c) => c.id === conversationKey)?.status ??
+                    'declined'),
+              facts: result.decision.speech?.text,
+            },
+            controller.signal,
+          );
+          if (spoken) {
+            result = { ...result, decision: { ...result.decision, speech: spoken } };
+            if (r.state.pendingAgreementReply) r.state.pendingAgreementReply.text = spoken.text;
+          }
         }
         if (
           !proposal &&
@@ -1116,7 +1243,16 @@ export class Residents {
             },
           };
         }
-        this.accept(r, latest, result, Date.now(), replyTo, chatOnly);
+        const finalWorld = this.worlds.get(r.state.world);
+        if (
+          !finalWorld ||
+          this.closed ||
+          controller.signal.aborted ||
+          this.memory.paused(r.config.id) ||
+          (!finalWorld.players[r.state.playerId]?.online && !r.state.inSpace)
+        )
+          return;
+        this.accept(r, finalWorld, result, Date.now(), replyTo, chatOnly);
         if (
           chatOnly &&
           (!r.state.plan.length || now >= r.state.until || p.hunger >= 40000 || p.thirst >= 40000)
@@ -1131,7 +1267,7 @@ export class Residents {
           r.state.plan = [];
           r.state.waitUntil = 0;
           r.nav = undefined;
-          this.checkpoint(r, latest);
+          this.checkpoint(r, finalWorld);
         }
       })
       .catch((e) => {
@@ -1168,6 +1304,70 @@ export class Residents {
         r.pending = undefined;
       });
   }
+  private async phraseAgreement(
+    r: Resident,
+    w: World,
+    conversation: NonNullable<ReturnType<typeof observe>['currentConversation']>,
+    replyTo: string | undefined,
+    receipt: Record<string, unknown>,
+    signal: AbortSignal,
+  ) {
+    if (!r.dialogue || signal.aborted || this.closed) return;
+    const p = w.players[r.state.playerId];
+    if (!p || !p.online) return;
+    const observation = conversationView(
+      observe(w, p, r.state, this.memory, r.config.id),
+      r.state,
+      conversation.speakerId ?? '',
+      !!replyTo,
+    );
+    // A newer question can arrive during a provider call. This receipt belongs
+    // only to the original speaker/message and cannot inherit the newer channel.
+    observation.currentConversation = conversation;
+    observation.conversationHistory = conversation.speakerId
+      ? this.memory
+          .conversation(r.config.id, conversation.speakerId, p.id, !!replyTo)
+          .map((e) => e.data)
+      : [];
+    const request = {
+      instructions:
+        conversationInstructions +
+        '\nYour personality: ' +
+        r.state.personality +
+        '\nRECEIPT REPLY ONLY: The server has already checked and recorded or declined this request. Say the receipt result naturally in your own voice. Do not claim unverified travel, training, employment or delivery happened. Explain any actual blocker. No new promises or actions: gameplayRequest and preferences MUST be null. Do not mention tools, validation or providers. Keep this reply brief and specific. The receipt facts override your earlier draft.',
+      observation: { ...observation, responsePhase: 'receipt', agreementResult: receipt },
+    };
+    const bytes =
+      Buffer.byteLength(JSON.stringify(request)) +
+      Buffer.byteLength(JSON.stringify(conversationTool));
+    if (bytes > 96000) return;
+    const reservation = this.budget.reserve(
+      r.config.id,
+      bytes,
+      conversationOutputLimit,
+      Date.now(),
+      r.dialogue.rates,
+    );
+    if (reservation === undefined) return;
+    try {
+      const answer = await r.dialogue.brain.decide(request, signal);
+      this.budget.settle(
+        reservation,
+        answer.inputTokens,
+        answer.outputTokens,
+        answer.cacheWriteTokens,
+        answer.cacheReadTokens,
+      );
+      if (this.closed || signal.aborted || this.memory.paused(r.config.id)) return;
+      const speech = decisionSchema.parse(answer.decision).speech;
+      if (answer.gameplayRequest || !speech || speech.text.trim().startsWith('*')) return;
+      return { text: speech.text, to: replyTo ?? null };
+    } catch {
+      this.budget.failed(reservation);
+      // Preserve the already-durable agreement and factual fallback, no retry.
+      return;
+    }
+  }
   private accept(
     r: Resident,
     w: World,
@@ -1196,7 +1396,7 @@ export class Residents {
       return;
     }
     if (d.speech && r.state.replyTo === replyTo) delete r.state.replyTo;
-    r.state.notebook = d.notebook;
+    if (!r.dialogue || !chatOnly) r.state.notebook = d.notebook;
     if (!chatOnly) {
       r.state.intent = d.intent;
       r.state.plan = d.plan;

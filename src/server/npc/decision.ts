@@ -249,6 +249,7 @@ export interface BrainRequest {
   observation: unknown;
 }
 export interface BrainResult {
+  preferences?: import('./agenda.ts').LearnedPreference[] | null;
   gameplayRequest?: GameplayRequest | null;
   decision: Decision;
   inputTokens: number;

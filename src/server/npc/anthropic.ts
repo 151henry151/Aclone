@@ -5,6 +5,7 @@ import {
   conversationOutputLimit,
   conversationDecision,
   conversationRequest,
+  conversationPreferences,
 } from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 
@@ -97,9 +98,11 @@ export class AnthropicBrain implements Brain {
       throw Error('AI response did not contain one valid turn');
     let value = calls[0].input;
     let gameplayRequest;
+    let preferences;
     if (this.mode === 'conversation') {
       try {
         gameplayRequest = conversationRequest(value);
+        preferences = conversationPreferences(value);
         value = conversationDecision(value);
       } catch {
         throw Error('AI response did not contain one valid turn');
@@ -120,6 +123,7 @@ export class AnthropicBrain implements Brain {
     return {
       decision: parsed.data,
       gameplayRequest,
+      preferences,
       inputTokens: inputTokens!,
       outputTokens: outputTokens!,
       cacheWriteTokens,

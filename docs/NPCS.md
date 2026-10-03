@@ -88,12 +88,66 @@ values override remembered/default figures. Building Admin shows the saved wage
 separately from your draft: press **Save details** to apply a change. Factory wages
 are per completed production cycle; farm wages are per harvested plot.
 
+## Continuity and conversation (0.22.0)
+
+Each resident now keeps conversation summaries for up to 64 person/world/channel
+combinations and up to 24 learned activity preferences. Chat updates only its own
+scoped summary, rather than replacing a notebook shared by everybody. Empty
+summaries preserve existing notes. The server assigns the speaker, world and
+privacy scope; models cannot relabel private material as public. Public replies
+exclude private summaries, raw journals, mixed legacy notebooks and private
+agreements. A private reply receives only that speaker's private memories plus
+permitted public context. Old notebooks and full journals remain on disk for the
+operator, but unclassified old notes are not automatically promoted into public
+memory. Recent conversation history on the correct channel remains available.
+
+Residents can form soft preferences for employment, trading, gathering, farming,
+fishing, business, housing and leisure. The conversation model should record its
+own considered inclination, not blindly adopt a player's instruction. Gameplay
+receives bounded preferences, relationship summaries, the current goal and recent
+outcomes. Relevant options indicate whether they fit a learned preference, without
+copying private reasons into their descriptions. Survival and accepted obligations
+still take precedence; a preference never grants permission or guarantees a choice.
+No background reflection or extra conversation calls are scheduled for this memory.
+
+For a delivery, employment or cancellation proposal, the server first records or
+rejects the agreement using current game rules. It then permits one separately
+budgeted reply call to phrase that result in the resident's personality. This call
+cannot add another agreement or change gameplay. If unavailable, invalid or over
+budget, the factual acknowledgement is used instead. Its pending delivery is saved
+with the agreement and cleared with the actual chat action, so a restart during
+wording does not lose the reply or duplicate the agreement. Ordinary conversation
+still takes one call; providers remain OpenAI for Mabel and Claude for the others.
+Generated phrasing remains fallible, so actual game outcomes remain authoritative.
+
+Addressed chat takes the next available request slot, with oldest-call order
+breaking ties. In-flight requests, resident intervals and the shared hourly/daily/
+monthly limits still apply; this is priority, not a latency guarantee or extra
+spending allowance. Chat turns no longer generate gameplay candidates or reset
+economic measurement windows. A sole safe accepted next plan runs locally without
+asking Jev to select it; survival/recovery or competing agreements can still require
+selection. These shortcuts preserve normal movement, tuition, stock, wages and
+production checks. They add no free resources or survival immunity.
+
+This is an incremental foundation. Persistent high-level strategy, general errands,
+loans, autonomous negotiation and ambient NPC conversations are not implemented by
+this change. Delivery and employment remain the executable chat agreement types.
+The guide is retrieved locally before conversation; chat has no interactive lookup
+loop. A narrow unsupported-promise backstop remains, with common conversational
+idioms exempted. AI labels and quiet-neighbour behavior remain in place.
+
+Regression scenarios in `tests/npc-agenda.test.ts`, `npc-employment.test.ts` and
+`npc-commitments.test.ts` cover private/public isolation, persistence, preference
+propagation into Jev's wire payload, scheduling priority, bounded calls, safe
+fallbacks and actual training/employment/delivery. They use fake provider responses;
+they verify the machinery, not the subjective realism of live model dialogue.
+
 ## Agreements made in chat
 
 Residents speak as a single character in the first person. Dialogue and server-generated acknowledgements describe agreements, practical obstacles and verified progress without naming providers or describing separate chat and decision systems. AI badges and operator diagnostics remain available; this voice guidance does not let residents claim that an agreed task has already happened.
 
-A conversation model can record a structured delivery agreement for Jev. Version 0.21.1 also supports a concrete employment request with optional training. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement wakes one new gameplay decision; it does not execute a
-chat model's arbitrary actions or call speech again. Jev sees the agreement,
+A conversation model can record a structured delivery agreement for Jev. Version 0.21.1 also supports a concrete employment request with optional training. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement schedules its next gameplay step; it does not execute a
+chat model's arbitrary actions. One bounded wording call can follow validation. Jev sees the agreement,
 remaining quantity and real blockers, alongside its ordinary opportunities.
 
 For example, an agreed 118 wheat at 6d each becomes a delivery with an exact buyer
@@ -113,7 +167,7 @@ Employment grants no right to withdraw an employer's stock. If the resident woul
 need to buy goods first, it must explain that prerequisite instead of promising to
 load the employer's crops. Invalid proposals receive a factual explanation and are
 not added to the delivery queue; valid proposals acknowledge planning, not departure
-or completion. Jev still chooses actions and survival remains a priority.
+or completion. Multiple options still go to Jev; a sole safe agreed plan can run locally. Survival remains a priority.
 
 An existing delivery that becomes blocked gets one factual notice when its
 requester is online in the parish. This uses no additional AI call and is remembered
@@ -366,11 +420,11 @@ Farming still requires explicit tending and harvest under ordinary seasonal rule
 
 OpenAI or Claude runs **only for an addressed human conversation**, receiving
 bundled help, current observations, memories and Jev's chosen future plan.
-The small `converse` tool returns speech, notebook and an optional gameplay request. A request is durable guidance for the next Jev decision; it cannot replace
+The small `converse` tool returns speech, a channel-scoped notebook, optional learned preferences and an optional gameplay request. A request is durable guidance for the next Jev decision; it cannot replace
 Jev's actions. Failed/capped chat preserves gameplay; an addressed human receives
 one private budget notice per question if the chat budget cannot be reserved.
 Unsolicited speech is also rejected by the controller, independent of prompts.
-Completed questions never trigger another conversation call. Provider failures
+After the bounded agreement reply, completed questions never trigger another conversation call. Provider failures
 back off for one minute, then five minutes, with at most three attempts per
 message. These markers persist across restarts. A new human message can try again.
 
@@ -380,14 +434,15 @@ from ChatGPT/Claude subscriptions. No new provider calls occur when disabled.
 
 ## Helping other players
 
-All four conversation providers receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) when answering an addressed question, including controls, employment, production, ownership, farming, lodging,
+Both conversation providers receive the complete [FAQ](FAQ.md) and [economy guide](ECONOMY.md) when answering an addressed question, including controls, employment, production, ownership, farming, lodging,
 account help and activities. These core rules no longer depend on her knowing
 which terms to search for. Up to three additional excerpts each can address the
 player's question and her current activity, using the [player guide](PLAYING.md)
 and current catalog data. Each excerpt group is bounded to 6,500 characters.
-She can still request a read-only `guide` lookup by topic or exact entry ID.
-Queries never become filesystem paths or web requests; search is local and uses
-no paid embeddings.
+The server selects these excerpts before the call; the conversation tool cannot
+request an additional guide or recall lookup. Legacy gameplay adapters retain
+those steps. Queries never become filesystem paths or web requests; search is
+local and uses no paid embeddings.
 
 Holding a job and having an active shift are distinct. Workplace summaries flag
 expired shifts or shifts that expire before the next batch, and supply the exact
@@ -403,15 +458,15 @@ seasonal plots. Workplaces she owns, works at, plans to visit or is discussing
 are prioritised within the bounded selection. These are read-only facts: the
 model still decides what to do and all actions pass normal game validation.
 
-Her latest outcome retains the attempted action and error through chat and
-restart. Action journals include job/shift/skill changes and affected building
+Her gameplay state retains the attempted action and error through restart; chat
+uses scoped agreement progress, current workplace diagnoses and wage receipts. Action journals include job/shift/skill changes and affected building
 stock/capital; recent personal wage receipts confirm actual payment. This helps
 her distinguish agreeing to work, accepting a job and completing production.
 Player claims and notebook summaries are fallible; current observations take
 precedence. She should own mistakes, explain the cause and next step, and use
 occasional gentle humour without repetitive announcements or invented memories.
-Advice remains model-generated and can be wrong. Private routing survives an
-extra lookup turn, and other players' private data is not added to these reports.
+Advice remains model-generated and can be wrong. Private routing survives the
+optional receipt reply, and other players' private memories are excluded in code.
 
 Developers: keep these manuals accurate as gameplay changes. Fixed-path files
 are read once per process and shipped in the source archive and Docker runtime;
@@ -465,8 +520,9 @@ apply only when the provider reports a cache hit; the cap does not assume one.
 
 - Plans have up to 12 steps and 30 bounded repeats. Routine movement and task
   completion run locally without an API call. Plans can last up to 30 minutes.
-- The full FAQ/economy fundamentals, a small notebook, recent journal excerpts,
-  selected workplace details and a compact directory enter each request. Total
+- Conversation receives FAQ/economy fundamentals, scoped memories, selected
+  workplace details and a compact directory. Raw journals and mixed legacy
+  notebooks are excluded from conversation. Total
   request/tool JSON is capped at 96,000 UTF-8 bytes (not tokens). Old memories use local SQLite
   keyword search and pagination (up to eight excerpts per turn); there is no paid embedding/vector service.
 - Addressed human messages, failed actions and newly critical needs can wake her.
@@ -585,7 +641,7 @@ Memory lives in `aclone.sqlite` and is included in ordinary game backups.
 History is retained indefinitely, so disk use grows with conversation/activity;
 monitor the database and backups. There is no automatic pruning or player-facing
 erasure tool in this prototype. Deletion requests require operator handling of
-the journal, notebook, saved recall excerpts and retained backups together.
+the journal, notebook, scoped agenda memories, saved recall excerpts and retained backups together.
 Disabling the NPC does not delete memories. Persistent history means retrievable
 records, not guaranteed perfect recall by the model.
 

@@ -5,6 +5,8 @@ import type { Step } from './decision.ts';
 import type { Presence } from './habits.ts';
 import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  pendingAgreementReply?: { world: string; text: string; to?: string; conversationId?: number };
+  agenda?: import('./agenda.ts').AgendaMemory;
   presence?: Presence;
   commitments?: Commitment[];
   decisionProvider?: string;

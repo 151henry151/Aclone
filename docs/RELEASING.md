@@ -4,6 +4,26 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.22.0
+
+Back up the database, pull, run `npm ci`, rebuild with
+`BASE_PATH=/aclone npm run build`, and restart the service. Production deployment
+remains operator-managed. No new keys, dependencies or budget settings are needed.
+
+NPC summaries now have person, world and channel scopes; unclassified old notebooks
+remain stored but are excluded from dialogue. Existing identities, journals and
+agreements are preserved. Learned preferences guide gameplay. Agreements can use
+one additional budgeted wording call, with a durable fallback; ordinary chat stays
+at one call. Sole safe agreed plans run without paid selection. See
+[NPC continuity](NPCS.md#continuity-and-conversation-0220) for behavior and limits.
+
+Validation: all 309 automated tests passed with test concurrency limited to two,
+plus targeted receipt/privacy regressions, TypeScript, formatting and the `/aclone`
+production build. The first unrestricted run exceeded an existing two-second
+planner timing assertion under concurrent test load; the bounded full run passed.
+Tests use fake providers and make no paid AI calls. Naturalness still needs live
+player feedback; tests verify memory isolation, follow-through and call limits.
+
 ## Deploying 0.21.3
 
 Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart

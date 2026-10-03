@@ -18,6 +18,7 @@ for (const provider of ['openai', 'anthropic'] as const)
         },
       },
       notebook: 'Robin owns a mill.',
+      preferences: [{ activity: 'employment', stance: 'prefer', reason: 'I enjoy steady wages.' }],
       speech: { text: 'The mill uses its own wheat and investment to make flour.', to: 'robin' },
     };
     let body: any;
@@ -55,12 +56,14 @@ for (const provider of ['openai', 'anthropic'] as const)
     assert.deepEqual(Object.keys(schema.properties).sort(), [
       'gameplayRequest',
       'notebook',
+      'preferences',
       'speech',
     ]);
     assert.equal(schema.additionalProperties, false);
     assert.equal(result.decision.speech?.to, 'robin');
     assert.deepEqual(result.decision.plan, [{ kind: 'wait', seconds: 60 }]);
     assert.equal(result.inputTokens, 200);
+    assert.deepEqual(result.preferences, reply.preferences);
     assert.deepEqual(result.gameplayRequest, reply.gameplayRequest);
   });
 

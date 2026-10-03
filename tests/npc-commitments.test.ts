@@ -129,7 +129,7 @@ test('overlapping delivery agreements cannot count sales below either promised m
   mill.buy.wheat = 700;
   assert.doesNotThrow(() => checkCommitmentPrice(w, state, sale));
 });
-test('conversation agreement wakes Jev exactly once, survives restart and drives a real delivery without another chat call', async (t) => {
+test('conversation agreement uses a bounded receipt reply, survives restart and drives a real delivery without paid decisions', async (t) => {
   let now = Date.now(),
     speechCalls = 0,
     decisions = 0;
@@ -213,7 +213,7 @@ test('conversation agreement wakes Jev exactly once, survives restart and drives
     r.capture(w);
     r.tick(0.5, now);
     await r.settled();
-    assert.equal(speechCalls, 1);
+    assert.equal(speechCalls, 2);
     const acknowledgement = w.messages
       .filter((m) => m.name === p.name && m.kind === 'chat')
       .at(-1)!;
@@ -236,8 +236,8 @@ test('conversation agreement wakes Jev exactly once, survives restart and drives
     }
     assert.equal(r.memory.load('rowan')!.commitments![0].status, 'completed');
     assert.equal(mill.stock.wheat, 118);
-    assert.equal(speechCalls, 1);
-    assert.ok(decisions >= 3);
+    assert.equal(speechCalls, 2);
+    assert.equal(decisions, 0, 'A sole safe accepted plan needs no paid selection');
   } finally {
     r.close();
     store.close();
@@ -335,7 +335,7 @@ for (const privateChat of [false, true]) {
       residents.tick(0.5, Date.now());
       await residents.settled();
       const replies = w.messages.filter((m) => m.name === p.name && m.kind === 'chat');
-      assert.equal(chatCalls, 1);
+      assert.equal(chatCalls, 2);
       assert.equal(replies.length, 1);
       assert.match(replies[0].text, /do not own.*employee/);
       assert.doesNotMatch(replies[0].text, /loading them now/);
@@ -409,7 +409,7 @@ test('recheck live ownership after the chat call and persist one legacy blocker 
     residents.capture(w);
     residents.tick(0.5, now);
     await residents.settled();
-    assert.equal(chatCalls, 1);
+    assert.equal(chatCalls, 2);
     assert.match(
       w.messages.filter((m) => m.name === p.name && m.kind === 'chat').at(-1)!.text,
       /do not own/,
@@ -438,7 +438,7 @@ test('recheck live ownership after the chat call and persist one legacy blocker 
     assert.equal(notices.length, 1);
     assert.match(notices[0].text, /do not own/);
     assert.equal(notices[0].to, human.id);
-    assert.equal(chatCalls, 1);
+    assert.equal(chatCalls, 2);
     assert.equal(residents.memory.load('rowan')!.commitments![0].blockedNoticeSent, true);
   } finally {
     residents.close();

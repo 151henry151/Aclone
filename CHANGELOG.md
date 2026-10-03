@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-03
+
+### Added
+
+- Give NPCs persistent conversation summaries scoped to each person and public/private channel, plus learned activity preferences shared with their gameplay planner. Preserve other relationships when updating a memory and retain preferences in bounded decision context.
+- Let NPCs phrase delivery and employment acknowledgements in their own voice after the server checks the agreement. Reserve at most one additional reply call, with a durable factual fallback if it fails or exceeds the budget.
+
+### Changed
+
+- Prioritize addressed conversations for the next available request slot. Skip action-candidate generation and economic evaluation on chat-only turns; continue a sole safe agreed plan locally without a paid gameplay selection.
+
+### Fixed
+
+- Exclude mixed legacy notebooks, raw journals and other people's private agreements from conversation context. Keep private preference reasons out of option descriptions and preserve queued acknowledgements through restart.
+- Avoid replacing ordinary phrases such as “I'll work out the numbers” with an unsupported-action correction. Correct the NPC guide's outdated lookup and conversation-call documentation.
+
 ## [0.21.3] - 2026-10-03
 
 ### Fixed

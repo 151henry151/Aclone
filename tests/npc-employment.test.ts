@@ -159,7 +159,7 @@ test('conversation tool requires explicit nullable employment and old delivery r
   assert.ok(!unqueuedPromise("I'll explain how milling works."));
 });
 
-test('chat request reaches actual school and mill through the resident executor, survives restart and uses one conversation call', async (t) => {
+test('chat request reaches actual school and mill through the resident executor, survives restart and uses a bounded receipt reply', async (t) => {
   let now = Date.now(),
     speeches = 0,
     includeRequest = true;
@@ -209,8 +209,24 @@ test('chat request reaches actual school and mill through the resident executor,
         provider: 'anthropic' as const,
         rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 5 },
         brain: {
-          async decide() {
+          async decide(req: any) {
             speeches++;
+            if (req.observation.responsePhase === 'receipt') {
+              assert.equal(req.observation.agreementResult.accepted, true);
+              assert.equal(req.observation.agreementResult.status, 'pending');
+              return {
+                decision: {
+                  ...idle,
+                  speech: {
+                    text: 'Milling sounds like an honest living, Hank. Count me in—though I still need that lesson before I can take the job.',
+                    to: 'wrong-person',
+                  },
+                },
+                gameplayRequest: null,
+                inputTokens: 10,
+                outputTokens: 5,
+              };
+            }
             return {
               decision: {
                 ...idle,
@@ -240,10 +256,10 @@ test('chat request reaches actual school and mill through the resident executor,
     residents.capture(w);
     residents.tick(0.5, now);
     await residents.settled();
-    assert.equal(speeches, 1);
+    assert.equal(speeches, 2);
     const response = w.messages.filter((m) => m.name === p.name).at(-1)!;
-    assert.match(response.text, /I have agreed to learn/);
-    assert.match(response.text, /not a report of finished training or a job change/);
+    assert.match(response.text, /Milling sounds like an honest living/);
+    assert.match(response.text, /still need that lesson before I can take the job/);
     assert.doesNotMatch(response.text, /\b(Jev|OpenAI|Claude|LLMs?|planner|gameplay|queued)\b/i);
     assert.equal(response.to, undefined);
     residents.close();
@@ -261,14 +277,14 @@ test('chat request reaches actual school and mill through the resident executor,
     assert.equal(residents.memory.load('elias')!.commitments![0].status, 'completed');
     assert.ok(p.skills.includes('miller'));
     assert.equal(p.job, mill.id);
-    assert.equal(speeches, 1);
+    assert.equal(speeches, 2);
     includeRequest = false;
     say(w, human.name, 'Elias, please do another errand for me.', 'chat');
     residents.capture(w);
     now += 6000;
     residents.tick(0.5, now);
     await residents.settled();
-    assert.equal(speeches, 2);
+    assert.equal(speeches, 3);
     assert.match(
       w.messages.filter((m) => m.name === p.name).at(-1)!.text,
       /have not taken on a new errand/,

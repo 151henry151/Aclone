@@ -5,6 +5,7 @@ import {
   conversationOutputLimit,
   conversationDecision,
   conversationRequest,
+  conversationPreferences,
 } from './conversation.ts';
 import { outputLimit, turnTool } from './turn-tool.ts';
 export { outputLimit, turnTool } from './turn-tool.ts';
@@ -58,6 +59,10 @@ export class OpenAIBrain implements Brain {
       throw Error('AI response missing token accounting');
     return {
       decision,
+      preferences:
+        this.mode === 'conversation'
+          ? conversationPreferences(JSON.parse(calls[0].arguments))
+          : undefined,
       gameplayRequest:
         this.mode === 'conversation'
           ? conversationRequest(JSON.parse(calls[0].arguments))
