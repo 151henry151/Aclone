@@ -59,7 +59,9 @@ for (const mobile of [false, true])
       for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
         const n = place(item);
         if (item === 'dirt') p.inventory.tools = 0;
-        await expect(gather).toHaveAttribute('data-id', n.id);
+        // CI's software renderer may take several seconds to present a teleported
+        // server snapshot. Keep the exact node assertion, with a bounded delivery wait.
+        await expect(gather).toHaveAttribute('data-id', n.id, { timeout: 15000 });
         await expect(gather).toBeEnabled();
         await expect(page.getByRole('dialog')).toHaveCount(0);
         const rect = (await gather.boundingBox())!;

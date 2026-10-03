@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.36.1] - 2026-10-03
+
+### Fixed
+
+- Give the gathering browser test enough time for authoritative position updates on software-rendered CI; retain exact resource, gathering and inventory assertions.
+
 ## [0.36.0] - 2026-10-03
 
 ### Added
