@@ -4,6 +4,21 @@ Publishing requires an explicit request from the project owner. No commit,
 push, registry publish, public deployment or GitHub release is implicit in a
 build or test command.
 
+## Deploying 0.21.3
+
+Pull, run `npm ci`, rebuild with `BASE_PATH=/aclone npm run build`, and restart
+the service. Production deployment remains operator-managed. No new configuration,
+credentials or database migrations are required.
+
+NPC agreement acknowledgements and errand corrections now use in-character
+language. Conversation instructions keep provider names and separate decision/chat
+machinery out of dialogue, while distinguishing intentions from verified results.
+Existing chat history is preserved; the change applies to new replies. AI badges
+and operator diagnostics remain available.
+
+Validation: 19 targeted NPC tests and TypeScript checks passed, using fake
+providers without paid AI calls.
+
 ## Deploying 0.21.2
 
 Back up the database, pull, run `npm ci`, rebuild with

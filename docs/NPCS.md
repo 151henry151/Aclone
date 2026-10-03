@@ -90,6 +90,8 @@ are per completed production cycle; farm wages are per harvested plot.
 
 ## Agreements made in chat
 
+Residents speak as a single character in the first person. Dialogue and server-generated acknowledgements describe agreements, practical obstacles and verified progress without naming providers or describing separate chat and decision systems. AI badges and operator diagnostics remain available; this voice guidance does not let residents claim that an agreed task has already happened.
+
 A conversation model can record a structured delivery agreement for Jev. Version 0.21.1 also supports a concrete employment request with optional training. Chat replies run independently of gameplay requests and retry cooldowns, without making a Jev call just to answer a question. An accepted agreement wakes one new gameplay decision; it does not execute a
 chat model's arbitrary actions or call speech again. Jev sees the agreement,
 remaining quantity and real blockers, alongside its ordinary opportunities.

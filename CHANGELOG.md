@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.21.3] - 2026-10-03
+
+### Fixed
+
+- Keep NPC dialogue in character: employment acknowledgements and errand corrections no longer expose the decision provider or separate chat/gameplay machinery. Conversation guidance uses one resident’s voice while preserving honest task status.
+
 ## [0.21.2] - 2026-10-02
 
 ### Fixed

@@ -242,7 +242,9 @@ test('chat request reaches actual school and mill through the resident executor,
     await residents.settled();
     assert.equal(speeches, 1);
     const response = w.messages.filter((m) => m.name === p.name).at(-1)!;
-    assert.match(response.text, /queued your request/);
+    assert.match(response.text, /I have agreed to learn/);
+    assert.match(response.text, /not a report of finished training or a job change/);
+    assert.doesNotMatch(response.text, /\b(Jev|OpenAI|Claude|LLMs?|planner|gameplay|queued)\b/i);
     assert.equal(response.to, undefined);
     residents.close();
     residents = new Residents(store, universe, worlds, options);
@@ -267,7 +269,10 @@ test('chat request reaches actual school and mill through the resident executor,
     residents.tick(0.5, now);
     await residents.settled();
     assert.equal(speeches, 2);
-    assert.match(w.messages.filter((m) => m.name === p.name).at(-1)!.text, /have not queued/);
+    assert.match(
+      w.messages.filter((m) => m.name === p.name).at(-1)!.text,
+      /have not taken on a new errand/,
+    );
     assert.equal(residents.memory.load('elias')!.commitments!.length, 1);
   } finally {
     residents.close();

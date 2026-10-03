@@ -1026,7 +1026,7 @@ export class Residents {
               say(
                 latest,
                 'AI notice',
-                `${r.state.name} received your message, but conversation is waiting for the shared AI budget. Gameplay can continue while funds remain for decisions.`,
+                `${r.state.name} received your message, but conversation is waiting for the shared AI budget.`,
                 'system',
                 conversation.speakerId,
               );
@@ -1076,12 +1076,12 @@ export class Residents {
               ? `I need to correct that before agreeing: ${reason} I have not accepted this delivery.`
               : !recorded
                 ? !proposal.delivery && !proposal.employment && !proposal.cancel
-                  ? 'I have not queued an action for that request. I can track a concrete goods delivery or training followed by a job at a named workplace; other suggestions do not become executable agreements yet.'
+                  ? 'I cannot take on that errand yet. I can agree to deliver specific goods, or learn a skill and take a job at a named workplace. Which of those did you have in mind?'
                   : 'I have not added a new agreement: it is already recorded, there is no matching request to cancel, or my four unfinished requests need attention first. Please ask about my existing agreements.'
                 : proposal.cancel
                   ? 'I have cancelled your latest unfinished request.'
                   : proposal.employment
-                    ? `I have queued your request to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(latest, player, proposal.employment) ?? 'Jev will plan the steps, with food, water and safe logout taking priority.'} This confirms the request, not that I have started studying or changed jobs.`
+                    ? `I have agreed to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(latest, player, proposal.employment) ?? 'I need to fit this around keeping myself fed, watered and rested.'} That is my agreement, not a report of finished training or a job change.`
                     : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and the buyer has the posted price, investment and storage for the order. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
             result = {
               ...result,
@@ -1110,7 +1110,7 @@ export class Residents {
             decision: {
               ...result.decision,
               speech: {
-                text: 'I need to correct that: I have not queued a new gameplay action from this message. A plan mentioned in chat is not an action. Please give me the workplace for a job/training request, or the goods and destination for a delivery, so I can record it properly.',
+                text: 'I spoke too soon: I have not taken on a new errand. Tell me which workplace you mean for a job or training, or which goods and destination for a delivery, so we can agree on the details.',
                 to: replyTo ?? null,
               },
             },

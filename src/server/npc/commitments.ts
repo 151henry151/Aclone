@@ -97,7 +97,7 @@ export function recordCommitment(
     delivered: 0,
     outcome: request.employment
       ? 'Employment requested; training and the job have not started.'
-      : 'Requested in conversation; Jev must choose a feasible plan. No goods delivered yet.',
+      : 'Delivery agreed; the trip still needs to be arranged. No goods delivered yet.',
   });
   state.commitments = all.slice(-20);
   return true;
@@ -275,7 +275,7 @@ export function commitmentChoices(w: World, p: Player, state: ResidentState): Fa
     if (!c.delivery) {
       c.status = 'blocked';
       c.outcome =
-        'This older request was only a note, not an executable agreement. Please ask again for a specific delivery or a job and any required training.';
+        'We discussed this earlier, but I did not agree to a specific errand. Please remind me of the delivery or workplace and any training you want me to take.';
       continue;
     }
     const d = c.delivery,
