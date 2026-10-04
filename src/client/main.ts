@@ -1,3 +1,4 @@
+import { townEventsPanel } from './story-editor';
 import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
 import { rulesSummary } from '../shared/rulesets';
 import { alcoholDose, intoxicationLabel } from '../shared/intoxication';
@@ -840,6 +841,7 @@ function drawMap() {
   ctx.fillText('HORN BALL', sx(63), sz(84));
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
+let storyPanelSignature = '';
 function openPanel(name: string) {
   mobile.close();
   mobile.setBlocked(true);
@@ -938,6 +940,23 @@ function refreshTradingPrices() {
     ]);
     if (key !== socialSignature && !document.activeElement?.matches('input,select,textarea')) {
       socialSignature = key;
+      renderPanel();
+    }
+  }
+  if (
+    world &&
+    me &&
+    (panel === 'inventory' || panel?.startsWith('book:') || panel === 'townEvents')
+  ) {
+    const key = JSON.stringify([
+      panel,
+      world.creator?.books,
+      world.creator?.townEvents,
+      me.inventory,
+      Math.floor(world.time / 60),
+    ]);
+    if (key !== storyPanelSignature) {
+      storyPanelSignature = key;
       renderPanel();
     }
   }
@@ -1211,6 +1230,27 @@ function renderPanel() {
     );
     return;
   }
+  if (panel?.startsWith('book:')) {
+    const book = world.creator?.books.find((b) => b.id === panel.slice(5));
+    if (!book || !(me.inventory[book.item] > 0)) {
+      modal('Book unavailable', '<p>Carry the book to read it.</p>');
+      return;
+    }
+    modal(
+      book.title,
+      book.pages
+        .map(
+          (text, i) =>
+            `<section class="notice"><small>Page ${i + 1} / ${book.pages.length}</small><p style="white-space:pre-wrap">${esc(text)}</p></section>`,
+        )
+        .join(''),
+    );
+    return;
+  }
+  if (panel === 'townEvents') {
+    modal('Town events', townEventsPanel(world));
+    return;
+  }
   if (panel === 'inventory' || panel === 'skills') {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
@@ -1221,7 +1261,14 @@ function renderPanel() {
             .filter(([, n]) => n)
             .map(
               ([id, n]) =>
-                `<div><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each · ${esc(nutritionDescription(items[id] ?? { name: id, weight: 0, price: 0 }))}${alcoholDose(id) ? ' · Alcohol: repeated drinks impair steering and vision' : ''}</small></span><strong>${n}</strong>${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}</div>`,
+                `<div><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${items[id]?.weight ?? 0} weight each · ${esc(nutritionDescription(items[id] ?? { name: id, weight: 0, price: 0 }))}${alcoholDose(id) ? ' · Alcohol: repeated drinks impair steering and vision' : ''}</small></span><strong>${n}</strong>${(
+                  world!.creator?.books ?? []
+                )
+                  .filter((b) => b.item === id)
+                  .map((b) => button('Read ' + esc(b.title), 'readBook', `data-id="${esc(b.id)}"`))
+                  .join(
+                    '',
+                  )}${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}</div>`,
             )
             .join(
               '',
@@ -1292,7 +1339,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1890,6 +1937,13 @@ app.addEventListener('click', async (e) => {
       case 'joinGame':
         send({ type: 'joinGame', game: id });
         closePanel();
+        break;
+      case 'readBook':
+        send({ type: 'readBook', book: id });
+        openPanel('book:' + id);
+        break;
+      case 'townEvents':
+        openPanel('townEvents');
         break;
       case 'sound':
         sound.toggle();

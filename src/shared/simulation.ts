@@ -1,3 +1,4 @@
+import { readBook, tickTownEvents } from './world-stories.ts';
 import { drinkAlcohol, intoxicatedSteer } from './intoxication.ts';
 import { socialAction } from './social.ts';
 import {
@@ -338,6 +339,10 @@ export function act(w: World, id: string, a: Action): string {
   if (type === 'catalogue') {
     setCatalogue(w, p, a.catalogue);
     return 'World catalogue saved.';
+  }
+  if (type === 'readBook') {
+    readBook(w, p, str(a.book));
+    return '';
   }
   if (type === 'quest') return questAction(w, p, a);
   if (
@@ -1681,6 +1686,7 @@ export function advance(w: World, seconds: number) {
   w.time = end;
   harbourSupply(w, end);
   refreshOrders(w);
+  tickTownEvents(w);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;

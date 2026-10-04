@@ -22,6 +22,7 @@ function targets(w: World): [string, string][] {
     ['', 'Any'],
     ...w.buildings.map((b) => [b.id, 'Building: ' + b.name] as [string, string]),
     ...(w.creator?.objects ?? []).map((o) => [o.id, 'Object: ' + o.name] as [string, string]),
+    ...(w.creator?.books ?? []).map((b) => [b.id, 'Read: ' + b.title] as [string, string]),
     ...resourceNodes.map(
       (n) => [n.id, 'Gathering ground: ' + n.name + ' (' + n.id + ')'] as [string, string],
     ),

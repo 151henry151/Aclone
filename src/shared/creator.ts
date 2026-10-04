@@ -1,3 +1,4 @@
+import { bookSchema, townEventSchema } from './world-stories.ts';
 import { ambientSchema } from './ambient.ts';
 import { maximumHealth } from './nutrition.ts';
 import { landscapeBlocks, scatterObjects } from './landscape.ts';
@@ -134,6 +135,8 @@ export const creatorSchema = z.object({
   models: z.array(blueprintSchema).max(64).default([]),
   objects: z.array(objectSchema).max(128).default([]),
   rules: z.array(ruleSchema).max(64).default([]),
+  books: z.array(bookSchema).max(16).default([]),
+  townEvents: z.array(townEventSchema).max(16).default([]),
   ambience: z.array(ambientSchema).max(32).default([]),
   terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
   resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
@@ -165,12 +168,15 @@ export function validateCreator(w: World, input: unknown) {
     }
     for (const id of Object.keys(q.rewards)) item(id);
   }
+  for (const book of c.books) item(book.item);
+  for (const e of c.townEvents)
+    if (e.quest && !c.quests.some((q) => q.id === e.quest)) throw Error('Event quest is missing');
   for (const g of c.guards) {
     item(g.item);
     skill(g.skill);
   }
 
-  for (const list of [c.models, c.objects, c.rules, c.quests, c.guards])
+  for (const list of [c.models, c.objects, c.rules, c.quests, c.guards, c.books, c.townEvents])
     if (new Set(list.map((v) => v.id)).size !== list.length)
       throw Error('Each object, model and rule needs a unique ID');
   for (const m of c.models)

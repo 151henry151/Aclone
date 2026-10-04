@@ -208,3 +208,9 @@ In **Assets → Paint an original texture**, paint a 256 × 256 tile with mouse 
 Use original or licensed mono/stereo clips no longer than 30 seconds (2 MiB upload limit). Invalid or oversized decoded audio stays silent. Loading is serial, with eight cached clips; there is no playback before a user gesture or in hidden tabs. Media bundles retain uploaded sounds; plain design exports omit their audio zones. Radio streams are not supported.
 
 Players can separately adjust **Engines**, **Effects & machinery**, **Ambience**, and **Chat alerts** under **Pilot & preferences**. Master mute/volume still controls all four. Preferences persist in the browser; arrival history never triggers a backlog of chat alerts.
+
+## Books, tutorials and events
+
+**Books** binds up to eight text pages to a carried item; create a custom book in Catalogue or attach instructions to existing equipment. Readers use **Inventory → Read**. Reading consumes nothing and can satisfy an **Interact** quest objective targeting the book. Pages render as text, never HTML or scripts. Distribute books through shops, rewards or behavior rules.
+
+Use **Quests** for ordered tutorials (read, gather, buy, study, take a job), including explicit rewards and reset-on-death policy. **Town events** announces recurring festivals/markets and links an existing quest. First day is measured from world creation; one game day is 600 real seconds. Repeat 0 means once. Events create no money and never replay a backlog of missed notices after downtime. Players find current events from the World menu. Both definitions travel with exported designs.

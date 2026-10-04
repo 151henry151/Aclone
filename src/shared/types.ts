@@ -251,6 +251,7 @@ export interface World {
   buildings: Building[];
   zones: Zone[];
   terrain: { x: number; z: number; radius: number; height: number }[];
+  townEventRuns?: Record<string, string>;
   messageSeq?: number;
   messages: {
     id?: number;

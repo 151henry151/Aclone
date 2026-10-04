@@ -1,3 +1,5 @@
+import { bookSchema, townEventSchema } from '../shared/world-stories';
+import { booksEditor, eventsEditor } from './story-editor';
 import { ambientSchema } from '../shared/ambient';
 import { rulesets } from '../shared/rulesets';
 import {
@@ -37,6 +39,8 @@ export const creatorTabs = [
   'Objects',
   'Behaviors',
   'Quests',
+  'Books',
+  'Town events',
   'Access rules',
   'Layout',
   'Production',
@@ -48,6 +52,8 @@ export const creatorTabs = [
 let draft: Blueprint | undefined,
   contextWorld = '',
   audioId = '',
+  bookId = '',
+  eventId = '',
   objectId = '',
   ruleId = '',
   questId = '',
@@ -195,6 +201,8 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   if (contextWorld !== w.id) {
     draft = undefined;
     audioId = '';
+    bookId = '';
+    eventId = '';
     objectId = '';
     ruleId = '';
     questId = '';
@@ -212,6 +220,8 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   const modelOptions: [string, string][] = c.models.map((m) => [m.id, m.name]);
   if (tab === 'Start here')
     return `<div class="guide-grid"><section><h3>Build a world in six steps</h3><ol><li><b>Rules</b>: set survival, economy, sea level and day length.</li><li><b>Arena</b>: choose CTF, capture point or deathmatch; move bases and set victory rules.</li><li><b>Workshop</b>: assemble reusable models or bind uploaded visuals.</li><li><b>Objects</b>: place trees, scenery, triggers, props or obstacles.</li><li><b>Behaviors</b>: add interact, zone-entry and timer actions without code.</li><li><b>Script</b>: add Lua for advanced conditions using the same effects.</li></ol></section><section><h3>Creator tools</h3><p>Changes are live for everyone in this world. Prototype in a separate world first. Saved designs survive server restarts.</p><p>Upload your own PNG/JPEG, OBJ or animated GLB in <b>Assets</b>, then select it in Workshop. Bind MP3 uploads or original woodland/shore/storm ambience in Audio zones.</p><p>Use <b>Layout</b> to rename, move and reskin existing functional buildings. <b>Vehicles</b> tunes physics; <b>Workshop</b> assigns custom appearances to vehicle slots.</p><p>Export a world design in Transfer and create a new world from it. Exports contain design data, not player accounts or money.</p></section></div>`;
+  if (tab === 'Books') return booksEditor(w, bookId);
+  if (tab === 'Town events') return eventsEditor(w, eventId);
   if (tab === 'Audio zones') {
     const zones = c.ambience ?? [],
       a = zones.find((a) => a.id === audioId);
@@ -411,6 +421,18 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'catalogue', catalogue });
   }
   if (action === 'quest') questId = value;
+  if (action === 'book') bookId = value;
+  if (action === 'townEvent') eventId = value;
+  if (action === 'deleteBook') {
+    c.books = c.books.filter((b) => b.id !== value);
+    bookId = '';
+    send({ type: 'creator', creator: c });
+  }
+  if (action === 'deleteTownEvent') {
+    c.townEvents = c.townEvents.filter((e) => e.id !== value);
+    eventId = '';
+    send({ type: 'creator', creator: c });
+  }
   if (action === 'audio') audioId = value;
   if (action === 'deleteAudio') {
     c.ambience = c.ambience.filter((a) => a.id !== value);
@@ -420,6 +442,7 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
   if (action === 'guard') guardId = value;
   if (action === 'deleteQuest') {
     c.quests = c.quests.filter((q) => q.id !== value);
+    for (const e of c.townEvents) if (e.quest === value) e.quest = '';
     send({ type: 'creator', creator: c });
     questId = '';
   }
@@ -479,7 +502,28 @@ export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefin
     d = new FormData(form),
     str = (k: string) => String(d.get(k) ?? ''),
     num = (k: string) => Number(d.get(k));
-  if (form.id === 'creator-audio-form') {
+  if (form.id === 'creator-book-form') {
+    const b = bookSchema.parse({
+      id: bookId || crypto.randomUUID(),
+      title: str('title'),
+      item: str('item'),
+      pages: Array.from({ length: 8 }, (_, i) => str('page' + i).trim()).filter(Boolean),
+    });
+    c.books = [...c.books.filter((old) => old.id !== b.id), b];
+    bookId = b.id;
+  } else if (form.id === 'creator-event-form') {
+    const e = townEventSchema.parse({
+      id: eventId || crypto.randomUUID(),
+      title: str('title'),
+      description: str('description'),
+      startsDay: num('startsDay'),
+      repeatDays: num('repeatDays'),
+      durationDays: num('durationDays'),
+      quest: str('quest'),
+    });
+    c.townEvents = [...c.townEvents.filter((old) => old.id !== e.id), e];
+    eventId = e.id;
+  } else if (form.id === 'creator-audio-form') {
     const a = ambientSchema.parse({
       id: audioId || crypto.randomUUID(),
       name: str('name'),
@@ -629,7 +673,22 @@ export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefin
 }
 
 export function creatorMemoryKey() {
-  return [draft?.id, objectId, ruleId, buildingId, recipeId, vehicleSlot].join(':');
+  return [
+    draft?.id,
+    objectId,
+    ruleId,
+    buildingId,
+    recipeId,
+    vehicleSlot,
+    audioId,
+    bookId,
+    eventId,
+    questId,
+    guardId,
+    catalogueItemId,
+    catalogueSkillId,
+    templateId,
+  ].join(':');
 }
 
 /** Keep conditional controls useful and load saved layout values when selecting a building. */

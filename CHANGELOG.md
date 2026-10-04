@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-10-03
+
+### Added
+
+- Creator-authored inventory books, reading objectives for tutorials, and recurring town events linked to quests. Event notices survive reloads without replaying missed occurrences.
+
+### Fixed
+
+- Keep creator form drafts separate for individual audio zones, books, events and catalogue records; refresh readable inventory when a new book arrives.
+
 ## [0.45.0] - 2026-10-03
 
 ### Added
