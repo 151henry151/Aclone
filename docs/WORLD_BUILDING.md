@@ -220,3 +220,9 @@ Use **Quests** for ordered tutorials (read, gather, buy, study, take a job), inc
 Enable `lotteryEnabled` in Rules; `lotteryTicketPrice` is a positive integer in hundredths of a denarius and changes at the next round. It defaults off. The World menu exposes entry, jackpot contributions, odds and recent results. Draws use 365 game days from world creation (about 61 hours), independent of decorative clock speed. Each round admits at most 100 tickets per player, 10,000 total.
 
 Every coin comes from a player's cash: no treasury faucet or house cut. Empty draws carry their jackpot; downtime resolves the existing draw once, without simulating fictional entries. Paid tickets remain valid if the owner disables new entries. Offline winners receive local cash, including after character death. Jackpot, entries, deadline and result history persist across restarts; exported designs omit those balances. This is in-game money only.
+
+## Advanced robocrows
+
+Enable `crowAbilities` together with `fighting` for open-world drone combat. **Activities** offers Scout (fast/unarmed), Interceptor (machine/plasma, stronger hull) and Bomber (slower, grenades/rockets). Each launch consumes one Disposable robocrow; weapon costs and safe zones still apply. Mark and recall move only the drone, costing 25,000 energy with a ten-second cooldown. Return restores the pilot's original vehicle and location; destroying a drone returns its pilot without death penalties or kill rewards.
+
+Drones cannot trade, carry objectives, start jobs or enter team matches. This keeps recall separate from CTF transport. Puddlewick keeps ordinary scouting and disables advanced classes. These classes are Aclone's adaptation, not a reconstruction of eight undocumented historical ranks.

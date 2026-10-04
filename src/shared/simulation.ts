@@ -1,3 +1,4 @@
+import { crowClasses, crowAbility, returnCrow, type CrowClass } from './robocrows.ts';
 import { lotteryAction, tickLottery } from './lottery.ts';
 import { readBook, tickTownEvents } from './world-stories.ts';
 import { drinkAlcohol, intoxicatedSteer } from './intoxication.ts';
@@ -335,6 +336,21 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (
+    p.crowBody &&
+    ![
+      'crow',
+      'crowAbility',
+      'fire',
+      'chargeWeapon',
+      'chat',
+      'command',
+      'horn',
+      'engine',
+      'lights',
+    ].includes(type)
+  )
+    throw Error('Return from the robocrow before other activities');
   checkActionGuards(w, p, a);
   if (type === 'landscape') return landscapeAction(w, p, a);
   if (type === 'catalogue') {
@@ -851,13 +867,28 @@ export function act(w: World, id: string, a: Action): string {
     case 'lights':
       p.lights = !p.lights;
       break;
+    case 'crowAbility':
+      return crowAbility(w, p, str(a.operation));
     case 'crow': {
       requireThat(p.game !== 'combat', 'Leave combat before flying a robocrow');
       if (p.crowBody) {
-        Object.assign(p, p.crowBody);
-        delete p.crowBody;
+        returnCrow(w, p);
       } else {
+        requireThat(
+          !p.task && !p.game && !p.hitch && !p.atHome,
+          'Finish your activity and go outside first',
+        );
+        const crowClass = str(a.class ?? 'scout') as CrowClass;
+        requireThat(Object.hasOwn(crowClasses, crowClass), 'Unknown robocrow class');
+        requireThat(
+          crowClass === 'scout' || (w.settings.crowAbilities && w.settings.fighting),
+          'Advanced robocrows are disabled',
+        );
         requireThat((p.inventory.rc ?? 0) > 0, 'Carry a Disposable robocrow');
+        if (w.settings.crowAbilities && w.settings.fighting) {
+          p.crowClass = crowClass;
+          p.crowIntegrity = crowClasses[crowClass].integrity;
+        }
         stockAdd(p.inventory, 'rc', -1);
         p.crowBody = { x: p.x, z: p.z, vehicle: p.vehicle };
         p.vehicle = 7;
@@ -1453,7 +1484,9 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const surface =
     [0, 1, 4].includes(v.mode) && p.y <= ground + 1 ? roadConditions(w) : { speed: 1, grip: 1 };
-  const cap = v.speed * (input.boost ? 1.7 : 1) * surface.speed * (0.7 + condition * 0.003);
+  const crowSpeed = p.crowBody && p.crowClass ? crowClasses[p.crowClass].speed : 1;
+  const cap =
+    crowSpeed * v.speed * (input.boost ? 1.7 : 1) * surface.speed * (0.7 + condition * 0.003);
   p.speed +=
     ((powered ? throttle : 0) * v.acceleration * surface.grip - p.speed * (throttle ? 0.13 : 1.8)) *
     dt;
@@ -1535,6 +1568,10 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   delete p.hitch;
   delete p.task;
   delete p.crowBody;
+  delete p.crowClass;
+  delete p.crowIntegrity;
+  delete p.crowMark;
+  delete p.crowRecallAt;
   if (comic) {
     p.vehicle = 6;
     say(
@@ -1695,6 +1732,7 @@ export function advance(w: World, seconds: number) {
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;
   for (const p of Object.values(w.players)) {
+    if (p.crowClass && (!w.settings.crowAbilities || !w.settings.fighting)) returnCrow(w, p);
     if (p.online) {
       p.age += seconds / (600 * 365);
       p.lastSeen = end;

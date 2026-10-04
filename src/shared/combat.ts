@@ -1,3 +1,4 @@
+import { crowClasses, returnCrow } from './robocrows.ts';
 import { maximumHealth } from './nutrition.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorBlocksSegment } from './creator.ts';
@@ -81,7 +82,14 @@ function safe(w: World, p: { x: number; z: number }) {
 export function fireWeapon(w: World, p: Player, a: Action) {
   if (!w.settings.fighting) throw Error('Fighting is disabled on this world');
   if (safe(w, p)) throw Error('Weapons are disabled in safe zones');
-  if (p.atHome || p.task || p.crowBody || p.hitch) throw Error('Weapons are disabled here');
+  if (p.atHome || p.task || p.hitch) throw Error('Weapons are disabled here');
+  if (
+    p.crowBody &&
+    (!w.settings.crowAbilities ||
+      !p.crowClass ||
+      !crowClasses[p.crowClass].weapons.includes(String(a.weapon)))
+  )
+    throw Error('This robocrow cannot use that weapon');
   const key = String(a.weapon),
     def = weapons[key];
   if (!Object.hasOwn(weapons, key)) throw Error('Unknown weapon');
@@ -151,6 +159,11 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
       ? q.game === 'combat' && shooter.team !== q.team
       : q.game !== 'combat');
   const hit = (shooter: Player | undefined, q: Player, amount: number) => {
+    if (q.crowBody && q.crowClass) {
+      q.crowIntegrity = (q.crowIntegrity ?? 18000) - amount;
+      if (q.crowIntegrity <= 0) returnCrow(w, q);
+      return;
+    }
     q.health -= damage(amount, w.vehicleTuning?.[q.vehicle]?.armour ?? vehicles[q.vehicle].armour);
     if (q.health > 0) return;
     leaveCombat(w, q);

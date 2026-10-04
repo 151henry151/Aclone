@@ -89,6 +89,10 @@ export interface Player {
   tribe?: string;
   family?: string;
   hitch?: string;
+  crowClass?: import('./robocrows.ts').CrowClass;
+  crowIntegrity?: number;
+  crowMark?: { x: number; y: number; z: number };
+  crowRecallAt?: number;
   crowBody?: { x: number; z: number; vehicle: number };
   muted: boolean;
   online: boolean;
@@ -165,6 +169,7 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  crowAbilities: boolean;
   lotteryEnabled: boolean;
   lotteryTicketPrice: number;
   jobsEnabled: boolean;

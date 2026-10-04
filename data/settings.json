@@ -46,5 +46,6 @@
   "ownerOperation": false,
   "postDeathGraceSeconds": 0,
   "lotteryEnabled": false,
-  "lotteryTicketPrice": 100
+  "lotteryTicketPrice": 100,
+  "crowAbilities": false
 }

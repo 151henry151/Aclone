@@ -1,3 +1,4 @@
+import { crowClasses } from '../shared/robocrows';
 import { lotteryPanel } from './lottery';
 import { townEventsPanel } from './story-editor';
 import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
@@ -950,13 +951,19 @@ function refreshTradingPrices() {
     (panel === 'inventory' ||
       panel?.startsWith('book:') ||
       panel === 'townEvents' ||
-      panel === 'lottery')
+      panel === 'lottery' ||
+      panel === 'activities')
   ) {
     const key = JSON.stringify([
       panel,
       world.creator?.books,
       world.creator?.townEvents,
+      world.lottery,
       me.inventory,
+      me.crowBody,
+      me.crowClass,
+      me.crowMark,
+      me.crowIntegrity,
       Math.floor(world.time / 60),
     ]);
     if (key !== storyPanelSignature) {
@@ -1295,7 +1302,17 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced ${esc(world.creator?.arena.teams[0] ?? 'Rust')} and ${esc(world.creator?.arena.teams[1] ?? 'Moss')} teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} ${world.creator ? `Win at ${world.creator.arena.scoreLimit} points; rounds last ${world.creator.arena.roundSeconds} seconds. ${world.creator.arena.mode === 'open' ? 'Choose a mode below.' : 'Fixed mode: ' + esc(world.creator.arena.mode) + '.'}` : 'Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.'}</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · ${esc(world.creator?.arena.teams[0] ?? 'Rust')} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${esc(world.creator?.arena.teams[1] ?? 'Moss')} · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
+      `${
+        world.settings.crowAbilities && world.settings.fighting
+          ? `<h3>Robocrows</h3><p>Scout: fast, unarmed. Interceptor: armoured, machine/plasma weapons. Bomber: slower, grenades/rockets. Every launch consumes one disposable robocrow. Available outside team matches; drone destruction returns you to your body.</p>${
+              me.crowBody
+                ? `<p>${esc(me.crowClass ?? 'Scout')} · integrity ${Math.max(0, me.crowIntegrity ?? 0)} · recall needs 25,000 energy and a 10-second cooldown. Only the drone moves; no goods or flags travel.</p>${button('Mark drone position', 'crowMark')}${button('Recall drone to mark', 'crowRecall')}${button('Return to body', 'crow')}`
+                : Object.entries(crowClasses)
+                    .map(([id, c]) => button('Launch ' + c.name, 'crowClass', `data-id="${id}"`))
+                    .join('')
+            }`
+          : ''
+      }${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced ${esc(world.creator?.arena.teams[0] ?? 'Rust')} and ${esc(world.creator?.arena.teams[1] ?? 'Moss')} teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} ${world.creator ? `Win at ${world.creator.arena.scoreLimit} points; rounds last ${world.creator.arena.roundSeconds} seconds. ${world.creator.arena.mode === 'open' ? 'Choose a mode below.' : 'Fixed mode: ' + esc(world.creator.arena.mode) + '.'}` : 'Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.'}</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · ${esc(world.creator?.arena.teams[0] ?? 'Rust')} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${esc(world.creator?.arena.teams[1] ?? 'Moss')} · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
         world.raceBest,
       )
         .map(([n, t]) => `${esc(n)} ${t.toFixed(1)}s`)
@@ -1945,6 +1962,15 @@ app.addEventListener('click', async (e) => {
       case 'joinGame':
         send({ type: 'joinGame', game: id });
         closePanel();
+        break;
+      case 'crowClass':
+        send({ type: 'crow', class: id });
+        break;
+      case 'crowMark':
+        send({ type: 'crowAbility', operation: 'mark' });
+        break;
+      case 'crowRecall':
+        send({ type: 'crowAbility', operation: 'recall' });
         break;
       case 'readBook':
         send({ type: 'readBook', book: id });

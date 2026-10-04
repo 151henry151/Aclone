@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.48.0] - 2026-10-03
+
+### Added
+
+- Optional Scout, Interceptor and Bomber robocrows with distinct speed, hull and weapon capabilities, plus energy/cooldown-limited drone mark and recall. Drone destruction returns the pilot safely without a kill reward.
+
+### Fixed
+
+- Prevent scouting drones from trading, starting jobs or entering other activities while their pilot remains elsewhere.
+
 ## [0.47.0] - 2026-10-03
 
 ### Added
