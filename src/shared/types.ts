@@ -222,6 +222,14 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  /** Public, expiring voluntary supply errands; never reservations of goods. */
+  supplyIntents?: {
+    player: string;
+    name: string;
+    building: string;
+    item: string;
+    expires: number;
+  }[];
   familyNames?: Record<string, string>;
   socialSequence?: number;
   families?: Record<string, import('./social.ts').Family>;

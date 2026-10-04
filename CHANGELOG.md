@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-10-04
+
+### Changed
+
+- Give NPCs visit-based market knowledge (Mabel remains the public-market guide), durable survival and production errands, public expiring supply intentions, and net-asset feedback. Correct service approaches and preflight gameplay requests before charging the shared budget.
+
 ## [0.51.1] - 2026-10-04
 
 ### Fixed

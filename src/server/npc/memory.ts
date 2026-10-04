@@ -5,6 +5,16 @@ import type { Step } from './decision.ts';
 import type { Presence } from './habits.ts';
 import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  supplyGoal?: import('./survival.ts').SupplyGoal;
+  markets?: import('./perception.ts').MarketMemory;
+  suspendedPlan?: {
+    world: string;
+    deaths: number;
+    intent: string;
+    plan: Step[];
+    expiresAt: number;
+  };
+  routine?: 'care' | 'employment';
   pendingAgreementReply?: { world: string; text: string; to?: string; conversationId?: number };
   agenda?: import('./agenda.ts').AgendaMemory;
   presence?: Presence;
@@ -12,6 +22,7 @@ export interface ResidentState {
   decisionProvider?: string;
   behaviorVersion?: number;
   evaluation?: {
+    netAssets?: number;
     time: number;
     cash: number;
     bank: number;
@@ -22,6 +33,7 @@ export interface ResidentState {
   experiences?: {
     goal: string;
     elapsedSeconds: number;
+    netAssetChange?: number;
     cashChange: number;
     bankChange: number;
     healthChange: number;

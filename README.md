@@ -22,6 +22,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
+AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival routines continue without AI credits; see [AI neighbours](docs/NPCS.md).
+
 Public waterworks prices support profitable fuel delivery and water production; existing owner-set quotes are preserved.
 
 Puddlewick has a premium government bread/water shop for shortages. Local production remains cheaper.

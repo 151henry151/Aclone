@@ -173,7 +173,7 @@ export class Navigator {
     this.sample += dt;
     if (this.elapsed > 240)
       return { input: idle, error: 'Journey timed out; choose a different approach' };
-    if (distance(p, this.target) <= this.radius + 1 && this.next >= this.path.length - 1) {
+    if (distance(p, this.target) <= this.radius + 0.5 && this.next >= this.path.length - 1) {
       return {
         input: {
           ...idle,
@@ -213,3 +213,6 @@ export class Navigator {
     };
   }
 }
+
+/** Fit large service footprints while staying strictly inside the player's 18m interaction range. */
+export const serviceRadius = 16;

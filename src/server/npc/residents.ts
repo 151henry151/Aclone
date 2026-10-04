@@ -1,4 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import {
+  perceivedWorld,
+  rememberMarkets,
+  inspectionChoices,
+  marketKnowledge,
+} from './perception.ts';
+import { suspendPlan, resumePlan, employmentRoutine } from './routines.ts';
+import { supplyChoices, continueSupply } from './survival.ts';
+import { publishSupplyIntent, anotherSupplier } from './cooperation.ts';
+import { netAssets } from './wealth.ts';
 import { workplace } from './workplace.ts';
 import { economicMenu } from './enterprise.ts';
 import { carePlan } from './care.ts';
@@ -16,11 +26,11 @@ import { decisionSchema, type Brain, type BrainResult, type Step } from './decis
 import type { NpcConfig } from './config.ts';
 import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
-import { Navigator } from './navigation.ts';
+import { Navigator, serviceRadius } from './navigation.ts';
 import { instructions, conversationInstructions, observe } from './observation.ts';
-import { careNeeded } from './strategy.ts';
+import { careNeeded, secondsToDamage } from './strategy.ts';
 import { characterRevision } from './character-facts.ts';
-import { jevInstructions } from './jev.ts';
+import { jevInstructions, LocalRequestError } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
 import { conversationTool, conversationOutputLimit, unqueuedPromise } from './conversation.ts';
@@ -166,6 +176,7 @@ export class Residents {
         lastCall: 0,
         cooldown: 0,
         active: false,
+        caring: state.routine === 'care',
       };
       this.residents.push(r);
       this.checkpoint(r, w, 'session', { event: 'Resident controller started', model: c.model });
@@ -260,6 +271,14 @@ export class Residents {
   }
 
   private checkpoint(r: Resident, w: World, kind?: string, data?: unknown) {
+    const player = w.players[r.state.playerId];
+    if (player)
+      publishSupplyIntent(
+        w,
+        player,
+        r.state.supplyGoal,
+        !!kind && ['decision', 'self-care', 'supply-progress', 'arrival', 'action'].includes(kind),
+      );
     this.store.saveWorld(w, Date.now() / 1000, () => {
       if (kind) this.memory.append(r.config.id, w.time, kind, data);
       this.capture(w);
@@ -312,7 +331,7 @@ export class Residents {
           r.state.replyTo = undefined;
         }
       }
-      refreshEmployment(w, p, r.state);
+      refreshEmployment(perceivedWorld(w, p, r.state, r.config.id === 'mabel'), p, r.state);
       if (recordDelivery(r.state, w.id, a)) {
         r.wake = true;
         r.state.needsDecision = true;
@@ -369,7 +388,9 @@ export class Residents {
   private choices(r: Resident, w: World, p: Player) {
     const a = this.account(r);
     if (r.state.inSpace) return spaceChoices(a, this.worlds, this.universe);
-    const deliveries = commitmentChoices(w, p, r.state);
+    const actual = w;
+    w = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+    const deliveries = commitmentChoices(w, p, r.state, actual.buildings);
     // A failed human agreement merits one factual notice, not another model call
     // or recurring public activity narration. Legacy channels default to private.
     const blocked = r.state.commitments?.find(
@@ -377,11 +398,11 @@ export class Residents {
         c.world === w.id &&
         c.status === 'blocked' &&
         !c.blockedNoticeSent &&
-        w.players[c.speakerId]?.online &&
+        actual.players[c.speakerId]?.online &&
         !p.task,
     );
     if (blocked && !p.muted && !w.settings.chatLocked) {
-      act(w, p.id, {
+      act(actual, p.id, {
         type: 'chat',
         text: blocked.delivery
           ? `My delivery is blocked: ${blocked.outcome} ${blocked.delivered}/${blocked.delivery.quantity} ${blocked.delivery.item} delivered.`
@@ -389,11 +410,16 @@ export class Residents {
         ...(blocked.replyTo === null ? {} : { to: blocked.speakerId }),
       });
       blocked.blockedNoticeSent = true;
-      this.checkpoint(r, w, 'delivery-blocked', { id: blocked.id, outcome: blocked.outcome });
+      this.checkpoint(r, actual, 'delivery-blocked', { id: blocked.id, outcome: blocked.outcome });
     }
     const agreed = focusCommitments(w, p, r.state, deliveries);
     if (!p.task && !careNeeded(w, p) && agreed.length) return learnedChoices(r.state, agreed);
-    const choices = [...deliveries, ...adaptiveChoices(w, p, r.state)];
+    const choices = [
+      ...supplyChoices(w, p, r.state),
+      ...deliveries,
+      ...inspectionChoices(actual, p, r.state),
+      ...adaptiveChoices(w, p, r.state),
+    ];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (port && !p.task && !p.atHome && !p.game) {
       const prep: Step[] =
@@ -571,6 +597,7 @@ export class Residents {
         p.online = false;
       }
       if (!p) continue;
+      rememberMarkets(w, p, r.state);
       if (r.state.observedDeaths !== undefined && p.deaths !== r.state.observedDeaths) {
         // A previous-life plan or reply must not reappear after resurrection,
         // including replies already in flight when the death happened.
@@ -580,6 +607,9 @@ export class Residents {
         delete r.state.observedTask;
         delete r.state.evaluation;
         delete r.state.recovery;
+        delete r.state.suspendedPlan;
+        delete r.state.supplyGoal;
+        delete r.state.routine;
         r.state.plan = [];
         r.state.intent = 'Begin a new life; reassess my qualifications, work and supplies.';
         r.state.pending = false;
@@ -656,11 +686,30 @@ export class Residents {
         }
         if (r.caring) {
           r.caring = false;
-          r.wake = true;
+          delete r.state.routine;
+          r.wake = !resumePlan(w, p, r.state);
+          if (!r.wake) {
+            r.state.until = now + 1800000;
+            r.state.nextAt = r.state.until;
+            r.state.needsDecision = false;
+          }
         }
         if (!p.task && now >= (r.careCheckAt ?? 0)) {
           r.careCheckAt = now + 10000;
-          const plan = carePlan(w, p);
+          const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+          const continuation = continueSupply(known, p, r.state);
+          let plan = carePlan(known, p, r.state);
+          if (!plan.length) {
+            const supply = continuation ?? supplyChoices(known, p, r.state)[0];
+            if (supply) {
+              r.state.supplyGoal ??= supply.supplyGoal;
+              plan = supply.plan;
+            }
+          }
+          // Discover an unknown source rather than interpreting unseen stock as empty.
+          if (!plan.length && !r.state.supplyGoal && (p.hunger >= 15000 || p.thirst >= 15000))
+            plan = inspectionChoices(w, p, r.state)[0]?.plan ?? [];
+          if (plan.length) suspendPlan(w, p, r.state);
           if (plan.length && !plan.some((s) => blockedStep(r.state.recovery, s, w.time))) {
             r.busy?.abort();
             r.nav = undefined;
@@ -671,6 +720,7 @@ export class Residents {
             r.state.pending = false;
             r.wake = false;
             r.caring = true;
+            r.state.routine = 'care';
             p.online = true;
             r.active = true;
             this.checkpoint(r, w, 'self-care', { hunger: p.hunger, thirst: p.thirst });
@@ -679,30 +729,52 @@ export class Residents {
           }
         }
       }
-      // Continuing a chosen, supplied job is routine; no paid call just to renew a shift.
-      if (
-        now < r.cooldown &&
-        !r.busy &&
-        !r.nav &&
-        !p.task &&
-        !r.state.inSpace &&
-        !careNeeded(w, p) &&
-        p.job &&
-        now >= (r.shiftCheckAt ?? 0)
-      ) {
-        r.shiftCheckAt = now + 60000;
-        const b = w.buildings.find((b) => b.id === p.job);
-        const job = b && workplace(w, p, b);
+      // Execute accepted plans during outages. A strategic-call budget never
+      // freezes driving, a production wait, or an already chosen ordinary action.
+      if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
+        const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+        const continuation = continueSupply(known, p, r.state);
+        if (continuation && r.state.index >= r.state.plan.length) {
+          r.state.plan = continuation.plan;
+          r.state.index = 0;
+          r.state.repeats = 1;
+          r.state.until = now + 1800000;
+          r.state.nextAt = r.state.until;
+          r.wake = false;
+          this.checkpoint(r, w, 'supply-progress', {
+            goal: r.state.supplyGoal,
+            plan: continuation.plan,
+          });
+        }
+        if (!careNeeded(w, p) && now >= (r.shiftCheckAt ?? 0)) {
+          r.shiftCheckAt = now + 60000;
+          const plan = employmentRoutine(known, p, r.state);
+          if (plan.length && !r.state.routine) {
+            suspendPlan(w, p, r.state);
+            r.nav = undefined;
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.routine = 'employment';
+            r.wake = false;
+            this.checkpoint(r, w, 'employment-routine', { plan });
+          }
+        }
         if (
-          b &&
-          job?.qualified &&
-          job.employedHere &&
-          !job.workActiveNextCycle &&
-          Math.hypot(p.x - b.x, p.z - b.z) < 14 &&
-          !job.ifYouWork.capitalShortfall &&
-          !job.blockers.some((v) => !v.startsWith('No active employees'))
-        )
-          this.perform(r, w, { type: 'work', building: b.id }, false);
+          r.state.plan.length &&
+          r.state.index < r.state.plan.length &&
+          (now < r.cooldown || r.state.routine || r.state.supplyGoal)
+        ) {
+          this.runStep(r, w, p, now);
+          continue;
+        }
+        if (r.state.routine === 'employment' && r.state.index >= r.state.plan.length) {
+          delete r.state.routine;
+          r.state.plan = [];
+          r.wake = !resumePlan(w, p, r.state);
+          r.state.until = now + 1800000;
+          r.state.nextAt = r.state.until;
+        }
       }
       if (now < r.cooldown && !this.dialogueDue(r, now)) continue;
       p.online = !r.state.inSpace;
@@ -771,14 +843,17 @@ export class Residents {
       r.state.plan = [];
       r.state.waitUntil = 0;
       r.nav = undefined;
-      r.wake = true;
-      r.state.needsDecision = true;
+      r.wake = !resumePlan(w, p, r.state);
+      r.state.needsDecision = r.wake;
+      r.state.until = now + 1800000;
       r.state.status = s.reason!;
       this.checkpoint(r, w, 'session', { event: 'Scheduled arrival', ...s });
     }
     if (s.phase === 'playing' && now >= s.endsAt - 5 * 60000) {
       s.phase = 'preparing';
+      suspendPlan(w, p, r.state);
       r.caring = false;
+      delete r.state.routine;
       if (!r.chatBusy) r.busy?.abort();
       r.nav = undefined;
       r.state.plan = [];
@@ -855,10 +930,17 @@ export class Residents {
       if (!landing) return true;
       r.state.plan = landing.plan;
     } else if (!r.state.plan.length || r.state.index >= r.state.plan.length) {
-      r.state.plan = homecomingPlan(w, p, away);
+      r.state.plan = homecomingPlan(
+        perceivedWorld(w, p, r.state, r.config.id === 'mabel'),
+        p,
+        away,
+        r.state,
+      );
       // Never execute the remainder of an errand whose prerequisite failed.
       if (r.state.plan.some((step) => blockedStep(r.state.recovery, step, w.time)))
         r.state.plan = [];
+      if (!r.state.plan.length && !(ready.atHome && ready.stocked))
+        r.state.plan = inspectionChoices(w, p, r.state)[0]?.plan ?? [];
       if (!r.state.plan.length) {
         r.state.waitUntil = now + 30000;
         return true;
@@ -882,6 +964,10 @@ export class Residents {
       else {
         r.state.plan = [];
         r.state.status = 'Waiting to reconsider';
+        if (r.state.commitments?.some((c) => c.world === w.id && c.status === 'pending')) {
+          r.wake = true;
+          r.state.needsDecision = true;
+        }
         this.checkpoint(r, w, 'plan-complete', { cash: p.cash, bank: p.bank });
         return;
       }
@@ -950,7 +1036,7 @@ export class Residents {
         if (step.kind === 'move') target = step;
         else {
           target = w.buildings.find((b) => b.id === step.destination);
-          radius = 12;
+          radius = serviceRadius;
           if (!target) {
             target = resourceNodes.find((n) => n.id === step.destination);
             radius = 6;
@@ -1000,6 +1086,7 @@ export class Residents {
     };
     const chatOnly = this.dialogueDue(r, now);
     const snapshot = {
+      netAssets: netAssets(w, p),
       time: w.time,
       cash: p.cash,
       bank: p.bank,
@@ -1012,6 +1099,9 @@ export class Residents {
       const result = {
         goal: r.state.intent,
         elapsedSeconds: Math.max(0, w.time - prior.time),
+        ...(prior.netAssets !== undefined
+          ? { netAssetChange: snapshot.netAssets - prior.netAssets }
+          : {}),
         cashChange: p.cash - prior.cash,
         bankChange: p.bank - prior.bank,
         healthChange: p.health - prior.health,
@@ -1022,10 +1112,12 @@ export class Residents {
       this.memory.append(r.config.id, w.time, 'evaluation', result);
     }
     if (!chatOnly) r.state.evaluation = snapshot;
+    const knownWorld = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
     const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
       observation: {
-        ...observe(w, p, r.state, this.memory, r.config.id),
+        ...observe(knownWorld, p, r.state, this.memory, r.config.id),
+        knowledge: marketKnowledge(w, r.state, r.config.id === 'mabel'),
         agenda: decisionAgenda(r.state),
         experiences: r.state.experiences,
         lessons: r.state.experiences?.slice(-3).map((e) => ({ ...e, goal: e.goal.slice(0, 180) })),
@@ -1046,8 +1138,8 @@ export class Residents {
           ? {
               choices: this.choices(r, w, p),
               space: { inSpace: !!r.state.inSpace, account: this.account(r) },
-              parishSurvey: parishSurvey(w, p),
-              farming: farmerSituation(w, p),
+              parishSurvey: parishSurvey(knownWorld, p),
+              farming: farmerSituation(knownWorld, p),
               vocation: r.config.vocation,
               enduringGoal: r.config.initialGoal,
             }
@@ -1055,16 +1147,32 @@ export class Residents {
       },
     });
     const { gameGuide: _guide, ...decisionObservation } = request.observation;
-    const decisionRequest =
+    let decisionRequest =
       r.config.provider === 'jev'
         ? {
             instructions: jevInstructions + '\nYour personality: ' + r.state.personality,
             observation: decisionObservation,
           }
         : request;
+    if (!chatOnly && r.brain.prepare) {
+      try {
+        decisionRequest = r.brain.prepare(decisionRequest) as typeof decisionRequest;
+      } catch {
+        // No reservation, transport, or paid retry for invalid local context.
+        r.cooldown = now + 300000;
+        r.state.status = 'Gameplay context unavailable; continuing local routines';
+        this.checkpoint(r, w, 'local-planning-error', {
+          message: 'Gameplay request rejected before transport; no charge',
+        });
+        return;
+      }
+    }
     const bytes =
-      Buffer.byteLength(JSON.stringify(decisionRequest)) +
-      (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
+      Buffer.byteLength(
+        ('preparedBody' in decisionRequest
+          ? (decisionRequest.preparedBody as string)
+          : undefined) ?? JSON.stringify(decisionRequest),
+      ) + (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
     if (!chatOnly && bytes > 96000) {
       // Model availability is not a logout. Preserve visible presence and back off.
       p.online = !r.state.inSpace;
@@ -1299,9 +1407,17 @@ export class Residents {
         let recorded = false;
         if (proposal && conversation?.speakerId && conversationKey) {
           const player = latest.players[r.state.playerId];
+          const known = perceivedWorld(latest, player, r.state, r.config.id === 'mabel');
           const reason =
             !proposal.cancel && proposal.delivery
-              ? deliveryBlocker(latest, player, proposal.delivery, proposal.delivery.quantity, true)
+              ? deliveryBlocker(
+                  known,
+                  player,
+                  proposal.delivery,
+                  proposal.delivery.quantity,
+                  true,
+                  true,
+                )
               : undefined;
           if (!reason)
             recorded = recordCommitment(
@@ -1313,7 +1429,7 @@ export class Residents {
               replyTo ?? null,
             );
           if (recorded && proposal.employment && !proposal.cancel) {
-            refreshEmployment(latest, player, r.state);
+            refreshEmployment(known, player, r.state);
             const queued = r.state.commitments?.find((c) => c.id === conversationKey);
             if (queued?.status === 'blocked') queued.blockedNoticeSent = true;
           }
@@ -1327,8 +1443,8 @@ export class Residents {
                 : proposal.cancel
                   ? 'I have cancelled your latest unfinished request.'
                   : proposal.employment
-                    ? `I have agreed to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(latest, player, proposal.employment) ?? 'I need to fit this around keeping myself fed, watered and rested.'} That is my agreement, not a report of finished training or a job change.`
-                    : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and the buyer has the posted price, investment and storage for the order. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
+                    ? `I have agreed to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(known, player, proposal.employment) ?? 'I need to fit this around keeping myself fed, watered and rested.'} That is my agreement, not a report of finished training or a job change.`
+                    : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and will check the buyer’s price, investment and storage on arrival. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
             result = {
               ...result,
               decision: { ...result.decision, speech: { text, to: replyTo ?? null } },
@@ -1430,7 +1546,10 @@ export class Residents {
       })
       .catch((e) => {
         if (this.closed || controller.signal.aborted) return;
-        if (reservation !== undefined) this.budget.failed(reservation);
+        if (reservation !== undefined) {
+          if (e instanceof LocalRequestError) this.budget.notSent(reservation);
+          else this.budget.failed(reservation);
+        }
         r.state.pending = false;
         r.wake = true;
         r.state.needsDecision = true;
@@ -1475,7 +1594,13 @@ export class Residents {
     const p = w.players[r.state.playerId];
     if (!p || !p.online) return;
     const observation = conversationView(
-      observe(w, p, r.state, this.memory, r.config.id),
+      observe(
+        perceivedWorld(w, p, r.state, r.config.id === 'mabel'),
+        p,
+        r.state,
+        this.memory,
+        r.config.id,
+      ),
       r.state,
       conversation.speakerId ?? '',
       !!replyTo,
@@ -1557,6 +1682,25 @@ export class Residents {
     if (d.speech && r.state.replyTo === replyTo) delete r.state.replyTo;
     if (!r.dialogue || !chatOnly) r.state.notebook = d.notebook;
     if (!chatOnly) {
+      // An asynchronous planner may have selected before a neighbour announced
+      // the same errand. Recheck on acceptance rather than issuing duplicate trips.
+      const goal = result.supplyGoal;
+      const player = w.players[r.state.playerId];
+      if (
+        goal &&
+        player &&
+        !r.state.supplyGoal &&
+        secondsToDamage(w, player) > 1800 &&
+        anotherSupplier(w, player, goal.building, goal.item)
+      ) {
+        r.state.plan = [];
+        r.state.nextAt = now + 30000;
+        r.state.until = r.state.nextAt;
+        r.wake = false;
+        this.checkpoint(r, w, 'supply-deferred', { building: goal.building, item: goal.item });
+        return;
+      }
+      if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
       r.state.intent = d.intent;
       r.state.plan = d.plan;
       delete r.state.fishCaught;

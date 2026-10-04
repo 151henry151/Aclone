@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { availableSupply } from '../../shared/harbour-supply.ts';
+import { propertyQuote } from '../../shared/property.ts';
+import { blockedStep } from './recovery.ts';
+import type { ResidentState } from './memory.ts';
 import { carePlan } from './care.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
@@ -71,9 +75,20 @@ export function returnDelay(w: World, p: Player, plannedSeconds: number) {
 }
 /** One ordinary, bounded errand at a time; no teleportation or inventory grants.
  * Running locally means a depleted AI budget cannot strand an already-planned logout. */
-export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[] {
+export function homecomingPlan(
+  w: World,
+  p: Player,
+  awaySeconds: number,
+  state?: ResidentState,
+): Step[] {
+  w = {
+    ...w,
+    buildings: w.buildings.filter(
+      (b) => !blockedStep(state?.recovery, { kind: 'travel', destination: b.id }, w.time),
+    ),
+  };
   if (p.task) return [{ kind: 'wait', seconds: Math.max(1, Math.min(60, p.task.end - w.time)) }];
-  const care = carePlan(w, p);
+  const care = carePlan(w, p, state);
   if (care.length) return care;
   const visit = (b: Building, steps: Step[]): Step[] => [
     ...(p.atHome ? [action({ type: 'outside' })] : []),
@@ -105,7 +120,11 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
         items[item][nutrient] &&
         ((p.inventory[item] ?? 0) > 0 ||
           w.buildings.some(
-            (s) => !s.construction && s.owner !== p.id && s.stock[item] > 0 && s.sell[item] >= 0,
+            (s) =>
+              !s.construction &&
+              s.owner !== p.id &&
+              availableSupply(w, s, item) > 0 &&
+              s.sell[item] >= 0,
           )),
     );
     const price = (item: string) =>
@@ -115,7 +134,10 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
             ...w.buildings
               .filter(
                 (s) =>
-                  !s.construction && s.owner !== p.id && s.stock[item] > 0 && s.sell[item] >= 0,
+                  !s.construction &&
+                  s.owner !== p.id &&
+                  availableSupply(w, s, item) > 0 &&
+                  s.sell[item] >= 0,
               )
               .map((s) => s.sell[item]),
           );
@@ -161,7 +183,7 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
           (v) =>
             !v.construction &&
             v.owner !== p.id &&
-            v.stock[item] > 0 &&
+            availableSupply(w, v, item) > 0 &&
             Number.isSafeInteger(v.sell[item]) &&
             v.sell[item] >= 0 &&
             p.cash >= v.sell[item],
@@ -171,7 +193,7 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
         let n = Math.min(
           20,
           target - carried,
-          shop.stock[item],
+          availableSupply(w, shop, item),
           shop.sell[item] ? Math.floor(p.cash / shop.sell[item]) : 20,
         );
         while (n > 0 && !canCarry(p, item, n, w)) n--;
@@ -200,5 +222,16 @@ export function homecomingPlan(w: World, p: Player, awaySeconds: number): Step[]
     .sort((a, b) => distance(p, a) - distance(p, b))[0];
   if (inn)
     return visit(inn, [operation('lodging', { building: inn.id, operation: 'rent', hours })]);
+  const cottage = w.buildings
+    .filter(
+      (v) =>
+        v.kind === 'home' &&
+        !v.construction &&
+        !v.government &&
+        (!v.owner || v.forSale) &&
+        propertyQuote(w, v).total + 20000 <= p.cash,
+    )
+    .sort((a, b) => propertyQuote(w, a).total - propertyQuote(w, b).total)[0];
+  if (cottage) return visit(cottage, [action({ type: 'buyBuilding', building: cottage.id })]);
   return [];
 }

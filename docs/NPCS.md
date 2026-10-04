@@ -201,7 +201,7 @@ These are explicit opt-in API charges; they never target production saves. Histo
 
 ## Survival and operating businesses
 
-Routine self-care runs locally, before paid decision cooldowns: consume carried supplies, visit a stocked shop (including expensive Harbour emergency imports), use bank savings, or earn emergency meal money. It uses ordinary actions, travel and prices; no invulnerability or free inventory. A qualified worker already at a funded, stocked workplace can renew shifts during a model budget cooldown. Offline survival remains governed by home/room stores.
+Routine self-care runs locally, before paid decision cooldowns: consume carried supplies, visit a stocked shop (including expensive Harbour emergency imports), use bank savings, or earn emergency meal money. It uses ordinary actions, travel and prices; no invulnerability or free inventory. A qualified worker can return to a known funded, stocked workplace and renew shifts during a model budget cooldown. Offline survival remains governed by home/room stores.
 
 Jev receives a bounded, rotating shortlist with intact costs instead of hundreds of truncated descriptions. Choices include provisioning a home with varied food/drink, funded productive jobs and training, acquiring a business with six batches of reserves, delivering inputs, and selling outputs to solvent buyers. Owned-business upkeep and personality preferences affect ranking. Blocked production is not an attractive endless waiting plan. Existing pilots reconsider old plans once after this upgrade.
 
@@ -210,3 +210,36 @@ Credit/debt appears in private observations. Ordinary loan actions are available
 The always-present player guide has a 12,500-character fundamentals budget. Additional FAQ/economy details remain searchable; expanding documentation does not automatically expand every model call.
 
 In custom worlds, observations include local course definitions and cargo checks use local item weights. Existing adaptive plans can handle ordinary custom-item trade/production actions, but arbitrary creator quests or scripted requirements are not guaranteed to produce useful autonomous plans.
+
+## Local survival plans and market knowledge
+
+Mabel can inspect current public markets to help players. Other residents know map
+locations but must visit shops for stock, quotes and staffing. Observations remain
+usable for 15 game minutes; older or unseen shops require inspection. Own properties
+remain visible. Bank accounts and other guests’ pantries are private, including from
+Mabel. Candidate selection uses the same restricted view as chat and planning.
+
+Accepted survival goals advance through ordinary training, input purchases/delivery,
+work, production and final consumption without further model calls. Bounded forecasts
+include tuition, cargo, capital, wages and time to hunger/thirst damage. Affordable
+loss-making input delivery is allowed when it secures necessities. Every stage checks
+conditions again; forecast output is never granted or reserved. Recursive chains are
+limited to three dependencies and four batches per producer.
+
+Meals temporarily suspend unfinished plans. Resumption returns to the next action’s
+building when needed, without repeating completed trades. Saved goals expire after
+two game hours and are discarded after death or changing worlds. Personal evaluations
+include catalogue-valued inventory/property, invested cash and debt, rather than treating
+an investment transfer as a loss. Valuation is not a guaranteed resale price.
+
+**AI neighbours → Voluntary supply errands** shows expiring public intentions to
+restore essential production. Other residents normally avoid duplicating these errands;
+urgent survival takes priority. These notices never lock stock or stop human trades.
+
+Gameplay requests are compacted and checked before budget reservation. Proven local
+rejections cost no internal allowance; uncertain remote failures remain conservatively
+charged. Historical ambiguous charges are not retroactively erased. Tests exercise
+Mabel and a visiting resident restoring water with zero AI credits across restart,
+multistage bread production, privacy, cooperative expiry and fair scheduling. They do
+not establish long-term economic stability: the broader scheduled-population simulation
+and live recovery measurements remain outstanding.

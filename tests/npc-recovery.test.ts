@@ -14,7 +14,10 @@ const step: Step = { kind: 'travel', destination: 'b6' };
 test('repeated failures back off and a recently failed step stays blocked through restart and incidental actions', () => {
   const r: Recovery = {};
   failStep(r, 10, step, 'No route');
-  assert.equal(blockedStep(r, step, 11), undefined);
+  assert.ok(
+    blockedStep(r, step, 11),
+    'An unreachable route must cool down after the first failure',
+  );
   failStep(r, 20, step, 'No route');
   assert.ok(r.retryAt! > 20);
   assert.ok(blockedStep(r, step, 21));

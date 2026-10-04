@@ -38,7 +38,11 @@ export function failStep(r: Recovery, time: number, step: Step | undefined, mess
     message,
     count,
     at: time,
-    until: count < 2 ? time : time + Math.min(1800, 300 * 2 ** Math.min(3, count - 2)),
+    until: /route|obstructed|journey/i.test(message)
+      ? time + 600
+      : count < 2
+        ? time
+        : time + Math.min(1800, 300 * 2 ** Math.min(3, count - 2)),
   });
   r.failures = r.failures.slice(-16);
 }

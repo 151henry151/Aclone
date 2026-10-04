@@ -1,3 +1,6 @@
+import { blockedStep } from './recovery.ts';
+import type { ResidentState } from './memory.ts';
+import { secondsToDamage } from './strategy.ts';
 import { alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -30,16 +33,22 @@ export function visitBuilding(p: Player, b: Building, steps: Step[]): Step[] {
 }
 /** Ordinary self-care is a routine, not a paid strategic decision. No gifts or immunity.
  * Resolve the most urgent nutrient first, including alternatives at the spaceport. */
-export function carePlan(w: World, p: Player): Step[] {
+export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
   const items = worldItems(w);
-  if (p.task || (p.hunger < 25000 && p.thirst < 25000)) return [];
+  if (p.task || (p.hunger < 25000 && p.thirst < 25000 && secondsToDamage(w, p) > 600)) return [];
+  const usable = (b: Building) =>
+    !blockedStep(state?.recovery, { kind: 'travel', destination: b.id }, w.time);
   const needs = (
     [
       ['food', p.hunger],
       ['drink', p.thirst],
     ] as const
   )
-    .filter(([, n]) => n >= 25000)
+    .filter(
+      ([nutrient, n]) =>
+        n >= 25000 ||
+        (50000 - n) / (nutrient === 'food' ? w.settings.hungerRate : w.settings.thirstRate) <= 600,
+    )
     .sort((a, b) => b[1] - a[1]);
   for (const [nutrient] of needs) {
     const food = Object.keys(items).filter((i) => nextNutrition(p, i, w)[nutrient] > 0);
@@ -52,7 +61,7 @@ export function carePlan(w: World, p: Player): Step[] {
       )[0];
     if (carried) return [act({ type: 'use', item: carried })];
     const sources = w.buildings
-      .filter((b) => !b.construction)
+      .filter((b) => !b.construction && usable(b))
       .flatMap((b) =>
         food.flatMap((item) => {
           const own = b.owner === p.id;
@@ -84,7 +93,7 @@ export function carePlan(w: World, p: Player): Step[] {
         act({ type: 'use', item: source.item }),
       ]);
   }
-  const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction);
+  const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction && usable(b));
   if (p.bank > 0 && p.cash < 12000 && bank)
     return visitBuilding(p, bank, [
       act({
@@ -107,7 +116,7 @@ export function carePlan(w: World, p: Player): Step[] {
       ),
   );
   const labour = w.buildings.find(
-    (b) => b.kind === 'workhouse' && b.owner !== p.id && !b.construction,
+    (b) => b.kind === 'workhouse' && b.owner !== p.id && !b.construction && usable(b),
   );
   if (unaffordable && labour)
     return visitBuilding(p, labour, [act({ type: 'task', building: labour.id, task: 'labour' })]);

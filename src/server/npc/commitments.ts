@@ -5,7 +5,7 @@ import { items, recipes, skills } from '../../shared/catalog.ts';
 import { operation } from './player-operations.ts';
 import { careNeeded } from './strategy.ts';
 import { blockedStep } from './recovery.ts';
-import type { World, Player, Action } from '../../shared/types.ts';
+import type { World, Player, Action, Building } from '../../shared/types.ts';
 import type { ResidentState } from './memory.ts';
 import type { Step } from './decision.ts';
 import type { FarmerChoice } from './farmer.ts';
@@ -139,14 +139,9 @@ export function deliveryBlocker(
   d: Delivery,
   remaining: number,
   wholeAgreement = false,
+  allowUninspectedBuyer = false,
 ): string | undefined {
   if (!items[d.item]) return 'I cannot identify that item. Please clarify what you want delivered.';
-  const buyer = w.buildings.find((b) => b.id === d.destinationBuilding && !b.construction);
-  if (!buyer) return 'The destination building is unavailable. We need another buyer.';
-  if (buyer.owner === p.id)
-    return 'I own the destination, so I must deposit stock there rather than sell to myself.';
-  if (!Number.isSafeInteger(buyer.buy[d.item]) || buyer.buy[d.item] < d.unitPrice)
-    return `The destination does not offer the agreed minimum of ${d.unitPrice / 100}d per item. Its owner needs to set the posted buy price.`;
   const carried = p.inventory[d.item] ?? 0;
   const source = deliverySource(w, p, d);
   if ((wholeAgreement ? carried < remaining : carried === 0) && d.sourceBuilding && !source) {
@@ -165,6 +160,13 @@ export function deliveryBlocker(
   const needed = wholeAgreement ? remaining : 1;
   if (available < needed)
     return `I have access to only ${available} ${d.item}, but ${remaining} remain to deliver. We need to agree a smaller amount or wait until I obtain more.`;
+  const buyer = w.buildings.find((b) => b.id === d.destinationBuilding && !b.construction);
+  if (!buyer && allowUninspectedBuyer) return;
+  if (!buyer) return 'The destination building is unavailable. We need another buyer.';
+  if (buyer.owner === p.id)
+    return 'I own the destination, so I must deposit stock there rather than sell to myself.';
+  if (!Number.isSafeInteger(buyer.buy[d.item]) || buyer.buy[d.item] < d.unitPrice)
+    return `The destination does not offer the agreed minimum of ${d.unitPrice / 100}d per item. Its owner needs to set the posted buy price.`;
   const space = buyer.capacity - (buyer.stock[d.item] ?? 0);
   if (space < needed)
     return `The buyer has storage space for only ${Math.max(0, space)} more ${d.item}. Its owner needs to clear stock or reduce the order.`;
@@ -282,15 +284,71 @@ export function focusCommitments(
 }
 export function refreshEmployment(w: World, p: Player, state: ResidentState) {
   for (const c of state.commitments ?? [])
-    if (c.world === w.id && c.employment && ['pending', 'blocked'].includes(c.status))
+    if (
+      c.world === w.id &&
+      c.employment &&
+      w.buildings.some((b) => b.id === c.employment!.building) &&
+      ['pending', 'blocked'].includes(c.status)
+    )
       employmentChoice(w, p, c);
 }
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 /** Fully accounted deliveries, possibly in several loads; ordinary action validation still applies. */
-export function commitmentChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
+export function commitmentChoices(
+  w: World,
+  p: Player,
+  state: ResidentState,
+  directory: Building[] = w.buildings,
+): FarmerChoice[] {
   const choices: FarmerChoice[] = [];
   for (const c of state.commitments ?? []) {
     if (c.world !== w.id || !['pending', 'blocked'].includes(c.status)) continue;
+    // Map locations are public, but unknown/stale stock is not a missing shop.
+    // Visit before diagnosing an agreed workplace or delivery destination.
+    const target = c.employment?.building ?? c.delivery?.destinationBuilding;
+    const needs = [target];
+    if (
+      c.employment?.train &&
+      !p.learning &&
+      w.buildings.some(
+        (b) =>
+          b.id === target &&
+          !p.skills.includes((b.production ?? recipes[b.recipe ?? ''])?.skill ?? ''),
+      ) &&
+      !w.buildings.some((b) => b.kind === 'school')
+    )
+      needs.push(directory.find((b) => b.kind === 'school')?.id);
+    const unseen = needs
+      .map((id) => directory.find((b) => b.id === id && !w.buildings.some((k) => k.id === id)))
+      .find(Boolean);
+    if (unseen) {
+      // Loss of our own property is known without inspecting the buyer again.
+      const source = c.delivery?.sourceBuilding;
+      if (
+        source &&
+        !w.buildings.some((b) => b.id === source && b.owner === p.id) &&
+        !(p.inventory[c.delivery!.item] > 0)
+      ) {
+        c.status = 'blocked';
+        c.outcome = 'I do not own the source stockroom any more and cannot withdraw its goods.';
+        continue;
+      }
+      c.status = 'pending';
+      c.outcome = `I need to inspect ${unseen.name} before checking current terms.`;
+      const plan: Step[] = [
+        ...prep(p),
+        { kind: 'travel', destination: unseen.id },
+        { kind: 'wait', seconds: 1 },
+      ];
+      if (!plan.some((step) => blockedStep(state.recovery, step, w.time)))
+        choices.push({
+          id: `commitment_${c.id}`,
+          description: c.outcome,
+          plan,
+          reconsiderSeconds: 600,
+        });
+      continue;
+    }
     if (c.employment) {
       const choice = employmentChoice(w, p, c);
       if (choice) choices.push(choice);

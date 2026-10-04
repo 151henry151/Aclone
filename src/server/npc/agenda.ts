@@ -147,6 +147,7 @@ export function conversationView(
 ) {
   const result: Record<string, any> = {};
   for (const key of [
+    'knowledge',
     'characterFacts',
     'businessResults',
     'employmentOptions',

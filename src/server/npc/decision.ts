@@ -262,8 +262,11 @@ export type Decision = z.infer<typeof decisionSchema>;
 export interface BrainRequest {
   instructions: string;
   observation: unknown;
+  /** Provider-preflighted exact wire body; never persisted in resident memory. */
+  preparedBody?: string;
 }
 export interface BrainResult {
+  supplyGoal?: import('./survival.ts').SupplyGoal;
   preferences?: import('./agenda.ts').LearnedPreference[] | null;
   gameplayRequest?: GameplayRequest | null;
   decision: Decision;
@@ -274,5 +277,6 @@ export interface BrainResult {
   cacheReadTokens?: number;
 }
 export interface Brain {
+  prepare?(request: BrainRequest): BrainRequest;
   decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult>;
 }

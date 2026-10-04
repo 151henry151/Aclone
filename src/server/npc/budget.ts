@@ -37,7 +37,9 @@ export class NpcBudget {
         db.prepare('SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=?').get(month)!.n,
       ),
       hourCalls: Number(
-        db.prepare('SELECT count(*) AS n FROM npc_calls WHERE at>?').get(now - 3600000)!.n,
+        db
+          .prepare("SELECT count(*) AS n FROM npc_calls WHERE at>? AND status!='not-sent'")
+          .get(now - 3600000)!.n,
       ),
       ...this.config,
     };
@@ -101,6 +103,11 @@ export class NpcBudget {
         "UPDATE npc_calls SET charged=?,input_tokens=?,output_tokens=?,cache_write_tokens=?,cache_read_tokens=?,status='complete' WHERE id=?",
       )
       .run(charged, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens, id);
+  }
+  notSent(id: number) {
+    this.memory.store.db
+      .prepare("UPDATE npc_calls SET status='not-sent',charged=0 WHERE id=? AND status='pending'")
+      .run(id);
   }
   failed(id: number) {
     this.memory.store.db.prepare("UPDATE npc_calls SET status='uncertain' WHERE id=?").run(id);

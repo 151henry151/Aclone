@@ -324,6 +324,8 @@ export function economicMenu(
   const enterprises = enterpriseChoices(w, p);
   const score = (c: FarmerChoice) => {
     let n = c.id.startsWith('commitment_') ? 1000 : 0;
+    if (c.id.startsWith('survival_')) n += 1200;
+    if (c.id.startsWith('inspect_')) n += 60;
     if (
       c.description.startsWith('Establish a home') ||
       c.description.startsWith('Provision my home')

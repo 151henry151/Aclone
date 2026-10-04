@@ -13,6 +13,7 @@ import { blockedStep } from './recovery.ts';
 import type { Step } from './decision.ts';
 
 export interface FarmerChoice {
+  supplyGoal?: import('./survival.ts').SupplyGoal;
   id: string;
   description: string;
   plan: Step[];
