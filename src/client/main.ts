@@ -1442,6 +1442,9 @@ function buildingWindow(b: Building) {
     return;
   }
   if (tab === 'Main') {
+    if (b.id === 'parish-government-stores')
+      html +=
+        '<p class="notice">Food and drinking water are imported on demand, even when stored stock is zero. These premium prices keep supplies available during shortages; local producers are usually cheaper.</p>';
     if (world.settings.parishOrders && world.procurement?.building === b.id)
       html += button('Parish supply orders', 'procurement');
     if (selfOwned)

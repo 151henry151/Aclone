@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.51.0] - 2026-10-04
+
+### Added
+
+- Restore the reserved starter Puddlewick's server ownership and add premium government bread/water imports during shortages, preserving player-owned properties and contents.
+
 ## [0.50.0] - 2026-10-04
 
 ### Added

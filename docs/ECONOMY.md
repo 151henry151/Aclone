@@ -81,6 +81,11 @@ the timer does not pause. Farms instead pay on funded manual harvest completion.
 Worlds with active work disabled need no renewals. Odd Jobs Office labour is a
 separate timed task that locks movement. Learn the corresponding profession at school.
 
+Puddlewick's **Government necessities** shop sells bread and drinking water on
+demand at premium prices, even with zero displayed stock or investment. Purchases
+pay for the imports; nothing is free. Local producers are normally cheaper. The
+harbour keeps finite stock once the dedicated shop is present.
+
 ## Connected industries
 
 - **Shoreline waterworks / pump operator:** 1 fuel → 12 water. Build on dry ground

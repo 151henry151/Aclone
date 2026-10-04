@@ -62,6 +62,7 @@ export class Store {
         for (const b of world.buildings)
           if (
             b.government &&
+            b.id !== 'parish-government-stores' &&
             (!b.owner || b.owner === 'treasury') &&
             ['market', 'starport'].includes(b.kind)
           )

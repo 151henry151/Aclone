@@ -1,6 +1,7 @@
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
 import { worldItems } from '../shared/world-catalogue.ts';
+import { restorePublicPuddlewick, governmentStores } from './government-stores.ts';
 import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { completePuddlewick } from './parish-services.ts';
@@ -113,6 +114,8 @@ export async function createApp(options: AppOptions) {
     ? new Federation(store, universe, options.federation)
     : undefined;
   for (const { world, saved } of store.loadWorlds()) {
+    restorePublicPuddlewick(world);
+    governmentStores(world);
     for (const p of Object.values(world.players)) p.online = false;
     let remaining = Math.min(Math.max(0, Date.now() / 1000 - saved), 86400 * 30);
     while (remaining > 0) {
@@ -133,7 +136,11 @@ export async function createApp(options: AppOptions) {
       store.saveWorld(w);
     }
   }
-  for (const world of worlds.values()) if (completePuddlewick(world)) store.saveWorld(world);
+  for (const world of worlds.values()) {
+    const services = completePuddlewick(world);
+    const government = governmentStores(world);
+    if (services || government || world.publicParishVersion) store.saveWorld(world);
+  }
   const accounts = new Accounts(
     store,
     universe,

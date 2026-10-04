@@ -4,6 +4,13 @@ Publish, commit, push or deploy only when explicitly requested. Builds and tests
 
 ## Release procedure
 
+The next upgrade restores server ownership of the reserved starter world named
+Puddlewick (economy template, original public harbour) once and adds Government
+necessities on a vacant dry lot. Back up first. Player-owned buildings, contents,
+prices and wages are preserved; custom world IDs/names are untouched. This runs
+on server startup, before offline catch-up. If terrain/buildings leave no suitable
+lot, placement retries next startup and the harbour retains its emergency imports.
+
 1. Finish behavior and regressions. Run `npm run check`, `npm run format:check`, `npm run build` and browser checks against a disposable instance; review relevant visuals and backup/migration tests.
 2. Move Unreleased entries to a dated `## [X.Y.Z] - YYYY-MM-DD` section, leaving Unreleased at the top. Use SemVer: minor for compatible features, patch for fixes. Never alter a published release.
 3. Update `package.json` and both version fields in `package-lock.json`. `src/shared/version.ts` imports that version for health/startup/UI. Refresh README and affected guides.

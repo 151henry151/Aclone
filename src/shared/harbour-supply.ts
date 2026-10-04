@@ -69,6 +69,13 @@ export function emergencyImport(w: World, b: Building, item: string) {
     !['water', 'bread'].includes(item)
   )
     return false;
+  // New parishes use a dedicated premium shop. Older saves keep their safety net
+  // until a suitable lot is available; harbour stocks remain finite thereafter.
+  if (
+    w.buildings.some((s) => s.id === 'parish-government-stores') &&
+    b.id !== 'parish-government-stores'
+  )
+    return false;
   const price = b.sell[item];
   const maxPublicBid = Math.max(
     0,
