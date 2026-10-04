@@ -4,6 +4,8 @@ export default defineConfig({
   testDir: 'tests/browser',
   // Concurrent software WebGL renderers starve input and snapshot handling on CI.
   workers: 1,
+  // Software WebGL may need several snapshot/render cycles on shared CI CPUs.
+  expect: { timeout: 30000 },
   timeout: process.env.TEST_GPU === '1' ? 120000 : 180000,
   use: {
     baseURL: process.env.TEST_URL ?? 'http://127.0.0.1:3000',

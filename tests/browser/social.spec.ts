@@ -11,7 +11,7 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
 }) => {
   const dir = mkdtempSync(join(tmpdir(), 'aclone-social-')),
     app = await createApp({ dataDir: dir, port: 0, dev: true });
-  const left = await browser.newContext(),
+  const left = await browser.newContext({ viewport: { width: 1280, height: 720 } }),
     right = await browser.newContext({ viewport: { width: 390, height: 844 } });
   left.setDefaultTimeout(15000);
   right.setDefaultTimeout(15000);
@@ -49,7 +49,7 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
     for (const p of [s, t]) {
       await p.bringToFront();
       await p.goto(`http://127.0.0.1:${port}`);
-      await expect(p.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await expect(p.locator('#world-hud')).toBeVisible({ timeout: 120000 });
       await p.keyboard.press('F9');
       await p.getByRole('button', { name: 'Mail, family & trades', exact: true }).click();
     }

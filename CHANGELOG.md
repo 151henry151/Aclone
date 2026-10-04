@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.48.2] - 2026-10-03
+
+### Fixed
+
+- Give browser regression checks time to receive and render live updates on software WebGL, and wait for the playable HUD before testing fishing controls. Keep desktop/mobile social checks within a smaller rendering budget.
+
+### Changed
+
+- Refresh the implementation status guide to reflect the completed creator, audio, social and activity work and its remaining limitations.
+
 ## [0.48.1] - 2026-10-03
 
 ### Fixed
