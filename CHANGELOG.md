@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.48.1] - 2026-10-03
+
+### Fixed
+
+- Restore account sign-out from the galaxy screen; the offline-survival reminder still appears when leaving a world.
+
 ## [0.48.0] - 2026-10-03
 
 ### Added

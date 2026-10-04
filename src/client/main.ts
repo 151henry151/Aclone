@@ -2013,8 +2013,11 @@ app.addEventListener('click', async (e) => {
         toast('Check your email. Verification links can be resent once a minute.');
         break;
       case 'logout':
-        openPanel('worldRules');
-        break;
+        if (world && me) {
+          openPanel('worldRules');
+          break;
+        }
+      // In the galaxy there is no world whose offline rules need showing.
       case 'confirmLogout':
         await api('/api/auth/logout', { method: 'POST', body: '{}' });
         token = '';

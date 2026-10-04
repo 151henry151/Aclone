@@ -154,6 +154,13 @@ test('password setup, sign-out and sign-in return to the same pilot', async ({ p
   await expect(page.locator('.pilot-card')).toContainText(name);
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#pilot-name')).toHaveText(name);
+  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await page.keyboard.press('F9');
+  await page.getByRole('button', { name: 'Options & pilot key', exact: true }).click();
+  await page.getByRole('button', { name: 'Sign out of all devices' }).click();
+  await expect(page.getByText('You are outside.', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out of all devices' }).click();
+  await expect(page.getByRole('heading', { name: 'Welcome to Aclone.' })).toBeVisible();
 });
 
 test('pilot nameplates and disconnects match the live parish list', async ({ page, baseURL }) => {
