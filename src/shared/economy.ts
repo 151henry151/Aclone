@@ -45,7 +45,7 @@ export function migrateEconomy(w: World) {
       }
     w.livestockPricing = 1;
   }
-  if ((w.tradePricing ?? 0) >= 3) return;
+  if ((w.tradePricing ?? 0) >= 4) return;
   for (const b of w.buildings) {
     // Treasury is the built-in public operator, not a human or NPC business owner.
     if (b.owner && !(b.government && b.owner === 'treasury')) continue;
@@ -57,9 +57,20 @@ export function migrateEconomy(w: World) {
     } else {
       // A domestic producer replaces the old import-cost water bids only.
       // Preserve unrelated edits and non-default quotes on unowned businesses.
-      if (b.buy.water === 868 && current.buy.water === 560) b.buy.water = 560;
+      if (b.buy.water === 868 && current.buy.water !== undefined) b.buy.water = current.buy.water;
       if (['bnb', 'hotel'].includes(b.kind) && b.sell.water === 1047) b.sell.water = 675;
     }
   }
-  w.tradePricing = 3;
+  // Repair the public pump's fuel/import route without overwriting player prices.
+  for (const b of w.buildings) {
+    if (b.owner && !(b.government && b.owner === 'treasury')) continue;
+    if (b.kind === 'waterworks') {
+      if (b.buy.fuel === 2240) b.buy.fuel = 3600;
+      if (b.sell.water === 500) b.sell.water = 625;
+    } else if (!['market', 'starport'].includes(b.kind) && b.buy.water === 560) b.buy.water = 660;
+    if (['bnb', 'hotel'].includes(b.kind) && b.sell.water === 675) b.sell.water = 725;
+    if (b.kind === 'market' && b.buy.water === 450) b.buy.water = 600;
+    if (b.kind === 'starport' && b.buy.water === 425) b.buy.water = 590;
+  }
+  w.tradePricing = 4;
 }

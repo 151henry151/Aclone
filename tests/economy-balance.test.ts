@@ -169,7 +169,7 @@ for (const version of [undefined, 1] as const) {
     try {
       store.saveWorld(w);
       const loaded = store.loadWorlds()[0].world;
-      assert.equal(loaded.tradePricing, 3);
+      assert.equal(loaded.tradePricing, 4);
       assert.deepEqual(
         loaded.buildings.filter((b) => [mill.id, bakery.id].includes(b.id)),
         protectedBuildings,
@@ -203,4 +203,31 @@ test('all six crops cover seed, a harvest wage, full irrigation and fertilizer a
       `${item}: viable at half the nominal harvest`,
     );
   }
+});
+
+test('version 3 pump pricing upgrades only former defaults and preserves owned/custom offers', async () => {
+  const { migrateEconomy } = await import('../src/shared/economy.ts');
+  const w = createWorld('prices', 'Prices', 'server');
+  w.tradePricing = 3;
+  const pump = makeBuilding('pump', 'waterworks', 0, 144);
+  pump.buy.fuel = 2240;
+  pump.sell.water = 500;
+  const owned = structuredClone(pump);
+  owned.id = 'owned';
+  owned.owner = 'human';
+  const custom = structuredClone(pump);
+  custom.id = 'custom';
+  custom.buy.fuel = 2500;
+  custom.sell.water = 555;
+  w.buildings = [pump, owned, custom];
+  migrateEconomy(w);
+  assert.equal(pump.buy.fuel, 3600);
+  assert.equal(pump.sell.water, 625);
+  assert.equal(owned.buy.fuel, 2240);
+  assert.equal(owned.sell.water, 500);
+  assert.equal(custom.buy.fuel, 2500);
+  assert.equal(custom.sell.water, 555);
+  pump.sell.water = 601;
+  migrateEconomy(w);
+  assert.equal(pump.sell.water, 601);
 });

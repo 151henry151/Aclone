@@ -7,7 +7,7 @@
       "wheat": 450,
       "flour": 2025,
       "bread": 4944,
-      "water": 450,
+      "water": 600,
       "tea": 2520,
       "logs": 720,
       "wood": 1260,
@@ -276,7 +276,7 @@
       "wheat": 425,
       "flour": 1912,
       "bread": 4848,
-      "water": 425,
+      "water": 590,
       "tea": 2380,
       "logs": 680,
       "wood": 1190,
@@ -929,7 +929,7 @@
     "buy": {
       "gravel": 448,
       "stone": 672,
-      "water": 560
+      "water": 660
     },
     "sell": {
       "concrete": 2600
@@ -996,7 +996,7 @@
     "buy": {
       "potatoes": 1680,
       "flour": 2520,
-      "water": 560
+      "water": 660
     },
     "sell": {
       "meals": 5200
@@ -1018,7 +1018,7 @@
     "capacity": 500,
     "buy": {
       "tea": 3136,
-      "water": 560
+      "water": 660
     },
     "sell": {
       "teaBlend": 6550
@@ -1062,13 +1062,13 @@
     "capacity": 500,
     "buy": {
       "meals": 5824,
-      "water": 560,
+      "water": 660,
       "teaBlend": 7336,
       "roastCoffee": 8932
     },
     "sell": {
       "meals": 7020,
-      "water": 675,
+      "water": 725,
       "teaBlend": 8843,
       "roastCoffee": 10767
     },
@@ -1095,13 +1095,13 @@
     "capacity": 500,
     "buy": {
       "meals": 5824,
-      "water": 560,
+      "water": 660,
       "teaBlend": 7336,
       "roastCoffee": 8932
     },
     "sell": {
       "meals": 7020,
-      "water": 675,
+      "water": 725,
       "teaBlend": 8843,
       "roastCoffee": 10767
     },
@@ -1128,10 +1128,10 @@
     "price": 120000,
     "capacity": 500,
     "buy": {
-      "fuel": 2240
+      "fuel": 3600
     },
     "sell": {
-      "water": 500
+      "water": 625
     },
     "stock": {},
     "recipe": "waterworks",
@@ -1173,7 +1173,7 @@
     "capacity": 500,
     "buy": {
       "feed": 1120,
-      "water": 560,
+      "water": 660,
       "cows": 22400
     },
     "sell": {
@@ -1222,7 +1222,7 @@
     "buy": {
       "cheese": 4816,
       "potatoes": 1680,
-      "water": 560
+      "water": 660
     },
     "sell": {
       "dairyMeals": 6000
@@ -1245,7 +1245,7 @@
     "capacity": 500,
     "buy": {
       "feed": 1120,
-      "water": 560,
+      "water": 660,
       "sheep": 15680
     },
     "sell": {
@@ -1270,7 +1270,7 @@
     "capacity": 500,
     "buy": {
       "feed": 1120,
-      "water": 560,
+      "water": 660,
       "pigs": 17920
     },
     "sell": {
@@ -1295,7 +1295,7 @@
     "capacity": 500,
     "buy": {
       "feed": 1120,
-      "water": 560,
+      "water": 660,
       "chickens": 3360
     },
     "sell": {

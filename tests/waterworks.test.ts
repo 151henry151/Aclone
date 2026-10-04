@@ -171,10 +171,10 @@ test('water pricing upgrade preserves private owners and unrelated public edits'
   try {
     store.saveWorld(w);
     const next = store.loadWorlds()[0].world;
-    assert.equal(next.tradePricing, 3);
-    assert.equal(next.buildings[0].buy.water, 560);
+    assert.equal(next.tradePricing, 4);
+    assert.equal(next.buildings[0].buy.water, 660);
     assert.equal(next.buildings[0].buy.potatoes, 111);
-    assert.equal(next.buildings[1].sell.water, 675);
+    assert.equal(next.buildings[1].sell.water, 725);
     assert.deepEqual(next.buildings[2], owned);
     store.saveWorld(next);
     assert.deepEqual(store.loadWorlds()[0].world, next);

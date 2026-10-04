@@ -236,7 +236,7 @@ export interface World {
   scriptInteraction?: boolean;
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
-  tradePricing?: 1 | 2 | 3;
+  tradePricing?: 1 | 2 | 3 | 4;
   vehicleServicesPricing?: 1;
   livestockPricing?: 1;
   animalPricing?: 1;

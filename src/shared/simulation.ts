@@ -158,7 +158,7 @@ export function createWorld(
     players: {},
     buildings: [],
     townLayout: 2,
-    tradePricing: 3,
+    tradePricing: 4,
     livestockPricing: 1,
     animalPricing: 1,
     vehicleServicesPricing: 1,

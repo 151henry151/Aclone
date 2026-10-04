@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.51.1] - 2026-10-04
+
+### Fixed
+
+- Make public fuel delivery to waterworks profitable and rebalance water-chain margins, preserving player-owned and custom quotes on upgrade.
+
 ## [0.51.0] - 2026-10-04
 
 ### Added
