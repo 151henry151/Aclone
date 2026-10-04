@@ -140,6 +140,8 @@ export interface Building {
   production?: Recipe;
   forSale?: boolean;
   construction?: Stock;
+  /** Original base cash paid at placement, excluding town tax. */
+  constructionCost?: number;
   style?: string;
   smoking?: boolean;
   /** Public snapshot projection: production intensity, zero when blocked. */

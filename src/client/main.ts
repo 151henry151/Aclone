@@ -1,3 +1,4 @@
+import { constructionRefund } from '../shared/construction';
 import { crowClasses } from '../shared/robocrows';
 import { lotteryPanel } from './lottery';
 import { townEventsPanel } from './story-editor';
@@ -686,6 +687,7 @@ function updateHud() {
   parishMap?.update(world, me);
   // Update read-only building facts without rebuilding focused forms/buttons.
   const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
+  if (panel === 'building' && !shown) closePanel();
   if (shown) {
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
@@ -1327,7 +1329,7 @@ function renderPanel() {
     const waterSite = waterworksSite(world, me);
     modal(
       'Build something useful.',
-      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply the listed materials to finish construction. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
+      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply the listed materials to finish construction. Unfinished sites can be cancelled for 75% of their base cash cost; tax and delivered materials are not returned. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
         worldBuildings(world!),
       )
         .filter(([, d]) => d.tier <= world!.tier)
@@ -1336,7 +1338,7 @@ function renderPanel() {
             `<button data-do="construct" data-id="${id}" ${id === 'waterworks' && !waterSite ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
               d.materials,
             )
-              .map(([i, n]) => `${n} ${esc(items[i].name)}`)
+              .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
               .join(
                 ' + ',
               )}</small></span><b>${money(Math.round(d.price * (1 + world!.towns[0].tax)))}</b></button>`,
@@ -1390,10 +1392,10 @@ function buildingWindow(b: Building) {
   let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
-      .map(([i, n]) => `${n} ${esc(items[i].name)}`)
+      .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
       .join(
         ', ',
-      )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}"`)}`;
+      )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}${selfOwned && !b.government && !b.lien ? `<details class="notice"><summary>Cancel construction</summary><p>Receive ${money(constructionRefund(world, b))} back (75% of the base cash cost). Construction tax and any materials already delivered are not returned. This removes the site.</p>${button('Cancel building and receive refund', 'cancelConstruction', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</details>` : ''}`;
     modal(b.name, html);
     refreshTradingPrices();
     return;

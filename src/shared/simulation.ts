@@ -1,3 +1,4 @@
+import { constructionRefund } from './construction.ts';
 import { crowClasses, crowAbility, returnCrow, type CrowClass } from './robocrows.ts';
 import { lotteryAction, tickLottery } from './lottery.ts';
 import { readBook, tickTownEvents } from './world-stories.ts';
@@ -1063,8 +1064,23 @@ export function act(w: World, id: string, a: Action): string {
       b.investment = 0;
       b.stock = {};
       b.construction = { ...def.materials };
+      b.constructionCost = def.price;
       w.buildings.push(b);
       result = 'Construction site placed. Deliver the materials listed at the site.';
+      break;
+    }
+    case 'cancelConstruction': {
+      const b = w.buildings.find((b) => b.id === a.building);
+      requireThat(b && b.construction, 'Choose an unfinished construction site');
+      requireThat(b.owner === p.id, 'Only the building owner can cancel construction');
+      requireThat(distance(p, b) < 18, 'Drive near the construction site first');
+      requireThat(!b.government && !b.lien, 'This property cannot be cancelled');
+      const refund = constructionRefund(w, b);
+      w.buildings = w.buildings.filter((site) => site !== b);
+      if (w.creator) w.creator.rules = w.creator.rules.filter((r) => r.target !== b.id);
+      grant(w, p, refund, 'Construction refund: ' + b.name);
+      result =
+        'Construction cancelled. Refunded ' + money(refund, w.settings.denariiPerSheckle) + '.';
       break;
     }
     case 'supply': {
@@ -1077,6 +1093,7 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (Object.values(b.construction).every((n) => !n)) {
         delete b.construction;
+        delete b.constructionCost;
         questEvent(w, p, 'build', b.templateId ?? b.kind);
         queueCreatorScript(w, 'BuildingComplete', { id, building: b.id, kind: b.kind });
         result = 'Building complete. Civilisation marches on.';

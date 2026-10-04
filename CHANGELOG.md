@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.49.0] - 2026-10-03
+
+### Added
+
+- Owners can cancel nearby unfinished construction for a 75% refund of its base cash cost. The building panel shows the refund before confirmation; tax and delivered materials are retained. Original costs persist across restarts, and older sites use a conservative catalogue-based fallback.
+
 ## [0.48.2] - 2026-10-03
 
 ### Fixed
