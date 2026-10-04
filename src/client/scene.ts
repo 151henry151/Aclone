@@ -6,7 +6,7 @@ import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './rend
 import { waitForTextures, failedTextures } from './materials';
 import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { creatorModel } from './creator-model';
+import { creatorModel, animateCreatorModels } from './creator-model';
 import { GameAudio } from './audio';
 import { streetLights } from '../shared/town';
 import { TownLighting } from './lighting';
@@ -1040,6 +1040,9 @@ export class GameScene {
       const w = this.world,
         p = this.me;
       this.livestock.animate(this.elapsed);
+      const assets = animateCreatorModels(this.scene, dt, this.camera.position);
+      this.renderer.domElement.dataset.assetLoading = String(assets.loading);
+      this.renderer.domElement.dataset.assetFailed = String(assets.failed);
       for (const flight of this.flights)
         flight.update(
           w.id,
@@ -1382,6 +1385,8 @@ export class GameScene {
 function dispose(root: T.Object3D) {
   root.traverse((o) => {
     o.userData.disposed = true;
+    o.userData.mixer?.stopAllAction();
+    if (o.userData.mixer) o.userData.mixer.uncacheRoot(o.userData.animationRoot);
     if (o instanceof T.Mesh || o instanceof T.Sprite || o instanceof T.Line) {
       if (o instanceof T.InstancedMesh) o.dispose();
       if ('geometry' in o && !o.geometry?.userData.shared) o.geometry?.dispose();

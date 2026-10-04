@@ -1,3 +1,4 @@
+import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
 import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -470,7 +471,7 @@ export async function createApp(options: AppOptions) {
       if (path === '/api/galaxy') return json(res, 200, { ...galaxy, worlds: registry() });
       if (path === '/api/worlds' && req.method === 'POST') {
         const a = auth(req),
-          data = JSON.parse((await body(req, 512 * 1024)).toString());
+          data = JSON.parse((await body(req, 12 * 1024 * 1024)).toString());
         const name = z.string().trim().min(2).max(48).parse(data.name),
           template = z
             .enum([
@@ -499,12 +500,22 @@ export async function createApp(options: AppOptions) {
                 : template,
           );
         applyPreset(w, template);
+        const media = data.assets ? decodeBundle(data.assets) : [];
+        w.assets = media.map((m) => m.asset);
         if (data.design) {
           applyDesign(w, data.design);
           const checked = await scriptPool.run(w, w.script, 'ScriptReload', {});
           for (const e of checked.effects ?? []) validateEffect(w, e.effect);
         }
         if (data.settings) configureRules(w, data.settings);
+        if (media.length) {
+          await mkdir(join(dataDir, 'assets'), { recursive: true });
+          for (const m of media)
+            await writeFile(
+              join(dataDir, 'assets', m.asset.id + assetExtensions[m.asset.type]),
+              m.bytes,
+            );
+        }
         worlds.set(id, w);
         store.saveWorld(w);
         return json(res, 201, { id, name });
@@ -513,6 +524,29 @@ export async function createApp(options: AppOptions) {
         const a = auth(req),
           w = worlds.get(path.split('/')[3]);
         if (!w || w.owner !== a.id) throw Error('World owner required');
+        if (new URL(req.url!, 'http://localhost').searchParams.get('media') === '1') {
+          let total = 0;
+          const assets = [];
+          for (const asset of w.assets) {
+            if (!/^[a-f0-9]{64}$/.test(asset.id) || !Object.hasOwn(assetExtensions, asset.type))
+              throw Error('Invalid asset metadata');
+            const bytes = await readFile(
+              join(dataDir, 'assets', asset.id + assetExtensions[asset.type]),
+            );
+            total += bytes.length;
+            if (total > 8 * 1024 * 1024)
+              throw Error(
+                'Portable bundle limit is 8 MiB of media; use the media-free design for larger worlds',
+              );
+            assets.push({ ...asset, data: bytes.toString('base64') });
+          }
+          return json(res, 200, {
+            format: 'aclone-world-bundle',
+            version: 1,
+            design: exportDesign(w, true),
+            assets,
+          });
+        }
         return json(res, 200, exportDesign(w));
       }
       if (path.startsWith('/api/assets/') && req.method === 'POST') {
@@ -520,7 +554,6 @@ export async function createApp(options: AppOptions) {
           id = path.split('/')[3],
           w = worlds.get(id);
         if (!w || w.owner !== a.id) throw Error('World owner required');
-        if (w.assets.length >= 32) throw Error('Asset limit reached');
         const buf = await body(req, 2 * 1024 * 1024),
           type = String(req.headers['content-type']);
         const types: Record<string, string> = {
@@ -530,7 +563,8 @@ export async function createApp(options: AppOptions) {
           'model/gltf-binary': '.glb',
           'model/obj': '.obj',
         };
-        if (!types[type]) throw Error('Only PNG, JPEG, MP3, OBJ and GLB files supported');
+        if (!Object.hasOwn(types, type))
+          throw Error('Only PNG, JPEG, MP3, OBJ and GLB files supported');
         if (
           type === 'image/png' &&
           !buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
@@ -543,8 +577,6 @@ export async function createApp(options: AppOptions) {
         validateVisualAsset(buf, type);
         const hash = createHash('sha256').update(buf).digest('hex'),
           file = hash + types[type];
-        await mkdir(join(dataDir, 'assets'), { recursive: true });
-        await writeFile(join(dataDir, 'assets', file), buf);
         const asset = {
           id: hash,
           name: decodeURIComponent(String(req.headers['x-asset-name'] ?? 'World asset')).slice(
@@ -552,9 +584,17 @@ export async function createApp(options: AppOptions) {
             80,
           ),
           type,
+          provenance: provenanceSchema.parse(
+            JSON.parse(decodeURIComponent(String(req.headers['x-asset-provenance'] ?? '%7B%7D'))),
+          ),
           url: '/world-assets/' + file,
         };
-        w.assets.push(asset);
+        const existing = w.assets.findIndex((a) => a.id === asset.id);
+        if (existing < 0 && w.assets.length >= 32) throw Error('Asset limit reached');
+        await mkdir(join(dataDir, 'assets'), { recursive: true });
+        await writeFile(join(dataDir, 'assets', file), buf);
+        if (existing >= 0) w.assets[existing] = asset;
+        else w.assets.push(asset);
         w.revision++;
         store.saveWorld(w);
         return json(res, 201, asset);

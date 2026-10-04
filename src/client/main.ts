@@ -1,3 +1,4 @@
+import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
 import { rulesSummary } from '../shared/rulesets';
 import { alcoholDose, intoxicationLabel } from '../shared/intoxication';
 import { spaceportFlight } from '../shared/spaceport-flight';
@@ -551,6 +552,20 @@ function updateHud() {
       }
     }
   }
+  let assetStatus = document.getElementById('creator-asset-status');
+  if (!assetStatus) {
+    assetStatus = document.createElement('div');
+    assetStatus.id = 'creator-asset-status';
+    assetStatus.setAttribute('role', 'status');
+    $('world-hud').append(assetStatus);
+  }
+  const visual = document.querySelector<HTMLCanvasElement>('#viewport canvas'),
+    loading = Number(visual?.dataset.assetLoading ?? 0),
+    failed = Number(visual?.dataset.assetFailed ?? 0);
+  assetStatus.hidden = !loading && !failed;
+  assetStatus.textContent = failed
+    ? `${failed} custom visuals failed to load; placeholders remain. Reload to retry.`
+    : `Loading ${loading} custom visuals…`;
   const immobile = !!(me.atHome || me.task || me.health <= 0);
   for (const b of document.querySelectorAll<HTMLButtonElement>('[data-hold]'))
     b.disabled = immobile;
@@ -1594,7 +1609,7 @@ function editorWindow() {
               : tab === 'Script'
                 ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart, TaskComplete, ObjectInteract, ZoneEnter, Timer. Functions: on, announce, getvar, setvar, kudos, heal, needs, give, teleport, score, object_visible, player_value. See the World Building and Scripting guides for examples. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
                 : tab === 'Assets'
-                  ? `<p>Upload original PNG, JPEG, MP3, OBJ or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. OBJ: static faces, up to 50,000 triangles; select a PNG/JPEG texture atlas in Workshop. GLB: static, embedded media only, up to 128 mesh primitives; no extensions or animations. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb,.obj" required><button>Upload asset</button></form><div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · ${a.type === 'model/obj' ? 'OBJ' : 'GLB'}</a>`)).join('')}</div>`
+                  ? `<p>Upload original PNG, JPEG, MP3, OBJ or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. OBJ: static faces, up to 50,000 triangles; select a PNG/JPEG texture atlas in Workshop. GLB: embedded media, up to 128 primitives, 8 animation clips and 64 joints per skin. No external resources, morph targets or extensions. Choose a clip in Workshop. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb,.obj" required><label>Author<input name="author" maxlength="120"></label><label>Licence<input name="license" maxlength="120" placeholder="e.g. CC0-1.0, CC-BY-4.0, original work"></label><label>Source / credits<input name="source" maxlength="300"></label><button>Upload asset</button></form>${texturePainterMarkup()}<div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · ${a.type === 'model/obj' ? 'OBJ' : 'GLB'}</a>`)).join('')}</div>`
                   : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
                       .slice(-25)
                       .reverse()
@@ -1606,6 +1621,27 @@ function editorWindow() {
     }`,
     true,
   );
+  if (tab === 'Assets')
+    mountTexturePainter(world.id, async (blob, name) => {
+      const response = await fetch(withBase('/api/assets/' + world!.id), {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer ' + token,
+          'content-type': 'image/png',
+          'x-asset-name': encodeURIComponent(name + '.png'),
+          'x-asset-provenance': encodeURIComponent(
+            JSON.stringify({
+              author: account?.name ?? '',
+              license: 'Original work',
+              source: 'Painted in Aclone',
+            }),
+          ),
+        },
+        body: blob,
+      });
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error);
+    });
   if (tab === 'Landscape') landscapeControls(world, send);
 }
 app.addEventListener('click', async (e) => {
@@ -1617,10 +1653,14 @@ app.addEventListener('click', async (e) => {
   try {
     if (action.startsWith('creator:') && world) {
       const op = action.slice(8);
-      if (op === 'export') {
+      if (op === 'export' || op === 'exportBundle') {
         download(
           'aclone-world-design.json',
-          JSON.stringify(await api('/api/design/' + world.id), null, 2),
+          JSON.stringify(
+            await api('/api/design/' + world.id + (op === 'exportBundle' ? '?media=1' : '')),
+            null,
+            2,
+          ),
         );
         return;
       }
@@ -1999,13 +2039,17 @@ app.addEventListener('submit', async (e) => {
         );
     } else if (form.id === 'creator-import-form') {
       const file = data.file as File;
-      if (file.size > 512 * 1024) throw Error('Design file is too large');
+      if (file.size > 12 * 1024 * 1024) throw Error('Design/bundle file is too large');
+      const imported = JSON.parse(await file.text());
+      if (imported.format === 'aclone-world-bundle' && imported.version !== 1)
+        throw Error('Unsupported world bundle version');
       await api('/api/worlds', {
         method: 'POST',
         body: JSON.stringify({
           name: data.name,
           template: 'blank',
-          design: JSON.parse(await file.text()),
+          design: imported.format === 'aclone-world-bundle' ? imported.design : imported,
+          ...(imported.format === 'aclone-world-bundle' ? { assets: imported.assets } : {}),
         }),
       });
       toast('Imported world created in the Hearth system.');
@@ -2059,6 +2103,13 @@ app.addEventListener('submit', async (e) => {
               ? 'model/gltf-binary'
               : file.type,
           'x-asset-name': encodeURIComponent(file.name),
+          'x-asset-provenance': encodeURIComponent(
+            JSON.stringify({
+              author: String(data.author ?? ''),
+              license: String(data.license ?? 'Unspecified'),
+              source: String(data.source ?? ''),
+            }),
+          ),
         },
         body: file,
       });

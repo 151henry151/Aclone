@@ -7,11 +7,17 @@ import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer } from '../../src/shared/simulation.ts';
 import { creatorSchema } from '../../src/shared/creator.ts';
 function triangle() {
-  const binary = Buffer.from(new Float32Array([-1, 0, 0, 1, 0, 0, 0, 2, 0]).buffer);
+  const binary = Buffer.from(
+    new Float32Array([-1, 0, 0, 1, 0, 0, 0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0]).buffer,
+  );
   const doc = {
     asset: { version: '2.0' },
-    buffers: [{ byteLength: 36 }],
-    bufferViews: [{ buffer: 0, byteLength: 36 }],
+    buffers: [{ byteLength: 84 }],
+    bufferViews: [
+      { buffer: 0, byteLength: 36 },
+      { buffer: 0, byteOffset: 36, byteLength: 12 },
+      { buffer: 0, byteOffset: 48, byteLength: 36 },
+    ],
     accessors: [
       {
         bufferView: 0,
@@ -20,6 +26,14 @@ function triangle() {
         type: 'VEC3',
         min: [-1, 0, 0],
         max: [1, 2, 0],
+      },
+      { bufferView: 1, componentType: 5126, count: 3, type: 'SCALAR', min: [0], max: [2] },
+      { bufferView: 2, componentType: 5126, count: 3, type: 'VEC3' },
+    ],
+    animations: [
+      {
+        channels: [{ sampler: 0, target: { node: 0, path: 'translation' } }],
+        samplers: [{ input: 1, output: 2 }],
       },
     ],
     materials: [
@@ -109,6 +123,7 @@ for (const format of ['glb', 'obj'] as const)
             name: 'Copper triangle',
             asset: asset.id,
             texture,
+            animation: format === 'glb' ? 0 : -1,
             width: 8,
             height: 8,
             depth: 2,
@@ -143,10 +158,19 @@ for (const format of ['glb', 'obj'] as const)
       await page.screenshot({ path: `test-results/creator-${format}.png` });
       await page.keyboard.press('Escape');
       await page.keyboard.press('ArrowUp', { delay: 200 });
+      if (format === 'glb') {
+        await page.keyboard.press('F10');
+        await page.getByRole('button', { name: 'Workshop', exact: true }).click();
+        await expect(page.locator('[data-model-status]')).toHaveText('Model ready');
+        const canvas = page.locator('#creator-preview canvas');
+        const first = await canvas.screenshot();
+        await expect.poll(async () => first.equals(await canvas.screenshot())).toBe(false);
+        await page.keyboard.press('Escape');
+      }
       if (format === 'obj') {
         await page.keyboard.press('F10');
         await page.getByRole('button', { name: 'Workshop', exact: true }).click();
-        await expect(page.getByLabel('OBJ texture (PNG/JPEG atlas, optional)')).toHaveValue(
+        await expect(page.getByLabel('Primitive/OBJ texture (PNG/JPEG, optional)')).toHaveValue(
           texture!,
         );
         await expect(page.locator('#creator-preview canvas')).toBeVisible();
@@ -164,6 +188,41 @@ for (const format of ['glb', 'obj'] as const)
         await expect
           .poll(() => w.assets.some((a) => a.name === 'Upload.obj' && a.type === 'model/obj'))
           .toBe(true);
+        await page.getByText('Paint an original texture', { exact: true }).click();
+        await page.locator('#paint-name').fill('Moss tile');
+        await page.locator('#paint-fill').click();
+        await page.locator('#paint-save').click();
+        await expect
+          .poll(() =>
+            w.assets.some(
+              (a) => a.name === 'Moss tile.png' && a.provenance?.license === 'Original work',
+            ),
+          )
+          .toBe(true);
+        const response = await fetch(url + '/api/design/' + w.id + '?media=1', {
+          headers: { authorization: 'Bearer ' + token },
+        });
+        expect(response.status).toBe(200);
+        const bundle = await response.json();
+        const imported = await fetch(url + '/api/worlds', {
+          method: 'POST',
+          headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Copied studio',
+            template: 'blank',
+            design: bundle.design,
+            assets: bundle.assets,
+          }),
+        });
+        expect(imported.status).toBe(201);
+        expect(
+          [...app.worlds.values()].some(
+            (copy) =>
+              copy.name === 'Copied studio' &&
+              copy.creator?.models[0].asset === asset.id &&
+              copy.assets.some((a) => a.name === 'Moss tile.png'),
+          ),
+        ).toBe(true);
       }
       await page.keyboard.press('Escape');
       await page.keyboard.press('h');

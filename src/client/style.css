@@ -2210,3 +2210,21 @@ button span {
   font-size: 0.8rem;
   pointer-events: none;
 }
+
+#creator-asset-status {
+  position: absolute;
+  bottom: 12rem;
+  left: 1rem;
+  max-width: 20rem;
+  padding: 0.5rem;
+  background: #263b31dd;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+@media (max-width: 700px) {
+  #creator-asset-status {
+    bottom: 10rem;
+    max-width: 14rem;
+    font-size: 0.7rem;
+  }
+}

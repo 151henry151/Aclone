@@ -30,6 +30,8 @@ export const creatorTabs = [
   'Start here',
   'Arena',
   'Workshop',
+  'Resource visuals',
+  'Terrain textures',
   'Objects',
   'Behaviors',
   'Quests',
@@ -161,6 +163,8 @@ function readDraft(host: ParentNode = document) {
     depth: num('depth'),
     asset: get('asset') || undefined,
     texture: get('texture') || undefined,
+    animation: num('animation'),
+    animationSpeed: num('animationSpeed'),
     parts: draft.parts.map((p, i) => ({
       ...p,
       shape: get(`shape${i}`) as typeof p.shape,
@@ -203,7 +207,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   const building = w.buildings.find((b) => b.id === buildingId) ?? w.buildings[0];
   const modelOptions: [string, string][] = c.models.map((m) => [m.id, m.name]);
   if (tab === 'Start here')
-    return `<div class="guide-grid"><section><h3>Build a world in six steps</h3><ol><li><b>Rules</b>: set survival, economy, sea level and day length.</li><li><b>Arena</b>: choose CTF, capture point or deathmatch; move bases and set victory rules.</li><li><b>Workshop</b>: assemble reusable models or bind uploaded visuals.</li><li><b>Objects</b>: place trees, scenery, triggers, props or obstacles.</li><li><b>Behaviors</b>: add interact, zone-entry and timer actions without code.</li><li><b>Script</b>: add Lua for advanced conditions using the same effects.</li></ol></section><section><h3>Creator tools</h3><p>Changes are live for everyone in this world. Prototype in a separate world first. Saved designs survive server restarts.</p><p>Upload your own PNG/JPEG or static OBJ/GLB in <b>Assets</b>, then select it in Workshop. MP3 uploads are available for preview/download.</p><p>Use <b>Layout</b> to rename, move and reskin existing functional buildings. <b>Vehicles</b> tunes physics; <b>Workshop</b> assigns custom appearances to vehicle slots.</p><p>Export a world design in Transfer and create a new world from it. Exports contain design data, not player accounts or money.</p></section></div>`;
+    return `<div class="guide-grid"><section><h3>Build a world in six steps</h3><ol><li><b>Rules</b>: set survival, economy, sea level and day length.</li><li><b>Arena</b>: choose CTF, capture point or deathmatch; move bases and set victory rules.</li><li><b>Workshop</b>: assemble reusable models or bind uploaded visuals.</li><li><b>Objects</b>: place trees, scenery, triggers, props or obstacles.</li><li><b>Behaviors</b>: add interact, zone-entry and timer actions without code.</li><li><b>Script</b>: add Lua for advanced conditions using the same effects.</li></ol></section><section><h3>Creator tools</h3><p>Changes are live for everyone in this world. Prototype in a separate world first. Saved designs survive server restarts.</p><p>Upload your own PNG/JPEG, OBJ or animated GLB in <b>Assets</b>, then select it in Workshop. MP3 uploads are available for preview/download.</p><p>Use <b>Layout</b> to rename, move and reskin existing functional buildings. <b>Vehicles</b> tunes physics; <b>Workshop</b> assigns custom appearances to vehicle slots.</p><p>Export a world design in Transfer and create a new world from it. Exports contain design data, not player accounts or money.</p></section></div>`;
   if (tab === 'Arena')
     return `<p>Match rules apply to the existing Activities combat games. Fixed modes prevent players switching to another mode. Saving changed arena rules ends any current match. Coordinates are metres.</p><form id="creator-arena-form"><div class="settings-grid">${select(
       'Game mode',
@@ -216,9 +220,13 @@ export function creatorPanel(w: World, p: Player, tab: string) {
       ],
       c.arena.mode,
     )}${field('Round length (seconds)', 'roundSeconds', c.arena.roundSeconds, 'number', 'min="30" max="3600"')}${field('Winning score / capture seconds', 'scoreLimit', c.arena.scoreLimit, 'number', 'min="1" max="1000"')}${field('Dropped flag return (seconds)', 'flagReturnSeconds', c.arena.flagReturnSeconds, 'number', 'min="5" max="300"')}${field('Spawn protection (seconds)', 'protectionSeconds', c.arena.protectionSeconds, 'number', 'min="0" max="30"')}${c.arena.bases.map((b, i) => `${field(`Team ${i + 1} name`, 'team' + i, c.arena.teams[i])}${coord('baseX' + i, b.x)}${coord('baseZ' + i, b.z)}`).join('')}${coord('captureX', c.arena.capture.x)}${coord('captureZ', c.arena.capture.z)}${field('Capture radius', 'captureRadius', c.arena.capture.radius, 'number', 'min="3" max="50"')}</div><fieldset><legend>Allowed weapons</legend>${['machine', 'grenade', 'plasma', 'rocket', 'javelin', 'mine'].map((key) => `<label class="check"><input type="checkbox" name="weapon" value="${key}" ${c.arena.weapons.includes(key as any) ? 'checked' : ''}>${friendly(key)}</label>`).join('')}</fieldset><button>Save arena rules</button></form>`;
+  if (tab === 'Terrain textures')
+    return `<p>Use uploaded or painted PNG/JPEG tiles for the four terrain brushes. Grass repeats every five metres; other surfaces every six metres. Snow still covers these surfaces.</p><form id="creator-terrain-textures-form">${['grass', 'gravel', 'soil', 'sand'].map((id) => select(id, id, [['', 'Original texture'], ...w.assets.filter((a) => a.type.startsWith('image/')).map((a) => [a.id, a.name] as [string, string])], c.terrainTextures?.[id as 'grass'])).join('')}<button>Save terrain textures</button></form>`;
+  if (tab === 'Resource visuals')
+    return `<p>Replace gathering-ground visuals while keeping their resource identities, amounts and interaction locations. Use a tree/grove model for wood, or sculpt a quarry outcrop. Models also bind to buildings, vehicles and landscape scatter in their respective tabs.</p><form id="creator-resource-form">${['logs', 'stone', 'gravel', 'dirt'].map((id) => select(id, id, [['', 'Original appearance'], ...c.models.map((m) => [m.id, m.name] as [string, string])], c.resourceModels?.[id as 'logs'])).join('')}<button>Save resource appearances</button></form>`;
   if (tab === 'Workshop') {
     draft ??= c.models[0] ? structuredClone(c.models[0]) : starters('tree');
-    return `<p>Reusable visual models: assemble shapes, adjust metre dimensions and colors, then drag the preview to rotate. Upload images/OBJ/GLB in Assets first. OBJ uses an optional PNG/JPEG UV atlas; export normals and triangulate in your modelling app. Collision bounds are explicit; match them to the design.</p><div class="button-row">${button('New tree', 'starter', 'tree')}${button('New building', 'starter', 'building')}${button('New rover', 'starter', 'rover')}${c.models.map((m) => button('Edit ' + m.name, 'model', m.id)).join('')}</div><form id="creator-model-form"><div class="settings-grid">${field('Model name', 'name', draft.name)}${select('Uploaded visual (optional)', 'asset', [['', 'Shapes only'], ...w.assets.filter((a) => a.type.startsWith('image/') || ['model/gltf-binary', 'model/obj'].includes(a.type)).map((a) => [a.id, a.name] as [string, string])], draft.asset)}${select('OBJ texture (PNG/JPEG atlas, optional)', 'texture', [['', 'No texture'], ...w.assets.filter((a) => a.type.startsWith('image/')).map((a) => [a.id, a.name] as [string, string])], draft.texture)}${field('Collision / imported width', 'width', draft.width, 'number', 'min="0.2" max="60" step="0.1"')}${field('Height', 'height', draft.height, 'number', 'min="0.2" max="60" step="0.1"')}${field('Depth', 'depth', draft.depth, 'number', 'min="0.2" max="60" step="0.1"')}</div><div id="creator-preview" aria-label="Model preview"></div><div class="creator-parts">${draft.parts
+    return `<p>Reusable visual models: assemble shapes, adjust metre dimensions and colors, then drag the preview to rotate. Upload images/OBJ/GLB in Assets first. OBJ uses an optional PNG/JPEG UV atlas; export normals and triangulate in your modelling app. Collision bounds are explicit; match them to the design.</p><div class="button-row">${button('New tree', 'starter', 'tree')}${button('New building', 'starter', 'building')}${button('New rover', 'starter', 'rover')}${c.models.map((m) => button('Edit ' + m.name, 'model', m.id)).join('')}</div><form id="creator-model-form"><div class="settings-grid">${field('Model name', 'name', draft.name)}${select('Uploaded visual (optional)', 'asset', [['', 'Shapes only'], ...w.assets.filter((a) => a.type.startsWith('image/') || ['model/gltf-binary', 'model/obj'].includes(a.type)).map((a) => [a.id, a.name] as [string, string])], draft.asset)}${select('Primitive/OBJ texture (PNG/JPEG, optional)', 'texture', [['', 'No texture'], ...w.assets.filter((a) => a.type.startsWith('image/')).map((a) => [a.id, a.name] as [string, string])], draft.texture)}${field('Animation clip (-1 for static, 0 for first)', 'animation', draft.animation, 'number', 'min="-1" max="7"')}${field('Animation speed', 'animationSpeed', draft.animationSpeed, 'number', 'min="0.1" max="3" step="0.1"')}${field('Collision / imported width', 'width', draft.width, 'number', 'min="0.2" max="60" step="0.1"')}${field('Height', 'height', draft.height, 'number', 'min="0.2" max="60" step="0.1"')}${field('Depth', 'depth', draft.depth, 'number', 'min="0.2" max="60" step="0.1"')}</div><div id="creator-preview" aria-label="Model preview"></div><div class="creator-parts">${draft.parts
       .map(
         (part, i) =>
           `<details class="creator-part"><summary>Part ${i + 1} · ${friendly(part.shape)}</summary><div class="settings-grid">${select(
@@ -358,7 +366,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
     )}${field('Speed (m/s)', 'speed', v.speed, 'number', 'min="1" max="100" step="any"')}${field('Acceleration', 'acceleration', v.acceleration, 'number', 'min="1" max="50" step="any"')}${field('Turn rate', 'turn', v.turn, 'number', 'min="0.1" max="6" step="any"')}${field('Armour percent', 'armour', v.armour, 'number', 'min="10" max="1000" step="any"')}${field('Fuel per second', 'fuel', v.fuel, 'number', 'min="0" max="1" step="any"')}<button>Save vehicle physics</button></form>`;
   }
   if (tab === 'Transfer')
-    return `<p>Export a reusable world design without players, accounts, cash or inventories. Imported designs create a new world; they never overwrite an occupied world. Uploaded media must be uploaded and assigned separately on another server.</p>${button('Download world design', 'export')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
+    return `<p>Export a reusable world design without players, accounts, cash or inventories. Imported designs create a new world; they never overwrite an occupied world. A media bundle carries up to 8 MiB of images, models and audio, retaining source/author/licence metadata. Only redistribute media you have permission to share; design-only exports use placeholder visuals.</p>${button('Download world design', 'export')}${button('Download design + media bundle', 'exportBundle')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
   return '';
 }
 export function creatorClick(action: string, value: string, w: World, send: (a: Action) => void) {
@@ -423,9 +431,10 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     if (
       c.objects.some((o) => o.model === value) ||
       Object.values(c.vehicleModels).includes(value) ||
+      Object.values(c.resourceModels).includes(value) ||
       w.buildings.some((b) => b.creatorModel === value)
     )
-      throw Error('Remove model assignments from objects, buildings and vehicles first');
+      throw Error('Remove model assignments from objects, buildings, resources and vehicles first');
     c.models = c.models.filter((m) => m.id !== value);
     draft = undefined;
     send({ type: 'creator', creator: c });
@@ -462,6 +471,14 @@ export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefin
     };
     c.guards = [...c.guards.filter((old) => old.id !== g.id), g];
     guardId = g.id;
+  } else if (form.id === 'creator-terrain-textures-form') {
+    c.terrainTextures = Object.fromEntries(
+      ['grass', 'gravel', 'soil', 'sand'].filter((k) => str(k)).map((k) => [k, str(k)]),
+    );
+  } else if (form.id === 'creator-resource-form') {
+    c.resourceModels = Object.fromEntries(
+      ['logs', 'stone', 'gravel', 'dirt'].filter((k) => str(k)).map((k) => [k, str(k)]),
+    );
   } else if (form.id === 'creator-model-form') {
     readDraft();
     const model = blueprintSchema.parse(draft);

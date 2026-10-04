@@ -7,8 +7,10 @@ import type { World } from '../shared/types';
 import { publicPath } from '../shared/public-path';
 declare const __ACLONE_BASE__: string;
 /** Primitive parts are baked by color, keeping each instance's draw count small. */
+const models = new Set<T.Group>();
 export function creatorModel(model: Blueprint, world: World): T.Group {
   const root = new T.Group();
+  models.add(root);
   root.userData.creatorModel = true; // Keep dynamic/custom models out of world scenery baking.
   const batches = new Map<string, T.BufferGeometry[]>();
   for (const p of model.parts) {
@@ -34,13 +36,53 @@ export function creatorModel(model: Blueprint, world: World): T.Group {
     if (geometry)
       root.add(new T.Mesh(geometry, new T.MeshStandardMaterial({ color, roughness: 0.7 })));
   }
+  const primitiveTexture = !model.asset && world.assets.find((a) => a.id === model.texture);
+  if (primitiveTexture) {
+    root.userData.loading = true;
+    new T.TextureLoader().load(
+      publicPath(__ACLONE_BASE__, primitiveTexture.url),
+      (texture) => {
+        if (root.userData.disposed) {
+          texture.dispose();
+          return;
+        }
+        texture.colorSpace = T.SRGBColorSpace;
+        root.traverse((o) => {
+          if (o instanceof T.Mesh) {
+            o.material.map = texture;
+            o.material.needsUpdate = true;
+          }
+        });
+        root.userData.loading = false;
+        root.userData.redraw?.();
+      },
+      undefined,
+      () => {
+        root.userData.loading = false;
+        root.userData.loadFailed = true;
+        root.userData.redraw?.();
+      },
+    );
+  }
   const asset = world.assets.find((a) => a.id === model.asset);
   if (asset) {
     const url = publicPath(__ACLONE_BASE__, asset.url);
     if (asset.type.startsWith('image/')) {
-      const texture = new T.TextureLoader().load(url, () => {
-        if (!root.userData.disposed) root.userData.redraw?.();
-      });
+      root.userData.loading = true;
+      const texture = new T.TextureLoader().load(
+        url,
+        () => {
+          root.userData.loading = false;
+          if (root.userData.disposed) texture.dispose();
+          else root.userData.redraw?.();
+        },
+        undefined,
+        () => {
+          root.userData.loading = false;
+          root.userData.loadFailed = true;
+          root.userData.redraw?.();
+        },
+      );
       texture.colorSpace = T.SRGBColorSpace;
       const mesh = new T.Mesh(
         new T.PlaneGeometry(model.width, model.height),
@@ -64,7 +106,19 @@ export function creatorModel(model: Blueprint, world: World): T.Group {
       const load = async () => {
         if (asset.type === 'model/gltf-binary') {
           const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-          return (await new GLTFLoader().loadAsync(url)).scene;
+          const gltf = await new GLTFLoader().loadAsync(url, (event) => {
+            root.userData.progress = event.total
+              ? Math.round((event.loaded / event.total) * 100)
+              : undefined;
+          });
+          if (!root.userData.disposed && model.animation >= 0 && gltf.animations[model.animation]) {
+            const mixer = new T.AnimationMixer(gltf.scene);
+            mixer.timeScale = model.animationSpeed;
+            mixer.clipAction(gltf.animations[model.animation]).play();
+            root.userData.mixer = mixer;
+            root.userData.animationRoot = gltf.scene;
+          }
+          return gltf.scene;
         }
         const response = await fetch(url);
         if (!response.ok) throw Error('Model download failed');
@@ -140,8 +194,11 @@ export function creatorModel(model: Blueprint, world: World): T.Group {
   return root;
 }
 export function disposeCreator(root: T.Object3D) {
+  models.delete(root as T.Group);
   root.traverse((o) => {
     o.userData.disposed = true;
+    o.userData.mixer?.stopAllAction();
+    if (o.userData.mixer) o.userData.mixer.uncacheRoot(o.userData.animationRoot);
     if (o instanceof T.Mesh) {
       o.geometry.dispose();
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
@@ -180,7 +237,7 @@ export function previewCreator(host: HTMLElement, model: Blueprint, world: World
   camera.lookAt(0, size * 0.35, 0);
   const render = () => {
     status.textContent = group.userData.loading
-      ? 'Loading model…'
+      ? `Loading model… ${group.userData.progress ?? ''}${group.userData.progress === undefined ? '' : '%'}`
       : group.userData.loadFailed
         ? 'Model failed to load; showing its collision bounds.'
         : 'Model ready';
@@ -188,6 +245,15 @@ export function previewCreator(host: HTMLElement, model: Blueprint, world: World
   };
   group.userData.redraw = render;
   render();
+  let previous = performance.now();
+  renderer.setAnimationLoop(() => {
+    const now = performance.now();
+    if (group.userData.mixer) {
+      group.userData.mixer.update(Math.min(0.1, (now - previous) / 1000));
+      render();
+    }
+    previous = now;
+  });
   let dragging = false,
     last = 0;
   renderer.domElement.onpointerdown = (e) => {
@@ -209,7 +275,36 @@ export function previewCreator(host: HTMLElement, model: Blueprint, world: World
     group.userData.disposed = true;
     delete group.userData.redraw;
     disposeCreator(group);
+    renderer.setAnimationLoop(null);
     renderer.dispose();
     renderer.forceContextLoss();
   };
 }
+
+/** Bound animated creator cost; distant visuals keep their last pose. */
+export function animateCreatorModels(root: T.Object3D, dt: number, observer: T.Vector3) {
+  let active = 0,
+    loading = 0,
+    failed = 0;
+  for (const o of models) {
+    if (o.userData.disposed) {
+      models.delete(o);
+      continue;
+    }
+    let ancestor: T.Object3D | null = o;
+    while (ancestor && ancestor !== root) ancestor = ancestor.parent;
+    if (!ancestor) continue;
+    if (o.userData.loading) loading++;
+    if (o.userData.loadFailed) failed++;
+    if (
+      o.userData.mixer &&
+      active < 24 &&
+      o.getWorldPosition(position).distanceToSquared(observer) < 120 * 120
+    ) {
+      o.userData.mixer.update(Math.min(0.1, dt));
+      active++;
+    }
+  }
+  return { loading, failed, active };
+}
+const position = new T.Vector3();

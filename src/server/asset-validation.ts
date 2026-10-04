@@ -66,11 +66,11 @@ export function validateVisualAsset(buf: Buffer, type: string) {
     bufferViews: 512,
     buffers: 1,
     scenes: 8,
-    animations: 0,
-    skins: 0,
+    animations: 8,
+    skins: 4,
   }))
     if (doc[key] !== undefined && (!Array.isArray(doc[key]) || doc[key].length > max))
-      throw Error('Model exceeds the static workshop budget: ' + key);
+      throw Error('Model exceeds the workshop budget: ' + key);
   const index = (n: unknown, list: any[]) =>
     Number.isInteger(n) && Number(n) >= 0 && Number(n) < list.length;
   const nodes = doc.nodes ?? [],
@@ -164,6 +164,169 @@ export function validateVisualAsset(buf: Buffer, type: string) {
       !['SCALAR', 'VEC2', 'VEC3', 'VEC4', 'MAT2', 'MAT3', 'MAT4'].includes(a.type)
     )
       throw Error('Use dense standard geometry accessors');
+  const accessors = doc.accessors ?? [];
+  const components: Record<string, number> = {
+    SCALAR: 1,
+    VEC2: 2,
+    VEC3: 3,
+    VEC4: 4,
+    MAT2: 4,
+    MAT3: 9,
+    MAT4: 16,
+  };
+  for (const a of accessors) {
+    const view = doc.bufferViews[a.bufferView],
+      bytes =
+        a.componentType === 5126 || a.componentType === 5125
+          ? 4
+          : a.componentType === 5122 || a.componentType === 5123
+            ? 2
+            : 1;
+    const packed = components[a.type] * bytes,
+      stride = view.byteStride ?? packed,
+      offset = a.byteOffset ?? 0;
+    if (
+      !Number.isInteger(offset) ||
+      offset < 0 ||
+      !Number.isInteger(stride) ||
+      stride < packed ||
+      stride > 252 ||
+      stride % bytes ||
+      offset % bytes ||
+      offset + (a.count - 1) * stride + packed > view.byteLength
+    )
+      throw Error('Accessor exceeds its binary view');
+    if (a.componentType === 5126)
+      for (let i = 0; i < a.count; i++)
+        for (let j = 0; j < components[a.type]; j++)
+          if (
+            !Number.isFinite(
+              buf.readFloatLE(binStart + (view.byteOffset ?? 0) + offset + i * stride + j * 4),
+            )
+          )
+            throw Error('Non-finite model data');
+  }
+  const times = (a: any) => {
+    const v = doc.bufferViews[a.bufferView];
+    let previous = -1;
+    for (let i = 0; i < a.count; i++) {
+      const t = buf.readFloatLE(
+        binStart + (v.byteOffset ?? 0) + (a.byteOffset ?? 0) + i * (v.byteStride ?? 4),
+      );
+      if (t < 0 || t > 300 || t <= previous)
+        throw Error('Animation times must increase within five minutes');
+      previous = t;
+    }
+  };
+  for (const animation of doc.animations ?? []) {
+    if (
+      !Array.isArray(animation.channels) ||
+      !Array.isArray(animation.samplers) ||
+      animation.channels.length > 64 ||
+      animation.samplers.length > 64
+    )
+      throw Error('Animation channel budget exceeded');
+    const targets = new Set<string>();
+    for (const channel of animation.channels) {
+      const target = channel.target,
+        sampler = animation.samplers[channel.sampler];
+      if (
+        !target ||
+        !index(target.node, nodes) ||
+        !['translation', 'rotation', 'scale'].includes(target.path) ||
+        !sampler ||
+        nodes[target.node].matrix
+      )
+        throw Error('Use node translation, rotation or scale animation');
+      const key = target.node + ':' + target.path;
+      if (targets.has(key)) throw Error('Duplicate animation target');
+      targets.add(key);
+      const input = accessors[sampler.input],
+        output = accessors[sampler.output],
+        interpolation = sampler.interpolation ?? 'LINEAR';
+      if (
+        !input ||
+        !output ||
+        input.componentType !== 5126 ||
+        input.type !== 'SCALAR' ||
+        input.count > 2000 ||
+        output.componentType !== 5126 ||
+        output.type !== (target.path === 'rotation' ? 'VEC4' : 'VEC3') ||
+        !['LINEAR', 'STEP', 'CUBICSPLINE'].includes(interpolation) ||
+        output.count !== input.count * (interpolation === 'CUBICSPLINE' ? 3 : 1)
+      )
+        throw Error('Invalid animation sampler');
+      times(input);
+    }
+  }
+  for (const skin of doc.skins ?? []) {
+    if (
+      !Array.isArray(skin.joints) ||
+      !skin.joints.length ||
+      skin.joints.length > 64 ||
+      new Set(skin.joints).size !== skin.joints.length ||
+      skin.joints.some((i: unknown) => !index(i, nodes)) ||
+      (skin.skeleton !== undefined && !index(skin.skeleton, nodes))
+    )
+      throw Error('Invalid skeleton joints');
+    if (skin.inverseBindMatrices !== undefined) {
+      const a = accessors[skin.inverseBindMatrices];
+      if (!a || a.type !== 'MAT4' || a.componentType !== 5126 || a.count !== skin.joints.length)
+        throw Error('Invalid bind matrices');
+    }
+  }
+  for (const node of nodes) {
+    for (const [key, length] of Object.entries({
+      translation: 3,
+      rotation: 4,
+      scale: 3,
+      matrix: 16,
+    })) {
+      const value = node[key];
+      if (
+        value !== undefined &&
+        (!Array.isArray(value) ||
+          value.length !== length ||
+          value.some((n: unknown) => typeof n !== 'number' || !Number.isFinite(n)))
+      )
+        throw Error('Invalid node transform');
+    }
+    if (node.skin === undefined) continue;
+    if (!index(node.skin, doc.skins ?? []) || !index(node.mesh, doc.meshes ?? []))
+      throw Error('Invalid skin reference');
+    const skin = doc.skins[node.skin];
+    for (const primitive of doc.meshes[node.mesh].primitives) {
+      const joints = accessors[primitive.attributes.JOINTS_0],
+        weights = accessors[primitive.attributes.WEIGHTS_0],
+        positions = accessors[primitive.attributes.POSITION];
+      if (
+        !joints ||
+        !weights ||
+        !positions ||
+        joints.type !== 'VEC4' ||
+        weights.type !== 'VEC4' ||
+        ![5121, 5123].includes(joints.componentType) ||
+        ![5121, 5123, 5126].includes(weights.componentType) ||
+        (weights.componentType !== 5126 && !weights.normalized) ||
+        joints.count !== positions.count ||
+        weights.count !== positions.count
+      )
+        throw Error('Skinned meshes require matching joint and weight attributes');
+      const view = doc.bufferViews[joints.bufferView],
+        bytes = joints.componentType === 5121 ? 1 : 2;
+      for (let i = 0; i < joints.count; i++)
+        for (let j = 0; j < 4; j++) {
+          const offset =
+            binStart +
+            (view.byteOffset ?? 0) +
+            (joints.byteOffset ?? 0) +
+            i * (view.byteStride ?? bytes * 4) +
+            j * bytes;
+          if (buf.readUIntLE(offset, bytes) >= skin.joints.length)
+            throw Error('Joint index exceeds skeleton');
+        }
+    }
+  }
   for (const img of doc.images ?? []) {
     if (img.uri || !['image/png', 'image/jpeg'].includes(img.mimeType))
       throw Error('GLB images must use embedded PNG/JPEG buffer views');

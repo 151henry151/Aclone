@@ -86,6 +86,8 @@ test('scatter is deterministic, bounded, avoids roads/buildings/water, and requi
   const { w, p } = setup();
   w.creator!.models.push({
     id: 'rock',
+    animation: -1,
+    animationSpeed: 1,
     name: 'Rock',
     width: 2,
     height: 2,

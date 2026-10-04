@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-10-03
+
+### Added
+
+- Animated GLB clips and rigs, original texture painting, custom terrain/resource appearances, and loading/failure indicators. Animation stays bounded for client performance.
+- Portable world bundles with validated content hashes and media author/licence/source credits. Plain design exports retain their small, media-free form.
+
 ## [0.43.0] - 2026-10-03
 
 ### Added

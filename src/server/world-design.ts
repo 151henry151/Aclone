@@ -102,11 +102,12 @@ const designSchema = z.object({
   creator: creatorSchema,
   script: z.string().max(16384).default(''),
 });
-export function exportDesign(w: World) {
+export function exportDesign(w: World, includeMedia = false) {
   const creator = structuredClone(w.creator ?? defaultCreator());
+  if (!includeMedia) creator.terrainTextures = {};
   // Designs remain portable without copying arbitrary asset URLs or private server paths.
   for (const m of creator.models)
-    if (m.asset) {
+    if (!includeMedia && (m.asset || m.texture)) {
       delete m.asset;
       delete m.texture;
       if (!m.parts.length)

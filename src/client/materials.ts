@@ -13,7 +13,7 @@ export const failedTextures = new Set<string>();
 export async function waitForTextures() {
   await Promise.all(pendingTextures);
 }
-export function texture(name: string) {
+export function texture(name: string, url?: string) {
   let map = textures.get(name);
   if (!map) {
     let finish!: () => void;
@@ -47,7 +47,7 @@ export function texture(name: string) {
     };
     const timeout = setTimeout(() => complete(true), 45000);
     map = new T.TextureLoader().load(
-      publicPath(__ACLONE_BASE__, `/textures/${name}.webp`),
+      publicPath(__ACLONE_BASE__, url ?? `/textures/${name}.webp`),
       () => complete(),
       undefined,
       () => complete(true),
@@ -154,18 +154,36 @@ function surfaceTexture(w: World) {
 }
 export const snowCover = { value: 0 };
 export function groundMaterial(w: World) {
+  const custom = (kind: 'grass' | 'gravel' | 'soil' | 'sand', fallback: string) => {
+    const a = w.assets.find((a) => a.id === w.creator?.terrainTextures?.[kind]);
+    return a ? texture(a.id, a.url) : texture(fallback);
+  };
   const mask = roadTexture(w),
     surface = surfaceTexture(w),
-    meadow = texture('meadow'),
-    gravel = texture('gravel'),
+    meadow = custom('grass', 'meadow'),
+    gravel = custom('gravel', 'gravel'),
+    soil = custom('soil', 'gravel'),
+    sand = custom('sand', 'gravel'),
     noise = noiseTexture();
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
-  mat.userData.warmTextures = [mask, surface, meadow, gravel, noise];
+  mat.userData.warmTextures = [mask, surface, meadow, gravel, soil, sand, noise];
   mat.addEventListener('dispose', () => {
     mask.dispose();
     surface.dispose();
   });
   mat.onBeforeCompile = (shader) => {
+    shader.uniforms.soilMap = { value: soil };
+    shader.uniforms.sandMap = { value: sand };
+    shader.uniforms.soilTint = {
+      value: w.creator?.terrainTextures?.soil
+        ? new T.Color('white')
+        : new T.Color().setRGB(0.58, 0.39, 0.24),
+    };
+    shader.uniforms.sandTint = {
+      value: w.creator?.terrainTextures?.sand
+        ? new T.Color('white')
+        : new T.Color().setRGB(1.12, 1.02, 0.72),
+    };
     shader.uniforms.snowCover = snowCover;
     shader.uniforms.groundNoise = { value: noise };
     shader.uniforms.meadow = { value: meadow };
@@ -180,7 +198,7 @@ export function groundMaterial(w: World) {
     );
     shader.fragmentShader =
       `
-      uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
@@ -199,14 +217,14 @@ export function groundMaterial(w: World) {
       vec3 grit=texture2D(gravel,p/6.).rgb;
       vec4 brush=texture2D(surfaceMask,vec2(.5+p.x/540.,.5-p.y/540.));
       vec3 painted=mix(turf,grit,brush.r);
-      painted=mix(painted,grit*vec3(.58,.39,.24),brush.g);
-      painted=mix(painted,grit*vec3(1.12,1.02,.72),brush.b);
+      painted=mix(painted,texture2D(soilMap,p/6.).rgb*soilTint,brush.g);
+      painted=mix(painted,texture2D(sandMap,p/6.).rgb*sandTint,brush.b);
       vec3 base=mix(mix(turf,grit,max(road,beach)),painted,brush.a);
       diffuseColor.rgb*=mix(base,vec3(.85,.91,.94),snowCover*(1.-road*.25));
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v3';
+  mat.customProgramCacheKey = () => 'countryside-ground-v4';
   return mat;
 }
 

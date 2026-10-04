@@ -1,3 +1,4 @@
+import { creatorModel } from './creator-model';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -495,6 +496,16 @@ export function resourceScenery(root: T.Group, world: World, low: boolean) {
       terrainHeight(world, node.x, node.z) < world.settings.seaLevel + 0.1
     )
       continue;
+    const custom = world.creator?.models.find(
+      (m) => m.id === world.creator?.resourceModels?.[node.item as 'logs'],
+    );
+    if (custom) {
+      const group = creatorModel(custom, world);
+      group.position.set(node.x, terrainHeight(world, node.x, node.z), node.z);
+      group.userData.resource = node.id;
+      root.add(group);
+      continue;
+    }
     const variant = Number(node.id.split('-').at(-1));
     const group = new T.Group();
     group.name = `Gathering ground ${node.id}`;

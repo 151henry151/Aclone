@@ -66,6 +66,8 @@ export const blueprintSchema = z
     parts: z.array(partSchema).max(32).default([]),
     asset: z.string().max(64).optional(),
     texture: z.string().max(64).optional(),
+    animation: z.number().int().min(-1).max(7).default(-1),
+    animationSpeed: z.number().min(0.1).max(3).default(1),
     width: z.number().min(0.2).max(60).default(4),
     height: z.number().min(0.2).max(60).default(4),
     depth: z.number().min(0.2).max(60).default(4),
@@ -131,6 +133,8 @@ export const creatorSchema = z.object({
   models: z.array(blueprintSchema).max(64).default([]),
   objects: z.array(objectSchema).max(128).default([]),
   rules: z.array(ruleSchema).max(64).default([]),
+  terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
+  resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
   vehicleModels: z.record(z.string().regex(/^([0-9]|1[0-9]|2[0-3])$/), id).default({}),
 });
 export type Creator = z.infer<typeof creatorSchema>;
@@ -180,16 +184,19 @@ export function validateCreator(w: World, input: unknown) {
   for (const m of c.models)
     if (
       m.texture &&
-      (!w.assets.some((a) => a.id === m.asset && a.type === 'model/obj') ||
+      ((!!m.asset && !w.assets.some((a) => a.id === m.asset && a.type === 'model/obj')) ||
         !w.assets.some((a) => a.id === m.texture && ['image/png', 'image/jpeg'].includes(a.type)))
     )
-      throw Error('OBJ textures must be PNG/JPEG assets uploaded to this world');
+      throw Error('Primitive/OBJ textures must be PNG/JPEG assets uploaded to this world');
+  for (const asset of Object.values(c.terrainTextures))
+    if (!w.assets.some((a) => a.id === asset && ['image/png', 'image/jpeg'].includes(a.type)))
+      throw Error('Choose an uploaded terrain image');
   const models = new Set(c.models.map((m) => m.id));
   for (const s of w.landscape?.scatter ?? [])
     if (!c.models.some((m) => m.id === s.model)) throw Error('Model is used by landscape scatter');
   for (const o of c.objects)
     if (!models.has(o.model)) throw Error('Object refers to a missing model');
-  for (const model of Object.values(c.vehicleModels))
+  for (const model of [...Object.values(c.vehicleModels), ...Object.values(c.resourceModels)])
     if (!models.has(model)) throw Error('Vehicle refers to a missing model');
   for (const b of w.buildings)
     if (b.creatorModel && !models.has(b.creatorModel))

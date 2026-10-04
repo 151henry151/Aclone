@@ -117,21 +117,19 @@ occupied worlds. Players, accounts, chat, stock, investment, inventories, match
 progress and script variables are excluded. Imported businesses belong to the
 new world’s owner and start from ordinary building defaults. Asset-only models
 become labelled gray placeholder shapes until their media is uploaded/reassigned.
-A rejected import does not add a world to the registry.
+A rejected import does not add a world to the registry. Use the media bundle option to retain model and texture bindings.
 
 ## Practical limits and extension points
 
 Worlds currently share a 500 × 500 metre terrain footprint. Limits per world:
 64 models, 32 parts per model, 128 placed objects, 64 behavior rules, 128 zones,
 256 terrain stamps and 500 buildings. Uploads allow 32 assets, 2 MiB each, with
-images no larger than 2048 × 2048. GLB supports static embedded geometry/textures,
+images no larger than 2048 × 2048. GLB supports embedded geometry/textures,
 up to 256 nodes, 128 primitives, 32 materials and eight textures, with a combined
 300,000 accessor-element budget. No external URLs, compression/extensions,
-skinning, animation, sparse accessors or morph targets are accepted.
+sparse accessors or morph targets are accepted. Up to eight five-minute animation clips, four skins and 64 joints per skin are allowed. Choose a clip index and playback speed in Workshop; -1 keeps it static. Nearby animation is capped at 24 models.
 
-Detailed repeated imports can slow phones despite these limits. Use few colors/simple shapes; same-color parts merge. Models change visuals, not the physics engine. Road painting, heightmap uploads, imported
-character animation rigs, shader scripts, arbitrary new inventory items and
-arbitrary client JavaScript are outside this editor.
+Detailed repeated imports can slow phones despite these limits. Use few colors/simple shapes; same-color parts merge. Models change visuals, not the physics engine. Shader scripts and arbitrary client JavaScript are outside this editor. Imported rigs play their authored clips; they do not replace the built-in human character controller.
 
 Developer entry points: `shared/creator.ts` owns validation/actions/effects;
 `client/creator-editor.ts` owns forms; `client/creator-model.ts` owns rendering;
@@ -145,11 +143,11 @@ saved/reloaded state, browser controls and untrusted input rejection.
 
 ## OBJ models and textures
 
-Make a static mesh in Blender or another modelling tool; [Blender's OBJ exporter](https://docs.blender.org/manual/en/5.0/files/import_export/obj.html) exports geometry, UV coordinates and normals. Triangulate faces, export normals, and use one UV texture atlas. Upload the `.obj` and its PNG/JPEG separately in **Assets**. In **Workshop**, select the OBJ as the uploaded visual and the image as **OBJ texture**, set the metre bounds, then save. Bind it to scenery, a building or a vehicle as usual. A blank texture selection gives plain geometry.
+Make a static mesh in Blender or another modelling tool; [Blender's OBJ exporter](https://docs.blender.org/manual/en/5.0/files/import_export/obj.html) exports geometry, UV coordinates and normals. Triangulate faces, export normals, and use one UV texture atlas. Upload the `.obj` and its PNG/JPEG separately in **Assets**. In **Workshop**, select the OBJ as the uploaded visual and the image as **Primitive/OBJ texture**, set the metre bounds, then save. Bind it to scenery, a building or a vehicle as usual. A blank texture selection gives plain geometry.
 
 Each file is limited to 2 MiB; images to 2048×2048; OBJ to 50,000 triangles and 60,000 records of each coordinate type. Positive/negative face indices and polygon faces work; curves, point clouds, animation and vertex-color shading do not. Material-library paths are ignored: no external `.mtl` or remote textures are fetched. For multiple materials or embedded textures, use the existing self-contained GLB workflow.
 
-Visitors download models/textures automatically through the game's hosting prefix, with immutable browser caching. A wireframe box marks loading or failed geometry while collision remains stable. Exported world designs keep placeholder geometry; upload/reassign media on the destination server.
+Visitors download models/textures automatically through the game's hosting prefix, with immutable browser caching. A wireframe box marks loading or failed geometry while collision remains stable. Media-free designs keep placeholder geometry. **Transfer → Export design + media** includes up to 8 MiB of content-hashed media (32 assets, 2 MiB each), plus author, licence and source credits. Import validates every hash and asset before creating a world. Only export media you have permission to redistribute; uploaded media does not automatically become GPL-licensed.
 
 ## Survival and death rules
 
@@ -198,3 +196,7 @@ Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences
 Creation offers the existing active-work village, **Relaxed owner economy**, **Harsh survival village**, **Civilization frontier**, arenas and a blank canvas. These are starting rules, not claims of exact historical balance. Relaxed disables needs and jobs, lets qualified owners operate supplied businesses without wages, and keeps skills/property on death. Harsh doubles needs, disables unattended production and grants one real hour of needs grace after death. Frontier enables combat, owner operation and larger ownership limits; safe zones still apply.
 
 `jobsEnabled` controls employment and paid labour. `ownerOperation` enables the qualified owner’s **Operate without wages** control; `activeWork` determines whether its two-cycle shift must be renewed. This never pays the owner wages or supplies free inputs. Farms keep their existing owner plot controls. `postDeathGraceSeconds` (0–86400) pauses needs only after rebirth, online or offline; ordinary offline survival continues. Puddlewick keeps jobs enabled, owner operation disabled and no grace. Every arrival shows the actual rules in private chat; **World → World rules & leaving safely** summarizes them before departure.
+
+## Texture and resource authoring
+
+In **Assets → Paint an original texture**, paint a 256 × 256 tile with mouse or touch, fill the tile and save it as PNG. Assign it to primitive models or an OBJ UV atlas in Workshop, or to grass, gravel, soil and sand in **Terrain textures**. **Resource visuals** assigns models to logs, stone, gravel and topsoil without changing their gathering rules. Uploaded imagery is cached by content hash. Loading/failure indicators keep collision bounds visible while media arrives.

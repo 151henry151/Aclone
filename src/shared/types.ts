@@ -290,7 +290,13 @@ export interface World {
   tier: number;
   script: string;
   scriptVariables: Record<string, number>;
-  assets: { id: string; name: string; type: string; url: string }[];
+  assets: {
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+    provenance?: { author: string; license: string; source: string };
+  }[];
   kricket: { bowler?: string; batter?: string; due: number; score: Record<string, number> };
   revision: number;
 }
