@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.42.3] - 2026-10-03
+
+### Fixed
+
+- Split browser CI across four serial-rendering runners to stay within the test deadline. Allow slow software rendering to display multiplayer presence and ease in intoxication effects before assertions, while checking server presence independently.
+
 ## [0.42.2] - 2026-10-03
 
 ### Fixed

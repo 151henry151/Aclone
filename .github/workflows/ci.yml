@@ -31,11 +31,19 @@ jobs:
           - name: root-1
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=1/2
+            tests: --shard=1/4
           - name: root-2
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=2/2
+            tests: --shard=2/4
+          - name: root-3
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=3/4
+          - name: root-4
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=4/4
           - name: subpath
             base_path: /aclone
             url: http://127.0.0.1:3013/aclone/

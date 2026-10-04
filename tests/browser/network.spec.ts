@@ -65,7 +65,8 @@ test('parked neighbours and a throttled internet link retain playable controls a
       await new Promise<void>((resolve) => ws.once('open', resolve));
       ws.send(JSON.stringify({ type: 'hello', protocol: 2, token: other.token, world: w.id }));
     }
-    await expect(page.locator('#player-count')).toHaveText('3');
+    await expect.poll(() => Object.values(w.players).filter((p) => p.online).length).toBe(3);
+    await expect(page.locator('#player-count')).toHaveText('3', { timeout: 30000 });
     const three = await sample();
     // Shape only gameplay traffic; first-time asset loading is a separate measurement.
     await page.addInitScript(

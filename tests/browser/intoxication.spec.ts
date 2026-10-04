@@ -50,7 +50,7 @@ test('drinks distort only scenery, preserve usable UI, respect reduced motion an
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await expect(page.locator('#intoxication-status')).toContainText('Very drunk');
     await expect
-      .poll(async () => Number(await canvas.getAttribute('data-intoxication')))
+      .poll(async () => Number(await canvas.getAttribute('data-intoxication')), { timeout: 30000 })
       .toBeGreaterThan(0.8);
     await page.screenshot({ path: 'test-results/intoxication/drunk.png' });
     await page.setViewportSize({ width: 390, height: 844 });
