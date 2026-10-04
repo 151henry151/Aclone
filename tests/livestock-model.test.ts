@@ -63,18 +63,52 @@ test('visible herds follow stock, removal and world changes without rebuilding g
   assert.ok(view.group.children.every((c) => (c as T.InstancedMesh).count === 0));
 });
 
-test('cow legs taper continuously from broad upper limbs to narrow ankles', () => {
-  for (const leg of animalModel('cows').filter((p) => p.motion === 'leg')) {
-    const positions = leg.geometry.attributes.position;
-    const span = (height: number) => {
-      const xs: number[] = [];
-      for (let i = 0; i < positions.count; i++)
-        if (Math.abs(positions.getY(i) + leg.pivot.y - height) < 0.001) xs.push(positions.getX(i));
-      assert.ok(xs.length > 0);
-      return Math.max(...xs) - Math.min(...xs);
-    };
-    assert.ok(span(1.06) > span(0.25) * 3);
-    assert.ok(span(0.61) > span(0.25) * 1.8);
-    leg.geometry.dispose();
+test('cow torso and legs form one connected closed surface, with thick upper limbs', async () => {
+  const { default: surface } = await import('../src/client/cow-surface.json');
+  const adjacency = new Map<number, Set<number>>(),
+    edges = new Map<string, number>();
+  for (let i = 0; i < surface.index.length; i += 3) {
+    const face = surface.index.slice(i, i + 3);
+    for (let j = 0; j < 3; j++) {
+      const a = face[j],
+        b = face[(j + 1) % 3],
+        key = [a, b].sort((a, b) => a - b).join(',');
+      edges.set(key, (edges.get(key) ?? 0) + 1);
+      if (!adjacency.has(a)) adjacency.set(a, new Set());
+      if (!adjacency.has(b)) adjacency.set(b, new Set());
+      adjacency.get(a)!.add(b);
+      adjacency.get(b)!.add(a);
+    }
   }
+  assert.ok(
+    [...edges.values()].every((n) => n === 2),
+    'no open seams or non-manifold edges',
+  );
+  const seen = new Set<number>(),
+    todo = [surface.index[0]];
+  while (todo.length) {
+    const i = todo.pop()!;
+    if (seen.has(i)) continue;
+    seen.add(i);
+    todo.push(...adjacency.get(i)!);
+  }
+  assert.equal(seen.size, surface.position.length / 3, 'all four legs share the torso topology');
+  const width = (height: number) => {
+    const xs: number[] = [];
+    for (let i = 0; i < surface.position.length; i += 3) {
+      const [x, y, z] = surface.position.slice(i, i + 3);
+      if (x > 0 && z > 0.4 && Math.abs(y - height) < 0.05) xs.push(x);
+    }
+    assert.ok(xs.length);
+    return Math.max(...xs) - Math.min(...xs);
+  };
+  assert.ok(width(0.8) > width(0.25) * 1.8);
+  const rig = animalModel('cows');
+  assert.equal(
+    rig.filter((p) => p.motion === 'leg').length,
+    0,
+    'walk uses weighted skin, not detached legs',
+  );
+  assert.ok([...rig[0].geometry.attributes.cowSkin.array].some((n) => n > 0));
+  rig.forEach((p) => p.geometry.dispose());
 });

@@ -78,6 +78,7 @@ export class LivestockScene {
     AnimalKind,
     { parts: AnimalPart[]; meshes: T.InstancedMesh[]; sites: AnimalSite[] }
   >();
+  private material: T.MeshStandardMaterial;
   private revision = '';
   private root = new T.Matrix4();
   private part = new T.Matrix4();
@@ -85,9 +86,14 @@ export class LivestockScene {
   private animal = new T.Object3D();
   constructor() {
     const material = animalMaterial();
+    this.material = material;
     for (const kind of species) {
       const parts = animalModel(kind),
         meshes = parts.map((part) => {
+          part.geometry.setAttribute(
+            'herdPhase',
+            new T.InstancedBufferAttribute(new Float32Array(MAX_VISIBLE_LIVESTOCK), 1),
+          );
           const mesh = new T.InstancedMesh(part.geometry, material, MAX_VISIBLE_LIVESTOCK);
           mesh.count = 0;
           mesh.frustumCulled = false;
@@ -127,6 +133,9 @@ export class LivestockScene {
       rig.sites = sites.filter((s) => s.kind === kind);
       for (const mesh of rig.meshes) {
         mesh.count = rig.sites.length;
+        const phase = mesh.geometry.getAttribute('herdPhase');
+        rig.sites.forEach((site, i) => phase.setX(i, site.seed));
+        phase.needsUpdate = true;
         rig.sites.forEach((site, i) =>
           mesh.setColorAt(i, new T.Color().setScalar(0.91 + (site.seed % 1) * 0.09)),
         );
@@ -135,6 +144,7 @@ export class LivestockScene {
     }
   }
   animate(time: number) {
+    this.material.userData.herdClock.value = time;
     for (const [kind, rig] of this.rigs) {
       const bird = kind === 'chickens';
       rig.sites.forEach((site, i) => {

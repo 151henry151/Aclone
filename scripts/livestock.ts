@@ -41,7 +41,7 @@ try {
  const grass=new T.InstancedMesh(new T.ConeGeometry(.025,.14,3),new T.MeshStandardMaterial({color:'#80905b'}),1800),m=new T.Matrix4();for(let i=0;i<1800;i++){const a=i*2.399,r=1.8+(i%120)/18;m.makeTranslation(Math.sin(a)*r,.05,Math.cos(a)*r);grass.setMatrixAt(i,m);}scene.add(grass);
  const camera=new T.PerspectiveCamera(36,1400/900,.01,100);
  let group=new T.Group();scene.add(group);
- window.showAnimal=(kind)=>{for(const o of group.children){o.geometry.dispose();o.material.dispose();}group.clear();const material=animalMaterial();for(const part of animalModel(kind)){const mesh=new T.Mesh(part.geometry,material);mesh.position.copy(part.pivot);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);}const bird=kind==='chickens';const scale=bird?.43:kind==='cows'?1:.72;camera.position.set(4.2*scale,2.4*scale,5.5*scale);camera.lookAt(0,bird?.35:kind==='cows'?.86:.52,0);document.querySelector('#caption').innerHTML=kind.toUpperCase()+'<small>Aclone · actual 3D model · close-up preview lighting</small>';renderer.render(scene,camera);return {draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};};
+ window.showAnimal=(kind,side=false)=>{for(const o of group.children){o.geometry.dispose();o.material.dispose();}group.clear();const material=animalMaterial();for(const part of animalModel(kind)){const mesh=new T.Mesh(part.geometry,material);mesh.position.copy(part.pivot);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);}const bird=kind==='chickens';const scale=bird?.43:kind==='cows'?1:.72;camera.position.set(4.2*scale,2.4*scale,5.5*scale);if(side)camera.position.set(6.4,1.9,.25);camera.lookAt(0,bird?.35:kind==='cows'?.86:.52,0);document.querySelector('#caption').innerHTML=kind.toUpperCase()+'<small>Aclone · actual 3D model · close-up preview lighting</small>';renderer.render(scene,camera);return {draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};};
  window.ready=true;
  </script></html>`,
     }),
@@ -52,6 +52,8 @@ try {
     console.log(kind, await page.evaluate((k) => (window as any).showAnimal(k), kind));
     await page.screenshot({ path: join(output, kind + '.png') });
   }
+  await page.evaluate(() => (window as any).showAnimal('cows', true));
+  await page.screenshot({ path: join(output, 'cows-side.png') });
   if (errors.length) throw Error(errors.join('\n'));
 } finally {
   await browser.close();

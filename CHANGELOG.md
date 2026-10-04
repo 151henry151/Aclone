@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.42.4] - 2026-10-03
+
+### Fixed
+
+- Rebuild cows with a single closed torso-and-leg surface, fuller shoulders/thighs, shaped rear hocks and thicker lower legs. Weighted surface animation keeps the limbs connected while walking, with three instanced parts and fewer than 8,500 triangles per cow.
+
 ## [0.42.3] - 2026-10-03
 
 ### Fixed
