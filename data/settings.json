@@ -44,5 +44,7 @@
   "requireMapItem": false,
   "jobsEnabled": true,
   "ownerOperation": false,
-  "postDeathGraceSeconds": 0
+  "postDeathGraceSeconds": 0,
+  "lotteryEnabled": false,
+  "lotteryTicketPrice": 100
 }

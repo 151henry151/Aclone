@@ -1,3 +1,4 @@
+import { lotteryPanel } from './lottery';
 import { townEventsPanel } from './story-editor';
 import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
 import { rulesSummary } from '../shared/rulesets';
@@ -946,7 +947,10 @@ function refreshTradingPrices() {
   if (
     world &&
     me &&
-    (panel === 'inventory' || panel?.startsWith('book:') || panel === 'townEvents')
+    (panel === 'inventory' ||
+      panel?.startsWith('book:') ||
+      panel === 'townEvents' ||
+      panel === 'lottery')
   ) {
     const key = JSON.stringify([
       panel,
@@ -1247,6 +1251,10 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'lottery') {
+    modal('Annual lottery', lotteryPanel(world, me));
+    return;
+  }
   if (panel === 'townEvents') {
     modal('Town events', townEventsPanel(world));
     return;
@@ -1339,7 +1347,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1942,6 +1950,9 @@ app.addEventListener('click', async (e) => {
         send({ type: 'readBook', book: id });
         openPanel('book:' + id);
         break;
+      case 'lotteryPanel':
+        openPanel('lottery');
+        break;
       case 'townEvents':
         openPanel('townEvents');
         break;
@@ -2232,6 +2243,8 @@ app.addEventListener('submit', async (e) => {
         values.price = Math.round(Number(data.priceDenarii) * 100);
         delete values.priceDenarii;
       }
+      if (form.dataset.action === 'lottery' && values.operation === 'fund')
+        values.amount = Math.round(Number(values.amount) * 100);
       send({ type: form.dataset.action, ...values });
       (document.activeElement as HTMLElement)?.blur();
     }

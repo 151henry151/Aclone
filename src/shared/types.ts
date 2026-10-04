@@ -165,6 +165,8 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  lotteryEnabled: boolean;
+  lotteryTicketPrice: number;
   jobsEnabled: boolean;
   ownerOperation: boolean;
   postDeathGraceSeconds: number;
@@ -251,6 +253,7 @@ export interface World {
   buildings: Building[];
   zones: Zone[];
   terrain: { x: number; z: number; radius: number; height: number }[];
+  lottery?: import('./lottery.ts').Lottery;
   townEventRuns?: Record<string, string>;
   messageSeq?: number;
   messages: {

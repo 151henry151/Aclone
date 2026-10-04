@@ -214,3 +214,9 @@ Players can separately adjust **Engines**, **Effects & machinery**, **Ambience**
 **Books** binds up to eight text pages to a carried item; create a custom book in Catalogue or attach instructions to existing equipment. Readers use **Inventory → Read**. Reading consumes nothing and can satisfy an **Interact** quest objective targeting the book. Pages render as text, never HTML or scripts. Distribute books through shops, rewards or behavior rules.
 
 Use **Quests** for ordered tutorials (read, gather, buy, study, take a job), including explicit rewards and reset-on-death policy. **Town events** announces recurring festivals/markets and links an existing quest. First day is measured from world creation; one game day is 600 real seconds. Repeat 0 means once. Events create no money and never replay a backlog of missed notices after downtime. Players find current events from the World menu. Both definitions travel with exported designs.
+
+## Optional annual lottery
+
+Enable `lotteryEnabled` in Rules; `lotteryTicketPrice` is a positive integer in hundredths of a denarius and changes at the next round. It defaults off. The World menu exposes entry, jackpot contributions, odds and recent results. Draws use 365 game days from world creation (about 61 hours), independent of decorative clock speed. Each round admits at most 100 tickets per player, 10,000 total.
+
+Every coin comes from a player's cash: no treasury faucet or house cut. Empty draws carry their jackpot; downtime resolves the existing draw once, without simulating fictional entries. Paid tickets remain valid if the owner disables new entries. Offline winners receive local cash, including after character death. Jackpot, entries, deadline and result history persist across restarts; exported designs omit those balances. This is in-game money only.

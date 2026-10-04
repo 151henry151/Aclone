@@ -4,7 +4,7 @@
 
 [Play the alpha](https://hromp.com/aclone) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.46.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.47.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -16,7 +16,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and stocked homes that feed you offline. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag.
 - Watch the spaceport cargo launcher depart with engine plumes and pad smoke every three or four game days and land half a day later. Choose cargo, courier, explorer or shielded spacecraft with distinct fuel/time tradeoffs and travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
-- Choose active-work, relaxed owner-operated, harsh-survival or combat/frontier rules, then customize them. Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, animated GLB/OBJ models, painted PNG/JPEG textures, environmental audio zones and portable media bundles, custom goods/professions/building templates, production-chain diagnostics, readable books, recurring town events, visual behavior rules, ordered tutorials/quests, action requirements and optional Lua scripts with persistent player progress.
+- Choose active-work, relaxed owner-operated, harsh-survival or combat/frontier rules, then customize them. Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, animated GLB/OBJ models, painted PNG/JPEG textures, environmental audio zones and portable media bundles, custom goods/professions/building templates, production-chain diagnostics, readable books, recurring town events, optional player-funded lotteries, visual behavior rules, ordered tutorials/quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. API billing and operator spending limits are separate from consumer subscriptions.
 - Play with desktop controls or a compact touch interface. Mark map waypoints and follow their direction and distance while driving. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
 

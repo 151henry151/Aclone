@@ -1,3 +1,4 @@
+import { lotteryAction, tickLottery } from './lottery.ts';
 import { readBook, tickTownEvents } from './world-stories.ts';
 import { drinkAlcohol, intoxicatedSteer } from './intoxication.ts';
 import { socialAction } from './social.ts';
@@ -344,6 +345,7 @@ export function act(w: World, id: string, a: Action): string {
     readBook(w, p, str(a.book));
     return '';
   }
+  if (type === 'lottery') return lotteryAction(w, p, a);
   if (type === 'quest') return questAction(w, p, a);
   if (
     ['creator', 'creatorBuilding', 'creatorRemove', 'creatorRecipe', 'interactObject'].includes(
@@ -1123,6 +1125,7 @@ export function act(w: World, id: string, a: Action): string {
           num(v, 0, 100000000, true);
         if (key === 'postDeathGraceSeconds') num(v, 0, 86400, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
+        if (key === 'lotteryTicketPrice') num(v, 1, 1000000, true);
         if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
@@ -1687,6 +1690,7 @@ export function advance(w: World, seconds: number) {
   harbourSupply(w, end);
   refreshOrders(w);
   tickTownEvents(w);
+  tickLottery(w);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
     w.settings.time = (w.settings.time + (seconds * 86400) / w.settings.dayLength) % 86400;

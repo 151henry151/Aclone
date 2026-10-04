@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.47.0] - 2026-10-03
+
+### Added
+
+- Optional annual lottery funded entirely by in-game ticket purchases and voluntary player contributions. Saved draws show odds/history, carry empty jackpots and pay offline winners once; Puddlewick keeps it disabled.
+
 ## [0.46.0] - 2026-10-03
 
 ### Added
