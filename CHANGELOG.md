@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.50.0] - 2026-10-04
+
+### Added
+
+- Show active work shifts, remaining production checks, and an expired-shift reminder; renewal becomes available during the final cycle.
+
 ## [0.49.1] - 2026-10-04
 
 ### Fixed

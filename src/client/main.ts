@@ -24,6 +24,7 @@ import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
+import { workShift } from './work-shift';
 import { TradeFeedback } from './trade-feedback';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
@@ -110,6 +111,12 @@ document
     '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span></section>',
   );
 const waypoints = new Waypoints(localStorage);
+document
+  .getElementById('world-hud')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="work-shift" hidden aria-label="Work shift"><strong id="work-shift-name"></strong><span id="work-shift-status" role="status"></span></section>',
+  );
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -690,6 +697,17 @@ function updateHud() {
       : me.job
         ? 'Keep working at your employer to earn wages when production runs.'
         : 'Earn cash at the Odd Jobs Office. Learn a skill at the school. Own a business. In roughly that order.';
+  const employer =
+    world.buildings.find((b) => b.id === me!.job) ??
+    world.buildings.find((b) => b.owner === me!.id && b.ownerActiveUntil !== undefined);
+  const shift = employer && workShift(world, me, employer);
+  $('work-shift').hidden = !shift || !!panel || !!mobile.drawer || !!me.task || !!me.game;
+  if (shift && employer) {
+    $('work-shift-name').textContent = employer.name;
+    if ($('work-shift-status').textContent !== shift.label)
+      $('work-shift-status').textContent = shift.label;
+    $('work-shift').title = shift.detail;
+  }
   if (me.game === 'combat' && world.combat)
     $('objective').textContent =
       `${world.combat.mode} · ${world.creator?.arena.teams[me.team] ?? (me.team === 0 ? 'Rust' : 'Moss')} team · ${world.creator?.arena.teams[0] ?? 'Rust'} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${world.creator?.arena.teams[1] ?? 'Moss'}. ${weapons[weapon].name}: ${world.settings.weaponMode === 'ammo' ? (me.ammo?.[weapon] ?? 'full') + ' rounds' : Math.floor(me.energy / 650) + '% energy'}. Tab fires; 1–6 select.`;
@@ -702,15 +720,22 @@ function updateHud() {
   const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
   if (panel === 'building' && !shown) closePanel();
   if (shown) {
+    const shift = workShift(world, me, shown);
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
       ['[data-building-efficiency]', `${Math.round(shown.efficiency * 100)}%`],
       ['[data-building-investment]', money(shown.investment)],
       ['[data-production-status]', productionStatus(world, shown)],
+      ['[data-work-status]', shift ? `${shift.label}. ${shift.detail}` : ''],
     ];
     for (const [selector, text] of facts) {
       const element = $('modal-host').querySelector(selector);
       if (element && element.textContent !== text) element.textContent = text;
+    }
+    const workButton = $('modal-host').querySelector<HTMLButtonElement>('[data-work-button]');
+    if (workButton && shift) {
+      workButton.textContent = shift.button;
+      workButton.disabled = !shift.canRenew || distance(me, shown) >= 18;
     }
   }
   const bite =
@@ -1565,15 +1590,19 @@ function buildingWindow(b: Building) {
           ' + ',
         )} · ${interval / 60} minutes · ${esc(r.skill)}</p><p class="note"><span data-production-status>${esc(productionStatus(world, b))}</span> Batches use this building's stockroom and need inputs, output space and funded wages. Efficiency shows current staffing; taking a job does not finish a batch immediately.</p>`;
     }
+    const shift = workShift(world, me, b);
+    const workAttributes = `data-building="${b.id}" data-work-button ${!near || !shift?.canRenew ? 'disabled' : ''}`;
     if (
       selfOwned &&
       world.settings.ownerOperation &&
       (b.recipe || b.production) &&
       b.kind !== 'farm'
     )
-      html += button('Operate without wages', 'work', `data-building="${b.id}"`);
+      html += button(shift?.button ?? 'Operate without wages', 'work', workAttributes);
     if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
-      html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
+      html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? shift!.button : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</div>`;
+    if (shift)
+      html += `<p class="note" data-work-status>${esc(`${shift.label}. ${shift.detail}`)}</p>`;
     if (['sawmill', 'quarry', 'forge'].includes(b.kind) && !(selfOwned && b.kind === 'forge'))
       html += button(
         b.kind === 'forge' ? 'Craft tools (1 steel + 2 wood)' : 'Gather raw materials',

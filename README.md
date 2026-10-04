@@ -22,6 +22,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
+Employment has a visible shift countdown and renewal reminder; see the [economy guide](docs/ECONOMY.md).
+
 Repeated trades show cumulative confirmed quantities and costs, including after closing a shop.
 
 <details>

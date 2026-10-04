@@ -2060,6 +2060,31 @@ button span {
   color: #c9d3c0;
 }
 
+#work-shift {
+  position: absolute;
+  top: 170px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 8px 14px;
+  text-align: center;
+  color: #efe9cf;
+  background: #20362ce8;
+  border-radius: 6px;
+  pointer-events: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+#work-shift strong,
+#work-shift span {
+  display: block;
+}
+.mobile-ui #work-shift {
+  top: calc(env(safe-area-inset-top, 0px) + 128px);
+  font-size: 12px;
+}
+
 /* Creator controls stay within the shared responsive dialog. */
 #creator-preview {
   min-height: 260px;

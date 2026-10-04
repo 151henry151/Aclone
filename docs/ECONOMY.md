@@ -68,8 +68,18 @@ and harvest their own farm plots, but receive no harvest wage.
 
 Production requires input goods, output space and funded wages. Qualified active
 employees give full efficiency; unattended businesses run at the world's reduced
-rate. **Work two cycles** covers two of that business's cycles. Actual payments
-happen only on successful production. Learn the corresponding profession at school.
+rate. **Work two cycles** starts a window lasting two production intervals (usually
+20 real minutes). Checks run on fixed world-time boundaries, so the first can be
+soon after clicking. The HUD and building panel show the remaining time and checks;
+renewal becomes available during the final interval. Early renewal resets the
+window from now rather than stacking shifts. Expiration is shown until you renew.
+
+You can drive away or log off during a shift: eligibility depends on the deadline,
+not your location or connection. Wages require a successful production batch with
+inputs, output space and funded payroll. An eligible check can fail without pay;
+the timer does not pause. Farms instead pay on funded manual harvest completion.
+Worlds with active work disabled need no renewals. Odd Jobs Office labour is a
+separate timed task that locks movement. Learn the corresponding profession at school.
 
 ## Connected industries
 

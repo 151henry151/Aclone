@@ -10,6 +10,10 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 4. Take a job and **Work two cycles**, or buy a business, stock inputs and fund wages. Actual production pays wages; signing up alone does not.
 5. Stock a cottage or rented room and enter before logging off. Hunger, thirst and starvation continue offline; provisions feed you automatically. **Go outside** restores movement.
 
+Your employer and shift countdown appear on the HUD; the building panel shows
+covered production checks. You can drive away while a shift runs. Renew during its
+last cycle or when it ends.
+
 Repeated buys/sales of the same item at one shop show the confirmed total quantity
 and price, including when you close the window. Failed trades do not add to it;
 changing goods, direction, shop or visit starts a new total.
