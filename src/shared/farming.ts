@@ -72,7 +72,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   };
   check(b.kind === 'farm' && !b.construction && distance(p, b) < 18, 'Visit a completed farm');
   check(
-    b.owner === p.id || b.employees.includes(p.id),
+    b.owner === p.id || (w.settings.jobsEnabled !== false && b.employees.includes(p.id)),
     'Only the farmer or farm staff can tend plots',
   );
   check(p.skills.includes('farmer'), 'Learn Farmer at the school');
@@ -170,7 +170,7 @@ export function finishHarvest(w: World, p: Player, building: string, index: numb
   const wage = b.owner === p.id ? 0 : plot.harvest.wage;
   delete plot.harvest;
   if (
-    (b.owner !== p.id && !b.employees.includes(p.id)) ||
+    (b.owner !== p.id && (w.settings.jobsEnabled === false || !b.employees.includes(p.id))) ||
     b.investment < wage ||
     (b.stock[plot.crop] ?? 0) + amount > b.capacity
   ) {

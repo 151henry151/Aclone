@@ -11,6 +11,7 @@ export type Task = {
   amount?: number;
 };
 export interface Player {
+  needsGraceUntil?: number;
   mail?: import('./social.ts').Mail[];
   sentMail?: import('./social.ts').Mail[];
   mailSentAt?: number;
@@ -100,6 +101,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  ownerActiveUntil?: number;
   templateId?: string;
   herdCondition?: number;
   breedingEnd?: number;
@@ -163,6 +165,9 @@ export interface Zone {
   radius: number;
 }
 export interface Settings {
+  jobsEnabled: boolean;
+  ownerOperation: boolean;
+  postDeathGraceSeconds: number;
   vehicleMaintenance: boolean;
   vehicleLicences: boolean;
   requireMapItem: boolean;

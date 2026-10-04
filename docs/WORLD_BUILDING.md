@@ -192,3 +192,9 @@ Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness map
 ## Vehicle rules
 
 Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences** (driver/pilot/boatmaster required for advanced slots according to their configured movement mode) and **Require map item** (hide visitor maps unless carrying a Parish map). Defaults enable gentle wear but leave licences and map ownership optional. Basic tractor, walking, ostrich and disposable robocrow controls are exempt from licences. Creator maps remain available for editing. Garage map printing and steel-part servicing are ordinary paid services, also available on existing saves.
+
+## Economy and survival presets
+
+Creation offers the existing active-work village, **Relaxed owner economy**, **Harsh survival village**, **Civilization frontier**, arenas and a blank canvas. These are starting rules, not claims of exact historical balance. Relaxed disables needs and jobs, lets qualified owners operate supplied businesses without wages, and keeps skills/property on death. Harsh doubles needs, disables unattended production and grants one real hour of needs grace after death. Frontier enables combat, owner operation and larger ownership limits; safe zones still apply.
+
+`jobsEnabled` controls employment and paid labour. `ownerOperation` enables the qualified owner’s **Operate without wages** control; `activeWork` determines whether its two-cycle shift must be renewed. This never pays the owner wages or supplies free inputs. Farms keep their existing owner plot controls. `postDeathGraceSeconds` (0–86400) pauses needs only after rebirth, online or offline; ordinary offline survival continues. Puddlewick keeps jobs enabled, owner operation disabled and no grace. Every arrival shows the actual rules in private chat; **World → World rules & leaving safely** summarizes them before departure.

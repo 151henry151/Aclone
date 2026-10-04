@@ -41,5 +41,8 @@
   "resetScriptOnDeath": true,
   "vehicleMaintenance": true,
   "vehicleLicences": false,
-  "requireMapItem": false
+  "requireMapItem": false,
+  "jobsEnabled": true,
+  "ownerOperation": false,
+  "postDeathGraceSeconds": 0
 }

@@ -19,6 +19,7 @@ export function motorRunning(w: World, p: Player): boolean {
 }
 
 export function productionStaff(w: World, b: Building, at: number) {
+  if (w.settings.jobsEnabled === false) return [];
   return b.employees
     .map((id) => w.players[id])
     .filter((p) => p && p.id !== b.owner && (!w.settings.activeWork || p.activeUntil >= at));
@@ -29,10 +30,19 @@ export function productionEfficiency(
   w: World,
   b: Building,
   staff = productionStaff(w, b, w.time).length,
+  at = w.time,
 ): number {
   if (!herdReady(b)) return 0;
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
-  return b.government || staff ? 1 : w.settings.offlineEfficiency;
+  const owner = b.owner && w.players[b.owner];
+  const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+  const operating =
+    w.settings.ownerOperation &&
+    owner &&
+    recipe &&
+    owner.skills.includes(recipe.skill) &&
+    (!w.settings.activeWork || (b.ownerActiveUntil ?? -1) >= at);
+  return b.government || staff || operating ? 1 : w.settings.offlineEfficiency;
 }
 
 /** Shared by the economic cycle and its audible activity projection. */

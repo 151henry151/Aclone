@@ -1,3 +1,4 @@
+import { rulesets } from '../shared/rulesets.ts';
 import { landscapeSchema, validateLandscape } from '../shared/landscape.ts';
 import {
   catalogueSchema,
@@ -215,6 +216,7 @@ export function configureRules(w: World, settings: unknown) {
 }
 export function applyPreset(w: World, preset: string) {
   w.creator = defaultCreator();
+  Object.assign(w.settings, rulesets[preset]?.settings ?? {});
   if (['combat', 'ctf', 'capture', 'blank'].includes(preset)) {
     w.buildings = w.buildings.filter((b) => b.kind === 'starport');
     w.zones = [];

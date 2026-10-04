@@ -1,3 +1,4 @@
+import { rulesSummary } from '../shared/rulesets.ts';
 import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { completePuddlewick } from './parish-services.ts';
@@ -269,6 +270,7 @@ export async function createApp(options: AppOptions) {
     returnReport(w, me);
     me.online = true;
     say(w, 'Parish notice', me.name + ' arrived.');
+    say(w, 'World rules', rulesSummary(w), 'system', me.id);
     store.saveWorld(w);
     snapshot(p);
     creatorEvent(w, 'login', me);
@@ -471,7 +473,17 @@ export async function createApp(options: AppOptions) {
           data = JSON.parse((await body(req, 512 * 1024)).toString());
         const name = z.string().trim().min(2).max(48).parse(data.name),
           template = z
-            .enum(['economy', 'combat', 'playground', 'ctf', 'capture', 'blank'])
+            .enum([
+              'economy',
+              'relaxed',
+              'survival',
+              'civilization',
+              'combat',
+              'playground',
+              'ctf',
+              'capture',
+              'blank',
+            ])
             .parse(data.template);
         if (worlds.size >= 100 || [...worlds.values()].filter((w) => w.owner === a.id).length >= 8)
           throw Error('World creation limit reached');

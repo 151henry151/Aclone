@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-10-03
+
+### Added
+
+- Relaxed owner-operated, harsh-survival and civilization-frontier world presets. Independent paid-job, wage-free owner-operation and timed post-death needs-grace rules retain Puddlewick defaults. Rules appear privately on arrival and in a leaving-safely panel before explicit sign-out.
+
 ## [0.42.4] - 2026-10-03
 
 ### Fixed

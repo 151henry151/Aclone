@@ -1,3 +1,4 @@
+import { rulesSummary } from '../shared/rulesets';
 import { alcoholDose, intoxicationLabel } from '../shared/intoxication';
 import { spaceportFlight } from '../shared/spaceport-flight';
 import { herdSpec, herdNeeds } from '../shared/livestock';
@@ -1015,6 +1016,13 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'worldRules' && world && me) {
+    modal(
+      'World rules & leaving safely',
+      `<p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${button('Sign out of all devices', 'confirmLogout')}`,
+    );
+    return;
+  }
   if (panel === 'options') {
     modal(
       'Pilot & preferences.',
@@ -1255,7 +1263,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1438,7 +1446,14 @@ function buildingWindow(b: Building) {
           ' + ',
         )} · ${interval / 60} minutes · ${esc(r.skill)}</p><p class="note"><span data-production-status>${esc(productionStatus(world, b))}</span> Batches use this building's stockroom and need inputs, output space and funded wages. Efficiency shows current staffing; taking a job does not finish a batch immediately.</p>`;
     }
-    if (!selfOwned && (b.recipe || b.production))
+    if (
+      selfOwned &&
+      world.settings.ownerOperation &&
+      (b.recipe || b.production) &&
+      b.kind !== 'farm'
+    )
+      html += button('Operate without wages', 'work', `data-building="${b.id}"`);
+    if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? (b.kind === 'farm' ? 'Refresh farm shift' : 'Work two cycles') : 'Take this job', me.job === b.id ? 'work' : 'job', `data-building="${b.id}"`)}</div>`;
     if (['sawmill', 'quarry', 'forge'].includes(b.kind) && !(selfOwned && b.kind === 'forge'))
       html += button(
@@ -1626,6 +1641,7 @@ app.addEventListener('click', async (e) => {
       'players',
       'help',
       'options',
+      'worldRules',
       'shipyard',
       'inventory',
       'skills',
@@ -1852,6 +1868,9 @@ app.addEventListener('click', async (e) => {
         toast('Check your email. Verification links can be resent once a minute.');
         break;
       case 'logout':
+        openPanel('worldRules');
+        break;
+      case 'confirmLogout':
         await api('/api/auth/logout', { method: 'POST', body: '{}' });
         token = '';
         account = undefined;

@@ -1,3 +1,4 @@
+import { rulesets } from '../shared/rulesets';
 import {
   catalogueEditor,
   catalogueForm,
@@ -84,13 +85,18 @@ export function creationFields() {
     'template',
     [
       ['economy', 'Living economy village'],
+      ...Object.entries(rulesets).map(([id, p]) => [id, p.name] as [string, string]),
       ['combat', 'Team deathmatch arena'],
       ['ctf', 'Capture the flag arena'],
       ['capture', 'Capture point arena'],
       ['playground', 'Vehicle playground'],
       ['blank', 'Blank creator canvas'],
     ],
-  )}<details><summary>Customize economy, survival, time and combat</summary><p>These values override the preset. Currency uses hundredths of a denarius; hunger/thirst rates are units per real second. Preset arenas otherwise disable hunger and thirst.</p><label class="check"><input name="customSettings" type="checkbox">Use these custom rules</label><div class="settings-grid">${settingsFields()}</div></details>`;
+  )}<p>${Object.values(rulesets)
+    .map((p) => `<b>${esc(p.name)}</b>: ${esc(p.description)}`)
+    .join(
+      '<br>',
+    )}</p><details><summary>Customize economy, survival, time and combat</summary><p>These values override the preset. Currency uses hundredths of a denarius; hunger/thirst rates are units per real second. Preset arenas otherwise disable hunger and thirst.</p><label class="check"><input name="customSettings" type="checkbox">Use these custom rules</label><div class="settings-grid">${settingsFields()}</div></details>`;
 }
 export function settingsData(form: HTMLFormElement, base: Settings = defaults) {
   const data = new FormData(form);

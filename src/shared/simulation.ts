@@ -598,6 +598,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'job': {
+      requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       const b = nearby(w, p, a.building);
       requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
       requireThat(!p.job || p.job === b.id, 'Quit your current job first');
@@ -635,7 +636,19 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'work': {
       const b = nearby(w, p, a.building);
+      if (w.settings.ownerOperation && b.owner === p.id) {
+        const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+        requireThat(
+          recipe && b.kind !== 'farm',
+          'This business uses different production controls',
+        );
+        requireThat(p.skills.includes(recipe.skill), 'Learn ' + recipe.skill + ' first');
+        b.ownerActiveUntil = w.time + 2 * productionInterval(w, b);
+        result = 'Operating your business for two cycles without wages.';
+        break;
+      }
       requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
+      requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       requireThat(p.job === b.id, 'Take a job here first');
       p.activeUntil = w.time + 2 * productionInterval(w, b);
       result = 'Working for the next two cycles. The glamour is unbearable.';
@@ -668,6 +681,8 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
       requireThat(!p.task, 'Already busy');
       const task = str(a.task);
+      if (task === 'labour')
+        requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       requireThat(['labour', 'logging', 'quarrying', 'craft'].includes(task), 'Unknown task');
       requireThat(
         task === 'labour'
@@ -1101,6 +1116,7 @@ export function act(w: World, id: string, a: Action): string {
           ].includes(key)
         )
           num(v, 0, 100000000, true);
+        if (key === 'postDeathGraceSeconds') num(v, 0, 86400, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
         if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'fishingMode') num(v, 0, 5, true);
@@ -1491,7 +1507,8 @@ export function move(w: World, p: Player, input: Input, dt: number) {
           dt,
     );
 }
-function kill(w: World, p: Player, comic = false, cause = 'injury') {
+function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  if (!comic) p.needsGraceUntil = at + (w.settings.postDeathGraceSeconds ?? 0);
   if (!comic)
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
@@ -1583,7 +1600,7 @@ function cycle(w: World, b: Building, at: number) {
     b.efficiency = 0;
     return;
   }
-  const efficiency = productionEfficiency(w, b, staff.length);
+  const efficiency = productionEfficiency(w, b, staff.length, at);
   b.efficiency = efficiency;
   b.progress += efficiency;
   if (b.progress < 1) return;
@@ -1614,6 +1631,11 @@ function cycle(w: World, b: Building, at: number) {
 function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
   let elapsed = 0;
   while (elapsed < seconds) {
+    const grace = Math.max(0, (p.needsGraceUntil ?? 0) - start - elapsed);
+    if (grace > 0) {
+      elapsed += Math.min(grace, seconds - elapsed);
+      continue;
+    }
     const current = shelter({ ...w, time: start + elapsed }, p);
     if (!current) p.atHome = false;
     // Snap numerical boundaries so a near-zero duration cannot stall catch-up.
@@ -1639,7 +1661,8 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
     p.thirst = Math.min(50000, p.thirst + thirstRate * duration);
     p.health = Math.max(0, Math.min(maximumHealth(p), p.health + (starving ? -6 : 2) * duration));
     elapsed += duration;
-    if (p.health <= 1e-7) kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation');
+    if (p.health <= 1e-7)
+      kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation', start + elapsed);
   }
   if (p.atHome && !shelter(w, p)) p.atHome = false;
 }
@@ -1681,7 +1704,7 @@ export function advance(w: World, seconds: number) {
     if (absenceDue) {
       p.inactivityProcessed = p.lastSeen;
       say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
-      kill(w, p, false, 'offline absence limit');
+      kill(w, p, false, 'offline absence limit', boundary);
       advanceLoans(w, p, boundary, end);
       advanceSurvival(w, p, boundary, end - boundary);
     }
