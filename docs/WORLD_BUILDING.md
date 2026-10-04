@@ -200,3 +200,11 @@ Creation offers the existing active-work village, **Relaxed owner economy**, **H
 ## Texture and resource authoring
 
 In **Assets → Paint an original texture**, paint a 256 × 256 tile with mouse or touch, fill the tile and save it as PNG. Assign it to primitive models or an OBJ UV atlas in Workshop, or to grass, gravel, soil and sand in **Terrain textures**. **Resource visuals** assigns models to logs, stone, gravel and topsoil without changing their gathering rules. Uploaded imagery is cached by content hash. Loading/failure indicators keep collision bounds visible while media arrives.
+
+## Audio zones
+
+**Editor → Audio zones** places woodland, shore or storm ambience, or binds an uploaded MP3 to coordinates/a placed object. Set radius, volume, looping, clock hours (including overnight intervals) and a weather condition. Equal start/end hours mean all day. Hidden objects are silent. Non-looping clips play once per entry; at most four nearby zones are audible.
+
+Use original or licensed mono/stereo clips no longer than 30 seconds (2 MiB upload limit). Invalid or oversized decoded audio stays silent. Loading is serial, with eight cached clips; there is no playback before a user gesture or in hidden tabs. Media bundles retain uploaded sounds; plain design exports omit their audio zones. Radio streams are not supported.
+
+Players can separately adjust **Engines**, **Effects & machinery**, **Ambience**, and **Chat alerts** under **Pilot & preferences**. Master mute/volume still controls all four. Preferences persist in the browser; arrival history never triggers a backlog of chat alerts.

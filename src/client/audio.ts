@@ -1,3 +1,4 @@
+import { AmbientAudio } from './ambient-audio';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import {
@@ -10,6 +11,7 @@ import {
 } from './sound-scene';
 import { synthesize, type SoundKind } from './sound-synthesis';
 
+export type AudioChannel = 'engine' | 'effects' | 'ambience' | 'chat';
 type Voice = {
   source: AudioBufferSourceNode;
   gain: GainNode;
@@ -22,6 +24,16 @@ export class GameAudio {
   enabled = localStorage.getItem('aclone.sound') !== 'off';
   volume = 0.65;
   onChange = () => {};
+  readonly channels: Record<AudioChannel, number> = {
+    engine: 1,
+    effects: 1,
+    ambience: 0.6,
+    chat: 0.5,
+  };
+  private buses = new Map<AudioChannel, GainNode>();
+  private ambience = new AmbientAudio();
+  private messageId?: number;
+  private lastAlert = 0;
   private context?: AudioContext;
   private master?: GainNode;
   private limiter?: DynamicsCompressorNode;
@@ -37,6 +49,11 @@ export class GameAudio {
   private nextUpdate = 0;
   private lastSnapshot = 0;
   constructor() {
+    for (const key of Object.keys(this.channels) as AudioChannel[]) {
+      const raw = localStorage.getItem('aclone.volume.' + key);
+      if (raw !== null && Number.isFinite(Number(raw)))
+        this.channels[key] = Math.max(0, Math.min(1, Number(raw)));
+    }
     const saved = localStorage.getItem('aclone.volume');
     const volume = saved === null ? NaN : Number(saved);
     if (Number.isFinite(volume)) this.volume = Math.max(0, Math.min(1, volume));
@@ -54,6 +71,12 @@ export class GameAudio {
         const context = (this.context = new AudioContext());
         this.master = context.createGain();
         this.master.gain.value = this.volume;
+        for (const key of Object.keys(this.channels) as AudioChannel[]) {
+          const bus = context.createGain();
+          bus.gain.value = this.channels[key];
+          bus.connect(this.master);
+          this.buses.set(key, bus);
+        }
         this.limiter = context.createDynamicsCompressor();
         this.limiter.threshold.value = -12;
         this.limiter.knee.value = 12;
@@ -96,6 +119,16 @@ export class GameAudio {
     }
     this.onChange();
   }
+  setChannel(channel: AudioChannel, volume: number) {
+    if (!Object.hasOwn(this.channels, channel) || !Number.isFinite(volume)) return;
+    this.channels[channel] = Math.max(0, Math.min(1, volume));
+    localStorage.setItem('aclone.volume.' + channel, String(this.channels[channel]));
+    if (this.context)
+      this.buses
+        .get(channel)
+        ?.gain.setTargetAtTime(this.channels[channel], this.context.currentTime, 0.03);
+    this.onChange();
+  }
   private masterVolume() {
     this.master?.gain.setTargetAtTime(
       this.enabled && this.active ? this.volume : 0,
@@ -118,6 +151,22 @@ export class GameAudio {
     this.world = w;
     this.me = w.players[me];
     this.lastSnapshot = performance.now();
+    const newest = Math.max(0, ...w.messages.map((m) => m.id ?? 0));
+    if (
+      this.messageId !== undefined &&
+      w.messages.some(
+        (m) => (m.id ?? 0) > this.messageId! && m.kind === 'chat' && m.name !== this.me?.name,
+      ) &&
+      performance.now() - this.lastAlert > 2000 &&
+      this.audible() &&
+      this.shots.size < MAX_HORNS
+    ) {
+      const voice = this.voice('chat', false);
+      voice.gain.gain.value = 0.3;
+      this.shots.set(voice, undefined);
+      this.lastAlert = performance.now();
+    }
+    this.messageId = newest;
     const p = this.me;
     const listener = this.listener ?? { ...p, heading: p.heading };
     // Consume events even when muted/hidden/locked so they cannot build a backlog.
@@ -140,6 +189,13 @@ export class GameAudio {
       this.stopVoices();
       return;
     }
+    this.ambience.update(
+      this.world,
+      listener,
+      this.context!,
+      this.buses.get('ambience')!,
+      !!this.me.atHome,
+    );
     const sounds = selectLoops(this.world, this.me, listener, position);
     const keep = new Set(sounds.map((s) => s.id));
     for (const [id, voice] of this.loops)
@@ -163,6 +219,7 @@ export class GameAudio {
       voice.source.playbackRate.setTargetAtTime(sound.rate, time, 0.18);
     }
     for (const [voice, id] of this.shots) {
+      if (voice.kind === 'chat') continue;
       const p = id && this.world.players[id];
       if (!p || !p.online || p.atHome) {
         this.stop(voice);
@@ -193,7 +250,12 @@ export class GameAudio {
     source.buffer = buffer;
     source.loop = loop;
     gain.gain.value = 0;
-    source.connect(gain).connect(pan).connect(this.master!);
+    source
+      .connect(gain)
+      .connect(pan)
+      .connect(
+        this.buses.get(kind === 'engine' ? 'engine' : kind === 'chat' ? 'chat' : 'effects')!,
+      );
     const voice = { source, gain, pan, kind };
     source.onended = () => {
       source.disconnect();
@@ -230,6 +292,7 @@ export class GameAudio {
     voice.source.stop(time + 0.08);
   }
   private stopVoices() {
+    this.ambience.clear(this.context);
     for (const voice of this.loops.values()) this.stop(voice);
     for (const voice of this.shots.keys()) this.stop(voice);
     this.loops.clear();
@@ -245,6 +308,7 @@ export class GameAudio {
     this.me = undefined;
     this.listener = undefined;
     this.horns.clear();
+    this.messageId = undefined;
   }
   dispose() {
     this.clear();

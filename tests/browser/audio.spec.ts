@@ -1,3 +1,4 @@
+import { creatorSchema } from '../../src/shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -19,6 +20,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     const { account, token } = app.universe.register('Sound driver');
     const w = createWorld('audio-test', 'Audio test', account.id);
     w.script = '';
+    w.creator = creatorSchema.parse({ scenery: false, weather: 'clear' });
     // Keep the audio fixture supplied and independent of weather/production clocks.
     w.settings.productionSeconds = 3600;
     w.settings.dayLength = 0;
@@ -233,6 +235,25 @@ test('audible engines, shared horns and supplied machinery through the real brow
     neighbour.close();
     await expect.poll(loops, { timeout: 15000 }).toBe(0);
     await expect.poll(rms).toBeLessThan(0.0001);
+    await page.keyboard.press('F10');
+    await page.getByRole('button', { name: 'Audio zones', exact: true }).click();
+    await page.getByLabel('Zone name', { exact: true }).fill('Nearby shore');
+    await page.getByRole('combobox', { name: 'Sound', exact: true }).selectOption('shore');
+    const form = page.locator('#creator-audio-form');
+    await form.locator('[name=x]').fill(p.x.toFixed(1));
+    await form.locator('[name=z]').fill(p.z.toFixed(1));
+    await page.getByRole('button', { name: 'Save audio zone', exact: true }).click();
+    await expect.poll(() => w.creator?.ambience.length).toBe(1);
+    await expect.poll(loops, { timeout: 15000 }).toBe(1);
+    await expect.poll(rms).toBeGreaterThan(0.0005);
+    await page.keyboard.press('Escape');
+    await page.locator('#brand-button').click();
+    await page.locator('[data-do="options"]').click();
+    await page.getByRole('slider', { name: 'Ambience', exact: true }).fill('0');
+    await expect.poll(rms).toBeLessThan(0.0001);
+    await page.getByRole('slider', { name: 'Ambience', exact: true }).fill('100');
+    await expect.poll(rms).toBeGreaterThan(0.0005);
+    expect(await page.evaluate(() => localStorage.getItem('aclone.volume.ambience'))).toBe('1');
     expect(errors).toEqual([]);
   } finally {
     neighbour?.terminate();

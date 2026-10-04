@@ -1,11 +1,31 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 export type SoundKind =
-  'engine' | 'saw' | 'mill' | 'hammer' | 'furnace' | 'pump' | 'horn' | 'weapon';
+  | 'engine'
+  | 'saw'
+  | 'mill'
+  | 'hammer'
+  | 'furnace'
+  | 'pump'
+  | 'horn'
+  | 'weapon'
+  | 'woodland'
+  | 'shore'
+  | 'storm'
+  | 'chat';
 const TAU = Math.PI * 2;
 
 /** Original mono PCM. Integer-frequency oscillations and a short wrap crossfade keep loops seamless. */
 export function synthesize(kind: SoundKind, sampleRate: number): Float32Array<ArrayBuffer> {
-  const duration = kind === 'horn' ? 0.48 : kind === 'weapon' ? 0.08 : 2;
+  const duration =
+    kind === 'horn'
+      ? 0.48
+      : kind === 'weapon'
+        ? 0.08
+        : kind === 'chat'
+          ? 0.18
+          : ['woodland', 'shore', 'storm'].includes(kind)
+            ? 8
+            : 2;
   const data = new Float32Array(Math.round(sampleRate * duration));
   let seed = 73921,
     low = 0,
@@ -19,6 +39,23 @@ export function synthesize(kind: SoundKind, sampleRate: number): Float32Array<Ar
     rumble += 0.025 * (noise - rumble);
     const firing = Math.exp(-((t * 20) % 1) * 7);
     switch (kind) {
+      case 'woodland': {
+        const chirp = Math.max(0, Math.sin(t * 1.6)) ** 28;
+        data[i] = rumble * 0.8 + low * 0.16 + chirp * 0.07 * sine(1700 + 220 * Math.sin(t * 18), t);
+        break;
+      }
+      case 'shore':
+        data[i] =
+          (low * 0.9 + noise * 0.035) * (0.35 + 0.65 * (0.5 + 0.5 * sine(0.25, t)) ** 2) +
+          rumble * 0.7;
+        break;
+      case 'storm':
+        data[i] =
+          low * 0.45 + noise * 0.08 + rumble * (1.5 + 2 * Math.max(0, Math.sin(t * 0.785)) ** 12);
+        break;
+      case 'chat':
+        data[i] = 0.18 * sine(620, t) * Math.min(1, t / 0.01) * Math.exp(-t * 22);
+        break;
       case 'engine':
         // Uneven exhaust pulses, resonant body and filtered mechanical chatter.
         data[i] =
@@ -63,7 +100,7 @@ export function synthesize(kind: SoundKind, sampleRate: number): Float32Array<Ar
       }
     }
   }
-  if (kind !== 'horn' && kind !== 'weapon') {
+  if (kind !== 'horn' && kind !== 'weapon' && kind !== 'chat') {
     // Blend the tail toward the beginning, rather than fading each revolution to silence.
     const wrap = Math.round(sampleRate * 0.02);
     for (let i = 0; i < wrap; i++) {

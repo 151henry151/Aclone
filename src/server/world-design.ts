@@ -104,7 +104,10 @@ const designSchema = z.object({
 });
 export function exportDesign(w: World, includeMedia = false) {
   const creator = structuredClone(w.creator ?? defaultCreator());
-  if (!includeMedia) creator.terrainTextures = {};
+  if (!includeMedia) {
+    creator.terrainTextures = {};
+    creator.ambience = (creator.ambience ?? []).filter((z) => z.source !== 'asset');
+  }
   // Designs remain portable without copying arbitrary asset URLs or private server paths.
   for (const m of creator.models)
     if (!includeMedia && (m.asset || m.texture)) {

@@ -226,3 +226,5 @@ Sunrise and sunset colour the sky and clouds around the sun, fading through an a
 ### Spaceport cargo launches
 
 The parked cargo ship launches every three or four economic game days (30–40 real minutes at the fixed calendar rate), returning to the pad half a day after departure. All clients see the same phase, including when joining during flight. The spaceport panel shows status and time to the next launch. The pad remains a reserved solid area even while the ship is away. This is an ambient cargo service; player travel, bookings and inventories are unaffected.
+
+Sound preferences separate engines, effects/machinery, environmental ambience and chat alerts. Find the four sliders below master volume in **Pilot & preferences**. World creators can add sounds that change with location, time and weather; muted and hidden tabs stay silent.

@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-10-03
+
+### Added
+
+- Authored audio zones with original woodland, shore and storm sounds or uploaded MP3s; object/region placement, radius, looping, time and weather conditions. Playback and decoding have explicit client budgets.
+- Independent engine, effects, ambience and chat-alert volume preferences, alongside master mute.
+
 ## [0.44.1] - 2026-10-03
 
 ### Fixed

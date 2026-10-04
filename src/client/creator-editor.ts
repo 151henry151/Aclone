@@ -1,3 +1,4 @@
+import { ambientSchema } from '../shared/ambient';
 import { rulesets } from '../shared/rulesets';
 import {
   catalogueEditor,
@@ -32,6 +33,7 @@ export const creatorTabs = [
   'Workshop',
   'Resource visuals',
   'Terrain textures',
+  'Audio zones',
   'Objects',
   'Behaviors',
   'Quests',
@@ -45,6 +47,7 @@ export const creatorTabs = [
 ];
 let draft: Blueprint | undefined,
   contextWorld = '',
+  audioId = '',
   objectId = '',
   ruleId = '',
   questId = '',
@@ -191,6 +194,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
     skills = worldSkills(w);
   if (contextWorld !== w.id) {
     draft = undefined;
+    audioId = '';
     objectId = '';
     ruleId = '';
     questId = '';
@@ -207,7 +211,22 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   const building = w.buildings.find((b) => b.id === buildingId) ?? w.buildings[0];
   const modelOptions: [string, string][] = c.models.map((m) => [m.id, m.name]);
   if (tab === 'Start here')
-    return `<div class="guide-grid"><section><h3>Build a world in six steps</h3><ol><li><b>Rules</b>: set survival, economy, sea level and day length.</li><li><b>Arena</b>: choose CTF, capture point or deathmatch; move bases and set victory rules.</li><li><b>Workshop</b>: assemble reusable models or bind uploaded visuals.</li><li><b>Objects</b>: place trees, scenery, triggers, props or obstacles.</li><li><b>Behaviors</b>: add interact, zone-entry and timer actions without code.</li><li><b>Script</b>: add Lua for advanced conditions using the same effects.</li></ol></section><section><h3>Creator tools</h3><p>Changes are live for everyone in this world. Prototype in a separate world first. Saved designs survive server restarts.</p><p>Upload your own PNG/JPEG, OBJ or animated GLB in <b>Assets</b>, then select it in Workshop. MP3 uploads are available for preview/download.</p><p>Use <b>Layout</b> to rename, move and reskin existing functional buildings. <b>Vehicles</b> tunes physics; <b>Workshop</b> assigns custom appearances to vehicle slots.</p><p>Export a world design in Transfer and create a new world from it. Exports contain design data, not player accounts or money.</p></section></div>`;
+    return `<div class="guide-grid"><section><h3>Build a world in six steps</h3><ol><li><b>Rules</b>: set survival, economy, sea level and day length.</li><li><b>Arena</b>: choose CTF, capture point or deathmatch; move bases and set victory rules.</li><li><b>Workshop</b>: assemble reusable models or bind uploaded visuals.</li><li><b>Objects</b>: place trees, scenery, triggers, props or obstacles.</li><li><b>Behaviors</b>: add interact, zone-entry and timer actions without code.</li><li><b>Script</b>: add Lua for advanced conditions using the same effects.</li></ol></section><section><h3>Creator tools</h3><p>Changes are live for everyone in this world. Prototype in a separate world first. Saved designs survive server restarts.</p><p>Upload your own PNG/JPEG, OBJ or animated GLB in <b>Assets</b>, then select it in Workshop. Bind MP3 uploads or original woodland/shore/storm ambience in Audio zones.</p><p>Use <b>Layout</b> to rename, move and reskin existing functional buildings. <b>Vehicles</b> tunes physics; <b>Workshop</b> assigns custom appearances to vehicle slots.</p><p>Export a world design in Transfer and create a new world from it. Exports contain design data, not player accounts or money.</p></section></div>`;
+  if (tab === 'Audio zones') {
+    const zones = c.ambience ?? [],
+      a = zones.find((a) => a.id === audioId);
+    return `<p>Up to four nearby zones play at once. Use original synthesized ambience or an uploaded mono/stereo MP3 (maximum 30 seconds). Start/end hours follow the world clock; equal hours mean all day. A non-looping sound plays once per entry. Upload properly licensed audio in Assets.</p><div class="button-row">${button('New audio zone', 'audio', '')}${zones.map((a) => button(a.name, 'audio', a.id)).join('')}</div><form id="creator-audio-form">${field('Zone name', 'name', a?.name ?? 'Woodland')}${select(
+      'Sound',
+      'source',
+      ['woodland', 'shore', 'storm', 'asset'].map((s) => [s, s]),
+      a?.source ?? 'woodland',
+    )}${select('MP3 asset', 'asset', [['', 'None'], ...w.assets.filter((a) => a.type === 'audio/mpeg').map((a) => [a.id, a.name] as [string, string])], a?.asset)}${select('Attach to object', 'object', [['', 'Fixed coordinates'], ...c.objects.map((o) => [o.id, o.name] as [string, string])], a?.object)}${coord('x', a?.x)}${coord('z', a?.z)}${field('Radius metres', 'radius', a?.radius ?? 40, 'number', 'min="2" max="250"')}${field('Volume', 'volume', a?.volume ?? 0.35, 'number', 'min="0" max="1" step=".05"')}<label><input type="checkbox" name="loop" ${a?.loop !== false ? 'checked' : ''}>Loop sound</label>${field('Start hour', 'startHour', a?.startHour ?? 0, 'number', 'min="0" max="24"')}${field('End hour', 'endHour', a?.endHour ?? 24, 'number', 'min="0" max="24"')}${select(
+      'Weather condition',
+      'weather',
+      ['any', 'clear', 'rain', 'snow', 'storm'].map((s) => [s, s]),
+      a?.weather ?? 'any',
+    )}<button>Save audio zone</button></form>${a ? button('Delete audio zone', 'deleteAudio', a.id) : ''}`;
+  }
   if (tab === 'Arena')
     return `<p>Match rules apply to the existing Activities combat games. Fixed modes prevent players switching to another mode. Saving changed arena rules ends any current match. Coordinates are metres.</p><form id="creator-arena-form"><div class="settings-grid">${select(
       'Game mode',
@@ -392,6 +411,12 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'catalogue', catalogue });
   }
   if (action === 'quest') questId = value;
+  if (action === 'audio') audioId = value;
+  if (action === 'deleteAudio') {
+    c.ambience = c.ambience.filter((a) => a.id !== value);
+    audioId = '';
+    send({ type: 'creator', creator: c });
+  }
   if (action === 'guard') guardId = value;
   if (action === 'deleteQuest') {
     c.quests = c.quests.filter((q) => q.id !== value);
@@ -420,6 +445,7 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
   }
   if (action === 'deleteObject') {
     c.objects = c.objects.filter((o) => o.id !== value);
+    c.ambience = c.ambience.filter((a) => a.object !== value);
     c.rules = c.rules.filter(
       (r) =>
         r.target !== value && !r.effects.some((e) => e.type === 'visibility' && e.object === value),
@@ -453,7 +479,25 @@ export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefin
     d = new FormData(form),
     str = (k: string) => String(d.get(k) ?? ''),
     num = (k: string) => Number(d.get(k));
-  if (form.id === 'creator-quest-form') {
+  if (form.id === 'creator-audio-form') {
+    const a = ambientSchema.parse({
+      id: audioId || crypto.randomUUID(),
+      name: str('name'),
+      source: str('source'),
+      asset: str('asset') || undefined,
+      object: str('object'),
+      x: num('x'),
+      z: num('z'),
+      radius: num('radius'),
+      volume: num('volume'),
+      loop: d.has('loop'),
+      startHour: num('startHour'),
+      endHour: num('endHour'),
+      weather: str('weather'),
+    });
+    c.ambience = [...c.ambience.filter((old) => old.id !== a.id), a];
+    audioId = a.id;
+  } else if (form.id === 'creator-quest-form') {
     const q = questForm(form, questId);
     c.quests = [...c.quests.filter((old) => old.id !== q.id), q];
     questId = q.id;

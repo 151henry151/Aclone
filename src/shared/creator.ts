@@ -1,3 +1,4 @@
+import { ambientSchema } from './ambient.ts';
 import { maximumHealth } from './nutrition.ts';
 import { landscapeBlocks, scatterObjects } from './landscape.ts';
 import {
@@ -133,6 +134,7 @@ export const creatorSchema = z.object({
   models: z.array(blueprintSchema).max(64).default([]),
   objects: z.array(objectSchema).max(128).default([]),
   rules: z.array(ruleSchema).max(64).default([]),
+  ambience: z.array(ambientSchema).max(32).default([]),
   terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
   resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
   vehicleModels: z.record(z.string().regex(/^([0-9]|1[0-9]|2[0-3])$/), id).default({}),
@@ -191,6 +193,17 @@ export function validateCreator(w: World, input: unknown) {
   for (const asset of Object.values(c.terrainTextures))
     if (!w.assets.some((a) => a.id === asset && ['image/png', 'image/jpeg'].includes(a.type)))
       throw Error('Choose an uploaded terrain image');
+  if (new Set(c.ambience.map((z) => z.id)).size !== c.ambience.length)
+    throw Error('Duplicate audio zone');
+  for (const zone of c.ambience) {
+    if (zone.object && !c.objects.some((o) => o.id === zone.object))
+      throw Error('Audio object is missing');
+    if (
+      zone.source === 'asset' &&
+      !w.assets.some((a) => a.id === zone.asset && a.type === 'audio/mpeg')
+    )
+      throw Error('Choose uploaded MP3 audio');
+  }
   const models = new Set(c.models.map((m) => m.id));
   for (const s of w.landscape?.scatter ?? [])
     if (!c.models.some((m) => m.id === s.model)) throw Error('Model is used by landscape scatter');
