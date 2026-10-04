@@ -24,6 +24,7 @@ import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
+import { TradeFeedback } from './trade-feedback';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
 import { bankLoans, bankQuote } from './bank';
@@ -282,6 +283,10 @@ document.addEventListener('input', (e) => {
     );
 });
 const actionViews = new Map<number, string | undefined>();
+const tradeFeedback = new TradeFeedback();
+const tradeVisits = new Map<number, number>();
+let tradeVisit = 0;
+let lastTradeVisit: number | undefined;
 function send(action: Action) {
   if (ws?.readyState !== WebSocket.OPEN) {
     toast('Connection unavailable. Reconnect before making changes.', true);
@@ -289,6 +294,8 @@ function send(action: Action) {
   }
   const id = ++request;
   actionViews.set(id, $('modal-host').dataset.viewKey);
+  if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
+  if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
   if (actionViews.size > 128) actionViews.delete(actionViews.keys().next().value!);
   ws.send(JSON.stringify({ type: 'action', request: id, action }));
 }
@@ -372,6 +379,12 @@ async function connect() {
       });
     }
     if (msg.type === 'result') {
+      const visit = tradeVisits.get(msg.request);
+      tradeVisits.delete(msg.request);
+      if (msg.ok && msg.trade && visit !== undefined) {
+        msg.message = tradeFeedback.add(msg.trade, visit);
+        lastTradeVisit = visit;
+      }
       if (msg.message && !['Parp.', 'Done. Quietly competent.'].includes(msg.message))
         toast(msg.message, !msg.ok);
       const view = actionViews.get(msg.request);
@@ -876,6 +889,9 @@ function openPanel(name: string) {
   renderPanel();
 }
 function closePanel() {
+  if (panel === 'building' && lastTradeVisit === tradeVisit && tradeFeedback.summary)
+    toast(tradeFeedback.summary);
+  tradeVisit++;
   closeCreatorPreview();
   panelMemory.capture();
   parishMap?.dispose();

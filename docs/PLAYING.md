@@ -10,6 +10,10 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 4. Take a job and **Work two cycles**, or buy a business, stock inputs and fund wages. Actual production pays wages; signing up alone does not.
 5. Stock a cottage or rented room and enter before logging off. Hunger, thirst and starvation continue offline; provisions feed you automatically. **Go outside** restores movement.
 
+Repeated buys/sales of the same item at one shop show the confirmed total quantity
+and price, including when you close the window. Failed trades do not add to it;
+changing goods, direction, shop or visit starts a new total.
+
 When reversing a wheeled vehicle, steering follows actual backward speed, including while braking.
 
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.

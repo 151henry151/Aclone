@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.49.1] - 2026-10-04
+
+### Fixed
+
+- Total consecutive confirmed purchases or sales at the same shop, including feedback after closing the window; failed trades do not count.
+
 ## [0.49.0] - 2026-10-03
 
 ### Added

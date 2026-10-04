@@ -1,5 +1,6 @@
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
+import { worldItems } from '../shared/world-catalogue.ts';
 import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { completePuddlewick } from './parish-services.ts';
@@ -862,7 +863,30 @@ export async function createApp(options: AppOptions) {
           worlds.set(w.id, before);
           throw e;
         }
-        send(p, { type: 'result', request, ok: true, message });
+        send(p, {
+          type: 'result',
+          request,
+          ok: true,
+          message,
+          ...(a.type === 'trade'
+            ? {
+                trade: {
+                  world: w.id,
+                  building: String(a.building).trim(),
+                  item: String(a.item).trim(),
+                  name: worldItems(w)[String(a.item).trim()].name,
+                  direction: a.direction,
+                  quantity: Number(a.quantity),
+                  total:
+                    Number(a.quantity) *
+                    before.buildings.find((b) => b.id === String(a.building).trim())![
+                      a.direction === 'buy' ? 'sell' : 'buy'
+                    ][String(a.item).trim()],
+                  denariiPerSheckle: w.settings.denariiPerSheckle,
+                },
+              }
+            : {}),
+        });
         snapshot(p);
         if (a.type === 'task') void scriptEvent(w, 'TaskStart', { id: p.account.id });
       } catch (e) {
