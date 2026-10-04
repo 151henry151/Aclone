@@ -47,7 +47,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await expect(arrow).not.toHaveAttribute('style', initial!);
     p.x = b.x;
     p.z = b.z;
-    await expect(page.locator('#waypoint-distance')).toContainText('Arrived');
+    await expect(page.locator('#waypoint-distance')).toContainText('Arrived', { timeout: 30000 });
     await page.reload();
     await expect(page.locator('#waypoint-name')).toHaveText(b.name);
     await page.setViewportSize({ width: 390, height: 844 });

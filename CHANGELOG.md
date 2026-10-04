@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.44.1] - 2026-10-03
+
+### Fixed
+
+- Give software-rendered map regression checks time to display authoritative position changes and waypoint arrival.
+
 ## [0.44.0] - 2026-10-03
 
 ### Added

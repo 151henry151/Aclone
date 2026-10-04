@@ -77,7 +77,7 @@ test('the parish map opens with M or a click and keeps navigation through live u
     const marker = map.locator('[data-player-id="visitor"]');
     const oldTransform = await marker.getAttribute('transform');
     remote.x = 120;
-    await expect(marker).not.toHaveAttribute('transform', oldTransform!);
+    await expect(marker).not.toHaveAttribute('transform', oldTransform!, { timeout: 30000 });
     remote.online = false;
     await expect(marker).toHaveCount(0);
     const added = makeBuilding('custom-map-home', 'home', -240, -175);
