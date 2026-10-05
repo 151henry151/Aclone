@@ -29,6 +29,15 @@ import { TradeFeedback } from './trade-feedback';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
 import { bankLoans, bankQuote } from './bank';
+import {
+  townPanel,
+  townFormAction,
+  charterForm,
+  charterFormAction,
+  townLocation,
+  constructionQuote,
+  foundTownForm,
+} from './town-panel';
 import { propertyQuote } from '../shared/property';
 import { creatorControls } from './creator-editor';
 import {
@@ -531,11 +540,7 @@ function updateHud() {
   }
   $('location').textContent = mobile.active
     ? world.name
-    : world.name +
-      ' · ' +
-      (distance(me, { x: 0, z: 0 }) < (world.townLayout === 2 ? 245 : 80)
-        ? 'In the parish of Puddlewick'
-        : 'Out in the sticks');
+    : world.name + ' · ' + townLocation(world, me);
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600);
   $('clock').textContent =
@@ -869,6 +874,15 @@ function drawMap() {
     ctx.fillStyle = '#758e86';
     ctx.fillRect(0, sz(150), 230, 170 - sz(150));
   }
+  ctx.strokeStyle = '#e8d9a6';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 3]);
+  for (const t of world.towns) {
+    ctx.beginPath();
+    ctx.arc(sx(t.x), sz(t.z), t.radius * scale, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
   ctx.strokeStyle = '#b6ac84';
   ctx.lineCap = 'round';
   for (const { a, b, width } of townRoads(world)) {
@@ -1397,23 +1411,27 @@ function renderPanel() {
   }
   if (panel === 'construction') {
     const waterSite = waterworksSite(world, me);
+    const quotes = new Map<string, ReturnType<typeof constructionQuote>>();
+    const quote = (id: string) =>
+      quotes.get(id) ?? quotes.set(id, constructionQuote(world!, me!, id)).get(id)!;
+    const here = Object.keys(worldBuildings(world)).map(quote);
     modal(
       'Build something useful.',
-      `<p>Civilization tier ${world.tier}. Structures cost cash plus town tax. Supply the listed materials to finish construction. Unfinished sites can be cancelled for 75% of their base cash cost; tax and delivered materials are not returned. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
+      `<p>Civilization tier ${world.tier}. Structures cost cash plus the local town's construction tax (${esc(here.find((q) => q.note)?.note ?? here[0]?.refusal ?? 'none here')}). Supply the listed materials to finish construction. Unfinished sites can be cancelled for 75% of their base cash cost; tax and delivered materials are not returned. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
         worldBuildings(world!),
       )
         .filter(([, d]) => d.tier <= world!.tier)
         .map(
           ([id, d]) =>
-            `<button data-do="construct" data-id="${id}" ${id === 'waterworks' && !waterSite ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
+            `<button data-do="construct" data-id="${id}" ${(id === 'waterworks' && !waterSite) || quote(id).refusal ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${quote(id).refusal ? `<small>${esc(quote(id).refusal)}</small>` : ''}${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
               d.materials,
             )
               .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
               .join(
                 ' + ',
-              )}</small></span><b>${money(Math.round(d.price * (1 + world!.towns[0].tax)))}</b></button>`,
+              )}</small></span><b>${money(quote(id).price + quote(id).tax)}</b></button>`,
         )
-        .join('')}</div>`,
+        .join('')}</div>${foundTownForm(world!, me!)}`,
     );
     return;
   }
@@ -1601,8 +1619,7 @@ function buildingWindow(b: Building) {
         ],
       )}<button>Transfer</button></form>`;
     if (b.kind === 'bank') html += bankLoans(world, me, b);
-    if (b.kind === 'town')
-      html += `<p>Parish tax: ${Math.round(world.towns[0].tax * 100)}% · Residents: ${world.towns[0].residents.length}</p>${button('Become a resident', 'town', `data-building="${b.id}" data-id="join"`)}${button('Stand for mayor', 'town', `data-building="${b.id}" data-id="stand"`)}<form data-action="town">${hidden('building', b.id)}${hidden('operation', 'tax')}${field('Tax (0–0.5)', 'tax', world.towns[0].tax, 'number', 'min="0" max="0.5" step="0.01"')}<button>Set tax as mayor</button></form>`;
+    if (b.kind === 'town') html += townPanel(world, me, b);
     if (b.kind === 'pub')
       html +=
         '<p>Welcome to The Unsteady Axle. There is beer, a noticeboard, and absolutely no dress code.</p>' +
@@ -1720,7 +1737,7 @@ function editorWindow() {
   if (creatorTabs.includes(tab)) {
     modal(
       'World creator studio',
-      `<nav class="tabs">${[...creatorTabs, 'Rules', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>` +
+      `<nav class="tabs">${[...creatorTabs, 'Rules', 'Towns', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>` +
         creatorPanel(world, me, tab),
       true,
     );
@@ -1730,59 +1747,61 @@ function editorWindow() {
   }
   modal(
     'Your world. Your peculiar rules.',
-    `<nav class="tabs">${[...creatorTabs, 'Rules', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t || (tab === 'Main' && t === 'Rules') ? 'active' : '')).join('')}</nav>${
-      tab === 'Main' || tab === 'Rules'
-        ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here. Death retention values run from 0 (lose all) to 1 (keep all). Set hunger/thirst rates to 0 to disable needs. maxOfflineDays uses real days; 0 disables the absence limit.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
-            world.settings,
-          )
-            .map(([k, v]) =>
-              typeof v === 'boolean'
-                ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</label>`
-                : k === 'weaponMode'
-                  ? select(
-                      k,
-                      [
-                        ['energy', 'Energy weapons'],
-                        ['ammo', 'Ammunition per life'],
-                      ],
-                      k,
-                    )
-                  : field(k, k, v, 'number', 'step="any"'),
+    `<nav class="tabs">${[...creatorTabs, 'Rules', 'Towns', 'Landscape', 'Buildings', 'Zones', 'Script', 'Assets', 'Ledger'].map((t) => button(t, 'tab', `data-id="${t}"`, tab === t || (tab === 'Main' && t === 'Rules') ? 'active' : '')).join('')}</nav>${
+      tab === 'Towns'
+        ? `<p>The charter decides how towns work on this world: who may found them, how their borders grow, how they are governed and which rules their governments control. Changes apply live.</p>${charterForm(world)}`
+        : tab === 'Main' || tab === 'Rules'
+          ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here. Death retention values run from 0 (lose all) to 1 (keep all). Set hunger/thirst rates to 0 to disable needs. maxOfflineDays uses real days; 0 disables the absence limit.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
+              world.settings,
             )
-            .join('')}</div><button class="primary">Apply changes to server</button></form>`
-        : tab === 'Landscape'
-          ? landscapeEditor(world, me)
-          : tab === 'Buildings'
-            ? `<form data-action="place">${select(
-                'kind',
-                Object.entries(definitions).map(([id, d]) => [id, d.name]),
-                'Building type',
-              )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}<button>Place building</button></form><p>Open the building's Admin tab to edit its prices, wages and stocks.</p>`
-            : tab === 'Zones'
-              ? `<form data-action="zone">${select(
-                  'kind',
-                  [
-                    ['safe', 'Safe zone (weapons disabled)'],
-                    ['noBuild', 'No construction'],
-                    ['spawn', 'Spawn marker'],
-                    ['game', 'Game marker'],
-                    ['script', 'Script marker'],
-                    ['vehicle', 'Vehicle marker'],
-                  ],
-                  'Zone type',
-                )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}${field('Radius', 'radius', 20, 'number', 'min="1" max="100"')}<button>Place zone</button></form><p>${world.zones.map((z) => esc(`${z.kind} at ${z.x}, ${z.z} (${z.radius}m)`)).join(' · ')}</p>`
-              : tab === 'Script'
-                ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart, TaskComplete, ObjectInteract, ZoneEnter, Timer. Functions: on, announce, getvar, setvar, kudos, heal, needs, give, teleport, score, object_visible, player_value. See the World Building and Scripting guides for examples. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
-                : tab === 'Assets'
-                  ? `<p>Upload original PNG, JPEG, MP3, OBJ or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. OBJ: static faces, up to 50,000 triangles; select a PNG/JPEG texture atlas in Workshop. GLB: embedded media, up to 128 primitives, 8 animation clips and 64 joints per skin. No external resources, morph targets or extensions. Choose a clip in Workshop. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb,.obj" required><label>Author<input name="author" maxlength="120"></label><label>Licence<input name="license" maxlength="120" placeholder="e.g. CC0-1.0, CC-BY-4.0, original work"></label><label>Source / credits<input name="source" maxlength="300"></label><button>Upload asset</button></form>${texturePainterMarkup()}<div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · ${a.type === 'model/obj' ? 'OBJ' : 'GLB'}</a>`)).join('')}</div>`
-                  : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
-                      .slice(-25)
-                      .reverse()
-                      .map(
-                        (l) =>
-                          `<div><b>${esc(l.kind)}</b><span>${esc(l.reason)}</span><strong>${money(l.amount)}</strong></div>`,
+              .map(([k, v]) =>
+                typeof v === 'boolean'
+                  ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</label>`
+                  : k === 'weaponMode'
+                    ? select(
+                        k,
+                        [
+                          ['energy', 'Energy weapons'],
+                          ['ammo', 'Ammunition per life'],
+                        ],
+                        k,
                       )
-                      .join('')}</div>${button('Download ledger JSON', 'ledger')}`
+                    : field(k, k, v, 'number', 'step="any"'),
+              )
+              .join('')}</div><button class="primary">Apply changes to server</button></form>`
+          : tab === 'Landscape'
+            ? landscapeEditor(world, me)
+            : tab === 'Buildings'
+              ? `<form data-action="place">${select(
+                  'kind',
+                  Object.entries(definitions).map(([id, d]) => [id, d.name]),
+                  'Building type',
+                )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}<button>Place building</button></form><p>Open the building's Admin tab to edit its prices, wages and stocks.</p>`
+              : tab === 'Zones'
+                ? `<form data-action="zone">${select(
+                    'kind',
+                    [
+                      ['safe', 'Safe zone (weapons disabled)'],
+                      ['noBuild', 'No construction'],
+                      ['spawn', 'Spawn marker'],
+                      ['game', 'Game marker'],
+                      ['script', 'Script marker'],
+                      ['vehicle', 'Vehicle marker'],
+                    ],
+                    'Zone type',
+                  )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}${field('Radius', 'radius', 20, 'number', 'min="1" max="100"')}<button>Place zone</button></form><p>${world.zones.map((z) => esc(`${z.kind} at ${z.x}, ${z.z} (${z.radius}m)`)).join(' · ')}</p>`
+                : tab === 'Script'
+                  ? `<p>Sandboxed Lua. Events: PlayerLogin, ScriptReload, TaskStart, TaskComplete, ObjectInteract, ZoneEnter, Timer. Functions: on, announce, getvar, setvar, kudos, heal, needs, give, teleport, score, object_visible, player_value. See the World Building and Scripting guides for examples. Memory, instruction and time limits enforced.</p><form id="script-form"><label>World script<textarea name="source" aria-label="World script" rows="14" spellcheck="false">${esc(world.script)}</textarea></label><button>Validate & reload Lua</button></form>`
+                  : tab === 'Assets'
+                    ? `<p>Upload original PNG, JPEG, MP3, OBJ or GLB assets (2 MiB each, 32 per world). Images: up to 2048 × 2048 pixels. OBJ: static faces, up to 50,000 triangles; select a PNG/JPEG texture atlas in Workshop. GLB: embedded media, up to 128 primitives, 8 animation clips and 64 joints per skin. No external resources, morph targets or extensions. Choose a clip in Workshop. Assign visuals in Workshop. Uploaded media is cached by each client. Select an asset below to preview it.</p><form id="asset-form"><input name="file" type="file" accept="image/png,image/jpeg,audio/mpeg,.glb,.obj" required><label>Author<input name="author" maxlength="120"></label><label>Licence<input name="license" maxlength="120" placeholder="e.g. CC0-1.0, CC-BY-4.0, original work"></label><label>Source / credits<input name="source" maxlength="300"></label><button>Upload asset</button></form>${texturePainterMarkup()}<div class="asset-list">${world.assets.map((a) => (a.type.startsWith('image/') ? `<figure><img src="${esc(withBase(a.url))}" alt="${esc(a.name)}"><figcaption>${esc(a.name)}</figcaption></figure>` : a.type.startsWith('audio/') ? `<label>${esc(a.name)}<audio controls src="${esc(withBase(a.url))}"></audio></label>` : `<a href="${esc(withBase(a.url))}" download>${esc(a.name)} · ${a.type === 'model/obj' ? 'OBJ' : 'GLB'}</a>`)).join('')}</div>`
+                    : `<p>Recent money movements. Internal units are hundredths of a denarius.</p><div class="ledger">${world.ledger
+                        .slice(-25)
+                        .reverse()
+                        .map(
+                          (l) =>
+                            `<div><b>${esc(l.kind)}</b><span>${esc(l.reason)}</span><strong>${money(l.amount)}</strong></div>`,
+                        )
+                        .join('')}</div>${button('Download ledger JSON', 'ledger')}`
     }`,
     true,
   );
@@ -2303,6 +2322,12 @@ app.addEventListener('submit', async (e) => {
       const result = await response.json();
       if (!response.ok) throw Error(result.error);
       toast('Asset uploaded.');
+    } else if (form.dataset.townForm !== undefined) {
+      send(townFormAction(new FormData(form).entries()));
+      (document.activeElement as HTMLElement)?.blur();
+    } else if (form.dataset.charterForm !== undefined) {
+      send(charterFormAction(new FormData(form).entries()));
+      (document.activeElement as HTMLElement)?.blur();
     } else if (form.dataset.action) {
       const values: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(data)) {

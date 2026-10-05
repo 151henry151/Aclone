@@ -3,6 +3,7 @@ import { migrateProcurement } from '../shared/procurement.ts';
 import { migrateEstates } from '../shared/property.ts';
 import { migrateEconomy } from '../shared/economy.ts';
 import { migrateTown } from '../shared/town.ts';
+import { normalizeTowns } from '../shared/civics.ts';
 import { DatabaseSync, backup } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -63,6 +64,7 @@ export class Store {
               : 500;
         world.settings = { ...defaults, ...world.settings };
         migrateTown(world);
+        normalizeTowns(world);
         migrateEconomy(world);
         migrateEstates(world);
         migrateProcurement(world);

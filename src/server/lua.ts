@@ -151,6 +151,21 @@ export class WorldScript {
       );
       return 1;
     });
+    const town = (name: string) => {
+      const key = name.toLowerCase();
+      return this.world.towns?.find((t) => t.id === key || t.name.toLowerCase() === key);
+    };
+    this.fn('in_town', (L: any) => {
+      const p = this.world.players[this.string(L, 1)],
+        t = town(this.string(L, 2));
+      lua.lua_pushboolean(L, !!p && !!t && Math.hypot(p.x - t.x, p.z - t.z) <= t.radius);
+      return 1;
+    });
+    this.fn('home_town', (L: any) => {
+      const p = this.world.players[this.string(L, 1)];
+      lua.lua_pushstring(L, to_luastring((p?.town && town(p.town)?.name) || ''));
+      return 1;
+    });
     this.fn('kudos', (L: any) => {
       const p = this.world.players[this.string(L, 1)],
         n = lua.lua_tonumber(L, 2);

@@ -31,6 +31,8 @@ Land, then open **Editor / F10**. On a phone, use **Menu → World editor**. Edi
    settings. **Players choose** leaves mode selection open, sharing the displayed
    round/score settings across modes.
 
+In **Towns**, edit the town charter: whether players may found towns (cost, required skill, town limit, minimum spacing), the initial and maximum border radius, whether borders grow from outskirts construction, whether building outside every border is allowed, governed by the nearest town or forbidden, the forms of government towns may use (the first is the default for new towns), which rules town governments may change, the maximum town tax, tax notice days, election term/registration/voting days, minimum candidates, candidate deposit, whether campaign payments are allowed, candidate skill, voter residency days, proposal quorum and voting days, and the default zoning for new towns. The owner can also change any town's rules or appoint its mayor from its plinth. Exported designs include the charter.
+
 In **Rules**, configure taxation, starting cash, professions, survival, building
 limits, combat, sea level and the decorative day clock. Estate rules choose whether stock/investment survive death, their share of an unclaimed asking price, and the yearly discount. The farming calendar
 remains independent of the decorative clock. In **Layout**, switch generated

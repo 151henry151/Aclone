@@ -3,6 +3,7 @@ import type { World, Building } from './types.ts';
 import { townRoads, roadDistance, type Point, type Road } from './town.ts';
 import { buildingPlan, buildingBounds, blocksBuilding } from './building-shapes.ts';
 import { terrainHeight } from './terrain.ts';
+import { townRefusal } from './town-charter.ts';
 
 /** A tractor is about 4.6 m long; the parish lays a little under three a day. */
 export const roadGrowthPerDay = 12;
@@ -53,6 +54,7 @@ function growOnce(w: World) {
   if (!roads.length) return false;
   const pending = w.buildings
     .filter((b) => !roadConnected(w, b, roads))
+    .filter((b) => b.government || !townRefusal(w, b.owner, b.x, b.z, 'roads'))
     .sort((a, b) => roadDistance(roads, a.x, a.z) - roadDistance(roads, b.x, b.z));
   for (const target of pending) {
     const from = nearestPoint(roads, target.x, target.z);

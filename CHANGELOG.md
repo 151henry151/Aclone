@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Add a per-world town charter (`townCharter`, owner **Towns** editor tab and design import/export) covering town founding (switch, cost, skill, town limit, spacing), border size and growth, construction outside borders (allow, nearest town's rules, or forbid), permitted forms of government, which rules town governments control, maximum tax, tax notice periods, election timing, candidate deposits and campaign payments, voter residency and proposal quorum.
+- Add player-founded towns with their own plinth, treasury, residents, construction/sales/wage taxes, north/south district zoning by building category, and resident/guest permissions for building property, building roads and modifying the environment.
+- Add town governments: appointed mayors, proprietor-owned towns that can be sold and bought, elections with registration, deposits, per-vote campaign payments, deferral and secret ballots, mayoral auctions, and direct democracy where residents propose and vote on rule changes.
+- Add the `*town`, `*showresidents` and `*sethometown` chat commands and the Lua functions `in_town(player, name)` and `home_town(player)`.
+- Add a town plinth panel, found-town form in **Build**, town borders on the minimap and parish map, and town-aware HUD location ("In the town of …" / "Closest town is …").
+- Add NPC options to join a home town, stand or bid for mayor, vote for candidates, vote on proposals and, as mayor, set the construction tax.
+
+### Changed
+
+- Change construction, sales and wage town taxes to apply only inside a town's border (or under the nearest town when the charter says so) and to pay into that town's treasury instead of being sunk.
+- Grow a town's border when buildings are completed on its outskirts, up to the charter maximum, the map edge and neighbouring towns.
+- Migrate saved worlds' single town to the new town model, keeping its tax as the construction and sales tax and converting players' home town names to town ids.
+- Change build quotes to show the local town's construction tax and disable buildings the town's zoning or permissions refuse.
+
 ## [0.53.0] - 2026-10-04
 
 ### Added

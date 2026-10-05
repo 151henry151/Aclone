@@ -3,6 +3,7 @@ import type { World, Player } from './types.ts';
 import { canCarry, distance, terrainHeight } from './simulation.ts';
 import { legacyHalf, mapHalf, terrainSeed, woodland } from './terrain.ts';
 import { hash2 } from './noise.ts';
+import { townRefusal } from './town-charter.ts';
 export interface ResourceNode {
   id: string;
   item: string;
@@ -131,6 +132,8 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
     reason = 'Finish your activity first';
   else if (w.buildings.some((b) => distance(b, n) < 12))
     reason = 'Buildings obstruct this gathering ground';
+  else if (townRefusal(w, p.id, n.x, n.z, 'environment'))
+    reason = townRefusal(w, p.id, n.x, n.z, 'environment');
   else if (n.item !== 'dirt' && !(p.inventory.tools > 0))
     reason = 'Carry tools to gather logs, gravel or stone';
   else if (available < amount) reason = 'This ground needs time to replenish';

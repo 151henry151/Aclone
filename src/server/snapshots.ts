@@ -10,6 +10,7 @@ import {
   productionEfficiency,
 } from '../shared/sound-state';
 import type { World, Player } from '../shared/types';
+import { publicTowns, townBallots } from '../shared/civics.ts';
 import type { Account } from './universe';
 import {
   diffFields,
@@ -60,6 +61,7 @@ export function privatePlayer(w: World, p: Player) {
         .map((b) => [b.id, b.accounts]),
     ),
     engineRunning: motorRunning(w, p),
+    ballots: townBallots(w, p),
     roomPantries: Object.fromEntries(
       w.buildings
         .filter((b) => b.lodging?.guests[p.id])
@@ -101,6 +103,7 @@ export function prepareFrame(w: World): Frame {
   });
   common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);
+  (common as Record<string, unknown>).towns = publicTowns(w);
   common.scriptInteraction = w.script.includes('ObjectInteract');
   const fields = Object.fromEntries(
     Object.entries(common).map(([key, value]) => [key, JSON.stringify(value)]),

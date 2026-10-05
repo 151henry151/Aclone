@@ -85,6 +85,7 @@ function scriptJob(
       messageSeq: world.messageSeq,
       messages: [],
       scriptVariables: { ...world.scriptVariables },
+      towns: world.towns.map(({ id, name, x, z, radius }) => ({ id, name, x, z, radius })),
       players: Object.fromEntries(
         Object.entries(world.players).map(([id, p]) => [
           id,
@@ -104,6 +105,7 @@ function scriptJob(
             hunger: p.hunger,
             thirst: p.thirst,
             team: p.team,
+            town: p.town,
           },
         ]),
       ),

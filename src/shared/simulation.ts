@@ -57,6 +57,20 @@ import { productionStaff, productionSupplied, productionEfficiency } from './sou
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
 import { growRoads } from './roads.ts';
+import {
+  charterAction,
+  constructionTerms,
+  findTown,
+  residentList,
+  setHomeTown,
+  growTown,
+  normalizeTowns,
+  payTown,
+  taxTown,
+  tickTowns,
+  townAction,
+  type Town,
+} from './civics.ts';
 import { gather, finishGather } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
@@ -173,7 +187,7 @@ export function createWorld(
     round: 0,
     projectiles: [],
     raceBest: {},
-    towns: [{ name: 'Puddlewick', tax: 0.02, residents: [], wars: [] }],
+    towns: [{ name: 'Puddlewick', tax: 0.02, residents: [], wars: [] } as unknown as Town],
     tier: 0,
     script:
       '-- Aclone world script. Register an event with on("PlayerLogin", function(e) ... end).\non("PlayerLogin", function(e)\n  announce("Welcome to the parish. Mind the tractor.")\nend)',
@@ -206,6 +220,7 @@ export function createWorld(
   if (template === 'playground') w.settings.hungerRate = w.settings.thirstRate = 0;
   // Arenas and sandboxes stay compact; only economy parishes open onto the wider countryside.
   if (template !== 'economy') w.settings.mapSize = 500;
+  normalizeTowns(w);
   say(w, 'Parish notice', 'Welcome to ' + name + '. A small world. Plenty to get on with.');
   return w;
 }
@@ -366,6 +381,8 @@ export function act(w: World, id: string, a: Action): string {
     return '';
   }
   if (type === 'lottery') return lotteryAction(w, p, a);
+  if (type === 'foundTown' || type === 'town') return townAction(w, p, a);
+  if (type === 'townCharter') return charterAction(w, p, a);
   if (type === 'quest') return questAction(w, p, a);
   if (
     ['creator', 'creatorBuilding', 'creatorRemove', 'creatorRecipe', 'interactObject'].includes(
@@ -424,7 +441,12 @@ export function act(w: World, id: string, a: Action): string {
         requireThat((b.stock[item] ?? 0) + n <= b.capacity, 'Building storage is full');
       }
       if (buying) {
-        const tax = Math.floor(total * clamp(w.settings.salesTax + (w.towns[0]?.tax ?? 0), 0, 1));
+        const town = taxTown(w, b.x, b.z);
+        const worldTax = Math.floor(total * clamp(w.settings.salesTax, 0, 1)),
+          townTax = town
+            ? Math.min(total - worldTax, Math.floor(total * clamp(town.salesTax, 0, 1)))
+            : 0,
+          tax = worldTax + townTax;
         const imported = emergencyImport(w, b, item) ? Math.max(0, n - (b.stock[item] ?? 0)) : 0;
         const importCost = imported ? Math.floor((((total - tax) * imported) / n) * 0.8) : 0;
         if (imported) stockAdd(b.stock, item, imported);
@@ -439,7 +461,12 @@ export function act(w: World, id: string, a: Action): string {
           item,
           quantity: n,
         });
-        log(w, 'sink', tax, id, 'treasury', 'sales tax', { building: b.id, item, quantity: n });
+        log(w, 'sink', worldTax, id, 'treasury', 'sales tax', {
+          building: b.id,
+          item,
+          quantity: n,
+        });
+        if (town) payTown(w, town, id, townTax, 'sales tax');
         if (b.kind === 'starport') {
           p.importDay = day;
           p.imports = imports + n;
@@ -1058,7 +1085,14 @@ export function act(w: World, id: string, a: Action): string {
         ).length < (home ? w.settings.maxHomes : w.settings.maxBuildings),
         'Property limit reached',
       );
-      charge(w, p, Math.round(def.price * (1 + w.towns[0].tax)), 'construction');
+      const terms = constructionTerms(w, p, requested, site);
+      requireThat(p.cash >= def.price + terms.tax, 'Not enough cash');
+      charge(w, p, def.price, 'construction');
+      if (terms.town) {
+        p.cash -= terms.tax;
+        payTown(w, terms.town, p.id, terms.tax, 'construction tax');
+      }
+      growTown(w, site);
       const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, site.x, site.z);
       applyBuildingTemplate(w, b, requested);
       b.owner = id;
@@ -1233,23 +1267,6 @@ export function act(w: World, id: string, a: Action): string {
       w.buildings.push(b);
       break;
     }
-    case 'town': {
-      const b = nearby(w, p, a.building);
-      requireThat(b.kind === 'town', 'Visit the town plinth');
-      const town = w.towns[0];
-      if (a.operation === 'join') {
-        if (!town.residents.includes(id)) town.residents.push(id);
-        p.town = town.name;
-      } else if (a.operation === 'stand') {
-        requireThat(town.residents.includes(id), 'Become a resident first');
-        requireThat(!town.mayor || town.mayor === id, 'This town already has a mayor');
-        town.mayor = id;
-      } else if (a.operation === 'tax') {
-        requireThat(town.mayor === id || p.authority === 20, 'Only the mayor can set town tax');
-        town.tax = num(a.tax, 0, 0.5);
-      }
-      break;
-    }
     case 'postMail':
     case 'deleteMail':
     case 'family':
@@ -1388,6 +1405,8 @@ export function command(w: World, p: Player, text: string): string {
     'economy',
     'me',
     'resetpos',
+    'town',
+    'showresidents',
   ];
   requireThat(
     publicCommands.includes(cmd) ||
@@ -1403,6 +1422,7 @@ export function command(w: World, p: Player, text: string): string {
           settime: 16,
           sethealth: 16,
           setvehicle: 16,
+          sethometown: 16,
           fighting: 20,
         }[cmd] ?? 20),
     'Insufficient authority',
@@ -1414,7 +1434,23 @@ export function command(w: World, p: Player, text: string): string {
   };
   switch (cmd) {
     case 'help':
-      return 'Player: *showfuel *showjobs *showowned *economy *me *resetpos. Admin: *say *announce *kick *gag *teleport *cash *grantitem *settime *sethealth *setvehicle *fighting.';
+      return 'Player: *showfuel *showjobs *showowned *economy *me *resetpos *town *showresidents [town]. Admin: *say *announce *kick *gag *teleport *cash *grantitem *settime *sethealth *setvehicle *sethometown [player] [town] *fighting.';
+    case 'town': {
+      const home = p.town ? findTown(w, p.town) : undefined;
+      return home ? residentList(w, home) : 'You have no home town. Join one at its town plinth.';
+    }
+    case 'showresidents': {
+      const t = findTown(w, args.join(' ') || p.town || '');
+      requireThat(t, 'Town not found');
+      return residentList(w, t);
+    }
+    case 'sethometown': {
+      const who = target(),
+        t = findTown(w, args.slice(1).join(' '));
+      requireThat(t, 'Town not found');
+      setHomeTown(w, who, t);
+      return `${who.name} now lives in ${t.name}.`;
+    }
     case 'showfuel':
       return `Fuel: ${p.fuel.toFixed(1)} / 64`;
     case 'showjobs':
@@ -1684,12 +1720,15 @@ function cycle(w: World, b: Building, at: number) {
     statement.batches++;
     addQuantities(statement.consumed, inputs);
     addQuantities(statement.produced, r.outputs);
+    const town = taxTown(w, b.x, b.z);
     for (const p of staff) {
-      const tax = Math.floor(b.wage * w.settings.wageTax);
+      const tax = Math.floor(b.wage * w.settings.wageTax),
+        local = town ? Math.min(b.wage - tax, Math.floor(b.wage * town.wageTax)) : 0;
       b.investment -= b.wage;
-      p.cash += b.wage - tax;
-      log(w, 'transfer', b.wage - tax, b.id, p.id, 'wage');
+      p.cash += b.wage - tax - local;
+      log(w, 'transfer', b.wage - tax - local, b.id, p.id, 'wage');
       log(w, 'sink', tax, b.id, 'treasury', 'wage tax');
+      if (town) payTown(w, town, b.id, local, 'wage tax');
     }
   }
 }
@@ -1748,6 +1787,7 @@ export function advance(w: World, seconds: number) {
   w.time = end;
   harbourSupply(w, end);
   growRoads(w, start, end);
+  tickTowns(w);
   refreshOrders(w);
   tickTownEvents(w);
   tickLottery(w);

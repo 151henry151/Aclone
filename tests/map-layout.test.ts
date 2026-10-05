@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapBounds, localBounds, placeMapLabels } from '../src/client/map-layout.ts';
+import { mapBounds, localBounds, placeMapLabels, townBorders } from '../src/client/map-layout.ts';
 import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import { resourceNodes } from '../src/shared/resources.ts';
 import { legacyTown, townRoads } from '../src/shared/town.ts';
@@ -66,4 +66,23 @@ test('on a large map the parish sheet stays readable and a local sheet follows a
   assert.ok(local.x < 3000 - 250 && local.x + local.width > 3000 + 250);
   assert.ok(local.z < -2200 - 250 && local.z + local.depth > -2200 + 250);
   assert.ok(local.width <= 800 && local.depth <= 800);
+});
+
+test('town borders appear on any sheet they overlap', () => {
+  const w = createWorld('map-towns', 'Map', 'owner');
+  const town = w.towns[0];
+  w.towns.push({ ...structuredClone(town), id: 'far', name: 'Far', x: 4000, z: 4000, radius: 150 });
+  const sheet = localBounds({ x: town.x + town.radius + 100, z: town.z }, 200);
+  assert.deepEqual(
+    townBorders(w, sheet).map((t) => t.name),
+    ['Puddlewick'],
+  );
+  assert.deepEqual(townBorders(w, localBounds({ x: 0, z: 9000 }, 100)), []);
+  assert.deepEqual(townBorders(w, localBounds({ x: 4000, z: 4000 }, 100))[0], {
+    id: 'far',
+    name: 'Far',
+    x: 4000,
+    z: 4000,
+    radius: 150,
+  });
 });

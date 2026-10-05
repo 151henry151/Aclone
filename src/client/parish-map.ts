@@ -3,7 +3,14 @@ import type { World, Player } from '../shared/types';
 import { townRoads } from '../shared/town';
 import { worldResources } from '../shared/resources';
 import { checkpoints } from '../shared/catalog';
-import { mapBounds, localBounds, inBounds, placeMapLabels, type MapBounds } from './map-layout';
+import {
+  mapBounds,
+  localBounds,
+  inBounds,
+  placeMapLabels,
+  townBorders,
+  type MapBounds,
+} from './map-layout';
 import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
@@ -184,6 +191,7 @@ export class ParishMap {
       w.id,
       w.townLayout,
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),
+      w.towns.map((t) => [t.id, t.name, t.x, t.z, t.radius]),
     ]);
     if (signature !== this.signature) {
       this.signature = signature;
@@ -307,6 +315,31 @@ export class ParishMap {
       );
     }
     const onSheet = (p: { x: number; z: number }) => inBounds(this.bounds, p, 30);
+    for (const t of townBorders(this.world, this.bounds)) {
+      const border = svg('circle', {
+        cx: this.x(t.x),
+        cy: this.y(t.z),
+        r: t.radius * this.scale,
+        fill: 'none',
+        stroke: '#e8d9a6',
+        'stroke-width': 2,
+        'stroke-dasharray': '8 6',
+        opacity: 0.8,
+      });
+      const title = svg('title');
+      title.textContent = `Town of ${t.name}`;
+      border.append(title);
+      const label = svg('text', {
+        x: this.x(t.x),
+        y: this.y(t.z - t.radius) + 14,
+        'text-anchor': 'middle',
+        fill: '#e8d9a6',
+        'font-size': 13,
+        'font-style': 'italic',
+      });
+      label.textContent = `Town of ${t.name}`;
+      drawing.append(border, label);
+    }
     const roads = townRoads(this.world).filter((r) => onSheet(r.a) || onSheet(r.b));
     for (const outline of [true, false])
       for (const road of roads)

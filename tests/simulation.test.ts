@@ -21,7 +21,7 @@ test('currency uses exact integer hundredths of a denarius and configurable shec
   assert.equal(money(872600, 100), '87s 26d');
   assert.equal(money(1425, 14), '1s 0.25d');
 });
-test('purchase conserves money across player, investment and tax sink', () => {
+test('purchase conserves money across player, investment, town treasury and tax sink', () => {
   const { w, p } = setup();
   const b = w.buildings.find((b) => b.kind === 'market')!;
   p.x = b.x;
@@ -29,8 +29,9 @@ test('purchase conserves money across player, investment and tax sink', () => {
   const before = p.cash + b.investment;
   act(w, p.id, { type: 'trade', building: b.id, item: 'bread', quantity: 2, direction: 'buy' });
   assert.equal(p.inventory.bread, 4);
+  assert.ok(w.towns[0].treasury > 0);
   assert.equal(
-    before - p.cash - b.investment,
+    before - p.cash - b.investment - w.towns[0].treasury,
     w.ledger.filter((l) => l.kind === 'sink').reduce((s, l) => s + l.amount, 0),
   );
 });

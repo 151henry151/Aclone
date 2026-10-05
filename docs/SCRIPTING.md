@@ -22,6 +22,8 @@ Handlers use `on(eventName, function(e) ... end)`.
 - `getvar(name)` reads a persisted world number, defaulting to zero.
 - `setvar(name, number)` writes one of up to 64 world variables.
 - `kudos(playerId, amount)` adjusts reputation by up to 100 per call.
+- `in_town(playerId, townName)` is true when the player stands inside that town's border.
+- `home_town(playerId)` returns the player's home town name, or an empty string.
 
 ## Runtime and limits
 

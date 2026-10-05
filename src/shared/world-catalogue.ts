@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { items, skills, recipes, buildings } from './catalog.ts';
 import type { World, Player, ItemDef, Building, Recipe, BuildingDef } from './types.ts';
+import { taxTown } from './town-charter.ts';
 export const customId = /^custom:[a-z][a-z0-9_-]{0,31}$/;
 export const catalogueItemId = z
   .string()
@@ -161,7 +162,7 @@ export function productionDiagnostics(w: World, b: Building) {
   const r = b.production ?? (b.recipe ? recipes[b.recipe] : undefined);
   if (!r) return { inputs: [], outputValue: 0, materials: 0, wages: 0, tax: 0, margin: 0 };
   const defs = worldItems(w),
-    taxRate = Math.min(1, Math.max(0, w.settings.salesTax + (w.towns[0]?.tax ?? 0)));
+    taxRate = Math.min(1, Math.max(0, w.settings.salesTax + (taxTown(w, b.x, b.z)?.salesTax ?? 0)));
   const inputs = Object.entries(r.inputs).map(([item, quantity]) => {
     const suppliers = w.buildings
       .filter((s) => s.id !== b.id && !s.construction && s.sell[item] !== undefined)

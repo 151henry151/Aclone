@@ -85,7 +85,10 @@ export interface Player {
   energy: number;
   kills: number;
   deaths: number;
+  /** Home town id. */
   town?: string;
+  /** Recipient-only snapshot projection of this player's secret ballots, by town id. */
+  ballots?: Record<string, { candidate?: string; proposals: Record<number, boolean> }>;
   tribe?: string;
   family?: string;
   hitch?: string;
@@ -312,7 +315,9 @@ export interface World {
     team?: number;
   }[];
   raceBest: Record<string, number>;
-  towns: { name: string; tax: number; mayor?: string; residents: string[]; wars: string[] }[];
+  towns: import('./civics.ts').Town[];
+  /** World creator's rules for founding, borders and town government. */
+  townCharter?: Partial<import('./civics.ts').TownCharter>;
   tier: number;
   script: string;
   scriptVariables: Record<string, number>;

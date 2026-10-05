@@ -28,7 +28,7 @@ Local processors pay **112%** of that reference for their inputs: buying wheat a
 pays 25.20d. These quotes leave a reason to connect local businesses.
 
 Each factory recipe is priced to cover its posted ingredient bids, **one active
-worker's gross wage**, and the default **7% sales tax** (5% world + 2% parish).
+worker's gross wage**, and the default **7% sales tax** inside Puddlewick (5% world + 2% town; see [Towns](PLAYING.md#towns-and-town-government)).
 At the normal batch size, net output sales retain at least 25% above those costs.
 For example, a mill pays 28d for five wheat plus 22d in wages; three flour sold at
 22.50d return about 62.78d after tax, leaving about 12.78d for its investment.
@@ -200,3 +200,7 @@ water bids are 6.60d, lodging retail 7.25d, and export bids 6d/5.90d. These
 cover production and delivery costs while keeping local purchases cheaper than
 imports. Upgrade migration changes former defaults only; player-owned businesses
 and custom public quotes are preserved.
+
+## Town taxes and treasuries
+
+Each town levies its own construction, sales and wage taxes inside its border. The world's sales and wage taxes are sunk as before; town taxes go to the town treasury and appear in the ledger as transfers to `town:<id>`. Outside every border no town tax applies unless the charter's outside-border policy is **nearest town**, which applies the nearest town's rules and taxes. Treasuries also receive candidate deposits, winning auction bids and (when a town has no seller) town-sale proceeds. A mayor, or a passed direct-democracy proposal, can pay treasury money to a resident when the charter delegates **treasury payments**. Tax changes take effect after the charter's notice period; the plinth lists scheduled changes.

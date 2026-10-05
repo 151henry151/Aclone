@@ -155,6 +155,17 @@ Trading lists keep scroll/quantity; admin/stock/gameplay forms retain edited amo
 
 Create through the galaxy directory; **F10 / World editor** opens owner tools. [World building](WORLD_BUILDING.md) covers models/rules/recipes/design import. Other galaxies require host configuration; identity travels but wealth/skills/property stay local. [Galaxies](GALAXIES.md) covers confirmation and native-home authentication.
 
+## Towns and town government
+
+A world can hold several towns, each with a plinth, a circular border, a treasury and its own rules. The HUD says which town you are in, or which is closest; the maps draw town borders as dashed circles. Open a plinth to see its taxes, zoning, permissions, government and residents.
+
+- **Residency:** **Become a resident** at a plinth (or `*sethometown` for staff). You can be a resident of one town at a time. `*town` names the town you are in and `*showresidents` lists residents.
+- **Founding:** where the world's charter allows it, **Build** ends with **Found a new town**. You pay the charter cost, the plinth is raised where you stand, and you become the first resident (and mayor, unless new towns are direct democracies). Towns need dry land, clear ground and space from other towns.
+- **Rules:** each town has construction, sales and wage taxes, north and south districts zoned for building categories (residential, commercial, industrial, agricultural, advanced, civic), and separate resident and guest permissions to build property, build roads and modify the environment (gather resources). Building on the outskirts can push the border outward.
+- **Government:** appointed mayors are chosen by the world owner. Proprietors own their town and may put it up for sale. Elected towns open candidate registration when a term ends; candidates pay a deposit and may escrow a campaign budget that pays each supporter a promised amount per vote. Too few candidates defers the election. Voting is secret; the plinth shows tallies only. Auction towns award the mayoralty to the highest escrowed bid. Direct democracies have no mayor: residents propose rule changes, which pass with a majority once enough residents vote.
+
+Mayors change only the rules the world's charter delegates to towns, within its tax limit.
+
 ## Puddlewick services
 
 Default server-owned Puddlewick adds only missing **Stonemason** (3 stone → 2 blocks) and **Shoreline waterworks** (1 fuel → 12 water), ten-minute batches at defaults. Find them with M. Train mason/pump operator for paid work. New seeded services receive finite initial supplies/capital; existing businesses are never refilled on restart. Other catalog businesses await player development.

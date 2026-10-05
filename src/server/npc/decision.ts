@@ -140,6 +140,12 @@ const operationParameter = z
       'system',
       'ship',
       'buy',
+      'rule',
+      'value',
+      'candidate',
+      'bid',
+      'proposal',
+      'support',
     ]),
     value: z.union([z.string().max(80), z.number().finite(), z.boolean()]),
   })

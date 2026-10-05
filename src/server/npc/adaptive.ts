@@ -8,6 +8,7 @@ import { buildings as catalog, items, recipes, vehicles, weapons } from '../../s
 import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
 import { act, canCarry, distance } from '../../shared/simulation.ts';
+import { ruleLabels, townCharter } from '../../shared/civics.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
 import type { ResidentState } from './memory.ts';
@@ -449,13 +450,45 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         `Make tools from personal steel and wood at ${b.name}.`,
         visit(b, [action({ type: 'task', building: b.id, task: 'craft' })]),
       );
-    if (b.kind === 'town')
-      for (const op of ['join', 'stand'] as const)
-        if (op === 'join' ? !w.towns[0].residents.includes(p.id) : w.towns[0].mayor !== p.id)
-          add(
-            'social',
-            `${op === 'join' ? 'Join the town' : 'Stand for mayor'} at ${b.name}.`,
-            visit(b, [operation('town', { building: b.id, operation: op })]),
+  }
+  for (const town of w.towns) {
+    const b = w.buildings.find((b) => b.id === town.plinth);
+    if (!b) continue;
+    const civic = (description: string, fields: Record<string, string | number | boolean>) =>
+      add('civic', description, visit(b, [operation('town', { building: b.id, ...fields })]));
+    if (!p.town)
+      civic(`Become a resident of ${town.name}; residents vote and may stand for mayor.`, {
+        operation: 'join',
+      });
+    if (p.town !== town.id) continue;
+    const e = town.election;
+    if (e?.phase === 'registration' && !e.candidates.some((c) => c.id === p.id))
+      civic(
+        e.kind === 'auction'
+          ? `Bid ${townCharter(w).candidateDeposit / 100}d to become mayor of ${town.name}.`
+          : `Stand for mayor of ${town.name}; the deposit is ${townCharter(w).candidateDeposit / 100}d.`,
+        e.kind === 'auction'
+          ? { operation: 'stand', bid: townCharter(w).candidateDeposit }
+          : { operation: 'stand' },
+      );
+    if (e?.phase === 'voting' && !e.votes[p.id])
+      for (const c of e.candidates.slice(0, 4))
+        civic(
+          `Vote for ${c.name} as mayor of ${town.name}${c.bribe ? ` (promises ${c.bribe / 100}d per vote)` : ''}.`,
+          { operation: 'vote', candidate: c.id },
+        );
+    for (const x of town.proposals.filter((x) => !(p.id in x.votes)).slice(0, 2))
+      for (const support of [true, false])
+        civic(
+          `${support ? 'Support' : 'Oppose'} proposal ${x.id} in ${town.name}: ${ruleLabels[x.rule]}${typeof x.value === 'number' ? ` to ${Math.round(x.value * 100)}%` : ''}.`,
+          { operation: 'ballot', proposal: x.id, support },
+        );
+    if (town.mayor === p.id)
+      for (const tax of [0, 0.05, 0.1])
+        if (town.tax !== tax)
+          civic(
+            `As mayor set ${town.name} construction tax to ${tax * 100}%. Consider effects on neighbours and trade.`,
+            { operation: 'rule', rule: 'constructionTax', value: tax },
           );
   }
   // Construction is ordinary placement plus later purchases/deliveries, never free buildings.
@@ -574,14 +607,6 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     add('recovery', 'Use the ordinary return-to-spawn action after repeated navigation failures.', [
       operation('respawn'),
     ]);
-  for (const b of buildings.filter((b) => b.kind === 'town' && w.towns[0].mayor === p.id))
-    for (const tax of [0, 0.05, 0.1])
-      if (w.towns[0].tax !== tax)
-        add(
-          'social',
-          `As mayor set town tax to ${tax * 100}%. Consider effects on neighbours and trade.`,
-          visit(b, [operation('town', { building: b.id, operation: 'tax', tax })]),
-        );
   for (const b of buildings.filter(
     (b) =>
       b.owner === p.id &&

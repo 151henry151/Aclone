@@ -43,6 +43,18 @@ export function inBounds(b: MapBounds, p: Point, margin = 0) {
     p.z <= b.z + b.depth + margin
   );
 }
+/** Town borders overlapping a sheet, for drawing as circles. */
+export function townBorders(w: World, b: MapBounds) {
+  return w.towns
+    .filter(
+      (t) =>
+        Math.hypot(
+          t.x - Math.max(b.x, Math.min(t.x, b.x + b.width)),
+          t.z - Math.max(b.z, Math.min(t.z, b.z + b.depth)),
+        ) <= t.radius,
+    )
+    .map(({ id, name, x, z, radius }) => ({ id, name, x, z, radius }));
+}
 export interface MapLabel {
   id: string;
   x: number;

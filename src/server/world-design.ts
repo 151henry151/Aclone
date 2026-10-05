@@ -12,6 +12,7 @@ import {
 import { z } from 'zod';
 import { creatorSchema, defaultCreator, validateCreator } from '../shared/creator.ts';
 import { act, addPlayer, makeBuilding } from '../shared/simulation.ts';
+import { anchorTowns } from '../shared/civics.ts';
 import { buildings as catalog, items, skills } from '../shared/catalog.ts';
 import type { World, Player } from '../shared/types.ts';
 const coordinate = z.number().min(-10000).max(10000);
@@ -39,6 +40,7 @@ const designSchema = z.object({
   settings: z
     .record(z.string(), z.union([z.number().finite(), z.boolean(), z.string()]))
     .default({}),
+  townCharter: z.record(z.string(), z.unknown()).default({}),
   terrain: z
     .array(
       z.object({
@@ -135,6 +137,7 @@ export function exportDesign(w: World, includeMedia = false) {
     tier: w.tier,
     vehicleTuning: w.vehicleTuning ?? {},
     settings: w.settings,
+    townCharter: w.townCharter ?? {},
     terrain: w.terrain,
     landscape: w.landscape,
     zones: w.zones,
@@ -207,22 +210,26 @@ export function applyDesign(w: World, input: unknown) {
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };
   }
   w.script = d.script;
-  configureRules(w, d.settings);
+  anchorTowns(w);
+  configureRules(w, d.settings, d.townCharter);
   w.revision++;
 }
 /** Creation-only validation: use the ordinary action on a disposable world copy
  * so its temporary player and money ledger cannot leak into the new world. */
-export function configureRules(w: World, settings: unknown) {
+export function configureRules(w: World, settings: unknown, charter?: unknown) {
   const validation = structuredClone(w),
     p = addPlayer(validation, w.owner, 'Creator');
   act(validation, p.id, { type: 'settings', patch: settings });
+  if (charter) act(validation, p.id, { type: 'townCharter', patch: charter });
   w.settings = validation.settings;
+  if (charter) w.townCharter = validation.townCharter;
 }
 export function applyPreset(w: World, preset: string) {
   w.creator = defaultCreator();
   Object.assign(w.settings, rulesets[preset]?.settings ?? {});
   if (['combat', 'ctf', 'capture', 'blank'].includes(preset)) {
     w.buildings = w.buildings.filter((b) => b.kind === 'starport');
+    anchorTowns(w);
     w.zones = [];
     w.creator.scenery = false;
     w.creator.roads = false;
