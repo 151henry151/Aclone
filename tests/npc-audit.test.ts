@@ -2,7 +2,15 @@
 import { completePuddlewick } from '../src/server/parish-services.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, addPlayer, act, advance, move, distance } from '../src/shared/simulation.ts';
+import {
+  createWorld,
+  addPlayer,
+  act,
+  advance,
+  move,
+  distance,
+  makeBuilding,
+} from '../src/shared/simulation.ts';
 import { Navigator, serviceRadius } from '../src/server/npc/navigation.ts';
 import { supplyChoices, continueSupply } from '../src/server/npc/survival.ts';
 import { perceivedWorld, inspectionChoices } from '../src/server/npc/perception.ts';
@@ -456,6 +464,162 @@ test('one invalid resident does not starve the other eighteen of their planning 
       store.db.prepare('SELECT count(*) n FROM npc_calls WHERE resident=?').get('resident0')!.n,
       0,
     );
+  } finally {
+    r.close();
+    store.close();
+  }
+});
+
+test('nineteen stocked households survive twelve game days, offline schedules and a controller restart without model calls', async () => {
+  let now = Date.parse('2026-10-04T12:00:00Z'),
+    calls = 0;
+  const store = new Store(':memory:'),
+    universe = new Universe(store),
+    { w } = fixture(),
+    worlds = new Map([[w.id, w]]);
+  const options = Array.from({ length: 19 }, (_, i) => ({
+    config: npcConfigSchema.parse({
+      id: i ? 'resident' + i : 'mabel',
+      name: 'Resident ' + i,
+      presence: i ? 'scheduled' : 'always',
+      activeAlone: true,
+    }),
+    brain: {
+      async decide(): Promise<never> {
+        calls++;
+        throw Error('No model needed');
+      },
+    },
+  }));
+  let r = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  r.close();
+  const residents = options.map((o, i) => {
+    const s = r.memory.load(o.config.id)!;
+    const p = w.players[s.playerId] ?? addPlayer(w, s.playerId, s.name);
+    p.npc = true;
+    // Starter pocket rations are eaten during logout preparation and would hide pantry use.
+    delete p.inventory.bread;
+    delete p.inventory.water;
+    const home = makeBuilding(`house${i}`, 'home', -160 + i * 16, -160);
+    home.owner = p.id;
+    home.stock = { water: 100, bread: 100 };
+    w.buildings.push(home);
+    Object.assign(p, {
+      home: home.id,
+      atHome: true,
+      x: home.x,
+      z: home.z,
+      hunger: 20000,
+      thirst: 20000,
+    });
+    if (i)
+      s.presence = {
+        phase: 'playing',
+        sessions: 1,
+        nextAt: now,
+        startedAt: now,
+        endsAt: now + 600000,
+        nextRegularAt: now + 86400000,
+        preparationUntil: now + 1200000,
+      };
+    r.memory.save(o.config.id, s);
+    return { p, home };
+  });
+  r = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  try {
+    for (let i = 0; i < 720; i++) {
+      advance(w, 10);
+      now += 10000;
+      r.tick(10, now);
+      if (i % 5 === 0) await r.settled();
+      // Public shelves empty halfway through; stocked homes do not depend on them.
+      if (i === 359) {
+        for (const b of w.buildings) if (b.kind !== 'home') b.stock = {};
+        r.close();
+        r = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+      }
+    }
+    for (const { p, home } of residents) {
+      assert.equal(p.deaths, 0, p.name);
+      assert.ok((home.stock.water ?? 0) < 100, p.name + ' used stored water');
+      assert.ok(p.hunger < 30000 && p.thirst < 30000, p.name);
+    }
+    assert.equal(residents[0].p.online, true);
+    assert.ok(residents.slice(1).every(({ p }) => !p.online));
+    assert.equal(calls, 0);
+  } finally {
+    r.close();
+    store.close();
+  }
+});
+
+test('an understocked household logs off at home and returns before starvation', async () => {
+  let now = Date.parse('2026-10-04T12:00:00Z');
+  const store = new Store(':memory:'),
+    universe = new Universe(store),
+    { w } = fixture(),
+    worlds = new Map([[w.id, w]]);
+  const options = [
+    {
+      config: npcConfigSchema.parse({
+        id: 'resident1',
+        name: 'Resident 1',
+        presence: 'scheduled',
+        activeAlone: true,
+      }),
+      brain: {
+        async decide(): Promise<never> {
+          throw Error('No model needed');
+        },
+      },
+    },
+  ];
+  let r = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  r.close();
+  const s = r.memory.load('resident1')!;
+  const p = w.players[s.playerId] ?? addPlayer(w, s.playerId, s.name);
+  p.npc = true;
+  p.cash = 0;
+  p.inventory = {};
+  const home = makeBuilding('house', 'home', -160, -160);
+  home.owner = p.id;
+  home.stock = { water: 1, bread: 1 };
+  w.buildings.push(home);
+  Object.assign(p, {
+    home: home.id,
+    atHome: true,
+    x: home.x,
+    z: home.z,
+    hunger: 20000,
+    thirst: 20000,
+  });
+  s.presence = {
+    phase: 'playing',
+    sessions: 1,
+    nextAt: now,
+    startedAt: now,
+    endsAt: now + 600000,
+    nextRegularAt: now + 86400000,
+    preparationUntil: now + 1200000,
+  };
+  r.memory.save('resident1', s);
+  r = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  let shelteredDeparture = false,
+    returned = false;
+  try {
+    for (let i = 0; i < 500 && !p.deaths; i++) {
+      advance(w, 10);
+      now += 10000;
+      r.tick(10, now);
+      if (i % 5 === 0) await r.settled();
+      const phase = r.memory.load('resident1')?.presence?.phase;
+      if (phase === 'offline' && p.atHome) shelteredDeparture = true;
+      if (shelteredDeparture && p.online) returned = true;
+    }
+    assert.equal(p.deaths, 0);
+    assert.equal(shelteredDeparture, true);
+    assert.equal(returned, true);
+    assert.ok(p.thirst < 50000 && p.hunger < 50000);
   } finally {
     r.close();
     store.close();
