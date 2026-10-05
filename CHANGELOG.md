@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-10-04
+
 ### Added
 
 - Add a per-world town charter (`townCharter`, owner **Towns** editor tab and design import/export) covering town founding (switch, cost, skill, town limit, spacing), border size and growth, construction outside borders (allow, nearest town's rules, or forbid), permitted forms of government, which rules town governments control, maximum tax, tax notice periods, election timing, candidate deposits and campaign payments, voter residency and proposal quorum.
