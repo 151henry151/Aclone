@@ -121,7 +121,17 @@ A rejected import does not add a world to the registry. Use the media bundle opt
 
 ## Practical limits and extension points
 
-Worlds currently share a 500 × 500 metre terrain footprint. Limits per world:
+Each world has a square map whose side is the `mapSize` setting (500–20,000 m,
+editable live in **Settings**). The public Puddlewick is 12,500 m; arenas and
+playgrounds, and worlds saved before map sizes existed, keep the 500 m
+footprint. The central 500 m village terrain is unchanged at any size; beyond it
+the countryside is generated deterministically from the world id: rolling hills,
+woods, inland lakes, a harbour inlet south of the village and an island coast
+that falls into open sea before the map edge. Woodland clearings, outcrops,
+gravel hollows and soil banks are placed on a 400 m lattice with stable ids, so
+reserves and NPC errands survive restarts. Creator objects, heightmap imports
+(33 × 33 across the whole map) and the shoreline survey still work at village
+scale. Limits per world:
 64 models, 32 parts per model, 128 placed objects, 64 behavior rules, 128 zones,
 256 terrain stamps and 500 buildings. Uploads allow 32 assets, 2 MiB each, with
 images no larger than 2048 × 2048. GLB supports embedded geometry/textures,
@@ -179,7 +189,9 @@ The **Production chain check** estimates one staffed batch using input bids, out
 
 ## Landscape editor
 
-In **Landscape**, tap the map to mark points or enter X,Z pairs (−250…250). Draw a curved/straight gravel path or a timber fence/stone wall. Set width and barrier height. New paths appear on parish maps and receive streetlights; generated roads can be disabled separately in Layout. Solid barriers stop ground movement and shots; NPC routes avoid them.
+In **Landscape**, tap the village map to mark points or enter X,Z pairs anywhere within the world's map (±`mapSize`/2; −250…250 on compact worlds). Draw a curved/straight gravel path or a timber fence/stone wall. Set width and barrier height. New paths appear on parish maps and receive streetlights; generated roads can be disabled separately in Layout. Solid barriers stop ground movement and shots; NPC routes avoid them.
+
+**Lanes grow on their own.** When a building (including a construction site) stands more than about 12 m from any lane, the parish lays a 5 m gravel lane toward it from the nearest point of the existing network: one 12 m stretch (two or three tractor lengths) at each game-day boundary, skirting other buildings and water, until the lane reaches the building. Nothing grows while every building is already served, and a world with generated roads disabled has no network to grow from. Grown lanes are saved with the world and appear on maps, in streetlighting and in NPC routes.
 
 Paint circular grass, gravel, soil or sand patches; the first map point sets the brush centre. Scatter a Workshop tree/rock model with a seed, count and scale. Rotation/size vary deterministically; roads, buildings, water and overlaps are avoided. Crowded areas can yield fewer instances. Solid scatter uses the model's bounds; editing terrain/layout may reposition it.
 

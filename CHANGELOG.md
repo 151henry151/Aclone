@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.53.0] - 2026-10-04
+
+### Added
+
+- Add a `mapSize` world setting (500–20,000 m, owner-editable) and set the public Puddlewick to 12,500 m; non-economy templates and saved worlds without the setting use 500 m. Clamp movement, owner commands, landscape features and waterworks sites to the configured map.
+- Generate countryside terrain beyond the unchanged 500 m village: seeded hills, inland lakes, a harbour inlet reaching the southern sea and an island coast sinking into open sea before the map edge, plus a deterministic woodland density field.
+- Add countryside gathering grounds on a 400 m lattice with stable ids (`worldResources`), typed by woodland and height; list the forty nearest in **Resources** and the nearest 32 in NPC observations.
+- Grow 5 m lanes from the road network toward buildings standing more than about 12 m from a lane: one 12 m stretch per game-day boundary, skirting buildings and water, persisted in `world.roads` and included in `townRoads`, maps, streetlights and NPC routing.
+- Stream 128 m terrain tiles with per-tile lane/surface masks, a camera-following sea plane and 256 m chunks of woodland, outcrops and gathering-ground scenery around the player on large maps; compact worlds keep the single village plane.
+- Sample the real coastline on the parish map and HUD minimap, follow the player on the minimap outside the village, open a 640 m local sheet from **Find me** in the countryside, and accept waypoints and landscape coordinates anywhere on the map.
+- Window the NPC navigation grid around each journey on large maps (up to about 1.6 km per leg) instead of the fixed village square.
+
 ## [0.52.0] - 2026-10-04
 
 ### Changed

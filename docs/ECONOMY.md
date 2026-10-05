@@ -9,8 +9,10 @@ topsoil can be gathered by hand. A basic load is three units after 20 seconds.
 Foresters (wood) and excavators (minerals/soil) gather six in 12 seconds. Tools are reusable for gathering. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
 
 Each woodland ground holds 18 logs and regrows three per 30 real minutes. Each
-mineral/soil ground holds 30 and replenishes three per ten minutes. There are six
-grounds of each kind. Reserves are shared, saved and recover offline. Buildings
+mineral/soil ground holds 30 and replenishes three per ten minutes. The village
+has six grounds of each kind; large maps add countryside patches on a 400 m
+lattice (timber in woodland, stone above 16 m, gravel and topsoil lower down),
+each with the same capacity and regrowth. Reserves are shared, saved and recover offline. Buildings
 within 12m obstruct extraction. Woodland clearings, chipped outcrops, gravel hollows and soil banks mark sites; scenic trees are not individually destructible.
 
 Sell through Main to a buyer with a posted price, capital and space. Owners must use **Stockroom**
