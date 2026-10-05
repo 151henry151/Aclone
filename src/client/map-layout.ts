@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types';
-import { resourceNodes } from '../shared/resources';
+import { worldResources } from '../shared/resources';
 import { townRoads, type Point } from '../shared/town';
+import { mapHalf, legacyHalf } from '../shared/terrain';
 
 export interface MapBounds {
   x: number;
@@ -9,19 +10,38 @@ export interface MapBounds {
   width: number;
   depth: number;
 }
-/** Fit actual roads and properties, including custom lots and legacy towns. */
+/** On large maps the parish sheet covers the village and its surroundings; anything
+ * further out belongs on a local sheet (see localBounds). Compact maps fit everything. */
+export const parishReach = 600;
+export const localReach = 320;
 export function mapBounds(w: World, you: Point): MapBounds {
+  const wide = mapHalf(w) > legacyHalf,
+    near = (p: Point) => !wide || Math.max(Math.abs(p.x), Math.abs(p.z)) <= parishReach;
   const points = [
-    ...w.buildings,
-    ...resourceNodes,
-    ...townRoads(w).flatMap((r) => [r.a, r.b]),
-    you,
+    ...w.buildings.filter(near),
+    ...worldResources(w).filter((n) => Math.max(Math.abs(n.x), Math.abs(n.z)) <= 250),
+    ...townRoads(w)
+      .flatMap((r) => [r.a, r.b])
+      .filter(near),
+    ...(near(you) ? [you] : []),
   ];
   const xs = points.map((p) => p.x),
     zs = points.map((p) => p.z);
   const x = Math.min(-155, ...xs) - 40,
     z = Math.min(-120, ...zs) - 40;
   return { x, z, width: Math.max(155, ...xs) + 40 - x, depth: Math.max(170, ...zs) + 35 - z };
+}
+/** A sheet centred on a pilot out in the countryside. */
+export function localBounds(you: Point, reach = localReach): MapBounds {
+  return { x: you.x - reach, z: you.z - reach, width: reach * 2, depth: reach * 2 };
+}
+export function inBounds(b: MapBounds, p: Point, margin = 0) {
+  return (
+    p.x >= b.x - margin &&
+    p.x <= b.x + b.width + margin &&
+    p.z >= b.z - margin &&
+    p.z <= b.z + b.depth + margin
+  );
 }
 export interface MapLabel {
   id: string;

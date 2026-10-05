@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapBounds, placeMapLabels } from '../src/client/map-layout.ts';
+import { mapBounds, localBounds, placeMapLabels } from '../src/client/map-layout.ts';
 import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import { resourceNodes } from '../src/shared/resources.ts';
 import { legacyTown, townRoads } from '../src/shared/town.ts';
@@ -9,6 +9,8 @@ import { legacyTown, townRoads } from '../src/shared/town.ts';
 test('map bounds contain roads, gathering grounds, custom properties and the pilot in both layouts', () => {
   for (const layout of [1, 2] as const) {
     const w = createWorld('map-bounds', 'Map', 'owner');
+    // Compact worlds fit everything on one sheet, wherever the pilot has got to.
+    w.settings.mapSize = 500;
     w.townLayout = layout;
     if (layout === 1)
       w.buildings = legacyTown.map((b, i) => makeBuilding(String(i), b.kind, b.x, b.z));
@@ -46,4 +48,22 @@ test('crowded map labels stay within the sheet and avoid each other deterministi
         `labels ${a.id} and ${b.id} overlap`,
       );
   }
+});
+test('on a large map the parish sheet stays readable and a local sheet follows a distant pilot', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.buildings.push(makeBuilding('farmstead', 'home', 3000, -2200));
+  const home = mapBounds(w, { x: 40, z: 60 });
+  assert.ok(home.width < 900 && home.depth < 900, `${home.width} x ${home.depth}`);
+  for (const p of [...legacyTown, ...resourceNodes, { x: 40, z: 60 }]) {
+    assert.ok(p.x >= home.x && p.x <= home.x + home.width, `${p.x} inside`);
+    assert.ok(p.z >= home.z && p.z <= home.z + home.depth, `${p.z} inside`);
+  }
+  // A pilot far out in the countryside does not stretch the parish sheet to 6 km.
+  const away = mapBounds(w, { x: 3000, z: -2200 });
+  assert.deepEqual(away, mapBounds(w, { x: -3000, z: 2200 }));
+  assert.ok(away.width < 900);
+  const local = localBounds({ x: 3000, z: -2200 });
+  assert.ok(local.x < 3000 - 250 && local.x + local.width > 3000 + 250);
+  assert.ok(local.z < -2200 - 250 && local.z + local.depth > -2200 + 250);
+  assert.ok(local.width <= 800 && local.depth <= 800);
 });

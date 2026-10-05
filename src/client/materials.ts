@@ -93,17 +93,58 @@ export function surface(
   return mesh;
 }
 
+/** The square of ground a baked mask covers: the whole 540 m village plane on compact
+ * maps, or one streamed tile on a large one. `pixels` keeps roughly two texels a metre. */
+export interface GroundRegion {
+  x: number;
+  z: number;
+  size: number;
+  pixels: number;
+}
+export const villageRegion: GroundRegion = { x: -270, z: -270, size: 540, pixels: 1024 };
+const blank = new Map<string, T.Texture>();
+function blankTexture(rgba: [number, number, number, number]) {
+  const key = rgba.join(',');
+  let map = blank.get(key);
+  if (!map) {
+    map = new T.DataTexture(new Uint8Array(rgba), 1, 1);
+    map.needsUpdate = true;
+    map.userData.shared = true;
+    blank.set(key, map);
+  }
+  return map;
+}
+function canvasTexture(canvas: HTMLCanvasElement) {
+  const map = new T.CanvasTexture(canvas);
+  map.generateMipmaps = false;
+  map.minFilter = map.magFilter = T.LinearFilter;
+  return map;
+}
 // Bake road coverage once per world rebuild. Shader cost stays constant as lanes grow.
-function roadTexture(w: World) {
+function roadTexture(w: World, region: GroundRegion) {
+  const roads = townRoads(w).filter(({ a, b, width }) => {
+    const pad = width / 2 + 2;
+    return (
+      Math.max(a.x, b.x) + pad >= region.x &&
+      Math.min(a.x, b.x) - pad <= region.x + region.size &&
+      Math.max(a.z, b.z) + pad >= region.z &&
+      Math.min(a.z, b.z) - pad <= region.z + region.size
+    );
+  });
+  const centre =
+    w.creator?.roads !== false &&
+    Math.abs(region.x + region.size / 2) < region.size &&
+    Math.abs(region.z + region.size / 2) < region.size;
+  // Open countryside has no lanes; share one black texel rather than a canvas per tile.
+  if (!roads.length && !centre) return blankTexture([0, 0, 0, 255]);
   const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 1024;
+  canvas.width = canvas.height = region.pixels;
   const ctx = canvas.getContext('2d')!,
-    scale = 1024 / 540;
+    scale = region.pixels / region.size;
   ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.fillRect(0, 0, region.pixels, region.pixels);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  const roads = townRoads(w);
   for (const [extra, color] of [
     [2, '#555'],
     [0, '#fff'],
@@ -112,30 +153,36 @@ function roadTexture(w: World) {
     for (const { a, b, width } of roads) {
       ctx.lineWidth = (width + extra) * scale;
       ctx.beginPath();
-      ctx.moveTo((a.x + 270) * scale, (a.z + 270) * scale);
-      ctx.lineTo((b.x + 270) * scale, (b.z + 270) * scale);
+      ctx.moveTo((a.x - region.x) * scale, (a.z - region.z) * scale);
+      ctx.lineTo((b.x - region.x) * scale, (b.z - region.z) * scale);
       ctx.stroke();
     }
   }
-  if (w.creator?.roads !== false) {
+  if (centre) {
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(512, 512, 13 * scale, 0, Math.PI * 2);
+    ctx.arc(-region.x * scale, -region.z * scale, 13 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
-  const map = new T.CanvasTexture(canvas);
-  map.generateMipmaps = false;
-  map.minFilter = map.magFilter = T.LinearFilter;
-  return map;
+  return canvasTexture(canvas);
 }
-function surfaceTexture(w: World) {
+function surfaceTexture(w: World, region: GroundRegion) {
+  const surfaces = (w.landscape?.surfaces ?? []).filter(
+    (s) =>
+      s.x + s.radius >= region.x &&
+      s.x - s.radius <= region.x + region.size &&
+      s.z + s.radius >= region.z &&
+      s.z - s.radius <= region.z + region.size,
+  );
+  if (!surfaces.length) return blankTexture([0, 0, 0, 0]);
   const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 1024;
-  const ctx = canvas.getContext('2d')!;
-  for (const s of w.landscape?.surfaces ?? []) {
-    const x = ((s.x + 270) * 1024) / 540,
-      y = ((s.z + 270) * 1024) / 540,
-      r = (s.radius * 1024) / 540;
+  canvas.width = canvas.height = region.pixels;
+  const ctx = canvas.getContext('2d')!,
+    scale = region.pixels / region.size;
+  for (const s of surfaces) {
+    const x = (s.x - region.x) * scale,
+      y = (s.z - region.z) * scale,
+      r = s.radius * scale;
     const color = { grass: '0,0,0', gravel: '255,0,0', soil: '0,255,0', sand: '0,0,255' }[
       s.material
     ];
@@ -147,19 +194,16 @@ function surfaceTexture(w: World) {
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
-  const map = new T.CanvasTexture(canvas);
-  map.generateMipmaps = false;
-  map.minFilter = map.magFilter = T.LinearFilter;
-  return map;
+  return canvasTexture(canvas);
 }
 export const snowCover = { value: 0 };
-export function groundMaterial(w: World) {
+export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
   const custom = (kind: 'grass' | 'gravel' | 'soil' | 'sand', fallback: string) => {
     const a = w.assets.find((a) => a.id === w.creator?.terrainTextures?.[kind]);
     return a ? texture(a.id, a.url) : texture(fallback);
   };
-  const mask = roadTexture(w),
-    surface = surfaceTexture(w),
+  const mask = roadTexture(w, region),
+    surface = surfaceTexture(w, region),
     meadow = custom('grass', 'meadow'),
     gravel = custom('gravel', 'gravel'),
     soil = custom('soil', 'gravel'),
@@ -168,8 +212,8 @@ export function groundMaterial(w: World) {
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
   mat.userData.warmTextures = [mask, surface, meadow, gravel, soil, sand, noise];
   mat.addEventListener('dispose', () => {
-    mask.dispose();
-    surface.dispose();
+    if (!mask.userData.shared) mask.dispose();
+    if (!surface.userData.shared) surface.dispose();
   });
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.soilMap = { value: soil };
@@ -191,14 +235,18 @@ export function groundMaterial(w: World) {
     shader.uniforms.shore = { value: w.settings.seaLevel };
     shader.uniforms.roadMask = { value: mask };
     shader.uniforms.surfaceMask = { value: surface };
+    shader.uniforms.maskOrigin = { value: new T.Vector2(region.x, region.z) };
+    shader.uniforms.maskSize = { value: region.size };
+    // Masks are addressed in world metres so streamed tiles sample their own bake.
     shader.vertexShader = 'varying vec3 groundPosition;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
-      '#include <begin_vertex>\ngroundPosition=position;',
+      '#include <begin_vertex>\ngroundPosition=(modelMatrix*vec4(position,1.)).xyz;',
     );
     shader.fragmentShader =
       `
       uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform vec2 maskOrigin; uniform float maskSize;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
@@ -207,15 +255,16 @@ export function groundMaterial(w: World) {
       '#include <map_fragment>',
       `
       vec2 p=groundPosition.xz;
+      vec2 maskUv=vec2((p.x-maskOrigin.x)/maskSize,1.-(p.y-maskOrigin.y)/maskSize);
       // Gravel wears away into the turf; noise breaks up the verge at two scales.
       float verge=noise(p*1.9)*.7+noise(p*.32)*1.4;
-      float road=smoothstep(.16,.84,texture2D(roadMask,vec2(.5+p.x/540.,.5-p.y/540.)).r+verge*.06);
+      float road=smoothstep(.16,.84,texture2D(roadMask,maskUv).r+verge*.06);
 
       float beach=1.-smoothstep(shore+.3,shore+1.7,groundPosition.y);
       vec3 turf=texture2D(meadow,p/5.).rgb;
       turf*=mix(vec3(.68,.74,.52),vec3(1.06,1.03,.88),noise(p*.045));
       vec3 grit=texture2D(gravel,p/6.).rgb;
-      vec4 brush=texture2D(surfaceMask,vec2(.5+p.x/540.,.5-p.y/540.));
+      vec4 brush=texture2D(surfaceMask,maskUv);
       vec3 painted=mix(turf,grit,brush.r);
       painted=mix(painted,texture2D(soilMap,p/6.).rgb*soilTint,brush.g);
       painted=mix(painted,texture2D(sandMap,p/6.).rgb*sandTint,brush.b);
@@ -224,7 +273,7 @@ export function groundMaterial(w: World) {
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v4';
+  mat.customProgramCacheKey = () => 'countryside-ground-v5';
   return mat;
 }
 

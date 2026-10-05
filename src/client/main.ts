@@ -47,7 +47,7 @@ import { playerAidPanel, refreshPlayerAid } from './player-aid';
 import { MAX_CHAT_LENGTH } from '../shared/messages';
 import { townRoads } from '../shared/town';
 import { fishingDock, nearFishingDock } from '../shared/dock';
-import { resourceNodes, gatheringStatus } from '../shared/resources';
+import { worldResources, gatheringStatus } from '../shared/resources';
 import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, routeQuote, stationPrice, spaceGoods } from '../shared/galaxy';
@@ -74,6 +74,7 @@ import {
   weapons,
 } from '../shared/catalog';
 import { money, carry, distance, terrainHeight, productionInterval } from '../shared/simulation';
+import { mapHalf, legacyHalf } from '../shared/terrain';
 import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
 import type { Account } from '../server/universe';
@@ -515,7 +516,7 @@ function buildingOwner(b: Building) {
 }
 function updateHud() {
   if (!world || !me) return;
-  waypoints.selectWorld(world.id);
+  waypoints.selectWorld(world.id, mapHalf(world));
   const goal = waypoints.point;
   $('waypoint-hud').hidden = !goal || !mapAvailable(world, me);
   if (goal) {
@@ -656,7 +657,7 @@ function updateHud() {
     const remaining = Math.max(0, Math.ceil(me.task.end - world.time));
     const label =
       me.task.kind === 'gather'
-        ? `Gathering ${me.task.amount ?? ''} ${items[resourceNodes.find((n) => n.id === me!.task!.resource)?.item ?? '']?.name ?? 'resources'}`
+        ? `Gathering ${me.task.amount ?? ''} ${items[worldResources(world).find((n) => n.id === me!.task!.resource)?.item ?? '']?.name ?? 'resources'}`
         : ((
             {
               labour: 'Working a labour shift',
@@ -766,8 +767,8 @@ function updateHud() {
     $('fishing-status').textContent = fishingStatus;
   const gathering = me.task?.kind === 'gather' ? me.task : undefined;
   const resource = gathering
-    ? resourceNodes.find((n) => n.id === gathering.resource)
-    : resourceNodes
+    ? worldResources(world).find((n) => n.id === gathering.resource)
+    : worldResources(world)
         .filter((n) => distance(me!, n) <= 10)
         .sort((a, b) => distance(me!, a) - distance(me!, b))[0];
   $('resource-control').hidden =
@@ -832,8 +833,24 @@ function drawMap() {
     return;
   }
   const scale = world.townLayout === 2 ? 0.31 : 0.6;
-  const sx = (x: number) => 115 + x * scale,
-    sz = (z: number) => (world!.townLayout === 2 ? 85 : 65) + z * scale;
+  // Out in the countryside of a large map the minimap follows the tractor instead.
+  const wide = mapHalf(world) > legacyHalf,
+    roaming = wide && Math.max(Math.abs(me.x), Math.abs(me.z)) > 200,
+    cx = roaming ? me.x : 0,
+    cz = roaming ? me.z : 0,
+    oy = roaming || world.townLayout === 2 ? 85 : 65;
+  const sx = (x: number) => 115 + (x - cx) * scale,
+    sz = (z: number) => oy + (z - cz) * scale;
+  if (wide) {
+    // Sample the real coastline rather than the compact map's straight shore.
+    ctx.fillStyle = '#758e86';
+    for (let py = 0; py < 170; py += 10)
+      for (let px = 0; px < 230; px += 10) {
+        const x = cx + (px + 5 - 115) / scale,
+          z = cz + (py + 5 - oy) / scale;
+        if (terrainHeight(world, x, z) < world.settings.seaLevel) ctx.fillRect(px, py, 10, 10);
+      }
+  }
   ctx.strokeStyle = '#718160';
   ctx.lineWidth = 1;
   for (let x = 0; x < 230; x += 23) {
@@ -848,8 +865,10 @@ function drawMap() {
     ctx.lineTo(230, z);
     ctx.stroke();
   }
-  ctx.fillStyle = '#758e86';
-  ctx.fillRect(0, sz(150), 230, 170 - sz(150));
+  if (!wide) {
+    ctx.fillStyle = '#758e86';
+    ctx.fillRect(0, sz(150), 230, 170 - sz(150));
+  }
   ctx.strokeStyle = '#b6ac84';
   ctx.lineCap = 'round';
   for (const { a, b, width } of townRoads(world)) {
@@ -861,6 +880,11 @@ function drawMap() {
   }
   ctx.fillStyle = '#ddd0a5';
   for (const b of world.buildings) ctx.fillRect(sx(b.x) - 2, sz(b.z) - 2, 4, 4);
+  ctx.fillStyle = '#a9cf86';
+  if (wide)
+    for (const n of worldResources(world))
+      if (Math.abs(n.x - cx) < 400 && Math.abs(n.z - cz) < 300)
+        ctx.fillRect(sx(n.x) - 1.5, sz(n.z) - 1.5, 3, 3);
   ctx.strokeStyle = '#c8d29e';
   ctx.strokeRect(sx(60), sz(20), 60 * scale, 50 * scale);
   for (const p of Object.values(world.players)) {
@@ -1273,10 +1297,11 @@ function renderPanel() {
   if (panel === 'resources') {
     modal(
       'Gathering grounds',
-      `<p>Drive within 10 metres of a marked ground. Carry tools for timber and minerals; topsoil can be gathered by hand. School qualifications double a load and shorten the task. Reserves replenish slowly, including offline.</p><div class="directory">${[
-        ...resourceNodes,
+      `<p>Drive within 10 metres of a marked ground. Carry tools for timber and minerals; topsoil can be gathered by hand. School qualifications double a load and shorten the task. Reserves replenish slowly, including offline. The nearest forty grounds are listed; the parish map shows the rest.</p><div class="directory">${[
+        ...worldResources(world!),
       ]
         .sort((a, b) => distance(me!, a) - distance(me!, b))
+        .slice(0, 40)
         .map((n) => {
           const status = gatheringStatus(world!, me!, n);
           return `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${status.available}/${n.capacity} available</p><p>${esc(status.reason ?? `${status.amount} per load · ${status.seconds} seconds`)}</p>${button('Gather', 'gather', `data-id="${n.id}" ${status.reason ? 'disabled' : ''}`)}</article>`;

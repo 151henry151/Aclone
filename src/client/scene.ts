@@ -19,6 +19,9 @@ import * as T from 'three';
 import { freezeScenery } from './static-scene';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
+import { GroundTiles, placeSea, seaReach } from './ground';
+import { CountrysideChunks } from './countryside';
+import { mapHalf, legacyHalf } from '../shared/terrain';
 import { countrySky } from './sky';
 import { celestialAt } from '../shared/astronomy';
 import { twilightAt, nightIllumination } from './sky-weather';
@@ -196,6 +199,8 @@ export class GameScene {
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
   private waterBase?: Float32Array;
+  private ground = new GroundTiles();
+  private woods = new CountrysideChunks();
   private low = localStorage.getItem('aclone.quality') === 'low';
   private software = false;
   private labelsHidden = false;
@@ -254,6 +259,8 @@ export class GameScene {
     this.precipitation.mesh.visible = false;
     this.scene.add(
       this.land,
+      this.ground.group,
+      this.woods.group,
       this.actors,
       this.space,
       this.sun,
@@ -414,12 +421,15 @@ export class GameScene {
     this.sky.visible = true;
     this.space.visible = false;
     this.land.visible = true;
+    this.ground.group.visible = true;
+    this.woods.group.visible = true;
     this.actors.visible = true;
     const rev =
       world.id +
       ':' +
       JSON.stringify(world.terrain) +
       JSON.stringify(world.landscape ?? {}) +
+      JSON.stringify(world.roads ?? []) +
       ':' +
       world.buildings
         .map(
@@ -599,6 +609,8 @@ export class GameScene {
     this.me = undefined;
     this.space.visible = true;
     this.land.visible = false;
+    this.ground.group.visible = false;
+    this.woods.group.visible = false;
     this.actors.visible = false;
     this.scene.fog = null;
     this.scene.background = new T.Color('#101d21');
@@ -614,16 +626,26 @@ export class GameScene {
     this.flights = [];
     this.labelsHidden = false;
     this.renderer.shadowMap.needsUpdate = true;
-    const geometry = new T.PlaneGeometry(540, 540, 128, 128);
-    geometry.rotateX(-Math.PI / 2);
-    const pos = geometry.attributes.position;
-    for (let i = 0; i < pos.count; i++) pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
-    geometry.computeVertexNormals();
-    this.terrain = new T.Mesh(geometry, groundMaterial(w));
-    this.terrain.receiveShadow = true;
-    this.land.add(this.terrain);
+    // Compact parishes keep the single hand-sized plane; larger maps stream tiles.
+    const streamed = mapHalf(w) > legacyHalf + 50;
+    this.ground.clear();
+    if (streamed) {
+      this.ground.reset(w);
+      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 64);
+      this.terrain = undefined;
+    } else {
+      const geometry = new T.PlaneGeometry(540, 540, 128, 128);
+      geometry.rotateX(-Math.PI / 2);
+      const pos = geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
+      geometry.computeVertexNormals();
+      this.terrain = new T.Mesh(geometry, groundMaterial(w));
+      this.terrain.receiveShadow = true;
+      this.land.add(this.terrain);
+    }
+    const reach = streamed ? seaReach : 540;
     const sea = new T.Mesh(
-      new T.PlaneGeometry(540, 540, 48, 48),
+      new T.PlaneGeometry(reach, reach, 48, 48),
       new T.MeshStandardMaterial({
         color: '#439ea7',
         roughness: 0.22,
@@ -634,6 +656,7 @@ export class GameScene {
     );
     sea.rotation.x = -Math.PI / 2;
     sea.position.y = w.settings.seaLevel;
+    if (streamed) placeSea(sea, this.me?.x ?? 0, this.me?.z ?? 0);
     this.water = sea;
     this.waterBase = new Float32Array(sea.geometry.attributes.position.array);
     this.land.add(sea);
@@ -831,6 +854,11 @@ export class GameScene {
     }
     this.townLighting.reset(this.land);
     if (w.creator?.scenery !== false) countryside(this.land, w, this.low);
+    this.woods.clear();
+    if (streamed && w.creator?.scenery !== false) {
+      this.woods.reset(w, this.low);
+      this.woods.update(this.me?.x ?? 0, this.me?.z ?? 0, 16);
+    }
     const seasonal = new Set<T.Material>();
     this.land.traverse((o) => {
       if (o instanceof T.Mesh && o !== this.terrain && o !== this.water)
@@ -1171,6 +1199,12 @@ export class GameScene {
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =
           1 - (w.climate?.wetness ?? 0) * 0.45;
+      if (this.ground.active) {
+        this.ground.setRoughness(1 - (w.climate?.wetness ?? 0) * 0.45);
+        this.ground.update(this.target.x, this.target.z);
+        if (this.water) placeSea(this.water, this.target.x, this.target.z);
+      }
+      if (this.woods.active) this.woods.update(this.target.x, this.target.z);
       // Spend the limited light budget where the player is looking, not behind
       // their tractor at the chase camera (especially with four lights on low).
       this.townLighting.update(w, this.target);

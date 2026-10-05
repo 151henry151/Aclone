@@ -254,7 +254,11 @@ export function evergreenGeometry(variant: number, low: boolean) {
 }
 
 /** Six draws for the entire woodland, rather than one mesh per branch or tree. */
-export function evergreens(root: T.Group, sites: EvergreenSite[], low: boolean) {
+export interface EvergreenMaterials {
+  needles: T.MeshLambertMaterial;
+  wood: T.MeshStandardMaterial;
+}
+export function evergreenMaterials(): EvergreenMaterials {
   const needles = new T.MeshLambertMaterial({
     map: needleTexture(),
     color: '#f0f3e8',
@@ -275,11 +279,33 @@ export function evergreens(root: T.Group, sites: EvergreenSite[], low: boolean) 
     );
   };
   const wood = new T.MeshStandardMaterial({ map: barkTexture(), roughness: 1 });
+  return { needles, wood };
+}
+const sharedGeometry = new Map<string, ReturnType<typeof evergreenGeometry>>();
+/** Streamed woodland reuses one geometry per variant; the village keeps its own copies. */
+export function sharedEvergreenGeometry(variant: number, low: boolean) {
+  const key = `${variant}:${low}`;
+  let geometry = sharedGeometry.get(key);
+  if (!geometry) {
+    geometry = evergreenGeometry(variant, low);
+    for (const g of Object.values(geometry)) g.userData.shared = true;
+    sharedGeometry.set(key, geometry);
+  }
+  return geometry;
+}
+export function evergreens(
+  root: T.Group,
+  sites: EvergreenSite[],
+  low: boolean,
+  materials: EvergreenMaterials = evergreenMaterials(),
+  geometryFor: typeof evergreenGeometry = evergreenGeometry,
+) {
+  const { needles, wood } = materials;
   const matrix = new T.Object3D();
   for (let variant = 0; variant < 3; variant++) {
     const trees = sites.filter((site) => site.variant === variant);
     if (!trees.length) continue;
-    const geometry = evergreenGeometry(variant, low);
+    const geometry = geometryFor(variant, low);
     for (const kind of ['wood', 'needles'] as const) {
       const mesh = new T.InstancedMesh(
         geometry[kind],

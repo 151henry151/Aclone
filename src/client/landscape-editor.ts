@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { landscapeSchema, type Landscape } from '../shared/landscape';
-import { terrainHeight } from '../shared/terrain';
+import { terrainHeight, mapHalf } from '../shared/terrain';
 import { townRoads, type Point } from '../shared/town';
 import type { World, Player, Action } from '../shared/types';
 const esc = (s: unknown) =>
@@ -19,13 +19,14 @@ export function landscapeEditor(w: World, p: Player) {
     points = [];
     draftMap = undefined;
   }
-  const l = w.landscape ?? landscapeSchema.parse({});
-  return `<p>Changes apply live. Click or tap the map to mark a path or fence; its first point also centres brushes. North is up. Map points can also be entered as X,Z pairs below.</p>
+  const l = w.landscape ?? landscapeSchema.parse({}),
+    half = mapHalf(w);
+  return `<p>Changes apply live. Click or tap the village map to mark a path or fence; its first point also centres brushes. North is up. Map points can also be entered as X,Z pairs below${half > 250 ? `, anywhere within ±${half} m of the parish centre` : ''}.</p>
   <canvas id="landscape-map" width="500" height="500" style="width:100%;max-width:500px;aspect-ratio:1;touch-action:none" aria-label="Landscape layout preview"></canvas>
   <label>Map points<textarea id="landscape-points" rows="3" placeholder="-50,-50; 0,-30; 40,-50">${points.map((p) => `${p.x},${p.z}`).join('; ')}</textarea></label><button type="button" id="landscape-clear">Clear points</button>
   <h3>Paths and barriers</h3><form id="landscape-line-form"><label>Feature<select name="kind"><option value="path">Curved gravel path</option><option value="straight">Straight gravel path</option><option value="fence">Timber fence</option><option value="wall">Stone wall</option></select></label><div class="settings-grid">${field('Width in metres', 'width', 3, 'min="0.2" max="20" step="0.1"')}${field('Barrier height', 'height', 1.5, 'min="0.5" max="8" step="0.1"')}</div><button>Add path or barrier</button></form>
-  <h3>Surface brush</h3><form id="landscape-surface-form"><label>Surface<select name="material"><option>grass</option><option>gravel</option><option>soil</option><option>sand</option></select></label><div class="settings-grid">${field('Centre X', 'x', Math.round(p.x), 'min="-250" max="250"')}${field('Centre Z', 'z', Math.round(p.z), 'min="-250" max="250"')}${field('Radius', 'radius', 15, 'min="1" max="100"')}</div><button>Paint surface</button></form>
-  <h3>Scatter Workshop models</h3><p>Repeat a tree or rock model with varied rotations and sizes. Avoids roads, buildings, water and overlaps; crowded brushes may place fewer objects. Optional solids block vehicles and shots.</p><form id="landscape-scatter-form"><label>Model<select name="model">${(w.creator?.models ?? []).map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('')}</select></label><div class="settings-grid">${field('Centre X', 'x', Math.round(p.x), 'min="-250" max="250"')}${field('Centre Z', 'z', Math.round(p.z), 'min="-250" max="250"')}${field('Radius', 'radius', 25, 'min="2" max="100"')}${field('Count', 'count', 12, 'min="1" max="64"')}${field('Seed', 'seed', 1, 'min="0" max="1000000000"')}${field('Scale', 'scale', 1, 'min="0.2" max="3" step="0.1"')}</div><label><input type="checkbox" name="solid">Solid obstacles</label><button ${w.creator?.models.length ? '' : 'disabled'}>Scatter models</button></form>
+  <h3>Surface brush</h3><form id="landscape-surface-form"><label>Surface<select name="material"><option>grass</option><option>gravel</option><option>soil</option><option>sand</option></select></label><div class="settings-grid">${field('Centre X', 'x', Math.round(p.x), `min="${-half}" max="${half}"`)}${field('Centre Z', 'z', Math.round(p.z), `min="${-half}" max="${half}"`)}${field('Radius', 'radius', 15, 'min="1" max="100"')}</div><button>Paint surface</button></form>
+  <h3>Scatter Workshop models</h3><p>Repeat a tree or rock model with varied rotations and sizes. Avoids roads, buildings, water and overlaps; crowded brushes may place fewer objects. Optional solids block vehicles and shots.</p><form id="landscape-scatter-form"><label>Model<select name="model">${(w.creator?.models ?? []).map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('')}</select></label><div class="settings-grid">${field('Centre X', 'x', Math.round(p.x), `min="${-half}" max="${half}"`)}${field('Centre Z', 'z', Math.round(p.z), `min="${-half}" max="${half}"`)}${field('Radius', 'radius', 25, 'min="2" max="100"')}${field('Count', 'count', 12, 'min="1" max="64"')}${field('Seed', 'seed', 1, 'min="0" max="1000000000"')}${field('Scale', 'scale', 1, 'min="0.2" max="3" step="0.1"')}</div><label><input type="checkbox" name="solid">Solid obstacles</label><button ${w.creator?.models.length ? '' : 'disabled'}>Scatter models</button></form>
   <h3>Heightmap import</h3><p>PNG/JPEG brightness becomes absolute ground height, sampled to 33 × 33 across the world. Black maps to the low value; white to the high value. Blue in the preview is submerged. Preview first; applying replaces the base terrain, retaining existing height brushes.</p><form id="landscape-heightmap-form"><label>Heightmap image<input type="file" name="file" accept="image/png,image/jpeg" required></label><div class="settings-grid">${field('Black height', 'low', -10, 'min="-40" max="40"')}${field('White height', 'high', 25, 'min="-40" max="40"')}</div><button>Preview heightmap</button><button type="button" id="landscape-apply-map" ${draftMap ? '' : 'disabled'}>Apply previewed heightmap</button><p id="landscape-feedback" role="status"></p></form>
   <h3>Raise or lower ground</h3><form data-action="terrain"><div class="settings-grid">${field('X', 'x', Math.round(p.x))}${field('Z', 'z', Math.round(p.z))}${field('Brush radius', 'radius', 20, 'min="1" max="100"')}${field('Height change', 'height', 5, 'min="-30" max="30"')}</div><button>Apply terrain brush</button></form>
   <h3>Saved landscape edits</h3><button type="button" id="landscape-undo" ${w.landscapeUndo ? '' : 'disabled'}>Undo last landscape edit</button><p>Undo retains the last four path, surface, scatter or heightmap changes. Remove individual height brushes in Layout.</p>${(['paths', 'surfaces', 'barriers', 'scatter'] as const).flatMap((key) => l[key].map((v) => `<p>${key}: ${esc(v.id)} <button type="button" data-landscape-remove="${key}" data-landscape-id="${esc(v.id)}">Remove</button></p>`)).join('')}${l.heightmap ? '<button type="button" data-landscape-remove="heightmap">Restore procedural terrain</button>' : ''}`;
@@ -129,11 +130,11 @@ export function landscapeControls(w: World, send: (a: Action) => void) {
         (p) =>
           !Number.isFinite(p.x) ||
           !Number.isFinite(p.z) ||
-          Math.abs(p.x) > 250 ||
-          Math.abs(p.z) > 250,
+          Math.abs(p.x) > mapHalf(w) ||
+          Math.abs(p.z) > mapHalf(w),
       )
     ) {
-      feedback('Use up to 16 X,Z pairs within −250…250.');
+      feedback(`Use up to 16 X,Z pairs within −${mapHalf(w)}…${mapHalf(w)}.`);
       return;
     }
     points = parsed;

@@ -2,7 +2,7 @@ import { worldItems, worldSkills } from '../shared/world-catalogue';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import { items, skills, buildings } from '../shared/catalog';
-import { resourceNodes } from '../shared/resources';
+import { worldResources } from '../shared/resources';
 import { objectives, currentProgress, type Quest } from '../shared/quests';
 const esc = (s: unknown) =>
   String(s ?? '').replace(
@@ -23,7 +23,7 @@ function targets(w: World): [string, string][] {
     ...w.buildings.map((b) => [b.id, 'Building: ' + b.name] as [string, string]),
     ...(w.creator?.objects ?? []).map((o) => [o.id, 'Object: ' + o.name] as [string, string]),
     ...(w.creator?.books ?? []).map((b) => [b.id, 'Read: ' + b.title] as [string, string]),
-    ...resourceNodes.map(
+    ...worldResources(w).map(
       (n) => [n.id, 'Gathering ground: ' + n.name + ' (' + n.id + ')'] as [string, string],
     ),
     ...worldSkills(w).map((s) => [s, 'Qualification: ' + s] as [string, string]),
@@ -36,7 +36,7 @@ function targetLabel(w: World, target: string) {
   return (
     w.buildings.find((b) => b.id === target)?.name ??
     w.creator?.objects.find((o) => o.id === target)?.name ??
-    resourceNodes.find((n) => n.id === target)?.name ??
+    worldResources(w).find((n) => n.id === target)?.name ??
     buildings[target]?.name ??
     target
   );

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import { townRoads } from '../shared/town';
-import { resourceNodes } from '../shared/resources';
+import { worldResources } from '../shared/resources';
 import { checkpoints } from '../shared/catalog';
-import { mapBounds, placeMapLabels, type MapBounds } from './map-layout';
+import { mapBounds, localBounds, inBounds, placeMapLabels, type MapBounds } from './map-layout';
+import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
 const ns = 'http://www.w3.org/2000/svg';
@@ -22,6 +23,8 @@ export class ParishMap {
   private world: World;
   private me: Player;
   private bounds: MapBounds;
+  /** A sheet centred on the pilot, for the countryside beyond the parish map. */
+  private local = false;
   private signature = '';
   private zoom = 1;
   private choosing = false;
@@ -41,7 +44,7 @@ export class ParishMap {
   ) {
     this.world = w;
     this.me = me;
-    this.bounds = mapBounds(w, me);
+    this.bounds = this.sheetBounds();
     host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="choose" aria-pressed="false">Choose waypoint</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name to inspect</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Click empty ground to mark a destination, or Choose waypoint then a name. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag or scroll to explore · zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
@@ -80,7 +83,10 @@ export class ParishMap {
         }
         if (action === 'in') this.zoom = Math.min(3, this.zoom + 0.5);
         if (action === 'out') this.zoom = Math.max(1, this.zoom - 0.5);
-        if (action === 'fit' || action === 'you') this.bounds = mapBounds(this.world, this.me);
+        // "Fit parish" always returns to the village; "Find me" may open a local sheet.
+        if (action === 'fit') this.local = false;
+        if (action === 'you') this.local = !inBounds(mapBounds(this.world, this.me), this.me);
+        if (action === 'fit' || action === 'you') this.bounds = this.sheetBounds();
         if (action === 'fit') this.zoom = 1;
         this.draw();
         this.updatePlayers();
@@ -182,14 +188,21 @@ export class ParishMap {
     if (signature !== this.signature) {
       this.signature = signature;
       const centre = this.centre();
-      this.bounds = mapBounds(w, me);
+      this.bounds = this.sheetBounds();
       this.draw();
       this.panTo(centre.x, centre.z);
     }
     this.updatePlayers();
   }
+  private sheetBounds() {
+    const parish = mapBounds(this.world, this.me);
+    if (!this.local && !inBounds(parish, this.me) && this.signature === '')
+      this.local = mapHalf(this.world) > legacyHalf;
+    return this.local ? localBounds(this.me) : parish;
+  }
   private mark(point?: Waypoint) {
-    if (point && (Math.abs(point.x) > 250 || Math.abs(point.z) > 250)) return;
+    const half = mapHalf(this.world);
+    if (point && (Math.abs(point.x) > half || Math.abs(point.z) > half)) return;
     this.navigation?.set(point);
     this.choosing = false;
     this.host.querySelector('[data-map=choose]')?.setAttribute('aria-pressed', 'false');
@@ -253,20 +266,48 @@ export class ParishMap {
           'stroke-opacity': 0.45,
         }),
       );
-    const coast = Math.max(0, Math.min(this.height, this.y(150)));
-    drawing.append(
-      svg('rect', {
-        x: 0,
-        y: coast,
-        width: this.width,
-        height: this.height - coast,
-        fill: '#758e86',
-      }),
-    );
-    drawing.append(
-      svg('path', { d: `M0 ${coast}H${this.width}`, stroke: '#afbd9b', 'stroke-width': 3 }),
-    );
-    const roads = townRoads(this.world);
+    if (mapHalf(this.world) > legacyHalf) {
+      // Sample the real coastline and lakes rather than the compact map's straight shore.
+      // One raster image keeps the sheet light however far the pilot zooms in.
+      const cell = 6,
+        canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(this.width / cell);
+      canvas.height = Math.ceil(this.height / cell);
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#758e86';
+      for (let py = 0; py < canvas.height; py++)
+        for (let px = 0; px < canvas.width; px++) {
+          const x = this.bounds.x + ((px + 0.5) * cell - this.offsetX) / this.scale,
+            z = this.bounds.z + ((py + 0.5) * cell - this.offsetY) / this.scale;
+          if (terrainHeight(this.world, x, z) < this.world.settings.seaLevel)
+            ctx.fillRect(px, py, 1, 1);
+        }
+      drawing.append(
+        svg('image', {
+          href: canvas.toDataURL(),
+          width: this.width,
+          height: this.height,
+          preserveAspectRatio: 'none',
+          style: 'image-rendering:pixelated',
+        }),
+      );
+    } else {
+      const coast = Math.max(0, Math.min(this.height, this.y(150)));
+      drawing.append(
+        svg('rect', {
+          x: 0,
+          y: coast,
+          width: this.width,
+          height: this.height - coast,
+          fill: '#758e86',
+        }),
+      );
+      drawing.append(
+        svg('path', { d: `M0 ${coast}H${this.width}`, stroke: '#afbd9b', 'stroke-width': 3 }),
+      );
+    }
+    const onSheet = (p: { x: number; z: number }) => inBounds(this.bounds, p, 30);
+    const roads = townRoads(this.world).filter((r) => onSheet(r.a) || onSheet(r.b));
     for (const outline of [true, false])
       for (const road of roads)
         drawing.append(
@@ -288,8 +329,8 @@ export class ParishMap {
         'stroke-width': 2,
       }),
     );
-    const available = resourceNodes.filter(
-      (n) => !this.world.buildings.some((b) => Math.hypot(b.x - n.x, b.z - n.z) < 12),
+    const available = worldResources(this.world).filter(
+      (n) => onSheet(n) && !this.world.buildings.some((b) => Math.hypot(b.x - n.x, b.z - n.z) < 12),
     );
     for (const n of available)
       drawing.append(
@@ -301,7 +342,8 @@ export class ParishMap {
           stroke: '#243b27',
         }),
       );
-    const sites = this.world.buildings.map((b) => ({
+    const buildings = this.world.buildings.filter(onSheet);
+    const sites = buildings.map((b) => ({
       id: b.id,
       name: b.name,
       x: b.x,
@@ -320,35 +362,38 @@ export class ParishMap {
         kind: n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item,
         category: 'resource',
       });
-    sites.push(
-      {
-        id: 'hornball',
-        name: 'Hornball',
-        x: 90,
-        z: 45,
-        kind: 'Playing field',
-        category: 'landmark',
-      },
-      {
-        id: 'circuit',
-        name: 'Circuit',
-        x: -105,
-        z: 30,
-        kind: 'Race checkpoints',
-        category: 'landmark',
-      },
-    );
-    drawing.append(
-      svg('path', {
-        d:
-          checkpoints.map((p, i) => `${i ? 'L' : 'M'}${this.x(p.x)} ${this.y(p.z)}`).join('') + 'Z',
-        fill: 'none',
-        stroke: '#d0d9a7',
-        'stroke-width': 1.5,
-        'stroke-dasharray': '4 5',
-      }),
-    );
-    for (const b of this.world.buildings)
+    if (!this.local) {
+      sites.push(
+        {
+          id: 'hornball',
+          name: 'Hornball',
+          x: 90,
+          z: 45,
+          kind: 'Playing field',
+          category: 'landmark',
+        },
+        {
+          id: 'circuit',
+          name: 'Circuit',
+          x: -105,
+          z: 30,
+          kind: 'Race checkpoints',
+          category: 'landmark',
+        },
+      );
+      drawing.append(
+        svg('path', {
+          d:
+            checkpoints.map((p, i) => `${i ? 'L' : 'M'}${this.x(p.x)} ${this.y(p.z)}`).join('') +
+            'Z',
+          fill: 'none',
+          stroke: '#d0d9a7',
+          'stroke-width': 1.5,
+          'stroke-dasharray': '4 5',
+        }),
+      );
+    }
+    for (const b of buildings)
       drawing.append(
         svg('rect', {
           x: this.x(b.x) - 5,

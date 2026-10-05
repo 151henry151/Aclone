@@ -4,7 +4,8 @@ export interface Waypoint {
   z: number;
   name: string;
 }
-export function readWaypoint(raw: string | null): Waypoint | undefined {
+/** `half` is the world's map half-size; the old 250 m square remains the default. */
+export function readWaypoint(raw: string | null, half = 250): Waypoint | undefined {
   try {
     const p = JSON.parse(raw ?? 'null');
     if (
@@ -13,8 +14,8 @@ export function readWaypoint(raw: string | null): Waypoint | undefined {
       typeof p.z === 'number' &&
       Number.isFinite(p.x) &&
       Number.isFinite(p.z) &&
-      Math.abs(p.x) <= 250 &&
-      Math.abs(p.z) <= 250 &&
+      Math.abs(p.x) <= half &&
+      Math.abs(p.z) <= half &&
       typeof p.name === 'string'
     )
       return { x: p.x, z: p.z, name: p.name.slice(0, 80) };
@@ -34,20 +35,22 @@ export function waypointGuidance(p: { x: number; z: number; heading: number }, g
 }
 export class Waypoints {
   private world = '';
+  private half = 250;
   point: Waypoint | undefined;
   constructor(private storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>) {}
-  selectWorld(id: string) {
-    if (id === this.world) return;
+  selectWorld(id: string, half = 250) {
+    if (id === this.world && half === this.half) return;
     this.world = id;
+    this.half = half;
     this.point = undefined;
     try {
-      this.point = readWaypoint(this.storage.getItem(this.key()));
+      this.point = readWaypoint(this.storage.getItem(this.key()), half);
     } catch {
       /* Private browsing. */
     }
   }
   set(point?: Waypoint) {
-    this.point = point && readWaypoint(JSON.stringify(point));
+    this.point = point && readWaypoint(JSON.stringify(point), this.half);
     try {
       if (this.point) this.storage.setItem(this.key(), JSON.stringify(this.point));
       else this.storage.removeItem(this.key());

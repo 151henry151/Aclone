@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { evergreens, type EvergreenSite } from './evergreen';
-import { resourceNodes } from '../shared/resources';
+import { worldResources } from '../shared/resources';
 import { resourceScenery } from './resource-scenery';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -10,14 +10,14 @@ import { terrainHeight } from '../shared/simulation';
 import { contactShadow, texture } from './materials';
 import { townRoads, roadDistance as distanceToRoad } from '../shared/town';
 const mat = (color: string) => new T.MeshStandardMaterial({ color, roughness: 0.96 });
-function random(seed: number) {
+export function random(seed: number) {
   return () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
 }
 /** Crossed alpha-tested cards: crisp leaf/grass silhouettes without transparent sorting. */
-function foliage(grass: boolean) {
+export function foliage(grass: boolean) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
   const ctx = canvas.getContext('2d')!,
@@ -111,7 +111,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   const roadDistance = (x: number, z: number) => distanceToRoad(roads, x, z);
   const clear = (x: number, z: number, margin: number) =>
     roadDistance(x, z) > margin &&
-    resourceNodes.every((n) => Math.hypot(n.x - x, n.z - z) > 7 + margin) &&
+    worldResources(world).every((n) => Math.hypot(n.x - x, n.z - z) > 7 + margin) &&
     Math.hypot(x, z) > 16 &&
     !(x > 56 && x < 124 && z > 16 && z < 74) &&
     !(x > 45 && x < 105 && z < -55 && z > -92) &&
@@ -240,7 +240,8 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     rocks,
     true,
   );
-  resourceScenery(root, world, low);
+  // On large maps the countryside's own patches are streamed with their chunks.
+  resourceScenery(root, world, low, (n) => Math.max(Math.abs(n.x), Math.abs(n.z)) < 300);
   const hedges: number[][] = [],
     fence: number[][] = [],
     rails: number[][] = [];

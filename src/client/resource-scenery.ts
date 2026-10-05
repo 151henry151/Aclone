@@ -2,7 +2,7 @@ import { creatorModel } from './creator-model';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { resourceNodes } from '../shared/resources';
+import { worldResources } from '../shared/resources';
 import { terrainHeight } from '../shared/simulation';
 import type { World } from '../shared/types';
 
@@ -465,7 +465,12 @@ function resourceTexture(kind: 'rock' | 'soil' | 'gravel' | 'bark' | 'wood' | 'l
   maps.set(kind, map);
   return map;
 }
-export function resourceScenery(root: T.Group, world: World, low: boolean) {
+export function resourceScenery(
+  root: T.Group,
+  world: World,
+  low: boolean,
+  include: (node: { x: number; z: number }) => boolean = () => true,
+) {
   const materials: Record<Surface, T.Material> = {
     rock: new T.MeshStandardMaterial({ map: resourceTexture('rock'), roughness: 1 }),
     cutStone: new T.MeshStandardMaterial({
@@ -490,8 +495,9 @@ export function resourceScenery(root: T.Group, world: World, low: boolean) {
     }),
     rubber: new T.MeshStandardMaterial({ color: '#292a25', roughness: 1 }),
   };
-  for (const node of resourceNodes) {
+  for (const node of worldResources(world)) {
     if (
+      !include(node) ||
       world.buildings.some((b) => Math.hypot(b.x - node.x, b.z - node.z) < 12) ||
       terrainHeight(world, node.x, node.z) < world.settings.seaLevel + 0.1
     )

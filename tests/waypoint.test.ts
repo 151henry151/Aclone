@@ -47,3 +47,31 @@ test('guidance follows tractor heading with correct left/right and distance', ()
   );
   assert.equal(waypointGuidance(p, { x: 3, z: 4, name: 'Near' }).metres, 5);
 });
+test('waypoints accept the whole configured map, not just the old village square', () => {
+  assert.equal(readWaypoint('{"x":2600,"z":-4100,"name":"Far farm"}'), undefined);
+  assert.deepEqual(readWaypoint('{"x":2600,"z":-4100,"name":"Far farm"}', 6250), {
+    x: 2600,
+    z: -4100,
+    name: 'Far farm',
+  });
+  assert.equal(readWaypoint('{"x":6251,"z":0,"name":"x"}', 6250), undefined);
+  const data = new Map<string, string>();
+  const w = new Waypoints({
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => void data.set(k, v),
+    removeItem: (k: string) => void data.delete(k),
+  });
+  w.selectWorld('puddlewick', 6250);
+  w.set({ x: 2600, z: -4100, name: 'Far farm' });
+  assert.equal(w.point?.x, 2600);
+  const again = new Waypoints({
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: () => {},
+    removeItem: () => {},
+  });
+  again.selectWorld('puddlewick', 6250);
+  assert.equal(again.point?.z, -4100);
+  again.selectWorld('arena', 250);
+  again.set({ x: 400, z: 0, name: 'Out of bounds' });
+  assert.equal(again.point, undefined);
+});
