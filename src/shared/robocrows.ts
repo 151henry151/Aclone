@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types.ts';
-import { terrainHeight } from './terrain.ts';
+import { terrainHeight, mapHalf } from './terrain.ts';
 import { travelHeight } from './dock.ts';
 export const crowClasses = {
   scout: { name: 'Scout', speed: 1.3, integrity: 18000, weapons: [] as string[] },
@@ -30,7 +30,8 @@ export function crowAbility(w: World, p: Player, operation: string) {
   if ((p.crowRecallAt ?? 0) > w.time) throw Error('Recall cooling down');
   if (p.energy < 25000) throw Error('Recall needs 25,000 energy');
   const point = p.crowMark;
-  if (Math.abs(point.x) > 245 || Math.abs(point.z) > 245) throw Error('Invalid recall point');
+  if (Math.abs(point.x) > mapHalf(w) - 5 || Math.abs(point.z) > mapHalf(w) - 5)
+    throw Error('Invalid recall point');
   p.energy -= 25000;
   p.crowRecallAt = w.time + 10;
   p.x = point.x;

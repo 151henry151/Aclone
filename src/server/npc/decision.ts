@@ -179,12 +179,12 @@ export const stepSchema = z.discriminatedUnion('kind', [
       kind: z.literal('move'),
       x: z
         .number()
-        .min(-245)
-        .max(245)
+        .min(-10000)
+        .max(10000)
         .describe(
           'Open-ground waypoint only. To visit a building or resource use travel with its ID instead.',
         ),
-      z: z.number().min(-245).max(245),
+      z: z.number().min(-10000).max(10000),
     })
     .strict(),
   z.object({ kind: z.literal('act'), action }).strict(),

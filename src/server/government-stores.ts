@@ -5,7 +5,7 @@ import { terrainHeight } from '../shared/terrain.ts';
 import { blocksBuilding } from '../shared/building-shapes.ts';
 import { creatorBlocks } from '../shared/creator.ts';
 import { roadDistance, townRoads } from '../shared/town.ts';
-import { resourceNodes } from '../shared/resources.ts';
+import { worldResources } from '../shared/resources.ts';
 import { fishingDock } from '../shared/dock.ts';
 
 /** Repair the named, reserved starter parish once; never transfer any property. */
@@ -44,7 +44,7 @@ export function governmentStores(w: World) {
         road > 35 ||
         w.buildings.some((b) => blocksBuilding(b, x, z, 0, 15)) ||
         Object.values(w.players).some((p) => Math.hypot(p.x - x, p.z - z) < 20) ||
-        resourceNodes.some((p) => Math.hypot(p.x - x, p.z - z) < 24) ||
+        worldResources(w).some((p) => Math.hypot(p.x - x, p.z - z) < 24) ||
         Math.hypot(fishingDock.x - x, fishingDock.z - z) < 40 ||
         (x > 44 && x < 136 && z > 4 && z < 86) ||
         w.zones.some((p) => p.kind === 'noBuild' && Math.hypot(p.x - x, p.z - z) < p.radius + 10) ||

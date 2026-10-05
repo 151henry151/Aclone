@@ -47,15 +47,16 @@ import {
   creatorBlocksSegment,
   queueCreatorScript,
 } from './creator.ts';
-import { terrainHeight } from './terrain.ts';
+import { terrainHeight, mapHalf, legacyHalf, minMapSize, maxMapSize } from './terrain.ts';
 import { fishingDock, travelHeight } from './dock';
-export { terrainHeight } from './terrain.ts';
+export { terrainHeight, mapHalf } from './terrain.ts';
 import { waterworksSite } from './shoreline.ts';
 import { say, MAX_CHAT_LENGTH } from './messages.ts';
 export { say } from './messages.ts';
 import { productionStaff, productionSupplied, productionEfficiency } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
 import { expandedTown } from './town.ts';
+import { growRoads } from './roads.ts';
 import { gather, finishGather } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
@@ -203,6 +204,8 @@ export function createWorld(
   migrateProcurement(w);
   if (template === 'combat') w.settings.fighting = true;
   if (template === 'playground') w.settings.hungerRate = w.settings.thirstRate = 0;
+  // Arenas and sandboxes stay compact; only economy parishes open onto the wider countryside.
+  if (template !== 'economy') w.settings.mapSize = 500;
   say(w, 'Parish notice', 'Welcome to ' + name + '. A small world. Plenty to get on with.');
   return w;
 }
@@ -1025,7 +1028,7 @@ export function act(w: World, id: string, a: Action): string {
         def = worldBuildings(w)[requested];
       const site =
         kind === 'waterworks' && (a.x !== undefined || a.z !== undefined)
-          ? { x: num(a.x, -240, 240), z: num(a.z, -240, 240) }
+          ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
           : p;
       requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
       const style = kind === 'home' && a.style !== undefined ? str(a.style) : undefined;
@@ -1177,6 +1180,7 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
+        if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
       Object.assign(w.settings, clean);
@@ -1185,8 +1189,8 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'terrain': {
       owner(p);
-      const x = num(a.x, -250, 250),
-        z = num(a.z, -250, 250),
+      const x = num(a.x, -mapHalf(w), mapHalf(w)),
+        z = num(a.z, -mapHalf(w), mapHalf(w)),
         radius = num(a.radius, 1, 100),
         height = num(a.height, -30, 30);
       requireThat(w.terrain.length < 256, 'Terrain stamp limit reached');
@@ -1201,8 +1205,8 @@ export function act(w: World, id: string, a: Action): string {
         ['safe', 'noBuild', 'spawn', 'game', 'script', 'vehicle'].includes(kind),
         'Invalid zone',
       );
-      const x = num(a.x, -250, 250),
-        z = num(a.z, -250, 250),
+      const x = num(a.x, -mapHalf(w), mapHalf(w)),
+        z = num(a.z, -mapHalf(w), mapHalf(w)),
         radius = num(a.radius, 1, 100);
       requireThat(w.zones.length < 128, 'Zone limit reached');
       w.zones.push({
@@ -1217,8 +1221,8 @@ export function act(w: World, id: string, a: Action): string {
     case 'place': {
       owner(p);
       const kind = str(a.kind),
-        x = num(a.x, -250, 250),
-        z = num(a.z, -250, 250);
+        x = num(a.x, -mapHalf(w), mapHalf(w)),
+        z = num(a.z, -mapHalf(w), mapHalf(w));
       requireThat(catalog[kind], 'Unknown building');
       requireThat(w.buildings.length < 500, 'Building limit reached');
       const shore = kind === 'waterworks' ? waterworksSite(w, { x, z }) : undefined;
@@ -1465,8 +1469,8 @@ export function command(w: World, p: Player, text: string): string {
       break;
     case 'teleport': {
       const t = target(),
-        x = num(Number(args[1]), -250, 250),
-        z = num(Number(args[2]), -250, 250);
+        x = num(Number(args[1]), -mapHalf(w), mapHalf(w)),
+        z = num(Number(args[2]), -mapHalf(w), mapHalf(w));
       t.x = x;
       t.z = z;
       t.speed = 0;
@@ -1530,8 +1534,9 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     if (!water) p.speed *= Math.exp(-4 * dt);
   }
   if (v.mode === 5) p.y = Math.max(ground, w.settings.seaLevel) + 0.5;
-  const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -250, 250),
-    nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -250, 250);
+  const half = mapHalf(w);
+  const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
+    nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
   if (
     !creatorBlocksSegment(w, p, { x: nx, z: nz, y: p.y }, p.vehicle === 5 ? 0.25 : 1.3, true) &&
     !w.buildings.some((b) =>
@@ -1742,6 +1747,7 @@ export function advance(w: World, seconds: number) {
   advanceClimate(w, start, end);
   w.time = end;
   harbourSupply(w, end);
+  growRoads(w, start, end);
   refreshOrders(w);
   tickTownEvents(w);
   tickLottery(w);

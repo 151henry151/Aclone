@@ -14,7 +14,7 @@ import { creatorSchema, defaultCreator, validateCreator } from '../shared/creato
 import { act, addPlayer, makeBuilding } from '../shared/simulation.ts';
 import { buildings as catalog, items, skills } from '../shared/catalog.ts';
 import type { World, Player } from '../shared/types.ts';
-const coordinate = z.number().min(-250).max(250);
+const coordinate = z.number().min(-10000).max(10000);
 const stock = z.record(catalogueItemId, z.number().int().min(0).max(100000000));
 const recipe = z
   .object({

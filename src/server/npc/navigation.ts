@@ -4,19 +4,63 @@ import type { World, Player, Input } from '../../shared/types.ts';
 import { terrainHeight, distance } from '../../shared/simulation.ts';
 import { blocksBuilding, buildingBounds, buildingPlan } from '../../shared/building-shapes.ts';
 import type { Point } from '../../shared/town.ts';
-const step = 4,
-  size = 125,
-  origin = -248;
-const point = (i: number): Point => ({
-  x: origin + (i % size) * step,
-  z: origin + Math.floor(i / size) * step,
+import { mapHalf, legacyHalf } from '../../shared/terrain.ts';
+const step = 4;
+/** The compact village grid; large maps use a window around each journey instead. */
+const villageWindow = { originX: -248, originZ: -248, sizeX: 125, sizeZ: 125 };
+/** Longest side of a journey window, in cells: about 1.6 km of countryside. */
+const maxCells = 400;
+interface Window {
+  originX: number;
+  originZ: number;
+  sizeX: number;
+  sizeZ: number;
+}
+interface Grid extends Window {
+  key: string;
+  clear: Uint8Array;
+  heights: Float32Array;
+}
+const point = (g: Window, i: number): Point => ({
+  x: g.originX + (i % g.sizeX) * step,
+  z: g.originZ + Math.floor(i / g.sizeX) * step,
 });
-const index = (p: Point) =>
-  Math.max(0, Math.min(size - 1, Math.round((p.z - origin) / step))) * size +
-  Math.max(0, Math.min(size - 1, Math.round((p.x - origin) / step)));
-const cache = new WeakMap<World, { key: string; clear: Uint8Array; heights: Float32Array }>();
-function grid(w: World) {
+const index = (g: Window, p: Point) =>
+  Math.max(0, Math.min(g.sizeZ - 1, Math.round((p.z - g.originZ) / step))) * g.sizeX +
+  Math.max(0, Math.min(g.sizeX - 1, Math.round((p.x - g.originX) / step)));
+/** Compact maps keep the whole-village grid. On large maps the window spans the
+ * journey with room to detour, and takes in the village whenever it touches it. */
+function windowFor(w: World, from: Point, target: Point): Window {
+  const half = mapHalf(w);
+  if (half <= legacyHalf) return villageWindow;
+  const margin = 120;
+  let minX = Math.min(from.x, target.x) - margin,
+    maxX = Math.max(from.x, target.x) + margin,
+    minZ = Math.min(from.z, target.z) - margin,
+    maxZ = Math.max(from.z, target.z) + margin;
+  if (minX < legacyHalf && maxX > -legacyHalf && minZ < legacyHalf && maxZ > -legacyHalf) {
+    minX = Math.min(minX, -248);
+    maxX = Math.max(maxX, 248);
+    minZ = Math.min(minZ, -248);
+    maxZ = Math.max(maxZ, 248);
+  }
+  const bound = half - 2;
+  minX = Math.max(-bound, minX);
+  minZ = Math.max(-bound, minZ);
+  maxX = Math.min(bound, maxX);
+  maxZ = Math.min(bound, maxZ);
+  const originX = Math.floor(minX / step) * step,
+    originZ = Math.floor(minZ / step) * step,
+    sizeX = Math.ceil((maxX - originX) / step) + 1,
+    sizeZ = Math.ceil((maxZ - originZ) / step) + 1;
+  if (sizeX > maxCells || sizeZ > maxCells)
+    throw Error('Destination too far for a ground route; break the journey into stages');
+  return { originX, originZ, sizeX, sizeZ };
+}
+const cache = new WeakMap<World, Map<string, Grid>>();
+function grid(w: World, win: Window): Grid {
   const key = JSON.stringify([
+    win,
     w.settings.seaLevel,
     w.townLayout,
     w.terrain,
@@ -25,12 +69,15 @@ function grid(w: World) {
     w.creator?.models.map((m) => [m.id, m.width, m.height, m.depth]),
     w.buildings.map((b) => [b.id, b.kind, b.style, b.x, b.z, b.rotation]),
   ]);
-  const previous = cache.get(w);
-  if (previous?.key === key) return previous;
-  const clear = new Uint8Array(size * size),
-    heights = new Float32Array(size * size);
+  let grids = cache.get(w);
+  if (!grids) cache.set(w, (grids = new Map()));
+  const previous = grids.get(key);
+  if (previous) return previous;
+  const { originX, originZ, sizeX, sizeZ } = win;
+  const clear = new Uint8Array(sizeX * sizeZ),
+    heights = new Float32Array(sizeX * sizeZ);
   for (let i = 0; i < clear.length; i++) {
-    const p = point(i),
+    const p = point(win, i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
     clear[i] = +(h >= w.settings.seaLevel + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2));
@@ -43,19 +90,21 @@ function grid(w: World) {
       Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 2.2,
       Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 2.2,
     );
-    const minX = Math.max(0, Math.ceil((b.x - radius - origin) / step));
-    const maxX = Math.min(size - 1, Math.floor((b.x + radius - origin) / step));
-    const minZ = Math.max(0, Math.ceil((b.z - radius - origin) / step));
-    const maxZ = Math.min(size - 1, Math.floor((b.z + radius - origin) / step));
+    const minX = Math.max(0, Math.ceil((b.x - radius - originX) / step));
+    const maxX = Math.min(sizeX - 1, Math.floor((b.x + radius - originX) / step));
+    const minZ = Math.max(0, Math.ceil((b.z - radius - originZ) / step));
+    const maxZ = Math.min(sizeZ - 1, Math.floor((b.z + radius - originZ) / step));
     for (let z = minZ; z <= maxZ; z++)
       for (let x = minX; x <= maxX; x++) {
-        const i = z * size + x;
-        if (clear[i] && blocksBuilding(b, origin + x * step, origin + z * step, 0, 2.2))
+        const i = z * sizeX + x;
+        if (clear[i] && blocksBuilding(b, originX + x * step, originZ + z * step, 0, 2.2))
           clear[i] = 0;
       }
   }
-  const value = { key, clear, heights };
-  cache.set(w, value);
+  const value = { ...win, key, clear, heights };
+  // A handful of recent windows per world: residents mostly repeat the same trips.
+  if (grids.size >= 6) grids.delete(grids.keys().next().value!);
+  grids.set(key, value);
   return value;
 }
 class Queue {
@@ -90,8 +139,10 @@ class Queue {
   }
 }
 function route(w: World, from: Point, target: Point, radius: number) {
-  const { clear, heights } = grid(w),
-    start = index(from),
+  const g = grid(w, windowFor(w, from, target)),
+    { clear, heights, sizeX, sizeZ } = g,
+    size = sizeX,
+    start = index(g, from),
     queue = new Queue(),
     cost = new Float64Array(clear.length).fill(Infinity),
     parent = new Int32Array(clear.length).fill(-1),
@@ -102,11 +153,11 @@ function route(w: World, from: Point, target: Point, radius: number) {
     const i = queue.pop().id;
     if (closed[i]) continue;
     closed[i] = 1;
-    if (clear[i] && distance(point(i), target) <= radius) {
+    if (clear[i] && distance(point(g, i), target) <= radius) {
       const path: Point[] = [];
       let at = i;
       while (at !== start) {
-        path.push(point(at));
+        path.push(point(g, at));
         at = parent[at];
       }
       return path.reverse();
@@ -129,8 +180,8 @@ function route(w: World, from: Point, target: Point, radius: number) {
       if (
         nx < 0 ||
         nz < 0 ||
-        nx >= size ||
-        nz >= size ||
+        nx >= sizeX ||
+        nz >= sizeZ ||
         !clear[j] ||
         closed[j] ||
         Math.abs(heights[i] - heights[j]) > 2
@@ -141,7 +192,7 @@ function route(w: World, from: Point, target: Point, radius: number) {
       if (value >= cost[j]) continue;
       parent[j] = i;
       cost[j] = value;
-      queue.push(j, value + Math.max(0, distance(point(j), target) - radius) / step);
+      queue.push(j, value + Math.max(0, distance(point(g, j), target) - radius) / step);
     }
   }
   throw Error('No safe ground route to that destination');
@@ -166,6 +217,9 @@ export class Navigator {
     // grid endpoint here can fail beside an inflated building obstacle.
     this.path = distance(p, target) <= radius ? [] : route(w, p, target, radius);
     this.last = { x: p.x, z: p.z };
+  }
+  waypoints(): readonly Point[] {
+    return this.path;
   }
   step(w: World, p: Player, dt: number): { input: Input; arrived?: boolean; error?: string } {
     if (p.atHome || p.task) return { input: idle, error: 'Cannot travel while indoors or busy' };

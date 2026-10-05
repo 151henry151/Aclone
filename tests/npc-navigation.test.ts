@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, move, distance, terrainHeight } from '../src/shared/simulation.ts';
 import { Navigator } from '../src/server/npc/navigation.ts';
+import { worldResources } from '../src/shared/resources.ts';
+import { mapHalf } from '../src/shared/terrain.ts';
 
 test('NPC drives through ordinary physics to dispersed public services without teleporting', () => {
   const w = createWorld('nav', 'Navigation', 'server'),
@@ -85,4 +87,20 @@ test('NPC plans around creator fences instead of driving into them', async () =>
     }
   }
   assert.ok(arrived);
+});
+
+test('NPC routes out to a countryside gathering ground on a large map', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server'),
+    p = addPlayer(w, 'npc', 'Mabel');
+  const patch = worldResources(w).find((n) => n.id === 'stone-c13-14')!;
+  assert.ok(Math.hypot(patch.x, patch.z) > 900, 'well outside the old 250 m grid');
+  const nav = new Navigator(w, p, patch, 8);
+  // The route itself stays on dry land the whole way.
+  for (const q of nav.waypoints()) {
+    assert.ok(terrainHeight(w, q.x, q.z) >= w.settings.seaLevel, `dry at ${q.x},${q.z}`);
+    assert.ok(Math.abs(q.x) <= mapHalf(w) && Math.abs(q.z) <= mapHalf(w));
+  }
+  assert.ok(nav.waypoints().length > 100, `${nav.waypoints().length} waypoints`);
+  // Journeys beyond a sensible day's drive are declined rather than gridded.
+  assert.throws(() => new Navigator(w, p, { x: 5000, z: -4000 }, 8), /far/);
 });

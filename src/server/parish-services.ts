@@ -3,7 +3,7 @@ import { recipes, checkpoints } from '../shared/catalog.ts';
 import { buildingBounds, buildingPlan } from '../shared/building-shapes.ts';
 import { creatorBlocks } from '../shared/creator.ts';
 import { fishingDock } from '../shared/dock.ts';
-import { resourceNodes } from '../shared/resources.ts';
+import { worldResources } from '../shared/resources.ts';
 import { waterworksSite } from '../shared/shoreline.ts';
 import { makeBuilding, log } from '../shared/simulation.ts';
 import { terrainHeight } from '../shared/terrain.ts';
@@ -145,7 +145,7 @@ export function completePuddlewick(w: World): boolean {
         )
       )
         return false;
-      if (resourceNodes.some((node) => Math.hypot(node.x - p.x, node.z - p.z) <= r + 12))
+      if (worldResources(w).some((node) => Math.hypot(node.x - p.x, node.z - p.z) <= r + 12))
         return false;
       if (checkpoints.some((point) => Math.hypot(point.x - p.x, point.z - p.z) <= r + 14))
         return false;

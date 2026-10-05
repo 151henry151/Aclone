@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { World, Player, Action } from './types.ts';
-import { terrainHeight } from './terrain.ts';
+import { terrainHeight, mapHalf } from './terrain.ts';
 import { townRoads, roadDistance, type Point, type Road } from './town.ts';
-const coordinate = z.number().finite().min(-250).max(250);
+const coordinate = z.number().finite().min(-10000).max(10000);
 const point = z.object({ x: coordinate, z: coordinate });
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const polyline = z
@@ -102,6 +102,13 @@ export function validateLandscape(w: World, input: unknown) {
   for (const s of l.scatter)
     if (!w.creator?.models.some((m) => m.id === s.model))
       throw Error('Choose an existing Workshop model for scatter');
+  const half = mapHalf(w);
+  const inside = (p: Point) => Math.abs(p.x) <= half && Math.abs(p.z) <= half;
+  if (
+    ![...l.surfaces, ...l.scatter].every(inside) ||
+    ![...l.paths, ...l.barriers].every((f) => f.points.every(inside))
+  )
+    throw Error(`Keep landscape features within ${half} metres of the parish centre`);
   return l;
 }
 export function landscapeAction(w: World, p: Player, a: Action) {
@@ -122,10 +129,10 @@ export function landscapeAction(w: World, p: Player, a: Action) {
   w.revision++;
   return '';
 }
-/** 33 x 33 samples span the playable -250..250 square; brushes remain additive. */
-export function heightmapAt(samples: number[], x: number, z: number) {
-  const gx = Math.max(0, Math.min(32, ((x + 250) * 32) / 500)),
-    gz = Math.max(0, Math.min(32, ((z + 250) * 32) / 500));
+/** 33 x 33 samples span the whole playable square; brushes remain additive. */
+export function heightmapAt(samples: number[], x: number, z: number, half = 250) {
+  const gx = Math.max(0, Math.min(32, ((x + half) * 32) / (half * 2))),
+    gz = Math.max(0, Math.min(32, ((z + half) * 32) / (half * 2)));
   const ix = Math.min(31, Math.floor(gx)),
     iz = Math.min(31, Math.floor(gz)),
     tx = gx - ix,
@@ -136,10 +143,11 @@ export function heightmapAt(samples: number[], x: number, z: number) {
   );
 }
 const roadCache = new WeakMap<Landscape, Road[]>();
-export function landscapeRoads(w: Pick<World, 'landscape'>): Road[] {
+export function landscapeRoads(w: Pick<World, 'landscape' | 'settings'>): Road[] {
   if (!w.landscape) return [];
   const cached = roadCache.get(w.landscape);
   if (cached) return cached;
+  const half = mapHalf(w);
   const roads: Road[] = [];
   for (const path of w.landscape.paths) {
     const pts = path.points;
@@ -153,9 +161,9 @@ export function landscapeRoads(w: Pick<World, 'landscape'>): Road[] {
         const t = j / (path.curved ? 8 : 1);
         const interpolate = (key: 'x' | 'z') =>
           Math.max(
-            -250,
+            -half,
             Math.min(
-              250,
+              half,
               0.5 *
                 (2 * p1[key] +
                   (-p0[key] + p2[key]) * t +
@@ -273,8 +281,8 @@ function makeScatter(w: World) {
         yaw = random() * 360;
       const radius = Math.max(m.width, m.depth) / 2;
       if (
-        Math.abs(x) > 248 ||
-        Math.abs(z) > 248 ||
+        Math.abs(x) > mapHalf(w) - 2 ||
+        Math.abs(z) > mapHalf(w) - 2 ||
         terrainHeight(w, x, z) < w.settings.seaLevel + 0.3 ||
         roadDistance(roads, x, z) < radius * scale + 2 ||
         w.buildings.some((b) => Math.hypot(b.x - x, b.z - z) < 20 + radius * scale) ||

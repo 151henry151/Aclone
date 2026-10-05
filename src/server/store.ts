@@ -54,6 +54,13 @@ export class Store {
       .all()
       .map((row) => {
         const world = JSON.parse(String(row.state)) as World;
+        // Older saves predate configurable maps. Only the public starter parish
+        // opens onto the full countryside; every other world keeps its old bounds.
+        if (!Number.isFinite(world.settings.mapSize))
+          world.settings.mapSize =
+            world.id === 'puddlewick' && world.owner === 'server' && world.template === 'economy'
+              ? defaults.mapSize
+              : 500;
         world.settings = { ...defaults, ...world.settings };
         migrateTown(world);
         migrateEconomy(world);

@@ -11,6 +11,7 @@
   "allowMoneyGifts": true,
   "allowPlayerRefuelling": true,
   "seaLevel": -2,
+  "mapSize": 12500,
   "hungerRate": 1.8,
   "thirstRate": 2.5,
   "maxAge": 90,

@@ -4,7 +4,7 @@ import { propertyQuote } from '../../shared/property.ts';
 import type { World, Player, Building } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { items, recipes } from '../../shared/catalog.ts';
-import { resourceNodes, resourceAmount } from '../../shared/resources.ts';
+import { worldResources, resourceAmount } from '../../shared/resources.ts';
 import type { Step } from './decision.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
@@ -203,7 +203,7 @@ export function economyChoices(
       visit(b, [act({ type: 'trade', building: b.id, direction: 'sell', item, quantity: n })]),
     );
   }
-  for (const n of [...resourceNodes]
+  for (const n of [...worldResources(w)]
     .sort((a, b) => distance(p, a) - distance(p, b))
     .filter(
       (n) =>

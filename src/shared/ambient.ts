@@ -5,8 +5,8 @@ import { calendar, worldWeather } from './environment.ts';
 export const ambientSchema = z.object({
   id: z.string().regex(/^[\w-]{1,64}$/),
   name: z.string().trim().min(1).max(64),
-  x: z.number().min(-240).max(240).default(0),
-  z: z.number().min(-240).max(240).default(0),
+  x: z.number().min(-10000).max(10000).default(0),
+  z: z.number().min(-10000).max(10000).default(0),
   object: z.string().max(64).default(''),
   radius: z.number().min(2).max(250).default(40),
   volume: z.number().min(0).max(1).default(0.35),

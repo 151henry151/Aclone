@@ -51,6 +51,8 @@ test('landscape changes are authorized, bounded, atomic, portable and undoable',
 });
 test('heightmaps share bilinear heights with water and subsequent terrain stamps', () => {
   const { w, p } = setup();
+  // The 33 × 33 grid spans the configured map; a 500 m world keeps the original spacing.
+  w.settings.mapSize = 500;
   const samples = Array.from({ length: 1089 }, (_, i) => (i % 33) - 16);
   act(w, p.id, { type: 'landscape', landscape: { heightmap: samples } });
   assert.equal(terrainHeight(w, 0, 0), 0);

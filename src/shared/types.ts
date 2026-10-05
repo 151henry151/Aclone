@@ -207,6 +207,8 @@ export interface Settings {
   allowMoneyGifts?: boolean;
   allowPlayerRefuelling?: boolean;
   seaLevel: number;
+  /** Square map side in metres. The original village occupies the central 500 m. */
+  mapSize: number;
   hungerRate: number;
   thirstRate: number;
   maxAge: number;
@@ -254,6 +256,10 @@ export interface World {
   publicParishVersion?: number;
   /** Last half-hour public shortage shipment, persisted across restarts. */
   harbourShipment?: number;
+  /** Lanes the parish has laid toward buildings off the road network. */
+  roads?: import('./town.ts').Road[];
+  /** Last game day on which road growth was considered. */
+  roadGrowth?: number;
   /** One-time retirement of excess public starter types; purchased property is protected. */
   parishRetired?: string[];
   schemaVersion: 1;

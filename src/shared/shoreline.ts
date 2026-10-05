@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { terrainHeight } from './terrain.ts';
+import { terrainHeight, mapHalf } from './terrain.ts';
 import type { World } from './types.ts';
 import type { Point } from './town.ts';
 
 /** The pump house stays dry; its buried intake reaches water behind the building.
  * Check the real, editable terrain and current sea level, never just a map edge. */
 export function waterworksSite(w: World, p: Point, rotation?: number) {
-  if (!Number.isFinite(p.x) || !Number.isFinite(p.z) || Math.abs(p.x) > 240 || Math.abs(p.z) > 240)
+  const edge = mapHalf(w) - 10;
+  if (
+    !Number.isFinite(p.x) ||
+    !Number.isFinite(p.z) ||
+    Math.abs(p.x) > edge ||
+    Math.abs(p.z) > edge
+  )
     return undefined;
   if (terrainHeight(w, p.x, p.z) < w.settings.seaLevel + 0.2) return undefined;
   const angles =

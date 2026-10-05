@@ -167,10 +167,13 @@ const legacyRoads: Road[] = [
     ? { a: { x: x - w / 2, z }, b: { x: x + w / 2, z }, width: d }
     : { a: { x, z: z - d / 2 }, b: { x, z: z + d / 2 }, width: w },
 );
-export function townRoads(w: Pick<World, 'townLayout' | 'creator' | 'landscape'>): readonly Road[] {
+export function townRoads(
+  w: Pick<World, 'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads'>,
+): readonly Road[] {
   return [
     ...(w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads),
     ...landscapeRoads(w),
+    ...(w.roads ?? []),
   ];
 }
 export function roadDistance(roads: readonly Road[], x: number, z: number) {

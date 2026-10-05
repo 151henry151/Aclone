@@ -12,7 +12,7 @@ import { gameGuide } from './knowledge.ts';
 import type { World, Player } from '../../shared/types.ts';
 import { items, recipes, skills } from '../../shared/catalog.ts';
 import { distance, carry } from '../../shared/simulation.ts';
-import { resourceNodes, resourceAmount } from '../../shared/resources.ts';
+import { worldResources, resourceAmount } from '../../shared/resources.ts';
 import { calendar, worldWeather } from '../../shared/environment.ts';
 import type { ResidentState, NpcMemory } from './memory.ts';
 
@@ -259,8 +259,11 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       plots: b.plots,
       construction: b.construction,
     })),
-    resources: resourceNodes
+    // Village grounds plus the nearest countryside patches keep the context bounded.
+    resources: worldResources(w)
       .filter((n) => !w.buildings.some((b) => distance(b, n) < 12))
+      .sort((a, b) => distance(p, a) - distance(p, b))
+      .slice(0, 32)
       .map((n) => ({ id: n.id, item: n.item, x: n.x, z: n.z, available: resourceAmount(w, n) })),
     items: Object.fromEntries([...wanted].slice(0, 40).map((id) => [id, items[id]])),
     availableSchoolSkills: {

@@ -14,7 +14,7 @@ import { economicMenu } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import { act, addPlayer, move, say } from '../../shared/simulation.ts';
-import { resourceNodes } from '../../shared/resources.ts';
+import { worldResources } from '../../shared/resources.ts';
 import type { Store } from '../store.ts';
 import type { Universe, Account } from '../universe.ts';
 import { spaceChoices, spaceOperations, spaceAction, exchange, systemFor } from './space.ts';
@@ -1038,7 +1038,7 @@ export class Residents {
           target = w.buildings.find((b) => b.id === step.destination);
           radius = serviceRadius;
           if (!target) {
-            target = resourceNodes.find((n) => n.id === step.destination);
+            target = worldResources(w).find((n) => n.id === step.destination);
             radius = 6;
           }
         }
