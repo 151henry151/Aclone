@@ -1228,22 +1228,13 @@ function renderPanel() {
     if (!parishMap) {
       modal('Parish map.', '<div id="parish-map"></div>', true);
       $('modal-host').querySelector('.window')!.classList.add('map-window');
-      parishMap = new ParishMap(
-        $('parish-map'),
-        world,
-        me,
-        (id) => {
-          selected = id;
-          openPanel('building');
+      parishMap = new ParishMap($('parish-map'), world, me, {
+        get: () => waypoints.point,
+        set: (point) => {
+          waypoints.set(point);
+          updateHud();
         },
-        {
-          get: () => waypoints.point,
-          set: (point) => {
-            waypoints.set(point);
-            updateHud();
-          },
-        },
-      );
+      });
       $('modal-host').querySelector<HTMLButtonElement>('.close')!.focus();
     } else parishMap.update(world, me);
     return;

@@ -90,9 +90,21 @@ test('the parish map opens with M or a click and keeps navigation through live u
     await expect(map.locator('.parish-map-zoom')).toHaveText('100%');
     await map.getByRole('button', { name: 'Find me', exact: true }).click();
     const building = w.buildings.find((b) => b.kind === 'market')!;
+    // Business names set a waypoint rather than opening the business remotely.
     await map.getByRole('button', { name: building.name, exact: true }).click({ delay: 450 });
-    await expect(page.getByRole('dialog', { name: building.name, exact: true })).toBeVisible();
-    await page.keyboard.press('m');
+    await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
+    await expect(page.getByRole('dialog', { name: building.name, exact: true })).toHaveCount(0);
+    await expect(map.getByRole('button', { name: 'Choose waypoint' })).toHaveCount(0);
+    const zoomLevel = map.locator('.parish-map-zoom');
+    const sheet = map.locator('.parish-map-viewport');
+    const area = (await sheet.boundingBox())!;
+    await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+    await page.mouse.wheel(0, -400);
+    await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeGreaterThan(100);
+    await page.mouse.wheel(0, 2000);
+    await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeLessThan(150);
+    await map.getByRole('button', { name: 'Fit parish', exact: true }).click();
+    await expect(zoomLevel).toHaveText('100%');
     await expect(map).toBeVisible();
     await page.keyboard.press('m');
     await expect(map).toHaveCount(0);
@@ -117,6 +129,30 @@ test('the parish map opens with M or a click and keeps navigation through live u
     const left = await viewport.evaluate((el) => el.scrollLeft);
     await page.keyboard.press('ArrowRight');
     await expect.poll(() => viewport.evaluate((el) => el.scrollLeft)).toBeGreaterThan(left);
+    // A two-finger pinch spreading to twice the distance doubles the zoom.
+    await viewport.evaluate((el) => {
+      const r = el.getBoundingClientRect(),
+        x = r.left + r.width / 2,
+        y = r.top + r.height / 2;
+      const touch = (identifier: number, clientX: number) =>
+        new Touch({ identifier, target: el, clientX, clientY: y });
+      const fire = (type: string, spread: number) => {
+        const touches = [touch(1, x - spread), touch(2, x + spread)];
+        el.dispatchEvent(
+          new TouchEvent(type, {
+            touches: type === 'touchend' ? [] : touches,
+            changedTouches: touches,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      };
+      fire('touchstart', 40);
+      fire('touchmove', 60);
+      fire('touchmove', 80);
+      fire('touchend', 80);
+    });
+    await expect(map.locator('.parish-map-zoom')).toHaveText('200%');
     await page.screenshot({ path: 'test-results/parish-map-mobile.png' });
     await page.keyboard.press('Escape');
     await expect(map).toHaveCount(0);

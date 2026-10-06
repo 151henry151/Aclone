@@ -9,6 +9,12 @@ import {
   inBounds,
   placeMapLabels,
   townBorders,
+  wheelZoom,
+  clampZoom,
+  maxZoom,
+  worldZoom,
+  outerSheet,
+  mapStep,
   type MapBounds,
 } from './map-layout';
 import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
@@ -29,12 +35,15 @@ export class ParishMap {
   private observer: ResizeObserver;
   private world: World;
   private me: Player;
+  /** The drawn area; `home` is the parish or local sheet shown at 100%. */
   private bounds: MapBounds;
+  private home: MapBounds;
   /** A sheet centred on the pilot, for the countryside beyond the parish map. */
   private local = false;
   private signature = '';
   private zoom = 1;
-  private choosing = false;
+  private pendingZoom?: { x: number; z: number; px: number; py: number };
+  private zoomFrame = 0;
   private width = 900;
   private height = 600;
   private scale = 1;
@@ -46,13 +55,12 @@ export class ParishMap {
     private host: HTMLElement,
     w: World,
     me: Player,
-    openBuilding: (id: string) => void,
     private navigation?: { get: () => Waypoint | undefined; set: (point?: Waypoint) => void },
   ) {
     this.world = w;
     this.me = me;
-    this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="choose" aria-pressed="false">Choose waypoint</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name to inspect</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Click empty ground to mark a destination, or Choose waypoint then a name. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag or scroll to explore · zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
+    this.home = this.bounds = this.sheetBounds();
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Click a name or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     host.addEventListener(
@@ -60,7 +68,7 @@ export class ParishMap {
       (e) => {
         const button = (e.target as Element).closest<HTMLButtonElement>('button');
         if (!button) return;
-        if (button.dataset.wx && (this.choosing || !button.dataset.site)) {
+        if (button.dataset.wx) {
           this.mark({
             x: Number(button.dataset.wx),
             z: Number(button.dataset.wz),
@@ -68,18 +76,9 @@ export class ParishMap {
           });
           return;
         }
-        if (button.dataset.site) {
-          openBuilding(button.dataset.site);
-          return;
-        }
         const action = button.dataset.map;
         if (!action) return;
         const centre = this.centre();
-        if (action === 'choose') {
-          this.choosing = !this.choosing;
-          button.setAttribute('aria-pressed', String(this.choosing));
-          return;
-        }
         if (action === 'clear') {
           this.mark();
           return;
@@ -88,13 +87,16 @@ export class ParishMap {
           this.mark({ ...centre, name: 'Map waypoint' });
           return;
         }
-        if (action === 'in') this.zoom = Math.min(3, this.zoom + 0.5);
-        if (action === 'out') this.zoom = Math.max(1, this.zoom - 0.5);
+        if (action === 'in')
+          this.zoom = clampZoom(this.zoom < 1 ? Math.min(1, this.zoom * 2) : this.zoom + 0.5);
+        if (action === 'out')
+          this.zoom = clampZoom(this.zoom > 1 ? this.zoom - 0.5 : this.zoom / 2, this.floor());
         // "Fit parish" always returns to the village; "Find me" may open a local sheet.
         if (action === 'fit') this.local = false;
         if (action === 'you') this.local = !inBounds(mapBounds(this.world, this.me), this.me);
-        if (action === 'fit' || action === 'you') this.bounds = this.sheetBounds();
+        if (action === 'fit' || action === 'you') this.home = this.sheetBounds();
         if (action === 'fit') this.zoom = 1;
+        this.bounds = this.frame(action === 'you' ? this.me : centre);
         this.draw();
         this.updatePlayers();
         if (action === 'you') this.panTo(this.me.x, this.me.z);
@@ -117,6 +119,47 @@ export class ParishMap {
         top: e.key === 'ArrowUp' ? -80 : e.key === 'ArrowDown' ? 80 : 0,
       });
     });
+    this.viewport.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        this.zoomAt(
+          wheelZoom(this.zoom, e.deltaY, e.deltaMode, this.floor()),
+          e.clientX,
+          e.clientY,
+        );
+      },
+      { passive: false },
+    );
+    let pinch: { distance: number; zoom: number } | undefined;
+    const spread = (e: TouchEvent) => {
+      const [a, b] = [e.touches[0], e.touches[1]];
+      return {
+        distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+        x: (a.clientX + b.clientX) / 2,
+        y: (a.clientY + b.clientY) / 2,
+      };
+    };
+    this.viewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 2) return;
+      tap = undefined;
+      pinch = { distance: Math.max(1, spread(e).distance), zoom: this.zoom };
+    });
+    this.viewport.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!pinch || e.touches.length !== 2) return;
+        e.preventDefault();
+        const s = spread(e);
+        this.zoomAt((pinch.zoom * s.distance) / pinch.distance, s.x, s.y);
+      },
+      { passive: false },
+    );
+    const endPinch = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinch = undefined;
+    };
+    this.viewport.addEventListener('touchend', endPinch);
+    this.viewport.addEventListener('touchcancel', endPinch);
     let tap: { id: number; x: number; y: number } | undefined;
     this.viewport.addEventListener('pointerdown', (e) => {
       if (!e.isPrimary || e.button !== 0) {
@@ -166,6 +209,31 @@ export class ParishMap {
     this.viewport.addEventListener('lostpointercapture', () => {
       drag = undefined;
     });
+    // Zoomed out, the sheet is a window onto the world that follows panning.
+    let recentre = 0;
+    this.viewport.addEventListener('scroll', () => {
+      if (this.zoom >= 1) return;
+      clearTimeout(recentre);
+      const settle = () => {
+        if (this.zoom >= 1 || this.pendingZoom) return;
+        if (drag) {
+          recentre = window.setTimeout(settle, 150);
+          return;
+        }
+        const centre = this.centre(),
+          next = this.frame(centre);
+        if (
+          Math.abs(next.x - this.bounds.x) * this.scale < this.viewport.clientWidth / 4 &&
+          Math.abs(next.z - this.bounds.z) * this.scale < this.viewport.clientHeight / 4
+        )
+          return;
+        this.bounds = next;
+        this.draw();
+        this.updatePlayers();
+        this.panTo(centre.x, centre.z);
+      };
+      recentre = window.setTimeout(settle, 150);
+    });
     this.baseWidth = Math.max(900, this.viewport.clientWidth);
     this.update(w, me);
     this.observer = new ResizeObserver(() => {
@@ -181,6 +249,7 @@ export class ParishMap {
     this.panTo(me.x, me.z);
   }
   dispose() {
+    cancelAnimationFrame(this.zoomFrame);
     this.observer.disconnect();
     this.abort.abort();
   }
@@ -196,7 +265,8 @@ export class ParishMap {
     if (signature !== this.signature) {
       this.signature = signature;
       const centre = this.centre();
-      this.bounds = this.sheetBounds();
+      this.home = this.sheetBounds();
+      this.bounds = this.frame(centre);
       this.draw();
       this.panTo(centre.x, centre.z);
     }
@@ -212,9 +282,62 @@ export class ParishMap {
     const half = mapHalf(this.world);
     if (point && (Math.abs(point.x) > half || Math.abs(point.z) > half)) return;
     this.navigation?.set(point);
-    this.choosing = false;
-    this.host.querySelector('[data-map=choose]')?.setAttribute('aria-pressed', 'false');
     this.updatePlayers();
+  }
+  private baseHeight() {
+    return Math.max(500, Math.min(620, window.innerHeight * 0.57 - 2));
+  }
+  /** Pixels per metre at 100%, where the home sheet fills the base sheet. */
+  private unitScale() {
+    return Math.min(
+      (this.baseWidth - 120) / this.home.width,
+      (this.baseHeight() - 90) / this.home.depth,
+    );
+  }
+  /** The lowest zoom: the whole map fits the window. */
+  private floor() {
+    return worldZoom(
+      this.unitScale(),
+      this.viewport.clientWidth || this.baseWidth,
+      this.viewport.clientHeight || this.baseHeight(),
+      mapHalf(this.world),
+    );
+  }
+  private frame(centre: { x: number; z: number }) {
+    return this.zoom < 1
+      ? outerSheet(
+          centre,
+          this.unitScale() * this.zoom,
+          this.baseWidth * 2,
+          this.baseHeight() * 2,
+          mapHalf(this.world),
+        )
+      : this.home;
+  }
+  /** Zoom keeping the map point under (clientX, clientY) in place; redraws once per frame. */
+  private zoomAt(zoom: number, clientX: number, clientY: number) {
+    zoom = clampZoom(zoom, this.floor());
+    if (zoom === this.zoom && !this.pendingZoom) return;
+    const rect = this.viewport.getBoundingClientRect(),
+      px = clientX - rect.left,
+      py = clientY - rect.top;
+    const anchor = this.pendingZoom ?? {
+      x: this.bounds.x + (this.viewport.scrollLeft + px - this.offsetX) / this.scale,
+      z: this.bounds.z + (this.viewport.scrollTop + py - this.offsetY) / this.scale,
+    };
+    this.pendingZoom = { x: anchor.x, z: anchor.z, px, py };
+    this.zoom = zoom;
+    if (this.zoomFrame) return;
+    this.zoomFrame = requestAnimationFrame(() => {
+      const a = this.pendingZoom!;
+      this.zoomFrame = 0;
+      this.pendingZoom = undefined;
+      this.bounds = this.frame(a);
+      this.draw();
+      this.updatePlayers();
+      this.viewport.scrollLeft = this.x(a.x) - a.px;
+      this.viewport.scrollTop = this.y(a.z) - a.py;
+    });
   }
   private x(x: number) {
     return this.offsetX + (x - this.bounds.x) * this.scale;
@@ -238,22 +361,23 @@ export class ParishMap {
   }
   private draw() {
     const focusedSite = (document.activeElement as HTMLElement | null)?.dataset.site;
-    this.width = this.baseWidth * this.zoom;
-    this.height = Math.max(500, Math.min(620, window.innerHeight * 0.57 - 2)) * this.zoom;
-    this.scale = Math.min(
-      (this.width - 120) / this.bounds.width,
-      (this.height - 90) / this.bounds.depth,
-    );
+    const outer = this.zoom < 1;
+    this.width = this.baseWidth * (outer ? 2 : this.zoom);
+    this.height = this.baseHeight() * (outer ? 2 : this.zoom);
+    this.scale = outer
+      ? this.width / this.bounds.width
+      : Math.min((this.width - 120) / this.bounds.width, (this.height - 90) / this.bounds.depth);
     this.offsetX = (this.width - this.bounds.width * this.scale) / 2;
     this.offsetY = (this.height - this.bounds.depth * this.scale) / 2;
+    const step = mapStep(this.scale);
     this.sheet.style.width = `${this.width}px`;
     this.sheet.style.height = `${this.height}px`;
     const drawing = svg('svg', { width: this.width, height: this.height, 'aria-hidden': 'true' });
     drawing.append(svg('rect', { width: this.width, height: this.height, fill: '#4e6247' }));
     for (
-      let x = Math.ceil(this.bounds.x / 50) * 50;
+      let x = Math.ceil(this.bounds.x / step) * step;
       x <= this.bounds.x + this.bounds.width;
-      x += 50
+      x += step
     )
       drawing.append(
         svg('path', {
@@ -263,9 +387,9 @@ export class ParishMap {
         }),
       );
     for (
-      let z = Math.ceil(this.bounds.z / 50) * 50;
+      let z = Math.ceil(this.bounds.z / step) * step;
       z <= this.bounds.z + this.bounds.depth;
-      z += 50
+      z += step
     )
       drawing.append(
         svg('path', {
@@ -386,15 +510,17 @@ export class ParishMap {
     }));
     // Gathering grounds are scattered, so a resource-type centroid may be
     // empty land. Anchor every name and leader line to an actual site.
-    for (const n of available)
-      sites.push({
-        id: n.id,
-        name: n.name,
-        x: n.x,
-        z: n.z,
-        kind: n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item,
-        category: 'resource',
-      });
+    // Zoomed out, names would bury the map: resources lose theirs below 100%.
+    if (!outer)
+      for (const n of available)
+        sites.push({
+          id: n.id,
+          name: n.name,
+          x: n.x,
+          z: n.z,
+          kind: n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item,
+          category: 'resource',
+        });
     if (!this.local) {
       sites.push(
         {
@@ -451,6 +577,7 @@ export class ParishMap {
       this.width,
       this.height,
     );
+    if (this.zoom < 0.5) sites.length = 0;
     for (let i = 0; i < sites.length; i++) {
       const site = sites[i],
         box = boxes[i];
@@ -485,10 +612,10 @@ export class ParishMap {
       stroke: '#f4edd6',
     });
     scale.append(
-      svg('path', { d: `M0 -6V0H${50 * this.scale}V-6`, fill: 'none', 'stroke-width': 2 }),
+      svg('path', { d: `M0 -6V0H${step * this.scale}V-6`, fill: 'none', 'stroke-width': 2 }),
     );
     const caption = svg('text', { x: 0, y: -12, stroke: 'none', 'font-size': 11 });
-    caption.textContent = '50 m';
+    caption.textContent = step >= 1000 ? `${step / 1000} km` : `${step} m`;
     scale.append(caption);
     drawing.append(scale);
     // Markers sit above the base map; labels remain native, keyboard-focusable buttons.
@@ -505,9 +632,11 @@ export class ParishMap {
       [...labels.querySelectorAll<HTMLButtonElement>('button')]
         .find((b) => b.dataset.site === focusedSite)
         ?.focus({ preventScroll: true });
-    this.host.querySelector('.parish-map-zoom')!.textContent = `${this.zoom * 100}%`;
-    (this.host.querySelector('[data-map="out"]') as HTMLButtonElement).disabled = this.zoom <= 1;
-    (this.host.querySelector('[data-map="in"]') as HTMLButtonElement).disabled = this.zoom >= 3;
+    this.host.querySelector('.parish-map-zoom')!.textContent = `${Math.round(this.zoom * 100)}%`;
+    (this.host.querySelector('[data-map="out"]') as HTMLButtonElement).disabled =
+      this.zoom <= this.floor() + 1e-6;
+    (this.host.querySelector('[data-map="in"]') as HTMLButtonElement).disabled =
+      this.zoom >= maxZoom;
   }
   private updatePlayers() {
     this.players.replaceChildren();

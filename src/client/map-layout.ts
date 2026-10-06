@@ -43,6 +43,37 @@ export function inBounds(b: MapBounds, p: Point, margin = 0) {
     p.z <= b.z + b.depth + margin
   );
 }
+export const minZoom = 1;
+export const maxZoom = 3;
+export const clampZoom = (zoom: number, min = minZoom) => Math.min(maxZoom, Math.max(min, zoom));
+/** Zoom after a wheel event; `mode` is WheelEvent.deltaMode (0 pixels, 1 lines, 2 pages). */
+export function wheelZoom(zoom: number, deltaY: number, mode = 0, min = minZoom) {
+  const pixels = deltaY * (mode === 1 ? 16 : mode === 2 ? 400 : 1);
+  return clampZoom(zoom * Math.exp(-pixels / 400), min);
+}
+/** The zoom (≤ 100%) at which the whole map fits a window, given the 100% scale in px/m. */
+export function worldZoom(unitScale: number, width: number, height: number, half: number) {
+  return Math.min(1, width / (2 * half * unitScale), height / (2 * half * unitScale));
+}
+/** A zoomed-out sheet of `width`×`height` px centred on `centre`, kept inside the map. */
+export function outerSheet(
+  centre: Point,
+  scale: number,
+  width: number,
+  height: number,
+  half: number,
+): MapBounds {
+  const axis = (c: number, size: number) =>
+    size >= 2 * half ? -size / 2 : Math.max(-half, Math.min(half - size, c - size / 2));
+  const w = width / scale,
+    d = height / scale;
+  return { x: axis(centre.x, w), z: axis(centre.z, d), width: w, depth: d };
+}
+/** A round distance in metres spanning at least `pixels` at `scale` px/m. */
+export function mapStep(scale: number, pixels = 40) {
+  const steps = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+  return steps.find((m) => m * scale >= pixels) ?? steps[steps.length - 1];
+}
 /** Town borders overlapping a sheet, for drawing as circles. */
 export function townBorders(w: World, b: MapBounds) {
   return w.towns

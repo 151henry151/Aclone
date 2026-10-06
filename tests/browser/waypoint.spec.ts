@@ -35,10 +35,28 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
     await page.keyboard.press('m');
     const map = page.locator('#parish-map');
-    await map.getByRole('button', { name: 'Choose waypoint', exact: true }).click();
     const b = w.buildings.find((b) => b.kind === 'market')!;
     await map.getByRole('button', { name: b.name, exact: true }).click();
     await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
+    // Zoom out past the village until the whole 12.5 km island fits the window.
+    const zoomLevel = map.locator('.parish-map-zoom');
+    const area = (await map.locator('.parish-map-viewport').boundingBox())!;
+    await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+    for (let i = 0; i < 6; i++) await page.mouse.wheel(0, 1000);
+    await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeLessThan(10);
+    await expect(map.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
+    await page.screenshot({ path: 'test-results/parish-map-world.png' });
+    // The window height now spans the map, so 30% of it east of the village is ~3.7 km.
+    await page.mouse.click(area.x + area.width / 2 + area.height * 0.3, area.y + area.height / 2);
+    await page.keyboard.press('Escape');
+    await expect
+      .poll(async () => parseFloat((await page.locator('#waypoint-distance').textContent())!))
+      .toBeGreaterThan(3000);
+    await page.keyboard.press('m');
+    await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+    for (let i = 0; i < 6; i++) await page.mouse.wheel(0, -500);
+    await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeGreaterThan(100);
+    await map.getByRole('button', { name: b.name, exact: true }).click();
     await page.keyboard.press('Escape');
     await expect(page.locator('#waypoint-name')).toHaveText(b.name);
     const arrow = page.locator('#waypoint-arrow'),

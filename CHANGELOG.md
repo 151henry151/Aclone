@@ -10,6 +10,12 @@ All notable changes to Aclone are documented here. This project follows
 
 - Accept a pilot key carried in the URL hash (`#pilot=…&world=…`), store it in the browser and remove it from the address, and link players on nogits.com to the hromp.com page that brings an existing pilot across.
 
+### Changed
+
+- Change clicking a building name on the parish map to set a waypoint there instead of opening the building's panel, and remove the **Choose waypoint** button.
+- Zoom the parish map with the mouse wheel or a two-finger pinch, keeping the point under the cursor or fingers in place; zoom is now continuous up to 300%.
+- Let the parish map zoom out below 100% until the whole world fits the window, re-centring the sheet as you pan, scaling the grid and scale bar to round distances, and hiding resource names below 100% and building names below 50%.
+
 ## [0.54.0] - 2026-10-04
 
 ### Added

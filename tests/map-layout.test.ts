@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapBounds, localBounds, placeMapLabels, townBorders } from '../src/client/map-layout.ts';
+import {
+  mapBounds,
+  localBounds,
+  placeMapLabels,
+  townBorders,
+  wheelZoom,
+  worldZoom,
+  outerSheet,
+  mapStep,
+} from '../src/client/map-layout.ts';
 import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import { resourceNodes } from '../src/shared/resources.ts';
 import { legacyTown, townRoads } from '../src/shared/town.ts';
@@ -85,4 +94,45 @@ test('town borders appear on any sheet they overlap', () => {
     z: 4000,
     radius: 150,
   });
+});
+
+test('wheel zoom scales smoothly by scroll distance and stays within the map limits', () => {
+  assert.ok(wheelZoom(1, -100) > 1);
+  assert.ok(wheelZoom(2, 100) < 2);
+  assert.ok(Math.abs(wheelZoom(wheelZoom(1.5, -120), 120) - 1.5) < 1e-9);
+  assert.equal(wheelZoom(1, 5000), 1);
+  assert.equal(wheelZoom(2.9, -5000), 3);
+  // Line-mode wheels (Firefox) scroll in lines rather than pixels.
+  assert.equal(wheelZoom(1, -3, 1), wheelZoom(1, -48));
+});
+
+test('zooming out widens the sheet until the whole map fits the window', () => {
+  // At 1 px/m a 900×600 window fits a 12.5 km map at 600/12,500 of the base zoom.
+  assert.equal(worldZoom(1, 900, 600, 6250), 600 / 12500);
+  // Compact maps already fit at 100%.
+  assert.equal(worldZoom(1.2, 900, 600, 250), 1);
+  // A sheet is centred on the requested point while it fits inside the map...
+  assert.deepEqual(outerSheet({ x: 100, z: -200 }, 0.5, 1000, 800, 6250), {
+    x: -900,
+    z: -1000,
+    width: 2000,
+    depth: 1600,
+  });
+  // ...is kept inside the map near its edge...
+  assert.equal(outerSheet({ x: 6200, z: 0 }, 0.5, 1000, 800, 6250).x, 6250 - 2000);
+  // ...and is centred on the map when it is larger than the map.
+  assert.deepEqual(outerSheet({ x: 3000, z: 3000 }, 0.05, 1000, 800, 6250), {
+    x: -10000,
+    z: -8000,
+    width: 20000,
+    depth: 16000,
+  });
+});
+
+test('grid and scale bar pick readable round distances', () => {
+  assert.equal(mapStep(1), 50);
+  assert.equal(mapStep(0.5), 100);
+  assert.equal(mapStep(0.1), 500);
+  assert.equal(mapStep(0.03), 2000);
+  assert.equal(mapStep(0.01), 5000);
 });
