@@ -9,7 +9,8 @@ import {
   type Listener,
   type Position,
 } from './sound-scene';
-import { synthesize, type SoundKind } from './sound-synthesis';
+import type { SoundKind } from './sound-synthesis';
+import { soundBank, SOUND_RATE } from './sound-bank';
 
 export type AudioChannel = 'engine' | 'effects' | 'ambience' | 'chat';
 type Voice = {
@@ -239,8 +240,8 @@ export class GameAudio {
     const context = this.context!;
     let buffer = this.buffers.get(kind);
     if (!buffer) {
-      const samples = synthesize(kind, context.sampleRate);
-      buffer = context.createBuffer(1, samples.length, context.sampleRate);
+      const samples = soundBank.get(kind);
+      buffer = context.createBuffer(1, samples.length, SOUND_RATE);
       buffer.copyToChannel(samples, 0);
       this.buffers.set(kind, buffer);
     }

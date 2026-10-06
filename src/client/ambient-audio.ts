@@ -2,7 +2,7 @@
 import { ambientZones } from '../shared/ambient';
 import type { World } from '../shared/types';
 import { publicPath } from '../shared/public-path';
-import { synthesize } from './sound-synthesis';
+import { soundBank, SOUND_RATE } from './sound-bank';
 import { spatialSound, type Listener } from './sound-scene';
 declare const __ACLONE_BASE__: string;
 type Voice = { source: AudioBufferSourceNode; gain: GainNode; pan: StereoPannerNode; key: string };
@@ -66,11 +66,8 @@ export class AmbientAudio {
           continue;
         }
         if (!buffer) {
-          const samples = synthesize(
-            zone.source as 'woodland' | 'shore' | 'storm',
-            context.sampleRate,
-          );
-          buffer = context.createBuffer(1, samples.length, context.sampleRate);
+          const samples = soundBank.get(zone.source as 'woodland' | 'shore' | 'storm');
+          buffer = context.createBuffer(1, samples.length, SOUND_RATE);
           buffer.copyToChannel(samples, 0);
           this.cache(key, buffer);
         }

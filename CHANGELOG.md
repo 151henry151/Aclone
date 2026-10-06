@@ -15,6 +15,8 @@ All notable changes to Aclone are documented here. This project follows
 - Change clicking a building name on the parish map to set a waypoint there instead of opening the building's panel, and remove the **Choose waypoint** button.
 - Zoom the parish map with the mouse wheel or a two-finger pinch, keeping the point under the cursor or fingers in place; zoom is now continuous up to 300%.
 - Let the parish map zoom out below 100% until the whole world fits the window, re-centring the sheet as you pan, scaling the grid and scale bar to round distances, and hiding resource names below 100% and building names below 50%.
+- Synthesize every game sound behind the loading screen (**Tuning engines and birdsong…**) instead of on first play.
+- Keep the loading screen up (**Settling in…**) while the world renders behind it, with the HUD laid out, until 20 consecutive frames run smoothly or 6 seconds pass, so automatic quality reduction and first-frame GPU work happen before controls are handed over.
 
 ## [0.54.0] - 2026-10-04
 

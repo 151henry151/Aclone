@@ -215,10 +215,10 @@ app.insertAdjacentHTML(
   'beforeend',
   '<section id="startup-loading" hidden role="status" aria-live="polite"><div><span class="eyebrow">ENTERING THE PARISH</span><h2 id="startup-message">Preparing scenery…</h2><p>The controls will be ready in a moment.</p></div></section>',
 );
-scene.onLoading = (message, warning) => {
+scene.onLoading = (message, warning, live) => {
   if ($('startup-loading').hidden === !!message) sound.setActive(!message && !document.hidden);
   $('startup-loading').hidden = !message;
-  $('world-hud').hidden = !!message || !world;
+  $('world-hud').hidden = (!!message && !live) || !world;
   if (message) {
     $('startup-message').textContent = message;
     keys.clear();

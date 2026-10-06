@@ -1,8 +1,10 @@
+import { FrameSettle } from './frame-settle';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
 import type { RocketFlight } from './rocket-flight';
 import { LivestockScene } from './livestock-scene';
 import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
+import { soundBank } from './sound-bank';
 import { waitForTextures, failedTextures } from './materials';
 import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -188,7 +190,10 @@ export class GameScene {
   private me?: Player;
   paused = false;
   ready = true;
-  onLoading?: (message?: string, warning?: string) => void;
+  /** Rendering behind the loading screen until frame pacing is steady. */
+  private settling?: { settle: FrameSettle; warning?: string };
+  /** `live` means the world is already rendering behind the loading message. */
+  onLoading?: (message?: string, warning?: string, live?: boolean) => void;
   private warmGeneration = 0;
   private sky = countrySky();
   private precipitation = new Precipitation();
@@ -411,6 +416,7 @@ export class GameScene {
     const entering = this.lastWorld !== world.id;
     if (entering) {
       this.ready = false;
+      this.settling = undefined;
       this.onLoading?.('Preparing the parish…');
       performance.mark('aclone-world-loading');
     }
@@ -521,10 +527,11 @@ export class GameScene {
         dispose(mesh);
         this.meshes.delete(id);
       }
-    if (entering || (rebuilt && !this.ready)) void this.prepareWorld();
+    if (entering || (rebuilt && !this.ready && !this.settling)) void this.prepareWorld();
   }
   private async prepareWorld() {
     const generation = ++this.warmGeneration;
+    this.settling = undefined;
     const current = () => generation === this.warmGeneration && !!this.world;
     try {
       await yieldFrame();
@@ -540,6 +547,8 @@ export class GameScene {
           this.onLoading?.(`Preparing scenery… ${Math.round((i / Math.max(1, total)) * 100)}%`),
       );
       if (!done) return;
+      this.onLoading?.('Tuning engines and birdsong…');
+      if (!(await soundBank.prepare(current))) return;
       // Establish fog, camera and light positions before compiling the first view.
       this.renderTime = -Infinity;
       this.frame();
@@ -572,16 +581,15 @@ export class GameScene {
       if (!(await finishGpuWork(this.renderer.getContext(), current))) return;
       await yieldFrame();
       if (!current()) return;
-      this.ready = true;
       this.lastTime = performance.now();
       this.slowFrames = 0;
-      performance.mark('aclone-world-ready');
-      this.onLoading?.(
-        undefined,
-        failedTextures.size
+      this.onLoading?.('Settling in…', undefined, true);
+      this.settling = {
+        settle: new FrameSettle(),
+        warning: failedTextures.size
           ? 'Some scenery textures could not load. Plain surfaces are in use; reload to retry.'
           : undefined,
-      );
+      };
     } catch (error) {
       if (!current()) return;
       console.warn('Scenery preparation failed', error);
@@ -596,6 +604,7 @@ export class GameScene {
   setSpace() {
     ++this.warmGeneration;
     this.ready = true;
+    this.settling = undefined;
     this.onLoading?.();
     this.audio.clear();
     this.lastWorld = '';
@@ -1039,7 +1048,7 @@ export class GameScene {
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
     this.renderTime = now - (sinceRender % interval);
     if (
-      this.ready &&
+      (this.ready || this.settling) &&
       !this.low &&
       !this.paused &&
       localStorage.getItem('aclone.quality') !== 'high'
@@ -1054,6 +1063,19 @@ export class GameScene {
         this.resize();
         document.documentElement.classList.add('performance');
       }
+    }
+    if (
+      this.settling?.settle.observe(
+        now,
+        now - this.lastTime,
+        Math.max(50, 2000 / (this.software || this.low ? 30 : 60)),
+      )
+    ) {
+      const { warning } = this.settling;
+      this.settling = undefined;
+      this.ready = true;
+      performance.mark('aclone-world-ready');
+      this.onLoading?.(undefined, warning);
     }
     this.fpsFrames++;
     if (now - this.fpsSince >= 1000) {
@@ -1389,7 +1411,7 @@ export class GameScene {
       this.stars.rotation.y += dt * 0.008;
       for (const p of this.planets) p.rotation.y += dt * 0.06;
     }
-    if (!this.ready) return;
+    if (!this.ready && !this.settling) return;
     this.drunkVision.render(
       this.renderer,
       this.scene,
