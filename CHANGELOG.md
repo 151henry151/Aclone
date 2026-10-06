@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-10-05
+
 ### Added
 
 - Accept a pilot key carried in the URL hash (`#pilot=…&world=…`), store it in the browser and remove it from the address, and link players on nogits.com to the hromp.com page that brings an existing pilot across.
