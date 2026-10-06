@@ -17,6 +17,8 @@ All notable changes to Aclone are documented here. This project follows
 - Let the parish map zoom out below 100% until the whole world fits the window, re-centring the sheet as you pan, scaling the grid and scale bar to round distances, and hiding resource names below 100% and building names below 50%.
 - Synthesize every game sound behind the loading screen (**Tuning engines and birdsong…**) instead of on first play.
 - Keep the loading screen up (**Settling in…**) while the world renders behind it, with the HUD laid out, until 20 consecutive frames run smoothly or 6 seconds pass, so automatic quality reduction and first-frame GPU work happen before controls are handed over.
+- Draw a soft ground glow, draped over the terrain in one batched mesh, under every lit streetlamp that has no spotlight of its own, and fade spotlights out as the next lamp approaches their slot instead of switching them off.
+- Draw signs and pilot name tags after all transparent scenery so the sea and other translucent surfaces no longer paint over them.
 
 ## [0.54.0] - 2026-10-04
 

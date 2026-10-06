@@ -1,4 +1,5 @@
 import { FrameSettle } from './frame-settle';
+import { label, pilotLabel } from './labels';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
 import type { RocketFlight } from './rocket-flight';
@@ -74,51 +75,6 @@ function cylinder(
   m.castShadow = true;
   g.add(m);
   return m;
-}
-function label(text: string, color = '#eee4c8', scale = 1) {
-  const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 96;
-  const ctx = c.getContext('2d')!;
-  ctx.fillStyle = 'rgba(27,37,30,.85)';
-  ctx.fillRect(0, 8, 512, 70);
-  ctx.strokeStyle = '#8c9671';
-  ctx.strokeRect(1, 9, 510, 68);
-  ctx.font = '600 24px monospace';
-  ctx.fillStyle = color;
-  ctx.textAlign = 'center';
-  ctx.fillText(text.slice(0, 30), 256, 53);
-  const texture = new T.CanvasTexture(c);
-  const s = new T.Sprite(new T.SpriteMaterial({ map: texture, depthTest: false }));
-  s.scale.set(15 * scale, 2.8 * scale, 1);
-  return s;
-}
-function pilotLabel(name: string) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 384;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = 'rgba(20,34,37,.9)';
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 376, 104, 22);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(180, 108);
-  ctx.lineTo(192, 124);
-  ctx.lineTo(204, 108);
-  ctx.fill();
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#a9dbcb';
-  ctx.font = '600 19px sans-serif';
-  ctx.fillText('● PILOT', 192, 36);
-  ctx.fillStyle = '#fff4d8';
-  ctx.font = '600 28px sans-serif';
-  ctx.fillText(name.slice(0, 30), 192, 78, 348);
-  const tag = new T.Sprite(
-    new T.SpriteMaterial({ map: new T.CanvasTexture(canvas), depthWrite: false }),
-  );
-  tag.scale.set(6, 2, 1);
-  return tag;
 }
 export class GameScene {
   readonly audio = new GameAudio();
@@ -861,7 +817,7 @@ export class GameScene {
         this.land.add(mesh);
       }
     }
-    this.townLighting.reset(this.land);
+    this.townLighting.reset(this.land, (x, z) => terrainHeight(w, x, z));
     if (w.creator?.scenery !== false) countryside(this.land, w, this.low);
     this.woods.clear();
     if (streamed && w.creator?.scenery !== false) {
