@@ -1,5 +1,6 @@
 import { FrameSettle } from './frame-settle';
 import { label, pilotLabel } from './labels';
+import { saleTag, saleTagText } from './sale-tag';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
 import type { RocketFlight } from './rocket-flight';
@@ -483,7 +484,29 @@ export class GameScene {
         dispose(mesh);
         this.meshes.delete(id);
       }
+    this.syncSaleTags(world);
     if (entering || (rebuilt && !this.ready && !this.settling)) void this.prepareWorld();
+  }
+  private syncSaleTags(w: World) {
+    const byId = new Map(w.buildings.map((b) => [b.id, b]));
+    for (const g of this.buildingMeshes) {
+      const b = byId.get(g.userData.building);
+      const text = b && saleTagText(w, b),
+        current = g.userData.saleTag as T.Sprite | undefined;
+      if (current?.userData.saleText === text) continue;
+      if (current) {
+        current.removeFromParent();
+        dispose(current);
+        delete g.userData.saleTag;
+      }
+      if (!text || g.userData.signY === undefined) continue;
+      const tag = saleTag(text);
+      // Hang from just under the name board; sprites rotate with the camera, not the building.
+      tag.position.set(0, g.userData.signY - 0.55, 0);
+      tag.userData.sway = Math.random() * Math.PI * 2;
+      g.userData.saleTag = tag;
+      g.add(tag);
+    }
   }
   private async prepareWorld() {
     const generation = ++this.warmGeneration;
@@ -628,6 +651,7 @@ export class GameScene {
     for (const b of w.buildings) {
       const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
       const g = custom ? creatorModel(custom, w) : this.building(b);
+      g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;
       g.position.set(b.x, terrainHeight(w, b.x, b.z), b.z);
       g.rotation.y = b.rotation;
       g.userData.building = b.id;
@@ -953,6 +977,7 @@ export class GameScene {
     // Keep the terminal name readable at the door, not above the tall spacecraft.
     sign.position.set(0, b.kind === 'starport' ? 8 : bounds.max.y + 1.1, 0);
     g.add(sign);
+    g.userData.signY = sign.position.y;
     return g;
   }
   private vehicle(slot: number, name?: string, paint?: string) {
@@ -1347,7 +1372,13 @@ export class GameScene {
       }
       for (const g of this.buildingMeshes)
         for (const child of g.children)
-          if (child instanceof T.Sprite) child.visible = !scenic && distance(p, g.position) < 32;
+          if (child instanceof T.Sprite) {
+            const tag = child === g.userData.saleTag;
+            // Sale tags carry further than names so listings catch the eye from the road.
+            child.visible = !scenic && distance(p, g.position) < (tag ? 70 : 32);
+            if (tag)
+              child.material.rotation = Math.sin(this.elapsed * 1.3 + child.userData.sway) * 0.06;
+          }
       for (const obj of this.land.children) {
         if (obj.userData.blades) obj.userData.blades.rotation.z += dt * 0.35;
         if (obj.userData.clouds) obj.position.x = Math.sin(this.elapsed * 0.006) * 25;

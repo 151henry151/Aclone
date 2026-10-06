@@ -4,7 +4,7 @@ import * as T from 'three';
  * Labels write no depth, so any transparent mesh drawn after them (the sea, glows, smoke)
  * would paint over them. Ordering them last keeps them on top.
  */
-const labelOrder = 10;
+export const labelOrder = 10;
 export function label(
   text: string,
   color = '#eee4c8',

@@ -9,6 +9,7 @@ All notable changes to Aclone are documented here. This project follows
 ### Added
 
 - Accept a pilot key carried in the URL hash (`#pilot=…&world=…`), store it in the browser and remove it from the address, and link players on nogits.com to the hromp.com page that brings an existing pilot across.
+- Hang a small swaying red **For sale** tag showing the asking price beneath the name sign of every building its owner has listed, visible from 70 m and updated as listings and prices change.
 
 ### Changed
 
