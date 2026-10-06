@@ -30,6 +30,8 @@ Production is operator-managed. Keep the same persistent DATA_DIR and private en
 4. Restart the service gracefully and refresh clients. Update client and server together: collision, protocols and shared catalogs must match.
 5. Check `/api/health`, login, movement, chat, property, stock and affected features. Use the public prefix when probing through a proxy.
 
+For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 over SSH from a workstation once `main` is pushed: it refuses a server checkout with local changes, takes a pre-deploy SQLite backup in `/var/lib/aclone/backups`, fast-forwards `/opt/aclone` to `origin/main` as the `aclone` user, runs `npm ci` only when the lockfile changed, builds with `BASE_PATH=/aclone/`, restarts `aclone.service`, and checks that the public page loads JavaScript from `/aclone/assets/` and `/api/health` reports the pushed version. It never reads the server's `.env`. Uploaded assets are not copied; back them up separately before migrations.
+
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
 ## Current upgrade: 0.42.2
