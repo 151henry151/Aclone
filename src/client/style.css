@@ -1071,8 +1071,10 @@ kbd {
   align-items: center;
   gap: 15px;
 }
-.directory > button:hover {
-  background: #ffffff09;
+.directory > button:hover,
+.directory > button.active {
+  background: #b1bf9120;
+  color: #e7cf8e;
 }
 .directory small {
   display: block;
@@ -1266,6 +1268,63 @@ kbd {
   font: 12px/1.65 monospace;
   resize: vertical;
   min-height: 230px;
+}
+.caretaker-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.caretaker-stats div {
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+}
+.caretaker-stats small {
+  display: block;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+.caretaker-stats b {
+  font:
+    18px Georgia,
+    serif;
+  color: var(--cream);
+}
+.caretaker-split {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(280px, 1.2fr);
+  gap: 18px;
+  align-items: start;
+}
+.caretaker-split .directory {
+  max-height: 58vh;
+}
+.caretaker-split .caretaker-detail {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 16px;
+  max-height: 58vh;
+  overflow: auto;
+}
+.caretaker-detail {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.caretaker-rules {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+}
+.caretaker-rules dt {
+  color: var(--muted);
+}
+.caretaker-rules dd {
+  margin: 0;
 }
 .ledger > div {
   display: flex;

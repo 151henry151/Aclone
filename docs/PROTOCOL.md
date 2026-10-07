@@ -53,7 +53,7 @@ Local actions (`src/shared/simulation.ts`): trade, use, buyBuilding, investment,
 
 Universe actions: land, takeoff, jump, ship, spaceTrade, exchange and script. Form handlers/integration tests supply examples. Socket authentication determines the actor, never a supplied player ID.
 
-`ping` with a numeric `at` gets a `pong` echo. Binary frames are not a separate protocol. Snapshot data for other players excludes their private inventory, cash, bank, skills and account credentials.
+`ping` with a numeric `at` gets a `pong` echo. Binary frames are not a separate protocol. Snapshot data for other players excludes their private inventory, cash, bank, skills and account credentials. The world owner may send `{type:"caretaker"}` while landed. The server answers that socket only, with `{type:"caretaker", view}` containing resident balances, needs, skills, inventories, jobs, loans, activity history and building stocks, tills, staff, guest stores and accounts. It refuses every other pilot with `World owner required` and does not include the view. Letters, secret ballots and unaccepted trade terms are counts only, never their contents. Account tokens and passwords are not part of the view.
 
 ## Account endpoints and compact state (0.3.0)
 

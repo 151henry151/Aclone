@@ -18,7 +18,7 @@ Optional [federation](GALAXIES.md) uses pinned Ed25519 hosts and single-use arri
 - `shared/creator.ts`: design validation/actions/effects; `server/world-design.ts`: portable exports.
 - `server/store.ts`: schema, snapshots, durable ledger and online backups.
 - `server/universe.ts`, `accounts.ts`, `mail.ts`: identities, space economy, credentials and optional SMTP.
-- `server/app.ts`, `snapshots.ts`: transport, scheduling, rollback and private/public projections.
+- `server/app.ts`, `snapshots.ts`: transport, scheduling, rollback and private/public projections. `shared/caretaker.ts` is the world owner's full parish inspection; letters, ballots and offer terms stay out of it.
 - `server/lua.ts`, `scripts.ts`, `script-worker.mjs`: bounded isolated script execution.
 - `server/npc/`: providers, plans, memory, budgets, A* navigation and scheduling; [NPC guide](NPCS.md).
 - `client/scene.ts`, `buildings.ts`, `tractor.ts`, `human.ts`: rendering and models; [Art](ART.md).

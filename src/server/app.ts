@@ -53,6 +53,7 @@ import {
 import { Accounts, type Mailer } from './accounts.ts';
 import { configuredMailer } from './mail.ts';
 import { clientAddress } from './client-address.ts';
+import { caretakerView } from '../shared/caretaker.ts';
 const inputSchema = z
   .object({
     throttle: z.number().min(-1).max(1),
@@ -819,6 +820,11 @@ export async function createApp(options: AppOptions) {
         }
         const w = p.world && worlds.get(p.world);
         if (!w) throw Error('Land on a world first');
+        if (a.type === 'caretaker') {
+          if (w.owner !== p.account.id) throw Error('World owner required');
+          send(p, { type: 'caretaker', view: caretakerView(w) });
+          return;
+        }
         if (a.type === 'script') {
           if (w.owner !== p.account.id) throw Error('World owner required');
           const source = z.string().max(16384).parse(a.source);

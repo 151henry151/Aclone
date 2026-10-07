@@ -25,6 +25,8 @@ import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
+import { caretakerBody, caretakerPanel, type CaretakerUi } from './caretaker';
+import type { CaretakerView } from '../shared/caretaker';
 import { workShift } from './work-shift';
 import { TradeFeedback } from './trade-feedback';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -192,6 +194,9 @@ if (carriedHash !== location.hash)
 let panel = '',
   selected = '',
   tab = 'Main',
+  caretakerSnapshot: CaretakerView | undefined,
+  caretakerUi: CaretakerUi = { tab: 'Overview', query: '', selected: '' },
+  caretakerTimer: ReturnType<typeof setInterval> | undefined,
   token = localStorage.getItem('aclone.pilot') ?? '',
   inSpace = true,
   reconnectTimer: ReturnType<typeof setTimeout> | undefined,
@@ -405,6 +410,11 @@ async function connect() {
       void showGalaxy().then(() => {
         if (reopen) openPanel('shipyard');
       });
+    }
+    if (msg.type === 'caretaker') {
+      caretakerSnapshot = msg.view;
+      const editing = document.activeElement?.matches('#caretaker-query');
+      if (panel === 'caretaker' && !editing) renderPanel();
     }
     if (msg.type === 'result') {
       const visit = tradeVisits.get(msg.request);
@@ -960,7 +970,17 @@ function openPanel(name: string) {
   panel = name;
   tab = 'Main';
   keys.clear();
+  watchCaretaker(name === 'caretaker');
   renderPanel();
+}
+function watchCaretaker(open: boolean) {
+  clearInterval(caretakerTimer);
+  caretakerTimer = undefined;
+  if (!open || (me?.authority ?? 0) < 20) return;
+  send({ type: 'caretaker' });
+  caretakerTimer = setInterval(() => {
+    if (panel === 'caretaker') send({ type: 'caretaker' });
+  }, 4000);
 }
 function closePanel() {
   if (panel === 'building' && lastTradeVisit === tradeVisit && tradeFeedback.summary)
@@ -973,6 +993,7 @@ function closePanel() {
   scene.paused = false;
   mobile.setBlocked(false);
   panel = '';
+  watchCaretaker(false);
   $('modal-host').innerHTML = '';
 }
 function modal(title: string, content: string, wide = false) {
@@ -1135,6 +1156,16 @@ app.addEventListener('change', (event) => {
 app.addEventListener('input', (event) => {
   if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
   const input = event.target as HTMLInputElement;
+  if (input.id === 'caretaker-query' && caretakerSnapshot && world) {
+    caretakerUi = { ...caretakerUi, query: input.value };
+    const body = document.getElementById('caretaker-body');
+    if (body)
+      body.innerHTML = caretakerBody(
+        caretakerSnapshot,
+        caretakerUi,
+        world.settings.denariiPerSheckle,
+      );
+  }
   if (
     (input.name === 'priceDenarii' && input.closest('form[data-price-editor]')) ||
     input.closest('form[data-business-details]')
@@ -1153,7 +1184,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10</dt><dd>Menu / owner editor</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -1306,7 +1337,7 @@ function renderPanel() {
               )
               .join('')}</div>`
           : ''
-      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
+      }<h3>Around the parish</h3><div class="menu-grid">${button('Parish directory', 'directory')}${button('Resources', 'resources')}${button('Activities', 'activities')}${button('Build', 'construction')}${button('Skills & employment', 'skills')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('World & community', 'menu')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Pilot & preferences', 'options')}${button('How to play', 'help')}</div>`,
     );
     return;
   }
@@ -1437,6 +1468,21 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'caretaker') {
+    if (!world || !me || me.authority < 20) {
+      modal(
+        'Caretaker dashboard.',
+        '<p>Only the world creator can open the parish books. Create your own world to inspect its residents and buildings.</p>',
+      );
+      return;
+    }
+    modal(
+      'Caretaker dashboard.',
+      caretakerPanel(caretakerSnapshot, caretakerUi, world.settings.denariiPerSheckle),
+      true,
+    );
+    return;
+  }
   if (panel === 'editor') {
     editorWindow();
     return;
@@ -1456,7 +1502,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1506,7 +1552,8 @@ function buildingWindow(b: Building) {
       html += `<p class="notice">${
         locked
           ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus ${OUTSIDE_RETURN_PERCENT}%, then the claim ends.`
-          : `Neighbours can invest working capital here. Returns come only from later earnings, capped at ${OUTSIDE_RETURN_PERCENT}% above the stake, and never empty the operating reserve.`}
+          : `Neighbours can invest working capital here. Returns come only from later earnings, capped at ${OUTSIDE_RETURN_PERCENT}% above the stake, and never empty the operating reserve.`
+      }
       }${
         mine
           ? ` You have put in ${money(mine.principal)}, collected ${money(mine.paid)}, and may take ${money(due)} now (claim ${money(mine.claim)}).`
@@ -1901,6 +1948,7 @@ app.addEventListener('click', async (e) => {
       'activities',
       'construction',
       'editor',
+      'caretaker',
       'create',
     ];
     if (panels.includes(action)) {
@@ -1946,6 +1994,17 @@ app.addEventListener('click', async (e) => {
       case 'interactObject':
         send({ type: 'interactObject', object: id });
         closePanel();
+        break;
+      case 'caretaker-tab':
+        caretakerUi = { ...caretakerUi, tab: id || 'Overview', selected: '' };
+        renderPanel();
+        break;
+      case 'caretaker-open':
+        caretakerUi = { ...caretakerUi, selected: id ?? '' };
+        renderPanel();
+        break;
+      case 'caretaker-refresh':
+        send({ type: 'caretaker' });
         break;
       case 'player':
         selected = id!;
@@ -2497,6 +2556,7 @@ window.addEventListener('keydown', (e) => {
     'f7',
     'f9',
     'f10',
+    'f6',
   ];
   if (handled.includes(key)) e.preventDefault();
   keys.add(e.key);
@@ -2510,6 +2570,10 @@ window.addEventListener('keydown', (e) => {
   }
   if (key === 'f10') {
     openPanel('editor');
+    return;
+  }
+  if (key === 'f6' && me && me.authority >= 20) {
+    openPanel('caretaker');
     return;
   }
   if (key === 'f9') {

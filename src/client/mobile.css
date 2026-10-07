@@ -470,6 +470,17 @@
 .mobile-ui .settings-grid {
   grid-template-columns: minmax(0, 1fr);
 }
+.mobile-ui .caretaker-split {
+  grid-template-columns: 1fr;
+}
+.mobile-ui .caretaker-split .caretaker-detail {
+  border-left: 0;
+  padding-left: 0;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 8px;
+  max-height: none;
+}
 .mobile-ui .menu-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

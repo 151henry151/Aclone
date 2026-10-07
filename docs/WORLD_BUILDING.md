@@ -15,6 +15,8 @@ and 100 worlds total.
 
 Land, then open **Editor / F10**. On a phone, use **Menu → World editor**. Edits apply live and persist.
 
+Open **Caretaker dashboard** from the world menu, or press **F6**. On a phone it is under **Actions → Caretaker dashboard**. Only the world creator receives it. The dashboard lists every pilot and AI resident (cash, bank, hunger, thirst, health, skills, job, inventory, loans and the activity log) and every building (till, stock, prices, staff, production, guest stores and accounts). It refreshes every few seconds. Private letters, secret ballots and the terms of unaccepted trades stay sealed.
+
 ## Build a capture-the-flag arena
 
 1. Create a **Capture the flag arena** world.

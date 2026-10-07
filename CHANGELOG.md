@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Add a caretaker dashboard, available only to the world creator, listing every pilot and AI resident (balances, hunger, thirst, health, skills, inventory, loans and activity) and every building (till, stock, prices, staff, production and accounts). Private letters, secret ballots and unaccepted trade terms stay sealed.
+
 ### Changed
 
 - Cap an outside business stake at an 8% earned return instead of 25%.
