@@ -2,7 +2,8 @@
 import { recipes } from './catalog.ts';
 import type { Building, Player, World } from './types.ts';
 
-export const OUTSIDE_RETURN = 125;
+/** Modest note-style profit on working capital, not a private-equity windfall. */
+export const OUTSIDE_RETURN_PERCENT = 8;
 
 export type OutsideStake = {
   investor: string;
@@ -13,11 +14,30 @@ export type OutsideStake = {
 };
 
 export function stakeClaim(principal: number) {
-  return Math.floor((principal * OUTSIDE_RETURN) / 100);
+  return Math.floor((principal * (100 + OUTSIDE_RETURN_PERCENT)) / 100);
+}
+
+/** Rewrite the first-day 25% claims down to the current 8% cap. */
+export function migrateOutsideClaims(w: World) {
+  for (const b of w.buildings) {
+    if (!b.stakes?.length) continue;
+    b.stakes = b.stakes.filter((s) => {
+      if (s.claim === Math.floor((s.principal * 125) / 100)) {
+        s.claim = stakeClaim(s.principal);
+        if (s.paid > s.claim) s.paid = s.claim;
+      }
+      return s.paid < s.claim;
+    });
+    if (!b.stakes.length) delete b.stakes;
+  }
 }
 
 export function unpaidPrincipal(b: Building) {
   return (b.stakes ?? []).reduce((n, s) => n + Math.max(0, s.principal - s.paid), 0);
+}
+
+export function remainingClaim(b: Building) {
+  return (b.stakes ?? []).reduce((n, s) => n + Math.max(0, s.claim - s.paid), 0);
 }
 
 export function operatingReserve(w: World, b: Building) {
@@ -40,7 +60,7 @@ export function collectableReturn(w: World, b: Building, investor: string) {
 }
 
 export function ownerWithdrawable(w: World, b: Building, keepReserve = false) {
-  const lock = unpaidPrincipal(b) + (keepReserve ? operatingReserve(w, b) : 0);
+  const lock = remainingClaim(b) + (keepReserve ? operatingReserve(w, b) : 0);
   return Math.max(0, b.investment - lock);
 }
 
@@ -79,6 +99,21 @@ export function addOutsideStake(w: World, b: Building, investor: string, amount:
       opened: w.time,
     });
   raiseWatermark(b, amount);
+}
+
+/** Pay back unpaid principal from the till when the shop is demolished or emptied. */
+export function takeStakeRefunds(b: Building) {
+  const refunds: { investor: string; amount: number }[] = [];
+  for (const s of b.stakes ?? []) {
+    const due = Math.max(0, s.principal - s.paid);
+    const pay = Math.min(due, b.investment);
+    if (pay <= 0) continue;
+    b.investment -= pay;
+    s.paid += pay;
+    refunds.push({ investor: s.investor, amount: pay });
+  }
+  delete b.stakes;
+  return refunds;
 }
 
 export function applyOutsideCollect(w: World, b: Building, investor: string, amount: number) {

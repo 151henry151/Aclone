@@ -45,6 +45,7 @@ import {
   collectableReturn,
   ownerWithdrawable,
   raiseWatermark,
+  takeStakeRefunds,
 } from './stakes.ts';
 import { harbourSupply, emergencyImport } from './harbour-supply.ts';
 import {
@@ -106,6 +107,16 @@ export function money(value: number, rate = 100) {
 }
 export function damage(value: number, armour: number) {
   return (value * 100) / Math.max(1, armour);
+}
+
+function refundStakes(w: World, b: Building) {
+  for (const { investor, amount } of takeStakeRefunds(b)) {
+    const q = w.players[investor];
+    if (q) {
+      q.cash += amount;
+      log(w, 'transfer', amount, b.id, investor, 'stake refund');
+    } else log(w, 'sink', amount, b.id, 'treasury', 'stake refund');
+  }
 }
 
 export function log(
@@ -618,7 +629,10 @@ export function act(w: World, id: string, a: Action): string {
           if (b.stakes?.length || b.watermark !== undefined) raiseWatermark(b, n);
           log(w, 'transfer', n, id, b.id, 'investment');
         } else {
-          requireThat(n <= ownerWithdrawable(w, b), 'That cash is reserved for outside investors');
+          requireThat(
+            n <= ownerWithdrawable(w, b),
+            'Outside stakes lock that cash in the till until investors are paid',
+          );
           requireThat(b.investment >= n, 'Not enough investment');
           b.investment -= n;
           p.cash += n;
@@ -1188,6 +1202,7 @@ export function act(w: World, id: string, a: Action): string {
         ),
         'Guests must check out and collect their supplies first',
       );
+      refundStakes(w, b);
       w.buildings = w.buildings.filter((x) => x !== b);
       if (w.creator) w.creator.rules = w.creator.rules.filter((r) => r.target !== b.id);
       break;
@@ -1695,6 +1710,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
           continue;
         }
         if (!w.settings.retainEstateContents) {
+          refundStakes(w, b);
           b.stock = {};
           log(w, 'sink', b.investment, b.id, 'treasury', 'estate closure');
           b.investment = 0;

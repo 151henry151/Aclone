@@ -230,8 +230,8 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       const price = seller.sell[item];
       let cash = p.cash;
       const plan: Step[] = [];
-      if (cash < price && b.investment >= price + 2000) {
-        const take = Math.min(10000, b.investment - 2000, price * Math.min(4, missing));
+      if (cash < price && ownerWithdrawable(w, b, true) >= price) {
+        const take = Math.min(10000, ownerWithdrawable(w, b, true), price * Math.min(4, missing));
         plan.push(
           ...visit(p, b, [act({ type: 'investment', building: b.id, direction: 'withdraw', amount: take })]),
         );

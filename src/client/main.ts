@@ -84,7 +84,13 @@ import {
   weapons,
 } from '../shared/catalog';
 import { money, carry, distance, terrainHeight, productionInterval } from '../shared/simulation';
-import { collectableReturn, unpaidPrincipal } from '../shared/stakes';
+import {
+  collectableReturn,
+  ownerWithdrawable,
+  remainingClaim,
+  unpaidPrincipal,
+  OUTSIDE_RETURN_PERCENT,
+} from '../shared/stakes';
 import { mapHalf, legacyHalf } from '../shared/terrain';
 import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
@@ -1499,8 +1505,8 @@ function buildingWindow(b: Building) {
       const due = mine ? collectableReturn(world, b, me!.id) : 0;
       html += `<p class="notice">${
         locked
-          ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus 25%, then the claim ends.`
-          : 'Neighbours can invest working capital here. Returns come only from later earnings, capped at 25% above the stake, and never empty the operating reserve.'
+          ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus ${OUTSIDE_RETURN_PERCENT}%, then the claim ends.`
+          : `Neighbours can invest working capital here. Returns come only from later earnings, capped at ${OUTSIDE_RETURN_PERCENT}% above the stake, and never empty the operating reserve.`}
       }${
         mine
           ? ` You have put in ${money(mine.principal)}, collected ${money(mine.paid)}, and may take ${money(due)} now (claim ${money(mine.claim)}).`
@@ -1691,7 +1697,11 @@ function buildingWindow(b: Building) {
     };
   if (tab === 'Building Admin')
     html += owned
-      ? `<div class="admin-grid"><form data-action="investment">${hidden('building', b.id)}<h3>Working capital</h3>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+      ? `<div class="admin-grid"><form data-action="investment">${hidden('building', b.id)}<h3>Working capital</h3>${
+          remainingClaim(b)
+            ? `<p>Outside stakes lock ${money(remainingClaim(b))} in this till. You may withdraw ${money(ownerWithdrawable(world, b))} of your own surplus; invested cash stays until investors are paid from earnings.</p>`
+            : ''
+        }${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
           'direction',
           [
             ['deposit', 'Invest cash'],
@@ -1712,7 +1722,7 @@ function buildingWindow(b: Building) {
           tradingSelection!.side,
         )}        <p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
       : !b.government && !b.construction
-        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to 25% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${OUTSIDE_RETURN_PERCENT}% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
             'direction',
             [
               ['deposit', 'Invest cash'],

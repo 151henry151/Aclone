@@ -20,9 +20,11 @@ to move goods without a sale. Use **Building Admin** to invest cash, collect
 profit, set wages and set buy/sell prices. Neighbours who do not own the building
 can still put cash into its till. That stake pays for goods and wages while the
 owner is away. You collect a return only after the business earns, never more than
-25% above what you put in, and never so much that the till cannot cover its
-operating reserve. You cannot take the stake back. The owner cannot withdraw
-unpaid outside principal. Sales and restocking are not automatic.
+8% above what you put in — a modest working-capital note, not a private-equity
+windfall — and never so much that the till cannot cover its
+operating reserve. You cannot take the stake back. The owner cannot withdraw cash that would invade the unpaid claim
+(the stake plus its 8% return). Demolishing the shop refunds unpaid principal
+to the investors first. Sales and restocking are not automatic.
 
 ## Default trade prices (0.16.0)
 

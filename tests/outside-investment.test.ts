@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act } from '../src/shared/simulation.ts';
 import {
   collectableReturn,
+  migrateOutsideClaims,
   operatingReserve,
   ownerWithdrawable,
   stakeClaim,
@@ -42,6 +43,19 @@ function fixture() {
   } as unknown as ResidentState;
   return { w, owner, neighbour, mill, state };
 }
+
+test('an outside stake claims an 8% return, not a windfall', () => {
+  assert.equal(stakeClaim(10000), 10800);
+  assert.equal(stakeClaim(5000), 5400);
+});
+
+test('saved 25% claims are rewritten to the 8% cap', () => {
+  const { w, mill } = fixture();
+  mill.stakes = [{ investor: 'ada', principal: 5000, claim: 6250, paid: 100, opened: 0 }];
+  migrateOutsideClaims(w);
+  assert.equal(mill.stakes![0]!.claim, 5400);
+  assert.equal(mill.stakes![0]!.paid, 100);
+});
 
 test('a neighbour can fund a mill they do not own', () => {
   const { w, neighbour, mill } = fixture();
@@ -83,7 +97,7 @@ test('an outside investor cannot pull the stake back before the mill earns', () 
   assert.equal(JSON.stringify(w), before);
 });
 
-test('after the mill sells, the investor can collect profit up to a 25% return, not the whole till', () => {
+test('after the mill sells, the investor can collect profit up to an 8% return, not the whole till', () => {
   const { w, neighbour, mill } = fixture();
   const buyer = addPlayer(w, 'buyer', 'Buyer');
   buyer.x = mill.x;
@@ -173,7 +187,7 @@ test('an investor cannot drain the operating reserve, and the owner cannot pocke
   );
 });
 
-test('the owner can still withdraw surplus above unpaid outside principal', () => {
+test('the owner cannot withdraw invested capital or the unpaid 8% claim', () => {
   const { w, owner, neighbour, mill } = fixture();
   act(w, neighbour.id, {
     type: 'investment',
@@ -181,18 +195,45 @@ test('the owner can still withdraw surplus above unpaid outside principal', () =
     direction: 'deposit',
     amount: 4000,
   });
-  mill.investment += 3000;
+  mill.investment += 2000;
   owner.cash = 0;
+  assert.ok(ownerWithdrawable(w, mill) < 2000);
+  assert.throws(
+    () =>
+      act(w, owner.id, {
+        type: 'investment',
+        building: mill.id,
+        direction: 'withdraw',
+        amount: 2000,
+      }),
+    /stake|investor|lock|reserved/i,
+  );
   const allowed = ownerWithdrawable(w, mill);
-  assert.ok(allowed >= 3000);
+  assert.ok(allowed > 0);
   act(w, owner.id, {
     type: 'investment',
     building: mill.id,
     direction: 'withdraw',
-    amount: 3000,
+    amount: allowed,
   });
-  assert.equal(owner.cash, 3000);
-  assert.equal(mill.stakes![0]!.principal, 4000);
+  assert.equal(owner.cash, allowed);
+  assert.ok(mill.investment >= stakeClaim(4000) - (mill.stakes![0]!.paid ?? 0));
+});
+
+test('demolishing a shop refunds unpaid outside principal instead of pocketing it', () => {
+  const { w, owner, neighbour, mill } = fixture();
+  act(w, neighbour.id, {
+    type: 'investment',
+    building: mill.id,
+    direction: 'deposit',
+    amount: 4000,
+  });
+  const cash = neighbour.cash;
+  owner.x = mill.x;
+  owner.z = mill.z;
+  act(w, owner.id, { type: 'demolish', building: mill.id });
+  assert.equal(w.buildings.find((b) => b.id === mill.id), undefined);
+  assert.equal(neighbour.cash, cash + 4000);
 });
 
 test('government shops do not take outside stakes', () => {

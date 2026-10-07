@@ -6,6 +6,11 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+
+- Cap an outside business stake at an 8% earned return instead of 25%.
+- Lock unpaid outside claims in the till so the owner cannot withdraw invested cash or skim the owed return, and refund unpaid principal if the shop is demolished.
+
 ## [0.56.0] - 2026-10-07
 
 ### Added

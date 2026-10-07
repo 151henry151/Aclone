@@ -31,7 +31,7 @@ Close windows/chat, check connection, fuel and **Engine/F4**, and finish tasks. 
 
 ## Why can I not buy, sell or work at a building?
 
-Get within 18m. Trades need posted prices, seller stock, buyer funds and storage/cargo room. Learn the required profession for jobs. At your own property use **Stockroom** for goods and **Building Admin** for investment/withdrawals/prices; no self-trading or paid self-employment. Neighbours can invest in a till they do not own and later collect a capped return from earnings only. Owners may farm unpaid. Buying your workplace ends your job there.
+Get within 18m. Trades need posted prices, seller stock, buyer funds and storage/cargo room. Learn the required profession for jobs. At your own property use **Stockroom** for goods and **Building Admin** for investment/withdrawals/prices; no self-trading or paid self-employment. Neighbours can invest in a till they do not own and later collect a capped return from earnings only; the owner cannot withdraw that locked claim. Owners may farm unpaid. Buying your workplace ends your job there.
 
 ## Why is my flour mill not making flour?
 

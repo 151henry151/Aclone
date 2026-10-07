@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings } from './catalog.ts';
 import type { World, Building } from './types.ts';
+import { migrateOutsideClaims } from './stakes.ts';
 /** An owner manages capital and stock; they cannot be their own paid employee. */
 export function removeOwnerEmployment(w: World, b: Building) {
   if (!b.owner) return;
@@ -15,6 +16,7 @@ export function removeOwnerEmployment(w: World, b: Building) {
 
 /** Upgrade public/unowned quotes once; every player-owned price is sacrosanct. */
 export function migrateEconomy(w: World) {
+  migrateOutsideClaims(w);
   for (const b of w.buildings) removeOwnerEmployment(w, b);
   if (!w.vehicleServicesPricing) {
     for (const b of w.buildings)
