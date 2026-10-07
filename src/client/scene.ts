@@ -18,6 +18,7 @@ import { FarmFields } from './fields';
 import { combatBases } from '../shared/combat';
 import { calendar, worldWeather, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
 import { Precipitation } from './weather';
+import { GroundTracks, trackKind } from './ground-tracks';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { freezeScenery } from './static-scene';
@@ -154,6 +155,7 @@ export class GameScene {
   private warmGeneration = 0;
   private sky = countrySky();
   private precipitation = new Precipitation();
+  private tracks = new GroundTracks();
   private fields = new FarmFields();
   private livestock = new LivestockScene();
   private flights: RocketFlight[] = [];
@@ -254,7 +256,7 @@ export class GameScene {
     this.ball.castShadow = true;
     this.projectiles.count = 0;
     this.projectiles.frustumCulled = false;
-    this.actors.add(this.ball, this.projectiles, this.plumes.mesh);
+    this.actors.add(this.ball, this.projectiles, this.plumes.mesh, this.tracks.mesh);
     const starGeo = new T.BufferGeometry();
     const coords = [];
     for (let i = 0; i < 1400; i++) {
@@ -1158,6 +1160,20 @@ export class GameScene {
           },
           (id) => this.meshes.get(id)?.position,
         );
+        const kind = trackKind(w.climate ?? {});
+        for (const [id, mesh] of this.meshes) {
+          const q = w.players[id];
+          if (!q || q.vehicle !== 0 || q.atHome) continue;
+          this.tracks.record(
+            mesh.position.x,
+            mesh.position.z,
+            mesh.rotation.y,
+            kind,
+            Math.abs(q.speed) > 0.6,
+          );
+        }
+        this.tracks.tick(dt);
+        this.tracks.sync((x, z) => terrainHeight(w, x, z));
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(
