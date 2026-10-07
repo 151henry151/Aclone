@@ -19,6 +19,7 @@ import type { Store } from '../store.ts';
 import type { Universe, Account } from '../universe.ts';
 import { spaceChoices, spaceOperations, spaceAction, exchange, systemFor } from './space.ts';
 import { operation } from './player-operations.ts';
+import { travelPrep } from './travel.ts';
 import { leaveCombat } from '../../shared/combat.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
@@ -422,13 +423,7 @@ export class Residents {
     ];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (port && !p.task && !p.atHome && !p.game) {
-      const prep: Step[] =
-        p.vehicle !== 5 && p.fuel <= 0
-          ? [{ kind: 'act', action: { type: 'vehicle', slot: 5 } }]
-          : p.vehicle !== 5 && !p.engine
-            ? [{ kind: 'act', action: { type: 'engine' } }]
-            : [];
-      const visit: Step[] = [...prep, { kind: 'travel', destination: port.id }];
+      const visit: Step[] = [...travelPrep(p), { kind: 'travel', destination: port.id }];
       choices.push({
         id: 'space_takeoff',
         description:

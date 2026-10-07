@@ -8,6 +8,7 @@ import { worldResources, resourceAmount } from '../../shared/resources.ts';
 import type { Step } from './decision.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
+import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 type Act = Extract<Step, { kind: 'act' }>['action'];
 export type AddChoice = (description: string, plan: Step[], reconsiderSeconds?: number) => void;
 const act = (action: Act): Step => ({ kind: 'act', action });
@@ -88,7 +89,7 @@ export function economyChoices(
             missing,
             seller.stock[item],
             seller.sell[item]
-              ? Math.floor(Math.max(0, p.cash - 12000) / seller.sell[item])
+              ? affordableLoad(p.cash, seller.sell[item], livingReserve(w, p), missing)
               : missing,
           );
           while (load > 0 && !canCarry(p, item, load, w)) load--;
@@ -168,7 +169,7 @@ export function economyChoices(
       const n = Math.min(
         item === 'tools' ? 1 : 5,
         b.stock[item],
-        b.sell[item] ? Math.floor(Math.max(0, p.cash - 12000) / b.sell[item]) : 5,
+        b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 5) : 5,
       );
       if (n > 0 && canCarry(p, item, n, w))
         add(
@@ -220,9 +221,7 @@ export function economyChoices(
     )
     .slice(0, 4)) {
     // Resource travel has a tighter interaction radius; Navigator handles the node ID.
-    const prep = p.atHome ? [act({ type: 'outside' })] : [];
-    if (p.vehicle !== 5 && p.fuel <= 0) prep.push(act({ type: 'vehicle', slot: 5 }));
-    else if (p.vehicle !== 5 && !p.engine) prep.push(act({ type: 'engine' }));
+    const prep = travelPrep(p);
     add(`Gather ${n.item} at ${n.id} using ordinary tools, capacity and skill rules.`, [
       ...prep,
       { kind: 'travel', destination: n.id },

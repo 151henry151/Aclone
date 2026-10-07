@@ -10,6 +10,7 @@ import { shelter, roomCount } from '../../shared/lodging.ts';
 import type { World, Player, Building, Stock } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
 import { operation } from './player-operations.ts';
+import { travelPrep } from './travel.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 function home(w: World, p: Player) {
   return w.buildings
@@ -91,15 +92,7 @@ export function homecomingPlan(
   const care = carePlan(w, p, state);
   if (care.length) return care;
   const visit = (b: Building, steps: Step[]): Step[] => [
-    ...(p.atHome ? [action({ type: 'outside' })] : []),
-    ...(p.game ? [operation('leaveGame')] : []),
-    ...(p.hitch ? [operation('detach')] : []),
-    ...(p.crowBody ? [operation('crow')] : []),
-    ...(p.vehicle !== 5 && p.fuel <= 0
-      ? [action({ type: 'vehicle', slot: 5 })]
-      : p.vehicle !== 5 && !p.engine
-        ? [action({ type: 'engine' })]
-        : []),
+    ...travelPrep(p),
     ...(distance(p, b) >= 12 ? [{ kind: 'travel', destination: b.id } as Step] : []),
     ...steps,
   ];

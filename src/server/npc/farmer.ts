@@ -11,6 +11,7 @@ import { crops, cropStatus, fertilizerPrice } from '../../shared/farming.ts';
 import type { ResidentState } from './memory.ts';
 import { blockedStep } from './recovery.ts';
 import type { Step } from './decision.ts';
+import { travelPrep } from './travel.ts';
 
 export interface FarmerChoice {
   supplyGoal?: import('./survival.ts').SupplyGoal;
@@ -18,6 +19,8 @@ export interface FarmerChoice {
   description: string;
   plan: Step[];
   reconsiderSeconds?: number;
+  expectedCash?: number;
+  idea?: string;
 }
 /** Supply feasible plans, not a scripted priority order: Jev chooses the goal.
  * Eligibility is only a snapshot; every step still passes ordinary act validation. */
@@ -39,17 +42,8 @@ export function gameplayChoices(
       });
   };
   const visit = (b: Building, actions: Step[]): Step[] => [
-    ...(p.atHome ? [{ kind: 'act', action: { type: 'outside' } } as Step] : []),
-    ...(distance(p, b) >= 14
-      ? [
-          ...(p.vehicle !== 5 && p.fuel <= 0
-            ? [{ kind: 'act', action: { type: 'vehicle', slot: 5 } } as Step]
-            : p.vehicle !== 5 && !p.engine
-              ? [{ kind: 'act', action: { type: 'engine' } } as Step]
-              : []),
-          { kind: 'travel', destination: b.id } as Step,
-        ]
-      : []),
+    ...travelPrep(p),
+    ...(distance(p, b) >= 14 ? [{ kind: 'travel', destination: b.id } as Step] : []),
     ...actions,
   ];
   const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { items, recipes, skills } from '../../shared/catalog.ts';
 import { operation } from './player-operations.ts';
+import { travelPrep } from './travel.ts';
 import { careNeeded } from './strategy.ts';
 import { blockedStep } from './recovery.ts';
 import type { World, Player, Action, Building } from '../../shared/types.ts';
@@ -205,17 +206,7 @@ export function employmentBlocker(w: World, p: Player, request: Employment): str
   return undefined;
 }
 function prep(p: Player): Step[] {
-  return [
-    ...(p.atHome ? [{ kind: 'act' as const, action: { type: 'outside' as const } }] : []),
-    ...(p.game ? [operation('leaveGame')] : []),
-    ...(p.hitch ? [operation('detach')] : []),
-    ...(p.crowBody ? [operation('crow')] : []),
-    ...(p.vehicle !== 5 && p.fuel <= 0
-      ? [{ kind: 'act' as const, action: { type: 'vehicle' as const, slot: 5 as const } }]
-      : p.vehicle !== 5 && !p.engine
-        ? [{ kind: 'act' as const, action: { type: 'engine' as const } }]
-        : []),
-  ];
+  return travelPrep(p);
 }
 function employmentChoice(w: World, p: Player, c: Commitment): FarmerChoice | undefined {
   const request = c.employment!;
@@ -386,14 +377,7 @@ export function commitmentChoices(
       block('Waiting for my stock, cargo space, buyer storage or funded working capital.');
       continue;
     }
-    const plan: Step[] = [
-      ...(p.atHome ? [action({ type: 'outside' })] : []),
-      ...(p.vehicle !== 5 && p.fuel <= 0
-        ? [action({ type: 'vehicle', slot: 5 })]
-        : p.vehicle !== 5 && !p.engine
-          ? [action({ type: 'engine' })]
-          : []),
-    ];
+    const plan: Step[] = [...travelPrep(p)];
     if (quantity > carried && source) {
       if (distance(p, source) >= 12) plan.push({ kind: 'travel', destination: source.id });
       plan.push(

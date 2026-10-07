@@ -10,6 +10,11 @@ All notable changes to Aclone are documented here. This project follows
 
 - Add `scripts/deploy-nogits.sh`, which backs up the database, fast-forwards the nogits.com checkout to `origin/main`, reinstalls dependencies when the lockfile changed, builds with `BASE_PATH=/aclone/`, restarts the service and verifies the public assets and health version.
 - Leave fading tyre marks behind moving tractors in snow and in wet weather.
+- Invent live NPC experiments from the current parish: remount a fueled tractor, try one-unit trades, fund a starved shop till, post missing bids, raise an empty wage, restock from the till, sell outputs, fish and sell the catch, or buy and fund an unowned producer.
+
+### Changed
+
+- Remount a tractor with fuel instead of walking, keep a smaller living-cash reserve so a modest purse can still buy one unit, and treat invented market experiments as first-class gameplay choices.
 
 ## [0.55.0] - 2026-10-05
 

@@ -17,6 +17,8 @@ import { operation, operationAction } from './player-operations.ts';
 import { blockedStep } from './recovery.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
+import { inventHypotheses } from './hypotheses.ts';
+import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 
 /** Shared by every personality. The model chooses; this catalog supplies executable
@@ -25,17 +27,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   const base = gameplayChoices(w, p, state, 'independent');
   if (p.task) return base;
   const groups = new Map<string, FarmerChoice[]>();
-  const prep: Step[] = [
-    ...(p.atHome ? [action({ type: 'outside' })] : []),
-    ...(p.game ? [operation('leaveGame')] : []),
-    ...(p.hitch ? [operation('detach')] : []),
-    ...(p.crowBody ? [operation('crow')] : []),
-    ...(p.vehicle !== 5 && p.fuel <= 0
-      ? [action({ type: 'vehicle', slot: 5 })]
-      : p.vehicle !== 5 && !p.engine
-        ? [action({ type: 'engine' })]
-        : []),
-  ];
+  const prep: Step[] = travelPrep(p);
   const visit = (b: Building, steps: Step[]): Step[] => [
     ...prep,
     ...(distance(p, b) >= 14 ? [{ kind: 'travel', destination: b.id } as Step] : []),
@@ -204,7 +196,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         b.stock[item],
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
-        b.sell[item] ? Math.floor(Math.max(0, p.cash - 12000) / b.sell[item]) : 10,
+        b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 10) : 10,
       );
       while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n > 0)
@@ -623,7 +615,8 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   // Round-robin prevents a large shop or farm from crowding out housing/leisure/enterprise.
   const extra: FarmerChoice[] = [];
   for (let i = 0; i < 80; i++) for (const list of groups.values()) if (list[i]) extra.push(list[i]);
-  const choices = [...base.slice(0, 80), ...extra].slice(0, 200);
+  const invented = inventHypotheses(w, p, state);
+  const choices = [...invented, ...base.slice(0, 80), ...extra].slice(0, 200);
   let bytes = 0;
   return choices
     .filter((c) => {

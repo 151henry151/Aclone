@@ -10,24 +10,12 @@ import { canCarry, distance } from '../../shared/simulation.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
 import { nextNutrition } from './strategy.ts';
-import { operation } from './player-operations.ts';
+import { travelPrep } from './travel.ts';
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 export function visitBuilding(p: Player, b: Building, steps: Step[]): Step[] {
   return [
-    ...(p.atHome ? [act({ type: 'outside' })] : []),
-    ...(p.game ? [operation('leaveGame')] : []),
-    ...(p.hitch ? [operation('detach')] : []),
-    ...(p.crowBody ? [operation('crow')] : []),
-    ...(distance(p, b) >= 12
-      ? [
-          ...(p.vehicle !== 5 && p.fuel <= 0
-            ? [act({ type: 'vehicle', slot: 5 })]
-            : p.vehicle !== 5 && !p.engine
-              ? [act({ type: 'engine' })]
-              : []),
-          { kind: 'travel' as const, destination: b.id },
-        ]
-      : []),
+    ...travelPrep(p),
+    ...(distance(p, b) >= 12 ? [{ kind: 'travel' as const, destination: b.id }] : []),
     ...steps,
   ];
 }
