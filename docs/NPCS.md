@@ -214,10 +214,12 @@ In custom worlds, observations include local course definitions and cargo checks
 ## Local survival plans and market knowledge
 
 Mabel can inspect current public markets to help players. Other residents know map
-locations but must visit shops for stock, quotes and staffing. Observations remain
-usable for 15 game minutes; older or unseen shops require inspection. Own properties
-remain visible. Bank accounts and other guests’ pantries are private, including from
-Mabel. Candidate selection uses the same restricted view as chat and planning.
+locations but must visit shops for stock, quotes and staffing. Last-known quotes stay
+in their parish model for a day of world time; they wander back after about an hour
+to refresh mills, farms, bakeries and shops they have not seen lately. Unseen shops
+are unknown, not empty. Own properties remain visible. Bank accounts and other guests’
+pantries are private, including from Mabel. Candidate selection uses the same
+restricted view as chat and planning.
 
 Accepted survival goals advance through ordinary training, input purchases/delivery,
 work, production and final consumption without further model calls. Bounded forecasts

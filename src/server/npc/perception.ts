@@ -14,7 +14,10 @@ function visibleBuilding(b: Building, p: Player): Building {
       if (id !== p.id) guest.stock = {};
   return snapshot;
 }
-export const marketMemorySeconds = 900;
+/** Last-known quotes stay in the parish model for a full day of world time. */
+export const marketMemorySeconds = 86400;
+/** Wander back after an hour so the model does not go stale. */
+export const marketFreshSeconds = 3600;
 export interface MarketMemory {
   world: string;
   visits: Record<
@@ -45,7 +48,7 @@ export function marketKnowledge(w: World, state: ResidentState, omniscient = fal
   return {
     scope: omniscient
       ? 'Current public markets: parish guide privilege.'
-      : 'Only visited businesses and my property. Quotes may change; inspect on arrival. Unseen or stale stock is UNKNOWN, not empty.',
+      : 'Visited businesses and my property stay in my parish model. Quotes may change; walk back to refresh. Unseen shops are UNKNOWN, not empty.',
     directory: w.buildings.map((b) => ({
       id: b.id,
       name: b.name,
@@ -152,23 +155,31 @@ export function inspectionChoices(w: World, p: Player, state: ResidentState): Fa
       (b) =>
         !b.construction &&
         b.owner !== p.id &&
-        (!visits[b.id] || w.time - visits[b.id].at > marketMemorySeconds) &&
+        (!visits[b.id] || w.time - visits[b.id].at > marketFreshSeconds) &&
         !blockedStep(state.recovery, { kind: 'travel', destination: b.id }, w.time),
     )
     .sort((a, b) => {
+      const thirsty = p.thirst >= 15000;
+      const hungry = p.hunger >= 15000;
       const priority = (v: Building) =>
-        (['market', 'waterworks', 'bakery', 'starport'].includes(v.kind) ? 200 : 0) +
+        (thirsty && ['waterworks', 'market', 'starport'].includes(v.kind) ? 420 : 0) +
+        (hungry && ['bakery', 'market', 'starport', 'pub'].includes(v.kind) ? 400 : 0) +
+        (!thirsty && !hungry && ['mill', 'farm'].includes(v.kind) ? 240 : 0) +
+        (['bakery', 'waterworks', 'market', 'starport'].includes(v.kind) ? 200 : 0) +
         (v.id === p.job ? 400 : 0) +
         (v.kind === 'school' && needsTraining ? 500 : 0) +
         (['market', 'starport', 'garage'].includes(v.kind) && inputs.has('fuel') ? 150 : 0) +
         (!p.home && ['home', 'bnb', 'hotel'].includes(v.kind) ? 160 : 0) +
-        (!visits[v.id] ? 100 : 0);
+        (!visits[v.id] ? 120 : 0) +
+        (visits[v.id] ? Math.min(80, Math.floor((w.time - visits[v.id].at) / 120)) : 0);
       return priority(b) - priority(a) || distance(p, a) - distance(p, b);
     })
-    .slice(0, 4)
+    .slice(0, 8)
     .map((b) => ({
       id: `inspect_${b.id}`,
-      description: `Inspect ${b.name} (${b.kind}): visit to learn current stock, prices and vacancies; I do not know them yet.`,
+      description: visits[b.id]
+        ? `Recheck ${b.name} (${b.kind}): last-known stock and prices are getting old; walk over and update my parish model.`
+        : `Explore ${b.name} (${b.kind}): I have not learned its stock, prices or vacancies yet.`,
       plan: visitBuilding(p, b, [{ kind: 'wait', seconds: 1 }]),
       reconsiderSeconds: 300,
     }));

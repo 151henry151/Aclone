@@ -325,7 +325,8 @@ export function economicMenu(
   const score = (c: FarmerChoice) => {
     let n = c.id.startsWith('commitment_') ? 1000 : 0;
     if (c.id.startsWith('survival_')) n += 1200;
-    if (c.id.startsWith('inspect_')) n += 60;
+    if (c.id.startsWith('inspect_')) n += 70;
+    if (c.description.startsWith('Explore ') || c.description.startsWith('Recheck ')) n += 70;
     if (
       c.description.startsWith('Establish a home') ||
       c.description.startsWith('Provision my home')
@@ -337,7 +338,7 @@ export function economicMenu(
     if (/^(Fund my|Supply my|Sell my output)/.test(c.description)) n += 95;
     if (c.description.startsWith('Operate ')) n += preference === 'employee' ? 80 : 50;
     if (c.description.includes('[Fits my')) n += 20;
-    if (c.description.startsWith('Trade route:')) n += 35;
+    if (c.description.startsWith('Trade route:') || c.description.startsWith('Experiment:')) n += 50;
     if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'fulfilOrder'))
       n += preference === 'trader' ? 65 : 30;
     if (c.description.startsWith('Gather ')) n += preference === 'gatherer' ? 45 : 10;

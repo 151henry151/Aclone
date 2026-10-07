@@ -5,7 +5,7 @@ import {
   inspectionChoices,
   marketKnowledge,
 } from './perception.ts';
-import { suspendPlan, resumePlan, employmentRoutine } from './routines.ts';
+import { suspendPlan, resumePlan, employmentRoutine, exploreRoutine } from './routines.ts';
 import { supplyChoices, continueSupply } from './survival.ts';
 import { publishSupplyIntent, anotherSupplier } from './cooperation.ts';
 import { netAssets } from './wealth.ts';
@@ -76,6 +76,7 @@ interface Resident extends ResidentOptions {
   caring?: boolean;
   careCheckAt?: number;
   shiftCheckAt?: number;
+  exploreCheckAt?: number;
 }
 export class Residents {
   readonly memory: NpcMemory;
@@ -756,6 +757,29 @@ export class Residents {
           }
         }
         if (
+          !careNeeded(w, p) &&
+          !r.wake &&
+          !r.state.needsDecision &&
+          !r.state.routine &&
+          !r.state.supplyGoal &&
+          !r.state.presence?.preparationUntil &&
+          !p.task &&
+          r.state.index >= r.state.plan.length &&
+          now >= (r.exploreCheckAt ?? 0)
+        ) {
+          r.exploreCheckAt = now + 90000;
+          const plan = exploreRoutine(w, p, r.state);
+          if (plan.length) {
+            r.nav = undefined;
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.routine = 'explore';
+            r.wake = false;
+            this.checkpoint(r, w, 'explore-parish', { plan });
+          }
+        }
+        if (
           r.state.plan.length &&
           r.state.index < r.state.plan.length &&
           (now < r.cooldown || r.state.routine || r.state.supplyGoal)
@@ -763,7 +787,10 @@ export class Residents {
           this.runStep(r, w, p, now);
           continue;
         }
-        if (r.state.routine === 'employment' && r.state.index >= r.state.plan.length) {
+        if (
+          (r.state.routine === 'employment' || r.state.routine === 'explore') &&
+          r.state.index >= r.state.plan.length
+        ) {
           delete r.state.routine;
           r.state.plan = [];
           r.wake = !resumePlan(w, p, r.state);

@@ -6,6 +6,7 @@ import { blockedStep } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
 import { workplace } from './workplace.ts';
 import { visitBuilding } from './care.ts';
+import { inspectionChoices } from './perception.ts';
 /** A meal is an interruption, not cancellation of an accepted goal. Keep just
  * the unexecuted tail, world/life identity and a bounded in-game expiry. */
 export function suspendPlan(w: World, p: Player, state: ResidentState) {
@@ -65,4 +66,11 @@ export function employmentRoutine(w: World, p: Player, state: ResidentState): St
     return [];
   const plan = visitBuilding(p, b, [{ kind: 'act', action: { type: 'work', building: b.id } }]);
   return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
+}
+/** Walk the parish to refresh last-known prices. Survival and shift work come first. */
+export function exploreRoutine(w: World, p: Player, state: ResidentState): Step[] {
+  if (p.task || p.learning) return [];
+  const choice = inspectionChoices(w, p, state)[0];
+  if (!choice) return [];
+  return choice.plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : choice.plan;
 }

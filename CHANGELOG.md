@@ -12,6 +12,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Keep last-known shop quotes in an NPC parish model for a day, wander to mills, farms and bakeries to refresh them, and rank live price experiments with ordinary trade routes.
+
 - Identify Puddlewick's bread and water safety net by the reserved world id and economy template, not by server ownership, so a player-owned public parish still imports.
 - Keep a reserved shelf of bread and water at Government necessities and refill it whenever the stock falls.
 

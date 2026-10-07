@@ -15,9 +15,10 @@ import { Navigator, serviceRadius } from '../src/server/npc/navigation.ts';
 import { supplyChoices, continueSupply } from '../src/server/npc/survival.ts';
 import { perceivedWorld, inspectionChoices } from '../src/server/npc/perception.ts';
 import { adaptiveChoices } from '../src/server/npc/adaptive.ts';
+import { inventHypotheses } from '../src/server/npc/hypotheses.ts';
 import { carePlan } from '../src/server/npc/care.ts';
 import { failStep } from '../src/server/npc/recovery.ts';
-import { suspendPlan, resumePlan, employmentRoutine } from '../src/server/npc/routines.ts';
+import { suspendPlan, resumePlan, employmentRoutine, exploreRoutine } from '../src/server/npc/routines.ts';
 import { JevBrain } from '../src/server/npc/jev.ts';
 import { Store } from '../src/server/store.ts';
 import { Universe } from '../src/server/universe.ts';
@@ -86,6 +87,77 @@ test('unseen market changes do not change observations or candidates; visits and
     perceivedWorld(w, p, state).buildings.find((b) => b.id === shop.id)!.sell.water,
     123456,
   );
+});
+test('a visited mill stays in the parish model for hours and is later worth another look', () => {
+  const { w, p, state } = fixture();
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  mill.stock.flour = 6;
+  mill.sell.flour = 2000;
+  Object.assign(p, { x: mill.x, z: mill.z });
+  perceivedWorld(w, p, state);
+  Object.assign(p, { x: 0, z: 0 });
+  w.time += 7200;
+  mill.sell.flour = 1;
+  const remembered = perceivedWorld(w, p, state).buildings.find((b) => b.id === mill.id);
+  assert.ok(remembered, 'the mill must remain in the model after two hours away');
+  assert.equal(remembered.sell.flour, 2000);
+  assert.ok(
+    inspectionChoices(w, p, state).some((c) => c.id === `inspect_${mill.id}`),
+    'stale producer quotes should be rechecked',
+  );
+});
+test('residents wander to mills and farms, not only the harbour and bakery', () => {
+  const { w, p, state } = fixture();
+  p.hunger = 0;
+  p.thirst = 0;
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  const farm = w.buildings.find((b) => b.kind === 'farm')!;
+  const inspect = inspectionChoices(w, p, state);
+  assert.ok(inspect.some((c) => c.id === `inspect_${mill.id}`));
+  assert.ok(inspect.some((c) => c.id === `inspect_${farm.id}`));
+  const wander = exploreRoutine(w, p, state);
+  assert.ok(wander.some((s) => s.kind === 'travel'));
+  assert.ok(
+    wander.some(
+      (s) =>
+        s.kind === 'travel' &&
+        (s.destination === mill.id ||
+          s.destination === farm.id ||
+          w.buildings.find((b) => b.id === s.destination)?.kind === 'bakery'),
+    ),
+  );
+});
+test('remembered mill and bakery quotes still invent a flour haul after leaving town', () => {
+  const { w, p, state } = fixture();
+  p.cash = 200000;
+  p.hunger = 0;
+  p.thirst = 0;
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  const bakery = w.buildings.find((b) => b.kind === 'bakery')!;
+  mill.stock = { flour: 8, wheat: 0 };
+  mill.sell.flour = 2000;
+  mill.buy.wheat = 600;
+  bakery.buy.flour = 2100;
+  bakery.investment = 100000;
+  bakery.stock.flour = 0;
+  Object.assign(p, { x: mill.x, z: mill.z });
+  perceivedWorld(w, p, state);
+  Object.assign(p, { x: bakery.x, z: bakery.z });
+  perceivedWorld(w, p, state);
+  Object.assign(p, { x: 0, z: 0 });
+  w.time += 7200;
+  const known = perceivedWorld(w, p, state);
+  const haul = inventHypotheses(known, p, state).find(
+    (idea) =>
+      idea.description.includes('flour') &&
+      idea.plan.some(
+        (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.building === mill.id,
+      ) &&
+      idea.plan.some(
+        (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.building === bakery.id,
+      ),
+  );
+  assert.ok(haul, 'last-known mill and bakery prices should still form a flour experiment');
 });
 function execute(s: ReturnType<typeof fixture>, plan: Step[]) {
   for (const step of plan) {
@@ -340,9 +412,16 @@ for (const id of ['mabel', 'rowan'])
       s = shortage(),
       { w, pump } = s;
     w.owner = 'human';
-    for (const b of w.buildings)
-      for (const item of ['water', 'tea', 'beer', 'wine', 'teaBlend', 'roastCoffee', 'milk'])
+    w.harbourShipment = 1e9;
+    for (const b of w.buildings) {
+      for (const item of ['water', 'tea', 'beer', 'wine', 'teaBlend', 'roastCoffee', 'milk']) {
         b.stock[item] = 0;
+        if (b.government) {
+          delete b.sell[item];
+          delete b.buy[item];
+        }
+      }
+    }
     const config = npcConfigSchema.parse({
       id,
       provider: 'jev',
