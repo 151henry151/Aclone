@@ -47,7 +47,7 @@ import {
   raiseWatermark,
   takeStakeRefunds,
 } from './stakes.ts';
-import { harbourSupply, emergencyImport } from './harbour-supply.ts';
+import { harbourSupply, emergencyImport, restockGovernmentStores } from './harbour-supply.ts';
 import {
   creatorAction,
   creatorEvent,
@@ -1829,6 +1829,7 @@ export function advance(w: World, seconds: number) {
   advanceClimate(w, start, end);
   w.time = end;
   harbourSupply(w, end);
+  restockGovernmentStores(w);
   growRoads(w, start, end);
   tickTowns(w);
   refreshOrders(w);

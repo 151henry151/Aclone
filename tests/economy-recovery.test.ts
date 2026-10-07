@@ -64,7 +64,11 @@ test('paid shortage shipments recover a drained parish without resetting stock, 
   w.owner = 'custom';
   local.stock.water = 0;
   harbourSupply(w, 3600);
-  assert.equal(h.stock.water, 0);
+  assert.ok(h.stock.water > 0, 'player-owned public parish still imports');
+  const imported = h.stock.water;
+  w.id = 'elsewhere';
+  harbourSupply(w, 5400);
+  assert.equal(h.stock.water, imported);
 });
 test('urgent thirst wins over small hunger, alternatives and owned supplies are usable', () => {
   const w = createWorld('test', 'Town', 'owner');

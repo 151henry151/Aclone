@@ -13,7 +13,8 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 Your employer and shift countdown appear on the HUD; the building panel also shows
 covered production checks. You can drive away while a shift runs. Renew during its
 last cycle or when it ends. In a shortage, Puddlewick's **Government necessities**
-shop always offers paid premium bread and water without requiring stored stock.
+shop keeps paid premium bread and water on the shelf and restocks them; you can
+still buy if displayed stock is briefly zero.
 
 Repeated buys/sales of the same item at one shop show the confirmed total quantity
 and price, including when you close the window. Failed trades do not add to it;

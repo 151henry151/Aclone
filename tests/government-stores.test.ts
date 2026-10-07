@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, addPlayer, act } from '../src/shared/simulation.ts';
+import { createWorld, addPlayer, act, advance } from '../src/shared/simulation.ts';
 import { restorePublicPuddlewick, governmentStores } from '../src/server/government-stores.ts';
 import { emergencyImport, availableSupply } from '../src/shared/harbour-supply.ts';
 import { Store } from '../src/server/store.ts';
@@ -22,7 +22,7 @@ test('restore starter government once without altering player property or other 
   assert.equal(restorePublicPuddlewick(w), false);
   for (const custom of [
     createWorld('custom', 'Puddlewick', 'hank'),
-    createWorld('puddlewick', 'Custom', 'hank'),
+    createWorld('otherwick', 'Custom', 'hank'),
   ]) {
     assert.equal(restorePublicPuddlewick(custom), false);
     assert.equal(custom.owner, 'hank');
@@ -71,6 +71,60 @@ test('premium government food and water remain available without stock or treasu
   } finally {
     store.close();
   }
+});
+
+test('a player-owned public Puddlewick still sells government bread and water from an empty shelf', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  assert.equal(governmentStores(w), true);
+  w.owner = 'hank';
+  const shop = w.buildings.find((b) => b.id === 'parish-government-stores')!;
+  shop.stock = {};
+  shop.investment = 0;
+  const p = addPlayer(w, 'visitor', 'Visitor');
+  p.x = shop.x;
+  p.z = shop.z;
+  p.cash = 200000;
+  p.inventory = {};
+  act(w, p.id, { type: 'trade', building: shop.id, item: 'water', quantity: 2, direction: 'buy' });
+  act(w, p.id, { type: 'trade', building: shop.id, item: 'bread', quantity: 1, direction: 'buy' });
+  assert.equal(p.inventory.water, 2);
+  assert.equal(p.inventory.bread, 1);
+  assert.ok(emergencyImport(w, shop, 'water'));
+  assert.ok(emergencyImport(w, shop, 'bread'));
+});
+
+test('Government necessities restocks bread and water after the shelf is emptied', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'hank');
+  assert.equal(governmentStores(w), true);
+  const shop = w.buildings.find((b) => b.id === 'parish-government-stores')!;
+  shop.stock = { bread: 0, water: 0 };
+  shop.investment = 0;
+  advance(w, 1);
+  assert.ok((shop.stock.water ?? 0) >= 24);
+  assert.ok((shop.stock.bread ?? 0) >= 24);
+  const visitor = addPlayer(w, 'buyer', 'Buyer');
+  visitor.x = shop.x;
+  visitor.z = shop.z;
+  visitor.cash = 500000;
+  act(w, visitor.id, {
+    type: 'trade',
+    building: shop.id,
+    item: 'water',
+    quantity: shop.stock.water,
+    direction: 'buy',
+  });
+  act(w, visitor.id, {
+    type: 'trade',
+    building: shop.id,
+    item: 'bread',
+    quantity: shop.stock.bread,
+    direction: 'buy',
+  });
+  assert.equal(shop.stock.water, 0);
+  assert.equal(shop.stock.bread, 0);
+  advance(w, 1);
+  assert.ok((shop.stock.water ?? 0) >= 24);
+  assert.ok((shop.stock.bread ?? 0) >= 24);
 });
 
 test('server startup persists the ownership repair and one shop without resetting the mill', async () => {

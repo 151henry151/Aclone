@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types.ts';
+import { isPublicPuddlewick } from '../shared/harbour-supply.ts';
 import { makeBuilding } from '../shared/simulation.ts';
 import { terrainHeight } from '../shared/terrain.ts';
 import { blocksBuilding } from '../shared/building-shapes.ts';
@@ -27,9 +28,7 @@ export function restorePublicPuddlewick(w: World) {
 /** On-demand goods are paid from purchases, never free stock or fresh cash. */
 export function governmentStores(w: World) {
   if (
-    w.id !== 'puddlewick' ||
-    w.template !== 'economy' ||
-    w.owner !== 'server' ||
+    !isPublicPuddlewick(w) ||
     w.buildings.some((b) => b.id === 'parish-government-stores') ||
     w.buildings.length >= 500
   )

@@ -4,12 +4,13 @@ Publish, commit, push or deploy only when explicitly requested. Builds and tests
 
 ## Release procedure
 
-The next upgrade restores server ownership of the reserved starter world named
-Puddlewick (economy template, original public harbour) once and adds Government
-necessities on a vacant dry lot. Back up first. Player-owned buildings, contents,
-prices and wages are preserved; custom world IDs/names are untouched. This runs
-on server startup, before offline catch-up. If terrain/buildings leave no suitable
-lot, placement retries next startup and the harbour retains its emergency imports.
+The reserved starter world named Puddlewick (economy template, original public
+harbour) received Government necessities on a vacant dry lot. Bread and water
+safety-net imports follow that world id and template even when a player holds
+world-owner rights. Back up first. Player-owned buildings, contents, prices and
+wages are preserved; custom world IDs/names are untouched. If terrain/buildings
+leave no suitable lot, placement retries next startup and the shop still sells
+on demand.
 
 1. Finish behavior and regressions. Run `npm run check`, `npm run format:check`, `npm run build` and browser checks against a disposable instance; review relevant visuals and backup/migration tests.
 2. Move Unreleased entries to a dated `## [X.Y.Z] - YYYY-MM-DD` section, leaving Unreleased at the top. Use SemVer: minor for compatible features, patch for fixes. Never alter a published release.

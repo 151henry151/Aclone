@@ -2,11 +2,44 @@
 import { items } from './catalog.ts';
 import { log } from './simulation.ts';
 import type { World, Building } from './types.ts';
+
+/** Reserved starter parish. Safety-net imports follow the world id and economy
+ * template, not who currently holds world-owner rights. */
+export function isPublicPuddlewick(w: World) {
+  return w.id === 'puddlewick' && w.template === 'economy';
+}
+
+export const GOVERNMENT_RESERVE = { water: 24, bread: 24 } as const;
+
+/** Keep a visible shelf of premium bread and water at Government necessities.
+ * The import cost is a sink; the shop till is not required. */
+export function restockGovernmentStores(w: World) {
+  if (!isPublicPuddlewick(w)) return;
+  const shop = w.buildings.find(
+    (b) =>
+      b.id === 'parish-government-stores' &&
+      b.kind === 'market' &&
+      b.government &&
+      b.owner === 'treasury' &&
+      !b.construction,
+  );
+  if (!shop) return;
+  for (const item of ['water', 'bread'] as const) {
+    if (!Number.isSafeInteger(shop.sell[item]) || shop.sell[item] < 0) continue;
+    const have = shop.stock[item] ?? 0;
+    const n = Math.max(0, Math.min(GOVERNMENT_RESERVE[item] - have, shop.capacity - have));
+    if (!n) continue;
+    shop.stock[item] = have + n;
+    const cost = Math.ceil(shop.sell[item] * 0.8) * n;
+    log(w, 'sink', cost, shop.id, 'imports', `government reserve: ${n} ${item}`);
+  }
+}
+
 /** A small paid import shipment is a safety net, not a replacement for local trade.
  * Only the public starter parish participates. Existing owners/quotes never change.
  * World-time checkpoints prevent reconnects or server restarts granting extra cargo. */
 export function harbourSupply(w: World, at: number) {
-  if (w.id !== 'puddlewick' || w.owner !== 'server' || w.template !== 'economy') return;
+  if (!isPublicPuddlewick(w)) return;
   const due = Math.floor(at / 1800);
   if (due <= (w.harbourShipment ?? -1)) return;
   w.harbourShipment = due;
@@ -59,9 +92,7 @@ export function harbourSupply(w: World, at: number) {
  * pays the full posted retail quote; imported goods are paid from that receipt. */
 export function emergencyImport(w: World, b: Building, item: string) {
   if (
-    w.id !== 'puddlewick' ||
-    w.owner !== 'server' ||
-    w.template !== 'economy' ||
+    !isPublicPuddlewick(w) ||
     b.kind !== 'market' ||
     !b.government ||
     b.owner !== 'treasury' ||
