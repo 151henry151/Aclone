@@ -12,7 +12,6 @@ import {
 import { inventHypotheses } from '../src/server/npc/hypotheses.ts';
 import { adaptiveChoices } from '../src/server/npc/adaptive.ts';
 import type { ResidentState } from '../src/server/npc/memory.ts';
-import type { Step } from '../src/server/npc/decision.ts';
 
 function fixture() {
   const w = createWorld('stakes', 'Stakes', 'owner');
@@ -251,12 +250,9 @@ test('NPCs invent funding a starved mill they do not own, and owners invent a ca
     ),
   );
   assert.ok(draw, 'a broke owner invents withdrawing operating cash');
-  const amount = (
-    draw.plan.find((s) => s.kind === 'act' && s.action.type === 'investment') as Extract<
-      Step,
-      { kind: 'act' }
-    >
-  ).action.amount as number;
+  const step = draw.plan.find((s) => s.kind === 'act' && s.action.type === 'investment');
+  assert.ok(step?.kind === 'act' && step.action.type === 'investment');
+  const amount = 'amount' in step.action ? Number(step.action.amount) : 0;
   assert.ok(amount > 0);
   assert.ok(amount <= ownerWithdrawable(w, mill, true));
   assert.ok(adaptiveChoices(w, owner, ownerState).some((c) => c.description.includes('withdraw')));

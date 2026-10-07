@@ -1494,9 +1494,9 @@ function buildingWindow(b: Building) {
       html +=
         '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages.</p>';
     if (!b.government && (b.stakes?.length || (!selfOwned && !b.construction))) {
-      const mine = b.stakes?.find((s) => s.investor === me.id);
+      const mine = b.stakes?.find((s) => s.investor === me!.id);
       const locked = unpaidPrincipal(b);
-      const due = mine ? collectableReturn(world, b, me.id) : 0;
+      const due = mine ? collectableReturn(world, b, me!.id) : 0;
       html += `<p class="notice">${
         locked
           ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus 25%, then the claim ends.`
