@@ -85,7 +85,8 @@ export function recordMoney(w: World, e: Ledger) {
   if (incoming) {
     const a = accounts(w, incoming);
     if (['purchase', 'room booking'].includes(e.reason)) a.receipts += e.amount;
-    else if (e.reason === 'investment') a.capitalIn += e.amount;
+    else if (e.reason === 'investment' || e.reason === 'outside stake') a.capitalIn += e.amount;
+    else if (e.reason === 'investor return') a.capitalOut += e.amount;
     else a.otherIn += e.amount;
   }
 }

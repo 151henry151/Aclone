@@ -8,6 +8,8 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.56.0:** neighbours can fund a business till they do not own and later collect a capped return from earnings only. AI residents invent live market experiments, remount fueled tractors, and withdraw operating cash from their own shops when personal money is too low. Tractors leave fading tracks in snow and mud.
+
 **New in 0.24.0:** player-to-player cash gifts and roadside refuelling, with independent world-owner controls. See [helping other players](PLAYING.md#helping-other-players).
 
 **Fixed in 0.23.1:** NPCs distinguish their current qualifications from school courses and old-life memories. Clarified training agreements replace blocked job requests, and outdated replies are discarded after character-state changes. See [current character facts](NPCS.md#current-character-facts-and-retraining) and [upgrade instructions](#deploying-0231).

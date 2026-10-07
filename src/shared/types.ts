@@ -129,6 +129,10 @@ export interface Building {
   ownerName?: string;
   price: number;
   investment: number;
+  /** Outside stakes. Neighbours can fund a till they do not own and later collect a capped return. */
+  stakes?: import('./stakes.ts').OutsideStake[];
+  /** High-water till after capital inflows; earnings above this are collectable profit. */
+  watermark?: number;
   stock: Stock;
   buy: Stock;
   sell: Stock;

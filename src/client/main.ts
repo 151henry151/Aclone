@@ -84,6 +84,7 @@ import {
   weapons,
 } from '../shared/catalog';
 import { money, carry, distance, terrainHeight, productionInterval } from '../shared/simulation';
+import { collectableReturn, unpaidPrincipal } from '../shared/stakes';
 import { mapHalf, legacyHalf } from '../shared/terrain';
 import { publicPath } from '../shared/public-path';
 import type { World, Player, Building, Action } from '../shared/types';
@@ -1492,6 +1493,20 @@ function buildingWindow(b: Building) {
     if (selfOwned)
       html +=
         '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages.</p>';
+    if (!b.government && (b.stakes?.length || (!selfOwned && !b.construction))) {
+      const mine = b.stakes?.find((s) => s.investor === me.id);
+      const locked = unpaidPrincipal(b);
+      const due = mine ? collectableReturn(world, b, me.id) : 0;
+      html += `<p class="notice">${
+        locked
+          ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus 25%, then the claim ends.`
+          : 'Neighbours can invest working capital here. Returns come only from later earnings, capped at 25% above the stake, and never empty the operating reserve.'
+      }${
+        mine
+          ? ` You have put in ${money(mine.principal)}, collected ${money(mine.paid)}, and may take ${money(due)} now (claim ${money(mine.claim)}).`
+          : ''
+      }</p>`;
+    }
     if (!selfOwned && (Object.keys(b.sell).length || Object.keys(b.buy).length))
       html += `<div class="trade-columns">${(['sell', 'buy'] as const)
         .map(
@@ -1695,8 +1710,16 @@ function buildingWindow(b: Building) {
           ],
           'Trade direction',
           tradingSelection!.side,
-        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
-      : '<p>Only the owner may manage this building.</p>';
+        )}        <p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
+      : !b.government && !b.construction
+        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to 25% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+            'direction',
+            [
+              ['deposit', 'Invest cash'],
+              ['withdraw', 'Collect earned return'],
+            ],
+          )}<button>Transfer cash</button></form>`
+        : '<p>Only the owner may manage this building.</p>';
   if (
     tab === 'Main' &&
     (world.creator?.rules.some((r) => r.enabled && r.event === 'interact' && r.target === b.id) ||

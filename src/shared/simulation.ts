@@ -39,6 +39,13 @@ import {
   forecloseEstate,
 } from './loans.ts';
 import { propertyQuote, releaseEstate, migrateEstates } from './property.ts';
+import {
+  addOutsideStake,
+  applyOutsideCollect,
+  collectableReturn,
+  ownerWithdrawable,
+  raiseWatermark,
+} from './stakes.ts';
 import { harbourSupply, emergencyImport } from './harbour-supply.ts';
 import {
   creatorAction,
@@ -600,19 +607,39 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'investment': {
       const b = nearby(w, p, a.building);
-      owns(p, b);
       const n = qty(a.amount);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
-      if (a.direction === 'deposit') {
-        requireThat(p.cash >= n, 'Not enough cash');
-        p.cash -= n;
-        b.investment += n;
-        log(w, 'transfer', n, id, b.id, 'investment');
+      const proprietor = p.authority >= 20 || b.owner === p.id;
+      if (proprietor) {
+        if (a.direction === 'deposit') {
+          requireThat(p.cash >= n, 'Not enough cash');
+          p.cash -= n;
+          b.investment += n;
+          if (b.stakes?.length || b.watermark !== undefined) raiseWatermark(b, n);
+          log(w, 'transfer', n, id, b.id, 'investment');
+        } else {
+          requireThat(n <= ownerWithdrawable(w, b), 'That cash is reserved for outside investors');
+          requireThat(b.investment >= n, 'Not enough investment');
+          b.investment -= n;
+          p.cash += n;
+          log(w, 'transfer', n, b.id, id, 'withdrawal');
+        }
       } else {
-        requireThat(b.investment >= n, 'Not enough investment');
-        b.investment -= n;
-        p.cash += n;
-        log(w, 'transfer', n, b.id, id, 'withdrawal');
+        requireThat(!b.government, 'Public buildings do not take private stakes');
+        if (a.direction === 'deposit') {
+          requireThat(p.cash >= n, 'Not enough cash');
+          p.cash -= n;
+          b.investment += n;
+          addOutsideStake(w, b, id, n);
+          log(w, 'transfer', n, id, b.id, 'outside stake');
+        } else {
+          const due = collectableReturn(w, b, id);
+          requireThat(due > 0, 'No earned return is available yet');
+          requireThat(n <= due, 'That exceeds the collectable return');
+          const paid = applyOutsideCollect(w, b, id, n);
+          p.cash += paid;
+          log(w, 'transfer', paid, b.id, id, 'investor return');
+        }
       }
       break;
     }

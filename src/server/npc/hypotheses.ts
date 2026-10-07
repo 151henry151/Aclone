@@ -13,6 +13,11 @@ import { workplace } from './workplace.ts';
 import { blockedStep } from './recovery.ts';
 import { operation } from './player-operations.ts';
 import { spareSupplies } from './strategy.ts';
+import {
+  collectableReturn,
+  ownerDrawNeed,
+  ownerWithdrawable,
+} from '../../shared/stakes.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 
@@ -165,6 +170,17 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           -amount,
         );
     }
+    const need = ownerDrawNeed(w, p);
+    const available = ownerWithdrawable(w, b, true);
+    if (need > 0 && available > 0) {
+      const amount = Math.min(10000, need, available);
+      add(
+        'withdraw till',
+        `Experiment: withdraw ${amount} from my ${b.name} for fuel, supplies or a living reserve, keeping enough till for wages and bids.`,
+        visit(p, b, [act({ type: 'investment', building: b.id, direction: 'withdraw', amount })]),
+        amount,
+      );
+    }
     if (recipe && b.kind !== 'farm') {
       for (const item of Object.keys(recipe.inputs)) {
         const seller = w.buildings
@@ -271,6 +287,37 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         qty * buyer.buy[item],
       );
     }
+  }
+
+  for (const b of w.buildings.filter(
+    (b) => !b.construction && !b.government && b.owner !== p.id && (b.recipe || b.production),
+  )) {
+    const bids = Object.values(b.buy).filter((price) => price > 0);
+    const cheapest = bids.length ? Math.min(...bids) : 0;
+    if (cheapest > 0 && b.investment < cheapest && p.cash >= cheapest) {
+      const amount = Math.min(
+        10000,
+        Math.max(cheapest, 2000),
+        affordableLoad(p.cash, 1, livingReserve(w, p), 10000),
+      );
+      if (amount >= cheapest)
+        add(
+          `invest ${b.kind}`,
+          `Experiment: invest ${amount} in ${b.name} so it can pay sellers. I collect a capped return only after it earns; I cannot take the stake back.`,
+          visit(p, b, [act({ type: 'investment', building: b.id, direction: 'deposit', amount })]),
+          -amount,
+        );
+    }
+    const due = collectableReturn(w, b, p.id);
+    if (due > 0)
+      add(
+        'collect return',
+        `Experiment: collect ${due} earned return from my stake in ${b.name}.`,
+        visit(p, b, [
+          act({ type: 'investment', building: b.id, direction: 'withdraw', amount: due }),
+        ]),
+        due,
+      );
   }
 
   if ((p.inventory.tackle ?? 0) > 0)

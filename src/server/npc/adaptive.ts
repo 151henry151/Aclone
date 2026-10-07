@@ -3,7 +3,6 @@ import { vehicleCondition } from '../../shared/vehicle-services.ts';
 import { orderAllowance } from '../../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
-import { businessEstimate } from './enterprise.ts';
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
 import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
@@ -19,6 +18,7 @@ import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
 import { inventHypotheses } from './hypotheses.ts';
 import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
+import { collectableReturn, ownerWithdrawable, unpaidPrincipal } from '../../shared/stakes.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 
 /** Shared by every personality. The model chooses; this catalog supplies executable
@@ -247,10 +247,10 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           `List my ${b.name} for sale at ${b.price}; this changes my business strategy.`,
           visit(b, [operation('listProperty', { building: b.id, price: b.price })]),
         );
-      if (b.investment - 5000 > (businessEstimate(w, b)?.reserve ?? 20000))
+      if (ownerWithdrawable(w, b, true) >= 5000)
         add(
           'management',
-          `Withdraw 5000 spare capital from ${b.name}; retain wages and input funding.`,
+          `Withdraw 5000 spare capital from ${b.name}; retain wages, input funding and outside stakes.`,
           visit(b, [
             action({ type: 'investment', building: b.id, direction: 'withdraw', amount: 5000 }),
           ]),
@@ -648,6 +648,8 @@ export function parishSurvey(w: World, p: Player) {
           skill: recipe?.skill,
           wage: b.wage,
           investment: b.investment,
+          outsidePrincipal: unpaidPrincipal(b) || undefined,
+          myReturn: collectableReturn(w, b, p.id) || undefined,
           qualified: diagnosis?.qualified,
           blockers: diagnosis?.blockers,
           estimatedNetPerHour:

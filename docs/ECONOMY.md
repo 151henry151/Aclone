@@ -17,7 +17,12 @@ within 12m obstruct extraction. Woodland clearings, chipped outcrops, gravel hol
 
 Sell through Main to a buyer with a posted price, capital and space. Owners must use **Stockroom**
 to move goods without a sale. Use **Building Admin** to invest cash, collect
-profit, set wages and set buy/sell prices. Sales and restocking are not automatic.
+profit, set wages and set buy/sell prices. Neighbours who do not own the building
+can still put cash into its till. That stake pays for goods and wages while the
+owner is away. You collect a return only after the business earns, never more than
+25% above what you put in, and never so much that the till cannot cover its
+operating reserve. You cannot take the stake back. The owner cannot withdraw
+unpaid outside principal. Sales and restocking are not automatic.
 
 ## Default trade prices (0.16.0)
 
