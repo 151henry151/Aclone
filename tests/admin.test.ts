@@ -80,6 +80,7 @@ test('caretaker view lists pilots, AI residents and buildings without sealed sec
   const listed = view.buildings.find((building) => building.id === mill.id);
   assert.equal(listed?.employees[0]?.name, 'Mabel Reed');
   assert.equal(listed?.stock.find((row) => row.id === 'wheat')?.quantity, 7);
+  assert.equal(listed?.buy.find((row) => row.id === 'wheat')?.quantity, mill.buy.wheat);
   assert.equal(listed?.accounts?.receipts, 900);
   assert.ok(listed?.production.length);
   assert.equal(encoded.includes('sealed-letter-body'), false);
