@@ -13,6 +13,7 @@ All notable changes to Aclone are documented here. This project follows
 ### Changed
 
 - Keep last-known shop quotes in an NPC parish model for a day, wander to mills, farms and bakeries to refresh them, and rank live price experiments with ordinary trade routes.
+- Stamp tractor snow and mud tracks as chevron tyre prints under the rear wheels, at the tractor's track width, and keep them for about two and a half minutes.
 - Honour a held job locally: plant empty funded farm plots, fetch one missing bid-priced input, or renew a funded shift, and do that once before welfare logout when still comfortable. The workplace they already work stays in their live parish model.
 
 - Identify Puddlewick's bread and water safety net by the reserved world id and economy template, not by server ownership, so a player-owned public parish still imports.
