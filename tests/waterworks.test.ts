@@ -130,7 +130,16 @@ test('shoreline production consumes fuel, pays qualified labour and stops for a 
 test('NPC construction choices survey a legal shoreline and use the same authoritative placement', () => {
   const { w, p } = setup();
   const choices = adaptiveChoices(w, p, { plan: [], index: 0 } as unknown as ResidentState);
-  const choice = choices.find((c) => c.description.includes('Build Shoreline waterworks'));
+  const choice = choices.find(
+    (c) =>
+      c.description.includes('Shoreline waterworks') &&
+      c.plan.some(
+        (s) =>
+          s.kind === 'operation' &&
+          s.operation === 'construct' &&
+          s.parameters.some((p) => p.name === 'kind' && p.value === 'waterworks'),
+      ),
+  );
   assert.ok(choice, 'waterworks is actually offered to the decision model');
   for (const s of choice.plan) {
     stepSchema.parse(s);

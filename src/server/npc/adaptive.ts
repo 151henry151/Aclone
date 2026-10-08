@@ -4,7 +4,6 @@ import { orderAllowance } from '../../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
-import { nearestWaterworksSite } from '../../shared/shoreline.ts';
 import { appearance } from '../../shared/appearance.ts';
 import { act, canCarry, distance } from '../../shared/simulation.ts';
 import { ruleLabels, townCharter } from '../../shared/civics.ts';
@@ -17,6 +16,7 @@ import { blockedStep } from './recovery.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
 import { inventHypotheses } from './hypotheses.ts';
+import { inventChainPlans } from './chains.ts';
 import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 import { collectableReturn, ownerWithdrawable, unpaidPrincipal } from '../../shared/stakes.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
@@ -558,26 +558,17 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       w.buildings.every((b) => distance(v, b) > 20) &&
       !w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius),
   );
-  if (!buildings.some((b) => b.owner === p.id && b.construction))
-    for (const [kind, def] of Object.entries(catalog)) {
-      if (def.tier > w.tier || p.cash <= def.price + 20000) continue;
-      const location = kind === 'waterworks' ? nearestWaterworksSite(w, p) : site;
-      if (!location) continue;
-      for (const style of kind === 'home' ? appearance.cottages.map((c) => c.id) : [undefined])
+  if (!buildings.some((b) => b.owner === p.id && b.construction)) {
+    const home = catalog.home;
+    if (home && home.tier <= w.tier && p.cash > home.price + 20000 && site)
+      for (const style of appearance.cottages.map((c) => c.id))
         add(
           'construction',
-          `Build ${def.name}${style ? ` (${style})` : ''}: base ${def.price} plus town tax and materials ${JSON.stringify(def.materials)}; an unfinished site earns nothing.${kind === 'waterworks' ? ' Travel to a surveyed dry shoreline; fuel and a pump operator produce water for local businesses.' : ''}`,
-          [
-            ...prep,
-            { kind: 'move', ...location },
-            operation('construct', {
-              kind,
-              ...(style ? { style } : {}),
-              ...(kind === 'waterworks' ? location : {}),
-            }),
-          ],
+          `Build ${home.name} (${style}): base ${home.price} plus town tax and materials ${JSON.stringify(home.materials)}; an unfinished site earns nothing.`,
+          [...prep, { kind: 'move', ...site }, operation('construct', { kind: 'home', style })],
         );
-    }
+  }
+  for (const c of inventChainPlans(w, p, state)) add('chain', c.description, c.plan);
   if (p.inventory.tackle > 0 && w.settings.fishingMode > 0)
     add(
       'leisure',

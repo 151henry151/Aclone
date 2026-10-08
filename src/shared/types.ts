@@ -238,6 +238,8 @@ export interface World {
     building: string;
     item: string;
     expires: number;
+    role?: 'supply' | 'found' | 'haul' | 'staff';
+    kind?: string;
   }[];
   familyNames?: Record<string, string>;
   socialSequence?: number;

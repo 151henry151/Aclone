@@ -14,7 +14,7 @@ export interface ResourceNode {
   regrowth: number;
 }
 /** Surveyed public gathering grounds; shared stable IDs make depletion survive restarts. */
-const gatheringSites: Record<string, [number, number][]> = {
+export const gatheringSites: Record<string, [number, number][]> = {
   logs: [
     [-204, -74],
     [-224, -118],

@@ -13,7 +13,12 @@ import {
   preparingPlan,
 } from './routines.ts';
 import { supplyChoices, continueSupply } from './survival.ts';
-import { publishSupplyIntent, anotherSupplier } from './cooperation.ts';
+import {
+  publishSupplyIntent,
+  anotherSupplier,
+  anotherFounding,
+  publishFoundingIntent,
+} from './cooperation.ts';
 import { netAssets } from './wealth.ts';
 import { workplace } from './workplace.ts';
 import { economicMenu } from './enterprise.ts';
@@ -40,6 +45,7 @@ import { characterRevision } from './character-facts.ts';
 import { jevInstructions, LocalRequestError } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
 import { adaptiveChoices, parishSurvey } from './adaptive.ts';
+import { kindRecipe } from './chains.ts';
 import { conversationTool, conversationOutputLimit, unqueuedPromise } from './conversation.ts';
 import { operationAction } from './player-operations.ts';
 import { initialPresence, beginVisit } from './habits.ts';
@@ -1797,6 +1803,28 @@ export class Residents {
         r.wake = false;
         this.checkpoint(r, w, 'supply-deferred', { building: goal.building, item: goal.item });
         return;
+      }
+      const construct = d.plan.find((s) => s.kind === 'operation' && s.operation === 'construct');
+      const foundingKind =
+        construct && construct.kind === 'operation'
+          ? construct.parameters.find((x) => x.name === 'kind')?.value
+          : undefined;
+      if (
+        typeof foundingKind === 'string' &&
+        player &&
+        secondsToDamage(w, player) > 1800 &&
+        anotherFounding(w, player, foundingKind)
+      ) {
+        r.state.plan = [];
+        r.state.nextAt = now + 30000;
+        r.state.until = r.state.nextAt;
+        r.wake = false;
+        this.checkpoint(r, w, 'supply-deferred', { kind: foundingKind });
+        return;
+      }
+      if (typeof foundingKind === 'string' && player) {
+        const item = Object.keys(kindRecipe(w, foundingKind)?.outputs ?? {})[0] ?? foundingKind;
+        publishFoundingIntent(w, player, foundingKind, item);
       }
       if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
       r.state.intent = d.intent;

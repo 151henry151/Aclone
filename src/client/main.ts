@@ -1245,7 +1245,7 @@ function renderPanel() {
     const residents = npcResidents?.filter((r) => r.world === world!.id);
     const supplyIntents = (world!.supplyIntents ?? []).filter((c) => c.expires > world!.time);
     const supplyNotice = supplyIntents.length
-      ? `<h3>Voluntary supply errands</h3><p class="note">Public plans, not promises or reserved stock. Anyone can help by delivering inputs or taking a job.</p>${supplyIntents.map((c) => `<p>${esc(c.name)} is trying to restore ${esc(c.item)} production at ${esc(world!.buildings.find((b) => b.id === c.building)?.name ?? c.building)}. Expires in ${Math.ceil((c.expires - world!.time) / 60)} min without progress.</p>`).join('')}`
+      ? `<h3>Voluntary supply errands</h3><p class="note">Public plans, not promises or reserved stock. Anyone can help by delivering inputs or taking a job.</p>${supplyIntents.map((c) => `<p>${c.role === 'found' && c.kind ? `${esc(c.name)} intends to found a ${esc(c.kind)} to supply ${esc(c.item)}.` : `${esc(c.name)} is trying to restore ${esc(c.item)} production at ${esc(world!.buildings.find((b) => b.id === c.building)?.name ?? c.building)}.`} Expires in ${Math.ceil((c.expires - world!.time) / 60)} min without progress.</p>`).join('')}`
       : '';
     modal(
       'AI neighbours.',

@@ -39,6 +39,35 @@ export function publishSupplyIntent(
 }
 export function anotherSupplier(w: World, p: Player, building: string, item: string) {
   return w.supplyIntents?.find(
-    (c) => c.player !== p.id && c.building === building && c.item === item && c.expires > w.time,
+    (c) =>
+      c.player !== p.id &&
+      c.building === building &&
+      c.item === item &&
+      c.expires > w.time &&
+      (c.role ?? 'supply') !== 'found',
   );
+}
+
+export function anotherFounding(w: World, p: Player, kind: string) {
+  return w.supplyIntents?.find(
+    (c) => c.player !== p.id && c.role === 'found' && c.kind === kind && c.expires > w.time,
+  );
+}
+
+export function publishFoundingIntent(w: World, p: Player, kind: string, item: string) {
+  const active = (w.supplyIntents ?? []).filter((c) => c.expires > w.time);
+  if (!p.online) {
+    w.supplyIntents = active.filter((c) => !(c.player === p.id && c.role === 'found'));
+    return;
+  }
+  w.supplyIntents = active.filter((c) => !(c.player === p.id && c.role === 'found'));
+  w.supplyIntents.push({
+    player: p.id,
+    name: p.name,
+    building: '',
+    item,
+    expires: w.time + 600,
+    role: 'found',
+    kind,
+  });
 }

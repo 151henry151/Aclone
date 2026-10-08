@@ -5,6 +5,7 @@ import { operation } from './player-operations.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import { homecomingPlan, offlineReadiness } from './homecoming.ts';
 import { recipes } from '../../shared/catalog.ts';
+import { worldItems } from '../../shared/world-catalogue.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { productionStaff } from '../../shared/sound-state.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -16,14 +17,16 @@ const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind:
 export function businessEstimate(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm') return;
+  const catalogue = worldItems(w);
   let inputs = 0,
     revenue = 0;
   for (const [item, n] of Object.entries(recipe.inputs)) {
     const quotes = w.buildings
       .filter((s) => s.id !== b.id && !s.construction && s.stock[item] > 0 && s.sell[item] >= 0)
       .map((s) => s.sell[item]);
-    if (!quotes.length && !(b.stock[item] >= n)) return;
-    inputs += n * (quotes.length ? Math.min(...quotes) : (b.buy[item] ?? 0));
+    const fallback = b.buy[item] || catalogue[item]?.price || 0;
+    if (!quotes.length && !(b.stock[item] >= n) && !fallback) return;
+    inputs += n * (quotes.length ? Math.min(...quotes) : fallback);
   }
   for (const [item, n] of Object.entries(recipe.outputs)) {
     const buyers = w.buildings.filter(
@@ -34,8 +37,9 @@ export function businessEstimate(w: World, b: Building) {
         s.investment >= s.buy[item] * n &&
         (s.stock[item] ?? 0) + n <= s.capacity,
     );
-    if (!buyers.length) return;
-    revenue += n * Math.max(...buyers.map((s) => s.buy[item]));
+    const implicit = (b.sell[item] > 0 ? b.sell[item] : 0) || catalogue[item]?.price || 0;
+    if (!buyers.length && !implicit) return;
+    revenue += n * (buyers.length ? Math.max(...buyers.map((s) => s.buy[item])) : implicit);
   }
   const wages = b.wage * Math.max(1, productionStaff(w, b, w.time).length);
   let setup = 0;
@@ -338,7 +342,10 @@ export function economicMenu(
     if (/^(Fund my|Supply my|Sell my output)/.test(c.description)) n += 95;
     if (c.description.startsWith('Operate ')) n += preference === 'employee' ? 80 : 50;
     if (c.description.includes('[Fits my')) n += 20;
-    if (c.description.startsWith('Trade route:') || c.description.startsWith('Experiment:')) n += 50;
+    if (c.description.startsWith('Found a')) n += 110;
+    if (c.description.startsWith('Close the')) n += 100;
+    if (c.description.startsWith('Trade route:') || c.description.startsWith('Experiment:'))
+      n += 50;
     if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'fulfilOrder'))
       n += preference === 'trader' ? 65 : 30;
     if (c.description.startsWith('Gather ')) n += preference === 'gatherer' ? 45 : 10;

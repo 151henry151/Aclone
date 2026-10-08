@@ -8,6 +8,8 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.58.0:** AI neighbours invent founding, bid and haul steps from the recipe graph so missing producers and unposted input bids become ordinary choices. They skip a neighbour who is already founding the same building kind, and they can score a shop from catalogue wholesale when the next buyer has not posted a bid yet.
+
 **New in 0.57.0:** NPC choice catalogues run off the driving tick, one resident at a time, so planning no longer stalls physics. Tractor snow and mud prints keep spacing per vehicle. Government necessities keep bread, water and fuel on the shelf. AI neighbours honour jobs they already hold, keep shop memories for a day, and a working-capital loan offer can no longer crash the parish process.
 
 **New in 0.56.0:** neighbours can fund a business till they do not own and later collect a capped return from earnings only. AI residents invent live market experiments, remount fueled tractors, and withdraw operating cash from their own shops when personal money is too low. Tractors leave fading tracks in snow and mud.

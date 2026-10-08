@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-10-08
+
+### Added
+
+- Invent NPC founding, bid and haul options from the recipe graph so a missing producer or unposted input bid for any good becomes a supplied next step, not only a mill-to-bakery flour loop.
+
+### Changed
+
+- Rank chain-closing founding and bid-posting above leisure on the Jev shortlist, skip a neighbour's in-flight founding of the same building kind, and score a mill (or other shop) from catalogue wholesale when downstream buyers have not posted bids yet.
+
 ## [0.57.0] - 2026-10-08
 
 ### Added
