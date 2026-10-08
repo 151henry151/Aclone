@@ -8,6 +8,8 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.57.0:** NPC choice catalogues run off the driving tick, one resident at a time, so planning no longer stalls physics. Tractor snow and mud prints keep spacing per vehicle. Government necessities keep bread, water and fuel on the shelf. AI neighbours honour jobs they already hold, keep shop memories for a day, and a working-capital loan offer can no longer crash the parish process.
+
 **New in 0.56.0:** neighbours can fund a business till they do not own and later collect a capped return from earnings only. AI residents invent live market experiments, remount fueled tractors, and withdraw operating cash from their own shops when personal money is too low. Tractors leave fading tracks in snow and mud.
 
 **New in 0.24.0:** player-to-player cash gifts and roadside refuelling, with independent world-owner controls. See [helping other players](PLAYING.md#helping-other-players).

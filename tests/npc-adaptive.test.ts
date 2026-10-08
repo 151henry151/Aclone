@@ -73,6 +73,23 @@ test('common adaptive planner offers every career, living choices, leisure and m
   list.forEach((c) => c.plan.forEach((s) => stepSchema.parse(s)));
   assert.ok(performance.now() - start < 2000, 'Bounded planning work must not take seconds');
 });
+test('legal dry-runs do not clone the parish once per candidate', () => {
+  const { w, p, choices } = fixture();
+  p.cash = 200000;
+  const original = globalThis.structuredClone.bind(globalThis);
+  let copies = 0;
+  globalThis.structuredClone = ((value: unknown, opts?: StructuredSerializeOptions) => {
+    copies++;
+    return original(value, opts);
+  }) as typeof structuredClone;
+  try {
+    const list = choices();
+    assert.ok(list.length > 20);
+    assert.ok(copies < 8, `cloned ${copies} times for ${list.length} plans`);
+  } finally {
+    globalThis.structuredClone = original;
+  }
+});
 test('trade plans produce the quoted real cash margin and a receipt, without manufacturing goods', () => {
   const { w, p, choices, run } = fixture();
   p.cash = 200000;

@@ -23,8 +23,8 @@ function sample(u: number, v: number) {
 
 test('moving vehicles lay marks that fade and vanish', () => {
   const tracks = new GroundTracks();
-  tracks.record(0, 0, 0, 'snow', true);
-  tracks.record(3, 0, 0, 'snow', true);
+  tracks.record('a', 0, 0, 0, 'snow', true);
+  tracks.record('a', 3, 0, 0, 'snow', true);
   assert.equal(tracks.marks.length, 2);
   assert.equal(tracks.opacity(tracks.marks[0]!), 1);
   tracks.tick(TRACK_LIFE / 2);
@@ -36,8 +36,8 @@ test('moving vehicles lay marks that fade and vanish', () => {
 test('tracks last a few real minutes instead of a few seconds', () => {
   assert.ok(TRACK_LIFE >= 120 && TRACK_LIFE <= 180);
   const tracks = new GroundTracks();
-  tracks.record(0, 0, 0, 'mud', true);
-  tracks.record(3, 0, 0, 'mud', true);
+  tracks.record('a', 0, 0, 0, 'mud', true);
+  tracks.record('a', 3, 0, 0, 'mud', true);
   tracks.tick(90);
   assert.equal(tracks.marks.length, 2);
   assert.ok(tracks.opacity(tracks.marks[0]!) > 0.35);
@@ -61,10 +61,29 @@ test('the stamp is a tread print, not a solid slab', () => {
 
 test('standing still, walking and dry ground leave no tracks', () => {
   const tracks = new GroundTracks();
-  tracks.record(0, 0, 0, 'snow', false);
-  tracks.record(0.1, 0, 0, 'snow', true);
-  tracks.record(10, 0, 0, undefined, true);
+  tracks.record('a', 0, 0, 0, 'snow', false);
+  tracks.record('a', 0.1, 0, 0, 'snow', true);
+  tracks.record('a', 10, 0, 0, undefined, true);
   assert.equal(tracks.marks.length, 0);
+});
+
+test('each tractor keeps its own print spacing', () => {
+  const tracks = new GroundTracks();
+  tracks.record('a', 0, 0, 0, 'mud', true);
+  tracks.record('b', 400, 0, 0, 'mud', true);
+  tracks.record('a', 0.4, 0, 0, 'mud', true);
+  tracks.record('b', 400.4, 0, 0, 'mud', true);
+  assert.equal(tracks.marks.length, 2);
+  assert.deepEqual(
+    tracks.marks.map((m) => [m.x, m.z]),
+    [
+      [0, 0],
+      [400, 0],
+    ],
+  );
+  tracks.record('a', 3, 0, 0, 'mud', true);
+  tracks.record('b', 403, 0, 0, 'mud', true);
+  assert.equal(tracks.marks.length, 4);
 });
 
 test('snow and wet ground pick the matching track kind', () => {

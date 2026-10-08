@@ -73,6 +73,7 @@ interface Resident extends ResidentOptions {
   nav?: Navigator;
   navOrigin?: { x: number; z: number };
   busy?: AbortController;
+  queued?: boolean;
   chatBusy?: boolean;
   pending?: Promise<void>;
   wake: boolean;
@@ -91,6 +92,9 @@ export class Residents {
   onTask?: (w: World, id: string) => void;
   private closed = false;
   private pollAt = 0;
+  private planQueue: { resident: Resident; now: number }[] = [];
+  private planning = false;
+  private planTimer?: ReturnType<typeof setTimeout>;
   constructor(
     private store: Store,
     private universe: Universe,
@@ -650,6 +654,7 @@ export class Residents {
           );
       if (paused || !occupied) {
         r.active = false;
+        this.dequeueThink(r);
         if (p.online || r.busy) {
           p.online = false;
           p.speed = 0;
@@ -671,13 +676,14 @@ export class Residents {
       // addressed conversation is requested; routine care keeps running locally.
       if (
         !r.busy &&
+        !r.queued &&
         this.dialogueDue(r, now) &&
         now - r.lastCall >= r.config.intervalMs &&
-        this.residents.filter((q) => q.busy).length < this.budget.config.concurrency
+        this.plannerBusy() < this.budget.config.concurrency
       ) {
         p.online = !r.state.inSpace;
         r.active = p.online;
-        this.think(r, w, p, now);
+        this.enqueueThink(r, now);
         continue;
       }
       // Eating, drinking and finishing an emergency errand never wait for API credits.
@@ -748,7 +754,7 @@ export class Residents {
             plan: continuation.plan,
           });
         }
-        if (!careNeeded(w, p) && now >= (r.shiftCheckAt ?? 0)) {
+        if (!careNeeded(w, p) && !r.wake && now >= (r.shiftCheckAt ?? 0)) {
           r.shiftCheckAt = now + 60000;
           const plan = employmentRoutine(known, p, r.state);
           if (plan.length && (!r.state.routine || r.state.routine === 'explore')) {
@@ -845,7 +851,11 @@ export class Residents {
         this.checkpoint(r, w, 'needs', { hunger: p.hunger, thirst: p.thirst, health: p.health });
       }
       r.state.critical = critical;
-      if (r.busy || (w.time < (r.state.recovery?.retryAt ?? 0) && !this.dialogueDue(r, now)))
+      if (
+        r.busy ||
+        r.queued ||
+        (w.time < (r.state.recovery?.retryAt ?? 0) && !this.dialogueDue(r, now))
+      )
         continue;
       if (
         r.wake ||
@@ -853,16 +863,8 @@ export class Residents {
         (now >= r.state.nextAt && (!r.state.plan.length || now >= r.state.until))
       ) {
         if (now - r.lastCall < r.config.intervalMs) continue;
-        if (this.residents.filter((q) => q.busy).length >= this.budget.config.concurrency) continue;
-        try {
-          this.think(r, w, p, now);
-        } catch (err) {
-          console.error(`NPC ${r.config.id} think failed:`, err);
-          r.wake = false;
-          r.state.needsDecision = false;
-          r.state.nextAt = now + 60000;
-          r.state.until = r.state.nextAt;
-        }
+        if (this.plannerBusy() >= this.budget.config.concurrency) continue;
+        this.enqueueThink(r, now);
         continue;
       }
       if (r.nav || p.task || now < r.state.waitUntil) continue;
@@ -949,14 +951,15 @@ export class Residents {
     r.active = true;
     if (
       !r.busy &&
+      !r.queued &&
       this.dialogueDue(r, now) &&
       now - r.lastCall >= r.config.intervalMs &&
-      this.residents.filter((q) => q.busy).length < this.budget.config.concurrency
+      this.plannerBusy() < this.budget.config.concurrency
     ) {
-      this.think(r, w, p, now);
+      this.enqueueThink(r, now);
       return true;
     }
-    if (r.busy || r.nav || p.task || now < r.state.waitUntil) return true;
+    if (r.busy || r.queued || r.nav || p.task || now < r.state.waitUntil) return true;
     if (r.state.inSpace) {
       const a = this.account(r);
       this.universe.arrive(a);
@@ -994,12 +997,10 @@ export class Residents {
         ? 'Honour the job I already hold before I go home'
         : 'Prepare supplies and return home before logging off';
     r.state.status = r.state.intent;
-    this.checkpoint(
-      r,
-      w,
-      r.state.routine === 'employment' ? 'employment-routine' : 'homecoming',
-      { plan: r.state.plan, readiness: ready },
-    );
+    this.checkpoint(r, w, r.state.routine === 'employment' ? 'employment-routine' : 'homecoming', {
+      plan: r.state.plan,
+      readiness: ready,
+    });
     this.runStep(r, w, p, now);
     return true;
   }
@@ -1110,6 +1111,56 @@ export class Residents {
       attempt.key !== key ||
       (!attempt.done && attempt.attempts < 3 && now >= attempt.nextAt)
     );
+  }
+  private plannerBusy() {
+    return this.residents.filter((q) => q.busy || q.queued).length;
+  }
+  private enqueueThink(r: Resident, now: number) {
+    if (r.busy || r.queued || this.closed) return;
+    r.queued = true;
+    this.planQueue.push({ resident: r, now });
+    this.pumpPlanner();
+  }
+  private dequeueThink(r: Resident) {
+    if (!r.queued) return;
+    this.planQueue = this.planQueue.filter((q) => q.resident !== r);
+    r.queued = false;
+  }
+  private pumpPlanner() {
+    if (this.closed || this.planning || this.planTimer) return;
+    if (!this.planQueue.length) return;
+    if (this.residents.filter((q) => q.busy).length >= this.budget.config.concurrency) return;
+    this.planning = true;
+    this.planTimer = setTimeout(() => this.runQueuedThink(), 0);
+  }
+  private runQueuedThink() {
+    this.planTimer = undefined;
+    this.planning = false;
+    const item = this.planQueue.shift();
+    if (!item || this.closed) {
+      if (item) item.resident.queued = false;
+      return;
+    }
+    const { resident: r, now } = item;
+    r.queued = false;
+    if (this.memory.paused(r.config.id)) {
+      this.pumpPlanner();
+      return;
+    }
+    const w = this.worlds.get(r.state.world),
+      p = w?.players[r.state.playerId];
+    if (w && p) {
+      try {
+        this.think(r, w, p, now);
+      } catch (err) {
+        console.error(`NPC ${r.config.id} think failed:`, err);
+        r.wake = false;
+        r.state.needsDecision = false;
+        r.state.nextAt = now + 60000;
+        r.state.until = r.state.nextAt;
+      }
+    }
+    this.pumpPlanner();
   }
   private think(r: Resident, w: World, p: Player, now: number) {
     const revision = characterRevision(p);
@@ -1626,6 +1677,7 @@ export class Residents {
         r.busy = undefined;
         r.chatBusy = false;
         r.pending = undefined;
+        this.pumpPlanner();
       });
   }
   private async phraseAgreement(
@@ -1809,10 +1861,17 @@ export class Residents {
     }));
   }
   async settled() {
+    while (!this.closed && (this.planQueue.length || this.planning || this.planTimer))
+      await new Promise((resolve) => setTimeout(resolve, 0));
     await Promise.all(this.residents.map((r) => r.pending));
   }
   close() {
     this.closed = true;
+    if (this.planTimer) clearTimeout(this.planTimer);
+    this.planTimer = undefined;
+    this.planning = false;
+    for (const item of this.planQueue) item.resident.queued = false;
+    this.planQueue.length = 0;
     for (const r of this.residents) {
       r.busy?.abort();
       const w = this.worlds.get(r.state.world);

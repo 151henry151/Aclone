@@ -1165,6 +1165,7 @@ export class GameScene {
           const q = w.players[id];
           if (!q || q.vehicle !== 0 || q.atHome) continue;
           this.tracks.record(
+            id,
             mesh.position.x,
             mesh.position.z,
             mesh.rotation.y,

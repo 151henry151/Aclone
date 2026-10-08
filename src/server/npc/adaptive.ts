@@ -21,24 +21,62 @@ import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 import { collectableReturn, ownerWithdrawable, unpaidPrincipal } from '../../shared/stakes.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
 
-/** Shared by every personality. The model chooses; this catalog supplies executable
- * plans and current costs. No role gets privileged wages, goods or qualifications. */
-export function adaptiveChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
-  const base = gameplayChoices(w, p, state, 'independent');
-  if (p.task) return base;
-  const groups = new Map<string, FarmerChoice[]>();
-  const prep: Step[] = travelPrep(p);
-  const visit = (b: Building, steps: Step[]): Step[] => [
-    ...prep,
-    ...(distance(p, b) >= 14 ? [{ kind: 'travel', destination: b.id } as Step] : []),
-    ...steps,
-  ];
-  const add = (group: string, description: string, plan: Step[], reconsiderSeconds = 300) => {
-    if (plan.length > 12 || plan.some((s) => blockedStep(state.recovery, s, w.time))) return;
-    // Dry-run legal checks on a private simulation copy, never on the live parish.
-    // Travel is represented only for eligibility; actual movement still uses Navigator.
-    const draft = structuredClone({ ...w, messages: [], ledger: [] });
-    const q = draft.players[p.id];
+/** Mutable slices a dry-run may touch. Terrain, landscape and scripts stay shared
+ * by reference; the catalogue never issues those actions. */
+function draftSlice(w: World) {
+  return {
+    players: w.players,
+    buildings: w.buildings,
+    time: w.time,
+    ledgerSeq: w.ledgerSeq,
+    revision: w.revision,
+    procurement: w.procurement,
+    tradeOffers: w.tradeOffers,
+    families: w.families,
+    familyNames: w.familyNames,
+    socialSequence: w.socialSequence,
+    supplyIntents: w.supplyIntents,
+    lottery: w.lottery,
+    combat: w.combat,
+    towns: w.towns,
+    kricket: w.kricket,
+    ball: w.ball,
+    scores: w.scores,
+    round: w.round,
+    projectiles: w.projectiles,
+    roads: w.roads,
+  };
+}
+function applySlice(w: World, slice: ReturnType<typeof draftSlice>) {
+  w.players = slice.players;
+  w.buildings = slice.buildings;
+  w.time = slice.time;
+  w.ledgerSeq = slice.ledgerSeq;
+  w.revision = slice.revision;
+  w.procurement = slice.procurement;
+  w.tradeOffers = slice.tradeOffers;
+  w.families = slice.families;
+  w.familyNames = slice.familyNames;
+  w.socialSequence = slice.socialSequence;
+  w.supplyIntents = slice.supplyIntents;
+  w.lottery = slice.lottery;
+  w.combat = slice.combat;
+  w.towns = slice.towns;
+  w.kricket = slice.kricket;
+  w.ball = slice.ball;
+  w.scores = slice.scores;
+  w.round = slice.round;
+  w.projectiles = slice.projectiles;
+  w.roads = slice.roads;
+}
+/** One parish snapshot, reset between candidates instead of cloning per plan. */
+function legalPlan(w: World, playerId: string) {
+  const seed = JSON.stringify(draftSlice(w));
+  const draft: World = { ...w, messages: [], ledger: [] };
+  return (plan: Step[]) => {
+    applySlice(draft, JSON.parse(seed) as ReturnType<typeof draftSlice>);
+    const q = draft.players[playerId];
+    if (!q) return false;
     try {
       for (const s of plan) {
         if (s.kind === 'travel') {
@@ -51,12 +89,34 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         } else if (s.kind === 'move') {
           q.x = s.x;
           q.z = s.z;
-        } else if (s.kind === 'act') act(draft, p.id, s.action);
-        else if (s.kind === 'operation') act(draft, p.id, operationAction(s));
+        } else if (s.kind === 'act') act(draft, playerId, s.action);
+        else if (s.kind === 'operation') act(draft, playerId, operationAction(s));
       }
+      return true;
     } catch {
-      return;
+      return false;
     }
+  };
+}
+
+/** Shared by every personality. The model chooses; this catalog supplies executable
+ * plans and current costs. No role gets privileged wages, goods or qualifications. */
+export function adaptiveChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
+  const base = gameplayChoices(w, p, state, 'independent');
+  if (p.task) return base;
+  const groups = new Map<string, FarmerChoice[]>();
+  const prep: Step[] = travelPrep(p);
+  const visit = (b: Building, steps: Step[]): Step[] => [
+    ...prep,
+    ...(distance(p, b) >= 14 ? [{ kind: 'travel', destination: b.id } as Step] : []),
+    ...steps,
+  ];
+  const allowed = legalPlan(w, p.id);
+  const add = (group: string, description: string, plan: Step[], reconsiderSeconds = 300) => {
+    if (plan.length > 12 || plan.some((s) => blockedStep(state.recovery, s, w.time))) return;
+    // Dry-run legal checks on a private simulation copy, never on the live parish.
+    // Travel is represented only for eligibility; actual movement still uses Navigator.
+    if (!allowed(plan)) return;
     const list = groups.get(group) ?? [];
     list.push({ id: '', description, plan, reconsiderSeconds });
     groups.set(group, list);

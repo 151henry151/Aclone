@@ -93,6 +93,8 @@ Unnamed public follow-ups go to the same resident for two real minutes after the
 
 ## Shared planner and Elias configuration
 
+Choice building runs after the physics tick, one resident at a time, so a long catalogue cannot stall driving. Dry-runs reuse one parish snapshot rather than cloning the world per candidate.
+
 The planner surveys skills, funded wages, shortages, prices, travel, property and recent cash/bank/health outcomes. Candidates cover ordinary economy, construction, housing, food, fishing, vehicles/paint, social/game/combat and space actions; no admin/editor/account management. A local inventor also builds live experiments from the current parish — any good with a real seller and funded buyer, owner restock from the till, funding a bid the shop cannot pay, posting a missing buy price, raising an empty wage, fishing or gathering to sell, buying an unowned producer and capitalising it, or investing in someone else's starved shop. Owners with a fat till and empty pockets withdraw only what they need for fuel, supplies or a living reserve. Failed tries rank lower next time. Quantities/routes are bounded, not an exhaustive search or expert tactics. Estimates are distinct from receipts.
 
 `NPC_JEV_MODEL=jev-1.13.0` defaults to accounting rates `NPC_JEV_INPUT_USD_PER_MILLION=0.042`, `NPC_JEV_OUTPUT_USD_PER_MILLION=0`. A custom model requires both rates. `TYPESAFE_API_KEY` takes precedence over `JEV_API_KEY`; create a key through the [TypeSafe console](https://console.typesafe.ai/).

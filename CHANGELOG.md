@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-10-08
+
 ### Added
 
 - Add a caretaker dashboard, available only to the world creator, listing every pilot and AI resident (balances, hunger, thirst, health, skills, inventory, loans and activity) and every building (till, stock, prices, staff, production and accounts). Private letters, secret ballots and unaccepted trade terms stay sealed.
@@ -16,6 +18,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Build NPC choice catalogues off the 50ms physics timer, one planner at a time, and dry-run candidate plans on a reused parish snapshot instead of cloning the world for every option.
+- Keep snow and mud print spacing per tractor so neighbouring vehicles do not stamp each other's tracks.
 - Keep last-known shop quotes in an NPC parish model for a day, wander to mills, farms and bakeries to refresh them, and rank live price experiments with ordinary trade routes.
 - Stamp tractor snow and mud tracks as chevron tyre prints under the rear wheels, at the tractor's track width, and keep them for about two and a half minutes.
 - Honour a held job locally: plant empty funded farm plots, fetch one missing bid-priced input, or renew a funded shift, and do that once before welfare logout when still comfortable. The workplace they already work stays in their live parish model.

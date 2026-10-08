@@ -9,6 +9,7 @@ import { budgetSchema, NpcBudget } from '../src/server/npc/budget.ts';
 import { NpcMemory } from '../src/server/npc/memory.ts';
 import { createWorld, addPlayer, advance, say } from '../src/shared/simulation.ts';
 import type { Brain, BrainRequest, BrainResult, Decision } from '../src/server/npc/decision.ts';
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const decision = (plan: Decision['plan']): Decision => ({
   intent: 'Earn a living',
   notebook: 'Ada likes blue tractors.',
@@ -145,6 +146,27 @@ test('shared budget and reservations survive restarts and limit all NPCs togethe
   assert.ok(restarted.usage().dayUsd > 0);
   store.close();
 });
+test('physics ticks do not wait for planner choice building', async () => {
+  let started = 0;
+  const s = setup(
+    {
+      async decide() {
+        started++;
+        return answer(decision([{ kind: 'wait', seconds: 600 }]));
+      },
+    },
+    2,
+  );
+  const now = Date.now();
+  const t0 = performance.now();
+  s.residents.tick(0.05, now);
+  assert.equal(started, 0);
+  assert.ok(performance.now() - t0 < 30);
+  await s.residents.settled();
+  assert.equal(started, 2);
+  s.residents.close();
+  s.store.close();
+});
 test('scheduler bounds concurrency for a 50-resident fixture; pausing discards late model actions', async () => {
   const resolvers: ((r: BrainResult) => void)[] = [];
   const s = setup(
@@ -157,6 +179,10 @@ test('scheduler bounds concurrency for a 50-resident fixture; pausing discards l
   );
   const now = Date.now();
   s.residents.tick(0.05, now);
+  assert.equal(resolvers.length, 0);
+  await flush();
+  assert.equal(resolvers.length, 1);
+  await flush();
   assert.equal(resolvers.length, 2);
   s.residents.memory.pause('resident-0', true);
   resolvers[0](
@@ -606,6 +632,7 @@ test('resident stays visible through delayed thinking, provider failure, backoff
     say(s.w, human.name, 'Resident, hello.', 'chat');
     s.residents.capture(s.w);
     s.residents.tick(0.05, now);
+    await flush();
     assert.equal(pending.length, 1);
     for (let i = 0; i < 10; i++) {
       now += 500;
@@ -623,6 +650,7 @@ test('resident stays visible through delayed thinking, provider failure, backoff
     assert.equal(pending.length, 1);
     now += 60000;
     s.residents.tick(0.05, now);
+    await flush();
     assert.equal(pending.length, 2);
     pending[1].resolve(
       answer({

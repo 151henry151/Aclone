@@ -65,7 +65,7 @@ export function trackPrintTexture() {
 export class GroundTracks {
   marks: TrackMark[] = [];
   readonly mesh: T.InstancedMesh;
-  private last?: { x: number; z: number };
+  private last = new Map<string, { x: number; z: number }>();
   private dummy = new T.Object3D();
   private fade: T.InstancedBufferAttribute;
   constructor() {
@@ -100,13 +100,21 @@ export class GroundTracks {
     this.mesh.count = 0;
     this.mesh.renderOrder = 1;
   }
-  record(x: number, z: number, heading: number, kind: TrackKind | undefined, moving: boolean) {
+  record(
+    id: string,
+    x: number,
+    z: number,
+    heading: number,
+    kind: TrackKind | undefined,
+    moving: boolean,
+  ) {
     if (!kind || !moving) {
-      this.last = { x, z };
+      this.last.set(id, { x, z });
       return;
     }
-    if (this.last && Math.hypot(x - this.last.x, z - this.last.z) < spacing) return;
-    this.last = { x, z };
+    const prev = this.last.get(id);
+    if (prev && Math.hypot(x - prev.x, z - prev.z) < spacing) return;
+    this.last.set(id, { x, z });
     this.marks.push({ x, z, heading, kind, age: 0 });
     if (this.marks.length > capacity) this.marks.shift();
   }
