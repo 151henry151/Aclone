@@ -18,6 +18,7 @@ All notable changes to Aclone are documented here. This project follows
 
 - Identify Puddlewick's bread and water safety net by the reserved world id and economy template, not by server ownership, so a player-owned public parish still imports.
 - Keep a reserved shelf of bread and water at Government necessities and refill it whenever the stock falls.
+- Keep a reserved shelf of fuel at Government necessities, sold above other typical quotes, and refill it whenever the stock falls.
 
 - Cap an outside business stake at an 8% earned return instead of 25%.
 - Lock unpaid outside claims in the till so the owner cannot withdraw invested cash or skim the owed return, and refund unpaid principal if the shop is demolished.

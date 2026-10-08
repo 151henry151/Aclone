@@ -9,9 +9,26 @@ export function isPublicPuddlewick(w: World) {
   return w.id === 'puddlewick' && w.template === 'economy';
 }
 
-export const GOVERNMENT_RESERVE = { water: 24, bread: 24 } as const;
+export const GOVERNMENT_RESERVE = { water: 24, bread: 24, fuel: 24 } as const;
+export const GOVERNMENT_FLOORS = { water: 1000, bread: 10000, fuel: 4500 } as const;
 
-/** Keep a visible shelf of premium bread and water at Government necessities.
+/** Premium enough to stay above other public shelves; fuel also beats every other posted sell. */
+export function governmentPremium(
+  w: World,
+  shop: Building,
+  item: keyof typeof GOVERNMENT_RESERVE,
+) {
+  const others = w.buildings.filter((s) => s !== shop && !s.construction);
+  const publicShops = others.filter((s) => s.government && s.owner === 'treasury');
+  return Math.max(
+    GOVERNMENT_FLOORS[item],
+    ...publicShops.map((s) => Math.ceil((s.sell[item] ?? 0) * 1.25)),
+    ...publicShops.map((s) => (s.buy[item] ?? 0) + 100),
+    ...(item === 'fuel' ? others.map((s) => Math.ceil((s.sell[item] ?? 0) * 1.25)) : []),
+  );
+}
+
+/** Keep a visible shelf of premium bread, water and fuel at Government necessities.
  * The import cost is a sink; the shop till is not required. */
 export function restockGovernmentStores(w: World) {
   if (!isPublicPuddlewick(w)) return;
@@ -24,7 +41,9 @@ export function restockGovernmentStores(w: World) {
       !b.construction,
   );
   if (!shop) return;
-  for (const item of ['water', 'bread'] as const) {
+  for (const item of Object.keys(GOVERNMENT_RESERVE) as (keyof typeof GOVERNMENT_RESERVE)[]) {
+    if (item === 'fuel' || !Number.isSafeInteger(shop.sell[item]) || shop.sell[item] < 0)
+      shop.sell[item] = governmentPremium(w, shop, item);
     if (!Number.isSafeInteger(shop.sell[item]) || shop.sell[item] < 0) continue;
     const have = shop.stock[item] ?? 0;
     const n = Math.max(0, Math.min(GOVERNMENT_RESERVE[item] - have, shop.capacity - have));
@@ -87,7 +106,7 @@ export function harbourSupply(w: World, at: number) {
   }
 }
 
-/** Expensive on-demand bread/water imports keep the public safety net available
+/** Expensive on-demand bread/water/fuel imports keep the public safety net available
  * even when its working capital and every local storeroom are empty. The buyer
  * pays the full posted retail quote; imported goods are paid from that receipt. */
 export function emergencyImport(w: World, b: Building, item: string) {
@@ -97,7 +116,7 @@ export function emergencyImport(w: World, b: Building, item: string) {
     !b.government ||
     b.owner !== 'treasury' ||
     b.construction ||
-    !['water', 'bread'].includes(item)
+    !['water', 'bread', 'fuel'].includes(item)
   )
     return false;
   // New parishes use a dedicated premium shop. Older saves keep their safety net

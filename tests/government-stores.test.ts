@@ -42,9 +42,11 @@ test('premium government food and water remain available without stock or treasu
   assert.equal(emergencyImport(w, harbour, 'water'), false);
   p.x = b.x;
   p.z = b.z;
-  p.cash = 100000;
-  for (const item of ['water', 'bread']) {
+  p.cash = 200000;
+  const port = w.buildings.find((s) => s.kind === 'starport')!;
+  for (const item of ['water', 'bread', 'fuel']) {
     assert.ok(b.sell[item] > harbour.sell[item]);
+    if (item === 'fuel') assert.ok(b.sell[item] > port.sell[item]);
     assert.ok(availableSupply(w, b, item) > 0);
     const before = p.cash;
     b.investment = 0;
@@ -59,15 +61,16 @@ test('premium government food and water remain available without stock or treasu
       act(w, p.id, { type: 'trade', building: b.id, item: 'water', quantity: 1, direction: 'buy' }),
     /cash/,
   );
-  assert.equal(emergencyImport(w, b, 'fuel'), false);
+  assert.ok(emergencyImport(w, b, 'fuel'));
   const store = new Store(':memory:');
   try {
     store.saveWorld(w);
     const loaded = store.loadWorlds()[0].world;
     const saved = loaded.buildings.find((s) => s.id === b.id)!;
     assert.deepEqual(saved.buy, {});
-    assert.deepEqual(Object.keys(saved.sell).sort(), ['bread', 'water']);
+    assert.deepEqual(Object.keys(saved.sell).sort(), ['bread', 'fuel', 'water']);
     assert.ok(emergencyImport(loaded, saved, 'water'));
+    assert.ok(emergencyImport(loaded, saved, 'fuel'));
   } finally {
     store.close();
   }
@@ -87,44 +90,59 @@ test('a player-owned public Puddlewick still sells government bread and water fr
   p.inventory = {};
   act(w, p.id, { type: 'trade', building: shop.id, item: 'water', quantity: 2, direction: 'buy' });
   act(w, p.id, { type: 'trade', building: shop.id, item: 'bread', quantity: 1, direction: 'buy' });
+  act(w, p.id, { type: 'trade', building: shop.id, item: 'fuel', quantity: 1, direction: 'buy' });
   assert.equal(p.inventory.water, 2);
   assert.equal(p.inventory.bread, 1);
+  assert.equal(p.inventory.fuel, 1);
   assert.ok(emergencyImport(w, shop, 'water'));
   assert.ok(emergencyImport(w, shop, 'bread'));
+  assert.ok(emergencyImport(w, shop, 'fuel'));
 });
 
-test('Government necessities restocks bread and water after the shelf is emptied', () => {
+test('Government necessities restocks bread, water and fuel after the shelf is emptied', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'hank');
   assert.equal(governmentStores(w), true);
   const shop = w.buildings.find((b) => b.id === 'parish-government-stores')!;
-  shop.stock = { bread: 0, water: 0 };
+  const harbour = w.buildings.find((b) => b.id === 'b0')!;
+  const port = w.buildings.find((b) => b.kind === 'starport')!;
+  shop.stock = { bread: 0, water: 0, fuel: 0 };
   shop.investment = 0;
   advance(w, 1);
   assert.ok((shop.stock.water ?? 0) >= 24);
   assert.ok((shop.stock.bread ?? 0) >= 24);
+  assert.ok((shop.stock.fuel ?? 0) >= 24);
+  assert.ok(shop.sell.fuel > harbour.sell.fuel);
+  assert.ok(shop.sell.fuel > port.sell.fuel);
   const visitor = addPlayer(w, 'buyer', 'Buyer');
   visitor.x = shop.x;
   visitor.z = shop.z;
-  visitor.cash = 500000;
-  act(w, visitor.id, {
-    type: 'trade',
-    building: shop.id,
-    item: 'water',
-    quantity: shop.stock.water,
-    direction: 'buy',
-  });
-  act(w, visitor.id, {
-    type: 'trade',
-    building: shop.id,
-    item: 'bread',
-    quantity: shop.stock.bread,
-    direction: 'buy',
-  });
-  assert.equal(shop.stock.water, 0);
-  assert.equal(shop.stock.bread, 0);
+  visitor.cash = 800000;
+  for (const item of ['water', 'bread', 'fuel'] as const) {
+    act(w, visitor.id, {
+      type: 'trade',
+      building: shop.id,
+      item,
+      quantity: shop.stock[item],
+      direction: 'buy',
+    });
+    assert.equal(shop.stock[item], 0);
+  }
   advance(w, 1);
   assert.ok((shop.stock.water ?? 0) >= 24);
   assert.ok((shop.stock.bread ?? 0) >= 24);
+  assert.ok((shop.stock.fuel ?? 0) >= 24);
+});
+
+test('an older government shop without a fuel quote starts selling expensive fuel', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'hank');
+  assert.equal(governmentStores(w), true);
+  const shop = w.buildings.find((b) => b.id === 'parish-government-stores')!;
+  const harbour = w.buildings.find((b) => b.id === 'b0')!;
+  delete shop.sell.fuel;
+  shop.stock = {};
+  advance(w, 1);
+  assert.ok(shop.sell.fuel > harbour.sell.fuel);
+  assert.ok((shop.stock.fuel ?? 0) >= 24);
 });
 
 test('server startup persists the ownership repair and one shop without resetting the mill', async () => {

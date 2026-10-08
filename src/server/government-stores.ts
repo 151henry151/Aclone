@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types.ts';
-import { isPublicPuddlewick } from '../shared/harbour-supply.ts';
+import {
+  GOVERNMENT_RESERVE,
+  governmentPremium,
+  isPublicPuddlewick,
+} from '../shared/harbour-supply.ts';
 import { makeBuilding } from '../shared/simulation.ts';
 import { terrainHeight } from '../shared/terrain.ts';
 import { blocksBuilding } from '../shared/building-shapes.ts';
@@ -70,17 +74,8 @@ export function governmentStores(w: World) {
     employees: [],
     forSale: false,
   });
-  for (const [item, minimum] of [
-    ['water', 1000],
-    ['bread', 10000],
-  ] as const) {
-    const publicShops = w.buildings.filter((s) => s.government && s.owner === 'treasury');
-    b.sell[item] = Math.max(
-      minimum,
-      ...publicShops.map((s) => Math.ceil((s.sell[item] ?? 0) * 1.25)),
-      ...publicShops.map((s) => (s.buy[item] ?? 0) + 100),
-    );
-  }
+  for (const item of Object.keys(GOVERNMENT_RESERVE) as (keyof typeof GOVERNMENT_RESERVE)[])
+    b.sell[item] = governmentPremium(w, b, item);
   w.buildings.push(b);
   w.revision++;
   return true;

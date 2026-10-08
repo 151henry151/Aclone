@@ -5,7 +5,7 @@ Publish, commit, push or deploy only when explicitly requested. Builds and tests
 ## Release procedure
 
 The reserved starter world named Puddlewick (economy template, original public
-harbour) received Government necessities on a vacant dry lot. Bread and water
+harbour) received Government necessities on a vacant dry lot. Bread, water and fuel
 safety-net imports follow that world id and template even when a player holds
 world-owner rights. Back up first. Player-owned buildings, contents, prices and
 wages are preserved; custom world IDs/names are untouched. If terrain/buildings
