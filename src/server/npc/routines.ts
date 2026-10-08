@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World, Player } from '../../shared/types.ts';
+import type { Building, World, Player } from '../../shared/types.ts';
 import type { ResidentState } from './memory.ts';
 import type { Step } from './decision.ts';
 import { blockedStep } from './recovery.ts';
-import { distance } from '../../shared/simulation.ts';
+import { canCarry, distance } from '../../shared/simulation.ts';
+import { recipes } from '../../shared/catalog.ts';
 import { workplace } from './workplace.ts';
 import { visitBuilding } from './care.ts';
 import { inspectionChoices } from './perception.ts';
+import { farmDuty } from './farmer.ts';
+import { affordableLoad, livingReserve } from './travel.ts';
+import { homecomingPlan } from './homecoming.ts';
+
+const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 /** A meal is an interruption, not cancellation of an accepted goal. Keep just
  * the unexecuted tail, world/life identity and a bounded in-game expiry. */
 export function suspendPlan(w: World, p: Player, state: ResidentState) {
@@ -49,23 +55,93 @@ export function resumePlan(w: World, p: Player, state: ResidentState) {
   state.waitUntil = 0;
   return true;
 }
-/** Keep an already chosen viable job operating through model outages and errands.
- * No automatic career switch, pay, production or goods are granted. */
+function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentState): Step[] {
+  const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+  if (!recipe) return [];
+  const reserve = livingReserve(w, p);
+  for (const [item, need] of Object.entries(recipe.inputs)) {
+    const have = b.stock[item] ?? 0;
+    if (have >= need) continue;
+    const bid = b.buy[item];
+    if (!Number.isSafeInteger(bid) || bid <= 0 || b.investment < bid) continue;
+    if (have >= b.capacity || !canCarry(p, item, 1, w)) continue;
+    const carried = p.inventory[item] ?? 0;
+    if (carried > 0) {
+      const n = Math.min(carried, need - have, b.capacity - have, Math.floor(b.investment / bid));
+      if (n <= 0) continue;
+      const plan = visitBuilding(p, b, [
+        act({ type: 'trade', building: b.id, item, quantity: n, direction: 'sell' }),
+      ]);
+      if (!plan.some((s) => blockedStep(state.recovery, s, w.time))) return plan;
+      continue;
+    }
+    const seller = w.buildings
+      .filter(
+        (shop) =>
+          shop.id !== b.id &&
+          !shop.construction &&
+          (shop.stock[item] ?? 0) > 0 &&
+          Number.isSafeInteger(shop.sell[item]) &&
+          shop.sell[item] > 0 &&
+          p.cash >= shop.sell[item],
+      )
+      .sort((a, c) => a.sell[item] - c.sell[item])[0];
+    if (!seller) continue;
+    const n = Math.min(
+      need - have,
+      seller.stock[item],
+      b.capacity - have,
+      Math.floor(b.investment / bid),
+      affordableLoad(p.cash, seller.sell[item], reserve, need - have),
+    );
+    if (n <= 0) continue;
+    const plan = [
+      ...visitBuilding(p, seller, [
+        act({ type: 'trade', building: seller.id, item, quantity: n, direction: 'buy' }),
+      ]),
+      { kind: 'travel' as const, destination: b.id },
+      act({ type: 'trade', building: b.id, item, quantity: n, direction: 'sell' }),
+    ];
+    if (!plan.some((s) => blockedStep(state.recovery, s, w.time))) return plan;
+  }
+  return [];
+}
+
+/** Honour the job already held: tend plots, fetch one missing bid-priced input, or renew the shift. */
 export function employmentRoutine(w: World, p: Player, state: ResidentState): Step[] {
   if (!p.job || p.task || p.learning) return [];
   const b = w.buildings.find((b) => b.id === p.job);
-  if (!b || b.kind === 'farm') return [];
+  if (!b) return [];
   const job = workplace(w, p, b);
-  if (
-    !job?.qualified ||
-    !job.employedHere ||
-    job.workActiveNextCycle ||
-    job.ifYouWork.capitalShortfall ||
-    job.blockers.some((b) => !b.startsWith('No active employees'))
-  )
-    return [];
+  if (!job?.qualified || !job.employedHere) return [];
+  if (b.kind === 'farm') return farmDuty(w, p, b, state);
+  if (job.ifYouWork.capitalShortfall) return [];
+  const stuck = job.blockers.filter(
+    (line) => !line.startsWith('No active employees') && !line.startsWith('Missing'),
+  );
+  if (stuck.length) return [];
+  if (job.blockers.some((line) => line.startsWith('Missing')))
+    return fetchWorkplaceInputs(w, p, b, state);
+  if (job.workActiveNextCycle) return [];
   const plan = visitBuilding(p, b, [{ kind: 'act', action: { type: 'work', building: b.id } }]);
   return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
+}
+
+/** Work a viable job once while still comfortable; then stock the house and leave. */
+export function preparingDuty(w: World, p: Player, state: ResidentState): Step[] {
+  if (p.hunger >= 25000 || p.thirst >= 25000 || state.routine === 'employment') return [];
+  return employmentRoutine(w, p, state);
+}
+
+export function preparingPlan(
+  w: World,
+  p: Player,
+  awaySeconds: number,
+  state: ResidentState,
+): { plan: Step[]; routine?: 'employment' } {
+  const duty = preparingDuty(w, p, state);
+  if (duty.length) return { plan: duty, routine: 'employment' };
+  return { plan: homecomingPlan(w, p, awaySeconds, state) };
 }
 /** Walk the parish to refresh last-known prices. Survival and shift work come first. */
 export function exploreRoutine(w: World, p: Player, state: ResidentState): Step[] {

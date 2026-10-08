@@ -5,7 +5,13 @@ import {
   inspectionChoices,
   marketKnowledge,
 } from './perception.ts';
-import { suspendPlan, resumePlan, employmentRoutine, exploreRoutine } from './routines.ts';
+import {
+  suspendPlan,
+  resumePlan,
+  employmentRoutine,
+  exploreRoutine,
+  preparingPlan,
+} from './routines.ts';
 import { supplyChoices, continueSupply } from './survival.ts';
 import { publishSupplyIntent, anotherSupplier } from './cooperation.ts';
 import { netAssets } from './wealth.ts';
@@ -745,8 +751,8 @@ export class Residents {
         if (!careNeeded(w, p) && now >= (r.shiftCheckAt ?? 0)) {
           r.shiftCheckAt = now + 60000;
           const plan = employmentRoutine(known, p, r.state);
-          if (plan.length && !r.state.routine) {
-            suspendPlan(w, p, r.state);
+          if (plan.length && (!r.state.routine || r.state.routine === 'explore')) {
+            if (!r.state.routine) suspendPlan(w, p, r.state);
             r.nav = undefined;
             r.state.plan = plan;
             r.state.index = 0;
@@ -952,12 +958,14 @@ export class Residents {
       if (!landing) return true;
       r.state.plan = landing.plan;
     } else if (!r.state.plan.length || r.state.index >= r.state.plan.length) {
-      r.state.plan = homecomingPlan(
-        perceivedWorld(w, p, r.state, r.config.id === 'mabel'),
-        p,
-        away,
-        r.state,
-      );
+      const alreadyWorked = r.state.routine === 'employment';
+      if (alreadyWorked) delete r.state.routine;
+      const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+      const next = alreadyWorked
+        ? { plan: homecomingPlan(known, p, away, r.state) }
+        : preparingPlan(known, p, away, r.state);
+      r.state.plan = next.plan;
+      if (next.routine) r.state.routine = next.routine;
       // Never execute the remainder of an errand whose prerequisite failed.
       if (r.state.plan.some((step) => blockedStep(r.state.recovery, step, w.time)))
         r.state.plan = [];
@@ -973,9 +981,17 @@ export class Residents {
     }
     r.state.index = 0;
     r.state.repeats = 1;
-    r.state.intent = 'Prepare supplies and return home before logging off';
+    r.state.intent =
+      r.state.routine === 'employment'
+        ? 'Honour the job I already hold before I go home'
+        : 'Prepare supplies and return home before logging off';
     r.state.status = r.state.intent;
-    this.checkpoint(r, w, 'homecoming', { plan: r.state.plan, readiness: ready });
+    this.checkpoint(
+      r,
+      w,
+      r.state.routine === 'employment' ? 'employment-routine' : 'homecoming',
+      { plan: r.state.plan, readiness: ready },
+    );
     this.runStep(r, w, p, now);
     return true;
   }

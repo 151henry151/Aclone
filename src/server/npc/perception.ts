@@ -101,7 +101,7 @@ export function perceivedWorld(
   const visits = state.markets!.visits;
   const buildings = w.buildings.flatMap((b) => {
     const v = visits[b.id];
-    if (b.owner === p.id || distance(p, b) < 18) return [visibleBuilding(b, p)];
+    if (b.owner === p.id || b.id === p.job || distance(p, b) < 18) return [visibleBuilding(b, p)];
     if (v && w.time - v.at <= marketMemorySeconds)
       return [v.building.owner === p.id ? { ...v.building, owner: 'unknown' } : v.building];
     return [];

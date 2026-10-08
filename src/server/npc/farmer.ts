@@ -12,6 +12,7 @@ import type { ResidentState } from './memory.ts';
 import { blockedStep } from './recovery.ts';
 import type { Step } from './decision.ts';
 import { travelPrep } from './travel.ts';
+import { visitBuilding } from './care.ts';
 
 export interface FarmerChoice {
   supplyGoal?: import('./survival.ts').SupplyGoal;
@@ -284,6 +285,65 @@ export function gameplayChoices(
       { kind: 'recall', query: state.helpQuestion.slice(0, 200), before: null },
     ]);
   return choices;
+}
+
+/** Plant, tend or harvest at the farm I already work — one plot, this visit. */
+export function farmDuty(w: World, p: Player, b: Building, state: ResidentState): Step[] {
+  if (b.kind !== 'farm' || !p.skills.includes('farmer')) return [];
+  if (b.owner !== p.id && !b.employees.includes(p.id)) return [];
+  const own = b.owner === p.id;
+  const season = calendar(w).season;
+  const buyers = new Set(
+    w.buildings.flatMap((shop) =>
+      Object.entries(shop.buy)
+        .filter(([, price]) => Number.isSafeInteger(price) && (price as number) > 0)
+        .map(([item]) => item),
+    ),
+  );
+  const farm = (
+    plot: number,
+    operation: 'plant' | 'water' | 'fertilize' | 'harvest',
+    crop: string | null = null,
+  ): Step => ({ kind: 'act', action: { type: 'farm', building: b.id, plot, operation, crop } });
+  const take = (steps: Step[]) => {
+    const plan = visitBuilding(p, b, steps);
+    return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
+  };
+  for (let plot = 0; plot < 4; plot++) {
+    const current = b.plots?.[plot];
+    if (current?.harvest) continue;
+    const status = cropStatus(w, b, plot);
+    if (
+      status.state === 'ripe' &&
+      (b.stock[current!.crop!] ?? 0) + status.yield <= b.capacity &&
+      b.investment >= (own ? 0 : b.wage)
+    )
+      return take([farm(plot, 'harvest'), { kind: 'wait', seconds: 15 }]);
+  }
+  for (let plot = 0; plot < 4; plot++) {
+    const current = b.plots?.[plot];
+    if (current?.harvest || cropStatus(w, b, plot).state !== 'growing') continue;
+    if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
+      return take([farm(plot, 'water')]);
+    if (!current!.fertilized && ((p.inventory.compost ?? 0) > 0 || b.investment >= fertilizerPrice))
+      return take([farm(plot, 'fertilize')]);
+  }
+  for (let plot = 0; plot < 4; plot++) {
+    if (cropStatus(w, b, plot).state !== 'empty') continue;
+    const previous = b.plots?.[plot]?.previous;
+    const previousFamily = previous ? crops[previous]?.family : undefined;
+    const crop = Object.entries(crops)
+      .filter(([, def]) => def.seasons.includes(season) && b.investment >= def.seed)
+      .sort(([a, da], [bName, db]) => {
+        const demand = Number(buyers.has(bName)) - Number(buyers.has(a));
+        const rotate =
+          Number(previousFamily !== undefined && db.family !== previousFamily) -
+          Number(previousFamily !== undefined && da.family !== previousFamily);
+        return demand || rotate || da.seed - db.seed;
+      })[0]?.[0];
+    if (crop) return take([farm(plot, 'plant', crop)]);
+  }
+  return [];
 }
 
 /** Backwards-compatible farmer entry point used by the standalone crop tests. */
