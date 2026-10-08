@@ -854,7 +854,15 @@ export class Residents {
       ) {
         if (now - r.lastCall < r.config.intervalMs) continue;
         if (this.residents.filter((q) => q.busy).length >= this.budget.config.concurrency) continue;
-        this.think(r, w, p, now);
+        try {
+          this.think(r, w, p, now);
+        } catch (err) {
+          console.error(`NPC ${r.config.id} think failed:`, err);
+          r.wake = false;
+          r.state.needsDecision = false;
+          r.state.nextAt = now + 60000;
+          r.state.until = r.state.nextAt;
+        }
         continue;
       }
       if (r.nav || p.task || now < r.state.waitUntil) continue;

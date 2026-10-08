@@ -966,7 +966,11 @@ export async function createApp(options: AppOptions) {
             )
               void scriptEvent(w, 'Timer', { time: w.time }).catch(() => {});
           }
-          residents?.tick(dt);
+          try {
+            residents?.tick(dt);
+          } catch (err) {
+            console.error('NPC tick failed:', err);
+          }
           counter++;
           if (counter % 4 === 0) {
             const frames = new Map<string, Frame>();

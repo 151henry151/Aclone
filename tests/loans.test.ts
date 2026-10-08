@@ -3,6 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, advance, log } from '../src/shared/simulation.ts';
 import { loanQuote, creditProfile, LOAN_MONTH, amortizedPayment } from '../src/shared/loans.ts';
+import { businessEstimate, enterpriseChoices } from '../src/server/npc/enterprise.ts';
+import { operation } from '../src/server/npc/player-operations.ts';
 import { propertyQuote } from '../src/shared/property.ts';
 function setup() {
   const w = createWorld('puddlewick', 'Town', 'server');
@@ -180,4 +182,36 @@ test('foreclosure dating is independent of restart catch-up step size', () => {
   assert.equal(a.home.estate!.since, b.home.estate!.since);
   assert.equal(a.p.loans![0].principal, b.p.loans![0].principal);
   assert.equal(a.p.loans![0].interest, b.p.loans![0].interest);
+});
+
+test('an owner short of working capital can be offered a bank loan without crashing the planner', () => {
+  const w = createWorld('loan-plan', 'Town', 'owner');
+  w.settings.hungerRate = w.settings.thirstRate = 0;
+  const p = addPlayer(w, 'npc', 'Owner');
+  p.cash = 20000;
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  mill.owner = p.id;
+  mill.stock = { wheat: 20 };
+  mill.wage = 2200;
+  const estimate = businessEstimate(w, mill)!;
+  assert.ok(estimate.margin > 0);
+  mill.investment = Math.max(0, estimate.reserve - 5000);
+  const bank = w.buildings.find((b) => b.kind === 'bank')!;
+  bank.investment = 250000;
+  assert.doesNotThrow(() =>
+    operation('loan', { building: bank.id, operation: 'repay', loan: 'l1', amount: 1000 }),
+  );
+  assert.doesNotThrow(() =>
+    operation('loan', {
+      building: bank.id,
+      operation: 'borrow',
+      amount: 5000,
+      months: 12,
+      apr: 0.12,
+      payment: 444,
+      accepted: true,
+      autoPay: true,
+    }),
+  );
+  assert.doesNotThrow(() => enterpriseChoices(w, p));
 });

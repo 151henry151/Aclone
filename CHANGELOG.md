@@ -10,6 +10,10 @@ All notable changes to Aclone are documented here. This project follows
 
 - Add a caretaker dashboard, available only to the world creator, listing every pilot and AI resident (balances, hunger, thirst, health, skills, inventory, loans and activity) and every building (till, stock, prices, staff, production and accounts). Private letters, secret ballots and unaccepted trade terms stay sealed.
 
+### Fixed
+
+- Accept loan fields on NPC operation plans so a working-capital borrow offer cannot crash the parish process.
+
 ### Changed
 
 - Keep last-known shop quotes in an NPC parish model for a day, wander to mills, farms and bakeries to refresh them, and rank live price experiments with ordinary trade routes.
