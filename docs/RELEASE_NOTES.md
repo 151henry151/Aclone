@@ -8,6 +8,8 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.59.2:** Scheduled AI neighbours stay busy while visiting: they haul, gather or work public labour toward a cottage and a shop. Mabel may still sit.
+
 **New in 0.59.1:** Chase camera drag tilts up and down the same way first person does.
 
 **New in 0.59.0:** Gathering uses a chainsaw for timber, a pickaxe for stone and a shovel for gravel or topsoil. Workshop tools stay a furniture part.

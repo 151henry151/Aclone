@@ -324,13 +324,15 @@ export function economicMenu(
   p: Player,
   choices: FarmerChoice[],
   preference: string,
+  busyVisit = false,
 ): FarmerChoice[] {
   const enterprises = enterpriseChoices(w, p);
   const score = (c: FarmerChoice) => {
     let n = c.id.startsWith('commitment_') ? 1000 : 0;
     if (c.id.startsWith('survival_')) n += 1200;
     if (c.id.startsWith('inspect_')) n += 70;
-    if (c.description.startsWith('Explore ') || c.description.startsWith('Recheck ')) n += 70;
+    if (c.description.startsWith('Explore ') || c.description.startsWith('Recheck '))
+      n += busyVisit ? 15 : 70;
     if (
       c.description.startsWith('Establish a home') ||
       c.description.startsWith('Provision my home')
@@ -350,6 +352,14 @@ export function economicMenu(
       n += preference === 'trader' ? 65 : 30;
     if (c.description.startsWith('Gather ')) n += preference === 'gatherer' ? 45 : 10;
     if (c.description.startsWith('Learn ')) n -= 15;
+    if (busyVisit) {
+      if (/labour shift/.test(c.description)) n += 55;
+      if (c.description.startsWith('Gather ')) n += 35;
+      if (c.description.startsWith('Trade route:') || c.description.startsWith('Experiment:'))
+        n += 25;
+      if (c.description.startsWith('Rest in my home') || c.description.startsWith('Play ')) n -= 80;
+      if (c.description.startsWith('Keep my active job')) n -= 90;
+    }
     return n;
   };
   const eligible = choices.filter((c) => {

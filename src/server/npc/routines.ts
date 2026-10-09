@@ -11,6 +11,8 @@ import { inspectionChoices } from './perception.ts';
 import { farmDuty } from './farmer.ts';
 import { affordableLoad, livingReserve } from './travel.ts';
 import { homecomingPlan } from './homecoming.ts';
+import { travelPrep } from './travel.ts';
+import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 /** A meal is an interruption, not cancellation of an accepted goal. Keep just
@@ -143,6 +145,51 @@ export function preparingPlan(
   if (duty.length) return { plan: duty, routine: 'employment' };
   return { plan: homecomingPlan(w, p, awaySeconds, state) };
 }
+/** Periodic visitors stay busy while online. Mabel, logout prep and the last eight minutes may rest. */
+export function visitorShouldHustle(
+  id: string,
+  presence?: { phase: string; endsAt: number; preparationUntil?: number },
+  now = Date.now(),
+) {
+  if (id === 'mabel') return false;
+  if (!presence || presence.phase !== 'playing') return false;
+  if ((presence.preparationUntil ?? 0) > now) return false;
+  return presence.endsAt - now >= 8 * 60_000;
+}
+
+/** Earn toward a cottage and a shop: honour a live job, sell, gather, or work a public shift. */
+export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[] {
+  if (p.task || p.learning) return [];
+  if (p.atHome) return [{ kind: 'act', action: { type: 'outside' } }];
+  const duty = employmentRoutine(w, p, state);
+  if (duty.length) return duty;
+  const office = w.buildings.find((b) => b.kind === 'workhouse' && !b.construction);
+  const load = (item: string) =>
+    p.skills.includes(item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
+  const node = [...worldResources(w)]
+    .sort((a, b) => distance(p, a) - distance(p, b))
+    .find(
+      (n) =>
+        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0 &&
+        resourceAmount(w, n) >= load(n.item) &&
+        !w.buildings.some((b) => distance(b, n) < 12) &&
+        canCarry(p, n.item, load(n.item), w),
+    );
+  if (node) {
+    const plan: Step[] = [
+      ...travelPrep(p),
+      { kind: 'travel', destination: node.id },
+      { kind: 'act', action: { type: 'gather', node: node.id } },
+    ];
+    return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
+  }
+  if (!office) return [];
+  const plan = visitBuilding(p, office, [
+    { kind: 'act', action: { type: 'task', building: office.id, task: 'labour' } },
+  ]);
+  return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
+}
+
 /** Walk the parish to refresh last-known prices. Survival and shift work come first. */
 export function exploreRoutine(w: World, p: Player, state: ResidentState): Step[] {
   if (p.task || p.learning) return [];

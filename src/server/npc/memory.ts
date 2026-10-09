@@ -14,7 +14,7 @@ export interface ResidentState {
     plan: Step[];
     expiresAt: number;
   };
-  routine?: 'care' | 'employment' | 'explore' | 'drive';
+  routine?: 'care' | 'employment' | 'explore' | 'drive' | 'hustle';
   pendingAgreementReply?: { world: string; text: string; to?: string; conversationId?: number };
   agenda?: import('./agenda.ts').AgendaMemory;
   presence?: Presence;

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.59.2] - 2026-10-08
+
+### Changed
+
+- Keep scheduled NPC visitors busy earning when they are online: public labour, gathering or a live job, instead of sitting or wandering. Mabel may still rest.
+
 ## [0.59.1] - 2026-10-08
 
 ### Changed

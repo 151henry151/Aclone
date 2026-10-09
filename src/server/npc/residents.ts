@@ -10,6 +10,8 @@ import {
   resumePlan,
   employmentRoutine,
   exploreRoutine,
+  hustleRoutine,
+  visitorShouldHustle,
   preparingPlan,
 } from './routines.ts';
 import { supplyChoices, continueSupply } from './survival.ts';
@@ -470,6 +472,7 @@ export class Residents {
         p,
         preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
         r.config.preference,
+        visitorShouldHustle(r.config.id, r.state.presence),
       ),
     );
   }
@@ -805,15 +808,16 @@ export class Residents {
           now >= (r.exploreCheckAt ?? 0)
         ) {
           r.exploreCheckAt = now + 90000;
-          const plan = exploreRoutine(w, p, r.state);
+          const hustle = visitorShouldHustle(r.config.id, r.state.presence, now);
+          const plan = hustle ? hustleRoutine(known, p, r.state) : exploreRoutine(w, p, r.state);
           if (plan.length) {
             r.nav = undefined;
             r.state.plan = plan;
             r.state.index = 0;
             r.state.repeats = 1;
-            r.state.routine = 'explore';
+            r.state.routine = hustle ? 'hustle' : 'explore';
             r.wake = false;
-            this.checkpoint(r, w, 'explore-parish', { plan });
+            this.checkpoint(r, w, hustle ? 'hustle' : 'explore-parish', { plan });
           }
         }
         if (
@@ -827,9 +831,11 @@ export class Residents {
         if (
           (r.state.routine === 'employment' ||
             r.state.routine === 'explore' ||
+            r.state.routine === 'hustle' ||
             r.state.routine === 'drive') &&
           r.state.index >= r.state.plan.length
         ) {
+          if (r.state.routine === 'hustle') r.exploreCheckAt = now;
           delete r.state.routine;
           r.state.plan = [];
           r.wake = !resumePlan(w, p, r.state);
