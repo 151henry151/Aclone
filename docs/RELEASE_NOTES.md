@@ -8,6 +8,8 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.59.1:** Chase camera drag tilts up and down the same way first person does.
+
 **New in 0.59.0:** Gathering uses a chainsaw for timber, a pickaxe for stone and a shovel for gravel or topsoil. Workshop tools stay a furniture part.
 
 **New in 0.58.1:** AI neighbours remount a fueled tractor and buy fuel when the tank is low instead of walking the parish.

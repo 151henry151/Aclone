@@ -19,6 +19,7 @@ import { combatBases } from '../shared/combat';
 import { calendar, worldWeather, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind } from './ground-tracks';
+import { chaseOffset, lookPitchFromDrag } from './camera-look';
 import { snowCover, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { freezeScenery } from './static-scene';
@@ -328,11 +329,7 @@ export class GameScene {
           this.zoom = Math.min(2.8, Math.max(0.55, (this.zoom * before) / after));
       } else {
         this.orbit += (e.clientX - previous.x) * 0.007;
-        if (this.cameraMode === 1)
-          this.lookPitch = Math.max(
-            -1.1,
-            Math.min(1.4, this.lookPitch + (previous.y - e.clientY) * 0.004),
-          );
+        this.lookPitch = lookPitchFromDrag(this.lookPitch, previous.y - e.clientY, this.cameraMode);
         moved += Math.abs(e.clientX - previous.x) + Math.abs(e.clientY - previous.y);
       }
     });
@@ -1118,6 +1115,7 @@ export class GameScene {
         this.chase += diff * (1 - Math.exp(-dt * 3));
         if (local.userData.snapCamera) this.chase = facing;
         const heading = this.chase + this.orbit;
+        const chase = chaseOffset(heading, this.zoom, walking, this.lookPitch);
         const cam =
           this.cameraMode === 1
             ? new T.Vector3(
@@ -1127,11 +1125,7 @@ export class GameScene {
               )
             : this.cameraMode === 2 || p.vehicle === 7
               ? new T.Vector3(pos.x, pos.y + 65 * this.zoom, pos.z + 3)
-              : new T.Vector3(
-                  pos.x - Math.sin(heading) * (walking ? 6 : 21) * this.zoom,
-                  pos.y + (walking ? 3 : 8.5) * this.zoom,
-                  pos.z - Math.cos(heading) * (walking ? 6 : 21) * this.zoom,
-                );
+              : new T.Vector3(pos.x + chase.x, pos.y + chase.y, pos.z + chase.z);
         cam.y = Math.max(
           cam.y,
           terrainHeight(w, cam.x, cam.z) + (walking || tractorView ? 0.6 : 3),

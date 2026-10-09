@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.59.1] - 2026-10-08
+
+### Changed
+
+- Let the chase camera tilt up and down with the same drag as first person.
+
 ## [0.59.0] - 2026-10-08
 
 ### Added
