@@ -4,9 +4,9 @@ Defaults below are original Aclone tuning; live recipes, taxes and quotes overri
 
 ## Gather, deliver, produce
 
-Use Resources/M for locations and reserves, then the nearby HUD Gather button within 10m. Logs, stone and gravel need one carried tool;
-topsoil can be gathered by hand. A basic load is three units after 20 seconds.
-Foresters (wood) and excavators (minerals/soil) gather six in 12 seconds. Tools are reusable for gathering. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
+Use Resources/M for locations and reserves, then the nearby HUD Gather button within 10m. Logs need a chainsaw, stone a pickaxe, and gravel or topsoil a shovel.
+Workshop tools stay a furniture input and do not unlock gathering. A basic load is three units after 20 seconds.
+Foresters (wood) and excavators (minerals/soil) gather six in 12 seconds. The matching implement is reusable. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
 
 Each woodland ground holds 18 logs and regrows three per 30 real minutes. Each
 mineral/soil ground holds 30 and replenishes three per ten minutes. The village
@@ -54,7 +54,7 @@ at one outlet and immediately exporting them through the other loses money.
 Pubs, B&Bs, hotels and garages have restocking bids for their relevant goods.
 They normally buy at 112% and sell at **135%** of producer reference, covering sales
 tax and a retail margin while undercutting imported finished goods. Garages stock
-fuel and tools when supplied; hospitality outlets buy food and drinks. Newly added
+fuel, workshop tools, pickaxes, chainsaws and shovels when supplied; hospitality outlets buy food and drinks. Newly added
 listings start with whatever stock is actually present, including zero.
 
 **Water supply (0.16.0):** shoreline waterworks sell water at 5d. Processors

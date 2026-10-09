@@ -483,7 +483,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
               visit(b, [action({ type: 'paint', building: b.id, color: paint.id })]),
             );
       vehicles.forEach((v, slot) => {
-        if (![p.vehicle, 6, 7].includes(slot))
+        if (![p.vehicle, 5, 6, 7].includes(slot))
           add(
             'vehicles',
             `Use ${v.name} (slot ${slot}), capacity ${v.capacity}, listed purchase price ${v.price}; owned vehicles cost nothing to select.`,

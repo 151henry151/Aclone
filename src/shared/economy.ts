@@ -47,6 +47,23 @@ export function migrateEconomy(w: World) {
       }
     w.livestockPricing = 1;
   }
+  if (!w.gatherToolsPricing) {
+    for (const b of w.buildings)
+      if (
+        ['market', 'starport', 'garage'].includes(b.kind) &&
+        b.government &&
+        b.owner === 'treasury' &&
+        (b.sell.tools !== undefined || b.buy.tools !== undefined)
+      ) {
+        for (const id of ['pickaxe', 'chainsaw', 'shovel']) {
+          b.buy[id] ??= buildings[b.kind].buy[id];
+          b.sell[id] ??= buildings[b.kind].sell[id];
+          if ((b.stock[id] ?? 0) === 0 && (buildings[b.kind].stock[id] ?? 0) > 0)
+            b.stock[id] = buildings[b.kind].stock[id];
+        }
+      }
+    w.gatherToolsPricing = 1;
+  }
   if ((w.tradePricing ?? 0) >= 4) return;
   for (const b of w.buildings) {
     // Treasury is the built-in public operator, not a human or NPC business owner.

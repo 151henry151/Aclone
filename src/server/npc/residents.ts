@@ -30,7 +30,7 @@ import type { Store } from '../store.ts';
 import type { Universe, Account } from '../universe.ts';
 import { spaceChoices, spaceOperations, spaceAction, exchange, systemFor } from './space.ts';
 import { operation } from './player-operations.ts';
-import { travelPrep } from './travel.ts';
+import { travelPrep, drivePlan } from './travel.ts';
 import { leaveCombat } from '../../shared/combat.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
@@ -760,6 +760,25 @@ export class Residents {
             plan: continuation.plan,
           });
         }
+        if (
+          !careNeeded(w, p) &&
+          !r.wake &&
+          !r.state.routine &&
+          !r.state.supplyGoal &&
+          r.state.index >= r.state.plan.length &&
+          (p.vehicle === 5 || p.fuel < 10)
+        ) {
+          const plan = drivePlan(known, p);
+          if (plan.length) {
+            r.nav = undefined;
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.routine = 'drive';
+            r.wake = false;
+            this.checkpoint(r, w, 'drive', { plan });
+          }
+        }
         if (!careNeeded(w, p) && !r.wake && now >= (r.shiftCheckAt ?? 0)) {
           r.shiftCheckAt = now + 60000;
           const plan = employmentRoutine(known, p, r.state);
@@ -806,7 +825,9 @@ export class Residents {
           continue;
         }
         if (
-          (r.state.routine === 'employment' || r.state.routine === 'explore') &&
+          (r.state.routine === 'employment' ||
+            r.state.routine === 'explore' ||
+            r.state.routine === 'drive') &&
           r.state.index >= r.state.plan.length
         ) {
           delete r.state.routine;
@@ -1084,6 +1105,9 @@ export class Residents {
         });
       } else {
         if (r.state.inSpace) throw Error('Land before driving');
+        if (p.vehicle === 5 && p.fuel > 0) this.perform(r, w, { type: 'vehicle', slot: 0 }, false);
+        if (p.vehicle !== 5 && !p.engine && p.fuel > 0)
+          this.perform(r, w, { type: 'engine' }, false);
         let target: { x: number; z: number } | undefined,
           radius = 3;
         if (step.kind === 'move') target = step;

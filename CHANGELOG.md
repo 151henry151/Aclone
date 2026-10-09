@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-10-08
+
+### Added
+
+- Add pickaxe, chainsaw and shovel items, sold at Harbour stores, the spaceport and the garage.
+
+### Changed
+
+- Require a chainsaw for logs, a pickaxe for stone and a shovel for gravel or topsoil, and stop treating workshop tools as a gathering implement.
+
+## [0.58.1] - 2026-10-08
+
+### Changed
+
+- Keep NPCs on their tractors: remount when they have fuel, buy fuel when the tank is low, and stop treating walking as a garage vehicle to collect.
+
 ## [0.58.0] - 2026-10-08
 
 ### Added

@@ -39,9 +39,9 @@ Labour, gathering and harvesting lock movement while a large centered countdown 
 
 ## Gathering resources
 
-Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil grounds outside town. On large maps such as Puddlewick the countryside holds hundreds more: timber in the woods, stone on high ground, gravel and topsoil on the lowlands. **Resources** lists the forty nearest; the maps show the rest. Approach within 10m for a direct HUD **Gather** button, reserve count and tool/cargo feedback. No menu is needed. Logs/stone/gravel require carried Tools from stocked Harbour stores or a forge; topsoil is hand-gatherable. Scenic trees are not individually cuttable.
+Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil grounds outside town. On large maps such as Puddlewick the countryside holds hundreds more: timber in the woods, stone on high ground, gravel and topsoil on the lowlands. **Resources** lists the forty nearest; the maps show the rest. Approach within 10m for a direct HUD **Gather** button, reserve count and tool/cargo feedback. No menu is needed. Logs need a chainsaw, stone a pickaxe, and gravel or topsoil a shovel, bought from Harbour stores, the spaceport or the garage. Workshop tools are for furniture, not digging. Scenic trees are not individually cuttable.
 
-Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. Tools are reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
+Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. The right implement is reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
 
 ## Fishing at the dock
 

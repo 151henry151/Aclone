@@ -12,6 +12,7 @@ test('gathering reserves finite nearby resources, completes offline and regenera
   p.x = n.x;
   p.z = n.z;
   p.y = 0.15;
+  p.inventory.shovel = 1;
   const before = resourceAmount(w, n);
   act(w, p.id, { type: 'gather', node: n.id });
   assert.equal(resourceAmount(w, n), before - 3);
@@ -61,6 +62,53 @@ test('all industry inputs, skills, construction and outputs form valid stocked p
   }
 });
 
+test('treasury shops gain gather-implement quotes without changing owned shops', async () => {
+  const { migrateEconomy } = await import('../src/shared/economy.ts');
+  const w = createWorld('gathermig', 'Prices', 'server');
+  const harbour = w.buildings.find((b) => b.kind === 'market')!;
+  delete harbour.buy.pickaxe;
+  delete harbour.sell.pickaxe;
+  delete harbour.stock.pickaxe;
+  delete w.gatherToolsPricing;
+  const owned = makeBuilding('owned-garage', 'garage', 40, 0);
+  owned.owner = 'human';
+  owned.government = false;
+  delete owned.buy.pickaxe;
+  delete owned.sell.pickaxe;
+  delete owned.stock?.pickaxe;
+  w.buildings.push(owned);
+  migrateEconomy(w);
+  assert.equal(harbour.sell.pickaxe, buildings.market.sell.pickaxe);
+  assert.equal(harbour.stock.pickaxe, buildings.market.stock.pickaxe);
+  assert.equal(owned.sell.pickaxe, undefined);
+});
+
+test('each gathering ground needs its own implement, not generic tools', () => {
+  const w = createWorld('implements', 'Resources', 'p');
+  const p = addPlayer(w, 'p', 'Gatherer');
+  const needed = { logs: 'chainsaw', stone: 'pickaxe', gravel: 'shovel', dirt: 'shovel' } as const;
+  for (const [item, tool] of Object.entries(needed)) {
+    const n = resourceNodes.find((n) => n.item === item)!;
+    Object.assign(p, { x: n.x, z: n.z, y: 0.15, inventory: {}, skills: [] });
+    const empty = gatheringStatus(w, p, n);
+    assert.match(empty.reason!, new RegExp(tool, 'i'), item);
+    p.inventory = { tools: 1 };
+    assert.match(
+      gatheringStatus(w, p, n).reason!,
+      new RegExp(tool, 'i'),
+      `${item} ignores workshop tools`,
+    );
+    p.inventory = { [tool === 'shovel' ? 'pickaxe' : 'shovel']: 1 };
+    assert.match(
+      gatheringStatus(w, p, n).reason!,
+      new RegExp(tool, 'i'),
+      `${item} rejects the wrong implement`,
+    );
+    p.inventory = { [tool]: 1 };
+    assert.equal(gatheringStatus(w, p, n).reason, undefined, item);
+  }
+});
+
 test('gathering preview matches server requirements and skilled yields without mutating the world', () => {
   const w = createWorld('preview', 'Resources', 'p');
   const p = addPlayer(w, 'p', 'Gatherer');
@@ -75,9 +123,9 @@ test('gathering preview matches server requirements and skilled yields without m
     const basic = gatheringStatus(w, p, n);
     assert.equal(basic.amount, 3);
     assert.equal(basic.seconds, 20);
-    assert.equal(!!basic.reason, item !== 'dirt');
+    assert.ok(basic.reason);
     assert.equal(JSON.stringify(w), before, 'HUD checks are read-only');
-    p.inventory.tools = 1;
+    p.inventory[item === 'logs' ? 'chainsaw' : item === 'stone' ? 'pickaxe' : 'shovel'] = 1;
     assert.equal(gatheringStatus(w, p, n).reason, undefined);
     p.skills = [item === 'logs' ? 'forester' : 'excavator'];
     assert.equal(gatheringStatus(w, p, n).amount, 6);

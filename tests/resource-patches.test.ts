@@ -40,7 +40,7 @@ test('a resident can gather at a countryside patch', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   const p = addPlayer(w, 'p', 'Pilot');
   const n = worldResources(w).find((n) => !resourceNodes.includes(n) && n.item === 'dirt')!;
-  Object.assign(p, { x: n.x, z: n.z, y: terrainHeight(w, n.x, n.z) });
+  Object.assign(p, { x: n.x, z: n.z, y: terrainHeight(w, n.x, n.z), inventory: { shovel: 1 } });
   assert.equal(gatheringStatus(w, p, n).reason, undefined);
   act(w, p.id, { type: 'gather', node: n.id });
   assert.equal(p.task?.resource, n.id);

@@ -54,6 +54,13 @@ const names: Record<string, string> = {
   gravel: 'Gravel hollow',
   dirt: 'Exposed topsoil',
 };
+/** One reusable implement per ground. Workshop tools are for furniture, not digging. */
+export const gatheringImplements: Record<string, { item: string; need: string }> = {
+  logs: { item: 'chainsaw', need: 'a chainsaw' },
+  stone: { item: 'pickaxe', need: 'a pickaxe' },
+  gravel: { item: 'shovel', need: 'a shovel' },
+  dirt: { item: 'shovel', need: 'a shovel' },
+};
 const node = (id: string, item: string, x: number, z: number): ResourceNode => ({
   id,
   item,
@@ -134,8 +141,8 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
     reason = 'Buildings obstruct this gathering ground';
   else if (townRefusal(w, p.id, n.x, n.z, 'environment'))
     reason = townRefusal(w, p.id, n.x, n.z, 'environment');
-  else if (n.item !== 'dirt' && !(p.inventory.tools > 0))
-    reason = 'Carry tools to gather logs, gravel or stone';
+  else if (gatheringImplements[n.item] && !(p.inventory[gatheringImplements[n.item].item] > 0))
+    reason = `Carry ${gatheringImplements[n.item].need} to gather ${n.item === 'dirt' ? 'topsoil' : n.item}`;
   else if (available < amount) reason = 'This ground needs time to replenish';
   else if (!canCarry(p, n.item, amount, w)) reason = 'Make room in your cargo';
   return { amount, available, seconds: amount === 6 ? 12 : 20, reason };

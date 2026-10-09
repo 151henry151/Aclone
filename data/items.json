@@ -65,6 +65,21 @@
     "weight": 2,
     "price": 18425
   },
+  "pickaxe": {
+    "name": "Pickaxe",
+    "weight": 2,
+    "price": 6000
+  },
+  "chainsaw": {
+    "name": "Chainsaw",
+    "weight": 3,
+    "price": 8000
+  },
+  "shovel": {
+    "name": "Shovel",
+    "weight": 2,
+    "price": 4000
+  },
   "hops": {
     "name": "Hops",
     "weight": 1,

@@ -20,7 +20,7 @@ test('all gathering sites sit on dry accessible outskirts, away from roads, buil
   completePuddlewick(w);
   const roads = townRoads(w),
     p = addPlayer(w, 'gatherer', 'Gatherer');
-  p.inventory = { tools: 1 };
+  p.inventory = { chainsaw: 1, pickaxe: 1, shovel: 1 };
   for (const n of resourceNodes) {
     assert.ok(roadDistance(roads, n.x, n.z) > 20, `${n.id} is off the road`);
     assert.ok(roadDistance(roads, n.x, n.z) < 150, `${n.id} is still a short detour`);
@@ -59,7 +59,7 @@ test('relocation retains legacy IDs, saved reserves and an already-running gathe
   p.z = node.z;
   p.y = terrainHeight(w, p.x, p.z);
   p.task = undefined;
-  p.inventory.tools = 1;
+  p.inventory.shovel = 1;
   act(w, p.id, { type: 'gather', node: node.id });
   advance(w, 21);
   assert.equal(p.inventory.gravel, 3);
@@ -70,7 +70,7 @@ test('NPCs can drive to every relocated site and gather using ordinary physics',
     const w = createWorld('nav-resource', 'Resources', 'server');
     completePuddlewick(w);
     const p = addPlayer(w, 'npc', 'Gatherer');
-    p.inventory.tools = 1;
+    p.inventory = { chainsaw: 1, pickaxe: 1, shovel: 1 };
     const nav = new Navigator(w, p, n, 8);
     let arrived = false;
     for (let i = 0; i < 6000; i++) {

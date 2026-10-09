@@ -55,11 +55,10 @@ for (const mobile of [false, true])
       const status = page.locator('#resource-status');
       await expect(gather).toBeVisible();
       await expect(gather).toBeDisabled();
-      await expect(status).toContainText('Carry tools');
-      p.inventory.tools = 1;
+      await expect(status).toContainText('chainsaw');
+      p.inventory = { chainsaw: 1, pickaxe: 1, shovel: 1 };
       for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
         const n = place(item);
-        if (item === 'dirt') p.inventory.tools = 0;
         // CI's software renderer may take several seconds to present a teleported
         // server snapshot. Keep the exact node assertion, with a bounded delivery wait.
         await expect(gather).toHaveAttribute('data-id', n.id, { timeout: 15000 });

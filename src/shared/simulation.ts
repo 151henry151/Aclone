@@ -195,6 +195,7 @@ export function createWorld(
     livestockPricing: 1,
     animalPricing: 1,
     vehicleServicesPricing: 1,
+    gatherToolsPricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],

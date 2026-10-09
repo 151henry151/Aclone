@@ -17,7 +17,7 @@ test('modifying the environment inside a town follows resident and guest permiss
   const town = w.towns[0];
   const n = worldResources(w).find((n) => n.item === 'dirt' && townAt(w, n.x, n.z) === town)!;
   const p = addPlayer(w, 'p', 'Digger');
-  Object.assign(p, { x: n.x, z: n.z, y: terrainHeight(w, n.x, n.z) });
+  Object.assign(p, { x: n.x, z: n.z, y: terrainHeight(w, n.x, n.z), inventory: { shovel: 1 } });
   assert.equal(gatheringStatus(w, p, n).reason, undefined);
   town.permissions.guests.environment = false;
   assert.match(gatheringStatus(w, p, n).reason!, /Only residents/);

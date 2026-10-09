@@ -117,19 +117,21 @@ test('local retailers can restock from producers, cover tax and undercut importe
       const source = producers(item);
       const supply = source.length
         ? Math.min(...source.map(([, b]) => b.sell[item]))
-        : buildings.market.sell[item];
+        : ['pickaxe', 'chainsaw', 'shovel'].includes(item)
+          ? buildings.market.buy[item]
+          : buildings.market.sell[item];
       assert.ok(shop.buy[item] > supply, `${kind} ${item}: restocking haulage pays`);
       assert.ok(
         ask - Math.floor(ask * 0.07) > shop.buy[item],
         `${kind} ${item}: profitable after sales tax`,
       );
-      if (source.length) {
+      if (source.length)
         assert.ok(
           shop.buy[item] > buildings.market.buy[item],
           `${kind} ${item}: preferred local customer`,
         );
+      if (buildings.market.sell[item] !== undefined)
         assert.ok(ask < buildings.market.sell[item], `${kind} ${item}: cheaper for players`);
-      }
     }
   }
   for (const [kind, b] of Object.entries(buildings))

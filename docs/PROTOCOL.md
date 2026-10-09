@@ -80,7 +80,7 @@ Close code 4004 requires signing in again after key revocation. Code 4005 means 
 ## Gathering and lodging (0.5.0)
 
 - `gather`: `node` is a stable ID from the shared resource catalog. The server checks
-  proximity, tools, activity, cargo and remaining shared reserve, then saves a task.
+  proximity, the matching implement, activity, cargo and remaining shared reserve, then saves a task.
 - `lodging`: `building`, `operation`. `configure` needs owner/innkeeper, integer
   `rate` (hundredths of a denarius per hour), and boolean `open`. `rent` needs integer
   `hours` from 1 to 24. `store` uses `item`, positive integer `quantity`, and

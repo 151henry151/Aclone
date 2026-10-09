@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldItems } from '../../shared/world-catalogue.ts';
-import { worldResources, resourceAmount } from '../../shared/resources.ts';
+import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { propertyQuote } from '../../shared/property.ts';
@@ -13,11 +13,7 @@ import { workplace } from './workplace.ts';
 import { blockedStep } from './recovery.ts';
 import { operation } from './player-operations.ts';
 import { spareSupplies } from './strategy.ts';
-import {
-  collectableReturn,
-  ownerDrawNeed,
-  ownerWithdrawable,
-} from '../../shared/stakes.ts';
+import { collectableReturn, ownerDrawNeed, ownerWithdrawable } from '../../shared/stakes.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 
@@ -67,18 +63,24 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
   };
 
   if (p.vehicle === 5 && p.fuel > 0)
-    add(
-      'remount',
-      'Mount my tractor again; walking is slower and I still have fuel.',
-      [act({ type: 'vehicle', slot: 0 })],
-    );
+    add('remount', 'Mount my tractor again; walking is slower and I still have fuel.', [
+      act({ type: 'vehicle', slot: 0 }),
+    ]);
 
   if (p.fuel < 10) {
     const can = Object.entries(p.inventory).find(([item, n]) => n > 0 && worldItems(w)[item]?.fuel);
     if (can)
-      add('refuel', `Use carried ${can[0]} to refill the tractor.`, [act({ type: 'use', item: can[0] })]);
+      add('refuel', `Use carried ${can[0]} to refill the tractor.`, [
+        act({ type: 'use', item: can[0] }),
+      ]);
     const shop = w.buildings
-      .filter((b) => !b.construction && (b.stock.fuel ?? 0) > 0 && (b.sell.fuel ?? 0) > 0 && p.cash >= b.sell.fuel)
+      .filter(
+        (b) =>
+          !b.construction &&
+          (b.stock.fuel ?? 0) > 0 &&
+          (b.sell.fuel ?? 0) > 0 &&
+          p.cash >= b.sell.fuel,
+      )
       .sort((a, b) => a.sell.fuel - b.sell.fuel)[0];
     if (shop)
       add(
@@ -198,9 +200,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           add(
             `post ${item} bid`,
             `Experiment: post a ${item} bid of ${price} at my ${b.name} so neighbours can sell here.`,
-            visit(p, b, [
-              operation('buildingAdmin', { building: b.id, item, side: 'buy', price }),
-            ]),
+            visit(p, b, [operation('buildingAdmin', { building: b.id, item, side: 'buy', price })]),
           );
         }
       }
@@ -220,10 +220,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       const seller = w.buildings
         .filter(
           (s) =>
-            s.id !== b.id &&
-            !s.construction &&
-            (s.stock[item] ?? 0) > 0 &&
-            (s.sell[item] ?? 0) > 0,
+            s.id !== b.id && !s.construction && (s.stock[item] ?? 0) > 0 && (s.sell[item] ?? 0) > 0,
         )
         .sort((a, c) => a.sell[item] - c.sell[item])[0];
       if (!seller) continue;
@@ -233,7 +230,9 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       if (cash < price && ownerWithdrawable(w, b, true) >= price) {
         const take = Math.min(10000, ownerWithdrawable(w, b, true), price * Math.min(4, missing));
         plan.push(
-          ...visit(p, b, [act({ type: 'investment', building: b.id, direction: 'withdraw', amount: take })]),
+          ...visit(p, b, [
+            act({ type: 'investment', building: b.id, direction: 'withdraw', amount: take }),
+          ]),
         );
         cash += take;
       }
@@ -331,9 +330,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const buyer = w.buildings
       .filter(
         (b) =>
-          (b.buy.fish ?? 0) > 0 &&
-          b.investment >= b.buy.fish &&
-          (b.stock.fish ?? 0) < b.capacity,
+          (b.buy.fish ?? 0) > 0 && b.investment >= b.buy.fish && (b.stock.fish ?? 0) < b.capacity,
       )
       .sort((a, c) => c.buy.fish - a.buy.fish)[0];
     if (buyer) {
@@ -343,7 +340,13 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           'sell fish',
           `Experiment: sell ${qty} fish at ${buyer.name} for ${qty * buyer.buy.fish}.`,
           visit(p, buyer, [
-            act({ type: 'trade', building: buyer.id, item: 'fish', quantity: qty, direction: 'sell' }),
+            act({
+              type: 'trade',
+              building: buyer.id,
+              item: 'fish',
+              quantity: qty,
+              direction: 'sell',
+            }),
           ]),
           qty * buyer.buy.fish,
         );
@@ -360,11 +363,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       b.kind !== 'farm',
   )) {
     const quote = propertyQuote(w, b);
-    const till = Math.max(
-      ...Object.values(b.buy).filter((price) => price > 0),
-      b.wage || 0,
-      2000,
-    );
+    const till = Math.max(...Object.values(b.buy).filter((price) => price > 0), b.wage || 0, 2000);
     if (p.cash < quote.total + till) continue;
     const deposit = Math.min(10000, Math.max(till * 4, 2000), p.cash - quote.total - 1);
     if (deposit <= 0) continue;
@@ -380,7 +379,12 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
   }
 
   for (const node of [...worldResources(w)]
-    .filter((n) => resourceAmount(w, n) >= 3 && canCarry(p, n.item, 3, w))
+    .filter(
+      (n) =>
+        resourceAmount(w, n) >= 3 &&
+        canCarry(p, n.item, 3, w) &&
+        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0,
+    )
     .slice(0, 4)) {
     const buyer = w.buildings
       .filter((b) => (b.buy[node.item] ?? 0) > 0 && b.investment >= b.buy[node.item])

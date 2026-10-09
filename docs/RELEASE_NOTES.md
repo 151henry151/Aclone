@@ -8,6 +8,10 @@ Back up the database and assets, then use the usual pull/build/restart procedure
 
 ## Feature history
 
+**New in 0.59.0:** Gathering uses a chainsaw for timber, a pickaxe for stone and a shovel for gravel or topsoil. Workshop tools stay a furniture part.
+
+**New in 0.58.1:** AI neighbours remount a fueled tractor and buy fuel when the tank is low instead of walking the parish.
+
 **New in 0.58.0:** AI neighbours invent founding, bid and haul steps from the recipe graph so missing producers and unposted input bids become ordinary choices. They skip a neighbour who is already founding the same building kind, and they can score a shop from catalogue wholesale when the next buyer has not posted a bid yet.
 
 **New in 0.57.0:** NPC choice catalogues run off the driving tick, one resident at a time, so planning no longer stalls physics. Tractor snow and mud prints keep spacing per vehicle. Government necessities keep bread, water and fuel on the shelf. AI neighbours honour jobs they already hold, keep shop memories for a day, and a working-capital loan offer can no longer crash the parish process.

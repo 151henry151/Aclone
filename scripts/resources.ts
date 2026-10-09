@@ -22,7 +22,7 @@ w.climate = { snow: 0, wetness: 0 };
 const p = addPlayer(w, account.id, account.name);
 p.vehicle = 5;
 p.lights = false;
-p.inventory.tools = 1;
+p.inventory = { chainsaw: 1, pickaxe: 1, shovel: 1 };
 app.worlds.set(w.id, w);
 const port = await app.listen();
 const browser = await chromium.launch({

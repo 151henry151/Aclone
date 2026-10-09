@@ -4,7 +4,7 @@ import { propertyQuote } from '../../shared/property.ts';
 import type { World, Player, Building } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { items, recipes } from '../../shared/catalog.ts';
-import { worldResources, resourceAmount } from '../../shared/resources.ts';
+import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
 import type { Step } from './decision.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
@@ -148,7 +148,11 @@ export function economyChoices(
       );
   }
   // A small, affordable cargo choice per owned recipe; never buy employer inputs already in its stockroom.
-  const needed = new Set<string>(!p.inventory.tools ? ['tools'] : []);
+  const needed = new Set<string>(
+    [...new Set(Object.values(gatheringImplements).map((v) => v.item))].filter(
+      (item) => !(p.inventory[item] > 0),
+    ),
+  );
   for (const b of buildings.filter((b) => b.owner === p.id)) {
     const recipe = b.production ?? recipes[b.recipe ?? ''];
     for (const item of Object.keys(recipe?.inputs ?? {}))
@@ -167,7 +171,7 @@ export function economyChoices(
       )
       .slice(0, 1)) {
       const n = Math.min(
-        item === 'tools' ? 1 : 5,
+        item === 'tools' || Object.values(gatheringImplements).some((v) => v.item === item) ? 1 : 5,
         b.stock[item],
         b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 5) : 5,
       );
@@ -181,7 +185,18 @@ export function economyChoices(
   for (const [item, count] of Object.entries(p.inventory)
     .filter(
       ([item, count]) =>
-        count > 0 && !['bread', 'water', 'fuel', 'tools', 'tackle', 'rc'].includes(item),
+        count > 0 &&
+        ![
+          'bread',
+          'water',
+          'fuel',
+          'tools',
+          'pickaxe',
+          'chainsaw',
+          'shovel',
+          'tackle',
+          'rc',
+        ].includes(item),
     )
     .slice(0, 8)) {
     const b = buildings.find(
@@ -208,7 +223,7 @@ export function economyChoices(
     .sort((a, b) => distance(p, a) - distance(p, b))
     .filter(
       (n) =>
-        (n.item === 'dirt' || p.inventory.tools > 0) &&
+        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0 &&
         resourceAmount(w, n) >=
           (p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3) &&
         !w.buildings.some((b) => distance(b, n) < 12) &&
@@ -222,7 +237,7 @@ export function economyChoices(
     .slice(0, 4)) {
     // Resource travel has a tighter interaction radius; Navigator handles the node ID.
     const prep = travelPrep(p);
-    add(`Gather ${n.item} at ${n.id} using ordinary tools, capacity and skill rules.`, [
+    add(`Gather ${n.item} at ${n.id} using the proper implement, capacity and skill rules.`, [
       ...prep,
       { kind: 'travel', destination: n.id },
       act({ type: 'gather', node: n.id }),
