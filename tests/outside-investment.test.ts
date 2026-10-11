@@ -232,7 +232,10 @@ test('demolishing a shop refunds unpaid outside principal instead of pocketing i
   owner.x = mill.x;
   owner.z = mill.z;
   act(w, owner.id, { type: 'demolish', building: mill.id });
-  assert.equal(w.buildings.find((b) => b.id === mill.id), undefined);
+  assert.equal(
+    w.buildings.find((b) => b.id === mill.id),
+    undefined,
+  );
   assert.equal(neighbour.cash, cash + 4000);
 });
 
@@ -259,15 +262,14 @@ test('NPCs invent funding a starved mill they do not own, and owners invent a ca
   neighbour.npc = true;
   const ideas = inventHypotheses(w, neighbour, state);
   assert.ok(
-    ideas.some(
-      (c) =>
-        c.plan.some(
-          (s) =>
-            s.kind === 'act' &&
-            s.action.type === 'investment' &&
-            s.action.building === mill.id &&
-            s.action.direction === 'deposit',
-        ),
+    ideas.some((c) =>
+      c.plan.some(
+        (s) =>
+          s.kind === 'act' &&
+          s.action.type === 'investment' &&
+          s.action.building === mill.id &&
+          s.action.direction === 'deposit',
+      ),
     ),
     'neighbours invent an outside stake when the mill cannot pay',
   );

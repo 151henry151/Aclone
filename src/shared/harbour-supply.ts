@@ -13,11 +13,7 @@ export const GOVERNMENT_RESERVE = { water: 24, bread: 24, fuel: 24 } as const;
 export const GOVERNMENT_FLOORS = { water: 1000, bread: 10000, fuel: 4500 } as const;
 
 /** Premium enough to stay above other public shelves; fuel also beats every other posted sell. */
-export function governmentPremium(
-  w: World,
-  shop: Building,
-  item: keyof typeof GOVERNMENT_RESERVE,
-) {
+export function governmentPremium(w: World, shop: Building, item: keyof typeof GOVERNMENT_RESERVE) {
   const others = w.buildings.filter((s) => s !== shop && !s.construction);
   const publicShops = others.filter((s) => s.government && s.owner === 'treasury');
   return Math.max(
