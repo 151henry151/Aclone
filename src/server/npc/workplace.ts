@@ -1,4 +1,10 @@
-import { herdSpec, herdReady, herdNeeds } from '../../shared/livestock.ts';
+import {
+  herdSpec,
+  herdReady,
+  herdNeeds,
+  acceptsHay,
+  livestockInputs,
+} from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from '../../shared/shoreline.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -37,7 +43,7 @@ export function workplace(w: World, p: Player, b: Building) {
         `Production requires ${herd.minimum} ${herd.animal} and 40% herd condition; keep feed, water and qualified care available`,
       );
     blockers.push(
-      `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} feed and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
+      `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} ${acceptsHay(b) ? 'hay or feed' : 'feed'} and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
     );
   }
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
@@ -50,7 +56,7 @@ export function workplace(w: World, p: Player, b: Building) {
       blockers.push(
         'No active employees at the next production check; only slow unattended production can run',
       );
-    for (const [item, n] of Object.entries(recipe.inputs))
+    for (const [item, n] of Object.entries(livestockInputs(b, recipe.inputs)))
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item} in building stockroom`);
     for (const [item, n] of Object.entries(recipe.outputs))

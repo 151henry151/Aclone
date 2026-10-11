@@ -1,5 +1,5 @@
 import { idealEmployees, staffingEfficiency } from './staffing.ts';
-import { herdSpec, herdReady } from './livestock.ts';
+import { herdSpec, herdReady, livestockInputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
 import { recipes, vehicles } from './catalog';
@@ -70,9 +70,9 @@ export function productionSupplied(
 ): boolean {
   return (
     herdReady(b) &&
-    !Object.entries(r.inputs).some(
+    !Object.entries(livestockInputs(b, r.inputs)).some(
       ([item, n]) =>
-        !(upkeepPaid && herdSpec(b) && ['feed', 'water'].includes(item)) &&
+        !(upkeepPaid && herdSpec(b) && ['hay', 'feed', 'water'].includes(item)) &&
         (b.stock[item] ?? 0) < n,
     ) &&
     !Object.entries(r.outputs).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&

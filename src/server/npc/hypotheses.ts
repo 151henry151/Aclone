@@ -1,3 +1,4 @@
+import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { canKeepFishing } from './cargo.ts';
 import { productionBudget } from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -186,7 +187,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       );
     }
     if (recipe && b.kind !== 'farm') {
-      for (const item of Object.keys(recipe.inputs)) {
+      for (const item of Object.keys(livestockSupplyInputs(w, b, recipe.inputs))) {
         const seller = w.buildings
           .filter(
             (s) =>
@@ -218,7 +219,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       }
     }
     if (!recipe || b.kind === 'farm') continue;
-    for (const [item, need] of Object.entries(recipe.inputs)) {
+    for (const [item, need] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
       const missing = Math.max(0, need * 2 - (b.stock[item] ?? 0));
       if (missing <= 0) continue;
       const seller = w.buildings

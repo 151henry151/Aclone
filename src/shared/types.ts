@@ -161,6 +161,9 @@ export interface Building {
     guests: Record<string, { until: number; stock: Stock }>;
   };
   plots?: import('./farming.ts').Plot[];
+  /** Purchased field capacity; legacy farms have four plots. */
+  farmPlots?: number;
+  farmLandCost?: number;
 }
 export interface Ledger {
   details?: { building?: string; item?: string; quantity?: number };
@@ -257,6 +260,7 @@ export interface World {
   scriptInteraction?: boolean;
   creator?: import('./creator.ts').Creator;
   townLayout?: 1 | 2;
+  hayPricing?: 1;
   tradePricing?: 1 | 2 | 3 | 4;
   vehicleServicesPricing?: 1;
   livestockPricing?: 1;

@@ -16,7 +16,10 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
   for (const kind of Object.keys(buildings)) {
     const plan = buildingPlan({ kind, id: 'b1' });
     const bounds = buildingBounds(plan);
-    assert.ok(bounds.width > 0 && bounds.width <= (kind === 'starport' ? 220 : 15));
+    assert.ok(
+      bounds.width > 0 &&
+        bounds.width <= (kind === 'starport' ? 220 : kind === 'haybarn' ? 20 : 15),
+    );
     assert.ok(bounds.depth > 0 && bounds.depth <= (kind === 'starport' ? 140 : 15));
     assert.ok(bounds.height > 0 && bounds.height <= (kind === 'starport' ? 194 : 12));
     shapes.add(JSON.stringify(plan.volumes));

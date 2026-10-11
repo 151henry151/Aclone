@@ -1,4 +1,4 @@
-import { herdSpec, herdNeeds } from './livestock.ts';
+import { herdSpec, herdRation, livestockInputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import { productionStaff, productionEfficiency, productionStaffing } from './sound-state.ts';
@@ -114,13 +114,13 @@ export function productionReport(w: World, b: Building) {
       );
     if ((b.herdCondition ?? 100) < 40)
       blockers.push('Herd condition is too low: fund feed, water and qualified care');
-    for (const [item, n] of Object.entries(herdNeeds(b)))
+    for (const [item, n] of Object.entries(herdRation(b)))
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Herd maintenance needs ${n} ${item} each check, even when output is full`);
   }
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
     blockers.push('Water intake is dry or the pump house is flooded');
-  for (const [item, n] of Object.entries(r.inputs))
+  for (const [item, n] of Object.entries(livestockInputs(b, r.inputs)))
     if ((b.stock[item] ?? 0) < n) blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item}`);
   for (const [item, n] of Object.entries(r.outputs))
     if ((b.stock[item] ?? 0) + n > b.capacity) blockers.push(`No room for ${n} ${item}`);

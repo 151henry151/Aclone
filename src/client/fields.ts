@@ -1,7 +1,8 @@
+import { farmPlotCount, farmPlotLocal, farmPlotPosition } from '../shared/farm-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seasonalMaterial } from './materials';
+import { seasonalMaterial, surface } from './materials';
 import { cropStatus } from '../shared/farming';
 import { terrainHeight, distance } from '../shared/simulation';
 import type { World, Player } from '../shared/types';
@@ -17,6 +18,14 @@ export class FarmFields {
       .map(
         (b) =>
           b.id +
+          ':' +
+          farmPlotCount(b) +
+          ':' +
+          b.x +
+          ':' +
+          b.z +
+          ':' +
+          b.rotation +
           ':' +
           (b.plots ?? [])
             .map((plot, i) => plot.crop + ':' + Math.floor(cropStatus(w, b, i).progress * 4))
@@ -37,16 +46,19 @@ export class FarmFields {
       farm.position.set(b.x, terrainHeight(w, b.x, b.z) + 0.04, b.z);
       farm.rotation.y = b.rotation;
       this.group.add(farm);
-      for (let i = 0; i < 4; i++) {
-        const x = (i % 2) * 8 + 10,
-          z = 9 + Math.floor(i / 2) * 8,
+      for (let i = 0; i < farmPlotCount(b); i++) {
+        const { x, z } = farmPlotLocal(i),
           plot = b.plots?.[i],
           status = cropStatus(w, b, i);
         const soil = new T.Mesh(
           new T.BoxGeometry(7, 0.08, 6),
           new T.MeshStandardMaterial({ color: '#594637', roughness: 1 }),
         );
-        soil.position.set(x, 0, z);
+        const centre = farmPlotPosition(b, i);
+        const ground = terrainHeight(w, centre.x, centre.z) - terrainHeight(w, b.x, b.z);
+        soil.position.set(x, ground, z);
+        if (plot?.crop === 'hay')
+          surface(soil, 'meadow', 3, status.state === 'ripe' ? '#bdb575' : '#91a16b');
         soil.receiveShadow = true;
         seasonalMaterial(soil.material);
         farm.add(soil);
@@ -56,7 +68,11 @@ export class FarmFields {
         const stems = new T.InstancedMesh(
           cropGeometry(plot.crop, height),
           new T.MeshStandardMaterial({
-            color: status.state === 'ripe' && plot.crop === 'wheat' ? '#c8b464' : '#68813d',
+            color:
+              status.state === 'ripe' && ['wheat', 'hay'].includes(plot.crop)
+                ? '#c8b464'
+                : '#68813d',
+            side: plot.crop === 'hay' ? T.DoubleSide : T.FrontSide,
             roughness: 1,
           }),
           80,
@@ -65,7 +81,11 @@ export class FarmFields {
         const matrix = new T.Matrix4();
         for (let n = 0; n < 80; n++) {
           matrix.makeRotationY(n * 2.399);
-          matrix.setPosition(x + (n % 10) * 0.62 - 2.8, 0, z + Math.floor(n / 10) * 0.66 - 2.3);
+          matrix.setPosition(
+            x + (n % 10) * 0.62 - 2.8,
+            ground,
+            z + Math.floor(n / 10) * 0.66 - 2.3,
+          );
           stems.setMatrixAt(n, matrix);
         }
         stems.castShadow = true;
@@ -79,6 +99,20 @@ export class FarmFields {
 }
 
 function cropGeometry(crop: string, height: number) {
+  if (crop === 'hay') {
+    // Crossed, tapered blades: twelve triangles per tuft, instanced across the meadow.
+    const vertices: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const a = i * 2.4,
+        x = Math.cos(a) * 0.14,
+        z = Math.sin(a) * 0.14;
+      vertices.push(x - 0.06, 0, z, x + 0.06, 0, z, x * 1.8, height * (0.7 + i * 0.06), z * 1.8);
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+    g.computeVertexNormals();
+    return g;
+  }
   const parts: T.BufferGeometry[] = [];
   const stem = new T.CylinderGeometry(0.018, 0.026, height, 6);
   stem.translate(0, height / 2, 0);

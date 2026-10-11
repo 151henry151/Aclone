@@ -54,7 +54,8 @@
       "pigs": 16480,
       "chickens": 3090,
       "wool": 2472,
-      "eggs": 1648
+      "eggs": 1648,
+      "hay": 450
     },
     "sell": {
       "wheat": 775,
@@ -107,7 +108,8 @@
       "pigs": 24800,
       "chickens": 4650,
       "wool": 3720,
-      "eggs": 2480
+      "eggs": 2480,
+      "hay": 1000
     },
     "stock": {
       "wheat": 60,
@@ -342,7 +344,8 @@
       "pigs": 16480,
       "chickens": 3090,
       "wool": 2472,
-      "eggs": 1648
+      "eggs": 1648,
+      "hay": 450
     },
     "sell": {
       "wheat": 825,
@@ -395,7 +398,8 @@
       "pigs": 26400,
       "chickens": 4950,
       "wool": 3960,
-      "eggs": 2640
+      "eggs": 2640,
+      "hay": 1000
     },
     "stock": {
       "wheat": 60,
@@ -502,7 +506,8 @@
       "hops": 1200,
       "grapes": 2000,
       "tea": 2800,
-      "coffee": 3200
+      "coffee": 3200,
+      "hay": 500
     },
     "stock": {
       "wheat": 20
@@ -1225,7 +1230,8 @@
     "buy": {
       "feed": 1120,
       "water": 660,
-      "cows": 22400
+      "cows": 22400,
+      "hay": 780
     },
     "sell": {
       "milk": 1500,
@@ -1300,7 +1306,8 @@
     "buy": {
       "feed": 1120,
       "water": 660,
-      "sheep": 15680
+      "sheep": 15680,
+      "hay": 780
     },
     "sell": {
       "wool": 2400,
@@ -1370,5 +1377,26 @@
     "tier": 0,
     "color": "#b29c75",
     "idealEmployees": 1
+  },
+  "haybarn": {
+    "name": "Hay barn",
+    "price": 75000,
+    "capacity": 3000,
+    "buy": {
+      "hay": 560
+    },
+    "sell": {
+      "hay": 700
+    },
+    "stock": {},
+    "wage": 0,
+    "materials": {
+      "wood": 24,
+      "blocks": 8,
+      "tools": 2,
+      "gravel": 12
+    },
+    "tier": 0,
+    "color": "#b39755"
   }
 }

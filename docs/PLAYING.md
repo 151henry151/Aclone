@@ -79,14 +79,17 @@ Water sells at 5d; local processors/lodging bid 5.60d. Harbour imports remain av
 
 ## Farming
 
-Learn **farmer**, then own or work at a farm. Each has four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce.
+Learn **farmer**, then own or work at a farm. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce.
 
+- **Hay grass:** spring/summer/autumn, 10 days (1h 40m), grass; baled forage for cows/sheep. Wet weather reduces the dry-hay yield; drainage helps.
 - **Wheat:** spring/autumn, 18 days (3h), grain; flour/bread.
 - **Potatoes:** spring/summer, 12 days (2h), root; meals/compost.
 - **Hops:** spring/summer, 30 days (5h), vine; beer.
 - **Grapes:** spring, 48 days (8h), vine; wine.
 - **Tea:** spring/summer, 36 days (6h), leaf; packed tea.
 - **Coffee:** spring, 60 days (10h), bean; roasted coffee.
+
+Owners can buy four adjoining plots from the farm's Main panel: **150d**, then **250d**, then **350d**, up to **16 plots**. This uses personal cash, not the farm till; no farmer skill is needed to buy land. New parcels extend beside the existing fields and require dry, level, unoccupied land clear of roads and no-build zones. Expansion preserves crops and stays with the property on sale or death. Nearby buildings cannot be built over reserved fields. Seed costs and harvest labour still apply to every plot.
 
 Seeds draw farm investment. Irrigate with 3 carried water, up to three treatments. Rain helps; crops differ in demand, frost and wet-soil sensitivity. One compost fertilizes for +33% yield; lacking compost buys imported fertilizer at Harbour's default compost price (39.53d). Repeating a crop family loses 20% yield; rotate or restore soil. [Economy](ECONOMY.md#crops-and-soil) explains drainage/restoration.
 
@@ -203,19 +206,23 @@ World creators may add local goods, courses and building designs. Schools show e
 
 ## Livestock and nutrition
 
-Build a **Feed mill** (wheat → livestock feed), **Dairy barn** (feed + water → milk), **Cheese dairy** (milk + fuel → cheese), or **Country café** (cheese + potatoes + water → suppers). Learn miller, livestock farmer, cheesemaker or cook and hire qualified workers. These are player-built businesses, not extra starter properties.
+Build a **Feed mill** (wheat → livestock feed), **Dairy barn** (hay/feed + water → milk), **Cheese dairy** (milk + fuel → cheese), or **Country café** (cheese + potatoes + water → suppers). Learn miller, livestock farmer, cheesemaker or cook and hire qualified workers. These are player-built businesses, not extra starter properties.
 
-Stock a barn with two cows, bought from Harbour stores or another dairy. Two stalls produce six milk per check. Every cow, including reserves, consumes one feed and one water each check even when milk storage is full or workers are absent. Fund wages and keep workers active: supplied/staffed care restores 4 condition, supplied/unattended loses 0.1, and missing feed/water loses 8. Milk needs 40% condition; reaching zero loses a cow. Sell surplus milk and keep the supply chain funded.
+Stock a barn with two cows, bought from Harbour stores or another dairy. Two stalls produce six milk per check. Every cow, including reserves, consumes one hay bale or feed sack and one water each check even when milk storage is full or workers are absent. Fund wages and keep workers active: supplied/staffed care restores 4 condition, supplied/unattended loses 0.1, and missing feed/water loses 8. Milk needs 40% condition; reaching zero loses a cow. Sell surplus milk and keep the supply chain funded.
 
-**Sheepfolds** keep two sheep and turn 2 feed + 2 water into 4 wool. **Pig farms** keep two pigs and turn 4 feed + 2 water into 5 compost (collected manure for crop fertilizer). **Henhouses** keep four chickens and turn 2 feed + 2 water into 6 edible eggs. These are ten-minute checks at default world speed; one livestock farmer can staff any species. Buy starter animals at Harbour stores or the spaceport, then trade locally with breeders. New livestock buildings are player-built; existing properties are not reset.
+**Sheepfolds** keep two sheep and turn 2 hay/feed + 2 water into 4 wool. **Pig farms** keep two pigs and turn 4 feed + 2 water into 5 compost (collected manure for crop fertilizer). **Henhouses** keep four chickens and turn 2 feed + 2 water into 6 edible eggs. These are ten-minute checks at default world speed; one livestock farmer can staff any species. Buy starter animals at Harbour stores or the spaceport, then trade locally with breeders. New livestock buildings are player-built; existing properties are not reset.
 
-The same health rules apply to all herds. Every animal consumes upkeep, even if output storage is full: cows/sheep each need 1 feed + 1 water; pigs 2 feed + 1 water; chickens half a feed + half a water, rounded up for the whole flock. Extra animals do not expand production capacity. Ordinary buyers cannot purchase the breeding stock, but owners can withdraw it deliberately.
+**Feeding with hay:** deposit bales through the livestock building's Stockroom if you own it, or sell them to its funded hay bid. Cows and sheep automatically eat hay first and make up any shortfall with feed; their water requirement is unchanged. This also works offline and for breeding. Pigs and chickens still need manufactured feed. You do not need to click each animal to feed it.
 
-Healthy qualified owners/employees can arrange one birth at a time using 4 feed + 4 water and investment: calf 20d/60 minutes, lamb 18d/50 minutes, piglet 20d/40 minutes, chick 6d/30 minutes. Births are checked on production ticks; keep the required parents, storage space and at least 60% condition until then. Newborns join ordinary livestock stock; age/sex/genetics are abstracted.
+Build a **Hay barn** for **750d + 24 wood, 8 stone blocks, 2 tools and 12 gravel**. Its stockroom holds up to **3,000 bales**. It buys and sells hay without a production recipe or employees: fund its bids and set prices in Building Admin, then store seasonal harvests for winter. Stored hay does not spoil. New barns start empty; no barn is automatically added to Puddlewick.
+
+The same health rules apply to all herds. Every animal consumes upkeep, even if output storage is full: cows/sheep each need 1 hay/feed + 1 water; pigs 2 feed + 1 water; chickens half a feed + half a water, rounded up for the whole flock. Extra animals do not expand production capacity. Ordinary buyers cannot purchase the breeding stock, but owners can withdraw it deliberately.
+
+Healthy qualified owners/employees can arrange one birth at a time using 4 feed (or hay for cows/sheep) + 4 water and investment: calf 20d/60 minutes, lamb 18d/50 minutes, piglet 20d/40 minutes, chick 6d/30 minutes. Births are checked on production ticks; keep the required parents, storage space and at least 60% condition until then. Newborns join ordinary livestock stock; age/sex/genetics are abstracted.
 
 Cows, sheep, pigs and chickens appear near their completed housing, with grazing/pecking, breathing, short walks and tail movement. Stock changes update the herd without rebuilding the town. Up to eight per nearby building and 48 total are displayed in available dry, level space away from roads and buildings; the stockroom always gives the full count. Models are visual, not obstacles or individual controllable animals.
 
-A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80% condition, four feed, four water and 20d investment. Keep parents at 60% condition and leave stock space for one hour. Success adds a tradable cow; failure consumes the breeding cost. Shop sales reserve the last two cows, while owners retain stockroom control. Extra cows add upkeep without expanding the stalls.
+A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80% condition, four hay/feed, four water and 20d investment. Keep parents at 60% condition and leave stock space for one hour. Success adds a tradable cow; failure consumes the breeding cost. Shop sales reserve the last two cows, while owners retain stockroom control. Extra cows add upkeep without expanding the stalls.
 
 Inventory lists each food's effects. Milk restores some health; cheese and dairy suppers also increase maximum health for this life. Nutrition changes the usual 60000 ceiling by at most ±6000 and resets on death. Custom foods may have clearly labelled negative effects, but consumption alone cannot reduce health below one. Ordinary hunger/thirst can still kill. Homes prefer a different available food and feed at the usual threshold; sheltered meals receive full food/drink value. Outdoor repeated servings still lose half their hunger/thirst benefit from the third serving.
 

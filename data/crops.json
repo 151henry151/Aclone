@@ -70,5 +70,17 @@
     "frost": 1.3,
     "rot": 0.2,
     "description": "Long warm-season crop for roasting; frost is its greatest risk."
+  },
+  "hay": {
+    "name": "Hay grass",
+    "days": 10,
+    "yield": 70,
+    "seed": 600,
+    "seasons": ["Spring", "Summer", "Autumn"],
+    "family": "grass",
+    "thirst": 0.35,
+    "frost": 0.2,
+    "rot": 0.25,
+    "description": "Fast forage for cattle and sheep. Rain helps growth, but wet fields reduce the dry-hay harvest; drainage helps. Cut and bale at harvest, then store for winter."
   }
 }

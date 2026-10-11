@@ -1,3 +1,4 @@
+import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World, Player } from '../../shared/types.ts';
 import type { ResidentState } from './memory.ts';
@@ -76,7 +77,7 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
   const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!recipe) return [];
   const reserve = livingReserve(w, p);
-  for (const [item, need] of Object.entries(recipe.inputs)) {
+  for (const [item, need] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
     const have = b.stock[item] ?? 0;
     if (have >= need) continue;
     const bid = b.buy[item];

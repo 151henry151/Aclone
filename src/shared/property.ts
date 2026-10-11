@@ -40,7 +40,12 @@ export function releaseEstate(w: World, b: Building, cause = 'death') {
     });
   delete b.owner;
   b.forSale = false;
-  b.estate = { since: w.time, base: worldBuildings(w)[b.templateId ?? b.kind]?.price ?? b.price };
+  b.estate = {
+    since: w.time,
+    base:
+      (worldBuildings(w)[b.templateId ?? b.kind]?.price ?? b.price - (b.farmLandCost ?? 0)) +
+      (b.farmLandCost ?? 0),
+  };
 }
 /** Only set host-parish defaults once; future world-owner edits survive reload. */
 export function migrateEstates(w: World) {

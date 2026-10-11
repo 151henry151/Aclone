@@ -1,3 +1,9 @@
+import {
+  farmPlotCount,
+  farmExpansionCost,
+  farmExpansionBlocker,
+  MAX_FARM_PLOTS,
+} from '../shared/farm-land';
 import { constructionRefund } from '../shared/construction';
 import { crowClasses } from '../shared/robocrows';
 import { lotteryPanel } from './lottery';
@@ -6,7 +12,7 @@ import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
 import { rulesSummary } from '../shared/rulesets';
 import { alcoholDose, intoxicationLabel } from '../shared/intoxication';
 import { spaceportFlight } from '../shared/spaceport-flight';
-import { herdSpec, herdNeeds } from '../shared/livestock';
+import { herdSpec, herdNeeds, acceptsHay, herdRation } from '../shared/livestock';
 import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
 import { adoptCarriedPilot } from './pilot-handoff';
@@ -1185,7 +1191,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow six crops over two to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift for 45d.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow seven crops over 1h 40m to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -1520,7 +1526,13 @@ function productionStatus(w: World, b: Building) {
     return 'Production paused: the intake is dry or the pump house is flooded. Restore dry shoreline terrain with water behind the building.';
   const interval = productionInterval(w, b);
   const remaining = Math.ceil(interval - (w.time % interval));
-  const stock = [...new Set([...Object.keys(recipe.inputs), ...Object.keys(recipe.outputs)])]
+  const stock = [
+    ...new Set([
+      ...Object.keys(recipe.inputs),
+      ...(acceptsHay(b) ? ['hay'] : []),
+      ...Object.keys(recipe.outputs),
+    ]),
+  ]
     .map((id) => `${b.stock[id] ?? 0} ${items[id]?.name ?? id}`)
     .join(' · ');
   return `Next production check in ${Math.floor(remaining / 60)}m ${remaining % 60}s. Stockroom: ${stock}.`;
@@ -1613,9 +1625,15 @@ function buildingWindow(b: Building) {
     }
     if (b.kind === 'garage')
       html += `<h3>Tractor paint shop</h3><p>A fresh finish costs ${money(appearance.paintPrice)}. Your choice stays with your tractor when you leave or sign out.</p><div class="paint-options">${appearance.paints.map((p) => `<button data-do="paint" data-id="${p.id}" data-building="${b.id}" ${!near || me!.tractorPaint === p.id ? 'disabled' : ''}><span class="paint-chip" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
+    if (b.kind === 'haybarn')
+      html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
-      html += `<h3>Four plots · ${calendar(world).season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p><div class="cards">${Array.from(
-        { length: 4 },
+      if (owned) {
+        const blocked = farmExpansionBlocker(world, b);
+        html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
+      }
+      html += `<h3>${farmPlotCount(b)} plots · ${calendar(world).season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p><div class="cards">${Array.from(
+        { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
             status = cropStatus(world!, b, i);
@@ -1644,7 +1662,13 @@ function buildingWindow(b: Building) {
     const herd = herdSpec(b);
     if (herd) {
       const needs = herdNeeds(b);
-      html += `<h3>${b.kind === 'dairy' ? 'Dairy herd' : 'Livestock'}</h3><p>${b.stock[herd.animal] ?? 0} ${herd.animal} · ${b.herdCondition ?? 100}% condition. Production needs ${herd.minimum} animals and at least 40% condition. The whole herd consumes ${needs.feed} feed and ${needs.water} water each production check, including when output is full. Qualified workers restore condition; neglect can kill animals.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 feed + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
+      html += `<h3>${b.kind === 'dairy' ? 'Dairy herd' : 'Livestock'}</h3><p>${b.stock[herd.animal] ?? 0} ${herd.animal} · ${b.herdCondition ?? 100}% condition. Production needs ${herd.minimum} animals and at least 40% condition. The whole herd consumes ${needs.feed} ${acceptsHay(b) ? 'hay bales or feed (mixable, hay used first)' : 'feed'} and ${needs.water} water each production check, including when output is full. Qualified workers restore condition; neglect can kill animals.</p><p>Feed automatically comes from this building’s Stockroom, including offline. Owners deposit carried supplies there; other players sell into the building’s funded purchase bids. Current next-check ration: ${Object.entries(
+        herdRation(b),
+      )
+        .map(([item, n]) => `${n} ${esc(items[item]?.name ?? item)}`)
+        .join(
+          ', ',
+        )}. Hay does not replace water.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'} + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
     }
     if (b.kind === 'home')
       html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
@@ -1700,7 +1724,10 @@ function buildingWindow(b: Building) {
       const interval = productionInterval(world, b);
       html += `<h3>Production</h3><p>${
         Object.entries(r.inputs)
-          .map(([k, n]) => `${n} ${esc(items[k].name)}`)
+          .map(
+            ([k, n]) =>
+              `${n} ${k === 'feed' && acceptsHay(b) ? 'Hay or livestock feed' : esc(items[k].name)}`,
+          )
           .join(' + ') || 'Raw extraction'
       } → ${Object.entries(r.outputs)
         .map(([k, n]) => `${n} ${esc(items[k].name)}`)

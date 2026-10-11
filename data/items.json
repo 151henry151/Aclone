@@ -286,5 +286,10 @@
     "price": 1600,
     "food": 6000,
     "health": 100
+  },
+  "hay": {
+    "name": "Hay bale",
+    "weight": 2,
+    "price": 600
   }
 }

@@ -1,3 +1,4 @@
+import { onFarmLand } from './farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Building } from './types.ts';
 import { townRoads, roadDistance, type Point, type Road } from './town.ts';
@@ -41,6 +42,7 @@ function clear(w: World, a: Point, b: Point, target: Building) {
   for (const t of [0.25, 0.5, 0.75, 1]) {
     const x = a.x + (b.x - a.x) * t,
       z = a.z + (b.z - a.z) * t;
+    if (onFarmLand(w, x, z, grownRoadWidth / 2, undefined, 4)) return false;
     if (terrainHeight(w, x, z) <= w.settings.seaLevel + 0.5) return false;
     for (const other of w.buildings)
       if (blocksBuilding(other, x, z, 0, grownRoadWidth / 2 + 1)) return false;

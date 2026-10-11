@@ -1,4 +1,5 @@
-import { herdSpec, herdNeeds } from '../../shared/livestock.ts';
+import { livestockSupplyInputs } from '../../shared/livestock.ts';
+import { herdSpec } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import type { World, Player, Building } from '../../shared/types.ts';
@@ -65,10 +66,8 @@ export function economyChoices(
           ]),
         );
       for (const [item, quantity] of Object.entries({
-        ...recipe.inputs,
-        ...(herdSpec(b)
-          ? { ...herdNeeds(b), [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 }
-          : {}),
+        ...livestockSupplyInputs(w, b, recipe.inputs),
+        ...(herdSpec(b) ? { [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 } : {}),
       })) {
         const missing = Math.min(
           quantity * 2 - (b.stock[item] ?? 0),

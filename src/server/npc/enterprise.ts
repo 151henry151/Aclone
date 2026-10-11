@@ -1,9 +1,11 @@
+import { hayMerchantChoices } from './hay-merchant.ts';
+import { livestockInputs, livestockSupplyInputs } from '../../shared/livestock.ts';
 import { farmEnterprises } from './farm-enterprise.ts';
 import { constructionChoices } from './construction-projects.ts';
 import { careerChoices } from './projects.ts';
 import { productionBudget, usefulShift } from './business-policy.ts';
 import { householdBudget } from './household.ts';
-import { herdSpec, herdNeeds, herdReady } from '../../shared/livestock.ts';
+import { herdSpec, herdReady, acceptsHay } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { loanQuote } from '../../shared/loans.ts';
 import { operation } from './player-operations.ts';
@@ -25,7 +27,7 @@ export function businessEstimate(w: World, b: Building) {
   const catalogue = worldItems(w);
   let inputs = 0,
     revenue = 0;
-  for (const [item, n] of Object.entries(recipe.inputs)) {
+  for (const [item, n] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
     const quotes = w.buildings
       .filter((s) => s.id !== b.id && !s.construction && s.stock[item] > 0 && s.sell[item] >= 0)
       .map((s) => s.sell[item]);
@@ -68,7 +70,11 @@ export function businessEstimate(w: World, b: Building) {
 }
 /** Complete, costed operating errands precede speculative one-step purchases. */
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
-  const list: FarmerChoice[] = [...constructionChoices(w, p), ...farmEnterprises(w, p)];
+  const list: FarmerChoice[] = [
+    ...constructionChoices(w, p),
+    ...farmEnterprises(w, p),
+    ...hayMerchantChoices(w, p),
+  ];
   const add = (description: string, plan: Step[], reconsiderSeconds = 120) => {
     const action = plan.filter((s) => s.kind === 'act' && 'building' in s.action).at(-1);
     const target =
@@ -157,18 +163,18 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       (b.stock[herd.animal] ?? 0) < herd.minimum + 2 &&
       (b.herdCondition ?? 100) >= 80 &&
       b.investment > 15000 &&
-      b.stock.feed >= 20 &&
+      (b.stock.feed ?? 0) + (acceptsHay(b) ? (b.stock.hay ?? 0) : 0) >= 20 &&
       b.stock.water >= 20
     )
       add(
-        `Breed a replacement ${herd.young} at my ${b.name}; invest 4 feed, 4 water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
+        `Breed a replacement ${herd.young} at my ${b.name}; invest 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'}, 4 water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
         visitBuilding(p, b, [operation('livestock', { building: b.id, operation: 'breed' })]),
       );
     const estimate = businessEstimate(w, b);
     const job = workplace(w, p, b)!;
     const supplied =
       herdReady(b) &&
-      Object.entries(recipe.inputs).every(([i, n]) => (b.stock[i] ?? 0) >= n) &&
+      Object.entries(livestockInputs(b, recipe.inputs)).every(([i, n]) => (b.stock[i] ?? 0) >= n) &&
       Object.entries(recipe.outputs).every(([i, n]) => (b.stock[i] ?? 0) + n <= b.capacity) &&
       b.investment >= job.ifYouWork.wagesRequired;
     const shortage = Object.keys(recipe.outputs).some(
@@ -276,8 +282,8 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         ]),
       );
     for (const [item, perBatch] of Object.entries({
-      ...recipe.inputs,
-      ...(herd ? { ...herdNeeds(b), [herd.animal]: herd.minimum } : {}),
+      ...livestockSupplyInputs(w, b, recipe.inputs),
+      ...(herd ? { [herd.animal]: herd.minimum } : {}),
     })) {
       const keep = item === 'water' ? 6 : item === 'bread' ? 3 : 0;
       const held = Math.min(

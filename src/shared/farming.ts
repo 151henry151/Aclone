@@ -1,3 +1,4 @@
+import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings, items } from './catalog.ts';
 import data from '../../data/crops.json';
@@ -75,10 +76,28 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     b.owner === p.id || (w.settings.jobsEnabled !== false && b.employees.includes(p.id)),
     'Only the farmer or farm staff can tend plots',
   );
+  if (a.operation === 'expand') {
+    check(b.owner === p.id, 'Only the owner can buy more farmland');
+    check(!p.task, 'Finish your current activity first');
+    const blocker = farmExpansionBlocker(w, b);
+    check(!blocker, blocker ?? 'Cannot expand here');
+    const cost = farmExpansionCost(b);
+    check(p.cash >= cost, 'Not enough personal cash to buy this parcel');
+    p.cash -= cost;
+    b.farmPlots = farmPlotCount(b) + 4;
+    b.plots = Array.from(
+      { length: b.farmPlots },
+      (_, i) => b.plots?.[i] ?? { planted: 0, ready: 0, water: 0, fertilized: false },
+    );
+    b.price += cost;
+    b.farmLandCost = (b.farmLandCost ?? 0) + cost;
+    log(w, 'sink', cost, p.id, 'land-registry', 'farm land purchase');
+    return `Purchased four more plots; this farm now has ${b.farmPlots}.`;
+  }
   check(p.skills.includes('farmer'), 'Learn Farmer at the school');
   check(typeof a.plot === 'number', 'Choose a plot');
   const index = a.plot as number;
-  check(Number.isInteger(index) && index >= 0 && index < 4, 'Choose a plot');
+  check(Number.isInteger(index) && index >= 0 && index < farmPlotCount(b), 'Choose a plot');
   check(!p.task, 'Finish your current task first');
   const old = b.plots?.[index],
     op = a.operation;
@@ -111,7 +130,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     check(b.investment >= c.seed, 'Fund the farm investment account for seeds');
     b.investment -= c.seed;
     log(w, 'sink', c.seed, b.id, 'seed merchant', 'crop seed');
-    b.plots ??= Array.from({ length: 4 }, () => ({
+    b.plots ??= Array.from({ length: farmPlotCount(b) }, () => ({
       planted: 0,
       ready: 0,
       water: 0,

@@ -168,6 +168,11 @@ export function buildingPlan(b: {
       wall = '#b9b5a4';
       trim = '#705b49';
       break;
+    case 'haybarn':
+      volumes = [volume(16, 12, 5.2, 3.2), volume(4, 9, 3.2, 0.6, 'shed', 10, -1)];
+      wall = '#96694a';
+      trim = '#dacda1';
+      break;
     case 'farm':
       volumes = [volume(10.5, 7.8, 3.8, 2.8)];
       wall = '#9d624b';
@@ -265,6 +270,7 @@ export function buildingPlan(b: {
       'sheepfold',
       'piggery',
       'henhouse',
+      'haybarn',
     ].includes(b.kind)
   )
     siding = 'wood';

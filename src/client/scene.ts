@@ -490,6 +490,11 @@ export class GameScene {
     const byId = new Map(w.buildings.map((b) => [b.id, b]));
     for (const g of this.buildingMeshes) {
       const b = byId.get(g.userData.building);
+      if (b?.kind === 'haybarn')
+        g.traverse((o) => {
+          if (o instanceof T.InstancedMesh && o.userData.hayStack)
+            o.count = Math.min(9, Math.ceil(Math.max(0, b.stock.hay ?? 0) / 50));
+        });
       const text = b && saleTagText(w, b),
         current = g.userData.saleTag as T.Sprite | undefined;
       if (current?.userData.saleText === text) continue;
@@ -793,6 +798,7 @@ export class GameScene {
       const mat = o.material as T.MeshStandardMaterial;
       if (
         o.userData.lightSource ||
+        o.userData.hayStack ||
         mat.transparent ||
         mat.vertexColors ||
         !(mat instanceof T.MeshStandardMaterial)

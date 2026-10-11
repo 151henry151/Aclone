@@ -17,6 +17,18 @@ export function removeOwnerEmployment(w: World, b: Building) {
 /** Upgrade public/unowned quotes once; every player-owned price is sacrosanct. */
 export function migrateEconomy(w: World) {
   migrateOutsideClaims(w);
+  if (!w.hayPricing) {
+    // Only add the new commodity. Never replace existing operator prices or grant stock.
+    for (const b of w.buildings) {
+      if (b.templateId || b.id === 'parish-government-stores') continue;
+      if (['market', 'starport'].includes(b.kind) && !(b.government && b.owner === 'treasury'))
+        continue;
+      const def = buildings[b.kind];
+      if (def?.buy.hay !== undefined) b.buy.hay ??= def.buy.hay;
+      if (def?.sell.hay !== undefined) b.sell.hay ??= def.sell.hay;
+    }
+    w.hayPricing = 1;
+  }
   for (const b of w.buildings) removeOwnerEmployment(w, b);
   if (!w.vehicleServicesPricing) {
     for (const b of w.buildings)

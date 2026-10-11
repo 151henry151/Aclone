@@ -1,3 +1,5 @@
+import { farmPlotCount } from '../../shared/farm-land.ts';
+import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../../shared/types.ts';
 import { worldBuildings } from '../../shared/world-catalogue.ts';
@@ -25,7 +27,7 @@ export function productionBudget(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm') return;
   const tax = Math.min(1, w.settings.salesTax + (taxTown(w, b.x, b.z)?.salesTax ?? 0));
-  const inputs = Object.entries(recipe.inputs).reduce(
+  const inputs = Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
     (sum, [item, n]) => sum + n * (b.buy[item] || worldItems(w)[item]?.price || 0),
     0,
   );
@@ -65,8 +67,9 @@ export function usefulShift(w: World, p: Player, b: Building) {
 
 /** Keep enough cash in the business before paying its owner for household needs. */
 export function retainedCapital(w: World, b: Building) {
+  if (b.kind === 'haybarn') return Math.max(2000, 40 * (b.buy.hay ?? 0));
   return b.kind === 'farm'
-    ? 4 * Math.max(b.wage, ...Object.values(crops).map((c) => c.seed + b.wage))
+    ? farmPlotCount(b) * Math.max(b.wage, ...Object.values(crops).map((c) => c.seed + b.wage))
     : (productionBudget(w, b)?.reserve ?? Math.max(2000, b.wage * 3));
 }
 export function ownerLivingDraw(w: World, p: Player, b: Building) {

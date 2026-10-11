@@ -1,3 +1,4 @@
+import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../../shared/farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { calendar } from '../../shared/environment.ts';
 import { crops } from '../../shared/farming.ts';
@@ -29,7 +30,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
         Math.floor(crop.yield * 0.5) * (b.sell[item] ?? 0) * (1 - tax) > crop.seed + b.wage,
     );
     if (!growing.length && b.owner !== p.id) continue;
-    const reserve = 4 * Math.max(b.wage, ...growing.map(([, c]) => c.seed + b.wage));
+    const reserve = farmPlotCount(b) * Math.max(b.wage, ...growing.map(([, c]) => c.seed + b.wage));
     const add = (description: string, plan: Step[]) => {
       if (plan.length && plan.length <= 12)
         choices.push({
@@ -80,6 +81,34 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
           {
             kind: 'act',
             action: { type: 'investment', building: b.id, direction: 'deposit', amount: deposit },
+          },
+        ]),
+      );
+    // Expand only a busy, funded farm with proven sales and unsatisfied observed demand.
+    if (
+      b.owner === p.id &&
+      p.skills.includes('farmer') &&
+      (b.plots ?? []).filter((plot) => plot.crop).length === farmPlotCount(b) &&
+      (b.accounts?.receipts ?? 0) > 0 &&
+      b.investment >= reserve &&
+      p.cash >= living + reserve + farmExpansionCost(b) &&
+      !farmExpansionBlocker(w, b) &&
+      growing.some(([item]) =>
+        w.buildings.some(
+          (s) =>
+            s.id !== b.id &&
+            s.buy[item] > 0 &&
+            s.investment >= s.buy[item] * 20 &&
+            (s.stock[item] ?? 0) < 20,
+        ),
+      )
+    )
+      add(
+        `Expand my busy ${b.name} by four plots for ${farmExpansionCost(b)}, preserving household and crop capital.`,
+        visitBuilding(p, b, [
+          {
+            kind: 'act',
+            action: { type: 'farm', building: b.id, operation: 'expand', plot: 0, crop: null },
           },
         ]),
       );

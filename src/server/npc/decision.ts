@@ -53,8 +53,8 @@ const action = z.discriminatedUnion('type', [
     .object({
       type: z.literal('farm'),
       ...building,
-      operation: z.enum(['plant', 'water', 'fertilize', 'harvest', 'drain', 'improve']),
-      plot: z.number().int().min(0).max(3),
+      operation: z.enum(['plant', 'water', 'fertilize', 'harvest', 'drain', 'improve', 'expand']),
+      plot: z.number().int().min(0).max(15),
       crop: z.string().max(30).nullable(),
     })
     .strict(),

@@ -1,3 +1,4 @@
+import { livestockInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { skillLesson } from '../../shared/world-catalogue.ts';
@@ -211,7 +212,8 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     const job = workplace(w, p, b)!;
     if (
       job.ifYouWork.capitalShortfall ||
-      (b.kind !== 'farm' && Object.entries(recipe.inputs).some(([i, n]) => (b.stock[i] ?? 0) < n))
+      (b.kind !== 'farm' &&
+        Object.entries(livestockInputs(b, recipe.inputs)).some(([i, n]) => (b.stock[i] ?? 0) < n))
     )
       continue;
     if (!p.skills.includes(recipe.skill)) {

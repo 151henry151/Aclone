@@ -11,7 +11,8 @@ export type Detail =
   | 'tyre'
   | 'rim'
   | 'paint'
-  | 'livestock';
+  | 'livestock'
+  | 'hay';
 const cache = new Map<Detail, T.DataTexture>();
 const fract = (n: number) => n - Math.floor(n);
 const hash = (x: number, y: number) => fract(Math.sin(x * 127.1 + y * 311.7) * 43758.5453);
@@ -42,7 +43,14 @@ export function detailTexture(kind: Detail) {
         n = hash(x, y),
         grain = noise(u * 90, v * 8);
       let c = [255, 255, 255];
-      if (kind === 'window' || kind === 'window-light') {
+      if (kind === 'hay') {
+        const strand = noise(u * 12 + v * 110, v * 7),
+          fine = noise(u * 130, v * 13);
+        const twine = Math.abs(u - 0.25) < 0.013 || Math.abs(u - 0.75) < 0.013;
+        c = twine
+          ? [112, 91, 48]
+          : [153 + strand * 63 + fine * 25, 126 + strand * 58 + fine * 20, 64 + strand * 37];
+      } else if (kind === 'window' || kind === 'window-light') {
         const border = u < 0.07 || u > 0.93 || v < 0.065 || v > 0.935,
           bar = Math.abs(u - 0.5) < 0.022 || Math.abs(v - 0.5) < 0.021;
         const pane = !border && !bar;

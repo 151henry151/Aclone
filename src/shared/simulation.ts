@@ -1,3 +1,5 @@
+import { onFarmLand } from './farm-land.ts';
+import { buildingBounds, buildingPlan } from './building-shapes.ts';
 import { constructionRefund } from './construction.ts';
 import { crowClasses, crowAbility, returnCrow, type CrowClass } from './robocrows.ts';
 import { lotteryAction, tickLottery } from './lottery.ts';
@@ -196,6 +198,7 @@ export function createWorld(
     animalPricing: 1,
     vehicleServicesPricing: 1,
     gatherToolsPricing: 1,
+    hayPricing: 1,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -1121,6 +1124,11 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(
         w.buildings.every((b) => distance(site, b) > 12),
         'Too close to another building',
+      );
+      const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
+      requireThat(
+        !onFarmLand(w, site.x, site.z, Math.max(footprint.width, footprint.depth) / 2),
+        'Construction would cover farmland',
       );
       const shore = kind === 'waterworks' ? waterworksSite(w, site) : undefined;
       requireThat(

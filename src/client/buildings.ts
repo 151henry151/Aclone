@@ -197,7 +197,19 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return root;
   }
   for (const v of plan.volumes) {
-    wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z));
+    if (b.kind === 'haybarn' && v.roof === 'shed') {
+      for (const x of [-1, 1])
+        for (const z of [-1, 1])
+          box(
+            0.2,
+            v.eaves,
+            0.2,
+            plan.trim,
+            v.x + (x * v.width) / 2,
+            v.eaves / 2,
+            v.z + (z * v.depth) / 2,
+          );
+    } else wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z));
     box(v.width + 0.15, 0.2, v.depth + 0.15, '#9d9f8e', v.x, 0.1, v.z);
     if (b.construction) {
       for (const side of [-1, 1])
@@ -216,9 +228,33 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     roof(v);
   }
   if (b.construction) return root;
+  if (b.kind === 'haybarn') {
+    // One instanced draw; the texture supplies fibre and twine detail.
+    const bales = new T.InstancedMesh(
+      new T.BoxGeometry(1.6, 0.8, 1.05),
+      detailMaterial('hay', '#ffffff', 0.04),
+      9,
+    );
+    for (let i = 0; i < 9; i++)
+      bales.setMatrixAt(
+        i,
+        new T.Matrix4().makeTranslation(
+          8.7 + (i % 2) * 1.7,
+          0.5 + Math.floor(i / 6) * 0.82,
+          -3 + Math.floor((i % 6) / 2) * 1.15,
+        ),
+      );
+    bales.computeBoundingSphere();
+    bales.userData.hayStack = true;
+    bales.count = Math.min(9, Math.ceil(Math.max(0, b.stock.hay ?? 0) / 50));
+    root.add(bales);
+    box(2.1, 1.6, 0.1, plan.trim, 0, main.eaves + 0.45, front);
+  }
+
   const shed = [
     'garage',
     'farm',
+    'haybarn',
     'sawmill',
     'warehouse',
     'shipyard',
@@ -230,7 +266,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     'piggery',
   ].includes(b.kind);
   if (shed) {
-    const bays = ['garage', 'warehouse', 'factory', 'shipyard'].includes(b.kind)
+    const bays = ['garage', 'warehouse', 'factory', 'shipyard', 'haybarn'].includes(b.kind)
       ? [-2.7, 2.7]
       : [0];
     for (const x of bays) {

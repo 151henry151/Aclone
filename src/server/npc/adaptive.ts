@@ -1,3 +1,4 @@
+import { farmPlotCount } from '../../shared/farm-land.ts';
 import { canKeepFishing } from './cargo.ts';
 import { constructionBudget } from './construction-projects.ts';
 import { personalOffers, familyInvites } from '../../shared/social.ts';
@@ -385,7 +386,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           ]),
         );
       if (b.kind === 'farm')
-        for (let plot = 0; plot < 4; plot++)
+        for (let plot = 0; plot < farmPlotCount(b); plot++)
           for (const op of ['drain', 'improve'] as const)
             add(
               'farming',

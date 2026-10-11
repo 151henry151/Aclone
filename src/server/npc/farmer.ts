@@ -1,3 +1,5 @@
+import { acceptsHay, herdNeeds } from '../../shared/livestock.ts';
+import { farmPlotCount } from '../../shared/farm-land.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
@@ -198,7 +200,7 @@ export function gameplayChoices(
         ]),
       );
     if (p.skills.includes('farmer') && (own || b.employees.includes(p.id))) {
-      for (let plot = 0; plot < 4; plot++) {
+      for (let plot = 0; plot < farmPlotCount(b); plot++) {
         const current = b.plots?.[plot],
           status = cropStatus(w, b, plot);
         if (current?.harvest) continue;
@@ -303,11 +305,13 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
       .filter((shop) => shop.id !== b.id && shop.buy[item] > 0)
       .reduce((sum, shop) => {
         const r = shop.production ?? recipes[shop.recipe ?? ''];
-        const target = r?.inputs[item] ? r.inputs[item] * 6 : def.yield;
+        const needed =
+          item === 'hay' && acceptsHay(shop)
+            ? Math.max(0, herdNeeds(shop).feed - (shop.stock.feed ?? 0))
+            : r?.inputs[item];
+        const target = needed ? needed * 6 : def.yield;
         const urgent =
-          r?.inputs[item] &&
-          (shop.stock[item] ?? 0) < r.inputs[item] &&
-          shop.investment >= shop.buy[item] * r.inputs[item]
+          needed && (shop.stock[item] ?? 0) < needed && shop.investment >= shop.buy[item] * needed
             ? def.yield * 3
             : 0;
         return (
@@ -335,7 +339,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     const plan = visitBuilding(p, b, steps);
     return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
   };
-  for (let plot = 0; plot < 4; plot++) {
+  for (let plot = 0; plot < farmPlotCount(b); plot++) {
     const current = b.plots?.[plot];
     if (current?.harvest) continue;
     const status = cropStatus(w, b, plot);
@@ -346,7 +350,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     )
       return take([farm(plot, 'harvest'), { kind: 'wait', seconds: 15 }]);
   }
-  for (let plot = 0; plot < 4; plot++) {
+  for (let plot = 0; plot < farmPlotCount(b); plot++) {
     const current = b.plots?.[plot];
     if (current?.harvest || cropStatus(w, b, plot).state !== 'growing') continue;
     if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
@@ -360,7 +364,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     )
       return take([farm(plot, 'fertilize')]);
   }
-  for (let plot = 0; plot < 4; plot++) {
+  for (let plot = 0; plot < farmPlotCount(b); plot++) {
     if (cropStatus(w, b, plot).state !== 'empty') continue;
     const previous = b.plots?.[plot]?.previous;
     const previousFamily = previous ? crops[previous]?.family : undefined;
@@ -409,7 +413,7 @@ export function farmerSituation(w: World, p: Player) {
       stock: b.stock,
       capacity: b.capacity,
       construction: b.construction,
-      plots: Array.from({ length: 4 }, (_, i) => ({
+      plots: Array.from({ length: farmPlotCount(b) }, (_, i) => ({
         plot: i,
         ...b.plots?.[i],
         ...cropStatus(w, b, i),

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World, Building } from './types.ts';
+import type { World, Building, Stock } from './types.ts';
 import { accounts, addQuantities, recordLife } from './reports.ts';
 export const livestock = {
   dairy: {
@@ -60,6 +60,44 @@ export function herdNeeds(b: Building) {
     water: Math.ceil(count * (spec?.water ?? 0)),
   };
 }
+/** Cattle and sheep can replace one sack of feed with one bale. Other animals need feed. */
+export const acceptsHay = (b: Pick<Building, 'kind'>) => ['dairy', 'sheepfold'].includes(b.kind);
+export function herdRation(
+  b: Building,
+  feed = herdNeeds(b).feed,
+  water = herdNeeds(b).water,
+): Stock {
+  const hay = acceptsHay(b) ? Math.min(feed, Math.max(0, b.stock.hay ?? 0)) : 0;
+  return { ...(hay ? { hay } : {}), ...(feed > hay ? { feed: feed - hay } : {}), water };
+}
+/** Upkeep replaces the legacy recipe feed/water, including surplus animals. */
+export function livestockInputs(b: Building, inputs: Stock): Stock {
+  if (!herdSpec(b)) return inputs;
+  const { feed: _feed, water: _water, ...other } = inputs;
+  return { ...other, ...herdRation(b) };
+}
+/** A bounded restocking target, using only the caller's observed market view. */
+export function livestockSupplyInputs(w: World, b: Building, inputs: Stock): Stock {
+  if (!herdSpec(b)) return inputs;
+  const target = livestockInputs(b, inputs);
+  if (!acceptsHay(b)) return target;
+  const cheapest = (item: string) =>
+    Math.min(
+      ...w.buildings
+        .filter((s) => !s.construction && s.stock[item] > 0 && s.sell[item] > 0)
+        .map((s) => s.sell[item]),
+    );
+  const hay = cheapest('hay'),
+    feed = cheapest('feed');
+  if (Number.isFinite(hay) && hay <= feed) {
+    delete target.feed;
+    target.hay = herdNeeds(b).feed;
+  } else if (Number.isFinite(feed)) {
+    delete target.hay;
+    target.feed = herdNeeds(b).feed;
+  }
+  return target;
+}
 export function herdReady(b: Building) {
   const spec = herdSpec(b);
   return !spec || ((b.stock[spec.animal] ?? 0) >= spec.minimum && (b.herdCondition ?? 100) >= 40);
@@ -72,7 +110,7 @@ export function tendHerd(w: World, b: Building, staff: number, at = w.time) {
     b.herdCondition = 100;
     return false;
   }
-  const needs = herdNeeds(b),
+  const needs = herdRation(b),
     fed = Object.entries(needs).every(([id, n]) => (b.stock[id] ?? 0) >= n);
   if (fed) {
     for (const [id, n] of Object.entries(needs)) b.stock[id] -= n;
@@ -112,14 +150,19 @@ export function breedHerd(w: World, p: import('./types.ts').Player, b: Building)
   if (b.breedingEnd) throw Error('An offspring is already on the way');
   if ((b.stock[spec.animal] ?? 0) < spec.minimum || (b.herdCondition ?? 100) < 80)
     throw Error(`Breeding requires ${spec.minimum} ${spec.animal} and 80% herd condition`);
-  if ((b.stock.feed ?? 0) < 4 || (b.stock.water ?? 0) < 4 || b.investment < spec.fee)
-    throw Error(`Breeding requires 4 feed, 4 water and ${spec.fee / 100}d investment`);
+  const ration = herdRation(b, 4, 4);
+  if (
+    Object.entries(ration).some(([item, n]) => (b.stock[item] ?? 0) < n) ||
+    b.investment < spec.fee
+  )
+    throw Error(
+      `Breeding requires 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'}, 4 water and ${spec.fee / 100}d investment`,
+    );
   if ((b.stock[spec.animal] ?? 0) >= b.capacity) throw Error(`No room for a ${spec.young}`);
-  b.stock.feed -= 4;
-  b.stock.water -= 4;
+  for (const [item, n] of Object.entries(ration)) b.stock[item] -= n;
   b.investment -= spec.fee;
   b.breedingEnd = w.time + spec.seconds;
-  addQuantities(accounts(w, b).consumed, { feed: 4, water: 4 });
+  addQuantities(accounts(w, b).consumed, ration);
   return spec.fee;
 }
 export function birthHerd(w: World, b: Building, at: number) {

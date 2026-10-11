@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.62.0] - 2026-10-11
+
+### Added
+
+- Grow and bale hay on farms, trade it through large player-built hay barns, and feed cattle and sheep from their building stockrooms. Hay can replace or mix with manufactured feed; water and qualified care remain necessary.
+- Farm owners can buy adjoining four-plot parcels, expanding from four to sixteen plots. Purchases cost personal cash, check usable land, persist with the property, and enlarge visible fields.
+- NPC farmers use expanded fields and hay demand; livestock keepers consider hay supplies, and hay merchants can fund and stock their barns while preserving living reserves. Existing saves gain hay quotes without replacing prices or granting stock.
+
 ## [0.61.0] - 2026-10-11
 
 ### Changed
