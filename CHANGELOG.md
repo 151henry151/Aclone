@@ -6,6 +6,29 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-10-11
+
+### Added
+
+- An Inventory discard action for unwanted cargo, also available to stranded NPCs as a last resort after checking nearby buyers or storage.
+- Persistent NPC career projects for resource gathering, trading, employment, housing and business operation, with local continuation and fresh eligibility checks.
+- An offline NPC soak evaluator with schedules, normal survival, controller restart and outcome reports; it makes no API calls.
+
+### Changed
+
+- Reserve household spending and a low-fuel allowance before optional trades or investments; fund owned businesses from surplus cash and return exported sales receipts to their tills. Owners can draw household and cottage savings from surplus working capital while protecting operating reserves and investor claims.
+- Budget tax, materials and operating reserves before starting construction, then procure and deliver the remaining materials as a persistent project.
+- Avoid redundant NPC factory shifts and rank farm crops by funded shortages, existing stocks and planted crops. Farming careers cover training, planting and harvesting; seed and fertilizer spending preserves harvest wages. Farm owners get costed purchase and operating plans as well.
+
+### Fixed
+
+- Scheduled NPC visits now reach earning routines. Empty tractors can be abandoned temporarily to walk, earn, eat or return home, rather than repeatedly failing to drive. Long countryside walks receive a distance-based deadline.
+- NPC builders can navigate out of their new construction sites, and interrupted gathering errands return to their resource patch. Full loads can be delivered or unloaded to make room for meals.
+- NPC fishing stops at a portable reserve instead of repeatedly overfilling cargo. Surplus food can be sold or stored, and heavy empty-tank loads can be reduced to walking capacity without losing tools or emergency meals.
+- Pantry forecasts now match actual home feeding. Residents can retrieve their own supplies from expired rooms and unload excessive portable provisions.
+- Large investment-return collections no longer invalidate Mabel’s entire planning request. Invalid candidates are isolated and validation paths are logged without private prompt contents.
+- Remote employers no longer reveal unseen stock changes to ordinary NPCs; visits refresh their remembered quotes.
+
 ## [0.59.2] - 2026-10-08
 
 ### Changed
