@@ -1,3 +1,4 @@
+import { worldResources } from '../src/shared/resources.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { completePuddlewick } from '../src/server/parish-services.ts';
 import { test } from 'node:test';
@@ -18,7 +19,12 @@ import { adaptiveChoices } from '../src/server/npc/adaptive.ts';
 import { inventHypotheses } from '../src/server/npc/hypotheses.ts';
 import { carePlan } from '../src/server/npc/care.ts';
 import { failStep } from '../src/server/npc/recovery.ts';
-import { suspendPlan, resumePlan, employmentRoutine, exploreRoutine } from '../src/server/npc/routines.ts';
+import {
+  suspendPlan,
+  resumePlan,
+  employmentRoutine,
+  exploreRoutine,
+} from '../src/server/npc/routines.ts';
 import { JevBrain } from '../src/server/npc/jev.ts';
 import { Store } from '../src/server/store.ts';
 import { Universe } from '../src/server/universe.ts';
@@ -677,7 +683,7 @@ test('an understocked household logs off at home and returns before starvation',
     sessions: 1,
     nextAt: now,
     startedAt: now,
-    endsAt: now + 600000,
+    endsAt: now + 300000,
     nextRegularAt: now + 86400000,
     preparationUntil: now + 1200000,
   };
@@ -703,4 +709,115 @@ test('an understocked household logs off at home and returns before starvation',
     r.close();
     store.close();
   }
+});
+
+test('an empty-tank penniless resident walks, earns and buys a drink without planner credits', async () => {
+  const store = new Store(':memory:'),
+    universe = new Universe(store),
+    { w } = fixture();
+  const options = [
+    {
+      config: npcConfigSchema.parse({
+        id: 'lena',
+        provider: 'jev',
+        presence: 'always',
+        activeAlone: true,
+      }),
+      brain: {
+        async decide(): Promise<never> {
+          throw Error('No model needed');
+        },
+      },
+    },
+  ];
+  const residents = new Residents(store, universe, new Map([[w.id, w]]), options, { dailyUsd: 0 });
+  const p = w.players[residents.status()[0].playerId];
+  Object.assign(p, {
+    cash: 0,
+    inventory: {},
+    fuel: 0,
+    vehicle: 0,
+    engine: true,
+    hunger: 0,
+    thirst: 30000,
+  });
+  let now = Date.now();
+  try {
+    for (
+      let i = 0;
+      i < 18000 &&
+      (p.thirst >= 30000 || !w.ledger.some((e) => e.reason === 'labour' && e.to === p.id));
+      i++
+    ) {
+      advance(w, 0.1);
+      now += 100;
+      residents.tick(0.1, now);
+      if (i % 20 === 0) await residents.settled();
+    }
+    assert.equal(p.deaths, 0);
+    assert.ok(p.thirst < 30000, 'bought and consumed an ordinary drink');
+    assert.ok(
+      w.ledger.some((e) => e.to === p.id && e.amount > 0),
+      'earned cash rather than receiving a recovery grant',
+    );
+    const errors = residents.memory.recent('lena', 500).filter((e) => e.kind === 'failure');
+    assert.ok(errors.length < 5, JSON.stringify(errors));
+    assert.equal(store.db.prepare('SELECT count(*) n FROM npc_calls').get()!.n, 0);
+  } finally {
+    residents.close();
+    store.close();
+  }
+});
+
+test('navigation backoff never prevents drinking water already carried', () => {
+  const store = new Store(':memory:'),
+    universe = new Universe(store),
+    { w } = fixture();
+  const worlds = new Map([[w.id, w]]),
+    options = [
+      {
+        config: npcConfigSchema.parse({
+          id: 'lena',
+          provider: 'jev',
+          presence: 'always',
+          activeAlone: true,
+        }),
+        brain: {
+          async decide(): Promise<never> {
+            throw Error('No API');
+          },
+        },
+      },
+    ];
+  let residents = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  const s = residents.memory.load('lena')!,
+    p = w.players[s.playerId];
+  residents.close();
+  s.recovery = { retryAt: w.time + 600 };
+  residents.memory.save('lena', s);
+  Object.assign(p, { thirst: 48000, inventory: { water: 1 }, fuel: 0 });
+  residents = new Residents(store, universe, worlds, options, { dailyUsd: 0 });
+  try {
+    residents.tick(0.1, Date.now());
+    assert.ok(p.thirst < 48000);
+    assert.equal(p.inventory.water, 0);
+  } finally {
+    residents.close();
+    store.close();
+  }
+});
+
+test('a gathering errand interrupted by a meal returns to the gathering site', () => {
+  const { w, p, state } = fixture();
+  const node = worldResources(w).find((n) => n.item === 'stone')!;
+  p.inventory = { tools: 1 };
+  p.x = node.x;
+  p.z = node.z;
+  state.plan = [{ kind: 'act', action: { type: 'gather', node: node.id } }];
+  state.index = 0;
+  suspendPlan(w, p, state);
+  p.x = 0;
+  p.z = 0;
+  assert.ok(resumePlan(w, p, state));
+  assert.ok(state.plan.some((s) => s.kind === 'move' && s.x === node.x && s.z === node.z));
 });

@@ -12,6 +12,7 @@ import type { Step } from './decision.ts';
 import { travelPrep, livingReserve } from './travel.ts';
 import { operation } from './player-operations.ts';
 import { anotherFounding } from './cooperation.ts';
+import { constructionBudget } from './construction-projects.ts';
 import { blockedStep } from './recovery.ts';
 
 const civicKinds = new Set([
@@ -150,6 +151,8 @@ function foundingSteps(w: World, p: Player, kind: string): Step[] | undefined {
   if (!def || def.tier > w.tier || p.cash <= def.price + 20000) return;
   const location = pickBuildSite(w, p, kind);
   if (!location) return;
+  const budget = constructionBudget(w, p, kind, location);
+  if (!budget || budget.total > p.cash) return;
   const owned = w.buildings.filter(
     (b) => b.owner === p.id && !['home', 'warehouse'].includes(b.kind),
   ).length;
@@ -242,7 +245,7 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
       const deposit = Math.min(
         10000,
         Math.max(price * 4, 2000),
-        Math.max(0, p.cash - (p.hunger >= 25000 || p.thirst >= 25000 ? 0 : livingReserve(w, p))),
+        Math.max(0, p.cash - livingReserve(w, p)),
       );
       const steps: Step[] = [
         ...travelPrep(p),

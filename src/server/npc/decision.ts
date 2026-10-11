@@ -11,6 +11,7 @@ const building = {
 };
 const transfer = { ...building, direction: z.enum(['deposit', 'withdraw']) };
 const action = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('discard'), item: id, quantity }).strict(),
   z.object({ type: z.literal('use'), item: id }).strict(),
   z
     .object({
@@ -280,6 +281,7 @@ export interface BrainRequest {
   preparedBody?: string;
 }
 export interface BrainResult {
+  careerGoal?: import('./projects.ts').CareerGoal;
   supplyGoal?: import('./survival.ts').SupplyGoal;
   preferences?: import('./agenda.ts').LearnedPreference[] | null;
   gameplayRequest?: GameplayRequest | null;

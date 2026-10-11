@@ -23,7 +23,11 @@ import {
 } from './cooperation.ts';
 import { netAssets } from './wealth.ts';
 import { workplace } from './workplace.ts';
-import { economicMenu } from './enterprise.ts';
+import { startCareer, continueCareer } from './projects.ts';
+import { canKeepFishing, strandedCargo } from './cargo.ts';
+import { householdBudget } from './household.ts';
+import { ownerRoutine, cargoRelief, usefulShift } from './business-policy.ts';
+import { economicMenu, enterpriseChoices } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import { act, addPlayer, move, say } from '../../shared/simulation.ts';
@@ -306,6 +310,7 @@ export class Residents {
     });
   }
   private failure(r: Resident, w: World, message: string, attempted = r.state.plan[r.state.index]) {
+    if (r.state.career && !r.state.routine) r.state.career.failures++;
     failStep((r.state.recovery ??= {}), w.time, attempted, message);
     const previous = r.state.lastOutcome;
     r.state.lastOutcome = {
@@ -337,7 +342,25 @@ export class Residents {
       const p = w.players[r.state.playerId],
         stats = this.actionStats(w, p, a);
       checkCommitmentPrice(w, r.state, a);
+      if (a.type === 'job' || a.type === 'work') {
+        const b = w.buildings.find((b) => b.id === a.building);
+        if (b && !usefulShift(w, p, b))
+          throw Error(
+            'Another worker already covers this production cycle; find another useful task',
+          );
+      }
       const result = act(w, p.id, a);
+      if (a.type === 'construct') {
+        const site = w.buildings.find(
+          (b) =>
+            b.owner === p.id && b.construction && !before.buildings.some((old) => old.id === b.id),
+        );
+        if (site)
+          startCareer(w, p, r.state, {
+            kind: site.kind === 'home' ? 'housing' : 'business',
+            target: site.id,
+          });
+      }
       const pendingReply = r.state.pendingAgreementReply;
       if (
         a.type === 'chat' &&
@@ -355,6 +378,16 @@ export class Residents {
       if (recordDelivery(r.state, w.id, a)) {
         r.wake = true;
         r.state.needsDecision = true;
+      }
+      if (r.state.career && !r.state.routine) {
+        const difference = p.cash - stats.cash;
+        if (a.type === 'trade') {
+          if (difference > 0) {
+            r.state.career.receipts += difference;
+            r.state.career.completed++;
+          } else r.state.career.spending -= difference;
+          r.state.career.lastReceipt = w.ledger.at(-1)?.id;
+        }
       }
       if (advanceStep) {
         // Engine toggles, outside when already outside, and work refreshes are
@@ -473,6 +506,7 @@ export class Residents {
         preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
         r.config.preference,
         visitorShouldHustle(r.config.id, r.state.presence),
+        r.state,
       ),
     );
   }
@@ -624,6 +658,7 @@ export class Residents {
         delete r.state.recovery;
         delete r.state.suspendedPlan;
         delete r.state.supplyGoal;
+        delete r.state.career;
         delete r.state.routine;
         r.state.plan = [];
         r.state.intent = 'Begin a new life; reassess my qualifications, work and supplies.';
@@ -681,6 +716,29 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
+      if (w.time < (r.state.recovery?.retryAt ?? 0) && !this.dialogueDue(r, now)) {
+        // Backoff must not prevent using food already in hand. Only an immediate
+        // serving may bypass it, never another route, investment or model call.
+        const immediate = carePlan(
+          perceivedWorld(w, p, r.state, r.config.id === 'mabel'),
+          p,
+          r.state,
+        );
+        if (
+          immediate.length === 1 &&
+          immediate[0].kind === 'act' &&
+          immediate[0].action.type === 'use'
+        )
+          this.perform(r, w, immediate[0].action, false);
+        else if (
+          immediate.length === 1 &&
+          immediate[0].kind === 'operation' &&
+          immediate[0].operation === 'crow' &&
+          p.crowBody
+        )
+          this.perform(r, w, operationAction(immediate[0]), false, immediate[0]);
+        continue;
+      }
       // A survival errand must not silence an online resident either. Only the
       // addressed conversation is requested; routine care keeps running locally.
       if (
@@ -716,6 +774,7 @@ export class Residents {
           const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
           const continuation = continueSupply(known, p, r.state);
           let plan = carePlan(known, p, r.state);
+          if (!plan.length) plan = cargoRelief(known, p, r.state);
           if (!plan.length) {
             const supply = continuation ?? supplyChoices(known, p, r.state)[0];
             if (supply) {
@@ -750,7 +809,20 @@ export class Residents {
       // freezes driving, a production wait, or an already chosen ordinary action.
       if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
-        const continuation = continueSupply(known, p, r.state);
+        const continuation =
+          r.state.index >= r.state.plan.length
+            ? (continueSupply(known, p, r.state) ??
+              (!r.state.helpQuestion && !r.state.routine && r.state.career
+                ? continueCareer(
+                    known,
+                    p,
+                    r.state,
+                    ['business', 'housing'].includes(r.state.career.kind)
+                      ? enterpriseChoices(known, p)
+                      : [],
+                  )
+                : undefined))
+            : undefined;
         if (continuation && r.state.index >= r.state.plan.length) {
           r.state.plan = continuation.plan;
           r.state.index = 0;
@@ -758,8 +830,8 @@ export class Residents {
           r.state.until = now + 1800000;
           r.state.nextAt = r.state.until;
           r.wake = false;
-          this.checkpoint(r, w, 'supply-progress', {
-            goal: r.state.supplyGoal,
+          this.checkpoint(r, w, r.state.supplyGoal ? 'supply-progress' : 'career-progress', {
+            goal: r.state.supplyGoal ?? r.state.career,
             plan: continuation.plan,
           });
         }
@@ -771,7 +843,9 @@ export class Residents {
           r.state.index >= r.state.plan.length &&
           (p.vehicle === 5 || p.fuel < 10)
         ) {
-          const plan = drivePlan(known, p);
+          const plan = cargoRelief(known, p, r.state).length
+            ? cargoRelief(known, p, r.state)
+            : drivePlan(known, p);
           if (plan.length) {
             r.nav = undefined;
             r.state.plan = plan;
@@ -784,7 +858,9 @@ export class Residents {
         }
         if (!careNeeded(w, p) && !r.wake && now >= (r.shiftCheckAt ?? 0)) {
           r.shiftCheckAt = now + 60000;
-          const plan = employmentRoutine(known, p, r.state);
+          const plan = ownerRoutine(known, p).length
+            ? ownerRoutine(known, p)
+            : employmentRoutine(known, p, r.state);
           if (plan.length && (!r.state.routine || r.state.routine === 'explore')) {
             if (!r.state.routine) suspendPlan(w, p, r.state);
             r.nav = undefined;
@@ -802,7 +878,7 @@ export class Residents {
           !r.state.needsDecision &&
           !r.state.routine &&
           !r.state.supplyGoal &&
-          !r.state.presence?.preparationUntil &&
+          r.state.presence?.phase !== 'preparing' &&
           !p.task &&
           r.state.index >= r.state.plan.length &&
           now >= (r.exploreCheckAt ?? 0)
@@ -992,7 +1068,15 @@ export class Residents {
       this.enqueueThink(r, now);
       return true;
     }
-    if (r.busy || r.queued || r.nav || p.task || now < r.state.waitUntil) return true;
+    if (
+      r.busy ||
+      r.queued ||
+      r.nav ||
+      p.task ||
+      now < r.state.waitUntil ||
+      w.time < (r.state.recovery?.retryAt ?? 0)
+    )
+      return true;
     if (r.state.inSpace) {
       const a = this.account(r);
       this.universe.arrive(a);
@@ -1013,7 +1097,7 @@ export class Residents {
       // Never execute the remainder of an errand whose prerequisite failed.
       if (r.state.plan.some((step) => blockedStep(r.state.recovery, step, w.time)))
         r.state.plan = [];
-      if (!r.state.plan.length && !(ready.atHome && ready.stocked))
+      if (!r.state.plan.length && !ready.atHome)
         r.state.plan = inspectionChoices(w, p, r.state)[0]?.plan ?? [];
       if (!r.state.plan.length) {
         r.state.waitUntil = now + 30000;
@@ -1055,13 +1139,29 @@ export class Residents {
     const step = r.state.plan[r.state.index];
     const blocked = blockedStep(r.state.recovery, step, w.time);
     if (blocked) {
-      this.failure(
-        r,
-        w,
-        `Recently failed step is resting until world time ${Math.ceil(blocked.until)}: ${blocked.message}`,
-        step,
-      );
+      r.state.waitUntil = now + Math.max(1, blocked.until - w.time) * 1000;
       return;
+    }
+    // The tank can empty after a plan was accepted. Repair the transport prerequisite
+    // without discarding its destination or fetching another strategic decision.
+    if (
+      (step.kind === 'travel' || step.kind === 'move' || (step.kind === 'fish' && p.crowBody)) &&
+      !r.state.inSpace
+    ) {
+      const prep = travelPrep(p);
+      if (prep.length) {
+        r.state.plan.splice(r.state.index, 0, ...prep);
+        this.checkpoint(r, w, 'transport-recovery', { destination: step });
+        return;
+      }
+    }
+    if (step.kind === 'act' && step.action.type === 'vehicle' && step.action.slot === 5) {
+      const unload = strandedCargo(p, perceivedWorld(w, p, r.state, r.config.id === 'mabel'));
+      if (unload.length) {
+        r.state.plan.splice(r.state.index, 0, ...unload);
+        this.checkpoint(r, w, 'cargo-recovery', { plan: unload });
+        return;
+      }
     }
     r.state.status = r.state.intent;
     try {
@@ -1079,6 +1179,13 @@ export class Residents {
           this.perform(r, w, operationAction(step), true, step);
         }
       } else if (step.kind === 'fish') {
+        if (!canKeepFishing(w, p)) {
+          if (p.game === 'fishing') this.perform(r, w, { type: 'leaveGame' }, false, step);
+          r.state.index++;
+          delete r.state.fishCaught;
+          this.checkpoint(r, w, 'fishing-load-limit', { fish: p.inventory.fish ?? 0 });
+          return;
+        }
         if (p.game !== 'fishing' || (p.fishUntil ?? Infinity) < w.time) {
           this.perform(r, w, { type: 'joinGame', game: 'fishing' }, false, step);
         } else if (p.fishAt !== undefined && w.time >= p.fishAt && w.time <= (p.fishUntil ?? 0)) {
@@ -1284,18 +1391,27 @@ export class Residents {
       r.config.provider === 'jev'
         ? {
             instructions: jevInstructions + '\nYour personality: ' + r.state.personality,
-            observation: decisionObservation,
+            observation: {
+              ...decisionObservation,
+              career: r.state.career,
+              household: householdBudget(knownWorld, p),
+            },
           }
         : request;
     if (!chatOnly && r.brain.prepare) {
       try {
         decisionRequest = r.brain.prepare(decisionRequest) as typeof decisionRequest;
-      } catch {
+        const warnings = (decisionRequest.observation as Record<string, unknown>).planningWarnings;
+        if (Array.isArray(warnings) && warnings.length)
+          this.checkpoint(r, w, 'planning-warning', { rejected: warnings });
+      } catch (error) {
         // No reservation, transport, or paid retry for invalid local context.
         r.cooldown = now + 300000;
         r.state.status = 'Gameplay context unavailable; continuing local routines';
         this.checkpoint(r, w, 'local-planning-error', {
           message: 'Gameplay request rejected before transport; no charge',
+          reason:
+            error instanceof LocalRequestError ? error.message : 'Unknown local validation failure',
         });
         return;
       }
@@ -1857,6 +1973,7 @@ export class Residents {
         publishFoundingIntent(w, player, foundingKind, item);
       }
       if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
+      if (result.careerGoal && player) startCareer(w, player, r.state, result.careerGoal);
       r.state.intent = d.intent;
       r.state.plan = d.plan;
       delete r.state.fishCaught;

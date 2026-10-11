@@ -5,7 +5,7 @@ import type { Building, Player, World } from '../../shared/types.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { economyChoices } from './economy-choices.ts';
 import { nextNutrition, spareSupplies } from './strategy.ts';
-import { items, skills } from '../../shared/catalog.ts';
+import { items, skills, recipes } from '../../shared/catalog.ts';
 import { calendar } from '../../shared/environment.ts';
 import { crops, cropStatus, fertilizerPrice } from '../../shared/farming.ts';
 import type { ResidentState } from './memory.ts';
@@ -15,6 +15,7 @@ import { travelPrep } from './travel.ts';
 import { visitBuilding } from './care.ts';
 
 export interface FarmerChoice {
+  careerGoal?: import('./projects.ts').CareerGoal;
   supplyGoal?: import('./survival.ts').SupplyGoal;
   id: string;
   description: string;
@@ -292,14 +293,39 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
   if (b.kind !== 'farm' || !p.skills.includes('farmer')) return [];
   if (b.owner !== p.id && !b.employees.includes(p.id)) return [];
   const own = b.owner === p.id;
+  const harvestWages = own ? 0 : (b.plots ?? []).filter((plot) => plot.crop).length * b.wage;
   const season = calendar(w).season;
-  const buyers = new Set(
-    w.buildings.flatMap((shop) =>
-      Object.entries(shop.buy)
-        .filter(([, price]) => Number.isSafeInteger(price) && (price as number) > 0)
-        .map(([item]) => item),
-    ),
-  );
+  // Count funded unmet production demand rather than the mere existence of a bid.
+  // A warehouse full of a crop and plots already growing it reduce its priority.
+  const demandFor = (item: string) => {
+    const def = crops[item];
+    const downstream = w.buildings
+      .filter((shop) => shop.id !== b.id && shop.buy[item] > 0)
+      .reduce((sum, shop) => {
+        const r = shop.production ?? recipes[shop.recipe ?? ''];
+        const target = r?.inputs[item] ? r.inputs[item] * 6 : def.yield;
+        const urgent =
+          r?.inputs[item] &&
+          (shop.stock[item] ?? 0) < r.inputs[item] &&
+          shop.investment >= shop.buy[item] * r.inputs[item]
+            ? def.yield * 3
+            : 0;
+        return (
+          sum +
+          urgent +
+          Math.max(
+            0,
+            Math.min(
+              target - (shop.stock[item] ?? 0),
+              shop.capacity - (shop.stock[item] ?? 0),
+              Math.floor(shop.investment / shop.buy[item]),
+            ),
+          )
+        );
+      }, 0);
+    const planted = (b.plots ?? []).filter((plot) => plot.crop === item).length * def.yield;
+    return (downstream - (b.stock[item] ?? 0) - planted) / def.yield;
+  };
   const farm = (
     plot: number,
     operation: 'plant' | 'water' | 'fertilize' | 'harvest',
@@ -325,7 +351,13 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     if (current?.harvest || cropStatus(w, b, plot).state !== 'growing') continue;
     if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
       return take([farm(plot, 'water')]);
-    if (!current!.fertilized && ((p.inventory.compost ?? 0) > 0 || b.investment >= fertilizerPrice))
+    if (
+      !current!.fertilized &&
+      ((p.inventory.compost ?? 0) > 0 ||
+        (b.investment >= fertilizerPrice + harvestWages &&
+          (crops[current!.crop!]?.yield ?? 0) * 0.33 * (b.sell[current!.crop!] ?? 0) >
+            fertilizerPrice))
+    )
       return take([farm(plot, 'fertilize')]);
   }
   for (let plot = 0; plot < 4; plot++) {
@@ -333,9 +365,14 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     const previous = b.plots?.[plot]?.previous;
     const previousFamily = previous ? crops[previous]?.family : undefined;
     const crop = Object.entries(crops)
-      .filter(([, def]) => def.seasons.includes(season) && b.investment >= def.seed)
+      .filter(
+        ([item, def]) =>
+          def.seasons.includes(season) &&
+          b.investment >= def.seed + harvestWages + (own ? 0 : b.wage) &&
+          (b.stock[item] ?? 0) + def.yield <= b.capacity,
+      )
       .sort(([a, da], [bName, db]) => {
-        const demand = Number(buyers.has(bName)) - Number(buyers.has(a));
+        const demand = demandFor(bName) - demandFor(a);
         const rotate =
           Number(previousFamily !== undefined && db.family !== previousFamily) -
           Number(previousFamily !== undefined && da.family !== previousFamily);

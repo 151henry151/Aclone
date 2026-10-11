@@ -1,3 +1,5 @@
+import { canKeepFishing } from './cargo.ts';
+import { constructionBudget } from './construction-projects.ts';
 import { personalOffers, familyInvites } from '../../shared/social.ts';
 import { vehicleCondition } from '../../shared/vehicle-services.ts';
 import { orderAllowance } from '../../shared/procurement.ts';
@@ -182,7 +184,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         allowance,
         source.stock[order.item],
         20,
-        cost ? Math.floor(Math.max(0, p.cash - 8000) / cost) : 20,
+        cost ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / cost) : 20,
       );
       while (quantity > 0 && !canCarry(p, order.item, quantity, w)) quantity--;
       if (quantity > 0)
@@ -229,7 +231,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     const quantity = Math.min(
       Math.max(1, Math.min(needed || 3, 20)),
       b.stock[item],
-      b.sell[item] ? Math.floor(Math.max(0, p.cash - 8000) / b.sell[item]) : 3,
+      b.sell[item] ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / b.sell[item]) : 3,
     );
     if (
       quantity > 0 &&
@@ -560,7 +562,12 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   );
   if (!buildings.some((b) => b.owner === p.id && b.construction)) {
     const home = catalog.home;
-    if (home && home.tier <= w.tier && p.cash > home.price + 20000 && site)
+    if (
+      home &&
+      home.tier <= w.tier &&
+      site &&
+      (constructionBudget(w, p, 'home', site)?.total ?? Infinity) <= p.cash
+    )
       for (const style of appearance.cottages.map((c) => c.id))
         add(
           'construction',
@@ -569,7 +576,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         );
   }
   for (const c of inventChainPlans(w, p, state)) add('chain', c.description, c.plan);
-  if (p.inventory.tackle > 0 && w.settings.fishingMode > 0)
+  if (p.inventory.tackle > 0 && w.settings.fishingMode > 0 && canKeepFishing(w, p))
     add(
       'leisure',
       'Fish for up to three catches, then leave fishing; fish can be eaten or sold. Actual bites and cargo limits govern success.',

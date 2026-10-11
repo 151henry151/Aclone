@@ -40,20 +40,24 @@ test('walking residents with fuel remount instead of staying on foot', () => {
   );
 });
 
-test('a modest purse can still buy one unit of a cheap trade', () => {
+test('a modest purse trades only from cash above its household reserve', () => {
   const { w, p } = fixture();
   p.cash = 3000;
   p.hunger = 0;
   p.thirst = 0;
   const reserve = livingReserve(w, p);
   assert.ok(reserve < 3000);
-  assert.equal(affordableLoad(3000, 2000, reserve, 8), 1);
+  assert.equal(
+    affordableLoad(3000, 2000, reserve, 8),
+    Math.floor(Math.max(0, 3000 - reserve) / 2000),
+  );
+  assert.equal(affordableLoad(reserve + 2000, 2000, reserve, 8), 1);
   assert.equal(affordableLoad(1500, 2000, reserve, 8), 0);
 });
 
 test('invented ideas include a live mill-to-bakery flour loop and an expired shift', () => {
   const { w, p, state } = fixture();
-  p.cash = 3500;
+  p.cash = livingReserve(w, p) + 3500;
   p.skills = ['miller'];
   p.vehicle = 5;
   p.fuel = 10;
@@ -74,17 +78,27 @@ test('invented ideas include a live mill-to-bakery flour loop and an expired shi
   const trade = ideas.find(
     (c) =>
       c.plan.some(
-        (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.item === 'flour' && s.action.direction === 'buy',
+        (s) =>
+          s.kind === 'act' &&
+          s.action.type === 'trade' &&
+          s.action.item === 'flour' &&
+          s.action.direction === 'buy',
       ) &&
       c.plan.some(
-        (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.item === 'flour' && s.action.direction === 'sell',
+        (s) =>
+          s.kind === 'act' &&
+          s.action.type === 'trade' &&
+          s.action.item === 'flour' &&
+          s.action.direction === 'sell',
       ),
   );
   assert.ok(trade, 'a broke-looking trader can still try one bag of flour');
   assert.ok((trade.expectedCash ?? 0) > 0);
   assert.ok(
     ideas.some((c) =>
-      c.plan.some((s) => s.kind === 'act' && s.action.type === 'work' && s.action.building === mill.id),
+      c.plan.some(
+        (s) => s.kind === 'act' && s.action.type === 'work' && s.action.building === mill.id,
+      ),
     ),
     'expired shift is an idea',
   );
@@ -121,7 +135,8 @@ test('a baker with till money but empty pockets can still restock flour', () => 
   assert.ok(restock, 'owner restock uses the business till');
   assert.ok(
     restock.plan.some(
-      (s) => s.kind === 'act' && s.action.type === 'investment' && s.action.direction === 'withdraw',
+      (s) =>
+        s.kind === 'act' && s.action.type === 'investment' && s.action.direction === 'withdraw',
     ),
   );
 });
@@ -132,14 +147,24 @@ test('failed experiments rank below untested or successful ones', () => {
       { id: 'a', description: 'Trade route: flour', plan: [], expectedCash: 100 },
       { id: 'b', description: 'Fish and sell', plan: [], expectedCash: 80 },
     ],
-    [{ goal: 'Trade route: flour', cashChange: -500, elapsedSeconds: 30, bankChange: 0, healthChange: 0, previousJob: null, currentJob: null }],
+    [
+      {
+        goal: 'Trade route: flour',
+        cashChange: -500,
+        elapsedSeconds: 30,
+        bankChange: 0,
+        healthChange: 0,
+        previousJob: null,
+        currentJob: null,
+      },
+    ],
   );
   assert.equal(failed[0]!.id, 'b');
 });
 
 test('adaptive planner offers invented experiments, not only the old 120d trades', () => {
   const { w, p, state } = fixture();
-  p.cash = 4000;
+  p.cash = livingReserve(w, p) + 4000;
   const mill = w.buildings.find((b) => b.kind === 'mill')!;
   const bakery = w.buildings.find((b) => b.kind === 'bakery')!;
   mill.stock.flour = 6;
@@ -148,9 +173,7 @@ test('adaptive planner offers invented experiments, not only the old 120d trades
   bakery.investment = 40000;
   const list = adaptiveChoices(w, p, state);
   assert.ok(
-    list.some(
-      (c) => /flour/i.test(c.description) && /trade|experiment/i.test(c.description),
-    ),
+    list.some((c) => /flour/i.test(c.description) && /trade|experiment/i.test(c.description)),
   );
 });
 
@@ -163,16 +186,15 @@ test('an owner funds a starved mill so it can actually pay for wheat', () => {
   mill.buy.wheat = 600;
   const ideas = inventHypotheses(w, p, state);
   assert.ok(
-    ideas.some(
-      (c) =>
-        c.plan.some(
-          (s) =>
-            s.kind === 'act' &&
-            s.action.type === 'investment' &&
-            s.action.building === mill.id &&
-            s.action.direction === 'deposit' &&
-            Number(s.action.amount) >= 600,
-        ),
+    ideas.some((c) =>
+      c.plan.some(
+        (s) =>
+          s.kind === 'act' &&
+          s.action.type === 'investment' &&
+          s.action.building === mill.id &&
+          s.action.direction === 'deposit' &&
+          Number(s.action.amount) >= 600,
+      ),
     ),
     'working capital is an experiment when the till cannot cover a posted bid',
   );
@@ -185,6 +207,7 @@ test('an owner posts a wheat bid and a hiring wage when the mill cannot attract 
   mill.owner = p.id;
   mill.employees = [];
   mill.wage = 400;
+  mill.investment = 50000;
   mill.buy = {};
   const farm = w.buildings.find((b) => b.kind === 'farm')!;
   farm.stock.wheat = 20;
@@ -264,12 +287,13 @@ test('a resident with cash can try buying an unowned mill and funding its till',
   assert.ok(
     ideas.some(
       (c) =>
-        c.plan.some((s) => s.kind === 'act' && s.action.type === 'buyBuilding' && s.action.building === mill.id) &&
         c.plan.some(
           (s) =>
-            s.kind === 'act' &&
-            s.action.type === 'investment' &&
-            s.action.direction === 'deposit',
+            s.kind === 'act' && s.action.type === 'buyBuilding' && s.action.building === mill.id,
+        ) &&
+        c.plan.some(
+          (s) =>
+            s.kind === 'act' && s.action.type === 'investment' && s.action.direction === 'deposit',
         ),
     ),
     'starting a mill is a live experiment, not a canned career pick',

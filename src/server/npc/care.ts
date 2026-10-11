@@ -1,3 +1,4 @@
+import { operation } from './player-operations.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
 import { secondsToDamage } from './strategy.ts';
@@ -24,6 +25,7 @@ export function visitBuilding(p: Player, b: Building, steps: Step[]): Step[] {
 export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
   const items = worldItems(w);
   if (p.task || (p.hunger < 25000 && p.thirst < 25000 && secondsToDamage(w, p) > 600)) return [];
+  if (p.crowBody) return [operation('crow')];
   const usable = (b: Building) =>
     !blockedStep(state?.recovery, { kind: 'travel', destination: b.id }, w.time);
   const needs = (
@@ -48,6 +50,28 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
           nextNutrition(p, b, w)[nutrient] - nextNutrition(p, a, w)[nutrient],
       )[0];
     if (carried) return [act({ type: 'use', item: carried })];
+    const room = w.buildings.find(
+      (b) =>
+        usable(b) &&
+        food.some(
+          (item) => (b.lodging?.guests[p.id]?.stock[item] ?? 0) > 0 && canCarry(p, item, 1, w),
+        ),
+    );
+    if (room) {
+      const item = food.find(
+        (i) => (room.lodging!.guests[p.id].stock[i] ?? 0) > 0 && canCarry(p, i, 1, w),
+      )!;
+      return visitBuilding(p, room, [
+        operation('lodging', {
+          building: room.id,
+          operation: 'store',
+          item,
+          quantity: 1,
+          direction: 'withdraw',
+        }),
+        act({ type: 'use', item }),
+      ]);
+    }
     const sources = w.buildings
       .filter((b) => !b.construction && usable(b))
       .flatMap((b) =>

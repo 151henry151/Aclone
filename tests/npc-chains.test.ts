@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, makeBuilding } from '../src/shared/simulation.ts';
+import { items } from '../src/shared/catalog.ts';
 import { recipeGraph, inventChainPlans } from '../src/server/npc/chains.ts';
 import { adaptiveChoices } from '../src/server/npc/adaptive.ts';
 import { businessEstimate, economicMenu } from '../src/server/npc/enterprise.ts';
@@ -28,6 +29,12 @@ function parish() {
   const p = addPlayer(w, 'founder', 'Oscar');
   p.npc = true;
   p.cash = 500000;
+  // These founding tests exercise a feasible project, including all materials.
+  const shop = w.buildings.find((b) => b.kind === 'market')!;
+  for (const item of ['bricks', 'concrete']) {
+    shop.stock[item] = 100;
+    shop.sell[item] = items[item].price;
+  }
   p.hunger = 0;
   p.thirst = 0;
   return { w, p, state: stateFor(p, w) };

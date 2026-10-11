@@ -104,3 +104,50 @@ test('NPC routes out to a countryside gathering ground on a large map', () => {
   // Journeys beyond a sensible day's drive are declined rather than gridded.
   assert.throws(() => new Navigator(w, p, { x: 5000, z: -4000 }, 8), /far/);
 });
+
+test('a long walk is not cut off by the old four-minute deadline', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server'),
+    p = addPlayer(w, 'walker', 'Walker');
+  p.vehicle = 5;
+  p.fuel = 0;
+  p.online = true;
+  const target = worldResources(w).find((n) => n.id === 'stone-c13-14')!;
+  const nav = new Navigator(w, p, target, 8);
+  let elapsed = 0,
+    arrived = false;
+  for (let i = 0; i < 18000; i++) {
+    const result = nav.step(w, p, 0.1);
+    assert.equal(result.error, undefined);
+    move(w, p, result.input, 0.1);
+    elapsed += 0.1;
+    if (result.arrived) {
+      arrived = true;
+      break;
+    }
+  }
+  assert.ok(arrived);
+  assert.ok(elapsed > 240, 'exercise a journey longer than the old deadline');
+});
+
+test('a builder can drive out of the footprint just constructed around them', async () => {
+  const { act } = await import('../src/shared/simulation.ts');
+  const w = createWorld('builder', 'Builder', 'server'),
+    p = addPlayer(w, 'builder', 'Builder');
+  w.buildings = [];
+  w.zones = [];
+  p.cash = 1000000;
+  act(w, p.id, { type: 'construct', kind: 'bakery' });
+  const target = { x: p.x + 40, z: p.z + 40 };
+  const nav = new Navigator(w, p, target, 3);
+  let arrived = false;
+  for (let t = 0; t < 1200; t++) {
+    const result = nav.step(w, p, 0.1);
+    assert.equal(result.error, undefined);
+    move(w, p, result.input, 0.1);
+    if (result.arrived) {
+      arrived = true;
+      break;
+    }
+  }
+  assert.ok(arrived, `builder escaped to ${p.x},${p.z}`);
+});

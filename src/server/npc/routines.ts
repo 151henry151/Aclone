@@ -9,9 +9,12 @@ import { workplace } from './workplace.ts';
 import { visitBuilding } from './care.ts';
 import { inspectionChoices } from './perception.ts';
 import { farmDuty } from './farmer.ts';
+import { careerChoices } from './projects.ts';
+import { usefulShift, ownerRoutine, cargoRelief } from './business-policy.ts';
 import { affordableLoad, livingReserve } from './travel.ts';
 import { homecomingPlan } from './homecoming.ts';
 import { travelPrep } from './travel.ts';
+import { operationAction } from './player-operations.ts';
 import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
@@ -24,7 +27,7 @@ export function suspendPlan(w: World, p: Player, state: ResidentState) {
     deaths: p.deaths,
     intent: state.intent,
     plan: structuredClone(state.plan.slice(state.index)),
-    expiresAt: w.time + 7200,
+    expiresAt: w.time + 7 * 86400,
   };
 }
 export function resumePlan(w: World, p: Player, state: ResidentState) {
@@ -41,14 +44,26 @@ export function resumePlan(w: World, p: Player, state: ResidentState) {
   // A meal may move us away after the original travel step completed.
   // Re-approach the first pending building action; do not repeat completed trades.
   const first = saved.plan[0];
+  const firstAction =
+    first?.kind === 'act'
+      ? first.action
+      : first?.kind === 'operation'
+        ? operationAction(first)
+        : undefined;
   const building =
-    first?.kind === 'act' && 'building' in first.action
-      ? w.buildings.find((b) => b.id === (first.action as { building: string }).building)
+    firstAction && 'building' in firstAction
+      ? w.buildings.find((b) => b.id === firstAction.building)
+      : undefined;
+  const node =
+    firstAction?.type === 'gather'
+      ? worldResources(w).find((n) => n.id === firstAction.node)
       : undefined;
   const plan =
     building && (distance(p, building) >= 18 || p.atHome)
       ? visitBuilding(p, building, saved.plan)
-      : saved.plan;
+      : node && (distance(p, node) >= 8 || p.atHome)
+        ? [...travelPrep(p), { kind: 'move' as const, x: node.x, z: node.z }, ...saved.plan]
+        : saved.plan;
   if (plan.some((s) => blockedStep(state.recovery, s, w.time))) return false;
   state.plan = plan;
   state.intent = saved.intent;
@@ -66,7 +81,7 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
     if (have >= need) continue;
     const bid = b.buy[item];
     if (!Number.isSafeInteger(bid) || bid <= 0 || b.investment < bid) continue;
-    if (have >= b.capacity || !canCarry(p, item, 1, w)) continue;
+    if (have >= b.capacity) continue;
     const carried = p.inventory[item] ?? 0;
     if (carried > 0) {
       const n = Math.min(carried, need - have, b.capacity - have, Math.floor(b.investment / bid));
@@ -77,6 +92,7 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
       if (!plan.some((s) => blockedStep(state.recovery, s, w.time))) return plan;
       continue;
     }
+    if (!canCarry(p, item, 1, w)) continue;
     const seller = w.buildings
       .filter(
         (shop) =>
@@ -117,6 +133,7 @@ export function employmentRoutine(w: World, p: Player, state: ResidentState): St
   const job = workplace(w, p, b);
   if (!job?.qualified || !job.employedHere) return [];
   if (b.kind === 'farm') return farmDuty(w, p, b, state);
+  if (!usefulShift(w, p, b)) return [];
   if (job.ifYouWork.capitalShortfall) return [];
   const stuck = job.blockers.filter(
     (line) => !line.startsWith('No active employees') && !line.startsWith('Missing'),
@@ -153,7 +170,6 @@ export function visitorShouldHustle(
 ) {
   if (id === 'mabel') return false;
   if (!presence || presence.phase !== 'playing') return false;
-  if ((presence.preparationUntil ?? 0) > now) return false;
   return presence.endsAt - now >= 8 * 60_000;
 }
 
@@ -161,8 +177,20 @@ export function visitorShouldHustle(
 export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[] {
   if (p.task || p.learning) return [];
   if (p.atHome) return [{ kind: 'act', action: { type: 'outside' } }];
+  const maintenance = cargoRelief(w, p, state).length
+    ? cargoRelief(w, p, state)
+    : ownerRoutine(w, p);
+  if (maintenance.length) return maintenance;
   const duty = employmentRoutine(w, p, state);
   if (duty.length) return duty;
+  const hauling = careerChoices(w, p, state)
+    .filter(
+      (c) =>
+        c.careerGoal?.kind === 'gather' &&
+        (p.inventory[gatheringImplements[c.careerGoal.item!]?.item] ?? 0) > 0,
+    )
+    .sort((a, b) => (b.expectedCash ?? 0) - (a.expectedCash ?? 0))[0];
+  if (hauling) return hauling.plan;
   const office = w.buildings.find((b) => b.kind === 'workhouse' && !b.construction);
   const load = (item: string) =>
     p.skills.includes(item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;

@@ -60,7 +60,9 @@ test('a farmer already employed on an empty funded farm plants a seasonal crop',
   );
   const plan = employmentRoutine(w, p, state);
   assert.ok(
-    plan.some((s) => s.kind === 'act' && s.action.type === 'farm' && s.action.operation === 'plant'),
+    plan.some(
+      (s) => s.kind === 'act' && s.action.type === 'farm' && s.action.operation === 'plant',
+    ),
     'holding a farm job means planting empty plots, not waiting for Jev',
   );
   run(w, p, plan);
@@ -128,16 +130,20 @@ test('a pump operator renews the shift when the waterworks already has fuel', ()
   assert.ok(p.activeUntil > w.time);
 });
 
-test('the workplace I already hold stays in my live model even when I am across town', () => {
+test('remote employment retains observed quotes without revealing unseen changes', () => {
   const { w, p, state } = fixture();
   const mill = w.buildings.find((b) => b.kind === 'mill')!;
   mill.stock = { wheat: 4, flour: 2 };
   p.job = mill.id;
   mill.employees = [p.id];
+  p.x = mill.x;
+  p.z = mill.z;
+  perceivedWorld(w, p, state);
+  mill.stock.wheat = 17;
   p.x = mill.x + 80;
   p.z = mill.z + 80;
   const view = perceivedWorld(w, p, state).buildings.find((b) => b.id === mill.id);
-  assert.ok(view, 'an employee still sees the mill they work');
+  assert.ok(view, 'an employee remembers the mill they inspected');
   assert.equal(view.stock.wheat, 4);
 });
 

@@ -1,3 +1,5 @@
+import { canKeepFishing } from './cargo.ts';
+import { productionBudget } from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldItems } from '../../shared/world-catalogue.ts';
 import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
@@ -162,7 +164,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       const amount = Math.min(
         10000,
         Math.max(cheapestBid * 4, 2000),
-        Math.max(0, p.cash - (p.hunger >= 25000 || p.thirst >= 25000 ? 0 : 1)),
+        Math.max(0, p.cash - reserve),
       );
       if (amount >= cheapestBid)
         add(
@@ -206,11 +208,13 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       }
       if (!b.employees.length) {
         const wage = Math.max(b.wage + 400, 2400);
-        add(
-          'raise wage',
-          `Experiment: raise ${b.name} wage to ${wage} so a qualified neighbour will work here.`,
-          visit(p, b, [operation('buildingAdmin', { building: b.id, wage })]),
-        );
+        const budget = productionBudget(w, b);
+        if (budget && budget.retailReceipts - budget.inputs - wage > 0 && b.investment >= 3 * wage)
+          add(
+            'raise wage',
+            `Experiment: raise ${b.name} wage to ${wage} so a qualified neighbour will work here.`,
+            visit(p, b, [operation('buildingAdmin', { building: b.id, wage })]),
+          );
       }
     }
     if (!recipe || b.kind === 'farm') continue;
@@ -307,7 +311,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           -amount,
         );
     }
-    const due = collectableReturn(w, b, p.id);
+    const due = Math.min(10000, collectableReturn(w, b, p.id));
     if (due > 0)
       add(
         'collect return',
@@ -319,7 +323,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       );
   }
 
-  if ((p.inventory.tackle ?? 0) > 0)
+  if ((p.inventory.tackle ?? 0) > 0 && w.settings.fishingMode > 0 && canKeepFishing(w, p))
     add(
       'fish',
       'Experiment: fish for a few catches, then sell or eat them. Bites are not guaranteed.',

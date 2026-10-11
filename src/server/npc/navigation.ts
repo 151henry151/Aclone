@@ -2,7 +2,12 @@ import { creatorBlocks } from '../../shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Input } from '../../shared/types.ts';
 import { terrainHeight, distance } from '../../shared/simulation.ts';
-import { blocksBuilding, buildingBounds, buildingPlan } from '../../shared/building-shapes.ts';
+import {
+  blocksBuilding,
+  buildingBlocksMovement,
+  buildingBounds,
+  buildingPlan,
+} from '../../shared/building-shapes.ts';
 import type { Point } from '../../shared/town.ts';
 import { mapHalf, legacyHalf } from '../../shared/terrain.ts';
 const step = 4;
@@ -138,6 +143,28 @@ class Queue {
     return first;
   }
 }
+/** Construction places the site around its builder. Shared physics lets a trapped
+ * pilot move outward; the route grid must permit the same strictly outward escape. */
+function canEscape(w: World, from: Point, to: Point) {
+  if (!w.buildings.some((b) => blocksBuilding(b, from.x, from.z, 0, 2.2))) return false;
+  const steps = Math.ceil(distance(from, to));
+  let previous = from;
+  for (let i = 1; i <= steps; i++) {
+    const next = {
+      x: from.x + ((to.x - from.x) * i) / steps,
+      z: from.z + ((to.z - from.z) * i) / steps,
+    };
+    const h = terrainHeight(w, next.x, next.z);
+    if (
+      h < w.settings.seaLevel + 0.05 ||
+      creatorBlocks(w, next.x, next.z, h, 2.2) ||
+      w.buildings.some((b) => buildingBlocksMovement(b, previous, next, 0, 2.2))
+    )
+      return false;
+    previous = next;
+  }
+  return true;
+}
 function route(w: World, from: Point, target: Point, radius: number) {
   const g = grid(w, windowFor(w, from, target)),
     { clear, heights, sizeX, sizeZ } = g,
@@ -182,12 +209,13 @@ function route(w: World, from: Point, target: Point, radius: number) {
         nz < 0 ||
         nx >= sizeX ||
         nz >= sizeZ ||
-        !clear[j] ||
         closed[j] ||
         Math.abs(heights[i] - heights[j]) > 2
       )
         continue;
-      if (dx && dz && (!clear[z * size + nx] || !clear[nz * size + x])) continue;
+      const escaping = !clear[i] && canEscape(w, i === start ? from : point(g, i), point(g, j));
+      if (!clear[j] && !escaping) continue;
+      if (dx && dz && (!clear[z * size + nx] || !clear[nz * size + x]) && !escaping) continue;
       const value = cost[i] + Math.hypot(dx, dz);
       if (value >= cost[j]) continue;
       parent[j] = i;
@@ -207,6 +235,7 @@ export class Navigator {
   private stuck = 0;
   private last: Point;
   private sample = 0;
+  private deadline: number;
   constructor(
     w: World,
     p: Player,
@@ -217,6 +246,16 @@ export class Navigator {
     // grid endpoint here can fail beside an inflated building obstacle.
     this.path = distance(p, target) <= radius ? [] : route(w, p, target, radius);
     this.last = { x: p.x, z: p.z };
+    let length = 0,
+      from: Point = p;
+    for (const point of this.path) {
+      length += distance(from, point);
+      from = point;
+    }
+    // Walking and long countryside approaches need more than the old fixed four minutes.
+    // Keep a hard bound; the stuck detector still catches an obstructed route promptly.
+    const speed = p.vehicle === 5 ? 1.5 : 3;
+    this.deadline = Math.min(1800, Math.max(240, 120 + length / speed));
   }
   waypoints(): readonly Point[] {
     return this.path;
@@ -225,7 +264,7 @@ export class Navigator {
     if (p.atHome || p.task) return { input: idle, error: 'Cannot travel while indoors or busy' };
     this.elapsed += dt;
     this.sample += dt;
-    if (this.elapsed > 240)
+    if (this.elapsed > this.deadline)
       return { input: idle, error: 'Journey timed out; choose a different approach' };
     if (distance(p, this.target) <= this.radius + 0.5 && this.next >= this.path.length - 1) {
       return {

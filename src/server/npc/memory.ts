@@ -5,6 +5,7 @@ import type { Step } from './decision.ts';
 import type { Presence } from './habits.ts';
 import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  career?: import('./projects.ts').CareerProject;
   supplyGoal?: import('./survival.ts').SupplyGoal;
   markets?: import('./perception.ts').MarketMemory;
   suspendedPlan?: {

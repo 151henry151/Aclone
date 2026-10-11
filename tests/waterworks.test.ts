@@ -129,6 +129,7 @@ test('shoreline production consumes fuel, pays qualified labour and stops for a 
 });
 test('NPC construction choices survey a legal shoreline and use the same authoritative placement', () => {
   const { w, p } = setup();
+  p.inventory = { ...buildings.waterworks.materials }; // A feasible site includes its completion materials.
   const choices = adaptiveChoices(w, p, { plan: [], index: 0 } as unknown as ResidentState);
   const choice = choices.find(
     (c) =>

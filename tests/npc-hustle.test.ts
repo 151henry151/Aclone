@@ -7,6 +7,17 @@ import { economicMenu } from '../src/server/npc/enterprise.ts';
 import { hustleRoutine, visitorShouldHustle } from '../src/server/npc/routines.ts';
 import type { ResidentState } from '../src/server/npc/memory.ts';
 import type { FarmerChoice } from '../src/server/npc/farmer.ts';
+import { beginVisit, initialPresence, habitSchema } from '../src/server/npc/habits.ts';
+
+test('real scheduled visits can earn before departure preparation', () => {
+  const now = 1_790_000_000_000;
+  const habit = habitSchema.parse({});
+  const presence = initialPresence('ada', habit, 'America/New_York', now);
+  beginVisit(presence, 'ada', habit, 'America/New_York', now);
+  assert.equal(visitorShouldHustle('ada', presence, now), true);
+  presence.phase = 'preparing';
+  assert.equal(visitorShouldHustle('ada', presence, now), false);
+});
 
 function fixture() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
@@ -128,5 +139,8 @@ test('a busy visit ranks labour above leisure rest and idle factory waiting', ()
     },
   ];
   const menu = economicMenu(w, p, choices, 'generalist', true);
-  assert.equal(menu[0].id, 'labour');
+  const rank = (id: string) => menu.findIndex((c) => c.id === id);
+  assert.ok(rank('labour') >= 0);
+  for (const id of ['rest', 'wait-job', 'explore'])
+    assert.ok(rank(id) < 0 || rank('labour') < rank(id));
 });

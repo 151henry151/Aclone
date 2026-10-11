@@ -105,7 +105,7 @@ Elias uses the `NPC_INDEPENDENT_` prefix: `ENABLED`, `ID` (elias), `NAME` (Elias
 
 Each decision has a protected `life` briefing: outdoor time to starvation without eating, effective servings/repeat-food penalties, provisions, cheap/near stocked sources, living-cash reserve, job wages/skills/blockers and the last three outcomes. Broader surveys may be trimmed; null survival time means no rising needs, not immunity. Shelter/room expiry are assessed separately.
 
-Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked shelter can feed safely without waking Jev. Urgent errands buy/eat in one plan. Optional sales, factory deposits and watering retain personal provisions; a comfortably fed resident may stock all supplies at home. Owners can buy/deposit inputs for their own business; workers neither own employer stock nor fund its inputs. Budgets, shortages, inaccessible shops and poor choices can still kill an NPC.
+Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked shelter can feed safely without waking Jev. Urgent errands buy/eat in one plan. Optional sales, factory deposits and watering retain personal provisions; a comfortably fed resident may stock all supplies at home. Owners can buy/deposit inputs for their own business; workers use the employer’s stock for production; hauling or investing is a separate transaction. Budgets, shortages, inaccessible shops and poor choices can still kill an NPC.
 
 ### How the providers cooperate
 
@@ -125,7 +125,7 @@ Workplace context prioritizes owned/employed/planned/discussed buildings, report
 
 Repeated identical failures block that step for five world minutes, extending to thirty; nearby failed waypoints share an eight-metre cell. Reject plans containing blocked steps. General decision delays grow 30, 60, 120 seconds…to ten minutes after the second failure. Keep 16 failed steps across restarts. Meaningful actions or four metres of travel clear general delay; no-op toggles/work refresh/already-reached waypoints do not. Individual blocks keep their own expiry.
 
-A new human question or critical needs can bypass general delay, not step blocks or caps. Legacy duplicate-speech protection keeps eight fingerprints, suppressing near-identical autonomous messages for ten minutes and until progress after repeated failure; configured residents are addressed-only.
+A new human question or an immediate meal already carried can bypass general delay, not step blocks or caps. A blocked trip does not trigger repeated travel or paid planning attempts during backoff. Legacy duplicate-speech protection keeps eight fingerprints, suppressing near-identical autonomous messages for ten minutes and until progress after repeated failure; configured residents are addressed-only.
 
 ## Token and spending controls
 
@@ -232,7 +232,7 @@ limited to three dependencies and four batches per producer.
 
 Meals temporarily suspend unfinished plans. Resumption returns to the next action’s
 building when needed, without repeating completed trades. Saved goals expire after
-two game hours and are discarded after death or changing worlds. Personal evaluations
+seven real-time days of advancing world time and are discarded after death or changing worlds. Career projects are reviewed after 24 hours, or earlier when eligibility changes or three attempts fail. Personal evaluations
 include catalogue-valued inventory/property, invested cash and debt, rather than treating
 an investment transfer as a loss. Valuation is not a guaranteed resale price.
 
@@ -246,5 +246,57 @@ rejections cost no internal allowance; uncertain remote failures remain conserva
 charged. Historical ambiguous charges are not retroactively erased. Tests exercise
 Mabel and a visiting resident restoring water with zero AI credits across restart,
 multistage bread production, privacy, cooperative expiry and fair scheduling. They do
-not establish long-term economic stability: the broader scheduled-population simulation
-and live recovery measurements remain outstanding.
+not establish long-term economic stability: the offline evaluator below exercises a scheduled population, while live recovery
+and long-duration economic measurements remain outstanding.
+
+## Household and career recovery
+
+The [recovery handoff](NPC_RECOVERY.md) tracks the October audit fixes and evidence.
+Fishing stops at a small portable reserve; surplus provisions can be sold or stored.
+When an empty tank and heavy cargo block walking, residents use adjacent storage
+or buyers first, then discard only enough surplus to leave. They preserve tools
+and emergency meals, using the same discard action offered in player Inventory.
+Household reserves use known food/drink prices, normal need rates, owned pantry
+supplies, valid room bookings and a low-fuel allowance. Refuelling can spend that
+allowance while optional purchases cannot. They protect six hours of provisions for optional
+trading and a day for expansion. Emergency care can spend that reserve. Full home
+nutrition counts; expired bookings do not provide shelter. Food left in an expired
+personal room can still be retrieved through the usual lodging action.
+
+Jev can select complete tool-purchase/gather/sell loops, quoted trade routes,
+training/employment, and housing/business projects. Continuation rebuilds a feasible
+plan from remembered markets without a new model call. Courses and care do not erase
+the career. Construction budgets include tax, known materials, initial operating cash and living costs; accepted sites get fresh procurement/delivery legs until finished. Death, changing worlds, repeated failures or a vanished opportunity
+trigger reassessment. Project trade receipts and purchases are recorded separately;
+they are not net profit, because travel, meals, wages and business transfers also
+matter. Broader evaluations continue to compare net assets and health.
+
+Factory output does not grow with extra staff. NPCs therefore check for another
+active worker before taking or renewing a factory shift. Owner top-ups preserve meal
+money; output-export errands return receipts to operating capital. Owners can draw
+from surplus capital for a day of living costs and modest cottage savings, preserving
+three factory batches (or four farm plots) and investor claims. These withdrawals
+are transfers, not newly earned profit. Crop selection
+accounts for funded downstream shortages, farm stock, planted crops, seasons and
+rotation. Farming careers include study and seasonal plot work, keeping money for
+harvest wages before buying more seeds or optional fertilizer. Seasonal farm owners
+have separate funding, training, plot-work and crop-export plans; they are not
+estimated as automatic factories. These policies do not alter human permissions, wages or production rules.
+
+To exercise the controller offline:
+
+```sh
+npx tsx scripts/npc-evaluate.ts --days=7 --population=4 --seed=1
+# Optional synthetic-world diagnostics, including state before critical health:
+npx tsx scripts/npc-evaluate.ts --days=1 --diagnostics=/tmp/npc-evaluation.json
+```
+
+Days mean 86,400 simulated real-time seconds, not 600-second game days. The evaluator
+creates an in-memory world, uses real movement/actions/survival/schedules, and restarts
+the controller halfway through. It never loads credentials or touches a running
+server. Its deterministic chooser is a test driver, not Jev: stock, deaths, assets,
+shelter and failure reports reveal integration problems. Reports separate liquid savings,
+quoted asset value, online time, money-transfer reasons and sampled local food/water
+availability (excluding government/import outlets). They do not prove live model
+quality or long-term economic balance. Use different seeds/populations for broader
+coverage; 19 residents and 14 days can take substantial CPU time.

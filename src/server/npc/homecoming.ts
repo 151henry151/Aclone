@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { nutritionIn } from './household.ts';
 import { availableSupply } from '../../shared/harbour-supply.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
+import { cargoRelief } from './business-policy.ts';
 import { carePlan } from './care.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
@@ -24,12 +26,6 @@ function home(w: World, p: Player) {
         Number(b.id === p.home) - Number(a.id === p.home) || distance(p, a) - distance(p, b),
     )[0];
 }
-function nutrition(stock: Stock, nutrient: 'food' | 'drink') {
-  return Object.entries(stock).reduce(
-    (n, [item, count]) => n + count * (items[item]?.[nutrient] ?? 0) * 0.5,
-    0,
-  );
-}
 /** Forecast actual home feeding rates, personal room stores and booking expiry. */
 export function offlineReadiness(w: World, p: Player, awaySeconds: number) {
   const b = home(w, p);
@@ -37,11 +33,13 @@ export function offlineReadiness(w: World, p: Player, awaySeconds: number) {
   const until = !b ? 0 : b.kind === 'home' ? Infinity : b.lodging!.guests[p.id].until;
   const foodSeconds =
     w.settings.hungerRate > 0
-      ? Math.max(0, 30000 - p.hunger + nutrition(stock, 'food')) / (w.settings.hungerRate * 0.8)
+      ? Math.max(0, 30000 - p.hunger + nutritionIn(w, stock, 'food')) /
+        (w.settings.hungerRate * 0.8)
       : Infinity;
   const drinkSeconds =
     w.settings.thirstRate > 0
-      ? Math.max(0, 30000 - p.thirst + nutrition(stock, 'drink')) / (w.settings.thirstRate * 0.8)
+      ? Math.max(0, 30000 - p.thirst + nutritionIn(w, stock, 'drink')) /
+        (w.settings.thirstRate * 0.8)
       : Infinity;
   const coveredSeconds = b ? Math.max(0, Math.min(foodSeconds, drinkSeconds, until - w.time)) : 0;
   return {
@@ -89,8 +87,14 @@ export function homecomingPlan(
     ),
   };
   if (p.task) return [{ kind: 'wait', seconds: Math.max(1, Math.min(60, p.task.end - w.time)) }];
+  const ready = offlineReadiness(w, p, awaySeconds);
+  if (ready.atHome && ready.stocked) return [];
   const care = carePlan(w, p, state);
   if (care.length) return care;
+  if (!canCarry(p, 'water', 1, w) || !canCarry(p, 'bread', 1, w)) {
+    const unload = cargoRelief(w, p, state);
+    if (unload.length) return unload;
+  }
   const visit = (b: Building, steps: Step[]): Step[] => [
     ...travelPrep(p),
     ...(distance(p, b) >= 12 ? [{ kind: 'travel', destination: b.id } as Step] : []),
@@ -143,9 +147,8 @@ export function homecomingPlan(
       ? Math.ceil(
           Math.max(
             0,
-            need + (awaySeconds + 900) * rate * 0.8 - 20000 - nutrition(stock, nutrient),
-          ) /
-            (items[item][nutrient]! * 0.5),
+            need + (awaySeconds + 900) * rate * 0.8 - 20000 - nutritionIn(w, stock, nutrient),
+          ) / items[item][nutrient]!,
         )
       : need >= 15000
         ? 2
@@ -187,7 +190,12 @@ export function homecomingPlan(
           20,
           target - carried,
           availableSupply(w, shop, item),
-          shop.sell[item] ? Math.floor(p.cash / shop.sell[item]) : 20,
+          shop.sell[item]
+            ? Math.floor(
+                Math.max(0, p.cash - (nutrient === 'food' && p.thirst >= 15000 ? 1500 : 0)) /
+                  shop.sell[item],
+              )
+            : 20,
         );
         while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../../shared/types.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
-import { distance } from '../../shared/simulation.ts';
+import { canCarry, distance } from '../../shared/simulation.ts';
 import type { Step } from './decision.ts';
+import { householdBudget } from './household.ts';
 import { operation } from './player-operations.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
@@ -16,27 +17,35 @@ function leaveDistractions(p: Player): Step[] {
   ];
 }
 
-/** Get back on the tractor when there is fuel. Never dismount just because the tank is low. */
+/** Get back on the tractor when there is fuel. An empty tank must never prevent walking to safety. */
 export function travelPrep(p: Player): Step[] {
+  if (p.fuel <= 0 && (p.inventory.fuel ?? 0) > 0)
+    return [...leaveDistractions(p), act({ type: 'use', item: 'fuel' })];
   return [
     ...leaveDistractions(p),
-    ...(p.vehicle === 5 && p.fuel > 0
-      ? [act({ type: 'vehicle', slot: 0 })]
-      : p.vehicle !== 5 && !p.engine && p.fuel > 0
-        ? [act({ type: 'engine' })]
-        : []),
+    ...(p.vehicle !== 5 && p.fuel <= 0
+      ? [act({ type: 'vehicle', slot: 5 })]
+      : p.vehicle === 5 && p.fuel > 0
+        ? [act({ type: 'vehicle', slot: 0 })]
+        : p.vehicle !== 5 && !p.engine && p.fuel > 0
+          ? [act({ type: 'engine' })]
+          : []),
   ];
 }
 
 function fuelShop(w: World, p: Player) {
+  const budget = householdBudget(w, p);
+  const mealReserve = budget.reserve - budget.fuel;
   return w.buildings
     .filter(
       (b) =>
         !b.construction &&
+        b.owner !== p.id &&
         (b.stock.fuel ?? 0) > 0 &&
         Number.isSafeInteger(b.sell.fuel) &&
         b.sell.fuel > 0 &&
-        p.cash >= b.sell.fuel,
+        p.cash - mealReserve >= b.sell.fuel &&
+        canCarry(p, 'fuel', 1, w),
     )
     .sort((a, b) => a.sell.fuel - b.sell.fuel || distance(p, a) - distance(p, b))[0];
 }
@@ -57,7 +66,7 @@ export function drivePlan(w: World, p: Player): Step[] {
     p.fuel >= 10
   )
     return [];
-  if (!willFuel && p.vehicle === 5 && p.fuel <= 0) return [];
+  if (!willFuel) return travelPrep(p);
   const steps: Step[] = [...leaveDistractions(p)];
   let walkedToPump = false;
   if (p.fuel < 10 && carried) steps.push(act({ type: 'use', item: carried[0] }));
@@ -70,7 +79,7 @@ export function drivePlan(w: World, p: Player): Step[] {
     if ((p.vehicle !== 5 || p.fuel > 0) && !p.engine && p.fuel > 0)
       steps.push(act({ type: 'engine' }));
     if (distance(p, shop) >= 12) steps.push({ kind: 'travel', destination: shop.id });
-    const n = Math.min(2, shop.stock.fuel, Math.max(1, Math.floor(p.cash / shop.sell.fuel)));
+    const n = 1; // Leave room and money for meals; refuel only what this trip needs.
     steps.push(
       act({ type: 'trade', building: shop.id, item: 'fuel', quantity: n, direction: 'buy' }),
     );
@@ -81,14 +90,12 @@ export function drivePlan(w: World, p: Player): Step[] {
   return steps;
 }
 
-/** Keep a little cash for the next meal, but never block a single affordable deal. */
+/** Optional spending must leave the measured household reserve intact. */
 export function livingReserve(w: World, p: Player) {
-  if (p.hunger >= 25000 || p.thirst >= 25000) return 0;
-  return Math.min(4000, Math.max(0, p.cash - 1));
+  return householdBudget(w, p).reserve;
 }
 
 export function affordableLoad(cash: number, price: number, reserve: number, max: number) {
   if (price <= 0) return max;
-  if (cash < price) return 0;
-  return Math.min(max, Math.max(1, Math.floor(Math.max(0, cash - reserve) / price)));
+  return Math.min(max, Math.max(0, Math.floor((cash - reserve) / price)));
 }

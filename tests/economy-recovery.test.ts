@@ -176,7 +176,8 @@ test('a purchased mill gets capital, input delivery, qualified work and a profit
   run(w, worker, job.plan);
   assert.ok(mill.stock.flour >= 3);
   assert.ok(worker.cash > 50000);
-  const before = owner.cash;
+  const before = owner.cash + mill.investment;
+  const tillBefore = mill.investment;
   run(
     w,
     owner,
@@ -184,7 +185,8 @@ test('a purchased mill gets capital, input delivery, qualified work and a profit
       (c) => c.description.startsWith('Sell my output') && c.description.includes(mill.name),
     )!.plan,
   );
-  assert.ok(owner.cash > before);
+  assert.ok(owner.cash + mill.investment > before);
+  assert.ok(mill.investment > tillBefore, 'sales replenish the operating till');
   assert.equal(owner.inventory.flour, 0);
 });
 test('menus remove impossible waits and bare business purchases; keep funded vacancies and housing', () => {

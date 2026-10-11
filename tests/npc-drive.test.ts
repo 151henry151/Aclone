@@ -39,13 +39,13 @@ const buysFuel = (plan: Step[]) =>
       s.action.direction === 'buy',
   );
 
-test('an empty tank does not put a resident on foot', () => {
+test('an empty tank permits walking and an affordable pump trip remounts afterwards', () => {
   const { w, p } = fixture();
   p.vehicle = 0;
   p.fuel = 0;
   p.engine = true;
   const prep = travelPrep(p);
-  assert.ok(!vehicleSlot(prep, 5));
+  assert.ok(vehicleSlot(prep, 5));
   const drive = drivePlan(w, p);
   assert.ok(buysFuel(drive));
   const walkAt = drive.findIndex(
@@ -55,6 +55,16 @@ test('an empty tank does not put a resident on foot', () => {
     (s) => s.kind === 'act' && s.action.type === 'vehicle' && s.action.slot === 0,
   );
   if (walkAt >= 0) assert.ok(mountAt > walkAt, 'a pump trip on foot must remount afterwards');
+});
+
+test('a penniless resident can walk to earn or return to shelter', () => {
+  const { w, p } = fixture();
+  p.fuel = 0;
+  p.cash = 0;
+  assert.ok(vehicleSlot(drivePlan(w, p), 5));
+  assert.ok(vehicleSlot(travelPrep(p), 5));
+  p.vehicle = 5;
+  assert.deepEqual(drivePlan(w, p), []);
 });
 
 test('a walker with fuel remounts instead of touring on foot', () => {
@@ -98,4 +108,35 @@ test('the garage catalogue does not offer walking as a vehicle to collect', () =
   p.cash = 200000;
   const walking = adaptiveChoices(w, p, state).filter((c) => vehicleSlot(c.plan, 5));
   assert.equal(walking.length, 0);
+});
+
+test('stranded navigation uses carried fuel before trying to unload into walking capacity', () => {
+  const { w, p } = fixture();
+  p.fuel = 0;
+  p.engine = false;
+  p.inventory = { fuel: 1, wheat: 149 };
+  const plan = travelPrep(p);
+  assert.ok(
+    plan.some((s) => s.kind === 'act' && s.action.type === 'use' && s.action.item === 'fuel'),
+  );
+  for (const s of plan) if (s.kind === 'act') act(w, p.id, s.action);
+  assert.ok(p.fuel > 0);
+  for (const s of travelPrep(p)) if (s.kind === 'act') act(w, p.id, s.action);
+  assert.equal(p.vehicle, 0);
+  assert.ok(p.engine);
+});
+
+test('urgent self-care leaves a robocrow before trying to drink', async () => {
+  const { carePlan } = await import('../src/server/npc/care.ts');
+  const { operationAction } = await import('../src/server/npc/player-operations.ts');
+  const { w, p } = fixture();
+  p.inventory = { rc: 1, water: 1 };
+  p.thirst = 40000;
+  act(w, p.id, { type: 'crow' });
+  const returnPlan = carePlan(w, p);
+  assert.equal(returnPlan[0].kind, 'operation');
+  for (const s of returnPlan) if (s.kind === 'operation') act(w, p.id, operationAction(s));
+  for (const s of carePlan(w, p)) if (s.kind === 'act') act(w, p.id, s.action);
+  assert.equal(p.crowBody, undefined);
+  assert.ok(p.thirst < 40000);
 });
