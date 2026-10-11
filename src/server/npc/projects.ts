@@ -246,12 +246,14 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     } else
       add(
         { kind: 'employment', target: b.id },
-        `Employment career: maintain a useful funded shift at ${b.name}, wage ${b.wage}; use the time between renewals for other earnings.`,
+        `Employment career: maintain a useful funded shift at ${b.name}, wage ${b.wage} ${b.kind === 'farm' ? 'per harvested plot' : `per completed batch at ${Math.round(job.efficiencyIfYouWork * 100)}% production speed, ideal crew ${job.idealEmployees}`}; use the time between renewals for other earnings.`,
         visitBuilding(p, b, [
           ...(p.job && p.job !== b.id ? [act({ type: 'quit' })] : []),
           act({ type: p.job === b.id ? 'work' : 'job', building: b.id }),
         ]),
-        Math.floor(b.wage * (1 - w.settings.wageTax)),
+        Math.floor(
+          b.wage * (1 - w.settings.wageTax) * (b.kind === 'farm' ? 1 : job.efficiencyIfYouWork),
+        ),
       );
   }
   // A large market catalogue must not crowd employment out of the planner.

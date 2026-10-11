@@ -104,7 +104,7 @@ test('Toby learns baking and earns ordinary bakery wages; both residents retain 
     residents.tick(0.05, now + 61500);
     residents.tick(0.05, now + 62000);
     const cash = toby.cash;
-    advance(w, 540);
+    advance(w, 1140);
     assert.equal(bakery.stock.flour, 8);
     assert.equal(bakery.stock.bread, 3);
     assert.ok(toby.cash > cash);

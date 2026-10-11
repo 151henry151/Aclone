@@ -108,6 +108,8 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  /** Public staffing projection; never persisted as employment authority. */
+  staffing?: { active: number; ideal: number; ownerOperating: boolean };
   ownerActiveUntil?: number;
   templateId?: string;
   herdCondition?: number;
@@ -371,6 +373,7 @@ export interface Recipe {
   tier: number;
 }
 export interface BuildingDef {
+  idealEmployees?: number;
   name: string;
   price: number;
   capacity: number;

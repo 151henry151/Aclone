@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-10-11
+
+### Changed
+
+- Automatic businesses have ideal active crew sizes: understaffing and overcrowding both slow production. Fractional progress carries forward; existing stock, wages, prices and employees are preserved.
+- Building panels show active versus ideal staffing, and NPCs fill useful vacancies without overcrowding crews. World creators can set ideal crew sizes on custom building templates.
+
 ## [0.60.0] - 2026-10-11
 
 ### Added

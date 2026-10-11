@@ -35,7 +35,17 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.60.0
+## Current upgrade: 0.61.0
+
+Automatic producers resolve ideal active crew sizes from their building type or
+custom template. Existing properties receive the staffing curve without resetting
+stock, wages, prices, employee rosters or fractional production progress. No SQL
+migration or world reset is needed. Refresh clients to see active/ideal staffing.
+A lone miller now runs at 50% speed; two millers run at 100%, and three at 67%.
+Wages remain per completed batch, so review payroll against sales: ideal speed
+does not guarantee ideal profit. Seasonal farms retain their manual plot rules.
+
+### 0.60.0
 
 NPC household reserves, persistent career projects and business upkeep replace
 several retry loops. Existing saves and NPC memory remain compatible; missing

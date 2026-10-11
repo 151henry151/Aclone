@@ -6,7 +6,7 @@ import {
   productionDiagnostics,
 } from '../shared/world-catalogue';
 import type { World, Building, Action } from '../shared/types';
-import { recipes } from '../shared/catalog';
+import { recipes, buildings } from '../shared/catalog';
 import { money } from '../shared/simulation';
 const esc = (v: unknown) =>
   String(v ?? '').replace(
@@ -73,6 +73,9 @@ export function catalogueForm(w: World, form: HTMLFormElement): Action {
       base: source.base,
       price: Math.round(num('price') * 100),
       wage: Math.round(num('wage') * 100),
+      idealEmployees: str('idealEmployees')
+        ? num('idealEmployees')
+        : (prior?.idealEmployees ?? buildings[source.base].idealEmployees ?? 1),
       materials: Object.fromEntries(
         Array.from({ length: 8 }, (_, i) => [str(`material${i}`), num(`quantity${i}`)]).filter(
           ([id]) => id,
@@ -137,7 +140,7 @@ export function templatesEditor(w: World, id: string) {
     )
     .join(
       '',
-    )}</div><form id="creator-catalogue-template-form">${input('Stable ID', 'definitionId', id || 'custom:tea_house', 'text', t ? 'readonly' : '')}${input('Name', 'name', t?.name ?? 'Tea house')}<label>Copy from building<select name="source">${t ? '<option value="">Keep current template recipe and quotes</option>' : ''}${w.buildings.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></label>${input('Construction price in denarii', 'price', (t?.price ?? 100000) / 100, 'number', 'min="0.01" max="1000000" step="0.01"')}${input('Wage in denarii', 'wage', (t?.wage ?? 1000) / 100, 'number', 'min="0" max="10000" step="0.01"')}<h3>Construction materials</h3>${Array.from(
+    )}</div><form id="creator-catalogue-template-form">${input('Stable ID', 'definitionId', id || 'custom:tea_house', 'text', t ? 'readonly' : '')}${input('Name', 'name', t?.name ?? 'Tea house')}<label>Copy from building<select name="source">${t ? '<option value="">Keep current template recipe and quotes</option>' : ''}${w.buildings.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('')}</select></label>${input('Construction price in denarii', 'price', (t?.price ?? 100000) / 100, 'number', 'min="0.01" max="1000000" step="0.01"')}${input('Wage in denarii', 'wage', (t?.wage ?? 1000) / 100, 'number', 'min="0" max="10000" step="0.01"')}${input('Ideal active employees', 'idealEmployees', t?.idealEmployees ?? (t ? buildings[t.base].idealEmployees : 2) ?? 1, 'number', 'min="1" max="16" step="1"')}<h3>Construction materials</h3>${Array.from(
     { length: 8 },
     (_, i) => {
       const entry = Object.entries(t?.materials ?? { wood: 10 })[i];

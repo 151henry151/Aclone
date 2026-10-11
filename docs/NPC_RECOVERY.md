@@ -118,6 +118,23 @@ API calls and repeated failures. Credit stock/cash injections to their actual
 human or NPC source. Observe a limited population before enabling broader changes.
 A passing test suite is not a guarantee of sustained production profitability.
 
+## Staffing follow-up: 0.61.0
+
+Automatic producers now have ideal active crew sizes, with slower production on
+both sides of the ideal. Released in 0.61.0, following the 0.60.0 recovery baseline
+described above. NPC shift selection and workplace
+observations use the new curve. Seasonal farms retain manual plots.
+
+Validation: 657 tests, TypeScript, build and the browser staffing display check
+passed. The browser confirmed 50% → 100% → 67% for one, two and three active
+millers. Fractional progress survives save/load and different tick sizes.
+
+Repeat the economic baseline with these rules before comparing later soaks:
+default one-worker price margins do not establish profitability at ideal staffing.
+A solo miller now completes a batch every two checks; two millers complete it every
+check but draw two wages. Existing owner prices and wages have not been changed.
+No new long-running economy soak has yet measured this staffing policy.
+
 ## Next proof of economic stability
 
 1. **Capture the release baseline.** Retain the pre-deploy SQLite backup and record

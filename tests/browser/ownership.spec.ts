@@ -45,7 +45,15 @@ test('owners get stock and capital controls instead of self-trading and employme
     worker.x = b.x;
     worker.z = b.z + 12;
     act(w, worker.id, { type: 'job', building: b.id });
-    await expect(page.locator('.building-meta')).toContainText('100%');
+    await expect(page.locator('.building-meta')).toContainText('50%');
+    await expect(page.locator('[data-building-staffing]')).toContainText('1 active / 2 ideal');
+    for (let i = 2; i <= 3; i++) {
+      const extra = addPlayer(w, 'miller' + i, 'Test miller ' + i);
+      Object.assign(extra, { skills: ['miller'], x: b.x, z: b.z + 12 });
+      act(w, extra.id, { type: 'job', building: b.id });
+      await expect(page.locator('.building-meta')).toContainText(i === 2 ? '100%' : '67%');
+      await expect(page.locator('[data-building-staffing]')).toContainText(`${i} active / 2 ideal`);
+    }
     expect(b.stock.flour).toBe(10);
     await page.screenshot({ path: 'test-results/mill-production-status.png' });
     await expect(page.locator('[data-do="trade"],[data-do="job"],[data-do="work"]')).toHaveCount(0);

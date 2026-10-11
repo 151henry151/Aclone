@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
+import { idealEmployees } from './staffing.ts';
 import { items, skills, recipes, buildings } from './catalog.ts';
 import type { World, Player, ItemDef, Building, Recipe, BuildingDef } from './types.ts';
 import { taxTown } from './town-charter.ts';
@@ -36,6 +37,7 @@ export const catalogueSchema = z.object({
         base: z.string().refine((s) => Object.hasOwn(buildings, s)),
         price: z.number().int().min(1).max(100000000),
         wage: z.number().int().min(0).max(1000000),
+        idealEmployees: z.number().int().min(1).max(16).optional(),
         materials: amounts,
         buy: amounts.default({}),
         sell: amounts.default({}),
@@ -178,7 +180,7 @@ export function productionDiagnostics(w: World, b: Building) {
     (n, [item, quantity]) => n + quantity * (b.sell[item] ?? 0),
     0,
   );
-  const wages = b.wage * Math.max(1, b.employees.length),
+  const wages = b.wage * idealEmployees(w, b),
     tax = Math.floor(outputValue * taxRate);
   return {
     inputs,
@@ -202,6 +204,7 @@ export function worldBuildings(w: World): Record<string, BuildingDef> {
           name: t.name,
           price: t.price,
           wage: t.wage,
+          idealEmployees: t.idealEmployees ?? buildings[t.base].idealEmployees,
           materials: t.materials,
           buy: t.buy,
           sell: t.sell,

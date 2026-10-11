@@ -6,7 +6,11 @@ import { crops } from '../../shared/farming.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 import { portableReserve } from './cargo.ts';
 import { recipes } from '../../shared/catalog.ts';
-import { productionStaff } from '../../shared/sound-state.ts';
+import {
+  productionStaff,
+  productionStaffing,
+  productionEfficiency,
+} from '../../shared/sound-state.ts';
 import { taxTown } from '../../shared/town-charter.ts';
 import { productionInterval, distance, canCarry } from '../../shared/simulation.ts';
 import { household, householdBudget } from './household.ts';
@@ -40,15 +44,23 @@ export function productionBudget(w: World, b: Building) {
     oneWorkerMargin: retailReceipts - inputs - b.wage,
     reserve: Math.ceil((inputs + payroll) * 3),
     activeWorkers: staff,
+    idealWorkers: productionStaffing(w, b, staff, next).ideal,
+    efficiency: productionEfficiency(w, b, staff, next),
   };
 }
-/** Additional staff do not increase factory output. Stagger NPC shifts; farms
- * have independent tasks and are deliberately not subject to this restriction. */
+/** Renew useful workers; fill vacancies only up to the ideal active crew. Farms
+ * have independent manual tasks rather than an automatic batch-efficiency curve. */
 export function usefulShift(w: World, p: Player, b: Building) {
   if (b.kind === 'farm') return true;
   const interval = productionInterval(w, b),
     next = (Math.floor(w.time / interval) + 1) * interval;
-  return !productionStaff(w, b, next).some((q) => q.id !== p.id);
+  const staff = productionStaff(w, b, next);
+  const index = staff.findIndex((q) => q.id === p.id);
+  const current = productionStaffing(w, b, staff.length, next);
+  if (index >= 0) return index < current.ideal - Number(current.ownerOperating);
+  const others = staff.length;
+  const crew = productionStaffing(w, b, others, next);
+  return crew.active < crew.ideal;
 }
 
 /** Keep enough cash in the business before paying its owner for household needs. */

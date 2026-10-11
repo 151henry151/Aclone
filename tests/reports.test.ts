@@ -68,7 +68,7 @@ test('production reports count completed batches and identify actual shortages',
   trader.skills = ['miller'];
   act(w, trader.id, { type: 'job', building: b.id });
   const capital = b.investment;
-  advance(w, 600);
+  advance(w, 1200);
   const a = accounts(w, b);
   assert.equal(a.batches, 1);
   assert.equal(a.produced.flour, 3);
@@ -77,7 +77,7 @@ test('production reports count completed batches and identify actual shortages',
   assert.equal(cashFlow(a), b.investment - capital);
   b.stock.wheat = 0;
   assert.ok(productionReport(w, b).some((s) => s.includes('Missing 5 wheat')));
-  advance(w, 600);
+  advance(w, 1200);
   assert.equal(a.batches, 1);
 });
 test('return report survives save/load and explains a lost estate without leaking accounts', () => {

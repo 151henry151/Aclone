@@ -4,7 +4,11 @@ import { waterworksSite } from '../../shared/shoreline.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { productionInterval } from '../../shared/simulation.ts';
-import { productionStaff } from '../../shared/sound-state.ts';
+import {
+  productionStaff,
+  productionStaffing,
+  productionEfficiency,
+} from '../../shared/sound-state.ts';
 
 /** Read-only diagnosis from the same recipe, staff and clock used by production.
  * No private details about other employees enter the model's observation. */
@@ -75,6 +79,7 @@ export function workplace(w: World, p: Player, b: Building) {
           b.investment < wagesRequired
             ? `The OWNER must add ${((wagesRequired - b.investment) / 100).toFixed(2)}d via Building Admin before that paid batch can run; job/work alone cannot fix this.`
             : 'Working capital covers that wage bill.',
+          `Ideal active crew: ${productionStaffing(w, b, staff.length, next).ideal}; expected efficiency ${Math.round(productionEfficiency(w, b, staff.length, next) * 100)}%. Fewer or excess workers slow batch completion; wages are paid only for completed batches.`,
           ...blockers,
         ].join(' ');
   return {
@@ -105,12 +110,14 @@ export function workplace(w: World, p: Player, b: Building) {
     renewAction,
     workActiveUntil: employedHere && w.settings.activeWork ? p.activeUntil : null,
     activeEmployeesNextCycle: staff.length,
-    efficiencyNextCycle:
-      b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)
-        ? 0
-        : b.government || staff.length
-          ? 1
-          : w.settings.offlineEfficiency,
+    idealEmployees: productionStaffing(w, b, staff.length, next).ideal,
+    efficiencyNextCycle: productionEfficiency(w, b, staff.length, next),
+    efficiencyIfYouWork: productionEfficiency(
+      w,
+      b,
+      staff.filter((q) => q.id !== p.id).length + 1,
+      next,
+    ),
     fractionalProgress: b.progress,
     blockers,
     ifYouWork: { wagesRequired, capitalShortfall: Math.max(0, wagesRequired - b.investment) },

@@ -82,14 +82,14 @@ test('production is persistent, consumes inputs, pays funded wages and cannot ov
   b.employees = [p.id];
   p.activeUntil = 1e8;
   const cash = p.cash;
-  advance(w, 600);
+  advance(w, 1200);
   assert.ok(b.stock.flour > 0);
   assert.ok(b.stock.wheat < 100);
   assert.ok(p.cash > cash);
   assert.ok(w.ledger.some((l) => l.reason === 'wage' && l.kind === 'transfer'));
   b.stock.flour = b.capacity;
   const wheat = b.stock.wheat;
-  advance(w, 600);
+  advance(w, 1200);
   assert.equal(b.stock.wheat, wheat);
 });
 test('offline progression is deterministic across tick sizes', () => {

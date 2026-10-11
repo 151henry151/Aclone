@@ -1761,9 +1761,10 @@ function cycle(w: World, b: Building, at: number) {
   const efficiency = productionEfficiency(w, b, staff.length, at);
   b.efficiency = efficiency;
   b.progress += efficiency;
-  if (b.progress < 1) return;
-  const times = Math.floor(b.progress);
-  b.progress -= times;
+  // Fractional crews (for example 2/7) must not lose a completed batch to rounding.
+  const times = Math.floor(b.progress + 1e-9);
+  if (times < 1) return;
+  b.progress = Math.max(0, b.progress - times);
   for (let i = 0; i < times; i++) {
     if (!productionSupplied(b, r, staff.length, true)) return;
     const inputs = Object.fromEntries(

@@ -40,8 +40,10 @@ At the normal batch size, net output sales retain at least 25% above those costs
 For example, a mill pays 28d for five wheat plus 22d in wages; three flour sold at
 22.50d return about 62.78d after tax, leaving about 12.78d for its investment.
 Wage tax is withheld from the worker's gross wage, not charged again to the employer.
-Multiple employees all receive wages without increasing batch output, so excessive
-staffing can still lose money. Repairs, travel, food, shortages, custom taxes and
+Additional employees improve production speed up to the ideal crew, but each
+still receives a full wage per completed batch. Those one-worker price margins
+do not guarantee a profit at ideal staffing: review wages and quotes before hiring.
+Overcrowding both slows production and adds payroll. Repairs, travel, food, shortages, custom taxes and
 owner-edited quotes also affect actual profit; the default balance is not a guarantee.
 
 Harbour stores pays **90%** of reference for recipe ingredients and **103%** for
@@ -76,8 +78,26 @@ your employment there; other employees keep their jobs. Owners can still tend
 and harvest their own farm plots, but receive no harvest wage.
 
 Production requires input goods, output space and funded wages. Qualified active
-employees give full efficiency; unattended businesses run at the world's reduced
-rate. **Work two cycles** starts a window lasting two production intervals (usually
+employees count toward each building's **ideal crew**. Most workshops, mills,
+bakeries and pumps need two; heavy industry needs three; small livestock barns,
+composters, tea houses and roasteries need one. The panel shows **active / ideal**,
+not just hired employees. Expired shifts do not count.
+
+For an ideal crew of two: one worker gives 50%, two 100%, three 67%, four 50%.
+The formula is active ÷ ideal below the ideal, and ideal ÷ active above it.
+Efficiency controls batch speed, not ingredient quantities or the posted wage.
+Partial batches carry forward across checks and saves; wages are paid only when
+a whole supplied batch completes. A lone miller therefore normally completes one
+batch in two checks. More staff means more wages per completed batch: the fastest
+crew is not necessarily the most profitable. Existing owner quotes are unchanged;
+review payroll against sales before hiring. Seasonal farm plots and manual tasks
+retain their separate production rules.
+
+With no active crew, private businesses use the world's unattended rate. Public
+businesses retain government operation when unattended. Where owner operation is
+enabled, a qualified operating owner counts as one unpaid worker toward the ideal.
+World creators can set 1–16 ideal employees on custom building templates.
+**Work two cycles** starts a window lasting two production intervals (usually
 20 real minutes). Checks run on fixed world-time boundaries, so the first can be
 soon after clicking. The HUD and building panel show the remaining time and checks;
 renewal becomes available during the final interval. Early renewal resets the

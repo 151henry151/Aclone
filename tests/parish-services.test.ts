@@ -69,7 +69,7 @@ test('Puddlewick adds only the approved services and removes the public council'
     act(w, p.id, { type: 'job', building: b.id });
     const stock = structuredClone(b.stock),
       cash = p.cash;
-    advance(w, productionInterval(w, b));
+    advance(w, 2 * productionInterval(w, b));
     for (const [item, n] of Object.entries(r.inputs)) assert.equal(b.stock[item], stock[item] - n);
     for (const [item, n] of Object.entries(r.outputs)) assert.equal(b.stock[item], stock[item] + n);
     assert.ok(p.cash > cash, 'worker paid by business');

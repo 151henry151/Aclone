@@ -271,8 +271,7 @@ trigger reassessment. Project trade receipts and purchases are recorded separate
 they are not net profit, because travel, meals, wages and business transfers also
 matter. Broader evaluations continue to compare net assets and health.
 
-Factory output does not grow with extra staff. NPCs therefore check for another
-active worker before taking or renewing a factory shift. Owner top-ups preserve meal
+NPCs compare active staffing with each factory's ideal crew before taking or renewing a shift. Extra workers help up to the ideal; overcrowding slows batches and raises payroll. Existing workers retain useful positions in roster order so an overcrowded crew does not all stop renewing at once. Planner observations include ideal staffing and expected speed; wage estimates distinguish completed batches from clock checks. Owner top-ups preserve meal
 money; output-export errands return receipts to operating capital. Owners can draw
 from surplus capital for a day of living costs and modest cottage savings, preserving
 three factory batches (or four farm plots) and investor claims. These withdrawals

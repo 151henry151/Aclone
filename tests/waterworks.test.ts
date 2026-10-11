@@ -100,8 +100,8 @@ test('shoreline production consumes fuel, pays qualified labour and stops for a 
   const cash = p.cash;
   b.operating = productionActivity(w, b);
   assert.ok(selectLoops(w, p, p).some((s) => s.id === `building:${b.id}` && s.kind === 'pump'));
-  assert.equal(productionActivity(w, b), 1);
-  advance(w, 600);
+  assert.equal(productionActivity(w, b), 0.5);
+  advance(w, 1200);
   assert.equal(b.stock.fuel, 2);
   assert.equal(b.stock.water, 12);
   assert.equal(b.investment, 7800);
@@ -113,18 +113,18 @@ test('shoreline production consumes fuel, pays qualified labour and stops for a 
     assert.ok(!selectLoops(w, p, p).some((s) => s.id === `building:${b.id}`));
     assert.match(workplace(w, p, b)!.blockers.join(' '), /intake|flooded/);
     assert.equal(workplace(w, p, b)!.efficiencyNextCycle, 0);
-    advance(w, 600);
+    advance(w, 1200);
     assert.equal(b.stock.water, 12);
     assert.equal(b.stock.fuel, 2);
     assert.equal(b.investment, 7800);
   }
   w.settings.seaLevel = -2;
   act(w, p.id, { type: 'work', building: b.id });
-  advance(w, 600);
+  advance(w, 1200);
   assert.equal(b.stock.water, 24);
   b.stock.fuel = 0;
   assert.equal(productionActivity(w, b), 0);
-  advance(w, 600);
+  advance(w, 1200);
   assert.equal(b.stock.water, 24);
 });
 test('NPC construction choices survey a legal shoreline and use the same authoritative placement', () => {

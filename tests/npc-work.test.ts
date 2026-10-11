@@ -47,7 +47,7 @@ test('reported production boundary matches real flour and employee wages without
   assert.equal(report.workActive, true);
   assert.equal(report.activeEmployeesNextCycle, 1);
   assert.deepEqual(report.blockers, []);
-  advance(w, 10);
+  advance(w, 610);
   assert.equal(b.stock.wheat, 7);
   assert.equal(b.stock.flour, 32);
   assert.equal(p.inventory.wheat, undefined);
@@ -125,7 +125,7 @@ test('accepting the same job renews an expired shift without duplicate staff or 
   assert.equal(p.activeUntil, w.time + 1200);
   assert.equal(p.cash, cash);
   assert.equal(b.stock.flour, 29);
-  advance(w, 10);
+  advance(w, 610);
   assert.equal(b.stock.flour, 32);
   assert.equal(b.stock.wheat, 7);
   assert.equal(p.cash, cash + 1980);
@@ -164,7 +164,7 @@ test('saved admin wage reaches live NPC diagnosis, actual payroll and durable st
   assert.equal(report.ifYouWork.wagesRequired, 1000);
   assert.match(report.summary, /10.00d total wages/);
   const before = p.cash;
-  advance(w, 10);
+  advance(w, 610);
   assert.equal(p.cash - before, 900);
   assert.equal(b.investment, 4000);
   const store = new Store(':memory:');

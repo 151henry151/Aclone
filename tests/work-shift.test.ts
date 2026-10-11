@@ -23,9 +23,10 @@ test('shift tracks actual cycle boundaries, remains eligible away/offline and th
   p.x += 100;
   p.online = false;
   advance(w, 10);
-  assert.ok(p.cash > cash);
+  assert.equal(p.cash, cash, 'understaffed first check only accrues progress');
   assert.equal(workShift(w, p, b)!.checks, 1);
   advance(w, 600);
+  assert.ok(p.cash > cash, 'second check completes the batch');
   assert.equal(workShift(w, p, b)!.checks, 0);
   assert.match(workShift(w, p, b)!.label, /Shift active/);
   assert.equal(workShift(w, p, b)!.canRenew, true);

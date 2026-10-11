@@ -101,7 +101,7 @@ test('custom professions require prerequisites and control tuition/time and prod
   b.buy.water = 200;
   b.sell['custom:tea'] = 1200;
   act(w, p.id, { type: 'job', building: b.id });
-  advance(w, 10);
+  advance(w, 20);
   assert.equal(b.stock['custom:tea'], 2);
   const diagnostics = productionDiagnostics(w, b);
   assert.equal(diagnostics.outputValue, 2400);

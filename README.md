@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.60.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.61.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -23,6 +23,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; household reserves, operating capital and observed shortages guide their choices; see [AI neighbours](docs/NPCS.md).
+
+Automatic producers have ideal crew sizes: understaffing and overcrowding both reduce production speed. Building panels show active versus ideal staff; wages are paid when batches complete.
 
 Public waterworks prices support profitable fuel delivery and water production; existing owner-set quotes are preserved.
 

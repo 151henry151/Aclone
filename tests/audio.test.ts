@@ -47,8 +47,8 @@ test('industry sound requires real production inputs, space and wages, or an act
   b.employees = [p.id];
   p.job = b.id;
   p.activeUntil = w.time + 60;
-  assert.equal(productionActivity(w, b), 1);
-  assert.equal(publicBuildings(w)[0].operating, 1);
+  assert.equal(productionActivity(w, b), 0.5);
+  assert.equal(publicBuildings(w)[0].operating, 0.5);
   b.stock.logs = 0;
   assert.equal(productionActivity(w, b), 0);
   b.stock.logs = 10;

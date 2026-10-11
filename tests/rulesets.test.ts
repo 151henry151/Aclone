@@ -20,7 +20,7 @@ test('relaxed owners run supplied businesses without payroll; jobs are rejected'
   assert.throws(() => act(w, q.id, { type: 'job', building: b.id }), /disabled/);
   act(w, p.id, { type: 'work', building: b.id });
   const cash = p.cash;
-  advance(w, 600);
+  advance(w, 1200);
   assert.equal(b.stock.flour, 3);
   assert.equal(b.investment, 0);
   assert.equal(p.cash, cash);
@@ -41,7 +41,7 @@ test('active owner shifts expire at cycle boundaries and default worlds prohibit
   w.settings.offlineEfficiency = 0;
   act(w, p.id, { type: 'work', building: b.id });
   advance(w, 1800);
-  assert.equal(b.stock.flour, 6);
+  assert.equal(b.stock.flour, 3);
 });
 test('post-death needs grace expires offline and bulk catch-up matches short ticks', () => {
   const a = createWorld('s', 'Survival', 'owner');

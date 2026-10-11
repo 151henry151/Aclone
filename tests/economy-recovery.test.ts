@@ -174,6 +174,7 @@ test('a purchased mill gets capital, input delivery, qualified work and a profit
   )!;
   assert.ok(job);
   run(w, worker, job.plan);
+  advance(w, 600); // The solo miller completes a batch on the second check.
   assert.ok(mill.stock.flour >= 3);
   assert.ok(worker.cash > 50000);
   const before = owner.cash + mill.investment;

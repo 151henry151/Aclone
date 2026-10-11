@@ -94,7 +94,7 @@ for (const [kind, skill, input, output, vocation] of [
     assert.equal(b.stock[output], 0);
     const before = p.cash;
     const carriedOutput = p.inventory[output] ?? 0;
-    advance(w, 600);
+    advance(w, 1200);
     assert.ok(b.stock[output] > 0);
     assert.ok(b.stock[input] < 50);
     assert.ok(p.cash > before);

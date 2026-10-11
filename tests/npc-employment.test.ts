@@ -93,7 +93,7 @@ test('employment agreement pays tuition, waits for a second qualification, chang
   assert.equal(restored.commitments![0].status, 'completed');
   assert.match(restored.commitments![0].outcome, /not finished production/);
   const flour = mill.stock.flour;
-  advance(w, 600);
+  advance(w, 1200);
   assert.ok(mill.stock.flour > flour);
 });
 test('training blockers are truthful and remain pending for repair without free qualifications or cash', () => {

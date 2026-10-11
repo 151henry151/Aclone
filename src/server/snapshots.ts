@@ -8,6 +8,7 @@ import {
   productionActivity,
   craftingBuildings,
   productionEfficiency,
+  productionStaffing,
 } from '../shared/sound-state';
 import type { World, Player } from '../shared/types';
 import { publicTowns, townBallots } from '../shared/civics.ts';
@@ -25,6 +26,10 @@ export function publicBuildings(w: World) {
     const b = {
       ...publicBuilding,
       productionStatus: productionReport(w, building),
+      staffing:
+        building.kind !== 'farm' && (building.production || building.recipe)
+          ? productionStaffing(w, building)
+          : undefined,
       ownerName: building.owner ? w.players[building.owner]?.name : undefined,
       operating: productionActivity(w, building, crafting),
       efficiency:

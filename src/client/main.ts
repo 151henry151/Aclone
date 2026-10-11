@@ -751,6 +751,7 @@ function updateHud() {
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
       ['[data-building-efficiency]', `${Math.round(shown.efficiency * 100)}%`],
+      ['[data-building-staffing]', staffingStatus(shown)],
       ['[data-building-investment]', money(shown.investment)],
       ['[data-production-status]', productionStatus(world, shown)],
       ['[data-work-status]', shift ? `${shift.label}. ${shift.detail}` : ''],
@@ -1507,6 +1508,11 @@ function renderPanel() {
     return;
   }
 }
+function staffingStatus(b: Building) {
+  const c = b.staffing;
+  if (!c) return '';
+  return `${c.active} active / ${c.ideal} ideal${c.ownerOperating ? ' (includes operating owner)' : ''}${!c.active && b.government ? ' · public operation' : ''}`;
+}
 function productionStatus(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm') return '';
@@ -1525,7 +1531,7 @@ function buildingWindow(b: Building) {
     selfOwned = b.owner === me.id,
     owned = selfOwned || me.authority === 20;
   const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info', 'Statement'];
-  let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
+  let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${b.staffing ? `<p class="note" data-building-staffing>${esc(staffingStatus(b))}</p>` : ''}${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
       .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
@@ -1700,7 +1706,7 @@ function buildingWindow(b: Building) {
         .map(([k, n]) => `${n} ${esc(items[k].name)}`)
         .join(
           ' + ',
-        )} · ${interval / 60} minutes · ${esc(r.skill)}</p><p class="note"><span data-production-status>${esc(productionStatus(world, b))}</span> Batches use this building's stockroom and need inputs, output space and funded wages. Efficiency shows current staffing; taking a job does not finish a batch immediately.</p>`;
+        )} · ${interval / 60} minutes · ${esc(r.skill)}</p><p class="note"><span data-production-status>${esc(productionStatus(world, b))}</span> Batches use this building's stockroom and need inputs, output space and funded wages. Efficiency sets batch speed: an ideal crew gives 100%; too few or too many active workers slow production. Partial progress carries over. Wages are paid per completed batch, not per check.</p>`;
     }
     const shift = workShift(world, me, b);
     const workAttributes = `data-building="${b.id}" data-work-button ${!near || !shift?.canRenew ? 'disabled' : ''}`;
@@ -1795,7 +1801,7 @@ function buildingWindow(b: Building) {
   if (tab === 'Statement')
     html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;
   if (tab === 'Extra Info')
-    html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Active workers give full efficiency. Unstaffed businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
+    html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Each production building has an ideal active crew. Below it, efficiency is active ÷ ideal; above it, ideal ÷ active. Unstaffed private businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
   modal(b.name, html, true);
   refreshTradingPrices();
 }

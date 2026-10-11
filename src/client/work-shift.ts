@@ -29,7 +29,7 @@ export function workShift(w: World, p: Player, b: Building) {
   const detail =
     b.kind === 'farm'
       ? 'Farm pay comes from completing funded harvest tasks, not automatic production checks.'
-      : `${checks === undefined ? '' : `${checks} production check${checks === 1 ? '' : 's'} covered. `}Next check in ${duration(nextIn)}. ${owner ? 'Operate without wages' : 'Wages require successful production'}; inputs, space and funding are still needed. You may drive away; the shift keeps running, even offline.`;
+      : `${checks === undefined ? '' : `${checks} production check${checks === 1 ? '' : 's'} covered. `}Next check in ${duration(nextIn)}. ${owner ? 'Operate without wages' : 'Wages require successful production'}; staffing efficiency may require several checks per batch; inputs, space and funding are still needed. You may drive away; the shift keeps running, even offline.`;
   return {
     label,
     detail,

@@ -1,7 +1,7 @@
 import { herdSpec, herdNeeds } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
-import { productionStaff, productionEfficiency } from './sound-state.ts';
+import { productionStaff, productionEfficiency, productionStaffing } from './sound-state.ts';
 import { waterworksSite } from './shoreline.ts';
 import type { World, Player, Building, Stock, Ledger } from './types.ts';
 export interface BusinessAccounts {
@@ -130,7 +130,12 @@ export function productionReport(w: World, b: Building) {
       `Wages need ${staff.length * b.wage - b.investment} more hundredths of a denarius`,
     );
   const efficiency = productionEfficiency(w, b, staff.length);
-  if (!staff.length && !b.government)
+  const crew = productionStaffing(w, b, staff.length);
+  if (crew.active && crew.active !== crew.ideal)
+    blockers.push(
+      `${crew.active} active / ${crew.ideal} ideal workers: production speed ${Math.round(efficiency * 100)}% (${crew.active < crew.ideal ? 'understaffed' : 'overstaffed'})`,
+    );
+  if (!crew.active && !b.government)
     blockers.push(
       `No active workers: unattended production runs at ${Math.round(efficiency * 100)}%`,
     );

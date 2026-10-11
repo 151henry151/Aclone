@@ -537,7 +537,8 @@
       "blocks": 5
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "bakery": {
     "name": "Bakery",
@@ -560,7 +561,8 @@
       "blocks": 5
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "sawmill": {
     "name": "Sawmill",
@@ -583,7 +585,8 @@
       "blocks": 5
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "quarry": {
     "name": "Quarry",
@@ -603,7 +606,8 @@
       "blocks": 5
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "mason": {
     "name": "Stonemason",
@@ -626,7 +630,8 @@
       "blocks": 5
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "mine": {
     "name": "Iron mine",
@@ -646,7 +651,8 @@
       "blocks": 5
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "forge": {
     "name": "Steel mill",
@@ -669,7 +675,8 @@
       "blocks": 5
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "brewery": {
     "name": "Brewery",
@@ -692,7 +699,8 @@
       "blocks": 5
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "workshop": {
     "name": "Tool workshop",
@@ -717,7 +725,8 @@
       "blocks": 5
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "refinery": {
     "name": "Fuel refinery",
@@ -740,7 +749,8 @@
       "blocks": 5
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "rareMine": {
     "name": "Rare earth mine",
@@ -760,7 +770,8 @@
       "blocks": 5
     },
     "tier": 2,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "factory": {
     "name": "Electronics works",
@@ -785,7 +796,8 @@
       "blocks": 5
     },
     "tier": 2,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "shipyard": {
     "name": "Shipyard",
@@ -810,7 +822,8 @@
       "blocks": 5
     },
     "tier": 2,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "warehouse": {
     "name": "Warehouse",
@@ -927,7 +940,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 1
   },
   "brickworks": {
     "name": "Brick kiln",
@@ -948,7 +962,8 @@
       "wood": 4
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "concreteWorks": {
     "name": "Concrete works",
@@ -971,7 +986,8 @@
       "wood": 4
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 3
   },
   "carpenter": {
     "name": "Furniture workshop",
@@ -993,7 +1009,8 @@
       "gravel": 4
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "winery": {
     "name": "Vintner\u2019s press",
@@ -1015,7 +1032,8 @@
       "stone": 4
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "kitchen": {
     "name": "Village kitchen",
@@ -1038,7 +1056,8 @@
       "concrete": 4
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 2
   },
   "teaHouse": {
     "name": "Tea blending house",
@@ -1060,7 +1079,8 @@
       "gravel": 4
     },
     "tier": 0,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 1
   },
   "roastery": {
     "name": "Coffee roastery",
@@ -1082,7 +1102,8 @@
       "concrete": 4
     },
     "tier": 1,
-    "color": "#d5c5a2"
+    "color": "#d5c5a2",
+    "idealEmployees": 1
   },
   "bnb": {
     "name": "Bed & breakfast",
@@ -1171,7 +1192,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#87a9a8"
+    "color": "#87a9a8",
+    "idealEmployees": 2
   },
   "feedmill": {
     "name": "Feed mill",
@@ -1193,7 +1215,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 2
   },
   "dairy": {
     "name": "Dairy barn",
@@ -1218,7 +1241,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 1
   },
   "creamery": {
     "name": "Cheese dairy",
@@ -1241,7 +1265,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 2
   },
   "dairyKitchen": {
     "name": "Country caf\u00e9",
@@ -1265,7 +1290,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 2
   },
   "sheepfold": {
     "name": "Sheepfold",
@@ -1290,7 +1316,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 1
   },
   "piggery": {
     "name": "Pig farm",
@@ -1315,7 +1342,8 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 1
   },
   "henhouse": {
     "name": "Henhouse",
@@ -1340,6 +1368,7 @@
       "gravel": 6
     },
     "tier": 0,
-    "color": "#b29c75"
+    "color": "#b29c75",
+    "idealEmployees": 1
   }
 }

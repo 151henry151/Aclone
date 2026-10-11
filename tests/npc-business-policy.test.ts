@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act } from '../src/shared/simulation.ts';
 import { productionBudget, usefulShift, ownerRoutine } from '../src/server/npc/business-policy.ts';
 
-test('extra workers cannot increase fixed batch output and should find other work', () => {
+test('workers fill an ideal crew then avoid excess staffing', () => {
   const w = createWorld('test', 'Test', 'server'),
     p = addPlayer(w, 'one', 'One'),
     q = addPlayer(w, 'two', 'Two');
@@ -16,7 +16,11 @@ test('extra workers cannot increase fixed batch output and should find other wor
   q.job = b.id;
   q.activeUntil = w.time + 1200;
   b.employees = [q.id];
-  assert.equal(usefulShift(w, p, b), false);
+  assert.equal(usefulShift(w, p, b), true);
+  const third = addPlayer(w, 'third', 'Third');
+  p.activeUntil = w.time + 1200;
+  b.employees.push(p.id);
+  assert.equal(usefulShift(w, third, b), false);
   assert.equal(usefulShift(w, q, b), true);
   const estimate = productionBudget(w, b);
   assert.ok(estimate && estimate.retailReceipts < 3 * 4800);

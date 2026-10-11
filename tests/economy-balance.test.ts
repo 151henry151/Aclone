@@ -84,7 +84,8 @@ test('every actual production batch pays its input suppliers and worker and reta
     const inputs = initial - b.investment;
     act(w, worker.id, { type: 'job', building: b.id });
     const workerCash = worker.cash;
-    advance(w, productionInterval(w, b));
+    worker.activeUntil = w.time + productionInterval(w, b) * (def.idealEmployees ?? 1);
+    advance(w, productionInterval(w, b) * (def.idealEmployees ?? 1));
     assert.equal(
       worker.cash - workerCash,
       b.wage - Math.floor(b.wage * defaults.wageTax),

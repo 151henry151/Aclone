@@ -427,7 +427,7 @@ test('resident observes mill diagnosis, accepts employment and records verifiabl
     assert.equal(job.before.job, null);
     assert.equal(job.after.job, b.id);
     assert.equal(job.after.building.employedHere, true);
-    advance(s.w, 10);
+    advance(s.w, 610);
     const { observe } = await import('../src/server/npc/observation.ts');
     const o = observe(
       s.w,
@@ -600,7 +600,7 @@ test('an expired miller can replay job then work without aborting or extra AI ca
     assert.equal(s.residents.memory.load('resident-0')!.lastOutcome!.ok, true);
     assert.deepEqual(b.employees, [p.id]);
     assert.equal(b.stock.flour, 0);
-    advance(s.w, 449);
+    advance(s.w, 1049);
     assert.equal(b.stock.flour, 3);
     assert.equal(b.stock.wheat, 45);
     assert.equal(b.investment, 18465);

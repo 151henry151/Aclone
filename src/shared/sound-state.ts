@@ -1,3 +1,4 @@
+import { idealEmployees, staffingEfficiency } from './staffing.ts';
 import { herdSpec, herdReady } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
@@ -25,7 +26,26 @@ export function productionStaff(w: World, b: Building, at: number) {
     .filter((p) => p && p.id !== b.owner && (!w.settings.activeWork || p.activeUntil >= at));
 }
 
-/** Staffing efficiency right now; supply checks still determine whether a batch runs. */
+/** Count active labour, including unpaid owner operation when the world enables it. */
+export function productionStaffing(
+  w: World,
+  b: Building,
+  staff = productionStaff(w, b, w.time).length,
+  at = w.time,
+) {
+  const owner = b.owner && w.players[b.owner];
+  const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
+  const ownerOperating = !!(
+    w.settings.ownerOperation &&
+    owner &&
+    recipe &&
+    owner.skills.includes(recipe.skill) &&
+    (!w.settings.activeWork || (b.ownerActiveUntil ?? -1) >= at)
+  );
+  return { active: staff + Number(ownerOperating), ideal: idealEmployees(w, b), ownerOperating };
+}
+
+/** Staffing controls batch speed; supplies and funded wages still gate completion. */
 export function productionEfficiency(
   w: World,
   b: Building,
@@ -34,15 +54,11 @@ export function productionEfficiency(
 ): number {
   if (!herdReady(b)) return 0;
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
-  const owner = b.owner && w.players[b.owner];
-  const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
-  const operating =
-    w.settings.ownerOperation &&
-    owner &&
-    recipe &&
-    owner.skills.includes(recipe.skill) &&
-    (!w.settings.activeWork || (b.ownerActiveUntil ?? -1) >= at);
-  return b.government || staff || operating ? 1 : w.settings.offlineEfficiency;
+  const crew = productionStaffing(w, b, staff, at);
+  // Preserve government operation without a player crew, but hired crews follow
+  // the same crowding rule as private production.
+  if (!crew.active) return b.government ? 1 : w.settings.offlineEfficiency;
+  return staffingEfficiency(crew.active, crew.ideal);
 }
 
 /** Shared by the economic cycle and its audible activity projection. */

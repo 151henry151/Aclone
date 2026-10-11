@@ -178,7 +178,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     if (b.owner !== p.id && supplied && b.employees.length < 16 && usefulShift(w, p, b)) {
       if (job.qualified)
         add(
-          `${shortage ? 'Supply shortage! ' : ''}Operate ${b.name}: funded, stocked job pays ${b.wage} per ${job.intervalSeconds}s. Keep producing ${Object.keys(recipe.outputs)}.`,
+          `${shortage ? 'Supply shortage! ' : ''}Operate ${b.name}: funded, stocked job pays ${b.wage} per completed batch, checks every ${job.intervalSeconds}s at ${Math.round(job.efficiencyIfYouWork * 100)}% speed (ideal crew ${job.idealEmployees}). Keep producing ${Object.keys(recipe.outputs)}.`,
           visitBuilding(p, b, [
             ...(!job.employedHere && p.job ? [act({ type: 'quit' })] : []),
             act({ type: job.employedHere ? 'work' : 'job', building: b.id }),

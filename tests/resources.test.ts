@@ -51,13 +51,13 @@ test('all industry inputs, skills, construction and outputs form valid stocked p
     b.stock = { ...r.inputs };
     b.employees = [p.id];
     p.job = b.id;
-    p.activeUntil = r.seconds + 1;
+    p.activeUntil = r.seconds * (buildings[kind].idealEmployees ?? 1) + 1;
     b.investment = b.wage;
-    advance(w, r.seconds);
+    advance(w, r.seconds * (buildings[kind].idealEmployees ?? 1));
     for (const [key, n] of Object.entries(r.outputs)) assert.equal(b.stock[key], n, kind);
     assert.ok(b.investment === 0);
     const outputs = JSON.stringify(b.stock);
-    advance(w, r.seconds);
+    advance(w, r.seconds * (buildings[kind].idealEmployees ?? 1));
     assert.equal(JSON.stringify(b.stock), outputs);
   }
 });

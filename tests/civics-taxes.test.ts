@@ -61,7 +61,7 @@ test('town wage tax is withheld into the treasury on top of the world wage tax',
   worker.skills = [recipe.skill];
   act(w, worker.id, { type: 'job', building: b.id });
   const cash = worker.cash;
-  advance(w, productionInterval(w, b));
+  advance(w, 2 * productionInterval(w, b));
   const world = Math.floor(b.wage * 0.1),
     local = Math.floor(b.wage * 0.2);
   assert.equal(worker.cash - cash, b.wage - world - local);
