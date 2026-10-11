@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.63.3] - 2026-10-11
+
+### Fixed
+
+- Garage browser checks now expect the selected tractor colour to be hidden, matching contextual controls, while confirming alternative colours remain available.
+
 ## [0.63.2] - 2026-10-11
 
 ### Fixed

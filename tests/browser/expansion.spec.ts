@@ -64,7 +64,9 @@ test('cottage styles, garage paint and combat choices survive real server action
   await expect(page.locator('#target')).toContainText('Spanner & Sons');
   await page.keyboard.press('e');
   await page.getByRole('button', { name: 'Harbour blue', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Harbour blue', exact: true })).toBeDisabled();
+  // The current colour is hidden; only alternative paint choices are actionable.
+  await expect(page.locator('[data-do="paint"][data-id="blue"]')).toBeHidden();
+  await expect(page.locator('[data-do="paint"]:visible').first()).toBeVisible();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   await expect(page.locator('#cottage-style option')).toHaveCount(6);
