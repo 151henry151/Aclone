@@ -174,6 +174,7 @@ export class GameScene {
   orbit = 0;
   private lookPitch = 0;
   onBuilding?: (id: string) => void;
+  onView?: (position: { x: number; z: number }, heading: number) => void;
   constructor(private container: HTMLElement) {
     this.renderer = new T.WebGLRenderer({
       // MSAA cannot be disabled on an existing context; keep it opt-in for fallback.
@@ -1151,6 +1152,7 @@ export class GameScene {
             );
         this.camera.lookAt(this.target);
         this.camera.getWorldDirection(this.audioFacing);
+        this.onView?.(pos, Math.atan2(this.audioFacing.x, this.audioFacing.z));
         this.audio.update(
           {
             x: pos.x,

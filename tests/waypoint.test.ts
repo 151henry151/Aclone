@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { PerspectiveCamera, Vector3 } from 'three';
 import { Waypoints, readWaypoint, waypointGuidance } from '../src/client/waypoint.ts';
 test('waypoints validate saved coordinates and isolate worlds', () => {
   const data = new Map<string, string>();
@@ -36,16 +37,20 @@ test('waypoints validate saved coordinates and isolate worlds', () => {
   ])
     assert.equal(readWaypoint(raw), undefined);
 });
-test('guidance follows tractor heading with correct left/right and distance', () => {
-  const p = { x: 0, z: 0, heading: 0 };
-  assert.deepEqual(waypointGuidance(p, { x: 0, z: 50, name: 'Ahead' }), { metres: 50, degrees: 0 });
-  assert.equal(waypointGuidance(p, { x: 50, z: 0, name: 'Right' }).degrees, 90);
-  assert.equal(waypointGuidance(p, { x: -50, z: 0, name: 'Left' }).degrees, -90);
-  assert.equal(
-    waypointGuidance({ ...p, heading: Math.PI / 2 }, { x: 50, z: 0, name: 'Ahead' }).degrees,
-    0,
-  );
-  assert.equal(waypointGuidance(p, { x: 3, z: 4, name: 'Near' }).metres, 5);
+test('guidance matches the rendered camera left/right, ahead and behind', () => {
+  const p = { x: 0, z: 0 };
+  assert.deepEqual(waypointGuidance(p, { x: 0, z: 50, name: 'Ahead' }, 0), {
+    metres: 50,
+    degrees: 0,
+  });
+  // Looking along +z, the renderer puts positive world x on the LEFT.
+  assert.equal(waypointGuidance(p, { x: 50, z: 0, name: 'Left' }, 0).degrees, -90);
+  assert.equal(waypointGuidance(p, { x: -50, z: 0, name: 'Right' }, 0).degrees, 90);
+  assert.equal(Math.abs(waypointGuidance(p, { x: 0, z: -50, name: 'Behind' }, 0).degrees), 180);
+  assert.equal(waypointGuidance(p, { x: 50, z: 0, name: 'Ahead' }, Math.PI / 2).degrees, 0);
+  assert.equal(waypointGuidance(p, { x: 3, z: 4, name: 'Near' }, 0).metres, 5);
+  // Orbiting reverses screen sides without moving or turning the player.
+  assert.equal(waypointGuidance(p, { x: 50, z: 0, name: 'Right' }, Math.PI).degrees, 90);
 });
 test('waypoints accept the whole configured map, not just the old village square', () => {
   assert.equal(readWaypoint('{"x":2600,"z":-4100,"name":"Far farm"}'), undefined);
@@ -74,4 +79,37 @@ test('waypoints accept the whole configured map, not just the old village square
   again.selectWorld('arena', 250);
   again.set({ x: 400, z: 0, name: 'Out of bounds' });
   assert.equal(again.point, undefined);
+});
+
+test('arrow sides agree with Three.js projection across chase, first-person and overhead views', () => {
+  const p = { x: 5, z: 7 };
+  for (const [x, y, z] of [
+    [5, 9, -14],
+    [-16, 9, 7],
+    [5, 1.8, 7],
+    [5, 65, 10],
+  ]) {
+    const camera = new PerspectiveCamera(53, 1.6, 0.1, 950);
+    camera.position.set(x, y, z);
+    camera.lookAt(5, 0, x === 5 && z === 7 ? 40 : 7);
+    camera.updateMatrixWorld(true);
+    const facing = camera.getWorldDirection(new Vector3());
+    const heading = Math.atan2(facing.x, facing.z);
+    const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+    for (const side of [-1, 1]) {
+      const target = new Vector3(p.x, 0, p.z)
+        .addScaledVector(facing, 40)
+        .addScaledVector(right, side * 15);
+      target.y = 0;
+      const screen = target.clone().project(camera);
+      const origin = new Vector3(p.x, 0, p.z).addScaledVector(facing, 40);
+      origin.y = 0;
+      origin.project(camera);
+      const guidance = waypointGuidance(p, { x: target.x, z: target.z, name: 'Target' }, heading);
+      assert.equal(
+        Math.sign(Math.sin((guidance.degrees * Math.PI) / 180)),
+        Math.sign(screen.x - origin.x),
+      );
+    }
+  }
 });

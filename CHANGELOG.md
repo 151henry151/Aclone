@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.63.2] - 2026-10-11
+
+### Fixed
+
+- Waypoint arrows point toward the destination in the current camera view, correcting reversed left/right directions and following camera orbit, smoothing and view changes.
+
 ## [0.63.1] - 2026-10-11
 
 ### Fixed

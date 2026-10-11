@@ -35,7 +35,13 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.63.1
+## Current upgrade: 0.63.2
+
+Refresh clients for corrected waypoint direction. Arrows follow the actual camera
+view, including camera orbit and view changes. Saved map destinations remain
+compatible; no migration or world reset is required.
+
+### 0.63.1
 
 Refresh clients for seasonal farm notices and automatic planting-menu updates at
 season changes. This changes presentation only; crops and planting rules are

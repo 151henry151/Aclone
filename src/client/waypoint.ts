@@ -23,11 +23,13 @@ export function readWaypoint(raw: string | null, half = 250): Waypoint | undefin
     /* Invalid or unavailable browser storage is harmless. */
   }
 }
-export function waypointGuidance(p: { x: number; z: number; heading: number }, goal: Waypoint) {
+export function waypointGuidance(p: { x: number; z: number }, goal: Waypoint, viewHeading: number) {
   const dx = goal.x - p.x,
     dz = goal.z - p.z;
-  // Heading zero faces +z; CSS rotation is clockwise from screen up.
-  const angle = Math.atan2(dx, dz) - p.heading;
+  // The camera looks along +z at heading zero: +x is SCREEN LEFT.
+  // Use the actual camera bearing (including orbit/smoothing), not vehicle yaw.
+  // Clockwise CSS angles therefore have the opposite sign to world bearings.
+  const angle = viewHeading - Math.atan2(dx, dz);
   return {
     metres: Math.hypot(dx, dz),
     degrees: (Math.atan2(Math.sin(angle), Math.cos(angle)) * 180) / Math.PI,

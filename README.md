@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.63.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.63.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -19,7 +19,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Watch the spaceport cargo launcher depart with engine plumes and pad smoke every three or four game days and land half a day later. Choose cargo, courier, explorer or shielded spacecraft with distinct fuel/time tradeoffs and travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
 - Choose active-work, relaxed owner-operated, harsh-survival or combat/frontier rules, then customize them. Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, animated GLB/OBJ models, painted PNG/JPEG textures, environmental audio zones and portable media bundles, custom goods/professions/building templates, production-chain diagnostics, readable books, recurring town events, optional player-funded lotteries, visual behavior rules, ordered tutorials/quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. Address one by name, or use `@all` to invite one interested volunteer without a chorus of replies. API billing and operator spending limits are separate from consumer subscriptions.
-- Play with desktop controls or a compact touch interface. Mark map waypoints and follow their direction and distance while driving. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
+- Play with desktop controls or a compact touch interface. Mark map waypoints and follow camera-relative arrows and distance while driving. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 

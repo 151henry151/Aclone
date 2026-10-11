@@ -181,6 +181,18 @@ try {
   app.innerHTML = `<div class="fatal"><h1>Aclone needs WebGL</h1><p>Enable hardware acceleration in your browser, then reload.</p><p>${esc((e as Error).message)}</p></div>`;
   throw e;
 }
+// Follow the rendered position and camera every frame, even between snapshots.
+scene.onView = (position, heading) => {
+  const goal = waypoints.point;
+  if (!goal) return;
+  const guidance = waypointGuidance(position, goal, heading);
+  $('waypoint-distance').textContent =
+    guidance.metres <= 10
+      ? 'Arrived · within 10m'
+      : `${Math.round(guidance.metres)}m · straight-line direction`;
+  $('waypoint-arrow').style.transform = `rotate(${guidance.degrees.toFixed(1)}deg)`;
+  $('waypoint-arrow').style.opacity = guidance.metres <= 10 ? '0.3' : '1';
+};
 let world: World | undefined,
   me: Player | undefined,
   account: Account | undefined,
@@ -556,16 +568,7 @@ function updateHud() {
   waypoints.selectWorld(world.id, mapHalf(world));
   const goal = waypoints.point;
   $('waypoint-hud').hidden = !goal || !mapAvailable(world, me);
-  if (goal) {
-    const guidance = waypointGuidance(me, goal);
-    $('waypoint-name').textContent = goal.name;
-    $('waypoint-distance').textContent =
-      guidance.metres <= 10
-        ? 'Arrived · within 10m'
-        : `${Math.round(guidance.metres)}m · straight-line direction`;
-    $('waypoint-arrow').style.transform = `rotate(${guidance.degrees}deg)`;
-    $('waypoint-arrow').style.opacity = guidance.metres <= 10 ? '0.3' : '1';
-  }
+  if (goal) $('waypoint-name').textContent = goal.name;
   $('location').textContent = mobile.active
     ? world.name
     : world.name + ' · ' + townLocation(world, me);
