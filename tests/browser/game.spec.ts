@@ -218,6 +218,12 @@ test('walking character can move, change camera and return to the tractor', asyn
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
+  const bread = page
+    .locator('.item-list > div')
+    .filter({ has: page.locator('[data-do="discard"][data-id="bread"]') });
+  const carried = Number(await bread.locator('strong').textContent());
+  await bread.getByRole('button', { name: 'Discard 1', exact: true }).click();
+  await expect(bread.locator('strong')).toHaveText(String(carried - 1));
   await page.getByRole('button', { name: 'Switch to walking' }).click();
   await expect(page.locator('#driving')).toContainText('On foot');
   await page.keyboard.down('ArrowDown');

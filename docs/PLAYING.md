@@ -43,6 +43,8 @@ Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil gr
 
 Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. The right implement is reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
 
+Open **Inventory** to use supplies or **Discard 1** unwanted item. Discarding is permanent and pays nothing; sell or store goods when possible. If an empty tractor tank leaves too much cargo to switch to walking, discarding surplus frees capacity.
+
 ## Fishing at the dock
 
 Carry Fishing tackle and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones.

@@ -518,6 +518,17 @@ export function act(w: World, id: string, a: Action): string {
       });
       break;
     }
+    case 'discard': {
+      const item = str(a.item),
+        n = qty(a.quantity);
+      requireThat(
+        Object.hasOwn(items, item) && (p.inventory[item] ?? 0) >= n,
+        'You do not carry that quantity',
+      );
+      stockAdd(p.inventory, item, -n);
+      result = `Discarded ${n} ${items[item].name}.`;
+      break;
+    }
     case 'use':
       usable(w, p, str(a.item));
       result = 'That should help.';

@@ -1402,11 +1402,11 @@ function renderPanel() {
                   .map((b) => button('Read ' + esc(b.title), 'readBook', `data-id="${esc(b.id)}"`))
                   .join(
                     '',
-                  )}${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}</div>`,
+                  )}${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}${button('Discard 1', 'discard', `data-id="${esc(id)}" title="Permanently discard one item; no refund"`)}</div>`,
             )
             .join(
               '',
-            )}</div>${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
         : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -2082,6 +2082,9 @@ app.addEventListener('click', async (e) => {
         break;
       case 'horn':
         send({ type: 'horn' });
+        break;
+      case 'discard':
+        send({ type: 'discard', item: id, quantity: 1 });
         break;
       case 'use':
         send({ type: 'use', item: id });
