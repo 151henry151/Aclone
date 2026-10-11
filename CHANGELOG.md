@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.63.1] - 2026-10-11
+
+### Fixed
+
+- Farms explain when no crops can be planted in the current season instead of showing empty crop menus. Open farm panels refresh when the season changes; existing crops remain available for tending and harvesting.
+
 ## [0.63.0] - 2026-10-11
 
 ### Added

@@ -961,6 +961,7 @@ function buildingAccessKey(b: Building) {
     me?.authority,
     me?.job,
     caretakerBuilding,
+    b.kind === 'farm' && world ? calendar(world).season : undefined,
   ]);
 }
 function openPanel(name: string) {
@@ -1662,11 +1663,13 @@ function buildingWindow(b: Building) {
     if (b.kind === 'haybarn')
       html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
+      const season = calendar(world).season;
+      const plantingCrops = Object.entries(crops).filter(([, c]) => c.seasons.includes(season));
       if (selfOwned) {
         const blocked = farmExpansionBlocker(world, b);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
-      html += `<h3>${farmPlotCount(b)} plots · ${calendar(world).season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p><div class="cards">${Array.from(
+      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>No crops can be planted in ${season.toLowerCase()}.${season === 'Winter' ? ' Planting resumes in spring.' : ' Wait for a suitable planting season.'} Existing crops can still be tended and harvested.</p>`}<div class="cards">${Array.from(
         { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
@@ -1675,12 +1678,15 @@ function buildingWindow(b: Building) {
           return `<article><h3>Plot ${i + 1} · ${plot?.crop ? esc(crops[plot.crop].name) : 'Fallow'}</h3>${
             plot?.crop
               ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
-              : `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
-                  'crop',
-                  Object.entries(crops)
-                    .filter(([, c]) => c.seasons.includes(calendar(world!).season))
-                    .map(([id, c]) => [id, `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`]),
-                )}<button>Plant seeds</button></form>`
+              : plantingCrops.length
+                ? `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
+                    'crop',
+                    plantingCrops.map(([id, c]) => [
+                      id,
+                      `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`,
+                    ]),
+                  )}<button>Plant seeds</button></form>`
+                : '<p class="note">Resting until planting season.</p>'
           }${!plot?.crop && plot ? button('Drain · 6 gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · 6 dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
         },
       ).join(
