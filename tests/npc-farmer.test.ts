@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, advance, say } from '../src/shared/simulation.ts';
 import { crops, cropStatus, fertilizerPrice } from '../src/shared/farming.ts';
 import { calendar, DAY_SECONDS } from '../src/shared/environment.ts';
-import { farmerChoices } from '../src/server/npc/farmer.ts';
+import { farmerChoices, farmDuty } from '../src/server/npc/farmer.ts';
 import { JevBrain } from '../src/server/npc/jev.ts';
 import {
   npcConfigSchema,
@@ -459,4 +459,38 @@ test('a delayed conversation uses the latest world and preserves a newer private
     residents.close();
     store.close();
   }
+});
+
+test('farmers choose crops that can finish before winter and never harvest winter losses', () => {
+  const { w, p, state, choices } = fixture();
+  const farm = w.buildings.find((b) => b.kind === 'farm')!;
+  farm.owner = p.id;
+  farm.investment = 100000;
+  farm.stock = {};
+  p.skills = ['farmer'];
+  p.x = farm.x;
+  p.z = farm.z;
+  w.time += (320 - calendar(w).dayOfYear) * DAY_SECONDS;
+  assert.ok(choices().some((c) => c.description.startsWith('Plant hay')));
+  assert.ok(!choices().some((c) => c.description.startsWith('Plant wheat')));
+  assert.ok(
+    farmDuty(w, p, farm, state).some(
+      (step) => step.kind === 'act' && step.action.type === 'farm' && step.action.crop === 'hay',
+    ),
+  );
+  w.time += 13 * DAY_SECONDS;
+  assert.ok(!choices().some((c) => c.description.startsWith('Plant ')));
+  assert.deepEqual(farmDuty(w, p, farm, state), []);
+  farm.plots = [
+    {
+      crop: 'wheat',
+      planted: w.time - 30 * DAY_SECONDS,
+      ready: w.time - DAY_SECONDS,
+      water: 0,
+      fertilized: false,
+    },
+  ];
+  w.time += DAY_SECONDS;
+  assert.ok(!choices().some((c) => c.description.startsWith('Harvest ')));
+  assert.deepEqual(farmDuty(w, p, farm, state), []);
 });

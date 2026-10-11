@@ -95,7 +95,7 @@ import {
   skills,
   checkpoints,
 } from './catalog.ts';
-import { farmAction, finishHarvest } from './farming.ts';
+import { farmAction, finishHarvest, expireFarmCrops } from './farming.ts';
 import { appearance, cottageStyle, tractorPaint } from './appearance.ts';
 import { buildingBlocksMovement } from './building-shapes.ts';
 import type { World, Player, Building, Stock, Action, Input, Ledger, Settings } from './types.ts';
@@ -1907,7 +1907,7 @@ export function advance(w: World, seconds: number) {
         continue;
       }
       delete p.task;
-      if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!);
+      if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!, t.end);
       else if (t.kind === 'labour') {
         grant(w, p, 4500, 'labour task');
         p.kudos++;
@@ -1955,6 +1955,7 @@ export function advance(w: World, seconds: number) {
       .map((p) => shelter(w, p)?.b.id),
   );
   for (const b of w.buildings) {
+    expireFarmCrops(w, b);
     for (const plot of b.plots ?? [])
       if (plot.harvest) {
         const task = w.players[plot.harvest.player]?.task;

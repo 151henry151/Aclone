@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, Player, World } from '../shared/types';
 import { propertyQuote } from '../shared/property';
+import { winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
 import { carry } from '../shared/simulation';
 import { requiredLicence } from '../shared/vehicle-services';
@@ -116,7 +117,7 @@ export function actionVisible(
       if (b.owner !== p.id && !(w.settings.jobsEnabled !== false && b.employees.includes(p.id)))
         return false;
       const plot = b.plots?.[plotIndex ?? -1];
-      if (plot?.harvest) return false;
+      if (plot?.harvest || (plot?.crop && w.time >= winterDeadline(plot.planted))) return false;
       switch (id) {
         case 'plant':
           return !plot?.crop;

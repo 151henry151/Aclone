@@ -57,12 +57,12 @@ export class FarmFields {
         const centre = farmPlotPosition(b, i);
         const ground = terrainHeight(w, centre.x, centre.z) - terrainHeight(w, b.x, b.z);
         soil.position.set(x, ground, z);
-        if (plot?.crop === 'hay')
+        if (plot?.crop === 'hay' && status.state !== 'withered')
           surface(soil, 'meadow', 3, status.state === 'ripe' ? '#bdb575' : '#91a16b');
         soil.receiveShadow = true;
         seasonalMaterial(soil.material);
         farm.add(soil);
-        if (!plot?.crop) continue;
+        if (!plot?.crop || status.state === 'withered') continue;
         const height =
           0.18 + status.progress * (plot.crop === 'grapes' || plot.crop === 'hops' ? 1.6 : 0.8);
         const stems = new T.InstancedMesh(

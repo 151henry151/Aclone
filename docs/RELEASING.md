@@ -35,7 +35,16 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.63.3
+## Current upgrade: 0.63.4
+
+Winter now kills crops still in the fields, including ripe crops. On upgrade,
+existing plots that have already crossed a winter since planting are cleared on
+the next tick. Stored goods, farm money, ownership and permanent drainage remain.
+Harvests completing at or after winter's start fail without wages; those completed
+before it still count during catch-up. Back up before deploying and refresh
+clients for corrected notices. No world reset or provider changes are needed.
+
+### 0.63.3
 
 This maintenance release updates the garage browser check for contextual controls;
 it adds no save changes. It includes the client fixes below.

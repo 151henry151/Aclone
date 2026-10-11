@@ -1,6 +1,6 @@
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { buildings, items } from './catalog.ts';
+import { buildings, items, defaults } from './catalog.ts';
 import data from '../../data/crops.json';
 import { calendar, DAY_SECONDS, worldWeather } from './environment.ts';
 import type { World, Building, Player, Action } from './types.ts';
@@ -31,11 +31,45 @@ export interface Plot {
   previous?: string;
   drainage?: boolean;
   improved?: boolean;
+  winterLoss?: string;
   harvest?: { player: string; amount: number; wage: number };
 }
+/** First winter boundary after planting; independent of visual clock/weather overrides. */
+export function winterDeadline(planted: number) {
+  const date = calendar({ time: planted });
+  if (date.season === 'Winter') return planted;
+  const winterDay = date.absoluteDay - date.dayOfYear + 334;
+  return (winterDay - 59 - defaults.time / 86400) * DAY_SECONDS;
+}
+
+/** Clear losses even when catch-up skipped the whole winter. Stored produce is unaffected. */
+export function expireFarmCrops(w: World, b: Building) {
+  for (const [index, plot] of (b.plots ?? []).entries()) {
+    if (!plot.crop || w.time < winterDeadline(plot.planted)) continue;
+    const worker = plot.harvest && w.players[plot.harvest.player];
+    if (
+      worker?.task?.kind === 'harvest' &&
+      worker.task.building === b.id &&
+      worker.task.plot === index
+    )
+      delete worker.task;
+    b.plots![index] = {
+      planted: 0,
+      ready: 0,
+      water: 0,
+      fertilized: false,
+      previous: plot.crop,
+      drainage: plot.drainage,
+      winterLoss: plot.crop,
+    };
+  }
+}
+
 export function cropStatus(w: World, b: Building, index: number) {
   const p = b.plots?.[index];
   if (!p?.crop) return { state: 'empty', progress: 0, yield: 0, water: 0, days: 0 };
+  if (w.time >= winterDeadline(p.planted))
+    return { state: 'withered', progress: 0, yield: 0, water: 0, days: 0 };
   const c = crops[p.crop];
   let rain = 0,
     frost = 0;
@@ -99,6 +133,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   const index = a.plot as number;
   check(Number.isInteger(index) && index >= 0 && index < farmPlotCount(b), 'Choose a plot');
   check(!p.task, 'Finish your current task first');
+  expireFarmCrops(w, b);
   const old = b.plots?.[index],
     op = a.operation;
   check(!old?.harvest, 'Someone is already harvesting this plot');
@@ -181,10 +216,12 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   } else throw Error('Unknown farm operation');
 }
 
-export function finishHarvest(w: World, p: Player, building: string, index: number) {
+export function finishHarvest(w: World, p: Player, building: string, index: number, at = w.time) {
   const b = w.buildings.find((b) => b.id === building),
     plot = b?.plots?.[index];
   if (!b || !plot?.crop || plot.harvest?.player !== p.id) return;
+  // A pre-winter completion still counts when the server catches up past the deadline.
+  if (at >= winterDeadline(plot.planted)) return;
   const { amount } = plot.harvest;
   const wage = b.owner === p.id ? 0 : plot.harvest.wage;
   delete plot.harvest;

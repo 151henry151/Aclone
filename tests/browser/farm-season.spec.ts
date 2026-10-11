@@ -53,12 +53,14 @@ test('winter explains unavailable planting and an open farm refreshes in spring'
     );
     await expect(dialog.locator('select[name="crop"]')).toHaveCount(0);
     await expect(dialog.getByRole('button', { name: 'Plant seeds', exact: true })).toHaveCount(0);
-    await expect(dialog.getByRole('button', { name: 'Harvest', exact: true })).toBeVisible();
+    await expect(dialog.locator('[data-planting-notice]')).toContainText('Unharvested crops die');
+    await expect(dialog.getByText('Wheat lost to winter.', { exact: true })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Harvest', exact: true })).toHaveCount(0);
     await page.screenshot({ path: '/tmp/aclone-winter-farm.png' });
     // Leave the dialog open as the economic calendar crosses into spring.
     w.time += (365 - calendar(w).dayOfYear + 60) * DAY_SECONDS;
     await expect(dialog.locator('[data-planting-notice]')).toHaveCount(0);
-    await expect(dialog.locator('select[name="crop"]')).toHaveCount(3);
+    await expect(dialog.locator('select[name="crop"]')).toHaveCount(4);
     await expect(
       dialog.locator('select[name="crop"]').first().locator('option[value="wheat"]'),
     ).toHaveCount(1);

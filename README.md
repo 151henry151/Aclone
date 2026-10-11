@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.63.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.63.4 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -12,7 +12,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 ## What you can do
 
-- Build an economy: gather materials, grow six crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
+- Build an economy: gather materials, grow seven crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and stocked homes that feed you offline. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Contextual controls show relevant vehicle/activity actions, explain seasonal planting limits, and separate personal property management from caretaker tools.
 - Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag. Combat-world creators can enable distinct robocrow classes with mark/recall abilities.
@@ -25,7 +25,7 @@ This is a playable alpha, not complete historical feature parity. See [status an
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; household reserves, operating capital and observed shortages guide their choices; see [AI neighbours](docs/NPCS.md).
 
-Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Cattle and sheep eat hay or feed from their stockrooms; see [farming](docs/PLAYING.md#farming) and [livestock](docs/PLAYING.md#livestock-and-nutrition).
+Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Harvest crops before winter kills them; stored produce survives. Cattle and sheep eat hay or feed from their stockrooms; see [farming](docs/PLAYING.md#farming) and [livestock](docs/PLAYING.md#livestock-and-nutrition).
 
 Automatic producers have ideal crew sizes: understaffing and overcrowding both reduce production speed. Building panels show active versus ideal staff; wages are paid when batches complete.
 

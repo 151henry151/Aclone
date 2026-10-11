@@ -1,7 +1,7 @@
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../../shared/farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { calendar } from '../../shared/environment.ts';
-import { crops } from '../../shared/farming.ts';
+import { calendar, DAY_SECONDS } from '../../shared/environment.ts';
+import { crops, winterDeadline } from '../../shared/farming.ts';
 import { canCarry } from '../../shared/simulation.ts';
 import { skillLesson } from '../../shared/world-catalogue.ts';
 import { taxTown } from '../../shared/town-charter.ts';
@@ -26,6 +26,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
     const growing = Object.entries(crops).filter(
       ([item, crop]) =>
         crop.seasons.includes(calendar(w).season) &&
+        w.time + crop.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
         (b.stock[item] ?? 0) + crop.yield <= b.capacity &&
         Math.floor(crop.yield * 0.5) * (b.sell[item] ?? 0) * (1 - tax) > crop.seed + b.wage,
     );

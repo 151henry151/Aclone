@@ -8,8 +8,8 @@ import { canCarry, distance } from '../../shared/simulation.ts';
 import { economyChoices } from './economy-choices.ts';
 import { nextNutrition, spareSupplies } from './strategy.ts';
 import { items, skills, recipes } from '../../shared/catalog.ts';
-import { calendar } from '../../shared/environment.ts';
-import { crops, cropStatus, fertilizerPrice } from '../../shared/farming.ts';
+import { calendar, DAY_SECONDS } from '../../shared/environment.ts';
+import { crops, cropStatus, fertilizerPrice, winterDeadline } from '../../shared/farming.ts';
 import type { ResidentState } from './memory.ts';
 import { blockedStep } from './recovery.ts';
 import type { Step } from './decision.ts';
@@ -210,7 +210,11 @@ export function gameplayChoices(
         ) => action({ type: 'farm', building: b.id, plot, operation, crop });
         if (status.state === 'empty') {
           for (const [crop, def] of Object.entries(crops))
-            if (def.seasons.includes(calendar(w).season) && b.investment >= def.seed)
+            if (
+              def.seasons.includes(calendar(w).season) &&
+              w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
+              b.investment >= def.seed
+            )
               add(
                 `Plant ${crop} in ${b.name} plot ${plot + 1}: ${def.days} game days, base yield ${def.yield}, seed ${def.seed} from FARM investment, family ${def.family}; previous crop ${current?.previous ?? 'none'}. ${def.description}`,
                 visit(b, [farm('plant', crop)]),
@@ -230,6 +234,7 @@ export function gameplayChoices(
               visit(b, [farm('fertilize')]),
             );
         } else if (
+          status.state === 'ripe' &&
           (b.stock[current!.crop!] ?? 0) + status.yield <= b.capacity &&
           b.investment >= (own ? 0 : b.wage)
         )
@@ -372,6 +377,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
       .filter(
         ([item, def]) =>
           def.seasons.includes(season) &&
+          w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
           b.investment >= def.seed + harvestWages + (own ? 0 : b.wage) &&
           (b.stock[item] ?? 0) + def.yield <= b.capacity,
       )

@@ -1672,29 +1672,31 @@ function buildingWindow(b: Building) {
         const blocked = farmExpansionBlocker(world, b);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
-      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>No crops can be planted in ${season.toLowerCase()}.${season === 'Winter' ? ' Planting resumes in spring.' : ' Wait for a suitable planting season.'} Existing crops can still be tended and harvested.</p>`}<div class="cards">${Array.from(
+      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>No crops can be planted in ${season.toLowerCase()}.${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Wait for a suitable planting season.'}</p>`}<div class="cards">${Array.from(
         { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
             status = cropStatus(world!, b, i);
           const attrs = `data-building="${b.id}" data-plot="${i}"`;
           return `<article><h3>Plot ${i + 1} · ${plot?.crop ? esc(crops[plot.crop].name) : 'Fallow'}</h3>${
-            plot?.crop
-              ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
-              : plantingCrops.length
-                ? `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
-                    'crop',
-                    plantingCrops.map(([id, c]) => [
-                      id,
-                      `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`,
-                    ]),
-                  )}<button>Plant seeds</button></form>`
-                : '<p class="note">Resting until planting season.</p>'
-          }${!plot?.crop && plot ? button('Drain · 6 gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · 6 dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
+            status.state === 'withered'
+              ? '<p class="notice">Crop lost to winter.</p>'
+              : plot?.crop
+                ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+                : plantingCrops.length
+                  ? `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
+                      'crop',
+                      plantingCrops.map(([id, c]) => [
+                        id,
+                        `${c.name} · ${c.days / 6}h · seed ${money(c.seed)}`,
+                      ]),
+                    )}<button>Plant seeds</button></form>`
+                  : '<p class="note">Resting until planting season.</p>'
+          }${plot?.winterLoss ? `<p class="note">${esc(crops[plot.winterLoss]?.name ?? plot.winterLoss)} lost to winter.</p>` : ''}${!plot?.crop && plot ? button('Drain · 6 gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · 6 dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
         },
       ).join(
         '',
-      )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Harvest within six real hours of ripening for best yield; later crops retain at least 65% of their quality-adjusted yield.</p>`;
+      )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Harvest within six real hours of ripening for best yield; later crops retain at least 65% of their quality-adjusted yield until winter kills all unharvested crops.</p>`;
     }
     if (b.kind === 'garage' && world.settings.fighting)
       html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.63.4] - 2026-10-11
+
+### Fixed
+
+- Winter kills all unharvested farm crops, including during offline catch-up. Harvests must finish before winter begins; stored produce and permanent drainage survive. Farm notices explain the deadline, and NPCs avoid planting crops that cannot mature in time.
+
 ## [0.63.3] - 2026-10-11
 
 ### Fixed

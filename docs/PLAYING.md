@@ -83,7 +83,7 @@ Water sells at 5d; local processors/lodging bid 5.60d. Harbour imports remain av
 
 ## Farming
 
-Learn **farmer**, then own or work at a farm. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce. In winter, a notice explains that planting resumes in spring; empty crop menus are replaced with resting plots. Existing crops can still be tended and harvested.
+Learn **farmer**, then own or work at a farm. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce. In winter, a notice explains that planting resumes in spring; empty crop menus are replaced with resting plots. All unharvested crops die when winter begins, including ripe crops. Finish the 15-second harvest before the season changes. Stored produce is safe; cleared plots retain drainage and can be replanted in spring.
 
 - **Hay grass:** spring/summer/autumn, 10 days (1h 40m), grass; baled forage for cows/sheep. Wet weather reduces the dry-hay yield; drainage helps.
 - **Wheat:** spring/autumn, 18 days (3h), grain; flour/bread.
@@ -97,7 +97,7 @@ Owners can buy four adjoining plots from the farm's Main panel: **150d**, then *
 
 Seeds draw farm investment. Irrigate with 3 carried water, up to three treatments. Rain helps; crops differ in demand, frost and wet-soil sensitivity. One compost fertilizes for +33% yield; lacking compost buys imported fertilizer at Harbour's default compost price (39.53d). Repeating a crop family loses 20% yield; rotate or restore soil. [Economy](ECONOMY.md#crops-and-soil) explains drainage/restoration.
 
-Yield estimates use the world's weather calendar. Frost harms yield but never halts growth. Crops keep full quality for six real hours after ripening, then lose up to 35%; they remain harvestable and never automatically replant. Perennial dormancy is not simulated. Livestock uses separate buildings and care cycles.
+Yield estimates use the world's weather calendar. Light frost harms yield; the start of winter kills every crop still in a field. Crops keep full quality for six real hours after ripening, then lose up to 35%; they remain harvestable only until winter and never automatically replant. Perennial dormancy is not simulated. Livestock uses separate buildings and care cycles.
 
 Harvest is a saved 15-second task, one worker/plot. Produce enters the farm stockroom; employed harvesters receive funded, taxed wages. Owners harvest unpaid. Insufficient output room/payroll at completion leaves the plot intact. Disconnects cannot double-pay. Farms no longer produce automatic wheat; existing stock is retained, and new market crop listings start empty.
 
