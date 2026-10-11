@@ -35,7 +35,14 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.62.1
+## Current upgrade: 0.63.0
+
+Public group invitations select at most one interested online resident, with a
+persisted 30-second cooldown. Restart the server for routing and updated NPC
+guidance; existing memories and agreements remain compatible. No reset, SQL
+migration or provider configuration change is required.
+
+### 0.62.1
 
 Refresh clients for contextual action controls. Property owners manage their own
 buildings through the normal panel; world administrators explicitly enter

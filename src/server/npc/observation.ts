@@ -127,6 +127,14 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
     currentConversation: state.helpQuestion
       ? {
           question: state.helpQuestion,
+          ...(state.groupQuestion && state.groupQuestion.messageId === state.conversationId
+            ? {
+                audience: 'public-group',
+                topic: state.groupQuestion.topic,
+                groupGuidance:
+                  'All online neighbours heard this public message. You are the one invited to consider replying, based on your own interests and circumstances. This is not an order or a job assignment. Reply only if genuinely interested or able to help; otherwise return speech:null and gameplayRequest:null. Do not speak for other residents, say everyone agrees, or send a generic acknowledgement or refusal. Advertised wages and supplies are the speaker’s report, not verified market observations. If you volunteer for the requested work, submit a concrete employment/training gameplayRequest using employmentOptions; speech alone cannot queue it. Verify terms when visiting. Keep the public reply brief.',
+              }
+            : {}),
           id: state.conversationId,
           speakerId: state.questionFrom ?? state.replyTo,
           replyTo: state.replyTo ?? null,

@@ -61,6 +61,8 @@ export interface ResidentState {
     attempted?: Step;
     repeats: number;
   };
+  groupReplyAt?: number;
+  groupQuestion?: { messageId: number; topic: import('./group-chat.ts').GroupTopic };
   helpQuestion?: string;
   questionFrom?: string;
   guideQuery?: string;

@@ -74,6 +74,8 @@ Preferences cover employment, trading, gathering, farming, fishing, business, ho
 
 Addressed chat gets the next available request slot, oldest call first, subject to current requests/cooldowns/shared caps. It does not build gameplay candidates or reset income-measurement windows. Ordinary conversation takes one call; an agreement may use one extra budgeted wording call after validation. That call cannot change the agreement. Saved factual fallback replies survive interruption without duplicating requests. A sole safe agreed next plan executes locally; competing agreements/survival/recovery can still need Jev.
 
+Public group invitations start with **Hey guys**, **everyone**, **anyone**, **folks** or **@all** (also `@everyone`/`@npcs`). All listeners retain public chat, but a local interest check selects at most one online responder. It considers skills, tuition reserves, remembered wages, personal preferences, existing agreements and urgent needs; advertised prices remain unverified claims. The selected resident can decline silently or agree through the normal gameplay-request validation. Everyone else makes no conversation call. A persisted, parish-wide 30-second cooldown limits repeat invitations; normal direct mentions/private replies remain available. An unnamed follow-up goes to the chosen listener under the same two-minute rule.
+
 ## Agreements made in chat
 
 Residents speak as one character, without naming providers or separate decision/chat machinery; AI badges and operator diagnostics remain. Replies distinguish intentions, queued requests and verified results.
@@ -89,7 +91,7 @@ Ready accepted requests outrank unrelated shopping/rest/cosmetics when healthy. 
 
 Residents respond to addressed humans, not routine activity or other NPCs. They can reply while preparing to leave or running survival errands. Pending conversation can delay departure only until one minute past the preparation deadline; departure and repeated provider failures give the sender a private notice. Public mentions receive public replies; private messages receive private replies. Routing follows the initiating channel, not the model's suggested recipient. Gameplay narration stays in journals.
 
-Unnamed public follow-ups go to the same resident for two real minutes after the player's last turn. Naming another person, private messaging or multiple names clears that listener. Group mentions may get individual replies but do not create a group follow-up. Windows persist with original expiry and are bounded to 64 players/resident. These are deterministic name/time rules, not semantic intent recognition; routing makes no model calls. Up to eight recent channel turns accompany a reply; private turns never enter public history. Messages are limited to 1,200 characters.
+Unnamed public follow-ups go to the same resident for two real minutes after the player's last turn. Naming another person, private messaging or multiple names clears that listener. Explicitly naming multiple residents may get individual replies but does not create a group follow-up. Windows persist with original expiry and are bounded to 64 players/resident. These are deterministic name/time rules, not semantic intent recognition; routing makes no model calls. Up to eight recent channel turns accompany a reply; private turns never enter public history. Messages are limited to 1,200 characters.
 
 ## Shared planner and Elias configuration
 

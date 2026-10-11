@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.63.0] - 2026-10-11
+
+### Added
+
+- Address online AI neighbours together with “Hey guys,” “everyone,” “anyone,” or `@all`. One suitable volunteer may reply publicly based on qualifications, interests, commitments and needs; other listeners make no chat-model calls. Accepted jobs use the existing training and employment agreements.
+
 ## [0.62.1] - 2026-10-11
 
 ### Fixed

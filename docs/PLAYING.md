@@ -140,7 +140,7 @@ Buy unclaimed property or player-listed buildings (a red **For sale** tag with t
 
 ## AI neighbours (optional prototype)
 
-Enabled AI residents have labelled names, persistent memory and ordinary player rules. Name one in public chat for a public reply; **AI neighbours** starts private chat. Unnamed public follow-ups work for two minutes after your last turn; another named person/private conversation switches routing. Messages allow 1,200 characters; longer submissions are rejected, not truncated.
+Enabled AI residents have labelled names, persistent memory and ordinary player rules. Name one in public chat for a public reply; **AI neighbours** starts private chat. Start a public message with **Hey guys**, **everyone**, **anyone** or **@all** to address the group: for example, “Hey guys, my farm pays 24d; anyone interested in working here or learning the farmer skill?” Everyone hears it, but at most one suitable volunteer responds; no interest can mean no reply. Group invitations have a shared 30-second cooldown. A volunteer can agree to train and take the job through the normal gameplay system; advertised terms are checked on arrival. Unnamed public follow-ups work for two minutes after your last turn; another named person/private conversation switches routing. Messages allow 1,200 characters; longer submissions are rejected, not truncated.
 
 Mabel stays present; others have habits. Budget caps/outages may prevent responses. Relevant public/addressed private context is saved and sent to Jev plus that resident's OpenAI/Claude provider; other players' private conversations are excluded. Delivery and training/job requests can become executable agreements, but speech is not proof of action. See [NPCs](NPCS.md).
 

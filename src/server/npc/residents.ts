@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { isGroupAddress, groupResponder, groupTopic } from './group-chat.ts';
 import {
   perceivedWorld,
   rememberMarkets,
@@ -240,13 +241,33 @@ export class Residents {
               ),
             )
           : [];
+      const group = !!(
+        humanChat &&
+        !m.to &&
+        !named.length &&
+        !namesHuman &&
+        isGroupAddress(m.text)
+      );
+      const volunteer = group
+        ? groupResponder(
+            w,
+            residents.filter((r) => !this.memory.paused(r.config.id)),
+            m.text,
+            m.id,
+            now,
+          )
+        : undefined;
       const targets = m.to
         ? residents.filter((r) => r.state.playerId === m.to)
         : named.length
           ? named
-          : listeners.length === 1
-            ? listeners
-            : [];
+          : group
+            ? volunteer
+              ? [volunteer]
+              : []
+            : listeners.length === 1
+              ? listeners
+              : [];
       for (const r of unread) {
         changed.add(r);
         r.state.cursor = m.id;
@@ -283,6 +304,10 @@ export class Residents {
           r.wake = true;
           r.state.needsDecision = true;
           r.state.helpQuestion = m.text;
+          if (group) {
+            r.state.groupReplyAt = now;
+            r.state.groupQuestion = { messageId: m.id, topic: groupTopic(m.text) };
+          } else delete r.state.groupQuestion;
           r.state.conversationId = m.id;
           r.state.questionFrom = sender.id;
           // Chat can interrupt recovery without restarting a failed action loop.
