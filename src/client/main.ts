@@ -1,3 +1,4 @@
+import { refreshActionVisibility } from './action-visibility';
 import {
   farmPlotCount,
   farmExpansionCost,
@@ -601,11 +602,6 @@ function updateHud() {
     for (const [selector, text, action] of [
       ['[data-do=engine]', me.engine ? 'Stop engine' : 'Start engine', 'engine'],
       ['[data-do=lights]', me.lights ? 'Turn lights off' : 'Turn lights on', 'lights'],
-      [
-        '[data-do=walk], [data-do=tractor]',
-        me.vehicle === 5 ? 'Return to tractor' : 'Walk on foot',
-        me.vehicle === 5 ? 'tractor' : 'walk',
-      ],
     ]) {
       const b = $('modal-host').querySelector<HTMLButtonElement>(selector);
       if (b) {
@@ -718,7 +714,7 @@ function updateHud() {
       .slice(0, 4)
       .map(
         ([id, n]) =>
-          `<button data-do="use" data-id="${id}" title="Use ${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
+          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < 64)) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
       `<div class="carry">${carry(me, world!)} / ${vehicles[me.vehicle].capacity} carried</div>`,
@@ -753,6 +749,7 @@ function updateHud() {
   const shown = panel === 'building' ? world.buildings.find((b) => b.id === selected) : undefined;
   if (panel === 'building' && !shown) closePanel();
   if (shown) {
+    if (buildingAccessSignature !== buildingAccessKey(shown)) buildingWindow(shown);
     const shift = workShift(world, me, shown);
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
@@ -772,13 +769,15 @@ function updateHud() {
       workButton.disabled = !shift.canRenew || distance(me, shown) >= 18;
     }
   }
+  refreshActionVisibility(app, world, me);
   const bite =
     me.game === 'fishing' &&
     me.fishAt !== undefined &&
     world.time >= me.fishAt &&
     world.time <= (me.fishUntil ?? 0);
   const fishing = me.game === 'fishing';
-  const atDock = nearFishingDock(world, me) && !me.atHome && !me.task && !me.game;
+  const atDock =
+    nearFishingDock(world, me) && !me.atHome && !me.task && !me.game && !me.crowBody && !me.hitch;
   $('fishing-control').hidden = (!fishing && !atDock) || !!panel || !!mobile.drawer;
   $('fishing-cast').hidden = fishing;
   $('fishing-stop').hidden = !fishing;
@@ -950,7 +949,22 @@ function drawMap() {
   ctx.fillText('CIRCUIT', sx(-123), sz(95));
 }
 let storyPanelSignature = '';
+let caretakerBuilding = '';
+let buildingAccessSignature = '';
+function buildingAccessKey(b: Building) {
+  return JSON.stringify([
+    b.id,
+    b.owner,
+    b.government,
+    !!b.construction,
+    !!b.lien,
+    me?.authority,
+    me?.job,
+    caretakerBuilding,
+  ]);
+}
 function openPanel(name: string) {
+  if (name !== 'building') caretakerBuilding = '';
   mobile.close();
   mobile.setBlocked(true);
   if (name === 'npc') {
@@ -1000,6 +1014,7 @@ function closePanel() {
   scene.paused = false;
   mobile.setBlocked(false);
   panel = '';
+  caretakerBuilding = '';
   watchCaretaker(false);
   $('modal-host').innerHTML = '';
 }
@@ -1018,6 +1033,7 @@ function modal(title: string, content: string, wide = false) {
       panel === 'editor' ? creatorMemoryKey() : '',
     ]),
   );
+  if (world && me) refreshActionVisibility(app, world, me);
 }
 function field(
   label: string,
@@ -1080,6 +1096,12 @@ function refreshTradingPrices() {
       world.creator?.townEvents,
       world.lottery,
       me.inventory,
+      me.vehicle,
+      me.atHome,
+      me.task?.kind,
+      me.hitch,
+      me.game,
+      me.skills,
       me.crowBody,
       me.crowClass,
       me.crowMark,
@@ -1223,7 +1245,7 @@ function renderPanel() {
     if (!account) return;
     modal(
       'A slightly better spaceship.',
-      `<p>${account.credits} galactic credits · ${Object.values(account.cargo).reduce((s, n) => s + n, 0)} cargo items</p><div class="cards">${galaxy.ships.map((s) => `<article><h3>${esc(s.name)}</h3><p>${esc(s.role)} · ${s.range} pc range · ${s.capacity} cargo · ${s.price} cr</p><p>${s.fuelPerPc}cr/pc · ${s.secondsPerPc}s/pc · ${Math.round(s.shield * 100)}% shielding</p>${button(s.id === account!.ship ? 'Current ship' : account!.hangar?.includes(s.id) ? 'Fly owned ship' : 'Buy ship', 'ship', `data-id="${s.id}" ${s.id === account!.ship ? 'disabled' : ''}`)}</article>`).join('')}</div><p class="note">Jumps add six seconds for departure. Frontier lanes have a published shielding-energy surcharge: 2cr per hazard level, reduced by hull shielding and rounded up. No random cargo loss or space combat. Route prices include every leg; you fly them individually.</p><h3>Ship fittings</h3><p>Fleet-wide fittings stay installed when switching ships. Current range ${shipStats(account).range} pc · capacity ${shipStats(account).capacity}.</p>${['drive', 'hold'].map((kind) => button(`${kind === 'drive' ? 'Jump drive +2 pc' : 'Cargo hold +20'} · level ${account!.upgrades?.[kind] ?? 0}/3 · ${((account!.upgrades?.[kind] ?? 0) + 1) * (kind === 'drive' ? 80 : 60)}cr`, 'upgrade', `data-id="${kind}" ${(account!.upgrades?.[kind] ?? 0) >= 3 ? 'disabled' : ''}`)).join('')}<h3>Courier desk</h3>${account.mission ? `<p>Ten sealed packages to ${esc(galaxy.systems.find((s) => s.id === account!.mission!.destination)?.name)} · reward ${account.mission.reward}cr. No expiry while offline.</p>${button('Deliver contract', 'courier', 'data-id="deliver"')}${button('Cancel contract', 'courier', 'data-id="cancel"')}` : `<p>Carry ten sealed packages to a reachable station. Keep jump fuel in reserve.</p>${button('Accept delivery contract', 'courier', 'data-id="accept"')}`}<h3>Exploration</h3><p>Survey each system once for 15cr. Frontier surveys at Lantern, Rime and The Vessel reveal relics; three relics unlock the alien ship. ${account.discoveries?.length ?? 0}/3 found.</p>${button('Survey this system', 'survey', ' ' + (account.visited?.includes(account.system) ? 'disabled' : ''))}${button('Stranded pilot rescue', 'rescue')}<p class="note">Free rescue to Hearth is available with an empty hold, no contract and under 10cr.</p><h3>Station trading</h3><p>Buy here, jump, sell elsewhere. Station prices differ by system.</p><form data-action="spaceTrade">${select(
+      `<p>${account.credits} galactic credits · ${Object.values(account.cargo).reduce((s, n) => s + n, 0)} cargo items</p><div class="cards">${galaxy.ships.map((s) => `<article><h3>${esc(s.name)}</h3><p>${esc(s.role)} · ${s.range} pc range · ${s.capacity} cargo · ${s.price} cr</p><p>${s.fuelPerPc}cr/pc · ${s.secondsPerPc}s/pc · ${Math.round(s.shield * 100)}% shielding</p>${button(s.id === account!.ship ? 'Current ship' : account!.hangar?.includes(s.id) ? 'Fly owned ship' : 'Buy ship', 'ship', `data-id="${s.id}" ${s.id === account!.ship ? 'disabled' : ''}`)}</article>`).join('')}</div><p class="note">Jumps add six seconds for departure. Frontier lanes have a published shielding-energy surcharge: 2cr per hazard level, reduced by hull shielding and rounded up. No random cargo loss or space combat. Route prices include every leg; you fly them individually.</p><h3>Ship fittings</h3><p>Fleet-wide fittings stay installed when switching ships. Current range ${shipStats(account).range} pc · capacity ${shipStats(account).capacity}.</p>${['drive', 'hold'].map((kind) => button(`${kind === 'drive' ? 'Jump drive +2 pc' : 'Cargo hold +20'} · level ${account!.upgrades?.[kind] ?? 0}/3 · ${((account!.upgrades?.[kind] ?? 0) + 1) * (kind === 'drive' ? 80 : 60)}cr`, 'upgrade', `data-id="${kind}" ${(account!.upgrades?.[kind] ?? 0) >= 3 ? 'disabled' : ''}`)).join('')}<h3>Courier desk</h3>${account.mission ? `<p>Ten sealed packages to ${esc(galaxy.systems.find((s) => s.id === account!.mission!.destination)?.name)} · reward ${account.mission.reward}cr. No expiry while offline.</p>${account.system === account.mission.destination && !account.transit ? button('Deliver contract', 'courier', 'data-id="deliver"') : ''}${button('Cancel contract', 'courier', 'data-id="cancel"')}` : `<p>Carry ten sealed packages to a reachable station. Keep jump fuel in reserve.</p>${button('Accept delivery contract', 'courier', 'data-id="accept"')}`}<h3>Exploration</h3><p>Survey each system once for 15cr. Frontier surveys at Lantern, Rime and The Vessel reveal relics; three relics unlock the alien ship. ${account.discoveries?.length ?? 0}/3 found.</p>${button('Survey this system', 'survey', ' ' + (account.visited?.includes(account.system) ? 'disabled' : ''))}${account.system !== 'hearth' && !account.transit && !account.mission && account.credits < 10 && !Object.values(account.cargo).some((n) => n > 0) ? button('Stranded pilot rescue', 'rescue') : ''}<p class="note">Free rescue to Hearth is available with an empty hold, no contract and under 10cr.</p><h3>Station trading</h3><p>Buy here, jump, sell elsewhere. Station prices differ by system.</p><form data-action="spaceTrade">${select(
         'item',
         ['electronics', 'rareEarth', 'shipParts'].map((id) => [
           id,
@@ -1256,7 +1278,7 @@ function renderPanel() {
       : '';
     modal(
       'AI neighbours.',
-      `<p>These residents are AI agents with their own personalities, savings and memories. They drive, work and trade under the same rules as you.</p><p class="notice">Parish chat and messages sent to an AI are saved in its memory. Relevant excerpts and game observations are sent to that resident’s AI provider (OpenAI, Anthropic/Claude, or TypeSafe/Jev; Jev chooses actions; Mabel uses OpenAI for conversation, all other residents use Claude) to decide its replies and actions. Private messages go only to the addressed resident.</p>${supplyNotice}${residents === undefined ? '<p>Loading residents…</p>' : residents.length ? residents.map((r) => `<article class="npc-card"><h3>${esc(r.name)} <small class="ai-tag">AI · ${r.provider === 'jev' ? (r.conversationProvider === 'openai' ? 'Jev + OpenAI' : 'Jev + Claude') : r.provider === 'anthropic' ? 'Claude' : 'OpenAI'}</small></h3><p>${esc(r.personality)}</p><p>${r.online ? 'In the parish' : r.status === 'In space' ? 'Exploring the galaxy' : 'Currently resting'} · ${esc(r.status)}${r.nextVisitAt ? ` · Expected back around ${esc(new Date(r.nextVisitAt).toLocaleString())}` : ''}</p>${button('Chat with ' + esc(r.name), 'npc-chat', `data-id="${esc(r.playerId)}"`)}</article>`).join('') : '<p>No AI resident is enabled in this parish. The server operator can enable the proof of concept.</p>'}<p class="note">Use the chat button for a private conversation, or mention their first name in parish chat. Replies can take a little time. Mabel stays online; other residents have individual playing habits and do not answer while signed off. Unnamed public follow-ups work for two minutes after your latest turn. Memories persist across restarts; the server operator can inspect and manage them.</p>${button('Refresh residents', 'npc')}`,
+      `<p>These residents are AI agents with their own personalities, savings and memories. They drive, work and trade under the same rules as you.</p><p class="notice">Parish chat and messages sent to an AI are saved in its memory. Relevant excerpts and game observations are sent to that resident’s AI provider (OpenAI, Anthropic/Claude, or TypeSafe/Jev; Jev chooses actions; Mabel uses OpenAI for conversation, all other residents use Claude) to decide its replies and actions. Private messages go only to the addressed resident.</p>${supplyNotice}${residents === undefined ? '<p>Loading residents…</p>' : residents.length ? residents.map((r) => `<article class="npc-card"><h3>${esc(r.name)} <small class="ai-tag">AI · ${r.provider === 'jev' ? (r.conversationProvider === 'openai' ? 'Jev + OpenAI' : 'Jev + Claude') : r.provider === 'anthropic' ? 'Claude' : 'OpenAI'}</small></h3><p>${esc(r.personality)}</p><p>${r.online ? 'In the parish' : r.status === 'In space' ? 'Exploring the galaxy' : 'Currently resting'} · ${esc(r.status)}${r.nextVisitAt ? ` · Expected back around ${esc(new Date(r.nextVisitAt).toLocaleString())}` : ''}</p>${r.online ? button('Chat with ' + esc(r.name), 'npc-chat', `data-id="${esc(r.playerId)}"`) : ''}</article>`).join('') : '<p>No AI resident is enabled in this parish. The server operator can enable the proof of concept.</p>'}<p class="note">Use the chat button for a private conversation, or mention their first name in parish chat. Replies can take a little time. Mabel stays online; other residents have individual playing habits and do not answer while signed off. Unnamed public follow-ups work for two minutes after your latest turn. Memories persist across restarts; the server operator can inspect and manage them.</p>${button('Refresh residents', 'npc')}`,
     );
     return;
   }
@@ -1330,7 +1352,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button(me.vehicle === 5 ? 'Return to tractor' : 'Walk on foot', me.vehicle === 5 ? 'tractor' : 'walk')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -1541,9 +1563,21 @@ function buildingWindow(b: Building) {
   if (!me || !world) return;
   const near = distance(me, b) < 18,
     selfOwned = b.owner === me.id,
-    owned = selfOwned || me.authority === 20;
-  const tabs = ['Main', 'Stockroom', 'Building Admin', 'Extra Info', 'Statement'];
-  let html = `<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${b.staffing ? `<p class="note" data-building-staffing>${esc(staffingStatus(b))}</p>` : ''}${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
+    caretaker = caretakerBuilding === b.id && me.authority >= 20,
+    owned = selfOwned || caretaker;
+  buildingAccessSignature = buildingAccessKey(b);
+  const tabs = [
+    'Main',
+    ...(owned
+      ? ['Stockroom', 'Building Admin']
+      : !b.government && !b.construction
+        ? ['Investment']
+        : []),
+    'Extra Info',
+    'Statement',
+  ];
+  if (!tabs.includes(tab)) tab = 'Main';
+  let html = `${caretaker ? '<p class="notice">Caretaker mode: managing this property as world administrator.</p>' : ''}<div class="building-meta"><span>OWNER <b data-building-owner>${esc(buildingOwner(b))}</b></span><span>INVESTMENT <b data-building-investment>${money(b.investment)}</b></span><span>EFFICIENCY <b data-building-efficiency>${Math.round(b.efficiency * 100)}%</b></span></div>${b.staffing ? `<p class="note" data-building-staffing>${esc(staffingStatus(b))}</p>` : ''}${!near ? '<p class="notice">You are ' + Math.round(distance(me, b)) + ' metres away. Drive closer to trade or use this building.</p>' : ''}<nav class="tabs">${tabs.map((t) => button(t, 'tab', `data-id="${t}"`, t === tab ? 'active' : '')).join('')}</nav>`;
   if (b.construction) {
     html += `<p>Materials still needed: ${Object.entries(b.construction)
       .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
@@ -1594,7 +1628,7 @@ function buildingWindow(b: Building) {
         .join(
           '',
         )}</div><label class="quantity">Quantity per trade<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label>`;
-    if (b.kind === 'workhouse' && !selfOwned)
+    if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false)
       html += `<p>Unskilled labour. A 15-second task pays 45d. You will be quite still while working.</p>${button('Work a shift · 45d', 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
     if (b.kind === 'school')
       html += `<p>First qualification: 80d and one minute. Later standard qualifications: 160d and forty minutes. Custom courses use the prices and times below. Up to ${world.settings.maxSkills} skills.</p><div class="menu-grid">${skills
@@ -1628,7 +1662,7 @@ function buildingWindow(b: Building) {
     if (b.kind === 'haybarn')
       html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
-      if (owned) {
+      if (selfOwned) {
         const blocked = farmExpansionBlocker(world, b);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
@@ -1668,10 +1702,10 @@ function buildingWindow(b: Building) {
         .map(([item, n]) => `${n} ${esc(items[item]?.name ?? item)}`)
         .join(
           ', ',
-        )}. Hay does not replace water.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : owned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'} + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
+        )}. Hay does not replace water.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : selfOwned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'} + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
     }
     if (b.kind === 'home')
-      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${owned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+      html += `<p>Stay inside to slow hunger and thirst by 20%. Your home feeds you from its storeroom even while you are offline. Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${selfOwned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (roomCount(b)) {
       const l = b.lodging,
         guest = l?.guests[me.id],
@@ -1692,7 +1726,7 @@ function buildingWindow(b: Building) {
           ['deposit', 'Store provisions'],
           ['withdraw', 'Collect provisions'],
         ])}<button>Transfer provisions</button></form>`;
-      if (owned)
+      if (selfOwned && me.skills.includes('innkeeper'))
         html += `<h3>Run your guesthouse</h3><p>Learn innkeeper at school. Booking payments enter Working capital; collect earnings in Building Admin. Closing only stops new bookings.</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'configure')}${field('Hourly price in denarii', 'rateDenarii', (l?.rate ?? 600) / 100, 'number', 'min="0" max="10000" step="0.01"')}${select(
           'open',
           [
@@ -1775,9 +1809,9 @@ function buildingWindow(b: Building) {
       item: Object.keys(b.buy)[0] ?? Object.keys(b.sell)[0] ?? Object.keys(items)[0],
       side: 'buy',
     };
-  if (tab === 'Building Admin')
+  if (tab === 'Building Admin' || tab === 'Investment')
     html += owned
-      ? `<div class="admin-grid"><form data-action="investment">${hidden('building', b.id)}<h3>Working capital</h3>${
+      ? `<div class="admin-grid"><form data-action="investment">${hidden('building', b.id)}${caretaker ? hidden('caretaker', 'true') : ''}<h3>Working capital</h3>${
           remainingClaim(b)
             ? `<p>Outside stakes lock ${money(remainingClaim(b))} in this till. You may withdraw ${money(ownerWithdrawable(world, b))} of your own surplus; invested cash stays until investors are paid from earnings.</p>`
             : ''
@@ -1823,7 +1857,7 @@ function buildingWindow(b: Building) {
       'interactObject',
       `data-id="${esc(b.id)}" ${!near ? 'disabled' : ''}`,
     );
-  if (tab === 'Building Admin' && owned && !b.government)
+  if (tab === 'Building Admin' && owned && !b.government && !b.lien)
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
   if (tab === 'Statement')
     html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;
@@ -1884,7 +1918,7 @@ function editorWindow() {
                   'kind',
                   Object.entries(definitions).map(([id, d]) => [id, d.name]),
                   'Building type',
-                )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}<button>Place building</button></form><p>Open the building's Admin tab to edit its prices, wages and stocks.</p>`
+                )}${field('X', 'x', Math.round(me.x), 'number')}${field('Z', 'z', Math.round(me.z), 'number')}<button>Place building</button></form><h3>Manage existing buildings as caretaker</h3><p>These tools use administrator permissions, separate from properties you personally own.</p><div class="directory">${world.buildings.map((b) => button(esc(b.name), 'manage-building', `data-id="${b.id}"`)).join('')}</div>`
               : tab === 'Zones'
                 ? `<form data-action="zone">${select(
                     'kind',
@@ -1958,6 +1992,12 @@ app.addEventListener('click', async (e) => {
       }
       creatorClick(op, id ?? '', world, send);
       renderPanel();
+      return;
+    }
+    if (action === 'manage-building' && (me?.authority ?? 0) >= 20) {
+      caretakerBuilding = id ?? '';
+      selected = id ?? '';
+      openPanel('building');
       return;
     }
     const panels = [
@@ -2085,6 +2125,7 @@ app.addEventListener('click', async (e) => {
         renderPanel();
         break;
       case 'building':
+        caretakerBuilding = '';
         openInteraction(id!);
         break;
       case 'land':
@@ -2477,7 +2518,7 @@ app.addEventListener('submit', async (e) => {
           'payment',
         ].includes(k)
           ? Number(v)
-          : ['buy', 'open', 'accepted', 'autoPay', 'enabled'].includes(k)
+          : ['buy', 'open', 'accepted', 'autoPay', 'enabled', 'caretaker'].includes(k)
             ? v === 'true'
             : v;
       }

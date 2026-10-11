@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.62.1] - 2026-10-11
+
+### Fixed
+
+- Building panels show owner controls only for personally owned property; outside investment has its own tab. Caretakers manage other properties explicitly through the editor.
+- Desktop and mobile actions now follow current vehicle, home, passenger, activity and plot state, hiding redundant or inapplicable controls and refreshing when ownership changes.
+
 ## [0.62.0] - 2026-10-11
 
 ### Added

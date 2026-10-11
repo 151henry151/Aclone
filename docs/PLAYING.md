@@ -33,6 +33,10 @@ Only time sobers you up, including time offline. From the maximum level, steerin
 
 **F9 → Options & pilot key → Drunk visual effects** cycles Automatic, Reduced and Off. Automatic respects your device’s reduced-motion setting. Reduced removes motion/double vision and retains mild softening; Off removes visual effects. Neither changes server-side steering impairment.
 
+## Contextual controls
+
+Building **Stockroom** and **Building Admin** tabs appear for properties you own. Use **Investment** to fund someone else’s business and collect earned returns. Movement controls show alternatives to your current vehicle and disappear indoors or while busy; a flying robocrow offers **Return to body**. Activity controls appear when relevant.
+
 ## Timed tasks
 
 Labour, gathering and harvesting lock movement while a large centered countdown shows progress. Menus temporarily hide it; completion clears it. Disconnecting does not cancel accepted work or duplicate rewards. Starting a harvest closes its panel. If the timer reaches zero before server confirmation, **Finishing…** remains until completion; no extra click. Pending loads can require cargo space before delivery.

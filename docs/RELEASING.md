@@ -35,7 +35,15 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.61.0
+## Current upgrade: 0.62.1
+
+Refresh clients for contextual action controls. Property owners manage their own
+buildings through the normal panel; world administrators explicitly enter
+caretaker management from Editor → Buildings. Ordinary outside investment now
+records the administrator’s personal stake unless caretaker mode is selected.
+Existing property, investments and player data are preserved.
+
+### 0.61.0
 
 Automatic producers resolve ideal active crew sizes from their building type or
 custom template. Existing properties receive the staffing curve without resetting

@@ -635,7 +635,7 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       const n = qty(a.amount);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
-      const proprietor = p.authority >= 20 || b.owner === p.id;
+      const proprietor = b.owner === p.id || (p.authority >= 20 && a.caretaker === true);
       if (proprietor) {
         if (a.direction === 'deposit') {
           requireThat(p.cash >= n, 'Not enough cash');
