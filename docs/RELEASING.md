@@ -35,7 +35,13 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.64.1
+## Current upgrade: 0.65.0
+
+Refresh clients for the new building finishes and simpler bay-door and awning
+geometry. No world migration or reset is needed; cottage styles and building
+footprints are preserved.
+
+### 0.64.1
 
 Refresh clients for smooth streetlamp ground glows in coloured fog and corrected
 cloud perspective near the horizon. This graphics patch needs no world migration

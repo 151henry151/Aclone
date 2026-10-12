@@ -155,3 +155,11 @@ Grilles, tread, wheel bolts, doors, siding and window frames use cached procedur
 `npm run profile:models` measures triangles before scenery batching: tractor with driver 14,262 (formerly 29,824); cow 5,704, sheep 3,916, pig 4,156 and chicken 4,044 (formerly 13,464–15,768); sample cottage 248 (formerly 1,514). These geometry counts are not FPS promises. `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:models` captures tractor/cottage/day/night close-ups in `test-results/models/`. Preview lighting includes shadows; game shadows remain optional.
 
 Cow anatomy is baked from original blended volumes by `npx tsx scripts/cow-surface.ts` into `src/client/cow-surface.json`; run Prettier after rebaking. Torso and legs share a closed surface, with weighted vertex deformation for walking. `npm run screenshots:livestock` includes a side view. Reference photographs guide proportions only; no reference pixels are shipped.
+
+### Building finishes
+
+`building-finishes.ts` supplies shared 512px masonry, timber, plaster and roofing maps plus 256px door, awning and window details. Profiles distinguish food shops, civic buildings, agricultural sheds and industry; existing stone and cottage siding remain in use. Brick joints, grain, fasteners, shutter ribs, bread displays and leaded glass are baked into textures. Roof courses follow the eaves and corrugations run downhill. Original footprints and cottage style choices are unchanged.
+
+No building gains triangles. For the preview IDs, garage 366 → 58, farm 574 → 84 and bakery 610 → 346; the cottage remains 248. The finite texture library is generated once, shared across buildings/rebuilds and mipmapped; its base RGBA data stays below 11 MiB (mipmaps add about one-third). Window quads retain their existing emissive mask and light batching. More material families can add static material batches; geometry savings are not an FPS guarantee.
+
+`CHROMIUM_PATH=/usr/bin/chromium npx tsx scripts/building-preview.ts` captures the actual bakery, bank, school, garage, farm, pump house, mill and cottage in `test-results/buildings/`, with browser-error checks. `tests/building-finishes.test.ts` checks geometry budgets, texture reuse, cottage customization and window batching.

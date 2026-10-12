@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.65.0] - 2026-10-12
+
+### Changed
+
+- Give businesses distinct textured finishes: brick and dressed stone, limewashed food shops, timber barns, and metal-clad workshops, with slate, clay or zinc roofs and purpose-specific windows and doors. Textured bay doors and awnings replace many small meshes without adding model complexity; cottage style choices and night lighting remain intact.
+
 ## [0.64.1] - 2026-10-12
 
 ### Fixed

@@ -5,11 +5,13 @@ import { buildingPlan, type BuildingVolume } from '../shared/building-shapes';
 import type { Building } from '../shared/types';
 import { surface } from './materials';
 import { spaceportModel } from './spaceport';
+import { buildingFinish, finishMaterial, finishSurface } from './building-finishes';
 
 /** Original metre-scale village kit. Door/window dimensions never scale with the shell. */
 export function buildingModel(b: Building, finish: typeof surface = surface) {
   const root = new T.Group(),
-    plan = buildingPlan(b);
+    plan = buildingPlan(b),
+    look = buildingFinish(b.kind, plan);
   const mat = (color: string) => new T.MeshStandardMaterial({ color, roughness: 0.88 });
   function mesh(geometry: T.BufferGeometry, color: string, x: number, y: number, z: number) {
     const m = new T.Mesh(geometry, mat(color));
@@ -30,26 +32,18 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize());
   }
   function wallFinish(m: T.Mesh<T.BufferGeometry, T.Material | T.Material[]>) {
-    if (b.kind === 'starport') {
-      const material = m.material as T.MeshStandardMaterial;
-      material.color.set(plan.wall);
-      material.roughness = 0.55;
-      material.metalness = 0.25;
-      return m;
-    }
-    if (plan.siding === 'wood') return sidingMaterial(m, plan.wall);
-    return finish(m, 'stone', 3, b.construction ? '#a6a18d' : plan.wall);
+    if (b.kind === 'home' && plan.siding === 'wood') return sidingMaterial(m, plan.wall);
+    if (look.wall === 'stone') return finish(m, 'stone', 3, b.construction ? '#a6a18d' : look.tint);
+    return finishSurface(m, look.wall, b.construction ? '#a6a18d' : look.tint);
   }
   function roof(v: BuildingVolume) {
     const w = v.width / 2 + 0.28,
       d = v.depth / 2 + 0.28,
       h = v.rise;
     if (v.roof === 'flat') {
-      finish(
+      finishSurface(
         box(v.width + 0.35, 0.18, v.depth + 0.35, '#ffffff', v.x, v.eaves + 0.08, v.z),
-        'roof',
-        3,
-        '#a7b1ad',
+        look.roof,
       );
       if (h > 0) {
         for (const side of [-1, 1]) {
@@ -60,11 +54,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       return;
     }
     if (v.roof === 'shed') {
-      const top = finish(
+      const top = finishSurface(
         box(w * 2, 0.16, Math.hypot(d * 2, h), '#ffffff', v.x, v.eaves + h / 2, v.z),
-        'roof',
-        3,
-        '#b5bfc0',
+        look.roof,
       );
       top.rotation.x = Math.atan2(h, d * 2);
       // Tapered side infill closes the wedge beneath the sloping roof.
@@ -76,20 +68,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
         shape.closePath();
         const g = new T.ShapeGeometry(shape);
         g.rotateY(-Math.PI / 2);
-        const wall = finish(
-          mesh(g, '#ffffff', v.x + (side * v.width) / 2, v.eaves, v.z),
-          'stone',
-          3,
-          plan.wall,
-        );
+        const wall = wallFinish(mesh(g, '#ffffff', v.x + (side * v.width) / 2, v.eaves, v.z));
         (wall.material as T.Material).side = T.DoubleSide;
       }
-      finish(
-        box(v.width, h, 0.12, '#ffffff', v.x, v.eaves + h / 2, v.z - v.depth / 2),
-        'stone',
-        3,
-        plan.wall,
-      );
+      wallFinish(box(v.width, h, 0.12, '#ffffff', v.x, v.eaves + h / 2, v.z - v.depth / 2));
       return;
     }
     const ridge = v.roof === 'hip' ? d * 0.45 : d;
@@ -118,7 +100,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     ];
     const geometry = new T.BufferGeometry().setFromPoints(indices.map((i) => vertices[i]));
     geometry.computeVertexNormals();
-    const top = finish(mesh(geometry, '#ffffff', v.x, v.eaves, v.z), 'roof', 3, '#dadcdb');
+    const top = finishSurface(mesh(geometry, '#ffffff', v.x, v.eaves, v.z), look.roof);
     (top.material as T.Material).side = T.DoubleSide;
     if (v.roof === 'gable') {
       const shape = new T.Shape();
@@ -149,7 +131,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     for (const side of [-1, 1]) box(0.12, 0.15, 2 * d, '#d2c8af', v.x + side * w, v.eaves, v.z);
   }
   function window(x: number, y: number, z: number, width = 1.05, angle = 0) {
-    const m = detailMaterial('window');
+    const m =
+      look.window === 'cottage'
+        ? detailMaterial('window')
+        : finishMaterial(`window-${look.window}`);
     m.emissiveMap = detailTexture('window-light');
     m.roughness = 0.45;
     const pane = new T.Mesh(new T.PlaneGeometry(width + 0.22, 1.42), m);
@@ -161,7 +146,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   function door(x: number, z: number) {
     const panel = new T.Mesh(
       new T.PlaneGeometry(1.17, plan.doorHeight + 0.13),
-      detailMaterial('door', plan.trim),
+      look.door === 'house'
+        ? detailMaterial('door', look.accent)
+        : finishMaterial(look.door, look.accent),
     );
     panel.position.set(x, (plan.doorHeight + 0.13) / 2, z + 0.12);
     root.add(panel);
@@ -270,18 +257,17 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       ? [-2.7, 2.7]
       : [0];
     for (const x of bays) {
-      box(3.25, 3.18, 0.14, '#343f3a', x, 1.59, front);
-      for (let i = 0; i < 9; i++) box(3.04, 0.05, 0.04, plan.trim, x, 0.25 + i * 0.34, front + 0.1);
-      for (const side of [-1, 1])
-        box(0.14, 3.3, 0.22, '#d0c2a3', x + side * 1.66, 1.65, front + 0.05);
-      box(3.45, 0.18, 0.25, '#d0c2a3', x, 3.27, front + 0.05);
+      // Frame, planks, bracing and shutter ribs are baked into one two-triangle panel.
+      const bay = new T.Mesh(new T.PlaneGeometry(3.6, 3.4), finishMaterial(look.bay, look.accent));
+      bay.position.set(x, 1.7, front + 0.18);
+      root.add(bay);
     }
     for (const z of [-2, 1.4]) window(main.width / 2 + 0.035, 2, z, 1.1, Math.PI / 2);
     if (b.kind === 'farm' || b.kind === 'sawmill') {
-      // Timber siding and high hayloft doors distinguish agricultural buildings.
-      for (let x = -main.width / 2 + 0.2; x < main.width / 2; x += 0.38)
-        box(0.08, main.eaves, 0.05, plan.trim, x, main.eaves / 2, -main.depth / 2 - 0.04);
-      box(1.4, 1.2, 0.08, plan.trim, 0, main.eaves + 0.45, front);
+      // The wall texture supplies siding; retain the existing hayloft silhouette.
+      const loft = box(1.4, 1.2, 0.08, plan.trim, 0, main.eaves + 0.45, front);
+      loft.material.dispose();
+      loft.material = finishMaterial('barn-door', look.accent);
     }
   } else {
     door(0, b.kind === 'school' ? 4.76 : front);
@@ -323,26 +309,12 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     chimney(-main.width * 0.3, -main.depth * 0.22, main.eaves + main.rise + 0.5);
   if (['market', 'shop', 'bakery'].includes(b.kind)) {
     const width = main.width - 0.5;
-    for (let i = 0; i < 12; i++) {
-      const awning = box(
-        width / 12,
-        0.09,
-        1.7,
-        i % 2 ? '#d9cba3' : plan.trim,
-        -width / 2 + ((i + 0.5) * width) / 12,
-        2.6,
-        front + 0.7,
-      );
-      awning.rotation.x = 0.12;
-      box(
-        width / 12,
-        0.22,
-        0.08,
-        i % 2 ? '#d9cba3' : plan.trim,
-        -width / 2 + ((i + 0.5) * width) / 12,
-        2.38,
-        front + 1.53,
-      );
+    const canopy = box(width, 0.09, 1.7, '#ffffff', 0, 2.6, front + 0.7);
+    canopy.rotation.x = 0.12;
+    const valance = box(width, 0.22, 0.08, '#ffffff', 0, 2.38, front + 1.53);
+    for (const panel of [canopy, valance]) {
+      panel.material.dispose();
+      panel.material = finishMaterial(b.kind === 'bakery' ? 'awning-rust' : 'awning-green');
     }
     for (const x of [-width / 2, width / 2]) box(0.09, 2.5, 0.09, '#6e6250', x, 1.25, front + 1.4);
   }
