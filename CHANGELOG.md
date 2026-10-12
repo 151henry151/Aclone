@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.0] - 2026-10-12
+
+### Changed
+
+- Rebuild the public landing page with fresh gameplay screenshots, a responsive screenshot gallery, a first-day guide, and dedicated world-creation and self-hosting sections. Keep the page in the repository, generate its version from the release, and provide separate preview, browser-check and backed-up publication commands.
+
 ## [0.65.0] - 2026-10-12
 
 ### Changed

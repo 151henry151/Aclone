@@ -12,6 +12,7 @@ const files = [
   'src',
   'data',
   'public',
+  'website',
   'art',
   'docs',
   'tests',
@@ -40,6 +41,11 @@ try {
   mkdirSync(join(root, 'scripts'));
   for (const file of [
     'backup.ts',
+    'build-website.ts',
+    'deploy-website.sh',
+    'serve-website.ts',
+    'website-check.ts',
+    'website-shots.ts',
     'package.ts',
     'screenshots.ts',
     'characters.ts',

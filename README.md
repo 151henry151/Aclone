@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.65.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.66.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -89,6 +89,10 @@ Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, i
 4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**
 
 Beer and wine can impair steering and produce scene sway, distortion and double vision; visual comfort controls are in **Pilot & preferences**. Buildings use distinct masonry, timber and metal finishes suited to their trade. Models share detail textures for siding, shop windows, machinery and animal coats to reduce geometry while retaining animated parts and night lighting. On entering a world, a short loading screen prepares scenery and lighting before driving controls become available. Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
+
+## Public website
+
+The marketing page at [nogits.com](https://nogits.com/) lives in `website/`, separately from the game at `/aclone/`. Run `npm run preview:website` for a local preview, `npm run build:website` to generate `website-dist/`, and `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` for responsive browser checks. The build reads the release version from `package.json`. See [hosting](docs/HOSTING.md#public-marketing-site) for publishing and screenshot refreshes.
 
 ## Contribute
 

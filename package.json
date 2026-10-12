@@ -1,6 +1,6 @@
 {
   "name": "aclone",
-  "version": "0.65.0",
+  "version": "0.66.0",
   "private": true,
   "type": "module",
   "description": "A small, persistent universe with an unreasonable number of tractors.",
@@ -17,8 +17,8 @@
     "test:e2e": "node --import tsx node_modules/@playwright/test/cli.js test",
     "check": "tsc --noEmit && npm test",
     "backup": "tsx scripts/backup.ts",
-    "format": "prettier --write src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
-    "format:check": "prettier --check src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
+    "format": "prettier --write website src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
+    "format:check": "prettier --check website src tests scripts/*.ts data docs README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md package.json tsconfig.json vite.config.ts playwright.config.ts index.html .github compose.yaml .prettierrc.json",
     "package": "tsx scripts/package.ts",
     "screenshots": "tsx scripts/screenshots.ts",
     "test:load": "tsx scripts/load.ts",
@@ -35,7 +35,11 @@
     "screenshots:livestock": "tsx scripts/livestock.ts",
     "screenshots:rocket": "tsx scripts/rocket.ts",
     "screenshots:models": "tsx scripts/model-preview.ts",
-    "profile:models": "tsx scripts/model-budget.ts"
+    "profile:models": "tsx scripts/model-budget.ts",
+    "build:website": "tsx scripts/build-website.ts",
+    "preview:website": "npm run build:website && tsx scripts/serve-website.ts",
+    "check:website": "tsx scripts/website-check.ts",
+    "screenshots:website": "tsx scripts/website-shots.ts"
   },
   "dependencies": {
     "fengari": "^0.1.4",

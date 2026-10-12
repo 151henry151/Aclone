@@ -116,3 +116,15 @@ Optional `GALAXY_URL`, `GALAXY_NAME`, `GALAXY_PEERS_FILE`; unset URL disables fe
 ## Default parish services (0.21.2)
 
 Only default server-owned Puddlewick receives missing stonemason/waterworks plus one-time cleanup of accidental excess public starters. Purchased/custom properties are preserved; active occupants/tasks defer cleanup. Completion records prevent restocking/recreation, blocked sites retry later; other worlds retain layouts. [Player service guide](PLAYING.md#puddlewick-services) and [migration scope](RELEASE_NOTES.md#puddlewick-cleanup-scope).
+
+## Public marketing site
+
+`website/` is a standalone static page for `https://nogits.com/`; the game remains at `/aclone/`. It needs no game server, JavaScript framework, external fonts or trackers to display. Screenshot enlargement is optional JavaScript; navigation, image links and FAQs work without it.
+
+- `npm run build:website` generates `website-dist/`, inserts the package version and validates local assets/documentation links.
+- `npm run preview:website` serves it at `http://127.0.0.1:4174`. Play links target `/aclone/`, which is supplied by the production proxy, not this preview server.
+- `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` checks desktop/tablet/phone layouts, keyboard image enlargement, focus restoration, image loading, FAQs and no-JavaScript access. Captures are in `test-results/website/`.
+- After `npm run build`, `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:website` refreshes the six original gameplay images from a disposable demonstration world. This uses Chromium and ImageMagick `convert`; ordinary website builds require neither. It never touches live players or calls NPC providers.
+- With explicit deployment authorization, run `bash scripts/deploy-website.sh`. It backs up the existing page in `/var/backups/aclone-website/`, stages assets and replaces HTML last. It preserves legacy `/img/` URLs, ACME files and `/aclone/`; the game service is not restarted. `DEPLOY_HOST`, `WEBSITE_DIR` and `WEBSITE_URL` override the nogits defaults. The game deployment script does not publish the marketing page.
+
+Other hosts can serve `website-dist/` as ordinary static files; adjust Play links and the social-preview image URL for their domain/path. Keep the source, not generated output, under version control. To roll back, restore the saved website archive; game data is unaffected.

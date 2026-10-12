@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#203c32" />
+    <title>Aclone — A little world. A lot to make of it.</title>
+    <meta
+      name="description"
+      content="A free, open-source multiplayer browser game of tractors, trade and worlds you make your own. Farm, build a business, explore the stars—or host a whole galaxy."
+    />
+    <meta property="og:title" content="Aclone — A little world. A lot to make of it." />
+    <meta
+      property="og:description"
+      content="Drive a tractor. Grow a livelihood. Build a world. A free, open-source multiplayer game, right in your browser."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://nogits.com/assets/village.webp" />
+    <meta
+      property="og:image:alt"
+      content="A red tractor outside the village flour mill in Aclone"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./site.css" />
+    <script src="./site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Aclone home"
+        ><span class="monogram" aria-hidden="true">a</span>Aclone<span class="wordmark-note"
+          >A WORLD OF YOUR OWN</span
+        ></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#explore">The game</a><a href="#first-day">First steps</a
+        ><a href="#create">Create worlds</a><a href="#host">Host a galaxy</a>
+      </nav>
+      <a class="button small" href="/aclone/">Play free <span aria-hidden="true">↗</span></a>
+    </header>
+    <main id="main">
+      <section class="hero wrap" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="status-dot" aria-hidden="true"></span> FREE TO PLAY · IN YOUR BROWSER
+          </p>
+          <h1 id="hero-title">
+            A little world.<br />A lot to
+            <em
+              >make<br class="desktop-break" />
+              of it.</em
+            >
+          </h1>
+          <p class="lede">
+            A tractor, a few neighbours, and a world that keeps turning. Find your trade. Build
+            something that matters. Make yourself at home.
+          </p>
+          <div class="actions">
+            <a class="button" href="/aclone/">Start your story <span aria-hidden="true">↗</span></a
+            ><a class="text-link" href="#explore"
+              >Take a look around <span aria-hidden="true">↓</span></a
+            >
+          </div>
+          <p class="hero-note">
+            No download. No subscription. A healthy disregard for grand destinies.
+          </p>
+        </div>
+        <figure class="hero-photo">
+          <img
+            src="./assets/village.webp"
+            width="1600"
+            height="1000"
+            fetchpriority="high"
+            alt="A red tractor visiting Puddlewick’s stone flour mill, with village buildings and countryside beyond"
+          />
+          <figcaption>
+            <span><i aria-hidden="true">✦</i> A DAY IN PUDDLEWICK</span
+            ><span>Actual gameplay · development alpha</span>
+          </figcaption>
+          <div class="photo-stamp" aria-hidden="true">
+            EST. WHENEVER<br /><strong>Yours to make.</strong>
+          </div>
+        </figure>
+      </section>
+      <div class="promise-strip">
+        <div class="wrap">
+          <span>One persistent universe.</span><span>Many ways to live in it.</span
+          ><span>Entirely open source.</span>
+        </div>
+      </div>
+
+      <section class="wrap section" id="explore" aria-labelledby="explore-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / FIND YOUR KIND OF BUSY</p>
+            <h2 id="explore-title">Small beginnings.<br /><em>Interesting possibilities.</em></h2>
+          </div>
+          <p>
+            This is a multiplayer world you live in, not a level you finish. Share the roads with
+            other players and optional AI neighbours. Your next ambition is up to you.
+          </p>
+        </div>
+        <div class="life-stories">
+          <article>
+            <span class="story-number">01</span>
+            <h3>Make an honest living.</h3>
+            <p>
+              Learn a profession, take a paid shift, gather timber or spot a good trade. A shortage
+              at the mill might be your next opportunity.
+            </p>
+            <a class="text-link" href="#economy">Follow the supply chain ↗</a>
+          </article>
+          <article>
+            <span class="story-number">02</span>
+            <h3>Put down roots.</h3>
+            <p>
+              Grow seasonal crops, expand a farm and feed your livestock. Buy a business, set its
+              wages and prices, or build a cottage to come home to.
+            </p>
+            <a class="text-link" href="#first-day">Find your feet ↗</a>
+          </article>
+          <article>
+            <span class="story-number">03</span>
+            <h3>Take the scenic route.</h3>
+            <p>
+              Fish at the dock, fly a robocrow, race or play Hornball. Then head for the spaceport:
+              there are other worlds beyond this parish.
+            </p>
+            <a class="text-link" href="#gallery">See the sights ↗</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="economy-section" id="economy" aria-labelledby="economy-title">
+        <div class="wrap split">
+          <figure class="framed-shot">
+            <a
+              class="zoom-shot"
+              href="./assets/farming.webp"
+              data-gallery
+              aria-label="Enlarge screenshot: a working farm"
+              ><img
+                src="./assets/farming.webp"
+                width="1600"
+                height="1000"
+                loading="lazy"
+                decoding="async"
+                alt="A tractor at a timber farm building beside growing crop plots"
+              /><span class="zoom-hint" aria-hidden="true">View screenshot ↗</span></a
+            >
+            <figcaption>Plant with the seasons. Harvest before winter.</figcaption>
+          </figure>
+          <div>
+            <p class="eyebrow">MORE THAN A FULL INVENTORY</p>
+            <h2 id="economy-title">Your wheat.<br />Someone’s daily bread.</h2>
+            <p>
+              A farm needs a harvest. A mill needs grain and workers. A bakery needs flour. Every
+              link is a business someone can supply, work for or own.
+            </p>
+            <ol class="supply-chain" aria-label="An example production chain">
+              <li>Farm<strong>Wheat</strong></li>
+              <li>Mill<strong>Flour</strong></li>
+              <li>Bakery<strong>Bread</strong></li>
+              <li>Neighbours<strong>A good meal</strong></li>
+            </ol>
+            <p>
+              Compare local prices, keep the stockroom supplied and fund wages. Build a livelihood
+              one useful delivery at a time—or turn it into a growing collection of businesses.
+            </p>
+            <a
+              class="text-link"
+              href="https://github.com/151henry151/Aclone/blob/main/docs/ECONOMY.md"
+              >Read the economy guide ↗</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section" id="gallery" aria-labelledby="gallery-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">POSTCARDS FROM THE PARISH</p>
+            <h2 id="gallery-title">Life moves at its own pace.</h2>
+          </div>
+          <p>
+            Days turn into nights. Seasons change the fields. Sometimes the best plan is to turn on
+            your headlights and see where the road goes.
+          </p>
+        </div>
+        <div class="gallery-grid">
+          <figure class="gallery-wide">
+            <a
+              class="zoom-shot"
+              href="./assets/evening.webp"
+              data-gallery
+              aria-label="Enlarge screenshot: evening in the village"
+              ><img
+                src="./assets/evening.webp"
+                width="1600"
+                height="1000"
+                loading="lazy"
+                decoding="async"
+                alt="Evening light falling over the village and its illuminated roads"
+              /><span class="zoom-hint" aria-hidden="true">View screenshot ↗</span></a
+            >
+            <figcaption>
+              <strong>A place to come home to.</strong
+              ><span>Changing skies, weather and the lights of town.</span>
+            </figcaption>
+          </figure>
+          <figure>
+            <a
+              class="zoom-shot"
+              href="./assets/waterworks.webp"
+              data-gallery
+              aria-label="Enlarge screenshot: the water pump house"
+              ><img
+                src="./assets/waterworks.webp"
+                width="1600"
+                height="1000"
+                loading="lazy"
+                decoding="async"
+                alt="A shoreline waterworks building with a pressure tank above its metal roof"
+              /><span class="zoom-hint" aria-hidden="true">View screenshot ↗</span></a
+            >
+            <figcaption>
+              <strong>Keep the town turning.</strong
+              ><span>Even a drink of water has a supply chain.</span>
+            </figcaption>
+          </figure>
+          <figure>
+            <a
+              class="zoom-shot"
+              href="./assets/spaceport.webp"
+              data-gallery
+              aria-label="Enlarge screenshot: the industrial spaceport"
+              ><img
+                src="./assets/spaceport.webp"
+                width="1600"
+                height="1000"
+                loading="lazy"
+                decoding="async"
+                alt="The industrial spaceport and its towering cargo rocket"
+              /><span class="zoom-hint" aria-hidden="true">View screenshot ↗</span></a
+            >
+            <figcaption>
+              <strong>A little further afield.</strong
+              ><span>Star travel, visiting worlds and a very large rocket.</span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="first-day" id="first-day" aria-labelledby="first-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 / YOUR FIRST DAY, PRESUMABLY</p>
+              <h2 id="first-title">No chosen one.<br /><em>Just choose something.</em></h2>
+            </div>
+            <p>
+              Create a pilot, land in Puddlewick and get your bearings. Here’s a useful way to begin
+              in the public economy world.
+            </p>
+          </div>
+          <ol class="starter-steps">
+            <li>
+              <span>01</span>
+              <h3>Earn your first pay.</h3>
+              <p>
+                Visit the Odd Jobs Office for a short labour shift. The button shows what you’ll
+                earn.
+              </p>
+            </li>
+            <li>
+              <span>02</span>
+              <h3>Look after yourself.</h3>
+              <p>
+                Buy food and water, then consume them from Inventory. Keep fuel handy. Government
+                necessities offers pricier emergency supplies.
+              </p>
+            </li>
+            <li>
+              <span>03</span>
+              <h3>Find a trade.</h3>
+              <p>
+                Learn a profession at school. Take a funded job and start a work shift, or buy the
+                right tools and gather resources to sell.
+              </p>
+            </li>
+            <li>
+              <span>04</span>
+              <h3>Make a home.</h3>
+              <p>
+                Stock your cottage or rented room with food and water, then enter before logging
+                off. Hunger and thirst continue while you’re away.
+              </p>
+            </li>
+          </ol>
+          <div class="controls">
+            <div>
+              <span class="eyebrow">KEYBOARD BASICS</span>
+              <p>
+                <kbd>WASD / ↑↓←→</kbd> Drive <kbd>E</kbd> Interact <kbd>M</kbd> Map
+                <kbd>I</kbd> Inventory <kbd>Enter</kbd> Chat
+              </p>
+            </div>
+            <div>
+              <span class="eyebrow">ON YOUR PHONE</span>
+              <p>
+                Touch steering and throttle, compact panels and an Actions menu. A modern browser
+                with WebGL is required.
+              </p>
+            </div>
+          </div>
+          <div class="guide-links">
+            <a href="https://github.com/151henry151/Aclone/blob/main/docs/PLAYING.md"
+              >Full player guide ↗</a
+            ><a href="https://github.com/151henry151/Aclone/blob/main/docs/MOBILE.md"
+              >Touch controls ↗</a
+            ><a href="https://github.com/151henry151/Aclone/blob/main/docs/FAQ.md"
+              >Controls &amp; FAQ ↗</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section" id="create" aria-labelledby="create-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">03 / THE WORLD IS YOURS, TOO</p>
+            <h2 id="create-title">A village? An arena?<br /><em>Something stranger?</em></h2>
+          </div>
+          <p>
+            You don’t have to run a server to make a world. Start from a preset in the galaxy
+            directory, then open the creator tools and make it your own.
+          </p>
+        </div>
+        <div class="creator-layout">
+          <figure class="framed-shot">
+            <a
+              class="zoom-shot"
+              href="./assets/creator.webp"
+              data-gallery
+              aria-label="Enlarge screenshot: the world creator tools"
+              ><img
+                src="./assets/creator.webp"
+                width="1600"
+                height="1000"
+                loading="lazy"
+                decoding="async"
+                alt="Aclone’s in-game world editor with configurable world rules and creative tools"
+              /><span class="zoom-hint" aria-hidden="true">View screenshot ↗</span></a
+            >
+            <figcaption>
+              The real in-game editor. Start with controls; add scripts when you need them.
+            </figcaption>
+          </figure>
+          <div class="creator-features">
+            <article>
+              <h3>Shape the place.</h3>
+              <p>Sculpt hills, paint surfaces, lay paths and place buildings, scenery and zones.</p>
+            </article>
+            <article>
+              <h3>Write the rules.</h3>
+              <p>
+                Build an economy, a vehicle playground or a capture-the-flag arena. Tune survival,
+                professions, production, combat and government.
+              </p>
+            </article>
+            <article>
+              <h3>Make it unmistakably yours.</h3>
+              <p>
+                Create models in the workshop or import GLB/OBJ assets and PNG/JPEG textures. Add
+                quests and visual behavior rules, with Lua for deeper customization.
+              </p>
+            </article>
+            <a
+              class="text-link"
+              href="https://github.com/151henry151/Aclone/blob/main/docs/WORLD_BUILDING.md"
+              >Explore the creator guide ↗</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="hosting-section" id="host" aria-labelledby="host-title">
+        <div class="wrap split">
+          <div>
+            <p class="eyebrow">04 / A WHOLE GALAXY OF YOUR OWN</p>
+            <h2 id="host-title">
+              Your server.<br />Your community.<br /><em>Your corner of space.</em>
+            </h2>
+            <p>
+              Aclone is free software, built to be run by its players. Host an instance for friends,
+              open a public galaxy or experiment with a different kind of world.
+            </p>
+            <div class="actions">
+              <a
+                class="button"
+                href="https://github.com/151henry151/Aclone/blob/main/docs/HOSTING.md"
+                >Hosting guide <span aria-hidden="true">↗</span></a
+              ><a class="text-link" href="https://github.com/151henry151/Aclone"
+                >Get the source ↗</a
+              >
+            </div>
+          </div>
+          <div class="host-notes">
+            <article>
+              <span>01 / RUN IT</span>
+              <h3>Start with Node.js or Docker.</h3>
+              <p>
+                Use the documented setup, keep persistent storage and put an HTTPS proxy in front.
+                Back up your database and uploaded assets.
+              </p>
+            </article>
+            <article>
+              <span>02 / MAKE IT YOURS</span>
+              <h3>Choose the experience.</h3>
+              <p>
+                Host multiple worlds with their own rules and designs. AI neighbours are optional;
+                enabling them requires separately funded provider APIs.
+              </p>
+            </article>
+            <article>
+              <span>03 / CONNECT, IF YOU LIKE</span>
+              <h3>Let your galaxy have neighbours.</h3>
+              <p>
+                Operators can establish trusted connections so pilots can visit other instances.
+                Cross-server travel is opt-in, with rules set by the hosts.
+              </p>
+              <a
+                class="text-link"
+                href="https://github.com/151henry151/Aclone/blob/main/docs/GALAXIES.md"
+                >How connected galaxies work ↗</a
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section faq-section" aria-labelledby="faq-title">
+        <div>
+          <p class="eyebrow">A FEW PRACTICAL THINGS</p>
+          <h2 id="faq-title">Before you<br /><em>turn the key.</em></h2>
+          <p>Playable now. Still growing.<br />Suggestions and contributions welcome.</p>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Is it really free?</summary>
+            <p>
+              Yes. There’s no game download to buy or subscription to play on the public instance.
+              The source is available under GPL-3.0-or-later. If you host your own instance, you
+              cover your server costs and any optional AI API usage.
+            </p>
+          </details>
+          <details>
+            <summary>What happens when I log off?</summary>
+            <p>
+              The world persists. In Puddlewick, hunger, thirst and starvation continue offline. Go
+              inside a home or rented room stocked with food and water before leaving. Other worlds
+              can use different survival rules.
+            </p>
+          </details>
+          <details>
+            <summary>How do I keep my pilot safe?</summary>
+            <p>
+              Your browser remembers your pilot. Set a password in Pilot &amp; preferences, export
+              your private pilot key, and add a verified recovery email where the host supports it.
+              Keep that key private; a new pilot name creates a different character.
+            </p>
+          </details>
+          <details>
+            <summary>Are the neighbours real players?</summary>
+            <p>
+              You can meet human players and, on servers that enable them, AI residents. AI
+              characters are clearly labelled. They have personalities and memories, can chat, and
+              try to make their way in the economy. Their behavior is still being improved.
+            </p>
+          </details>
+          <details>
+            <summary>Can I play on mobile?</summary>
+            <p>
+              Yes—there are touch driving controls and layouts for smaller screens. You need a
+              browser with WebGL. Performance varies by device; try the Performance graphics setting
+              if needed.
+            </p>
+          </details>
+          <details>
+            <summary>Is the game finished?</summary>
+            <p>
+              Aclone is a development alpha. Features and balancing are evolving, and bugs happen.
+              It is independently inspired by <em>A tractor / The Universal</em>, with original
+              code, art and sound.
+              <a href="https://github.com/151henry151/Aclone/issues"
+                >Report a problem or suggest an idea on GitHub.</a
+              >
+            </p>
+          </details>
+        </div>
+      </section>
+      <section class="closing">
+        <div class="wrap">
+          <p class="eyebrow">THERE’S A PLACE FOR YOU HERE</p>
+          <h2>Bring your own ambition.<br /><em>We have the tractors.</em></h2>
+          <a class="button light" href="/aclone/"
+            >Make yourself at home <span aria-hidden="true">↗</span></a
+          >
+          <p>Free to play · Multiplayer · Open source</p>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer wrap">
+      <div>
+        <a class="wordmark" href="#top"><span class="monogram" aria-hidden="true">a</span>Aclone</a>
+        <p>A small, persistent universe.<br />Alpha __VERSION__ · GPL-3.0-or-later</p>
+      </div>
+      <nav aria-label="Footer">
+        <a href="/aclone/">Play</a><a href="https://github.com/151henry151/Aclone">GitHub</a
+        ><a href="https://github.com/151henry151/Aclone/blob/main/CHANGELOG.md">What’s new</a
+        ><a href="https://github.com/151henry151/Aclone/blob/main/docs/PLAYING.md">Player guide</a>
+      </nav>
+      <p class="attribution">
+        Independent and community-built. Inspired by <em>A tractor / The Universal</em>; not
+        affiliated with or endorsed by its creators. All screenshots show the game, captured in a
+        demonstration world.
+      </p>
+    </footer>
+    <dialog id="screenshot-dialog" aria-labelledby="screenshot-caption">
+      <form method="dialog">
+        <button aria-label="Close screenshot">Close <span aria-hidden="true">×</span></button>
+      </form>
+      <img id="screenshot-image" alt="" />
+      <p id="screenshot-caption"></p>
+    </dialog>
+  </body>
+</html>
