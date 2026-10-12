@@ -11,6 +11,7 @@ All notable changes to Aclone are documented here. This project follows
 ### Fixed
 
 - Streetlamp ground glows fade out in coloured fog instead of exposing bright square patches at sunrise, sunset and during storms.
+- Clouds retain perspective near the horizon instead of stretching into vertical streaks; cloud shading and moonlight obstruction use the same curved-layer projection.
 
 ## [0.64.0] - 2026-10-11
 

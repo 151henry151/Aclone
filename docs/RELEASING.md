@@ -37,7 +37,8 @@ See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo
 
 ## Current upgrade: 0.64.1
 
-Refresh clients for smooth streetlamp ground glows in coloured fog. This graphics patch needs no world migration
+Refresh clients for smooth streetlamp ground glows in coloured fog and corrected
+cloud perspective near the horizon. This graphics patch needs no world migration
 or reset and retains the existing light and draw-call budgets.
 
 ### 0.64.0

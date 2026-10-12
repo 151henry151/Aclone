@@ -28,11 +28,17 @@ function noise(x: number, y: number) {
     (at(ix, iy + 1) * (1 - fx) + at(ix + 1, iy + 1) * fx) * fy
   );
 }
-export function cloudOpacity(direction: Direction, coverage: number, drift: number) {
+/** Intersect the view ray with a curved cloud layer. Unlike a clamped plane,
+ * this remains finite while retaining perspective all the way to the horizon. */
+export function cloudCoordinates(direction: Direction, drift: number): [number, number] {
   const [x, h, z] = direction,
-    scale = 2.4 / (Math.max(0.08, h) + 0.17);
-  const u = x * scale + drift,
-    v = z * scale;
+    elevation = Math.max(0, h),
+    scale = 4.8 / (elevation + Math.sqrt(elevation * elevation + 0.04));
+  return [x * scale + drift, z * scale];
+}
+export function cloudOpacity(direction: Direction, coverage: number, drift: number) {
+  const [u, v] = cloudCoordinates(direction, drift),
+    h = direction[1];
   const f =
     noise(u, v) * 0.55 +
     noise(u * 2.03, v * 2.03) * 0.27 +
@@ -43,8 +49,12 @@ export function cloudOpacity(direction: Direction, coverage: number, drift: numb
 }
 // Keep the coverage equation identical to cloudOpacity; both use noiseValues.
 export const cloudShader = `
+vec2 cloudUV(vec3 d, float drift){
+  float h=max(0.,d.y);
+  return d.xz*(4.8/(h+sqrt(h*h+.04)))+vec2(drift,0.);
+}
 float cloudAt(vec3 d, float coverage, float drift){
-  vec2 p=d.xz/(max(.08,d.y)+.17)*2.4+vec2(drift,0.);
+  vec2 p=cloudUV(d,drift);
   float density=smoothstep(.66-coverage*.5,.84-coverage*.5,fbm(p));
   return mix(density,1.,smoothstep(.65,.9,coverage))*smoothstep(0.,.16,d.y);
 }`;

@@ -88,7 +88,7 @@ export function countrySky() {
         color+=discColor*smoothstep(.99993,.99997,sun)*5.*sunVisible;
         color+=discColor*pow(sun,1100.)*.4*sunVisible;
         float cloud=cloudAt(d,clouds,drift);
-        vec2 p=d.xz/(max(.08,d.y)+.17)*2.4+vec2(drift,0.);
+        vec2 p=cloudUV(d,drift);
         float detail=fbm(p+vec2(.12,.08));
         vec3 cloudColor=mix(vec3(.49,.55,.57),vec3(1.,.94,.81),smoothstep(.45,.8,detail));
         float halo=pow(max(0.,dot(d,moonA.xyz)),100.)+pow(max(0.,dot(d,moonB.xyz)),160.);
