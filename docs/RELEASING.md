@@ -35,7 +35,12 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.64.0
+## Current upgrade: 0.64.1
+
+Refresh clients for smooth streetlamp ground glows in coloured fog. This graphics patch needs no world migration
+or reset and retains the existing light and draw-call budgets.
+
+### 0.64.0
 
 Back up before restarting. The authorized one-time Puddlewick rebalance resets
 standard business buy/sell quotes and wages to the new catalogue **including

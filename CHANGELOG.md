@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.64.1] - 2026-10-12
+
+### Fixed
+
+- Streetlamp ground glows fade out in coloured fog instead of exposing bright square patches at sunrise, sunset and during storms.
+
 ## [0.64.0] - 2026-10-11
 
 ### Added

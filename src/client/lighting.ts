@@ -39,6 +39,16 @@ export class TownLighting {
   private lastFocus = new T.Vector3(Infinity, Infinity, Infinity);
   private pool: T.SpotLight[];
   constructor(limit = 12) {
+    // Additive light fades to zero in fog, not to the fog's colour. Ordinary
+    // surface fog would illuminate even the black corners of these square
+    // terrain meshes (and inactive pools in the same batch) at dawn/dusk.
+    this.glow.material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <fog_fragment>',
+        T.ShaderChunk.fog_fragment.replace('fogColor', 'vec3( 0.0 )'),
+      );
+    };
+    this.glow.material.customProgramCacheKey = () => 'town-glow-attenuated-fog-v1';
     this.pool = Array.from({ length: limit }, () => {
       const light = new T.SpotLight('#ffcd83', 0, 22, 1.12, 0.72, 1.4);
       this.group.add(light, light.target);

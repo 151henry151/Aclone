@@ -65,7 +65,7 @@ One unit = 1m. Adult ~1.8m; tractor 2.85m high/2.6m wide, cockpit eye 2.5m; seat
 
 ## Living villages (0.5.0)
 
-Merged window panes have separate emissive control. Twelve pooled window/street spotlights (four Performance) aim outward/down without extra shadows; budgets do not scale with players. Dark nights retain headlights/natural sky light. Lightning combines cloud flash/bolt. Seed regions group evergreen/birch species; birches have procedural markings/narrow crowns and varied sizes.
+Merged window panes have separate emissive control. Twelve pooled window/street spotlights (four Performance) aim outward/down without extra shadows; budgets do not scale with players. Distant streetlamps share one additive ground-glow mesh. Its fog shader attenuates light toward black so coloured fog cannot expose rectangular mesh edges; no additional lights or draw calls are needed. Dark nights retain headlights/natural sky light. Lightning combines cloud flash/bolt. Seed regions group evergreen/birch species; birches have procedural markings/narrow crowns and varied sizes.
 
 ## Reviewing visual changes
 
@@ -78,7 +78,7 @@ Use disposable worlds, never concept art presented as screenshots. `CHROMIUM_PAT
 - `npm run screenshots:living`: booking/gathering and night/headlights/snowstorm comparisons.
 - `npm run screenshots:resources`: all four grounds and HUD gathering; defaults `test-results/resources`.
 - `npx tsx scripts/evergreens.ts`: seeded real-tree front/side/close/distant/snow views, errors/render counts; defaults `test-results/evergreens`.
-- After build, `npx tsx scripts/night-lighting.ts`: real L toggle, midnight/day comparison; defaults `test-results/night-lighting`.
+- After build, `npx tsx scripts/night-lighting.ts`: real L toggle, midnight/day and rainy sunrise/sunset comparisons; defaults `test-results/night-lighting`.
 - `npx tsx scripts/night-sky.ts`: full/half/crescent/overcast/day, two hours' movement, same ground under moon/stars/cloud; defaults `test-results/night-sky`.
 - `npm run test:e2e -- tests/browser/spaceport.spec.ts` and `tests/browser/robocrow.spec.ts`: real takeoff/dock scale and drone deployment/flight/return; `TEST_GPU=1` requests hardware.
 

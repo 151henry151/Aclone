@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../src/server/app.ts';
 import { createWorld, addPlayer } from '../src/shared/simulation.ts';
-import { weatherAt } from '../src/shared/environment.ts';
+import { sunAt, weatherAt } from '../src/shared/environment.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'aclone-lighting-'));
 const output = process.env.SCREENSHOT_OUTPUT_DIR ?? 'test-results/night-lighting';
@@ -80,6 +80,33 @@ try {
   w.settings.time = 43200;
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(output, 'daytime.png') });
+  // Coloured fog used to reveal the square bounds of distant additive pools.
+  // Review both horizon colours from above with enough lamps to exceed the
+  // spotlight budget, matching the reported rainy sunrise/sunset views.
+  const stormDay = Array.from({ length: 365 }, (_, i) => i).find(
+    (d) => weatherAt(w.id, d).storm && weatherAt(w.id, d).precipitation === 'rain',
+  )!;
+  w.time = (stormDay - 59 - 42200 / 86400) * 600 + 1;
+  await page.mouse.move(720, 450);
+  await page.mouse.wheel(0, 1000);
+  for (const [name, afternoon] of [
+    ['foggy-sunrise', false],
+    ['foggy-sunset', true],
+  ] as const) {
+    w.settings.time = Array.from(
+      { length: 720 },
+      (_, i) => (i + (afternoon ? 720 : 0)) * 60,
+    ).reduce(
+      (best, t) =>
+        Math.abs(sunAt(t, stormDay).direction[1] - 0.04) <
+        Math.abs(sunAt(best, stormDay).direction[1] - 0.04)
+          ? t
+          : best,
+      afternoon ? 64800 : 21600,
+    );
+    await page.waitForTimeout(2500);
+    await page.screenshot({ path: join(output, name + '.png') });
+  }
   if (errors.length) throw Error(errors.join('\n'));
   console.log(`Night/day views and headlight toggle passed without browser errors: ${output}`);
 } finally {
