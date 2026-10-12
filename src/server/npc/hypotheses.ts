@@ -163,7 +163,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const cheapestBid = postedBids.length ? Math.min(...postedBids.map(([, price]) => price)) : 0;
     if (cheapestBid > 0 && b.investment < cheapestBid && p.cash >= cheapestBid) {
       const amount = Math.min(
-        10000,
+        10_000_000,
         Math.max(cheapestBid * 4, 2000),
         Math.max(0, p.cash - reserve),
       );
@@ -178,7 +178,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const need = ownerDrawNeed(w, p);
     const available = ownerWithdrawable(w, b, true);
     if (need > 0 && available > 0) {
-      const amount = Math.min(10000, need, available);
+      const amount = Math.min(10_000_000, need, available);
       add(
         'withdraw till',
         `Experiment: withdraw ${amount} from my ${b.name} for fuel, supplies or a living reserve, keeping enough till for wages and bids.`,
@@ -300,9 +300,9 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const cheapest = bids.length ? Math.min(...bids) : 0;
     if (cheapest > 0 && b.investment < cheapest && p.cash >= cheapest) {
       const amount = Math.min(
-        10000,
+        10_000_000,
         Math.max(cheapest, 2000),
-        affordableLoad(p.cash, 1, livingReserve(w, p), 10000),
+        affordableLoad(p.cash, 1, livingReserve(w, p), 10_000_000),
       );
       if (amount >= cheapest)
         add(
@@ -312,7 +312,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           -amount,
         );
     }
-    const due = Math.min(10000, collectableReturn(w, b, p.id));
+    const due = Math.min(10_000_000, collectableReturn(w, b, p.id));
     if (due > 0)
       add(
         'collect return',
@@ -370,7 +370,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const quote = propertyQuote(w, b);
     const till = Math.max(...Object.values(b.buy).filter((price) => price > 0), b.wage || 0, 2000);
     if (p.cash < quote.total + till) continue;
-    const deposit = Math.min(10000, Math.max(till * 4, 2000), p.cash - quote.total - 1);
+    const deposit = Math.min(10_000_000, Math.max(till * 4, 2000), p.cash - quote.total - reserve);
     if (deposit <= 0) continue;
     add(
       `buy ${b.kind}`,

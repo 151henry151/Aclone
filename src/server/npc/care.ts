@@ -6,6 +6,7 @@ import { alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { availableSupply } from '../../shared/harbour-supply.ts';
+import { householdBudget } from './household.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -106,13 +107,14 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
       ]);
   }
   const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction && usable(b));
-  if (p.bank > 0 && p.cash < 12000 && bank)
+  const reserve = Math.max(12000, householdBudget(w, p).reserve);
+  if (p.bank > 0 && p.cash < reserve && bank)
     return visitBuilding(p, bank, [
       act({
         type: 'bank',
         building: bank.id,
         direction: 'withdraw',
-        amount: Math.min(p.bank, 10000),
+        amount: Math.min(p.bank, 10_000_000, reserve - p.cash),
       }),
     ]);
   // Only earn emergency money if a stocked meal exists and cannot be afforded.

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { worldBuildings } from '../../shared/world-catalogue.ts';
+import { herdSpec } from '../../shared/livestock.ts';
+import { worldBuildings, worldItems } from '../../shared/world-catalogue.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { constructionTerms } from '../../shared/civics.ts';
 import { canCarry } from '../../shared/simulation.ts';
@@ -43,19 +44,46 @@ export function constructionBudget(
   } catch {
     return;
   }
-  const recipe = def.recipe && recipes[def.recipe];
+  const recipe =
+    w.catalogue?.templates[kind]?.production ?? (def.recipe ? recipes[def.recipe] : undefined);
+  // Empty sheds cannot produce: account for the initial breeding herd as well
+  // as construction materials. Only observed, available animals are budgeted.
+  const herd = herdSpec({ kind });
+  let livestockCost = 0;
+  if (herd) {
+    let missing = Math.max(0, herd.minimum - (p.inventory[herd.animal] ?? 0));
+    const shops = w.buildings
+      .filter(
+        (b) =>
+          !b.construction &&
+          b.owner !== p.id &&
+          b.sell[herd.animal] >= 0 &&
+          b.stock[herd.animal] > 0,
+      )
+      .sort((a, b) => a.sell[herd.animal] - b.sell[herd.animal]);
+    for (const b of shops) {
+      const n = Math.min(missing, b.stock[herd.animal]);
+      livestockCost += n * b.sell[herd.animal];
+      missing -= n;
+    }
+    if (missing) return;
+  }
   const operating = recipe
     ? 3 *
-      (def.wage +
-        Object.entries(recipe.inputs).reduce((sum, [item, n]) => sum + n * (def.buy[item] ?? 0), 0))
+      (def.wage * (def.idealEmployees ?? 1) +
+        Object.entries(recipe.inputs).reduce(
+          (sum, [item, n]) => sum + n * (def.buy[item] || worldItems(w)[item]?.price || 0),
+          0,
+        ))
     : 0;
   const living = householdBudget(w, p, 86400).reserve;
   return {
     materialCost,
     tax,
     operating,
+    livestockCost,
     living,
-    total: def.price + tax + Math.ceil(materialCost * 1.1) + operating + living,
+    total: def.price + tax + Math.ceil(materialCost * 1.1) + operating + livestockCost + living,
   };
 }
 

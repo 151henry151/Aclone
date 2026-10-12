@@ -1,3 +1,4 @@
+import { offlineReadiness } from './homecoming.ts';
 import { livestockInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
@@ -209,6 +210,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
   for (const b of shops) {
     const recipe = b.kind === 'farm' ? recipes.farm : (b.production ?? recipes[b.recipe ?? '']);
     if (!recipe || !usefulShift(w, p, b)) continue;
+    if (b.kind !== 'farm' && p.job === b.id && workplace(w, p, b)?.workActiveNextCycle) continue;
     const job = workplace(w, p, b)!;
     if (
       job.ifYouWork.capitalShortfall ||
@@ -301,6 +303,13 @@ export function continueCareer(
   // Accepted player requests get the next decision; keep the career for later.
   if (state.commitments?.some((deal) => deal.world === w.id && deal.status === 'pending')) return;
   if (p.task || p.learning) return;
+  if (c.kind === 'housing') {
+    const ready = offlineReadiness(w, p, 86400);
+    if (ready.home === c.target && ready.stocked && ready.atHome) {
+      delete state.career;
+      return;
+    }
+  }
   if (c.world !== w.id || c.deaths !== p.deaths || c.reviewAt <= w.time || c.failures >= 3) {
     delete state.career;
     return;

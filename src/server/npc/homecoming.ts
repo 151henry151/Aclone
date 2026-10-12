@@ -1,3 +1,4 @@
+import { constructionChoices } from './construction-projects.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { nutritionIn } from './household.ts';
 import { availableSupply } from '../../shared/harbour-supply.ts';
@@ -107,6 +108,15 @@ export function homecomingPlan(
       ((p.hunger >= 20000 && items[item]?.food) || (p.thirst >= 20000 && items[item]?.drink))
     )
       return [action({ type: 'use', item })];
+  const unfinishedHome = w.buildings.find(
+    (b) => b.owner === p.id && b.kind === 'home' && b.construction,
+  );
+  if (unfinishedHome) {
+    const finish = constructionChoices(w, p).find(
+      (c) => c.careerGoal?.target === unfinishedHome.id,
+    );
+    if (finish) return finish.plan;
+  }
   const b = home(w, p);
   for (const [need, nutrient, rate] of [
     [p.hunger, 'food', w.settings.hungerRate],

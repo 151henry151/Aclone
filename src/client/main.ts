@@ -48,6 +48,7 @@ import {
   townLocation,
   constructionQuote,
   foundTownForm,
+  nearbyTownPanels,
 } from './town-panel';
 import { propertyQuote } from '../shared/property';
 import { creatorControls } from './creator-editor';
@@ -1498,7 +1499,9 @@ function renderPanel() {
                 ' + ',
               )}</small></span><b>${money(quote(id).price + quote(id).tax)}</b></button>`,
         )
-        .join('')}</div>${foundTownForm(world!, me!)}`,
+        .join(
+          '',
+        )}</div><h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world!, me!)}${foundTownForm(world!, me!)}`,
     );
     return;
   }

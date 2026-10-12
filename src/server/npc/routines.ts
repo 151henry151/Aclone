@@ -1,3 +1,4 @@
+import { householdBudget } from './household.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World, Player } from '../../shared/types.ts';
@@ -180,7 +181,7 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
   if (p.atHome) return [{ kind: 'act', action: { type: 'outside' } }];
   const maintenance = cargoRelief(w, p, state).length
     ? cargoRelief(w, p, state)
-    : ownerRoutine(w, p);
+    : ownerRoutine(w, p, state);
   if (maintenance.length) return maintenance;
   const duty = employmentRoutine(w, p, state);
   if (duty.length) return duty;
@@ -212,7 +213,7 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
     ];
     return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
   }
-  if (!office) return [];
+  if (!office || p.cash + p.bank > householdBudget(w, p).reserve) return [];
   const plan = visitBuilding(p, office, [
     { kind: 'act', action: { type: 'task', building: office.id, task: 'labour' } },
   ]);

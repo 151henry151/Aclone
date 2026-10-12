@@ -21,8 +21,11 @@ test('large earned investment returns produce a schema-valid bounded collection'
   );
   p.x = b.x;
   p.z = b.z;
+  const cash = p.cash;
   for (const s of c.plan) if (s.kind === 'act') act(w, p.id, s.action);
-  assert.equal(b.stakes[0].paid, 10000);
+  assert.equal(p.cash, cash + 27000);
+  assert.equal(b.investment, 73000);
+  assert.deepEqual(b.stakes, [], 'fully paid claim is retired in one transfer');
 });
 test('one malformed candidate cannot prevent a valid choice from reaching the planner', () => {
   const brain = new JevBrain('fake', 'test');

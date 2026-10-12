@@ -71,8 +71,10 @@ test('scheduled visitors hustle while online; Mabel and departing neighbours may
   assert.equal(visitorShouldHustle('ada', { phase: 'offline', endsAt: now }, now), false);
 });
 
-test('an idle visitor works a public labour shift instead of sitting', () => {
+test('a cash-poor idle visitor works a public labour shift instead of sitting', () => {
   const { w, p, state } = fixture();
+  p.cash = 0;
+  p.bank = 0;
   const office = w.buildings.find((b) => b.kind === 'workhouse')!;
   const plan = hustleRoutine(w, p, state);
   assert.ok(
@@ -109,6 +111,8 @@ test('a visitor still inside their cottage leaves before earning', () => {
 
 test('a busy visit ranks labour above leisure rest and idle factory waiting', () => {
   const { w, p } = fixture();
+  p.cash = 0;
+  p.bank = 0;
   const office = w.buildings.find((b) => b.kind === 'workhouse')!;
   const choices: FarmerChoice[] = [
     {

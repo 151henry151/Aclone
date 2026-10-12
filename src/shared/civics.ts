@@ -1,3 +1,4 @@
+import { townMeeting, meetingTown } from './town-charter.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { World, Player, Action, Building } from './types.ts';
@@ -495,11 +496,11 @@ function stand(w: World, p: Player, town: Town, a: Action) {
 
 export function townAction(w: World, p: Player, a: Action): string {
   if (a.type === 'foundTown') return foundTown(w, p, a);
-  const b = w.buildings.find((x) => x.id === a.building);
-  requireThat(b && b.kind === 'town', 'Visit the town plinth');
+  const town = meetingTown(w, String(a.building));
+  requireThat(town, 'Visit the town meeting place');
+  const b = townMeeting(w, town, a.building === `town-centre:${town.id}`);
   requireThat(Math.hypot(p.x - b.x, p.z - b.z) < 18, 'Drive near the building first');
-  const town = townOfPlinth(w, b);
-  requireThat(town, 'This plinth belongs to no town');
+
   const charter = townCharter(w),
     owner = p.authority >= 20;
   switch (a.operation) {

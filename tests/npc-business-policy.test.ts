@@ -144,3 +144,29 @@ test('a cash-poor farm owner can save for meals and a cottage without stripping 
   b.investment = retainedCapital(w, b) + remainingClaim(b);
   assert.equal(ownerLivingDraw(w, p, b), 0, 'never withdraw seed/wage reserves or investor claims');
 });
+
+test('prosperous owners can choose to withdraw growth capital without consuming protected reserves', async () => {
+  const { capitalChoices } = await import('../src/server/npc/prosperity.ts');
+  const { retainedCapital } = await import('../src/server/npc/business-policy.ts');
+  const w = createWorld('growth', 'Growth', 'server'),
+    p = addPlayer(w, 'owner', 'Owner');
+  const b = w.buildings.find((b) => b.kind === 'mill')!;
+  b.owner = p.id;
+  const { constructionBudget } = await import('../src/server/npc/construction-projects.ts');
+  const { pickBuildSite } = await import('../src/server/npc/chains.ts');
+  p.cash = constructionBudget(w, p, 'home', pickBuildSite(w, p, 'home')!)!.total - 10000;
+  b.investment = retainedCapital(w, b) + 18000;
+  b.stakes = [{ investor: 'neighbour', principal: 5000, claim: 8000, paid: 0, opened: w.time }];
+  const before = p.cash + b.investment;
+  const choice = capitalChoices(w, p).find((c) => c.id === `capital_${b.id}`)!;
+  assert.ok(choice);
+  for (const s of choice.plan) {
+    if (s.kind === 'travel') {
+      p.x = b.x;
+      p.z = b.z;
+    } else if (s.kind === 'act') act(w, p.id, s.action);
+  }
+  assert.equal(p.cash + b.investment, before);
+  assert.equal(b.investment, retainedCapital(w, b) + 8000);
+  assert.equal(capitalChoices(w, p).length, 0);
+});

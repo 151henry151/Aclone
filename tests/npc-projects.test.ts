@@ -76,6 +76,7 @@ test('trading continues with carried cargo after source empties and abandons a v
     buyer = w.buildings.find((b) => b.kind === 'bakery')!;
   source.stock.flour = 4;
   source.sell.flour = 1000;
+  for (const b of w.buildings) b.buy.flour = 0;
   buyer.buy.flour = 3000;
   buyer.investment = 100000;
   buyer.stock.flour = 0;
@@ -256,4 +257,23 @@ test('a career yields to a pending player agreement and can resume once it is co
   assert.equal(state.career, career);
   state.commitments![0].status = 'completed';
   assert.ok(continueCareer(w, p, state));
+});
+
+test('career reviews wait for a completed errand, survive reload and vary by resident', async () => {
+  const { strategicReviewDue, reviewInterval } = await import('../src/server/npc/prosperity.ts');
+  const { w, p, state } = setup();
+  state.strategyReviewedAt = w.time;
+  const period = reviewInterval(p.id);
+  w.time += period - 1;
+  assert.equal(strategicReviewDue(w, p, state), false);
+  w.time++;
+  assert.equal(strategicReviewDue(w, p, JSON.parse(JSON.stringify(state))), true);
+  state.plan = [{ kind: 'travel', destination: 'market' }];
+  assert.equal(strategicReviewDue(w, p, state), false, 'finish the accepted trip first');
+  state.index = 1;
+  assert.equal(strategicReviewDue(w, p, state), true);
+  state.routine = 'care';
+  assert.equal(strategicReviewDue(w, p, state), false);
+  assert.ok(reviewInterval(p.id, 'employee') > period);
+  assert.notEqual(reviewInterval('mabel'), reviewInterval('rowan'));
 });

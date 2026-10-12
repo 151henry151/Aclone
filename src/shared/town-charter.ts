@@ -240,3 +240,19 @@ export function taxTown(w: World, x: number, z: number) {
     townAt(w, x, z) ?? (townCharter(w).outside === 'nearest' ? nearestTown(w, x, z) : undefined)
   );
 }
+
+/** Removed council models do not remove a town's public civic meeting place. */
+export function townMeeting(w: World, town: Town, centre = false) {
+  return (
+    (!centre && w.buildings.find((b) => b.id === town.plinth && b.kind === 'town')) || {
+      id: `town-centre:${town.id}`,
+      kind: 'town',
+      name: town.name,
+      x: town.x,
+      z: town.z,
+    }
+  );
+}
+export function meetingTown(w: World, id: string) {
+  return w.towns.find((t) => townMeeting(w, t).id === id || `town-centre:${t.id}` === id);
+}

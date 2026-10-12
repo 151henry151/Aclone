@@ -168,7 +168,7 @@ Create through the galaxy directory; **F10 / World editor** opens owner tools. [
 
 ## Towns and town government
 
-A world can hold several towns, each with a plinth, a circular border, a treasury and its own rules. The HUD says which town you are in, or which is closest; the maps draw town borders as dashed circles. Open a plinth to see its taxes, zoning, permissions, government and residents.
+A world can hold several towns, each with a plinth, a circular border, a treasury and its own rules. The HUD says which town you are in, or which is closest; the maps draw town borders as dashed circles. Open a plinth to see its taxes, zoning, permissions, government and residents. Alternatively, open **Build → Town government** within 18m of the town centre; this also works when a council building has been removed.
 
 - **Residency:** **Become a resident** at a plinth (or `*sethometown` for staff). You can be a resident of one town at a time. `*town` names the town you are in and `*showresidents` lists residents.
 - **Founding:** where the world's charter allows it, **Build** ends with **Found a new town**. You pay the charter cost, the plinth is raised where you stand, and you become the first resident (and mayor, unless new towns are direct democracies). Towns need dry land, clear ground and space from other towns.

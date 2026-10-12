@@ -301,3 +301,25 @@ quoted asset value, online time, money-transfer reasons and sampled local food/w
 availability (excluding government/import outlets). They do not prove live model
 quality or long-term economic balance. Use different seeds/populations for broader
 coverage; 19 residents and 14 days can take substantial CPU time.
+
+### Economy recovery safeguards
+
+NPC ground routes use the tractor or walking. Old unsupported vehicle selections
+are repaired through normal actions, unloading surplus cargo if necessary.
+Housing/construction projects continue across completed plan fragments and care
+interruptions; one cottage design is offered per resident instead of six duplicate
+choices. Finished businesses still receive periodic strategic reviews.
+
+Funding and growth draws target a measured shortfall and retain household,
+operating and outside-investor reserves. They are no longer split into 100d
+transfers. Output withdrawn from owned production is tracked as business cargo;
+actual sale receipts remain attributable across replanning and reloads. Owners
+return those proceeds using ordinary investment deposits, preserving meal money.
+Death/ownership changes clear stale attribution; there is no automatic credit
+or guaranteed reimbursement of consumed/lost stock.
+
+Menus avoid renewing already-covered employment cycles. Public labour is a
+means-tested fallback; wage, input and full-crew estimates guide business choices.
+These safeguards address observed failures, but the stopped paid experiment is
+not evidence that the revised economy remains stable for four days. See the
+[recovery handoff](NPC_RECOVERY.md) for evidence and the next comparison.

@@ -57,7 +57,7 @@ export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
       continue;
     }
     const deposit = Math.min(
-      10000,
+      10_000_000,
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );

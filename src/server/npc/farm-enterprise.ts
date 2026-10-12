@@ -50,20 +50,20 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       if (
         (!b.owner || b.forSale) &&
         count < w.settings.maxBuildings &&
-        deposit <= 80000 &&
+        deposit <= 10_000_000 &&
         p.cash >= propertyQuote(w, b).total + deposit + living
       )
         add(
           `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, seed and harvest deposit ${deposit}. Seasonal crops require tending, harvesting and buyers; they are not automatic wheat batches.`,
           visitBuilding(p, b, [
             { kind: 'act', action: { type: 'buyBuilding', building: b.id } },
-            ...Array.from({ length: Math.ceil(deposit / 10000) }, (_, i): Step => ({
+            ...Array.from({ length: Math.ceil(deposit / 10_000_000) }, (_, i): Step => ({
               kind: 'act',
               action: {
                 type: 'investment',
                 building: b.id,
                 direction: 'deposit',
-                amount: Math.min(10000, deposit - i * 10000),
+                amount: Math.min(10_000_000, deposit - i * 10_000_000),
               },
             })),
           ]),
@@ -71,7 +71,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       continue;
     }
     const deposit = Math.min(
-      10000,
+      10_000_000,
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );
@@ -148,7 +148,6 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
         b.stock[item] ?? 0,
         buyer.capacity - (buyer.stock[item] ?? 0),
         Math.floor(buyer.investment / buyer.buy[item]),
-        Math.floor(10000 / buyer.buy[item]),
       );
       while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n > 0)
@@ -172,7 +171,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
               action: {
                 type: 'investment',
                 building: b.id,
-                amount: n * buyer.buy[item],
+                amount: Math.min(10_000_000, n * buyer.buy[item]),
                 direction: 'deposit',
               },
             },

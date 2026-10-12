@@ -24,10 +24,11 @@ export function canKeepFishing(w: World, p: Player) {
  * storage/buyers first; otherwise abandon only enough surplus to carry on foot.
  * Every step is an ordinary player action; no teleport, free fuel or cash. */
 export function strandedCargo(p: Player, w?: World): Step[] {
-  if (p.vehicle === 5 || p.fuel > 0 || p.crowBody) return [];
+  if (p.vehicle === 5 || (p.vehicle === 0 && p.fuel > 0) || p.crowBody) return [];
   const catalogue = worldItems(w);
-  if (Object.entries(p.inventory).some(([id, n]) => n > 0 && catalogue[id]?.fuel)) return [];
-  let excessWeight = carry(p, w) - vehicles[5].capacity;
+  if (p.fuel <= 0 && Object.entries(p.inventory).some(([id, n]) => n > 0 && catalogue[id]?.fuel))
+    return [];
+  let excessWeight = carry(p, w) - vehicles[p.fuel > 0 ? 0 : 5].capacity;
   if (excessWeight <= 0) return [];
   const plan: Step[] = [];
   const freight = Object.entries(p.inventory)

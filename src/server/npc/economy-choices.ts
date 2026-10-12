@@ -252,12 +252,16 @@ export function economyChoices(
       );
   if (p.atHome) add('Go outside my home to resume work or travel.', [act({ type: 'outside' })]);
   const bank = buildings.find((b) => b.kind === 'bank');
-  if (bank && p.cash > 40000)
+  const reserve = Math.max(40000, livingReserve(w, p));
+  const deposit = Math.min(10_000_000, Math.floor(Math.max(0, p.cash - reserve) / 2));
+  if (bank && deposit >= 1000)
     add(
-      'Deposit 100d of spare cash at the bank; keep a living reserve.',
-      visit(bank, [act({ type: 'bank', building: bank.id, direction: 'deposit', amount: 10000 })]),
+      `Deposit ${deposit / 100}d of spare cash at the bank; retain living and opportunity funds.`,
+      visit(bank, [
+        act({ type: 'bank', building: bank.id, direction: 'deposit', amount: deposit }),
+      ]),
     );
-  if (bank && p.cash < 15000 && p.bank > 0)
+  if (bank && p.cash < reserve && p.bank > 0)
     add(
       'Withdraw savings to pay for food or tuition.',
       visit(bank, [
@@ -265,7 +269,7 @@ export function economyChoices(
           type: 'bank',
           building: bank.id,
           direction: 'withdraw',
-          amount: Math.min(10000, p.bank),
+          amount: Math.min(10_000_000, p.bank, reserve - p.cash),
         }),
       ]),
     );

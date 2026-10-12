@@ -12,6 +12,9 @@ All notable changes to Aclone are documented here. This project follows
 
 - Treasury-run Puddlewick ports clear bounded surplus shipments for external revenue, freeing shelves and replenishing trade capital without resetting the world.
 
+- NPCs periodically reconsider completed careers, can transfer surplus between their own businesses, draw protected surplus for growth, and consider founding a distant town once securely housed and well capitalized.
+- Town government is accessible from **Build** near the town centre, including towns whose council building was removed.
+
 ### Changed
 
 - Default supply-chain prices cover ideal staffing, taxes and input delivery, including hay storage and imported pump fuel. A one-time Puddlewick migration updates standard owned and public business quotes/wages while retaining property, money and goods.
@@ -19,7 +22,11 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
-- Business and bank cash transfers are independent of item quantities, removing the accidental 100d per-action limit.
+- Business and bank cash transfers are independent of item quantities, removing the accidental 100d per-action limit and the derived NPC farm-hauling value ceiling.
+- NPCs recover from unsupported ground vehicles, avoid redundant shift renewals, continue chosen housing projects and raise purposeful growth capital without repeatedly draining tills. Owner-carried export receipts remain attributable across interruptions and return to business working capital through normal deposits.
+- Large NPC memories no longer crowd routine gameplay requests out of their existing size allowance. Shorter planner instructions preserve survival, agreement and business guidance.
+- Routine employment no longer interrupts a chosen errand. Owners can see their own sales accounts, construction searches use the actual map bounds, and growth/civic options remain visible among many trading choices.
+- Business reserves cover an ideal crew; livestock construction budgets include available starter animals. Internal supply transfers preserve source input reserves and home provisions.
 
 ## [0.63.4] - 2026-10-11
 

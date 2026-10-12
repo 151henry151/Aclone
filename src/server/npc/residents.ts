@@ -1,3 +1,4 @@
+import { recordBusinessFreight } from './business-freight.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { isGroupAddress, groupResponder, groupTopic } from './group-chat.ts';
 import {
@@ -22,6 +23,7 @@ import {
   anotherFounding,
   publishFoundingIntent,
 } from './cooperation.ts';
+import { strategicReviewDue, prosperityBriefing } from './prosperity.ts';
 import { netAssets } from './wealth.ts';
 import { workplace } from './workplace.ts';
 import { startCareer, continueCareer } from './projects.ts';
@@ -375,6 +377,7 @@ export class Residents {
           );
       }
       const result = act(w, p.id, a);
+      recordBusinessFreight(before, w, p, r.state, a);
       if (a.type === 'construct') {
         const site = w.buildings.find(
           (b) =>
@@ -684,6 +687,8 @@ export class Residents {
         delete r.state.suspendedPlan;
         delete r.state.supplyGoal;
         delete r.state.career;
+        delete r.state.businessCargo;
+        delete r.state.businessProceeds;
         delete r.state.routine;
         r.state.plan = [];
         r.state.intent = 'Begin a new life; reassess my qualifications, work and supplies.';
@@ -741,6 +746,15 @@ export class Residents {
         continue;
       }
       if (this.session(r, w, p, now)) continue;
+      if (!r.state.inSpace && !p.atHome && !p.crowBody && !p.task && ![0, 5].includes(p.vehicle)) {
+        // Repair obsolete/custom transport before route backoff or another model call.
+        r.nav = undefined;
+        const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+        const prep = strandedCargo(p, known)[0] ?? travelPrep(p)[0];
+        if (prep?.kind === 'act') this.perform(r, w, prep.action, false);
+        else if (prep?.kind === 'operation') this.perform(r, w, operationAction(prep), false);
+        continue;
+      }
       if (w.time < (r.state.recovery?.retryAt ?? 0) && !this.dialogueDue(r, now)) {
         // Backoff must not prevent using food already in hand. Only an immediate
         // serving may bypass it, never another route, investment or model call.
@@ -834,8 +848,23 @@ export class Residents {
       // freezes driving, a production wait, or an already chosen ordinary action.
       if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
-        const continuation =
+        if (!careNeeded(w, p) && strategicReviewDue(w, p, r.state, r.config.preference)) {
+          r.wake = true;
+          r.state.needsDecision = true;
+        }
+        const project =
+          !careNeeded(w, p) &&
+          !r.state.helpQuestion &&
+          r.state.career &&
+          (r.state.career.kind === 'housing' ||
+            (r.state.career.kind === 'business' &&
+              known.buildings.some((b) => b.id === r.state.career?.target && b.construction))) &&
           r.state.index >= r.state.plan.length
+            ? continueCareer(known, p, r.state, enterpriseChoices(known, p))
+            : undefined;
+        const continuation =
+          project ??
+          (!r.wake && !r.state.needsDecision && r.state.index >= r.state.plan.length
             ? (continueSupply(known, p, r.state) ??
               (!r.state.helpQuestion && !r.state.routine && r.state.career
                 ? continueCareer(
@@ -847,7 +876,7 @@ export class Residents {
                       : [],
                   )
                 : undefined))
-            : undefined;
+            : undefined);
         if (continuation && r.state.index >= r.state.plan.length) {
           r.state.plan = continuation.plan;
           r.state.index = 0;
@@ -855,6 +884,7 @@ export class Residents {
           r.state.until = now + 1800000;
           r.state.nextAt = r.state.until;
           r.wake = false;
+          r.state.needsDecision = false;
           this.checkpoint(r, w, r.state.supplyGoal ? 'supply-progress' : 'career-progress', {
             goal: r.state.supplyGoal ?? r.state.career,
             plan: continuation.plan,
@@ -881,10 +911,15 @@ export class Residents {
             this.checkpoint(r, w, 'drive', { plan });
           }
         }
-        if (!careNeeded(w, p) && !r.wake && now >= (r.shiftCheckAt ?? 0)) {
+        if (
+          !careNeeded(w, p) &&
+          !r.wake &&
+          r.state.index >= r.state.plan.length &&
+          now >= (r.shiftCheckAt ?? 0)
+        ) {
           r.shiftCheckAt = now + 60000;
-          const plan = ownerRoutine(known, p).length
-            ? ownerRoutine(known, p)
+          const plan = ownerRoutine(known, p, r.state).length
+            ? ownerRoutine(known, p, r.state)
             : employmentRoutine(known, p, r.state);
           if (plan.length && (!r.state.routine || r.state.routine === 'explore')) {
             if (!r.state.routine) suspendPlan(w, p, r.state);
@@ -1420,6 +1455,7 @@ export class Residents {
               ...decisionObservation,
               career: r.state.career,
               household: householdBudget(knownWorld, p),
+              prosperity: prosperityBriefing(knownWorld, p),
             },
           }
         : request;
@@ -1997,6 +2033,7 @@ export class Residents {
         const item = Object.keys(kindRecipe(w, foundingKind)?.outputs ?? {})[0] ?? foundingKind;
         publishFoundingIntent(w, player, foundingKind, item);
       }
+      r.state.strategyReviewedAt = w.time;
       if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
       if (result.careerGoal && player) startCareer(w, player, r.state, result.careerGoal);
       r.state.intent = d.intent;
@@ -2059,6 +2096,13 @@ export class Residents {
       sessionEndsAt: r.state.presence?.phase !== 'offline' ? r.state.presence?.endsAt : undefined,
       conversationProvider: r.dialogue ? (r.dialogue.provider ?? 'anthropic') : undefined,
     }));
+  }
+  /** Experiment barrier: dispatch queued work, without awaiting model results.
+   * Normal server scheduling is unchanged. Deferred results can then arrive on
+   * an evaluator's virtual clock while the ordinary controller keeps ticking. */
+  async dispatched() {
+    while (!this.closed && (this.planning || this.planTimer))
+      await new Promise((resolve) => setTimeout(resolve, 0));
   }
   async settled() {
     while (!this.closed && (this.planQueue.length || this.planning || this.planTimer))

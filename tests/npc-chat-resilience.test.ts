@@ -140,3 +140,36 @@ test('an addressed reply bypasses a broken gameplay provider and its retry coold
     store.close();
   }
 });
+
+test('large nested memories and outcome details cannot displace safety facts or stop planning', () => {
+  const detail = Object.fromEntries(
+    Array.from({ length: 28 }, (_, i) => [String(i), 'remembered detail '.repeat(300)]),
+  );
+  const request = {
+    instructions: jevInstructions,
+    observation: {
+      self: { cash: 52000, health: 43000, hunger: 41000, thirst: 42000, skills: ['farmer'] },
+      lastOutcome: { before: detail, after: detail, message: 'Bought water', ok: true },
+      recovery: { blockedSteps: Array(30).fill({ step: detail, message: 'Not enough stock' }) },
+      notebook: 'past life '.repeat(600),
+      life: {
+        survival: { needsAttention: true, secondsToDamageOutside: 20 },
+        economy: { prices: detail },
+      },
+      choices: [
+        {
+          id: 'drink',
+          description: 'Use carried water to survive',
+          plan: [{ kind: 'act' as const, action: { type: 'use' as const, item: 'water' } }],
+        },
+      ],
+    },
+  };
+  const before = JSON.stringify(request);
+  const body = jevPayload(request, 'test');
+  assert.ok(Buffer.byteLength(JSON.stringify(body)) <= 24000);
+  assert.deepEqual(body.state.self, request.observation.self);
+  assert.equal((body.state.life as any).survival.needsAttention, true);
+  assert.equal(body.questions.next_action.criteria.drink, 'Use carried water to survive');
+  assert.equal(JSON.stringify(request), before, 'packing must not change resident memory');
+});

@@ -8,7 +8,7 @@ import { blockedStep } from './recovery.ts';
 import { visitBuilding } from './care.ts';
 function visibleBuilding(b: Building, p: Player): Building {
   const snapshot = structuredClone(b);
-  delete snapshot.accounts;
+  if (b.owner !== p.id) delete snapshot.accounts;
   if (snapshot.lodging)
     for (const [id, guest] of Object.entries(snapshot.lodging.guests))
       if (id !== p.id) guest.stock = {};

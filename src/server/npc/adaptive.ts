@@ -1,3 +1,5 @@
+import { settlementChoices } from './civic-ambition.ts';
+import { townMeeting } from '../../shared/town-charter.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
 import { canKeepFishing } from './cargo.ts';
 import { constructionBudget } from './construction-projects.ts';
@@ -19,7 +21,7 @@ import { blockedStep } from './recovery.ts';
 import { spareSupplies } from './strategy.ts';
 import { workplace } from './workplace.ts';
 import { inventHypotheses } from './hypotheses.ts';
-import { inventChainPlans } from './chains.ts';
+import { inventChainPlans, pickBuildSite } from './chains.ts';
 import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 import { collectableReturn, ownerWithdrawable, unpaidPrincipal } from '../../shared/stakes.ts';
 const action = (a: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action: a });
@@ -310,14 +312,6 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           `List my ${b.name} for sale at ${b.price}; this changes my business strategy.`,
           visit(b, [operation('listProperty', { building: b.id, price: b.price })]),
         );
-      if (ownerWithdrawable(w, b, true) >= 5000)
-        add(
-          'management',
-          `Withdraw 5000 spare capital from ${b.name}; retain wages, input funding and outside stakes.`,
-          visit(b, [
-            action({ type: 'investment', building: b.id, direction: 'withdraw', amount: 5000 }),
-          ]),
-        );
       for (const [item, n] of Object.entries(p.inventory))
         if (
           n > 0 &&
@@ -486,7 +480,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
               visit(b, [action({ type: 'paint', building: b.id, color: paint.id })]),
             );
       vehicles.forEach((v, slot) => {
-        if (![p.vehicle, 5, 6, 7].includes(slot))
+        if (slot === 0 && p.vehicle !== 0)
           add(
             'vehicles',
             `Use ${v.name} (slot ${slot}), capacity ${v.capacity}, listed purchase price ${v.price}; owned vehicles cost nothing to select.`,
@@ -507,10 +501,13 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       );
   }
   for (const town of w.towns) {
-    const b = w.buildings.find((b) => b.id === town.plinth);
-    if (!b) continue;
+    const b = townMeeting(w, town);
     const civic = (description: string, fields: Record<string, string | number | boolean>) =>
-      add('civic', description, visit(b, [operation('town', { building: b.id, ...fields })]));
+      add('civic', description, [
+        ...prep,
+        ...(distance(p, b) >= 14 ? [{ kind: 'move' as const, x: b.x, z: b.z }] : []),
+        operation('town', { building: b.id, ...fields }),
+      ]);
     if (!p.town)
       civic(`Become a resident of ${town.name}; residents vote and may stand for mayor.`, {
         operation: 'join',
@@ -546,21 +543,9 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             { operation: 'rule', rule: 'constructionTax', value: tax },
           );
   }
+  for (const c of settlementChoices(w, p)) add('civic', c.description, c.plan, c.reconsiderSeconds);
   // Construction is ordinary placement plus later purchases/deliveries, never free buildings.
-  const site = [
-    { x: p.x + 24, z: p.z },
-    { x: p.x - 24, z: p.z },
-    { x: p.x, z: p.z - 24 },
-    { x: 90, z: -110 },
-    { x: -90, z: -110 },
-  ].find(
-    (v) =>
-      Math.abs(v.x) < 230 &&
-      v.z > -230 &&
-      v.z < 115 &&
-      w.buildings.every((b) => distance(v, b) > 20) &&
-      !w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius),
-  );
+  const site = pickBuildSite(w, p, 'home');
   if (!buildings.some((b) => b.owner === p.id && b.construction)) {
     const home = catalog.home;
     if (
@@ -569,7 +554,12 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       site &&
       (constructionBudget(w, p, 'home', site)?.total ?? Infinity) <= p.cash
     )
-      for (const style of appearance.cottages.map((c) => c.id))
+      for (const style of [
+        appearance.cottages[
+          Math.abs(p.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0)) %
+            appearance.cottages.length
+        ].id,
+      ])
         add(
           'construction',
           `Build ${home.name} (${style}): base ${home.price} plus town tax and materials ${JSON.stringify(home.materials)}; an unfinished site earns nothing.`,

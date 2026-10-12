@@ -25,7 +25,7 @@ export function travelPrep(p: Player): Step[] {
     ...leaveDistractions(p),
     ...(p.vehicle !== 5 && p.fuel <= 0
       ? [act({ type: 'vehicle', slot: 5 })]
-      : p.vehicle === 5 && p.fuel > 0
+      : p.vehicle !== 0 && p.fuel > 0
         ? [act({ type: 'vehicle', slot: 0 })]
         : p.vehicle !== 5 && !p.engine && p.fuel > 0
           ? [act({ type: 'engine' })]

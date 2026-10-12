@@ -1,3 +1,4 @@
+import { meetingTown, townMeeting } from '../shared/town-charter';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { constructionTerms, ruleLabels, type PublicTown } from '../shared/civics';
 import {
@@ -47,7 +48,13 @@ const permissionLabels = {
   environment: 'Modify environment',
 };
 
-const townForm = (b: Building, operation: string, inner: string, label: string, extra = '') =>
+const townForm = (
+  b: Pick<Building, 'id'>,
+  operation: string,
+  inner: string,
+  label: string,
+  extra = '',
+) =>
   `<form data-town-form ${extra}>${hidden('building', b.id)}${hidden('operation', operation)}${inner}<button>${label}</button></form>`;
 
 function describeValue(w: World, rule: TownRule, value: unknown) {
@@ -66,7 +73,7 @@ function describeValue(w: World, rule: TownRule, value: unknown) {
 function ruleForms(
   w: World,
   town: PublicTown,
-  b: Building,
+  b: Pick<Building, 'id'>,
   operation: 'rule' | 'propose',
   rules: readonly TownRule[],
   owner = false,
@@ -130,7 +137,7 @@ function ruleForms(
     .join('');
 }
 
-function electionSection(w: World, me: Player, town: PublicTown, b: Building) {
+function electionSection(w: World, me: Player, town: PublicTown, b: Pick<Building, 'id'>) {
   const e = town.election;
   if (!e) return town.termEnds ? `<p>Next election in ${days(w, town.termEnds)}.</p>` : '';
   const charter = townCharter(w);
@@ -177,7 +184,7 @@ function electionSection(w: World, me: Player, town: PublicTown, b: Building) {
   return html;
 }
 
-function proposalSection(w: World, me: Player, town: PublicTown, b: Building) {
+function proposalSection(w: World, me: Player, town: PublicTown, b: Pick<Building, 'id'>) {
   const ballots = me.ballots?.[town.id]?.proposals ?? {};
   const resident = town.residents.includes(me.id);
   return town.proposals
@@ -194,8 +201,8 @@ function proposalSection(w: World, me: Player, town: PublicTown, b: Building) {
 }
 
 /** The plinth panel: a town's rules, government, elections and proposals. */
-export function townPanel(w: World, me: Player, b: Building) {
-  const town = (w.towns as PublicTown[]).find((t) => t.plinth === b.id);
+export function townPanel(w: World, me: Player, b: Pick<Building, 'id'>) {
+  const town = meetingTown(w, b.id) as PublicTown | undefined;
   if (!town) return '<p>This plinth belongs to no town.</p>';
   const charter = townCharter(w);
   const owner = me.authority >= 20;
@@ -430,4 +437,14 @@ export function foundTownForm(w: World, p: Player) {
   return closed
     ? `${head}<p class="note">${esc(closed)}.</p>`
     : `${head}<form data-action="foundTown"><label>Town name<input name="name" maxlength="32" required></label><button>Found town</button></form>`;
+}
+
+/** The same public meeting access is available to human players and NPCs. */
+export function nearbyTownPanels(w: World, me: Player) {
+  return w.towns
+    .filter(
+      (t) => Math.hypot(me.x - townMeeting(w, t, true).x, me.z - townMeeting(w, t, true).z) < 18,
+    )
+    .map((t) => townPanel(w, me, townMeeting(w, t, true)))
+    .join('');
 }

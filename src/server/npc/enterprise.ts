@@ -1,3 +1,4 @@
+import { capitalChoices } from './prosperity.ts';
 import { hayMerchantChoices } from './hay-merchant.ts';
 import { livestockInputs, livestockSupplyInputs } from '../../shared/livestock.ts';
 import { farmEnterprises } from './farm-enterprise.ts';
@@ -48,7 +49,9 @@ export function businessEstimate(w: World, b: Building) {
     if (!buyers.length && !implicit) return;
     revenue += n * (buyers.length ? Math.max(...buyers.map((s) => s.buy[item])) : implicit);
   }
-  const wages = b.wage * Math.max(1, productionStaff(w, b, w.time).length);
+  const wages =
+    b.wage *
+    Math.max(productionBudget(w, b)?.idealWorkers ?? 1, productionStaff(w, b, w.time).length);
   // Implicit shelf sales pay local/world sales tax. Export bids above are net player receipts.
   const budget = productionBudget(w, b);
   if (budget) revenue = Math.min(revenue, budget.retailReceipts);
@@ -72,6 +75,7 @@ export function businessEstimate(w: World, b: Building) {
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   const list: FarmerChoice[] = [
     ...constructionChoices(w, p),
+    ...capitalChoices(w, p),
     ...farmEnterprises(w, p),
     ...hayMerchantChoices(w, p),
   ];
@@ -116,17 +120,17 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       );
   }
   const home = w.buildings.find((b) => b.kind === 'home' && b.owner === p.id && !b.construction);
-  if (home && !offlineReadiness(w, p, 86400).stocked) {
+  if (home && (!offlineReadiness(w, p, 86400).stocked || !p.atHome)) {
     const pantry = homecomingPlan(w, p, 86400);
-    if (
-      pantry.some(
-        (s) => s.kind === 'act' && (s.action.type === 'trade' || s.action.type === 'stock'),
-      )
-    )
-      add(
-        'Provision my home: buy or store a day of food and drink before optional expansion.',
-        pantry,
-      );
+    if (pantry.length && pantry.length <= 12)
+      list.push({
+        id: `household_${home.id}`,
+        description:
+          'Provision my home: finish stocking a day of food and drink, then go inside. A completed household ends repeated emergency visits.',
+        plan: pantry,
+        careerGoal: { kind: 'housing', target: home.id },
+        reconsiderSeconds: 600,
+      });
   }
   if (!home) {
     const house = w.buildings
@@ -219,17 +223,17 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         .length < w.settings.maxBuildings
     ) {
       const deposit = Math.max(0, estimate.reserve - b.investment);
-      if (deposit <= 80000 && p.cash >= propertyQuote(w, b).total + deposit + living)
+      if (deposit <= 10_000_000 && p.cash >= propertyQuote(w, b).total + deposit + living)
         add(
           `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, deposit ${deposit}, batch gross margin ${estimate.margin} after inputs ${estimate.inputs} and wages ${estimate.wages}. Needs a ${recipe.skill} worker; sales depend on buyers.`,
           visitBuilding(p, b, [
             act({ type: 'buyBuilding', building: b.id }),
-            ...Array.from({ length: Math.ceil(deposit / 10000) }, (_, i) =>
+            ...Array.from({ length: Math.ceil(deposit / 10_000_000) }, (_, i) =>
               act({
                 type: 'investment',
                 building: b.id,
                 direction: 'deposit',
-                amount: Math.min(10000, deposit - i * 10000),
+                amount: Math.min(10_000_000, deposit - i * 10_000_000),
               }),
             ),
           ]),
@@ -270,7 +274,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         );
     }
     const deposit = Math.min(
-      10000,
+      10_000_000,
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );
@@ -300,25 +304,50 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         );
         continue;
       }
-      const seller = w.buildings
-        .filter(
-          (s) => s.owner !== p.id && !s.construction && s.sell[item] >= 0 && s.stock[item] > 0,
-        )
-        .sort((a, b) => a.sell[item] - b.sell[item])[0];
-      if (!seller) continue;
+      // Transfer between one's own businesses through stock actions. Keep the
+      // source's production inputs and breeding herd; never raid a home pantry.
+      const supplies = w.buildings
+        .flatMap((s) => {
+          if (s.id === b.id || s.construction || s.kind === 'home' || !!s.lodging) return [];
+          const own = s.owner === p.id;
+          if (!own && !(s.sell[item] >= 0)) return [];
+          const sourceRecipe = s.production ?? recipes[s.recipe ?? ''];
+          const sourceHerd = herdSpec(s);
+          const keep = own
+            ? Math.max(
+                3 *
+                  (sourceRecipe
+                    ? (livestockSupplyInputs(w, s, sourceRecipe.inputs)[item] ?? 0)
+                    : 0),
+                sourceHerd?.animal === item ? sourceHerd.minimum : 0,
+              )
+            : 0;
+          const available = Math.max(0, (s.stock[item] ?? 0) - keep);
+          return available ? [{ shop: s, own, available, price: own ? 0 : s.sell[item] }] : [];
+        })
+        .sort((a, b) => a.price - b.price);
+      const source = supplies[0];
+      if (!source) continue;
+      const { shop: seller, own, available, price } = source;
       let n = Math.min(
         Math.max(0, perBatch * (item === herd?.animal ? 1 : 6) - (b.stock[item] ?? 0)),
-        seller.stock[item],
+        available,
         b.capacity - (b.stock[item] ?? 0),
-        seller.sell[item] ? Math.floor(Math.max(0, p.cash - living) / seller.sell[item]) : 100,
+        price ? Math.floor(Math.max(0, p.cash - living) / price) : 100,
       );
       while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n)
         add(
-          `Supply my ${b.name}: buy and deliver ${n} ${item} for ${n * seller.sell[item]}; replenish six batches, protect meals.`,
+          own
+            ? `Supply my ${b.name}: transfer ${n} ${item} from my ${seller.name}; no sale or new profit. Preserve the source's operating stock.`
+            : `Supply my ${b.name}: buy and deliver ${n} ${item} for ${n * price}; replenish six batches, protect meals.`,
           [
             ...visitBuilding(p, seller, [
-              act({ type: 'trade', building: seller.id, direction: 'buy', item, quantity: n }),
+              act(
+                own
+                  ? { type: 'stock', building: seller.id, direction: 'withdraw', item, quantity: n }
+                  : { type: 'trade', building: seller.id, direction: 'buy', item, quantity: n },
+              ),
             ]),
             { kind: 'travel', destination: b.id },
             act({ type: 'stock', building: b.id, direction: 'deposit', item, quantity: n }),
@@ -358,7 +387,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
               type: 'investment',
               building: b.id,
               direction: 'deposit',
-              amount: Math.min(10000, n * buyer.buy[item]),
+              amount: Math.min(10_000_000, n * buyer.buy[item]),
             }),
           ],
         );
@@ -460,6 +489,7 @@ export function economicMenu(
       );
       if (b) {
         const job = workplace(w, p, b);
+        if (p.job === b.id && b.kind !== 'farm' && job?.workActiveNextCycle) return false;
         if (
           job &&
           (job.ifYouWork.capitalShortfall > 0 ||
@@ -482,8 +512,35 @@ export function economicMenu(
         }),
     )
     .sort((a, b) => score(b) - score(a));
-  const selected = ranked.slice(0, 32);
-  const rest = ranked.slice(32);
+  const selected: FarmerChoice[] = [];
+  // Keep a few alternatives from each domain visible even in large markets.
+  const domain = (c: FarmerChoice) => {
+    if (c.id.startsWith('survival_') || c.id.startsWith('commitment_')) return 'urgent';
+    if (c.id.startsWith('capital_')) return 'capital';
+    if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'foundTown'))
+      return 'settlement';
+    if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'town')) return 'civic';
+    if (c.plan.some((s) => s.kind === 'operation' && ['construct', 'supply'].includes(s.operation)))
+      return 'construction';
+    if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'livestock'))
+      return 'livestock';
+    if (
+      c.plan.some(
+        (s) => s.kind === 'act' && s.action.type === 'farm' && s.action.operation === 'expand',
+      )
+    )
+      return 'farm-expansion';
+    if (c.plan.some((s) => s.kind === 'act' && s.action.type === 'buyBuilding'))
+      return 'acquisition';
+    return c.careerGoal?.kind ?? 'other';
+  };
+  const groups = new Map<string, FarmerChoice[]>();
+  for (const c of ranked) groups.set(domain(c), [...(groups.get(domain(c)) ?? []), c]);
+  for (let i = 0; i < 3; i++)
+    for (const group of groups.values())
+      if (group[i] && selected.length < 24) selected.push(group[i]);
+  for (const c of ranked) if (selected.length < 32 && !selected.includes(c)) selected.push(c);
+  const rest = ranked.filter((c) => !selected.includes(c));
   const offset = rest.length ? Math.floor(w.time / 300) % rest.length : 0;
   for (let i = 0; i < Math.min(12, rest.length); i++)
     selected.push(rest[(offset + i) % rest.length]);

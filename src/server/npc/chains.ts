@@ -1,3 +1,7 @@
+import { mapHalf, terrainHeight } from '../../shared/terrain.ts';
+import { onFarmLand } from '../../shared/farm-land.ts';
+import { constructionTerms } from '../../shared/civics.ts';
+import { buildingBounds, buildingPlan } from '../../shared/building-shapes.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldBuildings, worldItems } from '../../shared/world-catalogue.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -103,20 +107,43 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
 
 export function pickBuildSite(w: World, p: Player, kind: string) {
   if (kind === 'waterworks') return nearestWaterworksSite(w, p);
-  return [
-    { x: p.x + 24, z: p.z },
-    { x: p.x - 24, z: p.z },
-    { x: p.x, z: p.z - 24 },
-    { x: 90, z: -110 },
-    { x: -90, z: -110 },
-  ].find(
-    (v) =>
-      Math.abs(v.x) < 230 &&
-      v.z > -230 &&
-      v.z < 115 &&
-      w.buildings.every((b) => distance(v, b) > 20) &&
-      !w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius),
-  );
+  const half = mapHalf(w) - 24;
+  const footprint = buildingBounds(buildingPlan({ id: 'candidate', kind }));
+  const radius = Math.max(footprint.width, footprint.depth) / 2;
+  // Bounded search in the actual map, around this resident's holdings and town.
+  // No legacy +/-230 m box: builders can settle the countryside too.
+  const centres = [
+    p,
+    ...w.buildings.filter((b) => b.owner === p.id).slice(0, 3),
+    ...w.towns.slice(0, 4),
+  ];
+  for (const centre of centres)
+    for (const ring of [28, 56, 96, 160, 260, 400])
+      for (let i = 0; i < 12; i++) {
+        const v = {
+          x: Math.round(centre.x + Math.cos((i * Math.PI) / 6) * ring),
+          z: Math.round(centre.z + Math.sin((i * Math.PI) / 6) * ring),
+        };
+        if (
+          Math.abs(v.x) > half ||
+          Math.abs(v.z) > half ||
+          terrainHeight(w, v.x, v.z) <= w.settings.seaLevel + 1 ||
+          onFarmLand(w, v.x, v.z, radius)
+        )
+          continue;
+        if (
+          !w.buildings.every((b) => distance(v, b) > radius + 20) ||
+          w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
+        )
+          continue;
+        try {
+          constructionTerms(w, p, kind, v);
+        } catch {
+          continue;
+        }
+        return v;
+      }
+  return undefined;
 }
 
 function localProducers(w: World, item: string, graph: Record<string, GoodLink>) {
@@ -194,7 +221,26 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
       if (civicKinds.has(kind) || def.tier > w.tier) continue;
       const recipe = kindRecipe(w, kind);
       if (!recipe) continue;
-      if (w.buildings.some((b) => b.kind === kind)) continue;
+      const producers = w.buildings.filter((b) => b.kind === kind);
+      // Existing plants are preferable; expand capacity only when an owned one
+      // has actually sold output and observed customers are still short.
+      if (
+        producers.length &&
+        (!producers.some(
+          (b) => b.owner === p.id && !b.construction && (b.accounts?.receipts ?? 0) > 0,
+        ) ||
+          !Object.entries(recipe.outputs).some(
+            ([item, n]) =>
+              w.buildings.some(
+                (b) =>
+                  b.kind !== kind &&
+                  b.buy[item] > 0 &&
+                  b.investment >= b.buy[item] * n &&
+                  (b.stock[item] ?? 0) < n * 3,
+              ) && producers.every((b) => (b.stock[item] ?? 0) < n * 3),
+          ))
+      )
+        continue;
       if (anotherFounding(w, p, kind)) continue;
       const outputs = Object.keys(recipe.outputs);
       const localSink = outputs.some((item) => localConsumers(w, item).length > 0);
@@ -243,7 +289,7 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
       const price = b.buy[item] || worldBuildings(w)[b.kind]?.buy[item] || items[item]?.price;
       if (!price) continue;
       const deposit = Math.min(
-        10000,
+        10_000_000,
         Math.max(price * 4, 2000),
         Math.max(0, p.cash - livingReserve(w, p)),
       );

@@ -37,6 +37,7 @@ function fixture() {
   const run = (plan: Step[]) => {
     for (const s of plan)
       if (s.kind === 'travel') Object.assign(p, { x: plinth.x, z: plinth.z + 5 });
+      else if (s.kind === 'move') Object.assign(p, { x: s.x, z: s.z });
       else if (s.kind === 'act') act(w, p.id, s.action);
       else if (s.kind === 'operation') act(w, p.id, operationAction(s));
   };

@@ -1,3 +1,4 @@
+import { settleBusinessProceeds } from './business-freight.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -38,15 +39,17 @@ export function productionBudget(w: World, b: Building) {
   const next = (Math.floor(w.time / productionInterval(w, b)) + 1) * productionInterval(w, b);
   const staff = productionStaff(w, b, next).length;
   const payroll = b.wage * Math.max(1, staff);
+  const idealWorkers = productionStaffing(w, b, staff, next).ideal;
   return {
     inputs,
     retailReceipts,
     payroll,
     margin: retailReceipts - inputs - payroll,
     oneWorkerMargin: retailReceipts - inputs - b.wage,
-    reserve: Math.ceil((inputs + payroll) * 3),
+    reserve: Math.ceil((inputs + b.wage * Math.max(idealWorkers, staff)) * 3),
     activeWorkers: staff,
-    idealWorkers: productionStaffing(w, b, staff, next).ideal,
+    idealWorkers,
+    idealMargin: retailReceipts - inputs - b.wage * idealWorkers,
     efficiency: productionEfficiency(w, b, staff, next),
   };
 }
@@ -86,7 +89,7 @@ export function ownerLivingDraw(w: World, p: Player, b: Building) {
         0,
       );
   return Math.min(
-    10000,
+    10_000_000,
     Math.max(0, target - p.cash),
     ownerWithdrawable(w, b),
     Math.max(0, b.investment - remainingClaim(b) - retainedCapital(w, b)),
@@ -94,8 +97,10 @@ export function ownerLivingDraw(w: World, p: Player, b: Building) {
 }
 
 /** Maintain a solvent business before discretionary personal spending. */
-export function ownerRoutine(w: World, p: Player): Step[] {
+export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[] {
   if (p.task || p.learning) return [];
+  const settlement = state ? settleBusinessProceeds(w, p, state) : [];
+  if (settlement.length) return settlement;
   const living = householdBudget(w, p).reserve;
   for (const b of w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government)) {
     const draw = ownerLivingDraw(w, p, b);
@@ -110,11 +115,11 @@ export function ownerRoutine(w: World, p: Player): Step[] {
     if (!budget) continue;
     // Never pour fresh capital into production with a structurally negative margin.
     const amount = Math.min(
-      10000,
+      10_000_000,
       Math.max(0, budget.reserve - b.investment),
       Math.max(0, p.cash - living),
     );
-    if (amount > 0 && budget.oneWorkerMargin >= 0)
+    if (amount > 0 && budget.idealMargin >= 0)
       return visitBuilding(p, b, [
         {
           kind: 'act',
