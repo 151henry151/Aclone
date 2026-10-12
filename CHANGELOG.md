@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.64.0] - 2026-10-11
+
+### Fixed
+
+- Business and bank cash transfers are independent of item quantities, removing the accidental 100d per-action limit.
+
 ## [0.63.4] - 2026-10-11
 
 ### Fixed

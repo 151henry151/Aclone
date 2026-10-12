@@ -29,6 +29,8 @@ Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Harve
 
 Automatic producers have ideal crew sizes: understaffing and overcrowding both reduce production speed. Building panels show active versus ideal staff; wages are paid when batches complete.
 
+Bank and business cash transfers support up to 100,000d per action, subject to available funds and protected investment claims. Goods quantities and cargo capacity are separate limits.
+
 Public waterworks prices support profitable fuel delivery and water production; existing owner-set quotes are preserved.
 
 Puddlewick has a premium government bread/water shop for shortages. Local production remains cheaper.

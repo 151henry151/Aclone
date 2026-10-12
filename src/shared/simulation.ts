@@ -633,7 +633,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'investment': {
       const b = nearby(w, p, a.building);
-      const n = qty(a.amount);
+      const n = num(a.amount, 1, 10_000_000, true);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
       const proprietor = b.owner === p.id || (p.authority >= 20 && a.caretaker === true);
       if (proprietor) {
@@ -852,7 +852,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'bank': {
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'bank', 'Visit the bank');
-      const n = qty(a.amount);
+      const n = num(a.amount, 1, 10_000_000, true);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
       const deposit = a.direction === 'deposit';
       requireThat((deposit ? p.cash : p.bank) >= n, 'Insufficient funds');

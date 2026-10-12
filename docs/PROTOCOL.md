@@ -160,3 +160,5 @@ OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally refere
 ## Local catalogue editing
 
 `catalogue` is world-owner-only and accepts a complete `catalogue` containing bounded `items`, `skills` and `templates` maps. References/prerequisites are validated before replacing the prior definition set. `construct.kind` can use a local template ID. Standard trade, stock, use, learn, production and quest actions resolve goods/professions in their current world.
+
+`bank` and `investment` actions accept integer `amount` values from 1 to 10,000,000 hundredths (100,000d), independently of item-quantity limits. Balances, proximity, ownership and outside-investor claims are rechecked server-side.

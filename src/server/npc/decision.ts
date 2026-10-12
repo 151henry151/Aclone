@@ -48,7 +48,20 @@ const action = z.discriminatedUnion('type', [
   z.object({ type: z.literal('gather'), node: id }).strict(),
   z.object({ type: z.literal('vehicle'), slot: z.union([z.literal(0), z.literal(5)]) }).strict(),
   z.object({ type: z.literal('stock'), ...transfer, item: id, quantity }).strict(),
-  z.object({ type: z.enum(['investment', 'bank']), ...transfer, amount: quantity }).strict(),
+  z
+    .object({
+      type: z.literal('investment'),
+      ...transfer,
+      amount: z.number().int().min(1).max(10_000_000),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('bank'),
+      ...transfer,
+      amount: z.number().int().min(1).max(10_000_000),
+    })
+    .strict(),
   z
     .object({
       type: z.literal('farm'),
@@ -83,6 +96,7 @@ export const playerOperations = [
   'fire',
   'refit',
   'town',
+  'foundTown',
   'group',
   'hitch',
   'detach',
