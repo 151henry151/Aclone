@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { governmentPremium } from './harbour-supply.ts';
 import { buildings } from './catalog.ts';
 import type { World, Building } from './types.ts';
 import { migrateOutsideClaims } from './stakes.ts';
@@ -14,9 +15,27 @@ export function removeOwnerEmployment(w: World, b: Building) {
   for (const plot of b.plots ?? []) if (plot.harvest?.player === b.owner) plot.harvest.wage = 0;
 }
 
-/** Upgrade public/unowned quotes once; every player-owned price is sacrosanct. */
+/** Upgrade legacy quotes once. The crew rebalance explicitly includes owned Puddlewick businesses. */
 export function migrateEconomy(w: World) {
   migrateOutsideClaims(w);
+  w.exportShipment ??= Math.floor(w.time / 1800);
+  if (!w.crewPricing && w.id === 'puddlewick' && w.template === 'economy') {
+    for (const b of w.buildings) {
+      const def = buildings[b.kind];
+      if (!def || b.templateId || b.id === 'parish-government-stores') continue;
+      b.buy = { ...def.buy };
+      b.sell = { ...def.sell };
+      b.wage = def.wage;
+    }
+    const relief = w.buildings.find(
+      (b) => b.id === 'parish-government-stores' && b.government && b.owner === 'treasury',
+    );
+    if (relief)
+      for (const item of ['bread', 'water', 'fuel'] as const)
+        relief.sell[item] = governmentPremium(w, relief, item);
+    w.crewPricing = 1;
+    w.tradePricing = 4;
+  }
   if (!w.hayPricing) {
     // Only add the new commodity. Never replace existing operator prices or grant stock.
     for (const b of w.buildings) {
@@ -98,8 +117,10 @@ export function migrateEconomy(w: World) {
     if (b.kind === 'waterworks') {
       if (b.buy.fuel === 2240) b.buy.fuel = 3600;
       if (b.sell.water === 500) b.sell.water = 625;
-    } else if (!['market', 'starport'].includes(b.kind) && b.buy.water === 560) b.buy.water = 660;
-    if (['bnb', 'hotel'].includes(b.kind) && b.sell.water === 675) b.sell.water = 725;
+    } else if (!['market', 'starport'].includes(b.kind) && b.buy.water === 560)
+      b.buy.water = buildings[b.kind]?.buy.water ?? 660;
+    if (['bnb', 'hotel'].includes(b.kind) && b.sell.water === 675)
+      b.sell.water = buildings[b.kind]?.sell.water ?? 725;
     if (b.kind === 'market' && b.buy.water === 450) b.buy.water = 600;
     if (b.kind === 'starport' && b.buy.water === 425) b.buy.water = 590;
   }

@@ -89,7 +89,11 @@ test('room pantry stocks are delivered only to their guest, including legacy pro
   assert.deepEqual(publicBuildings(w)[0].lodging!.guests.a.stock, {});
   assert.equal(privatePlayer(w, a).roomPantries[inn.id].bread, 777);
   assert.equal(privatePlayer(w, b).roomPantries[inn.id].bread, undefined);
-  assert.ok(!prepareFrame(w).fields.buildings.includes('777'));
+  const projected = JSON.parse(prepareFrame(w).fields.buildings);
+  assert.deepEqual(
+    projected.find((s: { id: string }) => s.id === inn.id).lodging.guests.a.stock,
+    {},
+  );
 });
 
 test('compact states reconstruct legacy state, including deletions, privacy, ordering and skipped broadcasts', async () => {

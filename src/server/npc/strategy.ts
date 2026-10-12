@@ -152,7 +152,7 @@ export function lifeBriefing(w: World, p: Player) {
       jobEstimates:
         'Per completed batch; no wage when inputs, capital or output space block production. Taking a qualified vacancy may supply the missing worker. Compare travel and tuition before changing careers.',
       labour:
-        'Odd Jobs Office pays 4500 cash for a completed 15-second labour task, no qualification. Useful to bootstrap meals, tools or tuition; travel takes extra time.',
+        'Odd Jobs Office normally pays 100 cash per 15-second shift. Below 5000 combined cash and bank, relief pays a quoted basic-meal allowance at most once per 1800 seconds. It is emergency support, not a career; prefer useful employment and profitable hauling.',
       training: {
         tuition: p.skills.length ? 16000 : 8000,
         seconds: p.skills.length ? 2400 : 60,

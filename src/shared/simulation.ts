@@ -1,3 +1,5 @@
+import { exportShipments } from './export-shipments.ts';
+import { labourReward } from './public-labour.ts';
 import { onFarmLand } from './farm-land.ts';
 import { buildingBounds, buildingPlan } from './building-shapes.ts';
 import { constructionRefund } from './construction.ts';
@@ -199,6 +201,8 @@ export function createWorld(
     vehicleServicesPricing: 1,
     gatherToolsPricing: 1,
     hayPricing: 1,
+    crewPricing: 1,
+    exportShipment: 0,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -818,7 +822,13 @@ export function act(w: World, id: string, a: Action): string {
         stockAdd(p.inventory, 'wood', -2);
       } else if (task !== 'labour')
         requireThat(canCarry(p, task === 'logging' ? 'logs' : 'stone', 3, w), 'Cargo full');
-      p.task = { kind: task, end: w.time + 15, building: b.id };
+      p.task = {
+        kind: task,
+        end: w.time + 15,
+        building: b.id,
+        ...(task === 'labour' ? { reward: labourReward(w, p) } : {}),
+      };
+      if ((p.task.reward ?? 0) > 100) p.reliefAt = w.time;
       p.speed = 0;
       result = 'A bit of honest work. 15 seconds.';
       break;
@@ -1849,6 +1859,7 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  exportShipments(w, end);
   harbourSupply(w, end);
   restockGovernmentStores(w);
   growRoads(w, start, end);
@@ -1909,7 +1920,9 @@ export function advance(w: World, seconds: number) {
       delete p.task;
       if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!, t.end);
       else if (t.kind === 'labour') {
-        grant(w, p, 4500, 'labour task');
+        const reward = t.reward ?? labourReward(w, p);
+        if (t.reward === undefined && reward > 100) p.reliefAt = w.time;
+        grant(w, p, reward, 'labour task');
         p.kudos++;
       } else
         stockAdd(

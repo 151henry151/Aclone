@@ -1,3 +1,4 @@
+import { labourReward } from '../../shared/public-labour.ts';
 import { acceptsHay, herdNeeds } from '../../shared/livestock.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
@@ -138,7 +139,7 @@ export function gameplayChoices(
   }
   for (const b of buildings.filter((b) => b.kind === 'workhouse' && b.owner !== p.id).slice(0, 2))
     add(
-      `Earn 4500 cash with a 15-second public labour shift at ${b.name}; useful for tuition and supplies.`,
+      `Earn ${labourReward(w, p)} cash with a 15-second public labour shift at ${b.name}; useful for tuition and supplies.`,
       visit(b, [
         action({ type: 'task', building: b.id, task: 'labour' }),
         { kind: 'wait', seconds: 15 },

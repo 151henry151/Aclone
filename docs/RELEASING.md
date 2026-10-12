@@ -35,7 +35,18 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.63.4
+## Current upgrade: 0.64.0
+
+Back up before restarting. The authorized one-time Puddlewick rebalance resets
+standard business buy/sell quotes and wages to the new catalogue **including
+player-owned businesses**. It preserves ownership, cash, inventories and progress;
+custom building templates and other worlds are excluded. Later owner edits remain
+intact. No world reset is needed. Public ports clear bounded surplus shipments;
+regular labour pays 1d with means-tested meal relief. Refresh clients for the
+updated payment notices. NPC provider credentials and spending limits stay as
+configured; deployment does not start an accelerated paid experiment.
+
+### 0.63.4
 
 Winter now kills crops still in the fields, including ripe crops. On upgrade,
 existing plots that have already crossed a winter since planting are cleared on

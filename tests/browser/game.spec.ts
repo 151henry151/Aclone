@@ -120,9 +120,9 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.locator('#chat-input').press('Enter');
   await expect(page.locator('#target')).toContainText('Odd Jobs Office');
   await page.keyboard.press('e');
-  await page.getByRole('button', { name: 'Work a shift · 45d' }).click();
+  await page.getByRole('button', { name: 'Work a shift · 1d' }).click();
   await expect(page.locator('#task-name')).toContainText('Working a labour shift');
-  await expect(page.locator('#cash')).toHaveText('18s 45d', { timeout: 22000 });
+  await expect(page.locator('#cash')).toHaveText('18s 1d', { timeout: 22000 });
 });
 test('small viewport can register and navigate', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

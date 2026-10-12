@@ -23,7 +23,7 @@ A horn sound: **Space/Parp** honks for nearby players and pushes the Hornball ba
 
 ## How do I start earning money?
 
-Find Odd Jobs with M; drive nearby, E/Ctrl, **Work a shift · 45d**. Stay for the 15-second task; no skill needed. Buy/use food and water, then learn a profession (first course 80d/one minute; later 160d/40 minutes, within skill limits), work or buy a business. Jobs pay only after funded production with inputs and output space.
+Find Odd Jobs with M; drive nearby, E/Ctrl, **Work a shift** (1d normally; 150d meal relief below 50d cash plus bank, at most once per 30 minutes). Stay for the 15-second task; no skill needed. Buy/use food and water, then learn a profession (first course 80d/one minute; later 160d/40 minutes, within skill limits), work or buy a business. Jobs pay only after funded production with inputs and output space.
 
 ## Why will my tractor not move? How do I leave my house and walk?
 
@@ -67,7 +67,7 @@ Activities joins; Leave activity exits. **Hornball:** drive near the ball and ho
 
 ## How do money and trading profits work?
 
-Normally 100 denarii (d) = 1 sheckle (s); internal 4500 = 45d. Local processors bid 12% above producer reference; Harbour offers only 3% gross on finished goods and less on ingredients. Imports cost more; immediate harbour buy/resell loses money. Fuel/taxes/time/stock/capital/custom quotes affect profit. Spaceport conversion is capped; galactic credits/cargo are separate. [Detailed pricing](ECONOMY.md#default-trade-prices-0160).
+Normally 100 denarii (d) = 1 sheckle (s); internal 4500 = 45d. Local processors bid 12% above producer reference; Harbour offers only 3% gross on finished goods and less on ingredients. Imports cost more; immediate harbour buy/resell loses money. Fuel/taxes/time/stock/capital/custom quotes affect profit. Spaceport conversion is capped; galactic credits/cargo are separate. [Detailed pricing](ECONOMY.md#default-trade-prices).
 
 ## How do I produce water?
 

@@ -71,7 +71,7 @@ test('one AI plan drives, earns ordinary wages and consumes supplies with no per
     s.residents.tick(0.05, start + i * 50);
   }
   const current = s.worlds.get(s.w.id)!.players[id];
-  assert.equal(current.cash, cash + 4500);
+  assert.equal(current.cash, cash + 100);
   assert.equal(current.inventory.water, water - 1);
   assert.equal(calls, 1);
   assert.equal(current.authority, 0);
@@ -92,7 +92,7 @@ test('one AI plan drives, earns ordinary wages and consumes supplies with no per
     },
   ]);
   assert.equal(resumed.status()[0].playerId, id);
-  assert.equal(worlds.get(s.w.id)!.players[id].cash, cash + 4500);
+  assert.equal(worlds.get(s.w.id)!.players[id].cash, cash + 100);
   assert.equal(resumed.memory.load('resident-0')!.notebook, saved.notebook);
   resumed.close();
   s.store.close();

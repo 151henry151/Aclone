@@ -4,7 +4,7 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 
 ## Your first day
 
-1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 45d.
+1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift normally pays 1d. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes; the button shows your current payment.
 2. Buy bread/water at Harbour stores and use them from Inventory. Variety reduces repeat-food penalties; keep fuel reserves too.
 3. Learn a profession at school: first qualification 80d/one real minute, later ones 160d/40 minutes, subject to skill limits.
 4. Take a job and **Work two cycles**, or buy a business, stock inputs and fund wages. Actual production pays wages; signing up alone does not.

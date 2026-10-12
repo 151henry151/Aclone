@@ -26,50 +26,62 @@ operating reserve. You cannot take the stake back. The owner cannot withdraw cas
 (the stake plus its 8% return). Demolishing the shop refunds unpaid principal
 to the investors first. Sales and restocking are not automatic.
 
-## Default trade prices (0.16.0)
+## Default trade prices
 
-The reference price in `data/items.json` is a producer's wholesale asking price.
-Local processors pay **112%** of that reference for their inputs: buying wheat at
-5d from a farm and delivering it to a default mill paying 5.60d leaves the haulier
-0.60d per unit before travel costs. The mill sells flour at 22.50d; a default bakery
-pays 25.20d. These quotes leave a reason to connect local businesses.
+`data/buildings.json` contains live default bids and asks. Item catalogue prices
+are book values; use a shop's posted quotes to plan a trade.
 
-Each factory recipe is priced to cover its posted ingredient bids, **one active
-worker's gross wage**, and the default **7% sales tax** inside Puddlewick (5% world + 2% town; see [Towns](PLAYING.md#towns-and-town-government)).
-At the normal batch size, net output sales retain at least 25% above those costs.
-For example, a mill pays 28d for five wheat plus 22d in wages; three flour sold at
-22.50d return about 62.78d after tax, leaving about 12.78d for its investment.
-Wage tax is withheld from the worker's gross wage, not charged again to the employer.
-Additional employees improve production speed up to the ideal crew, but each
-still receives a full wage per completed batch. Those one-worker price margins
-do not guarantee a profit at ideal staffing: review wages and quotes before hiring.
-Overcrowding both slows production and adds payroll. Repairs, travel, food, shortages, custom taxes and
-owner-edited quotes also affect actual profit; the default balance is not a guarantee.
+Automatic producers cover their recipe inputs, the **full ideal crew's gross
+wages**, and Puddlewick's default 7% combined sales tax, with at least 25% above
+cost in retail receipts. Wage tax comes out of gross wages. Additional workers,
+repairs, travel, unsold stock and custom settings can still erase profit.
+Farms price crops against seed, harvest wages, irrigation and fertilizer at a
+conservative half yield; seasonal failure remains a risk.
 
-Harbour stores pays **90%** of reference for recipe ingredients and **103%** for
-finished goods; the spaceport pays **85%** and **101%** respectively. They sell at
-**155%** and **165%**. Raw materials and intermediate goods therefore earn more
-when delivered to local consumers. Finished bread can still be bought at the bakery
-for 48d and exported at the harbour for 49.44d, but a pub pays 53.76d. Buying imports
-at one outlet and immediately exporting them through the other loses money.
+Local input bids normally exceed supplier asks by at least 12%. Harbour and
+spaceport bids favour finished products; intermediate inputs earn more at local
+processors. Imports cost more than local supply. Retailers cover their purchase
+bids and sales tax. Hay barns buy seasonal hay from farms and sell to livestock
+businesses whose bids also leave a delivery margin.
 
-Pubs, B&Bs, hotels and garages have restocking bids for their relevant goods.
-They normally buy at 112% and sell at **135%** of producer reference, covering sales
-tax and a retail margin while undercutting imported finished goods. Garages stock
-fuel, workshop tools, pickaxes, chainsaws and shovels when supplied; hospitality outlets buy food and drinks. Newly added
-listings start with whatever stock is actually present, including zero.
+The waterworks pays **74d for fuel** and sells water at **13.25d**. A full batch
+uses one fuel and two 22d wages; twelve water return 147.87d after default tax,
+leaving 29.87d before other costs. Hauliers can initially import fuel from the
+spaceport for 57.75d; a local refinery sells it for 38.50d. Prices alone do not
+move cargo, hire staff or create stock.
 
-**Water supply (0.16.0):** shoreline waterworks sell water at 5d. Processors
-and lodging businesses buy at 5.60d; lodging resells at 6.75d. Harbour water remains
-7.75d, an emergency import rather than a profitable source for local resale.
-A staffed batch costs 22.40d of fuel plus 22d wages; twelve water return 55.80d
-after default sales tax, leaving 11.40d. Puddlewick includes a seeded waterworks; other worlds may need one built. Harbour imports remain available. Logs,
-gravel and topsoil can be gathered and sold directly to their local consumers. All seven farm crops
-have default sell listings; seed costs, seasonal yield, irrigation and harvest wages
-remain ordinary farm expenses. Prices do not spawn goods, move cargo automatically,
-or replenish a business's capital. Employees/owners and hauliers must supply demand.
+**Upgrade:** the crew-price rebalance resets default-type bids, asks and wages
+once on **all existing Puddlewick economy buildings, including human and NPC
+owned property**, as authorized for the economy repair. Custom templates and
+other worlds are excluded. The government necessities shop receives premium
+quotes. Ownership, stock, cash and construction progress are preserved. Later
+owner edits survive reloads; new worlds start with the new prices.
 
-Older public-price migrations preserve every human/NPC-owned business; see [upgrade notes](RELEASE_NOTES.md#deploying-0153). Owners may need to adjust incompatible old quotes themselves.
+## Public work and exports
+
+A 15-second Odd Jobs shift normally pays **1d**. Residents below 50d combined cash
+and bank savings can receive a larger relief payment once per 30 real minutes.
+Relief covers a premium bread-and-water purchase at default prices (currently
+150d); the quoted amount is fixed when the task starts. The cooldown survives
+reconnection and death. Public labour is a safety net rather than an unlimited
+45d-per-shift career.
+
+Every 30 real minutes, Puddlewick's treasury-run Harbour and spaceport sell surplus
+cargo to off-world customers. Each departure clears at most 40 units per item,
+leaving 8 on the shelf, or a population-based reserve of 12–100 bread, water and
+fuel. Only actual cargo earns proceeds. External settlement uses a capped
+catalogue bid plus 10%, below import retail prices; editing a port bid cannot
+inflate that payment. The ledger records `export shipment` income and quantities.
+This explicitly funded export outlet replenishes working capital and frees
+storage for local suppliers. It has finite throughput and does not guarantee
+demand for every private business. Private ports, custom worlds and the emergency
+necessities shop are excluded. Departure cursors persist; downtime catches up
+at most 48 departures against stock actually present.
+
+Bank deposits/withdrawals and owner capital transfers accept up to **100,000d**
+per action, subject to real balances and protected outside claims. The separate
+10,000-item goods limit is a quantity bound, not a 100d purchase cap. Cargo space,
+stock and available cash still govern trading.
 
 Owners cannot buy from or sell to their own property, hire themselves, refresh
 their own work shifts or start workplace tasks there. Use Stockroom for goods and
@@ -89,8 +101,7 @@ Efficiency controls batch speed, not ingredient quantities or the posted wage.
 Partial batches carry forward across checks and saves; wages are paid only when
 a whole supplied batch completes. A lone miller therefore normally completes one
 batch in two checks. More staff means more wages per completed batch: the fastest
-crew is not necessarily the most profitable. Existing owner quotes are unchanged;
-review payroll against sales before hiring. Seasonal farm plots and manual tasks
+crew is not necessarily the most profitable. Review payroll against sales before hiring. Seasonal farm plots and manual tasks
 retain their separate production rules.
 
 With no active crew, private businesses use the world's unattended rate. Public
@@ -210,7 +221,7 @@ Existing unclaimed properties start their clock at upgrade; ownership, stock and
 
 ## Public shortage supplies
 
-Puddlewick's public Harbour imports small paid shipments of scarce bread, water and fuel every 30 real minutes, counting local stocks first. Bread/water can also be imported on demand at the posted, expensive Harbour retail price, even with empty shelves or no treasury working capital: the buyer's payment funds that delivery. There are no free player supplies. This fallback only applies to the server-owned public parish and government Harbour, and refuses quotes that undercut catalogue prices or enable guaranteed re-export to a public buyer. Private shops and prices are untouched.
+Puddlewick's public Harbour imports small paid shipments of scarce bread, water and fuel every 30 real minutes, counting local stocks first. Bread/water can also be imported on demand at the posted, expensive Harbour retail price, even with empty shelves or no treasury working capital: the buyer's payment funds that delivery. There are no free player supplies. Where Government necessities exists, on-demand imports move there. This fallback applies to Puddlewick’s economy template and treasury-run outlets regardless of world-owner identity, and refuses quotes that undercut catalogue prices or enable guaranteed re-export to a public buyer. Private shops and prices are untouched.
 
 This safety net buys time for waterworks, farms and processors to operate. It does not guarantee every commodity is always stocked or every NPC business succeeds. Local suppliers still offer better terms; production needs skills, active labour, inputs, wages and customers.
 
@@ -231,13 +242,3 @@ The design uses ordinary amortization and ability-to-repay concepts ([CFPB expla
 ## Parish maintenance orders
 
 Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. Early in each hour, each supplier can fill at most half an order; the remaining demand opens to everyone in the second half-hour. Orders share a fixed hourly budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.
-
-Public water-chain defaults now pay 36d for fuel and sell water at 6.25d. Local
-water bids are 6.60d, lodging retail 7.25d, and export bids 6d/5.90d. These
-cover production and delivery costs while keeping local purchases cheaper than
-imports. Upgrade migration changes former defaults only; player-owned businesses
-and custom public quotes are preserved.
-
-## Town taxes and treasuries
-
-Each town levies its own construction, sales and wage taxes inside its border. The world's sales and wage taxes are sunk as before; town taxes go to the town treasury and appear in the ledger as transfers to `town:<id>`. Outside every border no town tax applies unless the charter's outside-border policy is **nearest town**, which applies the nearest town's rules and taxes. Treasuries also receive candidate deposits, winning auction bids and (when a town has no seller) town-sale proceeds. A mayor, or a passed direct-democracy proposal, can pay treasury money to a resident when the charter delegates **treasury payments**. Tax changes take effect after the charter's notice period; the plinth lists scheduled changes.

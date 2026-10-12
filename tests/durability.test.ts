@@ -65,7 +65,7 @@ test('delta protocol sends full reconnect state and disconnect/restart preserves
     assert.equal(app.universe.authenticate(pilot.token)?.id, pilot.account.id);
     await new Promise((r) => setTimeout(r, 1100));
     assert.equal(restored.task, undefined);
-    assert.equal(restored.cash, 184500);
+    assert.equal(restored.cash, 180100);
   } finally {
     ws?.terminate();
     await app.close();

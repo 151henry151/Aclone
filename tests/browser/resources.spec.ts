@@ -130,7 +130,7 @@ for (const mobile of [false, true])
       expect(Math.abs(box.x + box.width / 2 - size.width / 2)).toBeLessThan(2);
       expect(Math.abs(box.y + box.height / 2 - size.height / 2)).toBeLessThan(2);
       p.task!.end = w.time + 0.25;
-      await expect.poll(() => p.cash).toBe(prior + 4500);
+      await expect.poll(() => p.cash).toBe(prior + 100);
       await expect(page.locator('#task-control')).toBeHidden();
       expect(errors).toEqual([]);
     } finally {

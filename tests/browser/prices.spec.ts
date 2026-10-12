@@ -19,6 +19,7 @@ test('building admin shows saved prices, switches goods/direction and keeps edit
     p.z = 10;
     const b = makeBuilding('mill', 'mill', 0, 0);
     b.owner = p.id;
+    b.wage = 2200; // Explicit saved owner quote, independent of catalogue defaults.
     b.name = 'My test mill';
     b.buy = { wheat: 600 };
     b.sell = { flour: 1250, wheat: 0 };
@@ -34,7 +35,8 @@ test('building admin shows saved prices, switches goods/direction and keeps edit
       { token, world: w.id },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await page.getByRole('button', { name: /My test mill/ }).click({ timeout: 20000 });
+    await expect(page.locator('#target')).toContainText(b.name, { timeout: 20000 });
+    await page.locator('#target').click();
     await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
     const details = page.locator('[data-business-details]');
     const wage = details.getByRole('spinbutton', { name: 'Wage in denarii' });
@@ -66,7 +68,7 @@ test('building admin shows saved prices, switches goods/direction and keeps edit
     await expect(input).toHaveValue('');
     await expect(form.locator('[data-saved-price]')).toContainText('No saved price');
     await page.getByRole('button', { name: 'Close dialog' }).click();
-    await page.getByRole('button', { name: /My test mill/ }).click();
+    await page.locator('#target').click();
     await page.getByRole('button', { name: 'Building Admin', exact: true }).click();
     await expect(wage).toHaveValue('10');
     await page

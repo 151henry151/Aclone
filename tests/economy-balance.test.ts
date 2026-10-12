@@ -55,7 +55,7 @@ test('every processor input has a profitable supply route, and local delivery be
   }
 });
 
-test('every actual production batch pays its input suppliers and worker and retains at least 20% on cost after default taxes', () => {
+test('every actual production batch pays its input suppliers and ideal crew and retains at least 20% on cost after default taxes', () => {
   for (const [kind, def] of Object.entries(buildings)) {
     if (!def.recipe || kind === 'farm') continue;
     const recipe = recipes[def.recipe];
@@ -84,8 +84,15 @@ test('every actual production batch pays its input suppliers and worker and reta
     const inputs = initial - b.investment;
     act(w, worker.id, { type: 'job', building: b.id });
     const workerCash = worker.cash;
-    worker.activeUntil = w.time + productionInterval(w, b) * (def.idealEmployees ?? 1);
-    advance(w, productionInterval(w, b) * (def.idealEmployees ?? 1));
+    const crew = def.idealEmployees ?? 1;
+    for (let i = 1; i < crew; i++) {
+      const colleague = addPlayer(w, `worker${i}`, `Worker ${i}`);
+      colleague.x = worker.x;
+      colleague.z = worker.z;
+      colleague.skills = [recipe.skill];
+      act(w, colleague.id, { type: 'job', building: b.id });
+    }
+    advance(w, productionInterval(w, b));
     assert.equal(
       worker.cash - workerCash,
       b.wage - Math.floor(b.wage * defaults.wageTax),
@@ -97,7 +104,7 @@ test('every actual production batch pays its input suppliers and worker and reta
     }
     const profit = b.investment - initial;
     assert.ok(
-      profit >= (inputs + b.wage) * 0.2,
+      profit >= (inputs + b.wage * crew) * 0.2,
       `${kind}: ${profit} profit on ${inputs + b.wage} cost`,
     );
     // Owners who haul their own output can use either export outlet as a fallback.
@@ -106,7 +113,7 @@ test('every actual production batch pays its input suppliers and worker and reta
         (n, [item, qty]) => n + buildings[port].buy[item] * qty,
         0,
       );
-      assert.ok(exports > inputs + b.wage, `${kind}: fallback ${port} covers batch cost`);
+      assert.ok(exports > inputs + b.wage * crew, `${kind}: fallback ${port} covers batch cost`);
     }
   }
 });

@@ -31,7 +31,7 @@ Automatic producers have ideal crew sizes: understaffing and overcrowding both r
 
 Bank and business cash transfers support up to 100,000d per action, subject to available funds and protected investment claims. Goods quantities and cargo capacity are separate limits.
 
-Public waterworks prices support profitable fuel delivery and water production; existing owner-set quotes are preserved.
+The economy rebalance covers ideal crews, preserves operating reserves and adds paid surplus exports. Its one-time migration updates all standard Puddlewick business quotes and wages, including owned shops; ownership, goods and balances remain intact. See [economy rules and upgrade details](docs/ECONOMY.md#default-trade-prices).
 
 Puddlewick has a premium government bread/water shop for shortages. Local production remains cheaper.
 
@@ -83,7 +83,7 @@ The proxy must strip `/aclone` before forwarding, including WebSocket requests, 
 
 Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter**. On mobile, use the steering/throttle buttons and **Actions** menu.
 
-1. Work a 15-second shift at the Odd Jobs Office for 45d.
+1. Work a 15-second Odd Jobs shift for 1d, or the displayed meal-relief rate when eligible.
 2. Buy food and water at Harbour stores; consume them from Inventory. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.
 3. Learn a profession at school, take a funded job or save to buy a business.
 4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**

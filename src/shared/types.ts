@@ -9,8 +9,10 @@ export type Task = {
   resource?: string;
   item?: string;
   amount?: number;
+  reward?: number;
 };
 export interface Player {
+  reliefAt?: number;
   needsGraceUntil?: number;
   mail?: import('./social.ts').Mail[];
   sentMail?: import('./social.ts').Mail[];
@@ -272,6 +274,8 @@ export interface World {
   publicParishVersion?: number;
   /** Last half-hour public shortage shipment, persisted across restarts. */
   harbourShipment?: number;
+  exportShipment?: number;
+  crewPricing?: 1;
   /** Lanes the parish has laid toward buildings off the road network. */
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */

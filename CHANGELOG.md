@@ -8,6 +8,15 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [0.64.0] - 2026-10-11
 
+### Added
+
+- Treasury-run Puddlewick ports clear bounded surplus shipments for external revenue, freeing shelves and replenishing trade capital without resetting the world.
+
+### Changed
+
+- Default supply-chain prices cover ideal staffing, taxes and input delivery, including hay storage and imported pump fuel. A one-time Puddlewick migration updates standard owned and public business quotes/wages while retaining property, money and goods.
+- Public labour pays 1d per short shift, with means-tested, cooldown-limited meal relief instead of unlimited 45d shifts.
+
 ### Fixed
 
 - Business and bank cash transfers are independent of item quantities, removing the accidental 100d per-action limit.
