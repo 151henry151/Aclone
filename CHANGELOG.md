@@ -11,9 +11,10 @@ All notable changes to Aclone are documented here. This project follows
 ### Added
 
 - Treasury-run Puddlewick ports clear bounded surplus shipments for external revenue, freeing shelves and replenishing trade capital without resetting the world.
-
+- A paid, isolated NPC snapshot evaluator runs real Jev decisions with normal attendance and game clocks, measured response latency, resumable checkpoints and a durable experiment-wide spending ceiling. Reports distinguish incomplete runs, costs, deaths, liquidity and local supplies.
 - NPCs periodically reconsider completed careers, can transfer surplus between their own businesses, draw protected surplus for growth, and consider founding a distant town once securely housed and well capitalized.
 - Town government is accessible from **Build** near the town centre, including towns whose council building was removed.
+- Offline NPC evaluation supports up to 21 real-time-equivalent days, optional wall-time limits, measured acceleration and business/town reporting. It still uses a heuristic chooser, not paid AI decisions.
 
 ### Changed
 

@@ -2,6 +2,7 @@
 // Offline integration soak. No .env, network, human intervention or live database.
 // The deterministic chooser exercises the controller, not Jev's decision quality.
 import { writeFileSync } from 'node:fs';
+import { setImmediate as yieldToHost } from 'node:timers/promises';
 import { createWorld, advance } from '../src/shared/simulation.ts';
 import { completePuddlewick } from '../src/server/parish-services.ts';
 import { Store } from '../src/server/store.ts';
@@ -20,18 +21,25 @@ const option = (name: string, fallback: number) => {
 };
 const days = option('days', 7),
   count = option('population', 4),
-  seed = option('seed', 1);
+  seed = option('seed', 1),
+  maxWallSeconds = option('max-wall-seconds', 0);
 if (
   !Number.isFinite(days) ||
   days <= 0 ||
-  days > 14 ||
+  days > 21 ||
   !Number.isInteger(count) ||
   count < 1 ||
   count > 19 ||
-  !Number.isSafeInteger(seed)
+  !Number.isSafeInteger(seed) ||
+  !Number.isFinite(maxWallSeconds) ||
+  maxWallSeconds < 0
 )
-  throw Error('Use --days=0.1..14 --population=1..19 --seed=integer');
+  throw Error(
+    'Use --days=(0..21] --population=1..19 --seed=integer --max-wall-seconds=0-or-positive',
+  );
 const realNow = Date.now;
+const started = performance.now();
+let stoppedFor = 'running';
 let now = Date.parse('2026-10-11T12:00:00Z');
 Date.now = () => now;
 const store = new Store(':memory:'),
@@ -149,9 +157,20 @@ function measure() {
 const report = () => {
   w = worlds.get(w.id)!;
   return {
+    requestedHours: days * 24,
     elapsedHours: (w.time - start) / 3600,
+    completed: w.time - start >= days * 86400 - 0.1,
+    stoppedFor,
+    wallSeconds: (performance.now() - started) / 1000,
+    speedup: (w.time - start) / Math.max(0.001, (performance.now() - started) / 1000),
     decisions,
     model: 'deterministic offline chooser; no API calls',
+    limitations: [
+      'Fresh world; no live player interventions or conversations',
+      'Heuristic choices are not evidence of Jev decision quality',
+      'World scripts disabled; no browser, network or provider load simulated',
+      'Seed varies resident identities/schedules, not terrain or every random event',
+    ],
     localAvailability: {
       samples: supplySamples,
       water: localWaterSamples / Math.max(1, supplySamples),
@@ -174,6 +193,15 @@ const report = () => {
         shelter: household(w, p)?.id ?? null,
         job: p.job ?? null,
         career: controller.memory.load(r.id)?.career?.kind ?? null,
+        holdings: w.buildings
+          .filter((b) => b.owner === p.id)
+          .map((b) => ({
+            id: b.id,
+            kind: b.kind,
+            unfinished: !!b.construction,
+            investment: b.investment,
+            salesReceipts: b.accounts?.receipts ?? 0,
+          })),
       };
     }),
     failureReasons: store.db
@@ -181,6 +209,16 @@ const report = () => {
         "SELECT json_extract(data, '$.message') reason, count(*) n FROM npc_journal WHERE kind='failure' GROUP BY reason ORDER BY n DESC LIMIT 8",
       )
       .all(),
+    localPlanningErrors: store.db
+      .prepare("SELECT count(*) n FROM npc_journal WHERE kind='local-planning-error'")
+      .get(),
+    towns: w.towns.map((t) => ({
+      name: t.name,
+      founder: t.founder,
+      mayor: t.mayor,
+      residents: t.residents.length,
+      candidates: t.election?.candidates.length ?? 0,
+    })),
     failures: store.db.prepare("SELECT count(*) n FROM npc_journal WHERE kind='failure'").get(),
     failureExamples: store.db
       .prepare(
@@ -233,7 +271,16 @@ try {
     if (t % 10 === 9) measure();
     for (const p of Object.values(w.players))
       if (!initial.has(p.id)) initial.set(p.id, netAssets(w, p));
-    if (t % 100 === 0) await controller.settled();
+    if (t % 100 === 0) {
+      await controller.settled();
+      // Give signals and other processes a scheduling opportunity. Never skip
+      // physics/economy steps to accelerate a long run.
+      await yieldToHost();
+      if (maxWallSeconds && performance.now() - started >= maxWallSeconds * 1000) {
+        stoppedFor = 'wall-time limit';
+        break;
+      }
+    }
     if (!restarted && t >= days * 43200 * 10) {
       controller.close();
       controller = new Residents(store, universe, worlds, options);
@@ -242,6 +289,7 @@ try {
     if (t > 0 && t % 864000 === 0) console.log(JSON.stringify(report()));
   }
   await controller.settled();
+  if (stoppedFor === 'running') stoppedFor = 'completed';
   const summary = report();
   console.log(JSON.stringify(summary, null, 2));
   if (diagnosticPath)

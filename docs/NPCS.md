@@ -288,6 +288,8 @@ To exercise the controller offline:
 
 ```sh
 npx tsx scripts/npc-evaluate.ts --days=7 --population=4 --seed=1
+# Measure throughput locally; stop after one minute, marking the result incomplete:
+nice -n 10 npx tsx scripts/npc-evaluate.ts --days=21 --population=19 --max-wall-seconds=60
 # Optional synthetic-world diagnostics, including state before critical health:
 npx tsx scripts/npc-evaluate.ts --days=1 --diagnostics=/tmp/npc-evaluation.json
 ```
@@ -300,7 +302,61 @@ shelter and failure reports reveal integration problems. Reports separate liquid
 quoted asset value, online time, money-transfer reasons and sampled local food/water
 availability (excluding government/import outlets). They do not prove live model
 quality or long-term economic balance. Use different seeds/populations for broader
-coverage; 19 residents and 14 days can take substantial CPU time.
+coverage; up to 19 residents and 21 days can take substantial CPU time. `seed` varies resident identities and schedules; it does not seed every random event or the terrain.
+
+Reports include requested/completed duration, wall time, speedup, planning errors,
+owned businesses and town participation. `--max-wall-seconds=0` (default) imposes
+no wall-time limit; a bounded run is explicitly marked incomplete. Run locally
+with reduced CPU priority, not inside the production service. The simulation
+keeps 100ms steps; increasing hunger/production rates or skipping whole days is
+not equivalent. World scripts, clients/network and human conversations are excluded.
+
+### Actual-Jev snapshot experiments (paid)
+
+`scripts/npc-canary.ts` runs the configured residents on a private snapshot using
+real Jev decisions, ordinary 100ms simulation steps and their saved attendance
+patterns. It imports the snapshot's daily/monthly/request budgets. A separate,
+durable spending ledger enforces the required **whole-experiment** ceiling even
+when a world checkpoint is restored. Unknown provider outcomes retain their full
+reservation. Authentication/rate-limit errors and repeated provider failures stop
+the experiment. Requests are paced by real time (at most two starts per second);
+measured response latency, including pacing, advances in simulated time.
+
+Export only game state, NPC accounts (no authentication hashes), recent journals,
+provider accounting and market metadata from a read-only SQLite transaction:
+
+```sh
+umask 077
+ssh YOUR_SERVER python3 - < scripts/npc-canary-export.py > /private/source.json
+node --env-file=.env --import tsx scripts/npc-canary.ts --paid \
+  --source=/private/source.json --output=/private/experiment \
+  --days=4 --max-usd=9.60
+# Resume the same code/configuration/snapshot/cap after an orderly stop:
+# repeat that command with --resume
+```
+
+The export helper defaults to `/var/lib/aclone/aclone.sqlite`; adapt the source
+path for another installation. Keep exports private: they contain player progress
+and NPC memories. They must never be committed or copied over the live database.
+The sample cap is illustrative, **not** an estimate or a recommended default.
+Explicit `--paid` and `--max-usd` are required; local `.env` supplies credentials
+but credentials are never written into experiment manifests.
+
+Outputs include an immutable input/code fingerprint, resumable world checkpoint,
+independent `spend.sqlite`, progress log and `report.json` with deaths, liquidity,
+assets, holdings, production, sampled local necessities, town participation and
+errors. `--max-wall-seconds=60` or SIGINT stops at a checkpoint; incomplete runs
+are labelled. Resume models a normal controller restart and refuses changed code
+or configuration. Current transient navigation is recalculated after restarting.
+
+Days mean 86,400 normal seconds. All worlds, seasons, needs, rents and NPC schedules
+advance together; API timeouts stay on the real clock. Human players are offline,
+accepted gameplay commitments remain, and no conversation models are called. World
+announcement scripts, browser rendering and network load are excluded. Sampling is
+once per simulated minute. Existing human-funded businesses remain in the starting
+snapshot, and market valuations are not realized profit. Neither this single run
+nor the heuristic evaluator proves indefinite prosperity; compare repeat runs and
+a live no-intervention window before claiming stability.
 
 ### Economy recovery safeguards
 
