@@ -1023,7 +1023,14 @@ export async function createApp(options: AppOptions) {
     for (const w of worlds.values()) store.saveWorld(w);
     await vite?.close();
     await new Promise<void>((r) => wss.close(() => r()));
-    if (server.listening) await new Promise<void>((r) => server.close(() => r()));
+    if (server.listening) {
+      const closed = new Promise<void>((r) => server.close(() => r()));
+      // close() stops accepting clients, but an unused browser preconnection or
+      // incomplete request can otherwise hold shutdown open indefinitely. Game
+      // sockets and Vite have already closed; finish the remaining HTTP sockets.
+      server.closeAllConnections();
+      await closed;
+    }
     store.close();
   };
   return { server, worlds, store, universe, accounts, residents, listen, close };
