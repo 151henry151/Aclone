@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aclone.quality', 'low'));
 });
@@ -11,7 +12,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   });
   const textures = new Set<string>();
   page.on('response', (r) => {
-    if (r.ok() && /\/textures\/(meadow|gravel|stone|roof)\.webp$/.test(r.url()))
+    if (r.ok() && /\/textures\/(meadow|gravel|stone)\.webp$/.test(r.url()))
       textures.add(r.url().split('/').at(-1)!);
   });
   await page.goto('./');
@@ -24,7 +25,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await expect(page.getByRole('heading', { name: 'Somewhere to call home.' })).toBeVisible();
   await page.screenshot({ path: 'test-results/galaxy.png' });
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await expect(page.locator('#cash')).toHaveText('18s 0d');
   // Exercise the built client and configured URL prefix as well as the isolated map fixture.
   await page.keyboard.press('m');
@@ -33,7 +34,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await expect(map.getByRole('button', { name: 'Harbour stores', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(map).toHaveCount(0);
-  await expect.poll(() => textures.size).toBe(4);
+  await expect.poll(() => textures.size).toBe(3);
   await expect
     .poll(
       async () => Number(await page.locator('#viewport canvas').getAttribute('data-triangles')),
@@ -45,7 +46,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.keyboard.press('h');
   await expect(page.locator('#world-hud')).toBeHidden();
   await page.keyboard.press('Escape');
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.keyboard.down('ArrowDown');
   await page.waitForTimeout(1800);
   await expect(page.locator('#driving')).not.toContainText(/^0 MPH/);
@@ -64,7 +65,7 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await expect(page.locator('#clock')).toContainText('RUST 0 : 0 MOSS');
   await page.getByRole('button', { name: 'Parp Space' }).click();
   await page.reload();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await expect(page.locator('#clock')).toContainText('RUST');
   expect(errors).toEqual([]);
 });
@@ -95,7 +96,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Browser Parish');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.getByRole('button', { name: 'Editor F10' }).click();
   await expect(page.getByRole('heading', { name: 'World creator studio' })).toBeVisible();
   await page.getByRole('button', { name: 'Landscape', exact: true }).click();
@@ -133,7 +134,7 @@ test('small viewport can register and navigate', async ({ page }) => {
     .fill('Mobile ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.screenshot({ path: 'test-results/mobile.png' });
 });
 
@@ -154,7 +155,7 @@ test('password setup, sign-out and sign-in return to the same pilot', async ({ p
   await expect(page.locator('.pilot-card')).toContainText(name);
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
   await expect(page.locator('#pilot-name')).toHaveText(name);
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.keyboard.press('F9');
   await page.getByRole('button', { name: 'Options & pilot key', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out of all devices' }).click();
@@ -171,7 +172,7 @@ test('pilot nameplates and disconnects match the live parish list', async ({ pag
     .fill('Observer ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await expect(page.locator('#chat-log')).toContainText(
     'Welcome to the parish. Mind the tractor.',
     { timeout: 15000 },
@@ -216,7 +217,7 @@ test('walking character can move, change camera and return to the tractor', asyn
     .fill('Walker ' + Date.now().toString().slice(-8));
   await page.getByRole('button', { name: 'Make yourself at home' }).click();
   await page.getByRole('button', { name: 'Land on this world' }).first().click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.getByRole('button', { name: 'Inventory I', exact: true }).click();
   const bread = page
     .locator('.item-list > div')

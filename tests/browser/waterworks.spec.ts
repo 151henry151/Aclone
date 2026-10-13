@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -38,7 +39,7 @@ test('waterworks build preview enforces shoreline placement and the finished bui
       { token, world: w.id },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.getByRole('button', { name: 'Build', exact: true }).click();
     const build = page.locator('[data-do=construct][data-id=waterworks]');
     await expect(build).toBeDisabled();
@@ -68,6 +69,9 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     worker.z = b.z - 10;
     worker.skills = ['pump operator'];
     act(w, worker.id, { type: 'job', building: b.id });
+    // A lone operator is half of the ideal two-person crew.
+    advance(w, 600);
+    expect(b.stock.water ?? 0).toBe(0);
     advance(w, 600);
     expect(b.stock.water).toBe(12);
     expect(b.stock.fuel).toBe(0);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -34,7 +35,7 @@ test('drinks distort only scenery, preserve usable UI, respect reduced motion an
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     const canvas = page.locator('canvas[data-intoxication]');
     await expect(canvas).toHaveAttribute('data-intoxication', '0.000');
     await page.screenshot({ path: 'test-results/intoxication/sober.png' });

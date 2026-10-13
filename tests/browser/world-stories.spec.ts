@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -30,7 +31,7 @@ test('authors write readable books and announce town events through the editor',
       { token, id: w.id },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Books', exact: true }).click();
     const form = page.locator('#creator-book-form');

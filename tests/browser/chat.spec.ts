@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,7 +28,7 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
       { token: pilot.token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     const chat = page.getByRole('log');
     await expect(chat).toContainText('Earlier message 0');
     await expect(chat).not.toContainText('private secret');

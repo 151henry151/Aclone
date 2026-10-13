@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -45,7 +46,7 @@ for (const mobile of [false, true])
         { token, world: w.id },
       );
       await page.goto(`http://127.0.0.1:${port}`);
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 120000 });
+      await waitForWorld(page);
       await expect(page.locator('#target')).toContainText(mill.name);
       const activate = async (selector: string) =>
         mobile ? page.locator(selector).tap() : page.locator(selector).click();

@@ -1,6 +1,7 @@
 import { creatorSchema } from '../../src/shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -132,7 +133,7 @@ test('audible engines, shared horns and supplied machinery through the real brow
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     const soundButton = page.locator('.bottom-left [data-do="sound"]');
     await expect(soundButton).toHaveText('Sound: tap to start');
     expect(await page.evaluate(() => (window as any).__audioProbe.contexts.length)).toBe(0);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -37,7 +38,7 @@ test('leaving a home or rented room works across live updates and after reconnec
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     const outside = page.getByRole('button', { name: 'At home · Go outside' });
     for (const kind of ['home', 'bnb', 'hotel']) {
       b.kind = kind;
@@ -51,7 +52,7 @@ test('leaving a home or rented room works across live updates and after reconnec
       }
       p.atHome = true;
       await page.reload();
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       await expect(outside).toBeVisible();
       // Hold through several snapshots: replacing the node loses the click or focus.
       if (kind === 'bnb') {
@@ -66,7 +67,7 @@ test('leaving a home or rented room works across live updates and after reconnec
       await expect.poll(() => p.atHome).toBe(false);
       await expect(outside).toHaveCount(0, { timeout: 15000 });
       await page.reload();
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       await expect(outside).toHaveCount(0, { timeout: 15000 });
     }
     const startZ = p.z;

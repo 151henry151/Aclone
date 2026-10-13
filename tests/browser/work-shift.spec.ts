@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -41,7 +42,7 @@ for (const mobile of [false, true])
         { token },
       );
       await page.goto(`http://127.0.0.1:${port}`);
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       await expect(page.locator('#work-shift')).toContainText('Shift active');
       await page.locator('#target button').click();
       const work = page.locator('[data-work-button]');

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -30,7 +31,7 @@ test('combat-world players launch a class and mark or recall their drone', async
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.getByRole('button', { name: 'Activities', exact: true }).click();
     await page.getByRole('button', { name: 'Launch Interceptor' }).click();
     await expect.poll(() => p.crowClass).toBe('interceptor');

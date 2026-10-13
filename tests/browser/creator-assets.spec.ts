@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -152,7 +153,7 @@ for (const format of ['glb', 'obj'] as const)
         { token, id: w.id },
       );
       await page.goto(url);
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       await expect.poll(() => loaded).toBe(true);
       await page.keyboard.press('h');
       await page.screenshot({ path: `test-results/creator-${format}.png` });

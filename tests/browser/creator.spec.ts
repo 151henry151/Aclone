@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -38,7 +39,7 @@ for (const mobile of [false, true])
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`http://127.0.0.1:${port}`);
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       // The same editor is reachable through desktop keyboard and the mobile menu.
       if (mobile) {
         await page.getByRole('button', { name: 'Open game menu' }).click();
@@ -50,7 +51,11 @@ for (const mobile of [false, true])
       await expect(page.locator('#creator-preview canvas')).toBeVisible();
       await page.getByRole('button', { name: 'Save model', exact: true }).click();
       await expect.poll(() => w.creator?.models[0]?.name).toBe('Copper pine');
-      // Saving redraws the workshop after the authoritative state changes.
+      // The server state changes before its acknowledgement redraws the workshop.
+      // Wait for that new UI before scrolling the replacement preview.
+      await expect(
+        page.getByRole('button', { name: 'Edit Copper pine', exact: true }),
+      ).toBeVisible();
       await expect(async () => {
         await page.locator('#creator-preview').scrollIntoViewIfNeeded();
         await expect(page.locator('#creator-preview')).toBeInViewport();

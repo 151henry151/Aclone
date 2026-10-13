@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,7 +33,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.keyboard.press('m');
     const map = page.locator('#parish-map');
     const b = w.buildings.find((b) => b.kind === 'market')!;
@@ -67,6 +68,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     p.z = b.z;
     await expect(page.locator('#waypoint-distance')).toContainText('Arrived', { timeout: 30000 });
     await page.reload();
+    await waitForWorld(page);
     await expect(page.locator('#waypoint-name')).toHaveText(b.name);
     await page.setViewportSize({ width: 390, height: 844 });
     await page
@@ -91,7 +93,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await page.getByRole('button', { name: 'Clear waypoint', exact: true }).tap();
     await expect(page.locator('#waypoint-hud')).toBeHidden();
     await page.reload();
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await expect(page.locator('#waypoint-hud')).toBeHidden();
   } finally {
     await context.close();

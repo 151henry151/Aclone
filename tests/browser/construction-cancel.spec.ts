@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -44,7 +45,7 @@ for (const mobile of [false, true]) {
         { token },
       );
       await page.goto(`http://127.0.0.1:${port}`);
-      await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+      await waitForWorld(page);
       const target = page.locator('#target button');
       if (mobile) await target.tap();
       else await target.click();

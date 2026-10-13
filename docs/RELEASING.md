@@ -35,7 +35,13 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.66.0
+## Current upgrade: 0.66.1
+
+CI maintenance only: browser readiness, current gameplay expectations, smaller
+test groups and website coverage. No game or website deployment, service restart,
+migration or world reset is needed.
+
+### 0.66.0
 
 Publish the standalone marketing page with `bash scripts/deploy-website.sh` after
 pushing. The script backs up the existing site and leaves the game service and

@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.1] - 2026-10-12
+
+### Fixed
+
+- Browser checks wait for playable readiness and completed panel refreshes. Update outdated expectations for textures, pump-house staffing, purchased map controls and map waypoints.
+- Split CI browser coverage across eight runners so the full suite can finish within each job’s deadline, and include public-website checks in CI.
+
 ## [0.66.0] - 2026-10-12
 
 ### Changed

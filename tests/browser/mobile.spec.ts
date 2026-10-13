@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect, type Page } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -68,7 +69,7 @@ test('phone controls, mobile sheets and touch conversations support real gamepla
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await expect(page.locator('html')).toHaveClass(/mobile-ui/);
     await expect(page.locator('.mobile-nav')).toBeVisible();
     await expect(page.locator('.left-panel')).toBeHidden();

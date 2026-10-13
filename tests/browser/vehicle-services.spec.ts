@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -28,7 +29,7 @@ test('garage repairs and optional maps are usable on a phone', async ({ page }) 
       localStorage.setItem('aclone.quality', 'low');
     }, token);
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.keyboard.press('m');
     await expect(page.getByText(/This world requires a Parish map/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
@@ -38,10 +39,14 @@ test('garage repairs and optional maps are usable on a phone', async ({ page }) 
     await expect(page.getByText(/condition 75.0%/)).toBeVisible();
     await page.getByRole('button', { name: 'Buy parish map', exact: true }).click();
     await expect.poll(() => p.inventory.parishMap).toBe(1);
-    await expect(page.getByRole('button', { name: 'Buy parish map', exact: true })).toBeDisabled();
-    await page
-      .getByRole('heading', { name: 'Vehicle service', exact: true })
-      .scrollIntoViewIfNeeded();
+    // Contextual controls hide a purchase the player has already made.
+    await expect(page.getByRole('button', { name: 'Buy parish map', exact: true })).toBeHidden();
+    // A state snapshot can replace the panel while Playwright is scrolling it.
+    await expect(async () => {
+      await page
+        .getByRole('heading', { name: 'Vehicle service', exact: true })
+        .scrollIntoViewIfNeeded();
+    }).toPass({ timeout: 10000 });
     await page.screenshot({ path: 'test-results/vehicle-service-phone.png' });
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.keyboard.press('m');

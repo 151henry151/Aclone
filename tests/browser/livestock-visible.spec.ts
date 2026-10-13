@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,7 +55,7 @@ test('live livestock renders, henhouse care works, and stock changes leave the w
       { token },
     );
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.keyboard.press('e');
     await expect(page.getByRole('heading', { name: 'Livestock', exact: true })).toBeVisible();
     await expect(page.getByText(/4 chickens · 100% condition/)).toBeVisible();

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -49,7 +50,7 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
     for (const p of [s, t]) {
       await p.bringToFront();
       await p.goto(`http://127.0.0.1:${port}`);
-      await expect(p.locator('#world-hud')).toBeVisible({ timeout: 120000 });
+      await waitForWorld(p);
       await p.keyboard.press('F9');
       await p.getByRole('button', { name: 'Mail, family & trades', exact: true }).click();
     }

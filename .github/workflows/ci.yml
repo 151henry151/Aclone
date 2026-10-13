@@ -31,19 +31,35 @@ jobs:
           - name: root-1
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=1/4
+            tests: --shard=1/8
           - name: root-2
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=2/4
+            tests: --shard=2/8
           - name: root-3
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=3/4
+            tests: --shard=3/8
           - name: root-4
             base_path: ''
             url: http://127.0.0.1:3000/
-            tests: --shard=4/4
+            tests: --shard=4/8
+          - name: root-5
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=5/8
+          - name: root-6
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=6/8
+          - name: root-7
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=7/8
+          - name: root-8
+            base_path: ''
+            url: http://127.0.0.1:3000/
+            tests: --shard=8/8
           - name: subpath
             base_path: /aclone
             url: http://127.0.0.1:3013/aclone/
@@ -64,6 +80,9 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - name: Check public website
+        if: matrix.name == 'root-1'
+        run: npm run check:website
       - name: Start disposable game server
         run: npm start > /tmp/aclone.log 2>&1 &
       - name: Start subpath proxy
@@ -79,7 +98,8 @@ jobs:
           done
           cat /tmp/aclone.log
           exit 1
-      # One software WebGL browser per runner; split across machines, not workers.
+      # Eight bounded shards keep real software-WebGL runs within the 15-minute
+      # deadline without dropping tests or competing renderers on the same CPU.
       # Playwright's deadline leaves time to upload diagnostics before the job limit.
       - run: npm run test:e2e -- --global-timeout=900000 ${{ matrix.tests }}
       - uses: actions/upload-artifact@v4

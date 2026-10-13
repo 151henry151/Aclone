@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aclone.quality', 'low'));
@@ -15,7 +16,7 @@ test('world creator opens the caretaker dashboard and reads residents and buildi
   await page.getByRole('button', { name: 'Create a world', exact: true }).click();
   await page.getByLabel('World name', { exact: true }).fill('Books Parish');
   await page.getByRole('button', { name: 'Create world', exact: true }).click();
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.getByRole('button', { name: 'World F9' }).click();
   await page.getByRole('button', { name: 'Caretaker dashboard', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Caretaker dashboard.' });

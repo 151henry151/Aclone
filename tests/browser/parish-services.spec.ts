@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,11 +23,12 @@ test('default Puddlewick exposes the intended starter roster and production at t
       localStorage.setItem('aclone.pilot', token);
       localStorage.setItem('aclone.world', 'puddlewick');
       localStorage.setItem('aclone.sound', 'off');
+      localStorage.setItem('aclone.quality', 'low');
     }, token);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`http://127.0.0.1:${port}`);
-    await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+    await waitForWorld(page);
     await page.keyboard.press('m');
     const map = page.getByRole('dialog', { name: 'Parish map.', exact: true });
     await expect(map).toBeVisible();
@@ -38,6 +40,10 @@ test('default Puddlewick exposes the intended starter roster and production at t
       ).toHaveCount(0);
     for (const kind of ['mason', 'waterworks']) {
       await map.getByRole('button', { name: buildings[kind].name, exact: true }).click();
+      await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
+      await map.getByRole('button', { name: 'Parish directory', exact: true }).click();
+      const building = w.buildings.find((b) => b.kind === kind)!;
+      await page.locator(`[data-do="building"][data-id="${building.id}"]`).click();
       const panel = page.getByRole('dialog', { name: buildings[kind].name, exact: true });
       await expect(panel).toBeVisible();
       await expect(panel).toContainText(

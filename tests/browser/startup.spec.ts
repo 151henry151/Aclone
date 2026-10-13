@@ -37,7 +37,7 @@ test('cold entry waits for textures and GPU preparation, holds input neutral and
     await expect(page.locator('#world-hud')).toBeHidden();
     await page.keyboard.down('ArrowUp');
     await page.waitForTimeout(300);
-    expect(p.speed).toBe(0);
+    expect(Math.abs(p.speed)).toBe(0);
     expect(p.x).toBe(0);
     expect(p.z).toBe(0);
     release();
@@ -46,7 +46,7 @@ test('cold entry waits for textures and GPU preparation, holds input neutral and
     await expect(page.locator('#toast')).toContainText('Plain surfaces');
     // A held key during loading must not become a delayed drive command.
     await page.waitForTimeout(300);
-    expect(p.speed).toBe(0);
+    expect(Math.abs(p.speed)).toBe(0);
     await page.keyboard.up('ArrowUp');
     await page.keyboard.down('ArrowUp');
     await expect.poll(() => Math.abs(p.speed)).toBeGreaterThan(0.1);
