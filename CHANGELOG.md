@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.2] - 2026-10-12
+
+### Fixed
+
+- Server shutdown closes unused browser preconnections instead of waiting indefinitely for a request.
+- Housing browser checks exercise each accommodation separately, and the labour check waits for shift completion before checking payment on slow CI renderers.
+- An NPC regression test waits for its mocked dialogue to start rather than racing the planner's timer.
+
 ## [0.66.1] - 2026-10-12
 
 ### Fixed
