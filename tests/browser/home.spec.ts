@@ -7,41 +7,21 @@ import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation.ts';
 
-test('leaving a home or rented room works across live updates and after reconnecting', async ({
-  page,
-}) => {
-  const dir = mkdtempSync(join(tmpdir(), 'aclone-home-test-'));
-  const app = await createApp({ dataDir: dir, port: 0, dev: true });
-  try {
-    const { account, token } = app.universe.register('Home tester');
-    const w = createWorld('home-test', 'Home test', account.id);
-    w.script = '';
-    const p = addPlayer(w, account.id, account.name);
-    p.x = 0;
-    p.z = 10;
-    p.heading = 0;
-    const b = makeBuilding('shelter', 'home', 0, 0);
-    b.owner = p.id;
-    w.buildings = [b];
-    p.home = b.id;
-    p.atHome = true;
-    app.worlds.set(w.id, w);
-    const port = await app.listen();
-    await page.addInitScript(
-      ({ token, world }) => {
-        localStorage.setItem('aclone.pilot', token);
-        localStorage.setItem('aclone.world', world);
-        localStorage.setItem('aclone.quality', 'low');
-      },
-      { token, world: w.id },
-    );
-    const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://127.0.0.1:${port}`);
-    await waitForWorld(page);
-    const outside = page.getByRole('button', { name: 'At home · Go outside' });
-    for (const kind of ['home', 'bnb', 'hotel']) {
-      b.kind = kind;
+for (const kind of ['home', 'bnb', 'hotel']) {
+  test(`leaving ${kind} works across live updates and after reconnecting`, async ({ page }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'aclone-home-test-'));
+    const app = await createApp({ dataDir: dir, port: 0, dev: true });
+    try {
+      const { account, token } = app.universe.register('Home tester');
+      const w = createWorld('home-test', 'Home test', account.id);
+      w.script = '';
+      const p = addPlayer(w, account.id, account.name);
+      p.x = 0;
+      p.z = 10;
+      p.heading = 0;
+      const b = makeBuilding('shelter', kind, 0, 0);
+      b.owner = p.id;
+      w.buildings = [b];
       if (kind !== 'home') {
         b.owner = 'innkeeper';
         b.lodging = {
@@ -50,9 +30,23 @@ test('leaving a home or rented room works across live updates and after reconnec
           guests: { [p.id]: { until: w.time + 3600, stock: {} } },
         };
       }
+      p.home = b.id;
       p.atHome = true;
-      await page.reload();
+      app.worlds.set(w.id, w);
+      const port = await app.listen();
+      await page.addInitScript(
+        ({ token, world }) => {
+          localStorage.setItem('aclone.pilot', token);
+          localStorage.setItem('aclone.world', world);
+          localStorage.setItem('aclone.quality', 'low');
+        },
+        { token, world: w.id },
+      );
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.goto(`http://127.0.0.1:${port}`);
       await waitForWorld(page);
+      const outside = page.getByRole('button', { name: 'At home · Go outside' });
       await expect(outside).toBeVisible();
       // Hold through several snapshots: replacing the node loses the click or focus.
       if (kind === 'bnb') {
@@ -69,15 +63,15 @@ test('leaving a home or rented room works across live updates and after reconnec
       await page.reload();
       await waitForWorld(page);
       await expect(outside).toHaveCount(0, { timeout: 15000 });
+      const startZ = p.z;
+      await page.keyboard.down('ArrowUp');
+      await expect.poll(() => p.z).toBeGreaterThan(startZ + 1);
+      await page.keyboard.up('ArrowUp');
+      expect(errors).toEqual([]);
+    } finally {
+      await page.close();
+      await app.close();
+      rmSync(dir, { recursive: true, force: true });
     }
-    const startZ = p.z;
-    await page.keyboard.down('ArrowUp');
-    await expect.poll(() => p.z).toBeGreaterThan(startZ + 1);
-    await page.keyboard.up('ArrowUp');
-    expect(errors).toEqual([]);
-  } finally {
-    await page.close();
-    await app.close();
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
+  });
+}

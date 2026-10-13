@@ -123,7 +123,10 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   await page.keyboard.press('e');
   await page.getByRole('button', { name: 'Work a shift · 1d' }).click();
   await expect(page.locator('#task-name')).toContainText('Working a labour shift');
-  await expect(page.locator('#cash')).toHaveText('18s 1d', { timeout: 22000 });
+  // The shift takes 15 simulation seconds; a busy software renderer can deliver
+  // its final snapshot later. Observe completion before checking the exact wage.
+  await expect(page.locator('#task-control')).toBeHidden({ timeout: 60000 });
+  await expect(page.locator('#cash')).toHaveText('18s 1d');
 });
 test('small viewport can register and navigate', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

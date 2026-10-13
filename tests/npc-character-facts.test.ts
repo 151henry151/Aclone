@@ -197,6 +197,10 @@ for (const tickDuringReply of [false, true])
     let now = Date.now(),
       release!: () => void,
       calls = 0;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
     t.mock.method(Date, 'now', () => now);
     const store = new Store(':memory:'),
       w = createWorld('puddlewick', 'Test', 'server');
@@ -226,6 +230,7 @@ for (const tickDuringReply of [false, true])
                 if (calls === 1)
                   await new Promise<void>((resolve) => {
                     release = resolve;
+                    markStarted();
                   });
                 else assert.deepEqual(req.observation.characterFacts.acquiredSkills, []);
                 return {
@@ -256,8 +261,19 @@ for (const tickDuringReply of [false, true])
       say(w, 'Hank', 'Mabel, are you a miller?', 'chat');
       r.capture(w);
       r.tick(0.5, now);
-      for (let i = 0; i < 10 && !release; i++)
-        await new Promise((resolve) => setImmediate(resolve));
+      // Planning starts in setTimeout(0); ten immediate callbacks can all run
+      // before that timer is due. Synchronize with the mocked provider instead.
+      let deadline: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([
+          started,
+          new Promise((_, reject) => {
+            deadline = setTimeout(() => reject(new Error('Dialogue did not start')), 5000);
+          }),
+        ]);
+      } finally {
+        clearTimeout(deadline);
+      }
       assert.ok(release);
       p.age = w.settings.maxAge;
       advance(w, 1);

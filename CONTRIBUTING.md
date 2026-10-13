@@ -42,6 +42,8 @@ CI limits unit-test concurrency to two and runs browser checks on separate runne
 
 Use performance graphics for functional tests on software rendering; `TEST_GPU=1` enables detailed capture where supported. Use `waitForWorld` from `tests/browser/fixtures/ready.ts` before gameplay input: the HUD appears during settling, before controls are enabled. Wait for observable UI state after a server mutation or viewport resize. Hold finite task fixtures until assertions finish, then explicitly test completion; do not depend on screenshot speed or add retries to conceal a failure.
 
+Give independent scenarios their own tests rather than sharing one deadline across repeated world reloads. For timed work, observe the task ending before asserting its reward: simulation time and delivery of the final UI update can lag wall time on a busy runner. If a test times out after all assertions pass, inspect server teardown as well as browser actions; unused HTTP preconnections must not prevent shutdown.
+
 For cold-load diagnostics, run `npm run build` then `CHROMIUM_PATH=/usr/bin/chromium npm run profile:startup`. This creates a disposable parish with eight extra tractors and saves CPU, frame, resource and readiness timings under `test-results/startup`. `PROFILE_GPU=1` requests hardware rendering; inspect the recorded renderer before comparing results. `PROFILE_SECONDS=25` shortens the default minute. Browser entry assertions allow up to 60 seconds for preparation; ordinary interaction waits remain unchanged.
 
 ## Sending changes
