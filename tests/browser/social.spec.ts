@@ -28,10 +28,13 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
     a.inventory = { wheat: 20 };
     a.cash = b.cash = 10000;
     w.script = '';
-    // Exercise social transactions, not two competing full-town GPU warmups.
+    // Exercise social transactions in a compact parish. Disabling scenery alone
+    // still streams the full countryside terrain into both software renderers.
+    w.settings.mapSize = 500;
     w.creator = defaultCreator();
     w.creator.scenery = false;
     w.creator.roads = false;
+    w.roads = [];
     w.buildings = [];
     const offline = addPlayer(w, 'offline', 'Offline friend');
     offline.online = false;

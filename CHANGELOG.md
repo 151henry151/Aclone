@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.3] - 2026-10-14
+
+### Fixed
+
+- Keep the two-client social browser fixture compact so simultaneous software-rendered terrain warmups do not time out before mail, family and trade checks begin.
+
 ## [0.66.2] - 2026-10-12
 
 ### Fixed
