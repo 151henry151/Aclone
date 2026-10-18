@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.69.0] - 2026-10-18
+
+### Added
+
+- Caretakers can browse persistent public chat history in a new F6 Chat logs tab and load older notices from the Overview. History is fetched in batches, survives server restarts and keeps its scroll position during dashboard updates; private messages remain excluded.
+
 ## [0.68.0] - 2026-10-18
 
 ### Fixed

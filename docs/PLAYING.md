@@ -263,3 +263,9 @@ Sunrise and sunset colour the sky and clouds around the sun, fading through an a
 The parked cargo ship launches every three or four economic game days (30–40 real minutes at the fixed calendar rate), returning to the pad half a day after departure. All clients see the same phase, including when joining during flight. The spaceport panel shows status and time to the next launch. The pad remains a reserved solid area even while the ship is away. This is an ambient cargo service; player travel, bookings and inventories are unaffected.
 
 Sound preferences separate engines, effects/machinery, environmental ambience and chat alerts. Find the four sliders below master volume in **Pilot & preferences**. World creators can add sounds that change with location, time and weather; muted and hidden tabs stay silent.
+
+### Caretaker history
+
+World owners can open **F6 → Overview** for public notices or **Chat logs** for all public chat, emotes and notices. Scroll inside the history and choose **Load older entries** to continue to the beginning of the available archive. **Refresh** returns to the latest entries; live dashboard updates leave your reading position alone. Private messages and letters remain excluded.
+
+The archive starts with the messages still retained when this upgrade is installed, then saves new public messages alongside the world. Earlier messages already discarded from the game's chat buffer cannot be reconstructed. History is stored in the normal SQLite database and included in backups; it has no automatic age cutoff.

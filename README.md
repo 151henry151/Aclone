@@ -39,6 +39,8 @@ Employment has a visible shift countdown and renewal reminder; see the [economy 
 
 Repeated trades show cumulative confirmed quantities and costs, including after closing a shop.
 
+World owners can inspect residents, businesses and public notices through **F6 → Caretaker dashboard**. See the [caretaker history guide](docs/PLAYING.md#caretaker-history) for persistent public chat and notice archives.
+
 <details>
 <summary>More gameplay screenshots</summary>
 

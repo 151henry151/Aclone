@@ -2312,3 +2312,16 @@ button span {
     font-size: 0.7rem;
   }
 }
+
+.caretaker-log {
+  max-height: 55vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+}
+.caretaker-log li {
+  margin-bottom: 0.8rem;
+  white-space: pre-wrap;
+}

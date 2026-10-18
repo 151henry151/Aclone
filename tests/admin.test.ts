@@ -150,6 +150,26 @@ test('only the world creator receives the caretaker dashboard', async () => {
       await ready;
       return ws;
     };
+    const historyUrl = `${base}/api/caretaker/${created.id}?kind=chat`;
+    assert.equal((await fetch(historyUrl)).status, 400);
+    assert.equal(
+      (await fetch(historyUrl, { headers: { authorization: 'Bearer ' + guest.token } })).status,
+      403,
+    );
+    const history = await fetch(historyUrl, {
+      headers: { authorization: 'Bearer ' + owner.token },
+    });
+    assert.equal(history.status, 200);
+    assert.equal(history.headers.get('cache-control'), 'no-store');
+    assert.ok((await history.json()).entries.length > 0);
+    assert.equal(
+      (
+        await fetch(historyUrl + '&before=bad', {
+          headers: { authorization: 'Bearer ' + owner.token },
+        })
+      ).status,
+      400,
+    );
     const ownerSocket = await connect(owner.token);
     const guestSocket = await connect(guest.token);
     let leaked = false;

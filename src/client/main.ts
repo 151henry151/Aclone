@@ -34,7 +34,7 @@ import { questList } from './quests';
 import { procurementHtml } from './procurement';
 import { statementHtml, journalHtml } from './reports';
 import { caretakerBody, caretakerPanel, type CaretakerUi } from './caretaker';
-import type { CaretakerView } from '../shared/caretaker';
+import type { CaretakerView, CaretakerLogPage } from '../shared/caretaker';
 import { workShift } from './work-shift';
 import { TradeFeedback } from './trade-feedback';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -1000,10 +1000,49 @@ function openPanel(name: string) {
   watchCaretaker(name === 'caretaker');
   renderPanel();
 }
+let caretakerLogWorld = '';
+let caretakerLogGeneration = 0;
+async function loadCaretakerLog(kind: 'notices' | 'chat', refresh = false) {
+  if (!world || panel !== 'caretaker') return;
+  const worldId = world.id,
+    generation = caretakerLogGeneration;
+  const previous = caretakerUi.logs?.[kind];
+  if (previous?.loading || (!refresh && previous && !previous.before && !previous.error)) return;
+  const before = refresh ? undefined : previous?.before;
+  const log = {
+    entries: refresh ? [] : (previous?.entries ?? []),
+    before,
+    loading: true,
+  } as CaretakerLogPage & { loading?: boolean; error?: string };
+  caretakerUi.logs = { ...caretakerUi.logs, [kind]: log };
+  renderPanel();
+  try {
+    const page: CaretakerLogPage = await api(
+      `/api/caretaker/${encodeURIComponent(worldId)}?kind=${kind}${before ? `&before=${before}` : ''}`,
+    );
+    if (world?.id !== worldId || generation !== caretakerLogGeneration) return;
+    log.entries.push(...page.entries);
+    log.before = page.before;
+  } catch (error) {
+    log.error = (error as Error).message;
+  } finally {
+    log.loading = false;
+    if (panel === 'caretaker' && world?.id === worldId && generation === caretakerLogGeneration)
+      renderPanel();
+  }
+}
 function watchCaretaker(open: boolean) {
   clearInterval(caretakerTimer);
   caretakerTimer = undefined;
   if (!open || (me?.authority ?? 0) < 20) return;
+  if (caretakerLogWorld !== world?.id) {
+    caretakerLogWorld = world?.id ?? '';
+    caretakerLogGeneration++;
+    caretakerUi.logs = {};
+    caretakerSnapshot = undefined;
+  }
+  const kind = caretakerUi.tab === 'Chat logs' ? 'chat' : 'notices';
+  if (!caretakerUi.logs?.[kind]) void loadCaretakerLog(kind);
   send({ type: 'caretaker' });
   caretakerTimer = setInterval(() => {
     if (panel === 'caretaker') send({ type: 'caretaker' });
@@ -1037,6 +1076,7 @@ function modal(title: string, content: string, wide = false) {
       ['building', 'player'].includes(panel) ? selected : '',
       tab,
       panel === 'editor' ? creatorMemoryKey() : '',
+      panel === 'caretaker' ? caretakerUi.tab : '',
     ]),
   );
   if (world && me) refreshActionVisibility(app, world, me);
@@ -2088,12 +2128,20 @@ app.addEventListener('click', async (e) => {
       case 'caretaker-tab':
         caretakerUi = { ...caretakerUi, tab: id || 'Overview', selected: '' };
         renderPanel();
+        if (caretakerUi.tab === 'Chat logs' && !caretakerUi.logs?.chat)
+          void loadCaretakerLog('chat');
+        if (caretakerUi.tab === 'Overview' && !caretakerUi.logs?.notices)
+          void loadCaretakerLog('notices');
         break;
       case 'caretaker-open':
         caretakerUi = { ...caretakerUi, selected: id ?? '' };
         renderPanel();
         break;
+      case 'caretaker-older':
+        void loadCaretakerLog(id === 'chat' ? 'chat' : 'notices');
+        break;
       case 'caretaker-refresh':
+        void loadCaretakerLog(caretakerUi.tab === 'Chat logs' ? 'chat' : 'notices', true);
         send({ type: 'caretaker' });
         break;
       case 'player':

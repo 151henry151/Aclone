@@ -4,6 +4,7 @@ import type {
   CaretakerBuilding,
   CaretakerResident,
   CaretakerView,
+  CaretakerLogPage,
   NamedAmount,
 } from '../shared/caretaker';
 
@@ -29,6 +30,9 @@ export interface CaretakerUi {
   tab: string;
   query: string;
   selected: string;
+  logs?: Partial<
+    Record<'notices' | 'chat', CaretakerLogPage & { loading?: boolean; error?: string }>
+  >;
 }
 
 function matches(query: string, ...parts: (string | undefined)[]) {
@@ -60,15 +64,29 @@ function buildingCard(place: CaretakerBuilding, rate: number) {
   return `<article class="caretaker-detail"><header><h3>${esc(place.name)}</h3><p>${esc(place.kind)} · ${esc(place.ownerName)}${place.government ? ' · public' : ''}${place.forSale ? ' · for sale ' + cash(place.price, rate) : ''} · ${place.x}, ${place.z}</p></header><div class="caretaker-stats"><div><small>TILL</small><b>${cash(place.investment, rate)}</b></div><div><small>WAGE</small><b>${cash(place.wage, rate)}</b></div><div><small>CONDITION</small><b>${place.condition.toFixed(0)}%</b></div><div><small>EFFICIENCY</small><b>${Math.round(place.efficiency * 100)}%</b></div></div><p>Stock: ${goods(place.stock)}</p><p>Buying: ${quotes(place.buy, rate)} · Selling: ${quotes(place.sell, rate)}</p><p>Staff: ${place.employees.map((employee) => esc(employee.name)).join(', ') || 'None'}</p><ul>${place.production.map((line) => `<li>${esc(line)}</li>`).join('')}</ul>${place.construction ? `<p>Construction still needs: ${goods(place.construction)}</p>` : ''}${place.accounts ? `<p>Accounts: receipts ${cash(place.accounts.receipts, rate)}, materials ${cash(place.accounts.materials, rate)}, wages ${cash(place.accounts.wages, rate)}, ${place.accounts.batches} batches.</p>` : ''}${place.stakes.length ? `<p>Outside stakes: ${place.stakes.map((stake) => `${esc(stake.name)} put in ${cash(stake.principal, rate)}, claim ${cash(stake.claim, rate)}, paid ${cash(stake.paid, rate)}`).join('; ')}</p>` : ''}${place.lodging ? `<p>Lodging ${place.lodging.open ? 'open' : 'closed'} at ${cash(place.lodging.rate, rate)} / hour. Guests: ${place.lodging.guests.map((guest) => `${esc(guest.name)} (${goods(guest.stock)})`).join(', ') || 'none'}</p>` : ''}${place.plots.length ? `<p>Plots: ${place.plots.map((plot) => (plot.crop ? esc(plot.crop) : 'empty')).join(', ')}</p>` : ''}${place.herdCondition !== undefined ? `<p>Herd condition ${place.herdCondition.toFixed(0)}%.</p>` : ''}</article>`;
 }
 
-function overview(view: CaretakerView, rate: number) {
+function history(ui: CaretakerUi, kind: 'notices' | 'chat') {
+  const log = ui.logs?.[kind];
+  return `<p class="note">Newest first. Public messages only; older entries are retained from this upgrade onward, plus any history still available at upgrade. Refresh to see new entries.</p>
+    <div class="caretaker-log" data-preserve-scroll tabindex="0" aria-label="${kind === 'chat' ? 'Public chat history' : 'Notice history'}"><ol>${
+      log?.entries
+        .map(
+          (m) =>
+            `<li><small>${day(m.time)} · ${Math.floor(((m.time % 600) / 600) * 24)
+              .toString()
+              .padStart(2, '0')}:${Math.floor((((m.time % 600) / 600) * 1440) % 60)
+              .toString()
+              .padStart(
+                2,
+                '0',
+              )} · ${esc(m.kind)}</small><br><b>${esc(m.name)}${m.npc ? ' · AI' : ''}</b>: ${esc(m.text)}</li>`,
+        )
+        .join('') || '<li>No entries loaded.</li>'
+    }</ol>${log?.loading ? '<p role="status">Loading history…</p>' : ''}${log?.error ? `<p role="alert">${esc(log.error)}</p>` : ''}${!log?.loading && (!log || log.before || log.error) ? button(log?.error ? 'Retry history' : 'Load older entries', 'caretaker-older', `data-id="${kind}"`) : ''}${log && !log.loading && !log.before && !log.error ? '<p>Beginning of available history.</p>' : ''}</div>`;
+}
+
+function overview(view: CaretakerView, rate: number, ui: CaretakerUi) {
   const census = view.census;
-  return `<div class="caretaker-stats"><div><small>PILOTS</small><b>${census.pilots}</b></div><div><small>AI RESIDENTS</small><b>${census.npcs}</b></div><div><small>ONLINE</small><b>${census.online}</b></div><div><small>CASH IN POCKETS</small><b>${cash(census.cash, rate)}</b></div><div><small>IN BANKS</small><b>${cash(census.bank, rate)}</b></div><div><small>BUILDINGS</small><b>${census.buildings}</b></div><div><small>FOR SALE</small><b>${census.forSale}</b></div><div><small>UNFINISHED</small><b>${census.constructing}</b></div></div><p>${esc(view.template)} parish · ${day(view.time)} · revision ${view.revision}. ${view.privateMessages} private messages are omitted.</p><h3>Towns</h3>${view.towns.map((town) => `<p><b>${esc(town.name)}</b> · ${town.residents} residents · treasury ${cash(town.treasury, rate)} · ${esc(town.governance)}${town.mayor ? ` · mayor ${esc(town.mayor)}` : ''}</p>`).join('') || '<p>No towns.</p>'}<h3>Recent notices</h3><ol>${
-    view.notices
-      .slice()
-      .reverse()
-      .map((notice) => `<li>${day(notice.time)} · ${esc(notice.name)}: ${esc(notice.text)}</li>`)
-      .join('') || '<li>No public notices.</li>'
-  }</ol><details><summary>World rules</summary><dl class="caretaker-rules">${Object.entries(
+  return `<div class="caretaker-stats"><div><small>PILOTS</small><b>${census.pilots}</b></div><div><small>AI RESIDENTS</small><b>${census.npcs}</b></div><div><small>ONLINE</small><b>${census.online}</b></div><div><small>CASH IN POCKETS</small><b>${cash(census.cash, rate)}</b></div><div><small>IN BANKS</small><b>${cash(census.bank, rate)}</b></div><div><small>BUILDINGS</small><b>${census.buildings}</b></div><div><small>FOR SALE</small><b>${census.forSale}</b></div><div><small>UNFINISHED</small><b>${census.constructing}</b></div></div><p>${esc(view.template)} parish · ${day(view.time)} · revision ${view.revision}. ${view.privateMessages} private messages are omitted.</p><h3>Towns</h3>${view.towns.map((town) => `<p><b>${esc(town.name)}</b> · ${town.residents} residents · treasury ${cash(town.treasury, rate)} · ${esc(town.governance)}${town.mayor ? ` · mayor ${esc(town.mayor)}` : ''}</p>`).join('') || '<p>No towns.</p>'}<h3>Notices</h3>${history(ui, 'notices')}<details><summary>World rules</summary><dl class="caretaker-rules">${Object.entries(
     view.settings,
   )
     .map(
@@ -135,12 +153,13 @@ export function caretakerBody(view: CaretakerView, ui: CaretakerUi, rate: number
         .join('') || '<p>No buildings match.</p>'
     }</div>${selected ? buildingCard(selected, rate) : ''}</div>`;
   }
+  if (ui.tab === 'Chat logs') return history(ui, 'chat');
   if (ui.tab === 'Ledger') return ledger(view, rate);
-  return overview(view, rate);
+  return overview(view, rate, ui);
 }
 
 export function caretakerPanel(view: CaretakerView | undefined, ui: CaretakerUi, rate: number) {
-  const tabs = ['Overview', 'Residents', 'Buildings', 'Ledger'];
+  const tabs = ['Overview', 'Residents', 'Buildings', 'Ledger', 'Chat logs'];
   const nav = `<nav class="tabs">${tabs.map((tab) => button(tab, 'caretaker-tab', `data-id="${tab}"`, tab === ui.tab ? 'active' : '')).join('')}</nav>${button('Refresh', 'caretaker-refresh', '', 'quiet')}`;
   if (!view) return `${nav}<p>Reading the parish books…</p>`;
   const query =

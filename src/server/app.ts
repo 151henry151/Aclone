@@ -375,6 +375,24 @@ export async function createApp(options: AppOptions) {
         auth(req);
         return json(res, 200, { residents: residents?.status() ?? [] });
       }
+      if (path.startsWith('/api/caretaker/') && req.method === 'GET') {
+        const account = auth(req),
+          w = worlds.get(path.slice('/api/caretaker/'.length));
+        if (!w || w.owner !== account.id) return json(res, 403, { error: 'World owner required' });
+        const params = new URL(req.url!, 'http://localhost').searchParams;
+        const kind = z.enum(['notices', 'chat']).parse(params.get('kind') ?? 'chat');
+        const before = params.has('before')
+          ? z.coerce
+              .number()
+              .int()
+              .positive()
+              .max(Number.MAX_SAFE_INTEGER)
+              .parse(params.get('before'))
+          : undefined;
+        store.saveWorld(w);
+        res.setHeader('Cache-Control', 'no-store');
+        return json(res, 200, store.publicMessages(w.id, kind === 'notices', before));
+      }
       if (path.startsWith('/api/auth/')) {
         if (path === '/api/auth/status' && req.method === 'GET')
           return json(res, 200, accounts.status(auth(req).id));

@@ -9,6 +9,8 @@ import { DatabaseSync, backup } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { defaults, buildings } from '../shared/catalog.ts';
+import { pendingPublicMessages } from '../shared/messages.ts';
+import type { CaretakerLogPage } from '../shared/caretaker.ts';
 import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
@@ -22,6 +24,12 @@ export class Store {
  CREATE TABLE IF NOT EXISTS worlds (id TEXT PRIMARY KEY,state TEXT NOT NULL,saved REAL NOT NULL);
  CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT UNIQUE COLLATE NOCASE NOT NULL,token_hash TEXT UNIQUE NOT NULL,state TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS ledger (world TEXT NOT NULL,id INTEGER NOT NULL,time REAL NOT NULL,kind TEXT NOT NULL,amount INTEGER NOT NULL,sender TEXT NOT NULL,recipient TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(world,id));`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS public_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, world TEXT NOT NULL, message_id INTEGER NOT NULL,
+      time REAL NOT NULL, name TEXT NOT NULL, text TEXT NOT NULL, kind TEXT NOT NULL,
+      npc INTEGER NOT NULL, UNIQUE(world,message_id));
+      CREATE INDEX IF NOT EXISTS public_messages_world_page ON public_messages(world,id);
+      CREATE INDEX IF NOT EXISTS public_messages_notice_page ON public_messages(world,kind,id);`);
     const version = this.db.prepare("SELECT value FROM meta WHERE key='schema'").get();
     if (version && !['1', '2'].includes(String(version.value)))
       throw Error('Unsupported database schema');
@@ -56,6 +64,7 @@ export class Store {
       .all()
       .map((row) => {
         const world = JSON.parse(String(row.state)) as World;
+        pendingPublicMessages(world);
         // Older saves predate configurable maps. Only the public starter parish
         // opens onto the full countryside; every other world keeps its old bounds.
         if (!Number.isFinite(world.settings.mapSize))
@@ -118,8 +127,20 @@ export class Store {
     }
   }
   saveWorld(w: World, now = Date.now() / 1000, withinTransaction?: () => void) {
+    const pending = pendingPublicMessages(w);
     this.transaction(() => {
       withinTransaction?.();
+      const message = this.db.prepare(
+        `INSERT OR IGNORE INTO public_messages (world,message_id,time,name,text,kind,npc) VALUES (?,?,?,?,?,?,?)`,
+      );
+      const lastMessage = Number(
+        this.db
+          .prepare('SELECT COALESCE(MAX(message_id),0) AS id FROM public_messages WHERE world=?')
+          .get(w.id)!.id,
+      );
+      for (const m of new Set([...pending, ...w.messages]))
+        if (!m.to && m.id! > lastMessage)
+          message.run(w.id, m.id!, m.time, m.name, m.text, m.kind, Number(!!m.npc));
       const insert = this.db.prepare(
         'INSERT OR IGNORE INTO ledger (world,id,time,kind,amount,sender,recipient,reason,details) VALUES (?,?,?,?,?,?,?,?,?)',
       );
@@ -139,7 +160,32 @@ export class Store {
         .prepare('INSERT OR REPLACE INTO worlds VALUES (?,?,?)')
         .run(w.id, JSON.stringify({ ...w, ledger: w.ledger.slice(-100) }), now);
     });
+    // An enclosing transaction may still roll back this save. Keep the buffer
+    // until a top-level save commits; duplicate rows are skipped on retry.
+    if (this.transactionDepth === 0) pending.length = 0;
     w.ledger = w.ledger.slice(-100);
+  }
+  publicMessages(
+    world: string,
+    notices = false,
+    before = Number.MAX_SAFE_INTEGER,
+  ): CaretakerLogPage {
+    const rows = this.db
+      .prepare(
+        `SELECT id,time,name,text,kind,npc FROM public_messages
+       WHERE world=? AND id<? ${notices ? "AND kind='system'" : ''}
+       ORDER BY id DESC LIMIT 101`,
+      )
+      .all(world, before);
+    const entries = rows.slice(0, 100).map((r) => ({
+      id: Number(r.id),
+      time: Number(r.time),
+      name: String(r.name),
+      text: String(r.text),
+      kind: String(r.kind),
+      npc: !!r.npc,
+    }));
+    return { entries, ...(rows.length > 100 ? { before: entries.at(-1)!.id } : {}) };
   }
   async backup(path: string) {
     mkdirSync(dirname(path), { recursive: true });

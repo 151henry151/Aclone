@@ -34,4 +34,40 @@ test('world creator opens the caretaker dashboard and reads residents and buildi
   await expect(dialog).toContainText('TILL');
   await dialog.getByRole('button', { name: 'Ledger', exact: true }).click();
   await expect(dialog).toContainText('starting cash');
+  await dialog.getByRole('button', { name: 'Overview', exact: true }).click();
+  await expect(dialog.getByLabel('Notice history')).toContainText('Welcome to Books Parish');
+  let requests = 0;
+  await page.route('**/api/caretaker/**?kind=chat*', async (route) => {
+    requests++;
+    const older = new URL(route.request().url()).searchParams.has('before');
+    await route.fulfill({
+      json: {
+        entries: Array.from({ length: older ? 2 : 100 }, (_, i) => ({
+          id: older ? 2 - i : 102 - i,
+          time: i,
+          name: 'Neighbour',
+          text: older ? `Old message ${i}` : `Public message ${i}`,
+          kind: 'chat',
+          npc: false,
+        })),
+        ...(older ? {} : { before: 3 }),
+      },
+    });
+  });
+  await dialog.getByRole('button', { name: 'Chat logs', exact: true }).click();
+  const history = dialog.getByLabel('Public chat history');
+  await expect(history.locator('li')).toHaveCount(100);
+  await history.hover();
+  await page.mouse.wheel(0, 800);
+  await expect.poll(() => history.evaluate((el) => el.scrollTop)).toBeGreaterThan(100);
+  const position = await history.evaluate((el) => el.scrollTop);
+  // The live dashboard refreshes every four seconds; archive reading must stay put.
+  await page.waitForTimeout(4500);
+  expect(await history.evaluate((el) => el.scrollTop)).toBeCloseTo(position, 0);
+  expect(requests).toBe(1);
+  await history.getByRole('button', { name: 'Load older entries' }).click();
+  await expect(history.locator('li')).toHaveCount(102);
+  await expect(history).toContainText('Old message 1');
+  await expect(history).toContainText('Beginning of available history');
+  expect(requests).toBe(2);
 });

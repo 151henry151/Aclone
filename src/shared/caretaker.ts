@@ -389,3 +389,9 @@ export function caretakerView(w: World): CaretakerView {
     settings: { ...w.settings },
   };
 }
+
+/** Public archive only; private chat and letters are never included. */
+export interface CaretakerLogPage {
+  entries: { id: number; time: number; name: string; text: string; kind: string; npc: boolean }[];
+  before?: number;
+}
