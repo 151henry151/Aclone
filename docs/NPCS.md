@@ -31,7 +31,7 @@ node --env-file=.env --import tsx src/server/main.ts
 
 A service may use its own environment-file setting. Compose forwards listed settings at runtime: `docker compose up --build -d`; keys are not build arguments. Preserve DATA_DIR and resident IDs. [Hosting](HOSTING.md) covers deployment.
 
-Use **AI neighbours** for private chat, or name a resident in parish chat. AI badges remain visible. Replies take provider latency/cooldown and may be unavailable under budget caps or outages. Inspect actual results rather than trusting promises.
+Use **AI neighbours** for private chat, or directly address a resident in parish chat (for example, “Mabel, where is the mill?”). Merely talking about a resident does not summon them; explicit human addressees take priority. AI badges remain visible. Replies take provider latency/cooldown and may be unavailable under budget caps or outages. Inspect actual results rather than trusting promises.
 
 ## Residents
 
@@ -74,7 +74,9 @@ Preferences cover employment, trading, gathering, farming, fishing, business, ho
 
 Addressed chat gets the next available request slot, oldest call first, subject to current requests/cooldowns/shared caps. It does not build gameplay candidates or reset income-measurement windows. Ordinary conversation takes one call; an agreement may use one extra budgeted wording call after validation. That call cannot change the agreement. Saved factual fallback replies survive interruption without duplicating requests. A sole safe agreed next plan executes locally; competing agreements/survival/recovery can still need Jev.
 
-Public group invitations start with **Hey guys**, **everyone**, **anyone**, **folks** or **@all** (also `@everyone`/`@npcs`). All listeners retain public chat, but a local interest check selects at most one online responder. It considers skills, tuition reserves, remembered wages, personal preferences, existing agreements and urgent needs; advertised prices remain unverified claims. The selected resident can decline silently or agree through the normal gameplay-request validation. Everyone else makes no conversation call. A persisted, parish-wide 30-second cooldown limits repeat invitations; normal direct mentions/private replies remain available. An unnamed follow-up goes to the chosen listener under the same two-minute rule.
+Public group invitations start with **Hey guys**, **everyone**, **anyone**, **folks** or **@all** (also `@everyone`/`@npcs`). All listeners retain public chat, but a local interest check selects at most one online responder. It considers skills, tuition reserves, remembered wages, personal preferences, existing agreements and urgent needs; advertised prices remain unverified claims. The selected resident can decline silently or agree through the normal gameplay-request validation. Everyone else makes no conversation call. A persisted, parish-wide 30-second cooldown limits repeat invitations; normal direct mentions/private replies remain available. Up to two unnamed follow-ups can go to the chosen listener within two minutes of the explicit invitation; follow-ups do not extend that window. Acknowledgements such as “thanks” or “lol”, or a public human-to-human exchange, close implicit attention. Address the NPC again to start a new conversation.
+
+Say “Mabel, stop responding”, “be quiet”, or “enough for now” in an addressed conversation to close it immediately, without paying for a chat acknowledgement. Public dismissal closes that resident’s public conversation for every participant; a private dismissal affects only that private channel. Queued replies and in-flight responses to dismissed messages are discarded, including after restart. Previously accepted gameplay agreements remain active; silence does not cancel work. A new direct question or DM can resume conversation.
 
 ## Agreements made in chat
 

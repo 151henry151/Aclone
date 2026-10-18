@@ -48,11 +48,17 @@ export interface ResidentState {
   originWorld?: string;
   inSpace?: boolean;
   conversationId?: number;
+  dismissedChat?: {
+    world: string;
+    publicThrough?: number;
+    privateThrough?: Record<string, number>;
+  };
   publicConversations?: {
     speakerId: string;
     world: string;
     messageId: number;
     expiresAt: number;
+    followupsRemaining?: number;
   }[];
   dialogueNoticeKey?: string;
   dialogueAttempt?: { key: string; attempts: number; nextAt: number; done: boolean };

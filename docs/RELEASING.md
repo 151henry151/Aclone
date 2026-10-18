@@ -35,7 +35,14 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.66.3
+## Current upgrade: 0.66.4
+
+NPCs respect requests for silence and distinguish direct addresses from incidental
+mentions. Dismissal persists across restarts and suppresses outstanding replies;
+accepted gameplay agreements remain active. Deploy with the normal backup/build/
+restart procedure. No world reset or provider configuration change is needed.
+
+### 0.66.3
 
 CI maintenance only: the two-client social test uses a compact world while retaining
 all mail, family and trade assertions. No gameplay changes, migration or world reset

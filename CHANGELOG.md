@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.4] - 2026-10-18
+
+### Fixed
+
+- Respect requests for NPC silence without another model call, discard pending replies after dismissal, distinguish direct addresses from mentions, and prevent public follow-ups from keeping residents talking indefinitely.
+
 ## [0.66.3] - 2026-10-14
 
 ### Fixed

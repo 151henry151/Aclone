@@ -433,3 +433,26 @@ one-time owned-price migration, household reserves and transport recovery.
 The baseline results canvas was marked stopped and its TSX parses successfully.
 The stopped experiment remains archived. Release deployment status should be
 verified with the public health endpoint; no new paid experiment is running.
+
+## 2026-10-18: public conversation dismissal
+
+Read-only live chat inspection confirmed that third-person mentions opened NPC
+attention and each human follow-up extended the two-minute window. Requests for
+silence were answered by a model without clearing that routing state. Explicit
+human addressees also lost to incidental NPC names in the same message.
+
+The local fix uses direct-address routing, bounded unnamed follow-ups, and
+persistent channel-specific dismissal cutoffs. Silence requests close public
+threads for all participants without new model calls; outstanding replies and
+saved acknowledgements are discarded, while accepted gameplay remains intact.
+Direct invitations can reopen conversation. Release 0.66.4 contains only this chat
+fix; household and economy changes remain separate, uncommitted work.
+
+Regression coverage includes public/private stops, restart persistence, direct
+versus incidental addresses, bounded follow-ups and dismissal during a pending
+provider call. Tests use mocked providers; no paid model experiment accompanies
+this release. Deploy using the normal backup/build/restart procedure.
+
+Release-only verification: all 733 unit tests, TypeScript, formatting and the
+production build passed. The real-socket NPC browser check passed on an isolated
+rerun with a 300-second limit after its first run exceeded the default 180 seconds.

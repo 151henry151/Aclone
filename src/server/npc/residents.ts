@@ -1,3 +1,10 @@
+import {
+  publicAddressees,
+  mentionsName,
+  isChatDismissal,
+  isChatClosing,
+  chatWasDismissed,
+} from './chat-attention.ts';
 import { recordBusinessFreight } from './business-freight.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { isGroupAddress, groupResponder, groupTopic } from './group-chat.ts';
@@ -228,18 +235,25 @@ export class Residents {
       if (!unread.length) continue;
       const sender = Object.values(w.players).find((p) => p.name === m.name);
       const humanChat = m.kind === 'chat' && sender && !sender.npc;
-      const words: string[] = m.text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [];
+      const addressedPlayers = publicAddressees(m.text, Object.values(w.players));
+      const dismissal = isChatDismissal(m.text);
       const named = residents.filter((r) =>
-        words.includes(r.state.name.toLowerCase().split(' ')[0]),
+        addressedPlayers.some((p) => p.id === r.state.playerId),
       );
-      const namesHuman = Object.values(w.players).some(
-        (p) => !p.npc && p.id !== sender?.id && words.includes(p.name.toLowerCase().split(' ')[0]),
-      );
+      // Natural stop phrases sometimes put the name in the middle: "thanks Mabel, enough for now".
+      if (dismissal && !addressedPlayers.length)
+        named.push(...residents.filter((r) => mentionsName(m.text, r.state.name)));
+      const namesHuman = addressedPlayers.some((p) => !p.npc && p.id !== sender?.id);
+      const incidentalName =
+        !named.length && residents.some((r) => mentionsName(m.text, r.state.name));
       const listeners =
-        humanChat && !m.to && !named.length && !namesHuman
+        humanChat && !m.to && !named.length && !namesHuman && !incidentalName
           ? residents.filter((r) =>
               r.state.publicConversations?.some(
-                (c) => c.speakerId === sender.id && c.messageId < m.id!,
+                (c) =>
+                  c.speakerId === sender.id &&
+                  c.messageId < m.id! &&
+                  (dismissal || (c.followupsRemaining ?? 1) > 0),
               ),
             )
           : [];
@@ -250,29 +264,79 @@ export class Residents {
         !namesHuman &&
         isGroupAddress(m.text)
       );
-      const volunteer = group
-        ? groupResponder(
-            w,
-            residents.filter((r) => !this.memory.paused(r.config.id)),
-            m.text,
-            m.id,
-            now,
-          )
-        : undefined;
+      const volunteer =
+        group && !dismissal
+          ? groupResponder(
+              w,
+              residents.filter((r) => !this.memory.paused(r.config.id)),
+              m.text,
+              m.id,
+              now,
+            )
+          : undefined;
       const targets = m.to
         ? residents.filter((r) => r.state.playerId === m.to)
-        : named.length
-          ? named
-          : group
-            ? volunteer
-              ? [volunteer]
-              : []
-            : listeners.length === 1
-              ? listeners
-              : [];
+        : namesHuman
+          ? []
+          : named.length
+            ? named
+            : group
+              ? dismissal
+                ? residents
+                : volunteer
+                  ? [volunteer]
+                  : []
+              : !isChatClosing(m.text) && listeners.length === 1
+                ? listeners
+                : [];
+      if (humanChat && !m.to && !targets.length) {
+        for (const r of residents) {
+          r.state.publicConversations = [];
+          changed.add(r);
+        }
+      }
       for (const r of unread) {
         changed.add(r);
         r.state.cursor = m.id;
+        if (humanChat && dismissal && targets.includes(r)) {
+          const closed =
+            r.state.dismissedChat?.world === w.id ? r.state.dismissedChat : { world: w.id };
+          if (m.to) {
+            closed.privateThrough = Object.fromEntries(
+              [...Object.entries(closed.privateThrough ?? {}), [sender.id, m.id]].slice(-64),
+            );
+          } else {
+            // "We don't need help" closes the public conversation for all participants.
+            closed.publicThrough = Math.max(closed.publicThrough ?? 0, m.id);
+            r.state.publicConversations = [];
+          }
+          r.state.dismissedChat = closed;
+          // Silence also covers later automatic notices about existing agreements;
+          // the agreements themselves continue through normal gameplay.
+          for (const c of r.state.commitments ?? [])
+            if (
+              c.world === w.id &&
+              (m.to ? c.replyTo !== null && c.speakerId === sender.id : c.replyTo === null)
+            )
+              c.blockedNoticeSent = true;
+          if (chatWasDismissed(r.state, w.id, r.state.conversationId, r.state.replyTo)) {
+            delete r.state.helpQuestion;
+            delete r.state.replyTo;
+            delete r.state.groupQuestion;
+            delete r.state.dialogueAttempt;
+          }
+          const pending = r.state.pendingAgreementReply;
+          if (
+            pending &&
+            chatWasDismissed(r.state, pending.world, pending.conversationId, pending.to)
+          )
+            delete r.state.pendingAgreementReply;
+          this.memory.append(r.config.id, w.time, 'conversation-dismissed', {
+            messageId: m.id,
+            private: !!m.to,
+          });
+          continue;
+        }
         if (humanChat) {
           // A DM or a different named resident ends this player's public thread.
           // Never overwrite a newer thread when catching up an older cursor.
@@ -280,6 +344,9 @@ export class Residents {
             (c) => c.speakerId === sender.id && c.messageId >= m.id!,
           );
           if (!newer) {
+            const previousThread = r.state.publicConversations!.find(
+              (c) => c.speakerId === sender.id,
+            );
             r.state.publicConversations = r.state.publicConversations!.filter(
               (c) => c.speakerId !== sender.id,
             );
@@ -293,7 +360,13 @@ export class Residents {
                 speakerId: sender.id,
                 world: w.id,
                 messageId: m.id,
-                expiresAt: now + 120000,
+                // Only an explicit invitation renews the window; replies cannot keep it alive forever.
+                expiresAt:
+                  named.includes(r) || group ? now + 120000 : (previousThread?.expiresAt ?? now),
+                followupsRemaining:
+                  named.includes(r) || group
+                    ? 2
+                    : Math.max(0, (previousThread?.followupsRemaining ?? 1) - 1),
               });
               // Bounded state even in a busy parish; oldest threads expire first.
               r.state.publicConversations = r.state.publicConversations.slice(-64);
@@ -1519,6 +1592,18 @@ export class Residents {
     r.state.needsDecision = false;
     r.state.pending = true;
     const replyTo = r.state.replyTo;
+    const conversationAtStart = request.observation.currentConversation;
+    const discardDismissedChat = () => {
+      if (!chatWasDismissed(r.state, w.id, conversationAtStart?.id, replyTo)) return false;
+      r.state.pending = false;
+      if (!chatOnly) {
+        r.wake = true;
+        r.state.needsDecision = true;
+      }
+      const current = this.worlds.get(r.state.world);
+      if (current) this.checkpoint(r, current);
+      return true;
+    };
     this.checkpoint(r, w);
     if (!chatOnly) r.nav = undefined;
     r.state.status = chatOnly ? 'Replying' : 'Thinking';
@@ -1575,6 +1660,7 @@ export class Residents {
           (!player.online && !r.state.inSpace)
         )
           return;
+        if (discardDismissedChat()) return;
         // Dialogue is a separately metered call, only for an addressed human.
         // It cannot replace the action provider's choice or replay a whole plan.
         let conversationCompleted = false;
@@ -1631,6 +1717,7 @@ export class Residents {
                 chat.cacheWriteTokens,
                 chat.cacheReadTokens,
               );
+              if (discardDismissedChat()) return;
               const d = decisionSchema.parse(chat.decision);
               if (d.speech?.text.trim().startsWith('*')) throw Error('Invalid conversation');
               r.state.dialogueAttempt.done = true;
@@ -1649,6 +1736,7 @@ export class Residents {
             } catch {
               if (this.closed) return;
               this.budget.failed(chatReservation);
+              if (discardDismissedChat()) return;
               const latest = this.worlds.get(r.state.world) ?? current;
               const noticeKey = `${conversationKey}:failure:${count >= 3 ? 'final' : 'retry'}`;
               if (conversation.speakerId && r.state.dialogueNoticeKey !== noticeKey) {
@@ -1703,7 +1791,7 @@ export class Residents {
           return;
         // Validate against the world AFTER the asynchronous reply: ownership,
         // stock and prices may have changed while the model was thinking.
-        if (discardStaleReply(latest)) return;
+        if (discardDismissedChat() || discardStaleReply(latest)) return;
         if (conversation?.speakerId && conversationCompleted) {
           rememberConversation(
             r.state,
@@ -1835,7 +1923,7 @@ export class Residents {
           (!finalWorld.players[r.state.playerId]?.online && !r.state.inSpace)
         )
           return;
-        if (discardStaleReply(finalWorld)) return;
+        if (discardDismissedChat() || discardStaleReply(finalWorld)) return;
         this.accept(r, finalWorld, result, Date.now(), replyTo, chatOnly);
         if (
           chatOnly &&
@@ -1901,7 +1989,13 @@ export class Residents {
     receipt: Record<string, unknown>,
     signal: AbortSignal,
   ) {
-    if (!r.dialogue || signal.aborted || this.closed) return;
+    if (
+      !r.dialogue ||
+      signal.aborted ||
+      this.closed ||
+      chatWasDismissed(r.state, w.id, conversation.id, replyTo)
+    )
+      return;
     const p = w.players[r.state.playerId];
     if (!p || !p.online) return;
     const observation = conversationView(
