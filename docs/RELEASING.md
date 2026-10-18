@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.67.0
+## Current upgrade: 0.68.0
+
+NPC household recovery, complete earning routes, protected business procurement and informed surplus pricing use ordinary game actions. Existing memories remain compatible; no world reset, money grants, blanket price edits or provider configuration changes are required. This includes the 0.66.5 farm-supply fix and 0.67.0 Puddlewick employment migration: take the normal pre-deployment backup and refresh clients. No paid accelerated experiment is started by deployment.
+
+### 0.67.0
 
 Existing Puddlewick saves receive a one-time policy migration: activeWork=false and ownerOperation=true. Stock, property, prices, wages and balances are preserved. Subsequent creator changes remain authoritative. Back up before restarting; refresh clients for continuous-employment and owner-qualification messages. Other worlds keep their employment rules.
 

@@ -356,7 +356,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
               operation('buildingAdmin', { building: b.id, wage: Math.round(b.wage * multiplier) }),
             ]),
           );
-      for (const side of ['buy', 'sell'] as const)
+      for (const side of ['buy'] as const)
         for (const [item, price] of Object.entries(b[side]).slice(0, 8))
           for (const multiplier of [0.95, 1.05])
             add(
@@ -546,7 +546,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   for (const c of settlementChoices(w, p)) add('civic', c.description, c.plan, c.reconsiderSeconds);
   // Construction is ordinary placement plus later purchases/deliveries, never free buildings.
   const site = pickBuildSite(w, p, 'home');
-  if (!buildings.some((b) => b.owner === p.id && b.construction)) {
+  if (!buildings.some((b) => b.owner === p.id && (b.construction || b.kind === 'home'))) {
     const home = catalog.home;
     if (
       home &&

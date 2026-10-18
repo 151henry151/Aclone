@@ -49,6 +49,9 @@ export function anotherSupplier(w: World, p: Player, building: string, item: str
 }
 
 export function anotherFounding(w: World, p: Player, kind: string) {
+  // Every household needs its own shelter; another person's cottage cannot
+  // satisfy mine, unlike a shared producer filling a market gap.
+  if (kind === 'home') return undefined;
   return w.supplyIntents?.find(
     (c) => c.player !== p.id && c.role === 'found' && c.kind === kind && c.expires > w.time,
   );

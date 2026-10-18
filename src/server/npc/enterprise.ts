@@ -1,3 +1,7 @@
+import { pricingChoices } from './pricing.ts';
+import { housingChoices } from './housing.ts';
+import { household } from './household.ts';
+import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
 import { capitalChoices } from './prosperity.ts';
 import { hayMerchantChoices } from './hay-merchant.ts';
 import { livestockInputs, livestockSupplyInputs } from '../../shared/livestock.ts';
@@ -20,7 +24,7 @@ import type { Building, Player, World } from '../../shared/types.ts';
 import type { FarmerChoice } from './farmer.ts';
 import type { Step } from './decision.ts';
 import { visitBuilding } from './care.ts';
-import { workplace } from './workplace.ts';
+import { workplace, shiftBlocker } from './workplace.ts';
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 export function businessEstimate(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
@@ -74,7 +78,9 @@ export function businessEstimate(w: World, b: Building) {
 /** Complete, costed operating errands precede speculative one-step purchases. */
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   const list: FarmerChoice[] = [
+    ...pricingChoices(w, p),
     ...constructionChoices(w, p),
+    ...housingChoices(w, p),
     ...capitalChoices(w, p),
     ...farmEnterprises(w, p),
     ...hayMerchantChoices(w, p),
@@ -119,38 +125,18 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         ]),
       );
   }
-  const home = w.buildings.find((b) => b.kind === 'home' && b.owner === p.id && !b.construction);
-  if (home && (!offlineReadiness(w, p, 86400).stocked || !p.atHome)) {
-    const pantry = homecomingPlan(w, p, 86400);
+  const home = household(w, p);
+  if (home && !offlineReadiness(w, p, 86400).stocked) {
+    const pantry = homecomingPlan(w, p, 86400, undefined, false);
     if (pantry.length && pantry.length <= 12)
       list.push({
         id: `household_${home.id}`,
         description:
-          'Provision my home: finish stocking a day of food and drink, then go inside. A completed household ends repeated emergency visits.',
+          'Provision my home: stock a day of food and drink; stay outside while playing and enter only when leaving or resting. A completed household ends repeated emergency visits.',
         plan: pantry,
         careerGoal: { kind: 'housing', target: home.id },
         reconsiderSeconds: 600,
       });
-  }
-  if (!home) {
-    const house = w.buildings
-      .filter(
-        (b) =>
-          b.kind === 'home' &&
-          !b.construction &&
-          !b.government &&
-          (!b.owner || b.forSale) &&
-          propertyQuote(w, b).total + living <= p.cash,
-      )
-      .sort(
-        (a, b) =>
-          propertyQuote(w, a).total - propertyQuote(w, b).total || distance(p, a) - distance(p, b),
-      )[0];
-    if (house)
-      add(
-        `Establish a home: buy ${house.name} for ${propertyQuote(w, house).total}; keep ${living} for pantry supplies. Stock and enter it before logout.`,
-        visitBuilding(p, house, [act({ type: 'buyBuilding', building: house.id })]),
-      );
   }
   for (const b of w.buildings.filter(
     (b) => !b.construction && (b.recipe || b.production) && b.kind !== 'farm',
@@ -225,7 +211,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       const deposit = Math.max(0, estimate.reserve - b.investment);
       if (deposit <= 10_000_000 && p.cash >= propertyQuote(w, b).total + deposit + living)
         add(
-          `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, deposit ${deposit}, batch gross margin ${estimate.margin} after inputs ${estimate.inputs} and wages ${estimate.wages}. Needs a ${recipe.skill} worker; sales depend on buyers.`,
+          `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, deposit ${deposit}, estimated batch margin ${estimate.margin}; purchase payback at least ${Math.ceil(propertyQuote(w, b).total / estimate.margin)} SOLD batches. Keep ${living} household reserve. Needs a ${recipe.skill} worker; sales depend on buyers.`,
           visitBuilding(p, b, [
             act({ type: 'buyBuilding', building: b.id }),
             ...Array.from({ length: Math.ceil(deposit / 10_000_000) }, (_, i) =>
@@ -329,26 +315,41 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       const source = supplies[0];
       if (!source) continue;
       const { shop: seller, own, available, price } = source;
+      const payrollReserve =
+        3 * b.wage * Math.max(job.idealEmployees, job.activeEmployeesNextCycle);
+      const procurementCash = Math.min(
+        10_000_000,
+        ownerWithdrawable(w, b),
+        Math.max(0, b.investment - remainingClaim(b) - payrollReserve),
+      );
+      const personalSurplus = Math.max(0, p.cash - living);
       let n = Math.min(
         Math.max(0, perBatch * (item === herd?.animal ? 1 : 6) - (b.stock[item] ?? 0)),
         available,
         b.capacity - (b.stock[item] ?? 0),
-        price ? Math.floor(Math.max(0, p.cash - living) / price) : 100,
+        price ? Math.floor((personalSurplus + procurementCash) / price) : 100,
       );
       while (n > 0 && !canCarry(p, item, n, w)) n--;
+      const draw = Math.max(0, n * price - personalSurplus);
       if (n)
         add(
           own
             ? `Supply my ${b.name}: transfer ${n} ${item} from my ${seller.name}; no sale or new profit. Preserve the source's operating stock.`
-            : `Supply my ${b.name}: buy and deliver ${n} ${item} for ${n * price}; replenish six batches, protect meals.`,
+            : `Supply my ${b.name}: buy and deliver ${n} ${item} for ${n * price}${draw ? ` using ${draw} of its input-purchasing capital` : ''}; protect meals, payroll and investor claims.`,
           [
-            ...visitBuilding(p, seller, [
-              act(
-                own
-                  ? { type: 'stock', building: seller.id, direction: 'withdraw', item, quantity: n }
-                  : { type: 'trade', building: seller.id, direction: 'buy', item, quantity: n },
-              ),
-            ]),
+            ...(draw
+              ? visitBuilding(p, b, [
+                  act({ type: 'investment', building: b.id, direction: 'withdraw', amount: draw }),
+                ])
+              : []),
+            ...(draw
+              ? [{ kind: 'travel' as const, destination: seller.id }]
+              : visitBuilding(p, seller, [])),
+            act(
+              own
+                ? { type: 'stock', building: seller.id, direction: 'withdraw', item, quantity: n }
+                : { type: 'trade', building: seller.id, direction: 'buy', item, quantity: n },
+            ),
             { kind: 'travel', destination: b.id },
             act({ type: 'stock', building: b.id, direction: 'deposit', item, quantity: n }),
           ],
@@ -418,6 +419,7 @@ export function economicMenu(
         (c.careerGoal.kind === 'employment' && preference === 'employee' ? 40 : 0);
     if (c.id.startsWith('survival_')) n += 1200;
     if (c.id.startsWith('inspect_')) n += 70;
+    if (c.id.startsWith('surplus_price_')) n += 105;
     if (c.description.startsWith('Explore ') || c.description.startsWith('Recheck '))
       n += busyVisit ? 15 : 70;
     if (
@@ -475,29 +477,6 @@ export function economicMenu(
       )
     )
       return false;
-    // No waiting forever at a mill without wheat, space or wages.
-    if (/(Accept employment|Renew my shift|Keep my active job)/.test(c.description)) {
-      const b = w.buildings.find(
-        (b) =>
-          b.id === p.job ||
-          c.plan.some(
-            (s) =>
-              s.kind === 'act' &&
-              (s.action.type === 'job' || s.action.type === 'work') &&
-              s.action.building === b.id,
-          ),
-      );
-      if (b) {
-        const job = workplace(w, p, b);
-        if (p.job === b.id && b.kind !== 'farm' && job?.workActiveNextCycle) return false;
-        if (
-          job &&
-          (job.ifYouWork.capitalShortfall > 0 ||
-            job.blockers.some((v) => !v.startsWith('No active employees')))
-        )
-          return false;
-      }
-    }
     return true;
   });
   const ranked = [...enterprises, ...eligible]
@@ -508,7 +487,13 @@ export function economicMenu(
             return false;
           const id = s.action.building;
           const b = w.buildings.find((b) => b.id === id);
-          return b && !usefulShift(w, p, b);
+          return (
+            !b ||
+            !!shiftBlocker(w, p, b) ||
+            (s.action.type === 'work' &&
+              b.kind !== 'farm' &&
+              !!workplace(w, p, b)?.workActiveNextCycle)
+          );
         }),
     )
     .sort((a, b) => score(b) - score(a));

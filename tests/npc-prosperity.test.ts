@@ -16,6 +16,9 @@ import { nearbyTownPanels } from '../src/client/town-panel.ts';
 import type { ResidentState } from '../src/server/npc/memory.ts';
 import type { FarmerChoice } from '../src/server/npc/farmer.ts';
 import type { Step } from '../src/server/npc/decision.ts';
+import { prosperityBriefing, opportunityCounts } from '../src/server/npc/prosperity.ts';
+import { liquidCapital } from '../src/server/npc/wealth.ts';
+import { anotherFounding, publishFoundingIntent } from '../src/server/npc/cooperation.ts';
 
 function setup() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
@@ -35,6 +38,84 @@ function setup() {
   }
   return { w, p, state, run };
 }
+
+test('a full pantry still has a recurring cost and growth choices are visible in decision evidence', () => {
+  const { w, p, state } = setup();
+  const home = w.buildings.find((b) => b.kind === 'home')!;
+  home.owner = p.id;
+  p.home = home.id;
+  home.stock = { bread: 100, water: 100 };
+  const choices = economicMenu(w, p, [], 'owner', true, state);
+  const report = prosperityBriefing(w, p, choices);
+  assert.ok(report.dailyReplacementCost > 0);
+  assert.equal(report.householdReserve, 0);
+  assert.ok(report.opportunities.some((o) => o.project.startsWith('Acquire and fund')));
+  assert.ok(opportunityCounts(choices).acquisition > 0);
+  assert.ok(report.earningOptions.every((o) => o.tripsForDailyMeals > 0));
+});
+
+test('business capital transfers and unsold goods are not counted as new spendable wealth', () => {
+  const { w, p, run } = setup();
+  const mill = w.buildings.find((b) => b.kind === 'mill')!;
+  mill.owner = p.id;
+  const before = liquidCapital(w, p);
+  run([
+    { kind: 'travel', destination: mill.id },
+    {
+      kind: 'act',
+      action: { type: 'investment', building: mill.id, direction: 'deposit', amount: 10000 },
+    },
+  ]);
+  assert.equal(liquidCapital(w, p), before);
+  mill.stock.flour = (mill.stock.flour ?? 0) + 100;
+  assert.equal(liquidCapital(w, p), before, 'unsold catalogue value is not cash');
+});
+
+test('one resident building a home does not prevent another from obtaining their own shelter', () => {
+  const { w, p } = setup(),
+    q = addPlayer(w, 'neighbour', 'Neighbour');
+  p.online = true;
+  publishFoundingIntent(w, p, 'home', 'home');
+  assert.equal(anotherFounding(w, q, 'home'), undefined);
+  publishFoundingIntent(w, p, 'mill', 'flour');
+  assert.ok(
+    anotherFounding(w, q, 'mill'),
+    'competing commercial founding still considers announced supply',
+  );
+});
+
+test('an owner uses invested purchasing capital to obtain inputs without raiding meals, payroll or claims', () => {
+  const { w, p, run } = setup();
+  const mill = w.buildings.find((b) => b.kind === 'mill')!,
+    farm = w.buildings.find((b) => b.kind === 'farm')!;
+  mill.owner = p.id;
+  mill.stock = { wheat: 0, flour: 0 };
+  mill.investment = 100000;
+  mill.stakes = [{ investor: 'neighbour', principal: 5000, claim: 8000, paid: 0, opened: w.time }];
+  farm.stock.wheat = 50;
+  farm.sell.wheat = 500;
+  p.cash = 0;
+  const choice = enterpriseChoices(w, p).find(
+    (c) =>
+      c.description.startsWith(`Supply my ${mill.name}: buy`) && c.description.includes('wheat'),
+  );
+  assert.ok(
+    choice,
+    'operating input money is spendable on inputs even with empty personal pockets',
+  );
+  const payroll = 3 * mill.wage * (productionBudget(w, mill)?.idealWorkers ?? 1);
+  const before = mill.investment;
+  run(choice.plan);
+  assert.equal(p.cash, 0, 'withdrawal is exactly the procurement cost');
+  assert.equal(mill.stock.wheat, 30);
+  assert.equal(before - mill.investment, 15000);
+  assert.ok(mill.investment >= 8000 + payroll);
+  mill.stock.wheat = 0;
+  mill.investment = 8000 + payroll;
+  assert.ok(
+    !enterpriseChoices(w, p).some((c) => c.description.startsWith(`Supply my ${mill.name}: buy`)),
+  );
+});
 
 test("owners can assess their own sales, without seeing anybody else's private accounts", () => {
   const { w, p, state } = setup();

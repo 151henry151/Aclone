@@ -1,8 +1,9 @@
+import { housingChoices } from './housing.ts';
+import { alcoholDose } from '../../shared/intoxication.ts';
 import { constructionChoices } from './construction-projects.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { nutritionIn } from './household.ts';
 import { availableSupply } from '../../shared/harbour-supply.ts';
-import { propertyQuote } from '../../shared/property.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
 import { cargoRelief } from './business-policy.ts';
@@ -10,7 +11,7 @@ import { carePlan } from './care.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { shelter, roomCount } from '../../shared/lodging.ts';
-import type { World, Player, Building, Stock } from '../../shared/types.ts';
+import type { World, Player, Building } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
 import { operation } from './player-operations.ts';
 import { travelPrep } from './travel.ts';
@@ -80,6 +81,7 @@ export function homecomingPlan(
   p: Player,
   awaySeconds: number,
   state?: ResidentState,
+  enterForLogout = true,
 ): Step[] {
   w = {
     ...w,
@@ -89,7 +91,7 @@ export function homecomingPlan(
   };
   if (p.task) return [{ kind: 'wait', seconds: Math.max(1, Math.min(60, p.task.end - w.time)) }];
   const ready = offlineReadiness(w, p, awaySeconds);
-  if (ready.atHome && ready.stocked) return [];
+  if (ready.stocked && (!enterForLogout || ready.atHome)) return [];
   const care = carePlan(w, p, state);
   if (care.length) return care;
   if (!canCarry(p, 'water', 1, w) || !canCarry(p, 'bread', 1, w)) {
@@ -125,13 +127,14 @@ export function homecomingPlan(
     const alternatives = Object.keys(items).filter(
       (item) =>
         items[item][nutrient] &&
+        !alcoholDose(item) &&
         ((p.inventory[item] ?? 0) > 0 ||
           w.buildings.some(
             (s) =>
               !s.construction &&
-              s.owner !== p.id &&
+              s.id !== b?.id &&
               availableSupply(w, s, item) > 0 &&
-              s.sell[item] >= 0,
+              (s.owner === p.id || s.sell[item] >= 0),
           )),
     );
     const price = (item: string) =>
@@ -142,11 +145,11 @@ export function homecomingPlan(
               .filter(
                 (s) =>
                   !s.construction &&
-                  s.owner !== p.id &&
+                  s.id !== b?.id &&
                   availableSupply(w, s, item) > 0 &&
-                  s.sell[item] >= 0,
+                  (s.owner === p.id || s.sell[item] >= 0),
               )
-              .map((s) => s.sell[item]),
+              .map((s) => (s.owner === p.id ? 0 : s.sell[item])),
           );
     const item =
       alternatives.sort(
@@ -188,37 +191,47 @@ export function homecomingPlan(
         .filter(
           (v) =>
             !v.construction &&
-            v.owner !== p.id &&
+            v.id !== b?.id &&
             availableSupply(w, v, item) > 0 &&
-            Number.isSafeInteger(v.sell[item]) &&
-            v.sell[item] >= 0 &&
-            p.cash >= v.sell[item],
+            (v.owner === p.id ||
+              (Number.isSafeInteger(v.sell[item]) && v.sell[item] >= 0 && p.cash >= v.sell[item])),
         )
-        .sort((a, b) => a.sell[item] - b.sell[item] || distance(p, a) - distance(p, b))[0];
+        .sort(
+          (a, b) =>
+            (a.owner === p.id ? 0 : a.sell[item]) - (b.owner === p.id ? 0 : b.sell[item]) ||
+            distance(p, a) - distance(p, b),
+        )[0];
       if (shop) {
+        const cost = shop.owner === p.id ? 0 : shop.sell[item];
         let n = Math.min(
           20,
           target - carried,
           availableSupply(w, shop, item),
-          shop.sell[item]
+          cost
             ? Math.floor(
-                Math.max(0, p.cash - (nutrient === 'food' && p.thirst >= 15000 ? 1500 : 0)) /
-                  shop.sell[item],
+                Math.max(0, p.cash - (nutrient === 'food' && p.thirst >= 15000 ? 1500 : 0)) / cost,
               )
             : 20,
         );
         while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
           return visit(shop, [
-            action({ type: 'trade', building: shop.id, item, quantity: n, direction: 'buy' }),
+            action(
+              shop.owner === p.id
+                ? { type: 'stock', building: shop.id, item, quantity: n, direction: 'withdraw' }
+                : { type: 'trade', building: shop.id, item, quantity: n, direction: 'buy' },
+            ),
           ]);
       }
     }
   }
   if (b) {
-    if (!p.atHome || p.home !== b.id) return visit(b, [action({ type: 'home', building: b.id })]);
+    if (enterForLogout && (!p.atHome || p.home !== b.id))
+      return visit(b, [action({ type: 'home', building: b.id })]);
     return [];
   }
+  const establish = housingChoices(w, p, awaySeconds)[0];
+  if (establish) return establish.plan;
   const hours = Math.max(1, Math.min(24, Math.ceil((awaySeconds + 1200) / 3600)));
   const inn = w.buildings
     .filter(
@@ -233,16 +246,5 @@ export function homecomingPlan(
     .sort((a, b) => distance(p, a) - distance(p, b))[0];
   if (inn)
     return visit(inn, [operation('lodging', { building: inn.id, operation: 'rent', hours })]);
-  const cottage = w.buildings
-    .filter(
-      (v) =>
-        v.kind === 'home' &&
-        !v.construction &&
-        !v.government &&
-        (!v.owner || v.forSale) &&
-        propertyQuote(w, v).total + 20000 <= p.cash,
-    )
-    .sort((a, b) => propertyQuote(w, a).total - propertyQuote(w, b).total)[0];
-  if (cottage) return visit(cottage, [action({ type: 'buyBuilding', building: cottage.id })]);
   return [];
 }

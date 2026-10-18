@@ -18,18 +18,17 @@ function leaveDistractions(p: Player): Step[] {
 }
 
 /** Get back on the tractor when there is fuel. An empty tank must never prevent walking to safety. */
+export function travelVehicle(p: Player) {
+  return p.fuel > 0 || (p.inventory.fuel ?? 0) > 0 ? 0 : 5;
+}
+
 export function travelPrep(p: Player): Step[] {
-  if (p.fuel <= 0 && (p.inventory.fuel ?? 0) > 0)
-    return [...leaveDistractions(p), act({ type: 'use', item: 'fuel' })];
+  const slot = travelVehicle(p);
   return [
     ...leaveDistractions(p),
-    ...(p.vehicle !== 5 && p.fuel <= 0
-      ? [act({ type: 'vehicle', slot: 5 })]
-      : p.vehicle !== 0 && p.fuel > 0
-        ? [act({ type: 'vehicle', slot: 0 })]
-        : p.vehicle !== 5 && !p.engine && p.fuel > 0
-          ? [act({ type: 'engine' })]
-          : []),
+    ...(p.fuel <= 0 && (p.inventory.fuel ?? 0) > 0 ? [act({ type: 'use', item: 'fuel' })] : []),
+    ...(p.vehicle !== slot ? [act({ type: 'vehicle', slot })] : []),
+    ...(slot !== 5 && !p.engine ? [act({ type: 'engine' })] : []),
   ];
 }
 
@@ -69,6 +68,7 @@ export function drivePlan(w: World, p: Player): Step[] {
   if (!willFuel) return travelPrep(p);
   const steps: Step[] = [...leaveDistractions(p)];
   let walkedToPump = false;
+  let engineStarted = false;
   if (p.fuel < 10 && carried) steps.push(act({ type: 'use', item: carried[0] }));
   else if (shop) {
     if (p.vehicle !== 5 && p.fuel <= 0) {
@@ -76,8 +76,10 @@ export function drivePlan(w: World, p: Player): Step[] {
       walkedToPump = true;
     }
     if (p.vehicle === 5 && p.fuel > 0) steps.push(act({ type: 'vehicle', slot: 0 }));
-    if ((p.vehicle !== 5 || p.fuel > 0) && !p.engine && p.fuel > 0)
+    if ((p.vehicle !== 5 || p.fuel > 0) && !p.engine && p.fuel > 0) {
       steps.push(act({ type: 'engine' }));
+      engineStarted = true;
+    }
     if (distance(p, shop) >= 12) steps.push({ kind: 'travel', destination: shop.id });
     const n = 1; // Leave room and money for meals; refuel only what this trip needs.
     steps.push(
@@ -86,7 +88,7 @@ export function drivePlan(w: World, p: Player): Step[] {
     steps.push(act({ type: 'use', item: 'fuel' }));
   }
   if ((p.vehicle === 5 || walkedToPump) && willFuel) steps.push(act({ type: 'vehicle', slot: 0 }));
-  else if (p.vehicle !== 5 && !p.engine && willFuel) steps.push(act({ type: 'engine' }));
+  if (!p.engine && !engineStarted && willFuel) steps.push(act({ type: 'engine' }));
   return steps;
 }
 

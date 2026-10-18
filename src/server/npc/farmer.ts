@@ -25,6 +25,7 @@ export interface FarmerChoice {
   plan: Step[];
   reconsiderSeconds?: number;
   expectedCash?: number;
+  durationSeconds?: number;
   idea?: string;
 }
 /** Supply feasible plans, not a scripted priority order: Jev chooses the goal.
@@ -214,24 +215,29 @@ export function gameplayChoices(
             if (
               def.seasons.includes(calendar(w).season) &&
               w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
-              b.investment >= def.seed
+              b.investment >= def.seed + (own ? 0 : b.wage) &&
+              (b.stock[crop] ?? 0) +
+                (b.plots ?? []).filter((p) => p.crop === crop).length * def.yield +
+                def.yield <=
+                b.capacity
             )
               add(
                 `Plant ${crop} in ${b.name} plot ${plot + 1}: ${def.days} game days, base yield ${def.yield}, seed ${def.seed} from FARM investment, family ${def.family}; previous crop ${current?.previous ?? 'none'}. ${def.description}`,
                 visit(b, [farm('plant', crop)]),
               );
         } else if (status.state === 'growing') {
-          if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
+          if ((current?.water ?? 0) < 3 && (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >= 3)
             add(
-              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; consumes 3 carried water, keeping 2 to drink. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
+              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; uses 3 water from farm stock first, then personal surplus; protect drinking supplies. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
               visit(b, [farm('water')]),
             );
           if (
             !current!.fertilized &&
-            ((p.inventory.compost ?? 0) > 0 || b.investment >= fertilizerPrice)
+            ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
+              b.investment >= fertilizerPrice)
           )
             add(
-              `Fertilize ${current!.crop} at ${b.name} plot ${plot + 1}; costs one carried compost or ${fertilizerPrice} farm investment; increases yield.`,
+              `Fertilize ${current!.crop} at ${b.name} plot ${plot + 1}; costs one farm/carried compost or ${fertilizerPrice} farm investment; increases yield.`,
               visit(b, [farm('fertilize')]),
             );
         } else if (
@@ -359,11 +365,11 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
   for (let plot = 0; plot < farmPlotCount(b); plot++) {
     const current = b.plots?.[plot];
     if (current?.harvest || cropStatus(w, b, plot).state !== 'growing') continue;
-    if ((current?.water ?? 0) < 3 && spareSupplies(p, 'water', w) >= 3)
+    if ((current?.water ?? 0) < 3 && (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >= 3)
       return take([farm(plot, 'water')]);
     if (
       !current!.fertilized &&
-      ((p.inventory.compost ?? 0) > 0 ||
+      ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
         (b.investment >= fertilizerPrice + harvestWages &&
           (crops[current!.crop!]?.yield ?? 0) * 0.33 * (b.sell[current!.crop!] ?? 0) >
             fertilizerPrice))

@@ -28,7 +28,10 @@ function run(w: ReturnType<typeof createWorld>, p: ReturnType<typeof addPlayer>,
       p.z = b.z;
       p.y = terrainHeight(w, p.x, p.z);
     } else if (s.kind === 'wait') advance(w, s.seconds);
-    else if (s.kind === 'act') act(w, p.id, s.action);
+    else if (s.kind === 'act') {
+      act(w, p.id, s.action);
+      if (p.task) advance(w, p.task.end - w.time + 0.01);
+    }
   }
 }
 test('a gathering career buys equipment, gathers and sells through ordinary game actions', () => {
@@ -47,7 +50,9 @@ test('a gathering career buys equipment, gathers and sells through ordinary game
   run(w, p, choice.plan);
   assert.equal(p.inventory.chainsaw, 1);
   assert.equal(p.inventory.logs ?? 0, 0);
-  assert.equal(p.cash - before, 3500);
+  assert.equal(p.cash - before, 17000);
+  // Let the harvested grove replenish before repeating the same career.
+  advance(w, 3600);
   const persisted = JSON.parse(JSON.stringify(state));
   const next = continueCareer(w, p, persisted);
   assert.ok(next);
@@ -57,7 +62,7 @@ test('a gathering career buys equipment, gathers and sells through ordinary game
     ),
   );
   run(w, p, next.plan);
-  assert.equal(p.cash - before, 8000);
+  assert.equal(p.cash - before, 35000);
   const original = state.career;
   startCareer(w, p, state, {
     source: choice.careerGoal!.source,
@@ -141,7 +146,7 @@ test('a full gathering load is sold before looking for more cargo room', () => {
   assert.ok(choice);
   assert.ok(!choice.plan.some((s) => s.kind === 'act' && s.action.type === 'gather'));
   run(w, p, choice.plan);
-  assert.equal(p.inventory.logs, 44);
+  assert.equal(p.inventory.logs, 0);
 });
 
 test('a large trading catalogue cannot crowd all employment careers out', () => {

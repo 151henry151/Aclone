@@ -1,5 +1,4 @@
 import { offlineReadiness } from './homecoming.ts';
-import { livestockInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { skillLesson } from '../../shared/world-catalogue.ts';
@@ -12,9 +11,9 @@ import type { ResidentState } from './memory.ts';
 import type { FarmerChoice } from './farmer.ts';
 import type { Step } from './decision.ts';
 import { visitBuilding } from './care.ts';
-import { livingReserve, travelPrep, affordableLoad } from './travel.ts';
+import { livingReserve, travelPrep, travelVehicle, affordableLoad } from './travel.ts';
 import { usefulShift } from './business-policy.ts';
-import { workplace } from './workplace.ts';
+import { workplace, shiftBlocker } from './workplace.ts';
 import { blockedStep } from './recovery.ts';
 
 export interface CareerGoal {
@@ -45,14 +44,14 @@ export function journeyEstimate(w: World, p: Player, points: { x: number; z: num
     metres += distance(previous, point);
     previous = point;
   }
-  const slot = p.fuel > 0 ? (p.vehicle === 5 ? 0 : p.vehicle) : 5;
+  const slot = travelVehicle(p);
   const v = { ...vehicles[slot], ...w.vehicleTuning?.[slot] };
   const seconds = (metres * 1.5) / Math.max(1, v.speed * 0.6);
   const prices = w.buildings
     .filter((b) => b.sell.fuel > 0 && (b.stock.fuel ?? 0) > 0)
     .map((b) => b.sell.fuel);
   const cost =
-    p.fuel > 0
+    slot !== 5
       ? Math.ceil(((seconds * v.fuel) / 8) * (prices.length ? Math.min(...prices) : 4500))
       : 0;
   return { seconds, cost };
@@ -64,7 +63,13 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
   if (p.task || p.learning) return [];
   const result: FarmerChoice[] = [];
   const reserve = livingReserve(w, p);
-  const add = (goal: CareerGoal, description: string, plan: Step[], expectedCash: number) => {
+  const add = (
+    goal: CareerGoal,
+    description: string,
+    plan: Step[],
+    expectedCash: number,
+    durationSeconds?: number,
+  ) => {
     if (plan.length <= 12 && !plan.some((s) => blockedStep(state.recovery, s, w.time)))
       result.push({
         id: `career_${goal.kind}_${goal.source ?? ''}_${goal.target}_${goal.item ?? ''}`,
@@ -72,6 +77,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
         plan,
         careerGoal: goal,
         expectedCash,
+        durationSeconds,
         reconsiderSeconds: 600,
       });
   };
@@ -82,7 +88,8 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     .slice(0, 12)) {
     const tool = gatheringImplements[node.item]?.item;
     if (!tool) continue;
-    const quantity = p.skills.includes(node.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
+    const perGather = p.skills.includes(node.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
+    let quantity = perGather;
     if (
       ((p.inventory[node.item] ?? 0) < quantity && resourceAmount(w, node) < quantity) ||
       w.buildings.some((b) => distance(b, node) < 12)
@@ -107,19 +114,50 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     const equipment = owned ? 0 : seller!.sell[tool];
     const carry = {
       ...p,
+      vehicle: travelVehicle(p),
       inventory: { ...p.inventory, [tool]: Math.max(1, p.inventory[tool] ?? 0) },
     };
     if (
       (p.inventory[node.item] ?? 0) < quantity &&
-      (p.cash - equipment < reserve || !canCarry(carry, node.item, quantity, w))
+      ((equipment > 0 && p.cash - equipment < reserve) || !canCarry(carry, node.item, quantity, w))
     )
       continue;
-    const trip = journeyEstimate(w, p, [...(seller ? [seller] : []), node, buyer]);
+    const carried = Math.min(
+      10000,
+      p.inventory[node.item] ?? 0,
+      Math.floor(buyer.investment / buyer.buy[node.item]),
+      buyer.capacity - (buyer.stock[node.item] ?? 0),
+    );
+    const prep = seller
+      ? visitBuilding(p, seller, [
+          act({ type: 'trade', building: seller.id, item: tool, quantity: 1, direction: 'buy' }),
+        ])
+      : travelPrep(p);
+    // Every gather is a normal timed task. The executor waits for its completion;
+    // explicit wait steps waste the bounded plan's capacity and halve the load.
+    const maxRounds = Math.min(
+      12 - prep.length - 3,
+      Math.floor(resourceAmount(w, node) / perGather),
+    );
+    let rounds = 0;
+    while (
+      rounds < maxRounds &&
+      canCarry(carry, node.item, (rounds + 1) * perGather, w) &&
+      carried + (rounds + 1) * perGather <= buyer.capacity - (buyer.stock[node.item] ?? 0) &&
+      (carried + (rounds + 1) * perGather) * buyer.buy[node.item] <= buyer.investment
+    )
+      rounds++;
+    quantity = carried + rounds * perGather;
+    if (!quantity) continue;
+    const trip = journeyEstimate(
+      w,
+      p,
+      rounds === 0 ? [buyer] : [...(seller ? [seller] : []), node, buyer],
+    );
     const earned = quantity * buyer.buy[node.item] - trip.cost;
     if (earned <= 0 || equipment > earned * 8) continue;
-    const carried = Math.min(quantity, p.inventory[node.item] ?? 0);
     const plan: Step[] =
-      carried >= quantity
+      rounds === 0
         ? visitBuilding(p, buyer, [
             act({
               type: 'trade',
@@ -130,20 +168,9 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
             }),
           ])
         : [
-            ...(seller
-              ? visitBuilding(p, seller, [
-                  act({
-                    type: 'trade',
-                    building: seller.id,
-                    item: tool,
-                    quantity: 1,
-                    direction: 'buy',
-                  }),
-                ])
-              : travelPrep(p)),
+            ...prep,
             { kind: 'travel', destination: node.id },
-            act({ type: 'gather', node: node.id }),
-            { kind: 'wait', seconds: quantity === 6 ? 12 : 20 },
+            ...Array.from({ length: rounds }, (): Step => act({ type: 'gather', node: node.id })),
             { kind: 'travel', destination: buyer.id },
             act({
               type: 'trade',
@@ -158,6 +185,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       `Gathering career: ${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}, gather ${quantity} ${node.item}, deliver to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
       plan,
       earned - equipment,
+      trip.seconds + rounds * (perGather === 6 ? 12 : 20),
     );
   }
   for (const source of shops)
@@ -178,13 +206,13 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       const keep = portableReserve(item, w);
       const available = Math.max(0, carried - keep);
       let n = Math.min(
-        8,
+        1000,
         available || (source.stock[item] ?? 0),
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
-        available || affordableLoad(p.cash, price, reserve, 8),
+        available || affordableLoad(p.cash, price, reserve, 1000),
       );
-      while (n > 0 && !available && !canCarry(p, item, n, w)) n--;
+      while (n > 0 && !available && !canCarry({ ...p, vehicle: travelVehicle(p) }, item, n, w)) n--;
       if (!n) continue;
       const trip = journeyEstimate(w, p, available ? [buyer] : [source, buyer]);
       const margin = n * (buyer.buy[item] - price) - trip.cost;
@@ -205,6 +233,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
         `Trading career: ${n} ${item}, ${source.name} → ${buyer.name}; estimated margin ${margin} after travel, household reserve ${reserve}. Inspect changed quotes before spending.`,
         plan,
         margin,
+        trip.seconds,
       );
     }
   for (const b of shops) {
@@ -212,12 +241,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     if (!recipe || !usefulShift(w, p, b)) continue;
     if (b.kind !== 'farm' && p.job === b.id && workplace(w, p, b)?.workActiveNextCycle) continue;
     const job = workplace(w, p, b)!;
-    if (
-      job.ifYouWork.capitalShortfall ||
-      (b.kind !== 'farm' &&
-        Object.entries(livestockInputs(b, recipe.inputs)).some(([i, n]) => (b.stock[i] ?? 0) < n))
-    )
-      continue;
+    if (shiftBlocker(w, p, b)) continue;
     if (!p.skills.includes(recipe.skill)) {
       const school = shops.find((b) => b.kind === 'school');
       let skill = recipe.skill;
@@ -231,7 +255,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
         continue;
       add(
         { kind: 'employment', target: b.id },
-        `Employment career: learn ${skill} for a funded vacancy at ${b.name}, then take and renew the job. Tuition ${tuition}; wage ${b.wage}. Supplement wages with hauling or public work to cover living costs.`,
+        `Employment career: learn ${skill} for a funded vacancy at ${b.name}, then take the job and follow this world’s shift policy. Tuition ${tuition}; wage ${b.wage}. Supplement wages with hauling or public work to cover living costs.`,
         visitBuilding(p, school, [
           act({ type: 'learn', building: school.id, skill }),
           { kind: 'wait', seconds: 60 },
@@ -305,7 +329,7 @@ export function continueCareer(
   if (p.task || p.learning) return;
   if (c.kind === 'housing') {
     const ready = offlineReadiness(w, p, 86400);
-    if (ready.home === c.target && ready.stocked && ready.atHome) {
+    if (ready.home === c.target && ready.stocked) {
       delete state.career;
       return;
     }
@@ -317,7 +341,7 @@ export function continueCareer(
   if (
     c.kind === 'employment' &&
     p.job === c.target &&
-    p.activeUntil > w.time + 600 &&
+    (!w.settings.activeWork || p.activeUntil > w.time + 600) &&
     w.buildings.find((b) => b.id === c.target)?.kind !== 'farm'
   )
     return;

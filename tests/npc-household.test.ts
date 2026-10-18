@@ -4,6 +4,9 @@ import assert from 'node:assert/strict';
 import { createWorld, addPlayer, advance } from '../src/shared/simulation.ts';
 import { offlineReadiness, homecomingPlan } from '../src/server/npc/homecoming.ts';
 import { affordableLoad, livingReserve } from '../src/server/npc/travel.ts';
+import { enterpriseChoices } from '../src/server/npc/enterprise.ts';
+import { startCareer, continueCareer } from '../src/server/npc/projects.ts';
+import type { ResidentState } from '../src/server/npc/memory.ts';
 
 function fixture() {
   const w = createWorld('household', 'Household', 'owner');
@@ -58,4 +61,48 @@ test('optional spending reserves a fuel purchase, but refuelling can spend that 
   );
   p.inventory.fuel = 1;
   assert.equal(householdBudget(w, p).fuel, 0);
+});
+
+test('a stocked home completes its project outside and never offers the enter/exit loop', () => {
+  const { w, p, home } = fixture();
+  p.atHome = false;
+  p.hunger = p.thirst = 0;
+  home.stock = { bread: 100, water: 100 };
+  const state = { plan: [], index: 0 } as unknown as ResidentState;
+  startCareer(w, p, state, { kind: 'housing', target: home.id });
+  for (let i = 0; i < 10; i++) {
+    assert.deepEqual(homecomingPlan(w, p, 86400, undefined, false), []);
+    assert.ok(!enterpriseChoices(w, p).some((c) => c.id === `household_${home.id}`));
+    assert.equal(continueCareer(w, p, state, enterpriseChoices(w, p)), undefined);
+    w.time += 60;
+  }
+  assert.equal(state.career, undefined);
+  assert.ok(
+    homecomingPlan(w, p, 86400).some((s) => s.kind === 'act' && s.action.type === 'home'),
+    'actual logout still enters the house',
+  );
+});
+
+test('a cash-poor producer can provision a pantry from their own output without buying from themselves', () => {
+  const { w, p, home } = fixture();
+  p.cash = 0;
+  p.atHome = false;
+  p.hunger = p.thirst = 0;
+  p.inventory = {};
+  home.stock = { bread: 100 };
+  const producer = w.buildings.find((b) => b.kind === 'mill')!;
+  producer.owner = p.id;
+  producer.stock = { water: 100 };
+  const plan = homecomingPlan(w, p, 86400, undefined, false);
+  assert.ok(
+    plan.some(
+      (s) =>
+        s.kind === 'act' &&
+        s.action.type === 'stock' &&
+        s.action.building === producer.id &&
+        s.action.item === 'water' &&
+        s.action.direction === 'withdraw',
+    ),
+  );
+  assert.ok(!plan.some((s) => s.kind === 'act' && s.action.type === 'home'));
 });

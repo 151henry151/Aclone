@@ -434,6 +434,55 @@ The baseline results canvas was marked stopped and its TSX parses successfully.
 The stopped experiment remains archived. Release deployment status should be
 verified with the public health endpoint; no new paid experiment is running.
 
+## 2026-10-15: household loops, housing, earnings and investment
+
+Local implementation; not committed, pushed or deployed yet. No reset, balance
+migration or paid model run accompanies this revision.
+
+- Separate pantry provisioning from entering home; finish stocked housing goals
+  while outside. Remove bare exit routines and unnecessary additional cottages.
+- Departure preparation can start and finish a fully budgeted cottage, withdraw
+  savings and stock from owned businesses. Personal homes do not compete for a
+  shared commercial founding-intent slot.
+- Screen every job/work action by its target, not its description. Recheck the
+  destination before quitting; reject full outputs, missing inputs, inadequate
+  payroll and excess staff. Livestock status notes are no longer blockers.
+- Allow zero-cash owners of tools to gather and sell; replace gathering without a
+  buyer with complete earning routes. Batch ordinary gathering tasks and enlarge
+  wholesale loads within normal capacity and funding limits. Input deliveries
+  retain employer payroll, and owner procurement can use invested purchasing
+  capital while protecting three payrolls and investor claims.
+- Show recurring living costs, earning rates and growth choices. Record counts of
+  options offered and consolidated liquid-capital changes, distinct from book
+  assets or internal transfers. Growth remains an individual planner choice.
+
+The reboot cleared the earlier temporary snapshot. A fresh read-only production
+snapshot (2026-10-15 15:26 UTC) validated all 19 revised NPC menus with no provider
+requests: Mabel had no redundant pantry offer; Toby, Silas and Ada could start a
+budgeted cottage during departure preparation. Raw state remains outside Git.
+
+A bounded, unpaid controller soak reached 13.08 simulated hours before its
+120-second wall limit: four residents, zero deaths, full health, three completed
+homes (two newly built), one new brickworks and one farm acquisition. Sixteen
+recoverable failures included changed stock/resource availability and two journey
+timeouts. One resident remained homeless; mill capital was depleted. The chooser
+was deterministic, not Jev, so these results establish executable paths, **not** a
+stable economy. The invested-capital procurement repair was added after this run.
+
+Regression tests cover stocked-house loops, paid cottage completion plus a day
+of offline feeding, savings, zero-cash gathering, funded job selection and a lost
+vacancy before quitting, investor/payroll protections, opportunity reporting and
+liquid-capital accounting. Final verification: TypeScript and all 737 tests pass;
+the production build passes (dependency annotation and bundle-size warnings).
+The final code also validates all 19 saved live-state menus without planning
+warnings or provider calls. No paid simulation or production changes were made.
+
+Next deployment comparison: measure home/exit churn, stocked departures, median
+liquid-capital change, relief dependence, useful wage-paying shifts, input/output
+flow, and completed acquisitions/construction against the 64.8-hour live audit.
+Do not count a funded foundation or a successful service restart as prosperity.
+A new actual-Jev canary still needs explicit authorization; none is running.
+
 ## 2026-10-18: public conversation dismissal
 
 Read-only live chat inspection confirmed that third-person mentions opened NPC
@@ -446,7 +495,7 @@ persistent channel-specific dismissal cutoffs. Silence requests close public
 threads for all participants without new model calls; outstanding replies and
 saved acknowledgements are discarded, while accepted gameplay remains intact.
 Direct invitations can reopen conversation. Release 0.66.4 contains only this chat
-fix; household and economy changes remain separate, uncommitted work.
+fix; household and economy changes were kept separate and follow in 0.68.0.
 
 Regression coverage includes public/private stops, restart persistence, direct
 versus incidental addresses, bounded follow-ups and dismissal during a pending
@@ -456,3 +505,32 @@ this release. Deploy using the normal backup/build/restart procedure.
 Release-only verification: all 733 unit tests, TypeScript, formatting and the
 production build passed. The real-socket NPC browser check passed on an isolated
 rerun with a 300-second limit after its first run exceeded the default 180 seconds.
+
+## BioHaze feedback follow-up — releases 0.66.5–0.68.0 (2026-10-18)
+
+Reviewed the refreshed Discord #text-pub archive and the latest public in-game
+HANK_ROMP/BioHaze messages, including the later gathering/tool advice. The prompt
+already contains rules, state, ordinary actions and outcome memory; the important
+new work is executable opportunities and incentive changes, not simply more prose.
+
+Implemented continuous Puddlewick employment and qualified unpaid owner operation,
+farm-stockroom care, tractor engine preparation, consolidated gathering loads,
+and surplus price choices that leave a transport margin above production costs.
+The one-time employment migration changes only the two policy flags, preserves
+subsequent custom settings and does not reset the world. No player quotes or live
+production data were changed during development. Multiple jobs and speculative
+loan-funded trade remain separate proposals.
+
+The release separates farm care (0.66.5), employment policy (0.67.0), and NPC
+economy/household recovery (0.68.0) into logical commits with tests and docs.
+Deployment uses the documented backup/build/restart procedure; verify the public
+health version and persisted employment policy afterward. The 0.66.4 Mabel silence
+fix is retained. Raw archives/snapshots stay ignored.
+
+Verification for this local follow-up: TypeScript and all **753 unit tests** pass;
+the production build and the desktop work-shift browser regression pass. Changed
+source/docs/test files pass formatting. The repository-wide formatting command
+also scans three pre-existing untracked `NPC_STATUS*` notes; those still produce
+format warnings and were left untouched. No paid AI calls or production mutations
+were needed. After deployment, measure actual paid production, traded loads,
+unsold inventory, household coverage and deaths over a no-intervention period.

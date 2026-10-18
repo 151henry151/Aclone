@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-10-18
+
+### Fixed
+
+- Start the tractor engine when NPCs remount or refuel, and consolidate gathering tasks into practical loads without redundant wait steps.
+- Stop NPCs repeatedly entering and leaving an already stocked home; pantry work now ends when supplies are sufficient, while departure still requires going inside.
+- Let homeless NPCs complete affordable cottage projects during departure preparation, draw their savings and use their own business output for home supplies.
+- Check actual production conditions before NPC job renewals and before leaving an old job; preserve payroll when employees deliver missing inputs.
+- Allow cash-poor NPCs to gather with equipment they already own, and let business owners spend invested purchasing capital on inputs without consuming protected payroll or investor claims.
+
+### Changed
+
+- NPC owners can price surplus for known funded buyers with transport margins and production-cost safeguards, instead of arbitrary sell-price nudges.
+- NPC earning routines use complete gathering or trading trips with funded buyers, larger practical loads and comparisons of earnings against travel time.
+- NPC growth reviews show recurring living costs, affordable opportunities and business payback estimates. Decision journals count offered opportunities, and outcome memory distinguishes liquid capital from unsold inventory and internal transfers.
+
 ## [0.67.0] - 2026-10-18
 
 ### Changed

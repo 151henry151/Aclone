@@ -27,6 +27,7 @@ export interface ResidentState {
   behaviorVersion?: number;
   evaluation?: {
     netAssets?: number;
+    liquidCapital?: number;
     time: number;
     cash: number;
     bank: number;
@@ -38,6 +39,7 @@ export interface ResidentState {
     goal: string;
     elapsedSeconds: number;
     netAssetChange?: number;
+    liquidCapitalChange?: number;
     cashChange: number;
     bankChange: number;
     healthChange: number;

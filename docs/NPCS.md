@@ -111,6 +111,16 @@ Each decision has a protected `life` briefing: outdoor time to starvation withou
 
 Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked shelter can feed safely without waking Jev. Urgent errands buy/eat in one plan. Optional sales, factory deposits and watering retain personal provisions; a comfortably fed resident may stock all supplies at home. Owners can buy/deposit inputs for their own business; workers use the employer’s stock for production; hauling or investing is a separate transaction. Budgets, shortages, inaccessible shops and poor choices can still kill an NPC.
 
+### Household, earnings and investment reviews
+
+During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household.
+
+Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
+
+Owners can withdraw the exact input-purchasing cost for a supply trip, leaving three full payrolls and investor claims intact. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
+
+Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
+
 ### How the providers cooperate
 
 Jev chooses a validated supplied option ID, not dialogue. `adaptive.ts`, `farmer.ts`, `economy-choices.ts` and `space.ts` create candidates with category round-robin: up to 200 local options (~48 KB server-side) plus two optional spaceport plans. Executable steps stay on the server. The complete Jev request is limited to **24,000 UTF-8 bytes**: redundant context goes first, then descriptions shorten without removing choices; needs/commitments remain. Unknown IDs never execute; all conditions are rechecked.
@@ -123,7 +133,7 @@ OpenAI/Claude runs only for addressed conversation, using the strict `converse` 
 
 Both chat providers receive complete [FAQ](FAQ.md)/[Economy](ECONOMY.md) fundamentals, controls, current rules/workplace diagnostics, and up to three question excerpts plus three activity excerpts (6,500 characters/group) from bundled Playing/catalog data. Guides load once at startup; restart after edits. Queries cannot become paths or web requests; no paid embeddings. Chat has no interactive lookup loop; legacy gameplay adapters retain guide/recall steps.
 
-Workplace context prioritizes owned/employed/planned/discussed buildings, reports missing skills/inputs/output room/payroll, includes a prospective worker in wage costs, and distinguishes jobs from active shifts. `work` or reaccepting the same job renews a shift without duplicate employment/pay; waiting nearby does not. Custom recipes/live settings override defaults; farms use plots. Receipts record actual stock/cash/skills/shift changes and wages. Advice remains fallible; live state beats memory/player claims.
+Workplace context prioritizes owned/employed/planned/discussed buildings, reports missing skills/inputs/output room/payroll, includes a prospective worker in wage costs, and distinguishes jobs from active shifts. When active work is enabled, `work` or reaccepting the same job renews a shift without duplicate employment/pay; waiting nearby does not. Puddlewick disables renewal and allows qualified unpaid owner operation. Custom recipes/live settings override defaults; farms use plots. Receipts record actual stock/cash/skills/shift changes and wages. Advice remains fallible; live state beats memory/player claims.
 
 ## Recovery from failed plans
 
@@ -381,3 +391,27 @@ means-tested fallback; wage, input and full-crew estimates guide business choice
 These safeguards address observed failures, but the stopped paid experiment is
 not evidence that the revised economy remains stable for four days. See the
 [recovery handoff](NPC_RECOVERY.md) for evidence and the next comparison.
+
+### BioHaze feedback improvements (0.66.5–0.68.0)
+
+- Puddlewick employment persists offline; qualified owners operate unpaid. Factory
+  output still requires inputs, storage space and employee payroll. Other worlds
+  retain their settings; the starter-parish migration runs once.
+- Farm care consumes stockroom water, compost, gravel and topsoil before carried
+  materials. NPC farmers protect their personal meal/drink reserves.
+- Hauling plans remount and start fueled tractors. Gathering packs multiple timed
+  tasks into one trip, bounded by cargo, resource availability, funded bids and the
+  twelve-step plan limit. Ordinary gathering needs a tool, not a qualification.
+- Owners can offer costed surplus markdowns for every stocked product, rather than
+  random sell-price changes on the first eight goods. Known funded buyer bids must
+  leave a transport allowance while covering estimated replacement inputs, labour,
+  tax and an owner margin. An infeasible spread produces no markdown. These are
+  choices for Jev, not automatic global price resets; unknown shops stay unknown.
+- The gameplay instructions include these rules, inventory liquidity and practical
+  earning loops. No extra conversation-model calls are needed.
+
+Multiple concurrent jobs and speculative borrowing are not added by this change.
+The original-game recollection of three jobs is tentative; supporting multiple
+employers needs separate payroll, dismissal and survival balancing. Existing loan
+features remain available. Local regression success does not demonstrate lasting
+prosperity; follow deployment with a measured no-intervention observation window.

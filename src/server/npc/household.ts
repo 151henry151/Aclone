@@ -100,3 +100,38 @@ export function householdBudget(w: World, p: Player, seconds = 6 * 3600) {
       'Reserve covers meals, valid shelter and one fuel purchase when low; wages and trade receipts must also pay longer travel and business costs.',
   };
 }
+
+/** Replacement cost for one day of nutrition, even when today's pantry is full.
+ * A full pantry lowers immediate spending, not the recurring cost of living. */
+export function dailyLivingCost(w: World, p: Player) {
+  const h = household(w, p);
+  const empty = h
+    ? {
+        ...w,
+        buildings: w.buildings.map((b) =>
+          b.id !== h.id
+            ? b
+            : {
+                ...b,
+                stock: {},
+                ...(b.lodging
+                  ? {
+                      lodging: {
+                        ...b.lodging,
+                        guests: {
+                          ...b.lodging.guests,
+                          [p.id]: { ...b.lodging.guests[p.id], stock: {} },
+                        },
+                      },
+                    }
+                  : {}),
+              },
+        ),
+      }
+    : w;
+  return householdBudget(
+    empty,
+    { ...p, inventory: {}, hunger: 15000, thirst: 15000, fuel: 100 },
+    86400,
+  );
+}

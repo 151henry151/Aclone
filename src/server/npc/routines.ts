@@ -17,7 +17,7 @@ import { affordableLoad, livingReserve } from './travel.ts';
 import { homecomingPlan } from './homecoming.ts';
 import { travelPrep } from './travel.ts';
 import { operationAction } from './player-operations.ts';
-import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
+import { worldResources } from '../../shared/resources.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 /** A meal is an interruption, not cancellation of an accepted goal. Keep just
@@ -82,11 +82,13 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
     const have = b.stock[item] ?? 0;
     if (have >= need) continue;
     const bid = b.buy[item];
-    if (!Number.isSafeInteger(bid) || bid <= 0 || b.investment < bid) continue;
+    const payroll = workplace(w, p, b)?.ifYouWork.wagesRequired ?? b.wage;
+    const available = Math.max(0, b.investment - payroll);
+    if (!Number.isSafeInteger(bid) || bid <= 0 || available < bid) continue;
     if (have >= b.capacity) continue;
     const carried = p.inventory[item] ?? 0;
     if (carried > 0) {
-      const n = Math.min(carried, need - have, b.capacity - have, Math.floor(b.investment / bid));
+      const n = Math.min(carried, need - have, b.capacity - have, Math.floor(available / bid));
       if (n <= 0) continue;
       const plan = visitBuilding(p, b, [
         act({ type: 'trade', building: b.id, item, quantity: n, direction: 'sell' }),
@@ -99,6 +101,7 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
       .filter(
         (shop) =>
           shop.id !== b.id &&
+          shop.owner !== p.id &&
           !shop.construction &&
           (shop.stock[item] ?? 0) > 0 &&
           Number.isSafeInteger(shop.sell[item]) &&
@@ -106,12 +109,12 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
           p.cash >= shop.sell[item],
       )
       .sort((a, c) => a.sell[item] - c.sell[item])[0];
-    if (!seller) continue;
+    if (!seller || seller.owner === p.id || seller.sell[item] > bid) continue;
     const n = Math.min(
       need - have,
       seller.stock[item],
       b.capacity - have,
-      Math.floor(b.investment / bid),
+      Math.floor(available / bid),
       affordableLoad(p.cash, seller.sell[item], reserve, need - have),
     );
     if (n <= 0) continue;
@@ -178,7 +181,6 @@ export function visitorShouldHustle(
 /** Earn toward a cottage and a shop: honour a live job, sell, gather, or work a public shift. */
 export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[] {
   if (p.task || p.learning) return [];
-  if (p.atHome) return [{ kind: 'act', action: { type: 'outside' } }];
   const maintenance = cargoRelief(w, p, state).length
     ? cargoRelief(w, p, state)
     : ownerRoutine(w, p, state);
@@ -187,32 +189,15 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
   if (duty.length) return duty;
   const hauling = careerChoices(w, p, state)
     .filter(
-      (c) =>
-        c.careerGoal?.kind === 'gather' &&
-        (p.inventory[gatheringImplements[c.careerGoal.item!]?.item] ?? 0) > 0,
+      (c) => ['gather', 'trade'].includes(c.careerGoal?.kind ?? '') && (c.expectedCash ?? 0) > 0,
     )
-    .sort((a, b) => (b.expectedCash ?? 0) - (a.expectedCash ?? 0))[0];
+    .sort(
+      (a, b) =>
+        (b.expectedCash ?? 0) / Math.max(30, b.durationSeconds ?? 600) -
+        (a.expectedCash ?? 0) / Math.max(30, a.durationSeconds ?? 600),
+    )[0];
   if (hauling) return hauling.plan;
   const office = w.buildings.find((b) => b.kind === 'workhouse' && !b.construction);
-  const load = (item: string) =>
-    p.skills.includes(item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
-  const node = [...worldResources(w)]
-    .sort((a, b) => distance(p, a) - distance(p, b))
-    .find(
-      (n) =>
-        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0 &&
-        resourceAmount(w, n) >= load(n.item) &&
-        !w.buildings.some((b) => distance(b, n) < 12) &&
-        canCarry(p, n.item, load(n.item), w),
-    );
-  if (node) {
-    const plan: Step[] = [
-      ...travelPrep(p),
-      { kind: 'travel', destination: node.id },
-      { kind: 'act', action: { type: 'gather', node: node.id } },
-    ];
-    return plan.some((s) => blockedStep(state.recovery, s, w.time)) ? [] : plan;
-  }
   if (!office || p.cash + p.bank > householdBudget(w, p).reserve) return [];
   const plan = visitBuilding(p, office, [
     { kind: 'act', action: { type: 'task', building: office.id, task: 'labour' } },

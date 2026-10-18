@@ -272,8 +272,10 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
       if (!plan) continue;
       seen.add(c.kind);
       const def = worldBuildings(w)[c.kind];
+      const site = plan.find((s) => s.kind === 'move');
+      const budget = site?.kind === 'move' ? constructionBudget(w, p, c.kind, site)! : undefined;
       add(
-        `Found a ${def.name}: ${c.reason}. Base ${def.price} plus town tax and materials; an unfinished site earns nothing.`,
+        `Found a ${def.name}: budget ${budget?.total} including materials, tax, startup capital and living reserve. ${c.reason}. Needs ${kindRecipe(w, c.kind)?.skill} staff and funded buyers; complete and supply the site before income.`,
         plan,
       );
     }

@@ -6,6 +6,9 @@ import {
   livestockInputs,
 } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { usefulShift } from './business-policy.ts';
+import { calendar } from '../../shared/environment.ts';
+import { crops } from '../../shared/farming.ts';
 import { waterworksSite } from '../../shared/shoreline.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -29,20 +32,22 @@ export function workplace(w: World, p: Player, b: Building) {
   const qualified = p.skills.includes(recipe.skill);
   const workActive = employedHere && (!w.settings.activeWork || p.activeUntil >= w.time);
   const workActiveNextCycle = employedHere && staff.some((q) => q.id === p.id);
-  const renewAction = employedHere ? { type: 'work' as const, building: b.id } : null;
+  const renewAction =
+    employedHere && w.settings.activeWork ? { type: 'work' as const, building: b.id } : null;
   const jobBlockers: string[] = [];
   if (b.owner === p.id) jobBlockers.push('Owners cannot employ themselves');
   if (!qualified) jobBlockers.push(`Learn ${recipe.skill} at school first`);
   if (p.job && !employedHere) jobBlockers.push('Quit your other job before taking this one');
   if (!employedHere && b.employees.length >= 16) jobBlockers.push('All jobs filled');
   const blockers: string[] = [];
+  const notes: string[] = [];
   const herd = herdSpec(b);
   if (herd) {
     if (!herdReady(b))
       blockers.push(
         `Production requires ${herd.minimum} ${herd.animal} and 40% herd condition; keep feed, water and qualified care available`,
       );
-    blockers.push(
+    notes.push(
       `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} ${acceptsHay(b) ? 'hay or feed' : 'feed'} and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
     );
   }
@@ -52,7 +57,7 @@ export function workplace(w: World, p: Player, b: Building) {
     );
   if (b.construction) blockers.push('Construction is unfinished');
   if (b.kind !== 'farm') {
-    if (!b.government && !staff.length)
+    if (!b.government && !productionStaffing(w, b, staff.length, next).active)
       blockers.push(
         'No active employees at the next production check; only slow unattended production can run',
       );
@@ -67,7 +72,8 @@ export function workplace(w: World, p: Player, b: Building) {
         `Owner must invest ${b.wage * staff.length - b.investment} more for next cycle's wages`,
       );
   }
-  const wagesRequired = b.wage * (staff.filter((q) => q.id !== p.id).length + 1);
+  const paidCrewWithYou = staff.filter((q) => q.id !== p.id).length + Number(b.owner !== p.id);
+  const wagesRequired = b.wage * paidCrewWithYou;
   const summary =
     b.kind === 'farm'
       ? 'This farm uses seasonal plots, not automatic wheat production.'
@@ -78,7 +84,13 @@ export function workplace(w: World, p: Player, b: Building) {
               : !workActiveNextCycle
                 ? 'Your shift is active now but expires before the next production check. Use work before then to earn wages.'
                 : 'Your shift is active through the next production check; this is not proof a batch has completed.'
-            : 'You have NOT taken this job; a chat agreement does not count.',
+            : b.owner === p.id && w.settings.ownerOperation
+              ? !qualified
+                ? 'Learn the required skill to operate your business without wages.'
+                : w.settings.activeWork
+                  ? 'You can operate unpaid by renewing work.'
+                  : 'You operate unpaid without renewal, including offline.'
+              : 'You have NOT taken this job; a chat agreement does not count.',
           qualified ? `You are qualified (${recipe.skill}).` : `You lack ${recipe.skill}.`,
           `Inputs and outputs belong to the building stockroom, never your carried inventory.`,
           `With you working, the next batch needs ${(wagesRequired / 100).toFixed(2)}d total wages from building investment.`,
@@ -87,6 +99,7 @@ export function workplace(w: World, p: Player, b: Building) {
             : 'Working capital covers that wage bill.',
           `Ideal active crew: ${productionStaffing(w, b, staff.length, next).ideal}; expected efficiency ${Math.round(productionEfficiency(w, b, staff.length, next) * 100)}%. Fewer or excess workers slow batch completion; wages are paid only for completed batches.`,
           ...blockers,
+          ...notes,
         ].join(' ');
   return {
     summary,
@@ -118,20 +131,42 @@ export function workplace(w: World, p: Player, b: Building) {
     activeEmployeesNextCycle: staff.length,
     idealEmployees: productionStaffing(w, b, staff.length, next).ideal,
     efficiencyNextCycle: productionEfficiency(w, b, staff.length, next),
-    efficiencyIfYouWork: productionEfficiency(
-      w,
-      b,
-      staff.filter((q) => q.id !== p.id).length + 1,
-      next,
-    ),
+    efficiencyIfYouWork: productionEfficiency(w, b, paidCrewWithYou, next),
     fractionalProgress: b.progress,
     blockers,
+    notes,
     ifYouWork: { wagesRequired, capitalShortfall: Math.max(0, wagesRequired - b.investment) },
     nextStep:
       b.kind === 'farm'
         ? 'Inspect plots and use farm actions; no automatic wheat recipe runs here'
         : employedHere
-          ? 'Use work nearby to renew two cycles, then wait for production; check blockers and capital'
-          : 'Use job nearby if eligible; then work and wait. No personal milling/crafting action exists',
+          ? w.settings.activeWork
+            ? 'Use work nearby to renew two cycles, then wait for production; check blockers and capital'
+            : 'Employment continues without renewal, including offline; check stockroom, funding and buyers'
+          : 'Use job nearby if eligible; obey this world’s shift policy. No personal milling/crafting action exists',
   };
+}
+
+/** Evaluate the target, never the current employer or the wording of a choice.
+ * The caller supplies its perceived world; runtime rechecks at the destination. */
+export function shiftBlocker(w: World, p: Player, b: Building): string | undefined {
+  const job = workplace(w, p, b);
+  if (!job) return 'This building has no production job';
+  if (b.owner === p.id) return 'Owners cannot employ themselves';
+  if (b.construction) return 'Construction is unfinished';
+  if (b.wage <= 0) return 'This job pays no wages';
+  if (!usefulShift(w, p, b))
+    return 'Another worker already covers this production cycle; find another useful task';
+  if (job.ifYouWork.capitalShortfall) return 'Investment cannot pay the next wage bill';
+  if (b.kind === 'farm') {
+    const planted = (b.plots ?? []).some((plot) => plot.crop);
+    const plantable = Object.values(crops).some(
+      (c) =>
+        c.seasons.includes(calendar(w).season) &&
+        b.investment >= c.seed + job.ifYouWork.wagesRequired,
+    );
+    if (!planted && !plantable) return 'No funded seasonal farm work is available';
+    return;
+  }
+  return job.blockers.find((line) => !line.startsWith('No active employees'));
 }

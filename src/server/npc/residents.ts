@@ -30,13 +30,13 @@ import {
   anotherFounding,
   publishFoundingIntent,
 } from './cooperation.ts';
-import { strategicReviewDue, prosperityBriefing } from './prosperity.ts';
-import { netAssets } from './wealth.ts';
-import { workplace } from './workplace.ts';
+import { strategicReviewDue, prosperityBriefing, opportunityCounts } from './prosperity.ts';
+import { netAssets, liquidCapital } from './wealth.ts';
+import { workplace, shiftBlocker } from './workplace.ts';
 import { startCareer, continueCareer } from './projects.ts';
 import { canKeepFishing, strandedCargo } from './cargo.ts';
 import { householdBudget } from './household.ts';
-import { ownerRoutine, cargoRelief, usefulShift } from './business-policy.ts';
+import { ownerRoutine, cargoRelief } from './business-policy.ts';
 import { economicMenu, enterpriseChoices } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -444,10 +444,25 @@ export class Residents {
       checkCommitmentPrice(w, r.state, a);
       if (a.type === 'job' || a.type === 'work') {
         const b = w.buildings.find((b) => b.id === a.building);
-        if (b && !usefulShift(w, p, b))
-          throw Error(
-            'Another worker already covers this production cycle; find another useful task',
-          );
+        const blocked = b && shiftBlocker(w, p, b);
+        if (blocked) throw Error(blocked);
+      }
+      // Plans travel before quitting. Recheck the promised vacancy locally before
+      // relinquishing the old job; stale quotes must not cause job churn.
+      if (a.type === 'quit') {
+        const next = r.state.plan
+          .slice(r.state.index + 1)
+          .find((s) => s.kind === 'act' && s.action.type === 'job');
+        if (next?.kind === 'act' && next.action.type === 'job') {
+          const target = next.action.building;
+          const b = w.buildings.find((b) => b.id === target);
+          if (!b || distance(p, b) >= 18)
+            throw Error('Inspect the new workplace before leaving my job');
+          if (!workplace(w, p, b)?.qualified)
+            throw Error('Qualify for the new job before leaving my current one');
+          const blocked = shiftBlocker(w, p, b);
+          if (blocked) throw Error(blocked);
+        }
       }
       const result = act(w, p.id, a);
       recordBusinessFreight(before, w, p, r.state, a);
@@ -1460,6 +1475,7 @@ export class Residents {
     const chatOnly = this.dialogueDue(r, now);
     const snapshot = {
       netAssets: netAssets(w, p),
+      liquidCapital: liquidCapital(w, p),
       time: w.time,
       cash: p.cash,
       bank: p.bank,
@@ -1476,6 +1492,9 @@ export class Residents {
           ? { netAssetChange: snapshot.netAssets - prior.netAssets }
           : {}),
         cashChange: p.cash - prior.cash,
+        ...(prior.liquidCapital !== undefined
+          ? { liquidCapitalChange: snapshot.liquidCapital - prior.liquidCapital }
+          : {}),
         bankChange: p.bank - prior.bank,
         healthChange: p.health - prior.health,
         previousJob: prior.job,
@@ -1528,7 +1547,7 @@ export class Residents {
               ...decisionObservation,
               career: r.state.career,
               household: householdBudget(knownWorld, p),
-              prosperity: prosperityBriefing(knownWorld, p),
+              prosperity: prosperityBriefing(knownWorld, p, decisionObservation.choices),
             },
           }
         : request;
@@ -1924,7 +1943,15 @@ export class Residents {
         )
           return;
         if (discardDismissedChat() || discardStaleReply(finalWorld)) return;
-        this.accept(r, finalWorld, result, Date.now(), replyTo, chatOnly);
+        this.accept(
+          r,
+          finalWorld,
+          result,
+          Date.now(),
+          replyTo,
+          chatOnly,
+          chatOnly ? undefined : opportunityCounts(decisionRequest.observation.choices ?? []),
+        );
         if (
           chatOnly &&
           (!r.state.plan.length || now >= r.state.until || p.hunger >= 40000 || p.thirst >= 40000)
@@ -2064,6 +2091,7 @@ export class Residents {
     now: number,
     replyTo?: string,
     chatOnly = false,
+    available?: ReturnType<typeof opportunityCounts>,
   ) {
     const d = decisionSchema.parse(result.decision);
     if (d.speech?.text.trim().startsWith('*')) throw Error('NPC speech cannot run chat commands');
@@ -2147,6 +2175,7 @@ export class Residents {
     this.checkpoint(r, w, chatOnly ? 'conversation' : 'decision', {
       intent: d.intent,
       plan: d.plan,
+      available,
       repeat: d.repeat,
       reconsiderSeconds: d.reconsiderSeconds,
     });

@@ -88,7 +88,7 @@ test('a cash-poor idle visitor works a public labour shift instead of sitting', 
   assert.ok(!plan.every((s) => s.kind === 'wait'), 'hustle is not a sit-and-wait plan');
 });
 
-test('a visitor with a shovel gathers instead of resting at home', () => {
+test('a visitor with a shovel chooses a complete earning route instead of resting at home', () => {
   const { w, p, state } = fixture();
   p.inventory.shovel = 1;
   const home = w.buildings.find((b) => b.kind === 'home')!;
@@ -96,8 +96,10 @@ test('a visitor with a shovel gathers instead of resting at home', () => {
   p.home = home.id;
   const plan = hustleRoutine(w, p, state);
   assert.ok(
-    plan.some((s) => s.kind === 'act' && s.action.type === 'gather'),
-    'gathering is useful work when they already carry the implement',
+    plan.some(
+      (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.direction === 'sell',
+    ),
+    'either gathering or arbitrage must end in a sale to a funded buyer',
   );
   assert.ok(!plan.some((s) => s.kind === 'act' && s.action.type === 'home'));
 });
@@ -106,7 +108,13 @@ test('a visitor still inside their cottage leaves before earning', () => {
   const { w, p, state } = fixture();
   p.atHome = true;
   const plan = hustleRoutine(w, p, state);
-  assert.deepEqual(plan, [{ kind: 'act', action: { type: 'outside' } }]);
+  assert.deepEqual(plan[0], { kind: 'act', action: { type: 'outside' } });
+  assert.ok(
+    plan.some(
+      (s) => s.kind === 'act' && s.action.type === 'trade' && s.action.direction === 'sell',
+    ),
+    'leave for a concrete earning errand, not a bare outside step',
+  );
 });
 
 test('a busy visit ranks labour above leisure rest and idle factory waiting', () => {
