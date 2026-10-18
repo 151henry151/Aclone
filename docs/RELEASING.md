@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.66.4
+## Current upgrade: 0.66.5
+
+Farm care uses stored materials first, then carried supplies. Existing permissions and stock are preserved. Refresh clients for the revised labels; no data migration is needed.
+
+### 0.66.4
 
 NPCs respect requests for silence and distinguish direct addresses from incidental
 mentions. Dismissal persists across restarts and suppresses outstanding replies;

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.66.5] - 2026-10-18
+
+### Fixed
+
+- Farm care now consumes stockroom water, compost, gravel and topsoil before carried supplies; employees can tend crops without withdrawing business goods.
+
 ## [0.66.4] - 2026-10-18
 
 ### Fixed

@@ -83,7 +83,7 @@ Water sells at 5d; local processors/lodging bid 5.60d. Harbour imports remain av
 
 ## Farming
 
-Learn **farmer**, then own or work at a farm. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce. In winter, a notice explains that planting resumes in spring; empty crop menus are replaced with resting plots. All unharvested crops die when winter begins, including ripe crops. Finish the 15-second harvest before the season changes. Stored produce is safe; cleared plots retain drainage and can be replanted in spring.
+Learn **farmer**, then own or work at a farm. Water, compost, gravel and topsoil for farm care come from its stockroom first, with carried supplies covering any shortfall. Staff can use these supplies for farm tasks without withdrawing them personally. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce. In winter, a notice explains that planting resumes in spring; empty crop menus are replaced with resting plots. All unharvested crops die when winter begins, including ripe crops. Finish the 15-second harvest before the season changes. Stored produce is safe; cleared plots retain drainage and can be replanted in spring.
 
 - **Hay grass:** spring/summer/autumn, 10 days (1h 40m), grass; baled forage for cows/sheep. Wet weather reduces the dry-hay yield; drainage helps.
 - **Wheat:** spring/autumn, 18 days (3h), grain; flour/bread.

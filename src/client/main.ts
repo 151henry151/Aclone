@@ -1686,7 +1686,7 @@ function buildingWindow(b: Building) {
             status.state === 'withered'
               ? '<p class="notice">Crop lost to winter.</p>'
               : plot?.crop
-                ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+                ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 stocked/carried water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · stocked/carried compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
                 : plantingCrops.length
                   ? `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
                       'crop',
@@ -1696,7 +1696,7 @@ function buildingWindow(b: Building) {
                       ]),
                     )}<button>Plant seeds</button></form>`
                   : '<p class="note">Resting until planting season.</p>'
-          }${plot?.winterLoss ? `<p class="note">${esc(crops[plot.winterLoss]?.name ?? plot.winterLoss)} lost to winter.</p>` : ''}${!plot?.crop && plot ? button('Drain · 6 gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · 6 dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
+          }${plot?.winterLoss ? `<p class="note">${esc(crops[plot.winterLoss]?.name ?? plot.winterLoss)} lost to winter.</p>` : ''}${!plot?.crop && plot ? button('Drain · 6 stocked/carried gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · stocked/carried dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
         },
       ).join(
         '',

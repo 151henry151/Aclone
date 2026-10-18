@@ -137,20 +137,29 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   const old = b.plots?.[index],
     op = a.operation;
   check(!old?.harvest, 'Someone is already harvesting this plot');
+  // Staff may consume supplies for farm work, never withdraw them personally.
+  const available = (item: string) => (b.stock[item] ?? 0) + (p.inventory[item] ?? 0);
+  const consume = (item: string, n: number) => {
+    const stored = Math.min(n, b.stock[item] ?? 0);
+    if (stored) b.stock[item] -= stored;
+    if (n > stored) p.inventory[item] = (p.inventory[item] ?? 0) - (n - stored);
+  };
   if (op === 'drain' || op === 'improve') {
     check(old && !old!.crop, 'Improve an empty plot after its first harvest');
-    const stock = p.inventory;
     if (op === 'drain') {
-      check(!old!.drainage && (stock.gravel ?? 0) >= 6, 'Carry six gravel; drainage is permanent');
-      stock.gravel -= 6;
+      check(
+        !old!.drainage && available('gravel') >= 6,
+        'Stock or carry six gravel; drainage is permanent',
+      );
+      consume('gravel', 6);
       old!.drainage = true;
     } else {
       check(
-        !old!.improved && (stock.dirt ?? 0) >= 6 && (stock.compost ?? 0) >= 1,
-        'Carry six topsoil and one compost; improve once between crops',
+        !old!.improved && available('dirt') >= 6 && available('compost') >= 1,
+        'Stock or carry six topsoil and one compost; improve once between crops',
       );
-      stock.dirt -= 6;
-      stock.compost -= 1;
+      consume('dirt', 6);
+      consume('compost', 1);
       delete old!.previous;
       old!.improved = true;
     }
@@ -188,16 +197,16 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   if (op === 'water') {
     check(w.time < plot.ready, 'This crop is already ripe');
     check(plot.water < 3, 'This plot has enough irrigation');
-    check((p.inventory.water ?? 0) >= 3, 'Carry three water');
-    p.inventory.water -= 3;
+    check(available('water') >= 3, 'Stock or carry three water');
+    consume('water', 3);
     plot.water++;
   } else if (op === 'fertilize') {
     check(w.time < plot.ready && !plot.fertilized, 'Fertilize once during growth');
-    if ((p.inventory.compost ?? 0) > 0) p.inventory.compost--;
+    if (available('compost') > 0) consume('compost', 1);
     else {
       check(
         b.investment >= fertilizerPrice,
-        `Carry compost or fund ${fertilizerPrice / 100}d of fertilizer`,
+        `Stock or carry compost or fund ${fertilizerPrice / 100}d of fertilizer`,
       );
       b.investment -= fertilizerPrice;
       log(w, 'sink', fertilizerPrice, b.id, 'merchant', 'fertilizer');
