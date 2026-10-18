@@ -65,6 +65,7 @@ for (const [kind, skill, input, output, vocation] of [
 ] as const) {
   test(`Jev options renew an expired ${kind} shift, consume building inputs and verify real output/wages`, () => {
     const w = createWorld('puddlewick', 'Test', 'owner');
+    w.settings.activeWork = true; // Renewal remains available to custom worlds.
     const p = addPlayer(w, 'worker', 'Worker');
     const b = w.buildings.find((b) => b.kind === kind)!;
     b.owner = 'owner';

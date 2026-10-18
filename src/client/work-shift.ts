@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { recipes } from '../shared/catalog';
 import type { World, Player, Building } from '../shared/types';
 import { productionInterval } from '../shared/simulation';
 
@@ -6,7 +7,13 @@ const duration = (n: number) => `${Math.floor(n / 60)}m ${n % 60}s`;
 /** Presentation of the saved shift; starting a shift is not a completed batch. */
 export function workShift(w: World, p: Player, b: Building) {
   if (b.construction) return;
-  const owner = b.owner === p.id && w.settings.ownerOperation && b.kind !== 'farm';
+  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const owner =
+    b.owner === p.id &&
+    w.settings.ownerOperation &&
+    b.kind !== 'farm' &&
+    !!recipe &&
+    p.skills.includes(recipe.skill);
   const employee = b.owner !== p.id && p.job === b.id && w.settings.jobsEnabled !== false;
   if (!(b.recipe || b.production) || (!owner && !employee)) return;
   const interval = productionInterval(w, b);

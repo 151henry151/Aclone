@@ -1,3 +1,4 @@
+import { migrateEmploymentPolicy } from './employment-policy.ts';
 import { exportShipments } from './export-shipments.ts';
 import { labourReward } from './public-labour.ts';
 import { onFarmLand } from './farm-land.ts';
@@ -240,6 +241,7 @@ export function createWorld(
     }
     w.buildings.push(b);
   });
+  migrateEmploymentPolicy(w);
   migrateEstates(w);
   migrateProcurement(w);
   if (template === 'combat') w.settings.fighting = true;
@@ -734,8 +736,9 @@ export function act(w: World, id: string, a: Action): string {
       queueCreatorScript(w, 'JobChanged', { id, building: b.id, previous: p.job ?? '' });
       p.job = b.id;
       p.activeUntil = w.time + 2 * productionInterval(w, b);
-      result =
-        'Employed here and working for the next two cycles; production is scheduled, not instant.';
+      result = w.settings.activeWork
+        ? 'Employed here and working for the next two cycles; production is scheduled, not instant.'
+        : 'Employed here without shift renewal, including offline. Factory wages require funded production; farms pay for completed harvests.';
       break;
     }
     case 'quit': {
@@ -758,7 +761,9 @@ export function act(w: World, id: string, a: Action): string {
         );
         requireThat(p.skills.includes(recipe.skill), 'Learn ' + recipe.skill + ' first');
         b.ownerActiveUntil = w.time + 2 * productionInterval(w, b);
-        result = 'Operating your business for two cycles without wages.';
+        result = w.settings.activeWork
+          ? 'Operating your business for two cycles without wages.'
+          : 'Qualified owner operation continues without wages, including offline; inputs are still required.';
         break;
       }
       requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');

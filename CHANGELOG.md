@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.67.0] - 2026-10-18
+
+### Changed
+
+- Puddlewick jobs persist while offline without shift renewal, and qualified owners can operate factories unpaid. Production still requires stocked inputs, output space and funded employee wages.
+- Existing starter saves receive a one-time employment policy update; later world-owner settings are preserved.
+
 ## [0.66.5] - 2026-10-18
 
 ### Fixed

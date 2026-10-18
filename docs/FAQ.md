@@ -31,13 +31,13 @@ Close windows/chat, check connection, fuel and **Engine/F4**, and finish tasks. 
 
 ## Why can I not buy, sell or work at a building?
 
-Get within 18m. Trades need posted prices, seller stock, buyer funds and storage/cargo room. Learn the required profession for jobs. At your own property use **Stockroom** for goods and **Building Admin** for investment/withdrawals/prices; no self-trading or paid self-employment. Neighbours can invest in a till they do not own and later collect a capped return from earnings only; the owner cannot withdraw that locked claim. Owners may farm unpaid. Buying your workplace ends your job there.
+Get within 18m. Trades need posted prices, seller stock, buyer funds and storage/cargo room. Learn the required profession for jobs. At your own property use **Stockroom** for goods and **Building Admin** for investment/withdrawals/prices; no self-trading or paid self-employment. Neighbours can invest in a till they do not own and later collect a capped return from earnings only; the owner cannot withdraw that locked claim. Owners may farm unpaid; Puddlewick also allows qualified owners to operate factories unpaid. Buying your workplace ends your job there.
 
 ## Why is my flour mill not making flour?
 
 Put **5 wheat** in the mill's **Stockroom** to produce **3 flour** there per successful **10-real-minute** default cycle—not in the worker's inventory. No personal “mill flour” task exists; custom recipes/world speed may differ.
 
-The worker learns **miller**, visits, chooses **Take this job**, then **Work two cycles** to renew active employment. The owner supplies inputs/wage capital, not the employee. There is no owner hire button. Default gross wage is **22d per active worker per completed cycle**; 14.59d capital is 7.41d short for one worker. Check active staff, stock, output space, capital and the next-check countdown. Work starts a shift, not an instant batch. Holding a job or standing nearby is not an active shift; reaccepting the same job safely renews it too. Unstaffed production uses reduced efficiency. Owners cannot employ themselves; farms use seasonal plots, and wild nodes do not supply wheat.
+Learn **miller**, visit and choose **Take this job**. In Puddlewick, employment continues without renewal, including offline. Other worlds may require **Work two cycles**; the panel shows the current rule and shift state. Wages require a completed batch with stockroom inputs, output space and funded payroll. More or fewer workers than the ideal crew slow production. The posted wage overrides defaults. Qualified Puddlewick owners operate without wages; they cannot employ themselves. Farms use seasonal plots, and wild nodes do not supply wheat.
 
 ## What happens when I log out or the server restarts?
 
@@ -71,7 +71,7 @@ Normally 100 denarii (d) = 1 sheckle (s); internal 4500 = 45d. Local processors 
 
 ## How do I produce water?
 
-Build **Shoreline waterworks** on dry ground with its intake in adjacent water. Supply construction materials, stock fuel, fund wages and hire a **pump operator**; owners cannot work there. Default batch: 1 fuel → 12 water in ten minutes; asks 5d, local bids 5.60d. Dry intakes/flooded foundations halt production. Puddlewick has a seeded service. Public Harbour stores offer more expensive emergency bread/water imports even if their shelves are empty; local producers remain cheaper. Elsewhere build a producer or import. [Waterworks](PLAYING.md#water-supply).
+Build **Shoreline waterworks** on dry ground with its intake in adjacent water. Supply construction materials, stock fuel, fund wages and hire a **pump operator**; qualified owners can operate unpaid when the world allows owner operation (as Puddlewick does). Default batch: 1 fuel → 12 water in ten minutes; asks 5d, local bids 5.60d. Dry intakes/flooded foundations halt production. Puddlewick has a seeded service. Public Harbour stores offer more expensive emergency bread/water imports even if their shelves are empty; local producers remain cheaper. Elsewhere build a producer or import. [Waterworks](PLAYING.md#water-supply).
 
 ## Can Mabel help with everything or act on my behalf?
 

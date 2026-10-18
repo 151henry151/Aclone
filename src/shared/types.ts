@@ -276,6 +276,7 @@ export interface World {
   harbourShipment?: number;
   exportShipment?: number;
   crewPricing?: 1;
+  employmentPolicyVersion?: 1;
   /** Lanes the parish has laid toward buildings off the road network. */
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */

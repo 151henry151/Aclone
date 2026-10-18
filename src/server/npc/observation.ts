@@ -178,6 +178,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       productionSeconds: w.settings.productionSeconds,
       offlineEfficiency: w.settings.offlineEfficiency,
       activeWork: w.settings.activeWork,
+      ownerOperation: w.settings.ownerOperation,
       exchangeRate: w.settings.exchangeRate,
       exchangeCap: w.settings.exchangeCap,
     },

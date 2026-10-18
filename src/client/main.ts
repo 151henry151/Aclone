@@ -1604,7 +1604,7 @@ function buildingWindow(b: Building) {
       html += button('Parish supply orders', 'procurement');
     if (selfOwned)
       html +=
-        '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages.</p>';
+        '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages. Where owner operation is enabled, qualified owners also operate factories without wages.</p>';
     if (!b.government && (b.stakes?.length || (!selfOwned && !b.construction))) {
       const mine = b.stakes?.find((s) => s.investor === me!.id);
       const locked = unpaidPrincipal(b);
@@ -1792,7 +1792,9 @@ function buildingWindow(b: Building) {
       (b.recipe || b.production) &&
       b.kind !== 'farm'
     )
-      html += button(shift?.button ?? 'Operate without wages', 'work', workAttributes);
+      html += shift
+        ? button(shift.button, 'work', workAttributes)
+        : `<p class="note">Learn ${esc((b.production ?? recipes[b.recipe!]).skill)} to operate your business without wages.</p>`;
     if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? shift!.button : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</div>`;
     if (shift)

@@ -7,7 +7,7 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift normally pays 1d. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes; the button shows your current payment.
 2. Buy bread/water at Harbour stores and use them from Inventory. Variety reduces repeat-food penalties; keep fuel reserves too.
 3. Learn a profession at school: first qualification 80d/one real minute, later ones 160d/40 minutes, subject to skill limits.
-4. Take a job and **Work two cycles**, or buy a business, stock inputs and fund wages. Actual production pays wages; signing up alone does not.
+4. Take a job, or buy a business, stock inputs and fund wages. Puddlewick employment continues offline without renewal; other worlds may require **Work two cycles**. Qualified Puddlewick owners operate their factories unpaid. Actual successful production pays employee wages; signing up alone does not.
 5. Stock a cottage or rented room and enter before logging off. Hunger, thirst and starvation continue offline; provisions feed you automatically. **Go outside** restores movement.
 
 Your employer and shift countdown appear on the HUD; the building panel also shows
@@ -134,7 +134,7 @@ Galactic credits/cargo are separate from local cash/inventory; spaceports conver
 
 ## Appearance and property
 
-Choose among six cottage styles, including timber siding, at the same construction cost when building. Saved cottages keep their identity/stock/location; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid.
+Choose among six cottage styles, including timber siding, at the same construction cost when building. Saved cottages keep their identity/stock/location; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid. Puddlewick also allows qualified owners to operate their factories without wages, including offline.
 
 Buy unclaimed property or player-listed buildings (a red **For sale** tag with the asking price hangs under a listed building's name sign, visible from about 70 m), repair them and supply construction materials. To abandon an unfinished site, drive nearby, open it, expand **Cancel construction**, and confirm the displayed refund. The owner receives 75% of the original base cash cost; construction tax and delivered materials are not returned. Older sites without a saved cost use the lower of their saved building price and current catalogue base price. Completed buildings cannot use this refund. Homes and rooms use exterior shelter, not separate interior maps. [Economy](ECONOMY.md) covers business management and guesthouse rules.
 

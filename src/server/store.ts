@@ -1,3 +1,4 @@
+import { migrateEmploymentPolicy } from '../shared/employment-policy.ts';
 import { migrateProcurement } from '../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { migrateEstates } from '../shared/property.ts';
@@ -66,6 +67,7 @@ export class Store {
         migrateTown(world);
         normalizeTowns(world);
         migrateEconomy(world);
+        migrateEmploymentPolicy(world);
         migrateEstates(world);
         migrateProcurement(world);
         for (const b of world.buildings)

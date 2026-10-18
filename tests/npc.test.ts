@@ -578,6 +578,7 @@ test('an expired miller can replay job then work without aborting or extra AI ca
       );
     },
   });
+  s.w.settings.activeWork = true; // Regression for worlds that require renewal.
   try {
     const p = s.w.players[s.residents.status()[0].playerId];
     const b = s.w.buildings.find((b) => b.kind === 'mill')!;

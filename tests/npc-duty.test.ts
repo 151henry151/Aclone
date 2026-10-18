@@ -13,6 +13,7 @@ import type { Step } from '../src/server/npc/decision.ts';
 function fixture() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   completePuddlewick(w);
+  w.settings.activeWork = true; // Exercise opt-in shift-renewal worlds.
   w.settings.hungerRate = w.settings.thirstRate = 0;
   const p = addPlayer(w, 'worker', 'Worker');
   p.npc = true;

@@ -93,7 +93,7 @@ Production requires input goods, output space and funded wages. Qualified active
 employees count toward each building's **ideal crew**. Most workshops, mills,
 bakeries and pumps need two; heavy industry needs three; small livestock barns,
 composters, tea houses and roasteries need one. The panel shows **active / ideal**,
-not just hired employees. Expired shifts do not count.
+not just hired employees. In worlds requiring active shifts, expired shifts do not count.
 
 For an ideal crew of two: one worker gives 50%, two 100%, three 67%, four 50%.
 The formula is active ÷ ideal below the ideal, and ideal ÷ active above it.
@@ -108,7 +108,9 @@ With no active crew, private businesses use the world's unattended rate. Public
 businesses retain government operation when unattended. Where owner operation is
 enabled, a qualified operating owner counts as one unpaid worker toward the ideal.
 World creators can set 1–16 ideal employees on custom building templates.
-**Work two cycles** starts a window lasting two production intervals (usually
+**Puddlewick employment persists**, including offline: no shift renewal is needed. Qualified owners also operate their factories as unpaid workers. These are world settings; a one-time starter-parish update enables them on existing Puddlewick saves without changing property, prices, stock or money. Later creator changes are preserved. Farm wages still require hands-on harvests.
+
+In worlds with active work enabled, **Work two cycles** starts a window lasting two production intervals (usually
 20 real minutes). Checks run on fixed world-time boundaries, so the first can be
 soon after clicking. The HUD and building panel show the remaining time and checks;
 renewal becomes available during the final interval. Early renewal resets the
@@ -117,7 +119,7 @@ window from now rather than stacking shifts. Expiration is shown until you renew
 You can drive away or log off during a shift: eligibility depends on the deadline,
 not your location or connection. Wages require a successful production batch with
 inputs, output space and funded payroll. An eligible check can fail without pay;
-the timer does not pause. Farms instead pay on funded manual harvest completion.
+the timer does not pause in worlds using shifts. Farms instead pay on funded manual harvest completion.
 Worlds with active work disabled need no renewals. Odd Jobs Office labour is a
 separate timed task that locks movement. Learn the corresponding profession at school.
 
