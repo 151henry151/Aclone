@@ -123,7 +123,7 @@ Decision journal `available` counts distinguish offered earning, housing, constr
 
 ### How the providers cooperate
 
-Jev chooses a validated supplied option ID, not dialogue. `adaptive.ts`, `farmer.ts`, `economy-choices.ts` and `space.ts` create candidates with category round-robin: up to 200 local options (~48 KB server-side) plus two optional spaceport plans. Executable steps stay on the server. The complete Jev request is limited to **24,000 UTF-8 bytes**: redundant context goes first, then descriptions shorten without removing choices; needs/commitments remain. Unknown IDs never execute; all conditions are rechecked.
+Jev chooses a validated supplied option ID, not dialogue. `adaptive.ts`, `farmer.ts`, `economy-choices.ts` and `space.ts` create candidates with category round-robin: up to 200 local options (~48 KB server-side) plus two optional spaceport plans. Executable steps remain locally validated; their structured descriptions accompany each decision option. The complete Jev request is limited to **24,000 UTF-8 bytes**. At most eighteen varied alternatives reach Jev, with full descriptions, executable-stage summaries, observed quotes and numeric estimates. Entire lower-priority alternatives may be deferred under the byte cap; costs and destinations are never chopped off. Domain coverage and rotation keep alternatives visible across reviews; urgent options are protected. Seasonal deadlines, current work, needs and active commitments remain. Unknown IDs never execute; all conditions are rechecked.
 
 Local code handles movement, bites, waits and shift renewal. Plans allow 12 steps, 30 repeats and up to 30 minutes. Durable experience compares actual results with goals; full history is searchable rather than loaded every turn.
 
@@ -148,6 +148,7 @@ Defaults are local accounting rates, not a live provider-price quote (Claude rat
 - Mabel: `gpt-4.1-mini`, Responses API, max 2,200 output tokens, $0.40/$1.60 per million input/output; ignores cached-input discounts. [Model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
 - Others: `claude-haiku-4-5-20251001`, $1/$5 input/output; five-minute stable-prompt cache at 1.25× writes and 0.1× reads. Reservations use write rates; settlement uses reported categories. [Claude models](https://platform.claude.com/docs/en/models/overview), [caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching).
 - Shared defaults: **$0.60/UTC day, $20/UTC calendar month, 120 rolling calls/hour, two concurrent requests**, minimum interval 15 seconds. Adding residents divides this allowance; zero daily/monthly caps prevent calls.
+- `NPC_GAMEPLAY_BUDGET_SHARE=0.5` protects half the daily/monthly allowance and hourly requests from conversation. Gameplay can use the remaining total; chat cannot exceed its fraction. Existing unclassified call history conservatively counts against conversation until its accounting window expires. Overall caps and uncertain reservations are never reset by migration.
 - Reserve conservative byte-based input plus max output cost durably before dispatch; settle returned usage with the reservation's own rates. Ambiguous errors/crashes retain the charge. Restart does not reset accounting.
 - Conversation/tool JSON is capped at 96,000 UTF-8 bytes, with scoped memories, selected workplaces and directory; no raw journals/legacy notebook. Local journal recall is keyword/paginated, at most eight excerpts/turn.
 
@@ -159,7 +160,7 @@ Read at startup. All switches require exactly `true`. Keys never enter observati
 
 - Mabel: `NPC_ENABLED`; `OPENAI_API_KEY` (native legacy alias `OPENAI_KEY`); `NPC_ID=mabel`, `NPC_NAME=Mabel Reed`, `NPC_WORLD=puddlewick`, optional `NPC_PERSONALITY` (10–3,000 characters).
 - `NPC_MODEL=gpt-4.1-mini` selects Mabel's conversation model (Responses strict tools required). Custom models need both `NPC_INPUT_USD_PER_MILLION` / `NPC_OUTPUT_USD_PER_MILLION`; update Compose rates too. Add personality overrides to Compose's environment if needed.
-- `NPC_INTERVAL_MS=15000`, range 5,000–300,000; `NPC_MONTHLY_USD=20`, `NPC_DAILY_USD=0.60`, `NPC_CALLS_PER_HOUR=120`; server/CLI share `DATA_DIR`.
+- `NPC_INTERVAL_MS=15000`, range 5,000–300,000; `NPC_MONTHLY_USD=20`, `NPC_DAILY_USD=0.60`, `NPC_CALLS_PER_HOUR=120`, `NPC_GAMEPLAY_BUDGET_SHARE=0.5`; server/CLI share `DATA_DIR`.
 - `NPC_POPULATION_ENABLED=false`, `NPC_TIME_ZONE=America/New_York`; newcomers use shared Jev settings and Claude Haiku 4.5.
 - `ANTHROPIC_API_KEY` overrides `CLAUDE_API_KEY`; shared by enabled Claude residents.
 - `NPC_*_ACTIVE_ALONE` flags are legacy compatibility settings: Mabel stays present and scheduled residents visit even alone.
@@ -201,7 +202,7 @@ Run `npm run check` and `npm run test:e2e -- tests/browser/npc.spec.ts`. Determi
 
 ## Gameplay request size
 
-The current Jev wire limit is 24,000 UTF-8 bytes; conversation/tool JSON remains 96,000. See [provider cooperation](#how-the-providers-cooperate). Keep protected needs/commitments and all candidate IDs when trimming; do not fix oversized requests by silently dropping careers.
+The current Jev wire limit is 24,000 UTF-8 bytes; conversation/tool JSON remains 96,000. See [provider cooperation](#how-the-providers-cooperate). Keep protected needs/commitments and complete shortlisted alternatives. Local menus retain broader actions; deferred alternatives rotate into later reviews. Never shorten prices, destinations or conditions to fit.
 
 ### Optional paid smoke commands
 
@@ -281,7 +282,7 @@ Jev can select complete tool-purchase/gather/sell loops, quoted trade routes,
 training/employment, and housing/business projects. Continuation rebuilds a feasible
 plan from remembered markets without a new model call. Courses and care do not erase
 the career. Construction budgets include tax, known materials, initial operating cash and living costs; accepted sites get fresh procurement/delivery legs until finished. Death, changing worlds, repeated failures or a vanished opportunity
-trigger reassessment. Project trade receipts and purchases are recorded separately;
+trigger reassessment. Temporarily unavailable careers wait ten game minutes between checks and remain available for a game day before being retired; normal strategy reviews can switch sooner. Up to 32 completed/replaced project summaries retain receipts, spending, failures and consolidated wealth changes, with matching history attached to future alternatives. Concurrent care and wages mean these changes are not causal profit. Project trade receipts and purchases are recorded separately;
 they are not net profit, because travel, meals, wages and business transfers also
 matter. Broader evaluations continue to compare net assets and health.
 
@@ -415,3 +416,17 @@ The original-game recollection of three jobs is tentative; supporting multiple
 employers needs separate payroll, dismissal and survival balancing. Existing loan
 features remain available. Local regression success does not demonstrate lasting
 prosperity; follow deployment with a measured no-intervention observation window.
+
+## Focused decisions and savings milestones
+
+The actual gameplay instruction lives in `src/server/npc/planning.ts`; `jev.ts` packages and validates the request. The question focuses on immediate survival, departure, an accepted agreement, a current project review, or a new career step. Calculations and ordinary-action preconditions remain in code; Jev selects a complete supplied plan. Personality and learned preferences influence choice without assigning a compulsory occupation. Selection confidence and alternative probabilities are recorded for diagnosis, not treated as profit forecasts.
+
+A savings choice pairs a concrete home/business funding target with a profitable observed gathering or hauling trip. Purchase estimates retain household and operating reserves; there is no free property or automatic purchase. Once funded, ordinary acquisition options take over. Career continuations, care, price guards and local outage earning do not require a model call for every action. A changed quote can stop a trip; inspection and replanning use ordinary player-visible information.
+
+Run the bounded decision benchmark explicitly:
+
+```sh
+node --env-file=.env --import tsx scripts/npc-decision-smoke.ts --live
+```
+
+It uses the production Jev adapter on eight synthetic judgment fixtures in both candidate orders: at most 16 requests and $0.05 in its separate in-memory budget. It does not access the live database or call chat models. Its one-step judgments do not establish long-run economic stability. Continue with the isolated population canary and compare deaths, liquid income after living costs, operating businesses, completed buildings and local supply availability before claiming success.

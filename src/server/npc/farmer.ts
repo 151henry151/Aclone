@@ -18,6 +18,8 @@ import { travelPrep } from './travel.ts';
 import { visitBuilding } from './care.ts';
 
 export interface FarmerChoice {
+  tradeQuotes?: import('./execution.ts').TradeQuotes;
+  ambition?: import('./ambitions.ts').Ambition;
   careerGoal?: import('./projects.ts').CareerGoal;
   supplyGoal?: import('./survival.ts').SupplyGoal;
   id: string;

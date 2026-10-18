@@ -9,7 +9,7 @@ import { npcConfigSchema } from '../src/server/npc/config.ts';
 import { createWorld, addPlayer, say } from '../src/shared/simulation.ts';
 import type { BrainResult } from '../src/server/npc/decision.ts';
 
-test('large gameplay context fits the wire limit without losing candidate actions or local steps', async () => {
+test('large gameplay context preserves complete shortlisted alternatives and local steps', async () => {
   const choices = Array.from({ length: 200 }, (_, i) => ({
     id: `action_${i}`,
     description: `Option ${i}: ` + 'A useful career with costs and outcomes. '.repeat(20),
@@ -22,7 +22,7 @@ test('large gameplay context fits the wire limit without losing candidate action
       notebook: 'Working memory',
       choices,
       currentConversation: { question: 'Please deliver my wheat' },
-      commitments: [{ summary: '118 wheat at 6d', delivered: 40 }],
+      commitments: [{ summary: '118 wheat at 6d', delivered: 40, status: 'pending' }],
       journal: Array(12).fill({ data: 'x'.repeat(1000) }),
       conversationHistory: Array(8).fill({ text: 'a'.repeat(1200) }),
       nearbyBuildings: Array(12).fill({ stock: 'x'.repeat(2500) }),
@@ -32,22 +32,27 @@ test('large gameplay context fits the wire limit without losing candidate action
   };
   const body = jevPayload(request, 'jev-latest');
   assert.ok(Buffer.byteLength(JSON.stringify(body)) <= 24000);
-  assert.equal(Object.keys(body.questions.next_action.criteria).length, 200);
+  const ids = Object.keys(body.questions.next_action.criteria);
+  assert.ok(ids.length > 1 && ids.length <= 18);
+  for (const id of ids)
+    assert.equal(
+      body.questions.next_action.criteria[id].description,
+      choices.find((c) => c.id === id)!.description,
+    );
+  const selected = ids.at(-1)!;
   assert.deepEqual(body.state.self, request.observation.self);
   assert.deepEqual(body.state.commitments, request.observation.commitments);
   assert.equal(body.state.journal, undefined);
   assert.equal(body.state.availableDeliveryStock, undefined);
   const brain = new JevBrain('test', 'jev-latest', async (_url, options) => {
-    assert.deepEqual(JSON.parse(String(options?.body)), body);
+    assert.deepEqual(JSON.parse(String(options?.body)), JSON.parse(JSON.stringify(body)));
     return Response.json({
       answers: {
         next_action: {
           type: 'choice',
-          choice: 'action_199',
+          choice: selected,
           confidence: 1,
-          probabilities: Object.fromEntries(
-            choices.map((c) => [c.id, c.id === 'action_199' ? 1 : 0]),
-          ),
+          probabilities: Object.fromEntries(ids.map((id) => [id, id === selected ? 1 : 0])),
         },
       },
       usage: { input_tokens: 100, output_tokens: 0 },
@@ -55,7 +60,7 @@ test('large gameplay context fits the wire limit without losing candidate action
   });
   assert.deepEqual(
     (await brain.decide(request, new AbortController().signal)).decision.plan,
-    choices[199].plan,
+    choices.find((c) => c.id === selected)!.plan,
   );
 });
 
@@ -170,6 +175,9 @@ test('large nested memories and outcome details cannot displace safety facts or 
   assert.ok(Buffer.byteLength(JSON.stringify(body)) <= 24000);
   assert.deepEqual(body.state.self, request.observation.self);
   assert.equal((body.state.life as any).survival.needsAttention, true);
-  assert.equal(body.questions.next_action.criteria.drink, 'Use carried water to survive');
+  assert.equal(
+    body.questions.next_action.criteria.drink.description,
+    'Use carried water to survive',
+  );
   assert.equal(JSON.stringify(request), before, 'packing must not change resident memory');
 });

@@ -49,6 +49,7 @@ export function npcEnvironment(env: NodeJS.ProcessEnv = process.env) {
   return {
     apiKey,
     budget: budgetSchema.parse({
+      gameplayShare: number(env.NPC_GAMEPLAY_BUDGET_SHARE),
       monthlyUsd: number(env.NPC_MONTHLY_USD),
       dailyUsd: number(env.NPC_DAILY_USD),
       callsPerHour: number(env.NPC_CALLS_PER_HOUR),
@@ -333,6 +334,9 @@ export function residentsEnvironment(env: NodeJS.ProcessEnv = process.env) {
     budget:
       mabel?.budget ??
       budgetSchema.parse({
+        gameplayShare: env.NPC_GAMEPLAY_BUDGET_SHARE
+          ? Number(env.NPC_GAMEPLAY_BUDGET_SHARE)
+          : undefined,
         monthlyUsd: env.NPC_MONTHLY_USD ? Number(env.NPC_MONTHLY_USD) : undefined,
         dailyUsd: env.NPC_DAILY_USD ? Number(env.NPC_DAILY_USD) : undefined,
         callsPerHour: env.NPC_CALLS_PER_HOUR ? Number(env.NPC_CALLS_PER_HOUR) : undefined,

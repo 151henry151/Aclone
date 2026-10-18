@@ -534,3 +534,18 @@ also scans three pre-existing untracked `NPC_STATUS*` notes; those still produce
 format warnings and were left untouched. No paid AI calls or production mutations
 were needed. After deployment, measure actual paid production, traded loads,
 unsold inventory, household coverage and deaths over a no-intervention period.
+
+## 2026-10-18 planner redesign (0.70.0)
+
+Packaged as release 0.70.0. The independent F6 archive feature is released separately as 0.69.0. Deploy using the normal backup/build/restart procedure.
+
+- Separate durable gameplay/chat budget lanes; chat cannot consume the protected half of spending or requests. Existing unknown charges remain accounted. Earlier live configuration changes already raised nogits to $4.80/day and $40/month; this code does not change those totals.
+- Decouple planner retry state from ordinary execution. Budget failures and provider/local-context failures allow refuelling, job maintenance and earning, including Mabel, across restart.
+- Replace description truncation and the broad instruction dump with focused decisions over at most eighteen full alternatives, rotated across domains. Include calendar/work deadlines, structured economics/stages, quote metadata and relevant completed-project outcomes.
+- Persist optional home/business savings targets with executable income steps. Preserve temporarily blocked projects, recheck after ten game minutes, and retain up to 32 final project summaries. Continue existing training, supply-chain, construction, business and civic action generators rather than bypassing player rules.
+- Protect quotes captured when choosing a plan, including across care interruptions. Only observe changes on arrival. Distinguish book value, liquidity, receipts and internal transfers; do not manufacture repeated evaluation records for budget failures.
+- Exclude occupied private cottages from exploratory housing visits.
+
+Validation: the full `npm run check` passed 766 tests and the production build succeeded. Final receipt-attribution and savings regressions passed in a 26-test targeted run; final TypeScript validation also passed. Repository-wide formatting flags only three pre-existing untracked October 9/11 NPC status reports; changed implementation files are formatted. All nineteen saved-state gameplay requests reconstructed successfully: no shortened descriptions, at most 18 submitted alternatives, maximum 23,997 UTF-8 bytes. This reconstructs the next request, not historical wire payloads. Production-adapter smoke on `jev-1.13.0` passed 16/16 synthetic judgments including reversed option order, costing $0.000791196 (mean 1,177.375 input tokens). No chat calls or live-state mutations. The short offline controller soak completed 1.2 simulated hours with four scheduled residents; it is a mechanics check, not a long-term economy result.
+
+Remaining proof gate: run a bounded isolated actual-Jev population canary, with a matched baseline and no human deliveries/investments. Measure funded trade receipts net of procurement/living costs, deaths, qualified useful employment, completed construction, ownership, transport mode and local food/water availability. The synthetic benchmark and short heuristic soak cannot prove autonomous prosperity. Deployment does not start a long-running experiment; the population canary remains a separate verification step.

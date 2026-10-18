@@ -37,7 +37,11 @@ export function rankIdeas(ideas: Idea[], experiences: ResidentState['experiences
         (idea.description && e.goal.includes(idea.description.slice(0, 24))) ||
         (idea.idea && e.goal.toLowerCase().includes(idea.idea.toLowerCase()));
       if (!related) continue;
-      weight *= e.cashChange > 0 ? 2.2 : 0.25;
+      const liquid = e.liquidCapitalChange ?? e.cashChange + e.bankChange;
+      // Depositing working capital or acquiring stock is not a failed experiment.
+      // Only measurable deterioration is negative evidence, not money changing pockets.
+      if (liquid > 0 && e.healthChange >= 0) weight *= 2.2;
+      else if ((e.netAssetChange ?? liquid) < 0 || e.healthChange < 0) weight *= 0.5;
     }
     return weight;
   };

@@ -1,3 +1,4 @@
+import { liquidCapital, netAssets } from './wealth.ts';
 import { offlineReadiness } from './homecoming.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
@@ -33,6 +34,23 @@ export interface CareerProject extends CareerGoal {
   receipts: number;
   spending: number;
   lastReceipt?: number;
+  blockedSince?: number;
+  nextCheck?: number;
+  stage?: string;
+  liquidAtStart?: number;
+  assetsAtStart?: number;
+}
+export interface ProjectOutcome extends CareerGoal {
+  world: string;
+  ended: number;
+  elapsedSeconds: number;
+  reason: string;
+  completed: number;
+  failures: number;
+  receipts: number;
+  spending: number;
+  liquidChange?: number;
+  assetChange?: number;
 }
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 
@@ -301,6 +319,7 @@ export function startCareer(w: World, p: Player, state: ResidentState, goal: Car
     state.career.deaths === p.deaths
   )
     return;
+  if (state.career) finishCareer(w, p, state, 'Chose a different project');
   state.career = {
     ...goal,
     world: w.id,
@@ -310,6 +329,8 @@ export function startCareer(w: World, p: Player, state: ResidentState, goal: Car
     completed: 0,
     failures: 0,
     cashAtStart: p.cash,
+    liquidAtStart: liquidCapital(w, p),
+    assetsAtStart: netAssets(w, p),
     receipts: 0,
     spending: 0,
   };
@@ -330,12 +351,12 @@ export function continueCareer(
   if (c.kind === 'housing') {
     const ready = offlineReadiness(w, p, 86400);
     if (ready.home === c.target && ready.stocked) {
-      delete state.career;
+      finishCareer(w, p, state, 'Home provisioned for the planned absence');
       return;
     }
   }
-  if (c.world !== w.id || c.deaths !== p.deaths || c.reviewAt <= w.time || c.failures >= 3) {
-    delete state.career;
+  if (c.world !== w.id || c.deaths !== p.deaths || c.failures >= 3) {
+    finishCareer(w, p, state, 'Life/world changed or repeated execution failures');
     return;
   }
   if (
@@ -345,10 +366,60 @@ export function continueCareer(
     w.buildings.find((b) => b.id === c.target)?.kind !== 'farm'
   )
     return;
+  if ((c.nextCheck ?? 0) > w.time) return;
   const next = [...careerChoices(w, p, state), ...other].find(
     (o) => o.careerGoal && sameGoal(o.careerGoal, c),
   );
-  if (next) return next;
-  // A vanished quote or completed housing errand needs a fresh strategic choice.
+  if (next) {
+    delete c.blockedSince;
+    delete c.nextCheck;
+    c.stage = next.description;
+    return next;
+  }
+  // A stale quote, occupied vacancy or temporarily empty shelf is a blocker,
+  // not proof that the entire career should be forgotten.
+  c.blockedSince ??= w.time;
+  c.nextCheck = w.time + 600;
+  c.stage = 'Blocked: refresh relevant markets or earn elsewhere until review';
+  if (w.time - c.blockedSince >= 86400)
+    finishCareer(w, p, state, 'No feasible continuation for a game day');
+}
+
+/** Keep compact measured outcomes across projects; the full journal stays on disk.
+ * Cash includes concurrent wages and care, so it is not attributed causal profit. */
+export function finishCareer(w: World, p: Player, state: ResidentState, reason: string) {
+  const c = state.career;
+  if (!c) return;
+  const comparable = c.world === w.id && c.deaths === p.deaths;
+  state.projectHistory = [
+    ...(state.projectHistory ?? []),
+    {
+      kind: c.kind,
+      target: c.target,
+      source: c.source,
+      item: c.item,
+      world: c.world,
+      ended: w.time,
+      elapsedSeconds: Math.max(0, w.time - c.started),
+      reason,
+      completed: c.completed,
+      failures: c.failures,
+      receipts: c.receipts,
+      spending: c.spending,
+      liquidChange:
+        comparable && c.liquidAtStart !== undefined
+          ? liquidCapital(w, p) - c.liquidAtStart
+          : undefined,
+      assetChange:
+        comparable && c.assetsAtStart !== undefined ? netAssets(w, p) - c.assetsAtStart : undefined,
+    },
+  ].slice(-32);
   delete state.career;
+}
+
+/** Do not credit an unrelated side hustle to a suspended business or delivery. */
+export function projectTrade(c: CareerGoal, action: { building?: unknown; item?: unknown }) {
+  return (
+    [c.source, c.target].includes(String(action.building)) && (!c.item || c.item === action.item)
+  );
 }

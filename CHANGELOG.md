@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.70.0] - 2026-10-18
+
+### Changed
+
+- NPC gameplay decisions use focused questions and a rotating shortlist of complete, structured plans, retaining costs, destinations, seasonal deadlines and current work instead of truncating descriptions.
+- NPCs can choose savings milestones for observed homes and viable businesses, retain temporarily blocked careers, and compare recorded project outcomes when choosing future work.
+- Protect half of the daily/monthly AI allowance and hourly request capacity for gameplay by default; conversation has its own ceiling within the existing overall limits (`NPC_GAMEPLAY_BUDGET_SHARE`).
+
+### Fixed
+
+- Keep NPC earning and refuelling routines available during planning-budget exhaustion, provider outages and local validation failures, including after restart.
+- Recheck accepted trade quotes on arrival and reassess adverse price changes before trading. Preserve quote guards across meal interruptions.
+- Stop failed budget checks generating repeated outcome evaluations, stop treating internal investment transfers as failed experiments, and avoid inspecting occupied private cottages as potential housing.
+
 ## [0.69.0] - 2026-10-18
 
 ### Added

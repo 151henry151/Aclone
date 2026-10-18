@@ -11,7 +11,7 @@ import { workplace } from './workplace.ts';
 import { visitBuilding } from './care.ts';
 import { inspectionChoices } from './perception.ts';
 import { farmDuty } from './farmer.ts';
-import { careerChoices } from './projects.ts';
+import { careerChoices, startCareer } from './projects.ts';
 import { usefulShift, ownerRoutine, cargoRelief } from './business-policy.ts';
 import { affordableLoad, livingReserve } from './travel.ts';
 import { homecomingPlan } from './homecoming.ts';
@@ -25,6 +25,7 @@ const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind:
 export function suspendPlan(w: World, p: Player, state: ResidentState) {
   if (state.routine || state.suspendedPlan || state.index >= state.plan.length) return;
   state.suspendedPlan = {
+    tradeQuotes: state.tradeQuotes,
     world: w.id,
     deaths: p.deaths,
     intent: state.intent,
@@ -69,6 +70,7 @@ export function resumePlan(w: World, p: Player, state: ResidentState) {
   if (plan.some((s) => blockedStep(state.recovery, s, w.time))) return false;
   state.plan = plan;
   state.intent = saved.intent;
+  state.tradeQuotes = saved.tradeQuotes;
   state.index = 0;
   state.repeats = 1;
   state.waitUntil = 0;
@@ -196,7 +198,11 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
         (b.expectedCash ?? 0) / Math.max(30, b.durationSeconds ?? 600) -
         (a.expectedCash ?? 0) / Math.max(30, a.durationSeconds ?? 600),
     )[0];
-  if (hauling) return hauling.plan;
+  if (hauling) {
+    // Outage work can become a repeatable career rather than one unremembered trip.
+    if (hauling.careerGoal && !state.career) startCareer(w, p, state, hauling.careerGoal);
+    return hauling.plan;
+  }
   const office = w.buildings.find((b) => b.kind === 'workhouse' && !b.construction);
   if (!office || p.cash + p.bank > householdBudget(w, p).reserve) return [];
   const plan = visitBuilding(p, office, [

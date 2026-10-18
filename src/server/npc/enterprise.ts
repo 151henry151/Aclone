@@ -501,6 +501,7 @@ export function economicMenu(
   // Keep a few alternatives from each domain visible even in large markets.
   const domain = (c: FarmerChoice) => {
     if (c.id.startsWith('survival_') || c.id.startsWith('commitment_')) return 'urgent';
+    if (c.ambition) return 'saving';
     if (c.id.startsWith('capital_')) return 'capital';
     if (c.plan.some((s) => s.kind === 'operation' && s.operation === 'foundTown'))
       return 'settlement';

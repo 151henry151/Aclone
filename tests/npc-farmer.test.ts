@@ -209,6 +209,7 @@ function jevResponse(choices: { id: string }[], chosen = choices[0].id) {
 test('Jev sends bounded choices to the official API and can execute only a supplied plan', async () => {
   const { choices } = fixture();
   const options = choices();
+  let selected = options[0];
   const brain = new JevBrain('test-key', FARMER_MODEL, async (url, init) => {
     assert.equal(url, 'https://api.typesafe.ai/v1/systemone');
     assert.equal((init?.headers as any).authorization, 'Bearer test-key');
@@ -217,9 +218,11 @@ test('Jev sends bounded choices to the official API and can execute only a suppl
     assert.equal(b.questions.next_action.type, 'choice');
     assert.equal(b.state.gameGuide, undefined);
     assert.equal(b.state.farmerChoices, undefined);
-    assert.equal(Object.keys(b.questions.next_action.criteria).length, options.length);
-    assert.equal(b.state.notebook, 'My farm memory');
-    return new Response(JSON.stringify(jevResponse(options)));
+    const ids = Object.keys(b.questions.next_action.criteria);
+    assert.ok(ids.length <= 18);
+    const supplied = options.filter((c) => ids.includes(c.id));
+    selected = supplied[0];
+    return new Response(JSON.stringify(jevResponse(supplied)));
   });
   const result = await brain.decide(
     {
@@ -232,7 +235,7 @@ test('Jev sends bounded choices to the official API and can execute only a suppl
     },
     new AbortController().signal,
   );
-  assert.deepEqual(result.decision.plan, options[0].plan);
+  assert.deepEqual(result.decision.plan, selected.plan);
   assert.equal(result.decision.speech, null);
   assert.equal(result.decision.notebook, 'My farm memory');
   assert.equal(result.inputTokens, 250);

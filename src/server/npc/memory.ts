@@ -5,6 +5,10 @@ import type { Step } from './decision.ts';
 import type { Presence } from './habits.ts';
 import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  ambition?: import('./ambitions.ts').Ambition;
+  tradeQuotes?: import('./execution.ts').TradeQuotes;
+  plannerRetryAt?: number;
+  projectHistory?: import('./projects.ts').ProjectOutcome[];
   businessCargo?: { building: string; item: string; quantity: number }[];
   businessProceeds?: Record<string, number>;
   strategyReviewedAt?: number;
@@ -12,6 +16,7 @@ export interface ResidentState {
   supplyGoal?: import('./survival.ts').SupplyGoal;
   markets?: import('./perception.ts').MarketMemory;
   suspendedPlan?: {
+    tradeQuotes?: import('./execution.ts').TradeQuotes;
     world: string;
     deaths: number;
     intent: string;
@@ -125,6 +130,7 @@ export class NpcMemory {
     );
     for (const [name, type] of Object.entries({
       rates: 'TEXT',
+      lane: "TEXT NOT NULL DEFAULT 'legacy'",
       cache_write_tokens: 'INTEGER NOT NULL DEFAULT 0',
       cache_read_tokens: 'INTEGER NOT NULL DEFAULT 0',
     }))

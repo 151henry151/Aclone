@@ -278,7 +278,8 @@ test('local invalid gameplay context makes no transport call and no budget reser
     throw Error('Transport must not run');
   });
   const prepare = brain.prepare.bind(brain);
-  brain.prepare = (request) => prepare({ ...request, instructions: 'oversized '.repeat(10000) });
+  brain.prepare = (request) =>
+    prepare({ ...request, instructions: 'Your personality: ' + 'oversized '.repeat(10000) });
   const r = new Residents(store, universe, new Map([[w.id, w]]), [
     { config: npcConfigSchema.parse({ id: 'test', provider: 'jev', activeAlone: true }), brain },
   ]);

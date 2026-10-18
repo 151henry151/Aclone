@@ -1,3 +1,5 @@
+import { savingChoices } from './ambitions.ts';
+import { planQuotes, changedQuote } from './execution.ts';
 import {
   publicAddressees,
   mentionsName,
@@ -33,7 +35,7 @@ import {
 import { strategicReviewDue, prosperityBriefing, opportunityCounts } from './prosperity.ts';
 import { netAssets, liquidCapital } from './wealth.ts';
 import { workplace, shiftBlocker } from './workplace.ts';
-import { startCareer, continueCareer } from './projects.ts';
+import { startCareer, continueCareer, finishCareer, projectTrade } from './projects.ts';
 import { canKeepFishing, strandedCargo } from './cargo.ts';
 import { householdBudget } from './household.ts';
 import { ownerRoutine, cargoRelief } from './business-policy.ts';
@@ -178,8 +180,8 @@ export class Residents {
         }
       } else delete state.presence;
       state.originWorld ??= c.world;
-      if (c.provider === 'jev' && state.behaviorVersion !== 2) state.needsDecision = true;
-      state.behaviorVersion = 2;
+      if (c.provider === 'jev' && state.behaviorVersion !== 3) state.needsDecision = true;
+      state.behaviorVersion = 3;
       if (state.decisionProvider !== c.provider) state.needsDecision = true;
       state.decisionProvider = c.provider;
       if (state.personality !== c.personality) {
@@ -206,9 +208,11 @@ export class Residents {
       const r: Resident = {
         ...option,
         state,
-        wake: !!state.needsDecision || !!state.pending || state.plan.length === 0,
+        wake:
+          Date.now() >= (state.plannerRetryAt ?? 0) &&
+          (!!state.needsDecision || !!state.pending || state.plan.length === 0),
         lastCall: 0,
-        cooldown: 0,
+        cooldown: state.plannerRetryAt ?? 0,
         active: false,
         caring: state.routine === 'care',
       };
@@ -495,9 +499,12 @@ export class Residents {
         r.wake = true;
         r.state.needsDecision = true;
       }
-      if (r.state.career && !r.state.routine) {
+      if (r.state.career && (!r.state.routine || r.state.routine === 'hustle')) {
         const difference = p.cash - stats.cash;
-        if (a.type === 'trade') {
+        if (
+          a.type === 'trade' &&
+          projectTrade(r.state.career, { building: a.building, item: a.item })
+        ) {
           if (difference > 0) {
             r.state.career.receipts += difference;
             r.state.career.completed++;
@@ -582,8 +589,13 @@ export class Residents {
       this.checkpoint(r, actual, 'delivery-blocked', { id: blocked.id, outcome: blocked.outcome });
     }
     const agreed = focusCommitments(w, p, r.state, deliveries);
-    if (!p.task && !careNeeded(w, p) && agreed.length) return learnedChoices(r.state, agreed);
+    if (!p.task && !careNeeded(w, p) && agreed.length)
+      return learnedChoices(r.state, agreed).map((c) => ({
+        ...c,
+        tradeQuotes: planQuotes(w, c.plan),
+      }));
     const choices = [
+      ...savingChoices(w, p, r.state),
       ...supplyChoices(w, p, r.state),
       ...deliveries,
       ...inspectionChoices(actual, p, r.state),
@@ -624,7 +636,7 @@ export class Residents {
         visitorShouldHustle(r.config.id, r.state.presence),
         r.state,
       ),
-    );
+    ).map((c) => ({ ...c, tradeQuotes: planQuotes(w, c.plan) }));
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
     const stateBefore = structuredClone(r.state),
@@ -774,7 +786,10 @@ export class Residents {
         delete r.state.recovery;
         delete r.state.suspendedPlan;
         delete r.state.supplyGoal;
-        delete r.state.career;
+        finishCareer(w, p, r.state, 'Life ended; reassess all abilities and assets');
+        delete r.state.ambition;
+        delete r.state.plannerRetryAt;
+        delete r.state.tradeQuotes;
         delete r.state.businessCargo;
         delete r.state.businessProceeds;
         delete r.state.routine;
@@ -889,7 +904,8 @@ export class Residents {
         if (r.caring) {
           r.caring = false;
           delete r.state.routine;
-          r.wake = !resumePlan(w, p, r.state);
+          r.wake = !resumePlan(w, p, r.state) && now >= (r.state.plannerRetryAt ?? 0);
+          if (!r.wake) r.state.needsDecision = false;
           if (!r.wake) {
             r.state.until = now + 1800000;
             r.state.nextAt = r.state.until;
@@ -936,7 +952,11 @@ export class Residents {
       // freezes driving, a production wait, or an already chosen ordinary action.
       if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
-        if (!careNeeded(w, p) && strategicReviewDue(w, p, r.state, r.config.preference)) {
+        if (
+          now >= (r.state.plannerRetryAt ?? 0) &&
+          !careNeeded(w, p) &&
+          strategicReviewDue(w, p, r.state, r.config.preference)
+        ) {
           r.wake = true;
           r.state.needsDecision = true;
         }
@@ -967,6 +987,7 @@ export class Residents {
             : undefined);
         if (continuation && r.state.index >= r.state.plan.length) {
           r.state.plan = continuation.plan;
+          r.state.tradeQuotes = planQuotes(known, continuation.plan);
           r.state.index = 0;
           r.state.repeats = 1;
           r.state.until = now + 1800000;
@@ -1032,13 +1053,16 @@ export class Residents {
           now >= (r.exploreCheckAt ?? 0)
         ) {
           r.exploreCheckAt = now + 90000;
-          const hustle = visitorShouldHustle(r.config.id, r.state.presence, now);
+          const hustle =
+            now < (r.state.plannerRetryAt ?? 0) ||
+            visitorShouldHustle(r.config.id, r.state.presence, now);
           const plan = hustle ? hustleRoutine(known, p, r.state) : exploreRoutine(w, p, r.state);
           if (plan.length) {
             r.nav = undefined;
             r.state.plan = plan;
             r.state.index = 0;
             r.state.repeats = 1;
+            r.state.tradeQuotes = planQuotes(known, plan);
             r.state.routine = hustle ? 'hustle' : 'explore';
             r.wake = false;
             this.checkpoint(r, w, hustle ? 'hustle' : 'explore-parish', { plan });
@@ -1062,7 +1086,8 @@ export class Residents {
           if (r.state.routine === 'hustle') r.exploreCheckAt = now;
           delete r.state.routine;
           r.state.plan = [];
-          r.wake = !resumePlan(w, p, r.state);
+          r.wake = !resumePlan(w, p, r.state) && now >= (r.state.plannerRetryAt ?? 0);
+          if (!r.wake) r.state.needsDecision = false;
           r.state.until = now + 1800000;
           r.state.nextAt = r.state.until;
         }
@@ -1318,6 +1343,10 @@ export class Residents {
         r.state.waitUntil = now + step.seconds * 1000;
         this.checkpoint(r, w);
       } else if (step.kind === 'act') {
+        if (!r.state.routine || r.state.routine === 'hustle') {
+          const quoteError = changedQuote(w, p, step.action, r.state.tradeQuotes);
+          if (quoteError) throw Error(quoteError);
+        }
         if (r.state.inSpace) throw Error('Land before taking parish actions');
         this.perform(r, w, step.action, true);
       } else if (step.kind === 'operation') {
@@ -1483,27 +1512,6 @@ export class Residents {
       inventory: { ...p.inventory },
       job: p.job ?? null,
     };
-    const prior = r.state.evaluation;
-    if (prior && !chatOnly) {
-      const result = {
-        goal: r.state.intent,
-        elapsedSeconds: Math.max(0, w.time - prior.time),
-        ...(prior.netAssets !== undefined
-          ? { netAssetChange: snapshot.netAssets - prior.netAssets }
-          : {}),
-        cashChange: p.cash - prior.cash,
-        ...(prior.liquidCapital !== undefined
-          ? { liquidCapitalChange: snapshot.liquidCapital - prior.liquidCapital }
-          : {}),
-        bankChange: p.bank - prior.bank,
-        healthChange: p.health - prior.health,
-        previousJob: prior.job,
-        currentJob: p.job ?? null,
-      };
-      r.state.experiences = [...(r.state.experiences ?? []), result].slice(-8);
-      this.memory.append(r.config.id, w.time, 'evaluation', result);
-    }
-    if (!chatOnly) r.state.evaluation = snapshot;
     const knownWorld = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
     const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
@@ -1546,6 +1554,8 @@ export class Residents {
             observation: {
               ...decisionObservation,
               career: r.state.career,
+              ambition: r.state.ambition,
+              projectHistory: r.state.projectHistory,
               household: householdBudget(knownWorld, p),
               prosperity: prosperityBriefing(knownWorld, p, decisionObservation.choices),
             },
@@ -1560,6 +1570,9 @@ export class Residents {
       } catch (error) {
         // No reservation, transport, or paid retry for invalid local context.
         r.cooldown = now + 300000;
+        r.state.plannerRetryAt = r.cooldown;
+        r.wake = false;
+        r.state.needsDecision = false;
         r.state.status = 'Gameplay context unavailable; continuing local routines';
         this.checkpoint(r, w, 'local-planning-error', {
           message: 'Gameplay request rejected before transport; no charge',
@@ -1602,10 +1615,43 @@ export class Residents {
       p.speed = 0;
       r.nav = undefined;
       r.cooldown = now + 60000;
-      r.state.status = 'Resting: shared AI budget limit';
+      r.state.plannerRetryAt = r.cooldown;
+      r.wake = false;
+      r.state.needsDecision = false;
+      r.state.status = 'Continuing local work; planning budget unavailable';
       this.checkpoint(r, w);
       return;
     }
+    const prior = r.state.evaluation;
+    if (
+      prior &&
+      !chatOnly &&
+      w.time > prior.time &&
+      (snapshot.liquidCapital !== prior.liquidCapital ||
+        snapshot.netAssets !== prior.netAssets ||
+        p.health !== prior.health ||
+        snapshot.job !== prior.job ||
+        JSON.stringify(p.inventory) !== JSON.stringify(prior.inventory))
+    ) {
+      const result = {
+        goal: r.state.intent,
+        elapsedSeconds: Math.max(0, w.time - prior.time),
+        ...(prior.netAssets !== undefined
+          ? { netAssetChange: snapshot.netAssets - prior.netAssets }
+          : {}),
+        cashChange: p.cash - prior.cash,
+        ...(prior.liquidCapital !== undefined
+          ? { liquidCapitalChange: snapshot.liquidCapital - prior.liquidCapital }
+          : {}),
+        bankChange: p.bank - prior.bank,
+        healthChange: p.health - prior.health,
+        previousJob: prior.job,
+        currentJob: p.job ?? null,
+      };
+      r.state.experiences = [...(r.state.experiences ?? []), result].slice(-8);
+      this.memory.append(r.config.id, w.time, 'evaluation', result);
+    }
+    if (!chatOnly) r.state.evaluation = snapshot;
     r.lastCall = now;
     r.wake = false;
     r.state.needsDecision = false;
@@ -1646,6 +1692,7 @@ export class Residents {
         })
       : localChoice
         ? Promise.resolve({
+            tradeQuotes: localChoice.tradeQuotes,
             decision: {
               intent: localChoice.description.slice(0, 300),
               notebook: r.state.notebook,
@@ -1715,6 +1762,7 @@ export class Residents {
                   conversationOutputLimit,
                   Date.now(),
                   r.dialogue.rates,
+                  'chat',
                 )
               : undefined;
           if (chatReservation !== undefined) {
@@ -1976,12 +2024,13 @@ export class Residents {
           else this.budget.failed(reservation);
         }
         r.state.pending = false;
-        r.wake = true;
-        r.state.needsDecision = true;
+        r.wake = false;
+        r.state.needsDecision = false;
         r.active = false;
         r.state.errors++;
-        r.state.status = 'AI unavailable; resting before retry';
+        r.state.status = 'AI unavailable; continuing local work';
         r.cooldown = Date.now() + Math.min(300000, 15000 * 2 ** Math.min(r.state.errors, 4));
+        r.state.plannerRetryAt = r.cooldown;
         const current = this.worlds.get(r.state.world);
         if (current) {
           const player = current.players[r.state.playerId];
@@ -2063,6 +2112,7 @@ export class Residents {
       conversationOutputLimit,
       Date.now(),
       r.dialogue.rates,
+      'chat',
     );
     if (reservation === undefined) return;
     try {
@@ -2155,9 +2205,15 @@ export class Residents {
         const item = Object.keys(kindRecipe(w, foundingKind)?.outputs ?? {})[0] ?? foundingKind;
         publishFoundingIntent(w, player, foundingKind, item);
       }
+      delete r.state.plannerRetryAt;
       r.state.strategyReviewedAt = w.time;
       if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
+      if (result.ambition) r.state.ambition = result.ambition;
       if (result.careerGoal && player) startCareer(w, player, r.state, result.careerGoal);
+      if (player)
+        r.state.tradeQuotes =
+          result.tradeQuotes ??
+          planQuotes(perceivedWorld(w, player, r.state, r.config.id === 'mabel'), d.plan);
       r.state.intent = d.intent;
       r.state.plan = d.plan;
       delete r.state.fishCaught;
@@ -2176,6 +2232,7 @@ export class Residents {
       intent: d.intent,
       plan: d.plan,
       available,
+      selection: result.selection,
       repeat: d.repeat,
       reconsiderSeconds: d.reconsiderSeconds,
     });

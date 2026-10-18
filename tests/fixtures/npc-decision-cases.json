@@ -1,0 +1,144 @@
+[
+  {
+    "id": "profitable_trade",
+    "expected": "b",
+    "state": {
+      "goal": "Earn money this session; no urgent needs.",
+      "cashDenarii": 500,
+      "foodHours": 12,
+      "waterHours": 12,
+      "fuelPercent": 80,
+      "allQuotes": "Personally inspected five minutes ago; buyers funded; loads fit."
+    },
+    "options": {
+      "a": "Trading career: deliver ten hay from farm to export. Upfront 120d; receipts 125d; fuel 10d. Computed net LOSS 5d. Takes ten minutes.",
+      "b": "Trading career: deliver ten flour from mill to bakery. Upfront 100d; receipts 200d; fuel 10d. Computed net PROFIT 90d. Takes ten minutes; preserves supplies.",
+      "c": "Trading career: deliver ten wood from sawmill to export. Upfront 100d; receipts 130d; fuel 10d. Computed net PROFIT 20d. Takes ten minutes; preserves supplies."
+    }
+  },
+  {
+    "id": "restore_mobility",
+    "expected": "c",
+    "state": {
+      "goal": "Finish the accepted profitable delivery efficiently.",
+      "cashDenarii": 200,
+      "foodHours": 12,
+      "waterHours": 12,
+      "fuelPercent": 0,
+      "project": "Deliver carried cargo to a known funded buyer. Remounting the tractor is legal.",
+      "fuelSource": "Shop next door has fuel available; affordable."
+    },
+    "options": {
+      "a": "Continue the delivery project by walking the entire route. Takes forty minutes; same cargo and receipts, saves 10d fuel.",
+      "b": "Continue the delivery project by waiting at the buyer later. Wait here three minutes now; no fuel, money or information gained.",
+      "c": "Continue the delivery project by buying and using 10d of fuel next door, remounting the tractor and delivering cargo. Takes five minutes; preserves food and water; still earns 80d net."
+    }
+  },
+  {
+    "id": "stop_pantry_loop",
+    "expected": "b",
+    "state": {
+      "goal": "Complete an accepted supply delivery, then save toward a business.",
+      "cashDenarii": 400,
+      "health": "full",
+      "foodHours": 30,
+      "waterHours": 30,
+      "home": "Owned and stocked for entire scheduled absence plus buffer.",
+      "sessionMinutes": 30,
+      "project": "Carrying purchased flour to bakery. Buyer inspected and funded; no known blockers."
+    },
+    "options": {
+      "a": "Continue my household project by returning to my already stocked house, entering it, then leaving. No increase in pantry coverage, health, income or knowledge.",
+      "b": "Continue my household project by completing the flour delivery already underway, receiving payment and recording the result. Then resume saving; no household needs are due.",
+      "c": "Continue my household project by buying extra meals beyond the full planned absence. Uses 60d and fifteen minutes; no current household shortage."
+    }
+  },
+  {
+    "id": "inspect_before_tuition",
+    "expected": "a",
+    "state": {
+      "goal": "Choose whether to retrain for profitable employment.",
+      "cashDenarii": 300,
+      "foodHours": 12,
+      "waterHours": 12,
+      "knownJob": "Last observed mill vacancy was yesterday. Funding and current staffing unknown.",
+      "skill": "Lacks miller; tuition 200d. No obligation to train yet.",
+      "location": "Beside the mill; inspection costs nothing."
+    },
+    "options": {
+      "a": "Pursue the milling opportunity by inspecting the nearby mill first to learn current funding and vacancy. Then reconsider tuition using observed facts.",
+      "b": "Pursue the milling opportunity by spending 200d tuition immediately, assuming yesterday\u2019s vacancy and investment are unchanged.",
+      "c": "Pursue the milling opportunity by quitting current paid employment and waiting without inspecting or studying. No new information or qualification is gained."
+    }
+  },
+  {
+    "id": "survival_supply_chain",
+    "expected": "c",
+    "state": {
+      "goal": "Avoid dehydration; food is adequate.",
+      "damageInMinutes": 6,
+      "cashDenarii": 50,
+      "knownWater": "Pump house empty; missing only one fuel. Employee active, wages funded, output storage empty. Latest inspection one minute ago.",
+      "nearbyFuel": "One fuel costs 20d; pump buys it for 15d.",
+      "timing": "Code estimates complete fuel delivery, production and buying/drinking water take three minutes. Other water is twenty minutes away.",
+      "affordability": "The full pump-supply plan leaves enough cash to buy the water."
+    },
+    "options": {
+      "a": "Secure drinking water by walking to the distant shop. Arrival in twenty minutes, after dehydration damage begins.",
+      "b": "Secure drinking water by waiting ten minutes for the pump to produce without fuel; no other supplier is known to be coming.",
+      "c": "Secure drinking water by buying one fuel, selling it to the staffed pump at a 5d trading loss, waiting for the verified production cycle, then buying and drinking water within three minutes."
+    }
+  },
+  {
+    "id": "funded_acquisition",
+    "expected": "a",
+    "state": {
+      "goal": "Acquire a viable first business; personality prefers ownership and has chosen to invest this session.",
+      "cashDenarii": 5000,
+      "home": "Owned and stocked.",
+      "householdReserveDenarii": 500,
+      "knowledge": "Inspected properties and suppliers recently. These estimates are forecasts, not guaranteed future profits.",
+      "skill": "Qualified to operate these businesses."
+    },
+    "options": {
+      "a": "Acquire a local business: buy a mill for 1500d and fund 500d operating capital. Observed suppliers, workers and funded buyers support positive estimated cashflow. Total 2000d; leaves 3000d cash, above household reserve.",
+      "b": "Acquire a local business: buy a factory for 4500d; another 1500d required for inputs and wages. Total startup 6000d exceeds cash; no approved financing.",
+      "c": "Acquire a local business: buy a workshop for 2000d with 500d operating capital. Its only observed buyer pays less than replacement materials and wages; estimated operations lose money."
+    }
+  },
+  {
+    "id": "passive_job_plus_trade",
+    "expected": "b",
+    "state": {
+      "goal": "Earn enough for daily meals while keeping useful employment.",
+      "currentWork": {
+        "activeWork": false,
+        "job": "pump",
+        "funded": true,
+        "stocked": true,
+        "attendanceRequired": false
+      },
+      "safety": "Healthy, stocked home, 30 minutes left to play, fuel adequate."
+    },
+    "options": {
+      "a": "Wait beside my pump all session. Offline employment pays the same wage; being here adds no output or income.",
+      "b": "Keep my passive pump job and haul a funded flour load from mill to bakery for 60d net after fuel. No job resignation; no attendance requirement; takes 5 minutes.",
+      "c": "Quit the funded pump job and stand idle. No new income or information."
+    }
+  },
+  {
+    "id": "unsold_inventory_is_not_profit",
+    "expected": "c",
+    "state": {
+      "goal": "Restore personal liquidity for food while protecting viable business.",
+      "cashDenarii": 20,
+      "householdReserveDenarii": 18,
+      "business": "Own mill has 100 flour, no wheat, enough operating capital; observed bakery bid is above cost and buyer has cash."
+    },
+    "options": {
+      "a": "Spend the remaining 20d painting the tractor. No operating or household gain.",
+      "b": "Value unsold flour at catalogue price and wait indefinitely; assume that valuation pays for meals. No actual sale.",
+      "c": "Sell a measured load of my flour to the known funded bakery at a margin, return the operating share to the mill and draw only surplus for meals. Preserves working capital; restores spendable cash."
+    }
+  }
+]

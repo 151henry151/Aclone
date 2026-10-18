@@ -161,7 +161,10 @@ test('learned preferences reach the real Jev wire payload under pressure without
   };
   const payload = jevPayload(request, 'test');
   assert.ok(Buffer.byteLength(JSON.stringify(payload)) <= 24000);
-  assert.deepEqual(payload.state.agenda, request.observation.agenda);
+  assert.deepEqual(
+    (payload.state.agenda as any).preferences,
+    request.observation.agenda.preferences,
+  );
   const brain = new JevBrain('test', 'test', async (_url, init) => {
     const body = JSON.parse(String(init?.body));
     assert.equal(body.state.agenda.preferences[0].stance, 'avoid');

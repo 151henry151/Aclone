@@ -154,6 +154,7 @@ export function inspectionChoices(w: World, p: Player, state: ResidentState): Fa
     .filter(
       (b) =>
         !b.construction &&
+        (b.kind !== 'home' || !b.owner || b.forSale) &&
         b.owner !== p.id &&
         (!visits[b.id] || w.time - visits[b.id].at > marketFreshSeconds) &&
         !blockedStep(state.recovery, { kind: 'travel', destination: b.id }, w.time),
@@ -167,6 +168,8 @@ export function inspectionChoices(w: World, p: Player, state: ResidentState): Fa
         (!thirsty && !hungry && ['mill', 'farm'].includes(v.kind) ? 240 : 0) +
         (['bakery', 'waterworks', 'market', 'starport'].includes(v.kind) ? 200 : 0) +
         (v.id === p.job ? 400 : 0) +
+        ([state.career?.target, state.career?.source].includes(v.id) ? 380 : 0) +
+        (p.fuel < 10 && ['market', 'starport', 'garage', 'refinery'].includes(v.kind) ? 350 : 0) +
         (v.kind === 'school' && needsTraining ? 500 : 0) +
         (['market', 'starport', 'garage'].includes(v.kind) && inputs.has('fuel') ? 150 : 0) +
         (!p.home && ['home', 'bnb', 'hotel'].includes(v.kind) ? 160 : 0) +
@@ -178,7 +181,7 @@ export function inspectionChoices(w: World, p: Player, state: ResidentState): Fa
     .map((b) => ({
       id: `inspect_${b.id}`,
       description: visits[b.id]
-        ? `Recheck ${b.name} (${b.kind}): last-known stock and prices are getting old; walk over and update my parish model.`
+        ? `Recheck ${b.name} (${b.kind}): last-known stock and prices are getting old; visit and update my market knowledge.`
         : `Explore ${b.name} (${b.kind}): I have not learned its stock, prices or vacancies yet.`,
       plan: visitBuilding(p, b, [{ kind: 'wait', seconds: 1 }]),
       reconsiderSeconds: 300,

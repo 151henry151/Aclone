@@ -5,6 +5,7 @@ export const budgetSchema = z.object({
   monthlyUsd: z.number().min(0).max(10000).default(20),
   dailyUsd: z.number().min(0).max(1000).default(0.6),
   callsPerHour: z.number().int().min(1).max(10000).default(120),
+  gameplayShare: z.number().min(0).max(1).default(0.5),
   concurrency: z.number().int().min(1).max(8).default(2),
   inputUsdPerMillion: z.number().nonnegative().default(0.4),
   outputUsdPerMillion: z.number().nonnegative().default(1.6),
@@ -41,6 +42,27 @@ export class NpcBudget {
           .prepare("SELECT count(*) AS n FROM npc_calls WHERE at>? AND status!='not-sent'")
           .get(now - 3600000)!.n,
       ),
+      chatDayUsd: Number(
+        db
+          .prepare(
+            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane!='gameplay'",
+          )
+          .get(day)!.n,
+      ),
+      chatMonthUsd: Number(
+        db
+          .prepare(
+            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane!='gameplay'",
+          )
+          .get(month)!.n,
+      ),
+      chatHourCalls: Number(
+        db
+          .prepare(
+            "SELECT count(*) AS n FROM npc_calls WHERE at>? AND lane!='gameplay' AND status!='not-sent'",
+          )
+          .get(now - 3600000)!.n,
+      ),
       ...this.config,
     };
   }
@@ -50,6 +72,7 @@ export class NpcBudget {
     outputLimit: number,
     now = Date.now(),
     rates: TokenRates = this.config,
+    lane: 'gameplay' | 'chat' = 'gameplay',
   ) {
     const pricing = tokenRatesSchema.parse(rates);
     // UTF-8 bytes plus a fixed envelope allowance conservatively bound text token usage.
@@ -61,6 +84,14 @@ export class NpcBudget {
       1e6;
     return this.memory.store.transaction(() => {
       const u = this.usage(now);
+      const chatShare = 1 - this.config.gameplayShare;
+      if (
+        lane === 'chat' &&
+        (u.chatDayUsd + reserved > this.config.dailyUsd * chatShare ||
+          u.chatMonthUsd + reserved > this.config.monthlyUsd * chatShare ||
+          u.chatHourCalls >= Math.ceil(this.config.callsPerHour * chatShare))
+      )
+        return undefined;
       if (
         u.hourCalls >= this.config.callsPerHour ||
         u.dayUsd + reserved > this.config.dailyUsd ||
@@ -69,9 +100,9 @@ export class NpcBudget {
         return undefined;
       const result = this.memory.store.db
         .prepare(
-          "INSERT INTO npc_calls(resident,at,reserved,charged,rates,status) VALUES (?,?,?,?,?,'pending')",
+          "INSERT INTO npc_calls(resident,at,reserved,charged,rates,lane,status) VALUES (?,?,?,?,?,?,'pending')",
         )
-        .run(resident, now, reserved, reserved, JSON.stringify(pricing));
+        .run(resident, now, reserved, reserved, JSON.stringify(pricing), lane);
       return Number(result.lastInsertRowid);
     });
   }

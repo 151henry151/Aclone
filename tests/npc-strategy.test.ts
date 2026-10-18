@@ -139,10 +139,10 @@ test('survival facts and learned results survive a crowded Jev request without e
     },
     'test',
   );
-  assert.deepEqual(body.state.life, life);
+  assert.deepEqual((body.state.life as any).survival, life.survival);
   assert.ok(body.state.lessons);
   assert.ok(Buffer.byteLength(JSON.stringify(body)) <= 24000);
-  assert.equal(Object.keys(body.questions.next_action.criteria).length, 200);
+  assert.ok(Object.keys(body.questions.next_action.criteria).length <= 18);
 });
 test('stocked shelter is distinguished from resting outside with dangerous needs', () => {
   const { w, p } = fixture();

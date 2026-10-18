@@ -295,6 +295,15 @@ export interface BrainRequest {
   preparedBody?: string;
 }
 export interface BrainResult {
+  tradeQuotes?: import('./execution.ts').TradeQuotes;
+  ambition?: import('./ambitions.ts').Ambition;
+  selection?: {
+    id: string;
+    confidence: number;
+    probabilities: Record<string, number>;
+    candidates: number;
+    inputBytes: number;
+  };
   careerGoal?: import('./projects.ts').CareerGoal;
   supplyGoal?: import('./survival.ts').SupplyGoal;
   preferences?: import('./agenda.ts').LearnedPreference[] | null;
