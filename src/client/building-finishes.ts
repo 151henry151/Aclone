@@ -3,7 +3,8 @@ import * as T from 'three';
 import { detailTexture } from './detail-textures';
 import type { BuildingPlan } from '../shared/building-shapes';
 
-export type WallFinish = 'brick' | 'limestone' | 'stone' | 'limewash' | 'boards' | 'metal';
+export type WallFinish =
+  'brick' | 'limestone' | 'stone' | 'rubble' | 'clapboard' | 'limewash' | 'boards' | 'metal';
 export type RoofFinish = 'slate' | 'clay' | 'zinc';
 export type WindowFinish = 'cottage' | 'bakery' | 'stores' | 'workshop' | 'civic';
 export type PanelFinish =
@@ -113,7 +114,14 @@ export function buildingFinish(kind: string, plan: BuildingPlan): BuildingFinish
       tint: '#bbbcb3',
       accent: '#666b64',
     });
-  // User-selected cottage siding and colour remain authoritative.
+  if (plan.finish)
+    set({
+      wall: plan.finish,
+      tint: plan.wall,
+      accent: plan.trim,
+      roof: plan.finish === 'metal' ? 'zinc' : plan.finish === 'brick' ? 'clay' : 'slate',
+    });
+  // Explicit material selection remains authoritative over the business palette.
   return f;
 }
 const maps = new Map<Finish, T.DataTexture>();
@@ -170,6 +178,23 @@ export function buildingTexture(kind: Finish): T.DataTexture {
             : [147 + shade + bevel, 83 + shade * 0.8 + bevel, 57 + shade * 0.7 + bevel];
         // Fine mineral flecks, worn edges and occasional narrow hairline cracks.
         if (!roof && !joint && n > 0.987) c = c.map((a) => a - 28);
+      } else if (kind === 'rubble') {
+        const row = Math.floor(v * 8),
+          fy = fract(v * 8);
+        const xx = u * (5 + (row % 2)) + (row % 2) * 0.43,
+          col = Math.floor(xx),
+          fx = fract(xx);
+        const joint = fx < 0.045 + Math.sin(v * 95) * 0.012 || fy < 0.07 + Math.sin(u * 120) * 0.02;
+        const shade = 172 + hash(col, row) * 42 + fine;
+        c = joint ? [92, 91, 79] : [shade, shade * 0.97, shade * 0.86];
+        if (!joint && (fx < 0.08 || fy < 0.12)) c = c.map((a) => a - 22);
+      } else if (kind === 'clapboard') {
+        const course = Math.floor(v * 16),
+          local = fract(v * 16);
+        const grain = Math.sin(u * 160 + Math.sin(v * 400) * 2) * 3;
+        const value = 224 + fine * 0.4 + grain - (local < 0.08 ? 80 : local < 0.2 ? 24 : 0);
+        c = [value, value * 0.99, value * 0.95];
+        if (Math.abs(fract(u * 4 + (course % 2) * 0.5)) < 0.007) c = c.map((a) => a - 25);
       } else if (kind === 'boards') {
         const plank = Math.floor(u * 12),
           local = fract(u * 12);

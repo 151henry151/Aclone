@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingStyle, buildingSize } from './building-designs';
 import { appearance, cottageStyle } from './appearance';
 /** One world unit is one metre. Shared by geometry, picking, planting and collision. */
 export interface BuildingVolume {
@@ -17,6 +18,7 @@ export interface BuildingPlan {
   trim: string;
   doorHeight: number;
   siding: 'stone' | 'wood';
+  finish?: import('./building-designs').BuildingStyle['finish'];
   fixtures?: BuildingVolume[];
   apron?: { x: number; z: number; radius: number };
 }
@@ -41,6 +43,7 @@ export function buildingPlan(b: {
   kind: string;
   id: string;
   style?: string;
+  size?: string;
   creatorBounds?: { width: number; depth: number; height: number };
 }): BuildingPlan {
   if (b.creatorBounds)
@@ -56,13 +59,15 @@ export function buildingPlan(b: {
     };
   let seed = 0;
   for (const c of b.id) seed = (Math.imul(seed, 31) + c.charCodeAt(0)) >>> 0;
-  const variant = seed % 3;
+  const variant = b.style ? 0 : seed % 3;
   const key =
     b.kind +
     ':' +
-    (b.kind === 'home' ? seed % appearance.cottages.length : 0) +
+    (b.kind === 'home' && !b.style ? seed % appearance.cottages.length : 0) +
     ':' +
-    (b.style ?? '');
+    (b.style ?? '') +
+    ':' +
+    (b.size ?? 'standard');
   const cached = plans.get(key);
   if (cached) return cached;
   let style = b.kind,
@@ -240,8 +245,13 @@ export function buildingPlan(b: {
       wall = '#c7d2cd';
       trim = '#517b7e';
       break;
+    case 'scripted':
+      volumes = b.style
+        ? [volume(5, 4, 2.5, 1.5), volume(3, 3, 1, 0, 'flat', 4.5, -1)]
+        : [volume(7, 5.8, 2.8, 1.6)];
+      break;
     case 'town':
-      volumes = [volume(6, 6, 3, 0, 'flat')];
+      volumes = b.style ? [volume(8, 6, 4.8, 1.8, 'hip')] : [volume(6, 6, 3, 0, 'flat')];
       break;
     case 'notice':
       volumes = [volume(2.2, 0.5, 2.2, 0.3)];
@@ -291,6 +301,25 @@ export function buildingPlan(b: {
       volume(13.2, 24, 27.6, 0, 'flat', spaceportHardware.tank.x, spaceportHardware.tank.z + 5.4),
     ];
   }
+  if (b.kind === 'scripted' && b.style) plan.fixtures = [volume(0.6, 0.6, 6.7, 0, 'flat', 4.5, -1)];
+  const chosen = buildingStyle(b.kind, b.style);
+  if (chosen) {
+    plan.wall = chosen.wall;
+    plan.trim = chosen.trim;
+    plan.siding = chosen.siding;
+    plan.finish = chosen.finish;
+    // Preserve functional flat decks, lean-tos and machinery roofs.
+    for (const v of plan.volumes) if (v.roof === 'gable' || v.roof === 'hip') v.roof = chosen.roof;
+  }
+  const factor = buildingSize(b.kind, b.size)?.footprint ?? 1;
+  if (factor !== 1)
+    plan.volumes = plan.volumes.map((v) => ({
+      ...v,
+      x: v.x * factor,
+      z: v.z * factor,
+      width: v.width * factor,
+      depth: v.depth * factor,
+    }));
   plans.set(key, plan);
   return plan;
 }
@@ -323,7 +352,15 @@ export function buildingBounds(plan: BuildingPlan) {
   };
 }
 export function buildingPenetration(
-  b: { kind: string; id: string; style?: string; x: number; z: number; rotation: number },
+  b: {
+    kind: string;
+    id: string;
+    style?: string;
+    size?: string;
+    x: number;
+    z: number;
+    rotation: number;
+  },
   x: number,
   z: number,
   height: number,

@@ -1,9 +1,14 @@
-import { worldItems } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingSize } from './building-designs';
+import { worldItems } from './world-catalogue.ts';
 import { items } from './catalog.ts';
 import { canCarry, log } from './simulation.ts';
 import type { World, Player, Building, Action, Stock } from './types.ts';
-export const roomCount = (b: Building) => (b.kind === 'hotel' ? 8 : b.kind === 'bnb' ? 3 : 0);
+export const roomCount = (b: Building) =>
+  Math.floor(
+    (b.kind === 'hotel' ? 8 : b.kind === 'bnb' ? 3 : 0) *
+      (buildingSize(b.kind, b.size)?.capacity ?? 1),
+  );
 export function shelter(w: World, p: Player) {
   if (!p.atHome) return;
   const b = w.buildings.find((b) => b.id === p.home && !b.construction);

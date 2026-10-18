@@ -1,3 +1,5 @@
+import { buildingDesignQuote, type BuildingSize } from './building-designs';
+import { constructionSiteReason } from './construction-site';
 import { migrateEmploymentPolicy } from './employment-policy.ts';
 import { exportShipments } from './export-shipments.ts';
 import { labourReward } from './public-labour.ts';
@@ -99,7 +101,7 @@ import {
   checkpoints,
 } from './catalog.ts';
 import { farmAction, finishHarvest, expireFarmCrops } from './farming.ts';
-import { appearance, cottageStyle, tractorPaint } from './appearance.ts';
+import { appearance, tractorPaint } from './appearance.ts';
 import { buildingBlocksMovement } from './building-shapes.ts';
 import type { World, Player, Building, Stock, Action, Input, Ledger, Settings } from './types.ts';
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -1129,8 +1131,17 @@ export function act(w: World, id: string, a: Action): string {
           ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
           : p;
       requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
-      const style = kind === 'home' && a.style !== undefined ? str(a.style) : undefined;
-      requireThat(style === undefined || cottageStyle(style), 'Choose a cottage style');
+      const style = a.style === undefined ? undefined : str(a.style);
+      const size = a.size === undefined ? undefined : str(a.size);
+      const chosenRotation =
+        a.rotation === undefined ? undefined : num(a.rotation, -Math.PI * 2, Math.PI * 2);
+      requireThat(def, 'Unknown building type');
+      const customModel = w.catalogue?.templates[requested]?.creatorModel;
+      requireThat(
+        !customModel || (style === undefined && (!size || size === 'standard')),
+        'Custom models use their creator-defined design',
+      );
+      const design = buildingDesignQuote(kind, def, style, size);
       requireThat(def && def.tier <= w.tier, 'Building unavailable at this civilization tier');
       requireThat(
         !w.zones.some((z) => z.kind === 'noBuild' && distance(site, z) < z.radius),
@@ -1140,16 +1151,34 @@ export function act(w: World, id: string, a: Action): string {
         w.buildings.every((b) => distance(site, b) > 12),
         'Too close to another building',
       );
-      const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
+      const model = customModel ? w.creator?.models.find((m) => m.id === customModel) : undefined;
+      const creatorBounds = model
+        ? { width: model.width, depth: model.depth, height: model.height }
+        : undefined;
+      const footprint = buildingBounds(
+        buildingPlan({ id: 'construction', kind, style, size, creatorBounds }),
+      );
       requireThat(
         !onFarmLand(w, site.x, site.z, Math.max(footprint.width, footprint.depth) / 2),
         'Construction would cover farmland',
       );
-      const shore = kind === 'waterworks' ? waterworksSite(w, site) : undefined;
+      const shore = kind === 'waterworks' ? waterworksSite(w, site, chosenRotation) : undefined;
       requireThat(
         kind !== 'waterworks' || shore,
         'Waterworks require dry ground directly on a shoreline with water within 10 metres',
       );
+      const rotation = chosenRotation ?? shore?.rotation ?? 0;
+      const siteReason = constructionSiteReason(w, {
+        id: 'construction',
+        kind,
+        style,
+        size: size as BuildingSize | undefined,
+        x: site.x,
+        z: site.z,
+        rotation,
+        creatorBounds,
+      });
+      requireThat(!siteReason, siteReason!);
       const home = ['home', 'warehouse'].includes(kind);
       requireThat(
         w.buildings.filter(
@@ -1161,9 +1190,9 @@ export function act(w: World, id: string, a: Action): string {
         ).length < (home ? w.settings.maxHomes : w.settings.maxBuildings),
         'Property limit reached',
       );
-      const terms = constructionTerms(w, p, requested, site);
-      requireThat(p.cash >= def.price + terms.tax, 'Not enough cash');
-      charge(w, p, def.price, 'construction');
+      const terms = constructionTerms(w, p, requested, site, design.price);
+      requireThat(p.cash >= design.price + terms.tax, 'Not enough cash');
+      charge(w, p, design.price, 'construction');
       if (terms.town) {
         p.cash -= terms.tax;
         payTown(w, terms.town, p.id, terms.tax, 'construction tax');
@@ -1172,12 +1201,15 @@ export function act(w: World, id: string, a: Action): string {
       const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, site.x, site.z);
       applyBuildingTemplate(w, b, requested);
       b.owner = id;
-      if (shore) b.rotation = shore.rotation;
+      b.rotation = rotation;
+      if (size) b.size = size as BuildingSize;
+      b.capacity = design.capacity;
+      b.price = design.price;
       if (style) b.style = style;
       b.investment = 0;
       b.stock = {};
-      b.construction = { ...def.materials };
-      b.constructionCost = def.price;
+      b.construction = { ...design.materials };
+      b.constructionCost = design.price;
       w.buildings.push(b);
       result = 'Construction site placed. Deliver the materials listed at the site.';
       break;

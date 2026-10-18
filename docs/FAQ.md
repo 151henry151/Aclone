@@ -57,7 +57,7 @@ Eat/drink from Inventory when HUD bars are low; repeated foods help less. Deposi
 
 ## How do I build, paint or customize things?
 
-**Build** lists costs/materials/skills/tier limits and cottage styles (including timber); supply/fund completed businesses. Garages offer seven tractor paints at 25d. **F10** edits only worlds you own; creating one does not give authority in public Puddlewick. [Creator guide](WORLD_BUILDING.md).
+**Build** previews six styles per building, available sizes, rotation, material bills and costs before placing a foundation; supply/fund completed businesses. Garages offer seven tractor paints at 25d. **F10** edits only worlds you own; creating one does not give authority in public Puddlewick. [Creator guide](WORLD_BUILDING.md).
 
 ## What are Hornball, racing, fishing and Ultrakricket?
 

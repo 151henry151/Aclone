@@ -244,3 +244,7 @@ Every coin comes from a player's cash: no treasury faucet or house cut. Empty dr
 Enable `crowAbilities` together with `fighting` for open-world drone combat. **Activities** offers Scout (fast/unarmed), Interceptor (machine/plasma, stronger hull) and Bomber (slower, grenades/rockets). Each launch consumes one Disposable robocrow; weapon costs and safe zones still apply. Mark and recall move only the drone, costing 25,000 energy with a ten-second cooldown. Return restores the pilot's original vehicle and location; destroying a drone returns its pilot without death penalties or kill rewards.
 
 Drones cannot trade, carry objectives, start jobs or enter team matches. This keeps recall separate from CTF transport. Puddlewick keeps ordinary scouting and disables advanced classes. These classes are Aclone's adaptation, not a reconstruction of eight undocumented historical ranks.
+
+## Construction designs
+
+Built-in building types offer six material styles, and suitable types offer larger floor areas and storage capacities. Placement checks the rotated footprint, including service yards, against terrain, other buildings and protected zones. See [Building designs](PLAYING.md#building-designs) for costs and controls. Catalogue-based custom templates use the same designer; templates with a creator model keep their authored geometry and material bill, with rotation available.

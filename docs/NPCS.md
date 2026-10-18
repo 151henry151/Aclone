@@ -430,3 +430,7 @@ node --env-file=.env --import tsx scripts/npc-decision-smoke.ts --live
 ```
 
 It uses the production Jev adapter on eight synthetic judgment fixtures in both candidate orders: at most 16 requests and $0.05 in its separate in-memory budget. It does not access the live database or call chat models. Its one-step judgments do not establish long-run economic stability. Continue with the isolated population canary and compare deaths, liquid income after living costs, operating businesses, completed buildings and local supply availability before claiming success.
+
+### Construction materials and sites
+
+Cottage plans budget the chosen style's actual material bill and cash cost, including gravel foundations, and use the same footprint checks as player construction. When raw materials are unavailable at known shops, NPCs can obtain a suitable tool and gather from an available resource node, then carry the material back to the site. These steps use normal paid trades, gathering and supply actions.

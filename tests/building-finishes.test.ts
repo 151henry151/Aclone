@@ -7,6 +7,7 @@ import { buildingFinish, buildingTexture } from '../src/client/building-finishes
 import { buildingPlan } from '../src/shared/building-shapes.ts';
 import { makeBuilding } from '../src/shared/simulation.ts';
 import { buildings } from '../src/shared/catalog.ts';
+import { buildingStyle } from '../src/shared/building-designs.ts';
 import { appearance } from '../src/shared/appearance.ts';
 import { detailTexture } from '../src/client/detail-textures.ts';
 import { TownLighting } from '../src/client/lighting.ts';
@@ -103,7 +104,7 @@ test('cottage customization keeps the chosen siding, colour and trim', () => {
       finish = buildingFinish('home', plan);
     assert.equal(finish.tint, style.wall);
     assert.equal(finish.accent, style.trim);
-    assert.equal(finish.wall, style.siding === 'wood' ? 'boards' : 'stone');
+    assert.equal(finish.wall, buildingStyle('home', style.id)!.finish);
     assert.equal(plan.volumes[0].roof, style.roof);
   }
 });

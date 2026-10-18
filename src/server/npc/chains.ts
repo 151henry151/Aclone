@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { constructionSiteReason } from '../../shared/construction-site.ts';
 import { mapHalf, terrainHeight } from '../../shared/terrain.ts';
 import { onFarmLand } from '../../shared/farm-land.ts';
 import { constructionTerms } from '../../shared/civics.ts';
 import { buildingBounds, buildingPlan } from '../../shared/building-shapes.ts';
-// SPDX-License-Identifier: GPL-3.0-or-later
 import { worldBuildings, worldItems } from '../../shared/world-catalogue.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { crops } from '../../shared/farming.ts';
@@ -105,10 +106,10 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
   return graph;
 }
 
-export function pickBuildSite(w: World, p: Player, kind: string) {
+export function pickBuildSite(w: World, p: Player, kind: string, style?: string) {
   if (kind === 'waterworks') return nearestWaterworksSite(w, p);
   const half = mapHalf(w) - 24;
-  const footprint = buildingBounds(buildingPlan({ id: 'candidate', kind }));
+  const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
   const radius = Math.max(footprint.width, footprint.depth) / 2;
   // Bounded search in the actual map, around this resident's holdings and town.
   // No legacy +/-230 m box: builders can settle the countryside too.
@@ -135,6 +136,8 @@ export function pickBuildSite(w: World, p: Player, kind: string) {
           !w.buildings.every((b) => distance(v, b) > radius + 20) ||
           w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
         )
+          continue;
+        if (constructionSiteReason(w, { id: 'construction', kind, style, ...v, rotation: 0 }))
           continue;
         try {
           constructionTerms(w, p, kind, v);

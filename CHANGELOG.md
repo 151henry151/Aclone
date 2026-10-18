@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.71.0] - 2026-10-18
+
+### Added
+
+- Six construction designs for every built-in building, with material-specific bills and gravel foundations. Suitable premises offer larger storage capacities and lodging room counts at proportionate construction costs.
+- A building designer with a live 3D preview, material and cost breakdown, north-up site plan and rotation controls before placement. New shared masonry and clapboard textures keep geometry lightweight.
+
+### Fixed
+
+- Keep hotel entrances visible on the lobby front at every building size.
+- Check complete rotated construction footprints against buildings, protected areas, water and world boundaries before charging for a foundation.
+- Match NPC cottage budgets and site choices to their selected design, and let construction plans gather missing raw materials using ordinary tools and gathering actions.
+
 ## [0.70.0] - 2026-10-18
 
 ### Changed

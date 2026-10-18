@@ -108,6 +108,7 @@ export function constructionTerms(
   p: Player,
   kind: string,
   site: { x: number; z: number },
+  basePrice?: number,
 ): { town?: Town; rate: number; tax: number } {
   const town = governingTown(w, site.x, site.z);
   if (!town) return { tax: 0, rate: 0 };
@@ -120,7 +121,7 @@ export function constructionTerms(
       ? `Only ${listed(allowed)} buildings may be built here in ${town.name}`
       : `No construction is permitted here in ${town.name}`,
   );
-  const price = worldBuildings(w)[kind]?.price ?? 0;
+  const price = basePrice ?? worldBuildings(w)[kind]?.price ?? 0;
   return { town, rate: town.tax, tax: Math.round(price * (1 + town.tax)) - price };
 }
 

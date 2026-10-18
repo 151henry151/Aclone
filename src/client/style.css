@@ -2325,3 +2325,79 @@ button span {
   margin-bottom: 0.8rem;
   white-space: pre-wrap;
 }
+
+/* Construction designer: bounded, on-demand preview; no continuously animated canvas. */
+.build-designer {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 20px;
+}
+.build-controls label {
+  display: block;
+  margin-bottom: 14px;
+}
+.build-controls select,
+.build-controls input[type='range'] {
+  width: 100%;
+}
+.build-preview {
+  height: 300px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #a5b5b1;
+}
+.build-preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.build-site {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 190px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+.build-estimate {
+  grid-column: 1/-1;
+}
+.build-materials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  list-style: none;
+  padding: 0;
+}
+.build-materials li {
+  padding: 8px;
+  background: #ffffff08;
+  border-radius: 4px;
+}
+.build-materials small {
+  opacity: 0.7;
+}
+.build-refusal {
+  color: #ffbc91;
+}
+.build-designer > button {
+  grid-column: 1/-1;
+  min-height: 44px;
+}
+@media (max-width: 650px) {
+  .build-designer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .build-preview {
+    height: 240px;
+  }
+  .build-controls .button-row {
+    display: flex;
+  }
+  .build-controls button {
+    flex: 1;
+    min-height: 44px;
+  }
+}

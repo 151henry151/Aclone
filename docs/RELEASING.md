@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.70.0
+## Current upgrade: 0.71.0
+
+Building designs add optional style/size fields and save the chosen rotation, capacity and material bill. Existing property ownership, stock, investment and construction bills are preserved; no reset or price migration is required. New construction checks the complete rotated footprint, including service yards. Update client and server together and refresh browsers for the designer. NPC cottage plans now budget their selected materials and can gather raw supplies. Use the normal backup/build/restart procedure; no paid experiment is started.
+
+### 0.70.0
 
 NPC planning adds a durable gameplay/chat accounting lane and compatible optional memory fields. Existing charges remain counted; chat can use at most half of the total budget by default (`NPC_GAMEPLAY_BUDGET_SHARE=0.5` reserves the other half for gameplay). Preserve the server environment and existing total limits. No world reset, stock grant or price migration is required. Back up database/assets, build and restart normally; refresh clients for the included 0.69.0 caretaker archives. Deployment does not run paid experiments.
 

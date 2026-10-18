@@ -32,7 +32,8 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize());
   }
   function wallFinish(m: T.Mesh<T.BufferGeometry, T.Material | T.Material[]>) {
-    if (b.kind === 'home' && plan.siding === 'wood') return sidingMaterial(m, plan.wall);
+    if (b.kind === 'home' && plan.siding === 'wood' && !plan.finish)
+      return sidingMaterial(m, plan.wall);
     if (look.wall === 'stone') return finish(m, 'stone', 3, b.construction ? '#a6a18d' : look.tint);
     return finishSurface(m, look.wall, b.construction ? '#a6a18d' : look.tint);
   }
@@ -164,21 +165,21 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     front = main.depth / 2 + 0.06;
   if (['notice', 'pickup', 'portal', 'turret'].includes(b.kind)) {
     if (b.kind === 'notice') {
-      for (const x of [-0.9, 0.9]) box(0.13, 2.2, 0.13, '#6b5740', x, 1.1, 0);
-      box(2, 0.95, 0.16, '#796345', 0, 1.6, 0);
+      for (const x of [-0.9, 0.9]) box(0.13, 2.2, 0.13, plan.trim, x, 1.1, 0);
+      wallFinish(box(2, 0.95, 0.16, '#ffffff', 0, 1.6, 0));
       for (const x of [-0.55, 0, 0.55]) box(0.4, 0.6, 0.02, '#e2d5af', x, 1.6, 0.095);
       roof(main);
     } else if (b.kind === 'portal') {
-      for (const x of [-1.3, 1.3]) finish(box(0.4, 3.8, 0.7, '#ffffff', x, 1.9, 0), 'stone', 3);
+      for (const x of [-1.3, 1.3]) wallFinish(box(0.4, 3.8, 0.7, '#ffffff', x, 1.9, 0));
       box(3, 0.35, 0.75, plan.trim, 0, 3.8, 0);
       const ring = mesh(new T.TorusGeometry(1.15, 0.09, 8, 36), '#8cbbb8', 0, 2, 0);
       ring.scale.y = 1.35;
     } else if (b.kind === 'turret') {
-      cylinder(1.1, 1.5, '#7f8575', 0, 0.75, 0);
+      wallFinish(cylinder(1.1, 1.5, '#ffffff', 0, 0.75, 0));
       cylinder(0.75, 0.8, '#5b6762', 0, 1.9, 0);
       box(0.3, 0.3, 2, '#45504b', 0, 2.1, 0.8);
     } else {
-      box(1.8, 1.1, 1.2, '#8a7250', 0, 0.55, 0);
+      wallFinish(box(1.8, 1.1, 1.2, '#ffffff', 0, 0.55, 0));
       for (const x of [-0.7, 0.7]) box(0.12, 1.13, 1.23, '#51594b', x, 0.56, 0);
     }
     return root;
@@ -212,7 +213,14 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
           );
       continue;
     }
-    roof(v);
+    if (b.kind === 'scripted' && b.style && v !== main) {
+      finish(
+        box(v.width - 0.16, 0.03, v.depth - 0.16, '#ffffff', v.x, v.eaves + 0.015, v.z),
+        'gravel',
+        3,
+        '#51402d',
+      );
+    } else roof(v);
   }
   if (b.construction) return root;
   if (b.kind === 'haybarn') {
@@ -226,7 +234,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       bales.setMatrixAt(
         i,
         new T.Matrix4().makeTranslation(
-          8.7 + (i % 2) * 1.7,
+          plan.volumes[1].x - 1.3 + (i % 2) * 1.7,
           0.5 + Math.floor(i / 6) * 0.82,
           -3 + Math.floor((i % 6) / 2) * 1.15,
         ),
@@ -258,8 +266,12 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       : [0];
     for (const x of bays) {
       // Frame, planks, bracing and shutter ribs are baked into one two-triangle panel.
-      const bay = new T.Mesh(new T.PlaneGeometry(3.6, 3.4), finishMaterial(look.bay, look.accent));
-      bay.position.set(x, 1.7, front + 0.18);
+      const height = Math.min(3.4, main.eaves - 0.25);
+      const bay = new T.Mesh(
+        new T.PlaneGeometry(3.6, height),
+        finishMaterial(look.bay, look.accent),
+      );
+      bay.position.set(x, height / 2, front + 0.18);
       root.add(bay);
     }
     for (const z of [-2, 1.4]) window(main.width / 2 + 0.035, 2, z, 1.1, Math.PI / 2);
@@ -270,7 +282,12 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       loft.material = finishMaterial('barn-door', look.accent);
     }
   } else {
-    door(0, b.kind === 'school' ? 4.76 : front);
+    door(
+      0,
+      ['school', 'hotel'].includes(b.kind)
+        ? plan.volumes[1].z + plan.volumes[1].depth / 2 + 0.06
+        : front,
+    );
     const xs = main.width > 10 ? [-4, -2, 2, 4] : [-main.width * 0.3, main.width * 0.3];
     for (const x of xs) window(x, 1.6, front);
     for (const side of [-1, 1])
@@ -333,7 +350,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     box(0.8, 0.65, 0.09, '#647349', -main.width / 2 - 0.4, 2.6, front + 1);
   }
   if (b.kind === 'bank' || b.kind === 'school') {
-    const entrance = b.kind === 'school' ? 4.76 : front;
+    const entrance = ['school', 'hotel'].includes(b.kind)
+      ? plan.volumes[1].z + plan.volumes[1].depth / 2 + 0.06
+      : front;
     for (const x of [-1.3, 1.3]) cylinder(0.14, 2.45, '#d8d2bd', x, 1.225, entrance + 0.8);
     box(3.2, 0.2, 1.5, '#c5c4b3', 0, 2.55, entrance + 0.65);
     if (b.kind === 'school') {
@@ -418,6 +437,16 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       for (let i = 0; i < 5; i++)
         box(0.68, 0.03, 0.06, '#b99e70', 1, 0.2 - i * 0.035, front + 0.2 + i * 0.22);
     }
+  }
+  if (b.kind === 'scripted' && b.style) {
+    // The curious-tree business is a nursery: a compact potting house and one specimen.
+    cylinder(0.3, 4.5, '#74624b', 4.5, 2.25, -1);
+    for (const [x, y, z, r] of [
+      [4.5, 5, -1, 1.7],
+      [3.6, 4.4, -1.5, 1.2],
+      [5.5, 4.5, -0.7, 1.2],
+    ])
+      mesh(new T.IcosahedronGeometry(r, 1), '#607548', x, y, z);
   }
   if (b.kind === 'starport') {
     root.add(spaceportModel());

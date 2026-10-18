@@ -100,6 +100,7 @@ test('a chosen cottage project survives care interruption and has executable mat
       } else if (step.kind === 'move') Object.assign(p, { x: step.x, z: step.z });
       else if (step.kind === 'act') act(w, p.id, step.action);
       else if (step.kind === 'operation') act(w, p.id, operationAction(step));
+      else if (step.kind === 'wait') advance(w, step.seconds);
     }
   }
   assert.equal(

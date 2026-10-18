@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { constructionSiteReason } from './construction-site.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
 import type { World } from './types.ts';
 import type { Point } from './town.ts';
@@ -58,7 +59,13 @@ export function nearestWaterworksSite(w: World, p: Point) {
     .filter(
       (s) =>
         w.buildings.every((b) => Math.hypot(b.x - s.x, b.z - s.z) > 20) &&
-        !w.zones.some((z) => z.kind === 'noBuild' && Math.hypot(z.x - s.x, z.z - s.z) < z.radius),
+        !w.zones.some((z) => z.kind === 'noBuild' && Math.hypot(z.x - s.x, z.z - s.z) < z.radius) &&
+        !constructionSiteReason(w, {
+          id: 'construction',
+          kind: 'waterworks',
+          ...s,
+          rotation: waterworksSite(w, s)!.rotation,
+        }),
     )
     .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0];
 }

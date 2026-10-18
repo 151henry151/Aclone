@@ -405,6 +405,7 @@ export class GameScene {
             ':' +
             b.rotation +
             (b.style ?? '') +
+            (b.size ?? '') +
             (b.construction ? 'c' : ''),
         )
         .join(',') +
@@ -930,7 +931,7 @@ export class GameScene {
   }
   private building(b: Building) {
     const g = new T.Group();
-    if (b.kind === 'town') {
+    if (b.kind === 'town' && !b.style) {
       for (const [r, h, y] of [
         [5, 0.25, 0.125],
         [4.4, 0.3, 0.4],

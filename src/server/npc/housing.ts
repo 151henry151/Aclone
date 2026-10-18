@@ -23,8 +23,13 @@ export function housingChoices(w: World, p: Player, away = 86400): FarmerChoice[
   const house = w.buildings
     .filter((b) => b.kind === 'home' && !b.construction && !b.government && (!b.owner || b.forSale))
     .sort((a, b) => propertyQuote(w, a).total - propertyQuote(w, b).total)[0];
-  const site = worldBuildings(w).home?.tier <= w.tier ? pickBuildSite(w, p, 'home') : undefined;
-  const budget = site && constructionBudget(w, p, 'home', site);
+  const style =
+    appearance.cottages[
+      Math.abs(p.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0)) % appearance.cottages.length
+    ].id;
+  const site =
+    worldBuildings(w).home?.tier <= w.tier ? pickBuildSite(w, p, 'home', style) : undefined;
+  const budget = site && constructionBudget(w, p, 'home', site, style);
   const purchase = house ? propertyQuote(w, house).total + living : Infinity;
   const build = budget ? budget.total + Math.max(0, living - budget.living) : Infinity;
   const target = Math.min(purchase, build);
@@ -68,11 +73,7 @@ export function housingChoices(w: World, p: Player, away = 86400): FarmerChoice[
         { kind: 'move', ...site },
         operation('construct', {
           kind: 'home',
-          style:
-            appearance.cottages[
-              Math.abs(p.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0)) %
-                appearance.cottages.length
-            ].id,
+          style,
         }),
       ],
       reconsiderSeconds: 600,

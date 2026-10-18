@@ -134,9 +134,19 @@ Galactic credits/cargo are separate from local cash/inventory; spaceports conver
 
 ## Appearance and property
 
-Choose among six cottage styles, including timber siding, at the same construction cost when building. Saved cottages keep their identity/stock/location; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid. Puddlewick also allows qualified owners to operate their factories without wages, including offline.
+Choose among six material styles for each building, with size options for suitable types, using the building designer below. Existing properties keep their stock, location and capacity; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid. Puddlewick also allows qualified owners to operate their factories without wages, including offline.
 
 Buy unclaimed property or player-listed buildings (a red **For sale** tag with the asking price hangs under a listed building's name sign, visible from about 70 m), repair them and supply construction materials. To abandon an unfinished site, drive nearby, open it, expand **Cancel construction**, and confirm the displayed refund. The owner receives 75% of the original base cash cost; construction tax and delivered materials are not returned. Older sites without a saved cost use the lower of their saved building price and current catalogue base price. Completed buildings cannot use this refund. Homes and rooms use exterior shelter, not separate interior maps. [Economy](ECONOMY.md) covers business management and guesthouse rules.
+
+## Building designs
+
+Open **Build**, choose a building, then its style, size and rotation before placing the foundation. The 3D preview shows the finished design; the north-up site plan shows its footprint and nearby buildings. Rotate in 15° steps with the slider or arrow buttons: 0° faces south, 90° east, 180° north and 270° west. The selected footprint must fit on dry ground outside protected areas and other premises; waterworks must also reach the shoreline.
+
+All built-in types offer six styles. Cottages retain their familiar six designs; other buildings offer rough stone, white clapboard, red timber, dressed stone, brick and industrial metal. Material bills follow the structure: stone uses more blocks, timber uses more wood, brick uses bricks, and industrial panels need steel and concrete. Every selected design needs gravel for its foundation, and specialist equipment materials remain in the bill.
+
+Suitable buildings offer **Expanded** (1.5× storage, 1.55× cash/material cost) and **Large** (2× storage, 2.15× cash/material cost). The estimate includes the selected style’s cash price and shows town tax separately. Lodging gains rooms too; production recipes, speed and staffing do not change. Farm fields expand separately through farm administration. Door and window heights stay human-sized as floor area grows.
+
+Check the estimate for materials, what you already carry, storage, dimensions and any placement restriction. Choices persist while playing in the same browser session. Existing buildings and unfinished sites retain their original costs and capacity. Creator-uploaded models retain their authored design and bill but can also be rotated.
 
 ## AI neighbours (optional prototype)
 

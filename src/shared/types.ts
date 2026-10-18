@@ -154,6 +154,7 @@ export interface Building {
   /** Original base cash paid at placement, excluding town tax. */
   constructionCost?: number;
   style?: string;
+  size?: import('./building-designs').BuildingSize;
   smoking?: boolean;
   /** Public snapshot projection: production intensity, zero when blocked. */
   operating?: number;

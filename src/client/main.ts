@@ -1,3 +1,5 @@
+import { buildMenuHtml, mountBuildMenu } from './build-menu';
+let closeBuildPreview: (() => void) | undefined;
 import { labourReward, RELIEF_PAY } from '../shared/public-labour.ts';
 import { refreshActionVisibility } from './action-visibility';
 import {
@@ -46,7 +48,6 @@ import {
   charterForm,
   charterFormAction,
   townLocation,
-  constructionQuote,
   foundTownForm,
   nearbyTownPanels,
 } from './town-panel';
@@ -1053,6 +1054,8 @@ function closePanel() {
     toast(tradeFeedback.summary);
   tradeVisit++;
   closeCreatorPreview();
+  closeBuildPreview?.();
+  closeBuildPreview = undefined;
   panelMemory.capture();
   parishMap?.dispose();
   parishMap = undefined;
@@ -1065,6 +1068,8 @@ function closePanel() {
 }
 function modal(title: string, content: string, wide = false) {
   closeCreatorPreview();
+  closeBuildPreview?.();
+  closeBuildPreview = undefined;
   panelMemory.capture();
   $('modal-host').innerHTML =
     `<div class="modal-backdrop"><section class="window ${wide ? 'large' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><span class="eyebrow">ACLONE / ${esc(world?.name ?? 'UNIVERSE')}</span>${button('×', 'close', 'aria-label="Close dialog"', 'close')}</header><h2>${esc(title)}</h2>${content}</section></div>`;
@@ -1259,7 +1264,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift. Regular pay is 1d; residents below 50d cash plus bank qualify for ${money(RELIEF_PAY)} relief at most once per 30 minutes.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow seven crops over 1h 40m to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, cottage styling in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift. Regular pay is 1d; residents below 50d cash plus bank qualify for ${money(RELIEF_PAY)} relief at most once per 30 minutes.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow seven crops over 1h 40m to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, building styles, sizes and rotation in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -1518,30 +1523,19 @@ function renderPanel() {
     return;
   }
   if (panel === 'construction') {
-    const waterSite = waterworksSite(world, me);
-    const quotes = new Map<string, ReturnType<typeof constructionQuote>>();
-    const quote = (id: string) =>
-      quotes.get(id) ?? quotes.set(id, constructionQuote(world!, me!, id)).get(id)!;
-    const here = Object.keys(worldBuildings(world)).map(quote);
     modal(
       'Build something useful.',
-      `<p>Civilization tier ${world.tier}. Structures cost cash plus the local town's construction tax (${esc(here.find((q) => q.note)?.note ?? here[0]?.refusal ?? 'none here')}). Supply the listed materials to finish construction. Unfinished sites can be cancelled for 75% of their base cash cost; tax and delivered materials are not returned. Stand on clear ground first. Waterworks need a dry shoreline with water within 10 metres.</p><label>Cottage style<select id="cottage-style">${appearance.cottages.map((s) => `<option value="${s.id}">${s.name} · ${s.siding} siding</option>`).join('')}</select></label><p class="note">Choose a style above, then choose Small cottage below. All cottage styles cost the same and keep human-sized doors and windows.</p><div class="directory">${Object.entries(
-        worldBuildings(world!),
-      )
-        .filter(([, d]) => d.tier <= world!.tier)
-        .map(
-          ([id, d]) =>
-            `<button data-do="construct" data-id="${id}" ${(id === 'waterworks' && !waterSite) || quote(id).refusal ? 'disabled' : ''}><span><b>${esc(d.name)}</b>${quote(id).refusal ? `<small>${esc(quote(id).refusal)}</small>` : ''}${id === 'waterworks' ? `<small>${waterSite ? 'Shoreline suitable at your position' : 'Move to dry ground beside water'}</small>` : ''}<small>${Object.entries(
-              d.materials,
-            )
-              .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
-              .join(
-                ' + ',
-              )}</small></span><b>${money(quote(id).price + quote(id).tax)}</b></button>`,
-        )
-        .join(
-          '',
-        )}</div><h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world!, me!)}${foundTownForm(world!, me!)}`,
+      buildMenuHtml() +
+        `<h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world, me)}${foundTownForm(world, me)}`,
+      true,
+    );
+    closeBuildPreview = mountBuildMenu(
+      $('modal-host').querySelector<HTMLElement>('[data-build-designer]')!,
+      () => ({ w: world!, p: me! }),
+      (action) => {
+        send(action);
+        closePanel();
+      },
     );
     return;
   }
@@ -2276,9 +2270,6 @@ app.addEventListener('click', async (e) => {
         send({
           type: 'construct',
           kind: id,
-          ...(id === 'home'
-            ? { style: (document.getElementById('cottage-style') as HTMLSelectElement).value }
-            : {}),
         });
         closePanel();
         break;

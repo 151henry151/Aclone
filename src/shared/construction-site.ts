@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingPlan, type BuildingVolume } from './building-shapes';
+import { mapHalf, terrainHeight } from './terrain';
+import type { Building, World } from './types';
+type Site = Pick<
+  Building,
+  'id' | 'kind' | 'x' | 'z' | 'rotation' | 'style' | 'size' | 'creatorBounds'
+>;
+function rectangles(b: Site) {
+  const plan = buildingPlan(b);
+  const volumes: BuildingVolume[] = [...plan.volumes, ...(plan.fixtures ?? [])];
+  if (plan.apron)
+    volumes.push({
+      x: plan.apron.x,
+      z: plan.apron.z,
+      width: plan.apron.radius * 2,
+      depth: plan.apron.radius * 2,
+      eaves: 0,
+      rise: 0,
+      roof: 'flat',
+    });
+  const c = Math.cos(b.rotation),
+    s = Math.sin(b.rotation);
+  return volumes.map((v) => ({
+    x: b.x + v.x * c + v.z * s,
+    z: b.z - v.x * s + v.z * c,
+    hx: v.width / 2,
+    hz: v.depth / 2,
+    axes: [
+      { x: c, z: -s },
+      { x: s, z: c },
+    ],
+  }));
+}
+type Rect = ReturnType<typeof rectangles>[number];
+const projectRadius = (a: Rect, axis: { x: number; z: number }) =>
+  a.hx * Math.abs(a.axes[0].x * axis.x + a.axes[0].z * axis.z) +
+  a.hz * Math.abs(a.axes[1].x * axis.x + a.axes[1].z * axis.z);
+/** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
+export function constructionSiteReason(w: World, b: Site) {
+  const rects = rectangles(b),
+    edge = mapHalf(w);
+  for (const a of rects) {
+    for (const sx of [-1, 0, 1])
+      for (const sz of [-1, 0, 1]) {
+        const x = a.x + sx * a.hx * a.axes[0].x + sz * a.hz * a.axes[1].x;
+        const z = a.z + sx * a.hx * a.axes[0].z + sz * a.hz * a.axes[1].z;
+        if (Math.abs(x) > edge || Math.abs(z) > edge)
+          return 'The building footprint would cross the world boundary';
+        if (terrainHeight(w, x, z) < w.settings.seaLevel)
+          return 'The building foundation must stay on dry land';
+      }
+    for (const zone of w.zones.filter((z) => z.kind === 'noBuild')) {
+      const dx = zone.x - a.x,
+        dz = zone.z - a.z;
+      const x = Math.max(0, Math.abs(dx * a.axes[0].x + dz * a.axes[0].z) - a.hx);
+      const z = Math.max(0, Math.abs(dx * a.axes[1].x + dz * a.axes[1].z) - a.hz);
+      if (Math.hypot(x, z) < zone.radius) return 'Construction prohibited in this zone';
+    }
+    for (const other of w.buildings)
+      for (const o of rectangles(other)) {
+        const separated = [...a.axes, ...o.axes].some(
+          (axis) =>
+            Math.abs((a.x - o.x) * axis.x + (a.z - o.z) * axis.z) >
+            projectRadius(a, axis) + projectRadius(o, axis) + 2,
+        );
+        if (!separated)
+          return 'Too close to another building; leave room for the selected footprint';
+      }
+  }
+  return undefined;
+}

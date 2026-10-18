@@ -1,3 +1,4 @@
+import { buildingDesignQuote } from '../../shared/building-designs';
 import { settlementChoices } from './civic-ambition.ts';
 import { townMeeting } from '../../shared/town-charter.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
@@ -545,26 +546,27 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   }
   for (const c of settlementChoices(w, p)) add('civic', c.description, c.plan, c.reconsiderSeconds);
   // Construction is ordinary placement plus later purchases/deliveries, never free buildings.
-  const site = pickBuildSite(w, p, 'home');
+  const cottageDesign =
+    appearance.cottages[
+      Math.abs(p.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0)) % appearance.cottages.length
+    ].id;
+  const site = pickBuildSite(w, p, 'home', cottageDesign);
   if (!buildings.some((b) => b.owner === p.id && (b.construction || b.kind === 'home'))) {
     const home = catalog.home;
+    const style = cottageDesign;
     if (
       home &&
       home.tier <= w.tier &&
       site &&
-      (constructionBudget(w, p, 'home', site)?.total ?? Infinity) <= p.cash
-    )
-      for (const style of [
-        appearance.cottages[
-          Math.abs(p.id.split('').reduce((n, c) => n + c.charCodeAt(0), 0)) %
-            appearance.cottages.length
-        ].id,
-      ])
-        add(
-          'construction',
-          `Build ${home.name} (${style}): base ${home.price} plus town tax and materials ${JSON.stringify(home.materials)}; an unfinished site earns nothing.`,
-          [...prep, { kind: 'move', ...site }, operation('construct', { kind: 'home', style })],
-        );
+      (constructionBudget(w, p, 'home', site, style)?.total ?? Infinity) <= p.cash
+    ) {
+      const design = buildingDesignQuote('home', home, style);
+      add(
+        'construction',
+        `Build ${home.name} (${style}): base ${design.price} plus town tax and materials ${JSON.stringify(design.materials)}; an unfinished site earns nothing.`,
+        [...prep, { kind: 'move', ...site }, operation('construct', { kind: 'home', style })],
+      );
+    }
   }
   for (const c of inventChainPlans(w, p, state)) add('chain', c.description, c.plan);
   if (p.inventory.tackle > 0 && w.settings.fishingMode > 0 && canKeepFishing(w, p))

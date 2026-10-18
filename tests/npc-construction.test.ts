@@ -16,7 +16,7 @@ test('an accepted cottage project buys and delivers materials across separate le
     p = addPlayer(w, 'builder', 'Builder');
   p.cash = 1000000;
   p.inventory = { bread: 3, water: 6 };
-  p.x = 80;
+  p.x = -90;
   p.z = -130;
   const budget = constructionBudget(w, p, 'home', p);
   assert.ok(budget && budget.materialCost > 0 && budget.living > 0);
@@ -47,7 +47,7 @@ test('construction refuses unknown material supplies and protects meal money dur
   const w = createWorld('build', 'Build', 'server'),
     p = addPlayer(w, 'builder', 'Builder');
   p.cash = 1000000;
-  p.x = 80;
+  p.x = -90;
   p.z = -130;
   act(w, p.id, { type: 'construct', kind: 'home' });
   p.inventory = {};
