@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.77.0] - 2026-10-18
+
+### Added
+
+- Interactive orthographic previews in the public building gallery: rotate with mouse, touch or keyboard, zoom, and compare architectural models, finishes and sizes at a consistent scale. The viewer loads on demand and keeps image sheets available without JavaScript or WebGL.
+
 ## [0.76.0] - 2026-10-18
 
 ### Changed

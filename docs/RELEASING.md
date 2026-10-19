@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.76.0
+## Current upgrade: 0.77.0
+
+Publish the interactive building gallery with `bash scripts/deploy-website.sh`, which includes the bundled viewer and textures under `assets/building-viewer/`. Refresh browsers for the popup controls. The gallery uses no game connection or AI calls and retains image links without JavaScript or WebGL. Deploy the game normally for the shared preview code; no data migration or reset is required.
+
+### 0.76.0
 
 Selected architectural models gain trade-specific layouts and corrected details. Existing model IDs, ownership, stock, investments, capacities and saved construction bills are preserved; buildings without a selected model keep their legacy layouts. Update client and server together for matching footprints, then refresh browsers. Publish the refreshed gallery with `bash scripts/deploy-website.sh`. No world reset is required.
 

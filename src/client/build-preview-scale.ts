@@ -6,8 +6,9 @@ const frames = new Map<string, { radius: number; horizontal: number; vertical: n
 export const previewDirection = { x: 0.6, y: 0.46, z: 1 };
 /** One orthographic frame per built-in type. The full horizontal diagonal allows every
  * rotation; projected height includes the view's elevation and roof-equipment clearance. */
-export function buildingPreviewFrame(kind: string) {
-  const cached = frames.get(kind);
+export function buildingPreviewFrame(kind: string, terminalOnly = false) {
+  const key = kind + (terminalOnly ? ':terminal' : '');
+  const cached = frames.get(key);
   if (cached) return cached;
   const length = Math.hypot(previewDirection.x, previewDirection.y, previewDirection.z);
   const sinElevation = previewDirection.y / length,
@@ -15,8 +16,17 @@ export function buildingPreviewFrame(kind: string) {
   const frame = { radius: 2, horizontal: 2, vertical: 2 };
   for (const architecture of buildingArchitectures(kind))
     for (const size of sizesForBuilding(kind)) {
+      const plan = buildingPlan({
+        id: 'preview',
+        kind,
+        architecture: architecture.id,
+        size: size.id,
+      });
+      // Plans are cached by the game; never alter them for a gallery-only framing choice.
       const b = buildingBounds(
-        buildingPlan({ id: 'preview', kind, architecture: architecture.id, size: size.id }),
+        kind === 'starport' && terminalOnly
+          ? { ...plan, fixtures: undefined, apron: undefined }
+          : plan,
       );
       const horizontal = Math.hypot(b.width + 2, b.depth + 2) / 2,
         height = (b.height + 3) / 2;
@@ -24,7 +34,7 @@ export function buildingPreviewFrame(kind: string) {
       frame.horizontal = Math.max(frame.horizontal, horizontal);
       frame.vertical = Math.max(frame.vertical, horizontal * sinElevation + height * cosElevation);
     }
-  frames.set(kind, frame);
+  frames.set(key, frame);
   return frame;
 }
 export function buildingPreviewRadius(kind: string) {

@@ -16,7 +16,7 @@ export function buildBuildingGallery(source: string, output: string, version: st
       const models = buildingArchitectures(kind)
         .map((m) => m.name)
         .join(' · ');
-      return `<article id="${kind}" data-search="${escape((kind + ' ' + def.name + ' ' + models).toLocaleLowerCase())}"><div class="card-heading"><h2>${escape(def.name)}</h2><a href="#${kind}" aria-label="Link to ${escape(def.name)}">#</a></div><p class="models">${escape(models)}</p><a class="image-link" href="${image}" aria-label="Enlarge ${escape(def.name)} models"><img src="${image}" width="1500" height="1040" loading="lazy" alt="Five ${escape(def.name)} architectural models and a size or finish comparison" /></a></article>`;
+      return `<article id="${kind}" data-search="${escape((kind + ' ' + def.name + ' ' + models).toLocaleLowerCase())}"><div class="card-heading"><h2>${escape(def.name)}</h2><a href="#${kind}" aria-label="Link to ${escape(def.name)}">#</a></div><p class="models">${escape(models)}</p><a class="image-link" href="${image}" data-preview="${kind}" data-name="${escape(def.name)}" aria-label="Explore ${escape(def.name)} in 3D"><img src="${image}" width="1500" height="1040" loading="lazy" alt="Five ${escape(def.name)} architectural models and a size or finish comparison" /></a></article>`;
     })
     .join('\n');
   mkdirSync(join(output, 'buildings'), { recursive: true });

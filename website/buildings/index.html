@@ -22,9 +22,10 @@
         with five architectural models apiece and six independent finishes.
       </p>
       <p class="note">
-        These are actual game renders. Each sheet compares five models in the same finish; its sixth
-        view shows a larger size or another finish. Scale is consistent within each sheet, not
-        between building types. Spaceport views focus on the terminal.
+        Click a sheet to explore its building in 3D: rotate the orthographic view and choose a
+        model, finish and size. These are actual game renders. Each sheet compares five models in
+        the same finish; its sixth view shows a larger size or another finish. Scale is consistent
+        within each sheet, not between building types. Spaceport views focus on the terminal.
       </p>
       <div class="filter" hidden>
         <label for="search">Find a building</label>
@@ -33,6 +34,54 @@
       </div>
     </header>
     <main id="catalogue">__BUILDING_CARDS__</main>
+    <dialog id="building-dialog" aria-labelledby="preview-title">
+      <div class="preview-heading">
+        <div>
+          <p class="eyebrow">Explore in 3D · orthographic view</p>
+          <h2 id="preview-title"></h2>
+        </div>
+        <button id="preview-close" type="button" aria-label="Close building preview">✕</button>
+      </div>
+      <div class="preview-layout">
+        <div class="preview-scene">
+          <div
+            id="building-preview"
+            tabindex="0"
+            role="region"
+            aria-label="Interactive building preview"
+            aria-describedby="preview-status"
+          ></div>
+          <p id="preview-status" role="status">Loading 3D preview…</p>
+          <div class="view-buttons" aria-label="View controls">
+            <button type="button" data-view="left" aria-label="Rotate left">↶</button>
+            <button type="button" data-view="right" aria-label="Rotate right">↷</button>
+            <button type="button" data-view="up" aria-label="View from above">↑</button>
+            <button type="button" data-view="down" aria-label="Lower view">↓</button>
+            <button type="button" data-view="in" aria-label="Zoom in">+</button>
+            <button type="button" data-view="out" aria-label="Zoom out">−</button>
+            <button type="button" data-view="reset">Reset view</button>
+          </div>
+        </div>
+        <div class="preview-options">
+          <label for="preview-model">Architectural model</label
+          ><select id="preview-model"></select>
+          <label for="preview-finish" id="preview-finish-label">Surface finish</label
+          ><select id="preview-finish"></select>
+          <label for="preview-size">Building size</label
+          ><select id="preview-size"></select>
+          <p class="note">
+            The scale stays fixed when you change model, finish or size. Zoom in for details, or
+            reset the view to compare sizes.
+          </p>
+          <label id="preview-launch-label" hidden
+            ><input type="checkbox" id="preview-launch" /> Include launch pad and rocket</label
+          >
+          <a id="preview-sheet" href="/assets/buildings/home.webp" target="_blank" rel="noopener"
+            >Open image sheet ↗</a
+          >
+        </div>
+      </div>
+    </dialog>
     <footer>
       <p>Aclone __VERSION__ · Free and open source</p>
       <a href="https://github.com/151henry151/Aclone">Source &amp; documentation ↗</a>

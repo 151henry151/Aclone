@@ -11,7 +11,7 @@ import {
 } from '../src/shared/building-designs.ts';
 import { buildingPlan, buildingBounds, blocksBuilding } from '../src/shared/building-shapes.ts';
 import { buildingModel } from '../src/client/buildings.ts';
-import { buildingPreviewRadius } from '../src/client/build-preview-scale.ts';
+import { buildingPreviewRadius, buildingPreviewFrame } from '../src/client/build-preview-scale.ts';
 import { createWorld, addPlayer, makeBuilding, act } from '../src/shared/simulation.ts';
 import { exportDesign, applyDesign } from '../src/server/world-design.ts';
 import { Store } from '../src/server/store.ts';
@@ -423,4 +423,19 @@ test('spaceport hangars have freight-sized doors instead of shop doors', () => {
     assert.ok(freightDoors >= 1, a.name + ' needs access for cargo');
     release(root);
   }
+});
+
+test('terminal gallery framing preserves the shared spaceport and full-launch-pad frame', () => {
+  const before = buildingPlan({
+    id: 'preview',
+    kind: 'starport',
+    architecture: 'model-1',
+    size: 'standard',
+  });
+  const original = structuredClone(before);
+  const terminal = buildingPreviewFrame('starport', true);
+  const full = buildingPreviewFrame('starport');
+  assert.deepEqual(before, original);
+  assert.ok(full.radius > terminal.radius * 2);
+  assert.ok(before.fixtures?.length);
 });

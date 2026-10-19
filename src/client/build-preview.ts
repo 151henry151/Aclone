@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingPreviewFrame, previewDirection } from './build-preview-scale';
 import * as T from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { buildingModel } from './buildings';
 import { creatorModel, disposeCreator } from './creator-model';
 import { waitForTextures } from './materials';
@@ -18,7 +19,12 @@ export class BuildPreview {
   private frameWidth = 10;
   private frameHeight = 10;
   private center = new T.Vector3();
-  constructor(private host: HTMLElement) {
+  private controls?: OrbitControls;
+  private viewInitialized = false;
+  constructor(
+    private host: HTMLElement,
+    private interactive = false,
+  ) {
     this.renderer = new T.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     this.renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -32,6 +38,15 @@ export class BuildPreview {
       'Building preview at a fixed scale for this building type',
     );
     host.replaceChildren(this.renderer.domElement);
+    if (interactive) {
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.enablePan = false;
+      this.controls.minPolarAngle = 0.05;
+      this.controls.maxPolarAngle = Math.PI * 0.49;
+      this.controls.minZoom = 0.5;
+      this.controls.maxZoom = 4;
+      this.controls.addEventListener('change', () => this.render());
+    }
     this.observer = new ResizeObserver(() => this.render());
     this.observer.observe(host);
   }
@@ -53,23 +68,38 @@ export class BuildPreview {
         }
       });
   }
-  show(b: Building, w: World) {
+  show(b: Building, w?: World, terminalOnly = false) {
     this.clear();
     const serial = ++this.serial;
-    const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
-    this.group = custom ? creatorModel(custom, w) : buildingModel(b);
+    const custom = w?.creator?.models.find((m) => m.id === b.creatorModel);
+    this.group = custom ? creatorModel(custom, w!) : buildingModel(b);
     this.group.rotation.y = b.rotation;
     this.scene.add(this.group);
     const frame = () => {
       if (this.dead || serial !== this.serial) return;
+      const excluded =
+        terminalOnly && b.kind === 'starport'
+          ? this.group!.children.filter((child) => child.userData.flight)
+          : [];
+      for (const child of excluded) {
+        child.visible = false;
+        this.group!.remove(child);
+      }
       const bounds = new T.Box3().setFromObject(this.group!);
+      for (const child of excluded) this.group!.add(child);
+      const previousCenter = this.center.clone();
       bounds.getCenter(this.center);
-      const reference = custom ? undefined : buildingPreviewFrame(b.kind);
+      if (this.controls) {
+        this.camera.position.add(this.center.clone().sub(previousCenter));
+        this.controls.target.copy(this.center);
+      }
+      const reference = custom ? undefined : buildingPreviewFrame(b.kind, terminalOnly);
       this.radius = reference?.radius ?? Math.max(2, bounds.getSize(new T.Vector3()).length() / 2);
       this.frameWidth = reference?.horizontal ?? this.radius;
       this.frameHeight = reference?.vertical ?? this.radius;
       this.renderer.domElement.dataset.referenceRadius = String(this.radius);
-      this.render();
+      if (!this.viewInitialized) this.resetView();
+      else this.render();
     };
     this.group.userData.redraw = frame;
     frame();
@@ -81,12 +111,19 @@ export class BuildPreview {
       height = Math.max(220, this.host.clientHeight);
     this.renderer.setSize(width, height, false);
     const aspect = width / height;
-    const halfHeight = Math.max(this.frameHeight, this.frameWidth / aspect) * 1.12;
+    const halfHeight = this.interactive
+      ? this.radius * Math.max(1, 1 / aspect) * 1.12
+      : Math.max(this.frameHeight, this.frameWidth / aspect) * 1.12;
     this.camera.top = halfHeight;
     this.camera.bottom = -halfHeight;
     this.camera.left = -halfHeight * aspect;
     this.camera.right = halfHeight * aspect;
     this.renderer.domElement.dataset.metresPerPixel = String((halfHeight * 2) / height);
+    if (!this.interactive) this.positionCamera();
+    this.camera.updateProjectionMatrix();
+    this.renderer.render(this.scene, this.camera);
+  }
+  private positionCamera() {
     this.camera.position
       .copy(this.center)
       .add(
@@ -95,13 +132,34 @@ export class BuildPreview {
           .multiplyScalar(Math.max(100, this.radius * 4)),
       );
     this.camera.lookAt(this.center);
-    this.camera.updateProjectionMatrix();
-    this.renderer.render(this.scene, this.camera);
+  }
+  resetView() {
+    this.viewInitialized = true;
+    this.camera.zoom = 1;
+    this.positionCamera();
+    this.controls?.target.copy(this.center);
+    this.controls?.update();
+    this.render();
+  }
+  turn(azimuth: number, elevation = 0) {
+    if (!this.controls) return;
+    const spherical = new T.Spherical().setFromVector3(
+      this.camera.position.clone().sub(this.center),
+    );
+    spherical.theta += azimuth;
+    spherical.phi = T.MathUtils.clamp(spherical.phi + elevation, 0.05, Math.PI * 0.49);
+    this.camera.position.copy(this.center).add(new T.Vector3().setFromSpherical(spherical));
+    this.controls.update();
+  }
+  zoom(factor: number) {
+    this.camera.zoom = T.MathUtils.clamp(this.camera.zoom * factor, 0.5, 4);
+    this.render();
   }
   dispose() {
     this.dead = true;
     this.serial++;
     this.observer.disconnect();
+    this.controls?.dispose();
     this.clear();
     this.renderer.dispose();
     this.renderer.forceContextLoss();
