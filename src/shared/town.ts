@@ -181,7 +181,10 @@ export function roadDistance(roads: readonly Road[], x: number, z: number) {
   for (const { a, b, width } of roads) {
     const dx = b.x - a.x,
       dz = b.z - a.z;
-    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
+    const lengthSquared = dx * dx + dz * dz;
+    const t = lengthSquared
+      ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / lengthSquared))
+      : 0;
     closest = Math.min(closest, Math.hypot(x - a.x - dx * t, z - a.z - dz * t) - width / 2);
   }
   return closest;

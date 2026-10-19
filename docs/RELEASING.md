@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.72.0
+## Current upgrade: 0.73.0
+
+Motorized ground vehicles now use the visible road network for weather-sensitive off-road speed limits. Existing climate accumulation and road speeds are preserved. No save migration or reset is required; restart normally.
+
+### 0.72.0
 
 New construction supports architectural models independently of finishes and sizes. Existing buildings keep their legacy shapes, except supply caches now render as containers and completed cottages gain mailboxes. Ownership, stock, investments and existing material bills remain unchanged. Update client and server together for matching footprints and refresh browsers. No reset is required.
 

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.73.0] - 2026-10-18
+
+### Changed
+
+- Tractors and other motorized ground vehicles travel faster on roads than across fields. Off-road top speed is 10% lower on dry ground, 20% lower in fully wet conditions and 40% lower in deep snow, on top of existing weather effects; road edges blend smoothly.
+
 ## [0.72.0] - 2026-10-18
 
 ### Added
