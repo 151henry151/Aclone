@@ -29,10 +29,19 @@ function villageHeight(w: World, x: number, z: number) {
 function countrysideHeight(w: World, x: number, z: number, half: number) {
   const seed = terrainSeed(w),
     d = Math.hypot(x, z);
-  const relief = smoothstep(350, 1400, d);
-  const broad = fbm(x / 900, z / 900, 4, seed),
-    detail = fbm(x / 170, z / 170, 3, seed + 7);
-  let h = 6 + 40 * relief * (broad + 0.35) + detail * 5 * (0.25 + 0.75 * relief);
+  const relief = smoothstep(350, 1000, d);
+  // Broad downs with smaller rolling shoulders, not high-frequency crags. Fewer
+  // octaves keep slopes smooth and terrain sampling no dearer than before.
+  const broad = fbm(x / 850, z / 850, 3, seed),
+    detail = fbm(x / 260, z / 260, 2, seed + 7);
+  // Smaller islands need lower hills so the descent to the sea remains gentle.
+  const scale = Math.min(1, Math.max(0.15, (half - legacyHalf) / 2000));
+  const inletWidth = 250 + Math.max(0, z - 150) * 0.5;
+  // Bring hills down before the narrow harbour shore, rather than turning the
+  // old 120m beach transition into a cliff beneath a 150m hill.
+  const inletFoothills =
+    1 - smoothstep(120, 400, z) * (1 - smoothstep(0, 550 * scale, Math.abs(x) - inletWidth));
+  let h = 6 + scale * relief * inletFoothills * (95 * (broad + 0.8) + 22 * detail) + detail * 2;
   const square = Math.max(Math.abs(x), Math.abs(z)) / half,
     radial = d / half,
     shoreNoise = fbm(x / 1500, z / 1500, 2, seed + 13) * 0.05;

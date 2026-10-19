@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.75.0] - 2026-10-18
+
+### Changed
+
+- Large generated worlds have higher, more pronounced rolling countryside, with gentle foothills toward the harbour. Puddlewick’s original town footprint, compact maps and custom heightmaps retain their terrain.
+- Tractors and other motorized ground vehicles accelerate and travel more slowly uphill and faster downhill, including in reverse. Downhill speed bonuses are capped, and wheels stay grounded on continuous descents. Road and weather effects still apply.
+
 ## [0.74.0] - 2026-10-18
 
 ### Added

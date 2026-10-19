@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, addPlayer, move } from '../src/shared/simulation.ts';
+import { createWorld, addPlayer, move, terrainHeight } from '../src/shared/simulation.ts';
 import { creatorSchema } from '../src/shared/creator.ts';
-import { drivingSurface } from '../src/shared/driving-surface.ts';
+import { drivingSurface, drivingGrade } from '../src/shared/driving-surface.ts';
 import { roadConditions } from '../src/shared/environment.ts';
 import { townRoads } from '../src/shared/town.ts';
 
@@ -103,4 +103,61 @@ test('real driving obeys road limits forward, reversing and boosted; walking and
       }
   }
   for (const vehicle of [5, 7]) assert.equal(speed(0, 1, 1, vehicle), speed(20, 1, 1, vehicle));
+});
+
+test('hill driving changes acceleration and speed in the direction of travel, including reverse', () => {
+  function run(grade: number, throttle: number, boost = false, vehicle = 0) {
+    const w = setup();
+    w.settings.mapSize = 500;
+    w.landscape = {
+      paths: [],
+      surfaces: [],
+      barriers: [],
+      scatter: [],
+      heightmap: Array.from(
+        { length: 1089 },
+        (_, i) => 100 + (Math.floor(i / 33) - 16) * (500 / 32) * grade,
+      ),
+    };
+    const p = addPlayer(w, 'hill-driver', 'Hill driver');
+    Object.assign(p, {
+      x: 0,
+      z: 0,
+      y: 100,
+      heading: 0,
+      speed: 0,
+      engine: true,
+      fuel: 100,
+      vehicle,
+    });
+    let early = 0;
+    for (let i = 0; i < 100; i++) {
+      move(w, p, { throttle, steer: 0, boost }, 0.05);
+      if (i === 9) early = Math.abs(p.speed);
+      if (vehicle === 0)
+        assert.ok(Math.abs(p.y - terrainHeight(w, p.x, p.z)) < 1e-6, 'wheels follow the hillside');
+    }
+    return { speed: Math.abs(p.speed), early, z: p.z };
+  }
+  for (const boost of [false, true])
+    for (const direction of [-1, 1]) {
+      const up = run(0.25 * direction, direction, boost),
+        flat = run(0, direction, boost),
+        down = run(-0.25 * direction, direction, boost);
+      assert.ok(up.speed < flat.speed && flat.speed < down.speed);
+      assert.ok(up.early < flat.early && flat.early < down.early);
+      assert.ok(up.speed > 2, 'steep rolling hills remain climbable');
+      assert.ok(down.speed <= flat.speed * 1.31, 'downhill speed remains controlled');
+    }
+  assert.equal(run(0.25, 1, false, 5).speed, run(-0.25, 1, false, 5).speed, 'walking is unchanged');
+});
+
+test('dock support is flat despite the seabed and airborne tractors receive no hill bonus', () => {
+  const w = setup();
+  assert.ok(Math.abs(drivingGrade(w, 20, 150, 0)) < 1e-8);
+  const p = addPlayer(w, 'air', 'Air');
+  w.terrain = [{ x: 0, z: 0, radius: 100, height: 40 }];
+  Object.assign(p, { x: 0, z: -50, y: 100, heading: 0, speed: 100, engine: true, fuel: 100 });
+  move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+  assert.equal(p.speed, 13, 'airborne speed has no ground modifiers');
 });

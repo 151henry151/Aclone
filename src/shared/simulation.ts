@@ -89,7 +89,7 @@ import {
 import { gather, finishGather } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
-import { drivingSurface } from './driving-surface.ts';
+import { drivingGrade, drivingSurface, slopeSpeed } from './driving-surface.ts';
 import { shelter, lodgingAction, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
 import {
@@ -1653,19 +1653,25 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     water = ground < w.settings.seaLevel;
   const throttle = clamp(input.throttle, -1, 1);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
-  const surface =
-    [0, 1, 4].includes(v.mode) && p.y <= ground + 1
-      ? v.fuel > 0
-        ? drivingSurface(w, p.x, p.z)
-        : roadConditions(w)
-      : { speed: 1, grip: 1 };
+  const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
+  const motorGrounded = grounded && v.fuel > 0;
+  const grade = motorGrounded ? drivingGrade(w, p.x, p.z, p.heading) : 0;
+  const surface = grounded
+    ? v.fuel > 0
+      ? drivingSurface(w, p.x, p.z)
+      : roadConditions(w)
+    : { speed: 1, grip: 1 };
   const crowSpeed = p.crowBody && p.crowClass ? crowClasses[p.crowClass].speed : 1;
   const cap =
     crowSpeed * v.speed * (input.boost ? 1.7 : 1) * surface.speed * (0.7 + condition * 0.003);
   p.speed +=
-    ((powered ? throttle : 0) * v.acceleration * surface.grip - p.speed * (throttle ? 0.13 : 1.8)) *
+    ((powered ? throttle : 0) *
+      v.acceleration *
+      surface.grip *
+      slopeSpeed(grade * Math.sign(throttle)) -
+      p.speed * (throttle ? 0.13 : 1.8)) *
     dt;
-  p.speed = clamp(p.speed, -cap * 0.4, cap);
+  p.speed = clamp(p.speed, -cap * 0.4 * slopeSpeed(-grade), cap * slopeSpeed(grade));
   p.heading +=
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
@@ -1703,10 +1709,20 @@ export function move(w: World, p: Player, input: Input, dt: number) {
       ),
     )
   ) {
-    recordTravel(w, p, Math.hypot(nx - p.x, nz - p.z));
+    const travelled = Math.hypot(nx - p.x, nz - p.z);
+    recordTravel(w, p, travelled);
     p.x = nx;
     p.z = nz;
-    if (v.mode !== 3) p.y = Math.max(p.y, travelHeight(w, p.x, p.z));
+    if (v.mode !== 3) {
+      const support = travelHeight(w, p.x, p.z);
+      // Stay on continuous hills while descending quickly; intentional jetpack
+      // lift and actual drop-offs still use the existing airborne behavior.
+      const lifted = (input.lift ?? 0) > 0 && (p.inventory.jetpack ?? 0) > 0 && p.fuel > 0;
+      p.y =
+        motorGrounded && !lifted && Math.abs(support - ground) <= Math.max(0.1, travelled * 0.75)
+          ? support
+          : Math.max(p.y, support);
+    }
   } else p.speed *= -0.2;
   if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < w.settings.seaLevel - 1) {
     p.x = 0;

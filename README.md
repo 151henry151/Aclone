@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.74.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.75.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -27,7 +27,7 @@ AI neighbours inspect shops, remember recent quotes, and can restore essential p
 
 Design buildings before breaking ground: five architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
 
-Roads offer faster tractor travel than fields, with a modest advantage in dry weather and a stronger one on wet or snow-covered ground. Players and NPCs follow the same driving rules.
+Roads offer faster tractor travel than fields, with a modest advantage in dry weather and a stronger one on wet or snow-covered ground. Large worlds have rolling uplands around the settled town; tractors climb more slowly and descend faster, with a controlled speed bonus. Players and NPCs follow the same driving rules.
 
 Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Harvest crops before winter kills them; stored produce survives. Cattle and sheep eat hay or feed from their stockrooms; see [farming](docs/PLAYING.md#farming) and [livestock](docs/PLAYING.md#livestock-and-nutrition).
 

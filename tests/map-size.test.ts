@@ -133,3 +133,28 @@ test('owners resize their world through settings within the supported range', ()
     assert.throws(() => act(w, p.id, { type: 'settings', patch: { mapSize: bad } }));
   assert.equal(w.settings.mapSize, 3000);
 });
+
+test('countryside has tall rolling hills without sharp land slopes across different seeds', () => {
+  for (const seed of ['puddlewick', 'rolling', 'uplands']) {
+    const w = createWorld(seed, seed, 'owner');
+    w.settings.mapSize = 12500;
+    let highest = 0,
+      rolling = 0,
+      land = 0;
+    for (let x = -5500; x <= 5500; x += 50)
+      for (let z = -5500; z <= 5500; z += 50) {
+        const h = terrainHeight(w, x, z);
+        if (h <= w.settings.seaLevel + 1) continue;
+        const grade = Math.hypot(
+          (terrainHeight(w, x + 2, z) - terrainHeight(w, x - 2, z)) / 4,
+          (terrainHeight(w, x, z + 2) - terrainHeight(w, x, z - 2)) / 4,
+        );
+        assert.ok(grade < 0.65, `${seed} excessive land slope at ${x},${z}: ${grade}`);
+        highest = Math.max(highest, h);
+        land++;
+        if (grade > 0.08) rolling++;
+      }
+    assert.ok(highest > 140 && highest < 220, `${seed} maximum height ${highest}`);
+    assert.ok(rolling / land > 0.45, `${seed} visible rolling relief across the countryside`);
+  }
+});

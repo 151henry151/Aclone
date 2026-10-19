@@ -10,6 +10,10 @@ The public [building gallery](https://nogits.com/buildings/) shows every type. `
 
 The designer uses one reference camera scale per building type. Run `npx tsx scripts/building-architecture-preview.ts` for same-scale model contact sheets in `output/building-architecture/`; spaceport sheets show the terminal campus without the distant rocket. Existing non-container buildings keep their legacy architecture.
 
+## Rolling countryside
+
+`shared/terrain.ts` blends broad downs and smaller rolling shoulders beyond the original 500m village square. Lower noise octave counts keep sampling inexpensive; smaller islands use lower relief, and harbour foothills prevent steep banks. Render tiles, maps, resource positions and authoritative movement use the same height function. Custom heightmaps override generation. `npx tsx scripts/hills-preview.ts` captures real game views in a disposable world under `test-results/hills/`.
+
 ## Natural gathering grounds
 
 `client/resource-scenery.ts`: a grove/felled tree/firewood, chipped boulders/spalls, gravel hollow/wheelbarrow and exposed soil/roots/shovel. Original procedural bark/grain/foliage/rock/soil textures; shared seasonal materials, terrain-following geometry, clear surrounding vegetation. Stable variants use ≤5 batches and <5,000 detailed triangles/site, fewer in Performance.
