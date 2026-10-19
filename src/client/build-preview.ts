@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingPreviewFrame, previewDirection } from './build-preview-scale';
 import * as T from 'three';
 import { buildingModel } from './buildings';
 import { creatorModel, disposeCreator } from './creator-model';
@@ -8,12 +9,14 @@ import type { Building, World } from '../shared/types';
 export class BuildPreview {
   private renderer: T.WebGLRenderer;
   private scene = new T.Scene();
-  private camera = new T.PerspectiveCamera(38, 1, 0.1, 5000);
+  private camera = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
   private group?: T.Group;
   private observer: ResizeObserver;
   private dead = false;
   private serial = 0;
   private radius = 10;
+  private frameWidth = 10;
+  private frameHeight = 10;
   private center = new T.Vector3();
   constructor(private host: HTMLElement) {
     this.renderer = new T.WebGLRenderer({ antialias: true });
@@ -26,7 +29,7 @@ export class BuildPreview {
     this.scene.add(sun);
     this.renderer.domElement.setAttribute(
       'aria-label',
-      'Building preview in selected style, size and orientation',
+      'Building preview at a fixed scale for this building type',
     );
     host.replaceChildren(this.renderer.domElement);
     this.observer = new ResizeObserver(() => this.render());
@@ -61,7 +64,11 @@ export class BuildPreview {
       if (this.dead || serial !== this.serial) return;
       const bounds = new T.Box3().setFromObject(this.group!);
       bounds.getCenter(this.center);
-      this.radius = Math.max(2, bounds.getSize(new T.Vector3()).length() / 2);
+      const reference = custom ? undefined : buildingPreviewFrame(b.kind);
+      this.radius = reference?.radius ?? Math.max(2, bounds.getSize(new T.Vector3()).length() / 2);
+      this.frameWidth = reference?.horizontal ?? this.radius;
+      this.frameHeight = reference?.vertical ?? this.radius;
+      this.renderer.domElement.dataset.referenceRadius = String(this.radius);
       this.render();
     };
     this.group.userData.redraw = frame;
@@ -73,13 +80,20 @@ export class BuildPreview {
     const width = Math.max(180, this.host.clientWidth),
       height = Math.max(220, this.host.clientHeight);
     this.renderer.setSize(width, height, false);
-    this.camera.aspect = width / height;
-    const fov = (this.camera.fov * Math.PI) / 360;
-    const distance =
-      (this.radius / Math.sin(Math.min(fov, Math.atan(Math.tan(fov) * this.camera.aspect)))) * 1.15;
+    const aspect = width / height;
+    const halfHeight = Math.max(this.frameHeight, this.frameWidth / aspect) * 1.12;
+    this.camera.top = halfHeight;
+    this.camera.bottom = -halfHeight;
+    this.camera.left = -halfHeight * aspect;
+    this.camera.right = halfHeight * aspect;
+    this.renderer.domElement.dataset.metresPerPixel = String((halfHeight * 2) / height);
     this.camera.position
       .copy(this.center)
-      .add(new T.Vector3(0.6, 0.46, 1).normalize().multiplyScalar(distance));
+      .add(
+        new T.Vector3(previewDirection.x, previewDirection.y, previewDirection.z)
+          .normalize()
+          .multiplyScalar(Math.max(100, this.radius * 4)),
+      );
     this.camera.lookAt(this.center);
     this.camera.updateProjectionMatrix();
     this.renderer.render(this.scene, this.camera);

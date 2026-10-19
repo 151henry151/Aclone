@@ -404,6 +404,8 @@ export class GameScene {
             b.z +
             ':' +
             b.rotation +
+            (b.architecture ?? '') +
+            ':' +
             (b.style ?? '') +
             (b.size ?? '') +
             (b.construction ? 'c' : ''),

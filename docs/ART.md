@@ -2,6 +2,12 @@
 
 Warm, weathered countryside, readable machinery and consistent metre-scale forms. Original-game screenshots informed direction; none of their pixels/models ship. Original procedural geometry, sounds and generated textures use GPL-3.0-or-later. [Texture provenance/prompts](TEXTURE_PROMPTS.md) preserves exact generation instructions and master-export commands.
 
+## Building architecture
+
+`shared/building-architecture.ts` defines five models for each of 48 built-in types. Structural volumes drive rendering, collision, placement and navigation; finishes are independent. Expansions add wings or floors. `client/building-architecture.ts` places exposed door/window panels and type-specific machinery; `shared/building-features.ts` reserves equipment yards for refinery columns, brewing kettles, mine headgear and other trade cues. Small painted symbols and clock faces use shared 128-pixel textures; cottages have post-mounted mailboxes. `client/shipping-container.ts` uses textured corrugation with simple frame/locking bars. Models stay below 3,500 triangles, except the spaceport with its existing rocket (30,000 budget). Textures remain shared; no new lights or animation loops.
+
+The designer uses one reference camera scale per building type. Run `npx tsx scripts/building-architecture-preview.ts` for same-scale model contact sheets in `output/building-architecture/`; spaceport sheets show the terminal campus without the distant rocket. Existing non-container buildings keep their legacy architecture.
+
 ## Natural gathering grounds
 
 `client/resource-scenery.ts`: a grove/felled tree/firewood, chipped boulders/spalls, gravel hollow/wheelbarrow and exposed soil/roots/shovel. Original procedural bark/grain/foliage/rock/soil textures; shared seasonal materials, terrain-following geometry, clear surrounding vegetation. Stable variants use ≤5 batches and <5,000 detailed triangles/site, fewer in Performance.

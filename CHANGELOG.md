@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.72.0] - 2026-10-18
+
+### Added
+
+- Trade-specific equipment and civic details for the new models: refinery pipework, brewery kettles, mine headgear, council clocks, kilns, workshops, loading yards and more. Every completed cottage now has a mailbox.
+- Five architectural models for every built-in building type, with independent surface finishes. Courtyards, cross-wings, lofts, service halls and specialist structures give businesses distinct silhouettes; larger premises gain wings or floors rather than a uniformly scaled shell.
+
+### Changed
+
+- Supply caches are corrugated shipping containers with six paint colours and five arrangements, including 20-foot, 40-foot and high-cube models. Container construction uses the same steel-based bill regardless of paint.
+
+### Fixed
+
+- Keep the building preview at a fixed scale for each building type across model, finish, size and rotation changes, making larger premises visibly larger.
+- Preserve architectural models and building sizes when exporting/importing world designs; use their footprints for placement, collision and NPC navigation.
+
 ## [0.71.0] - 2026-10-18
 
 ### Added

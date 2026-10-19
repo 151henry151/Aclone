@@ -1,3 +1,7 @@
+import { cottageMailbox } from './mailbox';
+import { addBuildingIdentity } from './building-identity';
+import { shippingContainers } from './shipping-container';
+import { architecturalDetails } from './building-architecture';
 import { detailTexture, detailMaterial, sidingMaterial } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -38,6 +42,58 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return finishSurface(m, look.wall, b.construction ? '#a6a18d' : look.tint);
   }
   function roof(v: BuildingVolume) {
+    if (v.roofAxis === 'x') {
+      const start = root.children.length;
+      roof({ ...v, width: v.depth, depth: v.width, roofAxis: 'z' });
+      for (const o of root.children.slice(start)) {
+        const dx = o.position.x - v.x,
+          dz = o.position.z - v.z;
+        o.position.x = v.x + dz;
+        o.position.z = v.z - dx;
+        o.quaternion.premultiply(
+          new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), Math.PI / 2),
+        );
+      }
+      return;
+    }
+    if (v.roof === 'gambrel' || v.roof === 'barrel') {
+      const w = v.width / 2 + 0.25,
+        d = v.depth / 2 + 0.25;
+      const profile =
+        v.roof === 'gambrel'
+          ? [
+              [-w, 0],
+              [-w * 0.58, v.rise * 0.78],
+              [0, v.rise],
+              [w * 0.58, v.rise * 0.78],
+              [w, 0],
+            ]
+          : Array.from({ length: 9 }, (_, i) => {
+              const a = (i * Math.PI) / 8;
+              return [-Math.cos(a) * w, Math.sin(a) * v.rise];
+            });
+      const vertices: number[] = [];
+      for (let i = 0; i < profile.length - 1; i++) {
+        const [x, y] = profile[i],
+          [xx, yy] = profile[i + 1];
+        vertices.push(x, y, -d, x, y, d, xx, yy, d, x, y, -d, xx, yy, d, xx, yy, -d);
+      }
+      const g = new T.BufferGeometry();
+      g.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+      g.computeVertexNormals();
+      const top = finishSurface(mesh(g, '#ffffff', v.x, v.eaves, v.z), look.roof);
+      (top.material as T.Material).side = T.DoubleSide;
+      const shape = new T.Shape();
+      profile.forEach(([x, y], i) => (i ? shape.lineTo(x, y) : shape.moveTo(x, y)));
+      shape.closePath();
+      for (const side of [-1, 1]) {
+        const cap = wallFinish(
+          mesh(new T.ShapeGeometry(shape), '#ffffff', v.x, v.eaves, v.z + (side * v.depth) / 2),
+        );
+        (cap.material as T.Material).side = T.DoubleSide;
+      }
+      return;
+    }
     const w = v.width / 2 + 0.28,
       d = v.depth / 2 + 0.28,
       h = v.rise;
@@ -163,6 +219,13 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   }
   const main = plan.volumes[0],
     front = main.depth / 2 + 0.06;
+  if (b.kind === 'pickup') return shippingContainers(plan);
+  const kit = { box, cylinder, mesh, wallFinish, roof, door, window, chimney };
+  if (b.architecture && ['notice', 'pickup', 'portal', 'turret'].includes(b.kind)) {
+    architecturalDetails(root, b, plan, look, kit);
+    addBuildingIdentity(root, b, plan);
+    return root;
+  }
   if (['notice', 'pickup', 'portal', 'turret'].includes(b.kind)) {
     if (b.kind === 'notice') {
       for (const x of [-0.9, 0.9]) box(0.13, 2.2, 0.13, plan.trim, x, 1.1, 0);
@@ -185,7 +248,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return root;
   }
   for (const v of plan.volumes) {
-    if (b.kind === 'haybarn' && v.roof === 'shed') {
+    if (!b.architecture && b.kind === 'haybarn' && v.roof === 'shed') {
       for (const x of [-1, 1])
         for (const z of [-1, 1])
           box(
@@ -213,7 +276,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
           );
       continue;
     }
-    if (b.kind === 'scripted' && b.style && v !== main) {
+    if (b.kind === 'scripted' && b.style && (b.architecture ? v.eaves < 1.5 : v !== main)) {
       finish(
         box(v.width - 0.16, 0.03, v.depth - 0.16, '#ffffff', v.x, v.eaves + 0.015, v.z),
         'gravel',
@@ -223,6 +286,12 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     } else roof(v);
   }
   if (b.construction) return root;
+  if (b.kind === 'home') root.add(cottageMailbox(plan));
+  if (b.architecture) {
+    architecturalDetails(root, b, plan, look, kit);
+    addBuildingIdentity(root, b, plan);
+    return root;
+  }
   if (b.kind === 'haybarn') {
     // One instanced draw; the texture supplies fibre and twine detail.
     const bales = new T.InstancedMesh(

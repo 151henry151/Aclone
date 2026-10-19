@@ -23,8 +23,8 @@ function triangles(root: T.Object3D) {
   });
   return count;
 }
-test('surface details keep representative buildings at or below their previous geometry budgets', () => {
-  // Measured from the same IDs before the material pass; includes unchanged hardware.
+test('surface details keep representative buildings within their geometry budgets', () => {
+  // Original material-pass budgets, plus 72 triangles for the new cottage mailbox.
   for (const [kind, budget] of Object.entries({
     bakery: 610,
     bank: 250,
@@ -32,7 +32,7 @@ test('surface details keep representative buildings at or below their previous g
     farm: 574,
     mill: 1076,
     waterworks: 1132,
-    home: 248,
+    home: 320,
     starport: 28986,
   }))
     assert.ok(triangles(model(kind)) <= budget, kind);

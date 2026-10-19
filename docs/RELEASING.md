@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.71.0
+## Current upgrade: 0.72.0
+
+New construction supports architectural models independently of finishes and sizes. Existing buildings keep their legacy shapes, except supply caches now render as containers and completed cottages gain mailboxes. Ownership, stock, investments and existing material bills remain unchanged. Update client and server together for matching footprints and refresh browsers. No reset is required.
+
+### 0.71.0
 
 Building designs add optional style/size fields and save the chosen rotation, capacity and material bill. Existing property ownership, stock, investment and construction bills are preserved; no reset or price migration is required. New construction checks the complete rotated footprint, including service yards. Update client and server together and refresh browsers for the designer. NPC cottage plans now budget their selected materials and can gather raw supplies. Use the normal backup/build/restart procedure; no paid experiment is started.
 

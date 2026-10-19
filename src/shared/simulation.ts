@@ -1131,6 +1131,7 @@ export function act(w: World, id: string, a: Action): string {
           ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
           : p;
       requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
+      const architecture = a.architecture === undefined ? undefined : str(a.architecture);
       const style = a.style === undefined ? undefined : str(a.style);
       const size = a.size === undefined ? undefined : str(a.size);
       const chosenRotation =
@@ -1138,10 +1139,11 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(def, 'Unknown building type');
       const customModel = w.catalogue?.templates[requested]?.creatorModel;
       requireThat(
-        !customModel || (style === undefined && (!size || size === 'standard')),
+        !customModel ||
+          (architecture === undefined && style === undefined && (!size || size === 'standard')),
         'Custom models use their creator-defined design',
       );
-      const design = buildingDesignQuote(kind, def, style, size);
+      const design = buildingDesignQuote(kind, def, style, size, architecture);
       requireThat(def && def.tier <= w.tier, 'Building unavailable at this civilization tier');
       requireThat(
         !w.zones.some((z) => z.kind === 'noBuild' && distance(site, z) < z.radius),
@@ -1156,7 +1158,7 @@ export function act(w: World, id: string, a: Action): string {
         ? { width: model.width, depth: model.depth, height: model.height }
         : undefined;
       const footprint = buildingBounds(
-        buildingPlan({ id: 'construction', kind, style, size, creatorBounds }),
+        buildingPlan({ id: 'construction', kind, style, size, architecture, creatorBounds }),
       );
       requireThat(
         !onFarmLand(w, site.x, site.z, Math.max(footprint.width, footprint.depth) / 2),
@@ -1172,6 +1174,7 @@ export function act(w: World, id: string, a: Action): string {
         id: 'construction',
         kind,
         style,
+        architecture,
         size: size as BuildingSize | undefined,
         x: site.x,
         z: site.z,
@@ -1206,6 +1209,7 @@ export function act(w: World, id: string, a: Action): string {
       b.capacity = design.capacity;
       b.price = design.price;
       if (style) b.style = style;
+      if (architecture) b.architecture = architecture;
       b.investment = 0;
       b.stock = {};
       b.construction = { ...design.materials };

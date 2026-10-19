@@ -4,7 +4,7 @@ import { mapHalf, terrainHeight } from './terrain';
 import type { Building, World } from './types';
 type Site = Pick<
   Building,
-  'id' | 'kind' | 'x' | 'z' | 'rotation' | 'style' | 'size' | 'creatorBounds'
+  'id' | 'kind' | 'x' | 'z' | 'rotation' | 'architecture' | 'style' | 'size' | 'creatorBounds'
 >;
 function rectangles(b: Site) {
   const plan = buildingPlan(b);

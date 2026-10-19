@@ -1,3 +1,6 @@
+import { buildingArchitecture } from '../shared/building-architecture.ts';
+import { buildingDesignQuote } from '../shared/building-designs.ts';
+import { worldBuildings } from '../shared/world-catalogue.ts';
 import { rulesets } from '../shared/rulesets.ts';
 import { landscapeSchema, validateLandscape } from '../shared/landscape.ts';
 import {
@@ -80,6 +83,8 @@ const designSchema = z.object({
           .max(Math.PI * 2),
         creatorModel: z.string().max(64).optional(),
         style: z.string().max(40).optional(),
+        architecture: z.string().max(40).optional(),
+        size: z.enum(['standard', 'expanded', 'large']).optional(),
         buy: stock.optional(),
         sell: stock.optional(),
         wage: z.number().int().min(0).max(100000000).optional(),
@@ -154,6 +159,8 @@ export function exportDesign(w: World, includeMedia = false) {
         creatorModel,
         templateId,
         style,
+        architecture,
+        size,
         buy,
         sell,
         wage,
@@ -169,6 +176,8 @@ export function exportDesign(w: World, includeMedia = false) {
         creatorModel,
         templateId,
         style,
+        architecture,
+        size,
         buy,
         sell,
         wage,
@@ -202,7 +211,22 @@ export function applyDesign(w: World, input: unknown) {
   w.tier = d.tier;
   w.vehicleTuning = d.vehicleTuning;
   w.buildings = d.buildings.map((b) =>
-    Object.assign(makeBuilding(b.id, b.kind, b.x, b.z), b, { owner: w.owner }),
+    (() => {
+      if (b.architecture && !buildingArchitecture(b.kind, b.architecture))
+        throw Error('Invalid architectural model');
+      const result = Object.assign(makeBuilding(b.id, b.kind, b.x, b.z), b, { owner: w.owner });
+      if (b.architecture || b.size) {
+        const def = worldBuildings(w)[b.templateId ?? b.kind];
+        result.capacity = buildingDesignQuote(
+          b.kind,
+          def,
+          b.style,
+          b.size,
+          b.architecture,
+        ).capacity;
+      }
+      return result;
+    })(),
   );
   w.creator = validateCreator(w, d.creator);
   for (const b of w.buildings) {

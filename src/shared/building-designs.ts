@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingArchitecture } from './building-architecture';
 import { appearance } from './appearance';
 import type { BuildingDef, Stock } from './types';
 export type BuildingSize = 'standard' | 'expanded' | 'large';
@@ -63,11 +64,32 @@ const businessDesigns: BuildingStyle[] = [
     price: 1.15,
   },
 ];
-export function buildingStyles(kind: string) {
-  return kind === 'home' ? cottageDesigns : businessDesigns;
+const containerColors: BuildingStyle[] = [
+  ['oxide-red', 'Oxide red', '#a84734'],
+  ['ocean-blue', 'Ocean blue', '#33657f'],
+  ['forest-green', 'Forest green', '#426956'],
+  ['sand', 'Sand', '#c2ae7f'],
+  ['ivory', 'Ivory', '#dbded5'],
+  ['slate', 'Slate grey', '#626e77'],
+].map(([id, name, wall]) => ({
+  id,
+  name,
+  wall,
+  trim: wall,
+  siding: 'stone',
+  roof: 'gable',
+  finish: 'metal',
+  structure: 'steel',
+  price: 1.15,
+  description:
+    'Painted corrugated steel container with locking doors, timber floor and prepared gravel footing.',
+}));
+export function buildingStyles(kind: string, architecture?: string) {
+  if (kind === 'pickup') return containerColors;
+  return kind === 'home' && !architecture ? cottageDesigns : businessDesigns;
 }
-export function buildingStyle(kind: string, id?: string) {
-  return buildingStyles(kind).find((s) => s.id === id);
+export function buildingStyle(kind: string, id?: string, architecture?: string) {
+  return buildingStyles(kind, architecture).find((s) => s.id === id);
 }
 const scalable = new Set([
   'home',
@@ -104,9 +126,19 @@ export function buildingSize(kind: string, id?: string) {
 }
 /** Legacy action callers retain catalogue specifications. New designer requests always name a style.
  * Specialist equipment stays in the bill; only shell materials are replaced. */
-export function buildingDesignQuote(kind: string, def: BuildingDef, style?: string, size?: string) {
-  const selected = buildingStyle(kind, style),
+export function buildingDesignQuote(
+  kind: string,
+  def: BuildingDef,
+  style?: string,
+  size?: string,
+  architecture?: string,
+) {
+  const selected = buildingStyle(kind, style, architecture),
     scale = buildingSize(kind, size);
+  const model = buildingArchitecture(kind, architecture);
+  if (architecture !== undefined && (!model || !selected))
+    throw Error('Choose a valid architectural model and finish');
+  const cost = scale ? scale.cost * (model?.cost ?? 1) : 1;
   if (style !== undefined && !selected) throw Error('Choose a valid building style');
   if (!scale) throw Error('Choose a size available for this building');
   if (!selected && scale.id !== 'standard') throw Error('Choose a style for this size');
@@ -140,12 +172,12 @@ export function buildingDesignQuote(kind: string, def: BuildingDef, style?: stri
   // Kilns, forges and kitchens retain their refractory core even with timber cladding.
   if (selected.structure !== 'bricks' && def.materials.bricks) add('bricks', def.materials.bricks);
   return {
-    price: Math.ceil(def.price * selected.price * scale.cost),
-    capacity: Math.ceil(def.capacity * scale.capacity),
+    price: Math.ceil(def.price * selected.price * cost),
+    capacity: Math.ceil(def.capacity * scale.capacity * (model?.capacity ?? 1)),
     materials: Object.fromEntries(
       Object.entries(raw)
         .filter(([, n]) => n > 0)
-        .map(([item, n]) => [item, Math.ceil(n * scale.cost)]),
+        .map(([item, n]) => [item, Math.ceil(n * cost)]),
     ),
     size: scale,
     style: selected,

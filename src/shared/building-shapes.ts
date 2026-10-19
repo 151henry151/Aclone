@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingFeatures, type BuildingFeature } from './building-features';
+import { architecturalVolumes } from './building-architecture';
 import { buildingStyle, buildingSize } from './building-designs';
 import { appearance, cottageStyle } from './appearance';
 /** One world unit is one metre. Shared by geometry, picking, planting and collision. */
@@ -9,7 +11,8 @@ export interface BuildingVolume {
   depth: number;
   eaves: number;
   rise: number;
-  roof: 'gable' | 'hip' | 'shed' | 'flat';
+  roof: 'gable' | 'hip' | 'shed' | 'flat' | 'gambrel' | 'barrel';
+  roofAxis?: 'x' | 'z';
 }
 export interface BuildingPlan {
   style: string;
@@ -20,6 +23,7 @@ export interface BuildingPlan {
   siding: 'stone' | 'wood';
   finish?: import('./building-designs').BuildingStyle['finish'];
   fixtures?: BuildingVolume[];
+  features?: BuildingFeature[];
   apron?: { x: number; z: number; radius: number };
 }
 /** Metre-scale spaceport apron; the thin pad is walkable, its rocket/gantry are solid. */
@@ -44,6 +48,7 @@ export function buildingPlan(b: {
   id: string;
   style?: string;
   size?: string;
+  architecture?: string;
   creatorBounds?: { width: number; depth: number; height: number };
 }): BuildingPlan {
   if (b.creatorBounds)
@@ -67,7 +72,9 @@ export function buildingPlan(b: {
     ':' +
     (b.style ?? '') +
     ':' +
-    (b.size ?? 'standard');
+    (b.size ?? 'standard') +
+    ':' +
+    (b.architecture ?? '');
   const cached = plans.get(key);
   if (cached) return cached;
   let style = b.kind,
@@ -257,7 +264,7 @@ export function buildingPlan(b: {
       volumes = [volume(2.2, 0.5, 2.2, 0.3)];
       break;
     case 'pickup':
-      volumes = [volume(1.8, 1.2, 1.1, 0, 'flat')];
+      volumes = [volume(2.44, 6.06, 2.59, 0, 'flat')];
       break;
     case 'portal':
       volumes = [volume(3, 1, 4, 0, 'flat')];
@@ -301,18 +308,22 @@ export function buildingPlan(b: {
       volume(13.2, 24, 27.6, 0, 'flat', spaceportHardware.tank.x, spaceportHardware.tank.z + 5.4),
     ];
   }
-  if (b.kind === 'scripted' && b.style) plan.fixtures = [volume(0.6, 0.6, 6.7, 0, 'flat', 4.5, -1)];
-  const chosen = buildingStyle(b.kind, b.style);
+  if (b.kind === 'scripted' && b.style && !b.architecture)
+    plan.fixtures = [volume(0.6, 0.6, 6.7, 0, 'flat', 4.5, -1)];
+  if (b.architecture)
+    plan.volumes = architecturalVolumes(b.kind, b.architecture, plan.volumes, b.size);
+  const chosen = buildingStyle(b.kind, b.style, b.architecture);
   if (chosen) {
     plan.wall = chosen.wall;
     plan.trim = chosen.trim;
     plan.siding = chosen.siding;
     plan.finish = chosen.finish;
     // Preserve functional flat decks, lean-tos and machinery roofs.
-    for (const v of plan.volumes) if (v.roof === 'gable' || v.roof === 'hip') v.roof = chosen.roof;
+    for (const v of plan.volumes)
+      if (!b.architecture && (v.roof === 'gable' || v.roof === 'hip')) v.roof = chosen.roof;
   }
   const factor = buildingSize(b.kind, b.size)?.footprint ?? 1;
-  if (factor !== 1)
+  if (!b.architecture && factor !== 1)
     plan.volumes = plan.volumes.map((v) => ({
       ...v,
       x: v.x * factor,
@@ -320,6 +331,13 @@ export function buildingPlan(b: {
       width: v.width * factor,
       depth: v.depth * factor,
     }));
+  if (b.architecture) {
+    plan.features = buildingFeatures(b.kind, plan.volumes);
+    plan.fixtures = [
+      ...(plan.fixtures ?? []),
+      ...plan.features.map((f) => volume(f.width, f.depth, f.y + f.height, 0, 'flat', f.x, f.z)),
+    ];
+  }
   plans.set(key, plan);
   return plan;
 }
@@ -357,6 +375,7 @@ export function buildingPenetration(
     id: string;
     style?: string;
     size?: string;
+    architecture?: string;
     x: number;
     z: number;
     rotation: number;

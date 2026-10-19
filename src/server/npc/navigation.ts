@@ -72,7 +72,7 @@ function grid(w: World, win: Window): Grid {
     w.landscape,
     w.creator?.objects,
     w.creator?.models.map((m) => [m.id, m.width, m.height, m.depth]),
-    w.buildings.map((b) => [b.id, b.kind, b.style, b.x, b.z, b.rotation]),
+    w.buildings.map((b) => [b.id, b.kind, b.architecture, b.size, b.style, b.x, b.z, b.rotation]),
   ]);
   let grids = cache.get(w);
   if (!grids) cache.set(w, (grids = new Map()));

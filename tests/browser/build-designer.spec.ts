@@ -52,16 +52,45 @@ for (const mobile of [false, true])
         await page.locator('[data-do="construction"]:visible').click();
       };
       await open();
+      await page.getByLabel('Building type', { exact: true }).selectOption('pickup');
+      await expect(
+        page.getByLabel('Container colour', { exact: true }).locator('option'),
+      ).toHaveCount(6);
+      await page.getByLabel('Container colour', { exact: true }).selectOption('ocean-blue');
       await page.getByLabel('Building type', { exact: true }).selectOption('warehouse');
       await expect(
-        page.getByLabel('Construction style', { exact: true }).locator('option'),
+        page.getByLabel('Architectural model', { exact: true }).locator('option'),
+      ).toHaveCount(5);
+      await page.getByLabel('Architectural model', { exact: true }).selectOption('model-3');
+      await expect(
+        page.getByLabel('Surface finish', { exact: true }).locator('option'),
       ).toHaveCount(6);
-      await page.getByLabel('Construction style', { exact: true }).selectOption('metal-panel');
+      await page.getByLabel('Surface finish', { exact: true }).selectOption('metal-panel');
+      const previewCanvas = page.locator('[data-build-preview] canvas');
+      const referenceRadius = await previewCanvas.getAttribute('data-reference-radius');
+      expect(Number(referenceRadius)).toBeGreaterThan(0);
+      const metresPerPixel = await previewCanvas.getAttribute('data-metres-per-pixel');
+      await page.locator('[data-build-preview]').scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `test-results/build-standard-${mobile ? 'phone' : 'desktop'}.png`,
+      });
       await page.getByLabel('Building size', { exact: true }).selectOption('large');
+      await expect(previewCanvas).toHaveAttribute('data-reference-radius', referenceRadius!);
+      await expect(previewCanvas).toHaveAttribute('data-metres-per-pixel', metresPerPixel!);
+      await page.locator('[data-build-preview]').scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `test-results/build-large-${mobile ? 'phone' : 'desktop'}.png`,
+      });
       for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Rotate right' }).click();
       await expect(page.getByLabel('Building rotation', { exact: true })).toHaveValue('90');
       await expect(page.locator('[data-build-preview] canvas')).toBeVisible();
-      const quote = buildingDesignQuote('warehouse', buildings.warehouse, 'metal-panel', 'large');
+      const quote = buildingDesignQuote(
+        'warehouse',
+        buildings.warehouse,
+        'metal-panel',
+        'large',
+        'model-3',
+      );
       await expect(page.locator('[data-build-estimate]')).toContainText(
         `${quote.capacity.toLocaleString()} storage per good`,
       );
@@ -72,11 +101,13 @@ for (const mobile of [false, true])
       });
       await page.getByRole('button', { name: 'Close dialog' }).click();
       await open();
+      await expect(page.getByLabel('Architectural model', { exact: true })).toHaveValue('model-3');
       await expect(page.getByLabel('Building size', { exact: true })).toHaveValue('large');
       await expect(page.getByLabel('Building rotation', { exact: true })).toHaveValue('90');
       await page.getByRole('button', { name: 'Place foundation' }).click();
       await expect.poll(() => w.buildings.length).toBe(1);
       const b = w.buildings[0];
+      expect(b.architecture).toBe('model-3');
       expect(b.style).toBe('metal-panel');
       expect(b.size).toBe('large');
       expect(b.rotation).toBeCloseTo(Math.PI / 2);

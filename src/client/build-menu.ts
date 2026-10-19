@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { buildingArchitectures } from '../shared/building-architecture';
 import {
   buildingStyles,
   buildingDesignQuote,
@@ -23,6 +24,7 @@ const esc = (s: unknown) =>
 interface Draft {
   kind: string;
   style: string;
+  architecture: string;
   size: string;
   rotation: number;
 }
@@ -31,7 +33,8 @@ export function buildMenuHtml() {
   return `<p>Choose a design, review its materials and turn it before placing the foundation at your current position. Deliver materials afterwards; cancel an unfinished site for 75% of its base cash cost.</p>
   <div class="build-designer" data-build-designer>
     <div class="build-controls"><label>Building<select data-design="kind" aria-label="Building type"></select></label>
-    <label>Construction style<select data-design="style" aria-label="Construction style"></select></label>
+    <label>Architectural model<select data-design="architecture" aria-label="Architectural model"></select></label>
+    <label><span data-finish-label>Surface finish</span><select data-design="style" aria-label="Surface finish"></select></label>
     <label>Building size<select data-design="size" aria-label="Building size"></select></label>
     <p data-design-description></p>
     <label>Rotation <output data-bearing></output><input data-design="rotation" aria-label="Building rotation" type="range" min="0" max="345" step="15"></label>
@@ -53,6 +56,7 @@ export function mountBuildMenu(
   const draft = drafts.get(key) ?? {
     kind: 'home',
     style: 'stone-gable',
+    architecture: 'model-1',
     size: 'standard',
     rotation: 0,
   };
@@ -91,10 +95,21 @@ export function mountBuildMenu(
     const template = w.catalogue?.templates[draft.kind],
       kind = template?.base ?? draft.kind;
     const custom = !!template?.creatorModel;
-    const styles = buildingStyles(kind),
+    const models = buildingArchitectures(kind);
+    if (!models.some((m) => m.id === draft.architecture)) draft.architecture = models[0]?.id ?? '';
+    options('architecture', models);
+    control('architecture').value = draft.architecture;
+    control('architecture').disabled = custom;
+    const styles = buildingStyles(kind, draft.architecture),
       sizes = sizesForBuilding(kind);
     if (!styles.some((s) => s.id === draft.style)) draft.style = styles[0].id;
     if (!sizes.some((s) => s.id === draft.size) || custom) draft.size = 'standard';
+    host.querySelector('[data-finish-label]')!.textContent =
+      kind === 'pickup' ? 'Container colour' : 'Surface finish';
+    control('style').setAttribute(
+      'aria-label',
+      kind === 'pickup' ? 'Container colour' : 'Surface finish',
+    );
     options('style', styles);
     options('size', [...sizes]);
     control('style').value = draft.style;
@@ -105,10 +120,19 @@ export function mountBuildMenu(
     host.querySelector('[data-bearing]')!.textContent = `${draft.rotation}°`;
     host.querySelector('[data-design-description]')!.textContent = custom
       ? 'This world-created model uses its original design and material list.'
-      : styles.find((s) => s.id === draft.style)!.description;
-    const q = buildingDesignQuote(kind, def, custom ? undefined : draft.style, draft.size);
+      : models.find((m) => m.id === draft.architecture)!.description +
+        ' ' +
+        styles.find((s) => s.id === draft.style)!.description;
+    const q = buildingDesignQuote(
+      kind,
+      def,
+      custom ? undefined : draft.style,
+      draft.size,
+      custom ? undefined : draft.architecture,
+    );
     const b = makeBuilding('construction', kind, p.x, p.z);
     applyBuildingTemplate(w, b, draft.kind);
+    b.architecture = custom ? undefined : draft.architecture;
     b.style = custom ? undefined : draft.style;
     b.size = draft.size as BuildingSize;
     b.rotation = (draft.rotation * Math.PI) / 180;
@@ -149,14 +173,16 @@ export function mountBuildMenu(
           `<li><b>${n}</b> ${esc(worldItems(w)[item]?.name ?? item)} <small>(${p.inventory[item] ?? 0} carried)</small></li>`,
       )
       .join('')}</ul>
-    <p class="note">Larger premises increase storage${roomCount(b) ? ' and guest rooms' : ''}; recipes and production speed stay the same. Farm fields are expanded separately. Doors and windows remain human-sized.</p>
+    <p class="note">Larger premises increase storage${roomCount(b) ? ' and guest rooms' : ''}; recipes and production speed stay the same. Farm fields are expanded separately. Doors and windows remain human-sized. Preview scale stays fixed for this building type across models, finishes and sizes.</p>
     <p role="status" class="${refusal ? 'build-refusal' : ''}">${esc(refusal || 'Site clear. Ready to place this design.')}</p>`;
     button.disabled = !!refusal;
     action = {
       type: 'construct',
       kind: draft.kind,
       rotation: b.rotation,
-      ...(!custom ? { style: draft.style, size: draft.size } : {}),
+      ...(!custom
+        ? { style: draft.style, size: draft.size, architecture: draft.architecture }
+        : {}),
     };
     if (rebuild) preview?.show(b, w);
     const canvas = host.querySelector<HTMLCanvasElement>('[data-build-site]')!,
@@ -222,7 +248,8 @@ export function mountBuildMenu(
       field = el.dataset.design;
     if (!field) return;
     if (field === 'rotation') draft.rotation = Number(el.value);
-    else if (field === 'kind' || field === 'style' || field === 'size') draft[field] = el.value;
+    else if (field === 'kind' || field === 'architecture' || field === 'style' || field === 'size')
+      draft[field] = el.value;
     update();
   };
   const click = (event: Event) => {
