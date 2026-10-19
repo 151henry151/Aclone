@@ -6,6 +6,13 @@ import { buildingArchitecture } from '../shared/building-architecture';
 import { finishMaterial, type BuildingFinish } from './building-finishes';
 import { detailMaterial } from './detail-textures';
 import { spaceportModel } from './spaceport';
+import {
+  buildingFacade,
+  loadingBayXs,
+  exposedFacade,
+  industrialKinds,
+  roofHeightAt,
+} from '../shared/building-facade';
 interface Kit {
   box(w: number, h: number, d: number, color: string, x: number, y: number, z: number): T.Mesh;
   cylinder(r: number, h: number, color: string, x: number, y: number, z: number): T.Mesh;
@@ -72,45 +79,81 @@ export function architecturalDetails(
     return;
   }
   // A facade belongs to the exposed face of each volume, never behind another wing.
+  const facade = buildingFacade(b.kind, plan);
   const clear = (v: BuildingVolume, x: number, y: number, z: number, pad = 0.6) =>
-    !vs.some(
-      (o) =>
-        o !== v &&
-        y < o.eaves + o.rise &&
-        Math.abs(x - o.x) < o.width / 2 + pad &&
-        Math.abs(z - o.z) < o.depth / 2 + pad,
-    );
-  const industrial = ['barn', 'works', 'yard', 'port'].includes(model.family);
+    exposedFacade(vs, v, x, y, z, pad);
+  const industrial = industrialKinds.has(b.kind) || model.family === 'port';
   const entries: { x: number; z: number; v: BuildingVolume }[] = [];
   for (const v of vs) {
     if (v.eaves < 2.3) continue;
+    const hangar = model.family === 'port' && v !== main && v.width >= 18 && v.eaves >= 10;
+    const controlTower = model.family === 'port' && v.width <= 7 && v.eaves >= 15;
+    const bayHeight = hangar ? v.eaves * 0.72 : Math.min(3.4, v.eaves - 0.3);
+    const bayWidth = hangar ? v.width * 0.72 : Math.min(3.6, v.width * 0.65);
     const front = v.z + v.depth / 2 + 0.07;
     const entry = clear(v, v.x, 1, front, 0.2);
     if (entry) {
       entries.push({ x: v.x, z: front, v });
       if (industrial && v.width >= 4) {
-        const h = Math.min(3.4, v.eaves - 0.3),
-          width = Math.min(3.6, v.width * 0.65);
-        const panel = new T.Mesh(
-          new T.PlaneGeometry(width, h),
-          finishMaterial(look.bay, look.accent),
-        );
-        panel.position.set(v.x, h / 2, front + 0.04);
-        root.add(panel);
+        const h = bayHeight,
+          width = bayWidth;
+        for (const x of loadingBayXs(b.kind, v)) {
+          const panel = new T.Mesh(
+            new T.PlaneGeometry(width, h),
+            finishMaterial(look.bay, look.accent),
+          );
+          panel.position.set(x, h / 2, front + 0.04);
+          panel.userData.loadingDoor = true;
+          root.add(panel);
+        }
       } else door(v.x, front);
     }
-    for (let y = 1.6; y < v.eaves - 0.65; y += 2.7) {
+    const floors = hangar || controlTower ? 1 : Math.max(1, Math.round(v.eaves / 2.7));
+    const storey = v.eaves / floors;
+    for (let floor = 0; floor < floors; floor++) {
+      const y =
+        hangar || controlTower ? v.eaves - 1.2 : floor * storey + Math.min(1.6, storey * 0.58);
       for (const side of [-1, 1]) {
         const z = v.z + side * (v.depth / 2 + 0.06);
         for (let x = v.x - v.width / 2 + 1.1; x < v.x + v.width / 2 - 0.8; x += 2.4) {
-          if (side === 1 && entry && y < 2.5 && Math.abs(x - v.x) < (industrial ? 2.5 : 1.25))
+          if (
+            side === 1 &&
+            entry &&
+            y < (industrial ? bayHeight + 0.81 : plan.doorHeight + 0.84) &&
+            loadingBayXs(b.kind, v).some(
+              (bay) => Math.abs(x - bay) < (industrial ? bayWidth / 2 + 0.7 : 1.25),
+            )
+          )
+            continue;
+          const sign = facade.sign;
+          if (
+            side === 1 &&
+            v === facade.v &&
+            sign &&
+            Math.abs(x - sign.x) < 1.15 &&
+            Math.abs(y - sign.y) < 1.15
+          )
+            continue;
+          if (
+            side === 1 &&
+            v === facade.v &&
+            ['school', 'town', 'bank'].includes(b.kind) &&
+            Math.abs(x - v.x) < 2 &&
+            y < 4
+          )
             continue;
           if (clear(v, x, y, z))
             window(x, y, z, Math.min(1.05, v.width * 0.25), side === 1 ? 0 : Math.PI);
         }
         const x = v.x + side * (v.width / 2 + 0.06);
-        for (let z = v.z - v.depth / 2 + 1.1; z < v.z + v.depth / 2 - 0.8; z += 2.4)
+        for (let z = v.z - v.depth / 2 + 1.1; z < v.z + v.depth / 2 - 0.8; z += 2.4) {
+          const wheelWall =
+            b.kind === 'mill' &&
+            side === -1 &&
+            !vs.some((o) => o.x - o.width / 2 < v.x - v.width / 2);
+          if (wheelWall && Math.abs(z - v.z) < 2.1 && y < 3.85) continue;
           if (clear(v, x, y, z)) window(x, y, z, 1.05, (side * Math.PI) / 2);
+        }
       }
     }
   }
@@ -134,39 +177,34 @@ export function architecturalDetails(
     ].includes(b.kind)
   )
     chimney(main.x - main.width * 0.25, main.z - main.depth * 0.22, top + 0.65);
-  if (['market', 'bakery', 'dairyKitchen', 'teaHouse'].includes(b.kind)) {
-    const width = Math.min(entry.v.width - 0.2, 5);
-    const awning = box(width, 0.09, 1.05, '#ffffff', entry.x, 2.55, entry.z + 0.4);
+  if (facade.awning) {
+    const a = facade.awning;
+    const awning = box(a.width, 0.09, a.depth, '#ffffff', a.x, a.y, a.z);
     (awning.material as T.Material).dispose();
     awning.material = finishMaterial(b.kind === 'bakery' ? 'awning-rust' : 'awning-green');
     awning.rotation.x = 0.14;
+    awning.userData.awning = true;
+    for (const dx of [-a.width / 2 + 0.15, a.width / 2 - 0.15]) {
+      box(0.045, 0.45, 0.045, plan.trim, a.x + dx, 2.27, a.z + 0.4);
+      box(0.045, 0.045, 0.95, plan.trim, a.x + dx, 2.065, a.z - 0.05);
+    }
   }
   if (['school', 'town', 'bank'].includes(b.kind)) {
     const x = entry.x,
       z = entry.z;
-    for (const dx of [-1.15, 1.15]) cylinder(0.13, 2.4, '#d8d2bd', x + dx, 1.2, z + 0.6);
-    box(2.8, 0.2, 1.2, plan.trim, x, 2.5, z + 0.5);
+    const columnHeight = b.kind === 'school' ? 2.4 : 2.5;
+    for (const dx of [-1.15, 1.15])
+      cylinder(0.13, columnHeight, '#d8d2bd', x + dx, columnHeight / 2, z + 0.6);
     if (b.kind === 'town' || b.kind === 'bank') {
-      const pediment = new T.Shape();
-      pediment.moveTo(-1.8, 0);
-      pediment.lineTo(0, 0.85);
-      pediment.lineTo(1.8, 0);
-      pediment.closePath();
-      const face = wallFinish(mesh(new T.ShapeGeometry(pediment), '#ffffff', x, 2.65, z + 1.27));
-      (face.material as T.Material).side = T.DoubleSide;
+      roof({ x, z: z + 0.5, width: 2.8, depth: 1.2, eaves: 2.5, rise: 0.85, roof: 'gable' });
       box(3.9, 0.12, 1.5, '#b2b19d', x, 0.06, z + 0.55);
-    }
+    } else box(2.8, 0.2, 1.2, plan.trim, x, 2.5, z + 0.5);
     if (b.kind === 'school') {
-      wallFinish(box(0.9, 1, 0.9, '#ffffff', main.x, top + 0.5, main.z));
+      wallFinish(box(0.9, 1.6, 0.9, '#ffffff', main.x, top + 0.2, main.z));
       mesh(new T.ConeGeometry(0.75, 0.6, 4), plan.trim, main.x, top + 1.3, main.z).rotation.y =
         Math.PI / 4;
       cylinder(0.18, 0.25, '#b9954d', main.x, top + 0.5, main.z + 0.5);
     }
-  }
-  if (b.kind === 'pub') {
-    box(entry.v.width, 0.15, 0.1, plan.trim, entry.x, 2.75, entry.z);
-    box(0.1, 0.1, 0.8, '#333f37', entry.x + entry.v.width * 0.35, 2.8, entry.z + 0.35);
-    box(0.65, 0.5, 0.06, plan.trim, entry.x + entry.v.width * 0.35, 2.45, entry.z + 0.7);
   }
   if (b.kind === 'mill') {
     const left = vs.reduce((a, v) => (v.x - v.width / 2 < a.x - a.width / 2 ? v : a), main);
@@ -184,7 +222,9 @@ export function architecturalDetails(
     // Tanks sit on a supported roof deck (not suspended beside a changed roof).
     const deck = vs.find((v) => v.roof === 'flat') ?? main;
     const radius = Math.min(0.8, deck.width * 0.18, deck.depth * 0.18),
-      y = deck.eaves + deck.rise;
+      y = roofHeightAt(deck, deck.x, deck.z);
+    if (deck.roof !== 'flat')
+      box(radius * 2.2, 0.6, radius * 2.2, '#657a78', deck.x, y - 0.2, deck.z);
     box(radius * 2.2, 0.15, radius * 2.2, '#657a78', deck.x, y + 0.08, deck.z);
     cylinder(radius, 1.6, '#8aaca9', deck.x, y + 0.95, deck.z);
     for (const dy of [0.25, 1.5])
@@ -209,8 +249,8 @@ export function architecturalDetails(
     (root.userData.chimneys ??= []).push(new T.Vector3(x, h + 0.2, z));
   }
   if (b.kind === 'henhouse') {
-    box(0.5, 0.5, 0.06, '#322d24', entry.x + 0.75, 0.25, entry.z + 0.05);
-    const ramp = box(0.6, 0.06, 0.9, '#997944', entry.x + 0.75, 0.12, entry.z + 0.45);
+    box(0.5, 0.5, 0.06, '#322d24', entry.x + 1.35, 0.25, entry.z + 0.05);
+    const ramp = box(0.6, 0.06, 0.9, '#997944', entry.x + 1.35, 0.12, entry.z + 0.45);
     ramp.rotation.x = -0.2;
   }
   if (b.kind === 'haybarn') {

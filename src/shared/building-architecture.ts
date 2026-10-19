@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { BuildingVolume } from './building-shapes';
+import { buildingRecipes } from './building-recipes';
 
 type Family =
   | 'house'
@@ -15,55 +16,12 @@ type Family =
   | 'prop';
 /** Stable model identifiers are independent of finishes and of saved legacy styles. */
 const catalogue: Record<string, [Family, string[]]> = {
-  home: [
-    'house',
-    [
-      'Long cottage',
-      'Cross-gable cottage',
-      'Courtyard cottage',
-      'Two-storey cottage',
-      'Garden cottage',
-    ],
-  ],
-  bnb: [
-    'inn',
-    ['Village guesthouse', 'Gabled lodge', 'Courtyard inn', 'Boarding house', 'Garden lodge'],
-  ],
-  hotel: [
-    'inn',
-    ['Country hotel', 'Twin-wing hotel', 'Courtyard hotel', 'Town hotel', 'Terrace hotel'],
-  ],
-  market: [
-    'shop',
-    ['Market hall', 'Corner stores', 'Market court', 'Merchant house', 'Covered bazaar'],
-  ],
-  workhouse: [
-    'civic',
-    ['Labour hall', 'Workshop office', 'Service court', 'Town labour exchange', 'District depot'],
-  ],
-  school: [
-    'civic',
-    ['School hall', 'Cross-wing school', 'College court', 'Village academy', 'Classroom pavilions'],
-  ],
-  pub: ['inn', ['Roadside inn', 'Cross Keys', 'Coaching inn', 'Town tavern', 'Garden tavern']],
-  bank: [
-    'civic',
-    ['Counting house', 'Corner bank', 'Banking court', 'Savings tower', 'Bank pavilion'],
-  ],
-  town: [
-    'civic',
-    [
-      'Council hall',
-      'Civic cross-wing',
-      'Council court',
-      'Town chamber tower',
-      'Assembly pavilion',
-    ],
-  ],
-  garage: [
-    'works',
-    ['Motor shed', 'Repair bays', 'Service compound', 'Workshop and office', 'Twin service halls'],
-  ],
+  market: ['shop', buildingRecipes.market.map((recipe) => recipe.name)],
+  workhouse: ['civic', buildingRecipes.workhouse.map((recipe) => recipe.name)],
+  school: ['civic', buildingRecipes.school.map((recipe) => recipe.name)],
+  home: ['house', buildingRecipes.home.map((recipe) => recipe.name)],
+  pub: ['inn', buildingRecipes.pub.map((recipe) => recipe.name)],
+  garage: ['works', buildingRecipes.garage.map((recipe) => recipe.name)],
   starport: [
     'port',
     [
@@ -74,152 +32,23 @@ const catalogue: Record<string, [Family, string[]]> = {
       'Twin hangars',
     ],
   ],
-  farm: ['barn', ['Field barn', 'Cross barn', 'Farmyard court', 'Granary barn', 'Twin crop barns']],
-  mill: ['mill', ['Tower mill', 'Mill and granary', 'Mill court', 'Tall roller mill', 'Long mill']],
-  feedmill: [
-    'mill',
-    ['Feed tower', 'Mill and stores', 'Feed court', 'Elevator mill', 'Feed blending hall'],
-  ],
-  bakery: [
-    'shop',
-    ['Village bakehouse', 'Corner bakery', 'Bakers’ court', 'Bakery and rooms', 'Oven hall'],
-  ],
-  creamery: [
-    'shop',
-    ['Cheese house', 'Dairy annex', 'Cheesemakers’ court', 'Cheese loft', 'Aging halls'],
-  ],
-  kitchen: [
-    'shop',
-    ['Village kitchen', 'Corner cookhouse', 'Kitchen court', 'Dining house', 'Kitchen pavilions'],
-  ],
-  dairyKitchen: [
-    'shop',
-    ['Country café', 'Corner café', 'Café courtyard', 'Café and rooms', 'Garden café'],
-  ],
-  teaHouse: [
-    'shop',
-    ['Tea pavilion', 'Tea blending annex', 'Tea court', 'Tea merchant house', 'Twin tea halls'],
-  ],
-  roastery: [
-    'shop',
-    ['Roasting house', 'Roastery annex', 'Coffee court', 'Coffee merchant house', 'Roasting halls'],
-  ],
-  sawmill: [
-    'works',
-    ['Saw hall', 'Cross-cut sheds', 'Timber court', 'Saw hall and loft', 'Twin saw halls'],
-  ],
-  quarry: [
-    'yard',
-    ['Quarry office', 'Cutting sheds', 'Quarry court', 'Aggregate tower', 'Sorting yard'],
-  ],
-  mason: [
-    'yard',
-    [
-      'Stonecutters’ hall',
-      'Masons’ workshop',
-      'Masons’ court',
-      'Stone warehouse',
-      'Cutting pavilions',
-    ],
-  ],
-  mine: [
-    'yard',
-    ['Pithead house', 'Mine workshop', 'Pithead court', 'Winding house', 'Ore sorting halls'],
-  ],
-  rareMine: [
-    'yard',
-    ['Assay house', 'Mineral workshop', 'Assay court', 'Separation tower', 'Mineral sorting halls'],
-  ],
-  forge: [
-    'works',
-    ['Foundry hall', 'Smithy and stores', 'Foundry court', 'Furnace tower', 'Twin furnace halls'],
-  ],
-  brewery: [
-    'works',
-    ['Brewhouse', 'Malt annex', 'Brewers’ court', 'Malt tower', 'Twin brewing halls'],
-  ],
-  workshop: [
-    'works',
-    ['Tool shop', 'Machine annex', 'Artisans’ court', 'Workshop loft', 'Twin machine halls'],
-  ],
-  refinery: [
-    'works',
-    ['Process house', 'Pump annex', 'Refinery court', 'Fractionation house', 'Twin process halls'],
-  ],
-  factory: [
-    'works',
-    [
-      'Assembly hall',
-      'Laboratory annex',
-      'Factory court',
-      'Assembly loft',
-      'Twin production halls',
-    ],
-  ],
-  shipyard: [
-    'works',
-    ['Fitting hall', 'Shipwrights’ annex', 'Shipyard court', 'Rigging loft', 'Twin fitting halls'],
-  ],
-  warehouse: [
-    'works',
-    ['Goods shed', 'Loading annex', 'Depot court', 'Warehouse loft', 'Twin freight halls'],
-  ],
-  composter: [
-    'yard',
-    ['Compost shed', 'Mixing annex', 'Composting court', 'Mixing tower', 'Twin compost sheds'],
-  ],
-  brickworks: [
-    'works',
-    ['Kiln hall', 'Drying annex', 'Kiln court', 'Kiln tower', 'Twin kiln halls'],
-  ],
-  concreteWorks: [
-    'works',
-    ['Batching hall', 'Mixing annex', 'Batching court', 'Batch tower', 'Twin mixing halls'],
-  ],
-  carpenter: [
-    'works',
-    ['Joinery hall', 'Cabinet annex', 'Joiners’ court', 'Furniture loft', 'Twin joinery halls'],
-  ],
-  winery: [
-    'inn',
-    ['Press house', 'Cellar annex', 'Vintners’ court', 'Wine merchant house', 'Cellar pavilions'],
-  ],
-  waterworks: [
-    'pump',
-    ['Intake house', 'Split pump house', 'Pump and valve house', 'Pump tower', 'Twin pump halls'],
-  ],
-  dairy: [
-    'barn',
-    ['Milking barn', 'Cross dairy', 'Dairy court', 'Hayloft dairy', 'Twin dairy barns'],
-  ],
-  sheepfold: [
-    'barn',
-    ['Sheep barn', 'Shearing annex', 'Shepherds’ court', 'Fodder loft', 'Twin sheep barns'],
-  ],
-  piggery: ['barn', ['Pig barn', 'Feed annex', 'Stockyard court', 'Feed loft', 'Twin pig barns']],
-  henhouse: [
-    'barn',
-    ['Henhouse', 'Hatchery annex', 'Poultry court', 'Poultry loft', 'Twin poultry houses'],
-  ],
-  haybarn: ['barn', ['Hay hall', 'Cross hay barn', 'Hay court', 'Tall hayloft', 'Twin hay barns']],
-  notice: [
-    'prop',
-    ['Village board', 'Roofed board', 'Notice kiosk', 'Bulletin tower', 'Twin notice boards'],
-  ],
-  portal: [
-    'prop',
-    ['Gate pylons', 'Stepped gateway', 'Portal pavilion', 'Signal gate', 'Twin-ring gate'],
-  ],
-  pickup: [
-    'prop',
-    [
-      '20-foot container',
-      '40-foot container',
-      '40-foot high cube',
-      'Paired 20-foot containers',
-      'Container depot',
-    ],
-  ],
+  bank: ['civic', buildingRecipes.bank.map((recipe) => recipe.name)],
+  town: ['civic', buildingRecipes.town.map((recipe) => recipe.name)],
+  farm: ['barn', buildingRecipes.farm.map((recipe) => recipe.name)],
+  mill: ['mill', buildingRecipes.mill.map((recipe) => recipe.name)],
+  bakery: ['shop', buildingRecipes.bakery.map((recipe) => recipe.name)],
+  sawmill: ['works', buildingRecipes.sawmill.map((recipe) => recipe.name)],
+  quarry: ['yard', buildingRecipes.quarry.map((recipe) => recipe.name)],
+  mason: ['yard', buildingRecipes.mason.map((recipe) => recipe.name)],
+  mine: ['yard', buildingRecipes.mine.map((recipe) => recipe.name)],
+  forge: ['works', buildingRecipes.forge.map((recipe) => recipe.name)],
+  brewery: ['works', buildingRecipes.brewery.map((recipe) => recipe.name)],
+  workshop: ['works', buildingRecipes.workshop.map((recipe) => recipe.name)],
+  refinery: ['works', buildingRecipes.refinery.map((recipe) => recipe.name)],
+  rareMine: ['yard', buildingRecipes.rareMine.map((recipe) => recipe.name)],
+  factory: ['works', buildingRecipes.factory.map((recipe) => recipe.name)],
+  shipyard: ['works', buildingRecipes.shipyard.map((recipe) => recipe.name)],
+  warehouse: ['works', buildingRecipes.warehouse.map((recipe) => recipe.name)],
   turret: [
     'prop',
     [
@@ -230,16 +59,47 @@ const catalogue: Record<string, [Family, string[]]> = {
       'Twin-barrel emplacement',
     ],
   ],
-  scripted: [
-    'house',
+  portal: [
+    'prop',
+    ['Gate pylons', 'Stepped gateway', 'Portal pavilion', 'Signal gate', 'Twin-ring gate'],
+  ],
+  notice: [
+    'prop',
+    ['Village board', 'Roofed board', 'Notice kiosk', 'Bulletin tower', 'Twin notice boards'],
+  ],
+  scripted: ['house', buildingRecipes.scripted.map((recipe) => recipe.name)],
+  pickup: [
+    'prop',
     [
-      'Garden lodge',
-      'Botanist’s annex',
-      'Walled garden lodge',
-      'Naturalist’s tower',
-      'Garden pavilions',
+      '20-foot container',
+      '40-foot container',
+      '40-foot high cube',
+      'Paired 20-foot containers',
+      'Container depot',
     ],
   ],
+  composter: ['yard', buildingRecipes.composter.map((recipe) => recipe.name)],
+  brickworks: ['works', buildingRecipes.brickworks.map((recipe) => recipe.name)],
+  concreteWorks: ['works', buildingRecipes.concreteWorks.map((recipe) => recipe.name)],
+  carpenter: ['works', buildingRecipes.carpenter.map((recipe) => recipe.name)],
+  winery: ['inn', buildingRecipes.winery.map((recipe) => recipe.name)],
+  kitchen: ['shop', buildingRecipes.kitchen.map((recipe) => recipe.name)],
+  teaHouse: ['shop', buildingRecipes.teaHouse.map((recipe) => recipe.name)],
+  roastery: ['shop', buildingRecipes.roastery.map((recipe) => recipe.name)],
+  bnb: ['inn', buildingRecipes.bnb.map((recipe) => recipe.name)],
+  hotel: ['inn', buildingRecipes.hotel.map((recipe) => recipe.name)],
+  waterworks: [
+    'pump',
+    ['Intake house', 'Split pump house', 'Pump and valve house', 'Pump tower', 'Twin pump halls'],
+  ],
+  feedmill: ['mill', buildingRecipes.feedmill.map((recipe) => recipe.name)],
+  dairy: ['barn', buildingRecipes.dairy.map((recipe) => recipe.name)],
+  creamery: ['shop', buildingRecipes.creamery.map((recipe) => recipe.name)],
+  dairyKitchen: ['shop', buildingRecipes.dairyKitchen.map((recipe) => recipe.name)],
+  sheepfold: ['barn', buildingRecipes.sheepfold.map((recipe) => recipe.name)],
+  piggery: ['barn', buildingRecipes.piggery.map((recipe) => recipe.name)],
+  henhouse: ['barn', buildingRecipes.henhouse.map((recipe) => recipe.name)],
+  haybarn: ['barn', buildingRecipes.haybarn.map((recipe) => recipe.name)],
 };
 export function buildingArchitectures(kind: string) {
   const entry = catalogue[kind];
@@ -251,8 +111,9 @@ export function buildingArchitectures(kind: string) {
     family: entry[0],
     capacity: kind === 'pickup' ? [1, 2, 2.25, 2, 3][index] : 1,
     cost: (kind === 'pickup' ? [1, 1.8, 2, 1.95, 2.9] : [1, 1.08, 1.18, 1.15, 1.22])[index],
-    description:
-      kind === 'pickup'
+    description: buildingRecipes[kind]
+      ? `${buildingRecipes[kind][index].name}. Purpose-built rooms and working spaces; choose the wall finish independently.`
+      : kind === 'pickup'
         ? [
             'A standard 6.06 metre shipping container.',
             'A long 12.19 metre shipping container.',
@@ -260,13 +121,7 @@ export function buildingArchitectures(kind: string) {
             'Two containers side by side with separate locking doors.',
             'Three containers arranged around an open loading court.',
           ][index]
-        : [
-            'A compact, purpose-built main hall.',
-            'An asymmetric main building with a separate working wing.',
-            'Three connected wings surrounding an open entrance court.',
-            'A taller building with a lower service annex.',
-            'Paired halls connected by a lower rear wing.',
-          ][index],
+        : `${name}. A specialist layout; choose its surface finish independently.`,
   }));
 }
 export function buildingArchitecture(kind: string, id?: string) {
@@ -309,7 +164,13 @@ export function architecturalVolumes(
   const domestic = ['house', 'inn', 'shop', 'civic'].includes(f);
   const roof: BuildingVolume['roof'] =
     f === 'civic' || f === 'inn' ? 'hip' : f === 'works' ? 'shed' : 'gable';
-  if (kind === 'pickup') {
+  if (buildingRecipes[kind]) {
+    out = buildingRecipes[kind][i].volumes.map((v) => ({ ...v }));
+    if (kind === 'scripted') {
+      const right = Math.max(...out.map((a) => a.x + a.width / 2));
+      out.push(v(3, 3, 0.8, right + 2, 2, 'flat', 0));
+    }
+  } else if (kind === 'pickup') {
     out = [
       [v(2.44, 6.06, 2.59, 0, 0, 'flat')],
       [v(2.44, 12.19, 2.59, 0, 0, 'flat')],
@@ -326,7 +187,7 @@ export function architecturalVolumes(
     out = [
       [v(8, 6, 3.3, 0, 0, 'flat')],
       [v(5, 6, 4, -1.5), v(3, 4, 2.5, 2.5, -1, 'shed')],
-      [v(8, 3, 3.6, 0, -1.5, 'flat'), v(3, 3, 2.8, -2.5, 1.5), v(3, 3, 2.8, 2.5, 1.5)],
+      [v(5, 6, 3.6, -1.5, 0, 'barrel', 1.2), v(3, 3, 2.5, 2.5, -1.5, 'flat')],
       [v(4, 4, 6, -2, -1, 'flat'), v(4, 6, 2.7, 2, 0, 'shed')],
       [v(4, 6, 3.3, -2), v(4, 6, 3.3, 2)],
     ][i];
@@ -353,60 +214,8 @@ export function architecturalVolumes(
       [v(20, 12, 12, 0, 0, 'flat'), v(12, 18, 5, 16, -3, 'flat'), v(26, 24, 11, 36, -6)],
       [v(18, 10, 5, 0, 0, 'flat'), v(18, 26, 12, 21, -8), v(18, 26, 12, 41, -8)],
     ][i];
-  } else if (f === 'mill') {
-    out = [
-      [v(w, d, h, 0, 0, 'hip'), v(w * 0.8, d * 0.9, h * 0.42, w * 0.9, 0, 'shed')],
-      [v(w, d, h, 0, 0), v(w * 1.2, d * 1.5, h * 0.5, w * 1.1, -d * 0.25, 'gable', 1.6, 'x')],
-      [
-        v(w * 2, d * 0.8, h * 0.65, 0, -d * 0.6),
-        v(w * 0.6, d * 1.4, h * 0.5, -w * 0.7, d * 0.5),
-        v(w * 0.6, d * 1.4, h * 0.5, w * 0.7, d * 0.5),
-      ],
-      [v(w * 0.85, d * 0.9, h * 1.4, 0, 0, 'flat'), v(w, d, h * 0.4, w * 0.925, 0, 'shed')],
-      [
-        v(w * 1.7, d, h * 0.6, 0, 0, 'gable', 2, 'x'),
-        v(w * 0.65, d * 0.7, h * 1.1, -w * 0.5, -d * 0.85, 'hip'),
-      ],
-    ][i];
   } else {
-    const height = f === 'yard' ? Math.max(h, 2.8) : h;
-    out = [
-      [v(w, d, height, 0, 0, roof, domestic ? m.rise : Math.min(3, w * 0.23))],
-      [
-        v(w * 0.78, d, height, 0, 0, roof),
-        v(
-          w * 0.65,
-          d * 0.65,
-          Math.max(2.3, height * 0.78),
-          w * 0.715,
-          -d * 0.175,
-          'gable',
-          1.5,
-          'x',
-        ),
-      ],
-      [
-        v(w * 1.25, d * 0.48, height, 0, -d * 0.36, roof),
-        v(w * 0.32, d * 0.9, Math.max(2.3, height * 0.8), -w * 0.465, d * 0.33),
-        v(w * 0.32, d * 0.9, Math.max(2.3, height * 0.8), w * 0.465, d * 0.33),
-      ],
-      [
-        v(w * 0.8, d * 0.8, height + (domestic ? 2.7 : 2), 0, 0, domestic ? 'hip' : 'flat'),
-        v(w * 0.5, d * 0.7, Math.max(2.3, height * 0.65), w * 0.65, -d * 0.05, 'shed'),
-      ],
-      [
-        v(w * 0.48, d * 1.15, height, -w * 0.4, 0, roof),
-        v(w * 0.48, d * 1.15, height, w * 0.4, 0, roof),
-        v(w * 0.32, d * 0.3, Math.max(2.3, height * 0.7), 0, -d * 0.425, 'flat'),
-      ],
-    ][i];
-    if (f === 'yard') out.push(v(w * 0.6, d * 0.6, 1.1, -w * 0.25, -d * 1.05, 'flat'));
-    if (f === 'barn' && i === 0) out[0].roof = 'gambrel';
-    if (f === 'works' && i === 4) {
-      out[0].roof = 'barrel';
-      out[1].roof = 'barrel';
-    }
-    if (kind === 'scripted') out.push(v(3, 3, 0.8, w * 0.9, d * 0.7, 'flat', 0));
+    out = [v(w, d, h, 0, 0, roof, m.rise)];
   }
   if (size === 'expanded' || size === 'large') {
     const right = Math.max(...out.map((a) => a.x + a.width / 2));

@@ -4,6 +4,7 @@ import type { Building } from '../shared/types';
 import type { BuildingPlan } from '../shared/building-shapes';
 import { finishSurface } from './building-finishes';
 import { buildingBadge } from './building-badges';
+import { buildingFacade, tradeSymbols, roofHeightAt } from '../shared/building-facade';
 
 /** Recognisable trade equipment with low-sided vessels, textured stacks and flat painted signs. */
 export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPlan) {
@@ -78,68 +79,58 @@ export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPl
   };
   const main = plan.volumes[0];
   const front = main.z + main.depth / 2;
-  // Wall signs sit above a front entrance, leaving all working doors clear.
-  const symbols: Record<string, string> = {
-    bakery: 'bread',
-    pub: 'beer',
-    brewery: 'beer',
-    bank: 'coin',
-    town: 'council',
-    school: 'council',
-    workhouse: 'tools',
-    garage: 'tools',
-    workshop: 'tools',
-    carpenter: 'tools',
-    teaHouse: 'tea',
-    roastery: 'coffee',
-    dairyKitchen: 'coffee',
-    bnb: 'bed',
-    hotel: 'bed',
-    waterworks: 'water',
-  };
-  if (symbols[b.kind])
-    panel(
-      symbols[b.kind],
-      main.x + Math.min(main.width * 0.28, 2),
-      Math.min(main.eaves - 0.5, 2.9),
-      front + 0.09,
-      1,
-      1,
-    );
-  if (['bnb', 'hotel'].includes(b.kind) && main.eaves > 4.8) {
-    // A shallow guest balcony, with one textured slab and a simple rail.
-    box(Math.min(main.width - 1, 5), 0.12, 0.8, '#9a9e8d', main.x, 3.25, front + 0.35);
-    pipe([main.x - 2, 4.1, front + 0.72], [main.x + 2, 4.1, front + 0.72], 0.045);
-    for (const x of [-2, -1, 0, 1, 2])
-      pipe([main.x + x, 3.3, front + 0.72], [main.x + x, 4.1, front + 0.72], 0.025);
+  const facade = buildingFacade(b.kind, plan);
+  if (facade.sign) {
+    const s = facade.sign;
+    const plaque = panel(tradeSymbols[b.kind], s.x, s.y, s.z, s.width, s.height);
+    plaque.userData.tradeSign = true;
   }
   if (b.kind === 'factory')
     for (const dx of [-1.4, 1.4]) {
-      const y = main.eaves + main.rise;
+      const x = main.x + dx;
+      const heights = [-0.9, 0.9].flatMap((a) =>
+        [-0.7, 0.7].map((c) => roofHeightAt(main, x + a, main.z + c)),
+      );
+      const y = Math.max(...heights) + 0.08;
+      const bottom = Math.min(...heights) - 0.12;
+      box(1.9, y - bottom, 1.5, '#657572', x, (y + bottom) / 2, main.z);
       box(1.8, 0.7, 1.4, '#839b9b', main.x + dx, y + 0.35, main.z);
       for (const dz of [-0.35, 0, 0.35])
         box(1.5, 0.035, 0.06, '#394e53', main.x + dx, y + 0.72, main.z + dz);
     }
-  if (b.kind === 'henhouse')
+  if (b.kind === 'henhouse') {
+    const coop = plan.volumes.reduce(
+      (a, v) => (v.x + v.width / 2 > a.x + a.width / 2 ? v : a),
+      main,
+    );
     for (const dx of [-0.65, 0.65]) {
-      box(0.8, 0.65, 0.5, '#a28a58', main.x + main.width / 2 + 0.2, 0.8, main.z + dx);
-      box(0.03, 0.4, 0.5, '#433e32', main.x + main.width / 2 + 0.46, 0.8, main.z + dx);
+      box(0.8, 0.65, 0.5, '#a28a58', coop.x + coop.width / 2 + 0.2, 0.8, coop.z + dx);
+      box(0.03, 0.4, 0.5, '#433e32', coop.x + coop.width / 2 + 0.46, 0.8, coop.z + dx);
     }
+  }
   for (const f of plan.features ?? []) {
     host = new T.Group();
     host.position.set(f.x, f.y, f.z);
     host.userData.feature = f.kind;
     group.add(host);
     if (f.kind === 'clocktower') {
-      finishSurface(box(1.7, 2.4, 1.7, '#ffffff', 0, 1.2, 0), 'limestone', '#d8d5c1');
+      const lift = main.rise;
+      // A continuous shaft penetrates the roof; a flashing collar closes the join.
+      finishSurface(
+        box(1.7, lift + 2.4, 1.7, '#ffffff', 0, (lift + 2.4) / 2, 0),
+        'limestone',
+        '#d8d5c1',
+      );
+      box(1.95, 0.16, 1.95, '#758079', 0, lift + 0.08, 0);
+      box(1.9, 0.14, 1.9, '#d0cbb7', 0, lift + 2.36, 0);
       for (const side of [-1, 1]) {
-        panel('clock', 0, 1.55, side * 0.86, 1.25, 1.25, side === 1 ? 0 : Math.PI);
-        panel('clock', side * 0.86, 1.55, 0, 1.25, 1.25, (side * Math.PI) / 2);
+        panel('clock', 0, lift + 1.55, side * 0.86, 1.25, 1.25, side === 1 ? 0 : Math.PI);
+        panel('clock', side * 0.86, lift + 1.55, 0, 1.25, 1.25, (side * Math.PI) / 2);
       }
-      const cap = mesh(new T.ConeGeometry(1.35, 1.1, 4), '#46665e', 0, 2.95, 0);
+      const cap = mesh(new T.ConeGeometry(1.35, 1.1, 4), '#46665e', 0, lift + 2.95, 0);
       cap.rotation.y = Math.PI / 4;
-      pipe([0, 3.5, 0], [0, 4.25, 0], 0.035);
-      box(0.65, 0.35, 0.025, '#bb9b4b', 0.32, 4.02, 0);
+      pipe([0, lift + 3.5, 0], [0, lift + 4.25, 0], 0.035);
+      box(0.65, 0.35, 0.025, '#bb9b4b', 0.32, lift + 4.02, 0);
       continue;
     }
     box(f.width, 0.12, f.depth, '#9b9d90', 0, 0.06, 0);
@@ -261,7 +252,7 @@ export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPl
         dome.scale.z = 0.95;
         box(0.85, 0.7, 0.06, '#3e3026', -0.5, 0.95, 1.03);
         cyl(0.2, 2.7, '#9b8f7b', -0.8, 1.45, -0.7);
-        panel('bread', 1.1, 1.2, 1.25, 0.8, 0.55);
+        panel('bread', 1.1, 0.6, 1.031, 0.8, 0.55);
         crate(1.1, 0.6);
         break;
       }
@@ -285,7 +276,9 @@ export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPl
           for (let i = 0; i < 5; i++) box(0.15, 1.8, 0.6, '#a28d64', -1.2 + i * 0.17, 1, -0.8);
         else {
           box(0.5, 0.35, 0.4, '#426b74', 0.3, 1.3, 0.3);
-          panel('tools', 0, 2, -1, 1.2, 0.65);
+          box(1.3, 0.75, 0.08, '#706247', 0, 2, -1);
+          for (const x of [-0.5, 0.5]) box(0.08, 2, 0.08, '#706247', x, 1.1, -1);
+          panel('tools', 0, 2, -0.954, 1.2, 0.65);
         }
         break;
       }
@@ -308,6 +301,8 @@ export function addBuildingIdentity(root: T.Group, b: Building, plan: BuildingPl
         if (b.kind === 'quarry') {
           cone(1.2, 1.5, '#99988b', 1.3, 0.85, 0);
           box(1.3, 1, 0.9, '#6b7e76', 0.2, 2.2, -0.7);
+          for (const x of [-0.3, 0.7])
+            for (const z of [-1.05, -0.35]) box(0.1, 1.7, 0.1, '#4c605d', x, 0.95, z);
           pipe([0.2, 2.3, -0.7], [1.3, 1, 0], 0.25);
         } else {
           box(1.4, 0.2, 0.9, '#727d72', 1.2, 1.2, 0.2);

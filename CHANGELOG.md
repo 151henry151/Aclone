@@ -6,6 +6,20 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.76.0] - 2026-10-18
+
+### Changed
+
+- Building models now use trade-specific layouts: tall processing towers, low livestock sheds, long industrial halls, shopfronts with rear workrooms, civic halls and residential lodges. Five models and six independent finishes remain available for every type.
+- Refresh the building gallery with the revised models and add an all-finishes, front-and-rear screenshot mode for visual quality checks.
+
+### Fixed
+
+- Seat council clock towers, school cupolas and rooftop plant into their roofs; close gaps beneath gables and support porch roofs and awnings properly.
+- Keep shop signs clear of canopies, doors and windows, restore missing upper-floor windows, add actual doors to three-bay garages, and put crosswise shipping-container doors on their short ends.
+- Give spaceport hangars broad cargo doors and high windows, and control towers an observation level instead of repeated office floors.
+- Move henhouse nesting boxes onto exposed walls, keep windows clear of mill wheels, and mount workshop signs and yard machinery on supports.
+
 ## [0.75.0] - 2026-10-18
 
 ### Changed

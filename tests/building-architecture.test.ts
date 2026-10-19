@@ -122,7 +122,11 @@ test('container finishes are paint colours with identical steel bills and standa
   assert.equal(a.depth, 6.06);
   assert.equal(b.depth, 12.19);
   const legacy = buildingModel(makeBuilding('legacy', 'pickup', 0, 0), (m) => m);
-  assert.ok(legacy.children.some((o) => o.userData.containerPlate));
+  let plates = 0;
+  legacy.traverse((o) => {
+    if (o.userData.containerPlate) plates++;
+  });
+  assert.equal(plates, 1);
   release(legacy);
 });
 test('construction validates, charges and persists the chosen model, finish, size and material bill', () => {
@@ -263,5 +267,160 @@ test('every completed cottage has one mailbox outside its frontmost wing, includ
       assert.ok(!blocksBuilding(b, mailboxes[0].position.x, mailboxes[0].position.z, 0, 0));
       release(model);
     }
+  }
+});
+
+test('shop signs clear the actual canopy and windows across models, sizes and finishes', () => {
+  for (const kind of ['bakery', 'teaHouse', 'dairyKitchen', 'town', 'bank', 'school', 'garage'])
+    for (const a of buildingArchitectures(kind))
+      for (const size of sizesForBuilding(kind))
+        for (const style of buildingStyles(kind, a.id)) {
+          const b = {
+            ...makeBuilding('qc', kind, 0, 0),
+            architecture: a.id,
+            size: size.id,
+            style: style.id,
+          };
+          const root = buildingModel(b, (m) => m);
+          root.updateMatrixWorld(true);
+          const signs: T.Object3D[] = [],
+            awnings: T.Object3D[] = [],
+            windows: T.Object3D[] = [];
+          root.traverse((o) => {
+            if (o.userData.tradeSign) signs.push(o);
+            if (o.userData.awning) awnings.push(o);
+            if (o.userData.facadeWindow) windows.push(o);
+          });
+          assert.equal(signs.length, 1, `${kind} ${a.id}`);
+          const sign = new T.Box3().setFromObject(signs[0], true);
+          for (const canopy of awnings)
+            assert.ok(
+              !sign.intersectsBox(new T.Box3().setFromObject(canopy, true)),
+              `${kind} ${a.id}: canopy clips sign`,
+            );
+          for (const pane of windows) {
+            if (
+              Math.abs(pane.rotation.y) > 0.01 ||
+              Math.abs(pane.position.z - signs[0].position.z) > 0.2
+            )
+              continue;
+            const bounds = new T.Box3().setFromObject(pane, true);
+            assert.ok(
+              sign.max.x <= bounds.min.x ||
+                sign.min.x >= bounds.max.x ||
+                sign.max.y <= bounds.min.y ||
+                sign.min.y >= bounds.max.y,
+              `${kind} ${a.id}: sign covers a window`,
+            );
+          }
+          release(root);
+        }
+});
+
+test('council clock shafts penetrate the roof and two-storey cottages have upstairs windows', () => {
+  for (const a of buildingArchitectures('town')) {
+    const b = {
+      ...makeBuilding('clock', 'town', 0, 0),
+      architecture: a.id,
+      style: 'brick-workshop',
+    };
+    const plan = buildingPlan(b),
+      root = buildingModel(b, (m) => m);
+    let tower: T.Object3D | undefined;
+    root.traverse((o) => {
+      if (o.userData.feature === 'clocktower') tower = o;
+    });
+    const bounds = new T.Box3().setFromObject(tower!, true),
+      v = plan.volumes[0];
+    assert.ok(bounds.min.y <= v.eaves + 0.01);
+    assert.ok(bounds.max.y > v.eaves + v.rise + 3);
+    release(root);
+  }
+  const root = buildingModel(
+    {
+      ...makeBuilding('upstairs', 'home', 0, 0),
+      architecture: 'model-4',
+      style: 'white-clapboard',
+    },
+    (m) => m,
+  );
+  let upstairs = 0;
+  root.traverse((o) => {
+    if (o.userData.facadeWindow && o.position.y > 3) upstairs++;
+  });
+  assert.ok(upstairs >= 4, 'upper floor must not be windowless');
+  release(root);
+});
+
+test('livestock shelters stay low and industries no longer share a universal five-plan template', () => {
+  for (const kind of ['piggery', 'henhouse', 'sheepfold'])
+    for (const a of buildingArchitectures(kind)) {
+      const plan = buildingPlan({ kind, id: 'low', architecture: a.id });
+      assert.ok(
+        plan.volumes.every((v) => v.eaves <= 3.3),
+        kind + ' should not put animals upstairs',
+      );
+    }
+  const signatures = new Set<string>();
+  for (const kind of [
+    'bakery',
+    'brewery',
+    'bank',
+    'town',
+    'refinery',
+    'quarry',
+    'farm',
+    'school',
+    'henhouse',
+    'warehouse',
+  ]) {
+    const shapes = buildingArchitectures(kind).map((a) => {
+      const vs = buildingPlan({ kind, id: 'diversity', architecture: a.id }).volumes;
+      const main = vs[0];
+      return vs.map((v) => [
+        v.roof,
+        +(v.width / main.width).toFixed(3),
+        +(v.depth / main.width).toFixed(3),
+        +(v.eaves / main.width).toFixed(3),
+        v.x / main.width,
+        v.z / main.width,
+      ]);
+    });
+    signatures.add(JSON.stringify(shapes));
+  }
+  assert.equal(signatures.size, 10);
+});
+
+test('crosswise containers keep the locking doors on their short ends', () => {
+  const b = {
+    ...makeBuilding('depot', 'pickup', 0, 0),
+    architecture: 'model-5',
+    style: 'ocean-blue',
+  };
+  const root = buildingModel(b, (m) => m);
+  let backPlate: T.Object3D | undefined;
+  root.traverse((o) => {
+    if (o.userData.containerPlate && o.parent!.position.z < -4) backPlate = o;
+  });
+  assert.ok(backPlate);
+  const direction = backPlate!.getWorldDirection(new T.Vector3());
+  assert.ok(direction.x > 0.99 && Math.abs(direction.z) < 0.01);
+  release(root);
+});
+
+test('spaceport hangars have freight-sized doors instead of shop doors', () => {
+  for (const a of buildingArchitectures('starport')) {
+    const root = buildingModel(
+      { ...makeBuilding('hangars', 'starport', 0, 0), architecture: a.id },
+      (m) => m,
+    );
+    let freightDoors = 0;
+    root.traverse((o) => {
+      if (!o.userData.loadingDoor) return;
+      const size = new T.Box3().setFromObject(o, true).getSize(new T.Vector3());
+      if (size.x >= 12 && size.y >= 7) freightDoors++;
+    });
+    assert.ok(freightDoors >= 1, a.name + ' needs access for cargo');
+    release(root);
   }
 });

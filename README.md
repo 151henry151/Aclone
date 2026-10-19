@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.75.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.76.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -25,7 +25,7 @@ This is a playable alpha, not complete historical feature parity. See [status an
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; stocked-home targets, complete earning trips, costed surplus pricing and protected operating capital guide their choices; see [AI neighbours](docs/NPCS.md). Gameplay now includes protected gameplay budgets, complete structured decision options, persistent savings milestones and trade-price guards; see the [redesign handoff](docs/NPC_RECOVERY.md#2026-10-18-planner-redesign-0700).
 
-Design buildings before breaking ground: five architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
+Design buildings before breaking ground: five trade-specific architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
 
 Roads offer faster tractor travel than fields, with a modest advantage in dry weather and a stronger one on wet or snow-covered ground. Large worlds have rolling uplands around the settled town; tractors climb more slowly and descend faster, with a controlled speed bonus. Players and NPCs follow the same driving rules.
 
@@ -98,7 +98,7 @@ Beer and wine can impair steering and produce scene sway, distortion and double 
 
 ## Public website
 
-The marketing page at [nogits.com](https://nogits.com/) lives in `website/`, separately from the game at `/aclone/`. Run `npm run preview:website` for a local preview, `npm run build:website` to generate `website-dist/`, and `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` for responsive browser checks. The build includes the searchable [building gallery](https://nogits.com/buildings/) and reads the release version from `package.json`. Refresh its rendered sheets with `npm run screenshots:buildings` (Chromium and ImageMagick required). See [hosting](docs/HOSTING.md#public-marketing-site) for publishing and screenshot refreshes.
+The marketing page at [nogits.com](https://nogits.com/) lives in `website/`, separately from the game at `/aclone/`. Run `npm run preview:website` for a local preview, `npm run build:website` to generate `website-dist/`, and `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` for responsive browser checks. The build includes the searchable [building gallery](https://nogits.com/buildings/) and reads the release version from `package.json`. Refresh its rendered sheets with `npm run screenshots:buildings` (Chromium and ImageMagick required). The [art guide](docs/ART.md#building-architecture) also documents the all-finishes visual review sheets. See [hosting](docs/HOSTING.md#public-marketing-site) for publishing and screenshot refreshes.
 
 ## Contribute
 

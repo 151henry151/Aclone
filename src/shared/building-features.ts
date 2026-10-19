@@ -54,11 +54,11 @@ export function buildingFeatures(kind: string, volumes: BuildingVolume[]): Build
     features.push({
       kind: 'clocktower',
       x: main.x,
-      y: main.eaves + main.rise,
+      y: main.eaves,
       z: main.z,
       width: 2.6,
       depth: 2.6,
-      height: 4.3,
+      height: main.rise + 4.3,
     });
   return features;
 }

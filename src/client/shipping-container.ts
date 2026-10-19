@@ -5,6 +5,7 @@ import { finishSurface, finishMaterial } from './building-finishes';
 /** Corrugation and door seams are textured; only the box frame and locking bars add geometry. */
 export function shippingContainers(plan: BuildingPlan) {
   const root = new T.Group();
+  let host = root;
   const color = plan.finish === 'metal' ? plan.wall : '#9f4938';
   const box = (w: number, h: number, d: number, x: number, y: number, z: number, tint = color) => {
     const m = new T.Mesh(
@@ -12,11 +13,20 @@ export function shippingContainers(plan: BuildingPlan) {
       new T.MeshStandardMaterial({ color: tint, roughness: 0.8 }),
     );
     m.position.set(x, y, z);
-    root.add(m);
+    host.add(m);
     return m;
   };
   for (const v of plan.volumes) {
-    const { width: w, depth: d, eaves: h, x, z } = v;
+    host = new T.Group();
+    host.position.set(v.x, 0, v.z);
+    root.add(host);
+    const across = v.width > v.depth;
+    if (across) host.rotation.y = Math.PI / 2;
+    const w = across ? v.depth : v.width,
+      d = across ? v.width : v.depth,
+      h = v.eaves,
+      x = 0,
+      z = 0;
     finishSurface(box(w, h, d, x, h / 2, z), 'metal', color);
     for (const dx of [-1, 1])
       for (const dz of [-1, 1])
@@ -32,7 +42,7 @@ export function shippingContainers(plan: BuildingPlan) {
         finishMaterial('roller-door', color),
       );
       panel.position.set(x + side * w * 0.24, h / 2, z + d / 2 + 0.071);
-      root.add(panel);
+      host.add(panel);
       for (const offset of [-0.12, 0.12]) {
         box(
           0.035,

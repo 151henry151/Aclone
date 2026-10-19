@@ -24,13 +24,14 @@ function triangles(root: T.Object3D) {
   return count;
 }
 test('surface details keep representative buildings within their geometry budgets', () => {
-  // Original material-pass budgets, plus 72 triangles for the new cottage mailbox.
+  // Original material-pass budgets, plus the cottage mailbox and eight mill
+  // triangles closing the gaps between its two gables and roof overhangs.
   for (const [kind, budget] of Object.entries({
     bakery: 610,
     bank: 250,
     garage: 366,
     farm: 574,
-    mill: 1076,
+    mill: 1084,
     waterworks: 1132,
     home: 320,
     starport: 28986,

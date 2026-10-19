@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.75.0
+## Current upgrade: 0.76.0
+
+Selected architectural models gain trade-specific layouts and corrected details. Existing model IDs, ownership, stock, investments, capacities and saved construction bills are preserved; buildings without a selected model keep their legacy layouts. Update client and server together for matching footprints, then refresh browsers. Publish the refreshed gallery with `bash scripts/deploy-website.sh`. No world reset is required.
+
+### 0.75.0
 
 Generated countryside gains rolling hills while the original town square and custom heightmaps stay unchanged. Update client and server together and refresh browsers for matching terrain and slope-aware driving. No world reset is required.
 

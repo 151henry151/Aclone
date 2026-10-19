@@ -161,8 +161,11 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     (top.material as T.Material).side = T.DoubleSide;
     if (v.roof === 'gable') {
       const shape = new T.Shape();
+      const shoulder = (h * 0.28) / w;
       shape.moveTo(-v.width / 2, 0);
-      shape.lineTo(0, h - 0.08);
+      shape.lineTo(-v.width / 2, shoulder);
+      shape.lineTo(0, h);
+      shape.lineTo(v.width / 2, shoulder);
       shape.lineTo(v.width / 2, 0);
       shape.closePath();
       for (const side of [-1, 1]) {
@@ -198,6 +201,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     pane.position.set(x + Math.sin(angle) * 0.06, y, z + Math.cos(angle) * 0.06);
     pane.rotation.y = angle;
     pane.userData.lightSource = b.id;
+    pane.userData.facadeWindow = true;
     root.add(pane);
   }
   function door(x: number, z: number) {
