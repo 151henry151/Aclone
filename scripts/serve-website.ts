@@ -16,7 +16,14 @@ export async function serveWebsite(port = 4174) {
   const server = createServer(async (req, res) => {
     try {
       const pathname = decodeURIComponent(new URL(req.url!, 'http://localhost').pathname);
-      const path = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+      if (pathname === '/buildings') {
+        res.writeHead(301, { location: '/buildings/' }).end();
+        return;
+      }
+      const path = resolve(
+        root,
+        '.' + (pathname.endsWith('/') ? pathname + 'index.html' : pathname),
+      );
       if (!path.startsWith(root + sep)) {
         res.writeHead(403).end();
         return;

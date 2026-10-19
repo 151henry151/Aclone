@@ -121,7 +121,8 @@ Only default server-owned Puddlewick receives missing stonemason/waterworks plus
 
 `website/` is a standalone static page for `https://nogits.com/`; the game remains at `/aclone/`. It needs no game server, JavaScript framework, external fonts or trackers to display. Screenshot enlargement is optional JavaScript; navigation, image links and FAQs work without it.
 
-- `npm run build:website` generates `website-dist/`, inserts the package version and validates local assets/documentation links.
+- `npm run build:website` generates `website-dist/`, including `/buildings/`, inserts the package version and validates local assets/documentation links. The gallery uses committed WebP contact sheets and needs no game server or paid AI calls.
+- `npm run screenshots:buildings` refreshes all 48 building sheets from the real renderer using a disposable world, Chromium and ImageMagick. Review and commit `website/assets/buildings/` with model changes. Ordinary website builds need neither rendering dependency.
 - `npm run preview:website` serves it at `http://127.0.0.1:4174`. Play links target `/aclone/`, which is supplied by the production proxy, not this preview server.
 - `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` checks desktop/tablet/phone layouts, keyboard image enlargement, focus restoration, image loading, FAQs and no-JavaScript access. Captures are in `test-results/website/`.
 - After `npm run build`, `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:website` refreshes the six original gameplay images from a disposable demonstration world. This uses Chromium and ImageMagick `convert`; ordinary website builds require neither. It never touches live players or calls NPC providers.

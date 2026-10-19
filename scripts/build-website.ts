@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cpSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
+import { buildBuildingGallery } from './build-building-gallery.ts';
 const root = resolve(import.meta.dirname, '..');
 const source = join(root, 'website'),
   output = join(root, 'website-dist');
@@ -18,4 +19,5 @@ mkdirSync(output, { recursive: true });
 writeFileSync(join(output, 'index.html'), html);
 for (const file of ['site.css', 'site.js', 'assets'])
   cpSync(join(source, file), join(output, file), { recursive: true });
+buildBuildingGallery(source, output, version);
 console.log(`Built Aclone ${version} marketing site in website-dist/`);

@@ -80,8 +80,41 @@ try {
   await plain.getByText('Is it really free?', { exact: true }).click();
   await expect(plain.locator('details[open]')).toContainText('GPL');
   await expect(plain.locator('[data-gallery]').first()).toHaveAttribute('href', /\.webp$/);
+  await page.goto(url + '/buildings');
+  await expect(page).toHaveURL(url + '/buildings/');
+  await expect(page.locator('article')).toHaveCount(48);
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+      false,
+    );
+  }
+  await page.getByLabel('Find a building').fill('brewery');
+  await expect(page.locator('article:visible')).toHaveCount(1);
+  await expect(page.locator('#results')).toHaveText('1 of 48 building types');
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.screenshot({ path: `${output}/buildings-mobile.png`, fullPage: true });
+  await page.getByLabel('Find a building').fill('does not exist');
+  await expect(page.locator('article:visible')).toHaveCount(0);
+  await expect(page.locator('#results')).toContainText('No matching buildings');
+  await page.getByLabel('Find a building').fill('');
+  await page.evaluate(async () => {
+    for (const image of document.images) {
+      image.loading = 'eager';
+      await image.decode();
+    }
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: `${output}/buildings-desktop.png` });
+  await page.locator('#home .image-link').click();
+  await expect(page).toHaveURL(/\/assets\/buildings\/home\.webp$/);
+  await plain.goto(url + '/buildings/#home');
+  await expect(plain.locator('article')).toHaveCount(48);
+  await expect(plain.locator('.filter')).toBeHidden();
+  await expect(plain.locator('#home')).toBeVisible();
+  expect(errors).toEqual([]);
   console.log(
-    'PASS: 4 screen widths, image loading, navigation, keyboard lightbox/focus, FAQ, anchors and no-JavaScript fallback.',
+    'PASS: 4 screen widths, images, navigation, keyboard lightbox/focus, FAQ, anchors, 48-building gallery/search/enlargement and no-JavaScript fallback.',
   );
 } finally {
   await browser.close();

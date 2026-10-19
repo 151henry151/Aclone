@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.74.0] - 2026-10-18
+
+### Added
+
+- A public building gallery at nogits.com/buildings, with all 48 building types, five architectural models per type, search, enlarged images and links to individual building sheets. The gallery works on phones and without JavaScript, and ships with the public website.
+
 ## [0.73.0] - 2026-10-18
 
 ### Changed

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Building gallery · Aclone</title>
+    <meta
+      name="description"
+      content="Explore Aclone's 48 building types, each with five architectural models and independent finishes. Actual game-rendered previews."
+    />
+    <link rel="canonical" href="https://nogits.com/buildings/" />
+    <link rel="stylesheet" href="/buildings/gallery.css" />
+    <script src="/buildings/gallery.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Main"><a href="/">← Aclone</a><a href="/aclone/">Play free ↗</a></nav>
+      <p class="eyebrow">A little world. Built your way.</p>
+      <h1>A place for everything.</h1>
+      <p class="intro">
+        From a cottage with a mailbox to a refinery full of pipework. Explore 48 building types,
+        with five architectural models apiece and six independent finishes.
+      </p>
+      <p class="note">
+        These are actual game renders. Each sheet compares five models in the same finish; its sixth
+        view shows a larger size or another finish. Scale is consistent within each sheet, not
+        between building types. Spaceport views focus on the terminal.
+      </p>
+      <div class="filter" hidden>
+        <label for="search">Find a building</label>
+        <input id="search" type="search" placeholder="Try brewery, cottage, mine…" />
+        <p id="results" role="status" aria-live="polite"></p>
+      </div>
+    </header>
+    <main id="catalogue">__BUILDING_CARDS__</main>
+    <footer>
+      <p>Aclone __VERSION__ · Free and open source</p>
+      <a href="https://github.com/151henry151/Aclone">Source &amp; documentation ↗</a>
+    </footer>
+  </body>
+</html>

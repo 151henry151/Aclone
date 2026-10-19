@@ -2,9 +2,9 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
-[Play the alpha](https://nogits.com/aclone/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
+[Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.73.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.74.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -98,7 +98,7 @@ Beer and wine can impair steering and produce scene sway, distortion and double 
 
 ## Public website
 
-The marketing page at [nogits.com](https://nogits.com/) lives in `website/`, separately from the game at `/aclone/`. Run `npm run preview:website` for a local preview, `npm run build:website` to generate `website-dist/`, and `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` for responsive browser checks. The build reads the release version from `package.json`. See [hosting](docs/HOSTING.md#public-marketing-site) for publishing and screenshot refreshes.
+The marketing page at [nogits.com](https://nogits.com/) lives in `website/`, separately from the game at `/aclone/`. Run `npm run preview:website` for a local preview, `npm run build:website` to generate `website-dist/`, and `CHROMIUM_PATH=/usr/bin/chromium npm run check:website` for responsive browser checks. The build includes the searchable [building gallery](https://nogits.com/buildings/) and reads the release version from `package.json`. Refresh its rendered sheets with `npm run screenshots:buildings` (Chromium and ImageMagick required). See [hosting](docs/HOSTING.md#public-marketing-site) for publishing and screenshot refreshes.
 
 ## Contribute
 

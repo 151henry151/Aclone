@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.73.0
+## Current upgrade: 0.74.0
+
+Publish the gallery and website links with `bash scripts/deploy-website.sh`. `/buildings/` is static and requires no additional service or proxy rule on the existing nogits host. The script backs up the site and stages assets before replacing HTML. When upgrading from 0.71.0, also deploy the game normally for the building and driving changes below.
+
+### 0.73.0
 
 Motorized ground vehicles now use the visible road network for weather-sensitive off-road speed limits. Existing climate accumulation and road speeds are preserved. No save migration or reset is required; restart normally.
 

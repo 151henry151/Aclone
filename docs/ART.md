@@ -6,6 +6,8 @@ Warm, weathered countryside, readable machinery and consistent metre-scale forms
 
 `shared/building-architecture.ts` defines five models for each of 48 built-in types. Structural volumes drive rendering, collision, placement and navigation; finishes are independent. Expansions add wings or floors. `client/building-architecture.ts` places exposed door/window panels and type-specific machinery; `shared/building-features.ts` reserves equipment yards for refinery columns, brewing kettles, mine headgear and other trade cues. Small painted symbols and clock faces use shared 128-pixel textures; cottages have post-mounted mailboxes. `client/shipping-container.ts` uses textured corrugation with simple frame/locking bars. Models stay below 3,500 triangles, except the spaceport with its existing rocket (30,000 budget). Textures remain shared; no new lights or animation loops.
 
+The public [building gallery](https://nogits.com/buildings/) shows every type. `npm run screenshots:buildings` refreshes its committed WebP sheets; `npm run build:website` builds the searchable page.
+
 The designer uses one reference camera scale per building type. Run `npx tsx scripts/building-architecture-preview.ts` for same-scale model contact sheets in `output/building-architecture/`; spaceport sheets show the terminal campus without the distant rocket. Existing non-container buildings keep their legacy architecture.
 
 ## Natural gathering grounds
