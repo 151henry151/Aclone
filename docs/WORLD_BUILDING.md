@@ -1,5 +1,7 @@
 # World creator studio
 
+New to the editor? Follow the [illustrated world-building guide](WORLD_BUILDING_GUIDE.md) for screenshots and worked examples. This page is the compact reference.
+
 Owners edit designs/models/rules/layouts; visitors interact and play without edit permission. Test in a separate world and export before major edits.
 
 ## Start a world
@@ -128,7 +130,7 @@ A rejected import does not add a world to the registry. Use the media bundle opt
 ## Practical limits and extension points
 
 Each world has a square map whose side is the `mapSize` setting (500–20,000 m,
-editable live in **Settings**). The public Puddlewick is 12,500 m; arenas and
+editable live in **Rules**). The public Puddlewick is 12,500 m; arenas and
 playgrounds, and worlds saved before map sizes existed, keep the 500 m
 footprint. The central 500 m village terrain is unchanged at any size; beyond it
 the countryside is generated deterministically from the world id: rolling hills,

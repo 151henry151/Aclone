@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.79.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.80.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -134,6 +134,7 @@ Release maintainers can use the optional [Discord changelog publisher](docs/RELE
 - [Mobile](docs/MOBILE.md) — touch controls, menus and device checks.
 - [Economy](docs/ECONOMY.md) — prices, production chains, materials and lodging.
 - [World building](docs/WORLD_BUILDING.md) — creator studio, custom models, rules and design transfer.
+- [Illustrated world-building guide](docs/WORLD_BUILDING_GUIDE.md) — step-by-step editor tutorials with 18 screenshots; also published at [nogits.com/world-building](https://nogits.com/world-building/).
 - [Scripting](docs/SCRIPTING.md) — Lua events, effects, examples and limits.
 
 ### Hosts and developers

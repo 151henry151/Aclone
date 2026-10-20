@@ -45,6 +45,8 @@ try {
     'discord-changelog.ts',
     'deploy-discord.sh',
     'build-website.ts',
+    'build-building-gallery.ts',
+    'build-world-guide.ts',
     'deploy-website.sh',
     'serve-website.ts',
     'website-check.ts',

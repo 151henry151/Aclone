@@ -96,7 +96,14 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.79.0
+## Current upgrade: 0.80.0
+
+Publish the illustrated guide, landing-page link and gallery with
+`bash scripts/deploy-website.sh`. The guide uses the same Markdown source as
+GitHub. Its screenshots show the 0.78.0 editor; gameplay is unchanged.
+No migration or reset is required.
+
+### 0.79.0
 
 Install the optional Discord publisher with `bash scripts/deploy-discord.sh`.
 Its token stays in the protected server environment. No game-data migration is required.
@@ -307,3 +314,7 @@ The 0.31.0 procurement upgrade enables bounded hourly parish orders in existing 
 The 0.30.0 reporting upgrade adds business statements and private return/history reports. Existing stock, cash and ownership stay unchanged; accounting starts with newly recorded activity. SQLite receives an optional ledger-details column. Back up the database and uploaded assets before upgrading; a rollback to an older executable needs its matching database backup. Restart the server and refresh clients together. The preceding NPC fix restores replies while preparing to leave; world-rule defaults remain unchanged.
 
 For older upgrades, review the [upgrade archive](RELEASE_NOTES.md#upgrade-archive), especially schema 2 (0.3.0), seasonal farms (0.4.0), town relocation (0.6.0), offline starvation (0.15.0), pricing (0.15.3/0.16.0), and starter-property cleanup (0.21.2). NPC manuals are bundled runtime inputs: restart after editing FAQ, Playing or Economy.
+
+### Illustrated world-building guide
+
+Edit `docs/WORLD_BUILDING_GUIDE.md` and its screenshots in `docs/screenshots/world-building/`. The website build uses Marked at build time to render that same source at `/world-building/`; no Markdown runtime is shipped to players. Keep the guide tied to verified editor controls and capture examples in a disposable local world. `build-world-guide.ts` checks image and local-document references. Review desktop/mobile layout and links before `scripts/deploy-website.sh` publishes the guide alongside the landing page and building gallery.

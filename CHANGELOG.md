@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.80.0] - 2026-10-20
+
+### Added
+
+- An illustrated world-building guide with 18 actual editor screenshots and practical tutorials, shared between GitHub documentation and the public website at `/world-building/`.
+
 ## [0.79.0] - 2026-10-20
 
 ### Added

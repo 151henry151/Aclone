@@ -2,6 +2,7 @@
 import { cpSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { build } from 'vite';
+import { buildWorldGuide } from './build-world-guide.ts';
 import { buildBuildingGallery } from './build-building-gallery.ts';
 const root = resolve(import.meta.dirname, '..');
 const source = join(root, 'website'),
@@ -39,4 +40,5 @@ await build({
 });
 cpSync(join(root, 'public/textures'), join(viewerDir, 'textures'), { recursive: true });
 buildBuildingGallery(source, output, version);
+buildWorldGuide(root, output, version);
 console.log(`Built Aclone ${version} marketing site in website-dist/`);
