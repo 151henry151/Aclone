@@ -69,7 +69,11 @@ const messageSchema = z.discriminatedUnion('type', [
     world: z.string().max(80).optional(),
     protocol: z.union([z.literal(2), z.literal(3)]).optional(),
   }),
-  z.object({ type: z.literal('input'), input: inputSchema }),
+  z.object({
+    type: z.literal('input'),
+    input: inputSchema,
+    sequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).optional(),
+  }),
   z.object({ type: z.literal('ack'), sequence: z.number().int().nonnegative() }),
   z.object({
     type: z.literal('action'),
@@ -84,6 +88,8 @@ interface Peer {
   world?: string;
   input: Input;
   inputAt: number;
+  inputSequence?: number;
+  inputElapsed?: number;
   count: number;
   actions: ActionBudget;
   pingAt: number;
@@ -193,7 +199,14 @@ export async function createApp(options: AppOptions) {
         frames.set(w.id, frame);
       }
       p.stream ??= new DeltaStream(!!p.delivery);
-      const encoded = p.stream.encode(w, p.account, frame);
+      const body = p.stream.encode(w, p.account, frame);
+      const encoded =
+        '{"inputAck":' +
+        (p.inputSequence ?? 0) +
+        ',"inputElapsed":' +
+        (p.inputElapsed ?? 0) +
+        ',' +
+        body.slice(1);
       send(p, p.delivery ? '{"sequence":' + p.delivery.next() + ',' + encoded.slice(1) : encoded);
       return;
     }
@@ -239,7 +252,14 @@ export async function createApp(options: AppOptions) {
       scriptVariables: {},
       messages: w.messages.filter((m) => !m.to || m.to === me.id || m.name === me.name),
     };
-    send(p, { type: 'state', world: state, me: me.id, account: p.account });
+    send(p, {
+      type: 'state',
+      world: state,
+      me: me.id,
+      account: p.account,
+      inputAck: p.inputSequence ?? 0,
+      inputElapsed: p.inputElapsed ?? 0,
+    });
   };
   const leave = (p: Peer) => {
     if (p.world && p.account) {
@@ -259,6 +279,8 @@ export async function createApp(options: AppOptions) {
       p.delivery?.reset();
     }
     p.input = { throttle: 0, steer: 0, boost: false };
+    p.inputSequence = undefined;
+    p.inputElapsed = 0;
   };
   const enter = (p: Peer, id: string) => {
     if (p.account?.transit) throw Error('Wait until your jump arrives before landing');
@@ -784,6 +806,9 @@ export async function createApp(options: AppOptions) {
         }
         if (m.type === 'input') {
           if (p.world) {
+            if (m.sequence !== undefined && m.sequence <= (p.inputSequence ?? -1)) return;
+            p.inputSequence = m.sequence;
+            p.inputElapsed = 0;
             p.input = m.input;
             p.inputAt = now;
           }
@@ -971,6 +996,7 @@ export async function createApp(options: AppOptions) {
               if (Date.now() - p.inputAt > (p.delivery ? 500 : 350))
                 p.input = { throttle: 0, steer: 0, boost: false };
               move(w, player, p.input, dt);
+              p.inputElapsed = (p.inputElapsed ?? 0) + dt;
             }
           }
           for (const w of worlds.values()) {

@@ -132,6 +132,7 @@ export class CountrysideChunks {
     wanted.sort((a, b) => a.d - b.d);
     for (const { i, j } of wanted.slice(0, budget))
       this.chunks.set(`${i}:${j}`, this.build(w, i, j));
+    return wanted.length > budget;
   }
   private build(w: World, i: number, j: number) {
     assets ??= sharedAssets();

@@ -54,7 +54,7 @@ Requests enforce payload/rate/finite-number/proximity/ownership bounds. HTML is 
 
 ## Movement presentation
 
-Each visible pilot retains eight poses. Interpolation normally runs 300 ms behind server time, increasing smoothly to 800 ms for jitter and decaying after recovery. Time never rewinds; clock correction is capped at 5%. Positions interpolate linearly and headings use the shortest arc. Camera, wheels and headlights follow displayed motion. This adds visual latency, not client physics prediction.
+Remote pilots retain eight poses. Interpolation normally runs 300 ms behind server time, increasing smoothly to 800 ms for jitter and decaying after recovery. Time never rewinds; clock correction is capped at 5%. Positions interpolate linearly and headings use the shortest arc. Camera, wheels and headlights follow displayed motion. This buffer applies only to remote pilots. The local pilot uses a disposable copy and shared movement rules on each rendered frame. Input sequence acknowledgements and simulated durations bound replay to 500 ms; small corrections decay over 80 ms. Death, mode/world changes, teleports and reconnects reset prediction. Authoritative resources and actions are never applied by the preview.
 
 Teleports, vehicle/world changes and long gaps reset history. Exhausted buffers hold the last authoritative pose rather than extrapolating through walls. `tests/motion.test.ts` covers frame rates, jitter, angles and resets.
 

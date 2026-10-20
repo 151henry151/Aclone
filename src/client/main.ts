@@ -370,6 +370,7 @@ async function api(path: string, options: RequestInit = {}) {
 let inputStream = new InputStream();
 async function connect() {
   inputStream = new InputStream();
+  scene.prediction.reset();
   clearTimeout(reconnectTimer);
   $('connection').textContent = 'CONNECTING';
   ws = new WebSocket(
@@ -410,6 +411,13 @@ async function connect() {
       $('overlay').innerHTML = '';
       $('world-hud').hidden = !scene.ready;
       scene.setWorld(world!, msg.me);
+      scene.prediction.receive(
+        world!,
+        me!,
+        msg.inputAck ?? 0,
+        msg.inputElapsed ?? 0,
+        performance.now(),
+      );
       $('world-hud').hidden = !scene.ready;
       updateHud();
       refreshTradingPrices();
@@ -2761,9 +2769,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
   sound.setActive(!document.hidden && scene.ready);
 });
-setInterval(() => {
-  if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
-  scene.paused = !!(panel || mobile.drawer);
+function drivingInput() {
   const typing =
     !scene.ready ||
     panel ||
@@ -2771,42 +2777,49 @@ setInterval(() => {
     document.activeElement?.matches('input,textarea,select');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
   const touch = mobile.input();
-  const packet = inputStream.encode(
-    {
-      throttle: typing
-        ? 0
-        : Math.max(
-            -1,
-            Math.min(
-              1,
-              touch.throttle +
-                Number(held('ArrowUp', 'w', 'W')) -
-                Number(held('ArrowDown', 's', 'S')),
-            ),
+  return {
+    throttle: typing
+      ? 0
+      : Math.max(
+          -1,
+          Math.min(
+            1,
+            touch.throttle +
+              Number(held('ArrowUp', 'w', 'W')) -
+              Number(held('ArrowDown', 's', 'S')),
           ),
-      steer: typing
-        ? 0
-        : Math.max(
-            -1,
-            Math.min(
-              1,
-              touch.steer +
-                Number(held('ArrowLeft', 'a', 'A')) -
-                Number(held('ArrowRight', 'd', 'D')),
-            ),
+        ),
+    steer: typing
+      ? 0
+      : Math.max(
+          -1,
+          Math.min(
+            1,
+            touch.steer +
+              Number(held('ArrowLeft', 'a', 'A')) -
+              Number(held('ArrowRight', 'd', 'D')),
           ),
-      boost: !typing && (touch.boost || held('Shift')),
-      lift: typing
-        ? 0
-        : Math.max(
-            -1,
-            Math.min(1, (touch.lift ?? 0) + Number(held('Insert')) - Number(held('Delete'))),
-          ),
-    },
-    performance.now(),
-    ws.bufferedAmount,
-  );
-  if (packet) ws.send(packet);
+        ),
+    boost: !typing && (touch.boost || held('Shift')),
+    lift: typing
+      ? 0
+      : Math.max(
+          -1,
+          Math.min(1, (touch.lift ?? 0) + Number(held('Insert')) - Number(held('Delete'))),
+        ),
+  };
+}
+scene.localInput = drivingInput;
+setInterval(() => {
+  if (!world || !ws || ws.readyState !== WebSocket.OPEN) return;
+  scene.paused = !!(panel || mobile.drawer);
+  const input = drivingInput(),
+    now = performance.now();
+  const packet = inputStream.encode(input, now, ws.bufferedAmount);
+  if (packet) {
+    ws.send(packet);
+    scene.prediction.sent(inputStream.sequence, input, now);
+  }
 }, 50);
 setInterval(() => {
   const timer = document.getElementById('jump-countdown');

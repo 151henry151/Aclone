@@ -38,6 +38,8 @@ import { buildingModel } from './buildings';
 import { buildingPlan } from '../shared/building-shapes';
 import { fishingDock, dockHeight, travelHeight, nearFishingDock } from '../shared/dock';
 import { MotionClock, MotionTrack } from './motion';
+import { LocalPrediction } from './prediction';
+import type { Input } from '../shared/types';
 import { createHuman, type HumanFigure } from './human';
 import { createRobocrow, type RobocrowFigure } from './robocrow';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -106,6 +108,8 @@ export class GameScene {
   private townLighting: TownLighting;
   private ambient = new T.HemisphereLight(0xb6cbd9, 0x7c8067, 1.1);
   private meshes = new Map<string, T.Group>();
+  readonly prediction = new LocalPrediction();
+  localInput: () => Input = () => ({ throttle: 0, steer: 0, boost: false });
   private motionClock = new MotionClock();
   private buildingMeshes: T.Group[] = [];
   private ball: T.Mesh;
@@ -523,6 +527,17 @@ export class GameScene {
     try {
       await yieldFrame();
       if (!current()) return;
+      this.onLoading?.('Preparing nearby terrain…');
+      // Generate nearest tiles first, yielding between small batches rather than
+      // baking the entire horizon in the first state-message handler.
+      while (current()) {
+        const groundPending = this.ground.update(this.me!.x, this.me!.z, 2);
+        const woodsPending = this.woods.update(this.me!.x, this.me!.z, 1);
+        await yieldFrame();
+        if (!groundPending && !woodsPending) break;
+      }
+      if (!current()) return;
+      performance.mark('aclone-terrain-prepared');
       this.onLoading?.('Loading countryside textures…');
       await waitForTextures();
       if (!current()) return;
@@ -534,6 +549,7 @@ export class GameScene {
           this.onLoading?.(`Preparing scenery… ${Math.round((i / Math.max(1, total)) * 100)}%`),
       );
       if (!done) return;
+      performance.mark('aclone-textures-uploaded');
       this.onLoading?.('Tuning engines and birdsong…');
       if (!(await soundBank.prepare(current))) return;
       // Establish fog, camera and light positions before compiling the first view.
@@ -561,6 +577,7 @@ export class GameScene {
         this.headlights.visible = headlights;
       }
       if (!current()) return;
+      performance.mark('aclone-shaders-prepared');
       this.onLoading?.('Finishing the view…');
       this.renderTime = -Infinity;
       this.frame();
@@ -627,7 +644,7 @@ export class GameScene {
     this.ground.clear();
     if (streamed) {
       this.ground.reset(w);
-      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 64);
+      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 4);
       this.terrain = undefined;
     } else {
       const geometry = new T.PlaneGeometry(540, 540, 128, 128);
@@ -855,7 +872,7 @@ export class GameScene {
     this.woods.clear();
     if (streamed && w.creator?.scenery !== false) {
       this.woods.reset(w, this.low);
-      this.woods.update(this.me?.x ?? 0, this.me?.z ?? 0, 16);
+      this.woods.update(this.me?.x ?? 0, this.me?.z ?? 0, 1);
     }
     const seasonal = new Set<T.Material>();
     this.land.traverse((o) => {
@@ -1089,8 +1106,11 @@ export class GameScene {
           w.time + Math.min(1, Math.max(0, (now - this.flightSnapshotAt) / 1000)),
         );
       const motionTime = this.motionClock.sample(now);
+      const predicted = this.prediction.sample(now, this.localInput());
       for (const mesh of this.meshes.values()) {
-        const pose = (mesh.userData.motion as MotionTrack).sample(motionTime)!;
+        const pose =
+          (mesh === this.meshes.get(p.id) ? predicted : undefined) ??
+          (mesh.userData.motion as MotionTrack).sample(motionTime)!;
         const travel =
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
@@ -1226,10 +1246,11 @@ export class GameScene {
           1 - (w.climate?.wetness ?? 0) * 0.45;
       if (this.ground.active) {
         this.ground.setRoughness(1 - (w.climate?.wetness ?? 0) * 0.45);
-        this.ground.update(this.target.x, this.target.z);
+        if (this.ready || this.settling) this.ground.update(this.target.x, this.target.z);
         if (this.water) placeSea(this.water, this.target.x, this.target.z);
       }
-      if (this.woods.active) this.woods.update(this.target.x, this.target.z);
+      if (this.woods.active && (this.ready || this.settling))
+        this.woods.update(this.target.x, this.target.z);
       // Spend the limited light budget where the player is looking, not behind
       // their tractor at the chase camera (especially with four lights on low).
       this.townLighting.update(w, this.target);

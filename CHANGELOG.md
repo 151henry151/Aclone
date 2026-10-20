@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Predict local driving with server acknowledgements and bounded corrections; prepare streamed terrain in smaller loading batches.
+
 ### Fixed
 
 - Preserve caretaker archive scroll and focus during live refresh; update designer and fishing browser checks.

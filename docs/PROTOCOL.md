@@ -31,6 +31,8 @@ Drive by sending normalized input, up to 20 times per second:
 { "type": "input", "input": { "throttle": 1, "steer": 0, "boost": false, "lift": 0 } }
 ```
 
+`input` may include a monotonically increasing integer `sequence`. State messages echo `inputAck` and `inputElapsed` (simulated seconds under that held input). These are separate from protocol 3 snapshot acknowledgements. Stale sequenced controls are ignored; unsequenced legacy input remains supported. Durations and positions are server-derived, never supplied by the client.
+
 Perform a discrete action:
 
 ```json

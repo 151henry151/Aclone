@@ -78,6 +78,7 @@ export class GroundTiles {
     wanted.sort((a, b) => a.d - b.d);
     for (const { i, j } of wanted.slice(0, budget))
       this.tiles.set(`${i}:${j}`, this.build(w, i, j));
+    return wanted.length > budget;
   }
   private build(w: World, i: number, j: number) {
     const x0 = i * groundTileSize,

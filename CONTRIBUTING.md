@@ -46,7 +46,7 @@ Give independent scenarios their own tests rather than sharing one deadline acro
 
 Use compact worlds for multi-client tests of non-visual features. Disabling scenery alone still loads streamed countryside terrain on large maps; the social fixture sets a 500 m map while keeping both clients and all transaction assertions.
 
-For cold-load diagnostics, run `npm run build` then `CHROMIUM_PATH=/usr/bin/chromium npm run profile:startup`. This creates a disposable parish with eight extra tractors and saves CPU, frame, resource and readiness timings under `test-results/startup`. `PROFILE_GPU=1` requests hardware rendering; inspect the recorded renderer before comparing results. `PROFILE_SECONDS=25` shortens the default minute. Browser entry assertions allow up to 60 seconds for preparation; ordinary interaction waits remain unchanged.
+For cold-load diagnostics, run `npm run build` then `CHROMIUM_PATH=/usr/bin/chromium npm run profile:startup`. This creates a disposable parish with eight extra tractors and saves CPU, frame, resource and readiness timings under `test-results/startup`. `PROFILE_GPU=1` requests hardware rendering; inspect the recorded renderer before comparing results. `PROFILE_SECONDS=25` shortens the default minute. `PROFILE_WARM=1` records a second, cached reload; `PROFILE_MOBILE=1` uses a touch phone viewport. Terrain, texture-upload, shader and ready marks distinguish preparation stages. Browser entry assertions allow up to 60 seconds for preparation; ordinary interaction waits remain unchanged.
 
 ## Sending changes
 

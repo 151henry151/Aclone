@@ -31,7 +31,12 @@ const browser = await chromium.launch({
   ],
 });
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const mobile = process.env.PROFILE_MOBILE === '1';
+  const page = await browser.newPage({
+    viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+    isMobile: mobile,
+    hasTouch: mobile,
+  });
   await page.addInitScript(
     ({ token }) => {
       localStorage.setItem('aclone.pilot', token);
@@ -55,36 +60,47 @@ try {
   `);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Profiler.enable');
-  await cdp.send('Profiler.start');
-  await page.goto(`http://127.0.0.1:${port}`);
-  await page.waitForTimeout(Number(process.env.PROFILE_SECONDS ?? 60) * 1000);
-  const { profile } = await cdp.send('Profiler.stop');
-  writeFileSync(join(output, 'cpu.json'), JSON.stringify(profile));
-  const renderer = await page.locator('#viewport canvas').evaluate((canvas) => {
-    const gl = (canvas as HTMLCanvasElement).getContext('webgl2')!,
-      debug = gl.getExtension('WEBGL_debug_renderer_info');
-    return {
-      name: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : 'Unavailable',
-      drawCalls: (canvas as HTMLElement).dataset.drawCalls,
-      triangles: (canvas as HTMLElement).dataset.triangles,
-    };
-  });
-  const data = await page.evaluate(() => ({
-    ...(window as unknown as { startupProfile: object }).startupProfile,
-    marks: performance.getEntriesByType('mark').map((e) => ({ name: e.name, start: e.startTime })),
-    resources: performance.getEntriesByType('resource').map((e) => {
-      const r = e as PerformanceResourceTiming;
+  for (const phase of process.env.PROFILE_WARM === '1' ? ['cold', 'warm'] : ['cold']) {
+    await cdp.send('Profiler.start');
+    if (phase === 'warm') await page.reload();
+    else await page.goto(`http://127.0.0.1:${port}`);
+    await page.waitForTimeout(Number(process.env.PROFILE_SECONDS ?? 60) * 1000);
+    const { profile } = await cdp.send('Profiler.stop');
+    writeFileSync(
+      join(output, phase === 'cold' ? 'cpu.json' : 'cpu-warm.json'),
+      JSON.stringify(profile),
+    );
+    const renderer = await page.locator('#viewport canvas').evaluate((canvas) => {
+      const gl = (canvas as HTMLCanvasElement).getContext('webgl2')!,
+        debug = gl.getExtension('WEBGL_debug_renderer_info');
       return {
-        name: new URL(r.name).pathname,
-        start: r.startTime,
-        duration: r.duration,
-        bytes: r.transferSize,
+        name: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : 'Unavailable',
+        drawCalls: (canvas as HTMLElement).dataset.drawCalls,
+        triangles: (canvas as HTMLElement).dataset.triangles,
       };
-    }),
-  }));
-  writeFileSync(join(output, 'frames.json'), JSON.stringify({ ...data, renderer }));
-  if (errors.length) throw Error(errors.join('\n'));
-  console.log('Saved cold-load profile to', output);
+    });
+    const data = await page.evaluate(() => ({
+      ...(window as unknown as { startupProfile: object }).startupProfile,
+      marks: performance
+        .getEntriesByType('mark')
+        .map((e) => ({ name: e.name, start: e.startTime })),
+      resources: performance.getEntriesByType('resource').map((e) => {
+        const r = e as PerformanceResourceTiming;
+        return {
+          name: new URL(r.name).pathname,
+          start: r.startTime,
+          duration: r.duration,
+          bytes: r.transferSize,
+        };
+      }),
+    }));
+    writeFileSync(
+      join(output, phase === 'cold' ? 'frames.json' : 'frames-warm.json'),
+      JSON.stringify({ ...data, renderer }),
+    );
+    if (errors.length) throw Error(errors.join('\n'));
+    console.log('Saved', phase, mobile ? 'phone' : 'desktop', 'profile to', output);
+  }
 } finally {
   await browser.close();
   await app.close();
