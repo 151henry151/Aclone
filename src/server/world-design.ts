@@ -42,6 +42,7 @@ const designSchema = z.object({
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
   courses: z.array(courseSchema).max(16).default([]),
   roundCycle: roundCycleSchema.optional(),
+  contractRules: z.object({ leases: z.boolean(), auctions: z.boolean() }).optional(),
   format: z.literal('aclone-world-design'),
   version: z.literal(1),
   settings: z
@@ -144,6 +145,7 @@ export function exportDesign(w: World, includeMedia = false) {
     catalogue: w.catalogue ?? catalogueSchema.parse({}),
     courses: w.courses?.map((c) => c.definition) ?? [],
     roundCycle: w.roundCycle?.rules,
+    contractRules: w.contractRules,
     format: 'aclone-world-design',
     version: 1,
     tier: w.tier,
@@ -216,6 +218,7 @@ export function applyDesign(w: World, input: unknown) {
     weekly: {},
     paid: {},
   }));
+  w.contractRules = d.contractRules;
   if (d.roundCycle)
     w.roundCycle = {
       rules: d.roundCycle,

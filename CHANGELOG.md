@@ -13,6 +13,7 @@ All notable changes to Aclone are documented here. This project follows
 - Offer world-specific first steps, recent destinations, repeat gathering with a stop control, and configurable gamepad driving/menu navigation.
 - Support level foundations and entrance steps for new construction on gentle slopes, with matching placement checks and persisted terrain coordinates.
 - Add creator checkpoint courses, durable scoreboards and funded prizes, plus optional build/peace/war phases with archived results.
+- Offer optional prepaid commercial operating leases with asset bonds and funded fixed-term property auctions.
 
 ### Fixed
 

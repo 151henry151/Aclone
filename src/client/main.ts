@@ -1,3 +1,4 @@
+import { contractPanel } from './property-contracts';
 import { coursesPanel } from './courses';
 import { firstSteps } from '../shared/first-steps';
 import { Controller } from './controller';
@@ -1332,7 +1333,7 @@ function renderPanel() {
         )
         .join(
           '',
-        )}</ol><p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${button('Sign out of all devices', 'confirmLogout')}`,
+        )}</ol><p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${me.authority >= 20 || world.owner === me.id ? `<h3>Property contracts</h3>${button('Operating leases: ' + (world.contractRules?.leases ? 'on' : 'off'), 'leasesToggle')}${button('Property auctions: ' + (world.contractRules?.auctions ? 'on' : 'off'), 'auctionsToggle')}` : ''}${button('Sign out of all devices', 'confirmLogout')}`,
     );
     return;
   }
@@ -1982,12 +1983,20 @@ function buildingWindow(b: Building) {
       'interactObject',
       `data-id="${esc(b.id)}" ${!near ? 'disabled' : ''}`,
     );
-  if (tab === 'Building Admin' && owned && !b.government && !b.lien)
+  if (
+    tab === 'Building Admin' &&
+    owned &&
+    !b.government &&
+    !b.lien &&
+    !b.operatingLease &&
+    !b.auction
+  )
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
+  if (tab === 'Main' || tab === 'Building Admin') html += contractPanel(world, me, b);
   if (tab === 'Statement')
     html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;
   if (tab === 'Extra Info')
-    html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Each production building has an ideal active crew. Below it, efficiency is active ÷ ideal; above it, ideal ÷ active. Unstaffed private businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
+    html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Each production building has an ideal active crew. Below it, efficiency is active ÷ ideal; above it, ideal ÷ active. Unstaffed private businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned && !b.operatingLease && !b.auction ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
   modal(b.name, html, true);
   refreshTradingPrices();
 }
@@ -2323,6 +2332,21 @@ app.addEventListener('click', async (e) => {
         break;
       case 'learn':
         send({ type: 'learn', skill: id, building });
+        break;
+      case 'leasesToggle':
+      case 'auctionsToggle':
+        send({
+          type: 'propertyContract',
+          operation: 'rules',
+          leases:
+            action === 'leasesToggle'
+              ? !world?.contractRules?.leases
+              : !!world?.contractRules?.leases,
+          auctions:
+            action === 'auctionsToggle'
+              ? !world?.contractRules?.auctions
+              : !!world?.contractRules?.auctions,
+        });
         break;
       case 'courseStart':
       case 'courseStop':

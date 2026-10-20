@@ -114,6 +114,9 @@ export interface Player {
 export interface Building {
   /** Level selected by server for new foundations; absent on legacy buildings. */
   foundationY?: number;
+  leaseOffer?: import('./property-contracts').LeaseOffer;
+  operatingLease?: import('./property-contracts').OperatingLease;
+  auction?: import('./property-contracts').PropertyAuction;
   /** Public staffing projection; never persisted as employment authority. */
   staffing?: { active: number; ideal: number; ownerOperating: boolean };
   ownerActiveUntil?: number;
@@ -340,6 +343,7 @@ export interface World {
     team?: number;
   }[];
   raceBest: Record<string, number>;
+  contractRules?: { leases: boolean; auctions: boolean };
   roundArchive?: import('./round-cycle').RoundCycle['history'];
   roundCycle?: import('./round-cycle').RoundCycle;
   courses?: import('./courses').CourseState[];

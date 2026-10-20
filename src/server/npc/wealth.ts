@@ -10,7 +10,7 @@ export function liquidCapital(w: World, p: Player) {
     p.cash +
     p.bank +
     w.buildings
-      .filter((b) => b.owner === p.id)
+      .filter((b) => (b.operatingLease ? b.operatingLease.landlord === p.id : b.owner === p.id))
       .reduce((n, b) => n + Math.max(0, b.investment - remainingClaim(b)), 0) -
     (p.loans ?? []).reduce((n, l) => n + Math.max(0, l.principal + l.interest), 0)
   );
@@ -26,7 +26,7 @@ export function netAssets(w: World, p: Player) {
       0,
     );
   const property = w.buildings
-    .filter((b) => b.owner === p.id)
+    .filter((b) => (b.operatingLease ? b.operatingLease.landlord === p.id : b.owner === p.id))
     .reduce(
       (total, b) =>
         total +

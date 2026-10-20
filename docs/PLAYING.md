@@ -312,3 +312,9 @@ the course waypoint selected to see the next target. Changing vehicle, teleporti
 disconnecting or exceeding the time limit invalidates a run. Prizes come from a
 sponsor's deposited money, at most once per pilot per seven-day world-time week.
 A creator can also enable build/peace/war phases; survival and property persist.
+
+Some worlds allow commercial operating leases and auctions in building panels.
+Read the prepaid rent, asset bond and expiry before accepting: stock and working
+cash stay with the property when the lease ends, and asset depletion reduces the
+bond refund. An operator cannot sell, mortgage or demolish it. Auctions hold the
+highest bid until closing and refund outbid bidders. See [contract rules](ECONOMY.md#optional-property-contracts-0780).

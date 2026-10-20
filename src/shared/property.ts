@@ -39,6 +39,7 @@ export function releaseEstate(w: World, b: Building, cause = 'death') {
       text: `${b.name} became unclaimed after ${cause}. ${w.settings.retainEstateContents ? 'Contents and investment remain with the building.' : 'Estate contents follow this world’s death rules.'}`,
     });
   delete b.owner;
+  delete b.leaseOffer;
   b.forSale = false;
   b.estate = {
     since: w.time,

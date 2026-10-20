@@ -253,3 +253,31 @@ bottlenecks. Cash runway extrapolates the recorded cash-loss rate; sales/hour us
 recorded history. Neither predicts demand. Stored goods use catalogue reference
 values, not guaranteed proceeds. NPC owners see the same diagnosis; closed bids
 use catalogue estimates rather than pretending free inputs are available.
+
+## Optional property contracts (0.78.0)
+
+Caretakers enable leases and auctions in **World rules**; both default off. They
+apply to completed commercial properties without mortgages or outside stakes,
+excluding homes, lodging, banks, government property and supply caches.
+
+- **Operating lease:** the owner posts total prepaid rent and a 1–168 hour term.
+  The accepting operator pays rent plus a refundable bond equal to the current
+  catalogue value of stock and working cash. The landlord keeps title; the
+  operator manages prices, goods, employees and the till. At expiry, surrender
+  or either participant's death, operation returns to the landlord. Reduced
+  starting equity is charged against the bond, capped at the bond; the remainder
+  returns to the operator. Rent is non-refundable, and extra capital is not
+  guaranteed to be returned. After death, ordinary world estate rules still apply.
+- **Auction:** the owner sets a fixed 1–168 hour deadline and minimum. Bidders
+  must fund their full bid; outbidding refunds the previous bidder. There is no
+  early cancellation. The seller cannot strip stock or capital during the sale,
+  although ordinary production/trading continues and equity can change. Closing
+  transfers title and escrow once; failed ownership-limit checks refund the bid.
+  Seller death cancels/refunds; bidder death refunds their bid.
+- **Destruction:** outstanding auction escrow is refunded. Lease bonds settle
+  against destroyed assets before the building is removed. This is not insurance
+  for the building itself. Contract money cannot be settled twice after restart.
+
+Existing contracts settle even if new contracts are subsequently disabled.
+Maintenance freezes their world-time deadlines. Cross-host visits do not transfer
+these properties, contracts or sponsor escrow into another host's economy.

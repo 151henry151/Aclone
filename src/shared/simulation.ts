@@ -1,3 +1,9 @@
+import {
+  propertyContractAction,
+  tickPropertyContracts,
+  contractsOnDeath,
+  contractsOnRemoval,
+} from './property-contracts.ts';
 import { roundCycleAction, tickRoundCycle } from './round-cycle.ts';
 import { courseAction, tickCourses } from './courses.ts';
 import { cancelGather } from './resources.ts';
@@ -389,6 +395,22 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (type === 'propertyContract') return propertyContractAction(w, p, a);
+  const contracted = w.buildings.find((b) => b.id === a.building);
+  if (
+    contracted &&
+    (contracted.operatingLease || contracted.auction) &&
+    ['buyBuilding', 'listProperty', 'demolish'].includes(type)
+  )
+    throw Error('Settle the existing property contract first');
+  if (
+    contracted?.auction &&
+    ['stock', 'investment', 'buildingAdmin'].includes(type) &&
+    contracted.owner === p.id
+  )
+    throw Error('Owner stock, capital and price changes are locked during the auction');
+  if (contracted?.operatingLease && type === 'investment' && contracted.owner !== p.id)
+    throw Error('Outside stakes cannot be added during an operating lease');
   if (
     p.crowBody &&
     ![
@@ -564,7 +586,7 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(
         w.buildings.filter(
           (b) =>
-            b.owner === id &&
+            (b.owner === id || b.operatingLease?.landlord === id) &&
             (homes
               ? ['home', 'warehouse'].includes(b.kind)
               : !['home', 'warehouse'].includes(b.kind)),
@@ -594,6 +616,7 @@ export function act(w: World, id: string, a: Action): string {
       });
       b.owner = id;
       delete b.estate;
+      delete b.leaseOffer;
       removeOwnerEmployment(w, b);
       b.forSale = false;
       result = `You now own ${b.name}. Bring a broom.`;
@@ -606,6 +629,7 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(!b.lien, 'Repay the mortgage before listing this property');
       b.price = num(a.price, 1, 100000000, true);
       b.forSale = true;
+      delete b.leaseOffer;
       result = 'Property listed for sale.';
       break;
     }
@@ -1201,7 +1225,7 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(
         w.buildings.filter(
           (b) =>
-            b.owner === id &&
+            (b.owner === id || b.operatingLease?.landlord === id) &&
             (home
               ? ['home', 'warehouse'].includes(b.kind)
               : !['home', 'warehouse'].includes(b.kind)),
@@ -1758,6 +1782,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     );
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  if (!comic) contractsOnDeath(w, p);
   if (!comic) p.needsGraceUntil = at + (w.settings.postDeathGraceSeconds ?? 0);
   if (!comic)
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
@@ -1928,6 +1953,19 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
 
 export function advance(w: World, seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return;
+  const boundary = Math.min(
+    ...w.buildings.flatMap((b) =>
+      [b.operatingLease?.ends, b.auction?.ends].filter(
+        (v): v is number => v !== undefined && v > w.time,
+      ),
+    ),
+  );
+  if (boundary < w.time + seconds) {
+    const first = boundary - w.time;
+    advance(w, first);
+    advance(w, seconds - first);
+    return;
+  }
   // Fixed economic boundaries make catch-up independent of client frame rate.
   const start = w.time,
     end = start + seconds;
@@ -1947,6 +1985,7 @@ export function advance(w: World, seconds: number) {
   tickTownEvents(w);
   tickCourses(w, seconds);
   tickRoundCycle(w);
+  tickPropertyContracts(w);
   tickLottery(w);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)
@@ -2088,6 +2127,7 @@ export function advance(w: World, seconds: number) {
       );
     }
   }
+  for (const b of w.buildings) if (b.condition <= 0) contractsOnRemoval(w, b);
   w.buildings = w.buildings.filter((b) => b.condition > 0);
   const ball = w.ball,
     dt = Math.min(seconds, 1);

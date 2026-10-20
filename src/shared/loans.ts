@@ -64,7 +64,12 @@ export function creditProfile(w: World, p: Player) {
   const loans = (p.loans ?? []).filter((l) => l.status !== 'paid');
   const debt = loans.reduce((n, l) => n + l.principal + l.interest, 0);
   const assets = w.buildings
-    .filter((b) => b.owner === p.id && !b.government && !b.construction)
+    .filter(
+      (b) =>
+        (b.operatingLease ? b.operatingLease.landlord === p.id : b.owner === p.id) &&
+        !b.government &&
+        !b.construction,
+    )
     .reduce((n, b) => n + ((buildings[b.kind]?.price ?? 0) * Math.max(0, b.condition)) / 100, 0);
   const employment = c?.observedSeconds ? Math.min(1, c.employedSeconds / c.observedSeconds) : 0;
   const history = c ? Math.min(60, Math.floor((w.time - c.since) / LOAN_MONTH) * 3) : 0;
@@ -106,6 +111,7 @@ export function loanQuote(
 ) {
   const profile = creditProfile(w, p);
   const property = collateral ? w.buildings.find((v) => v.id === collateral) : undefined;
+
   const secured = !!collateral;
   const apr =
     Math.round(
@@ -127,6 +133,8 @@ export function loanQuote(
     ? Math.floor(value * 0.75)
     : Math.min(100000, Math.floor(profile.monthlyIncome * 6 + liquid * 0.5));
   const reasons: string[] = [];
+  if (property?.operatingLease || property?.auction)
+    reasons.push('Settle the property contract before mortgaging.');
   if (b.kind !== 'bank' || b.construction) reasons.push('Visit an operating bank.');
   if (!Number.isSafeInteger(amount) || amount < 1000 || amount > 10000000)
     reasons.push('Borrow 10d–100,000d.');
