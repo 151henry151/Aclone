@@ -35,7 +35,20 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.77.2
+## Current upgrade: 0.78.0
+
+Back up the database and uploaded assets. Update client and server together for
+predicted movement, repeat gathering and slope foundations, then refresh browsers.
+Publish the marketing page separately with `bash scripts/deploy-website.sh`.
+No reset, price migration, grants or provider-budget changes are required.
+
+Existing buildings retain their heights. Courses and phase cycles require creator
+setup; leases and auctions default off. Maintenance is only entered explicitly by
+the owner/caretaker. Preserve a 0.78.0 backup before any rollback once contracts or
+prize escrow have been funded: older code cannot settle these new obligations.
+See [fidelity validation](FIDELITY_PLAN.md#remaining-validation) for measured limits.
+
+### 0.77.2
 
 Chat allowance accounting excludes unclassified legacy calls from the chat-only limit, while retaining all historical charges against global limits. Budget/context refusals expire after three local checks. Preserve the same database and environment; restart normally. No accounting reset or world migration is required.
 

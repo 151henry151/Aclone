@@ -6,19 +6,25 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.78.0] - 2026-10-20
+
 ### Added
 
-- Predict local driving with server acknowledgements and bounded corrections; prepare streamed terrain in smaller loading batches.
-- Diagnose business cash flow, supply coverage and output congestion; protect NPC reserves and cool down depleted-resource retries.
-- Offer world-specific first steps, recent destinations, repeat gathering with a stop control, and configurable gamepad driving/menu navigation.
-- Support level foundations and entrance steps for new construction on gentle slopes, with matching placement checks and persisted terrain coordinates.
-- Add creator checkpoint courses, durable scoreboards and funded prizes, plus optional build/peace/war phases with archived results.
-- Offer optional prepaid commercial operating leases with asset bonds and funded fixed-term property auctions.
-- Persist audited maintenance pauses that freeze world actions, movement, scripts and NPC planning without replaying paused time.
+- Updated player, creator and hosting guides and the public website for these features.
+- A seven-pass fidelity roadmap with evidence, dependencies and acceptance checks for controls, the economy, onboarding, construction and optional historical features.
+- Immediate local driving prediction with server acknowledgements and bounded correction; other players retain interpolated movement.
+- Business statements and NPC owner briefings now diagnose input coverage, output congestion, staffing, observed sales and cash runway; financing and owner deposits are separate from operating cash flow.
+- World-specific first steps, recent destinations, explicit repeat gathering with a stop control, and configurable gamepad driving and menu navigation.
+- Level foundation plinths and entrance steps for new construction on gentle slopes, with shared placement/preview checks.
+- Creator checkpoint courses with hold points, weekly/all-time boards and sponsor-funded prizes; optional build/peace/war phases with persistent score archives.
+- Optional prepaid commercial operating leases with asset bonds, funded fixed-term property auctions, and an audited, persisted maintenance pause.
 
 ### Fixed
 
-- Preserve caretaker archive scroll and focus during live refresh; update designer and fishing browser checks.
+- NPC job and supply choices reject unfunded or congested production and preserve living reserves; depleted resource attempts cool down immediately instead of repeatedly retrying.
+- Prepare streamed terrain in small batches during loading instead of building the entire nearby horizon in one blocking task.
+- Keep the caretaker's archived chat reading surface intact during live census updates, preserving scroll, focus and text selection.
+- Update construction browser checks for the current building designer, including finish persistence, shoreline intake rotation and design-specific material costs.
 
 ## [0.77.2] - 2026-10-19
 

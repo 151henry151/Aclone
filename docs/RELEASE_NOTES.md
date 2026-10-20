@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.78.0 — Player controls and creator-world features
+
+Responsive driving prediction, controller menus, first-step guidance and repeat
+gathering make everyday play easier. Business reports separate cash earnings from
+funding and expose supply bottlenecks. New buildings gain slope-aware foundations.
+Creators can add checkpoint courses, funded prizes and build/peace/war phases;
+optional commercial leases, auctions and maintenance controls give hosts more
+choices. Existing worlds keep their property, prices and balances.
+
+See [upgrade instructions](RELEASING.md#current-upgrade-0780) and the
+[validation record](FIDELITY_PLAN.md). Startup speedup and long-term autonomous
+NPC prosperity remain unproven; no ATM importer or new space-mining economy is
+included.
+
 ## Upgrading to 0.36.0
 
 Back up the database and assets, then use the usual pull/build/restart procedure. Vehicle records initialize lazily; existing condition is not guessed from character age. New rules retain unrestricted Puddlewick maps and basic driving. The upgrade adds missing map quotes only to treasury-run public outlets, preserving private prices and inventories; existing garages can print maps and accept carried Steel for service. No world reset is needed.

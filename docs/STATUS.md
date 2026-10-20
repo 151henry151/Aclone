@@ -44,3 +44,12 @@ Finish required fidelity gaps; strengthen migrations/module boundaries and desig
 Deterministic NPC tests prove mechanics, privacy and budgets—not human realism, profitable autonomy or perfect advice. Short paid trials are documented in [NPC validation](NPCS.md#development-and-validation); a 50-resident scheduler fixture is not a production benchmark.
 
 Playtest sustainable businesses after days offline, six-player Hornball, and friends reaching a created world through space. A passing build alone is not completion of the spec.
+
+## Fidelity passes (0.78.0)
+
+Version 0.78.0 adds predicted driving, controller menus, repeat gathering, business
+diagnostics, first-step guidance, slope foundations, funded checkpoint courses,
+optional phase cycles, operating leases/auctions and maintenance pauses. See the
+[fidelity plan](FIDELITY_PLAN.md) for evidence and limitations. Startup speedup and
+long-term autonomous NPC prosperity are not established by the current checks;
+ATM import and new space-mining mechanics are not implemented.
