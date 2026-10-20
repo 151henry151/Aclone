@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.78.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.79.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -122,6 +122,8 @@ CI runs unit/type/format checks, eight isolated browser shards, public-website c
 Browser tests may create pilots and worlds: never target production. `TEST_URL` selects the server; `CHROMIUM_PATH` selects an installed Chromium. Load/network checks are in [Hosting](docs/HOSTING.md#connection-and-multiplayer-checks); visual capture commands are in [Art](docs/ART.md#reviewing-visual-changes).
 
 The [offline NPC evaluator](docs/NPCS.md#household-and-career-recovery) can fast-forward a disposable economy without graphics or API charges. Use it to find mechanical failures; its heuristic decisions do not prove that the live AI economy is stable.
+
+Release maintainers can use the optional [Discord changelog publisher](docs/RELEASING.md#discord-changelog-publisher) to backfill one post per release and publish new dated entries after deployment. It runs on the game host with a protected bot token and a systemd timer; your laptop need not stay online.
 
 ## Documentation
 

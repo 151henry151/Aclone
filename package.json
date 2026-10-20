@@ -1,6 +1,6 @@
 {
   "name": "aclone",
-  "version": "0.78.0",
+  "version": "0.79.0",
   "private": true,
   "type": "module",
   "description": "A small, persistent universe with an unreasonable number of tractors.",
@@ -40,7 +40,8 @@
     "preview:website": "npm run build:website && tsx scripts/serve-website.ts",
     "check:website": "tsx scripts/website-check.ts",
     "screenshots:website": "tsx scripts/website-shots.ts",
-    "screenshots:buildings": "tsx scripts/building-gallery-images.ts"
+    "screenshots:buildings": "tsx scripts/building-gallery-images.ts",
+    "changelog:discord": "node --env-file-if-exists=.env scripts/discord-changelog.ts"
   },
   "dependencies": {
     "fengari": "^0.1.4",

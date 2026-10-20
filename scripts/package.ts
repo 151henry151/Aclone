@@ -11,6 +11,7 @@ mkdirSync(root);
 const files = [
   'src',
   'data',
+  'deploy',
   'public',
   'website',
   'art',
@@ -41,6 +42,8 @@ try {
   mkdirSync(join(root, 'scripts'));
   for (const file of [
     'backup.ts',
+    'discord-changelog.ts',
+    'deploy-discord.sh',
     'build-website.ts',
     'deploy-website.sh',
     'serve-website.ts',

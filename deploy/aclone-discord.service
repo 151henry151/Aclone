@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Unit]
+Description=Aclone Discord changelog publisher
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=aclone-discord
+Group=aclone-discord
+WorkingDirectory=/opt/aclone-discord
+EnvironmentFile=/etc/aclone-discord.env
+Environment=DISCORD_CHANGELOG_PATH=/opt/aclone/CHANGELOG.md
+ExecStart=/usr/bin/node /opt/aclone-discord/discord-changelog.ts --send
+TimeoutStartSec=15min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true

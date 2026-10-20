@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.79.0] - 2026-10-20
+
+### Added
+
+- An optional Discord release bot publisher with chronological changelog backfill, duplicate detection, rate-limit handling and a separate server-hosted timer that posts new dated entries after deployment.
+
 ## [0.78.0] - 2026-10-20
 
 ### Added

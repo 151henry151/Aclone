@@ -21,6 +21,67 @@ on demand.
 
 0.1.0 was the local bootstrap; 0.2.0 the first public alpha. Do not claim 1.0 while required [status gaps](STATUS.md) remain.
 
+## Discord changelog publisher
+
+The publisher posts one message per dated `CHANGELOG.md` release to the official
+server's `#changelog`, oldest first. It ignores `[Unreleased]`. Every run scans
+that bot's channel history, so retries skip already published versions. Existing
+posts are not rewritten when an old release is edited. Keep the same bot identity
+and retain its messages; deleting a release post makes it eligible for reposting.
+Notes over Discord's embed limit get a preview and complete Markdown attachment
+in the same message. Mentions and push notifications are suppressed.
+
+### One-time setup
+
+1. Create **aclone-bot** in the [Discord Developer Portal](https://discord.com/developers/applications).
+   Install its bot in your server with the `bot` scope. In `#changelog`, grant
+   **View Channel, Send Messages, Embed Links, Attach Files, Read Message History**.
+   For a read-only channel, explicitly allow these permissions for the bot role in the channel overrides. Administrator and privileged gateway intents are unnecessary. You may limit
+   its role to this channel. This is a REST publisher, not an always-online chat bot.
+2. On nogits, store its bot token in `/etc/aclone-discord.env`, owned by root with
+   mode `0600`, as `DISCORD_CHANGELOG_BOT_TOKEN=...`. Add the verified numeric
+   `#changelog` ID as `DISCORD_CHANGELOG_CHANNEL_ID=1562183806478327980` and
+   `DISCORD_CHANGELOG_GUILD_ID=1562183434254680175`. Use a dedicated bot token,
+   never the personal research-export token. Never commit or print credentials.
+3. From a workstation, run `bash scripts/deploy-discord.sh` when deployment is
+   authorized. It installs the publisher separately in `/opt/aclone-discord`,
+   creates an unprivileged service account, and enables a systemd timer. It runs
+   an initial backfill and checks `/opt/aclone/CHANGELOG.md` every five minutes and
+   after server reboot. Future game deployments bring new notes onto the server;
+   the bot posts any missing dated releases. It does not announce unpushed local
+   edits or certify that the game deployment passed its health checks.
+
+This bot runs **on nogits**, independently of laptops and GitHub Actions. Node 24
+executes its TypeScript directly; it needs no npm packages, AI calls, gateway
+connection or privileged intents. Systemd reads the root-only environment file
+and gives only the bot service its token. The bot may appear offline in Discord
+because it uses the REST API only; this does not prevent posting.
+
+```sh
+# On nogits (root), inspect or trigger the one-shot publisher:
+systemctl status aclone-discord.timer
+systemctl start aclone-discord.service
+journalctl -u aclone-discord.service -n 30 --no-pager
+# Pause automatic publishing without affecting the game:
+systemctl stop aclone-discord.timer
+```
+
+For a preview, use `npm run changelog:discord -- --preview` in a source checkout.
+Without a token this is entirely offline. With `DISCORD_CHANGELOG_BOT_TOKEN` and
+`DISCORD_CHANGELOG_CHANNEL_ID` set, it checks permissions and history without
+posting. An ignored local `.env` is optional for development, never required for
+production. `DISCORD_CHANGELOG_PATH` can select the deployed changelog explicitly.
+The service uses `--send`; trigger production sends through systemd so they cannot
+overlap. Do not run a separate publisher alongside it.
+
+Failures retain progress in channel history and retry on the next timer run.
+Stable Discord nonces also guard near-simultaneous retries. The publisher verifies
+Read Message History before scanning: without it Discord can return empty history.
+A replacement bot cannot authenticate an old bot's posts; migrate deliberately.
+No game restart is needed to install or update this separate bot service.
+See Discord's [message API](https://docs.discord.com/developers/resources/message)
+and [rate limits](https://docs.discord.com/developers/topics/rate-limits).
+
 ## Deployment
 
 Production is operator-managed. Keep the same persistent DATA_DIR and private environment:
@@ -35,7 +96,12 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.78.0
+## Current upgrade: 0.79.0
+
+Install the optional Discord publisher with `bash scripts/deploy-discord.sh`.
+Its token stays in the protected server environment. No game-data migration is required.
+
+### 0.78.0
 
 Back up the database and uploaded assets. Update client and server together for
 predicted movement, repeat gathering and slope foundations, then refresh browsers.
