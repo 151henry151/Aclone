@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { fadeSceneryIntoFog } from './scenery-fog';
 
 export type EvergreenSite = {
   x: number;
@@ -279,6 +280,8 @@ export function evergreenMaterials(): EvergreenMaterials {
     );
   };
   const wood = new T.MeshStandardMaterial({ map: barkTexture(), roughness: 1 });
+  fadeSceneryIntoFog(needles);
+  fadeSceneryIntoFog(wood);
   return { needles, wood };
 }
 const sharedGeometry = new Map<string, ReturnType<typeof evergreenGeometry>>();

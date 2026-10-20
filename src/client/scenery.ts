@@ -2,6 +2,7 @@
 import { evergreens, type EvergreenSite } from './evergreen';
 import { worldResources } from '../shared/resources';
 import { resourceScenery } from './resource-scenery';
+import { fadeSceneryIntoFog } from './scenery-fog';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { buildingPlan, buildingBounds } from '../shared/building-shapes';
@@ -79,6 +80,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     points: number[][],
     shadow = false,
   ) => {
+    fadeSceneryIntoFog(material);
     const mesh = new T.InstancedMesh(geometry, material, points.length);
     points.forEach(([x, y, z, s = 1, rot = 0], i) => {
       matrix.position.set(x, y, z);

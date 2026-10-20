@@ -1,4 +1,5 @@
 import { creatorModel } from './creator-model';
+import { fadeSceneryIntoFog } from './scenery-fog';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -495,6 +496,7 @@ export function resourceScenery(
     }),
     rubber: new T.MeshStandardMaterial({ color: '#292a25', roughness: 1 }),
   };
+  for (const surface of ['leaves', 'bark', 'wood'] as const) fadeSceneryIntoFog(materials[surface]);
   for (const node of worldResources(world)) {
     if (
       !include(node) ||

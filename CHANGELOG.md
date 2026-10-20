@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.80.1] - 2026-10-20
+
+### Fixed
+
+- Distant woodland and small countryside scenery now fade out with fog instead of remaining as floating dark speckles above sunset and sunrise ridgelines, without adding geometry or draw calls.
+
 ## [0.80.0] - 2026-10-20
 
 ### Added

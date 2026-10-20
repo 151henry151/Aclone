@@ -96,7 +96,13 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.80.0
+## Current upgrade: 0.80.1
+
+Refresh browsers after deployment to load the distant-scenery fog fix. Tree
+positions, terrain, resource reserves and game rules are unchanged. No data
+migration or world reset is required.
+
+### 0.80.0
 
 Publish the illustrated guide, landing-page link and gallery with
 `bash scripts/deploy-website.sh`. The guide uses the same Markdown source as

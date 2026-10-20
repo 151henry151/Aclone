@@ -15,6 +15,7 @@ import {
 } from './evergreen';
 import { foliage, random } from './scenery';
 import { resourceScenery } from './resource-scenery';
+import { fadeSceneryIntoFog } from './scenery-fog';
 import { contactShadow, seasonalMaterial, texture } from './materials';
 
 export const chunkSize = 256;
@@ -65,6 +66,7 @@ function sharedAssets() {
     assets.evergreen.wood,
   ]) {
     m.userData.shared = true;
+    fadeSceneryIntoFog(m);
     seasonalMaterial(m, m === leaves.material);
   }
   return assets;
