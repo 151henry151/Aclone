@@ -15,6 +15,9 @@ export interface BusinessAccounts {
   capitalOut: number;
   otherIn: number;
   otherOut: number;
+  /** Lending principal and repayments are cash financing, not shop earnings. */
+  financingIn?: number;
+  financingOut?: number;
   batches: number;
   produced: Stock;
   consumed: Stock;
@@ -79,14 +82,17 @@ export function recordMoney(w: World, e: Ledger) {
     else if (['wage', 'harvest wage'].includes(e.reason)) a.wages += e.amount;
     else if (e.reason === 'wage tax') a.tax += e.amount;
     else if (e.to === 'imports') a.imports += e.amount;
-    else if (e.reason === 'withdrawal') a.capitalOut += e.amount;
+    else if (['withdrawal', 'investor return', 'stake refund'].includes(e.reason))
+      a.capitalOut += e.amount;
+    else if (e.reason === 'loan disbursement') a.financingOut = (a.financingOut ?? 0) + e.amount;
     else a.otherOut += e.amount;
   }
   if (incoming) {
     const a = accounts(w, incoming);
     if (['purchase', 'room booking'].includes(e.reason)) a.receipts += e.amount;
     else if (e.reason === 'investment' || e.reason === 'outside stake') a.capitalIn += e.amount;
-    else if (e.reason === 'investor return') a.capitalOut += e.amount;
+    else if (['loan repayment', 'foreclosure recovery'].includes(e.reason))
+      a.financingIn = (a.financingIn ?? 0) + e.amount;
     else a.otherIn += e.amount;
   }
 }

@@ -447,3 +447,22 @@ It uses the production Jev adapter on eight synthetic judgment fixtures in both 
 ### Construction materials and sites
 
 Cottage plans budget the chosen style's actual material bill and cash cost, including gravel foundations, and use the same footprint checks as player construction. When raw materials are unavailable at known shops, NPCs can obtain a suitable tool and gather from an available resource node, then carry the material back to the site. These steps use normal paid trades, gathering and supply actions.
+
+## Fidelity-pass diagnostics (0.78.0)
+
+Owner observations include input/output coverage, recorded operating cash flow,
+working-capital runway and observed sales. Deposits, financing and catalogue-valued
+inventory remain separate from earnings. The legacy job/supply menu now applies
+funded-shift, output-congestion and living-reserve checks already used by newer
+career paths. A depleted resource failure blocks that node for ten minutes from
+the first attempt, persisting across restart and unrelated successful actions.
+Other nodes remain available; this limits repeat failures rather than creating
+resources or sharing invisible market knowledge.
+
+`npx tsx scripts/npc-evaluate.ts --days=0.02 --population=5 --always-online`
+keeps all selected synthetic residents active for a short contention check.
+Use `--max-wall-seconds=60` to bound local CPU time; an interrupted result is marked
+incomplete. This uses a deterministic chooser and no provider API calls. It is
+not evidence of Jev's decision quality or long-term prosperity. See the
+[fidelity results](FIDELITY_PLAN.md#progress-log) before interpreting cash or asset
+growth as success; newly acquired businesses and unsold inventory are not profit.

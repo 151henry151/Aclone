@@ -47,6 +47,7 @@ const store = new Store(':memory:'),
 let w = createWorld('puddlewick', 'Puddlewick', 'server');
 completePuddlewick(w);
 w.script = '';
+const initialBuildingIds = new Set(w.buildings.map((b) => b.id));
 const worlds = new Map([[w.id, w]]);
 let decisions = 0;
 const options = Array.from({ length: count }, (_, i) => {
@@ -96,7 +97,7 @@ const options = Array.from({ length: count }, (_, i) => {
       id: i ? `eval${seed}_${i}` : 'mabel',
       name: `Evaluation ${i}`,
       provider: 'jev',
-      presence: i ? 'scheduled' : 'always',
+      presence: process.argv.includes('--always-online') ? 'always' : i ? 'scheduled' : 'always',
       activeAlone: true,
       preference,
     }),
@@ -158,6 +159,8 @@ const report = () => {
   w = worlds.get(w.id)!;
   return {
     requestedHours: days * 24,
+    population: count,
+    presence: process.argv.includes('--always-online') ? 'always' : 'scheduled except guide',
     elapsedHours: (w.time - start) / 3600,
     completed: w.time - start >= days * 86400 - 0.1,
     stoppedFor,
@@ -178,6 +181,20 @@ const report = () => {
     },
     moneyFlows,
     humanInterventions: 0,
+    development: {
+      basis:
+        'New buildings still present at the end, relative to the initial parish; not cumulative construction starts or profitable businesses.',
+      completedCommercial: w.buildings.filter(
+        (b) =>
+          !initialBuildingIds.has(b.id) &&
+          !b.construction &&
+          !['home', 'warehouse'].includes(b.kind),
+      ).length,
+      completedHomes: w.buildings.filter(
+        (b) => !initialBuildingIds.has(b.id) && !b.construction && b.kind === 'home',
+      ).length,
+      unfinished: w.buildings.filter((b) => !initialBuildingIds.has(b.id) && b.construction).length,
+    },
     residents: controller.status().map((r) => {
       const p = w.players[r.playerId];
       if (!p) return { id: r.id, pendingFirstVisit: true };

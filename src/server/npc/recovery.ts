@@ -19,6 +19,8 @@ export interface Recovery {
 function key(step: Step) {
   // Nearby variants of the same unreachable ground waypoint are one attempt.
   if (step.kind === 'move') return `move:${Math.floor(step.x / 8)}:${Math.floor(step.z / 8)}`;
+  // Ignore incidental action fields when cooling down a depleted resource.
+  if (step.kind === 'act' && step.action.type === 'gather') return `gather:${step.action.node}`;
   return JSON.stringify(step);
 }
 export function failStep(r: Recovery, time: number, step: Step | undefined, message: string) {
@@ -38,7 +40,7 @@ export function failStep(r: Recovery, time: number, step: Step | undefined, mess
     message,
     count,
     at: time,
-    until: /route|obstructed|journey/i.test(message)
+    until: /route|obstructed|journey|replenish/i.test(message)
       ? time + 600
       : count < 2
         ? time

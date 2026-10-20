@@ -1,3 +1,4 @@
+import { businessHealth } from '../../shared/business-health.ts';
 import { constructionBudget } from './construction-projects.ts';
 import { pickBuildSite } from './chains.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -110,6 +111,7 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
       operatingReserve: retainedCapital(w, b),
       investment: b.investment,
       productionEconomics: productionBudget(w, b),
+      diagnosis: businessHealth(w, b),
       inputTargets: Object.fromEntries(
         Object.keys(b.buy).flatMap((item) => {
           const target = inputStockTarget(b, item);

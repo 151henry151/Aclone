@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cashFlow, productionReport } from '../shared/reports';
+import { businessHealth } from '../shared/business-health';
 import { money } from '../shared/simulation';
 import { worldItems } from '../shared/world-catalogue';
 import type { World, Player, Building, Stock } from '../shared/types';
@@ -15,6 +16,7 @@ const goods = (stock: Stock, w: World) =>
     .join(', ') || 'None';
 export function statementHtml(w: World, p: Player, b: Building) {
   const a = p.statements?.[b.id];
+  const health = businessHealth(w, { ...b, accounts: a });
   const state = `<h3>Production right now</h3><ul>${(b.productionStatus ?? productionReport(w, b))
     .map((s) => `<li>${esc(s)}</li>`)
     .join('')}</ul>`;
@@ -25,6 +27,10 @@ export function statementHtml(w: World, p: Player, b: Building) {
     );
   return (
     state +
+    `<h3>Can this business keep going?</h3><p>${health.inputBatches === null ? 'No batch input estimate.' : `${health.inputBatches} batches of inputs in stock.`} ${health.outputRoom === null ? '' : `Room for ${health.outputRoom} output batches.`} ${health.fundedReplacementBatches === null ? '' : `Till can fund about ${health.fundedReplacementBatches} replacement batches at current input estimates and staffing.`}</p><p>${health.observedSalesPerHour === null ? 'Not enough trading history yet.' : `Recorded sales: ${health.observedSalesPerHour.toFixed(1)} units/hour.`} ${health.cashRunwayHours === null ? '' : `At the recorded cash-loss rate, the till lasts about ${health.cashRunwayHours.toFixed(1)} hours.`}</p><p>Stored goods: ${amount(health.stockReferenceValue, w.settings.denariiPerSheckle)} at catalogue prices, not cash earned.</p><ul>${health.messages
+      .filter((s) => !(b.productionStatus ?? productionReport(w, b)).includes(s))
+      .map((s) => `<li>${esc(s)}</li>`)
+      .join('')}</ul><p class="note">${health.basis}</p>` +
     `<h3>Business statement</h3><p>Tracked since world day ${Math.floor(a.since / 600) + 1}. Cash flow is not accrual profit: goods still in storage have not been sold. Receipts exclude sales tax paid by buyers.</p><dl class="business-accounts">${[
       ['Sales receipts', a.receipts],
       ['Materials purchased', a.materials],
@@ -36,6 +42,8 @@ export function statementHtml(w: World, p: Player, b: Building) {
       ['Operating cash flow', cashFlow(a)],
       ['Owner capital added', a.capitalIn],
       ['Owner withdrawals', a.capitalOut],
+      ['Lending repayments received', a.financingIn ?? 0],
+      ['Loans advanced', a.financingOut ?? 0],
     ]
       .map(
         ([label, n]) =>

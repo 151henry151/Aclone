@@ -1,3 +1,4 @@
+import { businessHealth } from '../../shared/business-health.ts';
 import { vehicleCondition, requiredLicence } from '../../shared/vehicle-services.ts';
 import { maximumHealth } from '../../shared/nutrition.ts';
 import { worldItems, worldSkills } from '../../shared/world-catalogue.ts';
@@ -101,6 +102,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
         operatingCashFlow: cashFlow(b.accounts!),
         batches: b.accounts!.batches,
         produced: b.accounts!.produced,
+        diagnosis: businessHealth(w, b),
       })),
     employmentOptions: selected.flatMap((b) => {
       const recipe = b.production ?? recipes[b.recipe ?? ''];

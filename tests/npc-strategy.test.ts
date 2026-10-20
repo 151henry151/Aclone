@@ -80,6 +80,7 @@ test('owners get a complete funded input purchase and delivery plan, employees d
   const mill = w.buildings.find((b) => b.kind === 'mill')!;
   mill.owner = p.id;
   mill.stock.wheat = 0;
+  mill.stock.flour = 0; // A depleted output shelf needs new inputs; a full one does not.
   const seller = w.buildings.find((b) => b.id !== mill.id && b.sell.wheat >= 0)!;
   seller.stock.wheat = 30;
   seller.sell.wheat = 600;

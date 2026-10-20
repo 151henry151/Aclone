@@ -66,3 +66,17 @@ test('autonomous duplicate speech is quiet but direct questions and different pr
   madeProgress(r);
   assert.equal(allowSpeech(r, 'The mill has now produced flour.', undefined, 30, false), true);
 });
+
+test('depleted gathering ground cools down on the first failure, across restart and other successes', () => {
+  const r: Recovery = {},
+    gather: Step = { kind: 'act', action: { type: 'gather', node: 'wood' } };
+  failStep(r, 10, gather, 'This ground needs time to replenish');
+  const restored: Recovery = JSON.parse(JSON.stringify(r));
+  madeProgress(restored);
+  assert.ok(blockedStep(restored, gather, 11));
+  assert.equal(
+    blockedStep(restored, { kind: 'act', action: { type: 'gather', node: 'stone' } }, 11),
+    undefined,
+  );
+  assert.equal(blockedStep(restored, gather, 611), undefined);
+});

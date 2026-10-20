@@ -8,7 +8,8 @@ import { items, recipes } from '../../shared/catalog.ts';
 import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
 import type { Step } from './decision.ts';
 import { spareSupplies } from './strategy.ts';
-import { workplace } from './workplace.ts';
+import { inputStockTarget, productionBudget } from './business-policy.ts';
+import { workplace, shiftBlocker } from './workplace.ts';
 import { travelPrep, livingReserve, affordableLoad } from './travel.ts';
 type Act = Extract<Step, { kind: 'act' }>['action'];
 export type AddChoice = (description: string, plan: Step[], reconsiderSeconds?: number) => void;
@@ -28,7 +29,7 @@ export function economyChoices(
     const job = workplace(w, p, b)!;
     const recipe = b.production ?? recipes[b.recipe!];
     if (!recipe) continue;
-    if (b.owner !== p.id && job.qualified) {
+    if (b.owner !== p.id && job.qualified && !shiftBlocker(w, p, b)) {
       const wait = Math.max(1, Math.min(600, job.nextCycleInSeconds + 1));
       if (job.employedHere) {
         if (
@@ -58,11 +59,20 @@ export function economyChoices(
         );
     }
     if (b.owner === p.id) {
-      if (b.investment < Math.max(10000, job.ifYouWork.wagesRequired * 2) && p.cash >= 20000)
+      const budget = productionBudget(w, b);
+      const capital =
+        budget && budget.margin >= 0 && budget.idealMargin >= 0
+          ? Math.min(
+              10_000_000,
+              Math.max(0, budget.reserve - b.investment),
+              Math.max(0, p.cash - livingReserve(w, p)),
+            )
+          : 0;
+      if (capital > 0)
         add(
-          `Invest 5000 in my ${b.name} to fund its business.`,
+          `Invest ${capital} in my ${b.name}, preserving household reserves.`,
           visit(b, [
-            act({ type: 'investment', building: b.id, direction: 'deposit', amount: 5000 }),
+            act({ type: 'investment', building: b.id, direction: 'deposit', amount: capital }),
           ]),
         );
       for (const [item, quantity] of Object.entries({
@@ -70,7 +80,7 @@ export function economyChoices(
         ...(herdSpec(b) ? { [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 } : {}),
       })) {
         const missing = Math.min(
-          quantity * 2 - (b.stock[item] ?? 0),
+          (inputStockTarget(b, item) ?? quantity * 2) - (b.stock[item] ?? 0),
           b.capacity - (b.stock[item] ?? 0),
         );
         const seller = buildings
@@ -83,7 +93,7 @@ export function economyChoices(
               v.sell[item] >= 0,
           )
           .sort((a, b) => a.sell[item] - b.sell[item])[0];
-        if (missing > 0 && seller) {
+        if (missing > 0 && seller && budget && budget.idealMargin >= 0 && budget.margin >= 0) {
           let load = Math.min(
             missing,
             seller.stock[item],
@@ -113,7 +123,7 @@ export function economyChoices(
         const n = Math.min(
           spareSupplies(p, item, w),
           b.capacity - (b.stock[item] ?? 0),
-          quantity * 4,
+          Math.max(0, (inputStockTarget(b, item) ?? quantity * 4) - (b.stock[item] ?? 0)),
         );
         if (n > 0)
           add(
@@ -137,12 +147,15 @@ export function economyChoices(
     } else if (
       !b.government &&
       (!b.owner || b.forSale) &&
-      p.cash >= propertyQuote(w, b).total + 20000 &&
+      p.cash >=
+        propertyQuote(w, b).total +
+          livingReserve(w, p) +
+          (productionBudget(w, b)?.reserve ?? 20000) &&
       w.buildings.filter((v) => v.owner === p.id && !['home', 'warehouse'].includes(v.kind))
         .length < w.settings.maxBuildings
     )
       add(
-        `Buy ${b.name} (${b.id}) for ${propertyQuote(w, b).total}, retaining at least 20000 for living and business supplies.`,
+        `Buy ${b.name} (${b.id}) for ${propertyQuote(w, b).total}, retaining household and business working capital.`,
         visit(b, [act({ type: 'buyBuilding', building: b.id })]),
       );
   }
@@ -155,7 +168,12 @@ export function economyChoices(
   for (const b of buildings.filter((b) => b.owner === p.id)) {
     const recipe = b.production ?? recipes[b.recipe ?? ''];
     for (const item of Object.keys(recipe?.inputs ?? {}))
-      if ((b.stock[item] ?? 0) < recipe.inputs[item] * 2 && !(p.inventory[item] > 0))
+      if (
+        (b.stock[item] ?? 0) <
+          Math.min(recipe.inputs[item] * 2, inputStockTarget(b, item) ?? Infinity) &&
+        !(p.inventory[item] > 0) &&
+        (productionBudget(w, b)?.idealMargin ?? -1) >= 0
+      )
         needed.add(item);
   }
   for (const item of [...needed].slice(0, 6)) {
