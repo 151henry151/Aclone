@@ -129,3 +129,13 @@ Only default server-owned Puddlewick receives missing stonemason/waterworks plus
 - With explicit deployment authorization, run `bash scripts/deploy-website.sh`. It backs up the existing page in `/var/backups/aclone-website/`, stages assets and replaces HTML last. It preserves legacy `/img/` URLs, ACME files and `/aclone/`; the game service is not restarted. `DEPLOY_HOST`, `WEBSITE_DIR` and `WEBSITE_URL` override the nogits defaults. The game deployment script does not publish the marketing page.
 
 Other hosts can serve `website-dist/` as ordinary static files; adjust Play links and the social-preview image URL for their domain/path. Keep the source, not generated output, under version control. To roll back, restore the saved website archive; game data is unaffected.
+
+## Maintenance pause (0.78.0)
+
+The owner or a caretaker can pause/resume a world in **World rules**. Pause state
+and the last 100 transitions (actor, world time and wall time) are saved. Movement,
+production, survival, loans, contracts, activities and NPC planning stop; economic
+actions are rejected while chat and resume remain available. Resuming does not
+replay the paused interval, including after a server restart. Ordinary offline
+survival still applies outside maintenance. Back up before maintenance involving
+manual data edits; pause is not a database backup or a global server shutdown.

@@ -737,7 +737,7 @@ export class Residents {
     for (const r of this.residents) {
       const w = this.worlds.get(r.state.world),
         p = w?.players[r.state.playerId];
-      if (!w || !p || !p.online) continue;
+      if (!w || w.maintenance?.paused || !p || !p.online) continue;
       if (r.nav) {
         const result = r.nav.step(w, p, dt);
         move(w, p, result.input, dt);
@@ -761,7 +761,7 @@ export class Residents {
         a.lastCall - b.lastCall,
     )) {
       const w = this.worlds.get(r.state.world);
-      if (!w) continue;
+      if (!w || w.maintenance?.paused) continue;
       let p = w.players[r.state.playerId];
       if (
         !p &&
@@ -1492,7 +1492,7 @@ export class Residents {
     }
     const w = this.worlds.get(r.state.world),
       p = w?.players[r.state.playerId];
-    if (w && p) {
+    if (w && !w.maintenance?.paused && p) {
       try {
         this.think(r, w, p, now);
       } catch (err) {

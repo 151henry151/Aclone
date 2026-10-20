@@ -14,6 +14,7 @@ All notable changes to Aclone are documented here. This project follows
 - Support level foundations and entrance steps for new construction on gentle slopes, with matching placement checks and persisted terrain coordinates.
 - Add creator checkpoint courses, durable scoreboards and funded prizes, plus optional build/peace/war phases with archived results.
 - Offer optional prepaid commercial operating leases with asset bonds and funded fixed-term property auctions.
+- Persist audited maintenance pauses that freeze world actions, movement, scripts and NPC planning without replaying paused time.
 
 ### Fixed
 

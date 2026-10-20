@@ -319,6 +319,7 @@ export async function createApp(options: AppOptions) {
     data: Record<string, string | number>,
   ) => {
     const current = () =>
+      !w.maintenance?.paused &&
       worlds.get(w.id) === w &&
       (data.life === undefined || w.players[String(data.id)]?.deaths === data.life);
     if (!current()) return;
@@ -820,6 +821,12 @@ export async function createApp(options: AppOptions) {
         request = m.request;
         if (!p.actions.allow(now)) throw Error('Too many actions; wait a moment');
         const a = m.action as Action;
+        if (
+          p.world &&
+          worlds.get(p.world)?.maintenance?.paused &&
+          !['chat', 'caretaker', 'maintenance'].includes(a.type)
+        )
+          throw Error('World paused for maintenance');
         if (a.type === 'land') {
           enter(p, z.string().parse(a.world));
           send(p, { type: 'result', request, ok: true, message: 'Welcome planetside.' });
@@ -1005,6 +1012,7 @@ export async function createApp(options: AppOptions) {
             }
           }
           for (const w of worlds.values()) {
+            if (w.maintenance?.paused) continue;
             advance(w, dt);
             for (const event of drainCreatorScripts(w))
               void scriptEvent(w, event.event, event.data).catch(() => {});

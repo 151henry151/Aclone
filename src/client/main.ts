@@ -1333,7 +1333,19 @@ function renderPanel() {
         )
         .join(
           '',
-        )}</ol><p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${me.authority >= 20 || world.owner === me.id ? `<h3>Property contracts</h3>${button('Operating leases: ' + (world.contractRules?.leases ? 'on' : 'off'), 'leasesToggle')}${button('Property auctions: ' + (world.contractRules?.auctions ? 'on' : 'off'), 'auctionsToggle')}` : ''}${button('Sign out of all devices', 'confirmLogout')}`,
+        )}</ol><p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${
+        me.authority >= 20 || world.owner === me.id
+          ? `<h3>Host operations</h3><p>${world.maintenance?.paused ? 'Maintenance pause active: game clocks frozen.' : 'World running; normal offline survival applies.'}</p>${button(world.maintenance?.paused ? 'Resume world' : 'Pause for maintenance', 'maintenanceToggle')}<p>${
+              world.maintenance?.history
+                .slice(-8)
+                .map(
+                  (e) =>
+                    `${e.paused ? 'Paused' : 'Resumed'} at world second ${Math.floor(e.worldTime)}`,
+                )
+                .join(' · ') ?? ''
+            }</p>${button('Operating leases: ' + (world.contractRules?.leases ? 'on' : 'off'), 'leasesToggle')}${button('Property auctions: ' + (world.contractRules?.auctions ? 'on' : 'off'), 'auctionsToggle')}`
+          : ''
+      }${button('Sign out of all devices', 'confirmLogout')}`,
     );
     return;
   }
@@ -2332,6 +2344,9 @@ app.addEventListener('click', async (e) => {
         break;
       case 'learn':
         send({ type: 'learn', skill: id, building });
+        break;
+      case 'maintenanceToggle':
+        send({ type: 'maintenance', paused: !world?.maintenance?.paused });
         break;
       case 'leasesToggle':
       case 'auctionsToggle':

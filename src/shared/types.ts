@@ -343,6 +343,7 @@ export interface World {
     team?: number;
   }[];
   raceBest: Record<string, number>;
+  maintenance?: import('./maintenance').Maintenance;
   contractRules?: { leases: boolean; auctions: boolean };
   roundArchive?: import('./round-cycle').RoundCycle['history'];
   roundCycle?: import('./round-cycle').RoundCycle;

@@ -1,3 +1,4 @@
+import { maintenanceAction } from './maintenance.ts';
 import {
   propertyContractAction,
   tickPropertyContracts,
@@ -395,6 +396,8 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (type === 'maintenance') return maintenanceAction(w, p, a);
+  if (w.maintenance?.paused && type !== 'chat') throw Error('World paused for maintenance');
   if (type === 'propertyContract') return propertyContractAction(w, p, a);
   const contracted = w.buildings.find((b) => b.id === a.building);
   if (
@@ -1549,6 +1552,25 @@ export function act(w: World, id: string, a: Action): string {
 }
 export function command(w: World, p: Player, text: string): string {
   const [cmd, ...args] = text.replace(/^\*/, '').split(/\s+/);
+  if (
+    w.maintenance?.paused &&
+    ![
+      'help',
+      'showfuel',
+      'showjobs',
+      'jobs',
+      'showowned',
+      'economy',
+      'me',
+      'town',
+      'showresidents',
+      'say',
+      'announce',
+      'gag',
+      'kick',
+    ].includes(cmd)
+  )
+    throw Error('World paused for maintenance');
   const publicCommands = [
     'help',
     'showfuel',
@@ -1680,6 +1702,7 @@ export function command(w: World, p: Player, text: string): string {
   return 'Command applied.';
 }
 export function move(w: World, p: Player, input: Input, dt: number) {
+  if (w.maintenance?.paused) return;
   if (p.game === 'fishing') p.y = travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
@@ -1952,7 +1975,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
 }
 
 export function advance(w: World, seconds: number) {
-  if (!Number.isFinite(seconds) || seconds <= 0) return;
+  if (!Number.isFinite(seconds) || seconds <= 0 || w.maintenance?.paused) return;
   const boundary = Math.min(
     ...w.buildings.flatMap((b) =>
       [b.operatingLease?.ends, b.auction?.ends].filter(
