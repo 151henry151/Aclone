@@ -266,3 +266,26 @@ markers and rotated building positions are covered by ten-round-trip regressions
 OBJ import retains its existing size/triangle/texture limits. ATM conversion is
 not supplied: compatibility requires permitted sample files and verification;
 public engine source does not grant rights to historical art.
+
+## Courses and round phases (0.78.0)
+
+The **Courses** editor provides an editable JSON example inspired by island time
+trials. A course has a stable ID, title, opening/closing seconds of world time,
+10–3600 second time limit, reward (hundredths of a denarius), and 2–32 checkpoints.
+Each point has X/Z, a 2–20 m radius and optional 0–60 second hold. Consecutive
+checkpoints must not overlap. Up to sixteen routes can coexist.
+
+Saving the same ID revises its route, clears boards and invalidates current runs;
+weekly prize claims remain. Only the sponsor may edit a funded course. Sponsors
+deposit prize money through the course panel and reclaim unused money after
+closing. Boards persist across restart; weekly boards reset every seven real-speed
+days of world time. Design exports contain route definitions, not money or scores.
+This editor uses structured text, not a map-drawing course editor.
+
+The optional **Build / peace / war** template sets three 60–86400 second phases.
+Combat is disabled during build/peace; construction is disabled during war. Safe
+zones still apply. Existing arena capture/CTF rules provide objectives and scores;
+results are archived when a round ends (latest 100 retained). Property, inventory
+and survival persist: this is not an economy reset. Disabling the cycle restores
+the previous fighting rule and keeps the result archive. Puddlewick is unchanged
+unless its caretaker explicitly enables these options.

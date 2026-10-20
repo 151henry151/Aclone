@@ -53,7 +53,8 @@ export function leaveCombat(w: World, p: Player) {
   delete p.weaponCharge;
 }
 export function joinCombat(w: World, p: Player, mode: string) {
-  if (!w.settings.fighting) throw Error('Fighting is disabled');
+  if (!w.settings.fighting || (w.roundCycle && w.roundCycle.phase !== 'war'))
+    throw Error('Fighting is disabled');
   if (w.creator?.arena.mode && w.creator.arena.mode !== 'open') mode = w.creator.arena.mode;
   if (!['deathmatch', 'capture', 'ctf'].includes(mode)) throw Error('Choose a combat mode');
   if (p.task || p.game || p.crowBody || p.hitch)
@@ -80,7 +81,8 @@ function safe(w: World, p: { x: number; z: number }) {
   return w.zones.some((z) => z.kind === 'safe' && distance(p, z) < z.radius);
 }
 export function fireWeapon(w: World, p: Player, a: Action) {
-  if (!w.settings.fighting) throw Error('Fighting is disabled on this world');
+  if (!w.settings.fighting || (w.roundCycle && w.roundCycle.phase !== 'war'))
+    throw Error('Fighting is disabled on this world');
   if (safe(w, p)) throw Error('Weapons are disabled in safe zones');
   if (p.atHome || p.task || p.hitch) throw Error('Weapons are disabled here');
   if (
@@ -281,6 +283,7 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
     (p) => Math.abs(p.y - terrainHeight(w, p.x, p.z)) < 3 && !p.atHome && !p.crowBody,
   );
   if (c.restart) {
+    if (w.roundCycle) return; // Keep this result for the enclosing phase archive.
     if (w.time >= c.restart) {
       c.scores = [0, 0];
       c.round++;
@@ -356,7 +359,7 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
     say(
       w,
       'Combat marshal',
-      `Round ${c.round}: ${c.winner < 0 ? 'draw' : (w.creator?.arena.teams[c.winner] ?? (c.winner === 0 ? 'Rust' : 'Moss')) + ' wins'}. Next round in 15 seconds.`,
+      `Round ${c.round}: ${c.winner < 0 ? 'draw' : (w.creator?.arena.teams[c.winner] ?? (c.winner === 0 ? 'Rust' : 'Moss')) + ' wins'}. ${w.roundCycle ? 'Result held until the next phase cycle.' : 'Next round in 15 seconds.'}`,
     );
     for (const p of joined) if (p.team === c.winner) p.kudos += 5;
     w.projectiles = [];

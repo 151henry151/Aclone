@@ -1,3 +1,5 @@
+import { roundCycleAction, tickRoundCycle } from './round-cycle.ts';
+import { courseAction, tickCourses } from './courses.ts';
 import { cancelGather } from './resources.ts';
 import { buildingDesignQuote, type BuildingSize } from './building-designs';
 import { constructionSiteReason, foundationProfile } from './construction-site';
@@ -403,6 +405,12 @@ export function act(w: World, id: string, a: Action): string {
   )
     throw Error('Return from the robocrow before other activities');
   checkActionGuards(w, p, a);
+  if (type === 'roundCycle') return roundCycleAction(w, p, a);
+  if (type === 'construct' && w.roundCycle?.phase === 'war')
+    throw Error('Wait for the build or peace phase before construction');
+  if (type === 'course') return courseAction(w, p, a);
+  if (['respawn', 'joinGame', 'vehicle', 'outside', 'home', 'crow'].includes(type))
+    delete p.courseRun;
   if (type === 'landscape') return landscapeAction(w, p, a);
   if (type === 'catalogue') {
     setCatalogue(w, p, a.catalogue);
@@ -1605,6 +1613,7 @@ export function command(w: World, p: Player, text: string): string {
       grant(w, target(), num(Number(args[1]) * 100, 1, 100000000, true), 'admin grant');
       break;
     case 'grantitem': {
+      delete target().courseRun;
       const t = target(),
         item = args[1],
         n = qty(Number(args[2]));
@@ -1625,6 +1634,7 @@ export function command(w: World, p: Player, text: string): string {
       target().online = false;
       break;
     case 'teleport': {
+      delete target().courseRun;
       const t = target(),
         x = num(Number(args[1]), -mapHalf(w), mapHalf(w)),
         z = num(Number(args[2]), -mapHalf(w), mapHalf(w));
@@ -1935,6 +1945,8 @@ export function advance(w: World, seconds: number) {
   tickTowns(w);
   refreshOrders(w);
   tickTownEvents(w);
+  tickCourses(w, seconds);
+  tickRoundCycle(w);
   tickLottery(w);
   if (seconds <= 10) tickCreator(w);
   if (w.settings.dayLength > 0)

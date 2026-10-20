@@ -1,3 +1,4 @@
+import { coursesPanel } from './courses';
 import { bookSchema, townEventSchema } from '../shared/world-stories';
 import { booksEditor, eventsEditor } from './story-editor';
 import { ambientSchema } from '../shared/ambient';
@@ -41,6 +42,7 @@ export const creatorTabs = [
   'Quests',
   'Books',
   'Town events',
+  'Courses',
   'Access rules',
   'Layout',
   'Production',
@@ -196,6 +198,7 @@ export function refreshCreatorPreview(w: World) {
   }
 }
 export function creatorPanel(w: World, p: Player, tab: string) {
+  if (tab === 'Courses') return coursesPanel(w, p, true);
   const items = worldItems(w),
     skills = worldSkills(w);
   if (contextWorld !== w.id) {
@@ -497,6 +500,23 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
+  if (form.id === 'creator-round-form') {
+    const d = new FormData(form);
+    return {
+      type: 'roundCycle',
+      rules: {
+        build: Number(d.get('build')),
+        peace: Number(d.get('peace')),
+        war: Number(d.get('war')),
+      },
+    };
+  }
+  if (form.id === 'creator-course-form')
+    return {
+      type: 'course',
+      operation: 'configure',
+      course: JSON.parse(String(new FormData(form).get('course'))),
+    };
   if (form.id.startsWith('creator-catalogue-')) return catalogueForm(w, form);
   const c = structuredClone({ ...defaultCreator(), ...w.creator }),
     d = new FormData(form),

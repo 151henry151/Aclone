@@ -1,3 +1,5 @@
+import { courseSchema, validateCourse } from '../shared/courses.ts';
+import { roundCycleSchema } from '../shared/round-cycle.ts';
 import { buildingArchitecture } from '../shared/building-architecture.ts';
 import { buildingDesignQuote } from '../shared/building-designs.ts';
 import { worldBuildings } from '../shared/world-catalogue.ts';
@@ -38,6 +40,8 @@ const recipe = z
 const designSchema = z.object({
   landscape: landscapeSchema.default(() => landscapeSchema.parse({})),
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
+  courses: z.array(courseSchema).max(16).default([]),
+  roundCycle: roundCycleSchema.optional(),
   format: z.literal('aclone-world-design'),
   version: z.literal(1),
   settings: z
@@ -138,6 +142,8 @@ export function exportDesign(w: World, includeMedia = false) {
     }
   return {
     catalogue: w.catalogue ?? catalogueSchema.parse({}),
+    courses: w.courses?.map((c) => c.definition) ?? [],
+    roundCycle: w.roundCycle?.rules,
     format: 'aclone-world-design',
     version: 1,
     tier: w.tier,
@@ -199,6 +205,26 @@ export function applyDesign(w: World, input: unknown) {
   )
     throw Error('Duplicate layout IDs');
   w.creator = d.creator;
+  if (new Set(d.courses.map((c) => c.id)).size !== d.courses.length)
+    throw Error('Duplicate course IDs');
+  w.courses = d.courses.map((definition) => ({
+    definition,
+    sponsor: w.owner,
+    pot: 0,
+    allTime: {},
+    week: 0,
+    weekly: {},
+    paid: {},
+  }));
+  if (d.roundCycle)
+    w.roundCycle = {
+      rules: d.roundCycle,
+      start: w.time,
+      phase: 'build',
+      slot: 0,
+      previousFighting: w.settings.fighting,
+      history: [],
+    };
   setCatalogue(w, { id: w.owner } as Player, d.catalogue);
   for (const b of d.buildings)
     if (b.templateId && !d.catalogue.templates[b.templateId])
@@ -239,6 +265,11 @@ export function applyDesign(w: World, input: unknown) {
   w.script = d.script;
   anchorTowns(w);
   configureRules(w, d.settings, d.townCharter);
+  for (const c of w.courses ?? []) validateCourse(w, c.definition);
+  if (w.roundCycle) {
+    w.roundCycle.previousFighting = w.settings.fighting;
+    w.settings.fighting = false;
+  }
   w.revision++;
 }
 /** Creation-only validation: use the ordinary action on a disposable world copy

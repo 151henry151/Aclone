@@ -302,3 +302,13 @@ stop it or run out of room, tools or available material. **Stop gathering** is i
 the floating task control. Driving away or disconnecting also stops repetition;
 uncollected reserved material is returned to the node. Single-load gathering
 keeps its existing behavior.
+
+## Courses and optional contracts (0.78.0)
+
+**World → Courses & scoreboards** lists creator routes, opening/closing world times,
+prizes and weekly/all-time results. Drive your tractor to the first waypoint to
+start, then follow checkpoints in order, holding position where required. Keep
+the course waypoint selected to see the next target. Changing vehicle, teleporting,
+disconnecting or exceeding the time limit invalidates a run. Prizes come from a
+sponsor's deposited money, at most once per pilot per seven-day world-time week.
+A creator can also enable build/peace/war phases; survival and property persist.

@@ -12,6 +12,7 @@ All notable changes to Aclone are documented here. This project follows
 - Diagnose business cash flow, supply coverage and output congestion; protect NPC reserves and cool down depleted-resource retries.
 - Offer world-specific first steps, recent destinations, repeat gathering with a stop control, and configurable gamepad driving/menu navigation.
 - Support level foundations and entrance steps for new construction on gentle slopes, with matching placement checks and persisted terrain coordinates.
+- Add creator checkpoint courses, durable scoreboards and funded prizes, plus optional build/peace/war phases with archived results.
 
 ### Fixed
 

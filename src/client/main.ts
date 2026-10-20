@@ -1,3 +1,4 @@
+import { coursesPanel } from './courses';
 import { firstSteps } from '../shared/first-steps';
 import { Controller } from './controller';
 import { buildMenuHtml, mountBuildMenu } from './build-menu';
@@ -890,6 +891,9 @@ function updateHud() {
     $('resource-stop').hidden = !gathering;
     if (gathering?.repeat) $('task-name').textContent += ' · repeating';
   }
+  if (me.courseRun)
+    $('clock').textContent +=
+      ` · Course checkpoint ${me.courseRun.next + 1} · ${Math.floor(world.time - me.courseRun.start)}s`;
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
   if (me.race)
@@ -1314,6 +1318,10 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'courses' && world && me) {
+    modal('Courses & scoreboards', coursesPanel(world, me), true);
+    return;
+  }
   if (panel === 'worldRules' && world && me) {
     modal(
       'World rules & leaving safely',
@@ -1639,7 +1647,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2131,6 +2139,7 @@ app.addEventListener('click', async (e) => {
       'help',
       'options',
       'worldRules',
+      'courses',
       'controllerOptions',
       'shipyard',
       'inventory',
@@ -2315,6 +2324,26 @@ app.addEventListener('click', async (e) => {
       case 'learn':
         send({ type: 'learn', skill: id, building });
         break;
+      case 'courseStart':
+      case 'courseStop':
+      case 'courseRefund':
+        send({
+          type: 'course',
+          operation:
+            action === 'courseStart' ? 'start' : action === 'courseStop' ? 'stop' : 'refund',
+          course: id,
+        });
+        break;
+      case 'courseWaypoint': {
+        const c = world!.courses?.find((c) => c.definition.id === id);
+        if (c) {
+          const pt =
+            c.definition.points[me?.courseRun && me.courseRun.id === id ? me.courseRun.next : 0];
+          waypoints.set({ ...pt, name: c.definition.name });
+          closePanel();
+        }
+        break;
+      }
       case 'guideWaypoint': {
         const b = world!.buildings.find((b) => b.id === id);
         if (b) {

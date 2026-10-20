@@ -13,6 +13,7 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  courseRun?: import('./courses').CourseRun;
   reliefAt?: number;
   needsGraceUntil?: number;
   mail?: import('./social.ts').Mail[];
@@ -339,6 +340,9 @@ export interface World {
     team?: number;
   }[];
   raceBest: Record<string, number>;
+  roundArchive?: import('./round-cycle').RoundCycle['history'];
+  roundCycle?: import('./round-cycle').RoundCycle;
+  courses?: import('./courses').CourseState[];
   towns: import('./civics.ts').Town[];
   /** World creator's rules for founding, borders and town government. */
   townCharter?: Partial<import('./civics.ts').TownCharter>;
