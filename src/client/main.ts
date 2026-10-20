@@ -1,3 +1,5 @@
+import { firstSteps } from '../shared/first-steps';
+import { Controller } from './controller';
 import { buildMenuHtml, mountBuildMenu } from './build-menu';
 let closeBuildPreview: (() => void) | undefined;
 import { labourReward, RELIEF_PAY } from '../shared/public-labour.ts';
@@ -121,7 +123,7 @@ let items = defaultItems,
   skills = defaultSkills;
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}</section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -132,13 +134,13 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="resource-control" hidden aria-label="Nearby resource"><strong id="resource-name"></strong><p id="resource-stock"></p><p id="resource-status" role="status"></p><button id="resource-gather" type="button" data-do="gather" aria-describedby="resource-status">Gather</button></section>',
+    '<section id="resource-control" hidden aria-label="Nearby resource"><strong id="resource-name"></strong><p id="resource-stock"></p><p id="resource-status" role="status"></p><button id="resource-gather" type="button" data-do="gather" aria-describedby="resource-status">Gather</button><button id="resource-repeat" type="button" data-do="gatherRepeat">Repeat gathering</button></section>',
   );
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span></section>',
+    '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span><button id="resource-stop" type="button" data-do="stopGather" hidden>Stop gathering</button></section>',
   );
 const waypoints = new Waypoints(localStorage);
 document
@@ -208,6 +210,7 @@ let registry: {
   players: number;
   owner: string;
   locked: boolean;
+  rules?: string;
 }[] = [];
 let market: { stock: Record<string, number> } | undefined;
 const carriedHash = adoptCarriedPilot(location.hash, localStorage);
@@ -509,6 +512,14 @@ function login() {
   $('overlay').innerHTML =
     `<div class="landing"><div class="landing-copy"><div class="eyebrow">INDEPENDENT. OPEN SOURCE. SLIGHTLY AGRICULTURAL.</div><h1>A little world.<br>A lot to get<br><em>on with.</em></h1><p>Build a business. Drive a tractor. Honk a ball into a goal.<br>A persistent universe, made by the people in it.</p><span class="release">ALPHA ${VERSION} <i>✦</i> GPL-3.0-OR-LATER</span></div><section class="login-card"><span class="eyebrow">YOUR FIRST DAY, PRESUMABLY</span><h2>Welcome to Aclone.</h2><p>A pilot name, a modest shuttle, and absolutely no grand destiny.</p>${location.hostname === 'nogits.com' || location.hostname === 'www.nogits.com' ? '<p><a href="https://hromp.com/continue-aclone/">Already play on hromp.com? Bring that pilot here.</a></p>' : ''}<form id="register-form"><label>Pilot name<input name="name" placeholder="e.g. Ada Turnip" minlength="2" maxlength="24" required autocomplete="nickname"></label><button class="primary">Make yourself at home <span>↗</span></button></form><details><summary>Sign in with a password</summary><form id="signin-form"><label>Returning pilot name<input name="name" required autocomplete="username"></label><label>Password<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary">Sign in</button></form></details><details><summary>Forgot your password?</summary><form id="forgot-form"><label>Verified email<input name="email" type="email" required autocomplete="email"></label><button>Send reset link</button></form><small>Email recovery must be enabled by the server operator.</small></details><details><summary>Been here before? Restore your pilot.</summary><form id="restore-form"><label>Pilot key<input name="key" type="password" required placeholder="Paste your saved pilot key" autocomplete="off"></label><button>Restore pilot</button></form></details><small>Your pilot stays in this browser. Add a password and recovery email in Pilot & preferences, or export a private key.</small></section><footer>NO INSTALL. NO SUBSCRIPTION. BRING YOUR OWN AMBITION.<span>Original code, art & sound · Community built</span></footer></div>`;
 }
+let lastVisitedWorld = '';
+function recentlyVisited(id: string) {
+  try {
+    return JSON.parse(localStorage.getItem('aclone.recentWorlds') ?? '[]').includes(id);
+  } catch {
+    return false;
+  }
+}
 let connectedGalaxies: {
   enabled: boolean;
   name?: string;
@@ -547,7 +558,7 @@ async function showGalaxy() {
       .filter((r) => r.system === account!.system)
       .map(
         (r, i) =>
-          `<article class="world-card"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><h2>${esc(r.name)}</h2><p>${r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p><div class="world-facts"><span>PERSISTENT WORLD</span><span>${r.owner === account!.id ? 'YOUR WORLD' : 'COMMUNITY PARISH'}</span></div>${button('Land on this world <span>↗</span>', 'land', `data-id="${r.id}" ${account!.transit ? 'disabled' : ''}`, 'primary wide')}</div></article>`,
+          `<article class="world-card"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><h2>${esc(r.name)}</h2>${recentlyVisited(r.id) ? '<small>Recently visited</small>' : ''}<p>${r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p><p>${esc(r.rules ?? 'Inspect world rules after landing.')}</p><div class="world-facts"><span>PERSISTENT WORLD</span><span>${r.owner === account!.id ? 'YOUR WORLD' : 'COMMUNITY PARISH'}</span></div>${button('Land on this world <span>↗</span>', 'land', `data-id="${r.id}" ${account!.transit ? 'disabled' : ''}`, 'primary wide')}</div></article>`,
       )
       .join(
         '',
@@ -562,7 +573,7 @@ async function showGalaxy() {
       )
       .join(
         '',
-      )}</div>${connectedGalaxies.enabled ? `<h3>Other galaxies</h3><p>Visit connected servers with your character passport. Money, inventory, businesses and skills stay saved in each galaxy. Return here to resume them.</p><div class="button-row">${connectedGalaxies.peers?.map((g) => button('Travel to ' + esc(g.name), 'galaxy-travel', `data-id="${esc(g.url)}" ${account!.transit ? 'disabled' : ''}`)).join('') || '<p>No connections configured by this host.</p>'}</div>` : ''}${account.traveler ? `<p>Visiting character: ${esc(account.traveler.name)} · home galaxy ${esc(account.traveler.home)}</p>` : ''}${sessionStorage.getItem('aclone.arrival') ? button('Complete pending galaxy arrival', 'galaxy-arrival') : ''}</div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Field guide', 'help')}</div></div></div>`;
+      )}</div>${connectedGalaxies.enabled ? `<h3>Other galaxies</h3><p>Visit connected servers with your character passport. Money, inventory, businesses and skills stay saved in each galaxy. Return here to resume them.</p><div class="button-row">${connectedGalaxies.peers?.map((g) => button('Travel to ' + esc(g.name), 'galaxy-travel', `data-id="${esc(g.url)}" ${account!.transit ? 'disabled' : ''}`)).join('') || '<p>No connections configured by this host.</p>'}</div>` : ''}${account.traveler ? `<p>Visiting character: ${esc(account.traveler.name)} · home galaxy ${esc(account.traveler.home)}</p><p>To return even if this host becomes unavailable, open your home galaxy directly and sign in with your saved home pilot key. Progress stays with each host.</p>` : ''}${sessionStorage.getItem('aclone.arrival') ? button('Complete pending galaxy arrival', 'galaxy-arrival') : ''}</div><div class="button-row">${button('Shipyard & space trade', 'shipyard')}${button('Pilot key & options', 'options')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}</div></div></div>`;
 }
 const chatLog = new ChatLog($('chat-log'), $('chat-latest') as HTMLButtonElement);
 let previousTargetHtml = '';
@@ -582,6 +593,21 @@ function buildingOwner(b: Building) {
 function updateHud() {
   if (!world || !me) return;
   waypoints.selectWorld(world.id, mapHalf(world));
+  if (lastVisitedWorld !== world.id) {
+    lastVisitedWorld = world.id;
+    try {
+      const prior = JSON.parse(localStorage.getItem('aclone.recentWorlds') ?? '[]');
+      localStorage.setItem(
+        'aclone.recentWorlds',
+        JSON.stringify(
+          [world.id, ...(Array.isArray(prior) ? prior : []).filter((id) => id !== world!.id)].slice(
+            0,
+            8,
+          ),
+        ),
+      );
+    } catch {}
+  }
   const goal = waypoints.point;
   $('waypoint-hud').hidden = !goal || !mapAvailable(world, me);
   if (goal) $('waypoint-name').textContent = goal.name;
@@ -857,6 +883,12 @@ function updateHud() {
     const gatherButton = $('resource-gather') as HTMLButtonElement;
     gatherButton.dataset.id = resource.id;
     gatherButton.disabled = !!status.reason;
+    const repeat = $('resource-repeat') as HTMLButtonElement;
+    repeat.dataset.id = resource.id;
+    repeat.disabled = !!status.reason;
+    repeat.hidden = !!gathering;
+    $('resource-stop').hidden = !gathering;
+    if (gathering?.repeat) $('task-name').textContent += ' · repeating';
   }
   if (me.game === 'hornball')
     $('clock').textContent += ` · RUST ${world.scores[0]} : ${world.scores[1]} MOSS`;
@@ -1285,7 +1317,28 @@ function renderPanel() {
   if (panel === 'worldRules' && world && me) {
     modal(
       'World rules & leaving safely',
-      `<p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${button('Sign out of all devices', 'confirmLogout')}`,
+      `<ol>${firstSteps(world, me)
+        .map(
+          (step) =>
+            `<li><b>${esc(step.title)}</b><p>${esc(step.detail)}</p>${step.destination ? button('Set destination', 'guideWaypoint', `data-id="${esc(step.destination)}"`) : ''}</li>`,
+        )
+        .join(
+          '',
+        )}</ol><p>${esc(rulesSummary(world))}</p><p>${me.atHome ? 'You are sheltered. Check that your home or room pantry has enough food and water; carried supplies do not feed you automatically.' : 'You are outside. Go home to use stored provisions while offline.'}</p>${button('Sign out of all devices', 'confirmLogout')}`,
+    );
+    return;
+  }
+  if (panel === 'controllerOptions') {
+    modal(
+      'Controller settings',
+      `<p>Left stick drives. A opens the nearby building. Menu opens Actions; B closes it. In menus use D-pad up/down to focus, left/right to change a selector or number, A to press a button. These controls also operate buying and building forms. Text entry uses your device keyboard.</p><form id="controller-settings">${Object.entries(
+        controller.config,
+      )
+        .map(
+          ([key, value]) =>
+            `<label>${esc(key)}<input name="${key}" type="number" value="${value}" min="${key === 'deadZone' ? '.05' : '0'}" max="${key === 'deadZone' ? '.5' : '15'}" step="${key === 'deadZone' ? '.01' : '1'}"></label>`,
+        )
+        .join('')}<button>Save controller bindings</button></form>`,
     );
     return;
   }
@@ -1301,7 +1354,7 @@ function renderPanel() {
         )
         .join(
           '',
-        )}<p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Drunk visual effects: ' + scene.drunkVision.label, 'drunkEffects')}<p class="note">Automatic respects your device’s reduced-motion setting. Reduced removes sway and double vision; Off disables the visual effect. Steering impairment still applies.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account && !accountStatus ? '<p>Loading account security…</p>' : account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Field guide', 'help')}`,
+        )}<p class="note">Engines, horns and working machinery are audible nearby. Sound starts after a click or keypress; hidden tabs are silent. Your sound and volume preferences are saved in this browser.</p>${button('Drunk visual effects: ' + scene.drunkVision.label, 'drunkEffects')}<p class="note">Automatic respects your device’s reduced-motion setting. Reduced removes sway and double vision; Off disables the visual effect. Steering impairment still applies.</p>${button('Graphics: ' + scene.qualityLabel, 'quality')}${button('Dynamic shadows: ' + (localStorage.getItem('aclone.shadows') === 'on' ? 'on' : 'off'), 'shadows')}<p class="note">Graphics cycles through adaptive, detailed, and performance. Dynamic shadows default off to keep gameplay smooth; contact shading, headlights and town lighting remain. Shadows can be enabled separately except in performance mode. The server stores progress automatically, including when you disconnect.</p><hr>${account && !accountStatus ? '<p>Loading account security…</p>' : account ? `<h3>Secure your pilot</h3><p>${accountStatus?.password ? 'Password enabled.' : 'Add a password to sign in on another device.'} ${accountStatus?.verified ? 'Recovery email verified.' : 'Email must be verified before it can recover this pilot.'}</p><form id="account-form">${accountStatus?.password ? '<label>Current password<input type="password" name="currentPassword" required autocomplete="current-password"></label>' : ''}<label>New password<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label>${accountStatus?.recoveryAvailable ? `<label>Recovery email (optional)<input type="email" name="email" value="${esc(accountStatus?.email)}" autocomplete="email"></label>` : '<p class="note">This server has not configured email delivery. Export your pilot key as a backup.</p>'}<button class="primary">Save account security</button></form>${accountStatus?.email && !accountStatus.verified ? button('Resend verification email', 'resendEmail') : ''}${button('Sign out of all devices', 'logout')}` : ''}<hr><p>Aclone ${VERSION} · GPL-3.0-or-later<br>Original models, AI-generated material textures, and synthesized audio. Reference material is not part of the game distribution.</p>${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}`,
     );
     return;
   }
@@ -1586,7 +1639,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2078,6 +2131,7 @@ app.addEventListener('click', async (e) => {
       'help',
       'options',
       'worldRules',
+      'controllerOptions',
       'shipyard',
       'inventory',
       'skills',
@@ -2260,6 +2314,20 @@ app.addEventListener('click', async (e) => {
         break;
       case 'learn':
         send({ type: 'learn', skill: id, building });
+        break;
+      case 'guideWaypoint': {
+        const b = world!.buildings.find((b) => b.id === id);
+        if (b) {
+          waypoints.set({ x: b.x, z: b.z, name: b.name });
+          closePanel();
+        }
+        break;
+      }
+      case 'gatherRepeat':
+        send({ type: 'gather', node: id, repeat: true });
+        break;
+      case 'stopGather':
+        send({ type: 'stopGather' });
         break;
       case 'gather':
         send({ type: 'gather', node: id });
@@ -2769,6 +2837,31 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
   sound.setActive(!document.hidden && scene.ready);
 });
+const controller = new Controller(
+  () => openPanel('menu'),
+  () => closePanel(),
+  () => {
+    const button = document.querySelector<HTMLButtonElement>('#target button');
+    button?.click();
+  },
+);
+document.addEventListener('submit', (e) => {
+  const form = e.target as HTMLFormElement;
+  if (form.id !== 'controller-settings') return;
+  e.preventDefault();
+  const data = new FormData(form);
+  for (const key of Object.keys(controller.config) as (keyof typeof controller.config)[]) {
+    const value = Number(data.get(key));
+    if (Number.isFinite(value))
+      controller.config[key] =
+        key === 'deadZone'
+          ? Math.max(0.05, Math.min(0.5, value))
+          : Math.max(0, Math.min(15, Math.floor(value)));
+  }
+  controller.save();
+  closePanel();
+});
+setInterval(() => controller.poll(!!panel), 50);
 function drivingInput() {
   const typing =
     !scene.ready ||
@@ -2785,6 +2878,7 @@ function drivingInput() {
           Math.min(
             1,
             touch.throttle +
+              controller.input.throttle +
               Number(held('ArrowUp', 'w', 'W')) -
               Number(held('ArrowDown', 's', 'S')),
           ),
@@ -2796,11 +2890,12 @@ function drivingInput() {
           Math.min(
             1,
             touch.steer +
+              controller.input.steer +
               Number(held('ArrowLeft', 'a', 'A')) -
               Number(held('ArrowRight', 'd', 'D')),
           ),
         ),
-    boost: !typing && (touch.boost || held('Shift')),
+    boost: !typing && (touch.boost || controller.input.boost || held('Shift')),
     lift: typing
       ? 0
       : Math.max(

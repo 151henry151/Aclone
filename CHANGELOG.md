@@ -10,6 +10,7 @@ All notable changes to Aclone are documented here. This project follows
 
 - Predict local driving with server acknowledgements and bounded corrections; prepare streamed terrain in smaller loading batches.
 - Diagnose business cash flow, supply coverage and output congestion; protect NPC reserves and cool down depleted-resource retries.
+- Offer world-specific first steps, recent destinations, repeat gathering with a stop control, and configurable gamepad driving/menu navigation.
 
 ### Fixed
 

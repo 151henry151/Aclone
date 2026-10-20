@@ -1,3 +1,4 @@
+import { cancelGather } from '../shared/resources.ts';
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
 import { worldItems } from '../shared/world-catalogue.ts';
@@ -182,6 +183,7 @@ export async function createApp(options: AppOptions) {
       players: Object.values(w.players).filter((p) => p.online).length,
       owner: w.owner,
       locked: w.settings.locked,
+      rules: rulesSummary(w),
     }));
   const snapshot = (p: Peer, frames = new Map<string, Frame>()) => {
     const w = p.world && worlds.get(p.world);
@@ -268,6 +270,7 @@ export async function createApp(options: AppOptions) {
       if (me) {
         leaveCombat(w, me);
         me.speed = 0;
+        if (me.task?.repeat) cancelGather(w, me);
         me.online = false;
         me.lastSeen = w.time;
         leaveReport(w, me);
@@ -995,6 +998,8 @@ export async function createApp(options: AppOptions) {
               }
               if (Date.now() - p.inputAt > (p.delivery ? 500 : 350))
                 p.input = { throttle: 0, steer: 0, boost: false };
+              if (player.task?.repeat && (p.input.throttle || p.input.steer || p.input.lift))
+                cancelGather(w, player);
               move(w, player, p.input, dt);
               p.inputElapsed = (p.inputElapsed ?? 0) + dt;
             }

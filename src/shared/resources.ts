@@ -165,8 +165,25 @@ export function gather(w: World, p: Player, id: string) {
 }
 export function finishGather(p: Player, w?: World) {
   const t = p.task!;
-  if (!t.item || !t.amount || !canCarry(p, t.item, t.amount, w)) return false;
+  if (!t.item || !t.amount || !canCarry(p, t.item, t.amount, w)) {
+    if (w) cancelGather(w, p);
+    else delete p.task;
+    return false;
+  }
   p.inventory[t.item] = (p.inventory[t.item] ?? 0) + t.amount;
   delete p.task;
   return true;
+}
+
+/** Cancel an unfinished load and return its reserved resources exactly once. */
+export function cancelGather(w: World, p: Player) {
+  const task = p.task;
+  if (task?.kind !== 'gather') return;
+  delete p.task;
+  const n = worldResources(w).find((n) => n.id === task.resource);
+  if (n && task.amount && w.resources)
+    w.resources[n.id] = {
+      amount: Math.min(n.capacity, resourceAmount(w, n) + task.amount),
+      updated: w.time,
+    };
 }

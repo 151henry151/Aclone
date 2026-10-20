@@ -1,3 +1,4 @@
+import { cancelGather } from './resources.ts';
 import { buildingDesignQuote, type BuildingSize } from './building-designs';
 import { constructionSiteReason } from './construction-site';
 import { migrateEmploymentPolicy } from './employment-policy.ts';
@@ -796,6 +797,11 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'gather': {
       gather(w, p, str(a.node));
+      p.task!.repeat = a.repeat === true;
+      break;
+    }
+    case 'stopGather': {
+      cancelGather(w, p);
       break;
     }
     case 'task': {
@@ -1970,12 +1976,21 @@ export function advance(w: World, seconds: number) {
       say(w, 'School', `${p.name} qualified as ${p.learning.skill}.`);
       delete p.learning;
     }
+    if (p.task?.repeat && !p.online) cancelGather(w, p);
     if (p.task && p.task.end <= end) {
       const t = p.task;
       if (t.kind === 'gather') {
         if (finishGather(p, w)) {
           questEvent(w, p, 'gather', t.resource ?? '', t.item, t.amount);
           if (p.online) creatorEvent(w, 'task', p, t.resource ?? '');
+          if (t.repeat && p.online) {
+            try {
+              gather(w, p, t.resource!);
+              p.task!.repeat = true;
+            } catch {
+              /* Stop on depletion, tools, position or capacity. */
+            }
+          }
         }
         continue;
       }

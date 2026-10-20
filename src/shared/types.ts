@@ -10,6 +10,7 @@ export type Task = {
   item?: string;
   amount?: number;
   reward?: number;
+  repeat?: boolean;
 };
 export interface Player {
   reliefAt?: number;

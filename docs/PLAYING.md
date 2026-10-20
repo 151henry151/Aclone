@@ -279,3 +279,26 @@ Sound preferences separate engines, effects/machinery, environmental ambience an
 World owners can open **F6 → Overview** for public notices or **Chat logs** for all public chat, emotes and notices. Scroll inside the history and choose **Load older entries** to continue to the beginning of the available archive. **Refresh** returns to the latest entries; live dashboard updates leave your reading position alone. Private messages and letters remain excluded.
 
 The archive starts with the messages still retained when this upgrade is installed, then saves new public messages alongside the world. Earlier messages already discarded from the game's chat buffer cannot be reconstructed. History is stored in the normal SQLite database and included in backups; it has no automatic age cutoff.
+
+## First steps and controller play (0.78.0)
+
+Open **World rules & leaving safely → First steps** for a short guide tailored to
+this world's survival/job rules and your qualifications. Destination buttons set
+waypoints; visit a business to check its actual stock, wages and vacancies. World
+selection now includes rules and marks your recent destinations in this browser.
+A remote visitor should retain their home-host address and pilot key; if the
+remote server is unavailable, sign in at the home host and use its visitor recovery
+flow. Recent destinations do not bypass cross-host account recovery.
+
+A standard gamepad uses the left stick to drive, right shoulder to boost, A to
+interact, Start for the menu and B to close it. In menus, D-pad up/down moves focus,
+left/right changes a selected choice or number, and A activates buttons. Remap
+axes/buttons and the dead zone in **Options → Controller settings**. Disconnecting
+the pad or hiding the tab releases its driving input. Text entry still needs the
+device keyboard.
+
+Near a resource, **Gather repeatedly** performs ordinary timed loads until you
+stop it or run out of room, tools or available material. **Stop gathering** is in
+the floating task control. Driving away or disconnecting also stops repetition;
+uncollected reserved material is returned to the node. Single-load gathering
+keeps its existing behavior.
