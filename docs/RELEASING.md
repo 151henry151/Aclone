@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.77.0
+## Current upgrade: 0.77.1
+
+NPC owners manage input buffers and actual payroll through ordinary actions; career recovery improves without changing player permissions or prices directly. Preserve the existing database and provider budgets, back up and restart normally. No reset or paid experiment is included.
+
+### 0.77.0
 
 Publish the interactive building gallery with `bash scripts/deploy-website.sh`, which includes the bundled viewer and textures under `assets/building-viewer/`. Refresh browsers for the popup controls. The gallery uses no game connection or AI calls and retains image links without JavaScript or WebGL. Deploy the game normally for the shared preview code; no data migration or reset is required.
 

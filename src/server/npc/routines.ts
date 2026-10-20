@@ -140,7 +140,18 @@ export function employmentRoutine(w: World, p: Player, state: ResidentState): St
   const job = workplace(w, p, b);
   if (!job?.qualified || !job.employedHere) return [];
   if (b.kind === 'farm') return farmDuty(w, p, b, state);
-  if (!usefulShift(w, p, b)) return [];
+  if (!usefulShift(w, p, b)) {
+    // Keep the existing wage unless a known, funded vacancy can actually use
+    // this worker. Moving one surplus employee improves both workplaces.
+    const alternative = careerChoices(w, p, state).find(
+      (c) =>
+        c.careerGoal?.kind === 'employment' &&
+        c.careerGoal.target !== b.id &&
+        c.plan.some((s) => s.kind === 'act' && s.action.type === 'job') &&
+        !c.plan.some((s) => s.kind === 'act' && s.action.type === 'learn'),
+    );
+    return alternative?.plan ?? [];
+  }
   if (job.ifYouWork.capitalShortfall) return [];
   const stuck = job.blockers.filter(
     (line) => !line.startsWith('No active employees') && !line.startsWith('Missing'),

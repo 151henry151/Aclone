@@ -118,6 +118,7 @@ test('a baker with till money but empty pockets can still restock flour', () => 
   bakery.owner = p.id;
   bakery.investment = 80000;
   bakery.stock.flour = 0;
+  bakery.stock.bread = 0;
   bakery.buy.flour = 2100;
   mill.stock.flour = 8;
   mill.sell.flour = 2000;
@@ -184,6 +185,7 @@ test('an owner funds a starved mill so it can actually pay for wheat', () => {
   mill.owner = p.id;
   mill.investment = 60;
   mill.buy.wheat = 600;
+  mill.stock = {};
   const ideas = inventHypotheses(w, p, state);
   assert.ok(
     ideas.some((c) =>
@@ -209,6 +211,7 @@ test('an owner posts a wheat bid and a hiring wage when the mill cannot attract 
   mill.wage = 400;
   mill.investment = 50000;
   mill.buy = {};
+  mill.stock = {};
   const farm = w.buildings.find((b) => b.kind === 'farm')!;
   farm.stock.wheat = 20;
   farm.sell.wheat = 500;

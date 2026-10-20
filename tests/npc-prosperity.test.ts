@@ -145,11 +145,11 @@ test('an owner supplies a mill from their farm and a bakery from their mill with
     b.stock = {};
   }
   farm.stock.wheat = 60;
-  mill.stock.flour = 30;
+  mill.stock.flour = 12;
   const before = p.cash + farm.investment + mill.investment + bakery.investment;
   for (const [target, item] of [
-    [mill, 'wheat'],
     [bakery, 'flour'],
+    [mill, 'wheat'],
   ] as const) {
     const choice = enterpriseChoices(w, p).find(
       (c) =>
@@ -163,7 +163,7 @@ test('an owner supplies a mill from their farm and a bakery from their mill with
   }
   assert.equal(before, p.cash + farm.investment + mill.investment + bakery.investment);
   assert.equal(farm.stock.wheat + mill.stock.wheat, 60);
-  assert.equal(mill.stock.flour + bakery.stock.flour, 30);
+  assert.equal(mill.stock.flour + bakery.stock.flour, 12);
 });
 
 test("internal deliveries do not raid home supplies or another factory's input reserve", () => {
@@ -271,8 +271,15 @@ test('startup and operating budgets cover a full crew and starter livestock', ()
   const { w, p } = setup();
   const mill = w.buildings.find((b) => b.kind === 'mill')!;
   mill.employees = [];
+  mill.stock = {};
   const budget = productionBudget(w, mill)!;
   assert.ok(budget.reserve >= 3 * (budget.inputs + budget.idealWorkers * mill.wage));
+  mill.stock.wheat = 500;
+  assert.equal(
+    productionBudget(w, mill)!.reserve,
+    3 * budget.idealWorkers * mill.wage,
+    'held inputs already fund production; retain cash for the crew, not duplicate stock',
+  );
   const shop = w.buildings.find((b) => b.kind === 'market')!;
   for (const item of Object.keys(buildings.dairy.materials)) {
     shop.stock[item] = 100;

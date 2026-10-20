@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.77.1] - 2026-10-19
+
+### Fixed
+
+- NPC factory owners pause paid input bids when supplies or finished goods are backed up, and reopen profitable bids after stocks fall. Operating reserves account for inputs already held and actual payroll; planning exposes these costs instead of treating reinvestment as profit.
+- Surplus employees can move to known, funded vacancies they are qualified for. Residents reconsider expired career goals and return to earning when an acquired home's pantry is unaffordable.
+
 ## [0.77.0] - 2026-10-18
 
 ### Added

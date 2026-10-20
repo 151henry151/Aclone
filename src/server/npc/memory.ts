@@ -11,6 +11,7 @@ export interface ResidentState {
   projectHistory?: import('./projects.ts').ProjectOutcome[];
   businessCargo?: { building: string; item: string; quantity: number }[];
   businessProceeds?: Record<string, number>;
+  pausedInputBids?: { world: string; deaths: number; bids: Record<string, number> };
   strategyReviewedAt?: number;
   career?: import('./projects.ts').CareerProject;
   supplyGoal?: import('./survival.ts').SupplyGoal;

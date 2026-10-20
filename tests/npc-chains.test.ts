@@ -113,6 +113,7 @@ test('an owner whose sink has no bid is offered a posted price and till, not onl
   bakery.buy = {};
   bakery.investment = 0;
   bakery.stock.flour = 0;
+  bakery.stock.bread = 0; // Restocking is useful only without a finished-goods backlog.
   const ideas = [...inventChainPlans(w, p, state), ...inventHypotheses(w, p, state)];
   const post = ideas.find(
     (c) =>

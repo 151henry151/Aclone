@@ -1,6 +1,6 @@
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { canKeepFishing } from './cargo.ts';
-import { productionBudget } from './business-policy.ts';
+import { productionBudget, inputStockTarget } from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldItems } from '../../shared/world-catalogue.ts';
 import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
@@ -163,9 +163,18 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
 
   for (const b of w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government)) {
     const recipe = b.production ?? recipes[b.recipe ?? ''];
-    const postedBids = Object.entries(b.buy).filter(([, price]) => price > 0);
+    const postedBids = Object.entries(b.buy).filter(
+      ([item, price]) =>
+        price > 0 && (b.stock[item] ?? 0) < (inputStockTarget(b, item) ?? b.capacity),
+    );
     const cheapestBid = postedBids.length ? Math.min(...postedBids.map(([, price]) => price)) : 0;
-    if (cheapestBid > 0 && b.investment < cheapestBid && p.cash >= cheapestBid) {
+    const budget = productionBudget(w, b);
+    if (
+      cheapestBid > 0 &&
+      b.investment < cheapestBid &&
+      p.cash >= cheapestBid &&
+      (!budget || budget.margin >= 0)
+    ) {
       const amount = Math.min(
         10_000_000,
         Math.max(cheapestBid * 4, 2000),
@@ -202,8 +211,13 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           )
           .sort((a, c) => a.sell[item] - c.sell[item])[0];
         if (!seller) continue;
-        if (!(b.buy[item] > 0)) {
+        if (
+          !(b.buy[item] > 0) &&
+          (b.stock[item] ?? 0) < (inputStockTarget(b, item) ?? b.capacity)
+        ) {
           const price = seller.sell[item];
+          const reopening = productionBudget(w, { ...b, buy: { ...b.buy, [item]: price } });
+          if (reopening && reopening.margin < 0) continue;
           add(
             `post ${item} bid`,
             `Experiment: post a ${item} bid of ${price} at my ${b.name} so neighbours can sell here.`,
@@ -224,7 +238,10 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     }
     if (!recipe || b.kind === 'farm') continue;
     for (const [item, need] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
-      const missing = Math.max(0, need * 2 - (b.stock[item] ?? 0));
+      const missing = Math.max(
+        0,
+        Math.min(need * 2, inputStockTarget(b, item) ?? need * 2) - (b.stock[item] ?? 0),
+      );
       if (missing <= 0) continue;
       const seller = w.buildings
         .filter(

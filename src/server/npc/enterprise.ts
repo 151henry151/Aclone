@@ -8,7 +8,7 @@ import { livestockInputs, livestockSupplyInputs } from '../../shared/livestock.t
 import { farmEnterprises } from './farm-enterprise.ts';
 import { constructionChoices } from './construction-projects.ts';
 import { careerChoices } from './projects.ts';
-import { productionBudget, usefulShift } from './business-policy.ts';
+import { productionBudget, usefulShift, inputStockTarget } from './business-policy.ts';
 import { householdBudget } from './household.ts';
 import { herdSpec, herdReady, acceptsHay } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -226,7 +226,8 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         );
     }
     if (b.owner !== p.id) continue;
-    const reserve = estimate?.reserve ?? Math.max(20000, b.wage * 6);
+    const operating = productionBudget(w, b);
+    const reserve = operating?.reserve ?? Math.max(20000, b.wage * 6);
     const bank = w.buildings.find((s) => s.kind === 'bank' && !s.construction);
     const shortfall = Math.max(0, reserve - b.investment - Math.max(0, p.cash - living));
     if (
@@ -235,6 +236,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       shortfall <= 10000 &&
       estimate &&
       estimate.margin > 0 &&
+      (!operating || operating.margin >= 0) &&
       !p.loans?.some((l) => l.status !== 'paid')
     ) {
       const q = loanQuote(w, p, bank, shortfall, 12);
@@ -264,9 +266,9 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );
-    if (deposit > 0 && estimate && estimate.margin >= 0)
+    if (deposit > 0 && estimate && estimate.margin >= 0 && (!operating || operating.margin >= 0))
       add(
-        `Fund my ${b.name}: deposit ${deposit} toward six batches of inputs and wages.`,
+        `Fund my ${b.name}: deposit ${deposit} for missing inputs and protected payroll; stock already held needs no replacement purchase.`,
         visitBuilding(p, b, [
           act({ type: 'investment', building: b.id, direction: 'deposit', amount: deposit }),
         ]),
@@ -275,10 +277,11 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       ...livestockSupplyInputs(w, b, recipe.inputs),
       ...(herd ? { [herd.animal]: herd.minimum } : {}),
     })) {
+      const target = inputStockTarget(b, item) ?? perBatch * (item === herd?.animal ? 1 : 6);
       const keep = item === 'water' ? 6 : item === 'bread' ? 3 : 0;
       const held = Math.min(
         Math.max(0, (p.inventory[item] ?? 0) - keep),
-        Math.max(0, perBatch * (item === herd?.animal ? 1 : 6) - (b.stock[item] ?? 0)),
+        Math.max(0, target - (b.stock[item] ?? 0)),
         b.capacity - (b.stock[item] ?? 0),
       );
       if (held > 0) {
@@ -324,7 +327,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       );
       const personalSurplus = Math.max(0, p.cash - living);
       let n = Math.min(
-        Math.max(0, perBatch * (item === herd?.animal ? 1 : 6) - (b.stock[item] ?? 0)),
+        Math.max(0, target - (b.stock[item] ?? 0)),
         available,
         b.capacity - (b.stock[item] ?? 0),
         price ? Math.floor((personalSurplus + procurementCash) / price) : 100,

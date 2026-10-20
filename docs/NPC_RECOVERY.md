@@ -549,3 +549,47 @@ Packaged as release 0.70.0. The independent F6 archive feature is released separ
 Validation: the full `npm run check` passed 766 tests and the production build succeeded. Final receipt-attribution and savings regressions passed in a 26-test targeted run; final TypeScript validation also passed. Repository-wide formatting flags only three pre-existing untracked October 9/11 NPC status reports; changed implementation files are formatted. All nineteen saved-state gameplay requests reconstructed successfully: no shortened descriptions, at most 18 submitted alternatives, maximum 23,997 UTF-8 bytes. This reconstructs the next request, not historical wire payloads. Production-adapter smoke on `jev-1.13.0` passed 16/16 synthetic judgments including reversed option order, costing $0.000791196 (mean 1,177.375 input tokens). No chat calls or live-state mutations. The short offline controller soak completed 1.2 simulated hours with four scheduled residents; it is a mechanics check, not a long-term economy result.
 
 Remaining proof gate: run a bounded isolated actual-Jev population canary, with a matched baseline and no human deliveries/investments. Measure funded trade receipts net of procurement/living costs, deaths, qualified useful employment, completed construction, ownership, transport mode and local food/water availability. The synthetic benchmark and short heuristic soak cannot prove autonomous prosperity. Deployment does not start a long-running experiment; the population canary remains a separate verification step.
+
+## 2026-10-19 audit follow-up — 0.77.1
+
+Packaged as 0.77.1; deployment verification follows the release procedure. The observed window was
+2026-10-18 21:44 UTC through 2026-10-19 22:40 UTC (about 25 hours). All 19 residents
+survived and ten NPC cottages completed, but no new NPC businesses appeared.
+Subtracting the explicit 500d-per-NPC grants, consolidated liquid capital fell by
+about 7,250d. House construction and unsold inventory mean that is not an accounting
+loss by itself. Mabel's fuel purchasing and Toby's crowded payroll were specific,
+large operating drains; Nora also retained a blocked housing goal after acquiring
+a home. Raw snapshots remain private under `/tmp/aclone-audit-2026-10-19/`.
+
+Business/career recovery:
+
+- Business/career recovery: shared six-batch input targets subtract held output;
+  ordinary owner-admin routines pause paid bids and restore them after depletion
+  only when current margins permit. Candidate generators use the same targets,
+  and reserves credit inputs already held while accounting for current payroll.
+  Jev sees the costs and targets. Surplus qualified workers can move to a known
+  funded vacancy; expired careers and cash-poor completed-home goals release the
+  resident to reconsider earning. Livestock feed and ordinary survival care remain
+  exempt from the factory buffer.
+
+Replaying the new pure policy against the saved snapshot proposes a normal visit
+and bid suspension at both Mabel's waterworks (388 fuel, target zero) and Toby's
+bakery (409 flour, target four). At those saved prices and crews, estimated batch
+margins are -14.14d and -6.79d respectively, including 88d payroll each. This is a
+policy check on a copy, not a live transaction or a simulated economic recovery.
+
+Validation: 295 NPC tests pass, including controller execution without AI credit,
+restocking after depletion, cross-generator bid guards, normal job switching,
+housing recovery and existing budget/conversation behavior. TypeScript
+and changed-file formatting are checked separately. No paid model requests, live
+price changes, grants or production deployment accompanied this work.
+
+Remaining proof: after deployment, compare a no-intervention window against this
+baseline. Measure owner input purchases versus consumption, stock and cash together,
+payroll/efficiency, funded local deliveries, completed businesses, employment,
+household provisions, deaths and chat refusals. Keep human grants and transactions
+separate. The buffer is deliberately simple, not a demand forecast; a trader can
+still deliver a large load before an owner next visits to pause a bid. Zero bids
+permit donations. These limits and autonomous expansion need observation before
+claiming a self-sustaining economy. The longer actual-Jev population canary remains
+separate, with explicit spending authorization; none is running from this work.

@@ -7,6 +7,7 @@ import { constructionBudget } from './construction-projects.ts';
 import { personalOffers, familyInvites } from '../../shared/social.ts';
 import { vehicleCondition } from '../../shared/vehicle-services.ts';
 import { orderAllowance } from '../../shared/procurement.ts';
+import { inputStockTarget, productionBudget } from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import { buildings as catalog, items, recipes, vehicles, weapons } from '../../shared/catalog.ts';
@@ -349,17 +350,26 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             );
         }
       if (b.recipe || b.production)
-        for (const multiplier of [0.9, 1.1])
+        for (const multiplier of [0.9, 1.1]) {
+          const wage = Math.round(b.wage * multiplier);
+          const budget = productionBudget(w, { ...b, wage });
+          if (wage === b.wage || (multiplier > 1 && budget && budget.margin <= 0)) continue;
           add(
             'management',
-            `Adjust ${b.name} wage to ${Math.round(b.wage * multiplier)} to balance recruitment and profitability.`,
+            `Adjust ${b.name} wage to ${wage}; current-crew batch margin would be ${budget?.margin ?? 'unknown'}, ideal crew ${budget?.idealWorkers ?? 'unknown'}. Lower wages can lose workers; extra staff can reduce efficiency.`,
             visit(b, [
               operation('buildingAdmin', { building: b.id, wage: Math.round(b.wage * multiplier) }),
             ]),
           );
+        }
       for (const side of ['buy'] as const)
         for (const [item, price] of Object.entries(b[side]).slice(0, 8))
-          for (const multiplier of [0.95, 1.05])
+          for (const multiplier of [0.95, 1.05]) {
+            if (price <= 0 || (b.stock[item] ?? 0) >= (inputStockTarget(b, item) ?? b.capacity))
+              continue;
+            const quote = Math.round(price * multiplier);
+            const budget = productionBudget(w, { ...b, buy: { ...b.buy, [item]: quote } });
+            if (budget && budget.margin < 0) continue;
             add(
               'pricing',
               `Set ${b.name} ${side} quote for ${item} to ${Math.round(price * multiplier)}. Compare rivals and preserve margins.`,
@@ -372,6 +382,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
                 }),
               ]),
             );
+          }
       if (['bnb', 'hotel'].includes(b.kind))
         add(
           'housing',

@@ -38,7 +38,7 @@ import { workplace, shiftBlocker } from './workplace.ts';
 import { startCareer, continueCareer, finishCareer, projectTrade } from './projects.ts';
 import { canKeepFishing, strandedCargo } from './cargo.ts';
 import { householdBudget } from './household.ts';
-import { ownerRoutine, cargoRelief } from './business-policy.ts';
+import { ownerRoutine, ownerBidRoutine, cargoRelief } from './business-policy.ts';
 import { economicMenu, enterpriseChoices } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -107,6 +107,7 @@ interface Resident extends ResidentOptions {
   caring?: boolean;
   careCheckAt?: number;
   shiftCheckAt?: number;
+  ownerCheckAt?: number;
   exploreCheckAt?: number;
 }
 export class Residents {
@@ -952,6 +953,28 @@ export class Residents {
       // freezes driving, a production wait, or an already chosen ordinary action.
       if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+        if (
+          !careNeeded(w, p) &&
+          !p.learning &&
+          !r.state.helpQuestion &&
+          r.state.index >= r.state.plan.length &&
+          now >= (r.ownerCheckAt ?? 0)
+        ) {
+          r.ownerCheckAt = now + 60000;
+          const plan = ownerBidRoutine(known, p, r.state);
+          if (plan.length && !plan.some((s) => blockedStep(r.state.recovery, s, w.time))) {
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.until = r.state.nextAt = now + 600000;
+            r.state.routine = 'employment';
+            r.state.needsDecision = false;
+            r.wake = false;
+            this.checkpoint(r, w, 'owner-purchasing', { plan });
+            this.runStep(r, w, p, now);
+            continue;
+          }
+        }
         if (
           now >= (r.state.plannerRetryAt ?? 0) &&
           !careNeeded(w, p) &&

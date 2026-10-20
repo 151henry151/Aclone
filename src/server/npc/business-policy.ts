@@ -1,6 +1,6 @@
 import { settleBusinessProceeds } from './business-freight.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
-import { livestockSupplyInputs } from '../../shared/livestock.ts';
+import { livestockSupplyInputs, herdSpec } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../../shared/types.ts';
 import { worldBuildings } from '../../shared/world-catalogue.ts';
@@ -21,6 +21,69 @@ import { visitBuilding } from './care.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
 import type { Step } from './decision.ts';
+import { operation } from './player-operations.ts';
+
+/** A small production buffer, not permission to fill the entire warehouse.
+ * Finished stock is expressed in batches so a waterworks and a bakery use the
+ * same policy without prescribing what either owner should produce. */
+export function inputStockTarget(b: Building, item: string) {
+  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  // Livestock need ongoing feed even when saleable output is backed up.
+  if (!recipe || b.kind === 'farm' || herdSpec(b) || !recipe.inputs[item]) return undefined;
+  const outputBatches = Math.min(
+    ...Object.entries(recipe.outputs).map(([id, n]) => (b.stock[id] ?? 0) / n),
+  );
+  const batches = Math.max(0, Math.ceil(6 - outputBatches));
+  return Math.min(b.capacity, batches * recipe.inputs[item]);
+}
+
+/** Manage paid bids through the same administration action as a human owner.
+ * Zero bids accept donations but do not attract profit-seeking suppliers. */
+export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step[] {
+  if (state.pausedInputBids?.world !== w.id || state.pausedInputBids.deaths !== p.deaths)
+    state.pausedInputBids = { world: w.id, deaths: p.deaths, bids: {} };
+  const owned = w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government);
+  const validKeys = new Set(
+    owned.flatMap((b) => Object.keys(b.buy).map((item) => `${b.id}:${item}`)),
+  );
+  for (const key of Object.keys(state.pausedInputBids.bids))
+    if (!validKeys.has(key)) delete state.pausedInputBids.bids[key];
+  for (const b of owned) {
+    for (const item of Object.keys((b.production ?? recipes[b.recipe ?? ''])?.inputs ?? {})) {
+      const target = inputStockTarget(b, item);
+      if (target === undefined) continue;
+      const key = `${b.id}:${item}`,
+        stock = b.stock[item] ?? 0;
+      const bid = b.buy[item] ?? 0;
+      if (bid > 0 && stock >= target) {
+        state.pausedInputBids.bids[key] = bid;
+        return visitBuilding(p, b, [
+          operation('buildingAdmin', { building: b.id, item, side: 'buy', price: 0 }),
+        ]);
+      }
+      // Forget a completed reopening, including a later manual price change.
+      if (bid > 0) delete state.pausedInputBids.bids[key];
+      // Hysteresis avoids changing the price after every single consumed unit.
+      const remembered = state.pausedInputBids.bids[key];
+      const reopened = remembered
+        ? productionBudget(w, { ...b, buy: { ...b.buy, [item]: remembered } })
+        : undefined;
+      if (
+        bid === 0 &&
+        remembered > 0 &&
+        target > 0 &&
+        stock < target / 2 &&
+        reopened &&
+        reopened.margin >= 0
+      ) {
+        return visitBuilding(p, b, [
+          operation('buildingAdmin', { building: b.id, item, side: 'buy', price: remembered }),
+        ]);
+      }
+    }
+  }
+  return [];
+}
 
 /** Separate shop retail receipts from direct wholesale export. Tax is withheld
  * from shop receipts, not added to a player's posted purchase price. */
@@ -38,7 +101,7 @@ export function productionBudget(w: World, b: Building) {
   );
   const next = (Math.floor(w.time / productionInterval(w, b)) + 1) * productionInterval(w, b);
   const staff = productionStaff(w, b, next).length;
-  const payroll = b.wage * Math.max(1, staff);
+  const payroll = b.wage * staff;
   const idealWorkers = productionStaffing(w, b, staff, next).ideal;
   return {
     inputs,
@@ -46,7 +109,16 @@ export function productionBudget(w: World, b: Building) {
     payroll,
     margin: retailReceipts - inputs - payroll,
     oneWorkerMargin: retailReceipts - inputs - b.wage,
-    reserve: Math.ceil((inputs + b.wage * Math.max(idealWorkers, staff)) * 3),
+    reserve: Math.ceil(
+      Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
+        (sum, [item, n]) =>
+          sum +
+          Math.max(0, Math.min(n * 3, inputStockTarget(b, item) ?? n * 3) - (b.stock[item] ?? 0)) *
+            (b.buy[item] || worldItems(w)[item]?.price || 0),
+        0,
+      ) +
+        b.wage * Math.max(idealWorkers, staff) * 3,
+    ),
     activeWorkers: staff,
     idealWorkers,
     idealMargin: retailReceipts - inputs - b.wage * idealWorkers,
@@ -99,6 +171,8 @@ export function ownerLivingDraw(w: World, p: Player, b: Building) {
 /** Maintain a solvent business before discretionary personal spending. */
 export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[] {
   if (p.task || p.learning) return [];
+  const bids = state ? ownerBidRoutine(w, p, state) : [];
+  if (bids.length) return bids;
   const settlement = state ? settleBusinessProceeds(w, p, state) : [];
   if (settlement.length) return settlement;
   const living = householdBudget(w, p).reserve;
@@ -119,7 +193,7 @@ export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[]
       Math.max(0, budget.reserve - b.investment),
       Math.max(0, p.cash - living),
     );
-    if (amount > 0 && budget.idealMargin >= 0)
+    if (amount > 0 && budget.idealMargin >= 0 && budget.margin >= 0)
       return visitBuilding(p, b, [
         {
           kind: 'act',

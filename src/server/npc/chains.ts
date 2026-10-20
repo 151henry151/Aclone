@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { inputStockTarget, productionBudget } from './business-policy.ts';
 import { constructionSiteReason } from '../../shared/construction-site.ts';
 import { mapHalf, terrainHeight } from '../../shared/terrain.ts';
 import { onFarmLand } from '../../shared/farm-land.ts';
@@ -289,10 +290,13 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
     const recipe = buildingRecipe(b);
     if (!recipe || b.kind === 'farm') continue;
     for (const item of Object.keys(recipe.inputs)) {
+      if ((b.stock[item] ?? 0) >= (inputStockTarget(b, item) ?? b.capacity)) continue;
       if ((b.buy[item] ?? 0) > 0) continue;
       if (!localProducers(w, item, graph).length && !inputAvailable(w, item, graph)) continue;
       const price = b.buy[item] || worldBuildings(w)[b.kind]?.buy[item] || items[item]?.price;
       if (!price) continue;
+      const budget = productionBudget(w, { ...b, buy: { ...b.buy, [item]: price } });
+      if (budget && budget.margin < 0) continue;
       const deposit = Math.min(
         10_000_000,
         Math.max(price * 4, 2000),

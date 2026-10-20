@@ -289,13 +289,25 @@ matter. Broader evaluations continue to compare net assets and health.
 NPCs compare active staffing with each factory's ideal crew before taking or renewing a shift. Extra workers help up to the ideal; overcrowding slows batches and raises payroll. Existing workers retain useful positions in roster order so an overcrowded crew does not all stop renewing at once. Planner observations include ideal staffing and expected speed; wage estimates distinguish completed batches from clock checks. Owner top-ups preserve meal
 money; output-export errands return receipts to operating capital. Owners can draw
 from surplus capital for a day of living costs and modest cottage savings, preserving
-three factory batches (or all purchased farm plots) and investor claims. These withdrawals
+three factory batches' missing inputs and payroll (or all purchased farm plots) and investor claims. These withdrawals
 are transfers, not newly earned profit. Crop selection
 accounts for funded downstream shortages, farm stock, planted crops, seasons and
 rotation. Farming careers include study and seasonal plot work, keeping money for
 harvest wages before buying more seeds or optional fertilizer. Seasonal farm owners
 have separate funding, training, plot-work and crop-export plans; they are not
 estimated as automatic factories. Farmers consider hay demand and can buy more land only when current plots are busy, sales have occurred, customers are short, and living/seed reserves remain funded. All plot actions support sixteen plots. Cattle/sheep supply errands consider affordable hay from observed markets; pigs and chickens retain feed. Hay-barn merchants can acquire, fund and restock a modest 40-bale buffer for observed customers, rather than speculatively filling their entire warehouse. These policies do not alter human permissions, wages or production rules.
+
+Factory owners use a six-batch stock buffer reduced by finished output already held.
+At safe plan boundaries they can visit their business and set input bids to zero,
+then restore remembered bids below half the buffer if current payroll permits a
+nonnegative batch margin. Zero bids still allow free donations; this is purchasing
+behavior, not a hard inventory cap. Farms and livestock upkeep are exempt.
+Procurement, funding and price candidates share the buffer. Cash reserves exclude
+inputs already held, retain at least the ideal crew's payroll, and top-ups reject
+negative current-crew margins. Surplus workers may switch to a known funded job
+they already qualify for. Career reviews expire after a day; a completed home
+with an unaffordable pantry releases the resident to earn again, while ordinary
+survival and departure preparation continue.
 
 To exercise the controller offline:
 

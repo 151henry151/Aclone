@@ -16,6 +16,7 @@ import { livingReserve, travelPrep, travelVehicle, affordableLoad } from './trav
 import { usefulShift } from './business-policy.ts';
 import { workplace, shiftBlocker } from './workplace.ts';
 import { blockedStep } from './recovery.ts';
+import { householdBudget } from './household.ts';
 
 export interface CareerGoal {
   kind: 'gather' | 'trade' | 'employment' | 'business' | 'housing';
@@ -348,16 +349,20 @@ export function continueCareer(
   // Accepted player requests get the next decision; keep the career for later.
   if (state.commitments?.some((deal) => deal.world === w.id && deal.status === 'pending')) return;
   if (p.task || p.learning) return;
+  if (c.world !== w.id || c.deaths !== p.deaths || c.failures >= 3 || w.time >= c.reviewAt) {
+    finishCareer(w, p, state, 'Life/world changed, repeated failures, or scheduled career review');
+    return;
+  }
   if (c.kind === 'housing') {
     const ready = offlineReadiness(w, p, 86400);
     if (ready.home === c.target && ready.stocked) {
       finishCareer(w, p, state, 'Home provisioned for the planned absence');
       return;
     }
-  }
-  if (c.world !== w.id || c.deaths !== p.deaths || c.failures >= 3) {
-    finishCareer(w, p, state, 'Life/world changed or repeated execution failures');
-    return;
+    if (ready.home === c.target && p.cash + p.bank < householdBudget(w, p).reserve) {
+      finishCareer(w, p, state, 'Home acquired; earn living money before further pantry purchases');
+      return;
+    }
   }
   if (
     c.kind === 'employment' &&

@@ -3,7 +3,7 @@ import { pickBuildSite } from './chains.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
-import { retainedCapital } from './business-policy.ts';
+import { retainedCapital, inputStockTarget, productionBudget } from './business-policy.ts';
 import { householdBudget, household, dailyLivingCost } from './household.ts';
 import { visitBuilding } from './care.ts';
 import type { ResidentState } from './memory.ts';
@@ -109,6 +109,15 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
       unfinished: !!b.construction,
       operatingReserve: retainedCapital(w, b),
       investment: b.investment,
+      productionEconomics: productionBudget(w, b),
+      inputTargets: Object.fromEntries(
+        Object.keys(b.buy).flatMap((item) => {
+          const target = inputStockTarget(b, item);
+          return target === undefined
+            ? []
+            : [[item, { held: b.stock[item] ?? 0, target, bid: b.buy[item] }]];
+        }),
+      ),
       drawableSurplus: b.construction
         ? 0
         : Math.max(
