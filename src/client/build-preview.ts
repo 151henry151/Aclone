@@ -1,3 +1,4 @@
+import { addFoundation } from './foundations';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingPreviewFrame, previewDirection } from './build-preview-scale';
 import * as T from 'three';
@@ -73,6 +74,7 @@ export class BuildPreview {
     const serial = ++this.serial;
     const custom = w?.creator?.models.find((m) => m.id === b.creatorModel);
     this.group = custom ? creatorModel(custom, w!) : buildingModel(b);
+    if (w) addFoundation(this.group, b, w);
     this.group.rotation.y = b.rotation;
     this.scene.add(this.group);
     const frame = () => {

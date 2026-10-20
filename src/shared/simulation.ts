@@ -1,6 +1,6 @@
 import { cancelGather } from './resources.ts';
 import { buildingDesignQuote, type BuildingSize } from './building-designs';
-import { constructionSiteReason } from './construction-site';
+import { constructionSiteReason, foundationProfile } from './construction-site';
 import { migrateEmploymentPolicy } from './employment-policy.ts';
 import { exportShipments } from './export-shipments.ts';
 import { labourReward } from './public-labour.ts';
@@ -1221,6 +1221,7 @@ export function act(w: World, id: string, a: Action): string {
       b.stock = {};
       b.construction = { ...design.materials };
       b.constructionCost = design.price;
+      b.foundationY = foundationProfile(w, b).level;
       w.buildings.push(b);
       result = 'Construction site placed. Deliver the materials listed at the site.';
       break;

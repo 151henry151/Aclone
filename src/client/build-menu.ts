@@ -8,7 +8,7 @@ import {
 } from '../shared/building-designs';
 import { worldBuildings, worldItems, applyBuildingTemplate } from '../shared/world-catalogue';
 import { constructionTerms } from '../shared/civics';
-import { constructionSiteReason } from '../shared/construction-site';
+import { constructionSiteReason, foundationProfile } from '../shared/construction-site';
 import { buildingBounds, buildingPlan } from '../shared/building-shapes';
 import { waterworksSite } from '../shared/shoreline';
 import { onFarmLand } from '../shared/farm-land';
@@ -149,6 +149,7 @@ export function mountBuildMenu(
       refusal = (error as Error).message;
     }
     refusal ||= constructionSiteReason(w, b) ?? '';
+    b.foundationY = foundationProfile(w, b).level;
     if (w.buildings.some((o) => Math.hypot(o.x - p.x, o.z - p.z) <= 12))
       refusal ||= 'Too close to another building';
     if (onFarmLand(w, p.x, p.z, Math.max(bounds.width, bounds.depth) / 2))
@@ -166,7 +167,7 @@ export function mountBuildMenu(
     const currency = (n: number) => money(n, w.settings.denariiPerSheckle);
     host.querySelector('[data-build-estimate]')!.innerHTML =
       `<h3>${esc(def.name)}</h3><p>${bounds.width.toFixed(1)} × ${bounds.depth.toFixed(1)} m footprint · ${bounds.height.toFixed(1)} m high · <b>${q.capacity.toLocaleString()} storage per good</b>${roomCount(b) ? ` · ${roomCount(b)} guest rooms` : ''}</p>
-    <p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
+    <p>Ground variation ${foundationProfile(w, b).rise.toFixed(2)}m; level plinth and entrance steps shown. Maximum accepted variation 2m.</p><p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
     <ul class="build-materials">${Object.entries(q.materials)
       .map(
         ([item, n]) =>

@@ -81,6 +81,7 @@ const designSchema = z.object({
           .number()
           .min(-Math.PI * 2)
           .max(Math.PI * 2),
+        foundationY: z.number().finite().min(-10000).max(10000).optional(),
         creatorModel: z.string().max(64).optional(),
         style: z.string().max(40).optional(),
         architecture: z.string().max(40).optional(),
@@ -156,6 +157,7 @@ export function exportDesign(w: World, includeMedia = false) {
         x,
         z,
         rotation,
+        foundationY,
         creatorModel,
         templateId,
         style,
@@ -173,6 +175,7 @@ export function exportDesign(w: World, includeMedia = false) {
         x,
         z,
         rotation,
+        foundationY,
         creatorModel,
         templateId,
         style,

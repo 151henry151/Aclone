@@ -1,3 +1,4 @@
+import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { label, pilotLabel } from './labels';
 import { saleTag, saleTagText } from './sale-tag';
@@ -677,7 +678,8 @@ export class GameScene {
       const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
       const g = custom ? creatorModel(custom, w) : this.building(b);
       g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;
-      g.position.set(b.x, terrainHeight(w, b.x, b.z), b.z);
+      addFoundation(g, b, w);
+      g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
       g.rotation.y = b.rotation;
       g.userData.building = b.id;
       this.buildingMeshes.push(g);

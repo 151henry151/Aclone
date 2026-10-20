@@ -111,6 +111,8 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  /** Level selected by server for new foundations; absent on legacy buildings. */
+  foundationY?: number;
   /** Public staffing projection; never persisted as employment authority. */
   staffing?: { active: number; ideal: number; ownerOperating: boolean };
   ownerActiveUntil?: number;

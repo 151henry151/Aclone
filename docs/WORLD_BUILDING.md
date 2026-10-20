@@ -248,3 +248,21 @@ Drones cannot trade, carry objectives, start jobs or enter team matches. This ke
 ## Construction designs
 
 Built-in types offer five architectural models with six independent finishes; supply caches use container designs and paint colours. Suitable types offer larger layouts and storage capacities. Model, finish and size travel with exported world designs. Placement checks the rotated footprint, including service yards, against terrain, other buildings and protected zones. See [Building designs](PLAYING.md#building-designs) for costs and controls. Catalogue-based custom templates use the same designer; templates with a creator model keep their authored geometry and material bill, with rotation available.
+
+## Foundations and terrain coordinates (0.78.0)
+
+New construction samples its rotated footprint, fixtures and entrance apron.
+Sites with over 2 m of ground-height variation are rejected before charging.
+Accepted buildings get a saved level foundation and simple entrance steps,
+shared between placement preview and the live model. Existing buildings are not
+moved. Later caretaker terrain edits can change access: review buildings after
+large edits rather than expecting automatic flattening of neighbouring land.
+
+Terrain coordinates are metres, centred at (0,0), with X increasing across map
+columns and Z across rows. The 33×33 heightmap spans the entire playable square:
+cell spacing is `mapSize / 32` metres. Height values are metres above the common
+origin; terrain brushes add to the base height. Saved coordinates, roads, resource
+markers and rotated building positions are covered by ten-round-trip regressions.
+OBJ import retains its existing size/triangle/texture limits. ATM conversion is
+not supplied: compatibility requires permitted sample files and verification;
+public engine source does not grant rights to historical art.
