@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.77.2] - 2026-10-19
+
+### Fixed
+
+- Keep unclassified historical AI charges against global spending limits without incorrectly assigning them all to the conversation allowance.
+- Expire unanswered NPC conversations after three local budget/context refusals, notify the speaker, and allow a fresh question to retry instead of repeatedly deferring an old message.
+
 ## [0.77.1] - 2026-10-19
 
 ### Fixed

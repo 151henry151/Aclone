@@ -337,3 +337,46 @@ test('project receipts exclude unrelated side hustles while the main project is 
   assert.equal(projectTrade(goal, { building: 'market', item: 'logs' }), false);
   assert.equal(projectTrade(goal, { building: 'mill', item: 'flour' }), false);
 });
+
+test('unclassified historical calls retain global charges without consuming the new chat-only allocation', () => {
+  const store = new Store(':memory:');
+  try {
+    const memory = new NpcMemory(store),
+      now = Date.now();
+    store.db
+      .prepare(
+        'INSERT INTO npc_calls(resident,at,reserved,charged,status,lane) VALUES (?,?,?,?,?,?)',
+      )
+      .run('old', now, 19.99, 19.99, 'uncertain', 'legacy');
+    const budget = new NpcBudget(
+      memory,
+      budgetSchema.parse({ monthlyUsd: 40, dailyUsd: 40, callsPerHour: 120 }),
+    );
+    assert.equal(budget.usage(now).monthUsd, 19.99);
+    assert.equal(budget.usage(now).chatMonthUsd, 0);
+    assert.ok(
+      budget.reserve(
+        'mabel',
+        5000,
+        1000,
+        now,
+        { inputUsdPerMillion: 1, outputUsdPerMillion: 1 },
+        'chat',
+      ),
+    );
+    assert.equal(
+      new NpcBudget(memory, budgetSchema.parse({ monthlyUsd: 20, dailyUsd: 40 })).reserve(
+        'mabel',
+        50000,
+        1000,
+        now,
+        { inputUsdPerMillion: 1, outputUsdPerMillion: 1 },
+        'chat',
+      ),
+      undefined,
+      'legacy spending still exhausts the global cap',
+    );
+  } finally {
+    store.close();
+  }
+});

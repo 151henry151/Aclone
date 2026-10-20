@@ -1793,6 +1793,7 @@ export class Residents {
             r.state.dialogueAttempt = {
               key: conversationKey!,
               attempts: count,
+              deferrals: attempt?.deferrals ?? 0,
               nextAt: Date.now() + (count === 1 ? 60000 : 300000),
               done: false,
             };
@@ -1847,26 +1848,36 @@ export class Residents {
             }
           } else {
             const latest = this.worlds.get(r.state.world) ?? current;
+            const deferrals = (attempt?.deferrals ?? 0) + 1;
+            const exhausted = deferrals >= 3;
             r.state.dialogueAttempt = {
               key: conversationKey!,
               attempts: attempt?.attempts ?? 0,
-              nextAt: Date.now() + 60000,
-              done: false,
+              nextAt: Date.now() + (deferrals === 1 ? 60000 : 300000),
+              done: exhausted,
+              deferrals,
             };
-            const noticeKey = conversationKey!;
+            const noticeKey = `${conversationKey!}:${exhausted ? 'expired' : 'waiting'}`;
             if (conversation.speakerId && r.state.dialogueNoticeKey !== noticeKey) {
               say(
                 latest,
                 'AI notice',
-                `${r.state.name} received your message, but conversation is waiting for the shared AI budget.`,
+                exhausted
+                  ? `${r.state.name} cannot reply right now. Please try again later.`
+                  : `${r.state.name} received your message, but conversation is waiting for the shared AI budget.`,
                 'system',
                 conversation.speakerId,
               );
               r.state.dialogueNoticeKey = noticeKey;
             }
             this.checkpoint(r, latest, 'dialogue-budget', {
-              message: 'Conversation deferred by shared budget or context limit.',
+              message: exhausted
+                ? 'Conversation expired after three admission refusals; no model call was made.'
+                : 'Conversation deferred by shared budget or context limit.',
+              deferrals,
             });
+            if (exhausted && r.state.conversationId === request.observation.currentConversation?.id)
+              r.state.helpQuestion = undefined;
           }
         }
         // Another action may have rolled back/replaced the world during dialogue.

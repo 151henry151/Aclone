@@ -35,7 +35,11 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.77.1
+## Current upgrade: 0.77.2
+
+Chat allowance accounting excludes unclassified legacy calls from the chat-only limit, while retaining all historical charges against global limits. Budget/context refusals expire after three local checks. Preserve the same database and environment; restart normally. No accounting reset or world migration is required.
+
+### 0.77.1
 
 NPC owners manage input buffers and actual payroll through ordinary actions; career recovery improves without changing player permissions or prices directly. Preserve the existing database and provider budgets, back up and restart normally. No reset or paid experiment is included.
 

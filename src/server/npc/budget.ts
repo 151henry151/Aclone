@@ -42,24 +42,26 @@ export class NpcBudget {
           .prepare("SELECT count(*) AS n FROM npc_calls WHERE at>? AND status!='not-sent'")
           .get(now - 3600000)!.n,
       ),
+      // Unclassified historical charges still count toward every global cap.
+      // Only known conversation charges consume the separate chat allowance.
       chatDayUsd: Number(
         db
           .prepare(
-            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane!='gameplay'",
+            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane='chat'",
           )
           .get(day)!.n,
       ),
       chatMonthUsd: Number(
         db
           .prepare(
-            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane!='gameplay'",
+            "SELECT coalesce(sum(charged),0) AS n FROM npc_calls WHERE at>=? AND lane='chat'",
           )
           .get(month)!.n,
       ),
       chatHourCalls: Number(
         db
           .prepare(
-            "SELECT count(*) AS n FROM npc_calls WHERE at>? AND lane!='gameplay' AND status!='not-sent'",
+            "SELECT count(*) AS n FROM npc_calls WHERE at>? AND lane='chat' AND status!='not-sent'",
           )
           .get(now - 3600000)!.n,
       ),

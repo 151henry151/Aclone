@@ -69,7 +69,13 @@ export interface ResidentState {
     followupsRemaining?: number;
   }[];
   dialogueNoticeKey?: string;
-  dialogueAttempt?: { key: string; attempts: number; nextAt: number; done: boolean };
+  dialogueAttempt?: {
+    key: string;
+    attempts: number;
+    nextAt: number;
+    done: boolean;
+    deferrals?: number;
+  };
   recovery?: Recovery;
   lastOutcome?: {
     time: number;

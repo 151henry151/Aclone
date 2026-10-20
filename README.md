@@ -25,7 +25,7 @@ This is a playable alpha, not complete historical feature parity. See [status an
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; stocked-home targets, complete earning trips, costed surplus pricing and protected operating capital guide their choices; see [AI neighbours](docs/NPCS.md). Gameplay now includes protected gameplay budgets, complete structured decision options, persistent savings milestones and trade-price guards; see the [redesign handoff](docs/NPC_RECOVERY.md#2026-10-18-planner-redesign-0700).
 
-Long-term autonomous prosperity remains under evaluation. The [recovery handoff](docs/NPC_RECOVERY.md) distinguishes released behavior, unreleased audit fixes and validation still needed.
+Long-term autonomous prosperity remains under evaluation. The [recovery handoff](docs/NPC_RECOVERY.md) records the business/career and conversation-budget fixes, and validation still needed.
 
 Design buildings before breaking ground: five trade-specific architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
 

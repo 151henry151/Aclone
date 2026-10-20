@@ -181,3 +181,71 @@ test('large nested memories and outcome details cannot displace safety facts or 
   );
   assert.equal(JSON.stringify(request), before, 'packing must not change resident memory');
 });
+
+test('budget-refused conversation expires after three local checks and a fresh question can retry', async (t) => {
+  let now = Date.now(),
+    calls = 0;
+  t.mock.method(Date, 'now', () => now);
+  const store = new Store(':memory:'),
+    world = createWorld('puddlewick', 'Test', 'server');
+  const resident = new Residents(
+    store,
+    new Universe(store),
+    new Map([[world.id, world]]),
+    [
+      {
+        config: npcConfigSchema.parse({
+          id: 'mabel',
+          provider: 'jev',
+          presence: 'always',
+          intervalMs: 5000,
+        }),
+        brain: {
+          async decide(): Promise<BrainResult> {
+            throw Error('Budget should stop gameplay transport');
+          },
+        },
+        dialogue: {
+          rates: { inputUsdPerMillion: 1, outputUsdPerMillion: 1 },
+          brain: {
+            async decide(): Promise<BrainResult> {
+              calls++;
+              throw Error('Budget should stop chat transport');
+            },
+          },
+        },
+      },
+    ],
+    { dailyUsd: 0, monthlyUsd: 0 },
+  );
+  try {
+    resident.tick(0.5, now);
+    await resident.settled();
+    const human = addPlayer(world, 'human', 'Hank');
+    say(world, human.name, 'Mabel, can you hear me?', 'chat');
+    resident.capture(world);
+    for (const elapsed of [6000, 61000, 301000, 301000]) {
+      now += elapsed;
+      resident.tick(0.5, now);
+      await resident.settled();
+    }
+    const state = resident.memory.load('mabel')!;
+    assert.equal(calls, 0);
+    assert.equal(state.dialogueAttempt?.deferrals, 3);
+    assert.equal(state.dialogueAttempt?.done, true);
+    assert.equal(state.helpQuestion, undefined);
+    assert.equal(
+      store.db.prepare("SELECT count(*) n FROM npc_journal WHERE kind='dialogue-budget'").get()!.n,
+      3,
+    );
+    say(world, human.name, 'Mabel, please try again.', 'chat');
+    resident.capture(world);
+    now += 6000;
+    resident.tick(0.5, now);
+    await resident.settled();
+    assert.equal(resident.memory.load('mabel')!.dialogueAttempt?.deferrals, 1);
+  } finally {
+    resident.close();
+    store.close();
+  }
+});

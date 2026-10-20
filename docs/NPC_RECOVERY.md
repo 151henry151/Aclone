@@ -578,7 +578,7 @@ bakery (409 flour, target four). At those saved prices and crews, estimated batc
 margins are -14.14d and -6.79d respectively, including 88d payroll each. This is a
 policy check on a copy, not a live transaction or a simulated economic recovery.
 
-Validation: 295 NPC tests pass, including controller execution without AI credit,
+Validation before packaging: 295 NPC tests pass, including controller execution without AI credit,
 restocking after depletion, cross-generator bid guards, normal job switching,
 housing recovery and existing budget/conversation behavior. TypeScript
 and changed-file formatting are checked separately. No paid model requests, live
@@ -593,3 +593,15 @@ still deliver a large load before an owner next visits to pause a bid. Zero bids
 permit donations. These limits and autonomous expansion need observation before
 claiming a self-sustaining economy. The longer actual-Jev population canary remains
 separate, with explicit spending authorization; none is running from this work.
+
+## 0.77.2 — chat admission recovery
+
+Unclassified historical AI charges still count against global caps, but no longer
+consume the separate chat allowance. Pending and uncertain reservations remain
+charged. Three local budget/context refusals expire an unanswered conversation
+and notify the speaker; a fresh question can retry. Refusals make no model call.
+This is separate from the 0.77.1 business/career changes.
+
+The combined release passes TypeScript and all 804 unit tests. Follow the normal
+backup/build/restart procedure; preserve provider budgets and saved memories.
+No paid experiment is started by deployment.
