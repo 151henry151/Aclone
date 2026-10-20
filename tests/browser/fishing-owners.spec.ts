@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer } from '../../src/shared/simulation.ts';
+import { creatorSchema } from '../../src/shared/creator.ts';
 
 for (const mobile of [false, true])
   test(`${mobile ? 'phone' : 'desktop'} shows offline building owners and a centered fishing control`, async ({
@@ -19,12 +20,14 @@ for (const mobile of [false, true])
       hasTouch: mobile,
     });
     const page = await context.newPage();
-    page.setDefaultTimeout(10000);
     try {
       const { account, token } = app.universe.register('Fishing visitor');
       const w = createWorld('fishing-owners', 'Fishing owners', account.id);
       w.script = '';
       w.settings.hungerRate = w.settings.thirstRate = 0;
+      // This tests input, ownership and fishing, not distant terrain rendering.
+      w.settings.mapSize = 500;
+      w.creator = creatorSchema.parse({ scenery: false, roads: false, weather: 'clear' });
       const p = addPlayer(w, account.id, account.name);
       const owner = addPlayer(w, 'offline-owner', 'Miriam <b>Oak</b>');
       owner.online = false;

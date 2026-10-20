@@ -57,12 +57,17 @@ test('world creator opens the caretaker dashboard and reads residents and buildi
   await dialog.getByRole('button', { name: 'Chat logs', exact: true }).click();
   const history = dialog.getByLabel('Public chat history');
   await expect(history.locator('li')).toHaveCount(100);
+  await history.focus();
+  const logElement = await history.elementHandle();
   await history.hover();
   await page.mouse.wheel(0, 800);
   await expect.poll(() => history.evaluate((el) => el.scrollTop)).toBeGreaterThan(100);
   const position = await history.evaluate((el) => el.scrollTop);
   // The live dashboard refreshes every four seconds; archive reading must stay put.
   await page.waitForTimeout(4500);
+  // Preserve the reading surface itself, not just a reconstructed scrollTop.
+  expect(await logElement!.evaluate((el) => el.isConnected)).toBe(true);
+  await expect(history).toBeFocused();
   expect(await history.evaluate((el) => el.scrollTop)).toBeCloseTo(position, 0);
   expect(requests).toBe(1);
   await history.getByRole('button', { name: 'Load older entries' }).click();

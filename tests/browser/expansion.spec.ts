@@ -70,8 +70,16 @@ test('cottage styles, garage paint and combat choices survive real server action
   await expect(page.locator('[data-do="paint"]:visible').first()).toBeVisible();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'Build', exact: true }).click();
-  await expect(page.locator('#cottage-style option')).toHaveCount(6);
-  await page.locator('#cottage-style').selectOption('red-timber');
+  await page.getByLabel('Building type', { exact: true }).selectOption('home');
+  const finish = page.getByLabel('Surface finish', { exact: true });
+  await expect(finish.locator('option')).toHaveCount(6);
+  await finish.selectOption('red-timber');
+  await page.getByLabel('Architectural model', { exact: true }).selectOption('model-2');
+  await expect(page.locator('[data-build-preview] canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await expect(finish).toHaveValue('red-timber');
+  await expect(page.getByLabel('Architectural model', { exact: true })).toHaveValue('model-2');
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await command('*fighting 1');
   await page.getByRole('button', { name: 'Activities', exact: true }).click();

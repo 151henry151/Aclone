@@ -436,7 +436,12 @@ async function connect() {
     if (msg.type === 'caretaker') {
       caretakerSnapshot = msg.view;
       const editing = document.activeElement?.matches('#caretaker-query');
-      if (panel === 'caretaker' && !editing) renderPanel();
+      // Archived chat changes only on explicit refresh/pagination. Replacing
+      // its DOM for a live census update can interrupt wheel scrolling,
+      // keyboard focus and text selection even when scrollTop is restored.
+      const readingChat =
+        caretakerUi.tab === 'Chat logs' && !!app.querySelector('#caretaker-body .caretaker-log');
+      if (panel === 'caretaker' && !editing && !readingChat) renderPanel();
     }
     if (msg.type === 'result') {
       const visit = tradeVisits.get(msg.request);

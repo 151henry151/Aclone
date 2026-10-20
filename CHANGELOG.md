@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve caretaker archive scroll and focus during live refresh; update designer and fishing browser checks.
+
 ## [0.77.2] - 2026-10-19
 
 ### Fixed

@@ -13,6 +13,8 @@ import {
   terrainHeight,
 } from '../../src/shared/simulation.ts';
 import { buildings } from '../../src/shared/catalog.ts';
+import { buildingDesignQuote } from '../../src/shared/building-designs.ts';
+import { creatorSchema } from '../../src/shared/creator.ts';
 
 test('waterworks build preview enforces shoreline placement and the finished building produces water', async ({
   page,
@@ -24,6 +26,9 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     const w = createWorld('water-ui', 'Water Parish', account.id);
     w.script = '';
     w.buildings = [];
+    w.settings.mapSize = 500;
+    w.settings.hungerRate = w.settings.thirstRate = 0;
+    w.creator = creatorSchema.parse({ scenery: false, roads: false, weather: 'clear' });
     const p = addPlayer(w, account.id, account.name);
     p.cash = 1000000;
     p.x = 0;
@@ -41,26 +46,47 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
     await page.getByRole('button', { name: 'Build', exact: true }).click();
-    const build = page.locator('[data-do=construct][data-id=waterworks]');
+    await page.getByLabel('Building type', { exact: true }).selectOption('waterworks');
+    const build = page.getByRole('button', { name: 'Place foundation', exact: true });
+    const status = page.locator('[data-build-estimate] [role="status"]');
     await expect(build).toBeDisabled();
-    await expect(build).toContainText('Move to dry ground beside water');
+    await expect(status).toContainText('dry shoreline ground');
     await page.getByRole('button', { name: 'Close dialog' }).click();
     p.z = 144;
     p.y = terrainHeight(w, p.x, p.z);
     await expect
       .poll(async () => {
         await page.getByRole('button', { name: 'Build', exact: true }).click();
+        // The intake must face the sea, not just have water somewhere nearby.
+        await page.getByLabel('Building rotation', { exact: true }).fill('180');
+        await page.getByLabel('Building rotation', { exact: true }).dispatchEvent('change');
         const enabled = await build.isEnabled();
         if (!enabled) await page.getByRole('button', { name: 'Close dialog' }).click();
         return enabled;
       })
       .toBe(true);
-    await expect(build).toContainText('Shoreline suitable');
+    await expect(status).toHaveText('Site clear. Ready to place this design.');
+    await page.getByLabel('Building rotation', { exact: true }).fill('0');
+    await page.getByLabel('Building rotation', { exact: true }).dispatchEvent('change');
+    await expect(build).toBeDisabled();
+    await expect(status).toContainText('Rotate the intake toward water');
+    await page.getByLabel('Building rotation', { exact: true }).fill('180');
+    await page.getByLabel('Building rotation', { exact: true }).dispatchEvent('change');
+    await expect(build).toBeEnabled();
     await build.click();
     await expect.poll(() => w.buildings.length).toBe(1);
     const b = w.buildings[0];
     expect(b.kind).toBe('waterworks');
-    p.inventory = { ...buildings.waterworks.materials };
+    expect(b.rotation).toBeCloseTo(Math.PI);
+    const quote = buildingDesignQuote(
+      'waterworks',
+      buildings.waterworks,
+      'stone-gable',
+      'standard',
+      'model-1',
+    );
+    expect(b.construction).toEqual(quote.materials);
+    p.inventory = { ...quote.materials };
     act(w, p.id, { type: 'supply', building: b.id });
     b.stock.fuel = 1;
     b.investment = 10000;
