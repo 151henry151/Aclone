@@ -27,6 +27,7 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
       },
       { token: pilot.token },
     );
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
     const chat = page.getByRole('log');
@@ -52,6 +53,39 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
     await page.mouse.wheel(0, -180);
     await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBeLessThan(atLatest - 30);
     await expect(canvas).toHaveAttribute('data-wheel-count', '0');
+    // Firefox may report wheel input in pages or many lines. Neither should
+    // skip a whole compact chat viewport; precision trackpad deltas stay small.
+    for (const [deltaMode, deltaY] of [
+      [2, -1],
+      [1, -30],
+      [0, -2],
+    ]) {
+      const before = await chat.evaluate((el) => el.scrollTop);
+      await chat.dispatchEvent('wheel', { deltaMode, deltaY, bubbles: true, cancelable: true });
+      const after = await chat.evaluate((el) => el.scrollTop);
+      const height = await chat.evaluate((el) => el.clientHeight);
+      expect(before - after).toBeGreaterThan(0);
+      expect(before - after).toBeLessThanOrEqual(Math.ceil(height / 3));
+      if (deltaMode === 0) expect(before - after).toBe(2);
+    }
+    // Smooth scrolling must reach its destination (including subpixel rounding)
+    // and accumulate a burst of wheel notches without jumping back to live chat.
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    const startSmooth = await chat.evaluate((el) => el.scrollTop);
+    await chat.dispatchEvent('wheel', {
+      deltaMode: 0,
+      deltaY: -10,
+      bubbles: true,
+      cancelable: true,
+    });
+    await chat.dispatchEvent('wheel', {
+      deltaMode: 0,
+      deltaY: -10,
+      bubbles: true,
+      cancelable: true,
+    });
+    await expect.poll(() => chat.evaluate((el) => el.scrollTop)).toBe(startSmooth - 20);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     const input = page.getByRole('textbox', { name: 'Chat message' });
     await expect(input).toHaveAttribute('maxlength', '1200');
     await input.fill('Unsent draft');

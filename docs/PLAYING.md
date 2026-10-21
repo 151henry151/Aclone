@@ -166,7 +166,7 @@ Adaptive graphics reduce sustained slow rendering. Dynamic shadows default off a
 
 ## Reading earlier chat
 
-Scroll inside chat (no camera zoom). Focus the log for arrows, Page Up/Down, Home/End; Page Up/Down also work while typing without losing drafts. New arrivals preserve your reading position; **jump to latest** resumes follow. Up to 100 recent messages, filtered for privacy; changing parish changes history. Not an unlimited archive.
+Scroll inside chat (no camera zoom). Focus the log for Page Up/Down or Home/End; arrows drive the tractor. The wheel moves in small smooth steps, and page keys leave overlapping lines for context. Reduced-motion settings disable the animation; Page Up/Down also work while typing without losing drafts. New arrivals preserve your reading position; **jump to latest** resumes follow. Up to 100 recent messages, filtered for privacy; changing parish changes history. Not an unlimited archive.
 
 ## Repeating transactions
 

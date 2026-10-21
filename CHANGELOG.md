@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Chat wheel scrolling uses small smooth steps instead of page jumps, while Page Up/Down retain overlapping lines. Reduced-motion preferences and reading positions are respected.
+
 - NPC property choices and queued actions no longer acquire a second cottage when a home or unfinished cottage is already owned, including when the saved home reference points elsewhere.
 
 - Businesses can explicitly pause buying or selling each good while retaining their price. NPCs stop accepting deliveries when stocked instead of offering 0d; buying prices have a 1d minimum, and trades reject changed quotes before moving goods or money.

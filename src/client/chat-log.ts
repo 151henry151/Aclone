@@ -14,13 +14,12 @@ export class ChatLog {
       'wheel',
       (event) => {
         if (event.ctrlKey || event.metaKey) return; // Keep browser zoom/pinch gestures available.
-        const unit =
-          event.deltaMode === WheelEvent.DOM_DELTA_LINE
-            ? 18
-            : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
-              ? element.clientHeight
-              : 1;
-        element.scrollTop += event.deltaY * unit;
+        const line = parseFloat(getComputedStyle(element).lineHeight) || 18;
+        // Firefox/system settings can report a whole page per wheel notch.
+        // Keep every notch small enough to retain context in this compact HUD.
+        const unit = event.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? 1 : line;
+        const limit = Math.min(line * 3, Math.max(line, element.clientHeight / 3));
+        this.scrollBy(Math.max(-limit, Math.min(limit, event.deltaY * unit)));
         // Consume the wheel even at the ends, including over the message input.
         event.preventDefault();
         event.stopPropagation();
@@ -35,18 +34,63 @@ export class ChatLog {
         !['PageUp', 'PageDown'].includes(event.key)
       )
         return;
-      element.scrollTop +=
-        (event.key === 'PageUp' ? -1 : 1) * Math.max(1, element.clientHeight - 18);
+      const line = parseFloat(getComputedStyle(element).lineHeight) || 18;
+      this.scrollBy(
+        (event.key === 'PageUp' ? -1 : 1) * Math.max(line, element.clientHeight - line * 3),
+      );
       event.preventDefault();
       event.stopPropagation();
     });
+    panel.addEventListener('pointerdown', () => this.stopScroll());
+    panel.addEventListener('keydown', (event) => {
+      if (event.key === 'Home' || event.key === 'End') this.stopScroll();
+    });
     latest.addEventListener('click', () => {
+      this.stopScroll();
       element.scrollTop = element.scrollHeight;
       latest.hidden = true;
     });
     element.addEventListener('scroll', () => {
       if (this.atBottom()) latest.hidden = true;
     });
+  }
+  private scrollTarget: number | undefined;
+  private scrollFrame = 0;
+  private stopScroll() {
+    cancelAnimationFrame(this.scrollFrame);
+    this.scrollFrame = 0;
+    this.scrollTarget = undefined;
+  }
+  private scrollBy(delta: number) {
+    const el = this.element;
+    this.scrollTarget = Math.max(
+      0,
+      Math.min(el.scrollHeight - el.clientHeight, (this.scrollTarget ?? el.scrollTop) + delta),
+    );
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.scrollTop = this.scrollTarget;
+      this.stopScroll();
+      return;
+    }
+    if (this.scrollFrame) return;
+    let previous = performance.now();
+    const frame = (now: number) => {
+      this.scrollTarget = Math.max(
+        0,
+        Math.min(el.scrollHeight - el.clientHeight, this.scrollTarget!),
+      );
+      const remaining = this.scrollTarget! - el.scrollTop;
+      if (Math.abs(remaining) < 1) {
+        el.scrollTop = this.scrollTarget!;
+        this.stopScroll();
+        return;
+      }
+      const step = Math.abs(remaining) * (1 - Math.exp(-Math.min(64, now - previous) / 45));
+      el.scrollTop += Math.sign(remaining) * Math.min(Math.abs(remaining), Math.max(1, step));
+      previous = now;
+      this.scrollFrame = requestAnimationFrame(frame);
+    };
+    this.scrollFrame = requestAnimationFrame(frame);
   }
   private atBottom() {
     return this.element.scrollHeight - this.element.scrollTop - this.element.clientHeight < 12;
@@ -62,10 +106,11 @@ export class ChatLog {
     const reset = world !== this.world;
     if (!reset && lines.length === this.keys.length && lines.every((v, i) => v === this.keys[i]))
       return;
-    const follow = reset || this.atBottom();
+    const follow = reset || (this.atBottom() && this.scrollTarget === undefined);
     const top = this.element.scrollTop;
     let removedHeight = 0;
     if (reset) {
+      this.stopScroll();
       this.followOnReveal = this.element.clientHeight === 0;
       this.element.replaceChildren();
       this.keys = [];
@@ -84,7 +129,17 @@ export class ChatLog {
     this.world = world;
     this.keys = lines;
     if (follow) this.element.scrollTop = this.element.scrollHeight;
-    else this.element.scrollTop = Math.max(0, top - removedHeight);
+    else {
+      this.element.scrollTop = Math.max(0, top - removedHeight);
+      if (this.scrollTarget !== undefined)
+        this.scrollTarget = Math.max(
+          0,
+          Math.min(
+            this.element.scrollHeight - this.element.clientHeight,
+            this.scrollTarget - removedHeight,
+          ),
+        );
+    }
     this.latest.hidden = follow;
   }
 }
