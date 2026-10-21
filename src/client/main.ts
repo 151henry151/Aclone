@@ -2076,7 +2076,7 @@ function buildingWindow(b: Building) {
     !b.operatingLease &&
     !b.auction
   )
-    html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>List property for sale</button></form>`;
+    html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>${b.forSale ? 'Update asking price' : 'List property for sale'}</button></form>${b.forSale ? `<form data-action="unlistProperty">${hidden('building', b.id)}<p>Currently listed for ${money(b.price)}.</p><button>Remove from sale</button></form>` : ''}`;
   if (tab === 'Main' || tab === 'Building Admin') html += contractPanel(world, me, b);
   if (tab === 'Statement')
     html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;

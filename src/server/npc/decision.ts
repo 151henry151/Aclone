@@ -77,6 +77,7 @@ const action = z.discriminatedUnion('type', [
 export const playerOperations = [
   'livestock',
   'listProperty',
+  'unlistProperty',
   'fulfilOrder',
   'loan',
   'buildingAdmin',

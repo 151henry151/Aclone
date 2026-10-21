@@ -627,6 +627,14 @@ export function act(w: World, id: string, a: Action): string {
       result = `You now own ${b.name}. Bring a broom.`;
       break;
     }
+    case 'unlistProperty': {
+      const b = nearby(w, p, a.building);
+      owns(p, b);
+      requireThat(!b.auction, 'End the auction through its own controls');
+      b.forSale = false;
+      result = 'Property removed from sale.';
+      break;
+    }
     case 'listProperty': {
       const b = nearby(w, p, a.building);
       owns(p, b);

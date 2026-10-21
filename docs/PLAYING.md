@@ -324,3 +324,6 @@ highest bid until closing and refund outbid bidders. See [contract rules](ECONOM
 Press **Enter** or **F2** to enter chat. Enter sends a message and keeps the cursor
 there; **Escape** returns to driving. Typing does not activate driving or HUD
 shortcuts. Enter still submits ordinary dialog forms.
+
+In **Building Admin**, use **Remove from sale** to withdraw a property listing.
+Your asking price, stock and investment remain intact for later relisting.
