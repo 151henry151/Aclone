@@ -59,6 +59,7 @@ export function jevPayload(request: BrainRequest, model: string) {
   const state: Record<string, unknown> = {};
   for (const key of [
     'self',
+    'finances',
     'worldRules',
     'calendar',
     'currentWork',
@@ -75,6 +76,37 @@ export function jevPayload(request: BrainRequest, model: string) {
     if (observation[key] !== undefined) state[key] = observation[key];
   }
   const life = observation.life as Record<string, unknown> | undefined;
+  if (state.finances && typeof state.finances === 'object') {
+    const finance = state.finances as ReturnType<typeof import('./finances.ts').financialBriefing>;
+    const holdings = Array.isArray(finance.businesses) ? finance.businesses : [];
+    state.finances = {
+      currency: finance.currency,
+      personal: finance.personal,
+      omittedBusinesses: Math.max(0, holdings.length - 4),
+      businesses: holdings.slice(0, 4).map((b) => ({
+        building: b.building,
+        name: b.name,
+        tillCash: b.tillCash,
+        operatingReserve: b.operatingReserve,
+        investorClaims: b.investorClaims,
+        safelyWithdrawable: b.safelyWithdrawable,
+        lifetimeOperatingCashFlowDenarii: b.lifetimeOperatingCashFlowDenarii,
+        recentOperatingCashFlow: b.recentOperatingCashFlow,
+        estimatedBatch: b.estimatedBatch
+          ? {
+              ...b.estimatedBatch,
+              basis: 'Conditional on selling output and replacing inputs; not recorded profit.',
+            }
+          : null,
+        purchasing: b.purchasing.slice(0, 4).map((q) => ({
+          ...q,
+          observedSupplier: q.observedSupplier
+            ? { ...q.observedSupplier, basis: 'Observed, recheck.' }
+            : null,
+        })),
+      })),
+    };
+  }
   state.life = life ? { survival: life.survival } : undefined;
   // Keep the exact seasonal/work deadlines and current inventory, not a repeated catalogue.
   state.prosperity = observation.prosperity;
@@ -91,7 +123,7 @@ export function jevPayload(request: BrainRequest, model: string) {
     state.farming = boundedContext(observation.farming);
   state.focus = decisionFocus(observation);
   state.units =
-    'Money: hundredths of a denarius; time: game seconds. Quotes are observed, not guaranteed.';
+    'Money: hundredths of a denarius EXCEPT finances.denarii and fields ending Denarii, which are display denarii; time: game seconds. Quotes are observed, not guaranteed.';
   state.personality = request.instructions.split('Your personality:')[1]?.trim();
   const payload = {
     model,
@@ -116,6 +148,12 @@ export function jevPayload(request: BrainRequest, model: string) {
   for (const key of ['agenda', 'lessons', 'projectHistory', 'lastOutcome', 'prosperity']) {
     if (bytes() <= 24000) break;
     state[key] = boundedContext(state[key]);
+  }
+  const finance = state.finances as
+    { businesses?: unknown[]; omittedBusinesses: number } | undefined;
+  while (bytes() > 24000 && finance?.businesses && finance.businesses.length > 1) {
+    finance.businesses.pop();
+    finance.omittedBusinesses++;
   }
   // Reduce whole alternatives only, never their economics or executable stages.
   // Urgent agreements/survival remain; a pathological essential fact fails locally.

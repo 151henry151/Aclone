@@ -163,6 +163,7 @@ export function conversationView(
     'gameGuide',
     'taxFacts',
     'portfolio',
+    'finances',
     'self',
     'nearbyBuildings',
     'directory',

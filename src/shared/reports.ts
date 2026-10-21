@@ -18,6 +18,8 @@ export interface BusinessAccounts {
   /** Lending principal and repayments are cash financing, not shop earnings. */
   financingIn?: number;
   financingOut?: number;
+  /** Bounded hourly operating cash flow; absent on legacy accounts until observed. */
+  recentOperating?: { since: number; hours: { time: number; amount: number }[] };
   batches: number;
   produced: Stock;
   consumed: Stock;
@@ -72,12 +74,35 @@ export function accounts(w: World, b: Building): BusinessAccounts {
 export function cashFlow(a: BusinessAccounts) {
   return a.receipts - a.materials - a.wages - a.tax - a.imports + a.otherIn - a.otherOut;
 }
+/** Whole-hour window, at most 24 elapsed simulation hours. Never invent pre-upgrade history. */
+export function recentOperatingCash(w: World, b: Building) {
+  const recent = b.accounts?.recentOperating;
+  if (!recent) return null;
+  const from = Math.max(recent.since, Math.ceil((w.time - 86400) / 3600) * 3600);
+  return {
+    from,
+    until: w.time,
+    observedSeconds: Math.max(0, w.time - from),
+    amount: recent.hours
+      .filter((h) => h.time >= Math.floor(from / 3600) * 3600)
+      .reduce((n, h) => n + h.amount, 0),
+  };
+}
+function trackOperating(a: BusinessAccounts, time: number, before: number) {
+  const recent = (a.recentOperating ??= { since: time, hours: [] });
+  const hour = Math.floor(time / 3600) * 3600;
+  recent.hours = recent.hours.filter((h) => h.time >= hour - 86400);
+  let bucket = recent.hours.find((h) => h.time === hour);
+  if (!bucket) recent.hours.push((bucket = { time: hour, amount: 0 }));
+  bucket.amount += cashFlow(a) - before;
+}
 /** Operating cash flow, not accrual profit: unsold inventory and owner capital are separate. */
 export function recordMoney(w: World, e: Ledger) {
   const outgoing = w.buildings.find((b) => b.id === e.from);
   const incoming = w.buildings.find((b) => b.id === e.to);
   if (outgoing) {
     const a = accounts(w, outgoing);
+    const before = cashFlow(a);
     if (['sale', 'crop seed', 'fertilizer'].includes(e.reason)) a.materials += e.amount;
     else if (['wage', 'harvest wage'].includes(e.reason)) a.wages += e.amount;
     else if (e.reason === 'wage tax') a.tax += e.amount;
@@ -86,14 +111,17 @@ export function recordMoney(w: World, e: Ledger) {
       a.capitalOut += e.amount;
     else if (e.reason === 'loan disbursement') a.financingOut = (a.financingOut ?? 0) + e.amount;
     else a.otherOut += e.amount;
+    trackOperating(a, e.time, before);
   }
   if (incoming) {
     const a = accounts(w, incoming);
+    const before = cashFlow(a);
     if (['purchase', 'room booking'].includes(e.reason)) a.receipts += e.amount;
     else if (e.reason === 'investment' || e.reason === 'outside stake') a.capitalIn += e.amount;
     else if (['loan repayment', 'foreclosure recovery'].includes(e.reason))
       a.financingIn = (a.financingIn ?? 0) + e.amount;
     else a.otherIn += e.amount;
+    trackOperating(a, e.time, before);
   }
 }
 export function recordLife(w: World, p: Player, event: Omit<LifeEvent, 'time'>, time = w.time) {

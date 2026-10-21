@@ -16,7 +16,7 @@ import {
   productionStaffing,
   productionEfficiency,
 } from '../../shared/sound-state.ts';
-import { taxTown } from '../../shared/town-charter.ts';
+import { salesReceipt } from '../../shared/taxes.ts';
 import { productionInterval, distance, canCarry } from '../../shared/simulation.ts';
 import { household, householdBudget } from './household.ts';
 import { visitBuilding } from './care.ts';
@@ -54,6 +54,8 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
   );
   for (const key of Object.keys(state.pausedInputBids.bids))
     if (!validKeys.has(key)) delete state.pausedInputBids.bids[key];
+  for (const key of Object.keys(state.pausedInputBids.manual ?? {}))
+    if (!validKeys.has(key)) delete state.pausedInputBids.manual![key];
   for (const b of owned) {
     for (const item of Object.keys((b.production ?? recipes[b.recipe ?? ''])?.inputs ?? {})) {
       const target = inputStockTarget(b, item);
@@ -61,6 +63,11 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
       const key = `${b.id}:${item}`,
         stock = b.stock[item] ?? 0;
       const bid = b.buy[item] ?? 0;
+      if (state.pausedInputBids.manual?.[key]) {
+        // An explicit agreed pause survives routine maintenance and restarts.
+        if (bid === 0) continue;
+        delete state.pausedInputBids.manual[key];
+      }
       if (bid > 0 && stock >= target) {
         state.pausedInputBids.bids[key] = bid;
         return visitBuilding(p, b, [
@@ -101,13 +108,13 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
 export function productionBudget(w: World, b: Building) {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm') return;
-  const tax = Math.min(1, w.settings.salesTax + (taxTown(w, b.x, b.z)?.salesTax ?? 0));
   const inputs = Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
-    (sum, [item, n]) => sum + n * (b.buy[item] || worldItems(w)[item]?.price || 0),
+    (sum, [item, n]) =>
+      sum + n * (b.buy[item] || b.pausedPrices?.buy?.[item] || worldItems(w)[item]?.price || 0),
     0,
   );
   const retailReceipts = Object.entries(recipe.outputs).reduce(
-    (sum, [item, n]) => sum + Math.floor(n * (b.sell[item] ?? 0) * (1 - tax)),
+    (sum, [item, n]) => sum + salesReceipt(w, b, n * (b.sell[item] ?? 0)).net,
     0,
   );
   const next = (Math.floor(w.time / productionInterval(w, b)) + 1) * productionInterval(w, b);
@@ -125,7 +132,7 @@ export function productionBudget(w: World, b: Building) {
         (sum, [item, n]) =>
           sum +
           Math.max(0, Math.min(n * 3, inputStockTarget(b, item) ?? n * 3) - (b.stock[item] ?? 0)) *
-            (b.buy[item] || worldItems(w)[item]?.price || 0),
+            (b.buy[item] || b.pausedPrices?.buy?.[item] || worldItems(w)[item]?.price || 0),
         0,
       ) +
         b.wage * Math.max(idealWorkers, staff) * 3,

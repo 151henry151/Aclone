@@ -605,3 +605,36 @@ This is separate from the 0.77.1 business/career changes.
 The combined release passes TypeScript and all 804 unit tests. Follow the normal
 backup/build/restart procedure; preserve provider budgets and saved memories.
 No paid experiment is started by deployment.
+
+## 2026-10-21 — Finch financial understanding (0.84.0)
+
+BioHaze's exchange exposed three connected failures: chat confused liquid till cash
+with stock/historical cash flow; advice about a bid below the supplier ask was
+accepted as profitable hauling; and promised withdrawals/repricing had no executable
+agreement type. Chat also confused BioHaze with Hank.
+
+Implemented locally: shared financial facts and currency display; observed supplier
+margin arithmetic; explicit replenishment pause reasons; recent operating cash-flow
+buckets with honest legacy coverage; business agreements with durable receipts and
+execution-time ownership/reserve checks; explicit pauses preserved against automatic
+reopening; speaker names captured from the incoming chat; and optional surplus draws
+without a fixed next-farm target. Related tests include a full conversation/restart/
+action path using fake providers, with no paid selection for a sole agreed stage.
+
+Replaying the saved inspection (world time 1922488.95) now reports bakery cash
+478s 93.3d, stock catalogue value 60s 90d, investor claims 22.68d, operating reserve
+118.8d and safe drawable capital 47751.82d separately. It explains that 206 flour
+and 30 bread justify a paused flour bid. Toby's remembered mill ask was 46.25d;
+the actual newer price was different, so the replay correctly labels his quote
+observed and requiring a revisit rather than granting remote knowledge.
+
+Validation: full suite passed 884 tests and the production build passed. The saved
+Toby planner replay was 12,612 bytes, retaining all four available choices. A further
+targeted regression protects small remaining housing shortfalls from the higher
+minimum used for discretionary draws by housed owners.
+
+Packaged for release 0.84.0. No live balances were edited and no paid experiment run.
+Remaining proof: after release, inspect real dialogue for correct money/identity,
+compare agreements with action receipts, and measure whether freed capital produces
+useful investments rather than churn. These regressions do not establish autonomous
+long-term economic stability.

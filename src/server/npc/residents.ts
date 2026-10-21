@@ -1,3 +1,8 @@
+import {
+  businessRequestBlocker,
+  checkBusinessAction,
+  recordBusinessAction,
+} from './business-requests.ts';
 import { checkHousingPurchase } from './housing.ts';
 import { savingChoices } from './ambitions.ts';
 import { planQuotes, changedQuote } from './execution.ts';
@@ -391,6 +396,7 @@ export class Residents {
           } else delete r.state.groupQuestion;
           r.state.conversationId = m.id;
           r.state.questionFrom = sender.id;
+          r.state.questionFromName = sender.name;
           // Chat can interrupt recovery without restarting a failed action loop.
           if (r.state.recovery) r.state.recovery.retryAt = 0;
           r.state.replyTo = m.to === r.state.playerId ? sender.id : undefined;
@@ -449,6 +455,7 @@ export class Residents {
         stats = this.actionStats(w, p, a);
       checkHousingPurchase(w, p, a);
       checkCommitmentPrice(w, r.state, a);
+      checkBusinessAction(w, p, r.state, a);
       if (a.type === 'job' || a.type === 'work') {
         const b = w.buildings.find((b) => b.id === a.building);
         const blocked = b && shiftBlocker(w, p, b);
@@ -498,7 +505,8 @@ export class Residents {
         }
       }
       refreshEmployment(perceivedWorld(w, p, r.state, r.config.id === 'mabel'), p, r.state);
-      if (recordDelivery(r.state, w.id, a)) {
+      const businessChanged = recordBusinessAction(w, p, r.state, a);
+      if (recordDelivery(r.state, w.id, a) || businessChanged) {
         r.wake = true;
         r.state.needsDecision = true;
       }
@@ -1910,16 +1918,18 @@ export class Residents {
           const player = latest.players[r.state.playerId];
           const known = perceivedWorld(latest, player, r.state, r.config.id === 'mabel');
           const reason =
-            !proposal.cancel && proposal.delivery
-              ? deliveryBlocker(
-                  known,
-                  player,
-                  proposal.delivery,
-                  proposal.delivery.quantity,
-                  true,
-                  true,
-                )
-              : undefined;
+            !proposal.cancel && proposal.business
+              ? businessRequestBlocker(known, player, proposal.business)
+              : !proposal.cancel && proposal.delivery
+                ? deliveryBlocker(
+                    known,
+                    player,
+                    proposal.delivery,
+                    proposal.delivery.quantity,
+                    true,
+                    true,
+                  )
+                : undefined;
           if (!reason)
             recorded = recordCommitment(
               r.state,
@@ -1934,18 +1944,29 @@ export class Residents {
             const queued = r.state.commitments?.find((c) => c.id === conversationKey);
             if (queued?.status === 'blocked') queued.blockedNoticeSent = true;
           }
-          if (proposal.delivery || proposal.employment || proposal.cancel || !recorded) {
+          if (
+            proposal.delivery ||
+            proposal.employment ||
+            proposal.business ||
+            proposal.cancel ||
+            !recorded
+          ) {
             const text = reason
-              ? `I need to correct that before agreeing: ${reason} I have not accepted this delivery.`
+              ? `I need to correct that before agreeing: ${reason} I have not accepted this request.`
               : !recorded
-                ? !proposal.delivery && !proposal.employment && !proposal.cancel
-                  ? 'I cannot take on that errand yet. I can agree to deliver specific goods, or learn a skill and take a job at a named workplace. Which of those did you have in mind?'
+                ? !proposal.delivery &&
+                  !proposal.employment &&
+                  !proposal.business &&
+                  !proposal.cancel
+                  ? 'I cannot take on that errand yet. I can agree to deliver goods, train and take a job, or change prices and withdraw surplus at my own business. Which of those did you have in mind?'
                   : 'I have not added a new agreement: it is already recorded, there is no matching request to cancel, or my four unfinished requests need attention first. Please ask about my existing agreements.'
                 : proposal.cancel
                   ? 'I have cancelled your latest unfinished request.'
-                  : proposal.employment
-                    ? `I have agreed to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(known, player, proposal.employment) ?? 'I need to fit this around keeping myself fed, watered and rested.'} That is my agreement, not a report of finished training or a job change.`
-                    : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and will check the buyer’s price, investment and storage on arrival. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
+                  : proposal.business
+                    ? 'I have recorded the business change. I still need to visit and carry it out, preserving operating reserves and investor claims. No cash has been withdrawn or prices changed yet.'
+                    : proposal.employment
+                      ? `I have agreed to ${proposal.employment.train ? 'learn the required skill if needed and ' : ''}take the job at ${latest.buildings.find((b) => b.id === proposal.employment!.building)?.name ?? 'the requested workplace'}. ${employmentBlocker(known, player, proposal.employment) ?? 'I need to fit this around keeping myself fed, watered and rested.'} That is my agreement, not a report of finished training or a job change.`
+                      : `I currently have access to ${proposal.delivery!.quantity} ${proposal.delivery!.item}, and will check the buyer’s price, investment and storage on arrival. I have recorded your delivery request at a minimum of ${proposal.delivery!.unitPrice / 100}d per item before tax. It still needs to be planned and carried out, possibly in several loads; nothing has been delivered on this request yet.`;
             result = {
               ...result,
               decision: { ...result.decision, speech: { text, to: replyTo ?? null } },
@@ -2011,7 +2032,7 @@ export class Residents {
             decision: {
               ...result.decision,
               speech: {
-                text: 'I spoke too soon: I have not taken on a new errand. Tell me which workplace you mean for a job or training, or which goods and destination for a delivery, so we can agree on the details.',
+                text: 'I spoke too soon: I have not taken on a new errand. Tell me which workplace you mean for a job or training, which goods and destination for a delivery, or which business and reserve or price to change, so we can agree on the details.',
                 to: replyTo ?? null,
               },
             },

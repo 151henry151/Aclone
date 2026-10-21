@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.84.0 — NPC financial understanding and follow-through
+
+Residents distinguish business cash from stock, reserves, investor claims and past
+cash flow, with explicit currency units and calculated transport margins. Their chat
+and gameplay use the same facts. Agreed owner withdrawals and price changes now have
+executable steps and saved receipts; an agreed purchase pause stays paused. Housed
+owners can consider freeing capital for opportunities beyond a preset farm budget.
+
+No reset or balance adjustment is required. Recent cash-flow history collects from
+new transactions. Existing accounts do not receive invented historical figures.
+Long-term autonomous prosperity still needs live observation.
+
 ## 0.82.0 — Business management and calmer chat
 
 Owners can withdraw property listings, set paid-job limits and dismiss workers.

@@ -1,6 +1,6 @@
-import { businessHealth } from '../../shared/business-health.ts';
 import { constructionBudget } from './construction-projects.ts';
 import { pickBuildSite } from './chains.ts';
+import { businessHealth } from '../../shared/business-health.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
@@ -113,12 +113,14 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
       productionEconomics: productionBudget(w, b),
       diagnosis: businessHealth(w, b),
       inputTargets: Object.fromEntries(
-        Object.keys(b.buy).flatMap((item) => {
-          const target = inputStockTarget(b, item);
-          return target === undefined
-            ? []
-            : [[item, { held: b.stock[item] ?? 0, target, bid: b.buy[item] }]];
-        }),
+        [...new Set([...Object.keys(b.buy), ...Object.keys(b.pausedPrices?.buy ?? {})])].flatMap(
+          (item) => {
+            const target = inputStockTarget(b, item);
+            return target === undefined
+              ? []
+              : [[item, { held: b.stock[item] ?? 0, target, bid: b.buy[item] }]];
+          },
+        ),
       ),
       drawableSurplus: b.construction
         ? 0
@@ -138,19 +140,21 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
 export function capitalChoices(w: World, p: Player): FarmerChoice[] {
   if (p.task || p.learning) return [];
   const status = prosperityBriefing(w, p);
-  const kind = status.housed ? 'farm' : 'home';
-  const site = pickBuildSite(w, p, kind);
-  const target = site ? constructionBudget(w, p, kind, site)?.total : undefined;
-  const shortfall = Math.max(0, (target ?? status.householdReserve) - p.cash);
-  if (!shortfall) return [];
+  // Until housed, fund a costed home rather than repeatedly draining tills into
+  // a wallet that can already pay for shelter. Housed owners have no farm-only cap.
+  const site = !status.housed ? pickBuildSite(w, p, 'home') : undefined;
+  const target = site ? constructionBudget(w, p, 'home', site)?.total : undefined;
+  const needed = !status.housed
+    ? Math.max(0, (target ?? status.householdReserve) - p.cash)
+    : Infinity;
   return status.holdings.flatMap((h) => {
-    const amount = Math.min(10_000_000, shortfall, h.drawableSurplus);
-    if (amount < 1000) return [];
+    const amount = Math.min(10_000_000, needed, h.drawableSurplus);
+    if (amount < (status.housed ? 10000 : 1000)) return [];
     const b = w.buildings.find((b) => b.id === h.id)!;
     return [
       {
         id: `capital_${b.id}`,
-        description: `Fund my next ${kind}: draw ${amount} surplus from my ${b.name}; keep ${h.operatingReserve} operating capital and all investor claims. This is a transfer, not new profit; compare expansion, another business, a home or a town charter.`,
+        description: `Release capital for an opportunity I choose: draw ${amount} surplus from my ${b.name}; keep ${h.operatingReserve} operating capital and all investor claims. This is a transfer, not new profit or income; choose it only when the cash can usefully fund housing, trade, expansion, another business or a town charter. It does not commit me to building a farm.`,
         plan: visitBuilding(p, b, [
           {
             kind: 'act' as const,

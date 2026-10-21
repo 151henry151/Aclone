@@ -11,7 +11,12 @@ export interface ResidentState {
   projectHistory?: import('./projects.ts').ProjectOutcome[];
   businessCargo?: { building: string; item: string; quantity: number }[];
   businessProceeds?: Record<string, number>;
-  pausedInputBids?: { world: string; deaths: number; bids: Record<string, number> };
+  pausedInputBids?: {
+    world: string;
+    deaths: number;
+    bids: Record<string, number>;
+    manual?: Record<string, boolean>;
+  };
   strategyReviewedAt?: number;
   career?: import('./projects.ts').CareerProject;
   supplyGoal?: import('./survival.ts').SupplyGoal;
@@ -88,6 +93,7 @@ export interface ResidentState {
   groupQuestion?: { messageId: number; topic: import('./group-chat.ts').GroupTopic };
   helpQuestion?: string;
   questionFrom?: string;
+  questionFromName?: string;
   guideQuery?: string;
   needsDecision?: boolean;
   pending?: boolean;

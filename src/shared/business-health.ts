@@ -25,7 +25,8 @@ export function businessHealth(w: World, b: Building) {
       )
     : null;
   const replacementInputs = inputs.reduce(
-    (sum, [id, n]) => sum + n * (b.buy[id] || catalogue[id]?.price || 0),
+    (sum, [id, n]) =>
+      sum + n * (b.buy[id] || b.pausedPrices?.buy?.[id] || catalogue[id]?.price || 0),
     0,
   );
   const a = b.accounts;
@@ -48,7 +49,7 @@ export function businessHealth(w: World, b: Building) {
     );
   if (flow !== null && flow < 0)
     messages.push(
-      'Recorded operating cash flow is negative; deposits and unsold stock do not make it profitable.',
+      'Lifetime operating cash flow is negative. This includes past input purchases; it does not show current till cash or prove that current production loses money.',
     );
   return {
     messages,

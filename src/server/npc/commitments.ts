@@ -1,3 +1,4 @@
+import { businessRequestSchema, businessRequestChoice } from './business-requests.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
@@ -29,6 +30,7 @@ export const gameplayRequestSchema = z
     summary: z.string().min(1).max(600),
     cancel: z.boolean(),
     employment: employmentRequestSchema.nullable().optional(),
+    business: businessRequestSchema.nullable().optional(),
     delivery: z
       .object({
         item: id,
@@ -48,6 +50,7 @@ export interface Commitment extends GameplayRequest {
   world: string;
   status: 'pending' | 'blocked' | 'completed' | 'cancelled';
   delivered: number;
+  businessProgress?: { withdrawalDone?: boolean; withdrawn?: number; pricingDone?: boolean };
   outcome: string;
   /** Null is public; absent on legacy agreements, which default to private notices. */
   replyTo?: string | null;
@@ -66,14 +69,18 @@ export function recordCommitment(
   if (all.some((c) => c.id === id)) return false;
   if (request.cancel) {
     const previous = all.findLast(
-      (c) => c.speakerId === speakerId && ['pending', 'blocked'].includes(c.status),
+      (c) =>
+        c.speakerId === speakerId &&
+        c.world === w.id &&
+        c.replyTo === replyTo &&
+        ['pending', 'blocked'].includes(c.status),
     );
     if (!previous) return false;
     previous.status = 'cancelled';
     previous.outcome = 'Cancelled at the requesting player’s instruction.';
     return true;
   }
-  if ((!request.delivery && !request.employment) || (request.delivery && request.employment))
+  if ([request.delivery, request.employment, request.business].filter(Boolean).length !== 1)
     return false;
   if (
     all.some(
@@ -84,34 +91,38 @@ export function recordCommitment(
         c.replyTo === replyTo &&
         c.summary === request.summary &&
         JSON.stringify(c.delivery) === JSON.stringify(request.delivery) &&
-        JSON.stringify(c.employment) === JSON.stringify(request.employment),
+        JSON.stringify(c.employment) === JSON.stringify(request.employment) &&
+        JSON.stringify(c.business) === JSON.stringify(request.business),
     )
   )
     return false;
   // A clarification replaces this speaker's existing request for the same job,
   // rather than filling the queue with contradictory copies of the agreement.
-  const replaced = request.employment
-    ? all.filter(
-        (c) =>
-          c.world === w.id &&
-          c.speakerId === speakerId &&
-          c.replyTo === replyTo &&
-          ['pending', 'blocked'].includes(c.status) &&
-          c.employment?.building === request.employment!.building,
-      )
-    : [];
+  const replaced =
+    request.employment || request.business
+      ? all.filter(
+          (c) =>
+            c.world === w.id &&
+            c.speakerId === speakerId &&
+            c.replyTo === replyTo &&
+            ['pending', 'blocked'].includes(c.status) &&
+            (request.employment
+              ? c.employment?.building === request.employment.building
+              : c.business?.building === request.business!.building),
+        )
+      : [];
   if (
     all.filter(
       (c) =>
         !replaced.includes(c) &&
-        (c.delivery || c.employment) &&
+        (c.delivery || c.employment || c.business) &&
         ['pending', 'blocked'].includes(c.status),
     ).length >= 4
   )
     return false;
   for (const c of replaced) {
     c.status = 'cancelled';
-    c.outcome = 'Replaced by the newer employment agreement with this player.';
+    c.outcome = 'Replaced by the newer agreement with this player.';
   }
   all.push({
     ...request,
@@ -121,9 +132,11 @@ export function recordCommitment(
     replyTo,
     status: 'pending',
     delivered: 0,
-    outcome: request.employment
-      ? 'Employment requested; training and the job have not started.'
-      : 'Delivery agreed; the trip still needs to be arranged. No goods delivered yet.',
+    outcome: request.business
+      ? 'Business change requested; no money transferred or prices changed yet.'
+      : request.employment
+        ? 'Employment requested; training and the job have not started.'
+        : 'Delivery agreed; the trip still needs to be arranged. No goods delivered yet.',
   });
   state.commitments = all.slice(-20);
   return true;
@@ -297,6 +310,11 @@ export function commitmentChoices(
   const choices: FarmerChoice[] = [];
   for (const c of state.commitments ?? []) {
     if (c.world !== w.id || !['pending', 'blocked'].includes(c.status)) continue;
+    if (c.business) {
+      const choice = businessRequestChoice(w, p, c);
+      if (choice) choices.push(choice);
+      continue;
+    }
     // Map locations are public, but unknown/stale stock is not a missing shop.
     // Visit before diagnosing an agreed workplace or delivery destination.
     const target = c.employment?.building ?? c.delivery?.destinationBuilding;

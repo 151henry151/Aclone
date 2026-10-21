@@ -1,3 +1,4 @@
+import { businessRequestSchema } from './business-requests.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { preferencesSchema } from './agenda.ts';
@@ -5,7 +6,7 @@ import { gameplayRequestSchema, employmentRequestSchema } from './commitments.ts
 import { decisionSchema, type Decision } from './decision.ts';
 export const conversationSchema = decisionSchema.pick({ notebook: true, speech: true }).extend({
   notebook: decisionSchema.shape.notebook.describe(
-    'Update only this speaker/channel relationship summary: their requests, preferences and social context. Do not store your current skills, job, cash or inventory as remembered facts; those come from characterFacts. Correct prior mistakes and never summarize other private conversations.',
+    'Update only this speaker/channel relationship summary: their requests, preferences and social context. Attribute advice to its speaker rather than saving it as a verified economic rule. Use currentConversation.speakerName for identity. Do not store your current skills, job, cash or inventory as remembered facts; those come from characterFacts. Correct prior mistakes and never summarize other private conversations.',
   ),
   gameplayRequest: gameplayRequestSchema.nullable(),
   preferences: preferencesSchema.nullable().optional(),
@@ -14,7 +15,10 @@ export const conversationSchema = decisionSchema.pick({ notebook: true, speech: 
 const toolSchema = conversationSchema.extend({
   preferences: preferencesSchema.nullable(),
   gameplayRequest: gameplayRequestSchema
-    .extend({ employment: employmentRequestSchema.nullable() })
+    .extend({
+      employment: employmentRequestSchema.nullable(),
+      business: businessRequestSchema.nullable(),
+    })
     .nullable(),
 });
 const parameters = z.toJSONSchema(toolSchema, { target: 'draft-7' });
@@ -23,7 +27,7 @@ export const conversationTool = {
   type: 'function',
   name: 'converse',
   description:
-    'Reply as this resident and update only this speaker/channel relationship summary. Use current characterFacts, not catalogue skills or old claims. When agreeing to train and work, copy the matching employmentOptions request into gameplayRequest; missing qualifications are handled by training. Permission may already have been given earlier in the conversation. Never ask the player to operate your interface. Optionally record personal activity preferences. Speech alone cannot queue work.',
+    'Reply as this resident and update only this speaker/channel relationship summary. Use current characterFacts, not catalogue skills or old claims. When agreeing to train and work, copy the matching employmentOptions request into gameplayRequest; missing qualifications are handled by training. Permission may already have been given earlier in the conversation. Never ask the player to operate your interface. Optionally record personal activity preferences. For an agreed owner withdrawal or price change, submit business with keepDenarii and/or pricing. Speech alone cannot queue work.',
   strict: true,
   parameters,
 };
@@ -54,7 +58,7 @@ export function unqueuedPromise(text: string) {
     !/\b(?:drive|deliver|study|school|mill|bring)\b/i.test(text)
   )
     return false;
-  return /\bI(?:['’]ll| will|['’]m going to| am going to)\s+(?:head|drive|travel|go|learn|study|take (?:the|a|your) job|bring|deliver|load|sell|buy|gather|harvest|build|work|start (?:work|studying|training))\b/i.test(
+  return /\bI(?:['’]ll| will|['’]m going to| am going to)\s+(?:withdraw|collect|reopen|resume buying|change (?:my|the) price|set (?:my|the|a) (?:(?:buy |sell )?price|bid|ask)|head|drive|travel|go|learn|study|take (?:the|a|your) job|bring|deliver|load|sell|buy|gather|harvest|build|work|start (?:work|studying|training))\b/i.test(
     text,
   );
 }

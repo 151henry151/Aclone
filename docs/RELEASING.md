@@ -2,7 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
-## Upgrade 0.83.0
+## Upgrade 0.84.0
+
+NPC financial facts and owner-business agreements require no reset or manual migration.
+Existing private memories and delivery/job agreements remain readable. Recent operating
+cash-flow tracking starts with the next money movement; earlier recent history is
+unknown. Agreed withdrawals protect operating reserves and investor claims. No prices,
+player balances or world settings are changed by deployment.
+
+### Snow state introduced in 0.83.0
 
 Snow depth and the protected winter base are persisted with climate state. Existing saves convert their old snow coverage to a thin layer (at most 4 cm); they do not gain deep drifts. No world reset or manual migration is needed. Roads stay exposed, and players and NPCs share depth-dependent off-road handling. Weather and sunny-day thaw remain consistent through save/reload and offline catch-up.
 

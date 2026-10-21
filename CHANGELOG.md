@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.84.0] - 2026-10-21
+
+### Added
+
+- NPCs can carry out agreed price changes and surplus withdrawals at their own businesses, with saved progress, normal travel and ownership checks, and protection for operating reserves and investor claims.
+
+### Fixed
+
+- NPC financial explanations now distinguish till cash, stock value, savings, protected capital, historical cash flow and conditional production margins. Chat and gameplay share these facts, including explicit currency units, paused-purchasing reasons and observed supplier/haulier margins.
+- Business accounts retain a bounded recent cash-flow window without inventing history for existing businesses. Negative lifetime cash flow no longer labels a cash-rich business as currently insolvent or unprofitable.
+- Prosperous NPCs can consider drawing capital for opportunities beyond a preset farm budget. Explicit purchasing pauses survive routine maintenance; business agreements only report actions after execution. Conversation identity comes from the actual speaker rather than a remembered name.
+
 ## [0.83.0] - 2026-10-21
 
 ### Added
