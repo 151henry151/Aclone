@@ -318,3 +318,9 @@ Read the prepaid rent, asset bond and expiry before accepting: stock and working
 cash stay with the property when the lease ends, and asset depletion reduces the
 bond refund. An operator cannot sell, mortgage or demolish it. Auctions hold the
 highest bid until closing and refund outbid bidders. See [contract rules](ECONOMY.md#optional-property-contracts-0780).
+
+## Business and chat controls
+
+Press **Enter** or **F2** to enter chat. Enter sends a message and keeps the cursor
+there; **Escape** returns to driving. Typing does not activate driving or HUD
+shortcuts. Enter still submits ordinary dialog forms.

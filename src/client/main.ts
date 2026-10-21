@@ -293,6 +293,8 @@ const mobile = new MobileUI(
   },
 );
 function focusChat() {
+  keys.clear();
+  document.documentElement.classList.remove('scenery-view');
   if (mobile.active) {
     closePanel();
     mobile.open('chat');
@@ -1371,7 +1373,7 @@ function renderPanel() {
   if (panel === 'help') {
     modal(
       'The field guide.',
-      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift. Regular pay is 1d; residents below 50d cash plus bank qualify for ${money(RELIEF_PAY)} relief at most once per 30 minutes.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Chat · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow seven crops over 1h 40m to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, building styles, sizes and rotation in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
+      `<p class="lede">Live a long life. Get reasonably rich. Try not to become an ostrich.</p><div class="guide-grid"><section><h3>On a phone or tablet</h3><p>Use both thumbs: steering on the left, forward/reverse on the right. Hold Boost for extra speed. Map, Bag, Chat and Actions open focused panels; tap Done or × to return. Tap your cash for health and neighbours. Drag scenery to look; pinch to zoom. Actions includes lights, camera, walking, flight/combat controls and every game menu.</p><h3>Your first few minutes</h3><ol><li>Land in Puddlewick. Drive with the arrows or WASD.</li><li>Approach the <b>Odd Jobs Office</b>, north of the green. Press E or Ctrl and work a 15-second shift. Regular pay is 1d; residents below 50d cash plus bank qualify for ${money(RELIEF_PAY)} relief at most once per 30 minutes.</li><li>Buy bread and water from <b>Harbour stores</b>. Click them in your inventory to consume.</li><li>Learn a profession at the <b>school</b>. The first lesson takes one minute and costs 80d.</li><li>Take a job, work, then buy a business. Fund its investment and inputs; production runs every ten minutes; farms use seasonal plots and harvest shifts.</li><li>Before signing off, go home with food and water stocked. Hunger and thirst keep growing offline; an empty pantry can be fatal. Businesses and training keep running.</li></ol></section><section><h3>The buttons that matter</h3><dl><dt>Arrows / WASD</dt><dd>Drive & steer</dd><dt>Shift</dt><dd>Boost (uses more fuel)</dd><dt>E / Ctrl</dt><dd>Open nearby building</dd><dt>Space / Tab</dt><dd>Horn; Tab fires in combat. Hold/release Tab for javelins; 1–6 select weapons.</dd><dt>F2 / Enter</dt><dd>Enter chat; Enter sends and keeps typing; Escape returns to driving · *help for commands</dd><dt>F4 / L</dt><dd>Engine / headlights</dd><dt>Sound button</dt><dd>Mute/unmute nearby engines, horns and machinery; volume in Pilot & preferences</dd><dt>F5 / R</dt><dd>Robocrow</dd><dt>C / mouse wheel</dt><dd>Camera / zoom; drag in first-person to look around and up</dd><dt>H</dt><dd>Scenery view · hide or restore the HUD; Escape restores it</dd><dt>Insert / Delete</dt><dd>Climb / descend in flight</dd><dt>F3</dt><dd>Reel when the fish bites</dd><dt>M / click minimap</dt><dd>Parish map with building and resource names; zoom and drag to explore</dd><dt>F9 / F10 / F6</dt><dd>Menu / owner editor / caretaker dashboard</dd><dt>Esc</dt><dd>Close window</dd></dl></section></div><p class="note">A day takes ten real minutes and the seasonal year about 61 hours. Farms grow seven crops over 1h 40m to ten hours; tend plots and complete 15-second harvest shifts. Choose combat modes in Activities, building styles, sizes and rotation in Build, and paint at the garage. Space journeys, courier contracts and discoveries are saved across disconnects. Cash is sheckles and denarii (normally 100d = 1s). The server keeps your property working while you are away. Keep inputs, stock space and wages funded. At 1% efficiency, unattended businesses still produce slowly. Browser-reserved keys have on-screen alternatives.</p>`,
       true,
     );
     return;
@@ -2671,9 +2673,7 @@ app.addEventListener('submit', async (e) => {
       const text = String(data.message).trim();
       if (text) send({ type: 'chat', text, ...(chatRecipient ? { to: chatRecipient.id } : {}) });
       form.reset();
-      if (mobile.active)
-        (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
-      else (form.querySelector('input') as HTMLInputElement).blur();
+      (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
     } else if (form.id === 'loan-quote-form' && world && me) {
       const b = world.buildings.find((b) => b.id === String(data.building));
       if (b)
@@ -2847,7 +2847,10 @@ function openInteraction(id: string) {
 }
 scene.onBuilding = openInteraction;
 window.addEventListener('keydown', (e) => {
-  if ((e.target as HTMLElement).matches('input,textarea,select')) {
+  if (
+    (e.target as HTMLElement).matches('input,textarea,select') ||
+    (e.target as HTMLElement).isContentEditable
+  ) {
     if (e.key === 'Escape') (e.target as HTMLElement).blur();
     return;
   }
@@ -2856,7 +2859,22 @@ window.addEventListener('keydown', (e) => {
     ['PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)
   )
     return;
-  // Let focused buttons use their native activation instead of honking or opening chat.
+  // Enter always starts chat from the game HUD, even after clicking a control.
+  // Dialog controls keep their native Enter behavior.
+  if (
+    world &&
+    !panel &&
+    !mobile.drawer &&
+    ['Enter', 'F2'].includes(e.key) &&
+    !e.ctrlKey &&
+    !e.altKey &&
+    !e.metaKey
+  ) {
+    e.preventDefault();
+    if (!e.repeat) focusChat();
+    return;
+  }
+  // Let focused dialog buttons use their native activation.
   if ((e.target as HTMLElement).closest('button') && [' ', 'Enter'].includes(e.key)) return;
   if (mobile.drawer) {
     if (e.key === 'Escape') mobile.close();
@@ -2916,6 +2934,8 @@ window.addEventListener('keydown', (e) => {
   if (handled.includes(key)) e.preventDefault();
   keys.add(e.key);
   if (key === 'enter' || key === 'f2') {
+    if (panel || !world) return;
+    e.preventDefault();
     focusChat();
     return;
   }
