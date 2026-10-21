@@ -100,9 +100,15 @@ test('current payroll blocks fresh top-ups even when the hypothetical ideal crew
   const budget = productionBudget(w, b)!;
   assert.ok(budget.idealMargin >= 0);
   assert.ok(budget.margin < 0);
-  assert.deepEqual(ownerRoutine(w, p), []);
+  const correction = ownerRoutine(w, p);
+  assert.ok(correction.some((s) => s.kind === 'operation' && s.operation === 'staffing'));
+  assert.ok(!correction.some((s) => s.kind === 'act' && s.action.type === 'investment'));
   assert.ok(!enterpriseChoices(w, p).some((c) => c.description.startsWith('Fund my')));
   assert.ok(!inventHypotheses(w, p, state).some((c) => c.idea === 'fund shop'));
+  const before = p.cash;
+  run(w, p, correction);
+  assert.equal(p.cash, before, 'fix staffing before injecting more capital');
+  assert.ok(productionBudget(w, b)!.margin >= 0);
 });
 test('cash-poor residents release completed housing goals to earn, and career reviews really expire', () => {
   const { w, p, state } = fixture(),

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, Player, World } from '../shared/types';
+import { jobVacancy, hiringLimit } from '../shared/staffing';
 import { propertyQuote } from '../shared/property';
 import { winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
@@ -182,7 +183,9 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   if (action === 'job' && b) {
     const recipe = b.kind === 'farm' ? recipes.farm : (b.production ?? recipes[b.recipe ?? '']);
     if (recipe && !p.skills.includes(recipe.skill)) return `Learn ${recipe.skill} at school first`;
-    if (b.employees.length >= 16) return 'All jobs are filled';
+    if ((b.dismissedUntil?.[p.id] ?? 0) > w.time)
+      return 'Recently dismissed; reapply after one hour';
+    if (!jobVacancy(w, b, p.id)) return `All jobs filled (hiring limit ${hiringLimit(w, b)})`;
   }
   if (action === 'joinGame' && id === 'fishing' && !(p.inventory.tackle > 0))
     return 'Carry Fishing tackle';

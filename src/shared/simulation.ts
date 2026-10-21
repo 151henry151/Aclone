@@ -1,3 +1,4 @@
+import { hiringLimit, jobVacancy } from './staffing.ts';
 import { salesReceipt } from './taxes.ts';
 import { MIN_BUY_PRICE, setTradingOffer } from './trading.ts';
 import { maintenanceAction } from './maintenance.ts';
@@ -772,6 +773,45 @@ export function act(w: World, id: string, a: Action): string {
       if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price);
       break;
     }
+    case 'staffing': {
+      const b = nearby(w, p, a.building);
+      owns(p, b);
+      requireThat(b.recipe || b.production, 'No employment at this building');
+      const limit = a.limit === undefined ? undefined : num(a.limit, 0, 16, true);
+      if (a.dismiss !== undefined) {
+        const id = str(a.dismiss);
+        requireThat(b.employees.includes(id), 'That worker is no longer employed here');
+        const worker = w.players[id];
+        requireThat(
+          !worker?.task || worker.task.building !== b.id,
+          'Wait until this worker finishes their current task',
+        );
+        b.employees = b.employees.filter((e) => e !== id);
+        b.dismissedUntil ??= {};
+        b.dismissedUntil[id] = w.time + 3600;
+        if (worker?.job === b.id) {
+          delete worker.job;
+          worker.activeUntil = 0;
+          recordLife(w, worker, {
+            kind: 'job',
+            building: b.id,
+            text: `Dismissed from ${b.name}; may reapply in one hour.`,
+          });
+          queueCreatorScript(w, 'JobChanged', { id, building: '', previous: b.id });
+          say(
+            w,
+            b.name,
+            'Your employment has ended. You may reapply here in one hour.',
+            'system',
+            id,
+          );
+        }
+      }
+      if (limit !== undefined) b.hiringLimit = limit;
+      if (a.automatic === true) delete b.hiringLimit;
+      result = 'Staffing settings updated. Existing workers remain until dismissed.';
+      break;
+    }
     case 'job': {
       requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       const b = nearby(w, p, a.building);
@@ -786,7 +826,11 @@ export function act(w: World, id: string, a: Action): string {
       );
       // Reaccepting an existing job renews its shift without a second staff slot.
       if (!b.employees.includes(id)) {
-        requireThat(b.employees.length < 16, 'All jobs filled');
+        requireThat(
+          (b.dismissedUntil?.[id] ?? 0) <= w.time,
+          'You were recently dismissed; reapply after one hour',
+        );
+        requireThat(jobVacancy(w, b, id), `All jobs filled (hiring limit ${hiringLimit(w, b)})`);
         b.employees.push(id);
       }
       if (p.job !== b.id)

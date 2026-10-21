@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 import {
   herdSpec,
   herdReady,
@@ -38,7 +39,7 @@ export function workplace(w: World, p: Player, b: Building) {
   if (b.owner === p.id) jobBlockers.push('Owners cannot employ themselves');
   if (!qualified) jobBlockers.push(`Learn ${recipe.skill} at school first`);
   if (p.job && !employedHere) jobBlockers.push('Quit your other job before taking this one');
-  if (!employedHere && b.employees.length >= 16) jobBlockers.push('All jobs filled');
+  if (!employedHere && !jobVacancy(w, b, p.id)) jobBlockers.push('All jobs filled');
   const blockers: string[] = [];
   const notes: string[] = [];
   const herd = herdSpec(b);

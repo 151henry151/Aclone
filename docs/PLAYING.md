@@ -327,3 +327,13 @@ shortcuts. Enter still submits ordinary dialog forms.
 
 In **Building Admin**, use **Remove from sale** to withdraw a property listing.
 Your asking price, stock and investment remain intact for later relisting.
+
+**Staffing & hiring** lets owners set 0–16 paid places, restore the automatic
+recommended limit, or dismiss individual workers. Zero closes hiring; lowering
+the limit leaves existing workers in place. Dismissed workers wait one real hour
+before reapplying. A worker must finish a current task before dismissal.
+
+Compare **Estimated production margins** before changing staff. A higher margin
+per batch can still mean less income per hour if production slows. Actual recorded
+cash flow remains in **Statement**. Farms pay for completed harvests and have no
+factory hourly forecast.

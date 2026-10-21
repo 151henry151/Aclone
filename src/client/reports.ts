@@ -1,3 +1,4 @@
+import { economicsPanel } from './staffing-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cashFlow, productionReport } from '../shared/reports';
 import { businessHealth } from '../shared/business-health';
@@ -17,9 +18,11 @@ const goods = (stock: Stock, w: World) =>
 export function statementHtml(w: World, p: Player, b: Building) {
   const a = p.statements?.[b.id];
   const health = businessHealth(w, { ...b, accounts: a });
-  const state = `<h3>Production right now</h3><ul>${(b.productionStatus ?? productionReport(w, b))
-    .map((s) => `<li>${esc(s)}</li>`)
-    .join('')}</ul>`;
+  const state =
+    economicsPanel(w, b) +
+    `<h3>Production right now</h3><ul>${(b.productionStatus ?? productionReport(w, b))
+      .map((s) => `<li>${esc(s)}</li>`)
+      .join('')}</ul>`;
   if (!a)
     return (
       state +
@@ -31,7 +34,7 @@ export function statementHtml(w: World, p: Player, b: Building) {
       .filter((s) => !(b.productionStatus ?? productionReport(w, b)).includes(s))
       .map((s) => `<li>${esc(s)}</li>`)
       .join('')}</ul><p class="note">${health.basis}</p>` +
-    `<h3>Business statement</h3><p>Tracked since world day ${Math.floor(a.since / 600) + 1}. Cash flow is not accrual profit: goods still in storage have not been sold. Receipts exclude sales tax paid by buyers.</p><dl class="business-accounts">${[
+    `<h3>Business statement</h3><p>Tracked since world day ${Math.floor(a.since / 600) + 1}. Cash flow is not accrual profit: goods still in storage have not been sold. Receipts exclude sales tax withheld from posted prices.</p><dl class="business-accounts">${[
       ['Sales receipts', a.receipts],
       ['Materials purchased', a.materials],
       ['Net wages paid', a.wages],

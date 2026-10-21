@@ -1,3 +1,4 @@
+import { productionStaffing } from '../../shared/sound-state.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -6,8 +7,10 @@ import type { ResidentState } from './memory.ts';
 import type { FarmerChoice } from './farmer.ts';
 import { blockedStep } from './recovery.ts';
 import { visitBuilding } from './care.ts';
-function visibleBuilding(b: Building, p: Player): Building {
+function visibleBuilding(w: World, b: Building, p: Player): Building {
   const snapshot = structuredClone(b);
+  snapshot.staffing = productionStaffing(w, b);
+  snapshot.ownerName = b.owner ? w.players[b.owner]?.name : undefined;
   if (b.owner !== p.id) delete snapshot.accounts;
   if (snapshot.lodging)
     for (const [id, guest] of Object.entries(snapshot.lodging.guests))
@@ -34,7 +37,7 @@ export function rememberMarkets(w: World, p: Player, state: ResidentState) {
     if (distance(p, b) >= 18 && b.owner !== p.id) continue;
     const old = visits[b.id];
     if (old && w.time - old.at < 2) continue;
-    const snapshot = visibleBuilding(b, p);
+    const snapshot = visibleBuilding(w, b, p);
     visits[b.id] = {
       at: w.time,
       building: snapshot,
@@ -71,7 +74,7 @@ export function perceivedWorld(
   if (omniscient)
     return {
       ...w,
-      buildings: w.buildings.map((b) => visibleBuilding(b, p)),
+      buildings: w.buildings.map((b) => visibleBuilding(w, b, p)),
       players: {
         [p.id]: p,
         ...Object.fromEntries(
@@ -101,7 +104,7 @@ export function perceivedWorld(
   const visits = state.markets!.visits;
   const buildings = w.buildings.flatMap((b) => {
     const v = visits[b.id];
-    if (b.owner === p.id || distance(p, b) < 18) return [visibleBuilding(b, p)];
+    if (b.owner === p.id || distance(p, b) < 18) return [visibleBuilding(w, b, p)];
     if (v && w.time - v.at <= marketMemorySeconds)
       return [v.building.owner === p.id ? { ...v.building, owner: 'unknown' } : v.building];
     return [];

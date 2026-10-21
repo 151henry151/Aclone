@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 import { pricingChoices } from './pricing.ts';
 import { housingChoices } from './housing.ts';
 import { household } from './household.ts';
@@ -171,7 +172,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       (item) =>
         w.buildings.reduce((n, s) => n + (s.sell[item] >= 0 ? (s.stock[item] ?? 0) : 0), 0) < 40,
     );
-    if (b.owner !== p.id && supplied && b.employees.length < 16 && usefulShift(w, p, b)) {
+    if (b.owner !== p.id && supplied && jobVacancy(w, b, p.id) && usefulShift(w, p, b)) {
       if (job.qualified)
         add(
           `${shortage ? 'Supply shortage! ' : ''}Operate ${b.name}: funded, stocked job pays ${b.wage} per completed batch, checks every ${job.intervalSeconds}s at ${Math.round(job.efficiencyIfYouWork * 100)}% speed (ideal crew ${job.idealEmployees}). Keep producing ${Object.keys(recipe.outputs)}.`,

@@ -1,3 +1,5 @@
+import { staffingPanel, economicsPanel } from './staffing-panel';
+import { hiringLimit, jobVacancy } from '../shared/staffing';
 import { taxesPanel, taxSummary, tradeQuoteText } from './tax-info';
 import { contractPanel } from './property-contracts';
 import { coursesPanel } from './courses';
@@ -1983,7 +1985,7 @@ function buildingWindow(b: Building) {
         ? button(shift.button, 'work', workAttributes)
         : `<p class="note">Learn ${esc((b.production ?? recipes[b.recipe!]).skill)} to operate your business without wages.</p>`;
     if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
-      html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/16 workers</span>${button(me.job === b.id ? shift!.button : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</div>`;
+      html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/${hiringLimit(world, b)} paid places</span>${button(me.job === b.id ? shift!.button : !jobVacancy(world, b, me.id) ? 'Hiring closed' : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near || !jobVacancy(world, b, me.id) ? 'disabled' : ''}`)}</div>`;
     if (shift)
       html += `<p class="note" data-work-status>${esc(`${shift.label}. ${shift.detail}`)}</p>`;
     if (['sawmill', 'quarry', 'forge'].includes(b.kind) && !(selfOwned && b.kind === 'forge'))
@@ -2077,6 +2079,8 @@ function buildingWindow(b: Building) {
     !b.auction
   )
     html += `<form data-action="listProperty">${hidden('building', b.id)}<h3>Sell this property</h3><p>Stock and investment stay with the business. The purchase price is paid directly to you.</p>${field('Asking price in denarii', 'priceDenarii', b.price / 100, 'number', 'min="0.01" step="0.01"')}<button>${b.forSale ? 'Update asking price' : 'List property for sale'}</button></form>${b.forSale ? `<form data-action="unlistProperty">${hidden('building', b.id)}<p>Currently listed for ${money(b.price)}.</p><button>Remove from sale</button></form>` : ''}`;
+  if (tab === 'Building Admin' && owned && (b.recipe || b.production))
+    html += staffingPanel(world, b) + economicsPanel(world, b);
   if (tab === 'Main' || tab === 'Building Admin') html += contractPanel(world, me, b);
   if (tab === 'Statement')
     html += `<section data-business-statement="${esc(b.id)}">${statementHtml(world, me, b)}</section>`;
@@ -2774,6 +2778,7 @@ app.addEventListener('submit', async (e) => {
       const values: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(data)) {
         values[k] = [
+          'limit',
           'plot',
           'hours',
           'rate',
@@ -2796,7 +2801,7 @@ app.addEventListener('submit', async (e) => {
           'payment',
         ].includes(k)
           ? Number(v)
-          : ['buy', 'open', 'accepted', 'autoPay', 'enabled', 'caretaker'].includes(k)
+          : ['buy', 'open', 'accepted', 'autoPay', 'enabled', 'caretaker', 'automatic'].includes(k)
             ? v === 'true'
             : v;
       }

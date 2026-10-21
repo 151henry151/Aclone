@@ -268,7 +268,7 @@ The design uses ordinary amortization and ability-to-repay concepts ([CFPB expla
 
 ## Business statements
 
-**Statement** separates sales receipts (net of buyer-paid sales tax), materials, net wages, payroll tax, imports, other flows and owner capital. Operating cash flow excludes deposits/withdrawals; it is not accrual profit because unsold stock has not been valued as income. Counters survive restart and ownership transfer with the business. Automatic recipe batches track input/output quantities; seasonal harvests are separate, with their payments included in cash flow. Current blockers are diagnosed server-side, including input shortages, output capacity, wages, staffing and shoreline access.
+**Statement** separates sales receipts (net of included sales tax), materials, net wages, payroll tax, imports, other flows and owner capital. Operating cash flow excludes deposits/withdrawals; it is not accrual profit because unsold stock has not been valued as income. Counters survive restart and ownership transfer with the business. Automatic recipe batches track input/output quantities; seasonal harvests are separate, with their payments included in cash flow. Current blockers are diagnosed server-side, including input shortages, output capacity, wages, staffing and shoreline access.
 
 ## Parish maintenance orders
 
@@ -310,3 +310,24 @@ excluding homes, lodging, banks, government property and supply caches.
 Existing contracts settle even if new contracts are subsequently disabled.
 Maintenance freezes their world-time deadlines. Cross-host visits do not transfer
 these properties, contracts or sponsor escrow into another host's economy.
+
+## Hiring limits and estimated margins
+
+Paid job vacancies default to the ideal crew minus a qualified working owner;
+farms retain 16 places because they pay per completed harvest. Owners can override
+the limit (0–16), restore automatic limits and dismiss workers in Building Admin.
+Existing rosters are preserved on upgrade. Dismissal removes employment and has a
+one-real-hour reapplication cooldown; it waits for any current task at that site.
+
+The margin comparison uses posted output prices minus included sales taxes,
+replacement inputs and gross wages for every active paid worker per batch. Closed
+input bids use their saved price or catalogue fallback, explicitly as estimates.
+Hourly contribution multiplies batch margin by staffing speed and batches per
+real hour. Unpaid owner operation contributes speed without payroll. This assumes
+funded inputs and wages, output space and buyers for every output; it excludes
+travel, maintenance, rent and financing. Missing output listings and livestock
+upkeep prevent a reliable hourly forecast. Actual Statement cash flow is separate.
+
+NPC owners use these comparisons to adjust hiring and remove excess staff. They
+respect the same vacancies and dismissal cooldowns as people. This does not change
+human-owned wages, listings or rosters.

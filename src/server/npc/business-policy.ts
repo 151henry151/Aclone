@@ -1,3 +1,5 @@
+import { businessEconomics } from '../../shared/business-economics.ts';
+import { hiringLimit } from '../../shared/staffing.ts';
 import { settleBusinessProceeds } from './business-freight.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
 import { livestockSupplyInputs, herdSpec } from '../../shared/livestock.ts';
@@ -130,7 +132,12 @@ export function productionBudget(w: World, b: Building) {
     ),
     activeWorkers: staff,
     idealWorkers,
-    idealMargin: retailReceipts - inputs - b.wage * idealWorkers,
+    idealMargin:
+      retailReceipts -
+      inputs -
+      b.wage *
+        Math.max(0, idealWorkers - Number(productionStaffing(w, b, staff, next).ownerOperating)),
+    economics: businessEconomics(w, b),
     efficiency: productionEfficiency(w, b, staff, next),
   };
 }
@@ -180,6 +187,8 @@ export function ownerLivingDraw(w: World, p: Player, b: Building) {
 /** Maintain a solvent business before discretionary personal spending. */
 export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[] {
   if (p.task || p.learning) return [];
+  const staffing = ownerStaffingRoutine(w, p);
+  if (staffing.length) return staffing;
   const bids = state ? ownerBidRoutine(w, p, state) : [];
   if (bids.length) return bids;
   const settlement = state ? settleBusinessProceeds(w, p, state) : [];
@@ -256,6 +265,28 @@ export function cargoRelief(w: World, p: Player, state?: ResidentState): Step[] 
             : { type: 'trade', building: b.id, item, quantity: n, direction: 'sell' },
         },
       ]);
+  }
+  return [];
+}
+
+/** Manage paid places by hourly contribution, never batch margin alone. */
+export function ownerStaffingRoutine(w: World, p: Player): Step[] {
+  if (w.settings.jobsEnabled === false || p.task || p.learning) return [];
+  for (const b of w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government)) {
+    const e = businessEconomics(w, b);
+    if (!e || e.bestPaidWorkers === null) continue;
+    // Do not optimize a loss-making line into an empty speculation business.
+    const best = e.scenarios.find((s) => s.paidWorkers === e.bestPaidWorkers)!;
+    const target =
+      best.profitPerHour > 0
+        ? best.paidWorkers
+        : Math.max(0, e.ideal - Number(e.current.ownerOperating));
+    const excess = b.employees.slice(target).filter((id) => !w.players[id]?.task);
+    const steps: Step[] = [];
+    if (hiringLimit(w, b) !== target)
+      steps.push(operation('staffing', { building: b.id, limit: target }));
+    for (const id of excess) steps.push(operation('staffing', { building: b.id, dismiss: id }));
+    if (steps.length) return visitBuilding(p, b, steps);
   }
   return [];
 }

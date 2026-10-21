@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { canCarry, distance } from '../../shared/simulation.ts';
@@ -185,8 +186,10 @@ export function employmentBlocker(w: World, p: Player, request: Employment): str
   if (!b || !recipe)
     return 'That building does not currently offer a finished, qualified workplace.';
   if (b.owner === p.id) return 'I own that building and cannot employ myself.';
-  if (!b.employees.includes(p.id) && b.employees.length >= 16)
-    return 'All staff positions at that building are filled.';
+  if (!b.employees.includes(p.id) && !jobVacancy(w, b, p.id))
+    return (b.dismissedUntil?.[p.id] ?? 0) > w.time
+      ? 'I was recently dismissed there and must wait one hour before reapplying.'
+      : 'All staff positions at that building are filled or hiring is closed.';
   if (!p.skills.includes(recipe.skill)) {
     if (!request.train)
       return `I need the ${recipe.skill} qualification; training was not included in this request.`;

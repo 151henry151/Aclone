@@ -81,6 +81,7 @@ export const playerOperations = [
   'fulfilOrder',
   'loan',
   'buildingAdmin',
+  'staffing',
   'lodging',
   'construct',
   'supply',
@@ -170,6 +171,9 @@ const operationParameter = z
       'autoPay',
       'collateral',
       'enabled',
+      'limit',
+      'dismiss',
+      'automatic',
     ]),
     value: z.union([z.string().max(80), z.number().finite(), z.boolean()]),
   })

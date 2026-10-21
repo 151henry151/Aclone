@@ -30,6 +30,9 @@ export function publicBuildings(w: World) {
         building.kind !== 'farm' && (building.production || building.recipe)
           ? productionStaffing(w, building)
           : undefined,
+      employeeNames: Object.fromEntries(
+        building.employees.map((id) => [id, w.players[id]?.name ?? id]),
+      ),
       ownerName: building.owner ? w.players[building.owner]?.name : undefined,
       operating: productionActivity(w, building, crafting),
       efficiency:

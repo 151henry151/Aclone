@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from '../../shared/catalog.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
@@ -82,7 +83,7 @@ export function estimateSupply(
           owned
             ? !w.settings.ownerOperation
             : w.settings.jobsEnabled === false ||
-              (source.employees.length >= 16 && p.job !== source.id)
+              (!jobVacancy(w, source, p.id) && p.job !== source.id)
         )
           throw Error('No worker available');
         if (!p.skills.includes(recipe.skill)) {

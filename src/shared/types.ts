@@ -138,6 +138,7 @@ export interface Building {
   owner?: string;
   /** Public snapshot projection, including owners who are currently offline. */
   ownerName?: string;
+  employeeNames?: Record<string, string>;
   price: number;
   investment: number;
   /** Outside stakes. Neighbours can fund a till they do not own and later collect a capped return. */
@@ -151,6 +152,10 @@ export interface Building {
   pausedPrices?: { buy?: Stock; sell?: Stock };
   capacity: number;
   employees: string[];
+  /** Paid places; absent follows the recommended crew automatically. */
+  hiringLimit?: number;
+  /** Dismissed workers may not immediately retake their job. */
+  dismissedUntil?: Record<string, number>;
   wage: number;
   progress: number;
   efficiency: number;

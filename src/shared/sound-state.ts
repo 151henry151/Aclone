@@ -1,4 +1,8 @@
-import { idealEmployees, staffingEfficiency } from './staffing.ts';
+import {
+  idealEmployees,
+  staffingEfficiency,
+  ownerOperating as isOwnerOperating,
+} from './staffing.ts';
 import { herdSpec, herdReady, livestockInputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
@@ -33,15 +37,7 @@ export function productionStaffing(
   staff = productionStaff(w, b, w.time).length,
   at = w.time,
 ) {
-  const owner = b.owner && w.players[b.owner];
-  const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
-  const ownerOperating = !!(
-    w.settings.ownerOperation &&
-    owner &&
-    recipe &&
-    owner.skills.includes(recipe.skill) &&
-    (!w.settings.activeWork || (b.ownerActiveUntil ?? -1) >= at)
-  );
+  const ownerOperating = isOwnerOperating(w, b, at);
   return { active: staff + Number(ownerOperating), ideal: idealEmployees(w, b), ownerOperating };
 }
 

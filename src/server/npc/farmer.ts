@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 import { labourReward } from '../../shared/public-labour.ts';
 import { acceptsHay, herdNeeds } from '../../shared/livestock.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
@@ -195,7 +196,7 @@ export function gameplayChoices(
           action({ type: 'investment', building: b.id, direction: 'deposit', amount: 5000 }),
         ]),
       );
-    if (p.skills.includes('farmer') && !own && p.job !== b.id && b.employees.length < 16)
+    if (p.skills.includes('farmer') && !own && p.job !== b.id && jobVacancy(w, b, p.id))
       add(
         `Accept farm employment at ${b.name} (${b.id}); harvest wages ${b.wage}, investment ${b.investment}. ${p.job ? 'Quit the previous job first.' : ''}`,
         visit(b, [

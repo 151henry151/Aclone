@@ -1,3 +1,4 @@
+import { jobVacancy } from '../../shared/staffing.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { herdSpec } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -47,7 +48,7 @@ export function economyChoices(
             [{ kind: 'wait', seconds: wait }],
             wait + 5,
           );
-      } else if (b.employees.length < 16)
+      } else if (jobVacancy(w, b, p.id))
         add(
           `Accept employment at ${b.name} (${b.id}), gross wage ${b.wage} per ${job.intervalSeconds}s. ${p.job ? 'This quits my previous job.' : ''} ${job.summary}`,
           visit(b, [
