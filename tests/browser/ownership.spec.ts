@@ -19,6 +19,8 @@ test('owners get stock and capital controls instead of self-trading and employme
     const p = addPlayer(w, account.id, account.name),
       b = w.buildings.find((b) => b.kind === 'mill')!;
     b.owner = p.id;
+    // Deliberately allow overstaffing to exercise the efficiency penalty.
+    b.hiringLimit = 3;
     b.stock.flour = 10;
     b.efficiency = 0.01;
     p.inventory.wheat = 5;
