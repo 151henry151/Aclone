@@ -467,7 +467,7 @@ async function connect() {
         toast(msg.message, !msg.ok);
       const view = actionViews.get(msg.request);
       actionViews.delete(msg.request);
-      if (msg.ok && panel && view === $('modal-host').dataset.viewKey)
+      if ((msg.ok || visit !== undefined) && panel && view === $('modal-host').dataset.viewKey)
         setTimeout(() => {
           // A prior action must never replace a newly opened tab or an input being edited.
           const editing = document.activeElement?.matches('input,select,textarea');
@@ -1250,19 +1250,36 @@ function refreshTradingPrices() {
   const item = (form.elements.namedItem('item') as HTMLSelectElement).value;
   const side = (form.elements.namedItem('side') as HTMLSelectElement).value as 'buy' | 'sell';
   const price = b[side][item];
+  const remembered = price ?? b.pausedPrices?.[side]?.[item];
+  const enabled = form.elements.namedItem('enabled') as HTMLSelectElement;
+  if (enabled.dataset.dirty !== 'true') enabled.value = price === undefined ? 'false' : 'true';
   const input = form.elements.namedItem('priceDenarii') as HTMLInputElement;
-  if (input.dataset.dirty !== 'true') input.value = price === undefined ? '' : String(price / 100);
+  input.min = side === 'buy' ? '1' : '0';
+  input.disabled = enabled.value === 'false';
+  input.required = !input.disabled;
+  if (input.dataset.dirty !== 'true')
+    input.value =
+      remembered === undefined || (side === 'buy' && remembered < 100)
+        ? ''
+        : String(remembered / 100);
   form.querySelector('[data-saved-price]')!.textContent =
     price === undefined
-      ? 'No saved price for this item and direction.'
+      ? `Not ${side === 'buy' ? 'buying' : 'selling'} this item.${remembered !== undefined && remembered > 0 ? ` Last price: ${money(remembered)} per item.` : ''}`
       : `Saved price: ${money(price)} per item`;
   const list = form.querySelector<HTMLElement>('[data-current-prices]')!;
-  const key = JSON.stringify([b.buy, b.sell]);
+  const key = JSON.stringify([b.buy, b.sell, b.pausedPrices]);
   if (list.dataset.prices !== key) {
     list.dataset.prices = key;
     list.innerHTML =
       '<h4>Current trading prices</h4><ul>' +
-      [...new Set([...Object.keys(b.buy), ...Object.keys(b.sell)])]
+      [
+        ...new Set([
+          ...Object.keys(b.buy),
+          ...Object.keys(b.sell),
+          ...Object.keys(b.pausedPrices?.buy ?? {}),
+          ...Object.keys(b.pausedPrices?.sell ?? {}),
+        ]),
+      ]
         .map(
           (i) =>
             `<li>${esc(items[i]?.name ?? i)} · buys: ${b.buy[i] === undefined ? 'not buying' : money(b.buy[i])} · sells: ${b.sell[i] === undefined ? 'not selling' : money(b.sell[i])}</li>`,
@@ -1274,13 +1291,20 @@ function refreshTradingPrices() {
 app.addEventListener('change', (event) => {
   const control = event.target as HTMLInputElement;
   const form = control.closest<HTMLFormElement>('form[data-price-editor]');
-  if (!form || !['item', 'side'].includes(control.name)) return;
+  if (!form) return;
+  if (control.name === 'enabled') {
+    control.dataset.dirty = 'true';
+    refreshTradingPrices();
+    return;
+  }
+  if (!['item', 'side'].includes(control.name)) return;
   tradingSelection = {
     building: form.dataset.priceEditor!,
     item: (form.elements.namedItem('item') as HTMLSelectElement).value,
     side: (form.elements.namedItem('side') as HTMLSelectElement).value as 'buy' | 'sell',
   };
   delete (form.elements.namedItem('priceDenarii') as HTMLInputElement).dataset.dirty;
+  delete (form.elements.namedItem('enabled') as HTMLSelectElement).dataset.dirty;
   refreshTradingPrices();
 });
 app.addEventListener('input', (event) => {
@@ -1750,7 +1774,7 @@ function buildingWindow(b: Building) {
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
               )
               .join('')}</div></section>`,
         )
@@ -1972,7 +1996,14 @@ function buildingWindow(b: Building) {
           ],
           'Trade direction',
           tradingSelection!.side,
-        )}        <p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="0" step="0.01" required placeholder="Not currently traded"')}<button>Set price</button><div data-current-prices></div></form></div>`
+        )} ${select(
+          'enabled',
+          [
+            ['true', 'Trading enabled'],
+            ['false', 'Not trading this item'],
+          ],
+          'Trading status',
+        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="1" step="0.01" required placeholder="Enter a price to resume trading"')}<button>Save trading settings</button><div data-current-prices></div></form></div>`
       : !b.government && !b.construction
         ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${OUTSIDE_RETURN_PERCENT}% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
             'direction',
@@ -2328,6 +2359,7 @@ app.addEventListener('click', async (e) => {
             (document.getElementById('trade-quantity') as HTMLInputElement)?.value ?? 1,
           ),
           direction: el.dataset.direction,
+          expectedPrice: Number(el.dataset.price),
         });
         break;
       case 'serviceVehicle':

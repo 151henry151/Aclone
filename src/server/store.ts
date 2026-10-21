@@ -1,3 +1,4 @@
+import { normalizeTradingOffers } from '../shared/trading.ts';
 import { migrateEmploymentPolicy } from '../shared/employment-policy.ts';
 import { migrateProcurement } from '../shared/procurement.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -103,6 +104,7 @@ export class Store {
               b.sell[key] ??= buildings[b.kind].sell[key];
               b.stock[key] ??= 0;
             }
+        for (const b of world.buildings) normalizeTradingOffers(b);
         return { world, saved: Number(row.saved) };
       });
   }

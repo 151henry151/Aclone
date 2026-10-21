@@ -81,7 +81,7 @@ Permitted chat is stored and relevant context goes to Jev plus OpenAI (Mabel) or
 
 ## Where are my building’s saved trading prices?
 
-Building Admin shows current quotes and loads the selected item's saved buy/sell price. Empty means no listing; zero means free. Amounts use denarii/decimals. Drafts and scroll positions persist through repeated transactions, but editing is not saving.
+Building Admin shows current quotes and loads the selected item's saved buy/sell price. Empty means no listing; zero selling prices mean free goods. The Trading status control pauses an offer without losing its saved price; buying prices must be at least 1d. Amounts use denarii/decimals. Drafts and scroll positions persist through repeated transactions, but editing is not saving.
 
 ## How do I read earlier chat?
 

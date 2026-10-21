@@ -1,3 +1,4 @@
+import { MIN_BUY_PRICE, setTradingOffer } from './trading.ts';
 import { maintenanceAction } from './maintenance.ts';
 import {
   propertyContractAction,
@@ -482,8 +483,12 @@ export function act(w: World, id: string, a: Action): string {
       const buying = a.direction === 'buy';
       const price = (buying ? b.sell : b.buy)[item];
       requireThat(
-        Number.isSafeInteger(price) && price >= 0,
+        Number.isSafeInteger(price) && price >= (buying ? 0 : MIN_BUY_PRICE),
         'This building does not trade that item',
+      );
+      requireThat(
+        a.expectedPrice === undefined || a.expectedPrice === price,
+        'The price changed. Review the current price before trading again.',
       );
       const total = price * n;
       requireThat(Number.isSafeInteger(total), 'Trade too large');
@@ -744,12 +749,22 @@ export function act(w: World, id: string, a: Action): string {
       if (a.item !== undefined) {
         item = str(a.item);
         requireThat(items[item], 'Unknown item');
-        price = num(a.price, 0, 10000000, true);
         requireThat(a.side === 'buy' || a.side === 'sell', 'Invalid price side');
+        requireThat(
+          a.enabled === undefined || typeof a.enabled === 'boolean',
+          'Invalid trading status',
+        );
+        if (a.enabled !== false)
+          price = num(
+            a.price ?? b.pausedPrices?.[a.side]?.[item] ?? b[a.side][item],
+            a.side === 'buy' ? MIN_BUY_PRICE : 0,
+            10000000,
+            true,
+          );
       }
       b.name = name;
       b.wage = wage;
-      if (item && price !== undefined) (a.side === 'buy' ? b.buy : b.sell)[item] = price;
+      if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price);
       break;
     }
     case 'job': {

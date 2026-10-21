@@ -38,13 +38,17 @@ export function inputStockTarget(b: Building, item: string) {
 }
 
 /** Manage paid bids through the same administration action as a human owner.
- * Zero bids accept donations but do not attract profit-seeking suppliers. */
+ * Suspended bids accept no deliveries and retain their previous price. */
 export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step[] {
   if (state.pausedInputBids?.world !== w.id || state.pausedInputBids.deaths !== p.deaths)
     state.pausedInputBids = { world: w.id, deaths: p.deaths, bids: {} };
   const owned = w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government);
   const validKeys = new Set(
-    owned.flatMap((b) => Object.keys(b.buy).map((item) => `${b.id}:${item}`)),
+    owned.flatMap((b) =>
+      [...new Set([...Object.keys(b.buy), ...Object.keys(b.pausedPrices?.buy ?? {})])].map(
+        (item) => `${b.id}:${item}`,
+      ),
+    ),
   );
   for (const key of Object.keys(state.pausedInputBids.bids))
     if (!validKeys.has(key)) delete state.pausedInputBids.bids[key];
@@ -58,13 +62,13 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
       if (bid > 0 && stock >= target) {
         state.pausedInputBids.bids[key] = bid;
         return visitBuilding(p, b, [
-          operation('buildingAdmin', { building: b.id, item, side: 'buy', price: 0 }),
+          operation('buildingAdmin', { building: b.id, item, side: 'buy', enabled: false }),
         ]);
       }
       // Forget a completed reopening, including a later manual price change.
       if (bid > 0) delete state.pausedInputBids.bids[key];
       // Hysteresis avoids changing the price after every single consumed unit.
-      const remembered = state.pausedInputBids.bids[key];
+      const remembered = state.pausedInputBids.bids[key] || b.pausedPrices?.buy?.[item] || 0;
       const reopened = remembered
         ? productionBudget(w, { ...b, buy: { ...b.buy, [item]: remembered } })
         : undefined;
@@ -77,7 +81,12 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
         reopened.margin >= 0
       ) {
         return visitBuilding(p, b, [
-          operation('buildingAdmin', { building: b.id, item, side: 'buy', price: remembered }),
+          operation('buildingAdmin', {
+            building: b.id,
+            item,
+            side: 'buy',
+            price: Math.max(100, remembered),
+          }),
         ]);
       }
     }

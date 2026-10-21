@@ -46,7 +46,8 @@ test('an overstocked owner pauses paid input bids before another cash deposit an
   const plan = ownerRoutine(w, p, state);
   assert.ok(plan.some((s) => s.kind === 'operation'));
   run(w, p, plan);
-  assert.equal(b.buy.flour, 0);
+  assert.equal(b.buy.flour, undefined);
+  assert.equal(b.pausedPrices?.buy?.flour, 2100);
   assert.equal(p.cash, before);
   const persisted = JSON.parse(JSON.stringify(state));
   assert.deepEqual(ownerBidRoutine(w, p, persisted), []);
@@ -193,7 +194,8 @@ test('owner purchasing maintenance executes through the controller without AI cr
       residents.tick(0.5, now + i * 1000);
       await residents.settled();
     }
-    assert.equal(b.buy.flour, 0);
+    assert.equal(b.buy.flour, undefined);
+    assert.equal(b.pausedPrices?.buy?.flour, 2100);
     assert.equal(p.cash, before);
     assert.equal(calls, 0);
     assert.ok(store.db.prepare("SELECT 1 FROM npc_journal WHERE kind='owner-purchasing'").get());

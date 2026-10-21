@@ -26,6 +26,17 @@ operating reserve. You cannot take the stake back. The owner cannot withdraw cas
 (the stake plus its 8% return). Demolishing the shop refunds unpaid principal
 to the investors first. Sales and restocking are not automatic.
 
+### Pausing trade
+
+In **Building Admin → Set trading prices**, choose the good and direction, then
+set **Trading status** to **Not trading this item**. Save to remove that offer;
+the previous price remains available when resuming. Buying prices must be at
+least 1d. A paused offer rejects deliveries rather than accepting free goods.
+Existing zero-price buying offers become paused on upgrade; positive buying
+prices below 1d become 1d. Stock, cash and past trades are unchanged.
+Shop buttons quote the displayed unit price: if it changes before the server
+receives the trade, the transaction is rejected and the shop refreshes for review.
+
 ## Default trade prices
 
 `data/buildings.json` contains live default bids and asks. Item catalogue prices

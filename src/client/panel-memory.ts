@@ -50,7 +50,7 @@ export class PanelMemory {
         ]
       : [];
     const priceSelection =
-      input.name === 'priceDenarii' && form?.hasAttribute('data-price-editor')
+      ['priceDenarii', 'enabled'].includes(input.name) && form?.hasAttribute('data-price-editor')
         ? ['item', 'side'].map((name) => (form.elements.namedItem(name) as HTMLSelectElement).value)
         : [];
     return JSON.stringify([

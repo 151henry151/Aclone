@@ -147,6 +147,8 @@ export interface Building {
   stock: Stock;
   buy: Stock;
   sell: Stock;
+  /** Last prices for explicitly paused shop offers; absent from active market quotes. */
+  pausedPrices?: { buy?: Stock; sell?: Stock };
   capacity: number;
   employees: string[];
   wage: number;
