@@ -2,7 +2,11 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
-## Upgrade 0.82.0
+## Upgrade 0.82.1
+
+Includes the 0.82.0 business controls plus keyboard activation and trade-scroll fixes.
+
+### Business controls introduced in 0.82.0
 
 No data reset or manual migration is needed. Missing paid-job limits resolve to
 ideal staffing minus a working owner (farms: 16). Existing employees stay employed;

@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.82.1] - 2026-10-20
+
 ### Fixed
 
 - Repeat trades preserve their list position while quantity-dependent tax quotes update.

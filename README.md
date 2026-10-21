@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.82.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.82.1 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -23,7 +23,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The Taxes & rates page (World/F9 or parish directory) explains live world and town rates, with included-tax totals beside shop trades.
 
-Version 0.82.0 adds hiring controls, property unlisting and clearer business estimates, preserves chat focus, and tightens NPC conversation routing. See the [changelog](CHANGELOG.md#0820---2026-10-20).
+Version 0.82 adds hiring controls, property unlisting and clearer business estimates, preserves chat focus, and tightens NPC conversation routing. Patch 0.82.1 preserves focused-button keyboard activation and repeat-trade scrolling. See the [changelog](CHANGELOG.md#0821---2026-10-20).
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
