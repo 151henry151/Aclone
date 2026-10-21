@@ -60,6 +60,7 @@ test('cottage styles, garage paint and combat choices survive real server action
   const command = async (text: string) => {
     await page.locator('#chat-input').fill(text);
     await page.locator('#chat-input').press('Enter');
+    await page.locator('#chat-input').press('Escape');
   };
   await command(`*teleport ${id} -118 8`);
   await expect(page.locator('#target')).toContainText('Spanner & Sons');

@@ -119,6 +119,7 @@ test('world creation, owner editor, safe Lua and live terrain changes', async ({
   const identity = (await session.json()).account.id;
   await page.locator('#chat-input').fill('*teleport ' + identity + ' -8 -97');
   await page.locator('#chat-input').press('Enter');
+  await page.locator('#chat-input').press('Escape');
   await expect(page.locator('#target')).toContainText('Odd Jobs Office');
   await page.keyboard.press('e');
   await page.getByRole('button', { name: 'Work a shift · 1d' }).click();

@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Focused HUD buttons keep their normal Enter activation, including leaving a hotel room; F2 remains available to enter chat.
+
 ## [0.82.0] - 2026-10-20
 
 ### Added

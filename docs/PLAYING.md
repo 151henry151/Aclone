@@ -323,7 +323,8 @@ highest bid until closing and refund outbid bidders. See [contract rules](ECONOM
 
 Press **Enter** or **F2** to enter chat. Enter sends a message and keeps the cursor
 there; **Escape** returns to driving. Typing does not activate driving or HUD
-shortcuts. Enter still submits ordinary dialog forms.
+shortcuts. Enter still activates a focused button or submits a dialog form;
+use F2 to start chat when a HUD button has focus.
 
 An owned business keeps its stock, sale prices, purchase bids and included-tax
 breakdown on **Main**. Its quantity field previews totals; use **Stockroom** to

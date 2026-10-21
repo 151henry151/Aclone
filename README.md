@@ -95,7 +95,7 @@ The proxy must strip `/aclone` before forwarding, including WebSocket requests, 
 
 ## Start playing
 
-Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter** (sending retains focus; **Escape** returns to driving). On mobile, use the steering/throttle buttons and **Actions** menu.
+Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter** (sending retains focus; **Escape** returns to driving; focused buttons retain normal Enter activation). On mobile, use the steering/throttle buttons and **Actions** menu.
 
 1. Work a 15-second Odd Jobs shift for 1d, or the displayed meal-relief rate when eligible.
 2. Buy food and water at Harbour stores; consume them from Inventory. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.

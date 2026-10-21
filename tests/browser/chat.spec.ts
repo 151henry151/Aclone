@@ -147,9 +147,12 @@ test('chat scrollback survives updates, preserves privacy, and can jump back to 
     await page.locator('[data-do="engine"]').click();
     await expect.poll(() => w.players[pilot.account.id].engine).toBe(!engineBefore);
     await expect(page.locator('#toast')).not.toHaveClass(/show/);
+    // Enter still activates a focused HUD button; from the log it enters chat.
+    await page.keyboard.press('Enter');
+    await expect.poll(() => w.players[pilot.account.id].engine).toBe(engineBefore);
+    await chat.focus();
     await page.keyboard.press('Enter');
     await expect(input).toBeFocused();
-    expect(w.players[pilot.account.id].engine).toBe(!engineBefore);
     await input.fill('Typing with Enter focus');
     await page.keyboard.press('Enter');
     await expect(chat).toContainText('Typing with Enter focus');

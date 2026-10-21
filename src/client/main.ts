@@ -2865,8 +2865,10 @@ window.addEventListener('keydown', (e) => {
     ['PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)
   )
     return;
-  // Enter always starts chat from the game HUD, even after clicking a control.
-  // Dialog controls keep their native Enter behavior.
+  // Preserve keyboard activation of focused controls, including HUD buttons.
+  if ((e.target as HTMLElement).closest('button,a[href],summary') && [' ', 'Enter'].includes(e.key))
+    return;
+  // Enter starts chat from the scenery or chat log; F2 is always available from the HUD.
   if (
     world &&
     !panel &&
@@ -2880,8 +2882,6 @@ window.addEventListener('keydown', (e) => {
     if (!e.repeat) focusChat();
     return;
   }
-  // Let focused dialog buttons use their native activation.
-  if ((e.target as HTMLElement).closest('button') && [' ', 'Enter'].includes(e.key)) return;
   if (mobile.drawer) {
     if (e.key === 'Escape') mobile.close();
     return;
