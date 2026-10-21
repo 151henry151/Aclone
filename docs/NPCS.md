@@ -113,7 +113,7 @@ Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked 
 
 ### Household, earnings and investment reviews
 
-During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household.
+During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household. Both general property choices and queued purchases check for an existing owned cottage or foundation before acquiring another; a stale home reference or a rented room does not hide owned housing. Human property permissions are unchanged.
 
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 

@@ -1,3 +1,4 @@
+import { ownsHome } from './housing.ts';
 import { buildingDesignQuote } from '../../shared/building-designs';
 import { settlementChoices } from './civic-ambition.ts';
 import { townMeeting } from '../../shared/town-charter.ts';
@@ -284,6 +285,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     if (
       b.owner !== p.id &&
       !b.government &&
+      (b.kind !== 'home' || !ownsHome(w, p)) &&
       (!b.owner || b.forSale) &&
       p.cash >= propertyQuote(w, b).total + 20000
     )

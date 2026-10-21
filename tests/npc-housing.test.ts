@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, addPlayer, act, advance } from '../src/shared/simulation.ts';
+import { createWorld, addPlayer, act, advance, makeBuilding } from '../src/shared/simulation.ts';
 import { homecomingPlan, offlineReadiness, returnDelay } from '../src/server/npc/homecoming.ts';
-import { housingChoices } from '../src/server/npc/housing.ts';
+import { housingChoices, checkHousingPurchase } from '../src/server/npc/housing.ts';
 import { operationAction } from '../src/server/npc/player-operations.ts';
 import type { Step } from '../src/server/npc/decision.ts';
 
@@ -80,4 +80,34 @@ test('building requires observed materials and full budget; savings can bridge a
   );
   p.cash = p.bank = 0;
   assert.deepEqual(housingChoices(w, p), []);
+});
+
+test('owned foundations and cottages prevent redundant housing even with a stale home pointer', () => {
+  const { w, p } = fixture();
+  const home = makeBuilding('mine', 'home', 20, 20);
+  home.owner = p.id;
+  w.buildings.push(home);
+  p.home = 'old-hotel-room';
+  assert.deepEqual(housingChoices(w, p), []);
+  assert.throws(
+    () => checkHousingPurchase(w, p, { type: 'construct', kind: 'home' }),
+    /already own/,
+  );
+  const other = makeBuilding('another', 'home', 30, 30);
+  w.buildings.push(other);
+  assert.throws(
+    () => checkHousingPurchase(w, p, { type: 'buyBuilding', building: other.id }),
+    /already own/,
+  );
+  assert.doesNotThrow(() => checkHousingPurchase(w, p, { type: 'construct', kind: 'mill' }));
+  home.construction = { wood: 4 };
+  assert.deepEqual(housingChoices(w, p), []);
+  assert.throws(
+    () => checkHousingPurchase(w, p, { type: 'construct', kind: 'home' }),
+    /already own/,
+  );
+  home.owner = 'someone-else';
+  assert.doesNotThrow(() =>
+    checkHousingPurchase(w, p, { type: 'buyBuilding', building: other.id }),
+  );
 });

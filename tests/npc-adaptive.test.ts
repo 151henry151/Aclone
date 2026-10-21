@@ -379,3 +379,20 @@ test('parish supply plans buy from a local supplier and return to the collection
   assert.equal(p.cash - before, (order.unitPrice - 500) * order.delivered);
   assert.equal(p.x, harbour.x);
 });
+
+test('general property choices do not offer a second home, including an unfinished first home', () => {
+  const { w, p, choices } = fixture();
+  p.cash = 10_000_000;
+  const own = makeBuilding('owned-home', 'home', p.x, p.z);
+  own.owner = p.id;
+  own.construction = { wood: 4 };
+  const other = makeBuilding('available-home', 'home', p.x + 10, p.z);
+  w.buildings = [own, other];
+  assert.ok(
+    !choices().some((c) => c.plan.some((s) => s.kind === 'act' && s.action.type === 'buyBuilding')),
+  );
+  delete own.owner;
+  assert.ok(
+    choices().some((c) => c.plan.some((s) => s.kind === 'act' && s.action.type === 'buyBuilding')),
+  );
+});

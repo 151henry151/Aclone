@@ -1,3 +1,4 @@
+import { checkHousingPurchase } from './housing.ts';
 import { savingChoices } from './ambitions.ts';
 import { planQuotes, changedQuote } from './execution.ts';
 import {
@@ -446,6 +447,7 @@ export class Residents {
     try {
       const p = w.players[r.state.playerId],
         stats = this.actionStats(w, p, a);
+      checkHousingPurchase(w, p, a);
       checkCommitmentPrice(w, r.state, a);
       if (a.type === 'job' || a.type === 'work') {
         const b = w.buildings.find((b) => b.id === a.building);

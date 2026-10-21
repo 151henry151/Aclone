@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World, Player } from '../../shared/types.ts';
+import type { World, Player, Action } from '../../shared/types.ts';
 import { worldBuildings } from '../../shared/world-catalogue.ts';
 import { appearance } from '../../shared/appearance.ts';
 import { propertyQuote } from '../../shared/property.ts';
-import { household, householdBudget } from './household.ts';
+import { householdBudget } from './household.ts';
 import { constructionBudget } from './construction-projects.ts';
 import { pickBuildSite } from './chains.ts';
 import { visitBuilding } from './care.ts';
@@ -11,14 +11,26 @@ import { travelPrep } from './travel.ts';
 import { operation } from './player-operations.ts';
 import type { FarmerChoice } from './farmer.ts';
 
+/** A remembered room or missing home pointer must not hide an owned cottage/foundation. */
+export function ownsHome(w: World, p: Player) {
+  return w.buildings.some((b) => b.kind === 'home' && b.owner === p.id);
+}
+
+/** Revalidate queued AI plans; this is not a property restriction on human players. */
+export function checkHousingPurchase(w: World, p: Player, a: Action) {
+  const acquiringHome =
+    (a.type === 'construct' && a.kind === 'home') ||
+    (a.type === 'buyBuilding' && w.buildings.some((b) => b.id === a.building && b.kind === 'home'));
+  if (acquiringHome && ownsHome(w, p))
+    throw Error(
+      'I already own a cottage or its foundation. Finish and stock that home; use surplus capital for a business instead.',
+    );
+}
+
 /** Permanent shelter is a costed project, including completion and pantry money.
  * Use only known suppliers. Existing foundations must be finished first. */
 export function housingChoices(w: World, p: Player, away = 86400): FarmerChoice[] {
-  if (
-    household(w, p)?.kind === 'home' ||
-    w.buildings.some((b) => b.owner === p.id && b.construction)
-  )
-    return [];
+  if (ownsHome(w, p) || w.buildings.some((b) => b.owner === p.id && b.construction)) return [];
   const living = householdBudget(w, p, Math.max(86400, away + 900)).reserve;
   const house = w.buildings
     .filter((b) => b.kind === 'home' && !b.construction && !b.government && (!b.owner || b.forSale))
