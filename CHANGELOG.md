@@ -6,7 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Public Taxes & rates page in the World menu and parish directory, plus quantity-aware tax breakdowns beside shop trades and tax guidance in business administration.
+
 ### Fixed
+
+- NPC chat receives current world and town tax facts and explicitly distinguishes included sales tax from extra charges.
 
 - Chat wheel scrolling uses small smooth steps instead of page jumps, while Page Up/Down retain overlapping lines. Reduced-motion preferences and reading positions are respected.
 

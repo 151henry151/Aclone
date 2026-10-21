@@ -26,6 +26,24 @@ operating reserve. You cannot take the stake back. The owner cannot withdraw cas
 (the stake plus its 8% return). Demolishing the shop refunds unpaid principal
 to the investors first. Sales and restocking are not automatic.
 
+### Taxes and quoted prices
+
+Buying from a business costs exactly its posted price times quantity. World and
+town sales taxes are **included**, withheld from business proceeds rather than
+added to the buyer's bill. At 5% world plus 2% town sales tax, a 100d purchase
+costs the buyer 100d and leaves the business 93d before other costs. Selling
+carried goods to a business pays its full posted bid, without another sales-tax
+deduction. Each tax rounds down on the transaction total, in hundredths of a denarius.
+
+Factory wages deduct world and town wage taxes; farm harvest wages currently
+deduct world wage tax only. Town construction tax is added to base construction
+cost and included in the build preview. Rates depend on the business/site location.
+
+Open **World/F9 → Taxes & rates** or **Parish directory → Taxes & rates**
+from anywhere to see current world/local rates and scheduled town changes. Shop
+rows show totals and included tax for your chosen quantity; Building Admin explains
+how tax affects your sale proceeds. These displays do not change any tax rates.
+
 ### Pausing trade
 
 In **Building Admin → Set trading prices**, choose the good and direction, then

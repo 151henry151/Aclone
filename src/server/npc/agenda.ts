@@ -161,6 +161,7 @@ export function conversationView(
     'recentWages',
     'currentWork',
     'gameGuide',
+    'taxFacts',
     'self',
     'nearbyBuildings',
     'directory',

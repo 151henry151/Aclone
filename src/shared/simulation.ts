@@ -1,3 +1,4 @@
+import { salesReceipt } from './taxes.ts';
 import { MIN_BUY_PRICE, setTradingOffer } from './trading.ts';
 import { maintenanceAction } from './maintenance.ts';
 import {
@@ -512,11 +513,7 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (buying) {
         const town = taxTown(w, b.x, b.z);
-        const worldTax = Math.floor(total * clamp(w.settings.salesTax, 0, 1)),
-          townTax = town
-            ? Math.min(total - worldTax, Math.floor(total * clamp(town.salesTax, 0, 1)))
-            : 0,
-          tax = worldTax + townTax;
+        const { worldTax, townTax, tax } = salesReceipt(w, b, total);
         const imported = emergencyImport(w, b, item) ? Math.max(0, n - (b.stock[item] ?? 0)) : 0;
         const importCost = imported ? Math.floor((((total - tax) * imported) / n) * 0.8) : 0;
         if (imported) stockAdd(b.stock, item, imported);

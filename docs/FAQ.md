@@ -110,3 +110,10 @@ The browser downloads textures, uploads them to the graphics card and prepares d
 ## Why is my view wobbling after drinking?
 
 Beer and wine accumulate intoxication: steering weaves and the scenery distorts, blurs and doubles. Water relieves thirst but only time clears alcohol, including while offline. Wait rather than drive if badly affected. Choose reduced/off visuals in **F9 → Options & pilot key → Drunk visual effects**; steering impairment still applies. Stock homes with water or other nonalcoholic drinks.
+
+## Is sales tax added to a shop's posted price?
+
+No. You pay exactly the posted price times quantity. World and town sales taxes
+come out of the business's proceeds. Delivering goods to a business pays its
+full posted bid. The **World/F9 → Taxes & rates** page lists live public
+rates and scheduled changes, and shop rows show quantity-aware totals.

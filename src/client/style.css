@@ -1182,6 +1182,7 @@ kbd {
 }
 .trade-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   padding: 10px 0;
@@ -2400,4 +2401,12 @@ button span {
     flex: 1;
     min-height: 44px;
   }
+}
+
+.trade-row .trade-tax-quote {
+  flex-basis: 100%;
+  font: 10px/1.5 sans-serif;
+  display: block;
+  line-height: 1.5;
+  color: var(--muted);
 }

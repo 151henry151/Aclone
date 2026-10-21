@@ -49,8 +49,11 @@ test('plinth panel shows the town, its rules and residency actions', () => {
   has(
     html,
     /Town of Puddlewick/,
-    /Construction tax 2%/,
-    /Sales tax 10%/,
+    /Local rates: construction 2%/,
+    /sales 10%/,
+    /World sales and wage taxes also apply/,
+    /Sales tax is included in posted prices/,
+    /data-do="taxes"/,
     /Treasury 1s 23\.45d/,
     /Elected mayor/,
     /data-id="join"|value="join"/,

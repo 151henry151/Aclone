@@ -1,3 +1,4 @@
+import { taxesPanel, taxSummary, tradeQuoteText } from './tax-info';
 import { contractPanel } from './property-contracts';
 import { coursesPanel } from './courses';
 import { firstSteps } from '../shared/first-steps';
@@ -1167,7 +1168,38 @@ function refreshBusinessDetails() {
 }
 let questSignature = '';
 let socialSignature = '';
+function refreshTaxInfo() {
+  if (!world || !me) return;
+  const overview = app.querySelector<HTMLElement>('[data-tax-overview]');
+  if (overview) {
+    const html = taxesPanel(world, me);
+    if (overview.dataset.rendered !== html) {
+      overview.innerHTML = html;
+      overview.dataset.rendered = html;
+    }
+  }
+  const b = world.buildings.find((b) => b.id === selected);
+  if (!b) return;
+  for (const note of app.querySelectorAll<HTMLElement>('[data-shop-tax]')) {
+    const summary = taxSummary(world, b);
+    if (note.textContent !== summary) note.textContent = summary;
+  }
+  const quantity = Number((app.querySelector('#trade-quantity') as HTMLInputElement)?.value ?? 1);
+  for (const quote of app.querySelectorAll<HTMLElement>('[data-trade-quote]')) {
+    // Use the price actually attached to the visible button, not a fresh unseen quote.
+    const text = tradeQuoteText(
+      world,
+      b,
+      quote.dataset.item!,
+      quote.dataset.side as 'buy' | 'sell',
+      Number(quote.dataset.price),
+      quantity,
+    );
+    if (quote.textContent !== text) quote.textContent = text;
+  }
+}
 function refreshTradingPrices() {
+  refreshTaxInfo();
   if (panel === 'social' && world && me) {
     const key = JSON.stringify([
       me.mail,
@@ -1310,6 +1342,7 @@ app.addEventListener('change', (event) => {
 app.addEventListener('input', (event) => {
   if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
   const input = event.target as HTMLInputElement;
+  if (input.id === 'trade-quantity') refreshTaxInfo();
   if (input.id === 'caretaker-query' && caretakerSnapshot && world) {
     caretakerUi = { ...caretakerUi, query: input.value };
     const body = document.getElementById('caretaker-body');
@@ -1602,10 +1635,15 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'taxes') {
+    modal('Taxes & rates', '<div data-tax-overview></div>');
+    refreshTaxInfo();
+    return;
+  }
   if (panel === 'directory') {
     modal(
       'Parish directory.',
-      `<p>Find a building on the map, drive up, and press E. Transactions require you to be within 18 metres.</p><div class="directory">${world.buildings.map((b) => `<button data-do="building" data-id="${b.id}"><span><b>${esc(b.name)}</b><small>${esc(b.kind)} · ${b.owner ? (b.government ? 'Public service' : 'Player owned') : 'For sale ' + money(b.price)}</small></span><span>${Math.round(distance(me!, b))} m ↗</span></button>`).join('')}</div>`,
+      `${button('Taxes & rates', 'taxes')}<p>Find a building on the map, drive up, and press E. Transactions require you to be within 18 metres.</p><div class="directory">${world.buildings.map((b) => `<button data-do="building" data-id="${b.id}"><span><b>${esc(b.name)}</b><small>${esc(b.kind)} · ${b.owner ? (b.government ? 'Public service' : 'Player owned') : 'For sale ' + money(b.price)}</small></span><span>${Math.round(distance(me!, b))} m ↗</span></button>`).join('')}</div>`,
     );
     return;
   }
@@ -1684,7 +1722,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -1766,7 +1804,9 @@ function buildingWindow(b: Building) {
       }</p>`;
     }
     if (!selfOwned && (Object.keys(b.sell).length || Object.keys(b.buy).length))
-      html += `<div class="trade-columns">${(['sell', 'buy'] as const)
+      html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<div class="trade-columns">${(
+        ['sell', 'buy'] as const
+      )
         .map(
           (side) =>
             `<section><h3>${side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${Object.entries(
@@ -1774,7 +1814,7 @@ function buildingWindow(b: Building) {
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button><small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
               )
               .join('')}</div></section>`,
         )
@@ -1983,7 +2023,7 @@ function buildingWindow(b: Building) {
             ['deposit', 'Invest cash'],
             ['withdraw', 'Collect earnings'],
           ],
-        )}<button>Transfer cash</button></form><form data-action="buildingAdmin" data-business-details="${esc(b.id)}">${hidden('building', b.id)}<h3>Business details</h3><p data-saved-wage></p>${field('Building name', 'name', b.name, 'text', 'maxlength="48"')}${field('Wage in denarii', 'wageDenarii', b.wage / 100, 'number', 'min="0" max="10000" step="0.01" required')}<button>Save details</button></form><form data-action="buildingAdmin" data-price-editor="${esc(b.id)}">${hidden('building', b.id)}<h3>Set trading prices</h3>${select(
+        )}<button>Transfer cash</button></form><form data-action="buildingAdmin" data-business-details="${esc(b.id)}">${hidden('building', b.id)}<h3>Business details</h3><p data-saved-wage></p>${field('Building name', 'name', b.name, 'text', 'maxlength="48"')}${field('Wage in denarii', 'wageDenarii', b.wage / 100, 'number', 'min="0" max="10000" step="0.01" required')}<button>Save details</button></form><form data-action="buildingAdmin" data-price-editor="${esc(b.id)}">${hidden('building', b.id)}<h3>Set trading prices</h3><p class="note" data-shop-tax></p>${select(
           'item',
           Object.entries(items).map(([id, d]) => [id, d.name]),
           'Item',
@@ -2185,6 +2225,7 @@ app.addEventListener('click', async (e) => {
       'procurement',
       'mobile-actions',
       'directory',
+      'taxes',
       'map',
       'npc',
       'players',

@@ -215,7 +215,7 @@ export function townPanel(w: World, me: Player, b: Pick<Building, 'id'>) {
       .map(([, l]) => l.toLowerCase())
       .join(', ') || 'nothing';
   let html = `<h3>Town of ${esc(town.name)}</h3><p>${governanceLabels[town.governance]}${town.governance === 'direct' ? '' : ` · Mayor: ${town.mayor ? esc(name(w, town.mayor)) : 'none'}`} · Residents: ${town.residents.length} · Border ${Math.round(town.radius)}m</p>`;
-  html += `<p>Construction tax ${pct(town.tax)} · Sales tax ${pct(town.salesTax)} · Wage tax ${pct(town.wageTax)} · Treasury ${money(town.treasury)}</p>`;
+  html += `<p>Local rates: construction ${pct(town.tax)} · sales ${pct(town.salesTax)} · factory wages ${pct(town.wageTax)} · Treasury ${money(town.treasury)}</p><p class="note">World sales and wage taxes also apply. Sales tax is included in posted prices.</p><button data-do="taxes">Taxes &amp; rates</button>`;
   for (const t of town.pendingTaxes)
     html += `<p class="note">Scheduled: ${esc(ruleLabels[t.rule])} to ${pct(t.value)} in ${days(w, t.at)}.</p>`;
   html += `<p class="note">Zoning · north: ${zone(town.zoning.north)}; south: ${zone(town.zoning.south)}. Residents may ${perms('residents')}; guests may ${perms('guests')}.</p>`;

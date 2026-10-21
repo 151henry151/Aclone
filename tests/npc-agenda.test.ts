@@ -470,3 +470,8 @@ test('conversation gets verified life changes without private errand receipts', 
   assert.equal(view.businessResults[0].batches, 2);
   assert.ok(!JSON.stringify(view).includes('PRIVATE_'));
 });
+
+test('public tax facts reach the conversation provider', () => {
+  const facts = { atCurrentLocation: { sales: 0.07 }, shopPurchases: 'Included in posted price' };
+  assert.deepEqual(conversationView({ taxFacts: facts }, state(), 'human', false).taxFacts, facts);
+});
