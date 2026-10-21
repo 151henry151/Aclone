@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.82.0
+
+No data reset or manual migration is needed. Missing paid-job limits resolve to
+ideal staffing minus a working owner (farms: 16). Existing employees stay employed;
+only explicit dismissal removes them. NPC owners may choose smaller crews using
+estimated hourly margins. Human-owned prices, wages and rosters are preserved.
+Pushing alone does not restart nogits or publish its Discord notes; deployment
+requires separate authorization.
+
 ## Release procedure
 
 The reserved starter world named Puddlewick (economy template, original public

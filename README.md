@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.81.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.82.0 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -23,7 +23,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The Taxes & rates page (World/F9 or parish directory) explains live world and town rates, with included-tax totals beside shop trades.
 
-Version 0.81.0 also adds explicit trading pauses, protects against changed trade prices, prevents NPCs acquiring duplicate homes, and smooths chat scrolling. See the [changelog](CHANGELOG.md#0810---2026-10-20).
+Version 0.82.0 adds hiring controls, property unlisting and clearer business estimates, preserves chat focus, and tightens NPC conversation routing. See the [changelog](CHANGELOG.md#0820---2026-10-20).
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
@@ -39,7 +39,7 @@ Roads offer faster tractor travel than fields, with a modest advantage in dry we
 
 Grow hay, expand farms to sixteen plots, and run a high-capacity hay barn. Harvest crops before winter kills them; stored produce survives. Cattle and sheep eat hay or feed from their stockrooms; see [farming](docs/PLAYING.md#farming) and [livestock](docs/PLAYING.md#livestock-and-nutrition).
 
-Automatic producers have ideal crew sizes: understaffing and overcrowding both reduce production speed. Building panels show active versus ideal staff; wages are paid when batches complete.
+Automatic producers have ideal crew sizes: understaffing and overcrowding both reduce production speed. Owners can set paid-job limits, dismiss workers and compare potential margins per batch and per hour, separately from actual cash flow. Wages are paid when batches complete. Shop prices, stock and included taxes remain visible to owners; property listings can be withdrawn.
 
 Bank and business cash transfers support up to 100,000d per action, subject to available funds and protected investment claims. Goods quantities and cargo capacity are separate limits.
 
@@ -95,7 +95,7 @@ The proxy must strip `/aclone` before forwarding, including WebSocket requests, 
 
 ## Start playing
 
-Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter**. On mobile, use the steering/throttle buttons and **Actions** menu.
+Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter** (sending retains focus; **Escape** returns to driving). On mobile, use the steering/throttle buttons and **Actions** menu.
 
 1. Work a 15-second Odd Jobs shift for 1d, or the displayed meal-relief rate when eligible.
 2. Buy food and water at Harbour stores; consume them from Inventory. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.

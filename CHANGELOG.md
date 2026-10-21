@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.82.0] - 2026-10-20
+
+### Added
+
+- Owner staffing controls: automatic or custom paid-job limits, individual dismissals and a one-hour reapplication cooldown. Existing rosters are preserved on upgrade.
+- Business margin comparisons per batch and per real hour, including taxes, input replacement costs and unpaid owner work. Actual cash flow remains separately labelled; farms and livestock have appropriate caveats.
+- A Remove from sale control for owned properties that preserves their asking price, stock and investment.
+
+### Fixed
+
+- Enter opens chat from the game HUD and keeps focus after sending; Escape returns to driving, while dialog forms keep normal Enter behavior.
+- Owners can see shop stock, posted prices and quantity-aware included-tax estimates on Main without self-trading.
+- NPC owners manage staffing using hourly contribution rather than batch margin alone, and job seekers respect vacancies and dismissal cooldowns.
+- NPC financial explanations use explicit ownership, denarii units and estimated-versus-recorded distinctions, with shorter complete replies and no access to another owner's private accounts.
+- Ordinary sentences such as “all that disappears” no longer summon the NPC group. Natural requests such as “your input isn't required right now” silence replies locally without another chat-model call.
+
 ## [0.81.0] - 2026-10-20
 
 ### Added

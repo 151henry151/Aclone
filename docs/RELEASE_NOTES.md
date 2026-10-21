@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.82.0 — Business management and calmer chat
+
+Owners can withdraw property listings, set paid-job limits and dismiss workers.
+Production estimates compare batch and hourly margins separately from recorded
+cash flow. NPC owners use the same staffing calculations, and financial chat uses
+explicit ownership and units. Owners retain stock/price/tax information on Main.
+Enter starts chat and keeps focus after sending; natural dismissals cost no model
+call, and incidental “all…” sentences no longer invite a group reply.
+
+No reset is required. New hiring defaults apply when no explicit limit exists;
+existing rosters remain until dismissed. Human-owned prices and wages are unchanged.
+
 ## 0.81.0 — Safer trading and visible taxes
 
 Pause each buying or selling offer without losing its price. Trades reject stale
