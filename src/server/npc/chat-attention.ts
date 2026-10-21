@@ -60,7 +60,11 @@ export function isChatDismissal(text: string) {
       t,
     ) ||
     /\b(?:dont|do not) (?:reply|respond|interrupt)\b/.test(t) ||
-    /\b(?:we|i) (?:dont|do not) need (?:any |your )?help (?:right )?now\b/.test(t)
+    /\b(?:we|i) (?:dont|do not) need (?:any |your )?(?:help|input|advice) (?:right )?now\b/.test(
+      t,
+    ) ||
+    /\byour (?:input|help|advice) (?:isnt|is not) (?:required|needed|wanted)\b/.test(t) ||
+    /\bno need (?:for you )?to (?:reply|respond|comment)\b/.test(t)
   );
 }
 

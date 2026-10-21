@@ -54,6 +54,9 @@ test('silence requests do not confuse stopping work or continuing a conversation
     'lol thanks mabel enough for now shh',
     'Please be quiet',
     'Do not reply',
+    'mabel okay thank you your input isnt required right now',
+    'Mabel, your help isn’t needed right now',
+    'No need to respond',
   ])
     assert.equal(isChatDismissal(text), true, text);
   for (const text of [
@@ -362,4 +365,21 @@ test('an unnamed stop still dismisses the last allowed follow-up while it is in 
   assert.equal(f.replies().length, 2);
   assert.equal(f.r.memory.load('mabel')!.helpQuestion, undefined);
   assert.equal(f.calls, 3);
+});
+
+test('ordinary all-statements do not invite group replies; natural dismissal stays local', async (t) => {
+  const f = fixture(t);
+  for (const text of [
+    'all that disappears when you own a business',
+    'all these farms have max stocks',
+    'all my prices are lower now',
+    'i find myself reading the tool tip for stock info',
+  ])
+    await f.send(text);
+  assert.equal(f.calls, 0);
+  await f.send('Hey everyone, hello!');
+  assert.equal(f.calls, 1, 'explicit group greetings still work');
+  await f.send('mabel okay thank you your input isnt required right now');
+  await f.send('What about your farm?');
+  assert.equal(f.calls, 1, 'dismiss without an acknowledgement call or follow-up');
 });

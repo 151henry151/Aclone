@@ -8,7 +8,7 @@ import type { NpcConfig } from './config.ts';
 export type GroupTopic = 'employment' | 'trading' | 'social';
 /** Explicit public group salutations, not incidental references to other people. */
 export function isGroupAddress(text: string) {
-  return /^\s*(?:@(?:all|everyone|npcs)\b|(?:(?:hey|hi|hello|okay|ok)\s*[,!]?\s+)?(?:everyone\b|everybody\b|folks\b|guys\b|neighbou?rs\b|all\b|anyone\b|anybody\b))/i.test(
+  return /^\s*(?:@(?:all|everyone|npcs)\b|(?:(?:hey|hi|hello|okay|ok)\s*[,!]?\s+)?(?:everyone\b|everybody\b|folks\b|guys\b|neighbou?rs\b|all(?=\s*[,!:?]|\s+of\s+you\b|\s*$)|anyone\b|anybody\b))/i.test(
     text,
   );
 }

@@ -467,6 +467,11 @@ not evidence of Jev's decision quality or long-term prosperity. See the
 [fidelity results](FIDELITY_PLAN.md#progress-log) before interpreting cash or asset
 growth as success; newly acquired businesses and unsold inventory are not profit.
 
+Public attention recognizes direct names and explicit group greetings, not ordinary
+sentences starting with “all” (such as “all that disappears”). Requests such as
+“your input isn't required right now” close attention locally without a chat-model
+call. Public follow-ups remain bounded; address a resident again to resume.
+
 Business owners assess paid staffing by potential contribution per real hour,
 including unpaid owner operation. They can close vacancies and dismiss excess
 workers through normal gameplay. Financial replies use a scoped ownership report,
