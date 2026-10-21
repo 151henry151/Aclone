@@ -77,7 +77,7 @@ test('lodging charges once, isolates guest stores, survives JSON and expires saf
   assert.equal(w.players.p.atHome, false);
   assert.ok(w.buildings.at(-1)!.lodging!.guests.p, 'unconsumed supplies survive checkout');
 });
-test('snow accumulation and thaw are chunk independent and reduce road speeds', () => {
+test('snow accumulation and thaw are chunk independent and leave roads only wet', () => {
   const a = createWorld('snow', 'Snow', 'o'),
     b = structuredClone(a);
   a.time = b.time = (350 - 59) * 600;
@@ -86,7 +86,7 @@ test('snow accumulation and thaw are chunk independent and reduce road speeds', 
   assert.ok(Math.abs(a.climate!.snow - b.climate!.snow) < 1e-8);
   a.climate!.snow = 1;
   a.climate!.wetness = 1;
-  assert.ok(roadConditions(a).speed < 0.8);
+  assert.equal(roadConditions(a).speed, 0.85);
   const p = addPlayer(a, 'p', 'Snowdriver');
   a.buildings = [];
   p.x = 50;
@@ -137,7 +137,7 @@ test('durable saves retain snow, guest provisions and depleted gathering grounds
     const b = makeBuilding('inn', 'hotel', 0, 0);
     w.buildings.push(b);
     b.lodging = { open: true, rate: 600, guests: { p: { until: 3600, stock: { bread: 4 } } } };
-    w.climate = { snow: 0.8, wetness: 0.2 };
+    w.climate = { snow: 1, wetness: 0.2, snowDepth: 0.8, winterBase: 0.04 };
     w.resources = { 'logs-1': { amount: 3, updated: 60 } };
     s.saveWorld(w);
     const loaded = s.loadWorlds()[0].world;

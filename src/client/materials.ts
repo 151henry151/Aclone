@@ -197,6 +197,7 @@ function surfaceTexture(w: World, region: GroundRegion) {
   return canvasTexture(canvas);
 }
 export const snowCover = { value: 0 };
+export const snowDepthVisual = { value: 0 };
 export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
   const custom = (kind: 'grass' | 'gravel' | 'soil' | 'sand', fallback: string) => {
     const a = w.assets.find((a) => a.id === w.creator?.terrainTextures?.[kind]);
@@ -229,6 +230,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
         : new T.Color().setRGB(1.12, 1.02, 0.72),
     };
     shader.uniforms.snowCover = snowCover;
+    shader.uniforms.snowDepthVisual = snowDepthVisual;
     shader.uniforms.groundNoise = { value: noise };
     shader.uniforms.meadow = { value: meadow };
     shader.uniforms.gravel = { value: gravel };
@@ -245,7 +247,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     );
     shader.fragmentShader =
       `
-      uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
+      uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform float snowDepthVisual; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       uniform vec2 maskOrigin; uniform float maskSize;
       varying vec3 groundPosition;
       uniform sampler2D groundNoise;
@@ -269,11 +271,17 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       painted=mix(painted,texture2D(soilMap,p/6.).rgb*soilTint,brush.g);
       painted=mix(painted,texture2D(sandMap,p/6.).rgb*sandTint,brush.b);
       vec3 base=mix(mix(turf,grit,max(road,beach)),painted,brush.a);
-      diffuseColor.rgb*=mix(base,vec3(.85,.91,.94),snowCover*(1.-road*.25));
+      // Road surfaces shed snow; soft snowy verges remain visible outside the lane.
+      // Shallow cover is broken by grass, deeper cover smooths into broad drifts.
+      float depth=clamp(snowDepthVisual/.5,0.,1.);
+      float cover=clamp(snowCover,0.,1.)*(1.-road);
+      vec3 snow=vec3(.85,.91,.94)*mix(.87+noise(p*2.)*.13,.94+noise(p*.12)*.06,depth);
+      snow*=1.-(1.-depth)*.10*(1.-noise(p*.8));
+      diffuseColor.rgb*=mix(base,snow,cover);
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v5';
+  mat.customProgramCacheKey = () => 'countryside-ground-v6';
   return mat;
 }
 

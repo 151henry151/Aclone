@@ -18,8 +18,8 @@ test('seasons and deterministic weather span winter snow and warmer rain', () =>
   assert.equal(weatherAt('t', 180).season, 'Summer');
   assert.equal(weatherAt('t', 280).season, 'Autumn');
   assert.deepEqual(weatherAt('t', 180), weatherAt('t', 180));
-  assert.ok(weatherAt('t', 0).snowCover > 0.5);
-  assert.equal(weatherAt('t', 180).snowCover, 0);
+  // Weather never invents ground cover from the season alone.
+  assert.equal('snowCover' in weatherAt('t', 0), false);
   const year = Array.from({ length: 365 }, (_, day) => weatherAt('t', day));
   assert.ok(year.some((d) => d.precipitation === 'snow'));
   assert.ok(year.some((d) => d.precipitation === 'rain'));

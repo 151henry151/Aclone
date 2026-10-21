@@ -80,7 +80,7 @@ import { worldResources, gatheringStatus } from '../shared/resources';
 import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, routeQuote, stationPrice, spaceGoods } from '../shared/galaxy';
-import { calendar, worldWeather } from '../shared/environment';
+import { calendar, worldWeather, snowDescription } from '../shared/environment';
 import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
 import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
@@ -622,14 +622,20 @@ function updateHud() {
     ? world.name
     : world.name + ' · ' + townLocation(world, me);
   const days = Math.floor(world.time / 600),
-    hours = Math.floor(world.settings.time / 3600);
+    hours = Math.floor(world.settings.time / 3600),
+    weather = worldWeather(world, calendar(world).absoluteDay),
+    snow = snowDescription(world.climate),
+    weatherName =
+      weather.precipitation === 'clear' && weather.clouds >= 0.6
+        ? 'overcast'
+        : weather.precipitation;
   $('clock').textContent =
-    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${worldWeather(world, calendar(world).absoluteDay).precipitation} · ${worldWeather(world, calendar(world).absoluteDay).storm ? 'STORM · ' : ''}${(world.climate?.snow ?? 0) > 0.05 ? 'Snow on roads · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
+    `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · Day ${calendar(world).dayOfYear + 1}, Year ${calendar(world).year} · ${weatherName} · ${weather.storm ? 'STORM · ' : ''}${snow ? snow + ' · ' : (world.climate?.wetness ?? 0) > 0.2 ? 'Wet roads · ' : ''}${world.template}`;
   $('mobile-calendar').textContent = $('clock').textContent;
   if (mobile.active) {
     $('clock').title = $('clock').textContent ?? '';
     $('clock').textContent =
-      `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · ${worldWeather(world, calendar(world).absoluteDay).precipitation}${worldWeather(world, calendar(world).absoluteDay).storm ? ' storm' : ''}`;
+      `${String(hours).padStart(2, '0')}:${String(Math.floor(world.settings.time / 60) % 60).padStart(2, '0')} · ${calendar(world).season} · ${weatherName}${weather.storm ? ' storm' : ''}${snow ? ' · ' + snow : ''}`;
   }
   $('pilot-name').textContent = me.name;
   $('age').textContent = 'Age ' + Math.floor(me.age);

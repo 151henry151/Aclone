@@ -44,7 +44,12 @@ limits, combat, sea level and the decorative day clock. Estate rules choose whet
 remains independent of the decorative clock. In **Layout**, switch generated
 vegetation and roads/streetlights on or off, or choose natural weather, clear
 skies, rain, snow or a storm. Weather overrides affect crops, accumulated snow
-and traction as well as visuals; old snow still takes time to melt.
+and traction as well as visuals. Snow adds
+12 cm per game day and snowstorm adds 48 cm; leaving either override enabled
+keeps accumulating snow. Clear skies allow daytime thaw (12 cm per sunny day),
+while rain/overcast skies and night do not. Winter retains its first 4 cm until
+spring. A frozen night clock prevents thaw; a frozen sunny clock supplies
+continuous sunlight. Roads stay exposed at any depth.
 
 ## Make a tree, vehicle or building
 

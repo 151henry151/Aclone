@@ -13,15 +13,22 @@ import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorModel, animateCreatorModels } from './creator-model';
 import { GameAudio } from './audio';
-import { streetLights } from '../shared/town';
+import { streetLights, townRoads, roadDistance } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
 import { combatBases } from '../shared/combat';
-import { calendar, worldWeather, sunAt, lightningAt, DAY_SECONDS } from '../shared/environment';
+import {
+  calendar,
+  worldWeather,
+  sunAt,
+  lightningAt,
+  DAY_SECONDS,
+  snowDepth,
+} from '../shared/environment';
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind } from './ground-tracks';
 import { chaseOffset, lookPitchFromDrag } from './camera-look';
-import { snowCover, autumnTint, seasonalMaterial } from './materials';
+import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { freezeScenery } from './static-scene';
 import { countryside } from './scenery';
@@ -1188,6 +1195,7 @@ export class GameScene {
           (id) => this.meshes.get(id)?.position,
         );
         const kind = trackKind(w.climate ?? {});
+        const roads = townRoads(w);
         for (const [id, mesh] of this.meshes) {
           const q = w.players[id];
           if (!q || q.vehicle !== 0 || q.atHome) continue;
@@ -1196,7 +1204,9 @@ export class GameScene {
             mesh.position.x,
             mesh.position.z,
             mesh.rotation.y,
-            kind,
+            kind === 'snow' && roadDistance(roads, mesh.position.x, mesh.position.z) < 1
+              ? undefined
+              : kind,
             Math.abs(q.speed) > 0.6,
           );
         }
@@ -1243,6 +1253,7 @@ export class GameScene {
       const drift = (w.time + skyOffset) * 0.001 * climate.wind;
       const night = nightIllumination(astronomy, climate.clouds, drift);
       snowCover.value = w.climate?.snow ?? 0;
+      snowDepthVisual.value = snowDepth(w.climate);
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =
           1 - (w.climate?.wetness ?? 0) * 0.45;

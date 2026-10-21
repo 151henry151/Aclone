@@ -2,9 +2,9 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
-## Upgrade 0.82.1
+## Upgrade 0.83.0
 
-Includes the 0.82.0 business controls plus keyboard activation and trade-scroll fixes.
+Snow depth and the protected winter base are persisted with climate state. Existing saves convert their old snow coverage to a thin layer (at most 4 cm); they do not gain deep drifts. No world reset or manual migration is needed. Roads stay exposed, and players and NPCs share depth-dependent off-road handling. Weather and sunny-day thaw remain consistent through save/reload and offline catch-up.
 
 ### Business controls introduced in 0.82.0
 

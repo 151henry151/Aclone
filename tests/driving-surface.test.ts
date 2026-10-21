@@ -15,7 +15,7 @@ function setup() {
   w.climate = { snow: 0, wetness: 0 };
   return w;
 }
-test('road advantage grows from dry ground to mud to snow without boosting road speeds', () => {
+test('roads stay clear while snow slows off-road travel more than mud', () => {
   const w = setup();
   const ratios: number[] = [];
   for (const climate of [
@@ -31,10 +31,19 @@ test('road advantage grows from dry ground to mud to snow without boosting road 
     assert.ok(field.speed > 0 && field.speed < road.speed);
     ratios.push(field.speed / road.speed);
   }
-  assert.deepEqual(
-    ratios.map((n) => Math.round(n * 100)),
-    [90, 80, 60, 50],
-  );
+  assert.ok(ratios[0] > ratios[1] && ratios[1] > ratios[2]);
+  assert.ok(Math.abs(ratios[2] - ratios[3]) < 0.05);
+  w.climate = { snow: 1, wetness: 1, snowDepth: 0.04 };
+  const base = drivingSurface(w, 20, 0).speed;
+  assert.ok(base > 0.33 && base < 0.68, 'base snow is faster than old snow but slower than mud');
+  const depths = [0.04, 0.16, 0.4, 1, 2, 5];
+  const speeds = depths.map((depth) => {
+    w.climate!.snowDepth = depth;
+    assert.equal(drivingSurface(w, 0, 0).speed, 0.85, 'road does not inherit drift depth');
+    return drivingSurface(w, 20, 0).speed;
+  });
+  for (let i = 1; i < speeds.length; i++) assert.ok(speeds[i] < speeds[i - 1]);
+  assert.ok(speeds.at(-1)! >= 0.06 && speeds.at(-1)! < 0.08);
 });
 test('road edges blend smoothly and road changes take effect immediately', () => {
   const w = setup();

@@ -75,7 +75,7 @@ export function cropStatus(w: World, b: Building, index: number) {
     frost = 0;
   const first = calendar({ time: p.planted }).absoluteDay;
   for (let day = 0; day < c.days; day++) {
-    const v = worldWeather(w, first + day);
+    const v = worldWeather(w, first + day, 0.5);
     rain += v.precipitation === 'rain' ? 1 : 0;
     frost += v.temperature < 0 ? 1 : 0;
   }

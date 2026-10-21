@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.83.0] - 2026-10-21
+
+### Added
+
+- Persistent snow depth with gradual, cumulative snowfall, varied storm strengths and lengths, and randomly milder or snowier winters. The HUD shows depth and warns of deep snow.
+
+### Changed
+
+- Extra snow melts only in sunny daylight: roughly 12 cm per fully sunny game day. The first 4 cm of winter snowfall remain until spring; changing seasons alone never adds or removes snow.
+- Roads remain exposed and usable in snow. Ordinary off-road snow is easier to cross than before; increasing depth slows tractors progressively to a crawl. Players and NPCs use the same handling.
+
+### Fixed
+
+- Snow accumulation, melting and wet-ground drying agree between live play, saved games and offline catch-up, including custom or frozen sky clocks. Existing snow coverage upgrades to a thin layer without inventing deep drifts.
+
 ## [0.82.1] - 2026-10-20
 
 ### Fixed

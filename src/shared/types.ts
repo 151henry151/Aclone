@@ -330,7 +330,15 @@ export interface World {
   ball: { x: number; z: number; vx: number; vz: number };
   scores: number[];
   round: number;
-  climate?: { snow: number; wetness: number };
+  climate?: {
+    /** Surface coverage (0–1), retained for older clients and material shaders. */
+    snow: number;
+    wetness: number;
+    /** Settled snow depth in metres; undefined only on older saves. */
+    snowDepth?: number;
+    /** First 4 cm of winter snowfall, protected until spring. */
+    winterBase?: number;
+  };
   resources?: Record<string, { amount: number; updated: number }>;
   combat?: import('./combat.ts').Combat;
   projectiles: {

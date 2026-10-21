@@ -43,7 +43,7 @@ New public-market coffee/potato quotes are filled in on load without overwriting
 existing quotes, and without creating free stock.
 
 `environment.ts` provides the fixed 600-second economic calendar and seeded
-three-day weather fronts. `dayLength` changes only the visual clock. Midnight
+seeded weather events with varying duration and intensity, plus a per-winter storm-frequency bias. `dayLength` changes only the visual clock. Midnight
 matches the date boundary at default speed. The original crop values and planting
 windows are documented in [PLAYING.md](PLAYING.md).
 
@@ -56,10 +56,18 @@ The `market:SYSTEM` metadata records station stock and hourly replenishment.
 
 ## Living-world fields (0.5.0)
 
-Optional `World.climate` stores snow cover and wetness in 0–1 units; integration
-splits at daily climate boundaries and works during restart catch-up. Missing
-fields start clear/dry. `resources` stores remaining reserve and last-update time
-by stable gathering-ground ID; replenishment is lazy, bounded by node capacity.
+Optional `World.climate` retains `snow` (0–1 coverage) and `wetness`, and adds
+`snowDepth` (metres) and `winterBase` (up to 0.04 m protected until spring).
+Coverage-only saves initialize depth as `snow * 0.04`; absent climate is bare
+regardless of season. Updates split at storm start/end and calendar boundaries;
+solar exposure integrates the visual sky clock, including frozen clocks. Rain,
+overcast weather and night do not melt snow. Daylight removes 0.12 m per fully
+sunny default day above the winter floor. Drying starts at the instant the last
+snow melts, so long offline steps match live ticks. Weather is deterministic by
+world ID, absolute date and independent hash streams, never rerolled on reload.
+
+`resources` stores remaining reserve and last-update time by stable gathering-ground
+ID; replenishment is lazy and bounded by node capacity.
 
 Buildings can contain `lodging` with open status, hourly integer price, and guest
 records (expiry simulation time plus item stock). Snapshot projections remove

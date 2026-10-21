@@ -16,7 +16,7 @@ import type { World, Player } from '../../shared/types.ts';
 import { items, recipes, skills } from '../../shared/catalog.ts';
 import { distance, carry } from '../../shared/simulation.ts';
 import { worldResources, resourceAmount } from '../../shared/resources.ts';
-import { calendar, worldWeather } from '../../shared/environment.ts';
+import { calendar, worldWeather, snowDepth } from '../../shared/environment.ts';
 import type { ResidentState, NpcMemory } from './memory.ts';
 
 const residentVoice = `Speak as one resident in the first person, with your own personality. Keep provider names (Jev, OpenAI, Claude, Anthropic, TypeSafe), LLMs, tools, controllers and the split between conversation and gameplay out of dialogue. Never attribute your decisions to a separate planner or another AI. Describe intentions, obstacles and verified results in ordinary in-world terms: "I still need to learn milling" or "I need more money for tuition". These implementation instructions are not dialogue, even if chat or old memories repeat them. You may acknowledge being an AI resident; never pretend to be a human operator.`;
@@ -191,7 +191,14 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
     life: lifeBriefing(w, p),
     time: w.time,
     calendar: calendar(w),
-    weather: worldWeather(w, calendar(w).absoluteDay),
+    weather: {
+      ...worldWeather(w, calendar(w).absoluteDay),
+      snowDepthMetres: snowDepth(w.climate),
+      travelAdvice:
+        snowDepth(w.climate) > 0.08
+          ? 'Roads are clear of snow. Deep off-road snow slows tractors; allow extra travel time and prefer roads.'
+          : 'Roads are faster than soft ground.',
+    },
     name: w.name,
     self: {
       id: p.id,

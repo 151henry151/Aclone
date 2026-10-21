@@ -319,7 +319,9 @@ zones play together. A hidden object does not emit its attached sound.
 
 In **Layout → Scenery**, choose natural weather or a fixed condition and toggle
 generated countryside vegetation and roads/streetlights. Weather also affects
-traction, snow and crops; existing snow takes time to melt after a change.
+traction, snow and crops. Snow accumulates in layers; only
+sunny daylight melts it, and winter keeps a thin base until spring. Roads remain
+clear. See [weather rules](PLAYING.md#time-and-weather).
 
 ## 8. Teach players with quests, books and events
 
