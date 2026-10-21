@@ -466,3 +466,9 @@ incomplete. This uses a deterministic chooser and no provider API calls. It is
 not evidence of Jev's decision quality or long-term prosperity. See the
 [fidelity results](FIDELITY_PLAN.md#progress-log) before interpreting cash or asset
 growth as success; newly acquired businesses and unsold inventory are not profit.
+
+Business owners assess paid staffing by potential contribution per real hour,
+including unpaid owner operation. They can close vacancies and dismiss excess
+workers through normal gameplay. Financial replies use a scoped ownership report,
+label estimated margins separately from actual private cash flow, and give a short
+complete answer instead of trying to list every business in one message.

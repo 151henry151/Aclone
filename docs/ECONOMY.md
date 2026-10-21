@@ -330,4 +330,6 @@ upkeep prevent a reliable hourly forecast. Actual Statement cash flow is separat
 
 NPC owners use these comparisons to adjust hiring and remove excess staff. They
 respect the same vacancies and dismissal cooldowns as people. This does not change
-human-owned wages, listings or rosters.
+human-owned wages, listings or rosters. NPC financial chat receives owner-filtered
+estimates with explicit denarii units; it cannot see another owner's private
+recorded accounts and must not present estimates as actual earnings.

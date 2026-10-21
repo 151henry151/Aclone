@@ -162,6 +162,7 @@ export function conversationView(
     'currentWork',
     'gameGuide',
     'taxFacts',
+    'portfolio',
     'self',
     'nearbyBuildings',
     'directory',
