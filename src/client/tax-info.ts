@@ -21,15 +21,17 @@ export function tradeQuoteText(
   side: 'buy' | 'sell',
   price: number,
   quantity: number,
+  ownerView = false,
 ) {
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10000)
     return 'Choose a whole quantity from 1 to 10,000.';
   const total = price * quantity;
   const m = (v: number) => money(v, w.settings.denariiPerSheckle);
   const prefix = `${quantity} ${worldItems(w)[item]?.name ?? item}: `;
-  if (side === 'buy') return `${prefix}you receive ${m(total)}. No sales-tax deduction.`;
+  if (side === 'buy')
+    return `${prefix}${ownerView ? 'Business pays supplier' : 'you receive'} ${m(total)}. No sales-tax deduction.`;
   const t = salesReceipt(w, b, total);
-  return `${prefix}you pay ${m(total)} total. Included tax ${m(t.tax)} (${m(t.worldTax)} world + ${m(t.townTax)} town); business receives ${m(t.net)} before other costs.`;
+  return `${prefix}${ownerView ? 'Customer pays' : 'you pay'} ${m(total)} total. Included tax ${m(t.tax)} (${m(t.worldTax)} world + ${m(t.townTax)} town); business receives ${m(t.net)} before other costs.`;
 }
 export function taxesPanel(w: World, site: { x: number; z: number }) {
   const r = taxRatesAt(w, site),

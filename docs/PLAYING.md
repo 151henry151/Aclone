@@ -325,6 +325,10 @@ Press **Enter** or **F2** to enter chat. Enter sends a message and keeps the cur
 there; **Escape** returns to driving. Typing does not activate driving or HUD
 shortcuts. Enter still submits ordinary dialog forms.
 
+An owned business keeps its stock, sale prices, purchase bids and included-tax
+breakdown on **Main**. Its quantity field previews totals; use **Stockroom** to
+move your own goods. You cannot trade with yourself.
+
 In **Building Admin**, use **Remove from sale** to withdraw a property listing.
 Your asking price, stock and investment remain intact for later relisting.
 

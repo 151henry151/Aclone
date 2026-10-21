@@ -1198,6 +1198,7 @@ function refreshTaxInfo() {
       quote.dataset.side as 'buy' | 'sell',
       Number(quote.dataset.price),
       quantity,
+      b.owner === me.id,
     );
     if (quote.textContent !== text) quote.textContent = text;
   }
@@ -1807,24 +1808,24 @@ function buildingWindow(b: Building) {
           : ''
       }</p>`;
     }
-    if (!selfOwned && (Object.keys(b.sell).length || Object.keys(b.buy).length))
+    if (Object.keys(b.sell).length || Object.keys(b.buy).length)
       html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<div class="trade-columns">${(
         ['sell', 'buy'] as const
       )
         .map(
           (side) =>
-            `<section><h3>${side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${Object.entries(
+            `<section><h3>${selfOwned ? (side === 'sell' ? 'Your sale listings' : 'Your purchase bids') : side === 'sell' ? 'Items you can buy here' : 'Items we buy from you'}</h3><div class="trade-list">${Object.entries(
               b[side],
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b><button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button><small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b>${selfOwned ? '' : `<button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button>`}<small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
               )
               .join('')}</div></section>`,
         )
         .join(
           '',
-        )}</div><label class="quantity">Quantity per trade<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label>`;
+        )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label>`;
     if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false)
       html += `<p>Unskilled labour. A 15-second task pays ${money(labourReward(world, me!))}. Low-cash residents can receive ${money(RELIEF_PAY)} relief at most once per 30 minutes. You will be quite still while working.</p>${button(`Work a shift · ${money(labourReward(world, me!))}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
     if (b.kind === 'school')
