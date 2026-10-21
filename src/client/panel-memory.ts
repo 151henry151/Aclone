@@ -107,11 +107,14 @@ export class PanelMemory {
         ? [focused.selectionStart, focused.selectionEnd]
         : undefined;
   }
-  restore(scope: string) {
+  restore(scope: string, beforeScroll?: () => void) {
     const sameView = this.host.dataset.viewKey === scope;
     this.host.dataset.viewKey = scope;
     const view = this.views.get(scope);
-    if (!view) return;
+    if (!view) {
+      beforeScroll?.();
+      return;
+    }
     for (const input of this.controls()) {
       const key = this.key(input),
         value = key && view.fields.get(key);
@@ -137,6 +140,7 @@ export class PanelMemory {
           input.setSelectionRange(view.selection[0], view.selection[1]);
       }
     }
+    beforeScroll?.();
     this.scrollers().forEach((el, i) => {
       if (view.scroll[i]) {
         el.scrollLeft = view.scroll[i][0];

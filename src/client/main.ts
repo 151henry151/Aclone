@@ -1138,8 +1138,12 @@ function modal(title: string, content: string, wide = false) {
       panel === 'editor' ? creatorMemoryKey() : '',
       panel === 'caretaker' ? caretakerUi.tab : '',
     ]),
+    () => {
+      if (world && me) refreshActionVisibility(app, world, me);
+      // Populate quantity-dependent quotes before restoring scroll offsets.
+      refreshTaxInfo();
+    },
   );
-  if (world && me) refreshActionVisibility(app, world, me);
 }
 function field(
   label: string,
