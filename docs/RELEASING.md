@@ -96,7 +96,17 @@ For the nogits.com instance, `scripts/deploy-nogits.sh` performs steps 1–5 ove
 
 See [Hosting](HOSTING.md) for service/proxy details. A code rollback cannot undo migrations or recover removed stock: restore the matching pre-upgrade database/assets too. Do not share a database between processes.
 
-## Current upgrade: 0.80.1
+## Current upgrade: 0.81.0
+
+Back up before restarting, and refresh browsers for the trading controls, tax
+breakdowns and smooth chat scrolling. On loading saved worlds, zero/negative
+buying offers become paused and positive buying offers below 1d become 1d.
+Paused quotes remain saved but cannot accept deliveries. Selling at 0d remains
+an explicit free offer. Past trades, stock, balances and tax rates are unchanged;
+there is no compensation, flour rollback or world reset. NPCs retain their homes;
+the duplicate-home check prevents future purchases/construction, not existing ownership.
+
+### 0.80.1
 
 Refresh browsers after deployment to load the distant-scenery fog fix. Tree
 positions, terrain, resource reserves and game rules are unchanged. No data

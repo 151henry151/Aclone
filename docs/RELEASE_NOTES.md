@@ -2,6 +2,15 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.81.0 — Safer trading and visible taxes
+
+Pause each buying or selling offer without losing its price. Trades reject stale
+quotes and NPC businesses pause deliveries instead of accepting them for 0d.
+Buying prices have a 1d minimum. The public Taxes & rates page and shop totals
+explain included sales taxes; NPC chat receives the same live rules. Duplicate
+NPC home acquisition is blocked, and chat scrolling moves smoothly with overlap
+between pages. See [upgrade instructions](RELEASING.md#current-upgrade-0810).
+
 ## 0.78.0 — Player controls and creator-world features
 
 Responsive driving prediction, controller menus, first-step guidance and repeat

@@ -6,19 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.81.0] - 2026-10-20
+
 ### Added
 
 - Public Taxes & rates page in the World menu and parish directory, plus quantity-aware tax breakdowns beside shop trades and tax guidance in business administration.
 
 ### Fixed
 
-- NPC chat receives current world and town tax facts and explicitly distinguishes included sales tax from extra charges.
-
-- Chat wheel scrolling uses small smooth steps instead of page jumps, while Page Up/Down retain overlapping lines. Reduced-motion preferences and reading positions are respected.
-
-- NPC property choices and queued actions no longer acquire a second cottage when a home or unfinished cottage is already owned, including when the saved home reference points elsewhere.
-
 - Businesses can explicitly pause buying or selling each good while retaining their price. NPCs stop accepting deliveries when stocked instead of offering 0d; buying prices have a 1d minimum, and trades reject changed quotes before moving goods or money.
+- NPC property choices and queued actions no longer acquire a second cottage when a home or unfinished cottage is already owned, including when the saved home reference points elsewhere.
+- NPC chat receives current world and town tax facts and explicitly distinguishes included sales tax from extra charges.
+- Chat wheel scrolling uses small smooth steps instead of page jumps, while Page Up/Down retain overlapping lines. Reduced-motion preferences and reading positions are respected.
 
 ## [0.80.1] - 2026-10-20
 
