@@ -1,3 +1,4 @@
+import { returnResidentHome } from './home-world.ts';
 import {
   businessRequestBlocker,
   checkBusinessAction,
@@ -141,10 +142,11 @@ export class Residents {
     if (options.length > 50 || new Set(options.map((o) => o.config.id)).size !== options.length)
       throw Error('Choose at most 50 unique resident IDs');
     for (const option of options) {
-      const c = option.config,
-        w = worlds.get(this.memory.load(c.id)?.world ?? c.world);
-      if (!w || worlds.get(c.world)?.template !== 'economy')
+      const c = option.config;
+      const initialWorld = worlds.get(this.memory.load(c.id)?.world ?? c.world);
+      if (!initialWorld || worlds.get(c.world)?.template !== 'economy')
         throw Error('NPC world must be an existing economy parish');
+      let w: World = initialWorld;
       w.messageSeq = Math.max(w.messageSeq ?? 0, ...w.messages.map((m) => m.id ?? 0));
       // Old saves lack sequence IDs; migrate the entire retained ring in order.
       if (w.messages.some((m) => !m.id))
@@ -178,6 +180,25 @@ export class Residents {
           this.memory.save(c.id, state);
         });
       state = state!;
+      if (c.homeWorldOnly && (state.world !== c.world || state.inSpace)) {
+        const home = worlds.get(c.world)!;
+        const away = w;
+        const returning = state;
+        this.store.transaction(() => {
+          const row = this.store.db
+            .prepare('SELECT state FROM accounts WHERE id=?')
+            .get(returning.playerId);
+          if (!row) throw Error('Resident account missing');
+          const account = JSON.parse(String(row.state));
+          returnResidentHome(returning, home, away, account);
+          this.universe.save(account);
+          this.store.saveWorld(away, Date.now() / 1000);
+          this.store.saveWorld(home, Date.now() / 1000);
+          this.memory.save(c.id, returning);
+          this.memory.append(c.id, home.time, 'home-world-return', { from: away.id, to: home.id });
+        });
+        w = home;
+      }
       if (c.presence === 'scheduled') {
         if (!state.presence) {
           state.presence = initialPresence(c.id, c.habit, c.timeZone, Date.now());
@@ -574,7 +595,8 @@ export class Residents {
   }
   private choices(r: Resident, w: World, p: Player) {
     const a = this.account(r);
-    if (r.state.inSpace) return spaceChoices(a, this.worlds, this.universe);
+    if (r.state.inSpace)
+      return r.config.homeWorldOnly ? [] : spaceChoices(a, this.worlds, this.universe);
     const actual = w;
     w = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
     const deliveries = commitmentChoices(w, p, r.state, actual.buildings);
@@ -613,7 +635,7 @@ export class Residents {
       ...adaptiveChoices(w, p, r.state),
     ];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
-    if (port && !p.task && !p.atHome && !p.game) {
+    if (!r.config.homeWorldOnly && port && !p.task && !p.atHome && !p.game) {
       const visit: Step[] = [...travelPrep(p), { kind: 'travel', destination: port.id }];
       choices.push({
         id: 'space_takeoff',
@@ -659,6 +681,10 @@ export class Residents {
           previous = structuredClone(a),
           op = operationAction(step),
           p = w.players[a.id];
+        if (r.config.homeWorldOnly)
+          throw Error(
+            'My role is based in my home world; space travel and currency exchange are unavailable.',
+          );
         if (op.type === 'exchange') {
           if (r.state.inSpace) throw Error('Land before exchanging local cash');
           exchange(w, p, a, Number(op.amount));
@@ -1555,6 +1581,12 @@ export class Residents {
         experiences: r.state.experiences,
         lessons: r.state.experiences?.slice(-3).map((e) => ({ ...e, goal: e.goal.slice(0, 180) })),
         careerPreference: r.config.preference,
+        homeWorldRole: r.config.homeWorldOnly
+          ? {
+              world: r.config.world,
+              rule: 'Remain in this world. Help neighbours and follow through on your founded town: establish viable businesses, finish sites and organise supplies and staffing. Earn and train as needed; protect living and operating reserves. Space travel is unavailable.',
+            }
+          : undefined,
         commitments: r.state.commitments,
         session: r.state.presence
           ? {

@@ -65,6 +65,7 @@ export function jevPayload(request: BrainRequest, model: string) {
     'currentWork',
     'session',
     'careerPreference',
+    'homeWorldRole',
     'career',
     'ambition',
     'projectHistory',

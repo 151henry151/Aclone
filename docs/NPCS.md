@@ -485,3 +485,20 @@ including unpaid owner operation. They can close vacancies and dismiss excess
 workers through normal gameplay. Financial replies use a scoped ownership report,
 label estimated margins separately from actual private cash flow, and give a short
 complete answer instead of trying to list every business in one message.
+
+### Home-world guide and town development
+
+Mabel stays in her configured home world by default (`NPC_HOME_WORLD_ONLY=true`).
+This removes space-travel and currency-exchange choices and rejects old departure
+plans at execution. On restart, a guide previously away is returned to the existing
+home-world character; cash, stock, skills and property stay in their original worlds.
+The return is recorded in the NPC journal. Set the option to `false` to allow guide
+travel again; other residents retain their normal travel choices.
+
+Founders consider construction sites around their own town before their current
+position or older holdings. Planning reports the founded town's businesses,
+unfinished sites and property allowance, with an explicit development goal.
+Projects still require affordable construction materials, operating reserves and
+ordinary permissions; founding a town grants no extra building slots or customers.
+Existing businesses and household supplies still need care. These changes provide
+feasible choices, not a guarantee that the model will choose or finish them.

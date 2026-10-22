@@ -26,6 +26,7 @@ export const npcConfigSchema = z.object({
   model: z.string().min(1).max(100).default('gpt-4.1-mini'),
   intervalMs: z.number().int().min(5000).max(300000).default(15000),
   activeAlone: z.boolean().default(false),
+  homeWorldOnly: z.boolean().default(false),
   presence: z.enum(['on-demand', 'always', 'scheduled']).default('on-demand'),
   timeZone: timeZoneSchema,
   habit: habitSchema.default(() => habitSchema.parse({})),
@@ -64,6 +65,9 @@ export function npcEnvironment(env: NodeJS.ProcessEnv = process.env) {
       model: env.NPC_MODEL,
       intervalMs: number(env.NPC_INTERVAL_MS),
       activeAlone: env.NPC_ACTIVE_ALONE === 'true',
+      homeWorldOnly: env.NPC_HOME_WORLD_ONLY !== 'false',
+      initialGoal:
+        'Stay healthy, help neighbours in my home world, and develop any town I founded into a working settlement through affordable businesses, supplies and jobs.',
     }),
   };
 }

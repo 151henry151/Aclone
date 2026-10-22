@@ -7,6 +7,7 @@ import { recipeGraph, inventChainPlans } from '../src/server/npc/chains.ts';
 import { adaptiveChoices } from '../src/server/npc/adaptive.ts';
 import { businessEstimate, economicMenu } from '../src/server/npc/enterprise.ts';
 import { inventHypotheses } from '../src/server/npc/hypotheses.ts';
+import { prosperityBriefing } from '../src/server/npc/prosperity.ts';
 import type { ResidentState } from '../src/server/npc/memory.ts';
 import type { World, Player } from '../src/shared/types.ts';
 
@@ -54,6 +55,35 @@ function constructs<
     ),
   );
 }
+
+test('founders receive affordable projects in their own town, with limits still enforced', () => {
+  const { w, p, state } = parish();
+  w.settings.mapSize = 2400;
+  const town = {
+    ...structuredClone(w.towns[0]),
+    id: 'reach',
+    name: 'New Reach',
+    x: 400,
+    z: 60,
+    radius: 150,
+    founder: p.id,
+  };
+  w.towns.push(town);
+  const project = constructs(inventChainPlans(w, p, state), 'kitchen')[0];
+  assert.ok(project);
+  const site = project.plan.find((s) => s.kind === 'move')!;
+  assert.ok(site.kind === 'move' && Math.hypot(site.x - town.x, site.z - town.z) < town.radius);
+  assert.match(project.description, /in New Reach, the town I founded/);
+  assert.equal(prosperityBriefing(w, p).foundedTowns[0].businesses.length, 0);
+  const works = makeBuilding('owned', 'mill', 0, 50);
+  works.owner = p.id;
+  w.buildings.push(works);
+  w.settings.maxBuildings = 1;
+  assert.equal(constructs(inventChainPlans(w, p, state), 'kitchen').length, 0);
+  w.settings.maxBuildings = 4;
+  p.cash = 100;
+  assert.equal(constructs(inventChainPlans(w, p, state), 'kitchen').length, 0);
+});
 
 test('the recipe graph lists producers and consumers for every catalogued good', () => {
   const { w } = parish();

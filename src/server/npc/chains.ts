@@ -108,13 +108,15 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
 }
 
 export function pickBuildSite(w: World, p: Player, kind: string, style?: string) {
-  if (kind === 'waterworks') return nearestWaterworksSite(w, p);
+  const founded = w.towns.filter((t) => t.founder === p.id);
+  if (kind === 'waterworks') return nearestWaterworksSite(w, founded[0] ?? p);
   const half = mapHalf(w) - 24;
   const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
   const radius = Math.max(footprint.width, footprint.depth) / 2;
   // Bounded search in the actual map, around this resident's holdings and town.
   // No legacy +/-230 m box: builders can settle the countryside too.
   const centres = [
+    ...founded,
     p,
     ...w.buildings.filter((b) => b.owner === p.id).slice(0, 3),
     ...w.towns.slice(0, 4),
@@ -185,7 +187,9 @@ function foundingSteps(w: World, p: Player, kind: string): Step[] | undefined {
   const budget = constructionBudget(w, p, kind, location);
   if (!budget || budget.total > p.cash) return;
   const owned = w.buildings.filter(
-    (b) => b.owner === p.id && !['home', 'warehouse'].includes(b.kind),
+    (b) =>
+      (b.owner === p.id || b.operatingLease?.landlord === p.id) &&
+      !['home', 'warehouse'].includes(b.kind),
   ).length;
   if (owned >= w.settings.maxBuildings) return;
   return [
@@ -278,8 +282,12 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
       const def = worldBuildings(w)[c.kind];
       const site = plan.find((s) => s.kind === 'move');
       const budget = site?.kind === 'move' ? constructionBudget(w, p, c.kind, site)! : undefined;
+      const town =
+        site?.kind === 'move'
+          ? w.towns.find((t) => t.founder === p.id && distance(t, site) < t.radius)
+          : undefined;
       add(
-        `Found a ${def.name}: budget ${budget?.total} including materials, tax, startup capital and living reserve. ${c.reason}. Needs ${kindRecipe(w, c.kind)?.skill} staff and funded buyers; complete and supply the site before income.`,
+        `Found a ${def.name}${town ? ` in ${town.name}, the town I founded` : ''}: budget ${budget?.total} including materials, tax, startup capital and living reserve. ${c.reason}. Needs ${kindRecipe(w, c.kind)?.skill} staff and funded buyers; complete and supply the site before income.`,
         plan,
       );
     }

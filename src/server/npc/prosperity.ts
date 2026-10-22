@@ -73,6 +73,26 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
     (b) => b.owner === p.id && !b.government && !['home', 'warehouse'].includes(b.kind),
   );
   return {
+    foundedTowns: w.towns
+      .filter((t) => t.founder === p.id)
+      .map((t) => ({
+        name: t.name,
+        x: t.x,
+        z: t.z,
+        businesses: businesses
+          .filter((b) => Math.hypot(b.x - t.x, b.z - t.z) < t.radius)
+          .map((b) => ({ id: b.id, kind: b.kind, unfinished: !!b.construction })),
+        goal: 'Turn the charter into a working settlement. Compare costed construction opportunities here, complete unfinished sites, arrange inputs, staff and customers. Existing businesses elsewhere still need care. A town centre alone generates no trade or income; do not build duplicate homes or empty factories without a supply and sales plan.',
+      })),
+    buildingAllowance: {
+      owned: w.buildings.filter(
+        (b) =>
+          (b.owner === p.id || b.operatingLease?.landlord === p.id) &&
+          !['home', 'warehouse'].includes(b.kind),
+      ).length,
+      limit: w.settings.maxBuildings,
+      rule: 'At the limit, sell or transfer an existing business under ordinary rules before starting another; founding a town does not increase the allowance.',
+    },
     householdReserve: reserve,
     liquidSurplus: Math.max(0, p.cash - reserve),
     housed: !!household(w, p),
@@ -107,6 +127,8 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
     holdings: businesses.map((b) => ({
       id: b.id,
       kind: b.kind,
+      forSale: !!b.forSale,
+      askingPrice: b.forSale ? b.price : undefined,
       unfinished: !!b.construction,
       operatingReserve: retainedCapital(w, b),
       investment: b.investment,

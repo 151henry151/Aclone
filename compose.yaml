@@ -62,6 +62,7 @@ services:
       NPC_ID: ${NPC_ID:-mabel}
       NPC_NAME: ${NPC_NAME:-Mabel Reed}
       NPC_WORLD: ${NPC_WORLD:-puddlewick}
+      NPC_HOME_WORLD_ONLY: ${NPC_HOME_WORLD_ONLY:-true}
       NPC_MODEL: ${NPC_MODEL:-gpt-4.1-mini}
       NPC_ACTIVE_ALONE: ${NPC_ACTIVE_ALONE:-false}
       NPC_INTERVAL_MS: ${NPC_INTERVAL_MS:-15000}
