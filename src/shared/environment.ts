@@ -19,9 +19,9 @@ export function calendar(w: Pick<World, 'time'>) {
     season: seasonAt(dayOfYear),
   };
 }
-/** Metres of settled snow. A normal storm's extra 12 cm thaws over one sunny day. */
+/** Metres of settled snow. Six centimetres of excess thaw per full sunny day. */
 export const WINTER_BASE_SNOW = 0.04;
-export const NORMAL_STORM_SNOW = 0.12;
+export const NORMAL_STORM_SNOW = 0.06;
 const calendarOffset = 59 + defaults.time / 86400;
 const clamp = (x: number, low = 0, high = 1) => Math.max(low, Math.min(high, x));
 const mod = (x: number, period: number) => ((x % period) + period) % period;
@@ -61,6 +61,8 @@ function weatherEvent(world: string, date: number) {
     // A cubic distribution makes heavy snowfall substantially rarer than light snowfall.
     strength: 0.35 + 2.65 * weatherRoll(world, slot, 'strength') ** 3,
     duration,
+    // Independent tail: occasional heavy snow, not every long winter shower.
+    blizzard: weatherRoll(world, slot, 'blizzard') < 0.028,
   };
 }
 /** Weather at an absolute date plus a fraction of its day (noon for daily forecasts). */
@@ -78,17 +80,23 @@ export function weatherAt(world: string, absoluteDay: number, fraction = 0.5) {
       ? 'snow'
       : 'rain'
     : 'clear';
-  const storm = wet && (event.strength >= 1.1 || (precipitation === 'snow' && event.duration >= 1));
+  const storm =
+    wet &&
+    (event.strength >= 1.1 ||
+      (precipitation === 'snow' && (event.duration >= 1 || event.blizzard)));
   const cloudRoll = weatherRoll(world, Math.floor(date), 'clouds');
   return {
     season: seasonAt(day),
     temperature,
     precipitation,
     storm,
-    intensity: wet ? clamp(0.3 + event.strength * 0.24) : 0,
+    intensity: wet
+      ? clamp(0.3 + event.strength * 0.24 + (precipitation === 'snow' && event.blizzard ? 0.4 : 0))
+      : 0,
     clouds: wet ? (storm ? 0.97 : 0.85) : cloudRoll < 0.28 ? 0.82 : 0.08 + cloudRoll * 0.28,
     wind: storm ? 2 + event.strength : wet ? 0.9 : 0.3 + cloudRoll,
-    snowfallPerDay: precipitation === 'snow' ? 0.24 * event.strength : 0,
+    snowfallPerDay:
+      precipitation === 'snow' ? 0.018 * event.strength + (event.blizzard ? 0.15 : 0) : 0,
   };
 }
 /** Weather follows economic time; the decorative sky clock controls when snow can melt. */
@@ -128,7 +136,7 @@ export function snowDescription(climate: World['climate']) {
   const depth = snowDepth(climate);
   if (depth < 0.001) return '';
   const amount = depth < 1 ? `${Math.max(1, Math.round(depth * 100))} cm` : `${depth.toFixed(1)} m`;
-  return `${depth >= 0.5 ? 'Deep snow' : 'Snow'} ${amount} · roads clear`;
+  return `${depth > 0.1524 ? 'Deep snow' : 'Snow'} ${amount} · roads clear`;
 }
 export function sunAt(seconds: number, day: number) {
   const direction = solarDirectionAt(day, seconds),
@@ -173,6 +181,17 @@ export function advanceClimate(w: World, start: number, end: number) {
   w.climate ??= { snow: 0, wetness: 0 };
   const climate = w.climate;
   climate.snowDepth = snowDepth(climate);
+  // Retire metre-deep packs produced by the old natural snowfall rates once.
+  // Deliberately forced creator weather retains its depth; subsequent legitimate
+  // rare winters are never clamped, including after saving/restarting.
+  if (climate.snowModel !== 1) {
+    if ((w.creator?.weather ?? 'natural') === 'natural') {
+      climate.snowDepth = Math.min(climate.snowDepth, 0.12);
+      if (climate.winterBase !== undefined)
+        climate.winterBase = Math.min(climate.winterBase, WINTER_BASE_SNOW, climate.snowDepth);
+    }
+    climate.snowModel = 1;
+  }
   climate.winterBase ??=
     seasonAt(calendar({ time: start }).dayOfYear) === 'Winter'
       ? Math.min(WINTER_BASE_SNOW, climate.snowDepth)

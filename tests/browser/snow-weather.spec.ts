@@ -32,7 +32,7 @@ test('snow accumulates visually without obscuring roads or adding ground draw ca
     const bare = await render(0);
     const dust = await render(0.01);
     const base = await render(0.04);
-    const deep = await render(1.2);
+    const deep = await render(0.2);
     for (const result of [dust, base, deep]) {
       expect(result.road).toEqual(bare.road);
       expect(result.calls).toBe(1);
@@ -41,6 +41,13 @@ test('snow accumulates visually without obscuring roads or adding ground draw ca
     expect(base.field[0]).toBeGreaterThan(dust.field[0]);
     expect(deep.field[0]).toBeGreaterThan(bare.field[0] + 20);
     await page.screenshot({ path: 'test-results/snow-clear-roads.png' });
+    const closeups = [];
+    for (const depth of [0, 0.04, 0.15, 0.25]) {
+      closeups.push(await page.evaluate((d) => (window as any).snowCloseup(d), depth));
+      await page.screenshot({ path: `test-results/snow-depth-${Math.round(depth * 100)}cm.png` });
+    }
+    expect(closeups[1].plants).toBeGreaterThan(5);
+    expect(closeups[2].plants).toBeLessThan(closeups[1].plants);
     expect(errors).toEqual([]);
   } finally {
     await page.close();
@@ -85,7 +92,7 @@ test('live snowy town reports depth, keeps roads visible and handles clear winte
     await waitForWorld(page);
     await expect(page.locator('#clock')).toContainText('Winter');
     await expect(page.locator('#clock')).not.toContainText('cm');
-    w.climate = { snow: 1, snowDepth: 0.04, winterBase: 0.04, wetness: 1 };
+    w.climate = { snow: 1, snowDepth: 0.04, winterBase: 0.04, wetness: 1, snowModel: 1 };
     await expect(page.locator('#clock')).toContainText('Snow 4 cm · roads clear');
     await page.screenshot({ path: 'test-results/winter-base-snow.png' });
     w.settings.time = 0; // depth remains fixed for the HUD assertion

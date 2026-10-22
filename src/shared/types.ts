@@ -336,6 +336,8 @@ export interface World {
     wetness: number;
     /** Settled snow depth in metres; undefined only on older saves. */
     snowDepth?: number;
+    /** One-time natural snowpack rebalance version. */
+    snowModel?: number;
     /** First 4 cm of winter snowfall, protected until spring. */
     winterBase?: number;
   };

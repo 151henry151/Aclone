@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.85.0 — Shallow winters and visible snow depth
+
+Natural snowpacks over six inches are exceptional. Sunny daylight removes excess
+snow at 6 cm per fully sunny day; the winter base remains until spring. Snow
+raises the existing terrain mesh, buries low plants and tyre bottoms, and carries
+tracks and contact shadows without adding terrain draw calls. Roads stay exposed.
+Old excessive natural packs receive a one-time adjustment; see [upgrade details](RELEASING.md#upgrade-0850).
+
 ## 0.84.0 — NPC financial understanding and follow-through
 
 Residents distinguish business cash from stock, reserves, investor claims and past

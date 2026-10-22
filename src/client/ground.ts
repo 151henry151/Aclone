@@ -3,6 +3,7 @@ import * as T from 'three';
 import type { World } from '../shared/types';
 import { terrainHeight, mapHalf } from '../shared/terrain';
 import { groundMaterial } from './materials';
+import { prepareSnowSurface } from './snow-surface';
 
 export const groundTileSize = 128;
 const segments = 32;
@@ -99,6 +100,7 @@ export class GroundTiles {
       const n = new T.Vector3(-dx / 1.5, 1, -dz / 1.5).normalize();
       normal.setXYZ(k, n.x, n.y, n.z);
     }
+    prepareSnowSurface(geometry, w, cx, cz);
     const material = groundMaterial(w, {
       x: x0,
       z: z0,

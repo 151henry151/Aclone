@@ -145,7 +145,7 @@ test('seeded weather varies by winter and world; long/heavy storms are rarer and
     counts.push(snowy);
   }
   assert.ok(Math.max(...counts) > Math.min(...counts) * 1.6);
-  assert.ok(depths.filter((d) => d < 0.3).length > depths.filter((d) => d > 0.5).length * 2);
+  assert.ok(depths.filter((d) => d < 0.06).length > depths.filter((d) => d > 0.15).length * 10);
   assert.notDeepEqual(weatherAt('one-world', 375), weatherAt('another-world', 375));
 });
 
@@ -181,4 +181,73 @@ test('new storm timing retains the previous rain share for farm seasons', () => 
         }
     assert.ok(wet / total > low && wet / total < high, `${wet / total} outside ${low}–${high}`);
   }
+});
+
+test('natural snow over six inches is exceptional across independently seeded years', () => {
+  let winters = 0,
+    heavyWinters = 0,
+    episodes = 0,
+    samples = 0,
+    deepSamples = 0;
+  let peak = 0;
+  for (const id of ['puddlewick', 'snow-test', 'winter-balance', 'meadow']) {
+    for (let year = 1; year <= 40; year++) {
+      const w = world(year * 365 - 31, 'natural');
+      w.id = id;
+      let heavy = false,
+        wasDeep = false;
+      for (let step = 0; step < 365 * 8; step++) {
+        run(w, 75);
+        const depth = snowDepth(w.climate),
+          deep = depth > 0.1524;
+        peak = Math.max(peak, depth);
+        samples++;
+        if (deep) {
+          deepSamples++;
+          heavy = true;
+          if (!wasDeep) episodes++;
+        }
+        wasDeep = deep;
+      }
+      winters++;
+      if (heavy) heavyWinters++;
+    }
+  }
+  assert.ok(
+    heavyWinters / winters > 0.15 && heavyWinters / winters < 0.55,
+    `${heavyWinters}/${winters} winters exceed six inches`,
+  );
+  assert.ok(
+    episodes / winters > 0.2 && episodes / winters < 0.7,
+    `${episodes}/${winters} heavy episodes per winter`,
+  );
+  assert.ok(deepSamples / samples < 0.01, 'deep snow occupies less than 1% of the year');
+  assert.ok(peak < 0.5, `no ordinary metre-deep winters: ${peak}`);
+});
+
+test('old excessive natural snow is rebalanced once, without clamping later storms or creator weather', () => {
+  const w = world(375, 'natural');
+  w.settings.dayLength = 0;
+  w.settings.time = 0;
+  w.climate = { snow: 1, snowDepth: 1.28, wetness: 1, winterBase: 0.04 };
+  run(w, 0.01);
+  assert.ok(snowDepth(w.climate) >= 0.12 && snowDepth(w.climate) < 0.121);
+  assert.equal(w.climate!.snowModel, 1);
+  w.climate!.snowDepth = 0.3;
+  Object.assign(w, JSON.parse(JSON.stringify(w)));
+  run(w, 0.01);
+  assert.ok(snowDepth(w.climate) >= 0.3);
+  const forced = world(375, 'snowstorm');
+  forced.climate = { snow: 1, snowDepth: 1.28, wetness: 1 };
+  run(forced, 1);
+  assert.ok(snowDepth(forced.climate) > 1.28);
+});
+
+test('a rare eight-inch pack drops below six inches in one sunny day, to base in three', () => {
+  const w = world();
+  w.climate = { snow: 1, snowDepth: 0.2032, winterBase: WINTER_BASE_SNOW, wetness: 1 };
+  run(w, 600);
+  assert.ok(snowDepth(w.climate) < 0.1524);
+  run(w, 1200);
+  near(snowDepth(w.climate), WINTER_BASE_SNOW);
 });

@@ -208,6 +208,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   const shade = makeShadow(4.7, 6.5, 0.52);
   shade.position.y = 0.035;
   g.add(shade);
+  g.userData.snowShadow = shade;
   batch(g);
   for (const child of g.children) {
     child.position.multiplyScalar(TRACTOR_SCALE);

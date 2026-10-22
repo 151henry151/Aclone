@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.85.0] - 2026-10-22
+
+### Added
+
+- Snow visibly accumulates on the existing terrain, covering low vegetation and tyre bottoms, with shallow drifts and tracks on its surface. Roads remain exposed without adding terrain polygons or draw calls.
+
+### Changed
+
+- Natural snowfall now favours shallow packs, with depths over six inches exceptional rather than routine. Excess snow melts at six centimetres per fully sunny day; the winter base persists until spring. Existing excessive natural snowpacks are reduced to twelve centimetres once on upgrade, while creator-forced snowfall remains unrestricted.
+
 ## [0.84.0] - 2026-10-21
 
 ### Added

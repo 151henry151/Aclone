@@ -27,6 +27,7 @@ import {
 } from '../shared/environment';
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind } from './ground-tracks';
+import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
 import { chaseOffset, lookPitchFromDrag } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
@@ -660,6 +661,7 @@ export class GameScene {
       const pos = geometry.attributes.position;
       for (let i = 0; i < pos.count; i++) pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
       geometry.computeVertexNormals();
+      prepareSnowSurface(geometry, w);
       this.terrain = new T.Mesh(geometry, groundMaterial(w));
       this.terrain.receiveShadow = true;
       this.land.add(this.terrain);
@@ -1116,6 +1118,7 @@ export class GameScene {
         );
       const motionTime = this.motionClock.sample(now);
       const predicted = this.prediction.sample(now, this.localInput());
+      const snowHeight = snowTrackHeight(w);
       for (const mesh of this.meshes.values()) {
         const pose =
           (mesh === this.meshes.get(p.id) ? predicted : undefined) ??
@@ -1125,6 +1128,12 @@ export class GameScene {
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.y = pose.heading;
+        liftSnowShadow(
+          mesh,
+          snowDepth(w.climate) > 0
+            ? snowHeight(pose.x, pose.z) - Math.max(pose.y, terrainHeight(w, pose.x, pose.z))
+            : 0,
+        );
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
         (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
@@ -1211,7 +1220,7 @@ export class GameScene {
           );
         }
         this.tracks.tick(dt);
-        this.tracks.sync((x, z) => terrainHeight(w, x, z));
+        this.tracks.sync(snowHeight);
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(

@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.85.0
+
+Natural snowfall now favours shallow packs. Existing natural snow deeper than
+12 cm is reduced to 12 cm once when the world next advances; later storms are
+not capped. Creator-forced weather is preserved. Back up before deploying and
+refresh clients for matching snow visuals. No reset or ownership changes are needed.
+The terrain uses its existing vertices to show depth; roads stay exposed and
+tracks/contact shadows follow the snow surface.
+
 ## Upgrade 0.84.0
 
 NPC financial facts and owner-business agreements require no reset or manual migration.

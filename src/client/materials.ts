@@ -240,10 +240,18 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     shader.uniforms.maskOrigin = { value: new T.Vector2(region.x, region.z) };
     shader.uniforms.maskSize = { value: region.size };
     // Masks are addressed in world metres so streamed tiles sample their own bake.
-    shader.vertexShader = 'varying vec3 groundPosition;\n' + shader.vertexShader;
+    shader.vertexShader =
+      'varying vec3 groundPosition; uniform float snowDepthVisual; attribute vec3 snowLift;\n' +
+      shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <beginnormal_vertex>',
+      `#include <beginnormal_vertex>
+       objectNormal.xz -= snowLift.xz * snowDepthVisual * objectNormal.y;
+       objectNormal = normalize(objectNormal);`,
+    );
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
-      '#include <begin_vertex>\ngroundPosition=(modelMatrix*vec4(position,1.)).xyz;',
+      '#include <begin_vertex>\ngroundPosition=(modelMatrix*vec4(position,1.)).xyz; transformed.y += snowLift.y * snowDepthVisual;',
     );
     shader.fragmentShader =
       `
@@ -273,7 +281,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       vec3 base=mix(mix(turf,grit,max(road,beach)),painted,brush.a);
       // Road surfaces shed snow; soft snowy verges remain visible outside the lane.
       // Shallow cover is broken by grass, deeper cover smooths into broad drifts.
-      float depth=clamp(snowDepthVisual/.5,0.,1.);
+      float depth=clamp(snowDepthVisual/.15,0.,1.);
       float cover=clamp(snowCover,0.,1.)*(1.-road);
       vec3 snow=vec3(.85,.91,.94)*mix(.87+noise(p*2.)*.13,.94+noise(p*.12)*.06,depth);
       snow*=1.-(1.-depth)*.10*(1.-noise(p*.8));
@@ -281,7 +289,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     `,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v6';
+  mat.customProgramCacheKey = () => 'countryside-ground-v7';
   return mat;
 }
 
