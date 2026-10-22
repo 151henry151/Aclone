@@ -1,4 +1,6 @@
 import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
+import { townCentreGround } from './town-centre-ground';
+import { viewFog } from './view-distance';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
@@ -694,9 +696,9 @@ export class GameScene {
     this.land.add(sea);
     for (const b of w.buildings) {
       const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
-      const g = custom ? creatorModel(custom, w) : this.building(b);
+      const g = custom ? creatorModel(custom, w) : this.building(b, w);
       g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;
-      addFoundation(g, b, w);
+      if (b.kind !== 'town' || b.style || custom) addFoundation(g, b, w);
       g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
       g.rotation.y = b.rotation;
       g.userData.building = b.id;
@@ -978,7 +980,7 @@ export class GameScene {
     });
     freezeScenery(this.land, animated);
   }
-  private building(b: Building) {
+  private building(b: Building, w: World) {
     const g = new T.Group();
     if (b.kind === 'town' && !b.style) {
       for (const [r, h, y] of [
@@ -1017,10 +1019,22 @@ export class GameScene {
         );
         g.add(stream);
       }
-      for (const x of [-7, 7]) {
-        box(g, 2.8, 0.17, 0.85, '#796747', x, 0.85, 0);
-        box(g, 2.8, 0.6, 0.14, '#796747', x, 1.22, -0.46);
-        for (const dx of [-1.05, 1.05]) box(g, 0.13, 0.85, 0.7, '#434c42', x + dx, 0.42, 0);
+      const site = townCentreGround(w, b);
+      for (const child of g.children) child.position.y += site.fountain.high;
+      // A level stone retaining base meets the slope instead of hanging over it.
+      const height = site.fountain.high - site.fountain.low + 0.12;
+      surface(
+        cylinder(g, 5, height, '#ffffff', 0, site.fountain.high - height / 2, 0, 48),
+        'stone',
+        4,
+      );
+      for (const bench of site.benches) {
+        box(g, 2.8, 0.17, 0.85, '#796747', bench.x, bench.seat, 0);
+        box(g, 2.8, 0.6, 0.14, '#796747', bench.x, bench.seat + 0.37, -0.46);
+        for (const foot of bench.feet) {
+          const height = bench.seat - 0.085 - foot.ground + 0.06;
+          box(g, 0.13, height, 0.13, '#434c42', foot.x, foot.ground - 0.06 + height / 2, foot.z);
+        }
       }
       g.scale.setScalar(0.6);
       return g;
@@ -1374,8 +1388,9 @@ export class GameScene {
       this.scene.background = sky;
       if (!(this.scene.fog instanceof T.Fog)) this.scene.fog = new T.Fog(sky, 125, 450);
       this.scene.fog.color.copy(sky);
-      this.scene.fog.near = climate.precipitation === 'clear' ? 125 : climate.storm ? 35 : 70;
-      this.scene.fog.far = climate.precipitation === 'clear' ? 450 : climate.storm ? 140 : 260;
+      const visibility = viewFog(climate);
+      this.scene.fog.near = visibility.near;
+      this.scene.fog.far = visibility.far;
       // The nearby pair shares the existing shadow-casting directional light.
       // Its weighted direction follows both moons without increasing the light budget.
       this.sun.position.fromArray(solar.direction).multiplyScalar(sunlight);
