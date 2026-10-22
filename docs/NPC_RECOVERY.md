@@ -638,3 +638,40 @@ Remaining proof: after release, inspect real dialogue for correct money/identity
 compare agreements with action receipts, and measure whether freed capital produces
 useful investments rather than churn. These regressions do not establish autonomous
 long-term economic stability.
+
+## 2026-10-22 — Mabel returns home; town-development follow-through
+
+The preceding scenery, tractor slope and road work was committed separately,
+pushed and deployed as **0.86.0** (`071d394`). The Mabel changes below are subsequent
+work packaged for **0.86.1**, together with a visible F9 menu hint.
+
+Live intervention at 17:03 server time: stopped the service, backed up SQLite to
+`/var/lib/aclone/backups/pre-mabel-return-20261022-170356.sqlite`, and returned
+Mabel's resident controller from HazeTopia to her existing Puddlewick character.
+Kept both worlds' money/inventory/property separate. Her home cash was 4,710,096
+internal units (471s 0.96d). Verified her online in Puddlewick after restarting;
+her first activity was collecting a meal from her cottage. Updated her server-side
+personality instructions to stay home and develop Mabel's Reach. The initial live correction used
+a model instruction; 0.86.1 adds the hard execution restriction.
+The private environment backup is outside the checkout in the server backup folder.
+
+The user explicitly chose to **keep the four-business limit**. Mabel owns four
+businesses plus a home. Waterworks and furniture workshop were already listed for
+sale. A listing does not free a slot; an actual sale must happen before construction.
+No limits, balances, ownership, listing prices or materials were altered.
+
+Release follow-up: `NPC_HOME_WORLD_ONLY` defaults true for the primary guide, false
+for other residents. Startup restores a guide who is away; space choices disappear
+and stale space operations are rejected. The Jev payload retains the home-world
+role. Founders consider building sites around their own towns first; prosperity
+context names founded settlements, unfinished businesses, sale listings and the
+property allowance (including leased-out properties). Normal costs and limits
+remain enforced. A replay of the live snapshot offers no construction while capped;
+with a hypothetical free slot, eight costed projects use sites at Mabel's Reach.
+The live cap was not changed.
+
+Validation: 923 tests passed; production build passed. New regressions cover guide
+configuration, return without asset transfers, stale departure rejection, founding
+near one's own town, and cash/property limits. Long-term sale and construction
+outcomes remain unproven; inspect later journals for actual sale, site completion,
+operating inputs/staff and receipts rather than treating intention as achievement.

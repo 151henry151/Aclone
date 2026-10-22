@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.86.1] - 2026-10-22
+
+### Fixed
+
+- A visible Menu button with its F9 shortcut and a getting-started hint make maps, reports and settings easier to find while playing.
+- Mabel remains in her home world to help neighbours and develop her founded town. Restarting with the guide's home-world policy returns a travelling guide without transferring money, inventory or property between worlds; stale departure plans are blocked.
+- NPC founders consider building sites near their own towns and see explicit settlement-development goals and business limits alongside costed construction opportunities.
+
 ## [0.86.0] - 2026-10-22
 
 ### Added
