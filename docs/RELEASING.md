@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.85.1
+
+Deploy the entire built `dist/` directory, including `.br` and `.gz` sidecars.
+HTML revalidates; fingerprinted assets can stay cached for a year. No data migration
+or reset is required. This improves downloads, not steady-state rendering FPS.
+
 ## Upgrade 0.85.0
 
 Natural snowfall now favours shallow packs. Existing natural snow deeper than

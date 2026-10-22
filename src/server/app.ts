@@ -1,3 +1,4 @@
+import { serveStatic } from './static-files';
 import { cancelGather } from '../shared/resources.ts';
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
@@ -685,13 +686,17 @@ export async function createApp(options: AppOptions) {
       const file = resolve('dist', '.' + decodeURIComponent(path === '/' ? '/index.html' : path));
       if (!file.startsWith(resolve('dist') + '/')) return json(res, 403, { error: 'Forbidden' });
       try {
-        if (!(await stat(file)).isFile()) throw Error();
-        res.writeHead(200, {
-          'content-type': mime(file),
-          'content-security-policy':
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
-        });
-        res.end(await readFile(file));
+        await serveStatic(
+          req,
+          res,
+          file,
+          mime(file),
+          /^\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+$/.test(path),
+          {
+            'content-security-policy':
+              "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+          },
+        );
       } catch {
         json(res, 404, { error: 'Build the client with npm run build first.' });
       }

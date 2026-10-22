@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.85.1] - 2026-10-22
+
+### Changed
+
+- Production builds include Brotli and gzip files for smaller game downloads without runtime compression work. Fingerprinted assets can be cached for a year; HTML and other mutable files revalidate so new deployments still load correctly.
+
 ## [0.85.0] - 2026-10-22
 
 ### Added

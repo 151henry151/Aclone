@@ -2,6 +2,13 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.85.1 — Smaller downloads and repeat visits
+
+Production builds precompress client files with Brotli and gzip. Hashed assets
+receive long-lived caching, while HTML and mutable files revalidate. Existing
+builds without sidecars remain supported. This reduces download work; it does
+not change gameplay or promise higher rendering FPS.
+
 ## 0.85.0 — Shallow winters and visible snow depth
 
 Natural snowpacks over six inches are exceptional. Sunny daylight removes excess

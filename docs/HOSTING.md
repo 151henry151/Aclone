@@ -103,6 +103,8 @@ Network test shapes compressed TCP to 64/16 kbit/s down/up, 200ms latency plus â
 
 Protocol 3 shares deltas and keeps three outstanding snapshots/peer; slow peers resume from current state, excessive send queues reconnect. Older clients still work. Deploy client/server together; reconnect starts full private-filtered state. [Wire details](PROTOCOL.md#compact-delivery-protocol-3-0110).
 
+Production builds include build-time Brotli/gzip sidecars to `dist/`. Deploy the whole directory: the game server negotiates compressed responses, marks hashed `/assets/` files immutable for one year, and revalidates HTML and other mutable files with ETags. Keep `Vary: Accept-Encoding` and `Cache-Control` intact in your reverse proxy; do not cache `/api/` responses. Older builds without sidecars still serve normally. No extra compression dependency or proxy module is required.
+
 For complaints collect ping/FPS, graphics mode, device/browser and nearby players, alone/together. Inspect `uptime`, `nproc`, `free -m`, `vmstat 1 5`, `/proc/pressure/{cpu,memory,io}` and service CPU/RAM. Full swap/host pressure can stall scripts/pings even with small game RAM. Reduce competing workloads or add capacity; graphics changes cannot fix host starvation. Short probes do not certify production capacity or an ISP.
 
 ## Optional AI resident
