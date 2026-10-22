@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.87.0] - 2026-10-22
+
+### Added
+
+- F9 → Statistics shows total playtime, including an explicitly labelled estimate reconstructed from historical connection logs. New connected time is saved across sessions and includes space travel without counting duplicate connections or paused worlds.
+- Private per-world statistics track personal earnings, spending, financing, completed buildings, gathered materials and harvested crops. Existing death totals are included; activity counters survive new lives and clearly mark missing older history.
+
 ## [0.86.1] - 2026-10-22
 
 ### Fixed

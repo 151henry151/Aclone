@@ -1,3 +1,4 @@
+import { recordPlayerMoney } from './player-statistics.ts';
 import { herdSpec, herdRation, livestockInputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
@@ -98,6 +99,7 @@ function trackOperating(a: BusinessAccounts, time: number, before: number) {
 }
 /** Operating cash flow, not accrual profit: unsold inventory and owner capital are separate. */
 export function recordMoney(w: World, e: Ledger) {
+  recordPlayerMoney(w, e);
   const outgoing = w.buildings.find((b) => b.id === e.from);
   const incoming = w.buildings.find((b) => b.id === e.to);
   if (outgoing) {

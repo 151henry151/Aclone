@@ -2,6 +2,18 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.87.0
+
+Reload browsers for **F9 → Statistics**. No world reset is needed. Personal
+activity counters start with this upgrade and survive death; existing death totals
+are retained. The new `player_playtime` table persists connected time across sessions.
+Before the first startup, install any recovered connection history as
+`<DATA_DIR>/statistics-history.json`; see [the import format](DATA.md#player-statistics-and-historical-playtime).
+Nogits already has its recovered backup evidence staged there. Each account's
+historical estimate imports once, separately from newly tracked time; retain both
+the database and the evidence file in backups. Existing money/material/building
+activity is explicitly marked incomplete rather than guessed.
+
 ## Upgrade 0.86.0
 
 Reload browsers for hillside furniture, tractor tilt and distant terrain. Existing

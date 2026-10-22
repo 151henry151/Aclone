@@ -1,3 +1,4 @@
+import type { PlaytimeStatistics } from '../shared/player-statistics';
 import { staffingPanel, economicsPanel } from './staffing-panel';
 import { hiringLimit, jobVacancy } from '../shared/staffing';
 import { taxesPanel, taxSummary, tradeQuoteText } from './tax-info';
@@ -41,7 +42,7 @@ import { landscapeEditor, landscapeControls } from './landscape-editor';
 import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
 import { questList } from './quests';
 import { procurementHtml } from './procurement';
-import { statementHtml, journalHtml } from './reports';
+import { statementHtml, journalHtml, statisticsHtml } from './reports';
 import { caretakerBody, caretakerPanel, type CaretakerUi } from './caretaker';
 import type { CaretakerView, CaretakerLogPage } from '../shared/caretaker';
 import { workShift } from './work-shift';
@@ -1035,7 +1036,22 @@ function buildingAccessKey(b: Building) {
     b.kind === 'farm' && world ? calendar(world).season : undefined,
   ]);
 }
+let playtimeStats: PlaytimeStatistics | undefined;
+let statisticsError = '';
 function openPanel(name: string) {
+  if (name === 'statistics') {
+    playtimeStats = undefined;
+    statisticsError = '';
+    void api('/api/statistics')
+      .then((r) => {
+        playtimeStats = r.playtime;
+        if (panel === 'statistics') renderPanel();
+      })
+      .catch(() => {
+        statisticsError = 'Playtime could not be loaded. Reopen Statistics to retry.';
+        if (panel === 'statistics') renderPanel();
+      });
+  }
   if (name !== 'building') caretakerBuilding = '';
   mobile.close();
   mobile.setBlocked(true);
@@ -1734,6 +1750,10 @@ function renderPanel() {
     modal('Quests', questList(world, me));
     return;
   }
+  if (panel === 'statistics') {
+    modal('Your statistics', statisticsHtml(world, me, playtimeStats, statisticsError));
+    return;
+  }
   if (panel === 'reports') {
     modal('Journal & reports', journalHtml(world, me));
     return;
@@ -1741,7 +1761,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2241,6 +2261,7 @@ app.addEventListener('click', async (e) => {
     const panels = [
       'menu',
       'reports',
+      'statistics',
       'social',
       'quests',
       'procurement',

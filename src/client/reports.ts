@@ -1,3 +1,4 @@
+import type { PlaytimeStatistics } from '../shared/player-statistics';
 import { economicsPanel } from './staffing-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cashFlow, productionReport } from '../shared/reports';
@@ -74,4 +75,25 @@ export function journalHtml(w: World, p: Player) {
         .join('') || '<li>No recorded events yet.</li>'
     }</ol>`
   );
+}
+
+export function statisticsHtml(w: World, p: Player, time?: PlaytimeStatistics, error = '') {
+  const duration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    return `${Math.floor(minutes / 60).toLocaleString()}h ${minutes % 60}m`;
+  };
+  const s = p.statistics;
+  const line = (label: string, value: string | number) => `<dt>${label}</dt><dd>${value}</dd>`;
+  const playtime = time
+    ? `<dl class="business-accounts">${line('Total playtime on this server', duration(time.recordedSeconds + time.estimatedSeconds))}${line('Estimated from historical logs', duration(time.estimatedSeconds))}${line('Recorded since tracking began', duration(time.recordedSeconds))}</dl>
+    <p class="note">Historical time is a minimum reconstructed from complete connection records; missing logs and older space travel cannot be recovered. The estimate is included in your total. New tracking began ${esc(new Date(time.since).toLocaleString())} and includes connected time in worlds and space, including idle time. Offline time and paused worlds do not count.</p>`
+    : `<p>${error ? esc(error) : 'Loading playtime…'}</p>`;
+  const activities = s
+    ? `<dl class="business-accounts">${line('Money earned', amount(s.earned, w.settings.denariiPerSheckle))}${line('Money spent / lost', amount(s.spent, w.settings.denariiPerSheckle))}${line('Other money received', amount(s.otherReceived, w.settings.denariiPerSheckle))}${line('Capital / loan money received', amount(s.capitalIn, w.settings.denariiPerSheckle))}${line('Capital / loan money paid', amount(s.capitalOut, w.settings.denariiPerSheckle))}${line('Buildings completed while owned', s.buildingsCompleted)}</dl>
+    <p class="note">${s.partialHistory ? 'These activity counters start with this update; earlier activity is unknown.' : 'These activity counters cover this character since joining this world.'} They survive death. Earnings include sales, wages, labour and prizes, before deducting expenses. Gifts, starting cash and refunds are other receipts; investments and loans are separate. Deposits and withdrawals of personal savings are excluded. Business tills have their own journal accounts.</p>
+    <h3>Materials gathered</h3><p>${goods(s.gathered, w)}</p><h3>Crops harvested into farm stockrooms</h3><p>${goods(s.harvested, w)}</p>`
+    : '<p>Activity tracking starts after this update; earlier totals are unknown.</p>';
+  return `<h3>Playtime</h3>${playtime}<h3>${esc(w.name)} · personal statistics</h3>
+    <dl class="business-accounts">${line('Deaths (existing lifetime record)', p.deaths)}${line('Buildings currently owned', w.buildings.filter((b) => b.owner === p.id && !b.construction).length)}</dl>
+    ${activities}<p class="note">Money and activity totals belong to this world. Visit another world to view its statistics. Playtime covers your account across this server. Reopen this page to refresh playtime.</p>`;
 }

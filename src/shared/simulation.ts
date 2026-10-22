@@ -1,3 +1,4 @@
+import { playerStatistics, recordGathered } from './player-statistics.ts';
 import { hiringLimit, jobVacancy } from './staffing.ts';
 import { salesReceipt } from './taxes.ts';
 import { MIN_BUY_PRICE, setTradingOffer } from './trading.ts';
@@ -309,6 +310,7 @@ export function addPlayer(w: World, id: string, name: string): Player {
     imports: 0,
   };
   w.players[id] = p;
+  playerStatistics(w, p, false);
   log(w, 'faucet', p.cash, 'treasury', id, 'starting cash');
   return p;
 }
@@ -1189,6 +1191,7 @@ export function act(w: World, id: string, a: Action): string {
       );
       requireThat(canCarry(p, 'fish', 1, w), 'Cargo full');
       stockAdd(p.inventory, 'fish', 1);
+      recordGathered(w, p, 'fish', 1);
       p.kudos++;
       p.fishAt = w.time + 20;
       p.fishUntil = p.fishAt + 8;
@@ -1350,6 +1353,8 @@ export function act(w: World, id: string, a: Action): string {
       if (Object.values(b.construction).every((n) => !n)) {
         delete b.construction;
         delete b.constructionCost;
+        const builder = b.owner ? w.players[b.owner] : undefined;
+        if (builder) playerStatistics(w, builder).buildingsCompleted++;
         questEvent(w, p, 'build', b.templateId ?? b.kind);
         queueCreatorScript(w, 'BuildingComplete', { id, building: b.id, kind: b.kind });
         result = 'Building complete. Civilisation marches on.';
@@ -2146,6 +2151,8 @@ export function advance(w: World, seconds: number) {
           t.kind === 'logging' ? 'logs' : t.kind === 'quarrying' ? 'stone' : 'tools',
           t.kind === 'craft' ? 1 : 3,
         );
+      if (t.kind === 'logging' || t.kind === 'quarrying')
+        recordGathered(w, p, t.kind === 'logging' ? 'logs' : 'stone', 3);
       if (p.online) creatorEvent(w, 'task', p, t.building ?? t.resource ?? '');
     }
     if (p.hitch) {
@@ -2171,8 +2178,10 @@ export function advance(w: World, seconds: number) {
       }
     }
     if (p.game === 'fishing' && p.fishUntil !== undefined && end > p.fishUntil) {
-      if (w.settings.fishingMode === 2 && canCarry(p, 'fish', 1, w))
+      if (w.settings.fishingMode === 2 && canCarry(p, 'fish', 1, w)) {
         stockAdd(p.inventory, 'fish', 1);
+        recordGathered(w, p, 'fish', 1);
+      }
       p.fishAt = end + (w.settings.fishingMode === 5 ? 20 : 90);
       p.fishUntil = p.fishAt + 8;
     }

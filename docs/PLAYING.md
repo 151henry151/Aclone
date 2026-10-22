@@ -348,3 +348,11 @@ Compare **Estimated production margins** before changing staff. A higher margin
 per batch can still mean less income per hour if production slows. Actual recorded
 cash flow remains in **Statement**. Farms pay for completed harvests and have no
 factory hourly forecast.
+
+## Personal statistics
+
+Open **Menu / F9 → Statistics**. Total playtime combines a labelled estimate from older connection logs with connected time recorded since tracking began. The estimate is a minimum: missing sessions and old space travel cannot be recovered. New time includes idle connected time and space travel, excludes offline time and paused worlds, and counts each account once even during reconnects. Reopen the page to refresh the total.
+
+Money, construction and resource counters are private and specific to the world you are visiting. Earnings count sales, wages, labour and prizes; spending includes purchases, taxes and losses. Gifts, refunds and starting cash are separate receipts, while business investments and loan movements are separate capital flows. Moving cash into or out of personal savings does not inflate totals. Business tills have separate Journal accounts. These are gross flows, not net profit.
+
+Construction counts finished buildings owned at completion, including a helper's final delivery; buying an existing property or cancelling an unfinished site does not count. Materials count completed gathering loads and caught fish; crops harvested into a farm's stockroom are listed separately. Failed or cancelled work does not count. Counters survive death. Existing death totals are retained, but money and activity before this update are unknown rather than reconstructed as zero.

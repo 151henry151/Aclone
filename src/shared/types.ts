@@ -13,6 +13,7 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  statistics?: import('./player-statistics.ts').PlayerStatistics;
   courseRun?: import('./courses').CourseRun;
   reliefAt?: number;
   needsGraceUntil?: number;

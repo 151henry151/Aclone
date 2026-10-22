@@ -1,3 +1,4 @@
+import { recordGathered } from './player-statistics.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings, items, defaults } from './catalog.ts';
@@ -249,6 +250,7 @@ export function finishHarvest(w: World, p: Player, building: string, index: numb
     return;
   }
   b.stock[plot.crop] = (b.stock[plot.crop] ?? 0) + amount;
+  recordGathered(w, p, plot.crop, amount, true);
   if (wage) {
     const tax = Math.floor(wage * w.settings.wageTax);
     b.investment -= wage;

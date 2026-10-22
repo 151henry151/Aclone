@@ -1,3 +1,4 @@
+import { recordGathered } from './player-statistics.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types.ts';
 import { canCarry, distance, terrainHeight } from './simulation.ts';
@@ -171,6 +172,7 @@ export function finishGather(p: Player, w?: World) {
     return false;
   }
   p.inventory[t.item] = (p.inventory[t.item] ?? 0) + t.amount;
+  if (w) recordGathered(w, p, t.item, t.amount);
   delete p.task;
   return true;
 }

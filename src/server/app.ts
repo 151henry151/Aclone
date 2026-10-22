@@ -1,3 +1,5 @@
+import { Playtime } from './playtime.ts';
+import { playerStatistics } from '../shared/player-statistics.ts';
 import { serveStatic } from './static-files';
 import { cancelGather } from '../shared/resources.ts';
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
@@ -125,7 +127,10 @@ export async function createApp(options: AppOptions) {
   for (const { world, saved } of store.loadWorlds()) {
     restorePublicPuddlewick(world);
     governmentStores(world);
-    for (const p of Object.values(world.players)) p.online = false;
+    for (const p of Object.values(world.players)) {
+      p.online = false;
+      playerStatistics(world, p);
+    }
     let remaining = Math.min(Math.max(0, Date.now() / 1000 - saved), 86400 * 30);
     while (remaining > 0) {
       const step = Math.min(60, remaining);
@@ -156,6 +161,7 @@ export async function createApp(options: AppOptions) {
     options.mailer ?? configuredMailer(),
     options.publicOrigin ?? process.env.PUBLIC_ORIGIN,
   );
+  const playtime = new Playtime(store, join(dataDir, 'statistics-history.json'));
   const peers = new Set<Peer>();
   const revoke = (id: string) => {
     for (const peer of peers)
@@ -520,6 +526,10 @@ export async function createApp(options: AppOptions) {
         );
         revoke(result.account.id);
         return json(res, 200, result);
+      }
+      if (path === '/api/statistics') {
+        const a = auth(req);
+        return json(res, 200, { playtime: playtime.get(a.id) });
       }
       if (path === '/api/session') return json(res, 200, { account: auth(req) });
       if (path === '/api/galaxy') return json(res, 200, { ...galaxy, worlds: registry() });
@@ -986,6 +996,18 @@ export async function createApp(options: AppOptions) {
       : setInterval(() => {
           const now = performance.now(),
             dt = Math.min((now - last) / 1000, 0.25);
+          playtime.advance(
+            [...peers]
+              .filter(
+                (p) =>
+                  p.account &&
+                  !p.account.npc &&
+                  p.socket.readyState === WebSocket.OPEN &&
+                  (!p.world || !worlds.get(p.world)?.maintenance?.paused),
+              )
+              .map((p) => p.account!.id),
+            (now - last) / 1000,
+          );
           last = now;
           for (const p of peers) {
             if (p.account?.transit && p.account.transit.arrives <= Date.now() / 1000) {
@@ -1038,7 +1060,10 @@ export async function createApp(options: AppOptions) {
             const frames = new Map<string, Frame>();
             for (const p of peers) snapshot(p, frames);
           }
-          if (counter % 100 === 0) for (const w of worlds.values()) store.saveWorld(w);
+          if (counter % 100 === 0) {
+            for (const w of worlds.values()) store.saveWorld(w);
+            playtime.save();
+          }
           if (counter % 600 === 0) {
             for (const [key, entry] of rate)
               if (Date.now() - entry.time > 3600000) rate.delete(key);
@@ -1093,6 +1118,7 @@ export async function createApp(options: AppOptions) {
       server.closeAllConnections();
       await closed;
     }
+    playtime.save();
     store.close();
   };
   return { server, worlds, store, universe, accounts, residents, listen, close };
