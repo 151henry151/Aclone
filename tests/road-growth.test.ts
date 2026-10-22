@@ -21,7 +21,7 @@ test('the starter parish is already served by lanes, so no roads grow', () => {
 
 test('a lane grows a few tractor lengths a day toward an isolated building, then stops', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
-  const b = makeBuilding('far', 'home', 320, 60);
+  const b = makeBuilding('far', 'home', 340, -110);
   b.owner = 'p';
   w.buildings.push(b);
   assert.equal(roadConnected(w, b), false);
@@ -106,7 +106,7 @@ test('a parish with no lanes at all has nothing to grow from', () => {
 
 test('grown lanes are part of the road network everyone else reads', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
-  w.buildings.push(makeBuilding('far', 'home', 320, 60));
+  w.buildings.push(makeBuilding('far', 'home', 340, -110));
   advance(w, day(w) * 2);
   const roads = townRoads(w);
   assert.equal(grownRoads(w).length, 2);

@@ -53,6 +53,9 @@ function draftSlice(w: World) {
     round: w.round,
     projectiles: w.projectiles,
     roads: w.roads,
+    retiredRoads: w.retiredRoads,
+    roadProject: w.roadProject,
+    roadGrowth: w.roadGrowth,
   };
 }
 function applySlice(w: World, slice: ReturnType<typeof draftSlice>) {
@@ -76,6 +79,9 @@ function applySlice(w: World, slice: ReturnType<typeof draftSlice>) {
   w.round = slice.round;
   w.projectiles = slice.projectiles;
   w.roads = slice.roads;
+  w.retiredRoads = slice.retiredRoads;
+  w.roadProject = slice.roadProject;
+  w.roadGrowth = slice.roadGrowth;
 }
 /** One parish snapshot, reset between candidates instead of cloning per plan. */
 function legalPlan(w: World, playerId: string) {

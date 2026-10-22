@@ -94,6 +94,7 @@ export function prepareFrame(w: World): Frame {
     scriptVariables,
     messages,
     landscapeHistory,
+    roadProject,
     families: _families,
     tradeOffers: _offers,
     ...common
@@ -113,9 +114,7 @@ export function prepareFrame(w: World): Frame {
   common.buildings = publicBuildings(w);
   (common as Record<string, unknown>).towns = publicTowns(w);
   common.scriptInteraction = w.script.includes('ObjectInteract');
-  const fields = Object.fromEntries(
-    Object.entries(common).map(([key, value]) => [key, JSON.stringify(value)]),
-  );
+  const fields = serializeFields(common);
   const publicPlayers: Record<string, string> = {};
   for (const p of Object.values(players))
     if (p.online)

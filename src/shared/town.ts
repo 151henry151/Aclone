@@ -167,14 +167,19 @@ const legacyRoads: Road[] = [
     ? { a: { x: x - w / 2, z }, b: { x: x + w / 2, z }, width: d }
     : { a: { x, z: z - d / 2 }, b: { x, z: z + d / 2 }, width: w },
 );
+/** Stable in saved JSON and independent of segment direction. */
+export function roadKey(r: Road) {
+  const points = [r.a, r.b].map((p) => `${p.x.toFixed(4)},${p.z.toFixed(4)}`).sort();
+  return `${points.join(':')}:${r.width}`;
+}
 export function townRoads(
-  w: Pick<World, 'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads'>,
+  w: Pick<World, 'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads' | 'retiredRoads'>,
 ): readonly Road[] {
   return [
     ...(w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads),
     ...landscapeRoads(w),
     ...(w.roads ?? []),
-  ];
+  ].filter((r) => !w.retiredRoads?.includes(roadKey(r)));
 }
 export function roadDistance(roads: readonly Road[], x: number, z: number) {
   let closest = Infinity;

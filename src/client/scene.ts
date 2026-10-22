@@ -418,6 +418,7 @@ export class GameScene {
       JSON.stringify(world.terrain) +
       JSON.stringify(world.landscape ?? {}) +
       JSON.stringify(world.roads ?? []) +
+      JSON.stringify(world.retiredRoads ?? []) +
       ':' +
       world.buildings
         .map(

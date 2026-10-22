@@ -298,6 +298,10 @@ export interface World {
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */
   roadGrowth?: number;
+  /** Incremental public roadwork, resumed after saving/restarting. */
+  roadProject?: import('./road-projects.ts').RoadProject;
+  /** Original/generated lane segments replaced by completed bypasses. */
+  retiredRoads?: string[];
   /** One-time retirement of excess public starter types; purchased property is protected. */
   parishRetired?: string[];
   schemaVersion: 1;

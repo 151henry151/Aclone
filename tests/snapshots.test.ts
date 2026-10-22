@@ -209,3 +209,29 @@ test('building snapshots show current staffing efficiency before the next produc
   act(w, p.id, { type: 'quit' });
   assert.equal(current().efficiency, 0.01);
 });
+
+for (const compact of [false, true])
+  test(`protocol ${compact ? 3 : 2} accepts idle road plans and sends completed bypasses`, () => {
+    const w = createWorld('roads', 'Roads', 'a');
+    addPlayer(w, 'a', 'Ada').online = true;
+    // Idle simulation/adaptive drafts may retain optional own properties.
+    w.roadProject = undefined;
+    w.retiredRoads = undefined;
+    const account = { id: 'a', name: 'Ada' } as Account;
+    const stream = new DeltaStream(compact);
+    const first = JSON.parse(stream.encode(w, account, prepareFrame(w)));
+    assert.equal(first.world.roadProject, undefined);
+    assert.equal(first.world.retiredRoads, undefined);
+    w.roadProject = {
+      kind: 'detour',
+      width: 5,
+      path: [
+        { x: 0, z: 0 },
+        { x: 10, z: 0 },
+      ],
+    };
+    w.retiredRoads = ['old-road'];
+    const next = JSON.parse(stream.encode(w, account, prepareFrame(w)));
+    assert.equal(next.world.roadProject, undefined, 'unfinished plans remain server-side');
+    assert.deepEqual(next.world.retiredRoads, ['old-road']);
+  });
