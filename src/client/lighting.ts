@@ -56,6 +56,14 @@ export class TownLighting {
     });
     this.glow.visible = false;
   }
+  /** Reduce shader light work without rebuilding scenery or losing window glows. */
+  reduceBudget(limit: number) {
+    for (const light of this.pool.splice(Math.max(0, limit))) {
+      this.group.remove(light, light.target);
+      light.dispose();
+    }
+    this.lastWorld = undefined;
+  }
   /** `ground` gives the terrain height under a lamp; by default its pool lies flat below the lamp. */
   reset(root: T.Group, ground?: (x: number, z: number) => number) {
     this.lastWorld = undefined;

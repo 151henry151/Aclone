@@ -26,3 +26,12 @@ test('waits a minimum time even when every frame is smooth', () => {
 test('gives up waiting after the maximum time on a slow machine', () => {
   assert.equal(run(new FrameSettle(5, 1000, 0), Array(20).fill(120)), 9);
 });
+
+test('distinguishes a timeout from smooth readiness for startup feedback', () => {
+  const slow = new FrameSettle(5, 1000, 0);
+  run(slow, Array(20).fill(120));
+  assert.equal(slow.timedOut, true);
+  const smooth = new FrameSettle(3, 1000, 0);
+  run(smooth, [20, 20, 20]);
+  assert.equal(smooth.timedOut, false);
+});

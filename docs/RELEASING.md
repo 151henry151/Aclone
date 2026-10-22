@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.85.2
+
+Refresh browsers after deployment for adaptive graphics and startup fixes. No
+world migration or reset is required. Detailed mode remains an explicit choice;
+use F9 → Options & pilot key to select Adaptive or Performance. Validation includes
+897 unit/integration tests, the production build, and focused browser checks for
+snow rendering, full-town weather, cold startup and the loading-screen fallback.
+
 ## Upgrade 0.85.1
 
 Deploy the entire built `dist/` directory, including `.br` and `.gz` sidecars.

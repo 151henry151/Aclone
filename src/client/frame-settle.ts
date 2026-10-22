@@ -1,5 +1,6 @@
 /** Decides when the world has rendered smoothly long enough to hand over controls. */
 export class FrameSettle {
+  timedOut = false;
   private start?: number;
   private smooth = 0;
   constructor(
@@ -11,6 +12,8 @@ export class FrameSettle {
     this.start ??= now;
     this.smooth = interval <= budget ? this.smooth + 1 : 0;
     const waited = now - this.start;
-    return waited >= this.maxWait || (this.smooth >= this.frames && waited >= this.minWait);
+    const smooth = this.smooth >= this.frames && waited >= this.minWait;
+    this.timedOut = !smooth && waited >= this.maxWait;
+    return smooth || this.timedOut;
   }
 }

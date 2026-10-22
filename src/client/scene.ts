@@ -1,5 +1,6 @@
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
+import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
 import { label, pilotLabel } from './labels';
 import { saleTag, saleTagText } from './sale-tag';
 import { DrunkVision } from './drunk-vision';
@@ -145,7 +146,8 @@ export class GameScene {
     return this.motionClock.bufferMs;
   }
   private renderTime = 0;
-  private slowFrames = 0;
+  private graphicsBudget = new GraphicsBudget();
+  private fallbackLevel = 0;
   private adapted = false;
   get qualityLabel() {
     return this.low
@@ -373,6 +375,10 @@ export class GameScene {
       },
       { passive: false },
     );
+    document.addEventListener('visibilitychange', () => {
+      this.graphicsBudget.reset();
+      this.lastTime = this.renderTime = performance.now();
+    });
     this.renderer.setAnimationLoop(() => this.frame());
   }
   resize() {
@@ -563,7 +569,7 @@ export class GameScene {
       if (!(await soundBank.prepare(current))) return;
       // Establish fog, camera and light positions before compiling the first view.
       this.renderTime = -Infinity;
-      this.frame();
+      this.frame(true);
       this.onLoading?.('Preparing daylight and night lighting…');
       const lamps = this.townLighting.group.visible,
         headlights = this.headlights.visible;
@@ -589,13 +595,13 @@ export class GameScene {
       performance.mark('aclone-shaders-prepared');
       this.onLoading?.('Finishing the view…');
       this.renderTime = -Infinity;
-      this.frame();
+      this.frame(true);
       this.renderer.render(this.scene, this.camera);
       if (!(await finishGpuWork(this.renderer.getContext(), current))) return;
       await yieldFrame();
       if (!current()) return;
       this.lastTime = performance.now();
-      this.slowFrames = 0;
+      this.graphicsBudget.reset();
       this.onLoading?.('Settling in…', undefined, true);
       this.settling = {
         settle: new FrameSettle(),
@@ -1058,29 +1064,36 @@ export class GameScene {
     }
     return g;
   }
-  private frame() {
+  private frame(preparing = false) {
+    // Warmup owns rendering until settling; avoid repeating all scene animation
+    // and terrain work between its small asynchronous preparation batches.
+    if ((!this.ready && !this.settling && !preparing) || document.hidden) return;
     const now = performance.now();
     const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
-    const sinceRender = now - this.renderTime;
-    if (sinceRender < interval) return;
+    const renderTime = pacedRenderTime(now, this.renderTime, interval);
+    if (renderTime === undefined) return;
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
-    this.renderTime = now - (sinceRender % interval);
+    this.renderTime = renderTime;
     if (
-      (this.ready || this.settling) &&
-      !this.low &&
-      !this.paused &&
-      localStorage.getItem('aclone.quality') !== 'high'
+      this.graphicsBudget.observe(
+        now - this.lastTime,
+        !!this.world && !!(this.ready || this.settling) && !this.paused && !document.hidden,
+      ) &&
+      localStorage.getItem('aclone.quality') !== 'high' &&
+      this.fallbackLevel < 2
     ) {
-      this.slowFrames =
-        now - this.lastTime > 180 ? this.slowFrames + 1 : Math.max(0, this.slowFrames - 1);
-      if (this.slowFrames >= 6) {
-        this.low = true;
-        this.adapted = true;
-        this.renderer.shadowMap.enabled = false;
-        this.renderer.setPixelRatio(0.75);
-        this.resize();
-        document.documentElement.classList.add('performance');
-      }
+      this.fallbackLevel++;
+      this.low = true;
+      this.adapted = true;
+      this.renderer.shadowMap.enabled = false;
+      this.townLighting.reduceBudget(4);
+      this.renderer.setPixelRatio(
+        Math.min(this.renderer.getPixelRatio(), this.fallbackLevel === 1 ? 0.75 : 0.5),
+      );
+      this.resize();
+      document.documentElement.classList.add('performance');
+      if (this.settling)
+        this.onLoading?.('Adjusting graphics for smoother driving…', undefined, true);
     }
     if (
       this.settling?.settle.observe(
@@ -1089,7 +1102,16 @@ export class GameScene {
         Math.max(50, 2000 / (this.software || this.low ? 30 : 60)),
       )
     ) {
-      const { warning } = this.settling;
+      const warning = [
+        this.settling.warning,
+        this.settling.settle.timedOut
+          ? 'Graphics are still slow. Try Performance graphics in F9 → Options & pilot key and check that browser hardware acceleration is enabled.'
+          : this.adapted
+            ? 'Graphics reduced automatically for smoother driving.'
+            : undefined,
+      ]
+        .filter(Boolean)
+        .join(' ');
       this.settling = undefined;
       this.ready = true;
       performance.mark('aclone-world-ready');
@@ -1474,6 +1496,8 @@ export class GameScene {
       dt,
     );
 
+    this.renderer.domElement.dataset.graphicsQuality = this.qualityLabel;
+    this.renderer.domElement.dataset.pixelRatio = String(this.renderer.getPixelRatio());
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
   }

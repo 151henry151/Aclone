@@ -35,6 +35,9 @@ test('cold entry waits for textures and GPU preparation, holds input neutral and
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#startup-loading')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#world-hud')).toBeHidden();
+    await expect(
+      page.getByRole('button', { name: 'Use Performance graphics and reload' }),
+    ).toBeVisible();
     await page.keyboard.down('ArrowUp');
     await page.waitForTimeout(300);
     expect(Math.abs(p.speed)).toBe(0);
@@ -54,6 +57,40 @@ test('cold entry waits for textures and GPU preparation, holds input neutral and
     expect(
       await page.evaluate(() => performance.getEntriesByName('aclone-world-ready').length),
     ).toBe(1);
+  } finally {
+    release();
+    await page.close();
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('loading screen can switch detailed graphics to performance before textures arrive', async ({
+  page,
+}) => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-startup-switch-'));
+  const app = await createApp({ dataDir: dir, port: 0, dev: true });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  try {
+    const port = await app.listen();
+    const { token } = app.universe.register('Graphics switch driver');
+    await page.addInitScript((token) => {
+      localStorage.setItem('aclone.pilot', token);
+      localStorage.setItem('aclone.world', 'puddlewick');
+      if (!localStorage.getItem('aclone.quality')) localStorage.setItem('aclone.quality', 'high');
+    }, token);
+    await page.route('**/textures/*.webp', async (route) => {
+      await gate;
+      await route.abort();
+    });
+    await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'domcontentloaded' });
+    const button = page.getByRole('button', { name: 'Use Performance graphics and reload' });
+    await expect(button).toBeVisible({ timeout: 15000 });
+    await Promise.all([page.waitForEvent('domcontentloaded'), button.click()]);
+    expect(await page.evaluate(() => localStorage.getItem('aclone.quality'))).toBe('low');
   } finally {
     release();
     await page.close();

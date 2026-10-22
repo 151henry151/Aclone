@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.85.2] - 2026-10-22
+
+### Fixed
+
+- Adaptive graphics now responds to sustained low frame rates, reduces nearby lighting work and resolution in stages, and ignores isolated stalls. Startup avoids redundant animation work during preparation, offers a Performance-mode reload button, and explains when graphics remain slow.
+- Performance mode's frame-rate cap now survives startup preparation instead of being disabled by an invalid timing value, avoiding unnecessary rendering work.
+
 ## [0.85.1] - 2026-10-22
 
 ### Changed
