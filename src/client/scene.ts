@@ -1,4 +1,5 @@
 import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
+import { vehicleGround } from './vehicle-ground';
 import { townCentreGround } from './town-centre-ground';
 import { viewFog } from './view-distance';
 import { addFoundation } from './foundations';
@@ -1167,6 +1168,7 @@ export class GameScene {
         );
       const motionTime = this.motionClock.sample(now);
       const predicted = this.prediction.sample(now, this.localInput());
+      const bareSurface = snowTrackHeight({ ...w, climate: undefined });
       const snowSurface = snowTrackHeight(w),
         depth = snowDepth(w.climate);
       const snowHeight = (x: number, z: number) =>
@@ -1184,12 +1186,16 @@ export class GameScene {
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
         mesh.position.set(pose.x, pose.y, pose.z);
-        mesh.rotation.y = pose.heading;
+        mesh.rotation.set(0, pose.heading, 0, 'YXZ');
+        const mode = vehicles[mesh.userData.vehicle]?.mode;
+        if (mesh.userData.wheels && mode !== 5 && pose.y < bareSurface(pose.x, pose.z) + 1) {
+          const ground = vehicleGround(pose.x, pose.z, pose.heading, bareSurface);
+          mesh.rotation.copy(ground.rotation);
+          mesh.position.y = ground.y;
+        }
         liftSnowShadow(
           mesh,
-          snowDepth(w.climate) > 0
-            ? snowHeight(pose.x, pose.z) - Math.max(pose.y, terrainHeight(w, pose.x, pose.z))
-            : 0,
+          snowDepth(w.climate) > 0 ? snowHeight(pose.x, pose.z) - mesh.position.y : 0,
         );
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
@@ -1205,11 +1211,13 @@ export class GameScene {
       if (local) {
         const pos = local.position;
         const facing = local.rotation.y;
-        this.headlights.position.set(pos.x, pos.y + (local.userData.driver ? 1.7 : 2), pos.z);
-        this.headlights.target.position.set(
-          pos.x + Math.sin(facing) * 35,
-          pos.y,
-          pos.z + Math.cos(facing) * 35,
+        this.headlights.position.copy(
+          new T.Vector3(0, local.userData.driver ? 1.7 : 2, 0)
+            .applyQuaternion(local.quaternion)
+            .add(pos),
+        );
+        this.headlights.target.position.copy(
+          new T.Vector3(0, 0, 35).applyQuaternion(local.quaternion).add(pos),
         );
         this.target.copy(pos);
         const walking = p.vehicle === 5;
@@ -1224,10 +1232,12 @@ export class GameScene {
         const cam =
           this.cameraMode === 1
             ? new T.Vector3(
-                pos.x + (tractorView ? Math.sin(facing) * TRACTOR_SEAT_Z : 0),
-                pos.y + (walking ? 1.68 : tractorView ? TRACTOR_EYE_HEIGHT : 3),
-                pos.z + (tractorView ? Math.cos(facing) * TRACTOR_SEAT_Z : 0),
+                0,
+                walking ? 1.68 : tractorView ? TRACTOR_EYE_HEIGHT : 3,
+                tractorView ? TRACTOR_SEAT_Z : 0,
               )
+                .applyQuaternion(local.quaternion)
+                .add(pos)
             : this.cameraMode === 2 || p.vehicle === 7
               ? new T.Vector3(pos.x, pos.y + 65 * this.zoom, pos.z + 3)
               : new T.Vector3(pos.x + chase.x, pos.y + chase.y, pos.z + chase.z);
