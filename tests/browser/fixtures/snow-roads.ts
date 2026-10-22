@@ -20,6 +20,9 @@ document.body.style.margin = '0';
 document.body.append(renderer.domElement);
 const scene = new T.Scene();
 scene.add(new T.HemisphereLight('#b6cbd9', '#7c8067', 1.1));
+const daylight = new T.DirectionalLight('#fff0dc', 1.5);
+daylight.position.set(-8, 8, 5);
+scene.add(daylight);
 for (let i = 0; i < 6; i++) {
   const light = new T.SpotLight('#ffcd83', 1, 22, 1.12, 0.72, 1.4);
   light.position.set(-30, 5, -20 + i * 8);
@@ -48,7 +51,15 @@ await waitForTextures();
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, value);
     return [...value].slice(0, 3);
   };
-  return { road: pixel(400, 300), field: pixel(600, 300), calls: renderer.info.render.calls };
+  const edgePixels: number[] = [];
+  for (let y = 150; y <= 450; y += 10)
+    for (let x = 355; x <= 445; x++) edgePixels.push(pixel(x, y).reduce((a, b) => a + b, 0) / 3);
+  return {
+    road: pixel(400, 300),
+    field: pixel(600, 300),
+    edgePixels,
+    calls: renderer.info.render.calls,
+  };
 };
 
 // Close view with fixed camera/scale, a real tractor and low plants: actual burial,

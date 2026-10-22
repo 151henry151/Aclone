@@ -36,6 +36,11 @@ test('snow accumulates visually without obscuring roads or adding ground draw ca
     for (const result of [dust, base, deep]) {
       expect(result.road).toEqual(bare.road);
       expect(result.calls).toBe(1);
+      // Snow must not paint a near-black contour along either side of the lane.
+      const ratios = result.edgePixels.map(
+        (value: number, i: number) => value / Math.max(1, bare.edgePixels[i]),
+      );
+      expect(Math.min(...ratios)).toBeGreaterThan(0.7);
     }
     expect(dust.field[0]).toBeGreaterThan(bare.field[0]);
     expect(base.field[0]).toBeGreaterThan(dust.field[0]);

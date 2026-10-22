@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.85.4] - 2026-10-22
+
+### Fixed
+
+- Snow banks, roof caps and fence caps now fade with the surrounding snow during thaw, instead of leaving opaque white roadside rectangles after most snow has melted.
+- Remove dark, jagged snow outlines beside roads and prevent snow-bank triangles from cutting into the terrain. Roadside buildup now conforms to the ground underneath, including on slopes.
+
 ## [0.85.3] - 2026-10-22
 
 ### Fixed

@@ -89,3 +89,40 @@ test('bare ground hides snow geometry and full thaw removes it without changing 
   assert.equal(snow.group.visible, false);
   assert.equal(other.visible, true);
 });
+
+// Check the rendered triangle interiors, not heightAt's max-with-terrain clamp.
+test('ground drifts conform to terrain triangles without intersecting the snowpack', () => {
+  for (const mapSize of [500, 4000]) {
+    const w = world();
+    w.settings.mapSize = mapSize;
+    w.terrain.push({ x: 5, z: 0, radius: 13, height: 3 });
+    const snow = new SnowAccumulation(w);
+    snow.verges();
+    const mesh = snow.finish().children[0] as T.Mesh;
+    const pos = mesh.geometry.getAttribute('position'),
+      lift = mesh.geometry.getAttribute('snowLift');
+    const index = mesh.geometry.index!;
+    for (const depth of [0.01, 0.04, 0.11, 0.25]) {
+      const surface = snowTrackHeight({ ...w, climate: { snow: 1, snowDepth: depth, wetness: 0 } });
+      for (let i = 0; i < index.count; i += 3) {
+        const ids = [index.getX(i), index.getX(i + 1), index.getX(i + 2)];
+        for (const weights of [
+          [1 / 3, 1 / 3, 1 / 3],
+          [0.8, 0.1, 0.1],
+          [0.1, 0.8, 0.1],
+          [0.1, 0.1, 0.8],
+        ]) {
+          const sum = (f: (id: number) => number) =>
+            ids.reduce((n, id, j) => n + f(id) * weights[j]!, 0);
+          const x = sum((id) => pos.getX(id)),
+            z = sum((id) => pos.getZ(id));
+          const y = sum((id) => pos.getY(id) + depth * lift.getX(id));
+          assert.ok(
+            y > surface(x, z) + 0.001,
+            `bank intersects terrain at ${x},${z}, depth ${depth}`,
+          );
+        }
+      }
+    }
+  }
+});

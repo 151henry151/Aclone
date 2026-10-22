@@ -291,11 +291,11 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <normal_fragment_maps>',
       `#include <normal_fragment_maps>
-      if (cover > .001) {
-        // Centimetre-scale wind ripples and the exposed roadside lip. Shade them
-        // per pixel rather than subdividing every terrain tile for shallow snow.
-        float relief = min(snowDepthVisual,.3)*(1.-road)
-          + min(snowDepthVisual,.08)*(.12*noise(p*2.)+.08*noise(p*.65));
+      if (snowDepthVisual > .001) {
+        // Physical banks supply the roadside lip. Only shade small wind ripples
+        // here: differentiating the noisy road mask drew a dark jagged outline.
+        // Derivatives must run for every fragment, including bare-road neighbours.
+        float relief = min(snowDepthVisual,.08)*(.12*noise(p*2.)+.08*noise(p*.65));
         vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
         vec3 rx=cross(dy,normal),ry=cross(normal,dx);
         float det=dot(dx,rx)*faceDirection;
@@ -305,7 +305,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       }`,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v8';
+  mat.customProgramCacheKey = () => 'countryside-ground-v9';
   return mat;
 }
 

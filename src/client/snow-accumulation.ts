@@ -4,10 +4,10 @@ import type { World } from '../shared/types';
 import { buildingPlan } from '../shared/building-shapes';
 import { townRoads, roadDistance } from '../shared/town';
 import { terrainHeight } from '../shared/terrain';
-import { snowTrackHeight } from './snow-surface';
-import { snowDepthVisual } from './materials';
+import { snowTrackHeight, snowSurfaceGrid } from './snow-surface';
+import { snowDepthVisual, snowCover } from './materials';
 
-type Vertex = { x: number; y: number; z: number; lift: number; opacity?: number };
+type Vertex = { x: number; y: number; z: number; lift: number; opacity?: number; extra?: number };
 type Triangle = [Vertex, Vertex, Vertex];
 const cellSize = 4;
 
@@ -34,6 +34,63 @@ export class SnowAccumulation {
     this.roads = townRoads(world);
   }
   private triangle(a: Vertex, b: Vertex, c: Vertex, ground = false) {
+    if (!ground) return this.storeTriangle(a, b, c, false);
+    // A bank spanning a terrain triangle edge can otherwise cut through the
+    // terrain between its vertices, exposing dark triangular seams. Clip to
+    // that grid and re-sample its base before adding the bank's extra depth.
+    const { step, origin } = snowSurfaceGrid(this.world);
+    const col = (x: number) => Math.floor((x - origin) / step);
+    const i = col(a.x),
+      j = col(a.z);
+    const side = (p: Vertex) => p.x + p.z <= 2 * origin + (i + j + 1) * step;
+    if ([b, c].every((p) => col(p.x) === i && col(p.z) === j && side(p) === side(a)))
+      return this.storeTriangle(a, b, c, true);
+    const vertices = [a, b, c].map((p) => ({
+      ...p,
+      lift: p.extra ?? p.lift - (this.snowy(p.x, p.z) - this.bare(p.x, p.z)),
+    }));
+    const clip = (polygon: Vertex[], distance: (p: Vertex) => number) => {
+      const result: Vertex[] = [];
+      for (let i = 0; i < polygon.length; i++) {
+        const a = polygon[i]!,
+          b = polygon[(i + 1) % polygon.length]!;
+        const da = distance(a),
+          db = distance(b);
+        if (da >= 0) result.push(a);
+        if (da >= 0 !== db >= 0) {
+          const t = da / (da - db);
+          result.push({
+            x: a.x + (b.x - a.x) * t,
+            z: a.z + (b.z - a.z) * t,
+            y: 0,
+            lift: a.lift + (b.lift - a.lift) * t,
+            opacity: (a.opacity ?? 1) + ((b.opacity ?? 1) - (a.opacity ?? 1)) * t,
+          });
+        }
+      }
+      return result;
+    };
+    for (let i = col(Math.min(a.x, b.x, c.x)); i <= col(Math.max(a.x, b.x, c.x)); i++)
+      for (let j = col(Math.min(a.z, b.z, c.z)); j <= col(Math.max(a.z, b.z, c.z)); j++) {
+        const x = origin + i * step,
+          z = origin + j * step;
+        let polygon = clip(vertices, (p) => p.x - x);
+        polygon = clip(polygon, (p) => x + step - p.x);
+        polygon = clip(polygon, (p) => p.z - z);
+        polygon = clip(polygon, (p) => z + step - p.z);
+        for (const side of [-1, 1]) {
+          const part = clip(polygon, (p) => side * (p.x - x + p.z - z - step)).map((p) => ({
+            ...p,
+            y: this.bare(p.x, p.z) + 0.002,
+            lift: p.lift + this.snowy(p.x, p.z) - this.bare(p.x, p.z),
+          }));
+          for (let k = 1; k < part.length - 1; k++)
+            this.storeTriangle(part[0]!, part[k]!, part[k + 1]!, true);
+        }
+      }
+  }
+  private storeTriangle(a: Vertex, b: Vertex, c: Vertex, ground: boolean) {
+    if (ground && Math.abs((b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z)) < 1e-9) return;
     // Consistent upward winding for ground; closed roof skirts supply their own.
     if (ground && (b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z) < 0) [b, c] = [c, b];
     for (const p of [a, b, c]) {
@@ -68,6 +125,7 @@ export class SnowAccumulation {
       y: y + 0.002,
       lift: this.snowy(x, z) - y + extra,
       opacity: Math.min(1, extra / 0.15),
+      extra,
     };
   }
   private allowed(x: number, z: number) {
@@ -324,6 +382,7 @@ export class SnowAccumulation {
     });
     material.onBeforeCompile = (shader) => {
       shader.uniforms.snowDepthVisual = snowDepthVisual;
+      shader.uniforms.snowCover = snowCover;
       shader.vertexShader =
         'uniform float snowDepthVisual; attribute float snowLift; attribute vec3 snowNormal; attribute float snowOpacity; varying float snowAlpha; varying vec3 snowPoint;\n' +
         shader.vertexShader;
@@ -336,14 +395,25 @@ export class SnowAccumulation {
         '#include <beginnormal_vertex>\nobjectNormal=normalize(normal+snowDepthVisual*snowNormal);',
       );
       shader.fragmentShader =
-        'varying vec3 snowPoint; varying float snowAlpha;\n' + shader.fragmentShader;
+        'uniform float snowCover; varying vec3 snowPoint; varying float snowAlpha;\n' +
+        shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <color_fragment>',
-        '#include <color_fragment>\nfloat grain=sin(snowPoint.x*3.1+sin(snowPoint.z*2.3))*sin(snowPoint.z*3.7); diffuseColor.rgb *= .96+grain*.025; diffuseColor.a *= snowAlpha;',
+        `#include <color_fragment>
+         float grain=sin(snowPoint.x*3.1+sin(snowPoint.z*2.3))*sin(snowPoint.z*3.7);
+         diffuseColor.rgb *= .96+grain*.025;
+         float coverage=clamp(snowCover,0.,1.);
+         #ifdef SNOW_GROUND
+           // Thin extra banks must not stay solid white after the surrounding
+           // snow reveals grass. Fade the overlay faster than the base layer.
+           diffuseColor.a *= snowAlpha*coverage*coverage;
+         #else
+           diffuseColor.a *= coverage;
+         #endif`,
       );
     };
-    material.customProgramCacheKey = () => 'accumulated-snow-v1';
-    // Roof shells stay opaque and self-occlude. Ground skirts fade into the
+    material.customProgramCacheKey = () => 'accumulated-snow-v2';
+    // Roof shells retain depth testing. Ground skirts fade into the
     // existing snow surface instead of leaving rectangular, differently lit tiles.
     for (const ground of [false, true]) {
       const indices: number[] = [];
@@ -352,9 +422,15 @@ export class SnowAccumulation {
       const g = geometry.clone();
       g.setIndex(indices);
       const m = material.clone();
-      m.onBeforeCompile = material.onBeforeCompile;
-      m.customProgramCacheKey = material.customProgramCacheKey;
-      m.transparent = ground;
+      m.onBeforeCompile = (shader, renderer) => {
+        material.onBeforeCompile(shader, renderer);
+        if (ground) shader.fragmentShader = '#define SNOW_GROUND\n' + shader.fragmentShader;
+      };
+      m.customProgramCacheKey = () =>
+        `${material.customProgramCacheKey()}-${ground ? 'ground' : 'cap'}`;
+      // Smooth thaw without stippled white pixels or two transparent face passes.
+      m.transparent = true;
+      m.forceSinglePass = true;
       m.depthWrite = !ground;
       const mesh = new T.Mesh(g, m);
       mesh.receiveShadow = true;

@@ -2,6 +2,13 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.85.4 — Cleaner snow edges and thaw
+
+Roadside snow no longer draws dark jagged outlines. Banks conform to the ground
+beneath them, and banks, roof caps and fence caps fade as the surrounding snow
+melts instead of leaving solid white rectangles. Snow depths, snowfall, melting
+rates and driving rules are unchanged. Reload the game to see the corrections.
+
 ## 0.85.3 — Snow with visible depth
 
 Snow now builds up as physical layers on roofs, beside cleared roads and around

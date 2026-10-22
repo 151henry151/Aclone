@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.85.4
+
+Reload browsers for the snow-edge and thaw corrections. No data migration,
+world reset or weather recalculation is required. Validation includes type checking,
+eight focused snow-geometry tests, a full-town thaw regression with screenshots at
+4 cm, 1 cm, 3 mm and zero snow, and the production build.
+
 ## Upgrade 0.85.3
 
 Refresh the game after deployment to load the snow-depth graphics. Existing

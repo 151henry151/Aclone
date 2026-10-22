@@ -34,14 +34,17 @@ export function prepareSnowSurface(geometry: T.BufferGeometry, w: World, cx = 0,
   }
   geometry.setAttribute('snowLift', new T.BufferAttribute(data, 3));
 }
+/** The terrain grid shared by snow displacement and conforming detail meshes. */
+export function snowSurfaceGrid(w: World) {
+  const streamed = mapHalf(w) > legacyHalf + 50;
+  return { step: streamed ? 4 : 540 / 128, origin: streamed ? 0 : -270 };
+}
 /** Match the actual triangles, not an ideal curved drift, so prints cannot sink
  * into the snow between terrain vertices. Cache samples for one sync pass. */
 export function snowTrackHeight(w: World) {
   const profile = snowProfile(w),
     depth = snowDepth(w.climate),
-    streamed = mapHalf(w) > legacyHalf + 50,
-    step = streamed ? 4 : 540 / 128,
-    origin = streamed ? 0 : -270,
+    { step, origin } = snowSurfaceGrid(w),
     cache = new Map<string, number>();
   const sample = (i: number, j: number) => {
     const key = `${i}:${j}`;
