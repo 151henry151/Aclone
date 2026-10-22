@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.86.0] - 2026-10-22
+
+### Added
+
+- Roads gradually connect remote towns from both ends, sharing the existing 12-metres-per-game-day construction budget. Unfinished routes survive server restarts.
+
+### Fixed
+
+- Roads grow detours around buildings and all farm plots, reconnect blocked junctions, and retire obstructed stretches after the bypass is complete. New extensions plan around obstacles instead of getting stuck against fields or walls.
+- Town-centre fountains sit on level stone retaining bases on hillsides; each bench rests on its own terrain height with legs reaching the ground.
+- Tractors pitch and roll with the terrain under their tyres, including NPC tractors. Cab camera positions and headlights follow the tilted vehicle.
+- Distant towns retain ground beneath their buildings. A cheaper outer terrain layer fills the camera's visible range with stitched edges, while clearer ordinary-weather haze preserves longer views of the spaceport and neighbouring settlements.
+
 ## [0.85.4] - 2026-10-22
 
 ### Fixed

@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.86.0
+
+Reload browsers for hillside furniture, tractor tilt and distant terrain. Existing
+worlds gradually plan town connections and bypass obstructed roads at the next
+game-day boundaries; no reset is required. Road plans and retired stretches persist
+in world saves, so retain the pre-upgrade database backup for rollback. Validation:
+920 unit/integration tests, the real-game hill-town/road browser check and production build.
+
 ## Upgrade 0.85.4
 
 Reload browsers for the snow-edge and thaw corrections. No data migration,

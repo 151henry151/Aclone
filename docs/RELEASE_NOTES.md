@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.86.0 — Hillside towns and connecting roads
+
+Remote towns gain roads gradually from both ends. Roads detour around buildings
+and all farm plots, preserving junctions and retiring blocked stretches once the
+bypass is complete. Crews share a 12 m per game-day budget and resume after restarts.
+
+Fountains and benches meet hillside terrain, tractors tilt with the ground, and
+distant villages retain terrain beneath them. Lighter ordinary-weather haze makes
+the spaceport and neighbouring settlements easier to see; storms still limit visibility.
+
 ## 0.85.4 — Cleaner snow edges and thaw
 
 Roadside snow no longer draws dark jagged outlines. Banks conform to the ground
