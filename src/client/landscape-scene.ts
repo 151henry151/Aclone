@@ -23,6 +23,7 @@ export function addLandscape(group: T.Group, w: World) {
       mesh.position.set((b.a.x + b.b.x) / 2, (ay + by) / 2 + offset, (b.a.z + b.b.z) / 2);
       mesh.rotation.y = Math.atan2(dx, dz);
       mesh.rotateX(-Math.atan2(by - ay, length));
+      mesh.userData.snowCap = 0.35;
       group.add(mesh);
     };
     if (b.kind === 'wall') beam(b.height, b.height / 2);
@@ -33,6 +34,7 @@ export function addLandscape(group: T.Group, w: World) {
       ] as const) {
         const post = new T.Mesh(new T.BoxGeometry(b.width, b.height, b.width), material);
         post.position.set(p.x, y + b.height / 2, p.z);
+        Object.assign(post.userData, { snowCap: 0.35, snowObstacle: 'post' });
         group.add(post);
       }
       beam(0.15, b.height * 0.4);

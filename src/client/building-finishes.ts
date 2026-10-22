@@ -342,6 +342,7 @@ export function finishSurface(
   kind: Exclude<WallFinish, 'stone'> | RoofFinish,
   tint = '#ffffff',
 ) {
+  if (['slate', 'clay', 'zinc'].includes(kind)) mesh.userData.snowCap = 0.75;
   const g = mesh.geometry,
     p = g.attributes.position,
     n = g.attributes.normal,

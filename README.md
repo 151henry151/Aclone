@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.85.2 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
+**Version 0.85.3 · development alpha · GPL-3.0-or-later · Node.js 24.14+**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -23,7 +23,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The Taxes & rates page (World/F9 or parish directory) explains live world and town rates, with included-tax totals beside shop trades.
 
-Version 0.85 adds visible snow accumulation around tyres and vegetation without extra terrain polygons. Natural depths over six inches are exceptional; sunny weather gradually melts extra snow while roads stay exposed. See the [changelog](CHANGELOG.md#0850---2026-10-22) and [weather rules](docs/PLAYING.md#time-and-weather).
+Version 0.85 adds visible snow accumulation around tyres and vegetation without extra terrain polygons. Natural depths over six inches are exceptional; sunny weather gradually melts extra snow while roads stay exposed. Version 0.85.3 adds physical snow caps on roofs and fences, roadside banks, drifts around walls and trees, and depth-sensitive tyre-rut shading; see [release changes](CHANGELOG.md#0853---2026-10-22) and the [weather rules](docs/PLAYING.md#time-and-weather).
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 

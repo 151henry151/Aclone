@@ -27,7 +27,7 @@ export function shippingContainers(plan: BuildingPlan) {
       h = v.eaves,
       x = 0,
       z = 0;
-    finishSurface(box(w, h, d, x, h / 2, z), 'metal', color);
+    finishSurface(box(w, h, d, x, h / 2, z), 'metal', color).userData.snowCap = 0.75;
     for (const dx of [-1, 1])
       for (const dz of [-1, 1])
         box(0.13, h + 0.04, 0.13, x + dx * (w / 2 - 0.045), h / 2, z + dz * (d / 2 - 0.045));

@@ -213,7 +213,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   scatter(new T.IcosahedronGeometry(0.09, 0), mat('#f0dc98'), flowers);
   const trunk = new T.CylinderGeometry(0.15, 0.46, 5, 7);
   trunk.translate(0, 2.5, 0);
-  scatter(trunk, mat('#625340'), trunks, true);
+  scatter(trunk, mat('#625340'), trunks, true).userData.snowObstacle = 'tree';
   evergreens(root, pines, low);
   const barkCanvas = document.createElement('canvas');
   barkCanvas.width = barkCanvas.height = 128;
@@ -233,7 +233,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     new T.MeshStandardMaterial({ color: '#ffffff', map: barkMap, roughness: 1 }),
     birches,
     true,
-  );
+  ).userData.snowObstacle = 'tree';
   const leaves = foliage(false);
   scatter(leaves.geometry, leaves.material, crowns, true);
   scatter(
@@ -276,8 +276,11 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   // Reuse the leaf material without the blob-like solid hedge geometry.
   const hedgeLeaf = foliage(false);
   scatter(hedgeLeaf.geometry, hedgeLeaf.material, hedges, true);
-  scatter(new T.BoxGeometry(0.15, 1.3, 0.15), mat('#c2b89b'), fence, true);
-  scatter(new T.BoxGeometry(4.4, 0.12, 0.12), mat('#b2a486'), rails, true);
+  Object.assign(scatter(new T.BoxGeometry(0.15, 1.3, 0.15), mat('#c2b89b'), fence, true).userData, {
+    snowCap: 0.35,
+    snowObstacle: 'post',
+  });
+  scatter(new T.BoxGeometry(4.4, 0.12, 0.12), mat('#b2a486'), rails, true).userData.snowCap = 0.3;
   const groups = new Map<number, T.Mesh[]>();
   for (const shade of shades) {
     const opacity = (shade.material as T.Material).opacity;

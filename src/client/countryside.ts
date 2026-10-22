@@ -1,3 +1,4 @@
+import { SnowAccumulation } from './snow-accumulation';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -136,6 +137,18 @@ export class CountrysideChunks {
       this.chunks.set(`${i}:${j}`, this.build(w, i, j));
     return wanted.length > budget;
   }
+  snowHeight(x: number, z: number, depth: number, base: number) {
+    if (!this.world || Math.max(Math.abs(x), Math.abs(z)) < 240) return base;
+    // Only query a neighbouring chunk when a trunk apron can cross its edge.
+    let height = base;
+    for (let a = Math.floor((x - 2) / chunkSize); a <= Math.floor((x + 2) / chunkSize); a++)
+      for (let b = Math.floor((z - 2) / chunkSize); b <= Math.floor((z + 2) / chunkSize); b++) {
+        const snow = this.chunks.get(`${a}:${b}`)?.userData.snowDetails as
+          SnowAccumulation | undefined;
+        if (snow) height = snow.heightAt(x, z, depth, height);
+      }
+    return height;
+  }
   private build(w: World, i: number, j: number) {
     assets ??= sharedAssets();
     const low = this.low;
@@ -241,6 +254,8 @@ export class CountrysideChunks {
           new T.Color().setRGB(0.8 + (k % 5) * 0.04, 0.84 + (k % 4) * 0.04, 0.75 + (k % 6) * 0.04),
         );
       });
+      if (geometry === assets!.trunk || geometry === assets!.birch)
+        mesh.userData.snowObstacle = 'tree';
       mesh.castShadow = mesh.receiveShadow = true;
       mesh.computeBoundingSphere();
       chunk.add(mesh);
@@ -289,6 +304,10 @@ export class CountrysideChunks {
       }
     }
     this.group.add(chunk);
+    const snow = new SnowAccumulation(w);
+    snow.collect(chunk);
+    chunk.add(snow.finish());
+    chunk.userData.snowDetails = snow;
     return chunk;
   }
 }

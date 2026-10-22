@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.85.3] - 2026-10-22
+
+### Fixed
+
+- Snow now forms physical roof caps with visible edges, roadside banks, and small drifts against foundations, tree trunks and fences. Layers grow and melt with the measured depth, leave road lanes clear, and are batched for economical rendering.
+- Snow tyre tracks now show compressed channels with shaded walls and tread relief that scales with snow depth and softens during thaw. Tracks stay continuous at low frame rates and follow sloping ground closely, while subtle surface and roadside lighting make accumulated snow easier to read without adding terrain polygons.
+
 ## [0.85.2] - 2026-10-22
 
 ### Fixed

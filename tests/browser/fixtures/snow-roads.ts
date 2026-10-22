@@ -2,6 +2,7 @@
 import * as T from 'three';
 import { createWorld } from '../../../src/shared/simulation';
 import { prepareSnowSurface, snowProfile, liftSnowShadow } from '../../../src/client/snow-surface';
+import { GroundTracks } from '../../../src/client/ground-tracks';
 import { tractor } from '../../../src/client/tractor';
 import { creatorSchema } from '../../../src/shared/creator';
 import {
@@ -92,4 +93,16 @@ await waitForTextures();
   for (let i = 0; i < pixels.length; i += 4)
     if (pixels[i + 1] > pixels[i] * 1.25 && pixels[i + 1] > pixels[i + 2] * 1.15) plants++;
   return { ...result, plants };
+};
+
+// Exercise the same instanced rut material used by the game, including melting.
+const tracks = new GroundTracks();
+(window as any).snowTracks = (depth: number) => {
+  if (!scene.children.includes(tracks.mesh)) {
+    scene.add(tracks.mesh);
+    for (let z = -6; z < 5; z += 1.16) tracks.record('driver', 6, z, 0, 'snow', true, 0.25);
+  }
+  tracks.sync((x, z) => depth * snowProfile(w)(x, z, 0), depth);
+  (window as any).renderSnow(depth);
+  return { calls: renderer.info.render.calls, marks: tracks.mesh.count };
 };

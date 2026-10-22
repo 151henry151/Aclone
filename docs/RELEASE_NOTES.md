@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.85.3 — Snow with visible depth
+
+Snow now builds up as physical layers on roofs, beside cleared roads and around
+foundations, tree trunks and fences. Roof edges reveal the thickness; shallow
+snow stays shallow and heavier packs grow gradually. Tyre channels have shaded
+walls and tread relief, follow the raised surfaces and remain continuous when
+frames or movement snapshots arrive slowly. Extra detail is batched, hidden
+when snow is gone, and works in Performance mode. Snowfall rates and driving
+rules are unchanged; no world reset is needed.
+
 ## 0.85.2 — Graphics fallback and startup pacing
 
 Adaptive graphics now reacts to sustained poor frame rates instead of waiting

@@ -288,8 +288,24 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       diffuseColor.rgb*=mix(base,snow,cover);
     `,
     );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <normal_fragment_maps>',
+      `#include <normal_fragment_maps>
+      if (cover > .001) {
+        // Centimetre-scale wind ripples and the exposed roadside lip. Shade them
+        // per pixel rather than subdividing every terrain tile for shallow snow.
+        float relief = min(snowDepthVisual,.3)*(1.-road)
+          + min(snowDepthVisual,.08)*(.12*noise(p*2.)+.08*noise(p*.65));
+        vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
+        vec3 rx=cross(dy,normal),ry=cross(normal,dx);
+        float det=dot(dx,rx)*faceDirection;
+        vec3 gradient=dFdx(relief)*rx+dFdy(relief)*ry;
+        vec3 snowNormal=normalize(abs(det)*normal-sign(det)*gradient);
+        normal=normalize(mix(normal,snowNormal,cover));
+      }`,
+    );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v7';
+  mat.customProgramCacheKey = () => 'countryside-ground-v8';
   return mat;
 }
 

@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.85.3
+
+Refresh the game after deployment to load the snow-depth graphics. Existing
+saved snow depths immediately control roof caps, roadside banks, obstacle drifts
+and tyre-rut relief. This is a client rendering update; it needs no migration,
+world reset, snowfall recalculation or player-data changes. Validation includes
+906 unit/integration tests, 19 focused snow/track checks, and two browser checks
+covering road visibility, tyre tracks and a full town at several snow depths.
+
 ## Upgrade 0.85.2
 
 Refresh browsers after deployment for adaptive graphics and startup fixes. No

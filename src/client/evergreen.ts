@@ -316,6 +316,7 @@ export function evergreens(
         trees.length,
       );
       mesh.name = `Evergreen ${kind} ${variant}`;
+      if (kind === 'wood') mesh.userData.snowObstacle = 'tree';
       trees.forEach((site, i) => {
         matrix.position.set(site.x, site.y, site.z);
         matrix.rotation.set(site.leanX, site.rotation, site.leanZ);

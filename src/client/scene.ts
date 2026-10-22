@@ -1,3 +1,4 @@
+import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
@@ -181,6 +182,8 @@ export class GameScene {
   private waterBase?: Float32Array;
   private ground = new GroundTiles();
   private woods = new CountrysideChunks();
+  private snowDetails?: SnowAccumulation;
+  private snowVisible = false;
   private low = localStorage.getItem('aclone.quality') === 'low';
   private software = false;
   private labelsHidden = false;
@@ -829,6 +832,8 @@ export class GameScene {
     this.land.updateMatrixWorld(true);
     addLandscape(this.land, w);
     this.land.updateMatrixWorld(true);
+    const snowDetails = new SnowAccumulation(w);
+    snowDetails.collect(this.land);
     const batches = new Map<string, { geometries: T.BufferGeometry[]; material: T.Material }>();
     const originals: T.Mesh[] = [];
     this.land.traverse((o) => {
@@ -904,6 +909,14 @@ export class GameScene {
             seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
           }
     });
+    snowDetails.collect(this.land);
+    snowDetails.foundations();
+    snowDetails.verges();
+    this.land.add(snowDetails.finish());
+    this.snowDetails = snowDetails;
+    this.snowVisible = snowDepth(w.climate) > 0.001;
+    showSnowAccumulation(this.land, this.snowVisible);
+    showSnowAccumulation(this.woods.group, this.snowVisible);
     if (!this.livestock.group.parent) this.actors.add(this.livestock.group);
     if (!this.fields.group.parent) this.actors.add(this.fields.group);
     if (!this.combatMarkers.parent) this.actors.add(this.combatMarkers);
@@ -1140,7 +1153,15 @@ export class GameScene {
         );
       const motionTime = this.motionClock.sample(now);
       const predicted = this.prediction.sample(now, this.localInput());
-      const snowHeight = snowTrackHeight(w);
+      const snowSurface = snowTrackHeight(w),
+        depth = snowDepth(w.climate);
+      const snowHeight = (x: number, z: number) =>
+        this.woods.snowHeight(
+          x,
+          z,
+          depth,
+          this.snowDetails?.heightAt(x, z, depth, snowSurface(x, z)) ?? snowSurface(x, z),
+        );
       for (const mesh of this.meshes.values()) {
         const pose =
           (mesh === this.meshes.get(p.id) ? predicted : undefined) ??
@@ -1239,10 +1260,11 @@ export class GameScene {
               ? undefined
               : kind,
             Math.abs(q.speed) > 0.6,
+            snowDepth(w.climate),
           );
         }
         this.tracks.tick(dt);
-        this.tracks.sync(snowHeight);
+        this.tracks.sync(snowHeight, snowDepth(w.climate));
         if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(
@@ -1285,6 +1307,10 @@ export class GameScene {
       const night = nightIllumination(astronomy, climate.clouds, drift);
       snowCover.value = w.climate?.snow ?? 0;
       snowDepthVisual.value = snowDepth(w.climate);
+      if (this.snowVisible !== snowDepthVisual.value > 0.001) {
+        this.snowVisible = snowDepthVisual.value > 0.001;
+        showSnowAccumulation(this.scene, this.snowVisible);
+      }
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =
           1 - (w.climate?.wetness ?? 0) * 0.45;
