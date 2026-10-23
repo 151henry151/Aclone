@@ -261,3 +261,60 @@ test('gamepad flight uses separate sticks and a wheel brake', () => {
   assert.equal(input.roll, -1);
   assert.equal(input.brake, true);
 });
+
+test('idle throttle-down pushes back slowly without fuel, and release/brakes stop it', () => {
+  const { p } = pilot();
+  p.engine = false;
+  p.fuel = 0;
+  assert.equal(run(p, 6, { ...idle, throttle: -1 }), undefined);
+  assert.ok(p.z < -5);
+  assert.ok(p.speed < -1 && p.speed >= -1.5);
+  assert.equal(p.flight!.throttle, 0);
+  assert.equal(p.flight!.grounded, true);
+  assert.equal(p.fuel, 0);
+  run(p, 1, { ...idle, throttle: -1, brake: true });
+  assert.equal(p.speed, 0);
+  const stopped = p.z;
+  run(p, 2, { ...idle, throttle: -1, brake: true });
+  assert.equal(p.z, stopped);
+  run(p, 2, { ...idle, throttle: -1 });
+  run(p, 12, idle);
+  assert.equal(p.speed, 0);
+});
+
+test('pushback steers backwards, then forward throttle resumes normal taxi', () => {
+  const { p } = pilot();
+  run(p, 3, { ...idle, throttle: -1 });
+  run(p, 3, { ...idle, throttle: -1, steer: 1 });
+  assert.ok(p.heading < -0.1);
+  run(p, 5, { ...idle, throttle: 1 });
+  assert.ok(p.speed > 2);
+  assert.ok(p.flight!.throttle > 0.9);
+  assert.equal(p.flight!.grounded, true);
+});
+
+test('throttle-down at speed or in flight never instantly reverses the aircraft', () => {
+  const { p } = pilot();
+  Object.assign(p.flight!, { vz: 12, airspeed: 12 });
+  p.speed = 12;
+  run(p, 1, { ...idle, throttle: -1 });
+  assert.ok(p.speed > 10);
+  const air = airborne();
+  air.flight!.throttle = 0;
+  run(air, 2, { ...idle, throttle: -1 });
+  assert.ok(air.flight!.vz > 20);
+  assert.equal(air.flight!.grounded, false);
+});
+
+test('a plane stopped against an obstacle can back away but cannot push through it', () => {
+  const { p } = pilot();
+  const wall = {
+    ...env,
+    blocked: (_from: { z: number }, to: { z: number }) => to.z > 0.01 || to.z < -6,
+  };
+  run(p, 6, { ...idle, throttle: 1 }, wall);
+  assert.ok(p.z <= 0.01);
+  assert.equal(run(p, 10, { ...idle, throttle: -1 }, wall), undefined);
+  assert.ok(p.z < -5 && p.z >= -6);
+  assert.equal(p.speed, 0);
+});

@@ -48,7 +48,7 @@ test('two-handed flight reaches the server, latches throttle, banks the aircraft
     await page.setViewportSize({ width: 390, height: 844 });
     for (const name of [
       'Increase throttle',
-      'Decrease throttle',
+      'Decrease throttle; hold at idle to push back',
       'Pitch nose up',
       'Pitch nose down',
       'Bank left',
@@ -65,14 +65,27 @@ test('two-handed flight reaches the server, latches throttle, banks the aircraft
     await expect(page.locator('#flight-readout')).toBeVisible();
     await page.screenshot({ path: 'test-results/biplane-flight-mobile.png' });
     await page.setViewportSize({ width: 1440, height: 900 });
+    const parkedZ = p.z;
+    await page.keyboard.down('s');
+    await expect.poll(() => p.z).toBeLessThan(parkedZ - 2);
+    await expect(page.locator('#flight-readout')).toContainText('PUSHBACK');
+    expect(p.flight!.grounded).toBe(true);
+    expect(p.flight!.throttle).toBe(0);
+    await page.keyboard.down('b');
+    await expect.poll(() => Math.abs(p.speed)).toBeLessThan(0.01);
+    await page.keyboard.up('s');
+    await page.keyboard.up('b');
     await page.keyboard.down('w');
-    await expect.poll(() => p.flight?.throttle, { timeout: 10000 }).toBeGreaterThan(0.98);
+    await expect.poll(() => p.flight?.throttle, { timeout: 30000 }).toBeGreaterThan(0.98);
     await page.keyboard.up('w');
     await page.waitForTimeout(1000);
     expect(p.flight!.throttle).toBeGreaterThan(0.98);
     expect(p.flight!.grounded).toBe(true);
+    // Rotate at flying speed, not after a fixed wall-clock delay. Software WebGL
+    // and shared CI runners can advance the simulation more slowly than real time.
+    await expect.poll(() => p.flight?.airspeed, { timeout: 45000 }).toBeGreaterThan(20);
     await page.keyboard.down('ArrowUp');
-    await expect.poll(() => p.flight?.grounded, { timeout: 15000 }).toBe(false);
+    await expect.poll(() => p.flight?.grounded, { timeout: 30000 }).toBe(false);
     await page.keyboard.up('ArrowUp');
     await expect.poll(() => p.y).toBeGreaterThan(12);
     await page.keyboard.down('ArrowLeft');

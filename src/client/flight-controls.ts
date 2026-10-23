@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Input } from '../shared/types';
 const idle: Input = { throttle: 0, steer: 0, boost: false, pitch: 0, roll: 0, brake: false };
-/** W/S are throttle-rate controls, never an absolute throttle or reverse thrust. */
+/** W/S are throttle-rate controls, idle throttle-down also requests slow ground pushback. */
 export function aircraftInput(
   keys: ReadonlySet<string>,
   touch: Input,

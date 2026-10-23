@@ -10,6 +10,12 @@ and angle of attack; it does not simulate wind gusts, structural flex or engine 
 Use two hands:
 
 - **W / S:** increase / decrease throttle. Release the key to leave it where you set it.
+  **Ground pushback (unreleased):** while stopped or moving slowly on the ground,
+  keep holding S after reaching idle to back up at walking speed (at most 1.5 m/s).
+  A/D steer while backing; B stops you. Release S to coast to a stop, or use W to
+  taxi forward again. This represents manual ground handling and works with the
+  engine off or an empty tank. In flight, S only reduces throttle. On touch controls,
+  hold Power −; on a controller, hold throttle-down at idle.
   There is no reverse thrust. Going from idle to full power takes about four seconds.
 - **A / D:** rudder left / right, also steering the wheels while taxiing.
 - **Up / Down arrows:** raise / lower the nose.

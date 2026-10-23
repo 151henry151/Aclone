@@ -34,6 +34,7 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const wrap = (v: number) => Math.atan2(Math.sin(v), Math.cos(v));
 const axis = (v: number | undefined) => (Number.isFinite(v) ? clamp(v!, -1, 1) : 0);
 export const FLIGHT = {
+  pushbackSpeed: 1.5,
   rotationSpeed: 19,
   approachSpeed: 24,
   maxLandingSink: 3.5,
@@ -94,7 +95,9 @@ export function fly(
         -0.04,
         0.3,
       );
-      p.heading += rudder * clamp(horizontal / 5, 0, 1) * (0.75 / (1 + speed / 18)) * dt;
+      const rollingDirection = Math.sign(f.vx * Math.sin(p.heading) + f.vz * Math.cos(p.heading));
+      p.heading +=
+        rudder * rollingDirection * clamp(horizontal / 5, 0, 1) * (0.75 / (1 + speed / 18)) * dt;
     } else {
       const path = Math.atan2(f.vy, Math.max(0.1, horizontal));
       // Aerodynamic damping stops rotation; it does not snap the attitude back to level.
@@ -154,10 +157,14 @@ export function fly(
         (env.ground(p.x + sh * 2, p.z + ch * 2) - env.ground(p.x - sh * 2, p.z - ch * 2)) / 4;
       const rolling = 0.18 + (1 - env.grip) * 1.4;
       const brake = input.brake ? 5.5 * env.grip : 0;
-      const nextSpeed = Math.max(
-        0,
-        horizontal + (thrust - drag - rolling - brake - FLIGHT.gravity * slope) * dt,
-      );
+      const signedSpeed = f.vx * sh + f.vz * ch;
+      // Holding throttle-down at idle acts as ground-handling pushback, not
+      // reverse propeller thrust. It also works with the engine off or no fuel.
+      const pushback = axis(input.throttle) < 0 && f.throttle === 0 && signedSpeed < 0.3;
+      let nextSpeed = signedSpeed + (thrust - FLIGHT.gravity * slope - (pushback ? 1.6 : 0)) * dt;
+      const resistance = (drag + rolling + brake) * dt;
+      nextSpeed = Math.sign(nextSpeed) * Math.max(0, Math.abs(nextSpeed) - resistance) || 0;
+      if (pushback) nextSpeed = Math.max(-FLIGHT.pushbackSpeed, nextSpeed);
       f.vx = sh * nextSpeed;
       f.vz = ch * nextSpeed;
       f.vy = 0;
@@ -181,14 +188,17 @@ export function fly(
     if (Math.abs(next.x) > env.half || Math.abs(next.z) > env.half) {
       if (speed > 5) return 'collision with the world boundary';
       f.vx = f.vz = 0;
-      return;
+      f.airspeed = p.speed = 0;
+      continue;
     }
     const support = env.ground(next.x, next.z);
     if (env.blocked(from, next)) {
       if (speed > 7 || !f.grounded) return 'collision with an obstacle';
       f.vx = f.vy = f.vz = 0;
-      p.speed = 0;
-      return;
+      f.airspeed = p.speed = 0;
+      // Keep advancing controls while a parked aircraft touches an obstacle.
+      // Otherwise only one physics substep runs and throttle-down becomes sluggish.
+      continue;
     }
     // Wheels cannot glue the aircraft to a sudden drop at a cliff/runway edge.
     if (f.grounded && support < ground - 0.15) {
@@ -229,7 +239,7 @@ export function fly(
     p.y = next.y;
     p.z = next.z;
     f.airspeed = Math.hypot(f.vx, f.vy, f.vz);
-    p.speed = f.airspeed;
+    p.speed = f.grounded ? f.vx * Math.sin(p.heading) + f.vz * Math.cos(p.heading) : f.airspeed;
     if (powered) p.fuel = Math.max(0, p.fuel - env.fuelRate * (0.12 + 0.88 * f.throttle) * dt);
   }
 }

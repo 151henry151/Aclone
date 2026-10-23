@@ -189,7 +189,7 @@ long-range night work; each machine has its own tank and saved finish.
 
 Fly a paintable, fabric-covered mail plane with an open cockpit, braced wings,
 landing gear and an animated wooden propeller. Cockpit instruments show airspeed, attitude, altitude, heading, climb rate, RPM
-and fuel; see [aircraft art notes](docs/ART.md#biplane).
+and fuel; see the [flying guide](docs/FLYING.md) for controls and ground handling, and [aircraft art notes](docs/ART.md#biplane).
 
 Two-handed flight controls, takeoff/landing physics and stalls make flying a skill
 to practise. See the [flight guide](docs/FLYING.md) for controls, cockpit instruments,

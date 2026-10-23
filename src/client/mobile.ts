@@ -180,7 +180,7 @@ export class MobileUI {
       ],
       [
         'reverse',
-        value ? 'Decrease throttle' : 'Reverse or walk backward',
+        value ? 'Decrease throttle; hold at idle to push back' : 'Reverse or walk backward',
         value ? 'Power −' : '↓',
       ],
       ['left', value ? 'Rudder left' : 'Steer left', '◀'],
