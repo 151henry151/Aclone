@@ -56,10 +56,11 @@ for (const mobile of [false, true])
       await expect(
         page.getByRole('button', { name: 'Edit Copper pine', exact: true }),
       ).toBeVisible();
-      await expect(async () => {
-        await page.locator('#creator-preview').scrollIntoViewIfNeeded();
-        await expect(page.locator('#creator-preview')).toBeInViewport();
-      }).toPass({ timeout: 10000 });
+      // Use the suite's software-WebGL assertion budget. A shorter outer
+      // toPass deadline can expire while the inner viewport check is still
+      // waiting for IntersectionObserver on a busy renderer.
+      await page.locator('#creator-preview').scrollIntoViewIfNeeded();
+      await expect(page.locator('#creator-preview')).toBeInViewport();
       await page.screenshot({
         path: `test-results/creator-workshop-${mobile ? 'phone' : 'desktop'}.png`,
       });

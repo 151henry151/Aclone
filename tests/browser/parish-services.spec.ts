@@ -7,9 +7,7 @@ import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { buildings } from '../../src/shared/catalog.ts';
 
-test('default Puddlewick exposes the intended starter roster and production at the two new services', async ({
-  page,
-}) => {
+test('default Puddlewick exposes its council and starter production services', async ({ page }) => {
   const dir = mkdtempSync(join(tmpdir(), 'aclone-parish-browser-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
   try {
@@ -34,20 +32,27 @@ test('default Puddlewick exposes the intended starter roster and production at t
     await expect(map).toBeVisible();
     for (const definition of w.buildings)
       await expect(map.getByRole('button', { name: definition.name, exact: true })).toBeVisible();
-    for (const kind of ['town', 'workshop', 'hotel', 'brewery', 'factory'])
+    for (const kind of ['workshop', 'hotel', 'brewery', 'factory'])
       await expect(
         map.getByRole('button', { name: buildings[kind].name, exact: true }),
       ).toHaveCount(0);
-    for (const kind of ['mason', 'waterworks']) {
+    for (const kind of ['town', 'mason', 'waterworks']) {
       await map.getByRole('button', { name: buildings[kind].name, exact: true }).click();
       await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
       await map.getByRole('button', { name: 'Parish directory', exact: true }).click();
       const building = w.buildings.find((b) => b.kind === kind)!;
-      await page.locator(`[data-do="building"][data-id="${building.id}"]`).click();
+      await page
+        .getByRole('dialog')
+        .locator(`[data-do="building"][data-id="${building.id}"]`)
+        .click();
       const panel = page.getByRole('dialog', { name: buildings[kind].name, exact: true });
       await expect(panel).toBeVisible();
       await expect(panel).toContainText(
-        kind === 'mason' ? '3 Stone → 2 Stone blocks' : '1 Fuel → 12 Water',
+        kind === 'town'
+          ? 'Town of Puddlewick'
+          : kind === 'mason'
+            ? '3 Stone → 2 Stone blocks'
+            : '1 Fuel → 12 Water',
       );
       await page.getByRole('button', { name: 'Close dialog' }).click();
       await page.keyboard.press('m');
