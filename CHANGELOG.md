@@ -6,6 +6,25 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.88.0] - 2026-10-22
+
+### Added
+
+- Textured tractor cockpits with rounded dashboard housings, gauges for actual speed, fuel and condition, an odometer, engine/light indicators, floor mats, door inserts and headliners. Instruments illuminate with the lights and update only in the local first-person view.
+- Independent paint colours for each owned vehicle. Garage previews show the selected tractor's saved finish; repainting it leaves the rest of the fleet unchanged. Existing owned machines retain their previous shared colour.
+- Six distinct tractor designs with complementary cargo, speed, fuel, handling, rough-ground and headlight characteristics. Garages offer a rotating preview at a common scale and detailed specifications before purchase.
+- Persistent individual vehicle tanks and remembered tractor selection: new specialist tractors start empty, parked fuel survives switching and reloads, and returning from walking recalls the selected owned tractor. Fuel gauges, roadside refuelling, wheel contact and tyre tracks match each machine.
+
+### Changed
+
+- Give the starter tractor a more economical engine so it remains a useful choice alongside the specialist machines. Existing custom vehicle slots retain their identities.
+
+### Fixed
+
+- Correct tractor steering-wheel tilt so the upper rim leans away from the driver; improve the seated view and dashboard placement across all six tractor models.
+- Update the parish browser test to verify the restored council and its government panel instead of expecting it to be absent.
+- Let the creator-preview browser check use the full software-rendering assertion timeout instead of aborting it early inside a shorter retry deadline.
+
 ## [0.87.2] - 2026-10-22
 
 ### Fixed

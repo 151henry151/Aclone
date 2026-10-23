@@ -1,3 +1,6 @@
+import { updateTractorCockpit } from './tractor-cockpit';
+import { fleetTractor, tractorShapes } from './tractor-fleet';
+import { isTractor } from '../shared/tractors';
 import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
 import { vehicleGround } from './vehicle-ground';
 import { townCentreGround } from './town-centre-ground';
@@ -47,7 +50,7 @@ import { celestialAt } from '../shared/astronomy';
 import { twilightAt, nightIllumination } from './sky-weather';
 import { tractor, TRACTOR_EYE_HEIGHT, TRACTOR_SEAT_Z } from './tractor';
 import { SmokePlumes } from './smoke';
-import { tractorPaint } from '../shared/appearance';
+import { tractorPaint, vehiclePaint } from '../shared/appearance';
 import { buildingModel } from './buildings';
 import { buildingPlan } from '../shared/building-shapes';
 import { fishingDock, dockHeight, travelHeight, nearFishingDock } from '../shared/dock';
@@ -461,8 +464,9 @@ export class GameScene {
     this.livestock.update(world, this.me);
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
+      const paint = vehiclePaint(p);
       let mesh = this.meshes.get(p.id);
-      if (mesh && (mesh.userData.vehicle !== p.vehicle || mesh.userData.paint !== p.tractorPaint)) {
+      if (mesh && (mesh.userData.vehicle !== p.vehicle || mesh.userData.paint !== paint)) {
         this.actors.remove(mesh);
         dispose(mesh);
         this.meshes.delete(p.id);
@@ -484,7 +488,7 @@ export class GameScene {
           : this.vehicle(
               p.vehicle,
               p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
-              p.tractorPaint,
+              paint,
             );
         mesh.userData.creatorKey = visualKey;
         if (visual && p.id !== me) {
@@ -492,7 +496,7 @@ export class GameScene {
           tag.position.y = visual.height + 1;
           mesh.add(tag);
         }
-        mesh.userData.paint = p.tractorPaint;
+        mesh.userData.paint = paint;
         mesh.userData.vehicle = p.vehicle;
         mesh.position.set(p.x, p.y, p.z);
         this.meshes.set(p.id, mesh);
@@ -1082,7 +1086,8 @@ export class GameScene {
       g.add(crow.group);
       g.userData.robocrow = crow;
     } else {
-      tractor(g, tractorPaint(paint)?.color ?? v.color);
+      if (isTractor(slot)) fleetTractor(g, slot, tractorPaint(paint)?.color ?? v.color);
+      else tractor(g, tractorPaint(paint)?.color ?? v.color);
       if (v.mode === 5) box(g, 4, 0.6, 5, '#454d42', 0, 0.4, 0);
     }
     if (name) {
@@ -1190,7 +1195,13 @@ export class GameScene {
         mesh.rotation.set(0, pose.heading, 0, 'YXZ');
         const mode = vehicles[mesh.userData.vehicle]?.mode;
         if (mesh.userData.wheels && mode !== 5 && pose.y < bareSurface(pose.x, pose.z) + 1) {
-          const ground = vehicleGround(pose.x, pose.z, pose.heading, bareSurface);
+          const ground = vehicleGround(
+            pose.x,
+            pose.z,
+            pose.heading,
+            bareSurface,
+            mesh.userData.contacts,
+          );
           mesh.rotation.copy(ground.rotation);
           mesh.position.y = ground.y;
         }
@@ -1208,12 +1219,15 @@ export class GameScene {
         if (occupant) occupant.visible = mesh !== this.meshes.get(p.id) || this.cameraMode !== 1;
       }
       this.headlights.visible = p.lights && !p.atHome;
+      this.headlights.intensity = vehicles[p.vehicle].headlight ?? 150;
+      this.headlights.distance = vehicles[p.vehicle].lightRange ?? 110;
       const local = this.meshes.get(p.id);
       if (local) {
+        if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed);
         const pos = local.position;
         const facing = local.rotation.y;
         this.headlights.position.copy(
-          new T.Vector3(0, local.userData.driver ? 1.7 : 2, 0)
+          (local.userData.lamp?.clone() ?? new T.Vector3(0, local.userData.driver ? 1.7 : 2, 0))
             .applyQuaternion(local.quaternion)
             .add(pos),
         );
@@ -1234,8 +1248,8 @@ export class GameScene {
           this.cameraMode === 1
             ? new T.Vector3(
                 0,
-                walking ? 1.68 : tractorView ? TRACTOR_EYE_HEIGHT : 3,
-                tractorView ? TRACTOR_SEAT_Z : 0,
+                walking ? 1.68 : tractorView ? (local.userData.eye?.y ?? TRACTOR_EYE_HEIGHT) : 3,
+                tractorView ? (local.userData.eye?.z ?? TRACTOR_SEAT_Z) : 0,
               )
                 .applyQuaternion(local.quaternion)
                 .add(pos)
@@ -1249,14 +1263,15 @@ export class GameScene {
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         local.userData.snapCamera = false;
+        const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
         if (this.cameraMode === 1)
           this.target
             .copy(this.camera.position)
             .add(
               new T.Vector3(
-                Math.sin(heading) * Math.cos(this.lookPitch) * 30,
-                Math.sin(this.lookPitch) * 30,
-                Math.cos(heading) * Math.cos(this.lookPitch) * 30,
+                Math.sin(heading) * Math.cos(cockpitPitch) * 30,
+                Math.sin(cockpitPitch) * 30,
+                Math.cos(heading) * Math.cos(cockpitPitch) * 30,
               ),
             );
         this.camera.lookAt(this.target);
@@ -1275,7 +1290,7 @@ export class GameScene {
         const roads = townRoads(w);
         for (const [id, mesh] of this.meshes) {
           const q = w.players[id];
-          if (!q || q.vehicle !== 0 || q.atHome) continue;
+          if (!q || !isTractor(q.vehicle) || q.atHome) continue;
           this.tracks.record(
             id,
             mesh.position.x,
@@ -1286,21 +1301,20 @@ export class GameScene {
               : kind,
             Math.abs(q.speed) > 0.6,
             snowDepth(w.climate),
+            tractorShapes[q.vehicle].half / (1.22 * 0.82),
           );
         }
         this.tracks.tick(dt);
         this.tracks.sync(snowHeight, snowDepth(w.climate));
-        if (p.vehicle === 0 && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
+        if (isTractor(p.vehicle) && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(
             pos
               .clone()
               .add(
-                new T.Vector3(
-                  -0.57 * 0.82 * Math.cos(facing) + 0.78 * 0.82 * Math.sin(facing),
-                  2.8,
-                  0.57 * 0.82 * Math.sin(facing) + 0.78 * 0.82 * Math.cos(facing),
-                ),
+                (
+                  local.userData.exhaust?.clone() ?? new T.Vector3(-0.57 * 0.82, 2.8, 0.78 * 0.82)
+                ).applyQuaternion(local.quaternion),
               ),
           );
         }

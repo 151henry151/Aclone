@@ -1,3 +1,4 @@
+import { vehiclePaint } from '../shared/appearance.ts';
 import { families, personalOffers, familyInvites } from '../shared/social.ts';
 import { repairRecipientReady } from '../shared/vehicle-services.ts';
 import { productionReport } from '../shared/reports.ts';
@@ -130,7 +131,7 @@ export function prepareFrame(w: World): Frame {
         vehicle: p.vehicle,
         canReceiveFuel: refuelRecipientReady(p),
         canReceiveRepair: repairRecipientReady(p),
-        tractorPaint: p.tractorPaint,
+        tractorPaint: vehiclePaint(p),
         atHome: p.atHome,
         lights: p.lights,
         engineRunning: motorRunning(w, p),

@@ -1,3 +1,10 @@
+import {
+  fuelCapacity,
+  switchVehicle,
+  isTractor,
+  tractorSurface,
+  returnTractor,
+} from './tractors.ts';
 import { playerStatistics, recordGathered } from './player-statistics.ts';
 import { hiringLimit, jobVacancy } from './staffing.ts';
 import { salesReceipt } from './taxes.ts';
@@ -116,7 +123,13 @@ import {
   checkpoints,
 } from './catalog.ts';
 import { farmAction, finishHarvest, expireFarmCrops } from './farming.ts';
-import { appearance, tractorPaint } from './appearance.ts';
+import {
+  appearance,
+  tractorPaint,
+  vehiclePaint,
+  paintableVehicle,
+  migrateVehiclePaint,
+} from './appearance.ts';
 import { buildingBlocksMovement } from './building-shapes.ts';
 import type { World, Player, Building, Stock, Action, Input, Ledger, Settings } from './types.ts';
 export const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
@@ -381,8 +394,8 @@ function usable(w: World, p: Player, item: string) {
     'That item is equipment or a trade good',
   );
   if (def.fuel) {
-    requireThat(p.fuel < 64, 'The tank is full');
-    p.fuel = Math.min(64, p.fuel + def.fuel);
+    requireThat(p.fuel < fuelCapacity(p), 'The tank is full');
+    p.fuel = Math.min(fuelCapacity(p), p.fuel + def.fuel);
   } else {
     p.repeats = p.lastFood === item ? p.repeats + 1 : 0;
     p.lastFood = item;
@@ -677,7 +690,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'vehicleTuning': {
       owner(p);
-      const slot = num(a.slot, 0, 23, true);
+      const slot = num(a.slot, 0, vehicles.length - 1, true);
       const tuning = {
         speed: num(a.speed, 1, 100),
         acceleration: num(a.acceleration, 1, 50),
@@ -988,13 +1001,27 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'paint': {
       const b = nearby(w, p, a.building);
-      requireThat(b.kind === 'garage', 'Visit the garage to repaint your tractor');
+      requireThat(
+        b.kind === 'garage' && !b.construction,
+        'Visit a completed garage to repaint your vehicle',
+      );
+      const slot =
+        a.slot === undefined
+          ? paintableVehicle(p.vehicle)
+            ? p.vehicle
+            : returnTractor(p)
+          : num(a.slot, 0, vehicles.length - 1, true);
+      requireThat(
+        paintableVehicle(slot) && (p.fleet ?? [0, 5]).includes(slot),
+        'Choose a vehicle you own',
+      );
       const color = str(a.color);
       requireThat(tractorPaint(color), 'Choose a paint from the garage palette');
-      requireThat(p.tractorPaint !== color, 'Your tractor already has that paint');
+      requireThat(vehiclePaint(p, slot) !== color, 'This vehicle already has that paint');
       charge(w, p, appearance.paintPrice, 'tractor repaint');
-      p.tractorPaint = color;
-      result = 'Fresh paint. Same dependable tractor.';
+      migrateVehiclePaint(p);
+      p.vehiclePaints = { ...p.vehiclePaints, [slot]: color };
+      result = `Fresh paint for your ${vehicles[slot].name}.`;
       break;
     }
     case 'buyMap': {
@@ -1042,7 +1069,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'vehicle': {
-      const slot = num(a.slot, 0, 23, true);
+      const slot = num(a.slot, 0, vehicles.length - 1, true);
       requireThat(
         p.game !== 'combat' || [0, 5].includes(slot),
         'Arena combat uses tractors or walking',
@@ -1058,16 +1085,17 @@ export function act(w: World, id: string, a: Action): string {
         carry(p, w) <= vehicles[slot].capacity,
         'Unload cargo before changing to a smaller vehicle',
       );
-      if (slot !== 5 && slot !== 0) {
+      if (slot !== 5 && slot !== 0 && !(isTractor(slot) && fleet.includes(slot))) {
         const b = nearby(w, p, a.building);
         requireThat(b.kind === 'garage', 'Visit the garage');
         if (!fleet.includes(slot)) {
           charge(w, p, vehicles[slot].price, 'vehicle purchase');
+          migrateVehiclePaint(p);
           fleet.push(slot);
         }
       }
       p.fleet = fleet;
-      p.vehicle = slot;
+      switchVehicle(p, slot);
       vehicleRecord(w, p);
       p.speed = 0;
       p.y = terrainHeight(w, p.x, p.z);
@@ -1129,12 +1157,12 @@ export function act(w: World, id: string, a: Action): string {
         p.x = p.team ? 102 : 78;
         p.z = 45 + ((joined.length % 3) - 1) * 5;
         p.heading = p.team ? -Math.PI / 2 : Math.PI / 2;
-        p.vehicle = 0;
+        switchVehicle(p, 0, false);
       }
       if (game === 'race') {
         p.x = -75;
         p.z = -20;
-        p.vehicle = 0;
+        switchVehicle(p, 0, false);
         p.race = { start: w.time + 3, next: 1 };
         p.heading = -Math.PI / 4;
       }
@@ -1562,7 +1590,7 @@ export function act(w: World, id: string, a: Action): string {
         status = refuellingStatus(w, p, target);
       requireThat(!status.reason, status.reason ?? 'Cannot refuel');
       stockAdd(p.inventory, 'fuel', -1);
-      target.fuel = Math.min(64, target.fuel + status.units);
+      target.fuel = Math.min(fuelCapacity(target), target.fuel + status.units);
       const amount = Number(status.units.toFixed(2));
       say(
         w,
@@ -1696,7 +1724,7 @@ export function command(w: World, p: Player, text: string): string {
       return `${who.name} now lives in ${t.name}.`;
     }
     case 'showfuel':
-      return `Fuel: ${p.fuel.toFixed(1)} / 64`;
+      return `Fuel: ${p.fuel.toFixed(1)} / ${fuelCapacity(p)}`;
     case 'showjobs':
     case 'jobs':
       return w.buildings
@@ -1740,7 +1768,7 @@ export function command(w: World, p: Player, text: string): string {
       target().health = num(Number(args[1]), 1, maximumHealth(target()));
       break;
     case 'setvehicle':
-      target().vehicle = num(Number(args[1]), 0, 23, true);
+      switchVehicle(target(), num(Number(args[1]), 0, vehicles.length - 1, true));
       break;
     case 'gag':
       target().muted = !target().muted;
@@ -1796,11 +1824,15 @@ export function move(w: World, p: Player, input: Input, dt: number) {
     : { speed: 1, grip: 1 };
   const crowSpeed = p.crowBody && p.crowClass ? crowClasses[p.crowClass].speed : 1;
   const cap =
-    crowSpeed * v.speed * (input.boost ? 1.7 : 1) * surface.speed * (0.7 + condition * 0.003);
+    crowSpeed *
+    v.speed *
+    (input.boost ? 1.7 : 1) *
+    tractorSurface(surface.speed, v.traction) *
+    (0.7 + condition * 0.003);
   p.speed +=
     ((powered ? throttle : 0) *
       v.acceleration *
-      surface.grip *
+      tractorSurface(surface.grip, v.traction) *
       slopeSpeed(grade * Math.sign(throttle)) -
       p.speed * (throttle ? 0.13 : 1.8)) *
     dt;
@@ -1808,7 +1840,7 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   p.heading +=
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
-    surface.grip *
+    tractorSurface(surface.grip, v.traction) *
     (input.boost ? 1.15 : 1) *
     dt *
     ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
@@ -1831,14 +1863,20 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
   if (
-    !creatorBlocksSegment(w, p, { x: nx, z: nz, y: p.y }, p.vehicle === 5 ? 0.25 : 1.3, true) &&
+    !creatorBlocksSegment(
+      w,
+      p,
+      { x: nx, z: nz, y: p.y },
+      p.vehicle === 5 ? 0.25 : (v.collisionRadius ?? 1.3),
+      true,
+    ) &&
     !w.buildings.some((b) =>
       buildingBlocksMovement(
         b,
         p,
         { x: nx, z: nz },
         p.y - terrainHeight(w, b.x, b.z),
-        p.vehicle === 5 ? 0.25 : 1.3,
+        p.vehicle === 5 ? 0.25 : (v.collisionRadius ?? 1.3),
       ),
     )
   ) {

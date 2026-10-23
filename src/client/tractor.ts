@@ -1,3 +1,4 @@
+import { STEERING_TILT } from './tractor-cockpit';
 import { detailTexture, detailMaterial } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -151,7 +152,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   g.add(driver.group);
   g.userData.driver = driver.group;
   const steering = add(g, new T.TorusGeometry(0.29, 0.033, 6, 16), black, 0, 2.62, -0.1);
-  steering.rotation.x = -0.8;
+  steering.rotation.x = STEERING_TILT;
   const pipe = add(g, new T.CylinderGeometry(0.08, 0.095, 1.22, 10), steel, -0.57, 2.73, 0.78);
   box(g, 0.3, 0.12, 0.24, black, pipe.position.x, 3.37, 0.78, 0.04);
   // Low-segment sidewalls with baked chevron tread and rim bolts; wheel groups still rotate.
@@ -216,7 +217,7 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
   }
 }
 /** Batch the stationary body and each animated wheel separately. */
-function batch(group: T.Group) {
+export function batch(group: T.Group) {
   const batches = new Map<T.Material, T.BufferGeometry[]>();
   for (const o of [...group.children]) {
     if (!(o instanceof T.Mesh) || Array.isArray(o.material) || o.material.transparent) continue;

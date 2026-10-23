@@ -140,7 +140,7 @@ Galactic credits/cargo are separate from local cash/inventory; spaceports conver
 
 ## Appearance and property
 
-Choose among five architectural models per building type and six independent finishes, with size options for suitable types, using the building designer below. Existing properties keep their stock, location and capacity; garage paint is saved per planetary pilot. Garages offer seven tractor paints for 25d at defaults. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid. Puddlewick also allows qualified owners to operate their factories without wages, including offline.
+Choose among five architectural models per building type and six independent finishes, with size options for suitable types, using the building designer below. Existing properties keep their stock, location and capacity; garage paint is saved separately for each owned machine. Garages offer seven paints for 25d at defaults; select the owned tractor to repaint without changing the others. Costs/materials/skills/civilization tiers apply. Owners use Stockroom and Building Admin, never self-trade or paid self-employment; buying your workplace ends that job. Neighbours can still fund a till they do not own and collect a capped return after it earns. Farm owners may tend/harvest unpaid. Puddlewick also allows qualified owners to operate their factories without wages, including offline.
 
 Buy unclaimed property or player-listed buildings (a red **For sale** tag with the asking price hangs under a listed building's name sign, visible from about 70 m), repair them and supply construction materials. To abandon an unfinished site, drive nearby, open it, expand **Cancel construction**, and confirm the displayed refund. The owner receives 75% of the original base cash cost; construction tax and delivered materials are not returned. Older sites without a saved cost use the lower of their saved building price and current catalogue base price. Completed buildings cannot use this refund. Homes and rooms use exterior shelter, not separate interior maps. [Economy](ECONOMY.md) covers business management and guesthouse rules.
 
@@ -206,7 +206,7 @@ Startup preserves purchased/custom properties, skips blocked sites and retries p
 Click an online player's name or **World/F9 → Players & roadside help** (**Actions** on mobile). Includes NPCs and private chat.
 
 - **Give money:** 0.01d–1,000,000d, two decimals, from cash in hand to another online player anywhere in this parish. No tax/fee; not a loan, bank withdrawal or galactic transfer. Both get private receipts; input values stay set.
-- **Refuel:** carry Fuel from a stocked shop/garage; stop within 15m and at the same height. Both must be outside, stationary and free of tasks/games/passenger rides/scouting. One Fuel adds up to 8 tank units, capped at 64; surplus is consumed, not taken from your own tank. Only fuel-powered vehicles qualify.
+- **Refuel:** carry Fuel from a stocked shop/garage; stop within 15m and at the same height. Both must be outside, stationary and free of tasks/games/passenger rides/scouting. One Fuel adds up to 8 tank units, capped at that machine’s tank capacity; surplus is consumed, not taken from your own tank. Only fuel-powered vehicles qualify.
 
 Buttons explain blockers; the server rechecks on receipt and saves transfers. Owners independently control both features under Editor → Rules (enabled by default). Receipts remain in recent chat.
 
@@ -248,13 +248,24 @@ A qualified owner or employee can **Arrange breeding** in the barn: two cows, 80
 
 Inventory lists each food's effects. Milk restores some health; cheese and dairy suppers also increase maximum health for this life. Nutrition changes the usual 60000 ceiling by at most ±6000 and resets on death. Custom foods may have clearly labelled negative effects, but consumption alone cannot reduce health below one. Ordinary hunger/thirst can still kill. Homes prefer a different available food and feed at the usual threshold; sheltered meals receive full food/drink value. Outdoor repeated servings still lose half their hunger/thirst benefit from the third serving.
 
+## Choosing a tractor
+
+Visit a completed garage to compare six tractor models at the same preview scale.
+The [tractor guide](TRACTORS.md) explains each machine’s speed, carrying capacity,
+fuel use, tank, handling and lights. Buy with cash, and bring fuel: new purchases
+have empty tanks. Each machine retains its parked fuel and paint. You can select
+an owned tractor outside; returning from walking recalls your selected tractor.
+Unload excess cargo before switching to a smaller machine. In first-person view,
+the textured dashboard shows speed, fuel, condition and distance; switch on the
+lights to illuminate the instruments.
+
 ## Vehicle care and roadside services
 
 Garage **Vehicle service** shows current condition, recorded kilometres and elapsed hours since first recorded use (old vehicles start with no invented history). Ordinary powered travel loses 0.2 condition points per kilometre. Parking, offline time and minigames cause no wear. At zero condition, top speed is 70% and fuel use is 30% higher; you can still reach help. Other damage/armour rules are separate.
 
 Bring **Steel** spare parts from a steelworks or shop. Each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
 
-World owners may require **driver**, **pilot**, or **boatmaster** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. The basic tractor and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick doesn't require these licences.
+World owners may require **driver**, **pilot**, or **boatmaster** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. All six tractors and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick doesn't require these licences.
 
 Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d, and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.
 

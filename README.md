@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.87.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.88.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -15,7 +15,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Build an economy: gather materials, grow seven crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and stocked homes that feed you offline. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Contextual controls show relevant vehicle/activity actions, explain seasonal planting limits, and separate personal property management from caretaker tools.
-- Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag. Combat-world creators can enable distinct robocrow classes with mark/recall abilities.
+- Choose among six distinct, individually paintable tractors with different cargo, speed, handling, tank and headlight strengths; preview and buy them at garages. Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag. Combat-world creators can enable distinct robocrow classes with mark/recall abilities.
 - Watch the spaceport cargo launcher depart with engine plumes and pad smoke every three or four game days and land half a day later. Choose cargo, courier, explorer or shielded spacecraft with distinct fuel/time tradeoffs and travel among seven star systems; visit other trusted, self-hosted galaxies with a persistent identity and separate local progress.
 - Choose active-work, relaxed owner-operated, harsh-survival or combat/frontier rules, then customize them. Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, animated GLB/OBJ models, painted PNG/JPEG textures, environmental audio zones and portable media bundles, custom goods/professions/building templates, production-chain diagnostics, readable books, recurring town events, optional player-funded lotteries, visual behavior rules, ordered tutorials/quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. Mabel stays in her home world to help neighbours and develop her settlement; other residents can travel. Address one directly by name, or use `@all` to invite one interested volunteer without a chorus of replies. Say “Mabel, stop responding” to end her public conversation; mentioning her while addressing another player does not summon her. API billing and operator spending limits are separate from consumer subscriptions. Developers can test survival and business growth in an isolated [accelerated Jev experiment](docs/NPCS.md#actual-jev-snapshot-experiments-paid), with explicit spending limits and resumable reports.
@@ -172,3 +172,15 @@ Release maintainers can use the optional [Discord changelog publisher](docs/RELE
 Code, configuration, documentation and original generated art/audio are **GPL-3.0-or-later**, unless a file says otherwise. See [LICENSE](LICENSE), [COPYRIGHT](COPYRIGHT), [third-party notices](THIRD_PARTY_NOTICES.md) and [security policy](SECURITY.md). Contributions use the same license.
 
 _A tractor / The Universal_ belongs to its creators; Aclone is independent and not endorsed by them. The supplied spec and `sources/` are research, not relicensed assets, and are excluded from the client and release archive. The World Owners' Manual is attributed in the research spec; these guides use original wording.
+
+### Tractor fleet
+
+Each owned machine can have its own saved paint colour; the garage preview shows
+the selected tractor’s finish. Repainting one leaves the others unchanged.
+First-person cockpits have textured interiors and working speed, fuel and condition
+gauges, with illuminated instruments, rounded dashboard tops and correctly tilted steering wheels.
+
+The [tractor fleet guide](docs/TRACTORS.md) covers five specialist tractors alongside
+the reworked starter, with a garage model viewer and balanced trade-offs. Choose
+compact handling, express deliveries, bulk hauling, rough-ground traction or
+long-range night work; each machine has its own tank and saved finish.

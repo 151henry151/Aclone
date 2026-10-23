@@ -1,3 +1,4 @@
+import { switchVehicle } from './tractors.ts';
 import { crowClasses, returnCrow } from './robocrows.ts';
 import { maximumHealth } from './nutrition.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -37,7 +38,7 @@ export function combatSpawn(w: World, p: Player) {
   p.health = maximumHealth(p);
   p.energy = 65000;
   p.speed = 0;
-  p.vehicle = p.combatVehicle ?? 0;
+  switchVehicle(p, p.combatVehicle ?? 0, false);
   p.invulnerableUntil = w.time + (w.creator?.arena.protectionSeconds ?? 3);
   p.ammo = { ...ammunition };
   delete p.weaponCharge;

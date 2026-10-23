@@ -67,9 +67,15 @@ export interface Player {
   roomPantries?: Record<string, Stock>;
   vehicle: number;
   fleet?: number[];
+  lastTractor?: number;
+  fuelVehicle?: number;
+  parkedFuel?: Record<number, number>;
   fleetState?: Record<number, import('./vehicle-services.ts').VehicleRecord>;
   canReceiveRepair?: boolean;
+  /** Legacy shared finish; also the resolved visible paint in public player snapshots. */
   tractorPaint?: string;
+  /** Private owned-machine finishes, keyed by vehicle slot. */
+  vehiclePaints?: Record<number, string>;
   engine: boolean;
   /** Public snapshot projection for audible motors. */
   engineRunning?: boolean;
@@ -401,6 +407,11 @@ export interface ItemDef {
   fuel?: number;
 }
 export interface VehicleDef {
+  tank?: number;
+  traction?: number;
+  headlight?: number;
+  lightRange?: number;
+  collisionRadius?: number;
   name: string;
   mode: number;
   speed: number;

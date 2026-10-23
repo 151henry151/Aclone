@@ -2,6 +2,22 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.88.0
+
+Back up the database and reload browsers after deployment. Six tractor designs
+use slot 0 and newly appended slots 24–28; existing vehicles and creator slots
+8–23 retain their identities. No world reset or manual migration is needed.
+Old shared fuel is adopted once when switching legacy vehicles; new specialist
+purchases start empty, and each parked tank then preserves its own fuel. Old
+paint is retained by already-owned machines when the first purchase or repaint
+migrates it; future purchases start in their factory colours. Retain the backup
+for rollback: older versions do not understand the new slots or per-machine state.
+
+Check the garage's six model previews, purchase/recall controls and independent
+paint choices. Verify first-person instruments and model-specific fuel capacity.
+Validation: 948 unit/integration tests, desktop and phone garage checks, corrected
+creator/parish browser checks, and visual review of all six exteriors and cockpits.
+
 ## Upgrade 0.87.2
 
 Back up the world database before starting this version. Startup repairs duplicated

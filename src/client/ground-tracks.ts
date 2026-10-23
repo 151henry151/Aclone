@@ -20,6 +20,7 @@ export type TrackMark = {
   kind: TrackKind;
   age: number;
   depth: number;
+  widthScale?: number;
 };
 export function trackKind(climate: { snow?: number; wetness?: number }) {
   if ((climate.snow ?? 0) > 0.08) return 'snow';
@@ -219,6 +220,7 @@ export class GroundTracks {
     kind: TrackKind | undefined,
     moving: boolean,
     snowDepth = 0.04,
+    widthScale = 1,
   ) {
     const prev = this.last.get(id);
     const distance = prev ? Math.hypot(x - prev.x, z - prev.z) : 0;
@@ -247,6 +249,7 @@ export class GroundTracks {
         ...point,
         kind,
         age: 0,
+        widthScale,
         depth: kind === 'snow' ? Math.max(0, Math.min(0.3, snowDepth * 0.8)) : 0,
       });
       this.last.set(id, { ...point, kind });
@@ -275,7 +278,7 @@ export class GroundTracks {
           mark.z - x * Math.sin(mark.heading) + z * Math.cos(mark.heading),
         ) - ground;
       // PlaneGeometry UV y=0 is its +Z edge after rotating onto the ground.
-      const x = TRACK_PRINT_WIDTH / 2,
+      const x = (TRACK_PRINT_WIDTH / 2) * (mark.widthScale ?? 1),
         z = TRACK_LENGTH / 2;
       // Nine samples follow terrain triangle boundaries that a single flat quad
       // can cut through, making whole stretches of a shallow rut disappear.
@@ -288,7 +291,7 @@ export class GroundTracks {
         );
       this.relief.setX(i, Math.min(mark.depth, snowDepth * 0.8) * fade);
       this.dummy.rotation.set(0, mark.heading, 0);
-      this.dummy.scale.setScalar(1);
+      this.dummy.scale.set(mark.widthScale ?? 1, 1, 1);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
       this.mesh.setColorAt(i, mark.kind === 'snow' ? snow : mud);

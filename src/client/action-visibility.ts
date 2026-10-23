@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { vehiclePaint, paintableVehicle } from '../shared/appearance';
+import { fuelCapacity, returnTractor } from '../shared/tractors';
 import type { Building, Player, World } from '../shared/types';
 import { jobVacancy, hiringLimit } from '../shared/staffing';
 import { propertyQuote } from '../shared/property';
@@ -17,6 +19,7 @@ export function actionVisible(
   id?: string,
   b?: Building,
   plotIndex?: number,
+  vehicleSlot?: number,
 ): boolean | undefined {
   const free = !p.atHome && !p.task && !p.hitch && !p.crowBody && p.health > 0;
   switch (action) {
@@ -26,7 +29,7 @@ export function actionVisible(
     case 'walk':
       return free && p.vehicle !== 5;
     case 'tractor':
-      return free && p.vehicle !== 0;
+      return free && p.vehicle !== returnTractor(p);
     case 'vehicle':
       return (
         free && p.vehicle !== Number(id) && (p.game !== 'combat' || [0, 5].includes(Number(id)))
@@ -66,7 +69,7 @@ export function actionVisible(
         !p.crowBody &&
         !!item &&
         !!(item.food || item.drink || item.health || item.maxHealth || item.fuel) &&
-        (!item.fuel || p.fuel < 64)
+        (!item.fuel || p.fuel < fuelCapacity(p))
       );
     }
     case 'discard':
@@ -139,8 +142,15 @@ export function actionVisible(
       return free && ![5, 6, 7].includes(p.vehicle);
     case 'buyMap':
       return !p.crowBody && !(p.inventory.parishMap > 0);
-    case 'paint':
-      return !p.crowBody && p.tractorPaint !== id;
+    case 'paint': {
+      const slot = vehicleSlot ?? (paintableVehicle(p.vehicle) ? p.vehicle : returnTractor(p));
+      return (
+        !p.crowBody &&
+        paintableVehicle(slot) &&
+        (p.fleet ?? [0, 5]).includes(slot) &&
+        vehiclePaint(p, slot) !== id
+      );
+    }
     case 'repair':
       return !!b && b.condition < 100;
     case 'demolish':
@@ -172,9 +182,15 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   if (action === 'buyBuilding' && b && p.cash < propertyQuote(w, b).total)
     return 'Not enough cash to buy this property';
   if (action === 'walk' || action === 'tractor' || action === 'vehicle') {
-    const slot = action === 'walk' ? 5 : action === 'tractor' ? 0 : Number(id);
+    const slot = action === 'walk' ? 5 : action === 'tractor' ? returnTractor(p) : Number(id);
     if (carry(p, w) > vehicles[slot].capacity)
       return 'Unload cargo before changing to a smaller vehicle';
+    if (
+      action === 'vehicle' &&
+      !(p.fleet ?? [0, 5]).includes(slot) &&
+      p.cash < vehicles[slot].price
+    )
+      return 'Not enough cash';
     const licence = requiredLicence(w, slot);
     if (licence && !p.skills.includes(licence)) return `Learn ${licence} at school first`;
   }
@@ -206,6 +222,7 @@ export function refreshActionVisibility(host: HTMLElement, w: World, p: Player) 
       el.dataset.id ?? value('operation'),
       b,
       Number(el.dataset.plot ?? value('plot')),
+      el.dataset.vehicle === undefined ? undefined : Number(el.dataset.vehicle),
     );
     if (visible !== undefined) el.hidden = !visible;
     if (form && b && action !== 'farm') {

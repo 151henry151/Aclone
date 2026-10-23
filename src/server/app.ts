@@ -1,3 +1,4 @@
+import { vehiclePaint } from '../shared/appearance.ts';
 import { Playtime } from './playtime.ts';
 import { playerStatistics } from '../shared/player-statistics.ts';
 import { serveStatic } from './static-files';
@@ -238,7 +239,7 @@ export async function createApp(options: AppOptions) {
                 heading: q.heading,
                 speed: q.speed,
                 vehicle: q.vehicle,
-                tractorPaint: q.tractorPaint,
+                tractorPaint: vehiclePaint(q),
                 atHome: q.atHome,
                 lights: q.lights,
                 engineRunning: motorRunning(w, q),

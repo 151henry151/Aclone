@@ -2,6 +2,28 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.88.0 — Six tractors, six ways to make a living
+
+Garages now offer five specialist tractors alongside the familiar Puddle tractor:
+Orchard Wren for tight spaces, Swift Kestrel for express deliveries, Barley Dray
+for bulk loads, Fenlander for difficult ground, and Lamplighter for long journeys
+and night work. Each trades strengths against cargo, speed, fuel use or handling;
+there is no single upgrade that wins at everything.
+
+Compare their actual 3D models and specifications before buying. Every owned
+machine keeps its own paint and fuel tank. New purchases start empty; unload
+cargo before switching to a smaller vehicle. Returning from walking recalls your
+selected owned tractor. The starter now uses less fuel.
+
+Cockpits have rounded dashboard housings, textured interiors, correctly tilted
+steering wheels and working speed, fuel, condition and distance instruments.
+Instruments illuminate with the lights. Detail stays lightweight and only the
+local visible cockpit updates its gauge texture. This release also corrects the
+creator-preview and restored-council browser checks.
+
+See the [tractor guide](TRACTORS.md) for specifications and trade-offs. Reload to
+load the new models; no world reset is required.
+
 ## 0.86.0 — Hillside towns and connecting roads
 
 Remote towns gain roads gradually from both ends. Roads detour around buildings

@@ -1,3 +1,4 @@
+import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehicles } from './catalog.ts';
 import { publicTowns } from './civics.ts';
@@ -36,6 +37,7 @@ export interface CaretakerResident {
   vehicle: number;
   vehicleName: string;
   fuel: number;
+  fuelCapacity: number;
   engine: boolean;
   lights: boolean;
   atHome: boolean;
@@ -203,6 +205,7 @@ function resident(w: World, p: Player): CaretakerResident {
     z: round(p.z),
     speed: round(p.speed),
     vehicle: p.vehicle,
+    fuelCapacity: fuelCapacity(p),
     vehicleName: vehicles[p.vehicle]?.name ?? `Vehicle ${p.vehicle}`,
     fuel: p.fuel,
     engine: p.engine,

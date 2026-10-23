@@ -1,3 +1,5 @@
+import { tractorShopHtml, mountTractorShop, vehiclePaintShop } from './tractor-shop';
+import { fuelCapacity, returnTractor, isTractor } from '../shared/tractors';
 import type { PlaytimeStatistics } from '../shared/player-statistics';
 import { staffingPanel, economicsPanel } from './staffing-panel';
 import { hiringLimit, jobVacancy } from '../shared/staffing';
@@ -83,7 +85,6 @@ import { roomCount } from '../shared/lodging';
 import { shipStats, routeQuote, stationPrice, spaceGoods } from '../shared/galaxy';
 import { calendar, worldWeather, snowDescription } from '../shared/environment';
 import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
-import { appearance } from '../shared/appearance';
 import { VERSION } from '../shared/version';
 import './style.css';
 import './mobile.css';
@@ -697,7 +698,7 @@ function updateHud() {
     ['Hunger', me.hunger / 50000, 'hunger'],
     ['Thirst', me.thirst / 50000, 'thirst'],
     ['Wellbeing', 1 - (me.hunger + me.thirst) / 100000, 'wellbeing'],
-    ['Fuel', me.fuel / 64, 'fuel'],
+    ['Fuel', me.fuel / fuelCapacity(me), 'fuel'],
     ['Energy', me.energy / 65000, 'energy'],
   ];
   setHudHtml(
@@ -777,7 +778,7 @@ function updateHud() {
       .slice(0, 4)
       .map(
         ([id, n]) =>
-          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < 64)) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
+          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < fuelCapacity(me!))) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
       `<div class="carry">${carry(me, world!)} / ${vehicles[me.vehicle].capacity} carried</div>`,
@@ -1130,11 +1131,14 @@ function watchCaretaker(open: boolean) {
     if (panel === 'caretaker') send({ type: 'caretaker' });
   }, 4000);
 }
+let closeTractorPreview: (() => void) | undefined;
 function closePanel() {
   if (panel === 'building' && lastTradeVisit === tradeVisit && tradeFeedback.summary)
     toast(tradeFeedback.summary);
   tradeVisit++;
   closeCreatorPreview();
+  closeTractorPreview?.();
+  closeTractorPreview = undefined;
   closeBuildPreview?.();
   closeBuildPreview = undefined;
   panelMemory.capture();
@@ -1149,6 +1153,8 @@ function closePanel() {
 }
 function modal(title: string, content: string, wide = false) {
   closeCreatorPreview();
+  closeTractorPreview?.();
+  closeTractorPreview = undefined;
   closeBuildPreview?.();
   closeBuildPreview = undefined;
   panelMemory.capture();
@@ -1873,24 +1879,27 @@ function buildingWindow(b: Building) {
           );
         })
         .join('')}</div>`;
+    if (b.kind === 'garage') html += tractorShopHtml();
     if (b.kind === 'garage')
-      html += `<div class="directory">${vehicles
+      html += `<h3>Other vehicles</h3><div class="directory">${vehicles
         .slice(0, 6)
         .map((v, i) =>
-          button(
-            `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(me!.fleet ?? [0, 5]).includes(i) ? 'Owned' : money(v.price)}</span>`,
-            'vehicle',
-            `data-id="${i}" data-building="${b.id}"`,
-            'wide',
-          ),
+          i === 0
+            ? ''
+            : button(
+                `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(me!.fleet ?? [0, 5]).includes(i) ? 'Owned' : money(v.price)}</span>`,
+                'vehicle',
+                `data-id="${i}" data-building="${b.id}"`,
+                'wide',
+              ),
         )
         .join('')}</div>`;
     if (b.kind === 'garage') {
       const record = me!.fleetState?.[me!.vehicle];
       html += `<h3>Vehicle service</h3><p>${esc(vehicles[me!.vehicle].name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
     }
-    if (b.kind === 'garage')
-      html += `<h3>Tractor paint shop</h3><p>A fresh finish costs ${money(appearance.paintPrice)}. Your choice stays with your tractor when you leave or sign out.</p><div class="paint-options">${appearance.paints.map((p) => `<button data-do="paint" data-id="${p.id}" data-building="${b.id}" ${!near || me!.tractorPaint === p.id ? 'disabled' : ''}><span class="paint-chip" style="background:${p.color}"></span>${esc(p.name)}</button>`).join('')}</div>`;
+    if (b.kind === 'garage' && !isTractor(me.vehicle))
+      html += vehiclePaintShop(world, me, b, me.vehicle);
     if (b.kind === 'haybarn')
       html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
@@ -2122,6 +2131,8 @@ function buildingWindow(b: Building) {
   if (tab === 'Extra Info')
     html += `<p>Building condition: ${b.condition.toFixed(1)}%. Government properties do not decay.</p><p>Production needs input stock, output space, and enough investment to pay wages. Each production building has an ideal active crew. Below it, efficiency is active ÷ ideal; above it, ideal ÷ active. Unstaffed private businesses run at ${world.settings.offlineEfficiency * 100}%.</p>${owned && !b.operatingLease && !b.auction ? button('Repair building', 'repair', `data-building="${b.id}"`) + button('Demolish building', 'demolish', `data-building="${b.id}"`) : ''}${me.job === b.id ? button('Quit job', 'quit') : ''}`;
   modal(b.name, html, true);
+  if (b.kind === 'garage' && tab === 'Main')
+    closeTractorPreview = mountTractorShop($('modal-host'), world, me, b);
   refreshTradingPrices();
 }
 function editorWindow() {
@@ -2454,7 +2465,7 @@ app.addEventListener('click', async (e) => {
         break;
       case 'walk':
       case 'tractor':
-        send({ type: 'vehicle', slot: action === 'walk' ? 5 : 0 });
+        send({ type: 'vehicle', slot: action === 'walk' ? 5 : returnTractor(me!) });
         closePanel();
         break;
       case 'learn':
@@ -2528,7 +2539,7 @@ app.addEventListener('click', async (e) => {
         if (id === 'harvest') closePanel();
         break;
       case 'paint':
-        send({ type: 'paint', building, color: id });
+        send({ type: 'paint', building, color: id, slot: Number(el.dataset.vehicle) });
         break;
       case 'construct':
         send({

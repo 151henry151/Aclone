@@ -2,7 +2,7 @@
 import { Euler, Quaternion, Vector3 } from 'three';
 
 /** The four tyre contacts of the standard tractor, in rendered metres. */
-const contacts = [-1.22 * 0.82, 1.22 * 0.82].flatMap((x) =>
+const defaultContacts = [-1.22 * 0.82, 1.22 * 0.82].flatMap((x) =>
   [-1.15 * 0.82, 1.37 * 0.82].map((z) => new Vector3(x, 0, z)),
 );
 /** Align the wheelbase with the bare ground. A fitted tangent plane supplies
@@ -13,6 +13,7 @@ export function vehicleGround(
   z: number,
   heading: number,
   sample: (x: number, z: number) => number,
+  contacts: Vector3[] = defaultContacts,
 ) {
   const c = Math.cos(heading),
     s = Math.sin(heading);

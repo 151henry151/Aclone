@@ -1,3 +1,4 @@
+import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types.ts';
 import { items, vehicles } from './catalog.ts';
@@ -18,7 +19,10 @@ export function moneyGiftReason(w: World, p: Player, target?: Player) {
   if (!p.online) return 'Sign in to give money';
 }
 export function refuellingStatus(w: World, p: Player, target?: Player, publicSnapshot = false) {
-  const units = Math.max(0, Math.min(items.fuel.fuel ?? 8, 64 - (target?.fuel ?? 0)));
+  const units = Math.max(
+    0,
+    Math.min(items.fuel.fuel ?? 8, (target ? fuelCapacity(target) : 64) - (target?.fuel ?? 0)),
+  );
   let reason: string | undefined;
   if (w.settings.allowPlayerRefuelling === false)
     reason = 'Helping refuel players is disabled in this world';
@@ -50,6 +54,6 @@ export function refuelRecipientReady(p: Player) {
     Math.abs(p.speed) <= 0.5 &&
     vehicles[p.vehicle]?.fuel > 0 &&
     Number.isFinite(p.fuel) &&
-    p.fuel < 64
+    p.fuel < fuelCapacity(p)
   );
 }

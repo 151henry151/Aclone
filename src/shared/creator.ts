@@ -140,7 +140,7 @@ export const creatorSchema = z.object({
   ambience: z.array(ambientSchema).max(32).default([]),
   terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
   resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
-  vehicleModels: z.record(z.string().regex(/^([0-9]|1[0-9]|2[0-3])$/), id).default({}),
+  vehicleModels: z.record(z.string().regex(/^([0-9]|1[0-9]|2[0-8])$/), id).default({}),
 });
 export type Creator = z.infer<typeof creatorSchema>;
 export type Blueprint = z.infer<typeof blueprintSchema>;
