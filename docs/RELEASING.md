@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.90.0
+
+Reload browsers for the rebuilt hovercraft, engine-driven fan and seated cockpit.
+No world reset or data migration is needed. Paint, fuel, prices and handling are
+unchanged. Validate ground clearance, fan animation and cockpit instruments; the
+focused hovercraft browser check and production build cover these changes.
+
 ## Upgrade 0.89.0
 
 Reload browsers to load the rebuilt biplane and its working cockpit instruments.

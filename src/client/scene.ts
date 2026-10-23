@@ -1,3 +1,4 @@
+import { createHovercraft, updateHovercraftInstruments, type HovercraftFigure } from './hovercraft';
 import { updateTractorCockpit } from './tractor-cockpit';
 import { createBiplane, updateBiplaneInstruments, type BiplaneFigure } from './biplane';
 import { fleetTractor, tractorShapes } from './tractor-fleet';
@@ -1080,6 +1081,13 @@ export class GameScene {
       g.userData.driver = plane.group.userData.driver;
       g.userData.eye = plane.group.userData.eye;
       g.userData.viewPitch = plane.group.userData.viewPitch;
+    } else if (v.mode === 5) {
+      const hover = createHovercraft(tractorPaint(paint)?.color ?? v.color);
+      g.add(hover.group);
+      g.userData.hovercraft = hover;
+      g.userData.driver = hover.group.userData.driver;
+      g.userData.eye = hover.group.userData.eye;
+      g.userData.viewPitch = hover.group.userData.viewPitch;
     } else if (v.mode === 3) {
       box(g, 3, 1, 6, v.color, 0, 0.5, 0);
       box(g, 2, 1.8, 2, '#d6cfae', 0, 1.8, -1);
@@ -1090,7 +1098,6 @@ export class GameScene {
     } else {
       if (isTractor(slot)) fleetTractor(g, slot, tractorPaint(paint)?.color ?? v.color);
       else tractor(g, tractorPaint(paint)?.color ?? v.color);
-      if (v.mode === 5) box(g, 4, 0.6, 5, '#454d42', 0, 0.4, 0);
     }
     if (name) {
       const tag = pilotLabel(name);
@@ -1215,6 +1222,10 @@ export class GameScene {
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
         (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
+        (mesh.userData.hovercraft as HovercraftFigure | undefined)?.animate(
+          dt,
+          mesh.userData.engineRunning,
+        );
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
         if (plane) {
           plane.animate(dt, mesh.userData.engineRunning, pose.y - bareSurface(pose.x, pose.z));
@@ -1231,6 +1242,8 @@ export class GameScene {
       const local = this.meshes.get(p.id);
       if (local) {
         if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed);
+        if (this.cameraMode === 1 && local.userData.hovercraft)
+          updateHovercraftInstruments(local.userData.hovercraft.group, p, this.elapsed);
         if (this.cameraMode === 1 && local.userData.biplane)
           updateBiplaneInstruments(
             local.userData.biplane.group,

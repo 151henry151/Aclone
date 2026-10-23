@@ -197,6 +197,27 @@ Run `npx tsx scripts/biplane-preview.ts` for front, rear, side, overhead and sea
 views plus a review sheet in `output/biplane/`. The focused browser check is
 `npm run test:e2e -- tests/browser/biplane.spec.ts`.
 
+### Hovercraft
+
+`src/client/hovercraft.ts` builds the Marsh Courier, a small enclosed utility
+hovercraft with a continuous rounded skirt, sloped windscreen, cargo lockers,
+rear duct, safety mesh and turning fan. Rubber folds, panel seams, maker lettering,
+non-slip deck pattern and instrument faces use cached textures. The fan guard is
+an alpha-tested texture rather than a lattice of individual geometry. Each craft
+retains independent garage paint; creator-provided models still take precedence.
+
+The model accounts for the physics engine's 0.5-metre hover offset, leaving its
+skirt just above the surface. Static geometry is batched by material. Including
+the seated driver, it stays below 15,000 triangles and 24 meshes. These budgets
+are not a measured FPS guarantee. Speed, cargo capacity, fuel use and water/land
+handling are unchanged. The engine controls the fan; only the visible local
+cockpit updates its speed/fuel texture, at most four times a second.
+
+Run `npx tsx scripts/hovercraft-preview.ts` for actual factory renders and a review
+sheet in `output/hovercraft/`. Run `npm run test:e2e -- tests/browser/hovercraft.spec.ts`
+for paint, engine animation, skirt normals, ground clearance, instrument updates
+and geometry-budget checks.
+
 ### Building finishes
 
 `building-finishes.ts` supplies shared 512px masonry, timber, plaster and roofing maps plus 256px door, awning and window details. Profiles distinguish food shops, civic buildings, agricultural sheds and industry; existing stone and cottage siding remain in use. Brick joints, grain, fasteners, shutter ribs, bread displays and leaded glass are baked into textures. Roof courses follow the eaves and corrugations run downhill. Original footprints and cottage style choices are unchanged.

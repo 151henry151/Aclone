@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.90.0 — Marsh Courier hovercraft
+
+The hovercraft now has its own utility-craft design: a rounded rubber skirt,
+forward cabin, cargo lockers, non-slip deck and a large guarded rear fan. The fan
+turns with the engine, the cockpit shows speed and fuel, and garage paint colours
+the hull and cabin. Textures provide rubber folds, seams and small details.
+Existing performance, ownership and operating costs stay the same.
+
 ## 0.89.0 — A proper parish mail plane
 
 The biplane now has a tapered fuselage, fabric-covered shaped wings, bracing wires,

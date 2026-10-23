@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.89.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.90.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -190,3 +190,9 @@ long-range night work; each machine has its own tank and saved finish.
 Fly a paintable, fabric-covered mail plane with an open cockpit, braced wings,
 landing gear and an animated wooden propeller. Cockpit instruments show speed,
 height above ground and fuel; see [aircraft art notes](docs/ART.md#biplane).
+
+### Hovercraft
+
+The Marsh Courier hovercraft has a rubber skirt, enclosed cockpit, guarded rear
+fan and cargo lockers, with working speed/fuel instruments and individual paint.
+See [the art notes](docs/ART.md#hovercraft).

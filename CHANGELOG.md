@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.90.0] - 2026-10-23
+
+### Changed
+
+- Rebuild the hovercraft as a paintable marsh utility craft with a rounded rubber skirt, enclosed forward cabin, rear ducted fan, cargo lockers and textured non-slip decks. The fan follows engine state, and first-person instruments show actual speed and fuel.
+
 ## [0.89.0] - 2026-10-22
 
 ### Changed
