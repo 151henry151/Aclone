@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-FROM node:24-bookworm-slim AS build
+FROM node:24.22.1-bookworm-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -11,7 +11,7 @@ ARG BASE_PATH=/
 ENV BASE_PATH=$BASE_PATH
 RUN npm run build
 
-FROM node:24-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000 DATA_DIR=/app/var
 WORKDIR /app
 COPY --from=build /app/package*.json ./

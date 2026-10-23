@@ -6,7 +6,7 @@ license-compatible. Do not extract anything from the original game.
 
 ## Development setup
 
-Use Node.js 24.14+ and `npm ci`. Run `npm run dev`, open the printed URL, and
+Use Node.js 24.22.1+ (24.x LTS) and `npm ci`. Run `npm run dev`, open the printed URL, and
 create a test world to access the editor. Keep a separate `DATA_DIR` for
 experiments that alter an economy. Data files are plain JSON; no authoring tool
 is required. The server runs on Linux without a display.

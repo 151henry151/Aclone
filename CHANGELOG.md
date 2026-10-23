@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.87.1] - 2026-10-22
+
+### Security
+
+- Require the patched Node.js 24.22.1 LTS runtime and use it in container builds and CI, addressing the October 2026 Node.js security disclosures. Existing hosts must upgrade Node and restart their services separately from updating Aclone.
+- Update Vite and its source-map dependency to fix development-server access/command-handling vulnerabilities and a source-map processing denial of service.
+
 ## [0.87.0] - 2026-10-22
 
 ### Added

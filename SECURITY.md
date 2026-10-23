@@ -55,3 +55,28 @@ animation/extension paths; dimensions and geometry budgets limit resource use.
 This does not make arbitrary scenes cheap to render. Scripts remain isolated
 from networking, filesystem access and account operations. Only validated bounded
 effects return to the simulation. Designs never import account or player records.
+
+## Runtime and dependency security updates
+
+Use Node.js 24.22.1 or a newer patched 24.x LTS release. The
+[October 2026 Node.js advisory](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases)
+includes Brotli decoding memory corruption and DNS/TLS validation fixes. `npm audit`
+checks npm packages, not Node's bundled libraries or OS packages; a clean audit
+is not evidence that the running server is fully patched. Serving precompressed
+Brotli files does not itself invoke the decoder, but outgoing HTTP clients may
+decode compressed responses.
+
+Check the actual running executable as well as the installed Node version. After
+upgrading Node, restart the game service gracefully and verify its health and
+runtime version; an existing process keeps running the old executable. Apply the
+same runtime update to other Node services such as the Discord publisher. Keep
+backups and an explicit rollback procedure. Manually installed Node binaries are
+not updated by Debian's unattended package upgrades.
+
+Run `npm audit` for the full dependency tree, including development tools: hosting
+retains `tsx` and other development dependencies even though production mode does
+not expose the Vite development server. Rebuild containers with `docker compose
+build --pull` after a base-image update. Keep the Dockerfile, CI Node version,
+package engine requirement and operator documentation aligned when updating the
+supported runtime. Do not infer vulnerability status from nginx's upstream version
+alone: distributions backport security fixes without changing that version.

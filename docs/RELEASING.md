@@ -2,6 +2,19 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.87.1
+
+Upgrade the host's Node.js runtime to **24.22.1 or a newer patched 24.x LTS**
+before deploying. Updating npm dependencies alone does not fix the Node runtime.
+Back up the live database and preserve the previous executable for rollback;
+replace the binary atomically, then gracefully restart Aclone. Verify the actual
+running process version and public health endpoint. Other Node services, including
+the Discord changelog publisher, must also use the patched runtime. Rebuild Docker
+images with `--pull`; this release pins the security baseline in Docker and CI.
+No world reset or database migration is needed. Validation: all 931 tests and the
+production build passed under Node 24.22.1; an isolated startup on nogits passed
+with a disposable database. The full dependency audit reports no known advisories.
+
 ## Upgrade 0.87.0
 
 Reload browsers for **F9 → Statistics**. No world reset is needed. Personal

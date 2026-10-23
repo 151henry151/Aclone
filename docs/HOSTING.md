@@ -2,7 +2,7 @@
 
 ## Native installation
 
-Node.js **24.14+**, `npm ci`, `npm run build`, `npm start`. No external database, Redis or GPU required. Run one unprivileged process per database; dev mode is not public hosting mode.
+Node.js **24.22.1+ (24.x LTS)**, `npm ci`, `npm run build`, `npm start`. No external database, Redis or GPU required. Run one unprivileged process per database; dev mode is not public hosting mode.
 
 - `HOST=127.0.0.1`, `PORT=3000`: bind address/port. Use 0.0.0.0 for intentional LAN access.
 - `DATA_DIR=var`: database/assets, relative to working directory; use an absolute service path.
