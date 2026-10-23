@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { flightState } from '../../src/shared/flight.ts';
 import { waitForWorld } from './fixtures/ready';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation.ts';
+import {
+  createWorld,
+  addPlayer,
+  makeBuilding,
+  terrainHeight,
+} from '../../src/shared/simulation.ts';
 
 test('touch input releases safely, aircraft and weapons work, and tablet/desktop layouts remain distinct', async ({
   browser,
 }) => {
+  // Several software-WebGL viewport/context rebuilds plus cleanup can exceed
+  // the single-scene default on shared runners. Individual assertions stay bounded.
+  test.setTimeout(270000);
   const dir = mkdtempSync(join(tmpdir(), 'aclone-touch-safety-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
   const context = await browser.newContext({
@@ -38,7 +47,7 @@ test('touch input releases safely, aircraft and weapons work, and tablet/desktop
     await page.addInitScript(setup, { token });
     const packets: {
       type: string;
-      input?: { throttle: number; lift?: number };
+      input?: { throttle: number; lift?: number; pitch?: number };
       action?: { type: string };
     }[] = [];
     page.on('websocket', (ws) =>
@@ -89,17 +98,24 @@ test('touch input releases safely, aircraft and weapons work, and tablet/desktop
     await page.evaluate(() => window.dispatchEvent(new Event('blur')));
     await expect.poll(() => input()?.throttle).toBe(0);
     await release();
-    // Real flight physics responds to the previously keyboard-only lift action.
+    // Start in established flight: the biplane now uses pitch, not vertical lift.
+    // Actual ground run and takeoff are covered by flight.spec.ts.
     p.vehicle = 2;
-    p.speed = 12;
+    p.speed = 26;
     p.fuel = 64;
+    p.engine = true;
+    p.y = terrainHeight(w, p.x, p.z) + 150;
+    delete p.flight;
+    flightState(p, terrainHeight(w, p.x, p.z)).throttle = 0.7;
     await expect(page.locator('#mobile-flight')).toBeVisible();
-    const height = p.y;
+    const pitch = p.flight!.pitch;
     await hold('[data-hold=up]');
-    await expect.poll(() => p.y).toBeGreaterThan(height + 0.2);
+    await expect.poll(() => input()?.pitch).toBe(1);
+    await expect.poll(() => p.flight?.pitch).toBeGreaterThan(pitch + 0.05);
     await release();
-    await expect.poll(() => input()?.lift).toBe(0);
+    await expect.poll(() => input()?.pitch).toBe(0);
     p.vehicle = 0;
+    delete p.flight;
     p.speed = 0;
     p.y = 0.15;
     await page.locator('[data-do=mobile-actions]').tap();
