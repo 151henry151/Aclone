@@ -8,6 +8,7 @@ const hold = (key: string, label: string, text: string) =>
   `<button type="button" data-hold="${key}" aria-label="${label}" aria-pressed="false">${text}</button>`;
 export class MobileUI {
   active = false;
+  private aircraft = false;
   drawer: 'chat' | 'status' | '' = '';
   private holds = new Map<number, { key: string; element: HTMLButtonElement }>();
   private taps = new Map<number, { button: HTMLButtonElement; x: number; y: number }>();
@@ -23,7 +24,7 @@ export class MobileUI {
     const hud = document.getElementById('world-hud')!;
     hud.insertAdjacentHTML(
       'beforeend',
-      `<div class="mobile-only mobile-top"><button id="mobile-status" type="button" aria-expanded="false" aria-controls="mobile-status-panel"><span id="mobile-cash"></span><small id="mobile-vitals"></small></button></div><div class="mobile-only" id="mobile-target"></div><div class="mobile-only mobile-drive" aria-label="Touch driving controls"><div class="mobile-steering"><div class="drive-extras"><button type="button" data-do="horn" aria-label="Sound horn">Horn</button>${hold('boost', 'Hold to boost', 'Boost')}</div><div>${hold('left', 'Steer left', '◀')}${hold('right', 'Steer right', '▶')}</div></div><div class="mobile-pedals">${hold('forward', 'Accelerate or walk forward', '↑')}<span>DRIVE</span>${hold('reverse', 'Reverse or walk backward', '↓')}</div><div id="mobile-flight" hidden>${hold('up', 'Climb', 'Climb')}${hold('down', 'Descend', 'Descend')}</div><div id="mobile-combat" hidden>${hold('fire', 'Fire selected weapon; hold and release to throw a javelin', 'Fire')}</div></div><nav class="mobile-only mobile-nav" aria-label="Mobile game navigation"><button type="button" data-do="map">Map</button><button type="button" data-do="inventory">Bag</button><button type="button" id="mobile-chat" aria-expanded="false" aria-controls="mobile-chat-panel">Chat</button><button type="button" data-do="mobile-actions">Actions</button></nav><button type="button" class="mobile-only mobile-scrim" aria-label="Close mobile panel" hidden></button>`,
+      `<div class="mobile-only mobile-top"><button id="mobile-status" type="button" aria-expanded="false" aria-controls="mobile-status-panel"><span id="mobile-cash"></span><small id="mobile-vitals"></small></button></div><div class="mobile-only" id="mobile-target"></div><div class="mobile-only mobile-drive" aria-label="Touch driving controls"><div class="mobile-steering"><div class="drive-extras"><button type="button" data-do="horn" aria-label="Sound horn">Horn</button>${hold('boost', 'Hold to boost', 'Boost')}</div><div>${hold('left', 'Steer left', '◀')}${hold('right', 'Steer right', '▶')}</div></div><div class="mobile-pedals">${hold('forward', 'Accelerate or walk forward', '↑')}<span>DRIVE</span>${hold('reverse', 'Reverse or walk backward', '↓')}</div><div id="mobile-flight" hidden>${hold('up', 'Climb', 'Climb')}${hold('down', 'Descend', 'Descend')}<span id="mobile-bank" hidden>${hold('bank-left', 'Bank left', 'Bank ◀')}${hold('bank-right', 'Bank right', 'Bank ▶')}</span></div><div id="mobile-combat" hidden>${hold('fire', 'Fire selected weapon; hold and release to throw a javelin', 'Fire')}</div></div><nav class="mobile-only mobile-nav" aria-label="Mobile game navigation"><button type="button" data-do="map">Map</button><button type="button" data-do="inventory">Bag</button><button type="button" id="mobile-chat" aria-expanded="false" aria-controls="mobile-chat-panel">Chat</button><button type="button" data-do="mobile-actions">Actions</button></nav><button type="button" class="mobile-only mobile-scrim" aria-label="Close mobile panel" hidden></button>`,
     );
     const chat = document.querySelector<HTMLElement>('.chat-panel')!;
     const status = document.querySelector<HTMLElement>('.status-panel')!;
@@ -164,12 +165,48 @@ export class MobileUI {
     if (value) this.reset();
     document.documentElement.classList.toggle('mobile-modal', value);
   }
+  setAircraft(value: boolean) {
+    if (this.aircraft === value) return;
+    this.aircraft = value;
+    document.documentElement.classList.toggle('aircraft-controls', value);
+    this.reset();
+    document.getElementById('mobile-bank')!.hidden = !value;
+    document.querySelector('.mobile-pedals > span')!.textContent = value ? 'FLIGHT' : 'DRIVE';
+    for (const [key, label, text] of [
+      [
+        'forward',
+        value ? 'Increase throttle' : 'Accelerate or walk forward',
+        value ? 'Power +' : '↑',
+      ],
+      [
+        'reverse',
+        value ? 'Decrease throttle' : 'Reverse or walk backward',
+        value ? 'Power −' : '↓',
+      ],
+      ['left', value ? 'Rudder left' : 'Steer left', '◀'],
+      ['right', value ? 'Rudder right' : 'Steer right', '▶'],
+      ['up', value ? 'Pitch nose up' : 'Climb', value ? 'Nose ↑' : 'Climb'],
+      ['down', value ? 'Pitch nose down' : 'Descend', value ? 'Nose ↓' : 'Descend'],
+      ['boost', value ? 'Wheel brakes' : 'Hold to boost', value ? 'Brakes' : 'Boost'],
+    ]) {
+      const b = document.querySelector<HTMLButtonElement>(`[data-hold="${key}"]`)!;
+      b.textContent = text;
+      b.setAttribute('aria-label', label);
+    }
+  }
   input(): Input {
     const held = (key: string) => this.active && !this.blocked && !this.drawer && this.held(key);
     return {
       throttle: +held('forward') - +held('reverse'),
       steer: +held('left') - +held('right'),
-      boost: held('boost'),
+      boost: !this.aircraft && held('boost'),
+      ...(this.aircraft
+        ? {
+            pitch: +held('up') - +held('down'),
+            roll: +held('bank-left') - +held('bank-right'),
+            brake: held('boost'),
+          }
+        : {}),
       lift: +held('up') - +held('down'),
     };
   }

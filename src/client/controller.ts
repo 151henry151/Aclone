@@ -26,8 +26,28 @@ export function controllerInput(
     boost: !!pad?.buttons[config.boost]?.pressed,
   };
 }
+export function aircraftControllerInput(
+  pad: Pick<Gamepad, 'axes' | 'buttons'> | null,
+  config = controllerDefaults,
+): Input {
+  const axis = (i: number) => {
+    const v = pad?.axes[i] ?? 0;
+    return Math.abs(v) < config.deadZone
+      ? 0
+      : Math.sign(v) * Math.min(1, (Math.abs(v) - config.deadZone) / (1 - config.deadZone));
+  };
+  return {
+    throttle: -axis(config.throttle),
+    steer: -axis(config.steer),
+    boost: false,
+    pitch: -axis(3),
+    roll: -axis(2),
+    brake: !!pad?.buttons[4]?.pressed,
+  };
+}
 export class Controller {
   config = { ...controllerDefaults };
+  flight: Input = { throttle: 0, steer: 0, boost: false };
   private previous = new Set<number>();
   private nextRepeat = 0;
   input: Input = { throttle: 0, steer: 0, boost: false };
@@ -56,6 +76,7 @@ export class Controller {
       ? null
       : (Array.from(navigator.getGamepads?.() ?? []).find((p) => p?.connected) ?? null);
     this.input = controllerInput(pad, this.config);
+    this.flight = aircraftControllerInput(pad, this.config);
     const pressed = new Set(pad?.buttons.flatMap((b, i) => (b.pressed ? [i] : [])) ?? []);
     const edge = (i: number) => pressed.has(i) && !this.previous.has(i);
     if (edge(this.config.menu)) this.onMenu();

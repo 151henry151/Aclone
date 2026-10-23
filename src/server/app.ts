@@ -66,6 +66,9 @@ const inputSchema = z
     steer: z.number().min(-1).max(1),
     boost: z.boolean(),
     lift: z.number().min(-1).max(1).optional(),
+    pitch: z.number().min(-1).max(1).optional(),
+    roll: z.number().min(-1).max(1).optional(),
+    brake: z.boolean().optional(),
   })
   .strict();
 const messageSchema = z.discriminatedUnion('type', [
@@ -243,6 +246,7 @@ export async function createApp(options: AppOptions) {
                 atHome: q.atHome,
                 lights: q.lights,
                 engineRunning: motorRunning(w, q),
+                flight: q.flight,
                 team: q.team,
                 game: q.game,
                 health: q.health,
@@ -855,6 +859,8 @@ export async function createApp(options: AppOptions) {
             me = w?.players[p.account.id];
           if (!w || !me || !w.buildings.some((b) => b.kind === 'starport' && distance(me, b) < 18))
             throw Error('Drive to the spaceport to take off');
+          if (me.flight && !me.flight.grounded)
+            throw Error('Land the aircraft before boarding a spaceship');
           leave(p);
           send(p, {
             type: 'space',

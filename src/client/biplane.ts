@@ -1,8 +1,9 @@
+import { drawFlightPanel } from './biplane-panel';
+import type { FlightState } from '../shared/flight';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { batch } from './tractor';
 import { createHuman } from './human';
-import { fuelCapacity } from '../shared/tractors';
 import type { Player } from '../shared/types';
 
 /** Original country mail plane: +Z forward, metres, fabric detail baked into shared atlases. */
@@ -88,53 +89,7 @@ function atlas(kind: 'wing' | 'tail' | 'body' | 'instruments' | 'wood' | 'engine
         }
     }
   } else {
-    x.strokeStyle = '#a68c57';
-    x.lineWidth = 8;
-    x.beginPath();
-    x.roundRect(12, 12, 1000, 488, 80);
-    x.stroke();
-    for (const [cx, cy, radius, label] of [
-      [260, 220, 142, 'AIRSPEED'],
-      [600, 180, 105, 'AGL m'],
-      [820, 300, 86, 'FUEL %'],
-    ] as const) {
-      x.fillStyle = '#aab2a7';
-      x.beginPath();
-      x.arc(cx, cy, radius, 0, Math.PI * 2);
-      x.fill();
-      x.fillStyle = '#111e21';
-      x.beginPath();
-      x.arc(cx, cy, radius - 9, 0, Math.PI * 2);
-      x.fill();
-      for (let i = 0; i <= 24; i++) {
-        const a = Math.PI * (0.75 + (i / 24) * 1.5);
-        x.strokeStyle = '#efe5bd';
-        x.lineWidth = i % 3 ? 2 : 4;
-        x.beginPath();
-        x.moveTo(cx + Math.cos(a) * (radius - 18), cy + Math.sin(a) * (radius - 18));
-        x.lineTo(cx + Math.cos(a) * (radius - 30), cy + Math.sin(a) * (radius - 30));
-        x.stroke();
-        if (i % 6 === 0) {
-          x.fillStyle = '#efe5bd';
-          x.font = '14px monospace';
-          x.textAlign = 'center';
-          const max = label === 'AIRSPEED' ? 120 : label === 'AGL m' ? 200 : 100;
-          x.fillText(
-            String((i / 24) * max),
-            cx + Math.cos(a) * (radius - 44),
-            cy + Math.sin(a) * (radius - 44),
-          );
-        }
-      }
-      x.font = 'bold 19px monospace';
-      x.textAlign = 'center';
-      x.fillStyle = '#efe5bd';
-      x.fillText(label, cx, cy + 45);
-    }
-    x.font = '22px monospace';
-    x.textAlign = 'left';
-    x.fillStyle = '#d8c998';
-    x.fillText('PARISH AIR MAIL  /  AC-02', 80, 460);
+    drawFlightPanel(x);
   }
   const texture = new T.CanvasTexture(c);
   texture.colorSpace = T.SRGBColorSpace;
@@ -231,7 +186,7 @@ function wing(span: number, chord: number, notch = false) {
 }
 export interface BiplaneFigure {
   group: T.Group;
-  animate(dt: number, running: boolean, heightAboveGround?: number): void;
+  animate(dt: number, running: boolean, heightAboveGround?: number, flight?: FlightState): void;
 }
 export function createBiplane(color = '#e5c979'): BiplaneFigure {
   const group = new T.Group();
@@ -339,9 +294,15 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   pilot.position.set(0, 1.71, -0.43);
   group.add(pilot);
   group.userData.driver = pilot;
-  group.userData.eye = new T.Vector3(0, 2.3, -0.49);
+  group.userData.eye = new T.Vector3(0, 2.27, -0.68);
   group.userData.viewPitch = -0.08;
-  const dash = new T.MeshStandardMaterial({ map: atlas('instruments'), roughness: 0.7 });
+  const dash = new T.MeshStandardMaterial({
+    map: atlas('instruments'),
+    emissiveMap: atlas('instruments'),
+    emissive: '#ffffff',
+    emissiveIntensity: 0.35,
+    roughness: 0.7,
+  });
   const panelShape = new T.Shape()
     .moveTo(-0.365, -0.18)
     .lineTo(0.365, -0.18)
@@ -361,7 +322,25 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   group.remove(panel);
   panelHolder.add(panel);
   group.add(panelHolder);
-  rod([0, 1.65, -0.1], [0, 1.94, 0.06], 0.023, navy);
+  // A U-shaped aircraft yoke and a left-hand quadrant replace the old straight stick.
+  rod([0, 1.61, -0.12], [0, 1.82, -0.02], 0.028, navy);
+  const yoke = new T.Group();
+  yoke.name = 'Biplane yoke';
+  yoke.position.set(0, 1.83, -0.06);
+  group.add(yoke);
+  for (const side of [-1, 1]) {
+    add(new T.BoxGeometry(0.18, 0.035, 0.045), navy, side * 0.085, 0, 0, yoke);
+    add(new T.BoxGeometry(0.04, 0.14, 0.05), leather, side * 0.17, 0.05, 0, yoke);
+  }
+  const throttle = new T.Group();
+  throttle.name = 'Biplane throttle';
+  throttle.position.set(0.32, 1.83, -0.25);
+  group.add(throttle);
+  add(new T.BoxGeometry(0.09, 0.06, 0.28), navy, 0.32, 1.8, -0.25);
+  add(new T.CylinderGeometry(0.016, 0.016, 0.19, 6), steel, 0, 0.095, 0, throttle);
+  add(new T.SphereGeometry(0.045, 8, 5), leather, 0, 0.2, 0, throttle);
+  batch(yoke);
+  batch(throttle);
   const glass = new T.MeshStandardMaterial({
     color: '#b5d7da',
     transparent: true,
@@ -414,40 +393,60 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   root.userData.driver = pilot;
   root.userData.eye = new T.Vector3();
   root.userData.flightPanel = { panel, last: -Infinity };
-  function attitude(height: number) {
-    const pitch = -0.22 * (1 - T.MathUtils.clamp(height / 2, 0, 1));
-    group.rotation.x = pitch;
-    group.position.y = Math.sin(pitch) * 1.05 + 0.42 * (1 - Math.cos(pitch));
+  root.userData.cameraAttitude = new T.Quaternion();
+  function attitude(height: number, flight?: FlightState) {
+    const pitch = flight ? -flight.pitch : -0.22 * (1 - T.MathUtils.clamp(height / 2, 0, 1));
+    group.rotation.set(pitch, 0, flight ? -flight.bank : 0, 'YXZ');
+    group.position.y =
+      !flight || flight.grounded ? Math.sin(pitch) * 1.05 + 0.42 * (1 - Math.cos(pitch)) : 0;
+    root.userData.cameraAttitude.copy(group.quaternion);
+    yoke.rotation.z = -(flight?.rollRate ?? 0) * 0.5;
+    yoke.position.z = -0.06 - (flight?.pitchRate ?? 0) * 0.2;
+    throttle.rotation.x = -0.4 + (flight?.throttle ?? 0) * 0.8;
     root.userData.eye.copy(group.userData.eye).applyEuler(group.rotation).add(group.position);
-    root.userData.viewPitch = -0.08 - pitch;
+    root.userData.viewPitch = -0.24 - pitch;
   }
   attitude(0);
   return {
     group: root,
-    animate(dt, running, heightAboveGround = 0) {
-      attitude(heightAboveGround);
+    animate(dt, running, heightAboveGround = 0, flight) {
+      attitude(heightAboveGround, flight);
       if (running)
-        prop.rotation.z = (prop.rotation.z + Math.min(0.1, Math.max(0, dt)) * 39) % (Math.PI * 2);
+        prop.rotation.z =
+          (prop.rotation.z +
+            Math.min(0.1, Math.max(0, dt)) * (flight ? 12 + flight.throttle * 45 : 39)) %
+          (Math.PI * 2);
     },
   };
 }
 
-/** The HUD remains authoritative; these three needles follow it in the visible local cockpit. */
+/** Only the visible local cockpit needs a private, throttled instrument texture. */
 export function updateBiplaneInstruments(
   group: T.Group,
   p: Player,
   altitude: number,
   time: number,
+  seaLevel = 0,
 ) {
   const state = group.userData.flightPanel;
-  if (!state || time - state.last < 0.25) return;
+  if (!state || time - state.last < 0.1) return;
   state.last = time;
-  const values = [
-    (Math.abs(p.speed) * 2.237) / 120,
-    Math.max(0, altitude) / 200,
-    p.fuel / fuelCapacity(p),
-  ];
-  const key = values.map((v) => v.toFixed(2)).join('/');
+  const f = p.flight;
+  const key = [
+    p.speed,
+    p.fuel,
+    p.y ?? 0,
+    p.heading ?? 0,
+    altitude,
+    f?.pitch ?? 0,
+    f?.bank ?? 0,
+    f?.vy ?? 0,
+    f?.throttle ?? 0,
+    +(f?.stalled ?? false),
+    +!!p.engine,
+  ]
+    .map((v) => v.toFixed(2))
+    .join('/');
   if (key === state.key) return;
   state.key = key;
   if (!state.canvas) {
@@ -457,25 +456,8 @@ export function updateBiplaneInstruments(
     const map = new T.CanvasTexture(state.canvas);
     map.colorSpace = T.SRGBColorSpace;
     state.panel.material.map = map;
+    state.panel.material.emissiveMap = map;
   }
-  const x = (state.canvas as HTMLCanvasElement).getContext('2d')!;
-  x.drawImage(atlas('instruments').image, 0, 0);
-  [
-    [260, 220, 142],
-    [600, 180, 105],
-    [820, 300, 86],
-  ].forEach(([cx, cy, r], i) => {
-    const a = Math.PI * (0.75 + T.MathUtils.clamp(values[i], 0, 1) * 1.5);
-    x.strokeStyle = '#dcaa62';
-    x.lineWidth = 5;
-    x.beginPath();
-    x.moveTo(cx, cy);
-    x.lineTo(cx + Math.cos(a) * (r - 35), cy + Math.sin(a) * (r - 35));
-    x.stroke();
-    x.fillStyle = '#a5ada0';
-    x.beginPath();
-    x.arc(cx, cy, 7, 0, Math.PI * 2);
-    x.fill();
-  });
+  drawFlightPanel(state.canvas.getContext('2d'), p, altitude, seaLevel);
   state.panel.material.map.needsUpdate = true;
 }

@@ -1200,6 +1200,7 @@ export class GameScene {
         const travel =
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
+        mesh.userData.pose = pose;
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.set(0, pose.heading, 0, 'YXZ');
         const mode = vehicles[mesh.userData.vehicle]?.mode;
@@ -1228,7 +1229,12 @@ export class GameScene {
         );
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
         if (plane) {
-          plane.animate(dt, mesh.userData.engineRunning, pose.y - bareSurface(pose.x, pose.z));
+          plane.animate(
+            dt,
+            mesh.userData.engineRunning,
+            pose.y - bareSurface(pose.x, pose.z),
+            pose.flight,
+          );
           mesh.userData.viewPitch = plane.group.userData.viewPitch;
         }
         // Keep the player's own face/driver out of the first-person camera.
@@ -1247,9 +1253,10 @@ export class GameScene {
         if (this.cameraMode === 1 && local.userData.biplane)
           updateBiplaneInstruments(
             local.userData.biplane.group,
-            p,
+            { ...p, ...local.userData.pose },
             local.position.y - bareSurface(local.position.x, local.position.z),
             this.elapsed,
+            w.settings.seaLevel,
           );
         const pos = local.position;
         const facing = local.rotation.y;
@@ -1274,7 +1281,7 @@ export class GameScene {
         const cam =
           this.cameraMode === 1
             ? new T.Vector3(
-                0,
+                tractorView ? (local.userData.eye?.x ?? 0) : 0,
                 walking ? 1.68 : tractorView ? (local.userData.eye?.y ?? TRACTOR_EYE_HEIGHT) : 3,
                 tractorView ? (local.userData.eye?.z ?? TRACTOR_SEAT_Z) : 0,
               )
@@ -1301,6 +1308,18 @@ export class GameScene {
                 Math.cos(heading) * Math.cos(cockpitPitch) * 30,
               ),
             );
+        this.camera.up.set(0, 1, 0);
+        if (this.cameraMode === 1 && local.userData.biplane) {
+          const attitude = local.userData.biplane.group.userData.cameraAttitude as T.Quaternion;
+          const direction = new T.Vector3(
+            Math.sin(this.orbit) * Math.cos(this.lookPitch - 0.24),
+            Math.sin(this.lookPitch - 0.24),
+            Math.cos(this.orbit) * Math.cos(this.lookPitch - 0.24),
+          );
+          direction.applyQuaternion(attitude).applyQuaternion(local.quaternion);
+          this.target.copy(this.camera.position).addScaledVector(direction, 30);
+          this.camera.up.applyQuaternion(attitude).applyQuaternion(local.quaternion);
+        }
         this.camera.lookAt(this.target);
         this.camera.getWorldDirection(this.audioFacing);
         this.onView?.(pos, Math.atan2(this.audioFacing.x, this.audioFacing.z));

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 export type Stock = Record<string, number>;
-export type Input = { throttle: number; steer: number; boost: boolean; lift?: number };
+export type Input = {
+  throttle: number;
+  steer: number;
+  boost: boolean;
+  lift?: number;
+  pitch?: number;
+  roll?: number;
+  brake?: boolean;
+};
 export type Task = {
   kind: string;
   end: number;
@@ -47,6 +55,8 @@ export interface Player {
   z: number;
   heading: number;
   speed: number;
+  flight?: import('./flight').FlightState;
+  lastFlightCrash?: { at: number; cause: string; slot: number };
   fuel: number;
   /** Public snapshot hint; exact fuel and private activity details stay private. */
   canReceiveFuel?: boolean;

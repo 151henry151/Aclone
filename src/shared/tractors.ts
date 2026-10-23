@@ -78,6 +78,7 @@ export function switchVehicle(p: Player, slot: number, remember = true) {
     }
     p.fuelVehicle = slot;
   }
+  if (p.vehicle !== slot) delete p.flight;
   p.vehicle = slot;
   if (remember && isTractor(slot)) p.lastTractor = slot;
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player } from '../shared/types';
-export type MotionPose = Pick<Player, 'x' | 'y' | 'z' | 'heading' | 'speed'>;
+export type MotionPose = Pick<Player, 'x' | 'y' | 'z' | 'heading' | 'speed' | 'flight'>;
 const BUFFER_SECONDS = 0.3;
 
 /** Map monotonic browser time to server simulation time without following packet jitter. */
@@ -78,6 +78,7 @@ export class MotionTrack {
       z: value.z,
       heading: value.heading,
       speed: value.speed,
+      ...(value.flight ? { flight: { ...value.flight } } : {}),
     };
     const previous = this.snapshots.at(-1);
     if (previous && time < previous.time) return false;
@@ -111,7 +112,22 @@ export class MotionTrack {
         Math.sin(b.pose.heading - a.pose.heading),
         Math.cos(b.pose.heading - a.pose.heading),
       );
+      const flight =
+        b.pose.flight && a.pose.flight
+          ? {
+              ...b.pose.flight,
+              pitch: a.pose.flight.pitch + (b.pose.flight.pitch - a.pose.flight.pitch) * fraction,
+              bank:
+                a.pose.flight.bank +
+                Math.atan2(
+                  Math.sin(b.pose.flight.bank - a.pose.flight.bank),
+                  Math.cos(b.pose.flight.bank - a.pose.flight.bank),
+                ) *
+                  fraction,
+            }
+          : b.pose.flight;
       return {
+        ...(flight ? { flight } : {}),
         x: lerp('x'),
         y: lerp('y'),
         z: lerp('z'),

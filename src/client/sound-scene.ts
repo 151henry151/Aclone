@@ -73,7 +73,10 @@ export function selectLoops(
     const spatial =
       p.id === me.id ? { gain: 1, pan: 0 } : spatialSound(listener, position(p.id) ?? p, 110);
     const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] };
-    const rev = Math.min(1, Math.abs(p.speed) / Math.max(1, v.speed));
+    const rev =
+      v.mode === 2 && p.flight
+        ? p.flight.throttle
+        : Math.min(1, Math.abs(p.speed) / Math.max(1, v.speed));
     const gain = spatial.gain * (0.24 + 0.1 * rev) * indoors;
     if (gain < 0.001) continue;
     result.push({

@@ -29,7 +29,7 @@ test('biplane factory renders a paintable airframe, grounded stance and working 
       plane.animate(.1,false,0);const grounded=airframe.rotation.x<0;
       const staticMap=panel.material.map, pilot={vehicle:2,fuel:30,speed:20};
       updateBiplaneInstruments(plane.group,pilot,50,1);const map=panel.material.map, initial=map.version;
-      updateBiplaneInstruments(plane.group,{...pilot,speed:35},70,1.1);const throttled=map.version===initial;
+      updateBiplaneInstruments(plane.group,{...pilot,speed:35},70,1.05);const throttled=map.version===initial;
       updateBiplaneInstruments(plane.group,{...pilot,speed:35},70,1.3);const changed=map.version>initial;
       const updated=map.version;updateBiplaneInstruments(plane.group,{...pilot,speed:35},70,1.6);const unchanged=map.version===updated;
       let triangles=0,meshes=0,finite=true,painted=false;
@@ -64,7 +64,7 @@ test('biplane factory renders a paintable airframe, grounded stance and working 
     ])
       expect(result[key], key).toBe(true);
     expect(result.triangles).toBeLessThan(14000);
-    expect(result.meshes).toBeLessThanOrEqual(16);
+    expect(result.meshes).toBeLessThanOrEqual(21);
     expect(result.size[0]).toBeGreaterThan(8.8);
     expect(result.size[0]).toBeLessThan(9.3);
     expect(Math.abs(result.low)).toBeLessThan(0.04);

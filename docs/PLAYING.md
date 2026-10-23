@@ -25,6 +25,12 @@ When reversing a wheeled vehicle, steering follows actual backward speed, includ
 
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
+## Biplane flight
+
+The [flight guide](FLYING.md) explains persistent throttle, independent rudder and
+ailerons, takeoff, stalls, gliding and safe landing. The HUD and F7 help show the new
+controls. These controls replace the earlier automatic-climb system introduced before 0.91.0.
+
 ## Beer, wine and intoxication
 
 Repeated beer or wine consumption makes steering drift and respond less accurately. Wine is stronger; effects accumulate rather than resetting between drinks. Increasing intoxication adds slow scenery sway/warping, blur and double vision; menus and chat stay sharp. Walking keeps normal controls but still has visual effects. The HUD shows **Tipsy**, **Drunk** or **Very drunk**.

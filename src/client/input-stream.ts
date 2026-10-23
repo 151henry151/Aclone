@@ -9,7 +9,14 @@ export class InputStream {
   encode(input: Input, now: number, bufferedAmount: number): string | undefined {
     if (bufferedAmount > 0) return;
     const value = JSON.stringify(input);
-    const active = input.throttle !== 0 || input.steer !== 0 || !!input.lift || input.boost;
+    const active =
+      input.throttle !== 0 ||
+      input.steer !== 0 ||
+      !!input.lift ||
+      input.boost ||
+      !!input.pitch ||
+      !!input.roll ||
+      !!input.brake;
     if (value === this.previous && now - this.sentAt < (active ? 100 : 1000)) return;
     this.previous = value;
     this.sentAt = now;

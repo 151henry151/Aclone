@@ -40,3 +40,10 @@ CHROMIUM_PATH=/usr/bin/chromium TEST_GPU=1 npm run test:e2e -- tests/browser/mob
 ```
 
 Disposable tests capture `test-results/`; other browser tests cover desktop, accounts, subpaths, multiplayer and retained values. Test physical Android Chrome/iOS Safari for keyboard, toolbar and thermal behavior: Chromium emulation only establishes layout/touch behavior. [Landscape preview](screenshots/mobile-landscape.png).
+
+## Aircraft controls
+
+In a biplane, the pedals become Power +/− and retain the selected throttle when
+released. Use rudder arrows for taxiing, Nose ↑/↓ for pitch, Bank ◀/▶ for turns,
+and Brakes after touchdown. Opening a menu releases held inputs but does not pause
+the aircraft or close its throttle. See [Flying](FLYING.md) before taking off.

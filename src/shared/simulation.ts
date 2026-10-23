@@ -1,3 +1,4 @@
+import { fly } from './flight.ts';
 import {
   fuelCapacity,
   switchVehicle,
@@ -414,6 +415,26 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (
+    vehicles[p.vehicle].mode === 2 &&
+    (p.flight ? !p.flight.grounded : p.y > travelHeight(w, p.x, p.z) + 0.25) &&
+    (a.building ||
+      [
+        'vehicle',
+        'crow',
+        'home',
+        'hitch',
+        'joinGame',
+        'joinCombat',
+        'respawn',
+        'gather',
+        'construct',
+        'work',
+        'learn',
+        'course',
+      ].includes(type))
+  )
+    throw Error('Land the aircraft before starting another activity');
   if (type === 'maintenance') return maintenanceAction(w, p, a);
   if (w.maintenance?.paused && type !== 'chat') throw Error('World paused for maintenance');
   if (type === 'propertyContract') return propertyContractAction(w, p, a);
@@ -1784,6 +1805,8 @@ export function command(w: World, p: Player, text: string): string {
       t.x = x;
       t.z = z;
       t.speed = 0;
+      t.y = travelHeight(w, x, z);
+      delete t.flight;
       break;
     }
     case 'settime':
@@ -1798,7 +1821,7 @@ export function command(w: World, p: Player, text: string): string {
   }
   return 'Command applied.';
 }
-export function move(w: World, p: Player, input: Input, dt: number) {
+export function move(w: World, p: Player, input: Input, dt: number, prediction = false) {
   if (w.maintenance?.paused) return;
   if (p.game === 'fishing') p.y = travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
@@ -1812,6 +1835,54 @@ export function move(w: World, p: Player, input: Input, dt: number) {
   const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] },
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
     water = ground < w.settings.seaLevel;
+  if (v.mode === 2) {
+    const previous = { x: p.x, z: p.z };
+    const accident = fly(p, input, dt, {
+      ground: (x, z) => travelHeight(w, x, z),
+      seaLevel: w.settings.seaLevel,
+      half: mapHalf(w),
+      grip: drivingSurface(w, p.x, p.z).grip,
+      fuelRate: v.fuel,
+      condition,
+      blocked: (from, to) =>
+        creatorBlocksSegment(w, from, to, 2.0, true) ||
+        w.buildings.some((b) =>
+          buildingBlocksMovement(
+            b,
+            from,
+            to,
+            Math.min(from.y, to.y) - terrainHeight(w, b.x, b.z),
+            2.0,
+          ),
+        ),
+    });
+    recordTravel(w, p, Math.hypot(p.x - previous.x, p.z - previous.z));
+    if (accident) {
+      const slot = p.vehicle;
+      p.lastFlightCrash = { at: w.time, cause: accident, slot };
+      p.fleet = (p.fleet ?? [0, 5]).filter((v) => v !== slot);
+      if (p.fleetState) delete p.fleetState[slot];
+      if (p.vehiclePaints) delete p.vehiclePaints[slot];
+      if (p.parkedFuel) delete p.parkedFuel[slot];
+      p.vehicle = 5;
+      p.fuelVehicle = returnTractor(p);
+      p.fuel = p.parkedFuel?.[p.fuelVehicle] ?? 0;
+      if (p.parkedFuel) delete p.parkedFuel[p.fuelVehicle];
+      delete p.flight;
+      p.engine = false;
+      p.speed = 0;
+      p.y = travelHeight(w, p.x, p.z);
+      p.health = Math.max(1000, p.health - 20000);
+      if (!prediction)
+        say(
+          w,
+          'Airfield notice',
+          `${p.name}'s ${v.name} was destroyed: ${accident}. The pilot escaped injured.`,
+        );
+    }
+    return;
+  }
+  delete p.flight;
   const throttle = clamp(input.throttle, -1, 1);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
@@ -1917,6 +1988,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   if (!comic)
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
+  delete p.flight;
   delete p.nutrition;
   delete p.alcohol;
   p.ammo = { ...ammunition };

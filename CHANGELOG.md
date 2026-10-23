@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.91.0] - 2026-10-23
+
+### Added
+
+- Two-handed biplane controls: W/S adjust a persistent throttle, A/D operate rudder and taxi steering, arrows pitch and bank, and B applies wheel brakes. Touch and controller equivalents, a flight readout and an in-game flying tutorial explain the controls.
+- A textured six-instrument aircraft panel with airspeed, attitude, altitude, heading, vertical speed and engine RPM, plus fuel, height-above-ground and stall warnings. An animated yoke and throttle lever complete the cockpit; the seated camera follows the airframe through turns.
+
+### Changed
+
+- Replace automatic biplane climbing with aerodynamic lift, drag, momentum, gravity, banked turns, angle-of-attack stalls and engine-off gliding. Takeoff needs a clear ground run and deliberate rotation; safe landing needs controlled descent and wings near level. Hard impacts destroy the active aircraft and injure the pilot while preserving other owned machines.
+- Aircraft engine sound and propeller animation follow throttle. Menus leave the throttle set and flight running; airborne pilots must land before switching vehicles or starting ground activities.
+
 ## [0.90.0] - 2026-10-23
 
 ### Changed

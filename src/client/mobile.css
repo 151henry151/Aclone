@@ -687,3 +687,37 @@
   min-height: 44px;
   padding: 8px;
 }
+
+#mobile-bank:not([hidden]) {
+  display: flex;
+  gap: 4px;
+}
+#driving:has(#flight-readout) {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+#flight-readout {
+  flex-basis: 100%;
+  display: block;
+  max-width: 28em;
+  line-height: 1.5;
+  color: #ead499;
+}
+
+.mobile-ui #mobile-bank button {
+  min-width: 48px;
+}
+.mobile-ui.aircraft-controls .mobile-pedals button {
+  font-size: 14px;
+  padding-inline: 4px;
+}
+
+.mobile-ui .bottom-left:has(#flight-readout) {
+  top: calc(var(--visible-top, 0px) + 86px);
+  bottom: auto;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+}
+.mobile-ui #flight-readout {
+  font-size: 11px;
+}

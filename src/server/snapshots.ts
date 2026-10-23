@@ -128,6 +128,7 @@ export function prepareFrame(w: World): Frame {
         z: +p.z.toFixed(2),
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
+        flight: p.flight,
         vehicle: p.vehicle,
         canReceiveFuel: refuelRecipientReady(p),
         canReceiveRepair: repairRecipientReady(p),

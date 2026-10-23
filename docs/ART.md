@@ -188,10 +188,14 @@ are cached canvas textures. Garage paint tints the fabric and fuselage while ret
 the dark trim. Creator-supplied models still override the built-in aircraft.
 
 The propeller stops when the engine is off. Only the visible local cockpit updates
-its instrument texture, at most four times a second, for speed in mph, altitude above
-ground in metres and fuel percentage. Flight speed, lift controls, prices and storage
-are unchanged. Static parts are batched by material; the model with pilot stays below
-14,000 triangles. These are geometry budgets, not FPS guarantees.
+its instrument texture, at most ten times a second, with airspeed in mph, attitude,
+altitude in metres above sea level, heading, climb rate and throttle-derived RPM.
+Fuel and height above ground remain visible. The moving yoke and throttle quadrant
+use separate material batches; gauges and needles are drawn into one canvas texture.
+The seated eye and camera up-vector follow pitch and bank without detaching from the
+cockpit. The current development model has 12,306 triangles and 19 meshes including
+the pilot. These are geometry budgets, not FPS guarantees. See [Flying](FLYING.md)
+for the accompanying physics and controls.
 
 Run `npx tsx scripts/biplane-preview.ts` for front, rear, side, overhead and seated
 views plus a review sheet in `output/biplane/`. The focused browser check is

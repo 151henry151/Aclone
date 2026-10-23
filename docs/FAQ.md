@@ -12,7 +12,7 @@ Live building quotes and world rules override these defaults. This concise refer
 - **I / Inventory:** inventory, food/drink, vehicles and walking. **M** or click minimap: **Parish map**, with named buildings/resources; M again closes it. The **Parish Directory** is a separate list.
 - **Enter / F2:** chat; Enter sends. **PgUp/PgDn:** scroll chat; arrows still drive when the chat log is focused. **F7:** Field guide. **F9:** game menu. **F10:** world-owner editor.
 - **F5 / R:** deploy/return from a carried robocrow. **F3:** reel when a fish bites.
-- **Insert / Delete:** climb/descend in flight; carried jetpacks let ground vehicles lift. **H:** hide/show HUD for scenery. **Escape:** close windows and restore the HUD.
+- **Insert / Delete:** robocrow climb/descend; carried jetpacks let ground vehicles lift. The biplane uses **W/S** persistent throttle, **A/D** rudder, **arrows** pitch/bank and **B** brakes; see [Flying](FLYING.md). **H:** hide/show HUD for scenery. **Escape:** close windows and restore the HUD.
 - **Mobile:** left arrows steer, right arrows drive/reverse; hold both to turn. Map, Bag, Chat and Actions open panels. Tap cash for needs. Actions includes engine, lights, walking, camera, weapons and every menu. Drag scenery to look; pinch to zoom. Tap Done or × to return. See [mobile play](MOBILE.md).
 - **Sound:** mute/unmute; volume in Pilot & preferences. Touch arrows steer/drive; use on-screen buttons where browsers reserve function keys.
 - Typing in a text field or having a game window open stops driving input. Focused buttons use Space/Enter normally instead of honking/opening chat.

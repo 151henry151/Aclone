@@ -80,7 +80,7 @@ export class LocalPrediction {
     // Match the server's 20 Hz movement integration, including slopes/collisions.
     while (seconds > 0.000001) {
       const dt = Math.min(0.05, seconds);
-      move(this.world, this.player, input, dt);
+      move(this.world, this.player, input, dt, true);
       seconds -= dt;
     }
   }
@@ -99,6 +99,7 @@ export class LocalPrediction {
       z: p.z + this.correction.z,
       heading: p.heading + this.correction.heading,
       speed: p.speed,
+      flight: p.flight ? { ...p.flight } : undefined,
     };
   }
 }

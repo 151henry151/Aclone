@@ -21,7 +21,13 @@ export function actionVisible(
   plotIndex?: number,
   vehicleSlot?: number,
 ): boolean | undefined {
-  const free = !p.atHome && !p.task && !p.hitch && !p.crowBody && p.health > 0;
+  const free =
+    !p.atHome &&
+    !p.task &&
+    !p.hitch &&
+    !p.crowBody &&
+    p.health > 0 &&
+    !(p.flight && !p.flight.grounded);
   switch (action) {
     case 'editor':
     case 'caretaker':
