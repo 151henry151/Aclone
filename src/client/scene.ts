@@ -1,7 +1,7 @@
 import { createHovercraft, updateHovercraftInstruments, type HovercraftFigure } from './hovercraft';
 import { updateTractorCockpit } from './tractor-cockpit';
 import { createBiplane, updateBiplaneInstruments, type BiplaneFigure } from './biplane';
-import { fleetTractor, tractorShapes } from './tractor-fleet';
+import { fleetTractor } from './tractor-fleet';
 import { isTractor } from '../shared/tractors';
 import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
 import { vehicleGround } from './vehicle-ground';
@@ -36,7 +36,7 @@ import {
   snowDepth,
 } from '../shared/environment';
 import { Precipitation } from './weather';
-import { GroundTracks, trackKind } from './ground-tracks';
+import { GroundTracks, trackKind, wheelPrints } from './ground-tracks';
 import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
 import { chaseOffset, lookPitchFromDrag } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
@@ -1337,18 +1337,22 @@ export class GameScene {
         for (const [id, mesh] of this.meshes) {
           const q = w.players[id];
           if (!q || !isTractor(q.vehicle) || q.atHome) continue;
-          this.tracks.record(
-            id,
-            mesh.position.x,
-            mesh.position.z,
-            mesh.rotation.y,
-            kind === 'snow' && roadDistance(roads, mesh.position.x, mesh.position.z) < 1
-              ? undefined
-              : kind,
-            Math.abs(q.speed) > 0.6,
-            snowDepth(w.climate),
-            tractorShapes[q.vehicle].half / (1.22 * 0.82),
-          );
+          // Use the same contact points as slope alignment, and the exact tyre
+          // widths from the model. Front/rear wheels follow separate paths in turns.
+          if (mesh.position.y > bareSurface(mesh.position.x, mesh.position.z) + 1) continue;
+          mesh.updateWorldMatrix(true, false);
+          const prints = wheelPrints(mesh.userData.tyreFootprints ?? [], mesh.matrixWorld);
+          for (const [wheel, print] of prints.entries())
+            this.tracks.record(
+              `${id}:${q.vehicle}:${wheel}`,
+              print.x,
+              print.z,
+              print.heading,
+              kind === 'snow' && roadDistance(roads, print.x, print.z) < 1 ? undefined : kind,
+              Math.abs(q.speed) > 0.6,
+              snowDepth(w.climate),
+              print.width,
+            );
         }
         this.tracks.tick(dt);
         this.tracks.sync(snowHeight, snowDepth(w.climate));

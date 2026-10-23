@@ -79,6 +79,17 @@ skip uploads. Other vehicles share static instrument textures. The new interiors
 add fewer than 400 triangles per model, including the corrected steering assembly
 and rounded dashboard housings.
 
+## Tyre tracks (unreleased)
+
+Snow and mud prints use each wheel's actual contact point and tyre width, rather
+than stretching the same pair of tracks for every tractor. Front and rear wheels
+trace separate paths around bends. Widths are 48 cm for the Puddle tractor, 38 cm
+for the Wren, 43 cm for the Kestrel, 56 cm for the Dray, 68 cm for the Fenlander,
+and 48 cm for the Lamplighter. Current models use matching front/rear tyre widths;
+the renderer reads individual wheels so future axle differences remain accurate.
+Snow tracks avoid exposed roads, soften as snow melts, and fade over 150 seconds.
+The renderer keeps a bounded pool of 960 individual prints in one draw call.
+
 ## Design and balance checks
 
 The catalogue has six tractors, including the reworked starter. New machines use

@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
-import { TRACTOR_SCALE } from './tractor';
 
 /** How long a tyre print stays visible, in real seconds. */
 export const TRACK_LIFE = 150;
-/** Distance from the tractor centreline to a rear tyre centre. */
-export const TRACK_HALF = 1.22 * TRACTOR_SCALE;
-/** Rear tyre contact width. */
-export const TRACK_WIDTH = 0.58 * TRACTOR_SCALE;
+/** Each instance is one tyre, with its width supplied by the rendered wheel. */
+export const TRACK_WIDTH = 0.48;
 export const TRACK_LENGTH = 1.45;
-export const TRACK_PRINT_WIDTH = TRACK_HALF * 2 + TRACK_WIDTH;
 const spacing = 1.15;
-const capacity = 480;
+const capacity = 960;
+export type WheelFootprint = { position: T.Vector3; width: number };
+/** Transform actual axle contact points, including the vehicle's slope alignment. */
+export function wheelPrints(wheels: readonly WheelFootprint[], matrix: T.Matrix4) {
+  const forward = new T.Vector3(0, 0, 1).transformDirection(matrix);
+  const heading = Math.atan2(forward.x, forward.z);
+  return wheels.map(({ position, width }) => {
+    const point = position.clone().applyMatrix4(matrix);
+    return { x: point.x, z: point.z, heading, width };
+  });
+}
 export type TrackKind = 'snow' | 'mud';
 export type TrackMark = {
   x: number;
@@ -20,7 +26,7 @@ export type TrackMark = {
   kind: TrackKind;
   age: number;
   depth: number;
-  widthScale?: number;
+  width: number;
 };
 export function trackKind(climate: { snow?: number; wetness?: number }) {
   if ((climate.snow ?? 0) > 0.08) return 'snow';
@@ -29,14 +35,14 @@ export function trackKind(climate: { snow?: number; wetness?: number }) {
 }
 const fract = (n: number) => n - Math.floor(n);
 let printMap: T.DataTexture | undefined;
-/** Two chevron tyre prints with a clear gap, used as an alpha stamp. */
+/** One chevron tyre print; each wheel supplies its own position and width. */
 export function trackPrintTexture() {
   if (printMap) return printMap;
   const width = 256,
     height = 128,
     data = new Uint8Array(width * height * 4),
-    half = TRACK_WIDTH / 2 / TRACK_PRINT_WIDTH,
-    centres = [0.5 - TRACK_HALF / TRACK_PRINT_WIDTH, 0.5 + TRACK_HALF / TRACK_PRINT_WIDTH];
+    half = 0.5,
+    centres = [0.5];
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       const u = x / (width - 1),
@@ -72,8 +78,8 @@ export function snowRutTextures() {
     height = 128;
   const colors = new Uint8Array(width * height * 4);
   const heights = new Uint8Array(colors.length);
-  const half = TRACK_WIDTH / 2 / TRACK_PRINT_WIDTH;
-  const centres = [0.5 - TRACK_HALF / TRACK_PRINT_WIDTH, 0.5 + TRACK_HALF / TRACK_PRINT_WIDTH];
+  const half = 0.5;
+  const centres = [0.5];
   const smooth = (a: number, b: number, x: number) => {
     const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
     return t * t * (3 - 2 * t);
@@ -124,13 +130,17 @@ export function snowRutTextures() {
 export class GroundTracks {
   marks: TrackMark[] = [];
   readonly mesh: T.InstancedMesh;
-  private last = new Map<string, { x: number; z: number; heading: number; kind?: TrackKind }>();
+  private last = new Map<
+    string,
+    { x: number; z: number; heading: number; kind?: TrackKind; seen: number }
+  >();
+  private elapsed = 0;
   private dummy = new T.Object3D();
   private fade: T.InstancedBufferAttribute;
   private relief: T.InstancedBufferAttribute;
   private ground: T.InstancedBufferAttribute[];
   constructor() {
-    const geometry = new T.PlaneGeometry(TRACK_PRINT_WIDTH, TRACK_LENGTH, 2, 2);
+    const geometry = new T.PlaneGeometry(1, TRACK_LENGTH, 2, 2);
     geometry.rotateX(-Math.PI / 2);
     this.fade = new T.InstancedBufferAttribute(new Float32Array(capacity), 1);
     geometry.setAttribute('instanceFade', this.fade);
@@ -206,7 +216,7 @@ export class GroundTracks {
           }`,
         );
     };
-    material.customProgramCacheKey = () => 'depth-aware-snow-ruts-v1';
+    material.customProgramCacheKey = () => 'individual-wheel-ruts-v2';
     this.mesh = new T.InstancedMesh(geometry, material, capacity);
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
@@ -220,12 +230,13 @@ export class GroundTracks {
     kind: TrackKind | undefined,
     moving: boolean,
     snowDepth = 0.04,
-    widthScale = 1,
+    width = TRACK_WIDTH,
   ) {
     const prev = this.last.get(id);
+    if (prev) prev.seen = this.elapsed;
     const distance = prev ? Math.hypot(x - prev.x, z - prev.z) : 0;
     if (!kind || (!moving && (!prev || prev.kind !== kind || distance >= 40))) {
-      this.last.set(id, { x, z, heading, kind });
+      this.last.set(id, { x, z, heading, kind, seen: this.elapsed });
       return;
     }
     // A snapshot can report stopped while the displayed tractor is still
@@ -235,29 +246,37 @@ export class GroundTracks {
     // dry ground, or a change between mud and snow.
     const join = prev && prev.kind === kind && distance < 40;
     const steps = join ? Math.floor(distance / spacing) : 1;
-    const turn = prev
-      ? Math.atan2(Math.sin(heading - prev.heading), Math.cos(heading - prev.heading))
-      : 0;
+    // Each axle follows a different arc. Align the stamp to this wheel's
+    // travelled path, retaining tread orientation when reversing.
+    let printHeading = heading;
+    if (join) {
+      printHeading = Math.atan2(x - prev.x, z - prev.z);
+      if (Math.cos(printHeading - heading) < 0) printHeading += Math.PI;
+    }
     for (let step = 1; step <= steps; step++) {
       const t = join ? (step * spacing) / distance : 1;
       const point = {
         x: join ? prev.x + (x - prev.x) * t : x,
         z: join ? prev.z + (z - prev.z) * t : z,
-        heading: join ? prev.heading + turn * t : heading,
+        heading: printHeading,
       };
       this.marks.push({
         ...point,
         kind,
         age: 0,
-        widthScale,
+        width,
         depth: kind === 'snow' ? Math.max(0, Math.min(0.3, snowDepth * 0.8)) : 0,
       });
-      this.last.set(id, { ...point, kind });
+      this.last.set(id, { ...point, kind, seen: this.elapsed });
     }
     if (this.marks.length > capacity) this.marks.splice(0, this.marks.length - capacity);
   }
 
   tick(dt: number) {
+    this.elapsed += dt;
+    // Drop histories for removed, parked or airborne vehicles; returning must not
+    // join tracks to a stale position. Also bounds memory after players leave.
+    for (const [id, prev] of this.last) if (this.elapsed - prev.seen > 1) this.last.delete(id);
     for (const mark of this.marks) mark.age += dt;
     this.marks = this.marks.filter((mark) => mark.age < TRACK_LIFE);
   }
@@ -278,7 +297,7 @@ export class GroundTracks {
           mark.z - x * Math.sin(mark.heading) + z * Math.cos(mark.heading),
         ) - ground;
       // PlaneGeometry UV y=0 is its +Z edge after rotating onto the ground.
-      const x = (TRACK_PRINT_WIDTH / 2) * (mark.widthScale ?? 1),
+      const x = mark.width / 2,
         z = TRACK_LENGTH / 2;
       // Nine samples follow terrain triangle boundaries that a single flat quad
       // can cut through, making whole stretches of a shallow rut disappear.
@@ -291,7 +310,7 @@ export class GroundTracks {
         );
       this.relief.setX(i, Math.min(mark.depth, snowDepth * 0.8) * fade);
       this.dummy.rotation.set(0, mark.heading, 0);
-      this.dummy.scale.set(mark.widthScale ?? 1, 1, 1);
+      this.dummy.scale.set(mark.width, 1, 1);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
       this.mesh.setColorAt(i, mark.kind === 'snow' ? snow : mud);

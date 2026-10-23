@@ -367,6 +367,7 @@ export function fleetTractor(
   g.userData.eye = new T.Vector3(0, d.seatY + 0.65, d.seatZ - 0.28);
   g.userData.lamp = new T.Vector3(0, slot === 28 ? 2.95 : 1.53, frontZ);
   g.userData.contacts = [];
+  g.userData.tyreFootprints = [];
   for (const side of [-1, 1])
     for (const [z, r] of [
       [d.rear, d.rr],
@@ -377,7 +378,9 @@ export function fleetTractor(
       wheel.userData.radius = r;
       g.add(wheel);
       (g.userData.wheels ??= []).push(wheel);
-      g.userData.contacts.push(new T.Vector3(side * d.half, 0, z));
+      const contact = new T.Vector3(side * d.half, 0, z);
+      g.userData.contacts.push(contact);
+      g.userData.tyreFootprints.push({ position: contact, width: d.tyre });
       const t = add(wheel, new T.CylinderGeometry(r, r, d.tyre, 20), rubber, 0, 0, 0);
       t.rotation.z = Math.PI / 2;
       for (const face of [-1, 1]) {

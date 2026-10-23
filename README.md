@@ -180,7 +180,7 @@ the selected tractor’s finish. Repainting one leaves the others unchanged.
 First-person cockpits have textured interiors and working speed, fuel and condition
 gauges, with illuminated instruments, rounded dashboard tops and correctly tilted steering wheels.
 
-The [tractor fleet guide](docs/TRACTORS.md) covers five specialist tractors alongside
+The [tractor fleet guide](docs/TRACTORS.md) covers tractor dimensions, cockpit controls and five specialist tractors alongside
 the reworked starter, with a garage model viewer and balanced trade-offs. Choose
 compact handling, express deliveries, bulk hauling, rough-ground traction or
 long-range night work; each machine has its own tank and saved finish.

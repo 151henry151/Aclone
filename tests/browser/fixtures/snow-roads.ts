@@ -2,8 +2,8 @@
 import * as T from 'three';
 import { createWorld } from '../../../src/shared/simulation';
 import { prepareSnowSurface, snowProfile, liftSnowShadow } from '../../../src/client/snow-surface';
-import { GroundTracks } from '../../../src/client/ground-tracks';
-import { tractor } from '../../../src/client/tractor';
+import { GroundTracks, wheelPrints } from '../../../src/client/ground-tracks';
+import { fleetTractor } from '../../../src/client/tractor-fleet';
 import { creatorSchema } from '../../../src/shared/creator';
 import {
   groundMaterial,
@@ -70,7 +70,7 @@ await waitForTextures();
     reference.name = 'depth-reference';
     const vehicle = new T.Group();
     vehicle.name = 'tractor';
-    tractor(vehicle, '#b94e32');
+    fleetTractor(vehicle, 0, '#b94e32');
     vehicle.position.set(6, 0, 0);
     reference.add(vehicle);
     for (let i = 0; i < 18; i++) {
@@ -111,7 +111,12 @@ const tracks = new GroundTracks();
 (window as any).snowTracks = (depth: number) => {
   if (!scene.children.includes(tracks.mesh)) {
     scene.add(tracks.mesh);
-    for (let z = -6; z < 5; z += 1.16) tracks.record('driver', 6, z, 0, 'snow', true, 0.25);
+    const vehicle = scene.getObjectByName('tractor')!;
+    for (let z = -6; z < 0; z += 0.5) {
+      const matrix = new T.Matrix4().makeTranslation(6, 0, z);
+      for (const [i, p] of wheelPrints(vehicle.userData.tyreFootprints, matrix).entries())
+        tracks.record(`driver:${i}`, p.x, p.z, p.heading, 'snow', true, 0.25, p.width);
+    }
   }
   tracks.sync((x, z) => depth * snowProfile(w)(x, z, 0), depth);
   (window as any).renderSnow(depth);

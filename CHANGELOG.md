@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Tractor tyre tracks now match each model’s actual tyre widths and wheel spacing, with independent front and rear wheel paths through turns. Snow ruts and mud treads retain terrain following and fading; changing vehicles or returning after an absence no longer joins unrelated trails.
+
 ## [0.91.0] - 2026-10-23
 
 ### Added
