@@ -57,13 +57,38 @@ const openPermissions = (): Permissions => ({ build: true, roads: true, environm
 /** Fill borders, treasury and governance into towns saved before multi-town support. */
 export function normalizeTowns(w: World) {
   const charter = townCharter(w);
+  // Resolve explicit claims first, independently of town order. Old saves could
+  // accidentally point the starter town at a newly founded town's meeting place.
+  const assigned = new Map<Town, Building>();
+  const used = new Set<string>();
+  for (const b of w.buildings.filter((b) => b.kind === 'town')) {
+    const claimants = w.towns.filter((t) => t.plinth === b.id);
+    const distance = (t: Town) =>
+      Number.isFinite(t.x) && Number.isFinite(t.z) ? Math.hypot(t.x - b.x, t.z - b.z) : Infinity;
+    claimants.sort(
+      (a, c) =>
+        Number(b.id === 'town-' + c.id) - Number(b.id === 'town-' + a.id) ||
+        distance(a) - distance(c) ||
+        String(a.id ?? a.name).localeCompare(String(c.id ?? c.name)),
+    );
+    if (claimants[0]) {
+      assigned.set(claimants[0], b);
+      used.add(b.id);
+    }
+  }
   w.towns.forEach((t, i) => {
+    // Only genuinely old, unlocated starter towns may adopt an unclaimed model.
+    // A modern town whose council was removed keeps its location and fallback UI.
     const plinth =
-      w.buildings.find((b) => b.id === t.plinth) ??
-      (i === 0 ? w.buildings.find((b) => b.kind === 'town') : undefined);
+      assigned.get(t) ??
+      (i === 0 && !Number.isFinite(t.x) && !Number.isFinite(t.z)
+        ? w.buildings.find((b) => b.kind === 'town' && !used.has(b.id))
+        : undefined);
+    if (plinth) used.add(plinth.id);
     const legacy = t.salesTax === undefined;
     t.id ??= uniqueTownId(w, t.name);
-    if (plinth) t.plinth ??= plinth.id;
+    if (plinth) t.plinth = plinth.id;
+    else delete t.plinth;
     t.x ??= plinth?.x ?? 0;
     t.z ??= plinth?.z ?? 0;
     t.radius ??= Math.min(300, mapHalf(w));
@@ -153,6 +178,7 @@ export function payTown(w: World, town: Town, from: string, amount: number, reas
 
 /** After a layout import, each town centres on its plinth, claiming an unused one if needed. */
 export function anchorTowns(w: World) {
+  normalizeTowns(w);
   const claimed = new Set<string>();
   for (const t of w.towns) {
     const plinth =

@@ -305,6 +305,8 @@ export interface World {
   retiredRoads?: string[];
   /** One-time retirement of excess public starter types; purchased property is protected. */
   parishRetired?: string[];
+  /** One-time restoration of the public starter town meeting place. */
+  publicCivicVersion?: 1;
   schemaVersion: 1;
   id: string;
   name: string;

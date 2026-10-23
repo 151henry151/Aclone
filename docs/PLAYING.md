@@ -195,7 +195,9 @@ Mayors change only the rules the world's charter delegates to towns, within its 
 
 ## Puddlewick services
 
-Default server-owned Puddlewick adds only missing **Stonemason** (3 stone → 2 blocks) and **Shoreline waterworks** (1 fuel → 12 water), ten-minute batches at defaults. Find them with M. Train mason/pump operator for paid work. New seeded services receive finite initial supplies/capital; existing businesses are never refilled on restart. Other catalog businesses await player development.
+Default server-owned Puddlewick adds missing **Stonemason** (3 stone → 2 blocks) and **Shoreline waterworks** (1 fuel → 12 water), ten-minute batches at defaults. Find them with M. Train mason/pump operator for paid work. New seeded services receive finite initial supplies/capital; existing businesses are never refilled on restart. Other catalog businesses await player development.
+
+Puddlewick's public **town centre** is a fountain with benches. Its missing starter centre is restored once on a clear nearby lot, avoiding roads, farm plots and existing property; town boundaries, taxes and treasuries stay unchanged. The earlier cleanup no longer removes the public council. Each town retains its own meeting place, so Mabel's Reach does not become Puddlewick's government office. Find the centre on the map or in the parish directory and approach it to open Town government. Later deliberate demolition is respected.
 
 Startup preserves purchased/custom properties, skips blocked sites and retries pending placements later. Completed additions are recorded: demolition/depletion does not recreate/refill them. Other worlds are untouched. The one-time 0.21.2 cleanup and exact removal scope are in [release notes](RELEASE_NOTES.md#puddlewick-cleanup-scope); owners retain prices/stock/wages. No catalog building type is banned.
 

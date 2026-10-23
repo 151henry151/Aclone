@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.87.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.87.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -54,6 +54,8 @@ Employment has a visible shift countdown and renewal reminder; see the [economy 
 Repeated trades show cumulative confirmed quantities and costs, including after closing a shop.
 
 The on-screen **Menu · F9** button opens maps, reports, settings and your pilot key. **F9 → Statistics** shows playtime (including recovered historical estimates), personal finances, completed construction, gathered materials, harvests and deaths; see [statistics coverage](docs/PLAYING.md#personal-statistics).
+
+Puddlewick has a public fountain-and-benches town centre for local government; each town keeps its own meeting place. See [parish services](docs/PLAYING.md#puddlewick-services).
 
 World owners can inspect residents, businesses and public notices through **F6 → Caretaker dashboard**. See the [caretaker history guide](docs/PLAYING.md#caretaker-history) for persistent public chat and notice archives.
 

@@ -21,7 +21,6 @@ export const retiredStarterTypes = [
   'rareMine',
   'factory',
   'brickworks',
-  'town',
   'mine',
   'teaHouse',
   'scripted',
@@ -48,9 +47,7 @@ function retireStarterBuildings(w: World) {
     const starter = w.buildings.filter(
       (b) =>
         b.kind === kind &&
-        (b.id === 'parish-' + kind ||
-          new RegExp('^parish-' + kind + '(?:-new)+$').test(b.id) ||
-          (kind === 'town' && b.id === 'b13')),
+        (b.id === 'parish-' + kind || new RegExp('^parish-' + kind + '(?:-new)+$').test(b.id)),
     );
     let pending = false;
     for (const b of starter) {

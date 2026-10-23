@@ -2,6 +2,17 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.87.2
+
+Back up the world database before starting this version. Startup repairs duplicated
+town meeting-place references and restores Puddlewick's missing public fountain
+and benches on a clear nearby lot. Existing town borders, governments, money and
+property remain unchanged; no world reset is needed. Restoration runs once, retries
+on later startups if no safe lot is available, and respects later deliberate removal.
+Verify that Puddlewick and Mabel's Reach each reference their own physical town centre.
+Validation: all 938 tests and the production build passed, followed by a migration
+rehearsal on a copy of the live world and a browser check of the restored centre.
+
 ## Upgrade 0.87.1
 
 Upgrade the host's Node.js runtime to **24.22.1 or a newer patched 24.x LTS**

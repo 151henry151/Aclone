@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld } from '../src/shared/simulation.ts';
+import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import {
   buildingCategory,
   categories,
   nearestTown,
   normalizeTowns,
+  meetingTown,
+  townOfPlinth,
+  anchorTowns,
   townAt,
   townCharter,
 } from '../src/shared/civics.ts';
@@ -78,4 +81,83 @@ test('buildings fall into zoning categories, including custom templates by base 
     templates: { villa: { base: 'home' } },
   } as unknown as typeof w.catalogue;
   assert.equal(buildingCategory(w, 'villa'), 'residential');
+});
+
+test('missing starter councils never adopt another town’s meeting place on reload', () => {
+  const w = createWorld('civics', 'Civics', 'owner');
+  const original = w.towns[0];
+  w.buildings = w.buildings.filter((b) => b.kind !== 'town');
+  const remote = makeBuilding('town-east', 'town', 770, 92);
+  w.buildings.push(remote);
+  const east = {
+    ...structuredClone(original),
+    id: 'east',
+    name: 'East',
+    x: 770,
+    z: 92,
+    plinth: remote.id,
+  };
+  w.towns.push(east);
+  delete original.plinth;
+  const position = [original.x, original.z];
+  normalizeTowns(w);
+  assert.equal(original.plinth, undefined);
+  assert.equal(east.plinth, remote.id);
+  assert.deepEqual([original.x, original.z], position);
+  assert.equal(meetingTown(w, remote.id)?.id, 'east');
+});
+
+test('duplicate meeting-place claims repair deterministically without moving towns or changing government', () => {
+  for (const reverse of [false, true]) {
+    const w = createWorld('civics', 'Civics', 'owner');
+    const original = w.towns[0];
+    w.buildings = w.buildings.filter((b) => b.kind !== 'town');
+    const remote = makeBuilding('town-east', 'town', 770, 92);
+    w.buildings.push(remote);
+    original.plinth = remote.id;
+    original.treasury = 123456;
+    original.mayor = 'hank';
+    const east = {
+      ...structuredClone(original),
+      id: 'east',
+      name: 'East',
+      x: 770,
+      z: 92,
+      mayor: 'mabel',
+    };
+    w.towns.push(east);
+    if (reverse) w.towns.reverse();
+    const before = structuredClone(w.towns);
+    normalizeTowns(w);
+    assert.equal(original.plinth, undefined);
+    assert.equal(east.plinth, remote.id);
+    assert.equal(meetingTown(w, remote.id)?.id, 'east');
+    assert.equal(townOfPlinth(w, remote)?.id, 'east');
+    const expected = before.map((t) => {
+      if (t.id === original.id) delete t.plinth;
+      return t;
+    });
+    assert.deepEqual(w.towns, expected);
+    normalizeTowns(w);
+    assert.deepEqual(w.towns, expected);
+    anchorTowns(w);
+    assert.equal(original.plinth, undefined);
+    assert.deepEqual([original.x, original.z], [0, 0]);
+    assert.equal(east.plinth, remote.id);
+  }
+});
+
+test('stale non-civic references are cleared and unnamed shared models belong to the closest claimant', () => {
+  const w = createWorld('civics', 'Civics', 'owner');
+  const original = w.towns[0];
+  const civic = w.buildings.find((b) => b.kind === 'town')!;
+  const near = { ...structuredClone(original), id: 'near', x: civic.x, z: civic.z };
+  original.x = 1000;
+  w.towns.push(near);
+  normalizeTowns(w);
+  assert.equal(original.plinth, undefined);
+  assert.equal(near.plinth, civic.id);
+  original.plinth = w.buildings.find((b) => b.kind === 'farm')!.id;
+  normalizeTowns(w);
+  assert.equal(original.plinth, undefined);
 });

@@ -5,6 +5,7 @@ import { cancelGather } from '../shared/resources.ts';
 import { decodeBundle, provenanceSchema, assetExtensions } from './asset-bundle.ts';
 import { rulesSummary } from '../shared/rulesets.ts';
 import { worldItems } from '../shared/world-catalogue.ts';
+import { restorePuddlewickCentre } from './puddlewick-centre.ts';
 import { restorePublicPuddlewick, governmentStores } from './government-stores.ts';
 import { leaveReport, returnReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -153,7 +154,8 @@ export async function createApp(options: AppOptions) {
   for (const world of worlds.values()) {
     const services = completePuddlewick(world);
     const government = governmentStores(world);
-    if (services || government || world.publicParishVersion) store.saveWorld(world);
+    const civic = restorePuddlewickCentre(world);
+    if (services || government || civic || world.publicParishVersion) store.saveWorld(world);
   }
   const accounts = new Accounts(
     store,

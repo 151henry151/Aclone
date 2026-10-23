@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.87.2] - 2026-10-22
+
+### Fixed
+
+- Restore Puddlewick's missing public fountain-and-benches town centre on a clear nearby lot, without changing town borders, governments, finances or existing property. Starter cleanup now preserves civic centres; blocked restorations retry on later startups.
+- Repair duplicated town meeting-place references in older saves, and prevent a town whose council was removed from claiming another town's fountain. Each town opens its own government panel after reloading.
+
 ## [0.87.1] - 2026-10-22
 
 ### Security

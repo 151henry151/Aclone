@@ -25,16 +25,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const parish = () => createWorld('puddlewick', 'Puddlewick', 'server');
-const wanted = () =>
-  new Set([
-    ...parish()
-      .buildings.filter((b) => b.kind !== 'town')
-      .map((b) => b.kind),
-    ...starterServices,
-  ]);
-test('Puddlewick adds only the approved services and removes the public council', () => {
+const wanted = () => new Set([...parish().buildings.map((b) => b.kind), ...starterServices]);
+test('Puddlewick adds approved services and preserves its public civic centre', () => {
   const w = parish(),
-    originals = structuredClone(w.buildings.filter((b) => b.kind !== 'town'));
+    originals = structuredClone(w.buildings);
   assert.equal(completePuddlewick(w), true);
   assert.deepEqual(new Set(w.buildings.map((b) => b.kind)), wanted());
   assert.deepEqual(w.buildings.slice(0, originals.length), originals);
@@ -89,7 +83,7 @@ test('upgrade preserves owned businesses, survives reload and does not respawn d
   const mason = makeBuilding('player-mason', 'mason', -192, 48);
   mason.owner = 'hank';
   w.buildings.push(mason);
-  const before = structuredClone(w.buildings.filter((b) => b.kind !== 'town'));
+  const before = structuredClone(w.buildings);
   completePuddlewick(w);
   assert.deepEqual(w.buildings.slice(0, before.length), before);
   assert.equal(w.buildings.filter((b) => b.kind === 'mason').length, 1);
@@ -216,7 +210,7 @@ test('retire all accidental public additions once, preserve purchased and custom
     w.ledger
       .filter((e) => e.reason === 'retired parish starter building')
       .reduce((n, e) => n + e.amount, 0),
-    250000 + (retiredStarterTypes.length - 2) * 22000,
+    (retiredStarterTypes.length - 1) * 22000,
   );
   const store = new Store(':memory:');
   try {
