@@ -10,7 +10,7 @@ and angle of attack; it does not simulate wind gusts, structural flex or engine 
 Use two hands:
 
 - **W / S:** increase / decrease throttle. Release the key to leave it where you set it.
-  **Ground pushback (unreleased):** while stopped or moving slowly on the ground,
+  **Ground pushback (0.91.1):** while stopped or moving slowly on the ground,
   keep holding S after reaching idle to back up at walking speed (at most 1.5 m/s).
   A/D steer while backing; B stops you. Release S to coast to a stop, or use W to
   taxi forward again. This represents manual ground handling and works with the

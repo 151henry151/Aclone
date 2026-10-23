@@ -79,7 +79,7 @@ skip uploads. Other vehicles share static instrument textures. The new interiors
 add fewer than 400 triangles per model, including the corrected steering assembly
 and rounded dashboard housings.
 
-## Tyre tracks (unreleased)
+## Tyre tracks (0.91.1)
 
 Snow and mud prints use each wheel's actual contact point and tyre width, rather
 than stretching the same pair of tracks for every tractor. Front and rear wheels

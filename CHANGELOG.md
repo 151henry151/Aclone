@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.91.1] - 2026-10-23
+
 ### Fixed
 
 - Biplanes can back away from garages: hold throttle-down at idle for slow ground pushback, steer with the rudder controls, and brake to stop. Keyboard, touch and controller inputs share the same ground-only handling; throttle controls remain responsive while touching an obstacle.
