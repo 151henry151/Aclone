@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.89.0
+
+Reload browsers to load the rebuilt biplane and its working cockpit instruments.
+Existing aircraft, fuel, paint and physics remain compatible; no world reset or
+data migration is needed. Back up before deploying as usual. Validate the grounded
+and airborne views, engine-controlled propeller and first-person instruments.
+
 ## Upgrade 0.88.0
 
 Back up the database and reload browsers after deployment. Six tractor designs

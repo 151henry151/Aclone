@@ -1,4 +1,5 @@
 import { updateTractorCockpit } from './tractor-cockpit';
+import { createBiplane, updateBiplaneInstruments, type BiplaneFigure } from './biplane';
 import { fleetTractor, tractorShapes } from './tractor-fleet';
 import { isTractor } from '../shared/tractors';
 import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
@@ -503,6 +504,7 @@ export class GameScene {
         this.actors.add(mesh);
       }
       mesh.visible = !p.atHome;
+      mesh.userData.engineRunning = p.engineRunning ?? (p.engine && p.fuel > 0);
       if (resetMotion || !mesh.userData.motion) mesh.userData.motion = new MotionTrack();
       const snapped = (mesh.userData.motion as MotionTrack).receive(world.time, p);
       if (snapped) {
@@ -1072,12 +1074,12 @@ export class GameScene {
       cylinder(g, 0.2, 2, '#d7c5a1', 0, 3.2, 0.4, 5);
       box(g, 0.6, 0.6, 0.7, '#d7c5a1', 0, 4.2, 0.4);
     } else if (v.mode === 2) {
-      box(g, 1, 1, 6, v.color, 0, 1, 0);
-      box(g, 9, 0.3, 1.8, v.color, 0, 1.6, 0);
-      box(g, 9, 0.3, 1.8, v.color, 0, 3, 0);
-      box(g, 3, 0.2, 1, v.color, 0, 1.2, -2.5);
-      box(g, 0.2, 1.7, 1.2, '#c36045', 0, 2, -2.5);
-      box(g, 3, 0.15, 0.2, '#4c534a', 0, 1, 3.1);
+      const plane = createBiplane(tractorPaint(paint)?.color ?? v.color);
+      g.add(plane.group);
+      g.userData.biplane = plane;
+      g.userData.driver = plane.group.userData.driver;
+      g.userData.eye = plane.group.userData.eye;
+      g.userData.viewPitch = plane.group.userData.viewPitch;
     } else if (v.mode === 3) {
       box(g, 3, 1, 6, v.color, 0, 0.5, 0);
       box(g, 2, 1.8, 2, '#d6cfae', 0, 1.8, -1);
@@ -1213,6 +1215,11 @@ export class GameScene {
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
         (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
+        const plane = mesh.userData.biplane as BiplaneFigure | undefined;
+        if (plane) {
+          plane.animate(dt, mesh.userData.engineRunning, pose.y - bareSurface(pose.x, pose.z));
+          mesh.userData.viewPitch = plane.group.userData.viewPitch;
+        }
         // Keep the player's own face/driver out of the first-person camera.
         const occupant =
           (mesh.userData.human as HumanFigure | undefined)?.group ?? mesh.userData.driver;
@@ -1224,6 +1231,13 @@ export class GameScene {
       const local = this.meshes.get(p.id);
       if (local) {
         if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed);
+        if (this.cameraMode === 1 && local.userData.biplane)
+          updateBiplaneInstruments(
+            local.userData.biplane.group,
+            p,
+            local.position.y - bareSurface(local.position.x, local.position.z),
+            this.elapsed,
+          );
         const pos = local.position;
         const facing = local.rotation.y;
         this.headlights.position.copy(

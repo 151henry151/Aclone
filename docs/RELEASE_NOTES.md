@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.89.0 — A proper parish mail plane
+
+The biplane now has a tapered fuselage, fabric-covered shaped wings, bracing wires,
+landing gear and a wooden propeller that spins with the engine. Its open cockpit
+has working airspeed, height-above-ground and fuel instruments. Garage paint
+colours the aircraft, while fabric seams, markings and engine detail use textures
+to keep the model lightweight. Flight performance and purchase terms are unchanged.
+
 ## 0.88.0 — Six tractors, six ways to make a living
 
 Garages now offer five specialist tractors alongside the familiar Puddle tractor:

@@ -176,6 +176,27 @@ Grilles, tread, wheel bolts, doors, siding and window frames use cached procedur
 
 Cow anatomy is baked from original blended volumes by `npx tsx scripts/cow-surface.ts` into `src/client/cow-surface.json`; run Prettier after rebaking. Torso and legs share a closed surface, with weighted vertex deformation for walking. `npm run screenshots:livestock` includes a side view. Reference photographs guide proportions only; no reference pixels are shipped.
 
+### Biplane
+
+`src/client/biplane.ts` replaces the built-in aircraft's box primitives with an
+original civilian mail-plane design. A tapered shell has a real opening for the
+pilot, staggered wings have shaped tips and a cockpit cutout, and the undercarriage
+uses a tail-down resting stance that levels off after leaving the ground. Bracing,
+landing gear, windscreen, padded cockpit rim and propeller are simple geometry;
+fabric weave, rib tapes, seams, registration, radiator fins, wood grain and instruments
+are cached canvas textures. Garage paint tints the fabric and fuselage while retaining
+the dark trim. Creator-supplied models still override the built-in aircraft.
+
+The propeller stops when the engine is off. Only the visible local cockpit updates
+its instrument texture, at most four times a second, for speed in mph, altitude above
+ground in metres and fuel percentage. Flight speed, lift controls, prices and storage
+are unchanged. Static parts are batched by material; the model with pilot stays below
+14,000 triangles. These are geometry budgets, not FPS guarantees.
+
+Run `npx tsx scripts/biplane-preview.ts` for front, rear, side, overhead and seated
+views plus a review sheet in `output/biplane/`. The focused browser check is
+`npm run test:e2e -- tests/browser/biplane.spec.ts`.
+
 ### Building finishes
 
 `building-finishes.ts` supplies shared 512px masonry, timber, plaster and roofing maps plus 256px door, awning and window details. Profiles distinguish food shops, civic buildings, agricultural sheds and industry; existing stone and cottage siding remain in use. Brick joints, grain, fasteners, shutter ribs, bread displays and leaded glass are baked into textures. Roof courses follow the eaves and corrugations run downhill. Original footprints and cottage style choices are unchanged.

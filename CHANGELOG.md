@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.89.0] - 2026-10-22
+
+### Changed
+
+- Rebuild the biplane as a fabric-covered mail plane with a tapered open-cockpit fuselage, shaped wings, bracing wires, rounded tail, landing gear and wooden propeller. Painted fabric seams, registration marks, wood grain and radiator details keep the model lightweight. The propeller follows engine state, the airframe adopts a tail-down resting stance, and the seated cockpit has working airspeed, height-above-ground and fuel instruments. Garage paint now appears on the aircraft.
+
 ## [0.88.0] - 2026-10-22
 
 ### Added
