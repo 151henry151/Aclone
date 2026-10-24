@@ -1,3 +1,4 @@
+import { AircraftCrashes } from './aircraft-crash';
 import { airfieldModel } from './airfield-scene';
 import { createHovercraft, updateHovercraftInstruments, type HovercraftFigure } from './hovercraft';
 import { updateTractorCockpit } from './tractor-cockpit';
@@ -144,6 +145,7 @@ export class GameScene {
   private elapsed = 0;
   private chase = 0;
   private plumes = new SmokePlumes();
+  private aircraftCrashes = new AircraftCrashes();
   private chimneyTime = 0;
   private smokesAt = 0;
   private stars: T.Points;
@@ -285,7 +287,13 @@ export class GameScene {
     this.ball.castShadow = true;
     this.projectiles.count = 0;
     this.projectiles.frustumCulled = false;
-    this.actors.add(this.ball, this.projectiles, this.plumes.mesh, this.tracks.mesh);
+    this.actors.add(
+      this.ball,
+      this.projectiles,
+      this.plumes.mesh,
+      this.tracks.mesh,
+      this.aircraftCrashes.mesh,
+    );
     const starGeo = new T.BufferGeometry();
     const coords = [];
     for (let i = 0; i < 1400; i++) {
@@ -464,6 +472,7 @@ export class GameScene {
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
+    this.aircraftCrashes.receive(world);
     this.fields.update(world, this.me);
     this.livestock.update(world, this.me);
     const resetMotion = this.motionClock.receive(world.time, performance.now());
@@ -642,6 +651,7 @@ export class GameScene {
     this.settling = undefined;
     this.onLoading?.();
     this.audio.clear();
+    this.aircraftCrashes.clear();
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
     this.sky.visible = false;
@@ -1385,6 +1395,7 @@ export class GameScene {
               this.plumes.emit(g.localToWorld(at.clone()));
       }
       this.plumes.update(dt);
+      this.aircraftCrashes.update(dt);
       const date = calendar(w),
         climate = worldWeather(w, date.absoluteDay),
         skyOffset = Math.max(-1, Math.min(1, motionTime - w.time)),

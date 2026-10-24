@@ -1897,7 +1897,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     recordTravel(w, p, Math.hypot(p.x - previous.x, p.z - previous.z));
     if (accident) {
       const slot = p.vehicle;
-      p.lastFlightCrash = { at: w.time, cause: accident, slot };
+      p.lastFlightCrash = { at: w.time, cause: accident, slot, x: p.x, y: p.y, z: p.z };
       p.fleet = (p.fleet ?? [0, 5]).filter((v) => v !== slot);
       if (p.fleetState) delete p.fleetState[slot];
       if (p.vehiclePaints) delete p.vehiclePaints[slot];

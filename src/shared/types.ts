@@ -56,7 +56,7 @@ export interface Player {
   heading: number;
   speed: number;
   flight?: import('./flight').FlightState;
-  lastFlightCrash?: { at: number; cause: string; slot: number };
+  lastFlightCrash?: { at: number; cause: string; slot: number; x?: number; y?: number; z?: number };
   fuel: number;
   /** Public snapshot hint; exact fuel and private activity details stay private. */
   canReceiveFuel?: boolean;

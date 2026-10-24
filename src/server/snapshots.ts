@@ -129,6 +129,7 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         flight: p.flight,
+        lastFlightCrash: p.lastFlightCrash,
         vehicle: p.vehicle,
         canReceiveFuel: refuelRecipientReady(p),
         canReceiveRepair: repairRecipientReady(p),
