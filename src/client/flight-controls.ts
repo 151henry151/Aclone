@@ -15,7 +15,7 @@ export function aircraftInput(
     throttle: clamp(+held('w', 'W') - +held('s', 'S') + touch.throttle + pad.throttle),
     steer: clamp(+held('a', 'A') - +held('d', 'D') + touch.steer + pad.steer),
     boost: false,
-    pitch: clamp(+held('ArrowUp') - +held('ArrowDown') + (touch.pitch ?? 0) + (pad.pitch ?? 0)),
+    pitch: clamp(+held('ArrowDown') - +held('ArrowUp') + (touch.pitch ?? 0) + (pad.pitch ?? 0)),
     roll: clamp(+held('ArrowLeft') - +held('ArrowRight') + (touch.roll ?? 0) + (pad.roll ?? 0)),
     brake: held('b', 'B') || !!touch.brake || !!pad.brake,
   };

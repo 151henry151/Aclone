@@ -69,7 +69,7 @@ const holdPitch = (p: Player, angle: number): Input => ({
   pitch: (angle - p.flight!.pitch) * 3,
 });
 test('two-handed inputs keep throttle, rudder, pitch and bank independent', () => {
-  assert.deepEqual(aircraftInput(new Set(['w', 'a', 'ArrowUp', 'ArrowRight']), idle, idle), {
+  assert.deepEqual(aircraftInput(new Set(['w', 'a', 'ArrowDown', 'ArrowRight']), idle, idle), {
     ...idle,
     throttle: 1,
     steer: 1,
@@ -78,6 +78,8 @@ test('two-handed inputs keep throttle, rudder, pitch and bank independent', () =
     brake: false,
   });
   assert.equal(aircraftInput(new Set(['ArrowDown']), idle, idle).throttle, 0);
+  assert.equal(aircraftInput(new Set(['ArrowUp']), idle, idle).pitch, -1);
+  assert.equal(aircraftInput(new Set(['ArrowDown']), idle, idle).pitch, 1);
   assert.deepEqual(aircraftInput(new Set(['w', 'ArrowUp']), idle, idle, true), {
     ...idle,
     pitch: 0,
@@ -158,6 +160,62 @@ test('a gentle wings-level approach lands and braking stops the rollout', () => 
   assert.equal(run(p, 10, { ...idle, brake: true }), undefined);
   assert.equal(p.y, 0);
   assert.equal(p.speed, 0);
+});
+test('a full discrete-control takeoff, approach and landing survives modest input delay', () => {
+  for (const delay of [0, 0.2, 0.4]) {
+    const { p } = pilot();
+    const f = p.flight!;
+    const commands: Input[] = [];
+    let phase = 'takeoff',
+      maxHeight = 0,
+      airborne = false,
+      touchdownSpeed = 0;
+    for (let t = 0; t < 100; t += 0.1) {
+      if (phase === 'takeoff' && !f.grounded) {
+        phase = 'climb';
+        airborne = true;
+      }
+      if (phase === 'climb' && p.y > 20) phase = 'approach';
+      if (phase === 'approach' && f.grounded) phase = 'stop';
+      // Test pilot changes only ordinary controls after starting parked.
+      const desiredSink = p.y < 4 ? -0.6 : -1.4;
+      const approachAngle =
+        (9.81 / (0.0217 * Math.max(20, f.airspeed) ** 2) - 0.28) / 4.5 +
+        Math.atan2(desiredSink, Math.max(20, f.airspeed));
+      const error = (phase === 'climb' ? 0.15 : approachAngle) - f.pitch - f.pitchRate * 0.7;
+      const targetThrottle =
+        phase === 'takeoff' ? 1 : phase === 'climb' ? 0.45 : phase === 'approach' ? 0.18 : 0;
+      commands.push({
+        ...idle,
+        throttle:
+          Math.abs(targetThrottle - f.throttle) > 0.02 ? Math.sign(targetThrottle - f.throttle) : 0,
+        pitch:
+          phase === 'takeoff'
+            ? f.airspeed > 20
+              ? 1
+              : 0
+            : phase === 'stop'
+              ? 0
+              : Math.abs(error) > 0.03
+                ? Math.sign(error)
+                : 0,
+        brake: phase === 'stop',
+      });
+      if (phase === 'approach' && !f.grounded) touchdownSpeed = f.airspeed;
+      assert.equal(
+        fly(p, commands[Math.max(0, commands.length - 1 - Math.round(delay / 0.1))], 0.1, env),
+        undefined,
+      );
+      maxHeight = Math.max(maxHeight, p.y);
+      if (phase === 'stop' && Math.abs(p.speed) < 0.01) break;
+    }
+    assert.ok(airborne && maxHeight > 20, 'A real climb precedes the approach');
+    assert.equal(phase, 'stop');
+    assert.ok(touchdownSpeed > 20 && touchdownSpeed < 30, `Approach speed ${touchdownSpeed}`);
+    assert.equal(f.grounded, true);
+    assert.equal(p.y, 0);
+    assert.equal(p.speed, 0);
+  }
 });
 test('hard impacts, banked landings, obstacles and water produce distinct accidents', () => {
   assert.equal(run(airborne(0.1, 26, -10), 0.1), 'hard landing');

@@ -84,9 +84,9 @@ test('two-handed flight reaches the server, latches throttle, banks the aircraft
     // Rotate at flying speed, not after a fixed wall-clock delay. Software WebGL
     // and shared CI runners can advance the simulation more slowly than real time.
     await expect.poll(() => p.flight?.airspeed, { timeout: 45000 }).toBeGreaterThan(20);
-    await page.keyboard.down('ArrowUp');
+    await page.keyboard.down('ArrowDown');
     await expect.poll(() => p.flight?.grounded, { timeout: 30000 }).toBe(false);
-    await page.keyboard.up('ArrowUp');
+    await page.keyboard.up('ArrowDown');
     await expect.poll(() => p.y).toBeGreaterThan(12);
     await page.keyboard.down('ArrowLeft');
     await expect.poll(() => p.flight?.bank).toBeGreaterThan(0.25);

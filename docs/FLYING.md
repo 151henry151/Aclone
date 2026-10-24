@@ -18,7 +18,7 @@ Use two hands:
   hold Power −; on a controller, hold throttle-down at idle.
   There is no reverse thrust. Going from idle to full power takes about four seconds.
 - **A / D:** rudder left / right, also steering the wheels while taxiing.
-- **Up / Down arrows:** raise / lower the nose.
+- **Down arrow:** pull back to raise the nose. **Up arrow:** push forward to lower it.
 - **Left / Right arrows:** bank left / right. Release to stop rolling; use the opposite
   arrow to return the wings to level. Banking turns the aircraft.
 - **B:** wheel brakes. Reduce power before braking after landing.
@@ -105,7 +105,8 @@ entering a home or starting a ground activity while airborne.
 prediction; the server owns crash outcomes. Saved flight state includes throttle,
 attitude and velocity. Remote clients interpolate pitch and bank along with position.
 Unit tests cover controls, takeoff distance, stalls/recovery, banking, gliding,
-landing, crashes, timestep consistency and prediction isolation. Browser tests cover
+landing, a complete parked-to-airborne-to-stopped flight with delayed discrete inputs,
+crashes, timestep consistency and prediction isolation. Browser tests cover
 live input delivery, cockpit rendering and the authoritative destruction notice.
 
 The stall and bank/lift relationships were informed by the
