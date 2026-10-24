@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.92.0] - 2026-10-23
+
+### Fixed
+
+- Biplane arrow keys now follow flight-stick convention: Down pulls the nose up and Up pushes it down; the flight guide and control hints match.
+
+### Changed
+
+- People now have a continuous smooth body mesh with skeletal animation, replacing the separate geometric body pieces. A shared texture supplies workwear pockets, stitching, boots and facial detail; walking and running now use retargeted human motion capture, with weight shifts, independent waist/neck/wrist motion and planted-foot constraints. Movement blends with stopping and reversing, and seated drivers use the same model. Each figure draws in one material batch.
+
 ## [0.91.1] - 2026-10-23
 
 ### Fixed

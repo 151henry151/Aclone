@@ -2,6 +2,19 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.92.0
+
+Reload browsers for the continuous character mesh, recorded walk/run animation
+and corrected biplane keyboard pitch (Down raises the nose; Up lowers it). No world
+reset or data migration is required. Back up the database before deploying as usual.
+Preserve the CMU motion attribution in `THIRD_PARTY_NOTICES.md` and
+`art/motion/README.md` when distributing source or compiled clients.
+
+Check forward walking, jogging, stopping, reversing and seated drivers. The human
+suite covers mesh connectivity, skin weights, separate skeletons, foot contact,
+knee stability and rendering budgets. Flight coverage includes delayed-input
+landings and a real keyboard/server/browser takeoff using the corrected controls.
+
 ## Upgrade 0.90.0
 
 Reload browsers for the rebuilt hovercraft, engine-driven fan and seated cockpit.

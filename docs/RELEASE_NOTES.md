@@ -2,6 +2,24 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.92.0 — More natural people
+
+People have a single smooth body mesh, with textured workwear and facial detail.
+Walking and running use retargeted human motion capture: weight shifts, heel lift,
+shoulder movement and overlapping arm motion replace the mechanical gait. Feet
+stay planted during the loaded part of each step, transitions blend with stopping
+and reversing, and the same body is used for seated drivers. The model stays at
+one material draw. The [art guide](ART.md#human-figures) credits the motion source
+and explains how to reproduce the model and previews.
+
+Biplane keyboard pitch now follows flight-stick convention: **Down pulls the nose
+up; Up pushes it down**. Touch labels and controller pitch axes are unchanged.
+Landing regression coverage now includes a complete takeoff, approach and stop
+with delayed discrete inputs.
+
+Reload the browser after deployment. No world reset, account migration or change
+to movement speeds is needed.
+
 ## 0.90.0 — Marsh Courier hovercraft
 
 The hovercraft now has its own utility-craft design: a rounded rubber skirt,

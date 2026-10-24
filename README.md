@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.91.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.92.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -20,6 +20,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 - Choose active-work, relaxed owner-operated, harsh-survival or combat/frontier rules, then customize them. Create worlds with terrain/heightmaps, drawn paths, surface painting, fences, model scatter, custom models, animated GLB/OBJ models, painted PNG/JPEG textures, environmental audio zones and portable media bundles, custom goods/professions/building templates, production-chain diagnostics, readable books, recurring town events, optional player-funded lotteries, visual behavior rules, ordered tutorials/quests, action requirements and optional Lua scripts with persistent player progress.
 - Meet up to 19 optional AI neighbours with distinct personalities, memory and playing habits. All use Jev for decisions; Mabel chats through OpenAI, the others through Claude. Mabel stays in her home world to help neighbours and develop her settlement; other residents can travel. Address one directly by name, or use `@all` to invite one interested volunteer without a chorus of replies. Say “Mabel, stop responding” to end her public conversation; mentioning her while addressing another player does not summon her. API billing and operator spending limits are separate from consumer subscriptions. Developers can test survival and business growth in an isolated [accelerated Jev experiment](docs/NPCS.md#actual-jev-snapshot-experiments-paid), with explicit spending limits and resumable reports.
 - Play with desktop controls or a compact touch interface. Mark map waypoints and follow camera-relative arrows and distance while driving. Send private offline mail, form families by invitation, agree direct trades, give neighbours money or help service their vehicles.
+
+People now use a continuous smooth mesh with recorded human walking and running motion, natural weight shifts and planted feet. Biplane keyboard pitch follows flight-stick convention: **Down pulls up; Up pushes down**. Reload after updating to load the new character and controls. See [release notes](docs/RELEASE_NOTES.md#0920--more-natural-people).
 
 The Taxes & rates page (World/F9 or parish directory) explains live world and town rates, with included-tax totals beside shop trades.
 
@@ -131,9 +133,9 @@ For graphics settings, open **F9 → Options & pilot key** and scroll below the 
 
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 
-CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
+CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
 
-Browser tests may create pilots and worlds: never target production. `TEST_URL` selects the server; `CHROMIUM_PATH` selects an installed Chromium. Load/network checks are in [Hosting](docs/HOSTING.md#connection-and-multiplayer-checks); visual capture commands are in [Art](docs/ART.md#reviewing-visual-changes).
+Browser tests may create pilots and worlds: never target production. `TEST_URL` selects the server; `CHROMIUM_PATH` selects an installed Chromium. People use a continuous smooth body mesh with skeletal walking/jogging animation adapted from recorded human motion and a shared workwear/face texture. Preview the actual model and seated pose with `npx tsx scripts/walking-preview.ts`; it writes 30-fps frames and front/back/side/seated views into `output/walking/`. Rebuild its baked surface with `npx tsx scripts/human-mesh.ts` and motion clips with `npx tsx scripts/human-motion.ts`; [motion provenance](art/motion/README.md) credits the CMU capture data. Load/network checks are in [Hosting](docs/HOSTING.md#connection-and-multiplayer-checks); visual capture commands are in [Art](docs/ART.md#reviewing-visual-changes).
 
 The [offline NPC evaluator](docs/NPCS.md#household-and-career-recovery) can fast-forward a disposable economy without graphics or API charges. Use it to find mechanical failures; its heuristic decisions do not prove that the live AI economy is stable.
 
