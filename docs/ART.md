@@ -71,7 +71,15 @@ At most six instanced meshes (wood/needles per profile), <11,000 triangles/tree 
 
 ## Human figures
 
-`human.ts` supplies original smooth workwear humans: face/fingers/collar/pockets/cap/boots and procedural cloth weave. No scanned likeness/model downloads. Walkers clone joint hierarchies over shared geometry/materials; two-bone legs follow interpolated distance and blend to rest. Seated drivers bake into three batches; walkers ≤24 draws, both <22,000 triangles. First-person hides local occupants; eye height 1.68m. Respect shared-resource flags on disposal.
+`human.ts` supplies an original continuous, watertight workwear character, replacing intersecting primitive body parts. `scripts/human-mesh.ts` bakes a smoothly joined implicit sculpt into `client/generated/human-mesh.json`; no meshing runs in the browser. The 10,228-triangle surface has a single connected shell, smooth normals and shared skin weights across UV seams. `human-surface.ts` supplies one shared clothing/face texture: pockets, stitching, buttons, boot laces and facial details add no geometry. No scanned likeness or third-party model downloads.
+
+Walkers use an independently cloned 17-bone skeleton over shared geometry/materials. `human-gait.ts` blends recorded walking and running from the CMU Graphics Lab Motion Capture Database, retargeted offline by `scripts/human-motion.ts`. Real weight shifts, hip/shoulder counter-motion, elbow timing and knee recovery replace a uniform sine-wave cycle. See [motion sources and permission](../art/motion/README.md) and [third-party notices](../THIRD_PARTY_NOTICES.md) for attribution.
+
+Distance drives stride phase; speed adjusts stride length and blends walk/run. Separate waist, neck and wrist joints carry overlapping movement. Two-bone leg constraints retain restrained captured knee variation without allowing backwards knee bends, keep soles above ground and hold feet during the loaded part of a step, including turns. Moving and idle poses blend on start/stop; reverse travel mirrors the step direction. This is a visual rig, not a change to player physics. Ground contact is relative to the character's ground plane; per-foot sampling of uneven terrain is not yet implemented.
+
+Walkers and seated drivers each use one material draw; seated drivers bake the same surface into a static pose and do not keep a live skeleton. Skeleton GPU textures belong to each walker and are disposed when it leaves the scene. First-person hides local occupants; eye height 1.68m. Respect shared-resource flags on disposal.
+
+Regenerate the sculpt with `npx tsx scripts/human-mesh.ts` and the clips with `npx tsx scripts/human-motion.ts`. Capture walking, jogging, front/back/side and seated views with `npx tsx scripts/walking-preview.ts`. `HUMAN_PREVIEW_PROFILE=true` selects a side view, and `HUMAN_PREVIEW_TRANSITIONS=true` adds start/walk/stop/reverse frames. Tests check surface connectivity/watertightness, matching weights at UV seams, independent animation, foot contact/clearance and rendering budgets.
 
 ## Scale and architecture (0.3.4)
 
@@ -92,6 +100,7 @@ Merged window panes have separate emissive control. Twelve pooled window/street 
 Use disposable worlds, never concept art presented as screenshots. `CHROMIUM_PATH` chooses Chromium. Captures default to SwiftShader; `SCREENSHOT_GPU=1` selects supported hardware and reports the actual device. `SCREENSHOT_QUALITY=low|balanced|high` selects Performance/Adaptive/Detailed; `SCREENSHOT_OUTPUT_DIR` changes output. Software timings do not predict GPU performance.
 
 - `TEST_URL=... npm run screenshots`: creates pilot/world, checks browser errors, captures game/trade/editor. `SCREENSHOT_HERO_ONLY=1 SCREENSHOT_QUALITY=high` captures H-key scenery only.
+- `npx tsx scripts/walking-preview.ts`: deterministic frames of the actual walking/jogging rig in `output/walking/`; encode `frames/%04d.png` at 30 fps for a motion preview. `tests/human-animation.test.ts` covers clone isolation, draw/triangle budgets, foot clearance and stopping.
 - `npm run screenshots:characters` and `npx tsx scripts/streets.ts`: disposable TEST_URL server, real walking/driver/cottage/pub/mill/shop/school/scale actions.
 - `npm run screenshots:town`: isolated expanded-town/service-access check.
 - `npm run screenshots:seasons`: owned disposable server, staged dates/crops, real harvest and space actions.

@@ -1200,6 +1200,10 @@ export class GameScene {
         const travel =
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
+        const turn = Math.atan2(
+          Math.sin(pose.heading - mesh.rotation.y),
+          Math.cos(pose.heading - mesh.rotation.y),
+        );
         mesh.userData.pose = pose;
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.set(0, pose.heading, 0, 'YXZ');
@@ -1221,7 +1225,7 @@ export class GameScene {
         );
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
-        (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt);
+        (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt, turn);
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
         (mesh.userData.hovercraft as HovercraftFigure | undefined)?.animate(
           dt,
@@ -1631,11 +1635,16 @@ export class GameScene {
   }
 }
 function dispose(root: T.Object3D) {
+  const skeletons = new Set<T.Skeleton>();
   root.traverse((o) => {
     o.userData.disposed = true;
     o.userData.mixer?.stopAllAction();
     if (o.userData.mixer) o.userData.mixer.uncacheRoot(o.userData.animationRoot);
     if (o instanceof T.Mesh || o instanceof T.Sprite || o instanceof T.Line) {
+      if (o instanceof T.SkinnedMesh && !skeletons.has(o.skeleton)) {
+        skeletons.add(o.skeleton);
+        o.skeleton.dispose();
+      }
       if (o instanceof T.InstancedMesh) o.dispose();
       if ('geometry' in o && !o.geometry?.userData.shared) o.geometry?.dispose();
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) {

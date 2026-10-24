@@ -9,3 +9,9 @@ playwright-report
 A tractor The Universal — Clone Design Spec.md
 package-lock.json
 website-dist
+
+# Reproducible mesh data written by scripts/human-mesh.ts
+src/client/generated/human-mesh.json
+
+# Reproducible retargeted motion data
+src/client/generated/human-motion.json
