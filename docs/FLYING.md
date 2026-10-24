@@ -43,11 +43,13 @@ Choose clear, reasonably level land with **at least 150–200 metres of straight
 and additional room beyond it. Trees, buildings, steep banks and water are hazards.
 There is no automatic runway alignment or instant vertical takeoff.
 
-1. Switch into your owned biplane at a garage. Check fuel and, on worlds requiring
+1. Drive to **Puddlewick airfield hangar**, on the western edge of the main town,
+   to buy or board a biplane. The aircraft appears on the apron with its engine off;
+   start it with F4. Check fuel and, on worlds requiring
    licences, obtain the pilot qualification. Taxi at low throttle using A/D.
 2. Line up, release B, and increase power with W. The tail comes up as speed builds.
-3. Around **45–55 mph**, gently tap Up to rotate. Full throttle alone does not lift
-   the aircraft from level ground. Holding Up continuously can cause a stall.
+3. Around **45–55 mph**, gently tap Down to rotate. Full throttle alone does not lift
+   the aircraft from level ground. Holding Down continuously can cause a stall.
 4. Keep a modest nose-up attitude. Level off by easing the nose down as needed.
 5. Use small banks to turn. Watch altitude: a steep bank leaves less lift supporting
    your weight. Counter-bank to level the wings before returning to the airfield.
@@ -112,3 +114,24 @@ live input delivery, cockpit rendering and the authoritative destruction notice.
 The stall and bank/lift relationships were informed by the
 [FAA Airplane Flying Handbook, Chapter 5](https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/06_afh_ch5.pdf).
 The coefficients and forgiving impact thresholds are tuned for this game.
+
+## Airfield and replacement aircraft
+
+Puddlewick’s public airfield has a level, marked 240-metre north/south runway
+inside the current town boundary (220 metres in a new parish with the smaller
+default boundary). The hangar is east of the strip. Use the map’s building marker
+to find it; taxi slowly west from the apron, then line up at either end. There is
+no automatic alignment. Garages continue to handle ground vehicles; biplanes
+require the hangar in Puddlewick (worlds without a hangar retain their garage desk). Stop before boarding and wait if another pilot occupies the
+apron. The runway is reserved against new buildings and farm plots.
+
+Your hangar panel shows the ready aircraft plus spare airframes. A crash removes
+only the aircraft flown. The next visit commissions a spare without another
+purchase charge; its tank is empty and its condition is new. Buy Fuel at the
+hangar or bring some with you, then use it from your inventory. Existing aircraft
+keep their parked fuel, paint and maintenance history. Spares do not copy these
+consumables or records from a destroyed machine.
+
+Confirmed crashes produce a brief fireball, sparks and rising smoke visible to
+nearby players. The effect fades after eight seconds; reconnecting does not
+replay old crashes. It does not change the existing crash injury rules.

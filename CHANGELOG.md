@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.93.0] - 2026-10-23
+
+### Added
+
+- A public airfield on Puddlewick’s western outskirts, with a graded, marked runway, reflective edge markers and a corrugated-metal hangar. Placement stays inside the town boundary, protects existing property, and relocates obstructing public gathering spots nearby without resetting their resources. New construction and farm plots must leave the runway and apron clear.
+- Spare biplane airframes: the hangar shows your total, and a crash destroys only the aircraft in use. Replacements are commissioned at the hangar with empty tanks and new maintenance records.
+- Aircraft crashes now show a brief fireball, flying sparks and rising smoke at the server-confirmed impact position, visible to other players nearby.
+
+### Changed
+
+- Buy and board biplanes at the airfield hangar rather than an ordinary garage in Puddlewick; worlds without a hangar retain their garage aircraft desk. Boarding requires a stopped pilot and a clear apron; the plane starts outside with its engine off. Existing aircraft retain their fuel, paint and service history.
+
 ## [0.92.0] - 2026-10-23
 
 ### Fixed

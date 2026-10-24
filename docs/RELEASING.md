@@ -2,6 +2,31 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.93.0
+
+Back up before deployment. On startup the default public Puddlewick gets a safe
+western airfield, including a level runway, hangar and apron. Placement checks
+private buildings, farm plots, creator obstacles, water and town limits. A blocked
+site is left unchanged and retried on a later startup. The live town’s 310-metre
+radius accommodates a 240-metre runway; a fresh 300-metre parish uses 220 metres.
+No buildings or town boundaries move. A few public gathering spots are relocated
+beside the strip, retaining their IDs and depletion state. Preserve the saved
+airfield and relocation fields when moving or restoring worlds.
+
+Reload clients for hangar boarding, runway markings and crash effects. Only
+biplane boarding changes location; existing owned planes retain their fuel,
+paint and condition. Spare airframes are a persisted count (`spareBiplanes`);
+commissioning one at the hangar consumes a spare and starts with an empty tank.
+Do not put duplicate vehicle IDs in `fleet`. In Puddlewick the hangar replaces
+the garage aircraft desk. Worlds without a completed hangar retain garage boarding
+and do not automatically receive an airfield.
+
+Validate the hangar’s four-airframe count, clear-apron requirement, takeoff and
+controlled landing within the runway, and destruction of one plane while reserves
+survive. Crash effects consume authoritative position-stamped events; old crashes
+do not replay when joining. The particle pool is bounded to 256 particles, and
+runway paint and edge markers are batched rather than adding dynamic lights.
+
 ## Upgrade 0.92.0
 
 Reload browsers for the continuous character mesh, recorded walk/run animation

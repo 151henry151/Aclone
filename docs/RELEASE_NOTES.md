@@ -2,6 +2,22 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.93.0 — Puddlewick flying club
+
+Drive to the new airfield hangar on Puddlewick’s western outskirts to buy or board
+a biplane. The level north/south runway has threshold markings, centre dashes,
+runway numbers and edge reflectors. The hangar sells fuel and offers aircraft
+service and paint. Board while stopped; wait if another pilot occupies the apron,
+then start the engine with F4 and taxi to the runway.
+
+Crashes now produce fire, sparks and rising smoke visible to nearby players.
+Only the plane being flown is destroyed. Spare airframes remain yours; the next
+hangar visit commissions one with a fresh service record and an empty tank.
+
+Existing property and town boundaries are preserved. Public gathering spots
+obstructing the strip move nearby without resetting depletion. New buildings and
+farm plots cannot cover the runway or apron. No world reset is needed.
+
 ## 0.92.0 — More natural people
 
 People have a single smooth body mesh, with textured workwear and facial detail.
