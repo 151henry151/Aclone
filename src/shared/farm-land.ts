@@ -1,3 +1,4 @@
+import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World } from './types.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
@@ -51,6 +52,7 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
   const roads = townRoads(w);
   for (let i = count; i < count + 4; i++) {
     const p = farmPlotPosition(b, i);
+    if (onAirfield(w, p.x, p.z, 6)) return 'Keep the airfield runway and apron clear';
     // Circumscribed clearance avoids missing a narrow road or small object between samples.
     if (roadDistance(roads, p.x, p.z) < 6) return 'A road crosses the new fields';
     if (

@@ -1,3 +1,4 @@
+import { airfieldHeight } from './airfield';
 import { heightmapAt } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -64,7 +65,7 @@ export function terrainHeight(w: World, x: number, z: number) {
   if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
-  return h;
+  return airfieldHeight(w.airfield, x, z, h);
 }
 /** Woodland cover 0..1 for the generated countryside: zero in the village, in the
  * water and on compact maps, which keep their hand-placed trees. */

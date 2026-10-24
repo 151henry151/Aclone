@@ -44,6 +44,7 @@ const volume = (
 ): BuildingVolume => ({ width, depth, eaves, rise, roof, x, z });
 const plans = new Map<string, BuildingPlan>();
 export function buildingPlan(b: {
+  aircraftHangar?: boolean;
   kind: string;
   id: string;
   style?: string;
@@ -51,6 +52,16 @@ export function buildingPlan(b: {
   architecture?: string;
   creatorBounds?: { width: number; depth: number; height: number };
 }): BuildingPlan {
+  if (b.aircraftHangar)
+    return {
+      style: 'hangar',
+      volumes: [volume(20, 16, 6, 2)],
+      wall: '#8c9a99',
+      trim: '#344a4d',
+      doorHeight: 5.5,
+      siding: 'stone',
+      finish: 'metal',
+    };
   if (b.creatorBounds)
     return {
       style: 'custom',

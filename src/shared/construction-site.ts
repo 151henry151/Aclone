@@ -1,10 +1,21 @@
+import { farmPlotPosition } from './farm-land';
+import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingPlan, type BuildingVolume } from './building-shapes';
 import { mapHalf, terrainHeight } from './terrain';
 import type { Building, World } from './types';
 type Site = Pick<
   Building,
-  'id' | 'kind' | 'x' | 'z' | 'rotation' | 'architecture' | 'style' | 'size' | 'creatorBounds'
+  | 'aircraftHangar'
+  | 'id'
+  | 'kind'
+  | 'x'
+  | 'z'
+  | 'rotation'
+  | 'architecture'
+  | 'style'
+  | 'size'
+  | 'creatorBounds'
 >;
 function rectangles(b: Site) {
   const plan = buildingPlan(b);
@@ -62,12 +73,21 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  if (
+    b.kind === 'farm' &&
+    Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
+      onAirfield(w, p.x, p.z, 6),
+    )
+  )
+    return 'Keep farm plots outside the airfield runway and apron';
   const foundation = foundationProfile(w, b);
   if (foundation.rise > 2)
     return 'Ground rises more than 2 metres across this footprint; choose a flatter site or smaller building';
   const rects = rectangles(b),
     edge = mapHalf(w);
   for (const a of rects) {
+    if (onAirfield(w, a.x, a.z, Math.hypot(a.hx, a.hz)))
+      return 'Keep the airfield runway and apron clear';
     for (const sx of [-1, 0, 1])
       for (const sz of [-1, 0, 1]) {
         const x = a.x + sx * a.hx * a.axes[0].x + sz * a.hz * a.axes[1].x;

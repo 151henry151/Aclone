@@ -1,3 +1,4 @@
+import { ensurePuddlewickAirfield } from './puddlewick-airfield';
 import { vehiclePaint } from '../shared/appearance.ts';
 import { Playtime } from './playtime.ts';
 import { playerStatistics } from '../shared/player-statistics.ts';
@@ -159,7 +160,9 @@ export async function createApp(options: AppOptions) {
     const services = completePuddlewick(world);
     const government = governmentStores(world);
     const civic = restorePuddlewickCentre(world);
-    if (services || government || civic || world.publicParishVersion) store.saveWorld(world);
+    const airfield = ensurePuddlewickAirfield(world);
+    if (services || government || civic || airfield || world.publicParishVersion)
+      store.saveWorld(world);
   }
   const accounts = new Accounts(
     store,

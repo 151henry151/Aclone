@@ -1,3 +1,4 @@
+import { onAirfield } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { evergreens, type EvergreenSite } from './evergreen';
 import { worldResources } from '../shared/resources';
@@ -112,6 +113,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   const roads = townRoads(world);
   const roadDistance = (x: number, z: number) => distanceToRoad(roads, x, z);
   const clear = (x: number, z: number, margin: number) =>
+    !onAirfield(world, x, z, margin + 3) &&
     roadDistance(x, z) > margin &&
     worldResources(world).every((n) => Math.hypot(n.x - x, n.z - z) > 7 + margin) &&
     Math.hypot(x, z) > 16 &&

@@ -1,3 +1,4 @@
+import { onAirfield } from '../shared/airfield';
 import { SnowAccumulation } from './snow-accumulation';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -179,6 +180,7 @@ export class CountrysideChunks {
         n.x >= x0 - 12 && n.x < x0 + chunkSize + 12 && n.z >= z0 - 12 && n.z < z0 + chunkSize + 12,
     );
     const clear = (x: number, z: number, margin: number) =>
+      !onAirfield(w, x, z, margin + 3) &&
       Math.max(Math.abs(x), Math.abs(z)) >= 250 &&
       (roads.length === 0 || roadDistance(roads, x, z) > margin) &&
       grounds.every((n) => Math.hypot(n.x - x, n.z - z) > 8 + margin) &&

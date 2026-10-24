@@ -112,11 +112,13 @@ function countrysidePatches(w: World): ResourceNode[] {
 const resourceCache = new WeakMap<World, { key: string; nodes: ResourceNode[] }>();
 /** Every gathering ground in this world: the surveyed village sites plus countryside patches. */
 export function worldResources(w: World): ResourceNode[] {
-  const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}`;
+  const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}:${JSON.stringify(w.resourceRelocations ?? {})}`;
   const cached = resourceCache.get(w);
   if (cached?.key === key) return cached.nodes;
   const patches = countrysidePatches(w);
-  const nodes = patches.length ? [...resourceNodes, ...patches] : resourceNodes;
+  const nodes = [...resourceNodes, ...patches].map((n) =>
+    w.resourceRelocations?.[n.id] ? { ...n, ...w.resourceRelocations[n.id] } : n,
+  );
   resourceCache.set(w, { key, nodes });
   return nodes;
 }

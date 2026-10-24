@@ -1,3 +1,4 @@
+import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehiclePaint, paintableVehicle } from '../shared/appearance';
 import { fuelCapacity, returnTractor } from '../shared/tractors';
@@ -189,11 +190,14 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
     return 'Not enough cash to buy this property';
   if (action === 'walk' || action === 'tractor' || action === 'vehicle') {
     const slot = action === 'walk' ? 5 : action === 'tractor' ? returnTractor(p) : Number(id);
+    if (slot === 2 && hasAircraftHangar(w) && !b?.aircraftHangar)
+      return 'Visit the airfield hangar';
+    if (slot === 2 && Math.abs(p.speed) >= 0.5) return 'Stop before boarding';
     if (carry(p, w) > vehicles[slot].capacity)
       return 'Unload cargo before changing to a smaller vehicle';
     if (
       action === 'vehicle' &&
-      !(p.fleet ?? [0, 5]).includes(slot) &&
+      !(slot === 2 ? aircraftCount(p) > 0 : (p.fleet ?? [0, 5]).includes(slot)) &&
       p.cash < vehicles[slot].price
     )
       return 'Not enough cash';

@@ -223,6 +223,36 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   }
   const main = plan.volumes[0],
     front = main.depth / 2 + 0.06;
+  if (b.aircraftHangar) {
+    wallFinish(box(20, 6, 16, '#ffffff', 0, 3, 0));
+    roof(main);
+    // A wide dark sliding door with corrugated leaves, lintel and rails. The
+    // hangar is a service building; boarding takes place on its exterior apron.
+    box(14.5, 5.5, 0.08, '#172323', 0, 2.75, 8.05);
+    for (const x of [-8.1, 8.1]) {
+      const leaf = box(3.5, 5.5, 0.15, '#ffffff', x, 2.75, 8.12);
+      finishSurface(leaf, 'metal', '#6c8387');
+    }
+    box(20.5, 0.18, 0.4, '#394b4e', 0, 5.85, 8.15);
+    box(20, 0.15, 0.7, '#d9b457', 0, 0.08, 8.35);
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 128;
+    const c = canvas.getContext('2d')!;
+    c.fillStyle = '#263c40';
+    c.fillRect(0, 0, 1024, 128);
+    c.fillStyle = '#f3e7bf';
+    c.font = 'bold 64px sans-serif';
+    c.textAlign = 'center';
+    c.fillText('PUDDLEWICK  •  FLYING CLUB', 512, 88);
+    const sign = new T.Mesh(
+      new T.PlaneGeometry(12, 0.7),
+      new T.MeshStandardMaterial({ map: new T.CanvasTexture(canvas), roughness: 0.8 }),
+    );
+    sign.position.set(0, 6.4, 8.2);
+    root.add(sign);
+    return root;
+  }
   if (b.kind === 'pickup') return shippingContainers(plan);
   const kit = { box, cylinder, mesh, wallFinish, roof, door, window, chimney };
   if (b.architecture && ['notice', 'pickup', 'portal', 'turret'].includes(b.kind)) {

@@ -1,3 +1,4 @@
+import { onAirfield } from './airfield';
 import { landscapeRoads } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -286,6 +287,7 @@ export function streetLights(w: World): Point[] {
         z: a.z + dz * t + (dx / length) * (width / 2 + 2) * side,
       };
       if (
+        !onAirfield(w, p.x, p.z, 3) &&
         lights.length < 96 &&
         lights.every((q) => Math.hypot(q.x - p.x, q.z - p.z) > 10) &&
         w.buildings.every((b) => Math.hypot(b.x - p.x, b.z - p.z) > 11)

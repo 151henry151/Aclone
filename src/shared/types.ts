@@ -77,6 +77,8 @@ export interface Player {
   roomPantries?: Record<string, Stock>;
   vehicle: number;
   fleet?: number[];
+  /** Replacement biplanes awaiting commissioning at a hangar. */
+  spareBiplanes?: number;
   lastTractor?: number;
   fuelVehicle?: number;
   parkedFuel?: Record<number, number>;
@@ -129,6 +131,7 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  aircraftHangar?: boolean;
   /** Level selected by server for new foundations; absent on legacy buildings. */
   foundationY?: number;
   leaseOffer?: import('./property-contracts').LeaseOffer;
@@ -272,6 +275,9 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  airfield?: import('./airfield').Airfield;
+  /** Public works may relocate gathering sites, retaining depletion and task IDs. */
+  resourceRelocations?: Record<string, { x: number; z: number }>;
   /** Public, expiring voluntary supply errands; never reservations of goods. */
   supplyIntents?: {
     player: string;

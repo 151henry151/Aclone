@@ -102,6 +102,7 @@ test('licences are optional, enforce tuned modes before purchase and movement; b
   assert.throws(() => act(w, a.id, { type: 'vehicle', slot: 2, building: garage.id }), /pilot/);
   assert.equal(JSON.stringify(w), before);
   a.skills.push('pilot');
+  garage.aircraftHangar = true;
   act(w, a.id, { type: 'vehicle', slot: 2, building: garage.id });
   a.skills = [];
   a.speed = 5;

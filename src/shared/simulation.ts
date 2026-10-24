@@ -1,3 +1,4 @@
+import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
 import {
   fuelCapacity,
@@ -1101,14 +1102,42 @@ export function act(w: World, id: string, a: Action): string {
         !licence || p.skills.includes(licence),
         `Learn ${licence} at school to drive this vehicle`,
       );
-      const fleet = p.fleet ?? [0, 5];
+      if (slot === 2 && hasAircraftHangar(w)) {
+        const hangar = nearby(w, p, a.building);
+        requireThat(hangar.aircraftHangar, 'Visit the airfield hangar to board a biplane');
+        requireThat(
+          Math.abs(p.speed) < 0.5 && !p.atHome && !p.task && !p.hitch && !p.game,
+          'Stop outside and finish your activity before boarding',
+        );
+        const x = hangar.x + Math.sin(hangar.rotation) * 17;
+        const z = hangar.z + Math.cos(hangar.rotation) * 17;
+        requireThat(
+          !Object.values(w.players).some(
+            (q) => q.id !== p.id && q.online && !q.atHome && Math.hypot(q.x - x, q.z - z) < 10,
+          ),
+          'The aircraft apron is occupied; wait for it to clear',
+        );
+        requireThat(
+          !w.buildings.some((b) => buildingBlocksMovement(b, { x, z }, { x, z }, 0, 6)),
+          'The aircraft apron is blocked',
+        );
+      }
       requireThat(
         carry(p, w) <= vehicles[slot].capacity,
         'Unload cargo before changing to a smaller vehicle',
       );
+      let fleet = p.fleet ?? [0, 5];
       if (slot !== 5 && slot !== 0 && !(isTractor(slot) && fleet.includes(slot))) {
         const b = nearby(w, p, a.building);
-        requireThat(b.kind === 'garage', 'Visit the garage');
+        requireThat(
+          b.kind === 'garage' &&
+            (slot === 2 ? !hasAircraftHangar(w) || b.aircraftHangar : !b.aircraftHangar),
+          slot === 2 ? 'Visit the airfield hangar' : 'Visit the garage',
+        );
+        if (slot === 2) {
+          commissionBiplane(p);
+          fleet = p.fleet ?? fleet;
+        }
         if (!fleet.includes(slot)) {
           charge(w, p, vehicles[slot].price, 'vehicle purchase');
           migrateVehiclePaint(p);
@@ -1119,6 +1148,15 @@ export function act(w: World, id: string, a: Action): string {
       switchVehicle(p, slot);
       vehicleRecord(w, p);
       p.speed = 0;
+      if (slot === 2 && w.buildings.find((b) => b.id === a.building)?.aircraftHangar) {
+        const b = w.buildings.find((b) => b.id === a.building)!;
+        p.x = b.x + Math.sin(b.rotation) * 17;
+        p.z = b.z + Math.cos(b.rotation) * 17;
+        // Park parallel to the runway; the chase camera stays outside the hangar.
+        p.heading = b.rotation + Math.PI / 2;
+        p.engine = false;
+        delete p.flight;
+      }
       p.y = terrainHeight(w, p.x, p.z);
       break;
     }

@@ -1,3 +1,4 @@
+import { airfieldModel } from './airfield-scene';
 import { createHovercraft, updateHovercraftInstruments, type HovercraftFigure } from './hovercraft';
 import { updateTractorCockpit } from './tractor-cockpit';
 import { createBiplane, updateBiplaneInstruments, type BiplaneFigure } from './biplane';
@@ -421,6 +422,7 @@ export class GameScene {
       world.id +
       ':' +
       JSON.stringify(world.terrain) +
+      JSON.stringify(world.airfield ?? null) +
       JSON.stringify(world.landscape ?? {}) +
       JSON.stringify(world.roads ?? []) +
       JSON.stringify(world.retiredRoads ?? []) +
@@ -686,6 +688,7 @@ export class GameScene {
       this.terrain.receiveShadow = true;
       this.land.add(this.terrain);
     }
+    if (w.airfield) this.land.add(airfieldModel(w.airfield));
     const reach = streamed ? seaReach : 540;
     const sea = new T.Mesh(
       new T.PlaneGeometry(reach, reach, 48, 48),
