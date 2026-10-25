@@ -23,7 +23,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -98,10 +98,10 @@ jobs:
           done
           cat /tmp/aclone.log
           exit 1
-      # Eight bounded shards keep real software-WebGL runs within the 15-minute
-      # deadline without dropping tests or competing renderers on the same CPU.
+      # Eight bounded shards run one software-WebGL renderer each. Allow 20 minutes
+      # per suite as coverage grows; keep each individual test deadline unchanged.
       # Playwright's deadline leaves time to upload diagnostics before the job limit.
-      - run: npm run test:e2e -- --global-timeout=900000 ${{ matrix.tests }}
+      - run: npm run test:e2e -- --global-timeout=1200000 ${{ matrix.tests }}
       - uses: actions/upload-artifact@v4
         if: failure() || cancelled()
         with:
