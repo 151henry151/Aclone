@@ -2439,13 +2439,16 @@ button span {
 }
 
 #fishing-control.commercial {
+  position: relative;
   top: auto;
-  bottom: 160px;
-  left: 16px;
+  left: auto;
   transform: none;
-  width: min(320px, calc(100vw - 32px));
-  max-height: calc(100dvh - 260px);
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 10px;
+  max-height: min(320px, calc(100dvh - 260px));
   overflow-y: auto;
+  pointer-events: auto;
   text-align: left;
   font-size: 12px;
   padding: 8px 12px;
@@ -2458,8 +2461,8 @@ button span {
 }
 
 #fishing-control.commercial.collapsed {
-  width: auto;
-  max-width: min(320px, calc(100vw - 32px));
+  width: fit-content;
+  max-width: 100%;
   padding: 3px;
 }
 #fishing-control.commercial .fishing-buttons {
@@ -2469,12 +2472,6 @@ button span {
   text-align: left;
   min-height: 36px;
 }
-@media (max-width: 700px) {
-  #fishing-control.commercial {
-    bottom: calc(180px + env(safe-area-inset-bottom));
-  }
-}
-
 .boat-death-settings {
   grid-column: 1 / -1;
   min-width: 0;

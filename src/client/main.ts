@@ -879,6 +879,9 @@ function updateHud() {
     !me.crowBody &&
     !me.hitch;
   const commercial = me.vehicle === FISHING_BOAT && !me.hitch && !me.game && !me.atHome;
+  const fishingControl = $('fishing-control');
+  const fishingHost = commercial ? app.querySelector('.bottom-left')! : $('world-hud');
+  if (fishingControl.parentElement !== fishingHost) fishingHost.prepend(fishingControl);
   const trawlExpanded = localStorage.getItem('aclone.trawl-expanded') === 'yes';
   $('trawl-controls').hidden = !commercial || !trawlExpanded;
   $('trawl-toggle').hidden = !commercial;

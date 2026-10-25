@@ -12,6 +12,8 @@ import { waitForWorld } from './fixtures/ready';
 test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescue work in the game', async ({
   page,
 }) => {
+  // This scenario also renders expanded/collapsed HUDs at four viewport sizes.
+  test.setTimeout(360000);
   await page.setViewportSize({ width: 1440, height: 900 });
   const dir = mkdtempSync(join(tmpdir(), 'aclone-boating-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
@@ -57,6 +59,31 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await page.keyboard.press('Escape');
     await expect(page.locator('#trawl-controls')).toBeHidden();
     await expect(page.locator('#trawl-toggle')).toHaveAttribute('aria-expanded', 'false');
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 1024, height: 768 },
+      { width: 390, height: 844 },
+      { width: 760, height: 390 },
+    ]) {
+      await page.setViewportSize(viewport);
+      for (const expanded of [false, true]) {
+        if (expanded) await page.locator('#trawl-toggle').click();
+        await expect(async () => {
+          const fishing = (await page.locator('#fishing-control').boundingBox())!;
+          const driving = (await page.locator('#driving').boundingBox())!;
+          expect(fishing.y + fishing.height).toBeLessThanOrEqual(driving.y - 8);
+          expect(fishing.x).toBeGreaterThanOrEqual(0);
+          expect(fishing.y).toBeGreaterThanOrEqual(0);
+          expect(fishing.x + fishing.width).toBeLessThanOrEqual(viewport.width);
+          expect(driving.y + driving.height).toBeLessThanOrEqual(viewport.height);
+        }).toPass();
+        await page.screenshot({
+          path: `test-results/fishing-hud-${viewport.width}-${expanded ? 'expanded' : 'collapsed'}.png`,
+        });
+      }
+      await page.locator('#trawl-toggle').click();
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator('#trawl-toggle').click();
     await expect(page.locator('#trawl-controls')).toBeVisible();
     await page.locator('#trawl-toggle').click();
