@@ -24,10 +24,13 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     const p = addPlayer(w, account.id, account.name),
       d = boatLandings(w).find((d) => d.building)!;
     w.settings.vehicleLicences = false;
-    Object.assign(p, d.land, {
-      y: travelHeight(w, d.land.x, d.land.z),
+    // Reproduce the live report: the building menu opens here, well beyond
+    // the old five-metre boarding area around the shore entrance.
+    const approach = { x: -32.27455230580994, z: 141.17068005055614 };
+    Object.assign(p, approach, {
+      y: travelHeight(w, approach.x, approach.z),
       heading: Math.PI,
-      fleet: [0, 5, 3, FISHING_BOAT],
+      fleet: [0, 5, FISHING_BOAT],
       inventory: {},
       fuelVehicle: 0,
       fuel: 40,
@@ -43,6 +46,10 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await waitForWorld(page);
     await page.keyboard.press('e');
     await expect(page.getByText('Commercial fishing', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Buy and board Canal boat/ })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Board your Fishing boat', exact: true }),
+    ).toBeVisible();
     await page.screenshot({ path: 'test-results/boatyard-menu.png' });
     await page.locator('[data-do="vehicle"][data-id="30"]').click();
     await expect.poll(() => p.vehicle).toBe(FISHING_BOAT);

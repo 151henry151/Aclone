@@ -77,6 +77,53 @@ test('boathouse boards in water, refuses every offshore exit, and stores boats w
   assert.deepEqual({ x: p.x, z: p.z }, d.land);
   assert.ok(!w.mooredBoats?.[`${p.id}:3`]);
 });
+test('boatyard purchases and owned boats board throughout the 40-metre menu range', () => {
+  for (const slot of [3, 30]) {
+    for (const owned of [false, true]) {
+      for (const position of ['reported', 'boundary']) {
+        const { w, p, yard, d } = setup();
+        const point =
+          position === 'reported'
+            ? { x: -32.27455230580994, z: 141.17068005055614 }
+            : { x: yard.x, z: yard.z - 40 };
+        Object.assign(p, point, {
+          y: travelHeight(w, point.x, point.z),
+          cash: 10000000,
+          fleet: owned ? [0, 5, slot] : [0, 5],
+          parkedFuel: owned ? { [slot]: vehicles[slot].tank ?? 64 } : {},
+        });
+        assert.ok(Math.hypot(p.x - d.land.x, p.z - d.land.z) > 5);
+        assert.ok(nearBoathouse(w, p, yard));
+        assert.equal(boatLanding(w, p, false, yard.id)?.id, yard.id);
+        const cash = p.cash;
+        vehicle(w, p, slot, yard.id);
+        assert.equal(p.vehicle, slot);
+        assert.ok(p.fleet!.includes(slot));
+        assert.equal(p.cash, cash - (owned ? 0 : vehicles[slot].price));
+        assert.equal(p.fuel, owned ? (vehicles[slot].tank ?? 64) : 0);
+        assert.deepEqual({ x: p.x, z: p.z }, d.berth);
+      }
+    }
+  }
+});
+test('wider boatyard boarding still rejects out-of-range and water starts, and keeps pier boarding local', () => {
+  const { w, p, yard } = setup();
+  Object.assign(p, { x: yard.x, z: yard.z - 40.01 });
+  p.y = travelHeight(w, p.x, p.z);
+  assert.equal(nearBoathouse(w, p, yard), false);
+  assert.equal(boatLanding(w, p, false, yard.id), undefined);
+  const before = structuredClone(p);
+  assert.throws(() => vehicle(w, p, 3, yard.id), /Visit/);
+  assert.deepEqual(p, before);
+
+  Object.assign(p, { x: yard.x, z: yard.z + 35, y: w.settings.seaLevel });
+  assert.equal(boatLanding(w, p, false, yard.id)?.id, yard.id);
+  assert.throws(() => vehicle(w, p, 3, yard.id), /shore entrance or pier deck/);
+
+  const pier = boatLandings(w).find((d) => !d.building)!;
+  Object.assign(p, { x: pier.land.x, z: pier.land.z - 6 });
+  assert.equal(withinBoatLanding(w, p, pier, false), false);
+});
 test('fishing pier leaves one saved empty boat and only its owner can retrieve it there', () => {
   const { w, p, yard } = setup();
   vehicle(w, p, 3, yard.id);

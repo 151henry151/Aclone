@@ -122,7 +122,10 @@ export function boatLandings(w: World): BoatLanding[] {
     }
   return docks;
 }
-/** Returning boats can come alongside the yard instead of hitting a tiny point.
+const boathouseRange = 40;
+
+/** Shore boarding uses the same building-centred range as the boatyard menu.
+ * Returning boats can come alongside the yard instead of hitting a tiny point.
  * A water-only approach prevents reaching a berth through an intervening shore. */
 export function withinBoatLanding(
   w: World,
@@ -130,9 +133,9 @@ export function withinBoatLanding(
   d: BoatLanding,
   afloat: boolean,
 ) {
-  const point = afloat ? d.berth : d.land;
+  const point = afloat ? d.berth : (d.building ?? d.land);
   const distance = Math.hypot(p.x - point.x, p.z - point.z);
-  if (distance > (afloat ? (d.building ? 30 : 14) : 5)) return false;
+  if (distance > (afloat ? (d.building ? 30 : 14) : d.building ? boathouseRange : 5)) return false;
   if (afloat) {
     const steps = Math.max(1, Math.ceil(distance / 2));
     for (let i = 0; i <= steps; i++) {
@@ -160,7 +163,7 @@ export function boatLanding(w: World, p: Pick<Player, 'x' | 'z'>, afloat: boolea
 }
 export function nearBoathouse(w: World, p: Pick<Player, 'x' | 'z' | 'vehicle'>, b: Building) {
   return (
-    Math.hypot(p.x - b.x, p.z - b.z) < 40 ||
+    Math.hypot(p.x - b.x, p.z - b.z) <= boathouseRange ||
     (boatSlot(p.vehicle) && !!boatLanding(w, p, true, b.id))
   );
 }
