@@ -2,6 +2,13 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.93.1 — Seated camera and hangar lettering
+
+Tractor cockpit views follow the vehicle’s pitch and roll on hills. Mouse look
+remains relative to the cab; chase and overhead views keep their normal orientation.
+The Flying Club sign now measures its lettering and leaves room at both edges,
+preventing the first and last letters from being clipped. Reload to receive both fixes.
+
 ## 0.93.0 — Puddlewick flying club
 
 Drive to the new airfield hangar on Puddlewick’s western outskirts to buy or board

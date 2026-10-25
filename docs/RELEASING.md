@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.93.1
+
+Client-only camera and sign-rendering fixes; no additional world migration or player
+data changes. Reload browsers after deploying. Verify the seated tractor view on
+uphill, downhill and cross slopes and the complete Flying Club sign lettering.
+Browser CI retains eight single-renderer shards and per-test deadlines, with a
+20-minute whole-suite limit and 25-minute job limit for setup and diagnostics.
+
 ## Upgrade 0.93.0
 
 Back up before deployment. On startup the default public Puddlewick gets a safe

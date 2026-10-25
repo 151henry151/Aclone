@@ -6,6 +6,15 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.93.1] - 2026-10-24
+
+### Fixed
+
+- Tractor first-person views now follow the cab’s uphill, downhill and sideways tilt. Looking around stays relative to the seat, keeping the dashboard aligned with the view on slopes.
+
+- The Puddlewick Flying Club sign now fits its lettering within padded edges, so the first and last letters remain fully visible.
+- Browser CI suites have enough time to finish the growing test collection, while retaining individual test deadlines.
+
 ## [0.93.0] - 2026-10-23
 
 ### Added
