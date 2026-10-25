@@ -211,7 +211,32 @@ next-fish wait to verify that catches arrive before any fixed trip duration.
 for the commercial boat. `scripts/boating-preview.ts` captures all four subjects
 from the actual game factories. These images are model previews, not photographs.
 
-## Camera clearance
+## Lighting
 
-The chase camera stays above the ocean surface, including while smoothing between
-orbit positions, so looking from a low angle cannot make the sea disappear.
+In the North Star, click **Lights** to open
+wheelhouse switches, also available in **Inventory → Boating**. Deck floods toggle
+independently. Cabin lighting cycles off → warm white → dim red → off. **L** keeps
+its quick searchlight toggle. Switches persist with the captain's fishing boat,
+and other players see the lights. Lighting does not consume propulsion fuel.
+
+Navigation lights stay on automatically, including during daylight and with the
+engine stopped. Red marks port and green starboard; their sectors and the white
+stern/masthead sectors follow the vessel's heading. Nets down replace the normal
+masthead signal with steady green above white; sidelights and sternlight remain
+when making way. Moored or rescue-abandoned boats show an all-round white
+visibility light. This is a simplified game implementation: stopping is not the
+same as anchoring, and there is no separate anchor command. Signal visibility is
+scaled for the game's viewing distances.
+
+A flashing red mast beacon is not a normal trawler navigation signal. The design
+uses [US Coast Guard Rules 21, 23 and 26](https://www.navcen.uscg.gov/navigation-rules-amalgamated)
+for colours, sectors and fishing status. [Rule 36](https://www.rya.org.uk/water-safety/passage-planning-and-navigation/navigation-lights/)
+discourages high-intensity intermittent lights that could confuse other signals.
+The separately switched, downward deck floods follow ordinary marine worklight
+practice, such as [Hella marine deck floodlights](https://www.hellamarine.com/shop/floodlights/sea-hawk-floodlights/sea-hawk-r-led-floodlights/).
+The cabin provides a low-glare red option while instruments remain readable.
+
+The commercial fishing HUD starts as a small lower-left status button. Click to
+expand or collapse the throttle/net controls; the browser remembers your choice.
+A full net still shows on the collapsed button. All fishing actions remain
+available in Inventory. The camera stays above water even at its lowest orbit.

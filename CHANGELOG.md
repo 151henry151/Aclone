@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Add steady fishing-boat navigation signals and separately controlled deck, cabin and search lighting.
+
+### Changed
+
+- Start fishing controls collapsed in a compact corner strip, with a persistent full-net notice.
+
 ### Fixed
 
 - Keep the boat camera above the ocean surface during orbiting and smoothing.

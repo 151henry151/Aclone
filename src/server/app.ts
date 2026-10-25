@@ -264,6 +264,7 @@ export async function createApp(options: AppOptions) {
                 tractorPaint: vehiclePaint(q),
                 atHome: q.atHome,
                 lights: q.lights,
+                boatLighting: q.boatLighting,
                 engineRunning: motorRunning(w, q),
                 flight: q.flight,
                 team: q.team,

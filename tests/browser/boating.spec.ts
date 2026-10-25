@@ -48,6 +48,22 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await expect.poll(() => p.vehicle).toBe(FISHING_BOAT);
     expect(p.fuel).toBe(144);
     await page.keyboard.press('Escape');
+    await expect(page.locator('#trawl-controls')).toBeHidden();
+    await expect(page.locator('#trawl-toggle')).toHaveAttribute('aria-expanded', 'false');
+    await page.locator('#trawl-toggle').click();
+    await expect(page.locator('#trawl-controls')).toBeVisible();
+    await page.locator('#trawl-toggle').click();
+    await expect(page.locator('#trawl-controls')).toBeHidden();
+    await page.locator('.bottom-left [data-do="lights"]').click();
+    await page.getByRole('button', { name: 'Deck floodlights: off', exact: true }).click();
+    await expect.poll(() => p.boatLighting?.deck).toBe(true);
+    await page.getByRole('button', { name: 'Cabin light: off', exact: true }).click();
+    await expect.poll(() => p.boatLighting?.cabin).toBe('warm');
+    await page.getByRole('button', { name: 'Cabin light: warm white', exact: true }).click();
+    await expect.poll(() => p.boatLighting?.cabin).toBe('red');
+    await page.keyboard.press('Escape');
+    await page.locator('#trawl-toggle').click();
+    await expect(page.locator('#trawl-controls')).toBeVisible();
     p.inventory = { bread: 10, water: 10 };
     await page.keyboard.press('i');
     await expect(

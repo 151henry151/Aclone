@@ -1,3 +1,4 @@
+import { changeBoatLighting } from './boat-lighting';
 import {
   expeditionAction,
   vesselStoresWeight,
@@ -1334,6 +1335,9 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'engine':
       p.engine = !p.engine;
+      break;
+    case 'boatLights':
+      changeBoatLighting(p, a.circuit);
       break;
     case 'lights':
       p.lights = !p.lights;

@@ -98,6 +98,7 @@ export interface Player {
   race?: { start: number; next: number };
   fishCatch?: string;
   boatThrottle?: number;
+  boatLighting?: import('./boat-lighting').BoatLighting;
   boatStores?: Stock;
   fishingVoyage?: import('./fishing-expedition').FishingVoyage;
   lastFishingSettlement?: string;

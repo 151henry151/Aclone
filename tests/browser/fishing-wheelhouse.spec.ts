@@ -17,6 +17,7 @@ test('fishing wheelhouse has a clear helm view and independent live navigation i
       globalThis.__ACLONE_BASE__='/';
       import * as T from '/node_modules/three/build/three.module.js';
       import {GameScene} from '/src/client/scene.ts';
+      import {FishingLightPool} from '/src/client/fishing-lights.ts';
       import {nauticalHeading} from '/src/client/fishing-wheelhouse.ts';
       const boat=GameScene.prototype.vehicle.call({},30), other=GameScene.prototype.vehicle.call({},30);
       const cockpit=boat.userData.fishingBoat.cockpit;
@@ -37,12 +38,18 @@ test('fishing wheelhouse has a clear helm view and independent live navigation i
       const ambient=new T.HemisphereLight('#eef1e6','#728b83',2.4);scene.add(ambient);
       const sun=new T.DirectionalLight('#ffebce',2.5);sun.position.set(-8,15,10);scene.add(sun);
       const water=new T.Mesh(new T.PlaneGeometry(3000,3000),new T.MeshStandardMaterial({color:'#397d88',roughness:.42,metalness:.15}));water.rotation.x=-Math.PI/2;scene.add(water);
+      const pool=new FishingLightPool();scene.add(pool.group);
       const camera=new T.PerspectiveCamera(60,1440/900,.05,2000);camera.position.copy(boat.userData.eye);
       let time=4;
       window.renderWheelhouse=(view)=>{
-        const night=view==='night';ambient.intensity=night?.16:2.4;sun.intensity=night?.03:2.5;scene.background.set(night?'#142831':'#adc6cb');
-        const direction={helm:[0,-.12,1],port:[1,-.3,.65],starboard:[-1,-.3,.65],aft:[.5,-.1,-1],night:[0,-.12,1]}[view];
-        camera.lookAt(camera.position.clone().add(new T.Vector3(...direction)));
+        const night=['night','red','deck','signals'].includes(view);ambient.intensity=night?.16:2.4;sun.intensity=night?.03:2.5;scene.background.set(night?'#142831':'#adc6cb');
+        const direction={helm:[0,-.12,1],port:[1,-.3,.65],starboard:[-1,-.3,.65],aft:[.5,-.1,-1],night:[0,-.12,1],red:[0,-.12,1],deck:[0,-.2,-1],signals:[0,-.2,-1]}[view];
+        camera.position.copy(boat.userData.eye);
+        if(view==='deck'||view==='signals')camera.position.set(22,13,-25);
+        camera.lookAt(view==='deck'||view==='signals'?new T.Vector3(0,3,-1):camera.position.clone().add(new T.Vector3(...direction)));
+        const lit={...p,boatLighting:{deck:view==='deck',cabin:view==='red'?'red':night?'warm':'off'},trawl:{deployed:true}};
+        boat.userData.fishingBoat.lighting.update(boat.userData.fishingBoat.group,camera.position,lit);
+        pool.update([{root:boat.userData.fishingBoat.group,player:lit}],camera.position);
         cockpit.update({...p,heading:0},time++);renderer.render(scene,camera);
         return {draws:renderer.info.render.calls,readings:cockpit.group.userData.readings};
       };
@@ -61,7 +68,7 @@ test('fishing wheelhouse has a clear helm view and independent live navigation i
     expect(r.cardinals).toEqual([0, 90, 180, 270, 0]);
     expect(r.triangles).toBeLessThan(18000);
     expect(r.meshes).toBeLessThan(40);
-    for (const view of ['helm', 'port', 'starboard', 'aft', 'night']) {
+    for (const view of ['helm', 'port', 'starboard', 'aft', 'night', 'red', 'deck', 'signals']) {
       const frame = await page.evaluate((view) => (window as any).renderWheelhouse(view), view);
       expect(frame.readings.heading).toBe(180);
       expect(frame.readings.fuel).toBe(2400);

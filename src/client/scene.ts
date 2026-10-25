@@ -1,3 +1,4 @@
+import { FishingLightPool } from './fishing-lights';
 import { createFishingBoat } from './fishing-boat';
 import { FISHING_BOAT, boatSlot } from '../shared/boats';
 import { createLifeboat } from './lifeboat';
@@ -134,6 +135,7 @@ export class GameScene {
     new T.LineBasicMaterial({ color: '#d9e5ff', toneMapped: false }),
   );
   private townLighting: TownLighting;
+  private fishingLights = new FishingLightPool();
   private ambient = new T.HemisphereLight(0xb6cbd9, 0x7c8067, 1.1);
   private meshes = new Map<string, T.Group>();
   readonly prediction = new LocalPrediction();
@@ -287,6 +289,7 @@ export class GameScene {
       this.headlights,
       this.headlights.target,
       this.townLighting.group,
+      this.fishingLights.group,
       this.lightning,
     );
     this.lightning.visible = false;
@@ -1378,9 +1381,6 @@ export class GameScene {
         );
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
-        local.userData.snapCamera = false;
-        const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
-        if (this.cameraMode === 1)
         // Interpolation can otherwise cross the water even when the destination is safe.
         this.camera.position.y = Math.max(
           this.camera.position.y,
@@ -1390,6 +1390,9 @@ export class GameScene {
             0.6,
           ),
         );
+        local.userData.snapCamera = false;
+        const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
+        if (this.cameraMode === 1)
           this.target
             .copy(this.camera.position)
             .add(
@@ -1510,6 +1513,18 @@ export class GameScene {
         this.woods.update(this.target.x, this.target.z);
       // Spend the limited light budget where the player is looking, not behind
       // their tractor at the chase camera (especially with four lights on low).
+      const litBoats: { root: T.Object3D; player: Player }[] = [];
+      for (const [id, model] of this.meshes) {
+        const boat = model.userData.fishingBoat;
+        const captain = w.players[id];
+        if (boat && captain && model.visible) {
+          boat.lighting.update(boat.group, this.camera.position, captain);
+          litBoats.push({ root: boat.group, player: captain });
+        }
+      }
+      for (const model of this.mooredGroup.children)
+        model.userData.marineLighting?.update(model, this.camera.position, undefined, true);
+      this.fishingLights.update(litBoats, this.camera.position);
       this.townLighting.update(w, this.target);
       const flash = lightningAt(motionTime, climate.storm && climate.precipitation === 'rain');
       autumnTint.value = climate.season === 'Autumn' ? 0.85 : climate.season === 'Winter' ? 0.5 : 0;

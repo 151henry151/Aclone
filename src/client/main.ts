@@ -1,4 +1,4 @@
-import { expeditionPanel } from './fishing-expedition-panel';
+import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
 import { TRAWL_FUEL_PER_SECOND, trawlWater } from '../shared/commercial-fishing';
@@ -144,7 +144,7 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch &amp; stow</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><button id="trawl-toggle" data-do="trawl-toggle" aria-controls="trawl-controls" aria-expanded="false" hidden>Fishing controls</button><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch &amp; stow</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
   );
 document
   .getElementById('world-hud')!
@@ -675,7 +675,15 @@ function updateHud() {
   if (panel === 'mobile-actions') {
     for (const [selector, text, action] of [
       ['[data-do=engine]', me.engine ? 'Stop engine' : 'Start engine', 'engine'],
-      ['[data-do=lights]', me.lights ? 'Turn lights off' : 'Turn lights on', 'lights'],
+      [
+        '[data-do=lights]',
+        me.vehicle === FISHING_BOAT
+          ? 'Boat lighting'
+          : me.lights
+            ? 'Turn lights off'
+            : 'Turn lights on',
+        'lights',
+      ],
     ]) {
       const b = $('modal-host').querySelector<HTMLButtonElement>(selector);
       if (b) {
@@ -868,10 +876,16 @@ function updateHud() {
     !me.crowBody &&
     !me.hitch;
   const commercial = me.vehicle === FISHING_BOAT && !me.hitch && !me.game && !me.atHome;
-  $('trawl-controls').hidden = !commercial;
+  const trawlExpanded = localStorage.getItem('aclone.trawl-expanded') === 'yes';
+  $('trawl-controls').hidden = !commercial || !trawlExpanded;
+  $('trawl-toggle').hidden = !commercial;
+  $('trawl-toggle').setAttribute('aria-expanded', String(trawlExpanded));
+  $('fishing-control').classList.toggle('collapsed', commercial && !trawlExpanded);
   $('fishing-control').classList.toggle('commercial', commercial);
   if (commercial) {
     $('trawl-status').textContent = trawlStatus();
+    $('trawl-toggle').textContent =
+      `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${me.trawl?.netFull ? 'Net full — haul catch' : me.trawl?.deployed ? 'Towing' : 'Nets stowed'}`;
     $('trawl-throttle').textContent = `Heading ${Math.round(
       (180 - (me.heading * 180) / Math.PI + 360) % 360,
     )
@@ -1326,6 +1340,8 @@ function refreshTradingPrices() {
       me.fishingVoyage?.members,
       me.fishingVoyage?.offers,
       me.lastFishingSettlement,
+      me.boatLighting,
+      me.lights,
       me.crowBody,
       me.crowClass,
       me.crowMark,
@@ -1354,6 +1370,8 @@ function refreshTradingPrices() {
       me.inventory,
       me.fishingVoyage,
       me.lastFishingSettlement,
+      me.boatLighting,
+      me.lights,
       me.hitch,
       dock?.id,
       Object.values(world.players).map((p) => [p.id, p.name, p.online]),
@@ -1362,6 +1380,11 @@ function refreshTradingPrices() {
       expeditionSignature = key;
       expeditionRoot.outerHTML = expeditionPanel(world, me);
     }
+  }
+  if (panel === 'boat-lighting' && me) {
+    const root = app.querySelector('.boat-lighting-panel');
+    const html = boatLightingPanel(me);
+    if (root && root.outerHTML !== html) root.outerHTML = html;
   }
   if (panel === 'quests' && world && me) {
     const key = JSON.stringify([world.creator?.quests, me.quests]);
@@ -1537,6 +1560,10 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'boat-lighting' && me) {
+    modal('Fishing boat lighting.', boatLightingPanel(me));
+    return;
+  }
   if (panel === 'options') {
     modal(
       'Pilot & preferences.',
@@ -1664,7 +1691,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.vehicle === FISHING_BOAT ? 'Boat lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -2577,6 +2604,19 @@ app.addEventListener('click', async (e) => {
         break;
       case 'boatIdle':
         send({ type: 'boatIdle' });
+        break;
+      case 'lights':
+        if (me?.vehicle === FISHING_BOAT && !me.hitch) openPanel('boat-lighting');
+        else send({ type: 'lights' });
+        break;
+      case 'trawl-toggle':
+        localStorage.setItem(
+          'aclone.trawl-expanded',
+          localStorage.getItem('aclone.trawl-expanded') === 'yes' ? 'no' : 'yes',
+        );
+        break;
+      case 'boatLights':
+        send({ type: 'boatLights', circuit: id });
         break;
       case 'expedition':
         send({

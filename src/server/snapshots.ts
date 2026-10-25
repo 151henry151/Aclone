@@ -161,6 +161,7 @@ export function prepareFrame(w: World): Frame {
         tractorPaint: vehiclePaint(p),
         atHome: p.atHome,
         lights: p.lights,
+        boatLighting: p.boatLighting,
         engineRunning: motorRunning(w, p),
         team: p.team,
         game: p.game,

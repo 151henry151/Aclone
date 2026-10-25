@@ -292,3 +292,14 @@ uses orange inflatable tubes, timber seats and animated oars. All are actual
 Three.js game models; no generated concept images are used for review.
 
 See [boating](BOATING.md) for controls, economy and reproduction commands.
+
+### Fishing lights (pending release)
+
+`fishing-lights.ts` supplies six sector-aware emissive navigation lenses, batched
+floodlight fixtures, a window-only emissive mask and the cabin fixture material.
+Each visible vessel updates its own lenses/windows. A scene-wide pool of two
+shadow-free aft/down deck spots and one cabin downlight serves the closest lit
+vessel within 80 metres and fades out over the final 20 metres. Additional boats
+retain their visible lamps/windows without adding dynamic lights. The existing
+single player searchlight remains independently controlled. Navigation glints
+have bounded distance scaling for readability; no strobe or bloom pass is added.

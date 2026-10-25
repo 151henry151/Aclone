@@ -1,3 +1,4 @@
+import { createFishingLights } from './fishing-lights';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { batch } from './tractor';
@@ -193,9 +194,9 @@ export function createFishingBoat(color = '#356c87') {
   const back = add(new T.PlaneGeometry(2.04, 1.25), panel, 0, 2.22, -0.056);
   back.rotation.y = Math.PI;
   // Mast, lights, exhaust and gantry form a recognisable trawler silhouette.
-  rod([0, 2.94, 1], [0, 4.55, 1], 0.065, cream);
+  rod([0, 2.94, 1], [0, 6.0, 1], 0.065, cream);
   rod([-0.7, 4.05, 1], [0.7, 4.05, 1], 0.04, cream);
-  rod([0, 4.5, 1], [0, 5.2, 1], 0.015);
+  rod([0, 6.0, 1], [0, 6.7, 1], 0.015);
   box(0.5, 0.1, 0.15, cream, 0, 4.6, 1);
   add(new T.CylinderGeometry(0.11, 0.11, 1.2, 8), iron, -0.8, 3.4, 0.2);
   for (const sign of [-1, 1]) {
@@ -253,6 +254,9 @@ export function createFishingBoat(color = '#356c87') {
   // Controls and crew stay human-sized in the enlarged wheelhouse.
   const cockpit = createFishingWheelhouse();
   group.add(cockpit.group);
+  const lighting = createFishingLights(panel, cockpit.cabinLightMaterial);
+  group.add(lighting.group);
+  group.userData.marineLighting = lighting;
   const driver = createHuman('seated').group;
   driver.position.set(0, 1.3 * 1.35, 2.6);
   group.add(driver);
@@ -292,6 +296,7 @@ export function createFishingBoat(color = '#356c87') {
   return {
     group,
     cockpit,
+    lighting,
     animate(deployed: boolean, activity = 0, time = 0, haulAge = Infinity, deckLoad = 0) {
       const hauling = haulAge >= 0 && haulAge < 6;
       gear.visible = deployed || activity > 0 || hauling;

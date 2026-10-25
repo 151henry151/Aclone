@@ -1,3 +1,4 @@
+import { boatLighting } from '../shared/boat-lighting';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../shared/types';
 import { FISHING_BOAT } from '../shared/boats';
@@ -27,6 +28,7 @@ function expeditionContent(w: World, p: Player) {
       html += '<button data-do="detach">Step ashore (keep agreed profit share)</button>';
   }
   if (p.vehicle !== FISHING_BOAT || p.hitch) return html;
+  html += boatLightingPanel(p);
   const defs = worldItems(w),
     v = p.fishingVoyage;
   if ((p.inventory.fuel ?? 0) > 0) html += button('Fill tank from carried Fuel', 'refuel');
@@ -61,4 +63,20 @@ function expeditionContent(w: World, p: Player) {
 
 export function expeditionPanel(w: World, p: Player) {
   return `<section class="expedition-panel">${expeditionContent(w, p)}</section>`;
+}
+
+export function boatLightingPanel(p: Player) {
+  const state = boatLighting(p);
+  return `<section class="boat-lighting-panel"><h3>Wheelhouse switches</h3><p>Navigation lights stay on automatically. Green over white signals nets out; red and green sidelights show port and starboard.</p><div class="menu-grid">${[
+    ['deck', `Deck floodlights: ${state.deck ? 'on' : 'off'}`],
+    [
+      'cabin',
+      `Cabin light: ${state.cabin === 'warm' ? 'warm white' : state.cabin === 'red' ? 'dim red' : 'off'}`,
+    ],
+    ['search', `Forward searchlight: ${p.lights ? 'on' : 'off'}`],
+  ]
+    .map(([id, label]) => `<button data-do="boatLights" data-id="${id}">${label}</button>`)
+    .join(
+      '',
+    )}</div><p>L toggles the searchlight. Cabin: off → warm white → dim red. Aim the searchlight with the boat; deck floods face aft and down.</p></section>`;
 }

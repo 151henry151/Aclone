@@ -406,17 +406,14 @@ export function createFishingWheelhouse() {
   chart.rotation.x = -Math.PI / 2;
   box(0.22, 0.035, 0.32, metal, -1.66, 2.065, 3.48);
   box(0.012, 0.012, 0.25, brass, -1.26, 2.06, 3.86);
+  const cabinLightMaterial = new T.MeshStandardMaterial({
+    color: '#e9dfbe',
+    emissive: '#e9dfbe',
+    emissiveIntensity: 0,
+  });
   // Roof liner, small overhead light, visor and wiper arms framing clear glazing.
   box(0.62, 0.035, 0.22, rubber, 0, 3.73, 3.67);
-  box(
-    0.49,
-    0.02,
-    0.16,
-    new T.MeshStandardMaterial({ color: '#e9dfbe', emissive: '#e9dfbe', emissiveIntensity: 0.25 }),
-    0,
-    3.705,
-    3.67,
-  );
+  box(0.49, 0.02, 0.16, cabinLightMaterial, 0, 3.705, 3.67);
   for (const side of [-1, 1]) {
     const arm = box(0.024, 0.64, 0.025, rubber, side * 0.43, 2.52, 5.29);
     arm.rotation.z = side * 0.35;
@@ -452,5 +449,5 @@ export function createFishingWheelhouse() {
     };
   }
   update({ heading: 0, speed: 0, fuel: 0, engine: false }, 0);
-  return { group, update };
+  return { group, cabinLightMaterial, update };
 }
