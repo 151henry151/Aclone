@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Keep the boat camera above the ocean surface during orbiting and smoothing.
+
 ## [0.95.0] - 2026-10-25
 
 ### Added

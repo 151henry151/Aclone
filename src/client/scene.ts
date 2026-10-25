@@ -47,7 +47,7 @@ import {
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind, wheelPrints } from './ground-tracks';
 import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
-import { cabView, chaseOffset, lookPitchFromDrag } from './camera-look';
+import { cabView, chaseOffset, lookPitchFromDrag, cameraSurfaceFloor } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { freezeScenery } from './static-scene';
@@ -1370,13 +1370,26 @@ export class GameScene {
               : new T.Vector3(pos.x + chase.x, pos.y + chase.y, pos.z + chase.z);
         cam.y = Math.max(
           cam.y,
-          terrainHeight(w, cam.x, cam.z) + (walking || tractorView ? 0.6 : 3),
+          cameraSurfaceFloor(
+            terrainHeight(w, cam.x, cam.z),
+            w.settings.seaLevel,
+            walking || tractorView ? 0.6 : 3,
+          ),
         );
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         local.userData.snapCamera = false;
         const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
         if (this.cameraMode === 1)
+        // Interpolation can otherwise cross the water even when the destination is safe.
+        this.camera.position.y = Math.max(
+          this.camera.position.y,
+          cameraSurfaceFloor(
+            terrainHeight(w, this.camera.position.x, this.camera.position.z),
+            w.settings.seaLevel,
+            0.6,
+          ),
+        );
           this.target
             .copy(this.camera.position)
             .add(

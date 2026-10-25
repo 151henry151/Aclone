@@ -210,3 +210,8 @@ next-fish wait to verify that catches arrive before any fixed trip duration.
 `npx tsx scripts/canal-boat-preview.ts` renders the canal boat. Add `--fishing`
 for the commercial boat. `scripts/boating-preview.ts` captures all four subjects
 from the actual game factories. These images are model previews, not photographs.
+
+## Camera clearance
+
+The chase camera stays above the ocean surface, including while smoothing between
+orbit positions, so looking from a low angle cannot make the sea disappear.

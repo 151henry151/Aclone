@@ -3,7 +3,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { vehicleGround } from '../src/client/vehicle-ground';
-import { cabView, chaseOffset, lookPitchFromDrag } from '../src/client/camera-look.ts';
+import {
+  cabView,
+  chaseOffset,
+  lookPitchFromDrag,
+  cameraSurfaceFloor,
+} from '../src/client/camera-look.ts';
 
 test('vertical drag tilts chase and first-person cameras, not the overhead view', () => {
   assert.equal(lookPitchFromDrag(0, 10, 0), 0.04);
@@ -80,4 +85,15 @@ test('cab camera inherits uphill, downhill and side slopes while retaining local
       }
     }
   }
+});
+
+test('camera orbit stays above deep water at every heading, zoom and sea level', () => {
+  for (const sea of [-12, 0, 35])
+    for (const heading of [0, 1, 3, 5])
+      for (const zoom of [0.5, 1, 3]) {
+        const orbit = chaseOffset(heading, zoom, false, 1.4);
+        assert.ok(orbit.y < 0, 'fixture exercises the underwater orbit');
+        assert.equal(Math.max(sea + orbit.y, cameraSurfaceFloor(sea - 500, sea, 0.6)), sea + 0.6);
+        assert.equal(cameraSurfaceFloor(sea + 20, sea, 0.6), sea + 20 + 0.6);
+      }
 });

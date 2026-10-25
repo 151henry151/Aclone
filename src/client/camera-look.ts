@@ -38,3 +38,8 @@ export function cabView(attitude: Quaternion, yaw: number, pitch: number) {
     up: new Vector3(0, 1, 0).applyQuaternion(attitude),
   };
 }
+
+/** Keep the near plane clear of either dry terrain or the ocean surface. */
+export function cameraSurfaceFloor(ground: number, seaLevel: number, clearance: number) {
+  return Math.max(ground, seaLevel) + clearance;
+}
