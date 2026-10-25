@@ -2,6 +2,39 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.96.0 — Boat lighting, recovery and automatic provisions
+
+Fishing boats now show steady navigation sectors and green-over-white trawling
+signals. Deck floods, cabin lighting (warm or dim red) and the searchlight have
+separate controls. The fishing controls collapse into a corner status strip;
+the chase camera stays above water even after orbit smoothing.
+
+**Puddlewick now removes all owned boats and their contents on death.** Stored and
+moored boats are included. This applies to future deaths; installing the update
+does not remove any existing boats. Running out of fuel still allows rescue.
+
+World builders can instead choose offshore recovery, a configurable cargo expiry
+(five game days by default; zero disables it), and tank-fuel retention. Cargo,
+provisions and unhauled catch remain recoverable until expiry. Owners can row
+back or hitch a recovery ride on another player's canal boat or trawler, then
+transfer directly to their vessel while stopped alongside. This is a passenger
+ride, not a deckhand employment contract.
+
+At home, a provisions indicator estimates real time until either food or drink
+runs out using the actual automatic meal rules, without adding time to death.
+It also handles private guest-room supplies, eligible inventory and the end of a booking.
+
+Puddlewick now eats and drinks automatically from inventory and the selected home
+or active private room while away, online or offline. Homeless players can rely
+on carried supplies. Being indoors gives 20% slower hunger/thirst growth. World
+owners independently control inventory feeding, remote-home feeding and the
+indoor multiplier in the Rules editor. Other worlds retain their previous rules;
+the once-only Puddlewick migration preserves later owner changes.
+
+The editor, new-world form, rules summary and world-building guides explain the
+choices. Recoveries survive saving and offline catch-up; world pauses stop their
+spoilage clock. The Puddlewick rule migration runs once and preserves later edits.
+
 ## 0.95.0 — Offshore expeditions and a working wheelhouse
 
 The North Star now supports long fishing expeditions: a 3,200-unit tank and

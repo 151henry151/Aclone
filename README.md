@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.92.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.96.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -13,7 +13,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 ## What you can do
 
 - Build an economy: gather materials, grow seven crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
-- Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and stocked homes that feed you offline. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
+- Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Contextual controls show relevant vehicle/activity actions, explain seasonal planting limits, and separate personal property management from caretaker tools.
 - Board biplanes at Puddlewick’s public airfield hangar and practise on its marked runway. Crashes destroy one aircraft and show fire, sparks and smoke; spare airframes remain available at the hangar.
 - Choose among six distinct, individually paintable tractors with different cargo, speed, handling, tank and headlight strengths; preview and buy them at garages. Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag. Combat-world creators can enable distinct robocrow classes with mark/recall abilities.
@@ -107,9 +107,9 @@ The proxy must strip `/aclone` before forwarding, including WebSocket requests, 
 Drive with **WASD/arrows**, interact with **E/Ctrl**, open the map with **M**, inventory with **I**, and chat with **Enter** (sending retains focus; **Escape** returns to driving; focused buttons retain normal Enter activation). On mobile, use the steering/throttle buttons and **Actions** menu.
 
 1. Work a 15-second Odd Jobs shift for 1d, or the displayed meal-relief rate when eligible.
-2. Buy food and water at Harbour stores; consume them from Inventory. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.
+2. Buy food and water at Harbour stores; Puddlewick consumes carried supplies automatically. Expensive emergency bread/water imports remain available when shelves are empty; local producers are cheaper.
 3. Learn a profession at school, take a funded job or save to buy a business.
-4. Stock a home or rented room and go inside before logging off. **Hunger, thirst and starvation continue offline.**
+4. Stock inventory or your selected home/room before logging off. Puddlewick consumes those supplies automatically anywhere; go inside for 20% slower needs. Other worlds choose their own rules. **Hunger, thirst and starvation continue offline.**
 
 Beer and wine can impair steering and produce scene sway, distortion and double vision; visual comfort controls are in **Pilot & preferences**. Buildings use distinct masonry, timber and metal finishes suited to their trade. Models share detail textures for siding, shop windows, machinery and animal coats to reduce geometry while retaining animated parts and night lighting. On entering a world, a short loading screen prepares scenery and lighting before driving controls become available. Set a password and, where mail is configured, verify a recovery email in **Pilot & preferences**. Keep your pilot key private; export a fresh one after password sign-in. See [controls and FAQ](docs/FAQ.md) and [player guide](docs/PLAYING.md) for details.
 
@@ -224,6 +224,14 @@ island and properties. The revised wheelhouse includes a mounted compass and liv
 marine instruments, a throttle lever, chart desk and furnished cabin, with readable
 instrument faces at night. Boatyards also accept stopped arrivals within 30 metres
 of their water berth, and ocean rendering follows boats far offshore.
+
+Boat navigation uses steady marine signals, with separate deck/cabin/searchlight
+controls, a collapsible fishing HUD and a camera that stays above the ocean surface.
+**Puddlewick removes all owned boats and everything aboard on death.** World owners
+can instead allow offshore recovery, set a cargo-spoilage deadline (five game days
+by default, or zero for no expiry), and choose whether tank fuel survives.
+Recovery passengers can hitch a ride on another player's boat and transfer back
+when stopped alongside their stranded vessel. See the [boating guide](docs/BOATING.md).
 
 An empty tank unlocks the **orange rowed lifeboat**. Main cargo stays offshore;
 row to a dock, buy fuel, then row back to reboard and refuel. Boats, moorings and

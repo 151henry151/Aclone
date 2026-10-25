@@ -6,25 +6,24 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
-### Changed
-
-- Puddlewick automatically eats and drinks from inventory and selected home/private-room stores anywhere, online or offline. Configure each source and the indoor needs multiplier per world; home estimates include eligible carried supplies.
-
-- Configure boat loss on death, cargo spoilage and fuel retention per world. Puddlewick loses all owned boats on death; recovery worlds allow a lifeboat or passenger ride back to an offshore vessel.
+## [0.96.0] - 2026-10-25
 
 ### Added
 
-- At-home provision estimates show real time until food or drink runs out, whichever comes first, excluding starvation and death time.
-
-- Add steady fishing-boat navigation signals and separately controlled deck, cabin and search lighting.
+- At-home provision estimates show how much real time remains before food or drink runs out, whichever comes first. They follow automatic meal rules, support mixed food/drink items and private guest-room pantries, and exclude starvation or death time.
+- Fishing-boat navigation lamps with red port and green starboard sectors, white masthead/stern lights and an automatic green-over-white trawling signal. Independent deck floods, warm-white/dim-red cabin lighting and a forward searchlight are controlled from the Lights menu or Inventory; nearby players see the selected lights.
 
 ### Changed
 
-- Start fishing controls collapsed in a compact corner strip, with a persistent full-net notice.
+- Puddlewick automatically eats and drinks from inventory and selected home/private-room stores anywhere, online or offline. Homes reduce need growth by 20%. World owners can independently configure inventory feeding, remote-home feeding and the indoor multiplier; the home provision estimate includes eligible carried supplies. Other worlds keep their existing rules.
+- Boat death rules are configurable per world in a dedicated editor section. Recovery worlds leave vessels offshore and can expire cargo, unhauled fish and provisions after a configurable number of game days (five by default), with optional tank-fuel retention. Set the lifetime to zero to disable spoilage.
+- Puddlewick now removes all owned boats and their contents on death, including stored and moored boats. The change affects future deaths, not existing fleets at deployment. Running out of fuel still permits rescue.
+- Owners of stranded boats can hitch a recovery ride on a canal boat or fishing boat and transfer directly back while stopped alongside. Recovery passengers share the trawler’s two berths with crew but do not receive profit shares or fishing bonuses.
+- Commercial trawling controls start collapsed in a compact lower-left status strip. Expand them when needed; the choice is remembered, and a full net remains visible as a status notice.
 
 ### Fixed
 
-- Keep the boat camera above the ocean surface during orbiting and smoothing.
+- Orbiting the boat camera can no longer drop it below the ocean surface and make the water disappear, including during camera smoothing offshore.
 
 ## [0.95.0] - 2026-10-25
 
