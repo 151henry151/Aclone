@@ -385,3 +385,7 @@ The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is exp
 The North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 24s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for controls and crew agreements.
 
 See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, controls, fish menus and the full cost breakdown.
+
+## Home provision estimate
+
+While at home or in a rented room, the status below **At home · Go outside** estimates when food or drink will run out, whichever is first, in real-time hours and minutes. It uses the stored supplies and automatic eating/drinking rules, including the 20% slower need growth indoors and items that supply both food and drink. It does not add time until starvation or death. Restocking updates the estimate; disabled needs do not count as a shortage. A rented room warns if its booking ends before supplies run out. The estimate assumes you remain at home under the current world rules.

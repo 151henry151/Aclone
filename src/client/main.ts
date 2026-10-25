@@ -1,3 +1,4 @@
+import { homeProvisionsStatus } from './home-provisions';
 import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
@@ -762,7 +763,8 @@ function updateHud() {
     : '';
   const target = scene.nearest();
   let targetHtml = me.atHome
-    ? button('At home · Go outside', 'outside', '', 'wide')
+    ? button('At home · Go outside', 'outside', '', 'wide') +
+      `<p class="home-provisions" data-home-provisions title="Estimate from stored supplies and current automatic eating/drinking rules. Assumes you remain at home; no starvation or death time is included.">${esc(homeProvisionsStatus(world, me))}</p>`
     : target && !me.task
       ? button(
           `<kbd>Ctrl / E</kbd> ${esc(target.name)} <span>↗</span>`,

@@ -12,6 +12,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- At-home provision estimates show real time until food or drink runs out, whichever comes first, excluding starvation and death time.
+
 - Add steady fishing-boat navigation signals and separately controlled deck, cabin and search lighting.
 
 ### Changed

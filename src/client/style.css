@@ -2480,3 +2480,9 @@ button span {
   min-width: 0;
   padding: 1rem;
 }
+
+.home-provisions {
+  margin: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
