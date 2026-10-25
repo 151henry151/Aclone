@@ -242,9 +242,14 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     c.fillStyle = '#263c40';
     c.fillRect(0, 0, 1024, 128);
     c.fillStyle = '#f3e7bf';
+    const title = 'PUDDLEWICK  •  FLYING CLUB';
     c.font = 'bold 64px sans-serif';
+    // Fit the actual font metrics with a margin at both ends of the sign.
+    const fontSize = Math.floor(64 * Math.min(1, (canvas.width - 96) / c.measureText(title).width));
+    c.font = `bold ${fontSize}px sans-serif`;
     c.textAlign = 'center';
-    c.fillText('PUDDLEWICK  •  FLYING CLUB', 512, 88);
+    c.textBaseline = 'middle';
+    c.fillText(title, canvas.width / 2, canvas.height / 2);
     const sign = new T.Mesh(
       new T.PlaneGeometry(12, 0.7),
       new T.MeshStandardMaterial({ map: new T.CanvasTexture(canvas), roughness: 0.8 }),
