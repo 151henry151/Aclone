@@ -33,7 +33,7 @@ export function recordTravel(w: World, p: Player, metres: number) {
   };
 }
 export function requiredLicence(w: World, slot: number) {
-  if (!w.settings.vehicleLicences || isTractor(slot) || [5, 6, 7].includes(slot)) return;
+  if (!w.settings.vehicleLicences || isTractor(slot) || [5, 6, 7, 29].includes(slot)) return;
   const mode = w.vehicleTuning?.[slot]?.mode ?? vehicles[slot]?.mode;
   return mode === 2 || mode === 6 ? 'pilot' : mode === 3 || mode === 5 ? 'boatmaster' : 'driver';
 }

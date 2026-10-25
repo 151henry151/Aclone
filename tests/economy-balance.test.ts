@@ -20,7 +20,8 @@ const producers = (item: string) =>
   Object.entries(buildings).filter(
     ([kind, b]) =>
       !ports.has(kind) &&
-      (kind === 'farm' ? !!crops[item] : !!recipes[b.recipe ?? '']?.outputs[item]),
+      ((kind === 'boathouse' && ['cod', 'halibut', 'tuna'].includes(item)) ||
+        (kind === 'farm' ? !!crops[item] : !!recipes[b.recipe ?? '']?.outputs[item])),
   );
 
 test('every processor input has a profitable supply route, and local delivery beats raw exports', () => {

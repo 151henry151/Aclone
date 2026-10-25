@@ -10,6 +10,7 @@ import {
   sizesForBuilding,
 } from '../src/shared/building-designs.ts';
 import { buildingPlan, buildingBounds, blocksBuilding } from '../src/shared/building-shapes.ts';
+import { yardFleets, yardBoat } from '../src/client/yard-boats';
 import { buildingModel } from '../src/client/buildings.ts';
 import { buildingPreviewRadius, buildingPreviewFrame } from '../src/client/build-preview-scale.ts';
 import { createWorld, addPlayer, makeBuilding, act } from '../src/shared/simulation.ts';
@@ -33,8 +34,8 @@ const release = (root: T.Object3D) =>
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) m.dispose();
     }
   });
-test('all 48 types have five distinct structural models; finishes do not change their geometry', () => {
-  assert.equal(Object.keys(buildings).length, 48);
+test('all 49 types have five distinct structural models; finishes do not change their geometry', () => {
+  assert.equal(Object.keys(buildings).length, 49);
   for (const [kind, def] of Object.entries(buildings)) {
     const models = buildingArchitectures(kind);
     assert.equal(models.length, 5, kind);
@@ -438,4 +439,31 @@ test('terminal gallery framing preserves the shared spaceport and full-launch-pa
   assert.deepEqual(before, original);
   assert.ok(full.radius > terminal.radius * 2);
   assert.ok(before.fixtures?.length);
+});
+
+test('boathouse yards have five distinct fleets with supported hulls inside the reserved yard', () => {
+  const names = new Set<string>(),
+    signatures = new Set<string>();
+  for (const fleet of yardFleets) {
+    const shapes: string[] = [];
+    for (const craft of fleet) {
+      assert.ok(!names.has(craft.name));
+      names.add(craft.name);
+      const root = yardBoat(craft),
+        bounds = new T.Box3().setFromObject(root);
+      assert.ok(bounds.min.y >= -0.01, craft.name + ' below the ground');
+      assert.ok(bounds.max.y <= 9 && bounds.max.z <= 7 && bounds.min.z >= -7, craft.name);
+      shapes.push(
+        JSON.stringify(
+          root.children.map((o) =>
+            o instanceof T.Mesh ? Array.from(o.geometry.attributes.position.array) : [],
+          ),
+        ),
+      );
+      release(root);
+    }
+    signatures.add(shapes.join('|'));
+  }
+  assert.equal(names.size, 15);
+  assert.equal(signatures.size, 5);
 });

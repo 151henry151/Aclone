@@ -16,6 +16,7 @@ type Family =
   | 'prop';
 /** Stable model identifiers are independent of finishes and of saved legacy styles. */
 const catalogue: Record<string, [Family, string[]]> = {
+  boathouse: ['works', buildingRecipes.boathouse.map((recipe) => recipe.name)],
   market: ['shop', buildingRecipes.market.map((recipe) => recipe.name)],
   workhouse: ['civic', buildingRecipes.workhouse.map((recipe) => recipe.name)],
   school: ['civic', buildingRecipes.school.map((recipe) => recipe.name)],

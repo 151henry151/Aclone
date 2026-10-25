@@ -1,3 +1,4 @@
+import { dockReserved } from './boathouse';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World } from './types.ts';
@@ -82,7 +83,9 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
           return 'New fields enter a no-build zone';
         if (
           onFarmLand(w, x, z, 0, b.id) ||
-          w.buildings.some((v) => v.id !== b.id && blocksBuilding(v, x, z, 0, 1))
+          w.buildings.some(
+            (v) => v.id !== b.id && (blocksBuilding(v, x, z, 0, 1) || dockReserved(v, x, z, 4)),
+          )
         )
           return 'Another property occupies the new fields';
         if (w.creator?.objects.some((o) => o.solid && Math.hypot(x - o.x, z - o.z) < o.radius + 2))

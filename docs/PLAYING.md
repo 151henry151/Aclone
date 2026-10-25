@@ -375,3 +375,11 @@ Open **Menu / F9 → Statistics**. Total playtime combines a labelled estimate f
 Money, construction and resource counters are private and specific to the world you are visiting. Earnings count sales, wages, labour and prizes; spending includes purchases, taxes and losses. Gifts, refunds and starting cash are separate receipts, while business investments and loan movements are separate capital flows. Moving cash into or out of personal savings does not inflate totals. Business tills have separate Journal accounts. These are gross flows, not net profit.
 
 Construction counts finished buildings owned at completion, including a helper's final delivery; buying an existing property or cancelling an unfinished site does not count. Materials count completed gathering loads and caught fish; crops harvested into a farm's stockroom are listed separately. Failed or cancelled work does not count. Counters survive death. Existing death totals are retained, but money and activity before this update are unknown rather than reconstructed as zero.
+
+## Boats and the coastal trade
+
+Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored. Return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel and fish trading.
+
+The 70s North Star uses persistent throttle (W/S, A/D steering, B idle) and nets for twelve-minute deep-water tows. Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
+
+See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, controls, fish menus and the full cost breakdown.

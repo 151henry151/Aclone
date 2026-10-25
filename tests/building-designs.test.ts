@@ -52,7 +52,7 @@ test('every catalogue building offers six complete designs with valid material l
           }
         });
         assert.ok(
-          triangles < (kind === 'starport' ? 30000 : 2200),
+          triangles < (kind === 'starport' ? 30000 : kind === 'boathouse' ? 3500 : 2200),
           `${kind} ${style.id}: ${triangles}`,
         );
         model.traverse((o) => {

@@ -18,9 +18,13 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
     const bounds = buildingBounds(plan);
     assert.ok(
       bounds.width > 0 &&
-        bounds.width <= (kind === 'starport' ? 220 : kind === 'haybarn' ? 20 : 15),
+        bounds.width <=
+          (kind === 'starport' ? 220 : kind === 'boathouse' ? 36 : kind === 'haybarn' ? 20 : 15),
     );
-    assert.ok(bounds.depth > 0 && bounds.depth <= (kind === 'starport' ? 140 : 15));
+    assert.ok(
+      bounds.depth > 0 &&
+        bounds.depth <= (kind === 'starport' ? 140 : kind === 'boathouse' ? 53 : 15),
+    );
     assert.ok(bounds.height > 0 && bounds.height <= (kind === 'starport' ? 194 : 12));
     shapes.add(JSON.stringify(plan.volumes));
     assert.equal(plan.doorHeight, 2.1);
@@ -89,12 +93,14 @@ test('every rendered building has finite geometry and fits its planned footprint
       const model = buildingModel(b, (mesh) => mesh);
       const bounds = new T.Box3().setFromObject(model);
       const plan = buildingBounds(buildingPlan(b));
-      assert.ok(bounds.min.y >= -0.05, `${kind}: below ground`);
+      assert.ok(bounds.min.y >= (kind === 'boathouse' ? -4 : -0.05), `${kind}: below ground`);
       assert.ok(bounds.max.y < (kind === 'starport' ? 194 : 12), `${kind}: height`);
       assert.ok(bounds.max.x - bounds.min.x <= plan.width + 2, `${kind}: width`);
       assert.ok(bounds.max.z - bounds.min.z <= plan.depth + 4, `${kind}: depth`);
       model.traverse((o) => {
         if (!(o instanceof T.Mesh)) return;
+        if (kind === 'boathouse' && new T.Box3().setFromObject(o).min.y < -0.5)
+          assert.equal(o.name, 'water-pile', 'Only underwater support piles extend below the site');
         for (const attr of Object.values((o.geometry as import('three').BufferGeometry).attributes))
           assert.ok(Array.from(attr.array).every(Number.isFinite), `${kind}: non-finite geometry`);
       });

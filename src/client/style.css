@@ -2437,3 +2437,17 @@ button span {
   margin: 4px 0 0;
   color: #eee5c6;
 }
+
+#fishing-control.commercial {
+  top: 170px;
+  transform: translateX(-50%);
+  max-width: 430px;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+#fishing-control.commercial p {
+  margin: 5px 0;
+}
+#fishing-control.commercial button {
+  margin: 2px;
+}

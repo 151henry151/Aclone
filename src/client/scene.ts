@@ -1,3 +1,10 @@
+import { createFishingBoat } from './fishing-boat';
+import { FISHING_BOAT, boatSlot } from '../shared/boats';
+import { createLifeboat } from './lifeboat';
+import { LIFEBOAT } from '../shared/boat-rescue';
+import { fitBoatyardToWater } from './boatyard';
+import { boatLanding } from '../shared/boathouse';
+import { createCanalBoat } from './canal-boat';
 import { AircraftCrashes } from './aircraft-crash';
 import { airfieldModel } from './airfield-scene';
 import { createHovercraft, updateHovercraftInstruments, type HovercraftFigure } from './hovercraft';
@@ -458,6 +465,7 @@ export class GameScene {
       JSON.stringify(world.creator ?? {}) +
       ':' +
       world.buildings.map((b) => b.creatorModel ?? '').join(',');
+    this.updateMooredBoats(world);
     const rebuilt = this.revision !== rev;
     if (rebuilt) {
       this.revision = rev;
@@ -1062,6 +1070,7 @@ export class GameScene {
       return g;
     }
     const model = buildingModel(b);
+    if (b.kind === 'boathouse') fitBoatyardToWater(model, b, w);
     g.add(model);
     g.userData.chimneys = model.userData.chimneys ?? [];
     const bounds = new T.Box3().setFromObject(g);
@@ -1101,9 +1110,23 @@ export class GameScene {
       g.userData.driver = hover.group.userData.driver;
       g.userData.eye = hover.group.userData.eye;
       g.userData.viewPitch = hover.group.userData.viewPitch;
+    } else if (slot === FISHING_BOAT) {
+      const boat = createFishingBoat(tractorPaint(paint)?.color ?? v.color);
+      g.add(boat.group);
+      g.userData.fishingBoat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
+        g.userData[key] = boat.group.userData[key];
+    } else if (slot === LIFEBOAT) {
+      const boat = createLifeboat();
+      g.add(boat);
+      g.userData.lifeboat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch']) g.userData[key] = boat.userData[key];
     } else if (v.mode === 3) {
-      box(g, 3, 1, 6, v.color, 0, 0.5, 0);
-      box(g, 2, 1.8, 2, '#d6cfae', 0, 1.8, -1);
+      const boat = createCanalBoat(tractorPaint(paint)?.color ?? v.color);
+      g.add(boat.group);
+      g.userData.canalBoat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
+        g.userData[key] = boat.group.userData[key];
     } else if (v.mode === 6) {
       const crow = createRobocrow();
       g.add(crow.group);
@@ -1244,6 +1267,9 @@ export class GameScene {
           dt,
           mesh.userData.engineRunning,
         );
+        mesh.userData.fishingBoat?.animate(!!p.trawl?.deployed);
+        mesh.userData.lifeboat?.userData.row(now / 1000, p.speed);
+        mesh.userData.canalBoat?.animate(dt > 0 ? turn / dt : 0);
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
         if (plane) {
           plane.animate(
@@ -1641,6 +1667,46 @@ export class GameScene {
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
   }
+  private mooredGroup = new T.Group();
+  private mooredKey = '';
+  private updateMooredBoats(w: World) {
+    const key =
+      w.id +
+      ':' +
+      w.settings.seaLevel +
+      ':' +
+      JSON.stringify([w.mooredBoats ?? {}, w.boatRescues ?? {}]);
+    if (key === this.mooredKey) return;
+    this.mooredKey = key;
+    dispose(this.mooredGroup);
+    this.mooredGroup.clear();
+    if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
+    for (const b of Object.values(w.mooredBoats ?? {})) {
+      const model = (b.slot === FISHING_BOAT ? createFishingBoat : createCanalBoat)(
+        tractorPaint(b.paint)?.color ?? vehicles[b.slot]?.color ?? '#407983',
+      ).group;
+      const driver = model.userData.driver as T.Object3D;
+      if (driver) driver.visible = false;
+      model.position.set(b.x, w.settings.seaLevel, b.z);
+      model.rotation.y = b.heading;
+      this.mooredGroup.add(model);
+    }
+    for (const r of Object.values(w.boatRescues ?? {})) {
+      const model = (r.boat.slot === FISHING_BOAT ? createFishingBoat : createCanalBoat)(
+        tractorPaint(r.boat.paint)?.color ?? vehicles[r.boat.slot]?.color ?? '#407983',
+      ).group;
+      model.userData.driver.visible = false;
+      model.position.set(r.boat.x, w.settings.seaLevel, r.boat.z);
+      model.rotation.y = r.boat.heading;
+      this.mooredGroup.add(model);
+      if (r.dinghy.moored) {
+        const life = createLifeboat(false);
+        life.position.set(r.dinghy.x, w.settings.seaLevel, r.dinghy.z);
+        life.rotation.y = r.dinghy.heading;
+        this.mooredGroup.add(life);
+      }
+    }
+  }
   nearest() {
     if (!this.world || !this.me) return undefined;
     return [
@@ -1648,9 +1714,16 @@ export class GameScene {
       ...(this.world.creator?.objects
         .filter((o) => o.visible)
         .map((o) => ({ ...o, id: 'object:' + o.id })) ?? []),
-      ...(nearFishingDock(this.world, this.me) ? [fishingDock] : []),
+      ...(nearFishingDock(this.world, this.me) ||
+      (boatSlot(this.me.vehicle) && boatLanding(this.world, this.me, true, fishingDock.id))
+        ? [fishingDock]
+        : []),
     ]
-      .filter((b) => distance(b, this.me!) < 18)
+      .filter(
+        (b) =>
+          distance(b, this.me!) <
+          ('kind' in b && b.kind === 'boathouse' ? 40 : b.id === fishingDock.id ? 26 : 18),
+      )
       .sort((a, b) => distance(a, this.me!) - distance(b, this.me!))[0];
   }
 }

@@ -24,6 +24,8 @@ export interface BuildingPlan {
   finish?: import('./building-designs').BuildingStyle['finish'];
   fixtures?: BuildingVolume[];
   features?: BuildingFeature[];
+  /** Visual-only dock extent; dry foundations and solid collision exclude the water. */
+  waterfront?: BuildingVolume[];
   apron?: { x: number; z: number; radius: number };
 }
 /** Metre-scale spaceport apron; the thin pad is walkable, its rocket/gantry are solid. */
@@ -233,6 +235,11 @@ export function buildingPlan(b: {
       volumes = [volume(8.5, 6.5, 3.4, 1.4)];
       trim = '#52727b';
       break;
+    case 'boathouse':
+      volumes = [volume(14, 14, 5, 2.6), volume(6, 7, 3, 0.8, 'shed', -11, 3)];
+      wall = '#b9c6ba';
+      trim = '#365c63';
+      break;
     case 'waterworks':
       volumes = [volume(8, 6, 3.3, 0.7, 'shed')];
       wall = '#c8d2cf';
@@ -342,7 +349,8 @@ export function buildingPlan(b: {
       width: v.width * factor,
       depth: v.depth * factor,
     }));
-  if (b.architecture) {
+  if (b.kind === 'boathouse') plan.waterfront = [volume(24, 38, 9.6, 0, 'flat', 5, -26)];
+  if (b.architecture || b.kind === 'boathouse') {
     plan.features = buildingFeatures(b.kind, plan.volumes);
     plan.fixtures = [
       ...(plan.fixtures ?? []),
@@ -353,7 +361,7 @@ export function buildingPlan(b: {
   return plan;
 }
 export function buildingBounds(plan: BuildingPlan) {
-  const volumes = [...plan.volumes, ...(plan.fixtures ?? [])];
+  const volumes = [...plan.volumes, ...(plan.fixtures ?? []), ...(plan.waterfront ?? [])];
   const minX = Math.min(
     ...volumes.map((v) => v.x - v.width / 2),
     plan.apron ? plan.apron.x - plan.apron.radius : Infinity,

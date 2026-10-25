@@ -210,6 +210,29 @@ Run `npx tsx scripts/biplane-preview.ts` for front, rear, side, overhead and sea
 views plus a review sheet in `output/biplane/`. The focused browser check is
 `npm run test:e2e -- tests/browser/biplane.spec.ts`.
 
+### Canal boat
+
+`src/client/canal-boat.ts` builds the Parish Carrier: a 13.5-metre steel canal
+boat with rounded swim ends, a submerged lower hull, cambered cream roof, narrow
+side decks and open bow/stern working decks. Cached textures provide cabin
+windows, portholes, signwriting, door panels, deck grain, hull seams and waterline
+bands. Rails, ventilators, mooring cleats, fenders and a lifebuoy supply silhouettes.
+Paint changes the hull and cabin without tinting window glass or gold lettering.
+The standing skipper and stern camera share a real helm position; the tiller turns
+with visible heading changes. Static fittings are batched by material.
+
+The model has 12,617 triangles and 13 meshes including the skinned skipper, with
+four 1024×512 texture designs cached by finish/paint. This is a geometry budget,
+not an FPS guarantee. Existing speed, capacity, fuel use and
+world boundaries are unchanged; collision clearance now matches the larger hull. This design is an Aclone interpretation; archived
+original documentation establishes boat control mode 3 and configurable models,
+but does not establish a specific historical canal-boat design.
+
+Run `npx tsx scripts/canal-boat-preview.ts` for factory renders from the bow, stern,
+side, overhead and helm, plus a review sheet in `output/canal-boat/`.
+`npm run test:e2e -- tests/browser/canal-boat.spec.ts` checks hull orientation,
+waterline placement, paint, steering animation, helm sightline and geometry budget.
+
 ### Hovercraft
 
 `src/client/hovercraft.ts` builds the Marsh Courier, a small enclosed utility
@@ -238,3 +261,23 @@ and geometry-budget checks.
 No building gains triangles. For the preview IDs, garage 366 → 58, farm 574 → 84 and bakery 610 → 346; the cottage remains 248. The finite texture library is generated once, shared across buildings/rebuilds and mipmapped; its base RGBA data stays below 11 MiB (mipmaps add about one-third). Window quads retain their existing emissive mask and light batching. More material families can add static material batches; geometry savings are not an FPS guarantee.
 
 `CHROMIUM_PATH=/usr/bin/chromium npx tsx scripts/building-preview.ts` captures the actual bakery, bank, school, garage, farm, pump house, mill and cottage in `test-results/buildings/`, with browser-error checks. `tests/building-finishes.test.ts` checks geometry budgets, texture reuse, cottage customization and window batching.
+
+### Boatyard and commercial fishing
+
+The shoreline boatyard uses the existing building finishes, a large repair hall,
+separate stores and an open lifting hall over the water, with tall doors, crane
+slings and side jetties. Each architectural model has three distinct boats on
+stands: 15 named craft with different hull proportions, cabins, rigs and deck
+fittings. Shared small plank textures supply surface detail. All five complete
+yards remain below 3,500 triangles, including their repair boats. It adds no
+high-poly imported assets.
+
+The 20.4-metre North Star commercial fishing boat has a flared hull, forward wheelhouse,
+textured instruments and glazing, stern gantry, net drum, fish boxes, mast and
+fenders. Its trailing net is an alpha-tested texture. Static geometry is batched
+by material. Including its seated driver, the preview reports about 13,800
+triangles; its human-sized controls are batched separately from the enlarged hull (hidden deployed gear included). The emergency lifeboat
+uses orange inflatable tubes, timber seats and animated oars. All are actual
+Three.js game models; no generated concept images are used for review.
+
+See [boating](BOATING.md) for controls, economy and reproduction commands.

@@ -111,6 +111,10 @@ export function prepareFrame(w: World): Frame {
       ),
     ),
   });
+  if (common.boatRescues)
+    common.boatRescues = Object.fromEntries(
+      Object.entries(common.boatRescues).map(([id, r]) => [id, { ...r, cargo: {} }]),
+    );
   common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);
   (common as Record<string, unknown>).towns = publicTowns(w);
@@ -129,6 +133,7 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         flight: p.flight,
+        trawl: p.trawl ? { deployed: p.trawl.deployed } : undefined,
         lastFlightCrash: p.lastFlightCrash,
         vehicle: p.vehicle,
         canReceiveFuel: refuelRecipientReady(p),

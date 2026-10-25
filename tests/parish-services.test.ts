@@ -149,7 +149,10 @@ test('server startup upgrades the saved live parish and persists the completion 
     const app = await createApp({ dataDir: dir, port: 0 });
     try {
       const live = app.worlds.get('puddlewick')!;
-      assert.deepEqual(new Set(live.buildings.map((b) => b.kind)), wanted());
+      assert.deepEqual(
+        new Set(live.buildings.map((b) => b.kind)),
+        new Set([...wanted(), 'boathouse']),
+      );
       assert.equal(live.buildings.find((b) => b.kind === 'mill')!.buy.wheat, 600);
       const saved = app.store.loadWorlds().find((entry) => entry.world.id === 'puddlewick')!.world;
       assert.deepEqual(saved.parishServices, live.parishServices);

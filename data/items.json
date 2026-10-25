@@ -291,5 +291,26 @@
     "name": "Hay bale",
     "weight": 2,
     "price": 600
+  },
+  "cod": {
+    "name": "Atlantic cod",
+    "weight": 4,
+    "price": 8000,
+    "food": 18000,
+    "drink": 0
+  },
+  "halibut": {
+    "name": "Atlantic halibut",
+    "weight": 10,
+    "price": 16000,
+    "food": 24000,
+    "drink": 0
+  },
+  "tuna": {
+    "name": "Bluefin tuna",
+    "weight": 15,
+    "price": 26000,
+    "food": 30000,
+    "drink": 0
   }
 }

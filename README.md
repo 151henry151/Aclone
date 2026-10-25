@@ -199,6 +199,30 @@ Two-handed flight controls, takeoff/landing physics and stalls make flying a ski
 to practise. See the [flight guide](docs/FLYING.md) for controls, cockpit instruments,
 safe approaches and crash consequences.
 
+### Boats and fishing
+
+The paintable Parish Carrier canal boat has a rounded hull, curved cabin roof,
+timber decks and a stern tiller. Its 240-weight hold and three passenger places
+suit coastal hauling. Buy and board boats at a shoreline **boathouse**; owned
+boats also board at the fishing pier. Pier departures leave an empty moored boat;
+boathouses store boats inside. Their covered lifting halls extend over the water,
+and each of five architectural models has its own set of repair boats on stands.
+Return to a dock to disembark. There is no offshore
+teleport to land. Boats can sail through connected water to the map boundary.
+
+The **North Star fishing boat** costs 70s, carries 280 weight and has a persistent
+throttle, a large diesel tank and working trawl nets. Twelve minutes of deep-water
+towing can yield a poor, ordinary or occasionally large haul. Fuel is a major
+expense; losing trips are expected. Boatyard landing prices leave margins for
+hauliers delivering cod, halibut and tuna to food businesses or export terminals.
+Kitchens, cafés, pubs and guest accommodation can select seafood meal recipes.
+
+An empty tank unlocks the **orange rowed lifeboat**. Main cargo stays offshore;
+row to a dock, buy fuel, then row back to reboard and refuel. Boats, moorings and
+rescue progress persist. Rod fishing from a stopped boat can also catch the new
+species in deep water. See the [boating guide and balance notes](docs/BOATING.md)
+and [art notes](docs/ART.md#canal-boat) for controls, costs and model details.
+
 ### Hovercraft
 
 The Marsh Courier hovercraft has a rubber skirt, enclosed cockpit, guarded rear

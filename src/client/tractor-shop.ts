@@ -14,7 +14,7 @@ const esc = (s: string) =>
 export function vehiclePaintShop(w: World, p: Player, b: Building, slot: number) {
   if (!paintableVehicle(slot) || !(p.fleet ?? [0, 5]).includes(slot)) return '';
   const finish = tractorPaint(vehiclePaint(p, slot));
-  const near = Math.hypot(p.x - b.x, p.z - b.z) < 18;
+  const near = Math.hypot(p.x - b.x, p.z - b.z) < (b.kind === 'boathouse' ? 32 : 18);
   return `<section class="vehicle-paint-shop"><h3>Paint ${esc(vehicles[slot].name)}</h3><p>Finish: ${esc(finish?.name ?? 'Factory colour')}. A repaint costs ${money(appearance.paintPrice, w.settings.denariiPerSheckle)} and changes only this machine. Its colour is saved when you switch vehicles or sign out.</p><div class="paint-options">${appearance.paints.map((c) => `<button data-do="paint" data-id="${c.id}" data-vehicle="${slot}" data-building="${esc(b.id)}" ${!near || p.cash < appearance.paintPrice || finish?.id === c.id ? 'disabled' : ''}><span class="paint-chip" style="background:${c.color}"></span>${esc(c.name)}</button>`).join('')}</div></section>`;
 }
 export function tractorShopHtml() {

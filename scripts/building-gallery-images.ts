@@ -19,5 +19,5 @@ for (const kind of Object.keys(buildings)) {
   ]);
 }
 console.log(
-  'Refreshed 48 public building contact sheets. Review and commit these assets before publishing.',
+  'Refreshed 49 public building contact sheets. Review and commit these assets before publishing.',
 );

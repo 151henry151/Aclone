@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.94.0] - 2026-10-24
+
+### Added
+
+- Shoreline boathouses with open lifting halls extending over water, stores and floating jetties. Each of five architectural models has distinct boats on repair stands, from sailing craft and wooden launches to working fishing boats and cruisers. Puddlewick gains a public boatyard when a clear shoreline site is available. Board and leave boats at boathouses or the fishing pier; boats left at the pier remain visibly moored.
+- An orange emergency rowing lifeboat for empty tanks. Leave the main boat and cargo offshore, row to a dock for fuel, then return to reboard and refuel. Moorings and rescue progress survive restarts.
+- Deep-water Atlantic cod, halibut and bluefin tuna, caught by rod from boats or with the new 70s, 20.4-metre North Star commercial fishing boat. Its persistent throttle, large tank, twelve-minute trawl, saved catches and variable hauls make commercial fishing a risky active livelihood.
+- A coastal fish trade: cheaper boatyard landing/resale prices leave haulage margins to harbour stores, spaceports and hospitality businesses. Public shipments export real surplus catches; kitchens, cafés, pubs, B&Bs and hotels can cook seafood menus using normal staffing and inputs.
+
+### Changed
+
+- Rebuilt the canal boat as the paintable 13.5-metre Parish Carrier, with a shaped steel hull, curved cabin roof, timber decks, textured windows and signwriting, mooring fittings, lifebuoy and a standing skipper at an animated stern tiller. First-person view now comes from the steering position.
+
 ## [0.93.2] - 2026-10-24
 
 ### Fixed

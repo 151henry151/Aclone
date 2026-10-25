@@ -1,3 +1,4 @@
+import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
 import { farmPlotPosition } from './farm-land';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -73,6 +74,12 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  if (b.kind === 'boathouse') {
+    if (!boathouseSite(w, b))
+      return 'Boathouses need dry shoreline ground, with a deep, clear berth behind the building; rotate the jetty toward the water';
+    const blocked = dockObstruction(w, b);
+    if (blocked) return blocked;
+  }
   if (
     b.kind === 'farm' &&
     Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
@@ -104,6 +111,8 @@ export function constructionSiteReason(w: World, b: Site) {
       const z = Math.max(0, Math.abs(dx * a.axes[1].x + dz * a.axes[1].z) - a.hz);
       if (Math.hypot(x, z) < zone.radius) return 'Construction prohibited in this zone';
     }
+    if (w.buildings.some((o) => dockReserved(o, a.x, a.z, Math.hypot(a.hx, a.hz))))
+      return 'Keep the boathouse jetty and boat berth clear';
     for (const other of w.buildings)
       for (const o of rectangles(other)) {
         const separated = [...a.axes, ...o.axes].some(

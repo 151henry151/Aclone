@@ -12,6 +12,7 @@ export interface BuildingFeature {
 /** Equipment yards are real parts of the footprint, not scenery placed through a neighbour. */
 export function buildingFeatures(kind: string, volumes: BuildingVolume[]): BuildingFeature[] {
   const yards: Record<string, [number, number, number]> = {
+    boathouse: [14, 14, 9],
     refinery: [8, 7, 11],
     brewery: [7, 5, 5.6],
     mine: [6, 7, 10],

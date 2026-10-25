@@ -1,3 +1,6 @@
+import { integrateSeafood } from '../shared/seafood';
+import { aboardBoat } from '../shared/boathouse';
+import { ensurePuddlewickBoatyard } from './puddlewick-boatyard';
 import { ensurePuddlewickAirfield } from './puddlewick-airfield';
 import { vehiclePaint } from '../shared/appearance.ts';
 import { Playtime } from './playtime.ts';
@@ -161,7 +164,17 @@ export async function createApp(options: AppOptions) {
     const government = governmentStores(world);
     const civic = restorePuddlewickCentre(world);
     const airfield = ensurePuddlewickAirfield(world);
-    if (services || government || civic || airfield || world.publicParishVersion)
+    const boatyard = ensurePuddlewickBoatyard(world);
+    const seafood = integrateSeafood(world);
+    if (
+      services ||
+      government ||
+      civic ||
+      airfield ||
+      boatyard ||
+      seafood ||
+      world.publicParishVersion
+    )
       store.saveWorld(world);
   }
   const accounts = new Accounts(
@@ -853,6 +866,13 @@ export async function createApp(options: AppOptions) {
         )
           throw Error('World paused for maintenance');
         if (a.type === 'land') {
+          const current = p.world ? worlds.get(p.world) : undefined;
+          if (
+            current &&
+            current.players[p.account.id] &&
+            aboardBoat(current, current.players[p.account.id])
+          )
+            throw Error('Return to a dock before changing worlds');
           enter(p, z.string().parse(a.world));
           send(p, { type: 'result', request, ok: true, message: 'Welcome planetside.' });
           return;
@@ -862,6 +882,7 @@ export async function createApp(options: AppOptions) {
             me = w?.players[p.account.id];
           if (!w || !me || !w.buildings.some((b) => b.kind === 'starport' && distance(me, b) < 18))
             throw Error('Drive to the spaceport to take off');
+          if (aboardBoat(w, me)) throw Error('Disembark at a dock before boarding a spaceship');
           if (me.flight && !me.flight.grounded)
             throw Error('Land the aircraft before boarding a spaceship');
           leave(p);

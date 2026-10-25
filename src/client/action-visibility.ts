@@ -1,3 +1,6 @@
+import { poweredBoat, FISHING_BOAT } from '../shared/boats';
+import { aboardBoat, boatLanding } from '../shared/boathouse';
+import { LIFEBOAT } from '../shared/boat-rescue';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehiclePaint, paintableVehicle } from '../shared/appearance';
@@ -30,22 +33,52 @@ export function actionVisible(
     p.health > 0 &&
     !(p.flight && !p.flight.grounded);
   switch (action) {
+    case 'boatIdle':
+      return free && p.vehicle === FISHING_BOAT;
+    case 'trawl':
+      return (
+        free &&
+        !p.game &&
+        p.vehicle === FISHING_BOAT &&
+        (id === 'haul'
+          ? !!p.trawl?.catch
+          : id === 'stow'
+            ? !!p.trawl?.deployed
+            : !p.trawl?.deployed && !p.trawl?.catch)
+      );
+    case 'lifeboat':
+      return (
+        free &&
+        !p.game &&
+        (id === 'launch'
+          ? poweredBoat(p.vehicle) && p.fuel <= 0 && !w.boatRescues?.[p.id]
+          : id === 'reboard'
+            ? p.vehicle === LIFEBOAT && !!w.boatRescues?.[p.id]
+            : !!w.boatRescues?.[p.id]?.dinghy.moored)
+      );
     case 'editor':
     case 'caretaker':
       return p.authority >= 20;
     case 'walk':
-      return free && p.vehicle !== 5;
+      return free && p.vehicle !== 5 && (!aboardBoat(w, p) || !!boatLanding(w, p, true));
     case 'tractor':
-      return free && p.vehicle !== returnTractor(p);
+      return (
+        free && p.vehicle !== returnTractor(p) && (!aboardBoat(w, p) || !!boatLanding(w, p, true))
+      );
     case 'vehicle':
       return (
-        free && p.vehicle !== Number(id) && (p.game !== 'combat' || [0, 5].includes(Number(id)))
+        free &&
+        (!aboardBoat(w, p) ||
+          (!!boatLanding(w, p, true) && [0, 5, 24, 25, 26, 27, 28].includes(Number(id)))) &&
+        p.vehicle !== Number(id) &&
+        (p.game !== 'combat' || [0, 5].includes(Number(id)))
       );
     case 'crow':
-      return !!p.crowBody || (free && !p.game && (p.inventory.rc ?? 0) > 0);
+      return !!p.crowBody || (free && !aboardBoat(w, p) && !p.game && (p.inventory.rc ?? 0) > 0);
     case 'crowClass':
       return (
         free &&
+        !aboardBoat(w, p) &&
         !p.game &&
         (p.inventory.rc ?? 0) > 0 &&
         w.settings.crowAbilities &&
@@ -62,7 +95,7 @@ export function actionVisible(
     case 'outside':
       return !!p.atHome;
     case 'detach':
-      return !!p.hitch;
+      return !!p.hitch && (!aboardBoat(w, p) || !!boatLanding(w, w.players[p.hitch], true));
     case 'hitch':
       return (
         free &&
@@ -76,7 +109,10 @@ export function actionVisible(
         !p.crowBody &&
         !!item &&
         !!(item.food || item.drink || item.health || item.maxHealth || item.fuel) &&
-        (!item.fuel || p.fuel < fuelCapacity(p))
+        (!item.fuel ||
+          (p.vehicle !== LIFEBOAT &&
+            !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1)) &&
+            p.fuel < fuelCapacity(p)))
       );
     }
     case 'discard':
@@ -87,11 +123,13 @@ export function actionVisible(
         free &&
         p.game !== 'combat' &&
         p.game !== id &&
-        (id !== 'fishing' || w.settings.fishingMode !== 0)
+        (!aboardBoat(w, p) || (id === 'fishing' && poweredBoat(p.vehicle))) &&
+        (id !== 'fishing' || (w.settings.fishingMode !== 0 && !p.trawl?.deployed))
       );
     case 'joinCombat':
       return (
         free &&
+        !aboardBoat(w, p) &&
         w.settings.fighting &&
         p.game !== 'combat' &&
         (!w.creator?.arena.mode || w.creator.arena.mode === 'open' || w.creator.arena.mode === id)
@@ -111,6 +149,7 @@ export function actionVisible(
       return (
         free &&
         p.game !== 'combat' &&
+        !aboardBoat(w, p) &&
         !!b &&
         ((b.kind === 'home' && b.owner === p.id) || (b.lodging?.guests[p.id]?.until ?? 0) > w.time)
       );
@@ -174,7 +213,7 @@ export function actionVisible(
     case 'buyBuilding':
       return free && !!b && !b.government && b.owner !== p.id && (!b.owner || !!b.forSale);
     case 'takeoff':
-      return free && !p.game;
+      return free && !p.game && !aboardBoat(w, p);
   }
 }
 
@@ -183,7 +222,7 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   if (
     b &&
     ['buyBuilding', 'vehicle', 'job', 'task', 'farm', 'learn', 'home'].includes(action) &&
-    Math.hypot(p.x - b.x, p.z - b.z) >= 18
+    Math.hypot(p.x - b.x, p.z - b.z) >= (b.kind === 'boathouse' ? 40 : 18)
   )
     return 'Move within 18 metres of this building';
   if (action === 'buyBuilding' && b && p.cash < propertyQuote(w, b).total)
@@ -240,7 +279,7 @@ export function refreshActionVisibility(host: HTMLElement, w: World, p: Player) 
       for (const submit of form.querySelectorAll<HTMLButtonElement>(
         'button:not([type="button"])',
       )) {
-        const blocked = Math.hypot(p.x - b.x, p.z - b.z) >= 18;
+        const blocked = Math.hypot(p.x - b.x, p.z - b.z) >= (b.kind === 'boathouse' ? 40 : 18);
         // These forms otherwise validate their numeric inputs on the server.
         if (['stock', 'investment', 'buildingAdmin', 'listProperty'].includes(action)) {
           submit.disabled = blocked;

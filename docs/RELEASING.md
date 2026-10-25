@@ -2,6 +2,21 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.94.0
+
+Back up the database, deploy client and server together, and reload browsers for
+boathouses, dock-only boarding, lifeboat rescue and commercial fishing. Puddlewick
+receives a public boatyard on a clear shoreline site; a blocked site is left alone
+and retried on startup. Existing property and terrain are preserved. Verify the
+new yard and its fuel supply after deployment. New seafood quotes are added
+without overwriting existing player prices.
+
+Keep saved moorings, boat rescues and trawl progress when moving worlds. The main
+boat and cargo remain offshore during a rescue. Newly purchased boats start with
+empty tanks; bring fuel. Validate boarding at the yard and pier, empty-tank rescue,
+returning to the same boat, and a single catch delivery after trawling. Publish the
+website separately to add the boathouse to its 49-type building gallery.
+
 ## Upgrade 0.93.2
 
 Deploy client and server together and reload browsers. The starter town’s circular

@@ -19,7 +19,7 @@ export function exportShipments(w: World, at: number) {
   const population = Object.keys(w.players).length;
   for (const port of w.buildings) {
     if (
-      !['market', 'starport'].includes(port.kind) ||
+      !['market', 'starport', 'boathouse'].includes(port.kind) ||
       !port.government ||
       port.owner !== 'treasury' ||
       port.construction
@@ -29,6 +29,11 @@ export function exportShipments(w: World, at: number) {
     if (port.id === 'parish-government-stores') continue;
     const quotes = buildings[port.kind];
     for (const [item, stock] of Object.entries(port.stock)) {
+      if (
+        port.kind === 'boathouse' &&
+        !['fish', 'largeFish', 'cod', 'halibut', 'tuna'].includes(item)
+      )
+        continue;
       const bid = quotes.buy[item];
       if (!(bid > 0) || !(port.buy[item] > 0)) continue;
       const reserve = necessities.has(item) ? Math.min(100, Math.max(12, population * 3)) : 8;

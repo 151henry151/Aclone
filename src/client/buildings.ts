@@ -1,3 +1,4 @@
+import { boatyardDetails } from './boatyard';
 import { cottageMailbox } from './mailbox';
 import { addBuildingIdentity } from './building-identity';
 import { shippingContainers } from './shipping-container';
@@ -325,6 +326,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     } else roof(v);
   }
   if (b.construction) return root;
+  if (b.kind === 'boathouse') {
+    boatyardDetails(root, plan, finish, b.architecture);
+    return root;
+  }
   if (b.kind === 'home') root.add(cottageMailbox(plan));
   if (b.architecture) {
     architecturalDetails(root, b, plan, look, kit);

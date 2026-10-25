@@ -1,3 +1,9 @@
+import { seafoodKitchens } from '../shared/seafood';
+import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
+import { TRAWL_SECONDS, TRAWL_FUEL, trawlWater } from '../shared/commercial-fishing';
+import { boatLanding } from '../shared/boathouse';
+import { LIFEBOAT } from '../shared/boat-rescue';
+import { deepBoatFishing } from '../shared/boat-fishing';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 import { aircraftInput } from './flight-controls';
 import { tractorShopHtml, mountTractorShop, vehiclePaintShop } from './tractor-shop';
@@ -137,7 +143,7 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
   );
 document
   .getElementById('world-hud')!
@@ -854,9 +860,25 @@ function updateHud() {
     world.time <= (me.fishUntil ?? 0);
   const fishing = me.game === 'fishing';
   const atDock =
-    nearFishingDock(world, me) && !me.atHome && !me.task && !me.game && !me.crowBody && !me.hitch;
-  $('fishing-control').hidden = (!fishing && !atDock) || !!panel || !!mobile.drawer;
-  $('fishing-cast').hidden = fishing;
+    (nearFishingDock(world, me) || (poweredBoat(me.vehicle) && Math.abs(me.speed) < 0.5)) &&
+    !me.atHome &&
+    !me.task &&
+    !me.game &&
+    !me.crowBody &&
+    !me.hitch;
+  const commercial = me.vehicle === FISHING_BOAT && !me.hitch && !me.game && !me.atHome;
+  $('trawl-controls').hidden = !commercial;
+  $('fishing-control').classList.toggle('commercial', commercial);
+  if (commercial) {
+    const left = Math.max(0, Math.ceil(TRAWL_SECONDS - (me.trawl?.seconds ?? 0)));
+    $('trawl-status').textContent = me.trawl?.catch
+      ? 'Catch ready — haul aboard when the hold has room.'
+      : `${me.trawl?.deployed ? 'Nets down' : 'Nets stowed'} · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} tow remaining · ${trawlWater(world, me) ? 'deep water' : 'too shallow'}`;
+    $('trawl-throttle').textContent =
+      `Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/144 · W/S adjust, A/D steer, B idle`;
+  }
+  $('fishing-control').hidden = (!fishing && !atDock && !commercial) || !!panel || !!mobile.drawer;
+  $('fishing-cast').hidden = fishing || commercial;
   $('fishing-stop').hidden = !fishing;
   $('fishing-reel').hidden = !fishing;
   ($('fishing-cast') as HTMLButtonElement).disabled =
@@ -870,8 +892,13 @@ function updateHud() {
     : world.settings.fishingMode === 0
       ? 'Fishing is disabled in this parish.'
       : me.inventory.tackle
-        ? 'Fishing dock · Ready to cast.'
+        ? poweredBoat(me.vehicle)
+          ? deepBoatFishing(world, me)
+            ? 'Deep water · Cod, halibut and tuna possible.'
+            : 'Shallow water · Small fish only.'
+          : 'Fishing dock · Ready to cast.'
         : 'Bring Fishing tackle from Harbour stores.';
+  $('fishing-status').hidden = commercial;
   if ($('fishing-status').textContent !== fishingStatus)
     $('fishing-status').textContent = fishingStatus;
   const gathering = me.task?.kind === 'gather' ? me.task : undefined;
@@ -1558,7 +1585,7 @@ function renderPanel() {
   if (panel === 'fishing-dock') {
     modal(
       'Fishing dock',
-      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}`,
+      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}${boatControls(fishingDock.id)}`,
     );
     return;
   }
@@ -1684,7 +1711,7 @@ function renderPanel() {
             )
             .join(
               '',
-            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
         : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -1810,7 +1837,7 @@ function productionStatus(w: World, b: Building) {
 }
 function buildingWindow(b: Building) {
   if (!me || !world) return;
-  const near = distance(me, b) < 18,
+  const near = distance(me, b) < (b.kind === 'boathouse' ? 40 : 18),
     selfOwned = b.owner === me.id,
     caretaker = caretakerBuilding === b.id && me.authority >= 20,
     owned = selfOwned || caretaker;
@@ -1892,6 +1919,10 @@ function buildingWindow(b: Building) {
           );
         })
         .join('')}</div>`;
+    if (b.kind === 'boathouse')
+      html +=
+        boatControls(b.id) +
+        '<p>Buy Fuel here and use it after boarding your boat. Atlantic cod, halibut and bluefin tuna can be sold here when the till has funds. Boat fishing in water at least 8 metres deep can catch these species; shallow water yields small fish.</p>';
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml();
     if (b.aircraftHangar)
       html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;
@@ -1902,7 +1933,7 @@ function buildingWindow(b: Building) {
       html += `<h3>Vehicles</h3><div class="directory">${vehicles
         .slice(0, 6)
         .map((v, i) =>
-          i === 0 || (b.aircraftHangar ? i !== 2 : i === 2 && hasAircraftHangar(world!))
+          i === 0 || i === 3 || (b.aircraftHangar ? i !== 2 : i === 2 && hasAircraftHangar(world!))
             ? ''
             : button(
                 `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(i === 2 ? aircraftCount(me!) > 0 : (me!.fleet ?? [0, 5]).includes(i)) ? (i === 2 ? 'Board owned aircraft' : 'Owned') : money(v.price)}</span>`,
@@ -1916,8 +1947,29 @@ function buildingWindow(b: Building) {
       const record = me!.fleetState?.[me!.vehicle];
       html += `<h3>Vehicle service</h3><p>${esc(vehicles[me!.vehicle].name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
     }
+    if (b.kind === 'boathouse' && poweredBoat(me.vehicle))
+      html +=
+        vehiclePaintShop(world, me, b, me.vehicle) +
+        button('Service boat · 1 Steel + labour', 'serviceVehicle', `data-building="${b.id}"`);
+    if (b.kind === 'boathouse')
+      html +=
+        '<h3>Commercial fishing</h3><p>Fishing boat: 70s, 280-weight hold, 144-unit tank. A full tank needs 18 Fuel (about 8s at this yard). New boats start empty. Tow nets in water at least 8 m deep for 12 minutes, using 124 fuel, with no extra boost while towing. Allow extra fuel for travel. About 3 in 10 hauls are poor, 6 ordinary, and 1 large; a poor trip usually loses money. The boatyard pays a lower landing price and resells below inland buyers’ bids, leaving room for hauliers. Sell fish to a buyer with money and space. Carry food, water and spare fuel; your hold is shared with supplies. This is a risky active livelihood, not guaranteed income.</p>';
     if (b.kind === 'garage' && !isTractor(me.vehicle))
       html += vehiclePaintShop(world, me, b, me.vehicle);
+    if (seafoodKitchens.includes(b.kind))
+      html +=
+        '<h3>Seafood kitchen</h3><p>Buy Atlantic cod, halibut or tuna from skippers or hauliers. Owners can choose a seafood menu; cooks turn fish, potatoes and water into meals through normal funded production. Guests can also buy fish and store it in their room pantry.</p>' +
+        (selfOwned && !b.production
+          ? ['standard', 'cod', 'halibut', 'tuna']
+              .map((menu) =>
+                button(
+                  menu === 'standard' ? 'Standard menu' : `${menu} meals`,
+                  'seafoodMenu',
+                  `data-id="${menu}" data-building="${b.id}"`,
+                ),
+              )
+              .join('')
+          : '');
     if (b.kind === 'haybarn')
       html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
@@ -2477,6 +2529,24 @@ app.addEventListener('click', async (e) => {
       case 'serviceVehicle':
       case 'buyMap':
         send({ type: action, building });
+        break;
+      case 'boat-rescue-waypoint': {
+        const r = world?.boatRescues?.[me!.id];
+        if (r) waypoints.set({ ...r.boat, name: 'Your stranded boat' });
+        closePanel();
+        break;
+      }
+      case 'seafoodMenu':
+        send({ type: 'seafoodMenu', building, menu: id });
+        break;
+      case 'boatIdle':
+        send({ type: 'boatIdle' });
+        break;
+      case 'trawl':
+        send({ type: 'trawl', operation: id });
+        break;
+      case 'lifeboat':
+        send({ type: 'lifeboat', operation: id });
         break;
       case 'vehicle':
         send({ type: 'vehicle', slot: Number(id), building });
@@ -3039,6 +3109,7 @@ window.addEventListener('keydown', (e) => {
     const b = scene.nearest();
     if (b) openInteraction(b.id);
   }
+  if (key === 'b' && me?.vehicle === FISHING_BOAT && !e.repeat) send({ type: 'boatIdle' });
   if (key === 'f4') send({ type: 'engine' });
   if (key === 'l') send({ type: 'lights' });
   if (key === 'f5' || key === 'r') send({ type: 'crow' });
@@ -3103,6 +3174,35 @@ function drivingInput() {
   const touch = mobile.input();
   if (world && vehicles[world.players[account!.id]?.vehicle]?.mode === 2)
     return aircraftInput(keys, touch, controller.flight, !!typing);
+  if (world?.players[account!.id]?.vehicle === FISHING_BOAT)
+    return {
+      throttle: typing
+        ? 0
+        : Math.max(
+            -1,
+            Math.min(
+              1,
+              +held('w', 'W', 'ArrowUp') -
+                +held('s', 'S', 'ArrowDown') +
+                touch.throttle +
+                controller.input.throttle,
+            ),
+          ),
+      steer: typing
+        ? 0
+        : Math.max(
+            -1,
+            Math.min(
+              1,
+              +held('a', 'A', 'ArrowLeft') -
+                +held('d', 'D', 'ArrowRight') +
+                touch.steer +
+                controller.input.steer,
+            ),
+          ),
+      brake: held('b', 'B'),
+      boost: false,
+    };
   return {
     throttle: typing
       ? 0
@@ -3215,3 +3315,65 @@ app.addEventListener('input', (e) => {
 app.addEventListener('change', (e) => {
   if (world) creatorControls(world, e.target as HTMLElement);
 });
+
+function boatControls(building?: string) {
+  if (!world || !me) return '';
+  const dock = boatLanding(world, me, boatSlot(me.vehicle), building);
+  const rescue = world.boatRescues?.[me.id];
+  const attrs = building ? `data-building="${esc(building)}"` : '';
+  let html = '<section><h3>Boating</h3>';
+  if (dock && !boatSlot(me.vehicle)) {
+    if (rescue?.dinghy.moored)
+      html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
+    else if (!rescue)
+      for (const slot of [3, FISHING_BOAT]) {
+        if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
+        html += button(
+          (me.fleet ?? []).includes(slot)
+            ? `Board your ${esc(vehicles[slot].name)}`
+            : `Buy and board ${esc(vehicles[slot].name)} · ${money(vehicles[slot].price)}`,
+          'vehicle',
+          `data-id="${slot}" ${attrs}`,
+        );
+      }
+  }
+  if (me.vehicle === FISHING_BOAT) html += trawlControls();
+  if (boatSlot(me.vehicle)) {
+    html += dock
+      ? button('Disembark on foot', 'walk') + button('Disembark into tractor', 'tractor')
+      : '<p>Return to a boathouse berth or the side of the fishing pier to disembark.</p>';
+    if (poweredBoat(me.vehicle) && me.fuel <= 0)
+      html += button('Launch emergency lifeboat', 'lifeboat', 'data-id="launch"');
+    if (me.vehicle === LIFEBOAT && rescue)
+      html +=
+        `<p>Row with the driving controls; no fuel needed. Main boat: ${Math.round(Math.hypot(me.x - rescue.boat.x, me.z - rescue.boat.z))} m away, map coordinates ${Math.round(rescue.boat.x)}, ${Math.round(rescue.boat.z)}. Bring Fuel back and reboard before using it.</p>` +
+        button('Show route to stranded boat', 'boat-rescue-waypoint') +
+        button('Reboard stranded boat', 'lifeboat', 'data-id="reboard"');
+  }
+  return (
+    html +
+    '<p>The fishing pier leaves your empty boat moored outside. A boathouse stores your boat inside. Lifeboats remain moored until you return.</p></section>'
+  );
+}
+
+function trawlControls() {
+  if (!me || !world || me.vehicle !== FISHING_BOAT) return '';
+  const t = me.trawl;
+  const remaining = Math.max(0, TRAWL_SECONDS - (t?.seconds ?? 0));
+  const fuel = (remaining / TRAWL_SECONDS) * TRAWL_FUEL;
+  const reason = !trawlWater(world, me)
+    ? 'Find water at least 8 m deep.'
+    : !me.engine
+      ? 'Start the engine (F4).'
+      : me.fuel + 1e-6 < fuel
+        ? 'Refuel before starting or resuming this tow.'
+        : 'Drive forward to tow. Nets limit speed; no boost.';
+  return `<strong>Commercial trawling</strong><p>Persistent throttle ${Math.round((me.boatThrottle ?? 0) * 100)}%. W/S or ↑/↓ increase/decrease; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle; the boat coasts to a stop. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${
+    t?.catch
+      ? 'Haul ready: ' +
+        Object.entries(t.catch)
+          .map(([id, n]) => `${n} ${esc(worldItems(world!)[id]?.name ?? id)}`)
+          .join(', ')
+      : `${t?.deployed ? 'Towing' : 'Nets stowed'} · ${Math.floor(remaining / 60)}:${String(Math.ceil(remaining % 60)).padStart(2, '0')} towing time remaining`
+  }</p><p>${t?.catch ? 'Make room in the hold, then haul once.' : reason} Tank ${me.fuel.toFixed(1)} / 144. ${!t?.catch ? `${fuel.toFixed(1)} needed for remaining tow; keep fuel for the return.` : ''}</p>${t?.catch ? button('Haul catch aboard', 'trawl', 'data-id="haul"') : t?.deployed ? button('Stow nets / pause tow', 'trawl', 'data-id="stow"') : button(t ? 'Resume tow' : 'Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">No progress while stopped or in shallow water. Nets down still burn fuel. Tow progress survives pauses and reconnects.</p>`;
+}

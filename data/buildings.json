@@ -55,7 +55,10 @@
       "chickens": 3090,
       "wool": 3193,
       "eggs": 2137,
-      "hay": 927
+      "hay": 927,
+      "cod": 6400,
+      "halibut": 12800,
+      "tuna": 20800
     },
     "sell": {
       "wheat": 1575,
@@ -109,7 +112,10 @@
       "chickens": 4650,
       "wool": 4650,
       "eggs": 3125,
-      "hay": 1350
+      "hay": 1350,
+      "cod": 9200,
+      "halibut": 18400,
+      "tuna": 29900
     },
     "stock": {
       "wheat": 60,
@@ -232,7 +238,12 @@
       "wine": 8009,
       "meals": 5965,
       "teaBlend": 7645,
-      "roastCoffee": 9969
+      "roastCoffee": 9969,
+      "cod": 6800,
+      "halibut": 13600,
+      "tuna": 22100,
+      "potatoes": 1681,
+      "water": 1485
     },
     "sell": {
       "beer": 7875,
@@ -241,7 +252,10 @@
       "wine": 9925,
       "meals": 7400,
       "teaBlend": 9475,
-      "roastCoffee": 12350
+      "roastCoffee": 12350,
+      "cod": 7600,
+      "halibut": 15200,
+      "tuna": 24700
     },
     "stock": {
       "beer": 60,
@@ -345,7 +359,10 @@
       "chickens": 3090,
       "wool": 3131,
       "eggs": 2095,
-      "hay": 909
+      "hay": 909,
+      "cod": 6400,
+      "halibut": 12800,
+      "tuna": 20800
     },
     "sell": {
       "wheat": 1575,
@@ -399,7 +416,10 @@
       "chickens": 4950,
       "wool": 4650,
       "eggs": 3125,
-      "hay": 1350
+      "hay": 1350,
+      "cod": 9200,
+      "halibut": 18400,
+      "tuna": 29900
     },
     "stock": {
       "wheat": 60,
@@ -1018,7 +1038,7 @@
     "idealEmployees": 2
   },
   "winery": {
-    "name": "Vintner’s press",
+    "name": "Vintner\u2019s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
@@ -1047,10 +1067,16 @@
     "buy": {
       "potatoes": 1681,
       "flour": 5181,
-      "water": 1485
+      "water": 1485,
+      "cod": 6800,
+      "halibut": 13600,
+      "tuna": 22100
     },
     "sell": {
-      "meals": 5325
+      "meals": 5325,
+      "cod": 7600,
+      "halibut": 15200,
+      "tuna": 24700
     },
     "stock": {},
     "recipe": "kitchen",
@@ -1118,13 +1144,20 @@
       "meals": 5965,
       "water": 1485,
       "teaBlend": 7645,
-      "roastCoffee": 9969
+      "roastCoffee": 9969,
+      "cod": 6800,
+      "halibut": 13600,
+      "tuna": 22100,
+      "potatoes": 1681
     },
     "sell": {
       "meals": 7400,
       "water": 1850,
       "teaBlend": 9475,
-      "roastCoffee": 12350
+      "roastCoffee": 12350,
+      "cod": 7600,
+      "halibut": 15200,
+      "tuna": 24700
     },
     "stock": {
       "meals": 0,
@@ -1151,13 +1184,20 @@
       "meals": 5965,
       "water": 1485,
       "teaBlend": 7645,
-      "roastCoffee": 9969
+      "roastCoffee": 9969,
+      "cod": 6800,
+      "halibut": 13600,
+      "tuna": 22100,
+      "potatoes": 1681
     },
     "sell": {
       "meals": 7400,
       "water": 1850,
       "teaBlend": 9475,
-      "roastCoffee": 12350
+      "roastCoffee": 12350,
+      "cod": 7600,
+      "halibut": 15200,
+      "tuna": 24700
     },
     "stock": {
       "meals": 0,
@@ -1275,16 +1315,23 @@
     "idealEmployees": 2
   },
   "dairyKitchen": {
-    "name": "Country café",
+    "name": "Country caf\u00e9",
     "price": 120000,
     "capacity": 500,
     "buy": {
       "cheese": 7897,
       "potatoes": 1681,
-      "water": 1485
+      "water": 1485,
+      "cod": 6800,
+      "halibut": 13600,
+      "tuna": 22100
     },
     "sell": {
-      "dairyMeals": 9000
+      "dairyMeals": 9000,
+      "cod": 7600,
+      "halibut": 15200,
+      "tuna": 24700,
+      "meals": 5325
     },
     "stock": {},
     "recipe": "dairyKitchen",
@@ -1398,5 +1445,37 @@
     },
     "tier": 0,
     "color": "#b39755"
+  },
+  "boathouse": {
+    "name": "Boathouse",
+    "price": 180000,
+    "capacity": 300,
+    "buy": {
+      "fuel": 4100,
+      "cod": 5600,
+      "halibut": 11200,
+      "tuna": 18200,
+      "fish": 840,
+      "largeFish": 3500
+    },
+    "sell": {
+      "fuel": 4500,
+      "cod": 6000,
+      "halibut": 12000,
+      "tuna": 19500,
+      "fish": 900,
+      "largeFish": 3750
+    },
+    "materials": {
+      "wood": 65,
+      "blocks": 25,
+      "steel": 12,
+      "gravel": 35
+    },
+    "tier": 0,
+    "recipe": null,
+    "wage": 0,
+    "color": "#91aba3",
+    "stock": {}
   }
 }

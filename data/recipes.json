@@ -340,5 +340,44 @@
     "skill": "livestock farmer",
     "seconds": 600,
     "tier": 0
+  },
+  "seafood_cod": {
+    "inputs": {
+      "cod": 1,
+      "potatoes": 2,
+      "water": 1
+    },
+    "outputs": {
+      "meals": 4
+    },
+    "skill": "cook",
+    "seconds": 600,
+    "tier": 0
+  },
+  "seafood_halibut": {
+    "inputs": {
+      "halibut": 1,
+      "potatoes": 4,
+      "water": 2
+    },
+    "outputs": {
+      "meals": 6
+    },
+    "skill": "cook",
+    "seconds": 600,
+    "tier": 0
+  },
+  "seafood_tuna": {
+    "inputs": {
+      "tuna": 1,
+      "potatoes": 6,
+      "water": 3
+    },
+    "outputs": {
+      "meals": 9
+    },
+    "skill": "cook",
+    "seconds": 600,
+    "tier": 0
   }
 }

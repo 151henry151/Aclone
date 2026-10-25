@@ -96,6 +96,10 @@ export interface Player {
   team: number;
   game?: string;
   race?: { start: number; next: number };
+  fishCatch?: string;
+  boatThrottle?: number;
+  /** Net progress is saved; catches roll only once when the full tow completes. */
+  trawl?: { seconds: number; deployed: boolean; catch?: Stock; fuelUsed: number };
   fishAt?: number;
   fishUntil?: number;
   lastShot: number;
@@ -339,6 +343,29 @@ export interface World {
   settings: Settings;
   vehicleTuning?: Record<number, Partial<VehicleDef>>;
   players: Record<string, Player>;
+  /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
+  boatyardVersion?: number;
+  seafoodVersion?: number;
+  boatRescues?: Record<
+    string,
+    {
+      boat: { x: number; z: number; heading: number; paint: string; slot: number };
+      cargo: Stock;
+      dinghy: { x: number; z: number; heading: number; moored: boolean; landing?: string };
+    }
+  >;
+  mooredBoats?: Record<
+    string,
+    {
+      x: number;
+      z: number;
+      heading: number;
+      paint: string;
+      landing: string;
+      owner: string;
+      slot: number;
+    }
+  >;
   buildings: Building[];
   zones: Zone[];
   terrain: { x: number; z: number; radius: number; height: number }[];

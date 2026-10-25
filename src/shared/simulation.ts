@@ -1,3 +1,16 @@
+import { setSeafoodMenu } from './seafood';
+import { trawlAction, advanceTrawl, TRAWL_SPEED } from './commercial-fishing';
+import { FISHING_BOAT } from './boats';
+import { poweredBoat, boatSlot, mooringKey } from './boats';
+import { LIFEBOAT, rescueAction } from './boat-rescue';
+import { landedFish, scheduleBite } from './boat-fishing';
+import {
+  aboardBoat,
+  boatLanding,
+  boatLandings,
+  landingBlocked,
+  type BoatLanding,
+} from './boathouse';
 import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
 import {
@@ -82,6 +95,7 @@ import {
   creatorAction,
   creatorEvent,
   tickCreator,
+  creatorBlocks,
   creatorBlocksSegment,
   queueCreatorScript,
 } from './creator.ts';
@@ -359,7 +373,7 @@ function owner(p: Player) {
 function nearby(w: World, p: Player, id: unknown) {
   const b = w.buildings.find((x) => x.id === id);
   requireThat(b, 'Building not found');
-  requireThat(distance(p, b) < 18, 'Drive near the building first');
+  requireThat(distance(p, b) < (b.kind === 'boathouse' ? 40 : 18), 'Drive near the building first');
   requireThat(!b.construction, 'Supply the construction materials first');
   return b;
 }
@@ -396,6 +410,10 @@ function usable(w: World, p: Player, item: string) {
     'That item is equipment or a trade good',
   );
   if (def.fuel) {
+    requireThat(
+      p.vehicle !== LIFEBOAT && !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1)),
+      'Carry the Fuel back to your main boat and reboard before refuelling it',
+    );
     requireThat(p.fuel < fuelCapacity(p), 'The tank is full');
     p.fuel = Math.min(fuelCapacity(p), p.fuel + def.fuel);
   } else {
@@ -417,6 +435,12 @@ export function act(w: World, id: string, a: Action): string {
   requireThat(p, 'Unknown player');
   const type = a.type;
   if (
+    aboardBoat(w, p) &&
+    (['crow', 'home', 'joinCombat'].includes(type) ||
+      (type === 'joinGame' && (a.game !== 'fishing' || !poweredBoat(p.vehicle) || !!p.hitch)))
+  )
+    throw Error('Disembark at a boathouse before starting another activity');
+  if (
     vehicles[p.vehicle].mode === 2 &&
     (p.flight ? !p.flight.grounded : p.y > travelHeight(w, p.x, p.z) + 0.25) &&
     (a.building ||
@@ -436,6 +460,8 @@ export function act(w: World, id: string, a: Action): string {
       ].includes(type))
   )
     throw Error('Land the aircraft before starting another activity');
+  if (aboardBoat(w, p) && type === 'respawn' && p.health > 0)
+    throw Error('Return to a dock to leave your boat; use the lifeboat if out of fuel');
   if (type === 'maintenance') return maintenanceAction(w, p, a);
   if (w.maintenance?.paused && type !== 'chat') throw Error('World paused for maintenance');
   if (type === 'propertyContract') return propertyContractAction(w, p, a);
@@ -497,6 +523,18 @@ export function act(w: World, id: string, a: Action): string {
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'boatIdle':
+      requireThat(p.vehicle === FISHING_BOAT && !p.hitch, 'Board your fishing boat');
+      p.boatThrottle = 0;
+      break;
+    case 'seafoodMenu':
+      result = setSeafoodMenu(w, p, nearby(w, p, a.building), a.menu);
+      break;
+    case 'trawl':
+      result = trawlAction(w, p, a.operation);
+      break;
+    case 'lifeboat':
+      return rescueAction(w, p, a.operation);
     case 'livestock': {
       const b = nearby(w, p, a.building);
       requireThat(a.operation === 'breed', 'Unknown livestock operation');
@@ -1024,8 +1062,8 @@ export function act(w: World, id: string, a: Action): string {
     case 'paint': {
       const b = nearby(w, p, a.building);
       requireThat(
-        b.kind === 'garage' && !b.construction,
-        'Visit a completed garage to repaint your vehicle',
+        ['garage', 'boathouse'].includes(b.kind) && !b.construction,
+        'Visit a completed garage or boathouse to repaint your vehicle',
       );
       const slot =
         a.slot === undefined
@@ -1036,6 +1074,10 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(
         paintableVehicle(slot) && (p.fleet ?? [0, 5]).includes(slot),
         'Choose a vehicle you own',
+      );
+      requireThat(
+        b.kind !== 'boathouse' || (poweredBoat(slot) && !w.boatRescues?.[p.id]),
+        'Recover your boat before painting it at the boathouse',
       );
       const color = str(a.color);
       requireThat(tractorPaint(color), 'Choose a paint from the garage palette');
@@ -1059,7 +1101,11 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'serviceVehicle': {
       const b = nearby(w, p, a.building);
-      requireThat(b.kind === 'garage' && !b.construction, 'Visit a completed garage');
+      requireThat(
+        (b.kind === 'garage' || (b.kind === 'boathouse' && poweredBoat(p.vehicle))) &&
+          !b.construction,
+        'Visit a completed garage or boathouse',
+      );
       requireThat(
         repairRecipientReady(p),
         'Stop an available vehicle outside below full condition',
@@ -1091,17 +1137,76 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'vehicle': {
+      requireThat(!p.hitch, 'Leave the passenger seat at the dock before changing vehicles');
       const slot = num(a.slot, 0, vehicles.length - 1, true);
       requireThat(
         p.game !== 'combat' || [0, 5].includes(slot),
         'Arena combat uses tractors or walking',
       );
-      requireThat(slot !== 7 && slot !== 6, 'Use a robocrow item; ostriches happen by accident');
+      requireThat(
+        slot !== 7 && slot !== 6 && slot !== LIFEBOAT,
+        'Use a robocrow item; ostriches happen by accident',
+      );
       const licence = requiredLicence(w, slot);
       requireThat(
         !licence || p.skills.includes(licence),
         `Learn ${licence} at school to drive this vehicle`,
       );
+      let landing: BoatLanding | undefined;
+      if (poweredBoat(slot) || boatSlot(p.vehicle)) {
+        requireThat(
+          !p.atHome && !p.task && !p.hitch && !p.game && Math.abs(p.speed) < 0.5,
+          'Stop outside and finish your activity before boarding or leaving a boat',
+        );
+        requireThat(!p.trawl?.deployed, 'Stow your nets before docking');
+        requireThat(
+          !poweredBoat(slot) || !boatSlot(p.vehicle),
+          'Disembark before boarding another boat',
+        );
+        requireThat(slot !== p.vehicle, 'Already aboard this vehicle');
+        requireThat(
+          poweredBoat(slot) || slot === 5 || isTractor(slot),
+          'Disembark on foot or into your tractor at a dock',
+        );
+        requireThat(
+          !poweredBoat(slot) || !w.boatRescues?.[p.id],
+          'Recover your stranded boat using its lifeboat first',
+        );
+        const moored = w.mooredBoats?.[mooringKey(p.id, slot)];
+        const candidates = boatLandings(w).filter(
+          (d) =>
+            (a.building === undefined ||
+              d.id === a.building ||
+              (!d.building && a.building === fishingDock.id)) &&
+            Math.hypot(
+              p.x - (poweredBoat(slot) ? d.land.x : d.berth.x),
+              p.z - (poweredBoat(slot) ? d.land.z : d.berth.z),
+            ) <= 5 &&
+            (!poweredBoat(slot) || !moored || d.id === moored.landing),
+        );
+        landing = candidates.find((d) => !landingBlocked(w, d, p, poweredBoat(slot), slot));
+        requireThat(
+          landing,
+          candidates.length
+            ? landingBlocked(w, candidates[0], p, poweredBoat(slot), slot)!
+            : moored && poweredBoat(slot)
+              ? 'Retrieve your moored boat from the fishing pier where you left it'
+              : 'Visit a completed boathouse or fishing pier: board from its land entrance, return to its water berth',
+        );
+        if (poweredBoat(slot))
+          requireThat(
+            travelHeight(w, p.x, p.z) >= w.settings.seaLevel + 0.15 &&
+              Math.abs(p.y - travelHeight(w, p.x, p.z)) <= 2,
+            'Board the boat from the shore entrance or pier deck',
+          );
+        else {
+          requireThat(
+            !Object.values(w.players).some((q) => q.hitch === p.id),
+            'Let your passengers disembark at the dock first',
+          );
+          requireThat(slot === 5 || (p.fleet ?? [0, 5]).includes(slot), 'Choose an owned tractor');
+        }
+      }
       if (slot === 2 && hasAircraftHangar(w)) {
         const hangar = nearby(w, p, a.building);
         requireThat(hangar.aircraftHangar, 'Visit the airfield hangar to board a biplane');
@@ -1128,10 +1233,12 @@ export function act(w: World, id: string, a: Action): string {
       );
       let fleet = p.fleet ?? [0, 5];
       if (slot !== 5 && slot !== 0 && !(isTractor(slot) && fleet.includes(slot))) {
-        const b = nearby(w, p, a.building);
+        const b = poweredBoat(slot) ? landing!.building : nearby(w, p, a.building);
         requireThat(
-          b.kind === 'garage' &&
-            (slot === 2 ? !hasAircraftHangar(w) || b.aircraftHangar : !b.aircraftHangar),
+          poweredBoat(slot)
+            ? !!landing
+            : b!.kind === 'garage' &&
+                (slot === 2 ? !hasAircraftHangar(w) || b!.aircraftHangar : !b!.aircraftHangar),
           slot === 2 ? 'Visit the airfield hangar' : 'Visit the garage',
         );
         if (slot === 2) {
@@ -1139,11 +1246,36 @@ export function act(w: World, id: string, a: Action): string {
           fleet = p.fleet ?? fleet;
         }
         if (!fleet.includes(slot)) {
+          requireThat(
+            !poweredBoat(slot) || !!landing?.building,
+            'Buy your first boat at a boathouse',
+          );
           charge(w, p, vehicles[slot].price, 'vehicle purchase');
           migrateVehiclePaint(p);
           fleet.push(slot);
         }
       }
+      if (landing && p.vehicle === LIFEBOAT) {
+        const r = w.boatRescues?.[p.id];
+        requireThat(r, 'Missing lifeboat rescue record');
+        r.dinghy = {
+          ...landing.berth,
+          heading: landing.heading,
+          moored: true,
+          landing: landing.id,
+        };
+      } else if (landing && poweredBoat(p.vehicle) && !landing.building) {
+        w.mooredBoats ??= {};
+        w.mooredBoats[mooringKey(p.id, p.vehicle)] = {
+          owner: p.id,
+          slot: p.vehicle,
+          ...landing.berth,
+          heading: landing.heading,
+          paint: vehiclePaint(p) ?? 'blue',
+          landing: landing.id,
+        };
+      } else if (landing && w.mooredBoats)
+        delete w.mooredBoats[mooringKey(p.id, poweredBoat(slot) ? slot : p.vehicle)];
       p.fleet = fleet;
       switchVehicle(p, slot);
       vehicleRecord(w, p);
@@ -1157,7 +1289,13 @@ export function act(w: World, id: string, a: Action): string {
         p.engine = false;
         delete p.flight;
       }
-      p.y = terrainHeight(w, p.x, p.z);
+      if (landing) {
+        p.boatThrottle = 0;
+        Object.assign(p, poweredBoat(slot) ? landing.berth : landing.land);
+        p.heading = poweredBoat(slot) ? landing.heading : (landing.building?.rotation ?? Math.PI);
+        p.engine = false;
+      }
+      p.y = poweredBoat(slot) ? w.settings.seaLevel : travelHeight(w, p.x, p.z);
       break;
     }
     case 'engine':
@@ -1201,8 +1339,18 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(['hornball', 'race', 'fishing', 'kricket'].includes(game), 'Unknown game');
       requireThat(!p.task && p.game !== 'combat', 'Finish your task or leave combat first');
       if (game === 'fishing') {
+        requireThat(!p.trawl?.deployed, 'Stow the trawl net before rod fishing');
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
+        requireThat(
+          !p.hitch && !p.atHome && !p.crowBody && Math.abs(p.speed) < 0.5,
+          'Stop outside before fishing',
+        );
+        if (poweredBoat(p.vehicle))
+          requireThat(
+            terrainHeight(w, p.x, p.z) < w.settings.seaLevel - 0.65,
+            'Take the boat into water before fishing',
+          );
       }
       if (game === 'kricket') requireThat(!w.kricket.bowler || !w.kricket.batter, 'Pitch is full');
       p.game = game;
@@ -1228,15 +1376,13 @@ export function act(w: World, id: string, a: Action): string {
       if (game === 'fishing') {
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
-        p.x = fishingDock.x;
-        p.z = fishingDock.z + 2;
-        p.y = travelHeight(w, p.x, p.z);
-        const mode = w.settings.fishingMode;
-        p.fishAt =
-          w.time +
-          (mode === 5 ? 10 : mode === 2 ? 60 : 30) +
-          Math.random() * (mode === 5 ? 20 : 180);
-        p.fishUntil = (p.fishAt ?? 0) + 8;
+        if (!poweredBoat(p.vehicle)) {
+          p.x = fishingDock.x;
+          p.z = fishingDock.z + 2;
+          p.y = travelHeight(w, p.x, p.z);
+        } else p.y = w.settings.seaLevel;
+        p.engine = false;
+        scheduleBite(w, p);
       }
       if (game === 'kricket') {
         requireThat(!w.kricket.bowler || !w.kricket.batter, 'Pitch is full');
@@ -1253,6 +1399,7 @@ export function act(w: World, id: string, a: Action): string {
       leaveCombat(w, p);
       delete p.game;
       delete p.race;
+      delete p.fishCatch;
       delete p.fishAt;
       delete p.fishUntil;
       if (w.kricket.batter === id) delete w.kricket.batter;
@@ -1276,13 +1423,16 @@ export function act(w: World, id: string, a: Action): string {
         w.time >= p.fishAt && w.time <= (p.fishUntil ?? 0),
         'No bite yet, or that one got away',
       );
-      requireThat(canCarry(p, 'fish', 1, w), 'Cargo full');
-      stockAdd(p.inventory, 'fish', 1);
-      recordGathered(w, p, 'fish', 1);
+      const catchId = landedFish(w, p);
+      requireThat(
+        canCarry(p, catchId, 1, w),
+        'Cargo full for this catch; free some space before reeling',
+      );
+      stockAdd(p.inventory, catchId, 1);
+      recordGathered(w, p, catchId, 1);
       p.kudos++;
-      p.fishAt = w.time + 20;
-      p.fishUntil = p.fishAt + 8;
-      result = 'A small fish. A substantial achievement.';
+      scheduleBite(w, p);
+      result = 'Caught ' + items[catchId].name + '.';
       break;
     }
     case 'kricket': {
@@ -1323,7 +1473,7 @@ export function act(w: World, id: string, a: Action): string {
         kind = w.catalogue?.templates[requested]?.base ?? requested,
         def = worldBuildings(w)[requested];
       const site =
-        kind === 'waterworks' && (a.x !== undefined || a.z !== undefined)
+        ['waterworks', 'boathouse'].includes(kind) && (a.x !== undefined || a.z !== undefined)
           ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
           : p;
       requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
@@ -1575,6 +1725,12 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(kind !== 'waterworks' || shore, 'Waterworks require a dry shoreline site');
       const b = makeBuilding('editor' + ++w.revision, kind, x, z);
       if (shore) b.rotation = shore.rotation;
+      if (kind === 'boathouse') {
+        b.rotation = a.rotation === undefined ? 0 : num(a.rotation, -Math.PI * 2, Math.PI * 2);
+        const reason = constructionSiteReason(w, b);
+        requireThat(!reason, reason!);
+        b.foundationY = foundationProfile(w, b).level;
+      }
       b.owner = id;
       w.buildings.push(b);
       break;
@@ -1598,12 +1754,23 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
       const target = w.players[String(a.player)];
       requireThat(
+        !boatSlot(p.vehicle) && !p.hitch,
+        'Disembark at the boathouse before changing rides',
+      );
+      if (poweredBoat(target?.vehicle ?? -1)) {
+        const dock = boatLanding(w, target, true, a.building);
+        requireThat(
+          dock && boatLanding(w, p, false, dock.id),
+          'Board boat passengers at the boathouse shore entrance',
+        );
+      }
+      requireThat(
         target &&
           target.id !== id &&
           stoppedOutside(p) &&
           stoppedOutside(target) &&
           target.vehicle !== 5 &&
-          distance(p, target) < 10 &&
+          distance(p, target) < (poweredBoat(target.vehicle) ? 48 : 10) &&
           Math.abs(p.y - target.y) <= 3,
         'No nearby driver',
       );
@@ -1615,9 +1782,25 @@ export function act(w: World, id: string, a: Action): string {
       p.hitch = target.id;
       break;
     }
-    case 'detach':
+    case 'detach': {
+      if (p.hitch && boatSlot(w.players[p.hitch]?.vehicle ?? -1)) {
+        const driver = w.players[p.hitch];
+        const dock = boatLanding(w, driver, true, a.building);
+        requireThat(
+          dock && Math.abs(driver.speed) < 0.5,
+          'Wait for the boat to stop at a boathouse berth',
+        );
+        const land = dock.land;
+        requireThat(
+          !w.buildings.some((b) => buildingBlocksMovement(b, land, land, 0, 1.5)) &&
+            !creatorBlocks(w, land.x, land.z, travelHeight(w, land.x, land.z), 1.5),
+          'The shore landing is blocked',
+        );
+        Object.assign(p, land, { y: travelHeight(w, land.x, land.z), speed: 0 });
+      }
       delete p.hitch;
       break;
+    }
     case 'giveMoney': {
       const target = w.players[str(a.player)],
         n = num(a.amount, 1, MAX_MONEY_GIFT, true);
@@ -1803,6 +1986,7 @@ export function command(w: World, p: Player, text: string): string {
       say(w, p.name, args.join(' '), 'emote');
       break;
     case 'resetpos':
+      requireThat(!aboardBoat(w, p), 'Return to a dock; use the lifeboat if out of fuel');
       p.x = 0;
       p.z = 17;
       p.speed = 0;
@@ -1861,7 +2045,8 @@ export function command(w: World, p: Player, text: string): string {
 }
 export function move(w: World, p: Player, input: Input, dt: number, prediction = false) {
   if (w.maintenance?.paused) return;
-  if (p.game === 'fishing') p.y = travelHeight(w, p.x, p.z);
+  if (p.game === 'fishing')
+    p.y = poweredBoat(p.vehicle) ? w.settings.seaLevel : travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
   const licence = requiredLicence(w, p.vehicle);
@@ -1921,7 +2106,12 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     return;
   }
   delete p.flight;
-  const throttle = clamp(input.throttle, -1, 1);
+  if (p.vehicle === FISHING_BOAT)
+    p.boatThrottle = input.brake
+      ? 0
+      : clamp((p.boatThrottle ?? 0) + clamp(input.throttle, -1, 1) * 0.24 * dt, -0.4, 1);
+  const throttle =
+    p.vehicle === FISHING_BOAT ? (p.boatThrottle ?? 0) : clamp(input.throttle, -1, 1);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
@@ -1932,10 +2122,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       : roadConditions(w)
     : { speed: 1, grip: 1 };
   const crowSpeed = p.crowBody && p.crowClass ? crowClasses[p.crowClass].speed : 1;
+  const trawling = p.vehicle === FISHING_BOAT && p.trawl?.deployed;
   const cap =
     crowSpeed *
-    v.speed *
-    (input.boost ? 1.7 : 1) *
+    (trawling ? TRAWL_SPEED : v.speed) *
+    (input.boost && p.vehicle !== FISHING_BOAT ? 1.7 : 1) *
     tractorSurface(surface.speed, v.traction) *
     (0.7 + condition * 0.003);
   p.speed +=
@@ -1950,7 +2141,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
     tractorSurface(surface.grip, v.traction) *
-    (input.boost ? 1.15 : 1) *
+    (input.boost && p.vehicle !== FISHING_BOAT ? 1.15 : 1) *
     dt *
     ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
@@ -1969,6 +2160,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   }
   if (v.mode === 5) p.y = Math.max(ground, w.settings.seaLevel) + 0.5;
   const half = mapHalf(w);
+  const previousPosition = { x: p.x, z: p.z };
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
   if (
@@ -2009,13 +2201,21 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.z = 17;
     p.speed = 0;
   }
-  if (powered)
+  if (trawling)
+    advanceTrawl(
+      w,
+      p,
+      dt,
+      Math.hypot(p.x - previousPosition.x, p.z - previousPosition.z),
+      prediction,
+    );
+  else if (powered)
     p.fuel = Math.max(
       0,
       p.fuel -
         (Math.abs(p.speed) / v.speed) *
           v.fuel *
-          (input.boost ? 2 : 1) *
+          (input.boost && p.vehicle !== FISHING_BOAT ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
@@ -2027,6 +2227,8 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
     recordLife(w, p, { kind: 'death', cause, text: `New life after ${cause}`, x: p.x, z: p.z });
   p.deaths++;
   delete p.flight;
+  delete p.trawl;
+  delete p.boatThrottle;
   delete p.nutrition;
   delete p.alcohol;
   p.ammo = { ...ammunition };
@@ -2326,12 +2528,12 @@ export function advance(w: World, seconds: number) {
       }
     }
     if (p.game === 'fishing' && p.fishUntil !== undefined && end > p.fishUntil) {
-      if (w.settings.fishingMode === 2 && canCarry(p, 'fish', 1, w)) {
-        stockAdd(p.inventory, 'fish', 1);
-        recordGathered(w, p, 'fish', 1);
+      const catchId = landedFish(w, p);
+      if (w.settings.fishingMode === 2 && canCarry(p, catchId, 1, w)) {
+        stockAdd(p.inventory, catchId, 1);
+        recordGathered(w, p, catchId, 1);
       }
-      p.fishAt = end + (w.settings.fishingMode === 5 ? 20 : 90);
-      p.fishUntil = p.fishAt + 8;
+      scheduleBite(w, p, end);
     }
   }
   // Resolve residents once; avoid scanning every resident for every cottage each tick.
