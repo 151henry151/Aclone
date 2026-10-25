@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.96.1] - 2026-10-25
+
+### Fixed
+
+- Buying and boarding boats at boathouses now works from dry land within 40 metres of the building, matching the building-menu range instead of hiding the options outside a five-metre entrance area.
+- Collapsed and expanded fishing controls sit above the driving readout without covering speed, engine, ping or FPS information, including on narrow and mobile screens.
+
 ## [0.96.0] - 2026-10-25
 
 ### Added

@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.96.1
+
+Deploy client and server together and reload browsers. No world migration is
+required. Check buying and boarding from dry land throughout the boatyard's
+40-metre menu range, plus collapsed and expanded fishing controls above the
+driving readout on desktop, phone portrait and phone landscape layouts.
+
 ## Upgrade 0.95.0
 
 Back up the database and deploy client and server together, then reload browsers.

@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.96.1 — Boatyard boarding and readable fishing controls
+
+Buy or board an owned boat from dry land within 40 metres of a boathouse, matching
+the building menu's interaction range. Fishing-pier boarding and waterfront
+disembarking retain their existing ranges.
+
+The fishing controls now sit above the driving readout. Collapsing or expanding
+them no longer covers speed, engine, ping or FPS information on desktop or mobile.
+Reload the game after deployment to load both fixes.
+
 ## 0.96.0 — Boat lighting, recovery and automatic provisions
 
 Fishing boats now show steady navigation sectors and green-over-white trawling

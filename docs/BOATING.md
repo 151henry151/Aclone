@@ -1,12 +1,13 @@
 # Boats, fishing and the coastal economy
 
-This guide describes the expedition system in Aclone 0.95.0. Prices below are defaults;
+This guide describes the expedition system in Aclone 0.96.1. Prices below are defaults;
 worlds and business owners can change them.
 
 ## Boarding and mooring
 
 Buy or board a canal boat or commercial fishing boat at a completed shoreline
-boathouse. Approach its shore entrance, stop, choose the boat, buy Fuel and use
+boathouse. Stop on dry land within 40 metres of the building,
+choose the boat from its Main tab, buy Fuel and use
 it from your inventory once aboard. New boats start with empty tanks. Each has
 its own fuel, paint and maintenance record. Boatmaster is required in worlds
 which enable vehicle licences.
@@ -14,8 +15,8 @@ which enable vehicle licences.
 The fishing pier also boards boats you already own. Return to a water berth
 before switching to walking or an owned tractor. Stop within the boatyard’s
 30-metre waterfront arrival area (14 metres beside a fishing-pier berth);
-there must be water between you and the berth. Boarding from shore still uses
-the marked entrance. The pier leaves the actual
+there must be water between you and the berth. At a fishing pier, boarding still
+requires being within five metres of its marked boarding point. The pier leaves the actual
 empty boat moored there; retrieve that particular boat from that berth. The
 boathouse puts it away inside. Different owned boats have independent moorings.
 Passengers board and disembark at the dock too. There is no offshore switch to

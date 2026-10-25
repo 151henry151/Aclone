@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.96.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.96.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -225,8 +225,14 @@ marine instruments, a throttle lever, chart desk and furnished cabin, with reada
 instrument faces at night. Boatyards also accept stopped arrivals within 30 metres
 of their water berth, and ocean rendering follows boats far offshore.
 
+Buy or board boats from dry land within 40 metres of a
+boathouse, matching its building-menu range. Fishing-pier boarding still uses the
+marked boarding point. See [boarding and mooring](docs/BOATING.md#boarding-and-mooring).
+
 Boat navigation uses steady marine signals, with separate deck/cabin/searchlight
 controls, a collapsible fishing HUD and a camera that stays above the ocean surface.
+The fishing panel sits above the driving readout, keeping speed and network/FPS
+information clear whether expanded or collapsed, including on mobile screens.
 **Puddlewick removes all owned boats and everything aboard on death.** World owners
 can instead allow offshore recovery, set a cargo-spoilage deadline (five game days
 by default, or zero for no expiry), and choose whether tank fuel survives.
