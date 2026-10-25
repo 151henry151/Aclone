@@ -2,6 +2,25 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.95.0 — Offshore expeditions and a working wheelhouse
+
+The North Star now supports long fishing expeditions: a 3,200-unit tank and
+3,200-weight hold allow 21 Puddlewick days of towing plus the journey home.
+Catches arrive continuously, with fish activity visible in the nets; haul whenever
+you choose to discover the catch. Weathering a poor trip remains a real economic
+risk. Hire up to two consenting deckhands for shares of realised profit and stock
+food and water for the voyage. Crew eat automatically; online captains eat manually.
+
+The furnished wheelhouse includes a mounted compass, live marine instruments,
+moving throttle lever, chart desk and readable night instruments. Fuel and cargo
+weight affect performance. Puddlewick gains more navigable ocean while retaining
+its island and properties. Boatyard arrivals now accept a wider waterfront area,
+and water renders correctly far offshore.
+
+New North Stars cost 300s; canal boats cost 24s. Existing owners retain their boats
+and fuel. Reload after deployment. See [Boating](BOATING.md) for controls and costs
+and [upgrade instructions](RELEASING.md#upgrade-0950) for the one-time world update.
+
 ## 0.93.2 — Clear gravel in the town square
 
 The circular gravel square now behaves as road, matching its appearance. Tractors

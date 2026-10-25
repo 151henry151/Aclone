@@ -1,6 +1,6 @@
 # Boats, fishing and the coastal economy
 
-Boats are available in Aclone 0.94.0. **The expedition system and revised prices described here are pending in the next release.** Prices below are defaults;
+This guide describes the expedition system in Aclone 0.95.0. Prices below are defaults;
 worlds and business owners can change them.
 
 ## Boarding and mooring

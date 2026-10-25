@@ -2,6 +2,27 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.95.0
+
+Back up the database and deploy client and server together, then reload browsers.
+Preserve the saved `terrainMapSize`, `fishingVoyageVersion`, crew agreements,
+provisions, voyage accounts and hidden trawl state when moving or restoring worlds.
+Existing boats, paint, fuel, property and island terrain remain in place; the
+higher purchase prices apply to new purchases only.
+
+A one-time public Puddlewick migration expands navigable ocean by 6,000 metres
+(up to a 20,000-metre world), preserving the original terrain domain. It enlarges
+the public boatyard's storage to 4,000 and supplies working capital of at least
+500s after paying for its initial delivery of up to 512 Fuel. These are recorded
+transactions; the migration does not repeat on restart. Verify the migration
+marker, terrain extent, ocean extent and yard stock after deployment.
+
+Check wider dock arrivals, continuous towing and hauling, private catch snapshots,
+crew boarding/settlement, provisions and the working wheelhouse compass. Economic
+simulations cover loss-making trips and occasional full holds; actual earnings
+still depend on player prices, buyers' cash and selling time. Publish the website
+separately so its release summary matches the game.
+
 ## Upgrade 0.94.0
 
 Back up the database, deploy client and server together, and reload browsers for

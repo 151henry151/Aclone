@@ -210,22 +210,20 @@ and each of five architectural models has its own set of repair boats on stands.
 Return to a dock to disembark. There is no offshore
 teleport to land. Boats can sail through connected water to the map boundary.
 
-The released **North Star fishing boat** has a persistent throttle and working
+The **North Star fishing boat** has a persistent throttle and working
 nets. Boatyard landing prices leave margins for hauliers delivering cod, halibut
 and tuna to food businesses or export terminals; kitchens and guest accommodation
 can select seafood recipes.
 
-**In development for the next release:** continuous catches hidden until hauling,
-long offshore expeditions, voluntary deckhands and shared provisions. The planned
-North Star costs 300s, with a 3,200-weight hold and 3,200-unit tank; at Puddlewick’s
+Fishing includes continuous catches hidden until hauling, long offshore expeditions,
+voluntary deckhands and shared provisions. The North Star costs 300s, with a 3,200-weight hold and 3,200-unit tank; at Puddlewick’s
 clock speed, that supports 21 game days (3½ real hours) of towing plus transit.
-The canal boat rises to 24s. Fish activity, hauling and deck piles are animated;
+The canal boat costs 24s. Fish activity, hauling and deck piles are animated;
 fuel and cargo load affect performance. Ocean expansion preserves the existing
 island and properties. The revised wheelhouse includes a mounted compass and live
 marine instruments, a throttle lever, chart desk and furnished cabin, with readable
 instrument faces at night. Boatyards also accept stopped arrivals within 30 metres
-of their water berth, and ocean rendering follows boats far offshore. These
-changes are not yet deployed.
+of their water berth, and ocean rendering follows boats far offshore.
 
 An empty tank unlocks the **orange rowed lifeboat**. Main cargo stays offshore;
 row to a dock, buy fuel, then row back to reboard and refuel. Boats, moorings and

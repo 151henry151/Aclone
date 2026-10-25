@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.95.0] - 2026-10-25
+
 ### Added
 
 - A furnished North Star wheelhouse with a working mounted compass, live speed/fuel/throttle gauges, moving engine lever, low-light instrument faces, chart desk, radio, seating, floor and ceiling lining. The first-person seating position leaves the horizon and instruments visible together.
