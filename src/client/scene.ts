@@ -1002,7 +1002,9 @@ export class GameScene {
       g.add(sign);
     }
 
-    const animated: T.Object3D[] = [];
+    // The sea follows the camera on large worlds; freezing its matrix would
+    // leave the visible water behind when boats sail beyond the starter town.
+    const animated: T.Object3D[] = this.water ? [this.water] : [];
     for (const o of this.land.children) {
       if (o.userData.blades) animated.push(o.userData.blades);
       if (o.userData.clouds) animated.push(o);

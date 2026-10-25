@@ -20,6 +20,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Visible ocean water follows boats offshore instead of remaining frozen near their starting location.
 - Boatyard arrivals accept stopped boats across a 30-metre waterfront area instead of requiring five-metre alignment with one point. Menus and server checks agree, and intervening land still prevents remote disembarking.
 
 ## [0.94.0] - 2026-10-24

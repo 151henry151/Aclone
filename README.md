@@ -222,7 +222,8 @@ clock speed, that supports 21 game days (3½ real hours) of towing plus transit.
 The canal boat rises to 24s. Fish activity, hauling and deck piles are animated;
 fuel and cargo load affect performance. Ocean expansion preserves the existing
 island and properties. Boatyards also accept stopped arrivals within 30 metres
-of their water berth. These changes are not yet deployed.
+of their water berth, and ocean rendering follows boats far offshore. These
+changes are not yet deployed.
 
 An empty tank unlocks the **orange rowed lifeboat**. Main cargo stays offshore;
 row to a dock, buy fuel, then row back to reboard and refuel. Boats, moorings and
