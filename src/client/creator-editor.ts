@@ -74,23 +74,29 @@ export function closeCreatorPreview() {
 const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
-  return Object.entries(settings)
-    .map(([key, value]) =>
-      typeof value === 'boolean'
-        ? `<label class="check"><input name="${key}" type="checkbox" ${value ? 'checked' : ''}>${friendly(key)}</label>`
-        : key === 'weaponMode'
-          ? select(
-              'Weapon supply',
-              key,
-              [
-                ['energy', 'Regenerating energy'],
-                ['ammo', 'Ammo per life'],
-              ],
-              String(value),
-            )
-          : field(friendly(key), key, value, 'number', 'step="any"'),
-    )
-    .join('');
+  const boatKeys = ['loseBoatsOnDeath', 'boatCargoSpoilageDays', 'retainBoatFuelOnDeath'];
+  const boatRules = `<fieldset class="boat-death-settings"><legend>Boats and death</legend><label class="check"><input name="loseBoatsOnDeath" type="checkbox" ${settings.loseBoatsOnDeath ? 'checked' : ''}>Lose all owned boats on death</label><p>Includes stored and moored boats, their cargo, provisions and tank fuel. Untick to leave an offshore boat recoverable after its captain dies.</p>${field('Recoverable cargo lifetime (game days; 0 = never expires)', 'boatCargoSpoilageDays', settings.boatCargoSpoilageDays ?? 5, 'number', 'min="0" max="365" step="0.1"')}<label class="check"><input name="retainBoatFuelOnDeath" type="checkbox" ${settings.retainBoatFuelOnDeath !== false ? 'checked' : ''}>Keep tank fuel in recoverable boats</label><p>Cargo lifetime and fuel retention apply only when boats survive death. Existing abandoned cargo keeps the deadline assigned at death. Running out of fuel still allows recovery under either rule.</p></fieldset>`;
+  return (
+    boatRules +
+    Object.entries(settings)
+      .filter(([key]) => !boatKeys.includes(key))
+      .map(([key, value]) =>
+        typeof value === 'boolean'
+          ? `<label class="check"><input name="${key}" type="checkbox" ${value ? 'checked' : ''}>${friendly(key)}</label>`
+          : key === 'weaponMode'
+            ? select(
+                'Weapon supply',
+                key,
+                [
+                  ['energy', 'Regenerating energy'],
+                  ['ammo', 'Ammo per life'],
+                ],
+                String(value),
+              )
+            : field(friendly(key), key, value, 'number', 'step="any"'),
+      )
+      .join('')
+  );
 }
 export function creationFields() {
   return `<p>Choose a starting layout, then expand the options to customize all world rules before creation. You can change them later in the owner editor.</p>${select(

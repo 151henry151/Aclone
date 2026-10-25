@@ -2,7 +2,7 @@ import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
 import { TRAWL_FUEL_PER_SECOND, trawlWater } from '../shared/commercial-fishing';
-import { boatLanding, nearBoathouse } from '../shared/boathouse';
+import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
@@ -80,6 +80,7 @@ import {
   creatorMemoryKey,
   creationFields,
   settingsData,
+  settingsFields,
   refreshCreatorPreview,
   closeCreatorPreview,
 } from './creator-editor';
@@ -1340,6 +1341,8 @@ function refreshTradingPrices() {
       me.fishingVoyage?.members,
       me.fishingVoyage?.offers,
       me.lastFishingSettlement,
+      world.boatRescues?.[me.id]?.spoilage?.spoiled,
+      world.boatRescues?.[me.id]?.dinghy.moored,
       me.boatLighting,
       me.lights,
       me.crowBody,
@@ -2295,24 +2298,7 @@ function editorWindow() {
       tab === 'Towns'
         ? `<p>The charter decides how towns work on this world: who may found them, how their borders grow, how they are governed and which rules their governments control. Changes apply live.</p>${charterForm(world)}`
         : tab === 'Main' || tab === 'Rules'
-          ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here. Death retention values run from 0 (lose all) to 1 (keep all). Set hunger/thirst rates to 0 to disable needs. maxOfflineDays uses real days; 0 disables the absence limit.</p><form id="settings-form"><div class="settings-grid">${Object.entries(
-              world.settings,
-            )
-              .map(([k, v]) =>
-                typeof v === 'boolean'
-                  ? `<label class="check"><input name="${k}" type="checkbox" ${v ? 'checked' : ''}>${k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</label>`
-                  : k === 'weaponMode'
-                    ? select(
-                        k,
-                        [
-                          ['energy', 'Energy weapons'],
-                          ['ammo', 'Ammunition per life'],
-                        ],
-                        k,
-                      )
-                    : field(k, k, v, 'number', 'step="any"'),
-              )
-              .join('')}</div><button class="primary">Apply changes to server</button></form>`
+          ? `<p>Changes apply live to everyone. Tune cautiously; people have businesses here. Death retention values run from 0 (lose all) to 1 (keep all). Set hunger/thirst rates to 0 to disable needs. maxOfflineDays uses real days; 0 disables the absence limit.</p><form id="settings-form"><div class="settings-grid">${settingsFields(world.settings)}</div><button class="primary">Apply changes to server</button></form>`
           : tab === 'Landscape'
             ? landscapeEditor(world, me)
             : tab === 'Buildings'
@@ -2593,6 +2579,13 @@ app.addEventListener('click', async (e) => {
       case 'buyMap':
         send({ type: action, building });
         break;
+      case 'boat-recovery-dock': {
+        const r = world?.boatRescues?.[me!.id];
+        const d = world && boatLandings(world).find((d) => d.id === r?.dinghy.landing);
+        if (d) waypoints.set({ ...d.land, name: 'Recovery lifeboat' });
+        closePanel();
+        break;
+      }
       case 'boat-rescue-waypoint': {
         const r = world?.boatRescues?.[me!.id];
         if (r) waypoints.set({ ...r.boat, name: 'Your stranded boat' });
@@ -3411,6 +3404,16 @@ function boatControls(building?: string) {
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me);
+  if (rescue?.spoilage) {
+    html +=
+      `<p>Your boat remains offshore. ${rescue.spoilage.spoiled ? 'Cargo and provisions have spoiled.' : rescue.spoilage.never ? 'Cargo spoilage is disabled in this world.' : `Recover cargo and provisions within ${rescue.spoilage.daysLeft.toFixed(1)} game days.`} Any remaining tank fuel does not spoil.</p>` +
+      button('Show route to stranded boat', 'boat-rescue-waypoint');
+    const recoveryDock = boatLandings(world).find((d) => d.id === rescue.dinghy.landing);
+    if (recoveryDock)
+      html +=
+        `<p>Recovery lifeboat: ${esc(recoveryDock.building?.name ?? 'Fishing pier')}.</p>` +
+        button('Show route to recovery lifeboat', 'boat-recovery-dock');
+  }
   if (dock && !boatSlot(me.vehicle)) {
     if (rescue?.dinghy.moored)
       html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
@@ -3433,11 +3436,13 @@ function boatControls(building?: string) {
       : '<p>Return to a boathouse berth or the side of the fishing pier to disembark.</p>';
     if (poweredBoat(me.vehicle) && me.fuel <= 0)
       html += button('Launch emergency lifeboat', 'lifeboat', 'data-id="launch"');
-    if (me.vehicle === LIFEBOAT && rescue)
-      html +=
-        `<p>Row with the driving controls; no fuel needed. Main boat: ${Math.round(Math.hypot(me.x - rescue.boat.x, me.z - rescue.boat.z))} m away, map coordinates ${Math.round(rescue.boat.x)}, ${Math.round(rescue.boat.z)}. Bring Fuel back and reboard before using it.</p>` +
-        button('Show route to stranded boat', 'boat-rescue-waypoint') +
-        button('Reboard stranded boat', 'lifeboat', 'data-id="reboard"');
+  }
+  if (rescue) {
+    html +=
+      '<p>Row back in your lifeboat, or hitch a ride from shore on another player’s boat. A recovery passenger receives no crew profit share. Stop alongside your own boat to transfer; bring Fuel if its tank is empty.</p>' +
+      button('Show route to stranded boat', 'boat-rescue-waypoint');
+    if (me.vehicle === LIFEBOAT || (me.hitch && boatSlot(world.players[me.hitch]?.vehicle ?? -1)))
+      html += button('Reboard your stranded boat', 'lifeboat', 'data-id="reboard"');
   }
   return (
     html +

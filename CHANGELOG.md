@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+
+- Configure boat loss on death, cargo spoilage and fuel retention per world. Puddlewick loses all owned boats on death; recovery worlds allow a lifeboat or passenger ride back to an offshore vessel.
+
 ### Added
 
 - Add steady fishing-boat navigation signals and separately controlled deck, cabin and search lighting.

@@ -266,6 +266,9 @@ export interface Settings {
   resetScriptOnDeath: boolean;
   loseSkillsOnDeath: boolean;
   loseInventoryOnDeath: boolean;
+  loseBoatsOnDeath: boolean;
+  boatCargoSpoilageDays: number;
+  retainBoatFuelOnDeath: boolean;
   loseJobOnDeath: boolean;
   losePropertyOnDeath: boolean;
   deathCashRetention: number;
@@ -372,6 +375,7 @@ export interface World {
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;
   fishingVoyageVersion?: number;
+  boatDeathRulesVersion?: 1;
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;
   seafoodVersion?: number;
@@ -380,6 +384,10 @@ export interface World {
     {
       boat: { x: number; z: number; heading: number; paint: string; slot: number };
       cargo: Stock;
+      /** Death-abandoned stores are separate from the respawned player's inventory. */
+      provisions?: Stock;
+      net?: Player['trawl'];
+      spoilage?: { daysLeft: number; checkedAt: number; spoiled?: boolean; never?: boolean };
       dinghy: { x: number; z: number; heading: number; moored: boolean; landing?: string };
     }
   >;

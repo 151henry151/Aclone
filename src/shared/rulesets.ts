@@ -54,6 +54,9 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
       ? 'Qualified owners can operate their own businesses without wages.'
       : 'Owners cannot employ themselves.',
     `Death: ${s.loseSkillsOnDeath ? 'lose' : 'keep'} skills, ${s.loseInventoryOnDeath ? 'lose' : 'keep'} inventory, ${s.losePropertyOnDeath ? 'release' : 'keep'} property; retain ${Math.round(s.deathCashRetention * 100)}% cash and ${Math.round(s.deathBankRetention * 100)}% savings.`,
+    s.loseBoatsOnDeath
+      ? 'Owned boats and everything aboard are lost on death.'
+      : `Boats remain offshore for recovery after death; ${s.boatCargoSpoilageDays === 0 ? 'cargo does not expire' : `cargo spoils after ${s.boatCargoSpoilageDays ?? 5} game days`}; tank fuel is ${s.retainBoatFuelOnDeath === false ? 'lost' : 'retained'}.`,
     s.postDeathGraceSeconds
       ? `Rebirth pauses needs for ${s.postDeathGraceSeconds / 60} real minutes.`
       : '',

@@ -2474,3 +2474,9 @@ button span {
     bottom: calc(180px + env(safe-area-inset-bottom));
   }
 }
+
+.boat-death-settings {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 1rem;
+}

@@ -176,6 +176,18 @@ Visitors download models/textures automatically through the game's hosting prefi
 
 At world creation or **Editor → Rules**, set hunger/thirst rates to zero for worlds without survival needs. Independently untick `loseSkillsOnDeath`, `loseInventoryOnDeath`, `loseJobOnDeath` or `losePropertyOnDeath` to retain those possessions/status. Keeping skills also keeps a course in progress; keeping a job retains its existing shift expiry. Ordinary death still respawns and restores the character's needs; arena knockouts keep their existing separate rules.
 
+The **Boats and death** group independently controls boats. **Lose all owned boats
+on death** (`loseBoatsOnDeath`) removes active, moored and stored boats plus their
+contents. Puddlewick enables this once on upgrade; later owner edits persist.
+Other worlds default to recovery: an offshore vessel stays in place after its
+captain dies. **Recoverable cargo lifetime** (`boatCargoSpoilageDays`, 0–365 game
+days) defaults to five; zero disables spoilage. **Keep tank fuel in recoverable
+boats** (`retainBoatFuelOnDeath`) defaults on. The lifetime/fuel options apply only
+when boats survive death; each abandoned cargo keeps its assigned lifetime.
+Paused worlds and a frozen day/night clock pause spoilage. See [boat recovery](BOATING.md#death-and-boat-recovery)
+for lifeboats and passenger transfers. Ordinary fuel emergencies remain recoverable
+under either death policy.
+
 `deathCashRetention` and `deathBankRetention` range from 0 (lose everything) to 1 (keep everything). Loans are never erased; a retained mortgaged property keeps its loan, while released collateral goes through foreclosure. Existing estate-content and valuation rules govern released ordinary buildings. Guesthouse protections remain unchanged.
 
 `maxOfflineDays` uses **real days**, with 0 disabling the rule. Once per absence, exceeding it triggers ordinary death under that world's configured penalties; logging in starts a new absence period. Turn needs off and retain selected possessions to make an activity-based world, or disable the absence limit too for a relaxed sandbox. These changes do not alter Puddlewick defaults.

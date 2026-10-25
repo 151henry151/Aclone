@@ -74,6 +74,16 @@ visual model does not change its recipe or prices.
 ![Rules exposes the world's economy, survival and other settings. Scroll for the rest of the fields.](screenshots/world-building/rules.webp)
 
 Open **Rules**. Change only a few settings at a time, then use its save button.
+
+**Boats and death** is a dedicated group at the top. Tick **Lose all owned boats
+on death** for Puddlewick-style loss of boats, cargo, provisions and tank fuel,
+including stored boats. Untick it to allow recovering an offshore boat after death.
+In recovery worlds, choose the cargo lifetime in **game days** (five by default;
+zero means no spoilage) and whether tank fuel survives. For example, untick boat
+loss, enter `5`, and tick fuel retention to give captains five game days to retrieve
+their cargo while keeping their vessel and fuel. These rules are independent of
+personal inventory loss; running out of fuel still permits recovery either way.
+
 For a first creation, leave most preset values alone.
 
 - **Map Size** is the square world's side length in metres, from 500 to 20,000.

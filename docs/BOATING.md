@@ -240,3 +240,46 @@ The commercial fishing HUD starts as a small lower-left status button. Click to
 expand or collapse the throttle/net controls; the browser remembers your choice.
 A full net still shows on the collapsed button. All fishing actions remain
 available in Inventory. The camera stays above water even at its lowest orbit.
+
+## Death and boat recovery
+
+**Puddlewick: death removes all owned canal boats and fishing boats, including
+stored, moored and stranded vessels, their cargo, provisions and tank fuel.**
+This applies to future deaths; upgrading does not confiscate existing boats.
+Running out of fuel is not death and still permits the ordinary rescue below.
+
+Other worlds can choose **Editor → Rules → Boats and death**. Untick **Lose all
+owned boats on death** to enable offshore recovery; set **Recoverable cargo
+lifetime** in game days (default five; zero disables spoilage), and choose **Keep
+tank fuel in recoverable boats**. These controls are also available when creating
+a world. They are independent of the ordinary inventory/property death rules.
+
+In a recovery world, a captain who dies aboard a boat respawns on foot at a shore landing. The owned
+boat stays at its offshore position, retaining tank fuel if the world allows it. Cargo, provisions
+and any unhauled net catch remain aboard for **five in-game days** from death,
+then are lost, unless the world owner sets a different lifetime. This applies to the entire abandoned cargo, including carried fuel
+cans; **fuel already retained in the tank never spoils**. The standard ten-minute game day
+makes the recovery window about fifty real minutes of running world time.
+Paused worlds and frozen day/night clocks do not advance spoilage. Saving,
+reconnecting or dying again does not restart the deadline.
+
+Inventory → Boating shows the time remaining and waypoints for the stranded boat
+and the recovery lifeboat at its dock. Row back and reboard alongside. If the dock
+has since been removed, board the recovery lifeboat from another valid dock.
+You cannot call the stranded vessel back through the normal boat-selection menu.
+The same physical recovery route works after a fuel emergency; simply running
+out of fuel does not start the death-related spoilage deadline.
+
+You may instead **hitch a recovery ride** on another player's canal boat or
+fishing boat from a dock. Select that player and choose **Hitch a ride**. A trawler
+has two berths shared between hired deckhands and recovery passengers; recovery
+passengers receive no wages, catch bonus or profit share and bring their own
+food and drink. When the driver stops alongside your stranded boat, open
+Inventory → Boating → **Reboard your stranded boat** to transfer directly. Your
+carried fuel and other items transfer with you, subject to the destination hold's
+capacity. The assisting player's boat, fuel and cargo stay with them. Ordinary
+passenger disembarking still requires a dock, never open water.
+
+If a captain dies with passengers aboard, they remain offshore in lifeboats and
+can row to a dock to disembark. The deceased captain's fishing expedition ends.
+Existing abandoned cargo keeps the deadline assigned when the captain died.

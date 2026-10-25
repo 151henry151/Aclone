@@ -48,5 +48,8 @@
   "postDeathGraceSeconds": 0,
   "lotteryEnabled": false,
   "lotteryTicketPrice": 100,
-  "crowAbilities": false
+  "crowAbilities": false,
+  "loseBoatsOnDeath": false,
+  "boatCargoSpoilageDays": 5,
+  "retainBoatFuelOnDeath": true
 }

@@ -15,7 +15,7 @@ import { setSeafoodMenu } from './seafood';
 import { trawlAction, advanceTrawl, TRAWL_SPEED } from './commercial-fishing';
 import { FISHING_BOAT } from './boats';
 import { poweredBoat, boatSlot, mooringKey } from './boats';
-import { LIFEBOAT, rescueAction } from './boat-rescue';
+import { LIFEBOAT, rescueAction, abandonBoatOnDeath, expireAbandonedCargo } from './boat-rescue';
 import { landedFish, scheduleBite } from './boat-fishing';
 import {
   aboardBoat,
@@ -1292,13 +1292,14 @@ export function act(w: World, id: string, a: Action): string {
       }
       if (landing && p.vehicle === LIFEBOAT) {
         const r = w.boatRescues?.[p.id];
-        requireThat(r, 'Missing lifeboat rescue record');
-        r.dinghy = {
-          ...landing.berth,
-          heading: landing.heading,
-          moored: true,
-          landing: landing.id,
-        };
+        // A rescued deckhand has a lifeboat but no owned stranded vessel.
+        if (r)
+          r.dinghy = {
+            ...landing.berth,
+            heading: landing.heading,
+            moored: true,
+            landing: landing.id,
+          };
       } else if (landing && poweredBoat(p.vehicle) && !landing.building) {
         w.mooredBoats ??= {};
         w.mooredBoats[mooringKey(p.id, p.vehicle)] = {
@@ -1710,6 +1711,7 @@ export function act(w: World, id: string, a: Action): string {
           ].includes(key)
         )
           num(v, 0, 100000000, true);
+        if (key === 'boatCargoSpoilageDays') num(v, 0, 365);
         if (key === 'postDeathGraceSeconds') num(v, 0, 86400, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
         if (key === 'lotteryTicketPrice') num(v, 1, 1000000, true);
@@ -1719,6 +1721,7 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      expireAbandonedCargo(w);
       Object.assign(w.settings, clean);
       w.revision++;
       break;
@@ -1792,8 +1795,8 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'hitch': {
       requireThat(
-        w.players[String(a.player)]?.vehicle !== FISHING_BOAT,
-        'Join a fishing boat by accepting a deckhand offer',
+        w.players[String(a.player)]?.vehicle !== FISHING_BOAT || !!w.boatRescues?.[p.id],
+        'Join a fishing boat by accepting a deckhand offer, or hitch a recovery ride to your stranded boat',
       );
       requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
       const target = w.players[String(a.player)];
@@ -1820,10 +1823,11 @@ export function act(w: World, id: string, a: Action): string {
       );
       requireThat(
         Object.values(w.players).filter((p) => p.hitch === target.id).length <
-          vehicles[target.vehicle].hitch,
+          (target.vehicle === FISHING_BOAT ? 2 : vehicles[target.vehicle].hitch),
         'No passenger room',
       );
       p.hitch = target.id;
+      Object.assign(p, { x: target.x, z: target.z, y: target.y + 2, speed: 0 });
       break;
     }
     case 'detach': {
@@ -2272,6 +2276,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  const recovery = !comic ? abandonBoatOnDeath(w, p, at) : undefined;
   endVoyageOnDeath(w, p);
   if (!comic) contractsOnDeath(w, p);
   if (!comic) p.needsGraceUntil = at + (w.settings.postDeathGraceSeconds ?? 0);
@@ -2310,6 +2315,15 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
         : `${p.name} has become an ostrich. These things happen.`,
     );
   } else {
+    if (recovery) {
+      delete p.game;
+      delete p.fishAt;
+      delete p.fishUntil;
+      switchVehicle(p, 5, false);
+      p.engine = false;
+      if (recovery.dock) Object.assign(p, recovery.dock.land);
+      p.y = travelHeight(w, p.x, p.z);
+    }
     resetQuests(w, p);
     if (w.settings.resetScriptOnDeath) p.scriptState = {};
     queueCreatorScript(w, 'PlayerDeath', { id: p.id, cause, deaths: p.deaths });
@@ -2595,6 +2609,7 @@ export function advance(w: World, seconds: number) {
       scheduleBite(w, p, end);
     }
   }
+  expireAbandonedCargo(w);
   // Resolve residents once; avoid scanning every resident for every cottage each tick.
   const occupied = new Set(
     Object.values(w.players)

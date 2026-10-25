@@ -128,7 +128,10 @@ export function prepareFrame(w: World): Frame {
   });
   if (common.boatRescues)
     common.boatRescues = Object.fromEntries(
-      Object.entries(common.boatRescues).map(([id, r]) => [id, { ...r, cargo: {} }]),
+      Object.entries(common.boatRescues).map(([id, r]) => [
+        id,
+        { boat: r.boat, dinghy: r.dinghy, cargo: {}, spoilage: r.spoilage },
+      ]),
     );
   common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);

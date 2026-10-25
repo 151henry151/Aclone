@@ -141,7 +141,11 @@ export function expeditionAction(w: World, p: Player, a: Action) {
         Math.abs(p.y - travelHeight(w, p.x, p.z)) < 2,
       'Finish your activity before joining the crew',
     );
-    need(Object.keys(v.members).length < 2, 'The two deckhand berths are taken');
+    need(
+      Object.keys(v.members).length < 2 &&
+        Object.values(w.players).filter((q) => q.hitch === captain.id).length < 2,
+      'The two berths are taken by deckhands or recovery passengers',
+    );
     need(
       Object.values(v.members).reduce((s, n) => s + n, 0) + v.offers[p.id] <= 50,
       'The offered shares exceed half the profit',
@@ -301,8 +305,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
 export function endVoyageOnDeath(w: World, p: Player) {
   const captain = fishingCrewCaptain(w, p);
   if (captain) delete captain.fishingVoyage!.members[p.id];
-  for (const id of deckhands(w, p)) {
-    const q = w.players[id];
+  for (const q of Object.values(w.players).filter((q) => boatSlot(p.vehicle) && q.hitch === p.id)) {
     delete q.hitch;
     switchVehicle(q, 29, false);
     Object.assign(q, { x: p.x, z: p.z, y: w.settings.seaLevel, speed: 0, engine: false });
