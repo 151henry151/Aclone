@@ -1,5 +1,5 @@
 import { poweredBoat, FISHING_BOAT } from '../shared/boats';
-import { aboardBoat, boatLanding } from '../shared/boathouse';
+import { aboardBoat, boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,7 +10,7 @@ import { jobVacancy, hiringLimit } from '../shared/staffing';
 import { propertyQuote } from '../shared/property';
 import { winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
-import { carry } from '../shared/simulation';
+import { stockWeight } from '../shared/fishing-expedition';
 import { requiredLicence } from '../shared/vehicle-services';
 import { worldItems } from '../shared/world-catalogue';
 
@@ -40,11 +40,7 @@ export function actionVisible(
         free &&
         !p.game &&
         p.vehicle === FISHING_BOAT &&
-        (id === 'haul'
-          ? !!p.trawl?.catch
-          : id === 'stow'
-            ? !!p.trawl?.deployed
-            : !p.trawl?.deployed && !p.trawl?.catch)
+        (id === 'haul' ? !!p.trawl : id === 'stow' ? !!p.trawl?.deployed : !p.trawl?.deployed)
       );
     case 'lifeboat':
       return (
@@ -222,7 +218,7 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   if (
     b &&
     ['buyBuilding', 'vehicle', 'job', 'task', 'farm', 'learn', 'home'].includes(action) &&
-    Math.hypot(p.x - b.x, p.z - b.z) >= (b.kind === 'boathouse' ? 40 : 18)
+    !(b.kind === 'boathouse' ? nearBoathouse(w, p, b) : Math.hypot(p.x - b.x, p.z - b.z) < 18)
   )
     return 'Move within 18 metres of this building';
   if (action === 'buyBuilding' && b && p.cash < propertyQuote(w, b).total)
@@ -232,7 +228,10 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
     if (slot === 2 && hasAircraftHangar(w) && !b?.aircraftHangar)
       return 'Visit the airfield hangar';
     if (slot === 2 && Math.abs(p.speed) >= 0.5) return 'Stop before boarding';
-    if (carry(p, w) > vehicles[slot].capacity)
+    if (
+      stockWeight(w, p.inventory) + (slot === FISHING_BOAT ? stockWeight(w, p.boatStores) : 0) >
+      vehicles[slot].capacity
+    )
       return 'Unload cargo before changing to a smaller vehicle';
     if (
       action === 'vehicle' &&
@@ -279,7 +278,9 @@ export function refreshActionVisibility(host: HTMLElement, w: World, p: Player) 
       for (const submit of form.querySelectorAll<HTMLButtonElement>(
         'button:not([type="button"])',
       )) {
-        const blocked = Math.hypot(p.x - b.x, p.z - b.z) >= (b.kind === 'boathouse' ? 40 : 18);
+        const blocked = !(b.kind === 'boathouse'
+          ? nearBoathouse(w, p, b)
+          : Math.hypot(p.x - b.x, p.z - b.z) < 18);
         // These forms otherwise validate their numeric inputs on the server.
         if (['stock', 'investment', 'buildingAdmin', 'listProperty'].includes(action)) {
           submit.disabled = blocked;

@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Commercial fishing expeditions with two voluntary deckhand berths, agreed shares of realised profit, shared boat provisions, dockside settlement and saved crew agreements. Deckhands eat automatically online or offline; online captains must eat manually.
+- Animated fish activity in the nets, a hauling-and-dumping sequence, visible landed fish piles and a heading compass in the fishing-boat HUD.
+
+### Changed
+
+- Commercial nets catch continuously during actual towing. Inspect catches by hauling at any time; there is no completion timer or numerical preview of unhauled fish. Separate net and hold limits preserve earned catches.
+- The North Star now costs 300s and carries 3,200 weight with a 3,200-unit tank, supporting 21 Puddlewick days of towing plus an offshore return journey. The canal boat costs 24s. Existing owners retain their vessels and fuel.
+- Offshore fishing starts beyond roughly 150 metres of coastal clearance. Conditions improve gradually towards open ocean, with persistent good and bad spells and substantial risk of loss. Fuel and cargo weight affect the commercial boat’s speed and fuel consumption.
+- Puddlewick gains navigable ocean around its unchanged island, with public boatyard storage, working capital and paid fuel shipments sized for the larger expeditions. Seafood resale margins and funded, real-cargo exports remain in place.
+
+### Fixed
+
+- Boatyard arrivals accept stopped boats across a 30-metre waterfront area instead of requiring five-metre alignment with one point. Menus and server checks agree, and intervening land still prevents remote disembarking.
+
 ## [0.94.0] - 2026-10-24
 
 ### Added

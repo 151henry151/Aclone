@@ -380,6 +380,8 @@ Construction counts finished buildings owned at completion, including a helper's
 
 Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored. Return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel and fish trading.
 
-The 70s North Star uses persistent throttle (W/S, A/D steering, B idle) and nets for twelve-minute deep-water tows. Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
+The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
+
+**Coming in the next release:** the North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 24s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for the pending controls and crew agreements. These changes have not yet been deployed.
 
 See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, controls, fish menus and the full cost breakdown.

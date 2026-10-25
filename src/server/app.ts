@@ -1,3 +1,4 @@
+import { prepareFishingVoyages } from './fishing-voyages';
 import { integrateSeafood } from '../shared/seafood';
 import { aboardBoat } from '../shared/boathouse';
 import { ensurePuddlewickBoatyard } from './puddlewick-boatyard';
@@ -166,6 +167,7 @@ export async function createApp(options: AppOptions) {
     const airfield = ensurePuddlewickAirfield(world);
     const boatyard = ensurePuddlewickBoatyard(world);
     const seafood = integrateSeafood(world);
+    const voyages = prepareFishingVoyages(world);
     if (
       services ||
       government ||
@@ -173,6 +175,7 @@ export async function createApp(options: AppOptions) {
       airfield ||
       boatyard ||
       seafood ||
+      voyages ||
       world.publicParishVersion
     )
       store.saveWorld(world);

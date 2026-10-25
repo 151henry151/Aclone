@@ -1,3 +1,4 @@
+import { fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { returnResidentHome } from './home-world.ts';
 import {
   businessRequestBlocker,
@@ -774,6 +775,10 @@ export class Residents {
       const w = this.worlds.get(r.state.world),
         p = w?.players[r.state.playerId];
       if (!w || w.maintenance?.paused || !p || !p.online) continue;
+      if (fishingCrewCaptain(w, p)) {
+        r.nav = undefined;
+        continue;
+      }
       if (r.nav) {
         const result = r.nav.step(w, p, dt);
         move(w, p, result.input, dt);

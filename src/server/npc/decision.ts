@@ -101,6 +101,7 @@ export const playerOperations = [
   'foundTown',
   'group',
   'hitch',
+  'expedition',
   'detach',
   'give',
   'giveMoney',

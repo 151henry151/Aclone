@@ -1,3 +1,6 @@
+import { boatLanding } from '../../shared/boathouse';
+import { travelHeight } from '../../shared/dock';
+import { fishingOffers, fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { ownsHome } from './housing.ts';
 import { buildingDesignQuote } from '../../shared/building-designs';
 import { settlementChoices } from './civic-ambition.ts';
@@ -103,6 +106,8 @@ function legalPlan(w: World, playerId: string) {
         } else if (s.kind === 'move') {
           q.x = s.x;
           q.z = s.z;
+          q.y = travelHeight(draft, s.x, s.z);
+          q.speed = 0;
         } else if (s.kind === 'act') act(draft, playerId, s.action);
         else if (s.kind === 'operation') act(draft, playerId, operationAction(s));
       }
@@ -116,6 +121,16 @@ function legalPlan(w: World, playerId: string) {
 /** Shared by every personality. The model chooses; this catalog supplies executable
  * plans and current costs. No role gets privileged wages, goods or qualifications. */
 export function adaptiveChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
+  if (fishingCrewCaptain(w, p))
+    return [
+      {
+        id: 'crew-watch',
+        description:
+          'Stay aboard as an agreed deckhand. Shared provisions feed me automatically; the captain settles the profit share at port.',
+        plan: [{ kind: 'wait', seconds: 60 }],
+        reconsiderSeconds: 60,
+      },
+    ];
   const base = gameplayChoices(w, p, state, 'independent');
   if (p.task) return base;
   const groups = new Map<string, FarmerChoice[]>();
@@ -135,6 +150,27 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     list.push({ id: '', description, plan, reconsiderSeconds });
     groups.set(group, list);
   };
+  for (const offer of fishingOffers(w, p)) {
+    const captain = w.players[offer.captain],
+      dock = captain && boatLanding(w, captain, true);
+    if (dock)
+      add(
+        'fishing',
+        `Join ${offer.name} at the dock as a deckhand for ${offer.share}% of realised profit after consumed fuel and provisions. This can be a long voyage, with no guaranteed pay; cannot leave at sea. Captain supplies meals.`,
+        [
+          ...prep,
+          { kind: 'move', x: dock.land.x, z: dock.land.z },
+          operation('expedition', { operation: 'accept', captain: offer.captain }),
+        ],
+        30,
+      );
+    add(
+      'fishing',
+      `Decline ${offer.name}'s deckhand offer.`,
+      [operation('expedition', { operation: 'decline', captain: offer.captain })],
+      30,
+    );
+  }
   for (const offer of personalOffers(w, p).filter((o) => o.to === p.id)) {
     add(
       'trade',

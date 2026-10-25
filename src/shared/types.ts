@@ -98,8 +98,33 @@ export interface Player {
   race?: { start: number; next: number };
   fishCatch?: string;
   boatThrottle?: number;
-  /** Net progress is saved; catches roll only once when the full tow completes. */
-  trawl?: { seconds: number; deployed: boolean; catch?: Stock; fuelUsed: number };
+  boatStores?: Stock;
+  fishingVoyage?: import('./fishing-expedition').FishingVoyage;
+  lastFishingSettlement?: string;
+  crewOffers?: { captain: string; name: string; share: number; fuelPrice: number }[];
+  crewBerth?: { captain: string; name: string; share: number; stores: Stock };
+  /** Continuous catches and paid fishing effort persist across pauses and hauling. */
+  trawl?: {
+    seconds: number;
+    deployed: boolean;
+    catch?: Stock;
+    fuelUsed: number;
+    holdFull?: boolean;
+    netFull?: boolean;
+    /** Coarse visual cue only; actual catch remains server-side until hauled. */
+    activity?: number;
+    hauledAt?: number;
+    deckLoad?: number;
+    /** Server-only encounter state. Never reveal future arrivals to clients. */
+    shoal?: {
+      ground: number;
+      nextChange: number;
+      nextFish: number;
+      pendingFish?: string;
+      luck?: number;
+      nextLuck?: number;
+    };
+  };
   fishAt?: number;
   fishUntil?: number;
   lastShot: number;
@@ -345,6 +370,9 @@ export interface World {
   players: Record<string, Player>;
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;
+  fishingVoyageVersion?: number;
+  /** Original terrain extent retained when surrounding navigable ocean is extended. */
+  terrainMapSize?: number;
   seafoodVersion?: number;
   boatRescues?: Record<
     string,

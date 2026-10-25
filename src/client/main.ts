@@ -1,7 +1,8 @@
+import { expeditionPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
-import { TRAWL_SECONDS, TRAWL_FUEL, trawlWater } from '../shared/commercial-fishing';
-import { boatLanding } from '../shared/boathouse';
+import { TRAWL_FUEL_PER_SECOND, trawlWater } from '../shared/commercial-fishing';
+import { boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
@@ -143,7 +144,7 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch &amp; stow</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
   );
 document
   .getElementById('world-hud')!
@@ -870,12 +871,15 @@ function updateHud() {
   $('trawl-controls').hidden = !commercial;
   $('fishing-control').classList.toggle('commercial', commercial);
   if (commercial) {
-    const left = Math.max(0, Math.ceil(TRAWL_SECONDS - (me.trawl?.seconds ?? 0)));
-    $('trawl-status').textContent = me.trawl?.catch
-      ? 'Catch ready — haul aboard when the hold has room.'
-      : `${me.trawl?.deployed ? 'Nets down' : 'Nets stowed'} · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} tow remaining · ${trawlWater(world, me) ? 'deep water' : 'too shallow'}`;
-    $('trawl-throttle').textContent =
-      `Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/144 · W/S adjust, A/D steer, B idle`;
+    $('trawl-status').textContent = trawlStatus();
+    $('trawl-throttle').textContent = `Heading ${Math.round(
+      (180 - (me.heading * 180) / Math.PI + 360) % 360,
+    )
+      .toString()
+      .padStart(
+        3,
+        '0',
+      )}° ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((180 - (me.heading * 180) / Math.PI + 360) % 360) / 45) % 8]} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicles[FISHING_BOAT].tank} · W/S adjust, A/D steer, B idle`;
   }
   $('fishing-control').hidden = (!fishing && !atDock && !commercial) || !!panel || !!mobile.drawer;
   $('fishing-cast').hidden = fishing || commercial;
@@ -894,8 +898,8 @@ function updateHud() {
       : me.inventory.tackle
         ? poweredBoat(me.vehicle)
           ? deepBoatFishing(world, me)
-            ? 'Deep water · Cod, halibut and tuna possible.'
-            : 'Shallow water · Small fish only.'
+            ? 'Offshore deep water · Cod, halibut and tuna possible.'
+            : 'Coastal or shallow water · Small fish only. Larger fish need 8 m depth and 600 m from shore.'
           : 'Fishing dock · Ready to cast.'
         : 'Bring Fishing tackle from Harbour stores.';
   $('fishing-status').hidden = commercial;
@@ -1279,6 +1283,7 @@ function refreshTaxInfo() {
     if (quote.textContent !== text) quote.textContent = text;
   }
 }
+let expeditionSignature = '';
 function refreshTradingPrices() {
   refreshTaxInfo();
   if (panel === 'social' && world && me) {
@@ -1316,15 +1321,46 @@ function refreshTradingPrices() {
       me.hitch,
       me.game,
       me.skills,
+      me.crewOffers,
+      me.crewBerth,
+      me.fishingVoyage?.members,
+      me.fishingVoyage?.offers,
+      me.lastFishingSettlement,
       me.crowBody,
       me.crowClass,
       me.crowMark,
       me.crowIntegrity,
       Math.floor(world.time / 60),
     ]);
-    if (key !== storyPanelSignature) {
+    if (key !== storyPanelSignature && !document.activeElement?.matches('input,select,textarea')) {
       storyPanelSignature = key;
       renderPanel();
+    }
+  }
+  const expeditionRoot = app.querySelector('.expedition-panel');
+  if (
+    expeditionRoot &&
+    world &&
+    me &&
+    !document.activeElement?.matches(
+      '.expedition-panel input,.expedition-panel select,.expedition-panel textarea',
+    )
+  ) {
+    const dock = boatLanding(world, me, boatSlot(me.vehicle));
+    const key = JSON.stringify([
+      me.crewOffers,
+      me.crewBerth,
+      me.boatStores,
+      me.inventory,
+      me.fishingVoyage,
+      me.lastFishingSettlement,
+      me.hitch,
+      dock?.id,
+      Object.values(world.players).map((p) => [p.id, p.name, p.online]),
+    ]);
+    if (key !== expeditionSignature) {
+      expeditionSignature = key;
+      expeditionRoot.outerHTML = expeditionPanel(world, me);
     }
   }
   if (panel === 'quests' && world && me) {
@@ -1837,7 +1873,7 @@ function productionStatus(w: World, b: Building) {
 }
 function buildingWindow(b: Building) {
   if (!me || !world) return;
-  const near = distance(me, b) < (b.kind === 'boathouse' ? 40 : 18),
+  const near = b.kind === 'boathouse' ? nearBoathouse(world, me, b) : distance(me, b) < 18,
     selfOwned = b.owner === me.id,
     caretaker = caretakerBuilding === b.id && me.authority >= 20,
     owned = selfOwned || caretaker;
@@ -1953,7 +1989,7 @@ function buildingWindow(b: Building) {
         button('Service boat · 1 Steel + labour', 'serviceVehicle', `data-building="${b.id}"`);
     if (b.kind === 'boathouse')
       html +=
-        '<h3>Commercial fishing</h3><p>Fishing boat: 70s, 280-weight hold, 144-unit tank. A full tank needs 18 Fuel (about 8s at this yard). New boats start empty. Tow nets in water at least 8 m deep for 12 minutes, using 124 fuel, with no extra boost while towing. Allow extra fuel for travel. About 3 in 10 hauls are poor, 6 ordinary, and 1 large; a poor trip usually loses money. The boatyard pays a lower landing price and resells below inland buyers’ bids, leaving room for hauliers. Sell fish to a buyer with money and space. Carry food, water and spare fuel; your hold is shared with supplies. This is a risky active livelihood, not guaranteed income.</p>';
+        '<h3>Commercial fishing</h3><p>North Star: 300s, 3,200-weight hold, 3,200-unit tank. New boats start empty. Bring food, water and fuel for the return. Deploy the nets while moving, and haul whenever you want to inspect your catch. A full net stops towing until you haul it aboard. Sell landed fish here or take them to another buyer; prices, available cash and storage vary.</p>';
     if (b.kind === 'garage' && !isTractor(me.vehicle))
       html += vehiclePaintShop(world, me, b, me.vehicle);
     if (seafoodKitchens.includes(b.kind))
@@ -2541,6 +2577,19 @@ app.addEventListener('click', async (e) => {
         break;
       case 'boatIdle':
         send({ type: 'boatIdle' });
+        break;
+      case 'expedition':
+        send({
+          type: 'expedition',
+          operation: id,
+          captain: el.dataset.captain,
+          player: el.dataset.player,
+          item: el.dataset.item,
+          quantity: Number(
+            (document.getElementById('boat-store-quantity') as HTMLInputElement)?.value ?? 1,
+          ),
+          share: Number((document.getElementById('crew-share') as HTMLInputElement)?.value ?? 15),
+        });
         break;
       case 'trawl':
         send({ type: 'trawl', operation: id });
@@ -3321,7 +3370,7 @@ function boatControls(building?: string) {
   const dock = boatLanding(world, me, boatSlot(me.vehicle), building);
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
-  let html = '<section><h3>Boating</h3>';
+  let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me);
   if (dock && !boatSlot(me.vehicle)) {
     if (rescue?.dinghy.moored)
       html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
@@ -3356,24 +3405,18 @@ function boatControls(building?: string) {
   );
 }
 
+function trawlStatus() {
+  if (!me || !world) return '';
+  const t = me.trawl;
+  if (t?.netFull) return 'Net full — haul it aboard';
+  if (t?.holdFull) return 'Hold limit reached — nets stowed';
+  if (!t?.deployed) return 'Nets stowed';
+  if (!me.engine || me.fuel <= 0) return 'Engine stopped';
+  if (!trawlWater(world, me)) return 'Not enough clear water for the nets';
+  return me.speed < 1 ? 'Move forward to tow' : 'Towing';
+}
 function trawlControls() {
   if (!me || !world || me.vehicle !== FISHING_BOAT) return '';
   const t = me.trawl;
-  const remaining = Math.max(0, TRAWL_SECONDS - (t?.seconds ?? 0));
-  const fuel = (remaining / TRAWL_SECONDS) * TRAWL_FUEL;
-  const reason = !trawlWater(world, me)
-    ? 'Find water at least 8 m deep.'
-    : !me.engine
-      ? 'Start the engine (F4).'
-      : me.fuel + 1e-6 < fuel
-        ? 'Refuel before starting or resuming this tow.'
-        : 'Drive forward to tow. Nets limit speed; no boost.';
-  return `<strong>Commercial trawling</strong><p>Persistent throttle ${Math.round((me.boatThrottle ?? 0) * 100)}%. W/S or ↑/↓ increase/decrease; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle; the boat coasts to a stop. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${
-    t?.catch
-      ? 'Haul ready: ' +
-        Object.entries(t.catch)
-          .map(([id, n]) => `${n} ${esc(worldItems(world!)[id]?.name ?? id)}`)
-          .join(', ')
-      : `${t?.deployed ? 'Towing' : 'Nets stowed'} · ${Math.floor(remaining / 60)}:${String(Math.ceil(remaining % 60)).padStart(2, '0')} towing time remaining`
-  }</p><p>${t?.catch ? 'Make room in the hold, then haul once.' : reason} Tank ${me.fuel.toFixed(1)} / 144. ${!t?.catch ? `${fuel.toFixed(1)} needed for remaining tow; keep fuel for the return.` : ''}</p>${t?.catch ? button('Haul catch aboard', 'trawl', 'data-id="haul"') : t?.deployed ? button('Stow nets / pause tow', 'trawl', 'data-id="stow"') : button(t ? 'Resume tow' : 'Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">No progress while stopped or in shallow water. Nets down still burn fuel. Tow progress survives pauses and reconnects.</p>`;
+  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Tank ${me.fuel.toFixed(1)} / ${vehicles[FISHING_BOAT].tank}. Nets down use ${(TRAWL_FUEL_PER_SECOND * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }

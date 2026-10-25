@@ -1,12 +1,10 @@
 import { poweredBoat } from './boats';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { terrainHeight } from './terrain';
+import { deepFishingWater } from './fishing-water';
 import type { Player, World } from './types';
 export const deepFish = ['cod', 'halibut', 'tuna'] as const;
 export function deepBoatFishing(w: World, p: Player) {
-  return (
-    poweredBoat(p.vehicle) && !p.hitch && w.settings.seaLevel - terrainHeight(w, p.x, p.z) >= 8
-  );
+  return poweredBoat(p.vehicle) && !p.hitch && deepFishingWater(w, p);
 }
 export function fishingCatch(w: World, p: Player, roll = Math.random()) {
   if (!deepBoatFishing(w, p)) return 'fish';

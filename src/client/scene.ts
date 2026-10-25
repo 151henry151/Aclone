@@ -3,7 +3,7 @@ import { FISHING_BOAT, boatSlot } from '../shared/boats';
 import { createLifeboat } from './lifeboat';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { fitBoatyardToWater } from './boatyard';
-import { boatLanding } from '../shared/boathouse';
+import { boatLanding, nearBoathouse } from '../shared/boathouse';
 import { createCanalBoat } from './canal-boat';
 import { AircraftCrashes } from './aircraft-crash';
 import { airfieldModel } from './airfield-scene';
@@ -486,15 +486,17 @@ export class GameScene {
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     for (const p of Object.values(world.players)) {
       const paint = vehiclePaint(p);
+      const displayVehicle =
+        p.hitch && world.players[p.hitch]?.vehicle === FISHING_BOAT ? 5 : p.vehicle;
       let mesh = this.meshes.get(p.id);
-      if (mesh && (mesh.userData.vehicle !== p.vehicle || mesh.userData.paint !== paint)) {
+      if (mesh && (mesh.userData.vehicle !== displayVehicle || mesh.userData.paint !== paint)) {
         this.actors.remove(mesh);
         dispose(mesh);
         this.meshes.delete(p.id);
         mesh = undefined;
       }
       const visual = world.creator?.models.find(
-        (m) => m.id === world.creator?.vehicleModels[p.vehicle],
+        (m) => m.id === world.creator?.vehicleModels[displayVehicle],
       );
       const visualKey = JSON.stringify(visual ?? null);
       if (mesh && mesh.userData.creatorKey !== visualKey) {
@@ -507,7 +509,7 @@ export class GameScene {
         mesh = visual
           ? creatorModel(visual, world)
           : this.vehicle(
-              p.vehicle,
+              displayVehicle,
               p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
               paint,
             );
@@ -518,7 +520,8 @@ export class GameScene {
           mesh.add(tag);
         }
         mesh.userData.paint = paint;
-        mesh.userData.vehicle = p.vehicle;
+        mesh.userData.vehicle = displayVehicle;
+        mesh.userData.playerId = p.id;
         mesh.position.set(p.x, p.y, p.z);
         this.meshes.set(p.id, mesh);
         this.actors.add(mesh);
@@ -1261,13 +1264,38 @@ export class GameScene {
         );
         for (const wheel of (mesh.userData.wheels ?? []) as T.Group[])
           wheel.rotation.x += travel / (wheel.userData.radius ?? 1);
-        (mesh.userData.human as HumanFigure | undefined)?.animate(travel, dt, turn);
+        (mesh.userData.human as HumanFigure | undefined)?.animate(
+          w.players[mesh.userData.playerId]?.hitch ? 0 : travel,
+          dt,
+          turn,
+        );
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
         (mesh.userData.hovercraft as HovercraftFigure | undefined)?.animate(
           dt,
           mesh.userData.engineRunning,
         );
-        mesh.userData.fishingBoat?.animate(!!p.trawl?.deployed);
+        const skipper = w.players[mesh.userData.playerId];
+        const t = skipper?.trawl;
+        mesh.userData.fishingBoat?.animate(
+          !!t?.deployed,
+          t?.activity ?? 0,
+          now / 1000,
+          t?.hauledAt === undefined ? Infinity : w.time - t.hauledAt,
+          t?.deckLoad ?? 0,
+        );
+        const captain = skipper?.hitch ? w.players[skipper.hitch] : undefined;
+        if (captain?.vehicle === FISHING_BOAT) {
+          const crew = Object.values(w.players)
+            .filter((q) => q.hitch === captain.id)
+            .sort((a, b) => a.id.localeCompare(b.id));
+          const side = crew.findIndex((q) => q.id === skipper.id) === 0 ? -1 : 1;
+          mesh.position.set(
+            captain.x + Math.cos(captain.heading) * side * 1.1 - Math.sin(captain.heading) * 2.5,
+            captain.y + 1.15,
+            captain.z - Math.sin(captain.heading) * side * 1.1 - Math.cos(captain.heading) * 2.5,
+          );
+          mesh.rotation.set(0, captain.heading, 0);
+        }
         mesh.userData.lifeboat?.userData.row(now / 1000, p.speed);
         mesh.userData.canalBoat?.animate(dt > 0 ? turn / dt : 0);
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
@@ -1719,10 +1747,10 @@ export class GameScene {
         ? [fishingDock]
         : []),
     ]
-      .filter(
-        (b) =>
-          distance(b, this.me!) <
-          ('kind' in b && b.kind === 'boathouse' ? 40 : b.id === fishingDock.id ? 26 : 18),
+      .filter((b) =>
+        'kind' in b && b.kind === 'boathouse'
+          ? nearBoathouse(this.world!, this.me!, b as Building)
+          : distance(b, this.me!) < (b.id === fishingDock.id ? 26 : 18),
       )
       .sort((a, b) => distance(a, this.me!) - distance(b, this.me!))[0];
   }

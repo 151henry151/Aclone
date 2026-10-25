@@ -27,6 +27,35 @@ export function exportShipments(w: World, at: number) {
       continue;
     // The emergency shop is not an export terminal.
     if (port.id === 'parish-government-stores') continue;
+    if (port.kind === 'boathouse') {
+      const retail = port.sell.fuel ?? 0;
+      const cost = Math.ceil(buildings.boathouse.sell.fuel * 0.8);
+      // A finite, paid bunker delivery, not infinite fuel or a recurring grant.
+      const highestBid = Math.max(
+        0,
+        ...w.buildings.filter((b) => b.government).map((b) => b.buy.fuel ?? 0),
+      );
+      if (retail > highestBid && retail > cost) {
+        const n = Math.max(
+          0,
+          Math.min(
+            512 - (port.stock.fuel ?? 0),
+            port.capacity - (port.stock.fuel ?? 0),
+            Math.floor(port.investment / cost),
+            departures * 400,
+          ),
+        );
+        if (n) {
+          port.stock.fuel = (port.stock.fuel ?? 0) + n;
+          port.investment -= n * cost;
+          log(w, 'sink', n * cost, port.id, 'imports', 'boatyard bunker shipment', {
+            building: port.id,
+            item: 'fuel',
+            quantity: n,
+          });
+        }
+      }
+    }
     const quotes = buildings[port.kind];
     for (const [item, stock] of Object.entries(port.stock)) {
       if (
@@ -37,7 +66,10 @@ export function exportShipments(w: World, at: number) {
       const bid = quotes.buy[item];
       if (!(bid > 0) || !(port.buy[item] > 0)) continue;
       const reserve = necessities.has(item) ? Math.min(100, Math.max(12, population * 3)) : 8;
-      const quantity = Math.max(0, Math.min(Math.floor(stock) - reserve, departures * 40));
+      const quantity = Math.max(
+        0,
+        Math.min(Math.floor(stock) - reserve, departures * (port.kind === 'boathouse' ? 800 : 40)),
+      );
       if (!quantity) continue;
       const price = Math.min(Math.floor(bid * 1.1), (quotes.sell[item] ?? bid) - 1);
       if (price <= 0) continue;

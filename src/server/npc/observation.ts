@@ -1,3 +1,4 @@
+import { fishingOffers, fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { financialBriefing, financeRules } from './finances.ts';
 import { portfolioBriefing } from './portfolio.ts';
 import { taxFacts } from '../../shared/taxes.ts';
@@ -224,6 +225,8 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       vehicleCondition: vehicleCondition(p),
       requiredLicence: requiredLicence(w, p.vehicle),
       inventory: p.inventory,
+      deckhandOffers: fishingOffers(w, p),
+      crewCaptain: fishingCrewCaptain(w, p)?.name,
       load: carry(p, w),
       skills: p.skills,
       learning: p.learning,

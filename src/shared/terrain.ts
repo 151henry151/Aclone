@@ -13,6 +13,12 @@ export function mapHalf(w: Pick<World, 'settings'>) {
   const size = w.settings.mapSize;
   return (Number.isFinite(size) && size >= minMapSize ? Math.min(maxMapSize, size) : 500) / 2;
 }
+/** Ocean expansions must never stretch the island, creator heightmaps or woodland. */
+export function terrainHalf(w: World) {
+  return Number.isFinite(w.terrainMapSize) && w.terrainMapSize! >= minMapSize
+    ? Math.min(maxMapSize, w.terrainMapSize!) / 2
+    : mapHalf(w);
+}
 /** Beyond this the village square gives way to the generated countryside. */
 export const countrysideEdge = legacyHalf + 150;
 export const terrainSeed = (w: Pick<World, 'id'>) => seedOf(w.id);
@@ -56,7 +62,7 @@ function countrysideHeight(w: World, x: number, z: number, half: number) {
   return h;
 }
 export function terrainHeight(w: World, x: number, z: number) {
-  const half = mapHalf(w);
+  const half = terrainHalf(w);
   let h = villageHeight(w, x, z);
   if (half > legacyHalf) {
     const s = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
@@ -70,7 +76,7 @@ export function terrainHeight(w: World, x: number, z: number) {
 /** Woodland cover 0..1 for the generated countryside: zero in the village, in the
  * water and on compact maps, which keep their hand-placed trees. */
 export function woodland(w: World, x: number, z: number) {
-  const half = mapHalf(w);
+  const half = terrainHalf(w);
   if (half <= legacyHalf) return 0;
   const outside = smoothstep(300, 450, Math.max(Math.abs(x), Math.abs(z)));
   if (outside <= 0) return 0;

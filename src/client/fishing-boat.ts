@@ -2,6 +2,7 @@
 import * as T from 'three';
 import { batch } from './tractor';
 import { createHuman } from './human';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const textures = new Map<string, T.CanvasTexture>();
 function texture(kind: 'hull' | 'deck' | 'cabin' | 'net' | 'instruments', color: string) {
@@ -301,8 +302,7 @@ export function createFishingBoat(color = '#356c87') {
   const gear = new T.Group();
   group.add(gear);
   gear.visible = false;
-  rod([-0.55, 3.68, -2.8], [-1.4, -0.2, -7], 0.018, rope, gear);
-  rod([0.55, 3.68, -2.8], [1.4, -0.2, -7], 0.018, rope, gear);
+
   const net = add(new T.ConeGeometry(1.6, 4, 12, 1, true), netMat, 0, -0.3, -8.7, gear);
   net.rotation.x = Math.PI / 2;
   batch(gear);
@@ -318,10 +318,101 @@ export function createFishingBoat(color = '#356c87') {
   group.userData.eye = new T.Vector3(0, 1.3 * 1.35 + 0.92, 0.85 + helm.position.z);
   group.userData.viewPitch = -0.04;
   group.userData.lamp = new T.Vector3(0, 3 * 1.35, 2.5 * 2.175);
+  // One instanced mesh supplies the glimpses in the net, the pouring catch and
+  // deck piles. Counts are deliberately illustrative, never a fish counter.
+  const fishBody = new T.SphereGeometry(1, 8, 4);
+  fishBody.scale(0.12, 0.1, 0.35);
+  const tail = new T.ConeGeometry(0.15, 0.23, 3);
+  tail.rotateX(Math.PI / 2);
+  tail.translate(0, 0, -0.39);
+  const fishGeometry = mergeGeometries([fishBody, tail]);
+  fishBody.dispose();
+  tail.dispose();
+  const fish = new T.InstancedMesh(
+    fishGeometry,
+    new T.MeshStandardMaterial({ color: '#aabec3', roughness: 0.36, metalness: 0.25 }),
+    100,
+  );
+  fish.count = 0;
+  fish.visible = false;
+  fish.name = 'Net glimpses and landed fish';
+  fish.frustumCulled = false;
+  group.add(fish);
+  const pose = new T.Object3D();
+  const gearHome = gear.position.clone();
+  const towGeometry = new T.BufferGeometry();
+  const towPositions = new Float32Array(12);
+  towGeometry.setAttribute('position', new T.BufferAttribute(towPositions, 3));
+  const towLines = new T.LineSegments(towGeometry, new T.LineBasicMaterial({ color: '#a79c7b' }));
+  towLines.frustumCulled = false;
+  towLines.visible = false;
+  group.add(towLines);
   return {
     group,
-    animate(deployed: boolean) {
-      gear.visible = deployed;
+    animate(deployed: boolean, activity = 0, time = 0, haulAge = Infinity, deckLoad = 0) {
+      const hauling = haulAge >= 0 && haulAge < 6;
+      gear.visible = deployed || activity > 0 || hauling;
+      const hoist = hauling ? Math.sin((Math.min(1, haulAge / 4) * Math.PI) / 2) : 0;
+      gear.position.copy(gearHome).add(new T.Vector3(0, hoist * 4, hoist * 12));
+      towLines.visible = gear.visible;
+      for (let i = 0; i < 2; i++) {
+        const side = i === 0 ? -1 : 1;
+        towPositions.set(
+          [
+            side * 0.55 * 2.175,
+            3.68 * 1.35,
+            -2.8 * 2.175,
+            side * 1.4 * 2.175,
+            -0.2 * 1.35 + hoist * 4,
+            -7 * 2.175 + hoist * 12,
+          ],
+          i * 6,
+        );
+      }
+      towGeometry.attributes.position.needsUpdate = true;
+      let count = 0;
+      const netFish = hauling ? 24 : [0, 2, 7, 16, 32][Math.max(0, Math.min(4, activity))];
+      for (let i = 0; i < netFish; i++) {
+        const a = i * 2.39996,
+          r = 0.3 + (i % 7) * 0.23;
+        const pour = hauling ? Math.max(0, Math.min(1, (haulAge - 2 - (i % 6) * 0.15) / 1.8)) : 0;
+        const jump = Math.pow(Math.max(0, Math.sin(time * 4.5 + i * 2.1)), 8);
+        pose.position.set(
+          Math.sin(a) * r,
+          0.16 + jump * 0.65 + hoist * 4,
+          -20 + Math.cos(a) * r + hoist * 12,
+        );
+        if (hauling) {
+          pose.position.y = pose.position.y * (1 - pour) + (1.38 + (i % 3) * 0.15) * pour;
+          pose.position.z = pose.position.z * (1 - pour) + (-3.7 + Math.cos(a)) * pour;
+        }
+        pose.rotation.set(
+          0.2 + jump * 1.1,
+          a + Math.sin(time * 8 + i) * 0.25,
+          Math.sin(time * 7 + i) * 0.4,
+        );
+        pose.scale.setScalar(1);
+        pose.updateMatrix();
+        fish.setMatrixAt(count++, pose.matrix);
+      }
+      // Piles fill insulated working-deck bins, leaving the helm and walkway clear.
+      const landed = Math.round(Math.max(0, Math.min(1, deckLoad)) * 60);
+      for (let i = 0; i < landed; i++) {
+        const side = i % 2 ? 1 : -1,
+          row = Math.floor(i / 2);
+        pose.position.set(
+          side * (1.6 + (row % 3) * 0.3),
+          1.72 + Math.floor(row / 9) * 0.18,
+          -1.3 - (Math.floor(row / 3) % 3) * 0.65,
+        );
+        pose.rotation.set(0, i * 2.4, Math.PI / 2);
+        pose.scale.setScalar(1.2);
+        pose.updateMatrix();
+        fish.setMatrixAt(count++, pose.matrix);
+      }
+      fish.count = count;
+      fish.visible = count > 0;
+      fish.instanceMatrix.needsUpdate = true;
     },
   };
 }

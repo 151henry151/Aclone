@@ -52,7 +52,7 @@
     "fuel": 0.012,
     "capacity": 240,
     "armour": 130,
-    "price": 180000,
+    "price": 240000,
     "color": "#407983",
     "hitch": 3,
     "collisionRadius": 1.72
@@ -428,12 +428,12 @@
     "acceleration": 1.5,
     "turn": 0.48,
     "fuel": 0.1111111111111111,
-    "capacity": 280,
+    "capacity": 3200,
     "armour": 100,
-    "price": 700000,
+    "price": 3000000,
     "color": "#356c87",
     "hitch": 0,
-    "tank": 144,
+    "tank": 3200,
     "collisionRadius": 3.7
   }
 ]

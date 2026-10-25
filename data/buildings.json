@@ -1449,7 +1449,7 @@
   "boathouse": {
     "name": "Boathouse",
     "price": 180000,
-    "capacity": 300,
+    "capacity": 4000,
     "buy": {
       "fuel": 4100,
       "cod": 5600,

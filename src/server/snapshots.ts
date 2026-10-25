@@ -1,3 +1,5 @@
+import { fishingOffers, fishingCrewCaptain, deckhands } from '../shared/fishing-expedition';
+import { visibleTrawl } from '../shared/commercial-fishing';
 import { vehiclePaint } from '../shared/appearance.ts';
 import { families, personalOffers, familyInvites } from '../shared/social.ts';
 import { repairRecipientReady } from '../shared/vehicle-services.ts';
@@ -61,6 +63,19 @@ export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
     departure: undefined,
+    crewOffers: fishingOffers(w, p),
+    crewBerth: (() => {
+      const c = fishingCrewCaptain(w, p);
+      return c
+        ? {
+            captain: c.id,
+            name: c.name,
+            share: c.fishingVoyage!.members[p.id],
+            stores: c.boatStores ?? {},
+          }
+        : undefined;
+    })(),
+    trawl: visibleTrawl(w, p),
     familyInvites: familyInvites(w, p),
     tradeOffers: personalOffers(w, p),
     statements: Object.fromEntries(
@@ -122,7 +137,11 @@ export function prepareFrame(w: World): Frame {
   const fields = serializeFields(common);
   const publicPlayers: Record<string, string> = {};
   for (const p of Object.values(players))
-    if (p.online)
+    if (
+      p.online ||
+      deckhands(w, p).length ||
+      (p.hitch && players[p.hitch]?.fishingVoyage?.members[p.id])
+    )
       publicPlayers[p.id] = JSON.stringify({
         id: p.id,
         name: p.name,
@@ -133,9 +152,10 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         flight: p.flight,
-        trawl: p.trawl ? { deployed: p.trawl.deployed } : undefined,
+        trawl: visibleTrawl(w, p),
         lastFlightCrash: p.lastFlightCrash,
         vehicle: p.vehicle,
+        hitch: p.hitch,
         canReceiveFuel: refuelRecipientReady(p),
         canReceiveRepair: repairRecipientReady(p),
         tractorPaint: vehiclePaint(p),

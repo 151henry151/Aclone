@@ -122,11 +122,46 @@ export function boatLandings(w: World): BoatLanding[] {
     }
   return docks;
 }
+/** Returning boats can come alongside the yard instead of hitting a tiny point.
+ * A water-only approach prevents reaching a berth through an intervening shore. */
+export function withinBoatLanding(
+  w: World,
+  p: Pick<Player, 'x' | 'z'>,
+  d: BoatLanding,
+  afloat: boolean,
+) {
+  const point = afloat ? d.berth : d.land;
+  const distance = Math.hypot(p.x - point.x, p.z - point.z);
+  if (distance > (afloat ? (d.building ? 30 : 14) : 5)) return false;
+  if (afloat) {
+    const steps = Math.max(1, Math.ceil(distance / 2));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      if (
+        terrainHeight(w, p.x + (point.x - p.x) * t, p.z + (point.z - p.z) * t) >
+        w.settings.seaLevel + 0.15
+      )
+        return false;
+    }
+  }
+  return true;
+}
 export function boatLanding(w: World, p: Pick<Player, 'x' | 'z'>, afloat: boolean, id?: unknown) {
-  return boatLandings(w).find(
-    (d) =>
-      (id === undefined || d.id === id || (id === fishingDock.id && !d.building)) &&
-      Math.hypot(p.x - (afloat ? d.berth.x : d.land.x), p.z - (afloat ? d.berth.z : d.land.z)) <= 5,
+  return boatLandings(w)
+    .filter(
+      (d) =>
+        (id === undefined || d.id === id || (id === fishingDock.id && !d.building)) &&
+        withinBoatLanding(w, p, d, afloat),
+    )
+    .sort(
+      (a, b) =>
+        Math.hypot(p.x - a.berth.x, p.z - a.berth.z) - Math.hypot(p.x - b.berth.x, p.z - b.berth.z),
+    )[0];
+}
+export function nearBoathouse(w: World, p: Pick<Player, 'x' | 'z' | 'vehicle'>, b: Building) {
+  return (
+    Math.hypot(p.x - b.x, p.z - b.z) < 40 ||
+    (boatSlot(p.vehicle) && !!boatLanding(w, p, true, b.id))
   );
 }
 export function landingBlocked(

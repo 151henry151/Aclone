@@ -4,7 +4,13 @@ import { vehicles, items } from '../src/shared/catalog';
 import assert from 'node:assert/strict';
 import { act, addPlayer, createWorld, makeBuilding, move } from '../src/shared/simulation';
 import { ensurePuddlewickBoatyard } from '../src/server/puddlewick-boatyard';
-import { boatLandings, boathouseSite } from '../src/shared/boathouse';
+import {
+  boatLandings,
+  boathouseSite,
+  boatLanding,
+  withinBoatLanding,
+  nearBoathouse,
+} from '../src/shared/boathouse';
 import { constructionSiteReason } from '../src/shared/construction-site';
 import { terrainHeight } from '../src/shared/terrain';
 import { travelHeight, fishingDock } from '../src/shared/dock';
@@ -153,16 +159,16 @@ test('rescue refuses nonempty tanks, duplicate launches and overloaded lifeboat 
 test('deep-water fishing stays afloat, grants weighted species only offshore and sells actual catches', () => {
   const { w, p, yard } = setup();
   vehicle(w, p, 3, yard.id);
-  Object.assign(p, { x: 0, z: 230, inventory: { tackle: 1 }, fuel: 20 });
+  Object.assign(p, { x: 0, z: 1400, inventory: { tackle: 1 }, fuel: 20 });
   assert.ok(deepBoatFishing(w, p));
   assert.equal(fishingCatch(w, p, 0.9), 'cod');
   assert.equal(fishingCatch(w, p, 0.97), 'halibut');
   assert.equal(fishingCatch(w, p, 0.999), 'tuna');
   act(w, p.id, { type: 'joinGame', game: 'fishing' });
-  assert.equal(p.z, 230);
+  assert.equal(p.z, 1400);
   move(w, p, { throttle: 1, steer: 1, boost: true }, 1);
   assert.equal(p.y, w.settings.seaLevel);
-  assert.equal(p.z, 230);
+  assert.equal(p.z, 1400);
   p.fishCatch = 'tuna';
   w.time = p.fishAt!;
   act(w, p.id, { type: 'reel' });
@@ -225,4 +231,42 @@ test('every public berth clears the enlarged hull and lands on solid ground or t
         );
     assert.ok(travelHeight(w, d.land.x, d.land.z) > w.settings.seaLevel, d.id);
   }
+});
+
+test('returning boats can disembark throughout the waterfront arrival area, but not from offshore or across land', () => {
+  const { w, p, d, yard } = setup();
+  vehicle(w, p, 3, yard.id);
+  for (const [dx, dz] of [
+    [22, 0],
+    [-22, 0],
+    [0, 25],
+    [18, 18],
+  ]) {
+    Object.assign(p, {
+      x: d.berth.x + dx,
+      z: d.berth.z + dz,
+      y: w.settings.seaLevel,
+      speed: 0,
+      vehicle: 3,
+    });
+    assert.equal(boatLanding(w, p, true, yard.id)?.id, yard.id);
+    assert.ok(nearBoathouse(w, p, yard));
+    vehicle(w, p, 5, yard.id);
+    assert.deepEqual({ x: p.x, z: p.z }, d.land);
+  }
+  Object.assign(p, {
+    x: d.berth.x,
+    z: d.berth.z + 35,
+    y: w.settings.seaLevel,
+    speed: 0,
+    vehicle: 3,
+  });
+  assert.equal(boatLanding(w, p, true, yard.id), undefined);
+  assert.throws(() => vehicle(w, p, 5, yard.id), /Visit/);
+  Object.assign(p, { x: d.berth.x, z: d.berth.z + 22, speed: 1 });
+  assert.throws(() => vehicle(w, p, 5, yard.id), /Stop/);
+  p.speed = 0;
+  w.terrain.push({ x: p.x, z: d.berth.z + 11, radius: 5, height: 50 });
+  w.revision++;
+  assert.equal(withinBoatLanding(w, p, d, true), false);
 });

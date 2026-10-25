@@ -1,3 +1,15 @@
+import {
+  expeditionAction,
+  vesselStoresWeight,
+  stockWeight,
+  boatLoadFactors,
+  voyageFuel,
+  boatPantry,
+  voyageMeals,
+  fishingCrewCaptain,
+  seaFish,
+  endVoyageOnDeath,
+} from './fishing-expedition';
 import { setSeafoodMenu } from './seafood';
 import { trawlAction, advanceTrawl, TRAWL_SPEED } from './commercial-fishing';
 import { FISHING_BOAT } from './boats';
@@ -6,6 +18,8 @@ import { LIFEBOAT, rescueAction } from './boat-rescue';
 import { landedFish, scheduleBite } from './boat-fishing';
 import {
   aboardBoat,
+  withinBoatLanding,
+  nearBoathouse,
   boatLanding,
   boatLandings,
   landingBlocked,
@@ -373,7 +387,10 @@ function owner(p: Player) {
 function nearby(w: World, p: Player, id: unknown) {
   const b = w.buildings.find((x) => x.id === id);
   requireThat(b, 'Building not found');
-  requireThat(distance(p, b) < (b.kind === 'boathouse' ? 40 : 18), 'Drive near the building first');
+  requireThat(
+    b.kind === 'boathouse' ? nearBoathouse(w, p, b) : distance(p, b) < 18,
+    'Drive near the building first',
+  );
   requireThat(!b.construction, 'Supply the construction materials first');
   return b;
 }
@@ -385,9 +402,9 @@ export function canCarry(p: Player, item: string, n: number, w?: World) {
   return !!def && carry(p, w) + def.weight * n <= vehicles[p.vehicle].capacity;
 }
 export function carry(p: Player, w?: World) {
-  return Object.entries(p.inventory).reduce(
-    (s, [k, n]) => s + (worldItems(w)[k]?.weight ?? 0) * n,
-    0,
+  return (
+    vesselStoresWeight(w, p) +
+    Object.entries(p.inventory).reduce((s, [k, n]) => s + (worldItems(w)[k]?.weight ?? 0) * n, 0)
   );
 }
 function stockAdd(stock: Stock, item: string, n: number) {
@@ -426,6 +443,8 @@ function usable(w: World, p: Player, item: string) {
   nutritionEffects(p, def);
   drinkAlcohol(p, item, w.time);
   stockAdd(p.inventory, item, -1);
+  if (p.vehicle === FISHING_BOAT && p.fishingVoyage && (def.food || def.drink))
+    p.fishingVoyage.expenses += p.fishingVoyage.provisionPrices[item] ?? 0;
 }
 // All request validation precedes mutation. The server additionally wraps actions in a transaction.
 export function act(w: World, id: string, a: Action): string {
@@ -434,6 +453,20 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  const crewCaptain = fishingCrewCaptain(w, p);
+  if (
+    crewCaptain &&
+    !['chat', 'use', 'detach', 'expedition', 'giveMoney', 'appearance', 'paint'].includes(type)
+  )
+    throw Error('You are aboard as a deckhand; wait until the expedition returns to port');
+  if (
+    Object.keys(p.fishingVoyage?.members ?? {}).length &&
+    seaFish.includes(String(a.item)) &&
+    ['trade', 'give', 'discard', 'offerTrade', 'stock', 'use'].includes(type)
+  )
+    throw Error(
+      'Settle the expedition at the boatyard to sell the crew catch and pay agreed shares',
+    );
   if (
     aboardBoat(w, p) &&
     (['crow', 'home', 'joinCombat'].includes(type) ||
@@ -529,6 +562,9 @@ export function act(w: World, id: string, a: Action): string {
       break;
     case 'seafoodMenu':
       result = setSeafoodMenu(w, p, nearby(w, p, a.building), a.menu);
+      break;
+    case 'expedition':
+      result = expeditionAction(w, p, a);
       break;
     case 'trawl':
       result = trawlAction(w, p, a.operation);
@@ -1178,10 +1214,7 @@ export function act(w: World, id: string, a: Action): string {
             (a.building === undefined ||
               d.id === a.building ||
               (!d.building && a.building === fishingDock.id)) &&
-            Math.hypot(
-              p.x - (poweredBoat(slot) ? d.land.x : d.berth.x),
-              p.z - (poweredBoat(slot) ? d.land.z : d.berth.z),
-            ) <= 5 &&
+            withinBoatLanding(w, p, d, !poweredBoat(slot)) &&
             (!poweredBoat(slot) || !moored || d.id === moored.landing),
         );
         landing = candidates.find((d) => !landingBlocked(w, d, p, poweredBoat(slot), slot));
@@ -1228,7 +1261,8 @@ export function act(w: World, id: string, a: Action): string {
         );
       }
       requireThat(
-        carry(p, w) <= vehicles[slot].capacity,
+        stockWeight(w, p.inventory) + (slot === FISHING_BOAT ? stockWeight(w, p.boatStores) : 0) <=
+          vehicles[slot].capacity,
         'Unload cargo before changing to a smaller vehicle',
       );
       let fleet = p.fleet ?? [0, 5];
@@ -1430,6 +1464,8 @@ export function act(w: World, id: string, a: Action): string {
       );
       stockAdd(p.inventory, catchId, 1);
       recordGathered(w, p, catchId, 1);
+      if (p.vehicle === FISHING_BOAT && p.fishingVoyage)
+        p.fishingVoyage.caught[catchId] = (p.fishingVoyage.caught[catchId] ?? 0) + 1;
       p.kudos++;
       scheduleBite(w, p);
       result = 'Caught ' + items[catchId].name + '.';
@@ -1751,6 +1787,10 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'hitch': {
+      requireThat(
+        w.players[String(a.player)]?.vehicle !== FISHING_BOAT,
+        'Join a fishing boat by accepting a deckhand offer',
+      );
       requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
       const target = w.players[String(a.player)];
       requireThat(
@@ -1783,6 +1823,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'detach': {
+      const captain = fishingCrewCaptain(w, p);
       if (p.hitch && boatSlot(w.players[p.hitch]?.vehicle ?? -1)) {
         const driver = w.players[p.hitch];
         const dock = boatLanding(w, driver, true, a.building);
@@ -1798,6 +1839,7 @@ export function act(w: World, id: string, a: Action): string {
         );
         Object.assign(p, land, { y: travelHeight(w, land.x, land.z), speed: 0 });
       }
+      if (captain && !captain.fishingVoyage!.departed) delete captain.fishingVoyage!.members[p.id];
       delete p.hitch;
       break;
     }
@@ -2123,8 +2165,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     : { speed: 1, grip: 1 };
   const crowSpeed = p.crowBody && p.crowClass ? crowClasses[p.crowClass].speed : 1;
   const trawling = p.vehicle === FISHING_BOAT && p.trawl?.deployed;
+  const loadFactors = boatLoadFactors(w, p),
+    fuelBefore = p.fuel;
   const cap =
     crowSpeed *
+    loadFactors.speed *
     (trawling ? TRAWL_SPEED : v.speed) *
     (input.boost && p.vehicle !== FISHING_BOAT ? 1.7 : 1) *
     tractorSurface(surface.speed, v.traction) *
@@ -2215,12 +2260,15 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       p.fuel -
         (Math.abs(p.speed) / v.speed) *
           v.fuel *
+          loadFactors.fuel *
           (input.boost && p.vehicle !== FISHING_BOAT ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
+  if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  endVoyageOnDeath(w, p);
   if (!comic) contractsOnDeath(w, p);
   if (!comic) p.needsGraceUntil = at + (w.settings.postDeathGraceSeconds ?? 0);
   if (!comic)
@@ -2369,7 +2417,12 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
       for (const boundary of [30000, 50000])
         if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
     }
-    if (current) feedShelterNow(w, p, current.stock, start + elapsed);
+    const pantry = current?.stock ?? boatPantry(w, p);
+    if (pantry) {
+      const before = { ...pantry };
+      feedShelterNow(w, p, pantry, start + elapsed);
+      if (!current) voyageMeals(w, p, before, pantry);
+    }
     const hungerRate = w.settings.hungerRate * (current ? 0.8 : 1),
       thirstRate = w.settings.thirstRate * (current ? 0.8 : 1);
     const starving = p.hunger >= 50000 || p.thirst >= 50000;
@@ -2378,7 +2431,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
     const duration = Math.min(
       seconds - elapsed,
       current ? current.until - start - elapsed : Infinity,
-      current ? nextShelterMeal(w, p, current.stock, hungerRate, thirstRate) : Infinity,
+      pantry ? nextShelterMeal(w, p, pantry, hungerRate, thirstRate) : Infinity,
       boundary(p.hunger, hungerRate),
       boundary(p.thirst, thirstRate),
       starving ? p.health / 6 : Infinity,
@@ -2532,6 +2585,8 @@ export function advance(w: World, seconds: number) {
       if (w.settings.fishingMode === 2 && canCarry(p, catchId, 1, w)) {
         stockAdd(p.inventory, catchId, 1);
         recordGathered(w, p, catchId, 1);
+        if (p.vehicle === FISHING_BOAT && p.fishingVoyage)
+          p.fishingVoyage.caught[catchId] = (p.fishingVoyage.caught[catchId] ?? 0) + 1;
       }
       scheduleBite(w, p, end);
     }

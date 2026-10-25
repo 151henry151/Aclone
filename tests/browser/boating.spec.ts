@@ -12,7 +12,7 @@ import { waitForWorld } from './fixtures/ready';
 test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescue work in the game', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1100, height: 760 });
+  await page.setViewportSize({ width: 1440, height: 900 });
   const dir = mkdtempSync(join(tmpdir(), 'aclone-boating-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
   const errors: string[] = [];
@@ -48,10 +48,20 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await expect.poll(() => p.vehicle).toBe(FISHING_BOAT);
     expect(p.fuel).toBe(144);
     await page.keyboard.press('Escape');
+    p.inventory = { bread: 10, water: 10 };
+    await page.keyboard.press('i');
+    await expect(
+      page.locator('[data-do="expedition"][data-id="store"][data-item="bread"]'),
+    ).toBeVisible();
+    await page.locator('#boat-store-quantity').fill('5');
+    await page.locator('[data-do="expedition"][data-id="store"][data-item="bread"]').click();
+    await expect.poll(() => p.boatStores?.bread ?? 0).toBe(5);
+    await page.screenshot({ path: 'test-results/fishing-provisions.png' });
+    await page.keyboard.press('Escape');
     // Move the fixture to open water; actual browser keys and the real server
-    // then exercise the throttle and towing. The unit test runs the full tow.
-    Object.assign(p, { x: 0, z: 400, y: w.settings.seaLevel, heading: 0, speed: 0 });
-    await expect(page.locator('#trawl-status')).toContainText('deep water');
+    // then exercise throttle and continuous catching; unit tests simulate long trips.
+    Object.assign(p, { x: 0, z: 1400, y: w.settings.seaLevel, heading: 0, speed: 0 });
+    await expect(page.locator('#trawl-status')).toContainText('Nets stowed');
     await page.keyboard.press('F4');
     await expect.poll(() => p.engine).toBe(true);
     await page.keyboard.down('w');
@@ -66,10 +76,29 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await expect.poll(() => p.trawl?.deployed).toBe(true);
     await expect.poll(() => p.trawl?.seconds ?? 0).toBeGreaterThan(0.1);
     await page.screenshot({ path: 'test-results/fishing-boat-trawling.png' });
-    p.trawl!.seconds = 719.8;
-    await expect(page.locator('#trawl-status')).toContainText('Catch ready');
+    p.trawl!.shoal = { ground: 0, nextChange: 1000, nextFish: 0.1 };
+    await expect.poll(() => p.trawl?.catch?.cod ?? 0).toBeGreaterThan(0);
+    await expect(page.locator('#trawl-status')).not.toContainText('cod');
+    await expect(page.locator('#trawl-status')).toContainText('Towing');
+    await expect(page.locator('#trawl-status')).not.toContainText('remaining');
+    expect(p.trawl!.seconds).toBeLessThan(60);
+    await page.screenshot({ path: 'test-results/fishing-continuous-catch.png' });
     await page.locator('#trawl-controls [data-id="haul"]').click();
     await expect.poll(() => p.inventory.cod ?? 0).toBeGreaterThan(0);
+    // Seed only the load for the visual/full-net state; hauling still uses the UI/server path.
+    p.trawl!.catch = { cod: 160 };
+    p.trawl!.netFull = true;
+    p.trawl!.deployed = false;
+    await expect(page.locator('#trawl-status')).toContainText('full');
+    await page.screenshot({ path: 'test-results/fishing-full-net.png' });
+    await page.locator('#trawl-controls [data-id="haul"]').click();
+    await expect.poll(() => p.inventory.cod ?? 0).toBeGreaterThan(160);
+    await page.waitForTimeout(2800);
+    await page.screenshot({ path: 'test-results/fishing-hauling.png' });
+    await page.keyboard.press('c');
+    await expect(page.locator('#trawl-throttle')).toContainText('°');
+    await page.screenshot({ path: 'test-results/fishing-helm-compass.png' });
+    await page.keyboard.press('c');
     await page.keyboard.press('b');
     await expect.poll(() => p.boatThrottle).toBe(0);
     Object.assign(p, { fuel: 0, speed: 0 });
@@ -85,7 +114,7 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     await page.keyboard.down('w');
     await expect.poll(() => Math.hypot(p.x - from.x, p.z - from.z)).toBeGreaterThan(2);
     await page.keyboard.up('w');
-    Object.assign(p, d.berth, { speed: 0 });
+    Object.assign(p, { x: d.berth.x, z: d.berth.z + 22, speed: 0 });
     await expect(page.locator('#target')).toContainText('Puddlewick boatyard');
     await page.keyboard.press('i');
     await page.getByRole('button', { name: 'Disembark on foot', exact: true }).click();

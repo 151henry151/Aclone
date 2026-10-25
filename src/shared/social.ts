@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { Action, Player, World } from './types.ts';
+import { seaFish } from './fishing-expedition';
 import { carry, log } from './simulation.ts';
 import { vehicles } from './catalog.ts';
 import { worldItems } from './world-catalogue.ts';
@@ -254,6 +255,10 @@ export function socialAction(w: World, p: Player, a: Action) {
     'Meet within 15 metres at the same height',
   );
   const total = o.quantity * o.price;
+  check(
+    !(Object.keys(seller.fishingVoyage?.members ?? {}).length && seaFish.includes(o.item)),
+    'Settle the fishing expedition before transferring the crew catch',
+  );
   check((seller.inventory[o.item] ?? 0) >= o.quantity, 'Seller no longer has enough stock');
   check(buyer.cash >= total, 'Buyer no longer has enough cash');
   check(Number.isSafeInteger(seller.cash + total), 'Seller cash limit reached');

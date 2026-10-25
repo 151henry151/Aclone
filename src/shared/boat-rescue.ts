@@ -1,3 +1,4 @@
+import { stockWeight } from './fishing-expedition';
 import { poweredBoat } from './boats';
 import { vehicles } from './catalog';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -102,7 +103,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   const defs = worldItems(w),
     capacity = vehicles[r.boat.slot].capacity;
   const cargoWeight = () =>
-    Object.entries(cargo).reduce((sum, [id, n]) => sum + n * (defs[id]?.weight ?? 0), 0);
+    Object.entries(cargo).reduce((sum, [id, n]) => sum + n * (defs[id]?.weight ?? 0), 0) +
+    (r.boat.slot === 30 ? stockWeight(w, p.boatStores) : 0);
   const oldFuel = p.fuelVehicle === r.boat.slot ? p.fuel : (p.parkedFuel?.[r.boat.slot] ?? 0);
   let poured = 0,
     fuel = oldFuel;

@@ -47,6 +47,7 @@ export function recordPlayerMoney(w: World, e: Ledger) {
   const earned = [
     'sale',
     'wage',
+    'deckhand profit share',
     'harvest wage',
     'labour task',
     'property sale',
