@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { batch } from './tractor';
+import { createFishingWheelhouse } from './fishing-wheelhouse';
 import { createHuman } from './human';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const textures = new Map<string, T.CanvasTexture>();
-function texture(kind: 'hull' | 'deck' | 'cabin' | 'net' | 'instruments', color: string) {
+function texture(kind: 'hull' | 'deck' | 'cabin' | 'net', color: string) {
   const key = kind + color;
   if (textures.has(key)) return textures.get(key)!;
   const c = document.createElement('canvas');
@@ -73,45 +74,6 @@ function texture(kind: 'hull' | 'deck' | 'cabin' | 'net' | 'instruments', color:
       g.lineTo(x - 512, 512);
       g.stroke();
     }
-  } else {
-    g.fillStyle = '#183b32';
-    g.fillRect(30, 30, 350, 300);
-    g.strokeStyle = '#6b9c7e';
-    g.lineWidth = 3;
-    for (let i = 0; i < 5; i++) {
-      g.beginPath();
-      g.arc(205, 180, 35 + i * 32, 0, Math.PI * 2);
-      g.stroke();
-    }
-    g.beginPath();
-    g.moveTo(205, 180);
-    g.lineTo(330, 90);
-    g.stroke();
-    for (let i = 0; i < 3; i++) {
-      const x = 490 + i * 180;
-      g.fillStyle = '#bbc3af';
-      g.beginPath();
-      g.arc(x, 150, 70, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = '#202e32';
-      g.beginPath();
-      g.arc(x, 150, 63, 0, Math.PI * 2);
-      g.fill();
-      g.strokeStyle = '#e9bc62';
-      g.lineWidth = 4;
-      g.beginPath();
-      g.moveTo(x, 150);
-      g.lineTo(x + 40, 120);
-      g.stroke();
-      g.fillStyle = '#e9dfbd';
-      g.font = '22px sans-serif';
-      g.textAlign = 'center';
-      g.fillText(['RPM', 'FUEL', 'TEMP'][i], x, 255);
-    }
-    g.fillStyle = '#e8ddbd';
-    g.font = '32px sans-serif';
-    g.textAlign = 'center';
-    g.fillText('NORTH STAR • MARINE DIESEL', 512, 405);
   }
   const t = new T.CanvasTexture(c);
   t.colorSpace = T.SRGBColorSpace;
@@ -163,9 +125,7 @@ export function createFishingBoat(color = '#356c87') {
   group.name = 'North Star commercial fishing boat';
   body.name = 'Fishing hull and fittings';
   group.add(body);
-  const helm = new T.Group();
-  group.add(helm);
-  let host = body;
+  const host = body;
   const paint = new T.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.2 });
   const cream = new T.MeshStandardMaterial({ color: '#e4dfc9', roughness: 0.7 });
   const iron = new T.MeshStandardMaterial({ color: '#263a3e', roughness: 0.7, metalness: 0.4 });
@@ -218,7 +178,9 @@ export function createFishingBoat(color = '#356c87') {
   add(deck, timber, 0, 0.84, 0);
   // Wheelhouse forward, open aft working deck. Windows are texture faces; a real
   // empty interior and slender pillars leave the first-person view unobstructed.
-  box(2.05, 0.75, 2.5, cream, 0, 1.23, 1.2);
+  // Hollow lower cabin: solid boxes here would bury the interior floor and chair.
+  for (const x of [-1, 1]) box(0.05, 0.75, 2.5, cream, x, 1.23, 1.2);
+  for (const z of [-0.025, 2.425]) box(2, 0.75, 0.05, cream, 0, 1.23, z);
   box(2.32, 0.16, 2.8, paint, 0, 2.92, 1.2);
   for (const x of [-1.02, 1.02])
     for (const z of [-0.05, 2.45]) box(0.09, 1.35, 0.09, cream, x, 2.22, z);
@@ -230,26 +192,6 @@ export function createFishingBoat(color = '#356c87') {
   // Hide the exterior glazing from the helm, like a one-sided window skin.
   const back = add(new T.PlaneGeometry(2.04, 1.25), panel, 0, 2.22, -0.056);
   back.rotation.y = Math.PI;
-  host = helm;
-  box(1.65, 0.12, 0.48, iron, 0, 1.84, 2.04);
-  const instruments = add(
-    new T.PlaneGeometry(1.45, 0.43),
-    new T.MeshStandardMaterial({ map: texture('instruments', '#273b3c') }),
-    0,
-    1.91,
-    1.83,
-  );
-  instruments.rotation.x = -0.55;
-  instruments.rotation.y = Math.PI;
-  const wheel = add(new T.TorusGeometry(0.25, 0.025, 6, 16), rope, 0, 1.85, 1.59);
-  wheel.rotation.x = 0.25;
-  for (let i = 0; i < 6; i++) {
-    const a = (i * Math.PI) / 3;
-    rod([0, 1.85, 1.59], [Math.sin(a) * 0.25, 1.85 + Math.cos(a) * 0.25, 1.59], 0.012, iron);
-  }
-  box(0.5, 0.08, 0.45, rope, 0, 1.27, 0.85);
-  box(0.09, 0.4, 0.09, iron, 0, 1.03, 0.85);
-  host = body;
   // Mast, lights, exhaust and gantry form a recognisable trawler silhouette.
   rod([0, 2.94, 1], [0, 4.55, 1], 0.065, cream);
   rod([-0.7, 4.05, 1], [0.7, 4.05, 1], 0.04, cream);
@@ -309,14 +251,14 @@ export function createFishingBoat(color = '#356c87') {
   body.scale.set(2.175, 1.35, 2.175);
   gear.scale.copy(body.scale);
   // Controls and crew stay human-sized in the enlarged wheelhouse.
-  helm.position.set(0, 1.3 * 0.35, 2.45 * 1.175);
-  batch(helm);
+  const cockpit = createFishingWheelhouse();
+  group.add(cockpit.group);
   const driver = createHuman('seated').group;
-  driver.position.set(0, 1.3 * 1.35, 0.85 + helm.position.z);
+  driver.position.set(0, 1.3 * 1.35, 2.6);
   group.add(driver);
   group.userData.driver = driver;
-  group.userData.eye = new T.Vector3(0, 1.3 * 1.35 + 0.92, 0.85 + helm.position.z);
-  group.userData.viewPitch = -0.04;
+  group.userData.eye = new T.Vector3(0, 1.3 * 1.35 + 0.92, 2.6);
+  group.userData.viewPitch = -0.12;
   group.userData.lamp = new T.Vector3(0, 3 * 1.35, 2.5 * 2.175);
   // One instanced mesh supplies the glimpses in the net, the pouring catch and
   // deck piles. Counts are deliberately illustrative, never a fish counter.
@@ -349,6 +291,7 @@ export function createFishingBoat(color = '#356c87') {
   group.add(towLines);
   return {
     group,
+    cockpit,
     animate(deployed: boolean, activity = 0, time = 0, haulAge = Infinity, deckLoad = 0) {
       const hauling = haulAge >= 0 && haulAge < 6;
       gear.visible = deployed || activity > 0 || hauling;

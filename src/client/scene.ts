@@ -1320,6 +1320,11 @@ export class GameScene {
       this.headlights.distance = vehicles[p.vehicle].lightRange ?? 110;
       const local = this.meshes.get(p.id);
       if (local) {
+        if (this.cameraMode === 1 && local.userData.fishingBoat)
+          local.userData.fishingBoat.cockpit.update(
+            { ...p, heading: local.rotation.y, speed: local.userData.pose?.speed ?? p.speed },
+            this.elapsed,
+          );
         if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed);
         if (this.cameraMode === 1 && local.userData.hovercraft)
           updateHovercraftInstruments(local.userData.hovercraft.group, p, this.elapsed);

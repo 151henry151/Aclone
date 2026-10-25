@@ -221,7 +221,9 @@ North Star costs 300s, with a 3,200-weight hold and 3,200-unit tank; at Puddlewi
 clock speed, that supports 21 game days (3½ real hours) of towing plus transit.
 The canal boat rises to 24s. Fish activity, hauling and deck piles are animated;
 fuel and cargo load affect performance. Ocean expansion preserves the existing
-island and properties. Boatyards also accept stopped arrivals within 30 metres
+island and properties. The revised wheelhouse includes a mounted compass and live
+marine instruments, a throttle lever, chart desk and furnished cabin, with readable
+instrument faces at night. Boatyards also accept stopped arrivals within 30 metres
 of their water berth, and ocean rendering follows boats far offshore. These
 changes are not yet deployed.
 

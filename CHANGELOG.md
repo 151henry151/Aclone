@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- A furnished North Star wheelhouse with a working mounted compass, live speed/fuel/throttle gauges, moving engine lever, low-light instrument faces, chart desk, radio, seating, floor and ceiling lining. The first-person seating position leaves the horizon and instruments visible together.
 - Commercial fishing expeditions with two voluntary deckhand berths, agreed shares of realised profit, shared boat provisions, dockside settlement and saved crew agreements. Deckhands eat automatically online or offline; online captains must eat manually.
 - Animated fish activity in the nets, a hauling-and-dumping sequence, visible landed fish piles and a heading compass in the fishing-boat HUD.
 

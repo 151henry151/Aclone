@@ -79,6 +79,11 @@ working deck, net drum, stern gantry, fish boxes, navigation mast and textured
 helm instruments. Static parts are batched; the trailing net uses a cutout
 texture rather than thousands of individual strands.
 
+The revised wheelhouse has a mounted compass and live speed (knots), throttle and
+fuel gauges, plus an animated throttle lever. The compass follows the boat's
+heading, not your mouse-look direction. Instrument faces remain readable at night.
+The radio and paper chart are cabin detail, not working communication or fish-finding tools.
+
 - Purchase: **300s** at the default 100d/s currency ratio. Existing owners keep their boats.
 - Hold: **3,200 weight**, shared by landed fish, provisions and carried goods.
 - Tank: **3,200 units**, filled with 400 Fuel items; **180s** at the default boatyard.

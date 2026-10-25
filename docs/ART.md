@@ -275,8 +275,19 @@ high-poly imported assets.
 The 20.4-metre North Star commercial fishing boat has a flared hull, forward wheelhouse,
 textured instruments and glazing, stern gantry, net drum, fish boxes, mast and
 fenders. Its trailing net is an alpha-tested texture. Static geometry is batched
-by material. Including its seated driver, the preview reports about 13,800
-triangles; its human-sized controls are batched separately from the enlarged hull (hidden deployed gear included). The emergency lifeboat
+by material. Including its seated driver and the furnished wheelhouse, the preview
+reports about 14,600 triangles; its human-sized controls are separate from the
+enlarged hull (hidden deployed gear included). The wheelhouse uses textured lining,
+rubber floor, a radio and chart desk, with batched window frames, chair and controls.
+The mounted compass and speed/fuel/throttle panel have private canvas textures,
+updated only for the local first-person skipper, at most ten times per second and
+only when readings change. Compass bearings use geographic north, matching the HUD;
+gauges show knots, throttle magnitude and fuel percentage. The lever shows ahead or
+astern throttle, and the panel reports an empty tank. Emissive faces keep readings
+visible at night without adding lights. Radio and paper chart are decorative.
+`npm run test:e2e -- tests/browser/fishing-wheelhouse.spec.ts` checks readings,
+texture isolation, forward sightline and model budget, and captures day/night and
+look-around views. The emergency lifeboat
 uses orange inflatable tubes, timber seats and animated oars. All are actual
 Three.js game models; no generated concept images are used for review.
 
