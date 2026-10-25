@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chaseOffset, lookPitchFromDrag } from '../src/client/camera-look.ts';
+import { PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import { vehicleGround } from '../src/client/vehicle-ground';
+import { cabView, chaseOffset, lookPitchFromDrag } from '../src/client/camera-look.ts';
 
 test('vertical drag tilts chase and first-person cameras, not the overhead view', () => {
   assert.equal(lookPitchFromDrag(0, 10, 0), 0.04);
@@ -27,4 +29,55 @@ test('chase camera keeps its default seat and orbits up or down with look pitch'
   const side = chaseOffset(Math.PI / 2, 1, false, 0);
   assert.ok(Math.abs(side.x + 21) < 1e-9);
   assert.ok(Math.abs(side.z) < 1e-9);
+});
+
+test('cab camera inherits uphill, downhill and side slopes while retaining local mouse look', () => {
+  for (const [dx, dz] of [
+    [0, 0],
+    [0, 0.4],
+    [0, -0.4],
+    [0.35, 0],
+    [-0.35, 0.25],
+  ]) {
+    for (const heading of [0, 0.7, Math.PI / 2, Math.PI]) {
+      const ground = vehicleGround(20, 30, heading, (x, z) => dx * x + dz * z);
+      const attitude = new Quaternion().setFromEuler(ground.rotation);
+      for (const [yaw, pitch] of [
+        [0, 0],
+        [0, -0.12],
+        [0.8, 0.5],
+        [-0.6, -0.4],
+      ]) {
+        const view = cabView(attitude, yaw, pitch);
+        const camera = new PerspectiveCamera();
+        camera.position.set(0, 0, 0);
+        camera.up.copy(view.up);
+        camera.lookAt(view.direction);
+        const localForward = camera
+          .getWorldDirection(new Vector3())
+          .applyQuaternion(attitude.clone().invert());
+        const expected = new Vector3(
+          Math.sin(yaw) * Math.cos(pitch),
+          Math.sin(pitch),
+          Math.cos(yaw) * Math.cos(pitch),
+        );
+        assert.ok(
+          localForward.distanceTo(expected) < 1e-9,
+          'look remains relative to the tilted cab',
+        );
+        const localRight = new Vector3(1, 0, 0)
+          .applyQuaternion(camera.quaternion)
+          .applyQuaternion(attitude.clone().invert());
+        assert.ok(
+          Math.abs(localRight.y) < 1e-9,
+          'dashboard stays level relative to the seated camera',
+        );
+        const normal = new Vector3(-dx, 1, -dz).normalize();
+        assert.ok(
+          view.up.distanceTo(normal) < 1e-9,
+          'camera up follows the ground-aligned tractor',
+        );
+      }
+    }
+  }
 });

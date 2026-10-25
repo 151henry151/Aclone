@@ -40,7 +40,7 @@ import {
 import { Precipitation } from './weather';
 import { GroundTracks, trackKind, wheelPrints } from './ground-tracks';
 import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
-import { chaseOffset, lookPitchFromDrag } from './camera-look';
+import { cabView, chaseOffset, lookPitchFromDrag } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
 import { freezeScenery } from './static-scene';
@@ -1336,6 +1336,10 @@ export class GameScene {
           direction.applyQuaternion(attitude).applyQuaternion(local.quaternion);
           this.target.copy(this.camera.position).addScaledVector(direction, 30);
           this.camera.up.applyQuaternion(attitude).applyQuaternion(local.quaternion);
+        } else if (this.cameraMode === 1 && isTractor(p.vehicle)) {
+          const view = cabView(local.quaternion, this.orbit, cockpitPitch);
+          this.target.copy(this.camera.position).addScaledVector(view.direction, 30);
+          this.camera.up.copy(view.up);
         }
         this.camera.lookAt(this.target);
         this.camera.getWorldDirection(this.audioFacing);

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { Vector3, type Quaternion } from 'three';
 /** Vertical look for chase and first-person cameras. Overhead stays top-down. */
 export const LOOK_PITCH_MIN = -1.1;
 export const LOOK_PITCH_MAX = 1.4;
@@ -21,5 +22,19 @@ export function chaseOffset(heading: number, zoom: number, walking: boolean, loo
     x: -Math.sin(heading) * horiz,
     y: radius * Math.sin(pitch),
     z: -Math.cos(heading) * horiz,
+  };
+}
+
+/** Look around in cab coordinates, then inherit the rendered vehicle's whole
+ * attitude. Using the same quaternion as the seat keeps pitch and roll aligned
+ * with the dashboard, including while steering or looking sideways on a slope. */
+export function cabView(attitude: Quaternion, yaw: number, pitch: number) {
+  return {
+    direction: new Vector3(
+      Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+      Math.cos(yaw) * Math.cos(pitch),
+    ).applyQuaternion(attitude),
+    up: new Vector3(0, 1, 0).applyQuaternion(attitude),
   };
 }

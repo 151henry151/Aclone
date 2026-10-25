@@ -182,6 +182,7 @@ Each owned machine can have its own saved paint colour; the garage preview shows
 the selected tractor’s finish. Repainting one leaves the others unchanged.
 First-person cockpits have textured interiors and working speed, fuel and condition
 gauges, with illuminated instruments, rounded dashboard tops and correctly tilted steering wheels.
+The seated view follows the tractor’s pitch and roll on hills, with mouse look relative to the cab.
 
 The [tractor fleet guide](docs/TRACTORS.md) covers tractor dimensions, cockpit controls and five specialist tractors alongside
 the reworked starter, with a garage model viewer and balanced trade-offs. Choose
