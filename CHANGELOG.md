@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.93.2] - 2026-10-24
+
+### Fixed
+
+- The circular gravel square in the starter town now behaves as road: tractors retain road traction, and snow displacement, drifts and tyre tracks respect its clear surface.
+
 ## [0.93.1] - 2026-10-24
 
 ### Fixed

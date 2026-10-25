@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.93.2 — Clear gravel in the town square
+
+The circular gravel square now behaves as road, matching its appearance. Tractors
+keep road traction across it, and snow cover, drifts and tyre tracks stay off its
+clear surface. Snow on the surrounding ground is unchanged. Reload after deployment.
+
 ## 0.93.1 — Seated camera and hangar lettering
 
 Tractor cockpit views follow the vehicle’s pitch and roll on hills. Mouse look

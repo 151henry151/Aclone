@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
-import { townRoads } from '../shared/town';
+import { townRoads, townSquare } from '../shared/town';
 import type { World } from '../shared/types';
 import { noiseTexture } from './noise';
 declare const __ACLONE_BASE__: string;
@@ -131,10 +131,13 @@ function roadTexture(w: World, region: GroundRegion) {
       Math.min(a.z, b.z) - pad <= region.z + region.size
     );
   });
+  const square = townSquare(w);
   const centre =
-    w.creator?.roads !== false &&
-    Math.abs(region.x + region.size / 2) < region.size &&
-    Math.abs(region.z + region.size / 2) < region.size;
+    square &&
+    square.x + square.radius >= region.x &&
+    square.x - square.radius <= region.x + region.size &&
+    square.z + square.radius >= region.z &&
+    square.z - square.radius <= region.z + region.size;
   // Open countryside has no lanes; share one black texel rather than a canvas per tile.
   if (!roads.length && !centre) return blankTexture([0, 0, 0, 255]);
   const canvas = document.createElement('canvas');
@@ -161,7 +164,13 @@ function roadTexture(w: World, region: GroundRegion) {
   if (centre) {
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(-region.x * scale, -region.z * scale, 13 * scale, 0, Math.PI * 2);
+    ctx.arc(
+      (square.x - region.x) * scale,
+      (square.z - region.z) * scale,
+      square.radius * scale,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   return canvasTexture(canvas);

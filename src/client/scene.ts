@@ -25,7 +25,7 @@ import { addLandscape } from './landscape-scene';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { creatorModel, animateCreatorModels } from './creator-model';
 import { GameAudio } from './audio';
-import { streetLights, townRoads, roadDistance } from '../shared/town';
+import { streetLights, townRoads, roadSurfaceDistance } from '../shared/town';
 import { TownLighting } from './lighting';
 import { FarmFields } from './fields';
 import { combatBases } from '../shared/combat';
@@ -1369,7 +1369,9 @@ export class GameScene {
               print.x,
               print.z,
               print.heading,
-              kind === 'snow' && roadDistance(roads, print.x, print.z) < 1 ? undefined : kind,
+              kind === 'snow' && roadSurfaceDistance(w, roads, print.x, print.z) < 1
+                ? undefined
+                : kind,
               Math.abs(q.speed) > 0.6,
               snowDepth(w.climate),
               print.width,

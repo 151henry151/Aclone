@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.93.2
+
+Deploy client and server together and reload browsers. The starter town’s circular
+gravel square now shares its surface footprint with driving traction and snow
+rendering. No world migration or weather reset is required. Verify that tractors
+cross the circle at road speed without leaving snow tracks, while adjacent snowy
+ground still slows travel and records tracks.
+
 ## Upgrade 0.93.1
 
 Client-only camera and sign-rendering fixes; no additional world migration or player

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
 import { roadConditions, snowDepth, WINTER_BASE_SNOW } from './environment.ts';
-import { roadDistance, townRoads } from './town.ts';
+import { roadSurfaceDistance, townRoads } from './town.ts';
 import { travelHeight } from './dock.ts';
 
 /** Rise/run along the tractor's forward axis, sampled across its wheelbase.
@@ -21,7 +21,7 @@ export function slopeSpeed(grade: number) {
  * road speed (formerly ~20–33%); a metre permits ~10%, with a 6% crawl floor. */
 export function drivingSurface(w: World, x: number, z: number) {
   const conditions = roadConditions(w);
-  const distance = roadDistance(townRoads(w), x, z);
+  const distance = roadSurfaceDistance(w, townRoads(w), x, z);
   const t = Math.max(0, Math.min(1, distance / 2));
   const offRoad = t * t * (3 - 2 * t);
   const depth = snowDepth(w.climate),

@@ -2,7 +2,7 @@
 import * as T from 'three';
 import type { World } from '../shared/types';
 import { buildingPlan } from '../shared/building-shapes';
-import { townRoads, roadDistance } from '../shared/town';
+import { townRoads, roadSurfaceDistance } from '../shared/town';
 import { terrainHeight } from '../shared/terrain';
 import { snowTrackHeight, snowSurfaceGrid } from './snow-surface';
 import { snowDepthVisual, snowCover } from './materials';
@@ -131,7 +131,7 @@ export class SnowAccumulation {
   private allowed(x: number, z: number) {
     return (
       terrainHeight(this.world, x, z) > this.world.settings.seaLevel + 0.2 &&
-      roadDistance(this.roads, x, z) > 0.08
+      roadSurfaceDistance(this.world, this.roads, x, z) > 0.08
     );
   }
   /** Query the same triangles the GPU lifts so tyres/shadows don't sink into a bank. */

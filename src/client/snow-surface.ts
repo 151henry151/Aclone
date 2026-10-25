@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
-import { roadDistance, townRoads } from '../shared/town';
+import { roadSurfaceDistance, townRoads } from '../shared/town';
 import { terrainHeight, mapHalf, legacyHalf } from '../shared/terrain';
 import { snowDepth } from '../shared/environment';
 
@@ -15,7 +15,7 @@ const smooth = (n: number) => {
 export function snowProfile(w: World) {
   const roads = townRoads(w);
   return (x: number, z: number, y = terrainHeight(w, x, z)) =>
-    smooth(roadDistance(roads, x, z) / 3) *
+    smooth(roadSurfaceDistance(w, roads, x, z) / 3) *
     smooth((y - w.settings.seaLevel) / 0.5) *
     (1 + 0.12 * Math.sin(x * 0.38 + Math.sin(z * 0.13)) * Math.cos(z * 0.31));
 }
