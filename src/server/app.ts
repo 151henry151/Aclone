@@ -1,3 +1,4 @@
+import { prepareAutomaticProvisions } from './automatic-provisions-rules';
 import { prepareBoatDeathRules } from './boat-death-rules';
 import { prepareFishingVoyages } from './fishing-voyages';
 import { integrateSeafood } from '../shared/seafood';
@@ -138,6 +139,7 @@ export async function createApp(options: AppOptions) {
   for (const { world, saved } of store.loadWorlds()) {
     restorePublicPuddlewick(world);
     governmentStores(world);
+    prepareAutomaticProvisions(world);
     for (const p of Object.values(world.players)) {
       p.online = false;
       playerStatistics(world, p);
@@ -170,6 +172,7 @@ export async function createApp(options: AppOptions) {
     const seafood = integrateSeafood(world);
     const voyages = prepareFishingVoyages(world);
     const boatDeath = prepareBoatDeathRules(world);
+    const provisions = prepareAutomaticProvisions(world);
     if (
       services ||
       government ||
@@ -179,6 +182,7 @@ export async function createApp(options: AppOptions) {
       seafood ||
       voyages ||
       boatDeath ||
+      provisions ||
       world.publicParishVersion
     )
       store.saveWorld(world);

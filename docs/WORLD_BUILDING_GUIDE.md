@@ -517,3 +517,9 @@ watch people play, then expand the parts they enjoy.
 For the complete option inventory and current limits, see the
 [creator reference](WORLD_BUILDING.md). For suggestions or examples, use the community's
 [world-building channel](https://discord.com/channels/1562183434254680175/1562195371487133746).
+
+## Automatic food and drink
+
+In **Editor → Rules → Automatic food and drink**, configure `autoConsumeInventory` (eat carried supplies online/offline anywhere), `autoConsumeHomeStock` (use the selected owned home or active private guest-room pantry while away), and `homeNeedsMultiplier` (0–1; 0 disables indoor drain, 1 gives no indoor benefit). Home stores always feed occupants automatically. Inventory and remote-home feeding default off for other worlds, preserving existing behavior. Puddlewick enables both once and uses a 0.8 indoor multiplier; later owner edits survive restarts.
+
+Only a valid owned home or unexpired private booking is eligible. Public lodging/business stock and another owner’s supplies are excluded. Boat crew still use their captain’s provisions first; the normal captain rule for boat stores remains offline-only. Inventory feeding also applies to online captains when enabled. The at-home provisions estimate follows these settings and includes carried supplies when available.

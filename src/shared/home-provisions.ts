@@ -2,6 +2,7 @@
 import type { Player, World } from './types';
 import { shelter } from './lodging';
 import { feedShelterNow, nextShelterMeal } from './nutrition';
+import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { worldItems } from './world-catalogue';
 
 export interface ProvisionEstimate {
@@ -15,15 +16,17 @@ export interface ProvisionEstimate {
 export function homeProvisions(w: World, p: Player): ProvisionEstimate | undefined {
   const home = shelter(w, p);
   if (!home) return;
-  const stock = { ...(p.roomPantries?.[home.b.id] ?? home.stock) };
+  const stocks = automaticPantries(w, p).map(({ stock }) => ({ ...stock }));
   const q = { ...p };
-  const foodRate = Math.max(0, w.settings.hungerRate) * 0.8;
-  const drinkRate = Math.max(0, w.settings.thirstRate) * 0.8;
+  const foodRate = Math.max(0, w.settings.hungerRate) * homeNeedsMultiplier(w);
+  const drinkRate = Math.max(0, w.settings.thirstRate) * homeNeedsMultiplier(w);
   if (!foodRate && !drinkRate) return { seconds: Infinity };
   const items = worldItems(w);
   const empty = () => {
     const has = (nutrient: 'food' | 'drink') =>
-      Object.entries(stock).some(([id, n]) => n > 0 && (items[id]?.[nutrient] ?? 0) > 0);
+      stocks.some((stock) =>
+        Object.entries(stock).some(([id, n]) => n > 0 && (items[id]?.[nutrient] ?? 0) > 0),
+      );
     const missing = [
       foodRate && !has('food') ? 'food' : '',
       drinkRate && !has('drink') ? 'drink' : '',
@@ -37,10 +40,12 @@ export function homeProvisions(w: World, p: Player): ProvisionEstimate | undefin
     if (seconds >= booking) return { seconds: booking, limit: 'booking' };
     for (const key of ['hunger', 'thirst'] as const)
       if (Math.abs(q[key] - 30000) < 1e-7) q[key] = 30000;
-    feedShelterNow(w, q, stock, w.time + seconds);
+    for (const stock of stocks) feedShelterNow(w, q, stock, w.time + seconds);
     const exhausted = empty();
     if (exhausted) return { seconds, exhausted };
-    const next = nextShelterMeal(w, q, stock, foodRate, drinkRate);
+    const next = Math.min(
+      ...stocks.map((stock) => nextShelterMeal(w, q, stock, foodRate, drinkRate)),
+    );
     if (!Number.isFinite(next) || next <= 0) return { seconds, limit: 'calculation' };
     seconds += next;
     q.hunger = Math.min(50000, q.hunger + next * foodRate);

@@ -23,6 +23,10 @@ export function homeProvisionsStatus(w: World, p: Player) {
     Math.floor(w.time / 10),
     w.settings.hungerRate,
     w.settings.thirstRate,
+    w.settings.homeNeedsMultiplier,
+    w.settings.autoConsumeInventory,
+    w.settings.autoConsumeHomeStock,
+    w.settings.autoConsumeInventory ? p.inventory : undefined,
     p.needsGraceUntil,
     home.until,
     p.roomPantries?.[home.b.id] ?? home.stock,
@@ -32,13 +36,13 @@ export function homeProvisionsStatus(w: World, p: Player) {
   const estimate = homeProvisions(w, p)!;
   const time = duration(estimate.seconds);
   cached = !Number.isFinite(estimate.seconds)
-    ? 'Food and drink needs are disabled here.'
+    ? 'Food and drink do not drain while you are at home.'
     : estimate.limit === 'booking'
       ? `Provisions cover your remaining stay (${time} real time). Renew your room before leaving.`
       : estimate.limit === 'calculation'
         ? `Provisions cover at least ${time} of real time at home.`
         : estimate.seconds === 0
-          ? `Your home is out of ${estimate.exhausted}. Restock before leaving.`
+          ? `Your available provisions are out of ${estimate.exhausted}. Restock before leaving.`
           : `Provisions run out in about ${time} of real time — ${estimate.exhausted} first.`;
   if (w.maintenance?.paused) cached += ' World paused; consumption is paused.';
   return cached;

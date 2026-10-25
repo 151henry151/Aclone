@@ -32,8 +32,7 @@ function expeditionContent(w: World, p: Player) {
   const defs = worldItems(w),
     v = p.fishingVoyage;
   if ((p.inventory.fuel ?? 0) > 0) html += button('Fill tank from carried Fuel', 'refuel');
-  html +=
-    '<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory and use them yourself. You eat automatically from these stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="10000" value="1"></label>';
+  html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? 'this world consumes carried meals automatically' : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="10000" value="1"></label>`;
   for (const [id, d] of Object.entries(defs).filter(([, d]) => d.food || d.drink)) {
     const held = p.inventory[id] ?? 0,
       stored = p.boatStores?.[id] ?? 0;

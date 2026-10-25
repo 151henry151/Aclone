@@ -33,6 +33,10 @@ test('world editor exposes boat death, cargo lifetime and fuel rules and saves t
     const loss = page.getByLabel('Lose all owned boats on death');
     await expect(loss).toBeChecked();
     await loss.uncheck();
+    await expect(page.getByLabel('Automatically eat and drink from inventory')).toBeChecked();
+    await expect(page.getByLabel('Use selected home stores while away')).toBeChecked();
+    await page.getByLabel('Use selected home stores while away').uncheck();
+    await page.getByLabel('Home needs multiplier').fill('0.5');
     await page.getByLabel('Recoverable cargo lifetime').fill('3');
     await page.getByLabel('Keep tank fuel in recoverable boats').uncheck();
     await page.screenshot({ path: 'test-results/boat-death-world-rules.png' });
@@ -40,6 +44,9 @@ test('world editor exposes boat death, cargo lifetime and fuel rules and saves t
     await expect.poll(() => w.settings.loseBoatsOnDeath).toBe(false);
     await expect.poll(() => w.settings.boatCargoSpoilageDays).toBe(3);
     await expect.poll(() => w.settings.retainBoatFuelOnDeath).toBe(false);
+    await expect.poll(() => w.settings.autoConsumeHomeStock).toBe(false);
+    await expect.poll(() => w.settings.homeNeedsMultiplier).toBe(0.5);
+    p.inventory = {};
     const home = makeBuilding('provisions-home', 'home', p.x, p.z);
     home.owner = p.id;
     home.stock = { bread: 3, water: 8 };

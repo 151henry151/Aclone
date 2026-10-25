@@ -5,10 +5,10 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 ## Your first day
 
 1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift normally pays 1d. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes; the button shows your current payment.
-2. Buy bread/water at Harbour stores and use them from Inventory. Variety reduces repeat-food penalties; keep fuel reserves too.
+2. Buy bread/water at Harbour stores. Puddlewick automatically eats and drinks from your inventory, online and offline; other worlds may require manual use. Variety reduces repeat-food penalties; keep fuel reserves too.
 3. Learn a profession at school: first qualification 80d/one real minute, later ones 160d/40 minutes, subject to skill limits.
 4. Take a job, or buy a business, stock inputs and fund wages. Puddlewick employment continues offline without renewal; other worlds may require **Work two cycles**. Qualified Puddlewick owners operate their factories unpaid. Actual successful production pays employee wages; signing up alone does not.
-5. Stock a cottage or rented room and enter before logging off. Hunger, thirst and starvation continue offline; provisions feed you automatically. **Go outside** restores movement.
+5. Keep provisions in inventory or your selected cottage/private rented room before logging off. Puddlewick feeds you from these supplies anywhere, even without a house. Going inside reduces hunger/thirst drain by 20%; other worlds may choose different rules. Hunger, thirst and starvation still continue offline if supplies run out. **Go outside** restores movement.
 
 Your employer and shift countdown appear on the HUD; the building panel also shows
 covered production checks. You can drive away while a shift runs. Renew during its
@@ -388,4 +388,12 @@ See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, co
 
 ## Home provision estimate
 
-While at home or in a rented room, the status below **At home · Go outside** estimates when food or drink will run out, whichever is first, in real-time hours and minutes. It uses the stored supplies and automatic eating/drinking rules, including the 20% slower need growth indoors and items that supply both food and drink. It does not add time until starvation or death. Restocking updates the estimate; disabled needs do not count as a shortage. A rented room warns if its booking ends before supplies run out. The estimate assumes you remain at home under the current world rules.
+While at home or in a rented room, the status below **At home · Go outside** estimates when food or drink will run out, whichever is first, in real-time hours and minutes. It uses home stores plus carried supplies when inventory feeding is enabled, the configured indoor needs multiplier (20% slower in Puddlewick), and items that supply both food and drink. It does not add time until starvation or death. Restocking updates the estimate; disabled needs do not count as a shortage. A rented room warns if its booking ends before supplies run out. The estimate assumes you remain at home under the current world rules.
+
+## Automatic meals
+
+Puddlewick eats and drinks from carried supplies automatically while online or offline, including during travel. If those cannot satisfy a need, it uses the stores of your selected owned home or unexpired private guest-room booking. Enter a home once to select it. A house is not required for inventory feeding. Business stockrooms and other players’ pantries are never used.
+
+Indoors, home supplies are used first, then inventory. Needs grow at 80% of the outdoor rate in Puddlewick; the savings apply only while actually inside. Automatic eating uses the same meal thresholds and food effects as home feeding, prefers nonalcoholic choices within each source, and spends real servings. Supplies can still run out. World owners can independently switch off inventory feeding or remote home feeding and adjust the indoor multiplier under **Editor → Rules → Automatic food and drink**.
+
+Boat crew continue to use their captain’s provisions first. Captains use boat stores automatically while offline; online captains can take provisions into inventory for automatic eating when this world permits it. The home estimate includes all supplies available while at home and excludes starvation/death time.

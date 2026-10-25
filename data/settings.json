@@ -51,5 +51,8 @@
   "crowAbilities": false,
   "loseBoatsOnDeath": false,
   "boatCargoSpoilageDays": 5,
-  "retainBoatFuelOnDeath": true
+  "retainBoatFuelOnDeath": true,
+  "autoConsumeInventory": false,
+  "autoConsumeHomeStock": false,
+  "homeNeedsMultiplier": 0.8
 }

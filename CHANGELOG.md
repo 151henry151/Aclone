@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Puddlewick automatically eats and drinks from inventory and selected home/private-room stores anywhere, online or offline. Configure each source and the indoor needs multiplier per world; home estimates include eligible carried supplies.
+
 - Configure boat loss on death, cargo spoilage and fuel retention per world. Puddlewick loses all owned boats on death; recovery worlds allow a lifeboat or passenger ride back to an offshore vessel.
 
 ### Added

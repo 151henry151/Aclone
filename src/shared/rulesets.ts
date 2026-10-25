@@ -45,7 +45,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
   return [
     s.hungerRate || s.thirstRate
-      ? `Needs continue offline (hunger ${s.hungerRate}/s, thirst ${s.thirstRate}/s). Stock food and water at home before leaving.`
+      ? `Needs continue offline (hunger ${s.hungerRate}/s, thirst ${s.thirstRate}/s). ${s.autoConsumeInventory ? 'Inventory food and drink are consumed automatically online and offline.' : 'Inventory eating is manual.'} ${s.autoConsumeHomeStock ? 'Your selected home supplies also feed you while away.' : 'Home stores feed you only while inside.'} At home, needs drain at ${Math.round((s.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
       : 'Hunger and thirst are disabled.',
     s.jobsEnabled === false
       ? 'Paid jobs are disabled.'

@@ -14,8 +14,9 @@ export function firstSteps(w: World, p: Player) {
       nearest('market') ?? w.buildings.find((b) => b.sell.water !== undefined && !b.construction);
     steps.push({
       title: 'Carry provisions',
-      detail:
-        'Buy food and water, then consume them from Inventory. Check prices and stock on arrival.',
+      detail: w.settings.autoConsumeInventory
+        ? 'Buy and carry food and water. This world eats and drinks from inventory automatically, online and offline. Check prices and stock on arrival.'
+        : 'Buy food and water, then consume them from Inventory. Check prices and stock on arrival.',
       destination: store?.id,
     });
   }
@@ -45,8 +46,8 @@ export function firstSteps(w: World, p: Player) {
   steps.push({
     title: home ? 'Prepare for logout' : 'Find shelter',
     detail: home
-      ? 'Put provisions in your home stockroom and go inside before leaving. Carried supplies are not an automatic pantry.'
-      : 'Save for a cottage or inspect an inn for a room. Offline survival follows this world’s rules.',
+      ? `Stock your selected home. ${w.settings.autoConsumeHomeStock ? 'These stores also feed you while away.' : 'Go inside to eat from home stores.'} ${w.settings.autoConsumeInventory ? 'Carried provisions are also consumed automatically.' : 'Carried supplies require manual eating.'} Indoors, needs drain at ${Math.round((w.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
+      : `Save for a cottage or inspect an inn for a room. ${w.settings.autoConsumeInventory ? 'Keep food and water in inventory: automatic meals work even without a home.' : 'Offline survival follows this world’s rules.'}`,
     destination: home?.id ?? (nearest('bnb') ?? nearest('hotel'))?.id,
   });
   steps.push({

@@ -1,3 +1,4 @@
+import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { changeBoatLighting } from './boat-lighting';
 import {
   expeditionAction,
@@ -5,7 +6,6 @@ import {
   stockWeight,
   boatLoadFactors,
   voyageFuel,
-  boatPantry,
   voyageMeals,
   fishingCrewCaptain,
   seaFish,
@@ -1711,6 +1711,7 @@ export function act(w: World, id: string, a: Action): string {
           ].includes(key)
         )
           num(v, 0, 100000000, true);
+        if (key === 'homeNeedsMultiplier') num(v, 0, 1);
         if (key === 'boatCargoSpoilageDays') num(v, 0, 365);
         if (key === 'postDeathGraceSeconds') num(v, 0, 86400, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
@@ -2435,21 +2436,22 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
       for (const boundary of [30000, 50000])
         if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
     }
-    const pantry = current?.stock ?? boatPantry(w, p);
-    if (pantry) {
-      const before = { ...pantry };
-      feedShelterNow(w, p, pantry, start + elapsed);
-      if (!current) voyageMeals(w, p, before, pantry);
+    const pantries = automaticPantries({ ...w, time: start + elapsed }, p);
+    for (const pantry of pantries) {
+      const before = pantry.boat ? { ...pantry.stock } : undefined;
+      feedShelterNow(w, p, pantry.stock, start + elapsed);
+      if (before) voyageMeals(w, p, before, pantry.stock);
     }
-    const hungerRate = w.settings.hungerRate * (current ? 0.8 : 1),
-      thirstRate = w.settings.thirstRate * (current ? 0.8 : 1);
+    const hungerRate = w.settings.hungerRate * (current ? homeNeedsMultiplier(w) : 1),
+      thirstRate = w.settings.thirstRate * (current ? homeNeedsMultiplier(w) : 1);
     const starving = p.hunger >= 50000 || p.thirst >= 50000;
     const boundary = (value: number, rate: number) =>
       value < 50000 && rate > 0 ? (50000 - value) / rate : Infinity;
     const duration = Math.min(
       seconds - elapsed,
       current ? current.until - start - elapsed : Infinity,
-      pantry ? nextShelterMeal(w, p, pantry, hungerRate, thirstRate) : Infinity,
+      ...pantries.map((pantry) => pantry.until - start - elapsed),
+      ...pantries.map((pantry) => nextShelterMeal(w, p, pantry.stock, hungerRate, thirstRate)),
       boundary(p.hunger, hungerRate),
       boundary(p.thirst, thirstRate),
       starving ? p.health / 6 : Infinity,

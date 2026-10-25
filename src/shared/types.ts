@@ -293,6 +293,9 @@ export interface Settings {
   seaLevel: number;
   /** Square map side in metres. The original village occupies the central 500 m. */
   mapSize: number;
+  autoConsumeInventory: boolean;
+  autoConsumeHomeStock: boolean;
+  homeNeedsMultiplier: number;
   hungerRate: number;
   thirstRate: number;
   maxAge: number;
@@ -308,6 +311,7 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  automaticProvisionsVersion?: 1;
   airfield?: import('./airfield').Airfield;
   /** Public works may relocate gathering sites, retaining depletion and task IDs. */
   resourceRelocations?: Record<string, { x: number; z: number }>;

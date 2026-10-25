@@ -74,9 +74,18 @@ export function closeCreatorPreview() {
 const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
-  const boatKeys = ['loseBoatsOnDeath', 'boatCargoSpoilageDays', 'retainBoatFuelOnDeath'];
+  const boatKeys = [
+    'loseBoatsOnDeath',
+    'boatCargoSpoilageDays',
+    'retainBoatFuelOnDeath',
+    'autoConsumeInventory',
+    'autoConsumeHomeStock',
+    'homeNeedsMultiplier',
+  ];
+  const provisions = `<fieldset class="boat-death-settings"><legend>Automatic food and drink</legend><label class="check"><input name="autoConsumeInventory" type="checkbox" ${settings.autoConsumeInventory ? 'checked' : ''}>Automatically eat and drink from inventory</label><label class="check"><input name="autoConsumeHomeStock" type="checkbox" ${settings.autoConsumeHomeStock ? 'checked' : ''}>Use selected home stores while away</label><p>Applies online and offline, including travel. Only your selected owned home or unexpired private guest-room pantry is used; business stock and other players’ supplies are excluded. At home, stored supplies are always eaten automatically.</p>${field('Home needs multiplier (0 = no drain; 1 = normal drain)', 'homeNeedsMultiplier', settings.homeNeedsMultiplier ?? 0.8, 'number', 'min="0" max="1" step="0.05"')}<p>0.8 means 20% slower hunger and thirst while inside a home. Boat crew still eat from their captain’s stores first; online captains use their inventory when enabled but must eat boat-store provisions manually.</p></fieldset>`;
   const boatRules = `<fieldset class="boat-death-settings"><legend>Boats and death</legend><label class="check"><input name="loseBoatsOnDeath" type="checkbox" ${settings.loseBoatsOnDeath ? 'checked' : ''}>Lose all owned boats on death</label><p>Includes stored and moored boats, their cargo, provisions and tank fuel. Untick to leave an offshore boat recoverable after its captain dies.</p>${field('Recoverable cargo lifetime (game days; 0 = never expires)', 'boatCargoSpoilageDays', settings.boatCargoSpoilageDays ?? 5, 'number', 'min="0" max="365" step="0.1"')}<label class="check"><input name="retainBoatFuelOnDeath" type="checkbox" ${settings.retainBoatFuelOnDeath !== false ? 'checked' : ''}>Keep tank fuel in recoverable boats</label><p>Cargo lifetime and fuel retention apply only when boats survive death. Existing abandoned cargo keeps the deadline assigned at death. Running out of fuel still allows recovery under either rule.</p></fieldset>`;
   return (
+    provisions +
     boatRules +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

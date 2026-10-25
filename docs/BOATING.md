@@ -117,7 +117,7 @@ progress survive the upgrade.
 
 The captain can put food and water into the boat stores and take them back.
 Stores stay aboard when disembarking and share the hold’s capacity. Online
-captains must take and use their own meals; offline captains eat automatically.
+captains must take boat-store provisions into inventory. In Puddlewick these carried meals are eaten automatically; worlds with inventory feeding disabled require manual use. Offline captains eat from boat stores automatically. Enabled remote-home feeding is available as a fallback too.
 Deckhands eat from the captain’s supplies automatically, online or offline, at
 the same normal need rates. Empty stores do not prevent hunger or thirst.
 
