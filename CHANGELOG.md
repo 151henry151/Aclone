@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.96.4] - 2026-10-26
+
+### Fixed
+
+- Fishing controls distinguish paused towing with an unhauled net from genuinely stowed nets. Collapsed and expanded controls now agree about whether fishing is active; refuelling alone does not resume towing.
+- Tractors trapped between overlapping building and equipment-yard collision areas can drive out again. Escape checks now use the exterior of the combined footprint, while still blocking entry from outside and movement deeper into walls.
+
 ## [0.96.3] - 2026-10-25
 
 ### Fixed

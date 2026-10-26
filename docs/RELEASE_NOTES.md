@@ -2,6 +2,21 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.96.4 — Worksite escape and fishing status
+
+Tractors caught between overlapping building walls and equipment yards can drive
+out again. Collision checks measure distance to the exterior of the combined
+footprint, while continuing to prevent entry into buildings and neighbouring walls.
+
+Fishing controls distinguish stopped towing with a retained, visible net from
+empty stowed nets. Collapsed and expanded controls agree about fishing status.
+Refuelling does not restart towing: choose **Deploy / resume nets**, or haul the
+catch aboard. Catch quantities remain hidden until hauling.
+
+Deploy client and server together, then reload. No world reset or migration is
+needed; existing property, catches and fuel are preserved. Validation includes
+1,091 passing tests, TypeScript, the production build and responsive website checks.
+
 ## 0.96.3 — Smoother driving
 
 Server updates now reconcile positions at the same instant, eliminating artificial

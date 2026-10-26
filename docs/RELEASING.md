@@ -2,6 +2,17 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.96.4
+
+Use the normal database backup, build and restart procedure, and publish the
+website version. Deploy client and server together and reload browsers so their
+collision checks agree. No world reset or data migration is required.
+
+Verify that tractors can leave overlapping worksite walls and equipment yards
+without driving through neighbouring buildings. Fishing controls must show paused
+towing for a retained net, and stowed nets after hauling; refuelling alone must
+not restart fishing. This release does not repeat any individual rescue or grant.
+
 ## Upgrade 0.96.3
 
 Use the normal backup, build and restart procedure, and publish the website version.
