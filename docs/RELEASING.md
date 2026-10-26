@@ -2,6 +2,17 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.98.0
+
+Use the normal database backup, build and restart procedure, and publish the
+website version. No data migration is required. Reload clients for the rebuilt
+trawl rig, angle-dependent water transparency, full-net alerts and compass fix.
+Existing catches, fuel, boats and fishing economics remain unchanged.
+
+Verify deployed and paused nets, retrieval/lifting/emptying/stowing, the underwater
+view and the persistent full-capacity indicator with controls collapsed. The
+hauling animation is cosmetic; catch transfer still happens immediately.
+
 ## Upgrade 0.97.0
 
 Use the normal database backup, build and restart procedure, and publish the

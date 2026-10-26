@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.97.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.98.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -14,7 +14,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 - Build an economy: gather materials, grow seven crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
-- Commercial fishing keeps an unhauled catch in the net when towing stops. Use **Deploy / resume nets** to restart fishing after refuelling, or **Haul catch & stow** to bring it aboard.
+- Commercial fishing keeps an unhauled catch in the net when towing stops. Use **Deploy / resume nets** to restart fishing after refuelling, or **Haul catch & stow** to bring it aboard. Full nets and holds trigger an alert and a highlighted status, including with the fishing controls collapsed.
 - Contextual controls show relevant vehicle/activity actions, explain seasonal planting limits, and separate personal property management from caretaker tools.
 - Board biplanes at Puddlewick’s public airfield hangar and practise on its marked runway. Crashes destroy one aircraft and show fire, sparks and smoke; spare airframes remain available at the hangar.
 - Choose among six distinct, individually paintable tractors with different cargo, speed, handling, tank and headlight strengths; preview and buy them at garages. Maintain vehicles with steel spare parts and garage or roadside service; optional world rules require advanced-vehicle licences and carried maps. Drive, fly, walk, fish, race, play Hornball/Ultrakricket, or join team combat and capture the flag. Combat-world creators can enable distinct robocrow classes with mark/recall abilities.
@@ -133,6 +133,8 @@ npm run test:e2e
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
 
+Version 0.98.0 rebuilds the commercial trawl with a complete submerged net, spreading boards and staged hauling animations. Water is clearer when viewed from above, and full nets/holds produce explicit alerts. Reload to load the update; catches, fuel and fishing economics are preserved.
+
 Version 0.97.0 adds a switchable topographic map with 10-metre contours and labelled 50-metre lines, plus smooth shorelines on both maps. Reload after deployment; the island terrain and driving behaviour are unchanged.
 
 Version 0.96.3 fixed small position pullbacks on server updates and unnecessary skipped frames from display-timing jitter. Reload after deployment to load the smoother movement. Movement regression checks include steady-speed driving with server updates arriving between 30/60 FPS frames, delayed network traffic, and frame scheduling on 60/120/144 Hz displays. These check motion consistency as well as average frame rate.
@@ -225,7 +227,9 @@ can select seafood recipes.
 Fishing includes continuous catches hidden until hauling, long offshore expeditions,
 voluntary deckhands and shared provisions. The North Star costs 300s, with a 3,200-weight hold and 3,200-unit tank; at Puddlewick’s
 clock speed, that supports 21 game days (3½ real hours) of towing plus transit.
-The canal boat costs 24s. Fish activity, hauling and deck piles are animated;
+The canal boat costs 24s. A complete trawl rig has spreading boards, floats and a
+closed catch bag, with animated pay-out, towing, retrieval and deck unloading. Fish
+activity and deck piles remain coarse visual cues;
 fuel and cargo load affect performance. Ocean expansion preserves the existing
 island and properties. The revised wheelhouse includes a mounted compass and live
 marine instruments, a throttle lever, chart desk and furnished cabin, with readable

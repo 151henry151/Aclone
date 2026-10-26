@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.98.0] - 2026-10-26
+
+### Changed
+
+- Commercial trawlers tow a complete net with a forward-facing mouth, tapered belly, closed catch bag, spreading boards, floats and weighted footrope. Gear pays out, flexes under tow and is retrieved, lifted, drained and emptied over the deck before stowing.
+- Ocean surfaces transmit more light when viewed from above, making submerged gear easier to see while retaining an opaque-looking horizon.
+
+### Fixed
+
+- Full fishing nets and holds now trigger an explicit alert, with a highlighted status that remains visible when fishing controls are collapsed. Repeated server updates do not repeat the alert; logging in with a full net also warns the skipper.
+- Fishing HUD compass headings stay between 000° and 359° after repeated turns, with a valid compass direction matching the wheelhouse compass.
+
 ## [0.97.0] - 2026-10-26
 
 ### Added

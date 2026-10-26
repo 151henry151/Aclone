@@ -2,6 +2,24 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.98.0 — Complete trawl rigs and clearer underwater views
+
+Commercial trawlers now tow a complete net with its wide mouth facing the boat,
+a tapered belly and a closed catch bag. Spreading boards, towing cables, floats
+and a weighted footrope complete the gear. Retrieval lifts and drains the bag,
+pours fish onto the deck and winds the gear away. These animations use bounded
+geometry and instanced details; fishing rewards and hauling timing are unchanged.
+
+Water becomes more transparent when viewed from above so submerged gear remains
+visible, while the horizon stays opaque-looking. Full nets and holds trigger an
+explicit alert and retain a highlighted status even with fishing controls
+collapsed. Compass headings remain valid after repeated turns. Catch quantities
+remain hidden until hauling.
+
+Reload after updating. No world reset or migration is needed. Validation includes
+1,097 passing tests, TypeScript, production builds, focused trawl and wheelhouse
+browser checks, and visual inspection of towing and the complete hauling sequence.
+
 ## 0.97.0 — Topographic maps and smooth coastlines
 
 The parish map can show hills and valleys with contours every 10 metres above
