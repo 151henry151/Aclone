@@ -4,7 +4,8 @@ import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
 import { TRAWL_FUEL_PER_SECOND } from '../shared/commercial-fishing';
-import { trawlStatus as fishingTrawlStatus } from './trawl-status';
+import { trawlStatus as fishingTrawlStatus, TrawlCapacityAlerts } from './trawl-status';
+import { nauticalHeadingLabel } from './nautical-heading';
 import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
@@ -333,13 +334,14 @@ function setChatRecipient(recipient?: { id: string; name: string }) {
     ? 'Message this AI resident…'
     : 'Enter to chat · *help for commands';
 }
-function toast(text: string, error = false) {
+function toast(text: string, error = false, duration = 5000) {
   $('toast').textContent = text;
   $('toast').className = error ? 'show error' : 'show';
   window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => ($('toast').className = ''), 5000);
+  toastTimer = window.setTimeout(() => ($('toast').className = ''), duration);
 }
 let toastTimer = 0;
+const trawlCapacityAlerts = new TrawlCapacityAlerts();
 function refreshSoundControls() {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-do="sound"]')) {
     button.textContent = sound.status;
@@ -449,6 +451,10 @@ async function connect() {
       );
       $('world-hud').hidden = !scene.ready;
       updateHud();
+      if (me) {
+        const alert = trawlCapacityAlerts.update(world!.id, me);
+        if (alert) toast(alert, false, 12000);
+      }
       refreshTradingPrices();
       if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
       if (msg.sequence !== undefined && ws?.readyState === WebSocket.OPEN)
@@ -890,18 +896,16 @@ function updateHud() {
   $('trawl-toggle').setAttribute('aria-expanded', String(trawlExpanded));
   $('fishing-control').classList.toggle('collapsed', commercial && !trawlExpanded);
   $('fishing-control').classList.toggle('commercial', commercial);
+  $('fishing-control').classList.toggle(
+    'capacity-alert',
+    commercial && !!(me.trawl?.netFull || me.trawl?.holdFull),
+  );
   if (commercial) {
     $('trawl-status').textContent = trawlStatus();
     $('trawl-toggle').textContent =
       `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${trawlStatus()}`;
-    $('trawl-throttle').textContent = `Heading ${Math.round(
-      (180 - (me.heading * 180) / Math.PI + 360) % 360,
-    )
-      .toString()
-      .padStart(
-        3,
-        '0',
-      )}° ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((180 - (me.heading * 180) / Math.PI + 360) % 360) / 45) % 8]} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicles[FISHING_BOAT].tank} · W/S adjust, A/D steer, B idle`;
+    $('trawl-throttle').textContent =
+      `Heading ${nauticalHeadingLabel(me.heading)} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicles[FISHING_BOAT].tank} · W/S adjust, A/D steer, B idle`;
   }
   $('fishing-control').hidden = (!fishing && !atDock && !commercial) || !!panel || !!mobile.drawer;
   $('fishing-cast').hidden = fishing || commercial;

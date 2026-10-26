@@ -1,6 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { trawlWater } from '../shared/commercial-fishing';
+import { FISHING_BOAT } from '../shared/boats';
 import type { Player, World } from '../shared/types';
+
+/** Announce authoritative capacity stops once, including on initial login.
+ * Keep this outside HUD rendering so prediction and repeated frames cannot alert. */
+export class TrawlCapacityAlerts {
+  private last = '';
+  update(worldId: string, p: Player) {
+    const message =
+      p.vehicle !== FISHING_BOAT || p.hitch
+        ? ''
+        : p.trawl?.netFull
+          ? 'Your fishing net is full. Towing has stopped — haul the catch aboard.'
+          : p.trawl?.holdFull
+            ? 'Your fishing boat has no room for more catch. Towing has stopped — haul and unload.'
+            : '';
+    const key = message ? JSON.stringify([worldId, p.id, p.trawl?.hauledAt, message]) : '';
+    const changed = key !== this.last;
+    this.last = key;
+    return changed ? message : '';
+  }
+}
 
 /** Use only the public net cue: catch quantities stay hidden until hauling. */
 export function trawlStatus(w: World, p: Player) {

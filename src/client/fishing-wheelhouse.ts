@@ -4,10 +4,10 @@ import { batch } from './tractor';
 import { vehicles } from '../shared/catalog';
 import { FISHING_BOAT } from '../shared/boats';
 import type { Player } from '../shared/types';
+import { nauticalHeading } from './nautical-heading';
+export { nauticalHeading } from './nautical-heading';
 
 type Reading = Pick<Player, 'heading' | 'speed' | 'fuel' | 'engine' | 'boatThrottle' | 'trawl'>;
-export const nauticalHeading = (heading: number) =>
-  (((180 - (heading * 180) / Math.PI) % 360) + 360) % 360;
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 function canvas(width: number, height: number) {
   const c = document.createElement('canvas');

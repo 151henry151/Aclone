@@ -2468,6 +2468,15 @@ button span {
 #fishing-control.commercial .fishing-buttons {
   display: none;
 }
+#fishing-control.commercial.capacity-alert {
+  border-color: #f4cc76;
+  box-shadow: 0 0 0 2px #f4cc7655;
+}
+#fishing-control.capacity-alert #trawl-toggle,
+#fishing-control.capacity-alert #trawl-status {
+  color: #ffe3a3;
+  font-weight: bold;
+}
 #trawl-toggle {
   text-align: left;
   min-height: 36px;
