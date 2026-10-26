@@ -110,8 +110,9 @@ deck; landed fish piles reflect the hold load. A compass appears in the helm HUD
 
 Conditions vary during a trip, with longer good or bad spells too. Pausing,
 hauling, docking or reconnecting does not reroll conditions. Offline time does
-not catch fish or advance the fishing clocks. Fuel exhaustion stows the net;
-you can still haul earned catches. Existing catches and paid partial legacy
+not catch fish or advance the fishing clocks. Fuel exhaustion stops towing;
+an unhauled catch remains in the visible net. Refuelling does not restart fishing:
+choose **Deploy / resume nets**, or **Haul catch & stow** to bring the catch aboard. Existing catches and paid partial legacy
 progress survive the upgrade.
 
 ### Provisions and deckhands

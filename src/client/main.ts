@@ -2,7 +2,8 @@ import { homeProvisionsStatus } from './home-provisions';
 import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
-import { TRAWL_FUEL_PER_SECOND, trawlWater } from '../shared/commercial-fishing';
+import { TRAWL_FUEL_PER_SECOND } from '../shared/commercial-fishing';
+import { trawlStatus as fishingTrawlStatus } from './trawl-status';
 import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
@@ -891,7 +892,7 @@ function updateHud() {
   if (commercial) {
     $('trawl-status').textContent = trawlStatus();
     $('trawl-toggle').textContent =
-      `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${me.trawl?.netFull ? 'Net full — haul catch' : me.trawl?.deployed ? 'Towing' : 'Nets stowed'}`;
+      `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${trawlStatus()}`;
     $('trawl-throttle').textContent = `Heading ${Math.round(
       (180 - (me.heading * 180) / Math.PI + 360) % 360,
     )
@@ -3457,13 +3458,7 @@ function boatControls(building?: string) {
 
 function trawlStatus() {
   if (!me || !world) return '';
-  const t = me.trawl;
-  if (t?.netFull) return 'Net full — haul it aboard';
-  if (t?.holdFull) return 'Hold limit reached — nets stowed';
-  if (!t?.deployed) return 'Nets stowed';
-  if (!me.engine || me.fuel <= 0) return 'Engine stopped';
-  if (!trawlWater(world, me)) return 'Not enough clear water for the nets';
-  return me.speed < 1 ? 'Move forward to tow' : 'Towing';
+  return fishingTrawlStatus(world, me);
 }
 function trawlControls() {
   if (!me || !world || me.vehicle !== FISHING_BOAT) return '';

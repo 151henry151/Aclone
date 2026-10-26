@@ -137,7 +137,9 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
   if (operation === 'stow') {
     need(t?.deployed, 'Your nets are already stowed');
     p.trawl = { ...t, deployed: false };
-    return 'Nets stowed. Keep your catch; haul it aboard whenever you want.';
+    return netWeight(w, t.catch) > 0
+      ? 'Towing stopped. Haul your catch aboard or deploy the nets to resume fishing.'
+      : 'Nets stowed.';
   }
   if (operation === 'haul') {
     need(t, 'Deploy the nets first');
