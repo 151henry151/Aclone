@@ -1,15 +1,21 @@
+import { jobTraining } from './job-training.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { pricingChoices } from './pricing.ts';
 import { housingChoices } from './housing.ts';
 import { household } from './household.ts';
-import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
 import { capitalChoices } from './prosperity.ts';
+import { fundProject } from './project-funding.ts';
 import { hayMerchantChoices } from './hay-merchant.ts';
 import { livestockInputs, livestockSupplyInputs } from '../../shared/livestock.ts';
 import { farmEnterprises } from './farm-enterprise.ts';
 import { constructionChoices } from './construction-projects.ts';
 import { careerChoices } from './projects.ts';
-import { productionBudget, usefulShift, inputStockTarget } from './business-policy.ts';
+import {
+  productionBudget,
+  usefulShift,
+  inputStockTarget,
+  procurementDraw,
+} from './business-policy.ts';
 import { householdBudget } from './household.ts';
 import { herdSpec, herdReady, acceptsHay } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -183,21 +189,9 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           ]),
           600,
         );
-      else if (
-        !p.learning &&
-        p.skills.length < w.settings.maxSkills &&
-        p.cash >= living + (p.skills.length ? 16000 : 8000)
-      ) {
-        const school = w.buildings.find((s) => s.kind === 'school' && !s.construction);
-        if (school)
-          add(
-            `${shortage ? 'Supply shortage! ' : ''}Train ${recipe.skill} for stocked, funded vacancy at ${b.name}; tuition ${p.skills.length ? 16000 : 8000}, duration ${p.skills.length ? 2400 : 60}s, wage ${b.wage}/cycle.`,
-            visitBuilding(p, school, [
-              act({ type: 'learn', building: school.id, skill: recipe.skill }),
-              { kind: 'wait', seconds: Math.min(600, p.skills.length ? 2400 : 60) },
-            ]),
-            600,
-          );
+      else {
+        const training = jobTraining(w, p, b);
+        if (training) list.push(training);
       }
     }
     if (
@@ -210,23 +204,47 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         .length < w.settings.maxBuildings
     ) {
       const deposit = Math.max(0, estimate.reserve - b.investment);
-      if (deposit <= 10_000_000 && p.cash >= propertyQuote(w, b).total + deposit + living)
+      const plan =
+        deposit <= 10_000_000
+          ? fundProject(w, p, propertyQuote(w, b).total + deposit + living, (funded) =>
+              visitBuilding(funded, b, [
+                act({ type: 'buyBuilding', building: b.id }),
+                ...(deposit
+                  ? [
+                      act({
+                        type: 'investment',
+                        building: b.id,
+                        direction: 'deposit',
+                        amount: deposit,
+                      }),
+                    ]
+                  : []),
+              ]),
+            )
+          : undefined;
+      if (plan)
         add(
-          `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, deposit ${deposit}, estimated batch margin ${estimate.margin}; purchase payback at least ${Math.ceil(propertyQuote(w, b).total / estimate.margin)} SOLD batches. Keep ${living} household reserve. Needs a ${recipe.skill} worker; sales depend on buyers.`,
-          visitBuilding(p, b, [
-            act({ type: 'buyBuilding', building: b.id }),
-            ...Array.from({ length: Math.ceil(deposit / 10_000_000) }, (_, i) =>
-              act({
-                type: 'investment',
-                building: b.id,
-                direction: 'deposit',
-                amount: Math.min(10_000_000, deposit - i * 10_000_000),
-              }),
-            ),
-          ]),
+          `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, deposit ${deposit}, estimated batch margin ${estimate.margin}; purchase payback at least ${Math.ceil(propertyQuote(w, b).total / estimate.margin)} SOLD batches. Keep ${living} household reserve. Draw only the shortfall from safely available capital/savings as part of this plan. Needs a ${recipe.skill} worker; sales depend on buyers.`,
+          plan,
         );
     }
     if (b.owner !== p.id) continue;
+    if (w.settings.ownerOperation && supplied && (productionBudget(w, b)?.idealMargin ?? -1) > 0) {
+      const training = jobTraining(w, p, b);
+      if (training) list.push(training);
+      else if (
+        job.qualified &&
+        w.settings.activeWork &&
+        !(b.ownerActiveUntil && b.ownerActiveUntil >= w.time + job.nextCycleInSeconds)
+      )
+        list.push({
+          id: `operate_owned_${b.id}`,
+          careerGoal: { kind: 'business', target: b.id },
+          description: `Operate my ${b.name} unpaid: renew my owner shift and let the stocked business produce.`,
+          plan: visitBuilding(p, b, [act({ type: 'work', building: b.id })]),
+          reconsiderSeconds: 600,
+        });
+    }
     const operating = productionBudget(w, b);
     const reserve = operating?.reserve ?? Math.max(20000, b.wage * 6);
     const bank = w.buildings.find((s) => s.kind === 'bank' && !s.construction);
@@ -262,23 +280,29 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           ],
         );
     }
-    const deposit = Math.min(
-      10_000_000,
-      Math.max(0, reserve - b.investment),
-      Math.max(0, p.cash - living),
-    );
-    if (deposit > 0 && estimate && estimate.margin >= 0 && (!operating || operating.margin >= 0))
-      add(
-        `Fund my ${b.name}: deposit ${deposit} for missing inputs and protected payroll; stock already held needs no replacement purchase.`,
-        visitBuilding(p, b, [
-          act({ type: 'investment', building: b.id, direction: 'deposit', amount: deposit }),
-        ]),
+    const deposit = Math.min(10_000_000, Math.max(0, reserve - b.investment));
+    if (deposit > 0 && estimate && estimate.margin >= 0 && (!operating || operating.margin >= 0)) {
+      const plan = fundProject(
+        w,
+        p,
+        living + deposit,
+        (funded) =>
+          visitBuilding(funded, b, [
+            act({ type: 'investment', building: b.id, direction: 'deposit', amount: deposit }),
+          ]),
+        [b.id],
       );
+      if (plan)
+        add(
+          `Fund my ${b.name}: deposit ${deposit} for missing inputs and protected payroll, using safe surplus/savings only for the shortfall; stock already held needs no replacement purchase.`,
+          plan,
+        );
+    }
     for (const [item, perBatch] of Object.entries({
       ...livestockSupplyInputs(w, b, recipe.inputs),
       ...(herd ? { [herd.animal]: herd.minimum } : {}),
     })) {
-      const target = inputStockTarget(b, item) ?? perBatch * (item === herd?.animal ? 1 : 6);
+      const target = inputStockTarget(b, item, w) ?? perBatch * (item === herd?.animal ? 1 : 6);
       const keep = item === 'water' ? 6 : item === 'bread' ? 3 : 0;
       const held = Math.min(
         Math.max(0, (p.inventory[item] ?? 0) - keep),
@@ -319,22 +343,17 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       const source = supplies[0];
       if (!source) continue;
       const { shop: seller, own, available, price } = source;
-      const payrollReserve =
-        3 * b.wage * Math.max(job.idealEmployees, job.activeEmployeesNextCycle);
-      const procurementCash = Math.min(
-        10_000_000,
-        ownerWithdrawable(w, b),
-        Math.max(0, b.investment - remainingClaim(b) - payrollReserve),
-      );
-      const personalSurplus = Math.max(0, p.cash - living);
       let n = Math.min(
         Math.max(0, target - (b.stock[item] ?? 0)),
         available,
         b.capacity - (b.stock[item] ?? 0),
-        price ? Math.floor((personalSurplus + procurementCash) / price) : 100,
       );
-      while (n > 0 && !canCarry(p, item, n, w)) n--;
-      const draw = Math.max(0, n * price - personalSurplus);
+      while (
+        n > 0 &&
+        (!canCarry(p, item, n, w) || procurementDraw(w, p, b, item, n, price) === undefined)
+      )
+        n--;
+      const draw = n ? procurementDraw(w, p, b, item, n, price)! : 0;
       if (n)
         add(
           own
@@ -439,6 +458,7 @@ export function economicMenu(
     if (c.description.includes('[Fits my')) n += 20;
     if (c.description.startsWith('Found a')) n += 110;
     if (c.id.startsWith('finish_')) n += 140;
+    if (c.id.startsWith('train_job_')) n += 100;
     if (
       c.plan.some(
         (s) =>

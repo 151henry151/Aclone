@@ -298,7 +298,7 @@ matter. Broader evaluations continue to compare net assets and health.
 NPCs compare active staffing with each factory's ideal crew before taking or renewing a shift. Extra workers help up to the ideal; overcrowding slows batches and raises payroll. Existing workers retain useful positions in roster order so an overcrowded crew does not all stop renewing at once. Planner observations include ideal staffing and expected speed; wage estimates distinguish completed batches from clock checks. Owner top-ups preserve meal
 money; output-export errands return receipts to operating capital. Owners can draw
 from surplus capital for a day of living costs and modest cottage savings, preserving
-three factory batches' missing inputs and payroll (or all purchased farm plots) and investor claims. These withdrawals
+the input replenishment target and six cycles of payroll (or all purchased farm plots) and investor claims. These withdrawals
 are transfers, not newly earned profit. Crop selection
 accounts for funded downstream shortages, farm stock, planted crops, seasons and
 rotation. Farming careers include study and seasonal plot work, keeping money for
@@ -306,17 +306,68 @@ harvest wages before buying more seeds or optional fertilizer. Seasonal farm own
 have separate funding, training, plot-work and crop-export plans; they are not
 estimated as automatic factories. Farmers consider hay demand and can buy more land only when current plots are busy, sales have occurred, customers are short, and living/seed reserves remain funded. All plot actions support sixteen plots. Cattle/sheep supply errands consider affordable hay from observed markets; pigs and chickens retain feed. Hay-barn merchants can acquire, fund and restock a modest 40-bale buffer for observed customers, rather than speculatively filling their entire warehouse. These policies do not alter human permissions, wages or production rules.
 
-Factory owners use a six-batch stock buffer reduced by finished output already held.
-At safe plan boundaries they can visit their business and pause input buying,
-then restore remembered bids below half the buffer if current payroll permits a
-nonnegative batch margin. Paused bids refuse deliveries instead
-of accepting free donations. This is purchasing behavior, not a hard inventory cap. Farms and livestock upkeep are exempt.
-Procurement, funding and price candidates share the buffer. Cash reserves exclude
-inputs already held, retain at least the ideal crew's payroll, and top-ups reject
-negative current-crew margins. Surplus workers may switch to a known funded job
-they already qualify for. Career reviews expire after a day; a completed home
-with an unaffordable pantry releases the resident to earn again, while ordinary
-survival and departure preparation continue.
+### Business continuity
+
+Factory owners keep input reserves separate from ordinary finished stock. The
+minimum buffer is six batches; measured lifetime output sales can raise it to two
+hours of observed demand, capped at 24 batches. This is a bounded heuristic, not a
+guaranteed demand forecast. Purchasing stops for a genuine finished-goods backlog
+(at least twelve batches, increasing with demand, and never above 75% of storage)
+or insufficient output space. Every coproduct is checked. Farms and livestock
+upkeep retain their specialist policies.
+
+Maintenance and exploratory planners share one purchasing implementation. Below
+half the input target, it can restore a paused quote or create a missing/legacy-zero
+quote from a stocked supplier the NPC has observed. A viable delivered quote includes
+round-trip fuel, a time allowance and at least an 8% price spread (minimum 1d).
+It must leave positive margin with the ideal crew and nonnegative margin with the
+current crew. If those costs cannot fit, the NPC must consider collecting supplies,
+repricing output or another opportunity; it does not force an unprofitable route.
+Remembered positive bids remain available when no stocked supplier is currently
+known. An explicit agreed buying pause survives restarts and all automatic bid
+planners. Quoted stock/price can still change before delivery.
+
+Before posting a bid, maintenance checks cash for a useful delivery and payroll;
+when necessary it deposits available personal funds while preserving living money.
+Retained business capital covers missing target inputs and six payroll cycles, plus
+protected investor claims before withdrawals. Stock already held is not purchased
+again. Direct supply runs can withdraw the exact purchase shortfall from input
+capital, replacing that cash with delivered stock while protecting other inputs,
+payroll and household money. Planning and execution use the same reserve rules.
+These are owner purchasing decisions, **not hard per-transaction inventory
+limits**; market sales and routine business visits still use ordinary game actions.
+
+Scheduled factory/farm owners return within 30 real minutes to check operations,
+even when their home has supplies for a longer absence. This also corrects old saved
+schedules. Operator pauses, world maintenance and configured empty-world sleeping
+still apply. At safe plan boundaries, purchasing and staffing upkeep execute locally
+without paid model calls. The owner travels to the business; offline production
+rules and physical action requirements are unchanged.
+
+Staffing maintenance opens economically useful vacancies and funds their operating
+reserves. Wage offers use catalogue and observed same-skill wages, bounded by the
+business's margin; they do not increase on every visit. Qualified owners can renew
+unpaid shifts, including through the NPC executor. Training choices retain the
+specific job or owned business as a career goal, account for prerequisites, total
+tuition and available skill slots, and recheck work after qualification. Other NPCs
+still choose whether to accept a job; this does not assign workers or grant skills.
+
+Business/farm acquisitions, new factories/cottages, farm expansion and factory
+funding can include ordinary withdrawals from owned-business surplus or bank savings
+in the same costed plan. They draw only the shortfall, preserve source operating
+capital and claims, obey property limits and leave household/startup reserves.
+Transfers are not income. Every owner withdrawal is checked again on arrival; if
+cash, claims or operating needs changed, the NPC must recalculate. Persistent career
+plans continue the chosen business after purchase or training.
+
+Regression coverage includes legacy zero bids, finished-stock buffers, profitable
+supplier deliveries, agreed pauses across planners, funded staffing, training/job
+continuation, costed acquisition, changing withdrawal reserves, saved offline-owner
+recovery with zero API budget and a 48-hour mechanical supply/production/payroll
+soak. The soak uses scripted customers and hauliers: it validates mechanics, **not**
+long-term autonomous Jev success. Live validation should compare paid input purchases,
+stockouts, wages/batches, useful staff, owner draws attached to projects, completed
+businesses and consolidated wealth over multiple days without player bailouts.
 
 To exercise the controller offline:
 

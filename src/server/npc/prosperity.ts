@@ -137,7 +137,7 @@ export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] 
       inputTargets: Object.fromEntries(
         [...new Set([...Object.keys(b.buy), ...Object.keys(b.pausedPrices?.buy ?? {})])].flatMap(
           (item) => {
-            const target = inputStockTarget(b, item);
+            const target = inputStockTarget(b, item, w);
             return target === undefined
               ? []
               : [[item, { held: b.stock[item] ?? 0, target, bid: b.buy[item] }]];

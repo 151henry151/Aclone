@@ -7,7 +7,7 @@ import {
 } from './business-requests.ts';
 import { checkHousingPurchase } from './housing.ts';
 import { savingChoices } from './ambitions.ts';
-import { planQuotes, changedQuote } from './execution.ts';
+import { planQuotes, changedQuote, checkOwnerCapitalAction } from './execution.ts';
 import {
   publicAddressees,
   mentionsName,
@@ -46,7 +46,13 @@ import { workplace, shiftBlocker } from './workplace.ts';
 import { startCareer, continueCareer, finishCareer, projectTrade } from './projects.ts';
 import { canKeepFishing, strandedCargo } from './cargo.ts';
 import { householdBudget } from './household.ts';
-import { ownerRoutine, ownerBidRoutine, cargoRelief } from './business-policy.ts';
+import {
+  ownerRoutine,
+  ownerBidRoutine,
+  ownerStaffingRoutine,
+  businessReturnDelay,
+  cargoRelief,
+} from './business-policy.ts';
 import { economicMenu, enterpriseChoices } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -476,11 +482,13 @@ export class Residents {
       const p = w.players[r.state.playerId],
         stats = this.actionStats(w, p, a);
       checkHousingPurchase(w, p, a);
+      checkOwnerCapitalAction(w, p, a, r.state.plan.slice(r.state.index + 1), r.state.tradeQuotes);
       checkCommitmentPrice(w, r.state, a);
       checkBusinessAction(w, p, r.state, a);
       if (a.type === 'job' || a.type === 'work') {
         const b = w.buildings.find((b) => b.id === a.building);
-        const blocked = b && shiftBlocker(w, p, b);
+        const operatingOwn = a.type === 'work' && b?.owner === p.id && w.settings.ownerOperation;
+        const blocked = b && !operatingOwn && shiftBlocker(w, p, b);
         if (blocked) throw Error(blocked);
       }
       // Plans travel before quitting. Recheck the promised vacancy locally before
@@ -1002,7 +1010,8 @@ export class Residents {
           now >= (r.ownerCheckAt ?? 0)
         ) {
           r.ownerCheckAt = now + 60000;
-          const plan = ownerBidRoutine(known, p, r.state);
+          const bids = ownerBidRoutine(known, p, r.state);
+          const plan = bids.length ? bids : ownerStaffingRoutine(known, p);
           if (plan.length && !plan.some((s) => blockedStep(r.state.recovery, s, w.time))) {
             r.state.plan = plan;
             r.state.index = 0;
@@ -1011,7 +1020,7 @@ export class Residents {
             r.state.routine = 'employment';
             r.state.needsDecision = false;
             r.wake = false;
-            this.checkpoint(r, w, 'owner-purchasing', { plan });
+            this.checkpoint(r, w, bids.length ? 'owner-purchasing' : 'owner-staffing', { plan });
             this.runStep(r, w, p, now);
             continue;
           }
@@ -1222,7 +1231,10 @@ export class Residents {
     const s = r.state.presence;
     if (!s) return false;
     if (s.phase === 'offline') {
-      if (now < s.nextAt) return true;
+      // Also applies to persisted absences scheduled before this policy existed.
+      const businessDue = businessReturnDelay(w, p, Infinity);
+      if (now < s.nextAt && w.time - p.lastSeen < businessDue) return true;
+      if (now < s.nextAt) s.shortVisit = true;
       beginVisit(s, r.config.id, r.config.habit, r.config.timeZone, now);
       r.state.plan = [];
       r.state.waitUntil = 0;
@@ -1260,12 +1272,12 @@ export class Residents {
       (now >= s.preparationUntil ||
         (now >= s.endsAt && ready.atHome && ready.stocked && ready.comfortable))
     ) {
-      const seconds = returnDelay(w, p, away);
+      const seconds = businessReturnDelay(w, p, returnDelay(w, p, away));
       s.phase = 'offline';
       s.nextAt = now + seconds * 1000;
       s.shortVisit = s.nextAt < s.nextRegularAt;
       s.reason = s.shortVisit
-        ? 'Returning sooner for food, water or shelter'
+        ? 'Returning sooner to check provisions and business operations'
         : 'At home until the next visit';
       r.active = false;
       r.busy?.abort();

@@ -1,6 +1,13 @@
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { canKeepFishing } from './cargo.ts';
-import { productionBudget, inputStockTarget } from './business-policy.ts';
+import {
+  productionBudget,
+  inputStockTarget,
+  ownerBidRoutine,
+  ownerStaffingRoutine,
+  retainedCapital,
+  procurementDraw,
+} from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldItems } from '../../shared/world-catalogue.ts';
 import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
@@ -16,7 +23,12 @@ import { workplace } from './workplace.ts';
 import { blockedStep } from './recovery.ts';
 import { operation } from './player-operations.ts';
 import { spareSupplies } from './strategy.ts';
-import { collectableReturn, ownerDrawNeed, ownerWithdrawable } from '../../shared/stakes.ts';
+import {
+  collectableReturn,
+  ownerDrawNeed,
+  ownerWithdrawable,
+  remainingClaim,
+} from '../../shared/stakes.ts';
 
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 
@@ -68,6 +80,22 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       reconsiderSeconds: 180,
     });
   };
+
+  const purchasing = ownerBidRoutine(w, p, structuredClone(state));
+  if (purchasing.length)
+    add(
+      'maintain purchasing',
+      'Maintain my business purchasing: protect stock and payroll reserves, and use viable delivered input prices.',
+      purchasing,
+    );
+
+  const staffing = ownerStaffingRoutine(w, p);
+  if (staffing.length)
+    add(
+      'maintain staffing',
+      'Maintain a funded, economically useful crew and competitive wages at my business.',
+      staffing,
+    );
 
   if (p.vehicle === 5 && p.fuel > 0)
     add('remount', 'Mount my tractor again; walking is slower and I still have fuel.', [
@@ -165,7 +193,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const recipe = b.production ?? recipes[b.recipe ?? ''];
     const postedBids = Object.entries(b.buy).filter(
       ([item, price]) =>
-        price > 0 && (b.stock[item] ?? 0) < (inputStockTarget(b, item) ?? b.capacity),
+        price > 0 && (b.stock[item] ?? 0) < (inputStockTarget(b, item, w) ?? b.capacity),
     );
     const cheapestBid = postedBids.length ? Math.min(...postedBids.map(([, price]) => price)) : 0;
     const budget = productionBudget(w, b);
@@ -189,7 +217,10 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         );
     }
     const need = ownerDrawNeed(w, p);
-    const available = ownerWithdrawable(w, b, true);
+    const available = Math.max(
+      0,
+      Math.min(ownerWithdrawable(w, b), b.investment - remainingClaim(b) - retainedCapital(w, b)),
+    );
     if (need > 0 && available > 0) {
       const amount = Math.min(10_000_000, need, available);
       add(
@@ -199,48 +230,11 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         amount,
       );
     }
-    if (recipe && b.kind !== 'farm') {
-      for (const item of Object.keys(livestockSupplyInputs(w, b, recipe.inputs))) {
-        const seller = w.buildings
-          .filter(
-            (s) =>
-              s.id !== b.id &&
-              !s.construction &&
-              (s.stock[item] ?? 0) > 0 &&
-              (s.sell[item] ?? 0) > 0,
-          )
-          .sort((a, c) => a.sell[item] - c.sell[item])[0];
-        if (!seller) continue;
-        if (
-          !(b.buy[item] > 0) &&
-          (b.stock[item] ?? 0) < (inputStockTarget(b, item) ?? b.capacity)
-        ) {
-          const price = seller.sell[item];
-          const reopening = productionBudget(w, { ...b, buy: { ...b.buy, [item]: price } });
-          if (reopening && reopening.margin < 0) continue;
-          add(
-            `post ${item} bid`,
-            `Experiment: post a ${item} bid of ${price} at my ${b.name} so neighbours can sell here.`,
-            visit(p, b, [operation('buildingAdmin', { building: b.id, item, side: 'buy', price })]),
-          );
-        }
-      }
-      if (!b.employees.length) {
-        const wage = Math.max(b.wage + 400, 2400);
-        const budget = productionBudget(w, b);
-        if (budget && budget.retailReceipts - budget.inputs - wage > 0 && b.investment >= 3 * wage)
-          add(
-            'raise wage',
-            `Experiment: raise ${b.name} wage to ${wage} so a qualified neighbour will work here.`,
-            visit(p, b, [operation('buildingAdmin', { building: b.id, wage })]),
-          );
-      }
-    }
     if (!recipe || b.kind === 'farm') continue;
     for (const [item, need] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
       const missing = Math.max(
         0,
-        Math.min(need * 2, inputStockTarget(b, item) ?? need * 2) - (b.stock[item] ?? 0),
+        Math.min(need * 2, inputStockTarget(b, item, w) ?? need * 2) - (b.stock[item] ?? 0),
       );
       if (missing <= 0) continue;
       const seller = w.buildings
@@ -251,28 +245,22 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         .sort((a, c) => a.sell[item] - c.sell[item])[0];
       if (!seller) continue;
       const price = seller.sell[item];
-      let cash = p.cash;
-      const plan: Step[] = [];
-      if (cash < price && ownerWithdrawable(w, b, true) >= price) {
-        const take = Math.min(10000, ownerWithdrawable(w, b, true), price * Math.min(4, missing));
-        plan.push(
-          ...visit(p, b, [
-            act({ type: 'investment', building: b.id, direction: 'withdraw', amount: take }),
-          ]),
-        );
-        cash += take;
-      }
-      const n = Math.min(
-        missing,
-        seller.stock[item],
-        affordableLoad(cash, price, 0, 8),
-        b.capacity - (b.stock[item] ?? 0),
-      );
+      let n = Math.min(missing, seller.stock[item], 8, b.capacity - (b.stock[item] ?? 0));
+      while (
+        n > 0 &&
+        (!canCarry(p, item, n, w) || procurementDraw(w, p, b, item, n, price) === undefined)
+      )
+        n--;
       if (n <= 0) continue;
+      const take = procurementDraw(w, p, b, item, n, price)!;
+      const plan: Step[] = take
+        ? visit(p, b, [
+            act({ type: 'investment', building: b.id, direction: 'withdraw', amount: take }),
+          ])
+        : [];
       plan.push(
-        ...visit(p, seller, [
-          act({ type: 'trade', building: seller.id, item, quantity: n, direction: 'buy' }),
-        ]),
+        ...(take ? [{ kind: 'travel' as const, destination: seller.id }] : visit(p, seller, [])),
+        act({ type: 'trade', building: seller.id, item, quantity: n, direction: 'buy' }),
         { kind: 'travel', destination: b.id },
         act({ type: 'stock', building: b.id, item, quantity: n, direction: 'deposit' }),
       );

@@ -69,7 +69,10 @@ test('an overstocked owner pauses paid input bids before another cash deposit an
   );
   b.stock = { flour: 1, bread: 0 };
   run(w, p, ownerBidRoutine(w, p, persisted));
-  assert.equal(b.buy.flour, 2100);
+  assert.ok(
+    b.buy.flour > w.buildings.find((s) => s.kind === 'mill')!.sell.flour,
+    'reopening updates the stale price to fund profitable delivery',
+  );
   assert.ok(productionBudget(w, b)!.reserve > 0);
 });
 test("stock policy does not halt livestock upkeep or alter another owner's prices", () => {

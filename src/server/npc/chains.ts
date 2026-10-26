@@ -1,5 +1,6 @@
+import { fundProject } from './project-funding.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { inputStockTarget, productionBudget } from './business-policy.ts';
+import { inputStockTarget, productionBudget, ownerBidRoutine } from './business-policy.ts';
 import { constructionSiteReason } from '../../shared/construction-site.ts';
 import { mapHalf, terrainHeight } from '../../shared/terrain.ts';
 import { onFarmLand } from '../../shared/farm-land.ts';
@@ -181,25 +182,25 @@ function inputAvailable(w: World, item: string, graph: Record<string, GoodLink>)
 
 function foundingSteps(w: World, p: Player, kind: string): Step[] | undefined {
   const def = worldBuildings(w)[kind];
-  if (!def || def.tier > w.tier || p.cash <= def.price + 20000) return;
+  if (!def || def.tier > w.tier) return;
   const location = pickBuildSite(w, p, kind);
   if (!location) return;
   const budget = constructionBudget(w, p, kind, location);
-  if (!budget || budget.total > p.cash) return;
+  if (!budget) return;
   const owned = w.buildings.filter(
     (b) =>
       (b.owner === p.id || b.operatingLease?.landlord === p.id) &&
       !['home', 'warehouse'].includes(b.kind),
   ).length;
   if (owned >= w.settings.maxBuildings) return;
-  return [
-    ...travelPrep(p),
+  return fundProject(w, p, budget.total, (funded) => [
+    ...travelPrep(funded),
     { kind: 'move', ...location },
     operation('construct', {
       kind,
       ...(kind === 'waterworks' ? location : {}),
     }),
-  ];
+  ]);
 }
 
 /** One legal next step per parish gap: found a missing kind, or post a missing bid. */
@@ -293,39 +294,12 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
     }
   }
 
-  const items = worldItems(w);
-  for (const b of w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government)) {
-    const recipe = buildingRecipe(b);
-    if (!recipe || b.kind === 'farm') continue;
-    for (const item of Object.keys(recipe.inputs)) {
-      if ((b.stock[item] ?? 0) >= (inputStockTarget(b, item) ?? b.capacity)) continue;
-      if ((b.buy[item] ?? 0) > 0) continue;
-      if (!localProducers(w, item, graph).length && !inputAvailable(w, item, graph)) continue;
-      const price = b.buy[item] || worldBuildings(w)[b.kind]?.buy[item] || items[item]?.price;
-      if (!price) continue;
-      const budget = productionBudget(w, { ...b, buy: { ...b.buy, [item]: price } });
-      if (budget && budget.margin < 0) continue;
-      const deposit = Math.min(
-        10_000_000,
-        Math.max(price * 4, 2000),
-        Math.max(0, p.cash - livingReserve(w, p)),
-      );
-      const steps: Step[] = [
-        ...travelPrep(p),
-        ...(distance(p, b) >= 14 ? [{ kind: 'travel' as const, destination: b.id }] : []),
-        operation('buildingAdmin', { building: b.id, item, side: 'buy', price }),
-      ];
-      if (deposit >= price && b.investment < price)
-        steps.push({
-          kind: 'act',
-          action: { type: 'investment', building: b.id, direction: 'deposit', amount: deposit },
-        });
-      add(
-        `Close the ${item} loop: post a ${item} bid of ${price} at my ${b.name} so neighbours can sell here.`,
-        steps,
-      );
-    }
-  }
+  const purchasing = ownerBidRoutine(w, p, structuredClone(state));
+  if (purchasing.length)
+    add(
+      'Maintain funded input bids with a viable delivery margin and bounded stock reserves.',
+      purchasing,
+    );
 
   return ideas;
 }

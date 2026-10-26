@@ -409,7 +409,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       for (const side of ['buy'] as const)
         for (const [item, price] of Object.entries(b[side]).slice(0, 8))
           for (const multiplier of [0.95, 1.05]) {
-            if (price <= 0 || (b.stock[item] ?? 0) >= (inputStockTarget(b, item) ?? b.capacity))
+            if (price <= 0 || (b.stock[item] ?? 0) >= (inputStockTarget(b, item, w) ?? b.capacity))
               continue;
             const quote = Math.round(price * multiplier);
             const budget = productionBudget(w, { ...b, buy: { ...b.buy, [item]: quote } });

@@ -81,7 +81,7 @@ export function economyChoices(
         ...(herdSpec(b) ? { [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 } : {}),
       })) {
         const missing = Math.min(
-          (inputStockTarget(b, item) ?? quantity * 2) - (b.stock[item] ?? 0),
+          (inputStockTarget(b, item, w) ?? quantity * 2) - (b.stock[item] ?? 0),
           b.capacity - (b.stock[item] ?? 0),
         );
         const seller = buildings
@@ -124,7 +124,7 @@ export function economyChoices(
         const n = Math.min(
           spareSupplies(p, item, w),
           b.capacity - (b.stock[item] ?? 0),
-          Math.max(0, (inputStockTarget(b, item) ?? quantity * 4) - (b.stock[item] ?? 0)),
+          Math.max(0, (inputStockTarget(b, item, w) ?? quantity * 4) - (b.stock[item] ?? 0)),
         );
         if (n > 0)
           add(
@@ -171,7 +171,7 @@ export function economyChoices(
     for (const item of Object.keys(recipe?.inputs ?? {}))
       if (
         (b.stock[item] ?? 0) <
-          Math.min(recipe.inputs[item] * 2, inputStockTarget(b, item) ?? Infinity) &&
+          Math.min(recipe.inputs[item] * 2, inputStockTarget(b, item, w) ?? Infinity) &&
         !(p.inventory[item] > 0) &&
         (productionBudget(w, b)?.idealMargin ?? -1) >= 0
       )

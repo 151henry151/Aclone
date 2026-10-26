@@ -1,3 +1,4 @@
+import { fundProject } from './project-funding.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../../shared/types.ts';
 import { worldBuildings } from '../../shared/world-catalogue.ts';
@@ -46,49 +47,38 @@ export function housingChoices(w: World, p: Player, away = 86400): FarmerChoice[
   const build = budget ? budget.total + Math.max(0, living - budget.living) : Infinity;
   const target = Math.min(purchase, build);
   if (!Number.isFinite(target)) return [];
-  if (p.cash < target) {
-    const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction);
-    const amount = Math.min(10_000_000, target - p.cash);
-    if (!bank || target - p.cash > p.bank) return [];
-    return [
-      {
-        id: 'housing_savings',
-        description: `Establish a home: withdraw ${amount} of my savings toward a fully costed ${target} home and pantry budget. This is a transfer, not income.`,
-        plan: visitBuilding(p, bank, [
+  if (purchase <= build && house) {
+    const plan = fundProject(w, p, purchase, (funded) =>
+      visitBuilding(funded, house, [
+        { kind: 'act', action: { type: 'buyBuilding', building: house.id } },
+      ]),
+    );
+    return plan
+      ? [
           {
-            kind: 'act',
-            action: { type: 'bank', building: bank.id, direction: 'withdraw', amount },
+            id: `housing_buy_${house.id}`,
+            description: `Establish a home: buy ${house.name} for ${purchase - living}, retaining ${living} for supplies; then stock it before logout.`,
+            careerGoal: { kind: 'housing', target: house.id },
+            plan,
           },
-        ]),
-      },
-    ];
+        ]
+      : [];
   }
-  if (purchase <= build && house)
-    return [
-      {
-        id: `housing_buy_${house.id}`,
-        description: `Establish a home: buy ${house.name} for ${purchase - living}, retaining ${living} for supplies; then stock it before logout.`,
-        careerGoal: { kind: 'housing', target: house.id },
-        plan: visitBuilding(p, house, [
-          { kind: 'act', action: { type: 'buyBuilding', building: house.id } },
-        ]),
-      },
-    ];
   if (!site || !budget || !worldBuildings(w).home || worldBuildings(w).home.tier > w.tier)
     return [];
-  return [
-    {
-      id: 'housing_build',
-      description: `Establish a home: build a cottage. Total budget ${build} includes materials ${budget.materialCost}, tax ${budget.tax} and pantry reserve ${living}. Complete deliveries before it can shelter me.`,
-      plan: [
-        ...travelPrep(p),
-        { kind: 'move', ...site },
-        operation('construct', {
-          kind: 'home',
-          style,
-        }),
-      ],
-      reconsiderSeconds: 600,
-    },
-  ];
+  const plan = fundProject(w, p, build, (funded) => [
+    ...travelPrep(funded),
+    { kind: 'move', ...site },
+    operation('construct', { kind: 'home', style }),
+  ]);
+  return plan
+    ? [
+        {
+          id: 'housing_build',
+          description: `Establish a home: build a cottage. Total budget ${build} includes materials ${budget.materialCost}, tax ${budget.tax} and pantry reserve ${living}. Complete deliveries before it can shelter me.`,
+          plan,
+          reconsiderSeconds: 600,
+        },
+      ]
+    : [];
 }

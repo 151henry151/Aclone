@@ -145,16 +145,14 @@ test('an owner whose sink has no bid is offered a posted price and till, not onl
   bakery.stock.flour = 0;
   bakery.stock.bread = 0; // Restocking is useful only without a finished-goods backlog.
   const ideas = [...inventChainPlans(w, p, state), ...inventHypotheses(w, p, state)];
-  const post = ideas.find(
-    (c) =>
-      /flour/.test(c.description) &&
-      c.plan.some(
-        (s) =>
-          s.kind === 'operation' &&
-          s.operation === 'buildingAdmin' &&
-          s.parameters.some((x) => x.name === 'item' && x.value === 'flour') &&
-          s.parameters.some((x) => x.name === 'side' && x.value === 'buy'),
-      ),
+  const post = ideas.find((c) =>
+    c.plan.some(
+      (s) =>
+        s.kind === 'operation' &&
+        s.operation === 'buildingAdmin' &&
+        s.parameters.some((x) => x.name === 'item' && x.value === 'flour') &&
+        s.parameters.some((x) => x.name === 'side' && x.value === 'buy'),
+    ),
   );
   assert.ok(post, 'owner should post a flour bid at the bakery');
   assert.ok(

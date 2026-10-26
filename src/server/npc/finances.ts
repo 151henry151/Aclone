@@ -38,7 +38,7 @@ export function financialBriefing(w: World, p: Player, state: ResidentState) {
             ...Object.keys(b.pausedPrices?.buy ?? {}),
           ]),
         ].map((item) => {
-          const target = inputStockTarget(b, item);
+          const target = inputStockTarget(b, item, w);
           const bid = b.buy[item];
           const remembered =
             state.pausedInputBids?.world === w.id && state.pausedInputBids.deaths === p.deaths
@@ -69,8 +69,8 @@ export function financialBriefing(w: World, p: Player, state: ResidentState) {
                 : target === undefined
                   ? 'No automatic recipe-buffer target.'
                   : (b.stock[item] ?? 0) >= target
-                    ? 'Enough input or finished output for the six-batch buffer; pause purchasing and find output buyers.'
-                    : 'Below target; a paused bid can reopen below half target if replacement production is viable.',
+                    ? 'Input reserve is stocked, or finished goods are genuinely backed up; pause purchasing and find output buyers.'
+                    : 'Below target; replenish below half target using a funded, profitable delivery quote. Input reserves are separate from ordinary finished stock and grow with observed sales.',
             observedSupplier: supplier
               ? {
                   building: supplier.id,

@@ -65,9 +65,14 @@ test('building requires observed materials and full budget; savings can bridge a
   p.cash = 100;
   p.bank = 1_500_000;
   const choice = housingChoices(w, p)[0];
-  assert.equal(choice.id, 'housing_savings');
+  assert.equal(choice.id, 'housing_build');
+  assert.ok(choice.plan.some((s) => s.kind === 'act' && s.action.type === 'bank'));
   const total = p.cash + p.bank;
-  run(choice.plan);
+  const foundation = choice.plan.findIndex(
+    (s) => s.kind === 'operation' && s.operation === 'construct',
+  );
+  assert.ok(foundation > 0);
+  run(choice.plan.slice(0, foundation));
   assert.equal(p.cash + p.bank, total);
   assert.ok(
     housingChoices(w, p)[0].plan.some((s) => s.kind === 'operation' && s.operation === 'construct'),

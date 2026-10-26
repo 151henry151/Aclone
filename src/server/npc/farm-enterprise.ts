@@ -1,3 +1,4 @@
+import { fundProject } from './project-funding.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../../shared/farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { calendar, DAY_SECONDS } from '../../shared/environment.ts';
@@ -47,27 +48,31 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
         (s) => s.owner === p.id && !['home', 'warehouse'].includes(s.kind),
       ).length;
       const deposit = Math.max(0, reserve - b.investment);
-      if (
-        (!b.owner || b.forSale) &&
-        count < w.settings.maxBuildings &&
-        deposit <= 10_000_000 &&
-        p.cash >= propertyQuote(w, b).total + deposit + living
-      )
-        add(
-          `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, seed and harvest deposit ${deposit}. Seasonal crops require tending, harvesting and buyers; they are not automatic wheat batches.`,
-          visitBuilding(p, b, [
+      if ((!b.owner || b.forSale) && count < w.settings.maxBuildings && deposit <= 10_000_000) {
+        const plan = fundProject(w, p, propertyQuote(w, b).total + deposit + living, (funded) =>
+          visitBuilding(funded, b, [
             { kind: 'act', action: { type: 'buyBuilding', building: b.id } },
-            ...Array.from({ length: Math.ceil(deposit / 10_000_000) }, (_, i): Step => ({
-              kind: 'act',
-              action: {
-                type: 'investment',
-                building: b.id,
-                direction: 'deposit',
-                amount: Math.min(10_000_000, deposit - i * 10_000_000),
-              },
-            })),
+            ...(deposit
+              ? [
+                  {
+                    kind: 'act' as const,
+                    action: {
+                      type: 'investment' as const,
+                      building: b.id,
+                      direction: 'deposit' as const,
+                      amount: deposit,
+                    },
+                  },
+                ]
+              : []),
           ]),
         );
+        if (plan)
+          add(
+            `Acquire and fund ${b.name}: price ${propertyQuote(w, b).total}, seed and harvest deposit ${deposit}. Draw only the shortfall from safe surplus/savings; seasonal crops require tending, harvesting and buyers.`,
+            plan,
+          );
+      }
       continue;
     }
     const deposit = Math.min(
@@ -92,7 +97,6 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       (b.plots ?? []).filter((plot) => plot.crop).length === farmPlotCount(b) &&
       (b.accounts?.receipts ?? 0) > 0 &&
       b.investment >= reserve &&
-      p.cash >= living + reserve + farmExpansionCost(b) &&
       !farmExpansionBlocker(w, b) &&
       growing.some(([item]) =>
         w.buildings.some(
@@ -103,16 +107,21 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
             (s.stock[item] ?? 0) < 20,
         ),
       )
-    )
-      add(
-        `Expand my busy ${b.name} by four plots for ${farmExpansionCost(b)}, preserving household and crop capital.`,
-        visitBuilding(p, b, [
+    ) {
+      const plan = fundProject(w, p, living + reserve + farmExpansionCost(b), (funded) =>
+        visitBuilding(funded, b, [
           {
             kind: 'act',
             action: { type: 'farm', building: b.id, operation: 'expand', plot: 0, crop: null },
           },
         ]),
       );
+      if (plan)
+        add(
+          `Expand my busy ${b.name} by four plots for ${farmExpansionCost(b)}, preserving household and crop capital and drawing only the funding shortfall.`,
+          plan,
+        );
+    }
     if (p.skills.includes('farmer')) {
       const plan = farmDuty(w, p, b, { plan: [], index: 0 } as unknown as ResidentState);
       add(

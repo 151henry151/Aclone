@@ -277,7 +277,7 @@ test('startup and operating budgets cover a full crew and starter livestock', ()
   mill.stock.wheat = 500;
   assert.equal(
     productionBudget(w, mill)!.reserve,
-    3 * budget.idealWorkers * mill.wage,
+    6 * budget.idealWorkers * mill.wage,
     'held inputs already fund production; retain cash for the crew, not duplicate stock',
   );
   const shop = w.buildings.find((b) => b.kind === 'market')!;

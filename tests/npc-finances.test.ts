@@ -92,8 +92,8 @@ test('Finch financial facts separate 479s cash from inventory and old negative c
     (b.investment - 2268 - retainedCapital(w, b)) / 100,
   );
   assert.equal(f.businesses[0].purchasing[0].acceptingDeliveries, false);
-  assert.equal(f.businesses[0].purchasing[0].target, 0);
-  assert.match(f.businesses[0].purchasing[0].policy, /finished output/);
+  assert.equal(f.businesses[0].purchasing[0].target, 12);
+  assert.match(f.businesses[0].purchasing[0].policy, /Input reserve/);
   const stockValue = f.businesses[0].stockCatalogueValueDenarii;
   b.stock.flour *= 2;
   assert.equal(financialBriefing(w, p, state).businesses[0].tillCash.denarii, 47893.3);

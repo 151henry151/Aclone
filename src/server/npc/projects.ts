@@ -1,8 +1,8 @@
+import { jobTraining } from './job-training.ts';
 import { liquidCapital, netAssets } from './wealth.ts';
 import { offlineReadiness } from './homecoming.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
-import { skillLesson } from '../../shared/world-catalogue.ts';
 import { portableReserve } from './cargo.ts';
 import { farmDuty } from './farmer.ts';
 import { vehicles, recipes } from '../../shared/catalog.ts';
@@ -262,25 +262,8 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     const job = workplace(w, p, b)!;
     if (shiftBlocker(w, p, b)) continue;
     if (!p.skills.includes(recipe.skill)) {
-      const school = shops.find((b) => b.kind === 'school');
-      let skill = recipe.skill;
-      for (let i = 0; i < 20; i++) {
-        const next = skillLesson(w, p, skill).prerequisites.find((s) => !p.skills.includes(s));
-        if (!next) break;
-        skill = next;
-      }
-      const tuition = skillLesson(w, p, skill).price;
-      if (!school || p.skills.length >= w.settings.maxSkills || p.cash - tuition < reserve)
-        continue;
-      add(
-        { kind: 'employment', target: b.id },
-        `Employment career: learn ${skill} for a funded vacancy at ${b.name}, then take the job and follow this world’s shift policy. Tuition ${tuition}; wage ${b.wage}. Supplement wages with hauling or public work to cover living costs.`,
-        visitBuilding(p, school, [
-          act({ type: 'learn', building: school.id, skill }),
-          { kind: 'wait', seconds: 60 },
-        ]),
-        -tuition,
-      );
+      const training = jobTraining(w, p, b);
+      if (training) result.push(training);
     } else if (b.kind === 'farm' && p.job === b.id) {
       const duty = farmDuty(w, p, b, state);
       if (duty.length)
