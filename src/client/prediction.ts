@@ -43,6 +43,10 @@ export class LocalPrediction {
     const previous = this.player;
     const jump = previous && Math.hypot(p.x - previous.x, p.z - previous.z) > 12;
     const reset = signature !== this.signature || now - this.receivedAt > 1500 || jump;
+    // Reconcile two poses at the same instant. Comparing the replayed snapshot
+    // with the last rendered frame mistakes normal travel for a server error,
+    // pulling the vehicle backwards a little on every snapshot (especially fast ones).
+    if (!reset) this.advanceTo(now, this.input);
     this.world = w;
     this.player = structuredClone(p);
     this.signature = signature;
@@ -84,14 +88,17 @@ export class LocalPrediction {
       seconds -= dt;
     }
   }
-  sample(now: number, input: Input): MotionPose | undefined {
-    if (!this.player) return;
+  private advanceTo(now: number, input: Input) {
     const elapsed = Math.min(100, Math.max(0, now - this.sampledAt));
     this.input = input;
     if (now - this.receivedAt <= 500) this.advance(this.input, elapsed);
     this.sampledAt = now;
     const decay = Math.exp(-elapsed / 80);
     for (const k of ['x', 'y', 'z', 'heading'] as const) this.correction[k] *= decay;
+  }
+  sample(now: number, input: Input): MotionPose | undefined {
+    if (!this.player) return;
+    this.advanceTo(now, input);
     const p = this.player;
     return {
       x: p.x + this.correction.x,

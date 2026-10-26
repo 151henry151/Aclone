@@ -122,3 +122,43 @@ test('predicted collision, slopes and fuel match shared authoritative movement',
   }
   assert.notEqual(p.fuel, authoritative.fuel);
 });
+
+for (const frameMs of [1000 / 60, 1000 / 30])
+  for (const arrivalOffset of [1, 7, 15, 31]) {
+    test(`fast straight driving stays even when snapshots arrive between ${Math.round(1000 / frameMs)} FPS frames (${arrivalOffset} ms offset)`, () => {
+      const { w, p } = fixture();
+      w.creator = creatorSchema.parse({ scenery: false, roads: false });
+      w.roads = [{ a: { x: 0, z: -110 }, b: { x: 0, z: 110 }, width: 12 }];
+      w.climate = { snow: 0, wetness: 0 };
+      p.x = 0;
+      p.z = -60;
+      p.heading = 0;
+      p.vehicle = 25; // Swift Kestrel: amplifies even a small lost fraction of a frame.
+      p.speed = 100;
+      const straight = { throttle: 1, steer: 0, boost: false };
+      move(w, p, straight, 0.05);
+      const speed = p.speed;
+      const predictor = new LocalPrediction();
+      predictor.receive(w, p, 0, 0, 0);
+      predictor.sent(1, straight, 0);
+      predictor.sample(0, straight);
+      let previousZ = p.z;
+      let previousTime = 0;
+      let snapshot = 200;
+      let worst = 0;
+      for (let frame = 1; frame * frameMs < 3000; frame++) {
+        const now = frame * frameMs;
+        while (snapshot + arrivalOffset <= now) {
+          for (let step = 0; step < 4; step++) move(w, p, straight, 0.05);
+          predictor.receive(w, p, 1, snapshot / 1000, snapshot + arrivalOffset);
+          snapshot += 200;
+        }
+        const pose = predictor.sample(now, straight)!;
+        const frameSpeed = (pose.z - previousZ) / ((now - previousTime) / 1000);
+        worst = Math.max(worst, Math.abs(frameSpeed / speed - 1));
+        previousZ = pose.z;
+        previousTime = now;
+      }
+      assert.ok(worst < 0.02, `snapshot-induced speed variation ${(worst * 100).toFixed(1)}%`);
+    });
+  }
