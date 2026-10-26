@@ -2,6 +2,13 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.96.3
+
+Use the normal backup, build and restart procedure, and publish the website version.
+No world reset or data migration is required. Players must reload for the client
+movement and frame-scheduling fixes. Check steady driving in a fast tractor after
+refreshing, including turns and slopes; compare motion consistency as well as FPS.
+
 ## Upgrade 0.96.2
 
 Use the normal database backup, build and service restart. No world reset or

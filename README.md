@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.96.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.96.3 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -131,6 +131,8 @@ npm run test:e2e
 ```
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
+
+Version 0.96.3 fixes small position pullbacks on server updates and unnecessary skipped frames from display-timing jitter. Reload after deployment to load the smoother movement. Movement regression checks include steady-speed driving with server updates arriving between 30/60 FPS frames, delayed network traffic, and frame scheduling on 60/120/144 Hz displays. These check motion consistency as well as average frame rate.
 
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 

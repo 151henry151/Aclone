@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.96.3] - 2026-10-25
+
+### Fixed
+
+- Driving no longer pulls back slightly on each server update when the update arrives between rendered frames. Position reconciliation now compares movement at the same instant, reducing the shaky-camera effect most noticeable in faster tractors.
+- Frame scheduling tolerates small display-timing variations without unnecessarily skipping frames, while preserving the 30/60 FPS limits.
+
 ## [0.96.2] - 2026-10-25
 
 ### Fixed

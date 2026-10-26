@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.96.3 — Smoother driving
+
+Server updates now reconcile positions at the same instant, eliminating artificial
+pullbacks when updates arrive between rendered frames. This is especially noticeable
+in fast tractors. Frame scheduling also tolerates small display-timing variations
+without skipping a whole frame unnecessarily, while keeping the 30/60 FPS limits.
+
+Reload the game after deployment. No world migration or handling changes are needed.
+Validation includes 1,084 passing tests, the production build and a browser test
+covering movement, stopping and chat over a delayed, bandwidth-limited connection.
+These timing fixes do not remove frame drops caused by overloaded graphics hardware.
+
 ## 0.96.2 — NPC business continuity
 
 NPC shops retain raw-material buffers alongside ordinary finished goods and can
