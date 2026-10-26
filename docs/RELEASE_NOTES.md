@@ -2,6 +2,22 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.97.0 — Topographic maps and smooth coastlines
+
+The parish map can show hills and valleys with contours every 10 metres above
+sea level, stronger lines every 50 metres and elevation labels. The **Contours**
+button toggles the overlay and remembers the preference in this browser. Roads,
+towns, buildings and waypoints remain visible above the terrain overlay.
+
+The parish map and minimap interpolate shoreline crossings instead of enlarging
+square water cells. The main map also refreshes when an editor changes terrain
+or sea level. These are map-display changes: the island, driving behaviour and
+saved progress are unchanged. Reload the game after deployment.
+
+Validation covers shoreline interpolation, contour heights, shared terrain samples,
+island/lake rendering, antialiasing, zoom, toggle persistence, terrain redraws and
+mobile layout, plus TypeScript and the production build.
+
 ## 0.96.4 — Worksite escape and fishing status
 
 Tractors caught between overlapping building walls and equipment yards can drive

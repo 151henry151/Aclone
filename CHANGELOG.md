@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.97.0] - 2026-10-26
+
+### Added
+
+- The parish map has a switchable topographic overlay with 10-metre contours, stronger 50-metre lines and elevation labels above sea level. The overlay preference is remembered.
+
+### Fixed
+
+- Parish maps and minimaps draw interpolated, antialiased shorelines instead of blocky water cells. Open maps refresh when terrain or sea level changes.
+
 ## [0.96.4] - 2026-10-26
 
 ### Fixed

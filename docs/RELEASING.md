@@ -2,6 +2,17 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.97.0
+
+Use the normal database backup, build and restart procedure, and publish the
+website version. No data migration or terrain change is required. Reload clients
+to load smooth map shorelines and the topographic overlay.
+
+Open the map with M, zoom out to the island and check the **Contours** toggle.
+Minor lines mark 10-metre intervals above sea level; stronger lines and labels
+mark 50-metre intervals. Check map navigation, landmarks and the minimap coastline.
+The preference is stored per browser; no new world rule is needed.
+
 ## Upgrade 0.96.4
 
 Use the normal database backup, build and restart procedure, and publish the
