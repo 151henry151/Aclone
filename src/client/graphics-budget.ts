@@ -3,8 +3,12 @@
 export function pacedRenderTime(now: number, previous: number, interval: number) {
   const elapsed = now - previous;
   if (!Number.isFinite(elapsed) || elapsed < 0) return now;
-  if (elapsed < interval) return undefined;
-  return now - (elapsed % interval);
+  // rAF timestamps can land just before the nominal refresh boundary. Waiting
+  // for the next callback then drops a whole frame. Keep the scheduled phase
+  // (rather than rounding back a full interval after an early render).
+  const tolerance = Math.min(1, interval * 0.05);
+  if (elapsed + tolerance < interval) return undefined;
+  return previous + Math.floor((elapsed + tolerance) / interval) * interval;
 }
 
 /** Sustained foreground frame pacing, not one shader compile or a hidden-tab gap. */

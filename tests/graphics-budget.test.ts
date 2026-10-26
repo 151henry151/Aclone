@@ -38,3 +38,37 @@ test('a single compile hitch does not lower graphics and hidden tabs reset the s
   assert.equal(budget.observe(30000), false);
   assert.equal(frames(budget, 16.7, 180), false);
 });
+
+test('small display timestamp jitter does not skip frames at the target refresh rate', () => {
+  for (const fps of [30, 60]) {
+    let previous = -Infinity;
+    let rendered = 0;
+    for (let frame = 0; frame < 600; frame++) {
+      const now = frame * (1000 / fps) + Math.sin(frame * 1.7) * 0.25;
+      const next = pacedRenderTime(now, previous, 1000 / fps);
+      if (next === undefined) continue;
+      previous = next;
+      rendered++;
+    }
+    assert.equal(rendered, 600, `${fps} Hz: skipped ${600 - rendered} frames`);
+  }
+});
+
+test('pacing retains its long-term cap on faster and jittery displays', () => {
+  for (const refresh of [60, 120, 144])
+    for (const fps of [30, 60]) {
+      let previous = -Infinity;
+      let rendered = 0;
+      for (let frame = 0; frame < refresh * 10; frame++) {
+        const now = frame * (1000 / refresh) + Math.sin(frame * 1.7) * 0.25;
+        const next = pacedRenderTime(now, previous, 1000 / fps);
+        if (next === undefined) continue;
+        previous = next;
+        rendered++;
+      }
+      assert.ok(
+        Math.abs(rendered - fps * 10) <= 1,
+        `${refresh} Hz / ${fps} FPS: ${rendered} frames`,
+      );
+    }
+});
