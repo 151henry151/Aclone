@@ -20,6 +20,7 @@ import {
 import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
+import { mapTerrainPaths } from './map-water';
 const ns = 'http://www.w3.org/2000/svg';
 function svg(tag: string, attrs: Record<string, string | number> = {}) {
   const node = document.createElementNS(ns, tag);
@@ -42,6 +43,7 @@ export class ParishMap {
   private local = false;
   private signature = '';
   private zoom = 1;
+  private contours = localStorage.getItem('aclone.map-contours') !== 'off';
   private pendingZoom?: { x: number; z: number; px: number; py: number };
   private zoomFrame = 0;
   private width = 900;
@@ -60,7 +62,7 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><strong>N ↑</strong></div><p class="parish-map-help">Click a name or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click a name or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     host.addEventListener(
@@ -79,6 +81,16 @@ export class ParishMap {
         const action = button.dataset.map;
         if (!action) return;
         const centre = this.centre();
+        if (action === 'contours') {
+          this.contours = !this.contours;
+          localStorage.setItem('aclone.map-contours', this.contours ? 'on' : 'off');
+          button.setAttribute('aria-pressed', String(this.contours));
+          button.textContent = `Contours: ${this.contours ? 'on' : 'off'}`;
+          host.querySelector<HTMLElement>('.map-contour-key')!.hidden = !this.contours;
+          this.draw();
+          this.updatePlayers();
+          return;
+        }
         if (action === 'clear') {
           this.mark();
           return;
@@ -259,6 +271,12 @@ export class ParishMap {
     const signature = JSON.stringify([
       w.id,
       w.townLayout,
+      w.settings.mapSize,
+      w.settings.seaLevel,
+      w.terrainMapSize,
+      w.terrain,
+      w.landscape?.heightmap,
+      w.airfield,
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),
       w.towns.map((t) => [t.id, t.name, t.x, t.z, t.radius]),
     ]);
@@ -398,29 +416,23 @@ export class ParishMap {
           'stroke-opacity': 0.45,
         }),
       );
+    const terrain = mapTerrainPaths(
+      this.width,
+      this.height,
+      (px, py) =>
+        terrainHeight(
+          this.world,
+          this.bounds.x + (px - this.offsetX) / this.scale,
+          this.bounds.z + (py - this.offsetY) / this.scale,
+        ) - this.world.settings.seaLevel,
+      this.contours,
+    );
     if (mapHalf(this.world) > legacyHalf) {
-      // Sample the real coastline and lakes rather than the compact map's straight shore.
-      // One raster image keeps the sheet light however far the pilot zooms in.
-      const cell = 6,
-        canvas = document.createElement('canvas');
-      canvas.width = Math.ceil(this.width / cell);
-      canvas.height = Math.ceil(this.height / cell);
-      const ctx = canvas.getContext('2d')!;
-      ctx.fillStyle = '#758e86';
-      for (let py = 0; py < canvas.height; py++)
-        for (let px = 0; px < canvas.width; px++) {
-          const x = this.bounds.x + ((px + 0.5) * cell - this.offsetX) / this.scale,
-            z = this.bounds.z + ((py + 0.5) * cell - this.offsetY) / this.scale;
-          if (terrainHeight(this.world, x, z) < this.world.settings.seaLevel)
-            ctx.fillRect(px, py, 1, 1);
-        }
       drawing.append(
-        svg('image', {
-          href: canvas.toDataURL(),
-          width: this.width,
-          height: this.height,
-          preserveAspectRatio: 'none',
-          style: 'image-rendering:pixelated',
+        svg('path', {
+          d: terrain.water,
+          fill: '#758e86',
+          class: 'map-water',
         }),
       );
     } else {
@@ -437,6 +449,39 @@ export class ParishMap {
       drawing.append(
         svg('path', { d: `M0 ${coast}H${this.width}`, stroke: '#afbd9b', 'stroke-width': 3 }),
       );
+    }
+    if (this.contours) {
+      const contours = svg('g', { class: 'map-contours', 'pointer-events': 'none' });
+      for (const [d, major] of [
+        [terrain.minor, false],
+        [terrain.major, true],
+      ] as const)
+        contours.append(
+          svg('path', {
+            d,
+            fill: 'none',
+            stroke: '#d0c49a',
+            'stroke-opacity': major ? 0.55 : 0.27,
+            'stroke-width': major ? 1.25 : 0.65,
+            'stroke-linecap': 'round',
+          }),
+        );
+      for (const label of terrain.labels) {
+        const text = svg('text', {
+          x: label.x,
+          y: label.y,
+          fill: '#dbd0ad',
+          'font-size': 10,
+          'text-anchor': 'middle',
+          'paint-order': 'stroke',
+          stroke: '#4e6247',
+          'stroke-width': 3,
+          'stroke-linejoin': 'round',
+        });
+        text.textContent = `${label.height} m`;
+        contours.append(text);
+      }
+      drawing.append(contours);
     }
     const onSheet = (p: { x: number; z: number }) => inBounds(this.bounds, p, 30);
     for (const t of townBorders(this.world, this.bounds)) {

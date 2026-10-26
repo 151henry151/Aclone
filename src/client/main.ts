@@ -1,4 +1,5 @@
 import { homeProvisionsStatus } from './home-provisions';
+import { mapWaterPath } from './map-water';
 import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
@@ -1012,14 +1013,18 @@ function drawMap() {
   const sx = (x: number) => 115 + (x - cx) * scale,
     sz = (z: number) => oy + (z - cz) * scale;
   if (wide) {
-    // Sample the real coastline rather than the compact map's straight shore.
     ctx.fillStyle = '#758e86';
-    for (let py = 0; py < 170; py += 10)
-      for (let px = 0; px < 230; px += 10) {
-        const x = cx + (px + 5 - 115) / scale,
-          z = cz + (py + 5 - oy) / scale;
-        if (terrainHeight(world, x, z) < world.settings.seaLevel) ctx.fillRect(px, py, 10, 10);
-      }
+    ctx.fill(
+      new Path2D(
+        mapWaterPath(
+          230,
+          170,
+          (px, py) =>
+            terrainHeight(world!, cx + (px - 115) / scale, cz + (py - oy) / scale) -
+            world!.settings.seaLevel,
+        ),
+      ),
+    );
   }
   ctx.strokeStyle = '#718160';
   ctx.lineWidth = 1;

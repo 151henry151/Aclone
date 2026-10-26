@@ -55,6 +55,16 @@ Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (
 
 Open **Inventory** to use supplies or **Discard 1** unwanted item. Discarding is permanent and pays nothing; sell or store goods when possible. If an empty tractor tank leaves too much cargo to switch to walking, discarding surplus frees capacity.
 
+## Reading the terrain map
+
+Open the parish map with **M** or by clicking the minimap. Shorelines follow the
+terrain with smooth edges. **Contours: on/off** toggles the topographic overlay
+and remembers your preference in this browser. Thin lines mark every 10 metres
+above sea level; stronger, labelled lines mark every 50 metres. Closely spaced
+lines show steep slopes; wider spacing shows gentler ground. Zoom in to inspect
+local hills, or zoom out to compare routes across the island. Roads, town borders,
+waypoints and building markers remain visible above the terrain overlay.
+
 ## Fishing at the dock
 
 Carry Fishing tackle and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones.
