@@ -1,3 +1,4 @@
+import { seaMaterial } from './sea-material';
 import { FishingLightPool } from './fishing-lights';
 import { createFishingBoat } from './fishing-boat';
 import { FISHING_BOAT, boatSlot } from '../shared/boats';
@@ -714,16 +715,7 @@ export class GameScene {
     }
     if (w.airfield) this.land.add(airfieldModel(w.airfield));
     const reach = streamed ? seaReach : 540;
-    const sea = new T.Mesh(
-      new T.PlaneGeometry(reach, reach, 48, 48),
-      new T.MeshStandardMaterial({
-        color: '#439ea7',
-        roughness: 0.22,
-        metalness: 0.2,
-        transparent: true,
-        opacity: 0.88,
-      }),
-    );
+    const sea = new T.Mesh(new T.PlaneGeometry(reach, reach, 48, 48), seaMaterial());
     sea.rotation.x = -Math.PI / 2;
     sea.position.y = w.settings.seaLevel;
     if (streamed) placeSea(sea, this.me?.x ?? 0, this.me?.z ?? 0);
@@ -1287,6 +1279,9 @@ export class GameScene {
           now / 1000,
           t?.hauledAt === undefined ? Infinity : w.time - t.hauledAt,
           t?.deckLoad ?? 0,
+          Math.abs(pose.speed),
+          turn,
+          dt,
         );
         const captain = skipper?.hitch ? w.players[skipper.hitch] : undefined;
         if (captain?.vehicle === FISHING_BOAT) {

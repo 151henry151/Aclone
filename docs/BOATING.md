@@ -103,10 +103,11 @@ The radio and paper chart are cabin detail, not working communication or fish-fi
 
 Fish accumulate continuously. The only preview is fish moving in the net;
 there is no species list, fish count or countdown before hauling. Haul whenever
-you want to see the catch. A full net stops fishing and displays a notice;
+you want to see the catch. A full net stops fishing and triggers an on-screen alert, including when you log in
+with a full net. Its highlighted status remains in the collapsed fishing controls;
 haul it into the hold and redeploy. Full holds stop towing without discarding
-previous catches. The hauling animation lifts the net and pours fish onto the
-deck; landed fish piles reflect the hold load. A compass appears in the helm HUD.
+previous catches. The hauling animation retrieves the rig, lifts its closed catch bag, drains water
+and empties fish onto the deck before winding the gear onto the drum; landed fish piles reflect the hold load. A compass appears in the helm HUD.
 
 Conditions vary during a trip, with longer good or bad spells too. Pausing,
 hauling, docking or reconnecting does not reroll conditions. Offline time does
@@ -285,3 +286,12 @@ passenger disembarking still requires a dock, never open water.
 If a captain dies with passengers aboard, they remain offshore in lifeboats and
 can row to a dock to disembark. The deceased captain's fishing expedition ends.
 Existing abandoned cargo keeps the deadline assigned when the captain died.
+
+### Previewing the trawl model locally
+
+Run `npx tsx scripts/trawl-preview.ts` to capture the actual boat and rig towing,
+lifting and emptying, plus a short animation in `output/trawl-rig/`. The inspection
+image deliberately hides the water to reveal the complete net; gameplay keeps it
+submerged. This preview does not connect to or alter a live world. Run
+`npm run test:e2e -- tests/browser/trawl-rig.spec.ts` for the deployment/haul and
+render-budget checks.

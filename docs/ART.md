@@ -276,7 +276,7 @@ The 20.4-metre North Star commercial fishing boat has a flared hull, forward whe
 textured instruments and glazing, stern gantry, net drum, fish boxes, mast and
 fenders. Its trailing net is an alpha-tested texture. Static geometry is batched
 by material. Including its seated driver and the furnished wheelhouse, the preview
-reports about 14,600 triangles; its human-sized controls are separate from the
+reports about 17,050 triangles before repeated fish instances; its human-sized controls are separate from the
 enlarged hull (hidden deployed gear included). The wheelhouse uses textured lining,
 rubber floor, a radio and chart desk, with batched window frames, chair and controls.
 The mounted compass and speed/fuel/throttle panel have private canvas textures,
@@ -303,3 +303,31 @@ vessel within 80 metres and fades out over the final 20 metres. Additional boats
 retain their visible lamps/windows without adding dynamic lights. The existing
 single player searchlight remains independently controlled. Navigation glints
 have bounded distance scaling for readability; no strobe or bloom pass is added.
+
+### Complete commercial trawl rig
+
+`trawl-rig.ts` replaces the pointed cone with an open, forward-facing mouth,
+forward wings, tapered body and closed trailing codend. Two otter boards spread
+the bridles; headline floats and a weighted footrope frame the opening. Eight
+reinforcing seams follow the deforming skin. Knotted diamond twine is an original
+procedural alpha-tested texture, not individual strand geometry. The skin uses
+825 vertices and 1,536 triangles; boards, floats, fish and draining water use
+instancing. No new dynamic lights, cloth solver or physics bodies are needed.
+
+Towing responds to speed and steering; paused gear sags. A twelve-second visual
+haul retrieves the rig, raises the gathered bag under the gantry, drains and
+empties it, then winds it onto the drum. This does not add a server-side wait or
+change catch rates, carrying limits or fuel use. Visible fish and bag swelling
+use only the existing coarse activity cues. The sea material uses viewing-angle
+transmission, leaving submerged gear dimmer than objects above the water.
+
+References consulted for structure and operation (not copied into game assets):
+
+- [NOAA: midwater trawls](https://www.fisheries.noaa.gov/national/bycatch/fishing-gear-midwater-trawls) — mouth, spreading doors and codend.
+- [FAO: bottom otter trawls](https://www.fao.org/fishery/docs/CDrom/ARTFIMED/ArtFiWeb/descript/Gear/geartype/gt306.htm) — wings, floats and footrope.
+- [Seafish: underwater net photograph](https://www.seafish.org/responsible-sourcing/fishing-gear-database/selective-device/benthos-release-panel/) — enclosing panels, mesh and taper.
+- [NOAA Teacher at Sea: trawl operations and photographs](https://noaateacheratsea.blog/tag/trawl-net/) — stern gantry and suspended codend.
+
+The game compresses towing distance/depth and handling time for visibility; it
+does not simulate seabed contact or a full-scale commercial fishing operation.
+Use `npx tsx scripts/trawl-preview.ts` for actual-model stills and animation.
