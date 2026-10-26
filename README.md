@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.96.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.96.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -36,7 +36,7 @@ The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implement
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; stocked-home targets, complete earning trips, costed surplus pricing and protected operating capital guide their choices; see [AI neighbours](docs/NPCS.md). Gameplay now includes protected gameplay budgets, complete structured decision options, persistent savings milestones and trade-price guards; see the [redesign handoff](docs/NPC_RECOVERY.md#2026-10-18-planner-redesign-0700).
 
-NPCs share explicit financial facts between chat and planning and can carry out agreed price changes and surplus withdrawals; see [AI neighbours](docs/NPCS.md#agreements-made-in-chat). Long-term autonomous prosperity remains under evaluation. The [recovery handoff](docs/NPC_RECOVERY.md) records the business/career and conversation-budget fixes, and validation still needed.
+NPCs share explicit financial facts between chat and planning and can carry out agreed price changes and surplus withdrawals; see [AI neighbours](docs/NPCS.md#agreements-made-in-chat). Long-term autonomous prosperity remains under evaluation. Version 0.96.2 repairs replenishment checks, funded staffing, business maintenance visits and project-linked surplus withdrawals; implementation and validation limits are described in [business continuity](docs/NPCS.md#business-continuity). The [recovery handoff](docs/NPC_RECOVERY.md) records the business/career and conversation-budget fixes, and validation still needed.
 
 Design buildings before breaking ground: five trade-specific architectural models per building type with six independent finishes (paint colours for shipping-container caches), larger storage or lodging layouts for suitable types, a 3D preview at a fixed scale per type, and rotation with a north-up site plan. Material bills and town taxes reflect the selected design. Trade-specific equipment distinguishes businesses, and cottage mailboxes mark residences. See [building designs](docs/PLAYING.md#building-designs).
 

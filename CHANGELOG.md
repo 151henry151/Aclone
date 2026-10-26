@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.96.2] - 2026-10-25
+
+### Fixed
+
+- NPC shops keep raw-material reserves alongside normal finished stock, recover missing/zero buying offers from known suppliers, and budget for profitable delivery margins, payroll and investor claims. Explicit agreed buying pauses remain respected across planners and restarts.
+- NPC owners return sooner for business maintenance, fund useful vacancies with bounded competitive wage offers, and can operate their own businesses without being mistaken for paid employees. Job training keeps its intended workplace goal through qualification.
+- Costed NPC business purchases, construction, farm expansion and factory funding can draw the required shortfall from safe business surplus or savings as part of the same plan. Withdrawals recheck operating reserves on arrival instead of spending cash the business now needs.
+
 ## [0.96.1] - 2026-10-25
 
 ### Fixed

@@ -2,6 +2,25 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.96.2 — NPC business continuity
+
+NPC shops retain raw-material buffers alongside ordinary finished goods and can
+restore missing or zero buying offers from known suppliers. Delivery bids allow
+for transport costs and a margin, while explicit agreed purchasing pauses remain
+respected. Direct restocking can use input capital without draining household
+money, other supplies, payroll or investor claims.
+
+Business owners return sooner to check operations, fund useful vacancies and
+make bounded competitive wage offers. Qualified owners can renew their unpaid
+shifts; training keeps its intended workplace goal. Costed business purchases,
+construction and expansion can withdraw the needed surplus or savings as part of
+the same plan, with reserves checked again before the withdrawal executes.
+
+No world reset or manual migration is needed. Validation includes 1,074 passing
+tests and a 48-hour mechanical supply/production/payroll simulation with scripted
+customers and hauliers. This verifies the repaired mechanics; sustained autonomous
+NPC prosperity still needs assessment during live play.
+
 ## 0.96.1 — Boatyard boarding and readable fishing controls
 
 Buy or board an owned boat from dry land within 40 metres of a boathouse, matching

@@ -2,6 +2,20 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.96.2
+
+Use the normal database backup, build and service restart. No world reset or
+manual migration is required; existing NPC memories and agreed buying pauses
+remain compatible. Scheduled business owners also reassess previously saved long
+absences. Publish the website so its displayed version matches the game.
+
+After deployment, verify service health and observe owner maintenance journals,
+reopened supply bids, actual supplier payments, production and paid employment.
+Track surplus withdrawals together with their subsequent purchases or expansion.
+The 48-hour mechanical regression uses scripted trading partners; it does not
+establish long-term autonomous Jev results. No paid accelerated test is required
+or started by this release.
+
 ## Upgrade 0.96.1
 
 Deploy client and server together and reload browsers. No world migration is
