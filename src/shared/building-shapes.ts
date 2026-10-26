@@ -410,19 +410,42 @@ export function buildingPenetration(
     s = Math.sin(b.rotation);
   const lx = dx * c - dz * s,
     lz = dx * s + dz * c;
-  let penetration = 0;
   const plan = buildingPlan(b);
-  for (const v of [...plan.volumes, ...(plan.fixtures ?? [])]) {
+  const volumes = [...plan.volumes, ...(plan.fixtures ?? [])];
+  let overlap = 0;
+  for (const v of volumes) {
     if (height >= v.eaves + v.rise) continue;
-    penetration = Math.max(
-      penetration,
+    overlap = Math.max(
+      overlap,
       Math.min(
         v.width / 2 + padding - Math.abs(lx - v.x),
         v.depth / 2 + padding - Math.abs(lz - v.z),
       ),
     );
   }
-  return penetration;
+  // Ordinary movement outside buildings keeps the cheap point test.
+  if (overlap <= 0 || volumes.length === 1) return overlap;
+  const rectangles = volumes
+    .filter((v) => height < v.eaves + v.rise)
+    .map((v) => ({
+      left: v.x - v.width / 2 - padding,
+      right: v.x + v.width / 2 + padding,
+      front: v.z - v.depth / 2 - padding,
+      back: v.z + v.depth / 2 + padding,
+    }));
+  const inside = (x: number, z: number) =>
+    rectangles.some((r) => x > r.left && x < r.right && z > r.front && z < r.back);
+  // Distance to the exterior of the whole solid footprint, not the deepest
+  // individual overlap. Inflated walls and yard fixtures can overlap: between
+  // them, the old metric increased in BOTH directions and trapped tractors.
+  // A nearest exterior point is on a projected edge or an edge intersection.
+  let distance = Infinity;
+  const xs = [lx, ...rectangles.flatMap((r) => [r.left, r.right])];
+  const zs = [lz, ...rectangles.flatMap((r) => [r.front, r.back])];
+  for (const x of xs)
+    for (const z of zs)
+      if (!inside(x, z)) distance = Math.min(distance, Math.hypot(x - lx, z - lz));
+  return distance;
 }
 export function blocksBuilding(...args: Parameters<typeof buildingPenetration>) {
   return buildingPenetration(...args) > 0;

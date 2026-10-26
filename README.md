@@ -134,6 +134,8 @@ For graphics settings, open **F9 → Options & pilot key** and scroll below the 
 
 Version 0.96.3 fixes small position pullbacks on server updates and unnecessary skipped frames from display-timing jitter. Reload after deployment to load the smoother movement. Movement regression checks include steady-speed driving with server updates arriving between 30/60 FPS frames, delayed network traffic, and frame scheduling on 60/120/144 Hz displays. These check motion consistency as well as average frame rate.
 
+Collision regression tests cover driving out of overlapping worksite walls and equipment yards, including rotated models, without passing through neighbouring buildings.
+
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 
 CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
