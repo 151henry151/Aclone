@@ -6,9 +6,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { addPlayer } from '../../src/shared/simulation.ts';
+import { creatorSchema } from '../../src/shared/creator';
 test('map waypoints persist and guide desktop and touch driving without marking drags', async ({
   browser,
 }) => {
+  // Three full client loads plus desktop/mobile captures on software WebGL.
+  test.setTimeout(300000);
   const dir = mkdtempSync(join(tmpdir(), 'aclone-waypoint-'));
   const app = await createApp({ dataDir: dir, port: 0, dev: true });
   const context = await browser.newContext({ hasTouch: true });
@@ -20,6 +23,11 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     const w = app.worlds.get('puddlewick')!,
       p = addPlayer(w, account.id, account.name);
     w.script = '';
+    // Exercise the real map/terrain and driving UI without unrelated animated scenery.
+    w.creator = creatorSchema.parse({ ...w.creator, scenery: false, weather: 'clear' });
+    w.settings.oceanWaves = 0;
+    w.settings.dayLength = 0;
+    w.settings.time = 43200;
     w.settings.hungerRate = w.settings.thirstRate = 0;
     p.x = 0;
     p.z = 0;

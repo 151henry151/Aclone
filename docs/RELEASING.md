@@ -8,7 +8,7 @@ Back up and deploy client and server together, then reload clients for the new t
 
 Check a boat approaching shore forward and astern: minor hull damage, zero throttle, recoil and no repeated damage while the input remains held. Confirm reverse remains available and dock boarding/disembarking still work.
 
-Browser release checks verify remote lighthouse discovery through the directory; map screenshots allow up to 60 seconds on software-rendered CI workers. Gameplay assertions retain their existing timeouts.
+Vite ignores generated output, browser traces and reports so writing HTML capture files does not trigger a page reload during a test. Browser release checks verify remote lighthouse discovery through the directory; map screenshots allow up to 60 seconds on software-rendered CI workers. The waypoint fixture omits unrelated animated scenery and allows five minutes for its three full client loads and two captures. Gameplay assertions retain their existing timeouts.
 
 ## Upgrade 0.99.1
 

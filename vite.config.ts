@@ -21,5 +21,17 @@ export default defineConfig({
   ],
   define: { __ACLONE_BASE__: JSON.stringify(base) },
   build: { target: 'es2023' },
-  server: { host: '127.0.0.1' },
+  server: {
+    host: '127.0.0.1',
+    // Playwright traces contain HTML snapshots; they must not reload the app
+    // while the same browser test is capturing or interacting with it.
+    watch: {
+      ignored: [
+        '**/output/**',
+        '**/test-results/**',
+        '**/playwright-report/**',
+        '**/website-dist/**',
+      ],
+    },
+  },
 });
