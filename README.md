@@ -10,7 +10,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
-The 0.99.1 maintenance update also places the public lighthouses when Puddlewick has a player administrator. Lighthouses mark both outer headlands and Puddlewick's harbour. Their rotating beams reach three kilometres. Each offers one unskilled keeper job with a private pantry and free quarters while employed. Owners receive a small 4d daily navigation allowance; keeper wages are capped at 8d per game day before tax. Ownership alone does not provide housing. Find them in the parish directory or preview the five designs in the [building gallery](https://nogits.com/buildings/).
+The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km; shafts appear only in misty rain or storms. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
 ## What you can do
 

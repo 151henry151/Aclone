@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.101.0] - 2026-10-26
+
+### Added
+
+- Fifteen grass-topped coastal headlands with near-vertical rocky cliffs, including the three public lighthouse sites and twelve additional locations around Puddlewick’s island. Uneven grassy crowns blend into inland hills, and solid sea boulders break up the cliff foot. People and ground vehicles stop at the cliff edge rather than falling.
+- New lighthouses require flat ground near a tall coastal cliff. Headland terrain and the original island extent travel with exported world designs.
+
+### Changed
+
+- Puddlewick’s harbour lighthouse moves roughly 780 metres from the town centre. The public lighthouse upgrade preserves ownership, jobs, supplies and resident keepers, and avoids reshaping existing neighbouring property.
+- Lighthouse navigation lights flash as their rotating optics face the observer. Clear-weather shafts disappear; rain and storms reveal a faint shaft, and nearby surfaces receive directed light. Distant signals use terrain occlusion and a height-limited geographic range capped at 16 nautical miles (about 30 km), with poorer visibility in bad weather.
+- Shore breakers now curl forward, collapse and wash up the beach. Waves hitting cliffs throw up broken sheets and falling spray; calm weather suppresses the effect. Local geometry and particle budgets keep the extra rendering bounded.
+
 ## [0.100.0] - 2026-10-26
 
 ### Added

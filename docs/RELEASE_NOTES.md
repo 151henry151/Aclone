@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.101.0 — Rocky headlands and coastal navigation
+
+Puddlewick’s harbour light has moved out of the town bustle, roughly as far away as Mabel’s Reach. All three public lights stand above the water on rocky bluffs, with twelve additional headlands around the island. Cliff edges stop people and tractors safely. You can build a lighthouse on a suitable flat cliff-top site.
+
+Watch for lighthouse flashes offshore as the rotating light faces you. In clear weather the shaft disappears; misty rain and storms reveal it while reducing the range. Hills block the signal, and the maximum clear-weather range is about 30 km, depending on height. Beach waves roll over and wash up the shore, while cliff impacts throw up sheets of water and falling spray. Calm days remain calm.
+
+The update preserves existing lighthouse ownership, jobs and provisions and checks neighbouring property before reshaping the coast. Headlands are included in world-design exports.
+
 ## 0.100.0 — Bulk shop sales and shoreline collisions
 
 Shop rows show the quantity in your inventory and update it while you trade. **Sell all** sells the carried stack; **Sell max** shows a smaller quantity when the buyer is short of working capital or storage, or the transaction limit applies. Unsold items stay in your inventory. Manual quantity controls and confirmed trade totals continue working as before.

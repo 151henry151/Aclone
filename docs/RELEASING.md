@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.101.0
+
+Back up and deploy client and server together; reload clients for matching cliff collision and terrain. The public Puddlewick migration upgrades `lighthouseVersion` to 2, saves 15 `coastalBluffs`, and moves/relevels the three named public lights. Harbour light is about 780 m from town. Ownership, employees, stock and working capital remain; housed keepers move with their lighthouse. Candidate footprints skip other buildings and people outside homes. A blocked migration retries missing sites on a later restart without duplicating completed headlands. Custom worlds are not reshaped.
+
+Verify all three lighthouse IDs, 12 `natural-headland-` entries, and the migration marker. Retain the pre-deploy database backup: rolling back code alone would remove terrain support beneath the elevated lights. Preview the production layout read-only before deployment; check normal properties keep their heights. Test cliff approach/reverse, cliff-top construction rejection/acceptance, sea-visible flashes and land occlusion. New world exports include the bluffs and island extent.
+
 ## Upgrade 0.100.0
 
 Back up and deploy client and server together, then reload clients for the new trading controls and matching shoreline prediction. No balance, inventory or world migration is required. Check a partial sale at a buyer with limited funds and verify the remaining inventory count updates without closing the shop.
