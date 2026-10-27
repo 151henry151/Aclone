@@ -82,3 +82,12 @@ test('Puddlewick gets three distinct unobstructed coastal lights once', () => {
   assert.ok(lights.some((b) => b.x > 1000 && b.z > 3000));
   assert.ok(lights.some((b) => Math.hypot(b.x, b.z) < 450));
 });
+
+test('public Puddlewick remains eligible after a player takes over world administration', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'administrator');
+  w.publicParishVersion = 1;
+  assert.equal(ensurePuddlewickLighthouses(w), true);
+  assert.equal(w.buildings.filter((b) => b.kind === 'lighthouse').length, 3);
+  const custom = createWorld('puddlewick', 'Custom', 'administrator');
+  assert.equal(ensurePuddlewickLighthouses(custom), false);
+});

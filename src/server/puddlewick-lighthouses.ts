@@ -8,7 +8,7 @@ import type { World } from '../shared/types';
 export function ensurePuddlewickLighthouses(w: World) {
   if (
     w.id !== 'puddlewick' ||
-    w.owner !== 'server' ||
+    (w.owner !== 'server' && !w.publicParishVersion) ||
     w.template !== 'economy' ||
     w.lighthouseVersion
   )

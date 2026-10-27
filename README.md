@@ -4,13 +4,13 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.99.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.99.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
-Lighthouses mark both outer headlands and Puddlewick's harbour. Their rotating beams reach three kilometres. Each offers one unskilled keeper job with a private pantry and free quarters while employed. Owners receive a small 4d daily navigation allowance; keeper wages are capped at 8d per game day before tax. Ownership alone does not provide housing. Find them in the parish directory or preview the five designs in the [building gallery](https://nogits.com/buildings/).
+The 0.99.1 maintenance update also places the public lighthouses when Puddlewick has a player administrator. Lighthouses mark both outer headlands and Puddlewick's harbour. Their rotating beams reach three kilometres. Each offers one unskilled keeper job with a private pantry and free quarters while employed. Owners receive a small 4d daily navigation allowance; keeper wages are capped at 8d per game day before tax. Ownership alone does not provide housing. Find them in the parish directory or preview the five designs in the [building gallery](https://nogits.com/buildings/).
 
 ## What you can do
 

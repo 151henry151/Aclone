@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.99.1
+
+Restart after updating and verify `lighthouseVersion: 1` plus all three lighthouse IDs. This corrects the ownership check for public worlds administered by a player. No manual database edit is needed.
+
 ## Upgrade 0.99.0
 
 Back up the database and deploy client and server together, then publish the

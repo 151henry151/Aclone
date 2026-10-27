@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.99.1] - 2026-10-26
+
+### Fixed
+
+- Public Puddlewick receives its three coastal lighthouses even when a player account administers the world. Custom worlds remain untouched.
+
 ## [0.99.0] - 2026-10-26
 
 ### Added
