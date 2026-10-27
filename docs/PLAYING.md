@@ -416,7 +416,7 @@ Boat crew continue to use their captain’s provisions first. Captains use boat 
 
 Puddlewick’s harbour light stands about 780 metres from town; West Cape and East Cape lights mark the outer tips. Use the directory to find them. Fifteen headlands around the island have steep rock faces, grassy inland approaches and protected cliff edges: walkers and tractors stop before the drop. Build your own lighthouse on flat ground 15–65 metres inland from a tall cliff lip; the normal footprint, ownership and town rules still apply.
 
-At sea, watch for a white flash when a lighthouse’s rotating light sweeps toward you. Clear nights have no solid beam in the air. Rain and storms reveal a faint shaft but also reduce visibility. Land blocks the signal. Height above the sea and your viewpoint limit the range, up to about 30 km in good conditions.
+At sea, watch for a white flash when a lighthouse’s rotating light sweeps toward you. Clear nights have no solid beam in the air. Rain and storms reveal a faint shaft but also reduce visibility. Land blocks the signal. Height above the sea and your viewpoint limit the range, up to about 30 km in good conditions. Beaches have rolling breakers and wash; cliffs have uprush and falling spray, strongest in storms.
 
 Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
 

@@ -366,4 +366,17 @@ full production renderer in a disposable world for visual review.
 
 ### Coastal lighthouses
 
-Five lightweight tower-and-cottage models use shared masonry/timber finishes, a glazed lantern, balcony rail and identification band. Gameplay attaches a rotating additive 3 km shaft after bounds and gallery framing are calculated. Terrain depth testing occludes the beam; it adds no shadow-casting spotlight. A long camera far plane keeps distant navigation lights visible while normal terrain fog remains in place. `scripts/lighthouse-preview.ts` captures day, night and offshore views using the actual GameScene.
+Five lightweight tower-and-cottage models use shared masonry/timber finishes, a glazed lantern, balcony rail and identification band. Navigation flashes are separate from model/terrain draw distance. `LighthouseLights` uses a narrow horizontal lobe, terrain line-of-sight checks, weather attenuation and a geographic horizon: 2.08 nautical miles times the sum of square roots of focal and eye heights in metres, capped at 16 NM. Distant sprites project inside the camera far plane. Day flashes are subdued and observers beneath the horizontal beam see little light. A single nearby shadowed spotlight illuminates surfaces; its shadow refresh is bounded to four times per second. Only misty precipitation/storms show a faint atmospheric shaft. No whole-island geometry is drawn just to show the signal.
+
+### Rocky headlands and surf
+
+Saved `coastalBluffs` define a scalloped lip, a roughly two-metre-wide drop of 28–44 metres at the centre, a submerged foot and a broad inland blend. The same height function drives terrain, maps, construction and movement. Local tiles use finer geometry around headlands; exposed faces use rock shading rather than stretched grass, with small instanced rim outcrops. Seeded folds and tapered shoulders replace broad flat crowns; only a small footing beneath each public lighthouse is levelled. Partly submerged sea boulders are part of the shared heightfield, with exposed-rock shading and boat collision. A spatial index avoids testing every headland for ordinary inland/ocean samples.
+
+`CoastalSurf` budgets at most 36 local breaker strips and 648 spray points. Shoreline sampling follows tidal height. A beach cross-section leans, overturns, collapses and washes inland; a cliff impact rises and falls ballistically in broken sheets and droplets. These are visual approximations, not a fluid solver. Existing swell sampling still governs boat motion. Nearly flat seas suppress surf. `scripts/coast-preview.ts` captures the real GameScene in clear weather, storms, darkness and from offshore; the browser regression checks animated geometry and beacon direction without shader errors.
+
+References inspected for this design:
+
+- [Northern Lighthouse Board: Neist Point](https://www.nlb.org.uk/lighthouses/neist-point/) — photograph of grass-covered headland and sheer rock faces; 43 m focal elevation, 19 m tower, flashing white and 16 NM range. Our fictional rotation remains 16 seconds, rather than copying Neist Point’s five-second characteristic.
+- [IALA G1094](https://www.iala.int/product/g1094/?download=true) — geographic visibility calculation using observer/signal height and atmospheric refraction. Daymark geometry supplies the horizon model, not a claim about lamp brightness.
+- [National Park Service: coastal waves](https://www.nps.gov/articles/coastal-processes-waves.htm) — spilling, plunging and surging breakers as shore slope changes.
+- [National Park Service: coastal erosion](https://home.nps.gov/articles/coastal-processes-erosion.htm) — wave impact and reflection against steep coasts.

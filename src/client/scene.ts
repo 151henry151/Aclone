@@ -269,6 +269,7 @@ export class GameScene {
     this.scene.add(
       this.land,
       this.lighthouseLights.group,
+      this.ocean.surf.group,
       this.ground.group,
       this.woods.group,
       this.actors,
@@ -687,6 +688,7 @@ export class GameScene {
     this.me = undefined;
     this.space.visible = true;
     this.land.visible = false;
+    this.ocean.surf.group.visible = false;
     this.lighthouseLights.group.visible = false;
     this.ground.group.visible = false;
     this.woods.group.visible = false;
@@ -1225,6 +1227,15 @@ export class GameScene {
         p = this.me;
       const seaTime = w.time + Math.max(-1, Math.min(1, this.motionClock.sample(now) - w.time));
       this.ocean.update(w, p.x, p.z, seaTime, dt, Math.max(0.08, this.sun.intensity / 3));
+      this.ocean.surf.update(
+        w,
+        p.x,
+        p.z,
+        this.ocean.level.value,
+        seaTime,
+        this.ocean.amplitude.value,
+        Math.max(0.04, this.sun.intensity / 3),
+      );
       for (const model of this.buildingMeshes)
         if (model.userData.boatyardBuilding)
           fitBoatyardToWater(model, model.userData.boatyardBuilding, w);

@@ -1,3 +1,4 @@
+import { CoastalSurf } from './coastal-surf';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -9,6 +10,7 @@ import { seaMaterial } from './sea-material';
  * converge to the water colour. No second scene render, screen-space depth pass,
  * or full-resolution framebuffer is needed on mobile GPUs. */
 export class Ocean {
+  readonly surf = new CoastalSurf();
   readonly level = { value: 0 };
   readonly tint = { value: new T.Color('#17454c') };
   readonly time = { value: 0 };
@@ -100,6 +102,7 @@ export class Ocean {
     });
   }
   create(w: World, low = false) {
+    this.surf.reset();
     this.world = w;
     this.sampleX = Infinity;
     this.sampleZ = Infinity;
@@ -179,7 +182,7 @@ export class Ocean {
         surf*=smoothstep(.02,.35,oceanAmplitude);
         surf*=.12+.88*fleck;
         float crest=smoothstep(.55,.9,(vSeaWorld.y-oceanLevel)/max(.01,oceanAmplitude));
-        float foam=max(surf,crest*smoothstep(.3,1.2,oceanAmplitude)*fleck);
+        float foam=max(surf*.15,crest*smoothstep(.3,1.2,oceanAmplitude)*fleck);
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.8,.91,.88),foam*.85);`,
       );
       shader.fragmentShader = shader.fragmentShader.replace(
