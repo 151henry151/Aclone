@@ -14,6 +14,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Release browser checks look for distant lighthouses in the parish directory rather than the initial town map view, and give software-rendered map screenshots more time on CI.
 - Boats stop at the tidal shoreline instead of creeping onto land. Impacts reduce powered-boat hull condition by one percentage point, cut throttle and recoil into clear water. A held throttle key must be released or reversed before propulsion resumes, preventing repeated damage from the same collision.
 
 ## [0.99.1] - 2026-10-26

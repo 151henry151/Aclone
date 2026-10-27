@@ -46,7 +46,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     for (let i = 0; i < 6; i++) await page.mouse.wheel(0, 1000);
     await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeLessThan(10);
     await expect(map.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
-    await page.screenshot({ path: 'test-results/parish-map-world.png' });
+    await page.screenshot({ path: 'test-results/parish-map-world.png', timeout: 60000 });
     // The window height now spans the map, so 30% of it east of the village is ~3.7 km.
     await page.mouse.click(area.x + area.width / 2 + area.height * 0.3, area.y + area.height / 2);
     await page.keyboard.press('Escape');
@@ -89,7 +89,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expect(page.locator('#waypoint-hud')).toBeVisible();
-    await page.screenshot({ path: 'test-results/waypoint-phone.png' });
+    await page.screenshot({ path: 'test-results/waypoint-phone.png', timeout: 60000 });
     await page.getByRole('button', { name: 'Clear waypoint', exact: true }).tap();
     await expect(page.locator('#waypoint-hud')).toBeHidden();
     await page.reload();

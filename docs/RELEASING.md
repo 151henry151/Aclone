@@ -8,6 +8,8 @@ Back up and deploy client and server together, then reload clients for the new t
 
 Check a boat approaching shore forward and astern: minor hull damage, zero throttle, recoil and no repeated damage while the input remains held. Confirm reverse remains available and dock boarding/disembarking still work.
 
+Browser release checks verify remote lighthouse discovery through the directory; map screenshots allow up to 60 seconds on software-rendered CI workers. Gameplay assertions retain their existing timeouts.
+
 ## Upgrade 0.99.1
 
 Restart after updating and verify `lighthouseVersion: 1` plus all three lighthouse IDs. This corrects the ownership check for public worlds administered by a player. No manual database edit is needed.

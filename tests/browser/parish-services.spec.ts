@@ -30,7 +30,8 @@ test('default Puddlewick exposes its council and starter production services', a
     await page.keyboard.press('m');
     const map = page.getByRole('dialog', { name: 'Parish map.', exact: true });
     await expect(map).toBeVisible();
-    for (const definition of w.buildings)
+    // The initial town view deliberately excludes remote cape lighthouses.
+    for (const definition of w.buildings.filter((b) => b.kind !== 'lighthouse'))
       await expect(map.getByRole('button', { name: definition.name, exact: true })).toBeVisible();
     for (const kind of ['workshop', 'hotel', 'brewery', 'factory'])
       await expect(
@@ -58,6 +59,12 @@ test('default Puddlewick exposes its council and starter production services', a
       await page.keyboard.press('m');
       await expect(map).toBeVisible();
     }
+    await map.getByRole('button', { name: 'Parish directory', exact: true }).click();
+    const directory = page.getByRole('dialog');
+    const lights = w.buildings.filter((b) => b.kind === 'lighthouse');
+    expect(lights).toHaveLength(3);
+    for (const light of lights)
+      await expect(directory.locator(`[data-do="building"][data-id="${light.id}"]`)).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await app.close();
