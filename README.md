@@ -4,16 +4,19 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.98.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.99.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
+Lighthouses mark both outer headlands and Puddlewick's harbour. Their rotating beams reach three kilometres. Each offers one unskilled keeper job with a private pantry and free quarters while employed. Owners receive a small 4d daily navigation allowance; keeper wages are capped at 8d per game day before tax. Ownership alone does not provide housing. Find them in the parish directory or preview the five designs in the [building gallery](https://nogits.com/buildings/).
+
 ## What you can do
 
 - Build an economy: gather materials, grow seven crops, raise visible cows, sheep, pigs and chickens, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
+- Oceans have depth-faded underwater visibility, weather-driven swells and breaking surf. Boats rise and tilt with waves, and fast wave encounters produce spray and slow the hull. World owners can configure wave strength and moon-linked tidal ranges; Puddlewick uses a modest 0.6-metre spring range.
 - Commercial fishing keeps an unhauled catch in the net when towing stops. Use **Deploy / resume nets** to restart fishing after refuelling, or **Haul catch & stow** to bring it aboard. Full nets and holds trigger an alert and a highlighted status, including with the fishing controls collapsed.
 - Contextual controls show relevant vehicle/activity actions, explain seasonal planting limits, and separate personal property management from caretaker tools.
 - Board biplanes at Puddlewick’s public airfield hangar and practise on its marked runway. Crashes destroy one aircraft and show fire, sparks and smoke; spare airframes remain available at the hangar.
@@ -132,6 +135,8 @@ npm run test:e2e
 ```
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
+
+Version 0.99.0 adds moon-linked tides, weather-driven ocean swells and boat motion, wave-impact spray and resistance, shoreline surf, and depth-faded underwater visibility. World owners can tune tides and waves. Reload after deployment; Puddlewick enables a modest 0.6-metre tidal range. See [boating](docs/BOATING.md#ocean-weather-and-tides).
 
 Version 0.98.0 rebuilds the commercial trawl with a complete submerged net, spreading boards and staged hauling animations. Water is clearer when viewed from above, and full nets/holds produce explicit alerts. Reload to load the update; catches, fuel and fishing economics are preserved.
 

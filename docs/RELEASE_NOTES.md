@@ -2,6 +2,31 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.99.0 — Tides, swells and coastal lighthouses
+
+Boats rise, pitch and roll over weather-driven swells. Meeting steep waves at
+speed produces extra resistance and bow spray; wheelhouse views follow the hull.
+Calm spells can be nearly flat, while storms bring whitecaps and shoreline surf.
+Trailing nets remain in the water independently of the pitching boat. Shallow
+gear stays visible while deep objects fade into the ocean colour.
+
+Tides follow the game's moon cycle, with two highs per lunar day and larger
+ranges around new and full moons. Puddlewick enables a 0.6-metre maximum spring
+range once; other worlds retain zero tides until their owners opt in. Floating
+jetties, dock access, fishing depth and maps account for changing water levels.
+New shoreline construction checks tidal extremes. The editor exposes tidal range
+and wave strength independently.
+
+Three lighthouses mark the outer headlands and harbour. Each has a rotating navigation beam, five architectural choices and keeper accommodation. One unqualified employee can live there without buying property, including an owner who takes the vacant keeper job. Private pantry supplies remain collectible after leaving. A small navigation grant provides 4d per game day to a private owner's working capital and funds a keeper wage capped at 8d before normal taxes. Larger buildings never add jobs or grants.
+
+Reload after updating. Existing catches, fuel, vessels and property are preserved.
+This is a lightweight wave and buoyancy approximation; it does not introduce
+flooding, sinking, tidal currents or vessel damage from waves.
+
+Validation: unit/integration tests, lighthouse employment and placement regressions, production
+builds, actual-renderer optical-depth/net/camera checks, and calm/storm/cockpit/surf
+preview review. See [boating](BOATING.md#ocean-weather-and-tides) for details.
+
 ## 0.98.0 — Complete trawl rigs and clearer underwater views
 
 Commercial trawlers now tow a complete net with its wide mouth facing the boat,

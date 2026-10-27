@@ -2,6 +2,20 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.99.0
+
+Back up the database and deploy client and server together, then publish the
+website and reload clients. A one-time public Puddlewick migration saves
+`oceanVersion: 1`, `tidalRange: 0.6` and `oceanWaves: 1`; subsequent restarts
+respect owner edits. Other worlds default to zero tides and natural waves.
+The same upgrade places three lighthouses on safe coastal sites and saves `lighthouseVersion: 1`. They begin publicly owned, for sale, with open keeper jobs. Placement preserves existing buildings and retries missing sites if blocked. Inspect all three IDs (`parish-west-light`, `parish-east-light`, `parish-harbour-light`) after restart. No player balance grants or world reset are required.
+
+Verify health and the migration marker, then check boat heave/pitch/roll, cabin
+and chase cameras, submerged net visibility, and shoreline access. Existing
+boatyard landing identities remain stable through the tide cycle. Fixed piers
+sit above high tide and floating jetties follow the water. Preserve the normal
+pre-upgrade backup for rollback.
+
 ## Upgrade 0.98.0
 
 Use the normal database backup, build and restart procedure, and publish the

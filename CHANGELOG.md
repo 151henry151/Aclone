@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.99.0] - 2026-10-26
+
 ### Added
 
 - Three coastal lighthouses in Puddlewick, with rotating 3 km navigation beams, five tower designs, independent finishes and keeper cottages. Lighthouses are purchasable and buildable.
