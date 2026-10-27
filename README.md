@@ -58,6 +58,8 @@ Puddlewick has a premium government bread/water shop for shortages. Local produc
 
 Employment has a visible shift countdown and renewal reminder; see the [economy guide](docs/ECONOMY.md).
 
+Boats stop and recoil at the shoreline, with minor hull damage and an automatic throttle cut; release or reverse a held throttle key before moving again.
+
 Shop rows show your carried quantities. Use **Sell all** to sell a stack, or **Sell max** to sell the quantity the buyer can currently afford and store. Repeated trades show cumulative confirmed quantities and costs, including after closing a shop.
 
 The on-screen **Menu · F9** button opens maps, reports, settings and your pilot key. **F9 → Statistics** shows playtime (including recovered historical estimates), personal finances, completed construction, gathered materials, harvests and deaths; see [statistics coverage](docs/PLAYING.md#personal-statistics).

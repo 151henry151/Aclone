@@ -2,9 +2,11 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
-## 0.100.0 — Bulk shop sales
+## 0.100.0 — Bulk shop sales and shoreline collisions
 
 Shop rows show the quantity in your inventory and update it while you trade. **Sell all** sells the carried stack; **Sell max** shows a smaller quantity when the buyer is short of working capital or storage, or the transaction limit applies. Unsold items stay in your inventory. Manual quantity controls and confirmed trade totals continue working as before.
+
+Boats now check the shoreline along their movement path, including the bow and stern, against the current tide. A collision stops propulsion, cuts throttle and recoils into clear water; powered boats lose just one percentage point of hull condition. Holding the same throttle key cannot cause repeated impacts. Release it or reverse to move again. No cargo, fuel or existing vessels are removed by this update.
 
 ## 0.99.1 — Public lighthouse placement
 

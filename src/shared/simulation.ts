@@ -1,4 +1,5 @@
 import { isLighthouseKeeper } from './lodging';
+import { boatShoreCollision } from './boat-shore';
 import { waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
 import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { changeBoatLighting } from './boat-lighting';
@@ -66,6 +67,7 @@ import { drinkAlcohol, intoxicatedSteer } from './intoxication.ts';
 import { socialAction } from './social.ts';
 import {
   vehicleCondition,
+  maintainable,
   vehicleRecord,
   recordTravel,
   requiredLicence,
@@ -2183,12 +2185,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     return;
   }
   delete p.flight;
+  let throttleInput = clamp(input.throttle, -1, 1);
+  if (v.mode !== 3 || Math.sign(throttleInput) !== p.boatShoreThrottle) delete p.boatShoreThrottle;
+  if (v.mode === 3 && p.boatShoreThrottle !== undefined) throttleInput = 0;
   if (p.vehicle === FISHING_BOAT)
     p.boatThrottle = input.brake
       ? 0
-      : clamp((p.boatThrottle ?? 0) + clamp(input.throttle, -1, 1) * 0.24 * dt, -0.4, 1);
-  const throttle =
-    p.vehicle === FISHING_BOAT ? (p.boatThrottle ?? 0) : clamp(input.throttle, -1, 1);
+      : clamp((p.boatThrottle ?? 0) + throttleInput * 0.24 * dt, -0.4, 1);
+  const throttle = p.vehicle === FISHING_BOAT ? (p.boatThrottle ?? 0) : throttleInput;
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
@@ -2248,14 +2252,57 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       w.time,
       amp,
     ).y;
-    if (!water) p.speed *= Math.exp(-4 * dt);
   }
   if (v.mode === 5) p.y = Math.max(ground, waterLevel(w)) + 0.5;
   const half = mapHalf(w);
   const previousPosition = { x: p.x, z: p.z };
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
-  if (
+  const shore =
+    v.mode === 3
+      ? boatShoreCollision(
+          w,
+          p,
+          { x: nx, z: nz },
+          v.collisionRadius ?? 1.3,
+          p.heading,
+          p.vehicle === FISHING_BOAT
+            ? 10.5
+            : p.vehicle === 3
+              ? 6
+              : p.vehicle === LIFEBOAT
+                ? 1.5
+                : (v.collisionRadius ?? 1.3),
+        )
+      : undefined;
+  if (shore) {
+    // Copy nested fleet state: client prediction must not mutate a server snapshot.
+    if (maintainable(p.vehicle) && Math.abs(p.speed) > 0.1) {
+      const old = p.fleetState?.[p.vehicle] ?? { acquiredAt: w.time, metres: 0, condition: 100 };
+      p.fleetState = {
+        ...p.fleetState,
+        [p.vehicle]: { ...old, condition: Math.max(0, old.condition - 1) },
+      };
+    }
+    const recoilBlocked =
+      creatorBlocksSegment(w, p, { ...shore, y: p.y }, v.collisionRadius ?? 1.3, true) ||
+      w.buildings.some((b) =>
+        buildingBlocksMovement(
+          b,
+          p,
+          shore,
+          p.y - terrainHeight(w, b.x, b.z),
+          v.collisionRadius ?? 1.3,
+        ),
+      );
+    if (!recoilBlocked) {
+      p.x = shore.x;
+      p.z = shore.z;
+    }
+    p.speed = 0;
+    p.boatThrottle = 0;
+    if (input.throttle) p.boatShoreThrottle = Math.sign(input.throttle);
+  } else if (
     !creatorBlocksSegment(
       w,
       p,

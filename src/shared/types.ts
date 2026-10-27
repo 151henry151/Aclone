@@ -98,6 +98,8 @@ export interface Player {
   race?: { start: number; next: number };
   fishCatch?: string;
   boatThrottle?: number;
+  /** After grounding, release the held throttle input (or reverse it) before restarting. */
+  boatShoreThrottle?: number;
   boatLighting?: import('./boat-lighting').BoatLighting;
   boatStores?: Stock;
   fishingVoyage?: import('./fishing-expedition').FishingVoyage;

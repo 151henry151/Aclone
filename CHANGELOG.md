@@ -12,6 +12,10 @@ All notable changes to Aclone are documented here. This project follows
 
 - Shop trading rows show how many items you carry and offer Sell all, or a clearly labelled Sell max when the buyer cannot afford or store the entire quantity. Counts and bulk-sale limits update while the shop stays open.
 
+### Fixed
+
+- Boats stop at the tidal shoreline instead of creeping onto land. Impacts reduce powered-boat hull condition by one percentage point, cut throttle and recoil into clear water. A held throttle key must be released or reversed before propulsion resumes, preventing repeated damage from the same collision.
+
 ## [0.99.1] - 2026-10-26
 
 ### Fixed

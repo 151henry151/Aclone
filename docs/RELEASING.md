@@ -4,7 +4,9 @@ Publish, commit, push or deploy only when explicitly requested. Builds and tests
 
 ## Upgrade 0.100.0
 
-Back up and deploy normally, then reload clients for the new trading controls. No balance, inventory or world migration is required. Check a partial sale at a buyer with limited funds and verify the remaining inventory count updates without closing the shop.
+Back up and deploy client and server together, then reload clients for the new trading controls and matching shoreline prediction. No balance, inventory or world migration is required. Check a partial sale at a buyer with limited funds and verify the remaining inventory count updates without closing the shop.
+
+Check a boat approaching shore forward and astern: minor hull damage, zero throttle, recoil and no repeated damage while the input remains held. Confirm reverse remains available and dock boarding/disembarking still work.
 
 ## Upgrade 0.99.1
 
