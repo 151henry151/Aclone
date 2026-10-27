@@ -1,3 +1,4 @@
+import { waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
 import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { changeBoatLighting } from './boat-lighting';
 import {
@@ -1229,7 +1230,7 @@ export function act(w: World, id: string, a: Action): string {
         );
         if (poweredBoat(slot))
           requireThat(
-            travelHeight(w, p.x, p.z) >= w.settings.seaLevel + 0.15 &&
+            travelHeight(w, p.x, p.z) >= waterLevel(w) + 0.15 &&
               Math.abs(p.y - travelHeight(w, p.x, p.z)) <= 2,
             'Board the boat from the shore entrance or pier deck',
           );
@@ -1331,7 +1332,7 @@ export function act(w: World, id: string, a: Action): string {
         p.heading = poweredBoat(slot) ? landing.heading : (landing.building?.rotation ?? Math.PI);
         p.engine = false;
       }
-      p.y = poweredBoat(slot) ? w.settings.seaLevel : travelHeight(w, p.x, p.z);
+      p.y = poweredBoat(slot) ? waterLevel(w) : travelHeight(w, p.x, p.z);
       break;
     }
     case 'engine':
@@ -1387,7 +1388,7 @@ export function act(w: World, id: string, a: Action): string {
         );
         if (poweredBoat(p.vehicle))
           requireThat(
-            terrainHeight(w, p.x, p.z) < w.settings.seaLevel - 0.65,
+            terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65,
             'Take the boat into water before fishing',
           );
       }
@@ -1419,7 +1420,7 @@ export function act(w: World, id: string, a: Action): string {
           p.x = fishingDock.x;
           p.z = fishingDock.z + 2;
           p.y = travelHeight(w, p.x, p.z);
-        } else p.y = w.settings.seaLevel;
+        } else p.y = waterLevel(w);
         p.engine = false;
         scheduleBite(w, p);
       }
@@ -1551,7 +1552,8 @@ export function act(w: World, id: string, a: Action): string {
         !onFarmLand(w, site.x, site.z, Math.max(footprint.width, footprint.depth) / 2),
         'Construction would cover farmland',
       );
-      const shore = kind === 'waterworks' ? waterworksSite(w, site, chosenRotation) : undefined;
+      const shore =
+        kind === 'waterworks' ? waterworksSite(w, site, chosenRotation, true) : undefined;
       requireThat(
         kind !== 'waterworks' || shore,
         'Waterworks require dry ground directly on a shoreline with water within 10 metres',
@@ -1719,6 +1721,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
+        if (key === 'tidalRange') num(v, 0, 4);
+        if (key === 'oceanWaves') num(v, 0, 2);
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
@@ -1765,7 +1769,8 @@ export function act(w: World, id: string, a: Action): string {
         z = num(a.z, -mapHalf(w), mapHalf(w));
       requireThat(catalog[kind], 'Unknown building');
       requireThat(w.buildings.length < 500, 'Building limit reached');
-      const shore = kind === 'waterworks' ? waterworksSite(w, { x, z }) : undefined;
+      const shore =
+        kind === 'waterworks' ? waterworksSite(w, { x, z }, undefined, true) : undefined;
       requireThat(kind !== 'waterworks' || shore, 'Waterworks require a dry shoreline site');
       const b = makeBuilding('editor' + ++w.revision, kind, x, z);
       if (shore) b.rotation = shore.rotation;
@@ -2097,7 +2102,7 @@ export function command(w: World, p: Player, text: string): string {
 export function move(w: World, p: Player, input: Input, dt: number, prediction = false) {
   if (w.maintenance?.paused) return;
   if (p.game === 'fishing')
-    p.y = poweredBoat(p.vehicle) ? w.settings.seaLevel : travelHeight(w, p.x, p.z);
+    p.y = poweredBoat(p.vehicle) ? waterLevel(w) : travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
   const licence = requiredLicence(w, p.vehicle);
@@ -2108,12 +2113,12 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const condition = w.settings.vehicleMaintenance && !p.game ? vehicleCondition(p) : 100;
   const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] },
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
-    water = ground < w.settings.seaLevel;
+    water = ground < waterLevel(w);
   if (v.mode === 2) {
     const previous = { x: p.x, z: p.z };
     const accident = fly(p, input, dt, {
       ground: (x, z) => travelHeight(w, x, z),
-      seaLevel: w.settings.seaLevel,
+      seaLevel: waterLevel(w),
       half: mapHalf(w),
       grip: drivingSurface(w, p.x, p.z).grip,
       fuelRate: v.fuel,
@@ -2209,10 +2214,22 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.fuel = Math.max(0, p.fuel - 0.08 * dt);
   } else p.y = Math.max(ground, p.y - 9.8 * dt);
   if (v.mode === 3) {
-    p.y = Math.max(ground, w.settings.seaLevel);
+    const amp = oceanWeather(w).amplitude;
+    const impact = waveImpact(p.x, p.z, w.time, p.heading, p.speed, amp, waterLevel(w) - ground);
+    p.speed *= Math.exp(-impact * dt * 0.45);
+    p.y = boatSeaPose(
+      w,
+      p.x,
+      p.z,
+      p.heading,
+      p.vehicle === FISHING_BOAT ? 21 : p.vehicle === LIFEBOAT ? 3 : 12,
+      p.vehicle === FISHING_BOAT ? 6 : 3,
+      w.time,
+      amp,
+    ).y;
     if (!water) p.speed *= Math.exp(-4 * dt);
   }
-  if (v.mode === 5) p.y = Math.max(ground, w.settings.seaLevel) + 0.5;
+  if (v.mode === 5) p.y = Math.max(ground, waterLevel(w)) + 0.5;
   const half = mapHalf(w);
   const previousPosition = { x: p.x, z: p.z };
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
@@ -2250,7 +2267,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           : Math.max(p.y, support);
     }
   } else p.speed *= -0.2;
-  if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < w.settings.seaLevel - 1) {
+  if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < waterLevel(w) - 1) {
     p.x = 0;
     p.z = 17;
     p.speed = 0;

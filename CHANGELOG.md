@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Moon-linked tides with two cycles per lunar day and spring/neap variation. World owners can set tidal range and wave strength; Puddlewick enables a modest 0.6-metre spring range once on upgrade.
+- Weather-driven ocean swells, moving shoreline surf and offshore whitecaps. Boats rise, pitch and roll with the water; meeting steep waves at speed produces bow spray and extra resistance, with cabin views following the hull.
+
+### Changed
+
+- Underwater visibility fades with submerged viewing distance, preserving nearby net detail while obscuring the deep seabed and terrain-streaming edges.
+- Floating boatyard jetties follow the tide. Navigation, boarding, rescue, fishing depth and new shoreline construction account for changing water levels; existing boatyards retain their landing identities.
+
 ## [0.98.0] - 2026-10-26
 
 ### Changed

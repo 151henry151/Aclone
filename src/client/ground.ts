@@ -18,6 +18,7 @@ const detailRadius = 560,
  * Each tile carries its own baked lane/surface mask addressed in world metres, so
  * the look matches the compact village plane exactly where they would overlap. */
 export class GroundTiles {
+  constructor(private decorate: (mesh: T.Mesh) => void = () => {}) {}
   readonly group = new T.Group();
   private tiles = new Map<string, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>();
   private world?: World;
@@ -113,6 +114,7 @@ export class GroundTiles {
     tile.userData.cx = cx;
     tile.userData.cz = cz;
     tile.userData.ground = true;
+    this.decorate(tile);
     this.group.add(tile);
     return tile;
   }

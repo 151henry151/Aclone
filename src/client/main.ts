@@ -1,3 +1,4 @@
+import { waterLevel } from '../shared/ocean';
 import { homeProvisionsStatus } from './home-provisions';
 import { mapWaterPath } from './map-water';
 import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
@@ -1025,7 +1026,7 @@ function drawMap() {
           170,
           (px, py) =>
             terrainHeight(world!, cx + (px - 115) / scale, cz + (py - oy) / scale) -
-            world!.settings.seaLevel,
+            waterLevel(world!),
         ),
       ),
     );

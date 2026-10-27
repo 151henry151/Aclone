@@ -154,7 +154,7 @@ export function mountBuildMenu(
       refusal ||= 'Too close to another building';
     if (onFarmLand(w, p.x, p.z, Math.max(bounds.width, bounds.depth) / 2))
       refusal ||= 'Construction would cover farmland';
-    if (kind === 'waterworks' && !waterworksSite(w, p, b.rotation))
+    if (kind === 'waterworks' && !waterworksSite(w, p, b.rotation, true))
       refusal ||=
         'Rotate the intake toward water; the pump house needs dry shoreline ground with water within 10 metres behind it.';
     const home = ['home', 'warehouse'].includes(kind);

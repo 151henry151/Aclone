@@ -1,3 +1,4 @@
+import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
 import type { Point, Road } from './town.ts';
@@ -43,9 +44,7 @@ export function roadSite(w: World, width = 5) {
         blocksBuilding(b, p.x, p.z, 0, pad),
     );
   const dry = (p: Point) =>
-    Math.abs(p.x) < half &&
-    Math.abs(p.z) < half &&
-    terrainHeight(w, p.x, p.z) > w.settings.seaLevel + 0.5;
+    Math.abs(p.x) < half && Math.abs(p.z) < half && terrainHeight(w, p.x, p.z) > highWater(w) + 0.5;
   const allowed = (p: Point) => {
     const town = townAt(w, p.x, p.z);
     return !town || town.permissions.residents.roads || town.permissions.guests.roads;

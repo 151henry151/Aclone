@@ -11,6 +11,8 @@
   "allowMoneyGifts": true,
   "allowPlayerRefuelling": true,
   "seaLevel": -2,
+  "tidalRange": 0,
+  "oceanWaves": 1,
   "mapSize": 12500,
   "hungerRate": 1.8,
   "thirstRate": 2.5,

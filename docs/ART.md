@@ -331,3 +331,36 @@ References consulted for structure and operation (not copied into game assets):
 The game compresses towing distance/depth and handling time for visibility; it
 does not simulate seabed contact or a full-scale commercial fishing operation.
 Use `npx tsx scripts/trawl-preview.ts` for actual-model stills and animation.
+
+## Ocean rendering and hull motion
+
+The ocean uses shared deterministic spectral waves for GPU displacement and
+server/client hull sampling. The surface has a denser central grid and a coarser
+outer band (18,432 triangles, or 8,192 in Performance mode), an opaque far-water
+background (two triangles), and a bounded 192-drop spray pool. There is no extra
+scene render, reflection pass or depth framebuffer. Underwater material shading
+uses exponential attenuation along the submerged viewing path. New terrain tiles
+and boat materials receive the same shader extension. Existing material hooks,
+instancing and skeletal transforms are preserved.
+
+World-space phase prevents waves sliding with the camera. Bathymetry samples are
+refreshed only when the ocean grid moves to another 16-metre origin, reusing a
+bounded four-metre survey cache with bilinear interpolation. Hull physics still
+samples exact terrain. Shallow water
+damps displacement and gets moving surf foam; storm crests get textured whitecaps.
+Hull samples span each boat's length and beam. The trawl's trailing geometry stays
+in the sea while its fairleads stay aboard the pitching hull. Hull reaction is a
+kinematic buoyancy approximation with encounter-dependent resistance and spray,
+not a full six-degree-of-freedom naval dynamics solver.
+
+Tides share the astronomical moon's 28-day elongation and combine lunar/solar
+semidiurnal components. See [NOAA tide frequency](https://oceanservice.noaa.gov/facts/tidefrequency.html),
+[NOAA spring/neap tides](https://www.nesdis.noaa.gov/about/k-12-education/oceans-coasts/what-causes-tides)
+and [NOAA waves](https://www.noaa.gov/jetstream/ocean/waves). These describe the
+physical behaviour; the game uses its fictional moon period and tuned coastal range.
+
+Checks cover optical depth with actual rendered pixels, tide periods/ranges,
+boat response and camera clearance, storm versus calm rendering, and shoreline
+boarding throughout a full tide cycle. `scripts/ocean-preview.ts` captures the
+full production renderer in a disposable world for visual review.
+

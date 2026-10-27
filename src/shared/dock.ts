@@ -1,3 +1,4 @@
+import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { terrainHeight } from './terrain';
 import type { World } from './types';
@@ -13,10 +14,7 @@ export const fishingDock = {
   rampStart: 136,
 };
 export function dockHeight(w: World) {
-  return Math.max(
-    w.settings.seaLevel + 0.55,
-    terrainHeight(w, fishingDock.x, fishingDock.shore) + 0.2,
-  );
+  return Math.max(highWater(w) + 0.55, terrainHeight(w, fishingDock.x, fishingDock.shore) + 0.2);
 }
 export function travelHeight(w: World, x: number, z: number) {
   const ground = terrainHeight(w, x, z);

@@ -333,6 +333,13 @@ traction, snow and crops. Snow accumulates in layers; only
 sunny daylight melts it, and winter keeps a thin base until spring. Roads remain
 clear. See [weather rules](PLAYING.md#time-and-weather).
 
+In **Rules → Ocean and tides**, set the tidal range in metres and wave strength.
+A zero tidal range holds the sea at its mean level; zero wave strength makes it
+flat. Tides follow the world's moon, while wind and storms build larger swells.
+New shoreline buildings are checked against both high and low water. Try a
+modest range first and test access to existing docks through a full tide cycle.
+See [boating and ocean behaviour](BOATING.md) for details.
+
 ## 8. Teach players with quests, books and events
 
 ![Quests gives a tutorial ordered objectives and explicit rewards.](screenshots/world-building/quests.webp)

@@ -291,6 +291,10 @@ export interface Settings {
   allowMoneyGifts?: boolean;
   allowPlayerRefuelling?: boolean;
   seaLevel: number;
+  /** Maximum spring-tide high-to-low range in metres; zero disables tides. */
+  tidalRange?: number;
+  /** Wind-wave scale, 0 (flat) to 2. */
+  oceanWaves?: number;
   /** Square map side in metres. The original village occupies the central 500 m. */
   mapSize: number;
   autoConsumeInventory: boolean;
@@ -379,6 +383,7 @@ export interface World {
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;
   fishingVoyageVersion?: number;
+  oceanVersion?: number;
   boatDeathRulesVersion?: 1;
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;

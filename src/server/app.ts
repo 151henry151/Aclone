@@ -1,3 +1,4 @@
+import { preparePuddlewickOcean } from './puddlewick-ocean';
 import { prepareAutomaticProvisions } from './automatic-provisions-rules';
 import { prepareBoatDeathRules } from './boat-death-rules';
 import { prepareFishingVoyages } from './fishing-voyages';
@@ -173,6 +174,7 @@ export async function createApp(options: AppOptions) {
     const voyages = prepareFishingVoyages(world);
     const boatDeath = prepareBoatDeathRules(world);
     const provisions = prepareAutomaticProvisions(world);
+    const ocean = preparePuddlewickOcean(world);
     if (
       services ||
       government ||
@@ -183,6 +185,7 @@ export async function createApp(options: AppOptions) {
       voyages ||
       boatDeath ||
       provisions ||
+      ocean ||
       world.publicParishVersion
     )
       store.saveWorld(world);

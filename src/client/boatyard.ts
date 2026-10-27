@@ -1,3 +1,4 @@
+import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { yardBoat, yardFleets } from './yard-boats';
@@ -154,14 +155,14 @@ export function boatyardDetails(
   }
 }
 export function fitBoatyardToWater(root: T.Group, b: Building, w: World) {
-  const level = w.settings.seaLevel + 0.32 - (b.foundationY ?? terrainHeight(w, b.x, b.z));
+  const level = waterLevel(w) + 0.32 - (b.foundationY ?? terrainHeight(w, b.x, b.z));
   const dock = root.getObjectByName('floating-jetty');
   if (dock) dock.position.y = level;
   const gangway = root.getObjectByName('boatyard-gangway');
   const deckHeight = (x: number, z: number) => {
     const p = dockPoint(b, x, z);
     return (
-      Math.max(w.settings.seaLevel + 0.32, terrainHeight(w, p.x, p.z) + 0.25) -
+      Math.max(waterLevel(w) + 0.32, terrainHeight(w, p.x, p.z) + 0.25) -
       (b.foundationY ?? terrainHeight(w, b.x, b.z))
     );
   };

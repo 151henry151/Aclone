@@ -1,3 +1,4 @@
+import { waterLevel, highWater, lowWater } from './ocean';
 import { boatSlot, mooringKey } from './boats';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { blocksBuilding, buildingPlan } from './building-shapes';
@@ -18,8 +19,10 @@ export function dockPoint(b: Pick<Site, 'x' | 'z' | 'rotation'>, x: number, z: n
 }
 /** A dry workshop, an over-water lifting hall and a side boarding berth.
  * Dimensions include clearance around the twenty-one-metre boats, not just its origin. */
-export function boathouseSite(w: World, b: Site) {
-  const sea = w.settings.seaLevel;
+export function boathouseSite(w: World, b: Site, newSite = false) {
+  const sea = w.settings.seaLevel,
+    dry = newSite ? highWater(w) : sea,
+    wet = newSite ? lowWater(w) : sea;
   const sample = (x: number, z: number) => {
     const p = dockPoint(b, x, z);
     return Math.max(Math.abs(p.x), Math.abs(p.z)) < mapHalf(w) - 2
@@ -29,16 +32,16 @@ export function boathouseSite(w: World, b: Site) {
   for (const v of buildingPlan(b).volumes)
     for (let x = -v.width / 2; x <= v.width / 2 + 0.01; x += v.width / Math.ceil(v.width))
       for (let z = -v.depth / 2; z <= v.depth / 2 + 0.01; z += v.depth / Math.ceil(v.depth))
-        if (!(sample(v.x + x, v.z + z) >= sea + 0.2)) return undefined;
+        if (!(sample(v.x + x, v.z + z) >= dry + 0.2)) return undefined;
   // Keep the gangway gentle and the shore landing wide enough for a tractor.
-  if (!(sample(0, 0) <= sea + 3)) return undefined;
+  if (!(sample(0, 0) <= dry + 3)) return undefined;
   for (const x of [-2, 0, 2])
-    for (const z of [9, 10, 11]) if (!(sample(x, z) >= sea + 0.2)) return undefined;
+    for (const z of [9, 10, 11]) if (!(sample(x, z) >= dry + 0.2)) return undefined;
   // The slip inside the covered hall and the outside berth both need room
   // for the full hull, including its bow/stern and draft.
   for (const centre of [0, 12.3])
     for (let x = centre - 4.1; x <= centre + 4.1; x += 1)
-      for (let z = -44; z <= -22; z += 1) if (!(sample(x, z) <= sea - 1.1)) return undefined;
+      for (let z = -44; z <= -22; z += 1) if (!(sample(x, z) <= wet - 1.1)) return undefined;
 
   return {
     berth: dockPoint(b, 12.3, -33),
@@ -67,7 +70,7 @@ export function dockObstruction(w: World, b: Site, players = false, except?: str
             o.id !== b.id && (blocksBuilding(o, p.x, p.z, 0, 1) || dockReserved(o, p.x, p.z, 1)),
         ) ||
         onFarmLand(w, p.x, p.z, 1) ||
-        creatorBlocks(w, p.x, p.z, w.settings.seaLevel, 1) ||
+        creatorBlocks(w, p.x, p.z, waterLevel(w), 1) ||
         w.zones.some((o) => o.kind === 'noBuild' && Math.hypot(o.x - p.x, o.z - p.z) < o.radius + 1)
       )
         return 'Keep the boathouse jetty and berth clear of buildings, farm plots and obstacles';
@@ -142,7 +145,7 @@ export function withinBoatLanding(
       const t = i / steps;
       if (
         terrainHeight(w, p.x + (point.x - p.x) * t, p.z + (point.z - p.z) * t) >
-        w.settings.seaLevel + 0.15
+        waterLevel(w) + 0.15
       )
         return false;
     }
@@ -179,7 +182,7 @@ export function landingBlocked(
     if (reason) return reason;
   }
   const point = board ? d.berth : d.land;
-  const height = board ? w.settings.seaLevel : travelHeight(w, point.x, point.z);
+  const height = board ? waterLevel(w) : travelHeight(w, point.x, point.z);
   if (
     w.buildings.some((b) => blocksBuilding(b, point.x, point.z, 0, board ? 5 : 1.5)) ||
     creatorBlocks(w, point.x, point.z, height, board ? 5 : 1.5)

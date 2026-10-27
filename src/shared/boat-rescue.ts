@@ -1,3 +1,4 @@
+import { waterLevel } from './ocean';
 import { stockWeight } from './fishing-expedition';
 import { boatSlot, poweredBoat } from './boats';
 import { vehicles } from './catalog';
@@ -145,7 +146,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
       poweredBoat(p.vehicle) && p.fuel <= 0 && !r,
       'Launch the lifeboat only from your boat when its fuel tank is empty',
     );
-    need(terrainHeight(w, p.x, p.z) < w.settings.seaLevel - 0.65, 'Launch the lifeboat on water');
+    need(terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65, 'Launch the lifeboat on water');
     const clearance = (vehicles[p.vehicle].collisionRadius ?? 2) + 1.05;
     const candidates = [-1, 1].map((side) => ({
       x: p.x + Math.cos(p.heading) * clearance * side,
@@ -155,12 +156,10 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
       (s) =>
         Math.max(Math.abs(s.x), Math.abs(s.z)) < mapHalf(w) - 3 &&
         [-1, 0, 1].every((dx) =>
-          [-1.5, 0, 1.5].every(
-            (dz) => terrainHeight(w, s.x + dx, s.z + dz) < w.settings.seaLevel - 0.35,
-          ),
+          [-1.5, 0, 1.5].every((dz) => terrainHeight(w, s.x + dx, s.z + dz) < waterLevel(w) - 0.35),
         ) &&
         !w.buildings.some((b) => blocksBuilding(b, s.x, s.z, 0, 1)) &&
-        !creatorBlocks(w, s.x, s.z, w.settings.seaLevel, 1),
+        !creatorBlocks(w, s.x, s.z, waterLevel(w), 1),
     );
     need(spot, 'There is no clear water alongside for the lifeboat');
     w.boatRescues ??= {};
@@ -179,7 +178,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     p.inventory = {}; // Main cargo stays on the stranded boat, never duplicated into the inflatable.
     p.boatThrottle = 0;
     switchVehicle(p, LIFEBOAT, false);
-    Object.assign(p, spot, { y: w.settings.seaLevel, speed: 0, engine: false });
+    Object.assign(p, spot, { y: waterLevel(w), speed: 0, engine: false });
     return 'Lifeboat launched. Row to a dock, buy Fuel, then row back to your boat. Cargo remains aboard.';
   }
   need(r, 'You have no lifeboat rescue in progress');
@@ -208,7 +207,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
       x: r.dinghy.x,
       z: r.dinghy.z,
       heading: r.dinghy.heading,
-      y: w.settings.seaLevel,
+      y: waterLevel(w),
       speed: 0,
       engine: false,
     });
@@ -244,7 +243,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     Array.from({ length: 9 }, (_, i) => i / 8).every(
       (t) =>
         terrainHeight(w, from.x + (r.boat.x - from.x) * t, from.z + (r.boat.z - from.z) * t) <
-        w.settings.seaLevel + 0.15,
+        waterLevel(w) + 0.15,
     ),
     'Move alongside over clear water before transferring',
   );
@@ -287,7 +286,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     x: r.boat.x,
     z: r.boat.z,
     heading: r.boat.heading,
-    y: w.settings.seaLevel,
+    y: waterLevel(w),
     speed: 0,
     engine: false,
   });

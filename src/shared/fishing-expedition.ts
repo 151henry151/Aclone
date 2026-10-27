@@ -1,3 +1,4 @@
+import { waterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, Stock, World } from './types';
 import { FISHING_BOAT, boatSlot } from './boats';
@@ -308,7 +309,7 @@ export function endVoyageOnDeath(w: World, p: Player) {
   for (const q of Object.values(w.players).filter((q) => boatSlot(p.vehicle) && q.hitch === p.id)) {
     delete q.hitch;
     switchVehicle(q, 29, false);
-    Object.assign(q, { x: p.x, z: p.z, y: w.settings.seaLevel, speed: 0, engine: false });
+    Object.assign(q, { x: p.x, z: p.z, y: waterLevel(w), speed: 0, engine: false });
   }
   delete p.fishingVoyage;
 }

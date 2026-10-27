@@ -84,6 +84,7 @@ export function mapTerrainPaths(
   height: number,
   elevation: (x: number, y: number) => number,
   contours = true,
+  tide = 0,
 ) {
   const grid = sampleGrid(width, height, elevation, 6);
   const minor: string[] = [],
@@ -142,5 +143,12 @@ export function mapTerrainPaths(
   for (const candidate of candidates.sort((a, b) => b.height - a.height))
     if (labels.every((p) => Math.hypot(p.x - candidate.x, p.y - candidate.y) > 180))
       labels.push(candidate);
-  return { water: waterPath(grid), minor: minor.join(''), major: major.join(''), labels };
+  return {
+    water: waterPath(
+      tide ? { ...grid, heights: grid.heights.map((row) => row.map((h) => h - tide)) } : grid,
+    ),
+    minor: minor.join(''),
+    major: major.join(''),
+    labels,
+  };
 }

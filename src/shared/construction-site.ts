@@ -1,3 +1,4 @@
+import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
 import { farmPlotPosition } from './farm-land';
 import { onAirfield } from './airfield';
@@ -75,7 +76,7 @@ export function foundationProfile(w: World, b: Site) {
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
   if (b.kind === 'boathouse') {
-    if (!boathouseSite(w, b))
+    if (!boathouseSite(w, b, true))
       return 'Boathouses need dry shoreline ground, with a deep, clear berth behind the building; rotate the jetty toward the water';
     const blocked = dockObstruction(w, b);
     if (blocked) return blocked;
@@ -101,7 +102,7 @@ export function constructionSiteReason(w: World, b: Site) {
         const z = a.z + sx * a.hx * a.axes[0].z + sz * a.hz * a.axes[1].z;
         if (Math.abs(x) > edge || Math.abs(z) > edge)
           return 'The building footprint would cross the world boundary';
-        if (terrainHeight(w, x, z) < w.settings.seaLevel)
+        if (terrainHeight(w, x, z) < highWater(w))
           return 'The building foundation must stay on dry land';
       }
     for (const zone of w.zones.filter((z) => z.kind === 'noBuild')) {

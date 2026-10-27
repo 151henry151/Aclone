@@ -1,3 +1,4 @@
+import { waterLevel, lowWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { mapHalf, terrainHeight } from './terrain';
 import type { World } from './types';
@@ -27,7 +28,7 @@ const coastCache = new WeakMap<World['terrain'], CoastCache>();
  * the accepted area beyond 150m; coastal boundaries are approximate to 10m.
  * Cache bounded spatial cells so moving/rendering never scans a coast per tick. */
 export function deepFishingWater(w: World, p: { x: number; z: number }) {
-  if (w.settings.seaLevel - terrainHeight(w, p.x, p.z) < DEEP_FISHING_DEPTH) return false;
+  if (waterLevel(w) - terrainHeight(w, p.x, p.z) < DEEP_FISHING_DEPTH) return false;
   const half = mapHalf(w);
   if (Math.max(Math.abs(p.x), Math.abs(p.z)) > half) return false;
   let cache = coastCache.get(w.terrain);
@@ -39,7 +40,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
     cache.landscape !== w.landscape ||
     cache.terrain !== w.terrain ||
     cache.terrainCount !== w.terrain.length ||
-    cache.sea !== w.settings.seaLevel ||
+    cache.sea !== lowWater(w) ||
     cache.half !== half ||
     cache.terrainSize !== w.terrainMapSize ||
     cache.airfield !== w.airfield
@@ -51,7 +52,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
       landscape: w.landscape,
       terrain: w.terrain,
       terrainCount: w.terrain.length,
-      sea: w.settings.seaLevel,
+      sea: lowWater(w),
       half,
       airfield: w.airfield,
       cells: new Map(),
@@ -75,7 +76,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
     (t) =>
       t.height > 0 &&
       Math.hypot(t.x - x, t.z - z) < radius + t.radius &&
-      terrainHeight(w, t.x, t.z) >= w.settings.seaLevel,
+      terrainHeight(w, t.x, t.z) >= lowWater(w),
   );
   for (let dx = -Math.ceil(radius / GRID); dx <= Math.ceil(radius / GRID) && offshore; dx++) {
     for (let dz = -Math.ceil(radius / GRID); dz <= Math.ceil(radius / GRID); dz++) {
@@ -90,7 +91,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
         if (cache.heights.size >= 16384) cache.heights.clear();
         cache.heights.set(sampleKey, h);
       }
-      if (h >= w.settings.seaLevel) {
+      if (h >= lowWater(w)) {
         offshore = false;
         break;
       }

@@ -295,3 +295,36 @@ image deliberately hides the water to reveal the complete net; gameplay keeps it
 submerged. This preview does not connect to or alter a live world. Run
 `npm run test:e2e -- tests/browser/trawl-rig.spec.ts` for the deployment/haul and
 render-budget checks.
+
+### Ocean weather and tides
+
+Calm, low-wind days can be almost still. Wind seas build and decay over roughly
+90 seconds as weather changes; thunderstorms produce larger crossing swells,
+whitecaps, shoreline surf and bow spray. Boats follow the water with heave, pitch
+and roll. Meeting a steep rising wave at speed adds resistance; throttle back to
+reduce slamming and spray. This update does not add random sinking or hull damage.
+First-person views follow the hull, and third-person cameras stay above the waves.
+
+The lunar tide has two highs and lows per lunar day: about 12 hours 27 minutes of
+game time between lunar highs, or 5 minutes 11 seconds at the default clock rate.
+The game's 28-day moon cycle produces larger spring tides around new/full moons
+and smaller neap tides around quarter moons. Tides use the continuous saved lunar
+calendar, including while an owner changes the decorative day/night clock.
+Puddlewick enables a maximum 0.6-metre high-to-low spring range on upgrade.
+Other worlds retain zero tides until their owners opt in. The world editor exposes
+**Ocean and tides** controls for range (0–4 metres) and wave strength (0–2).
+
+Floating jetties and their gangways follow the tide; the fixed fishing pier stays
+above high water. Low tide can uncover shallows. Return to a dock or boatyard to
+leave a boat as usual. Existing landing identities remain stable throughout the
+cycle; new construction must allow for high and low water. Maps follow the tidal shoreline while retaining mean-sea-level
+contours. Fishing depth uses the current tide, with conservative low-water coastal
+clearance. Tide and wave settings do not change catch tables or vessel prices.
+
+Shallow submerged gear remains visible, but colour and contrast fade with distance
+through water. The deep ocean floor is obscured. The ocean is a bounded wave and
+buoyancy approximation, not a fluid-volume solver: surf foam represents spilling
+breakers, with no simulated overturning water volume, flooding, currents or erosion.
+
+For an actual-renderer preview, run `npx tsx scripts/ocean-preview.ts`; outputs go to
+`output/ocean/`. This uses a disposable local world, never a live player account.

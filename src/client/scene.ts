@@ -1,4 +1,5 @@
-import { seaMaterial } from './sea-material';
+import { Ocean } from './ocean';
+import { boatSeaPose, waterLevel } from '../shared/ocean';
 import { FishingLightPool } from './fishing-lights';
 import { createFishingBoat } from './fishing-boat';
 import { FISHING_BOAT, boatSlot } from '../shared/boats';
@@ -55,7 +56,7 @@ import * as T from 'three';
 import { freezeScenery } from './static-scene';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
-import { GroundTiles, placeSea, seaReach } from './ground';
+import { GroundTiles } from './ground';
 import { CountrysideChunks } from './countryside';
 import { mapHalf, legacyHalf } from '../shared/terrain';
 import { countrySky } from './sky';
@@ -200,8 +201,8 @@ export class GameScene {
   private flightSnapshotAt = 0;
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
-  private waterBase?: Float32Array;
-  private ground = new GroundTiles();
+  private ocean = new Ocean();
+  private ground = new GroundTiles((mesh) => this.ocean.absorb(mesh));
   private woods = new CountrysideChunks();
   private snowDetails?: SnowAccumulation;
   private snowVisible = false;
@@ -466,6 +467,8 @@ export class GameScene {
       ':' +
       world.settings.seaLevel +
       ':' +
+      (world.settings.tidalRange ?? 0) +
+      ':' +
       JSON.stringify(world.creator ?? {}) +
       ':' +
       world.buildings.map((b) => b.creatorModel ?? '').join(',');
@@ -714,14 +717,10 @@ export class GameScene {
       this.land.add(this.terrain);
     }
     if (w.airfield) this.land.add(airfieldModel(w.airfield));
-    const reach = streamed ? seaReach : 540;
-    const sea = new T.Mesh(new T.PlaneGeometry(reach, reach, 48, 48), seaMaterial());
-    sea.rotation.x = -Math.PI / 2;
-    sea.position.y = w.settings.seaLevel;
-    if (streamed) placeSea(sea, this.me?.x ?? 0, this.me?.z ?? 0);
+    const sea = this.ocean.create(w, this.low);
     this.water = sea;
-    this.waterBase = new Float32Array(sea.geometry.attributes.position.array);
     this.land.add(sea);
+    if (!this.ocean.sprayObject.parent) this.scene.add(this.ocean.sprayObject);
     for (const b of w.buildings) {
       const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
       const g = custom ? creatorModel(custom, w) : this.building(b, w);
@@ -1006,8 +1005,10 @@ export class GameScene {
     }
     this.land.traverse((o) => {
       if (o.userData.animatedFlight) animated.push(o);
+      if (o.name === 'floating-jetty' || o.parent?.name === 'boatyard-gangway') animated.push(o);
       if (o.userData.flight) this.flights.push(o.userData.flight);
     });
+    this.ocean.absorb(this.land);
     freezeScenery(this.land, animated);
   }
   private building(b: Building, w: World) {
@@ -1070,7 +1071,10 @@ export class GameScene {
       return g;
     }
     const model = buildingModel(b);
-    if (b.kind === 'boathouse') fitBoatyardToWater(model, b, w);
+    if (b.kind === 'boathouse') {
+      fitBoatyardToWater(model, b, w);
+      g.userData.boatyardBuilding = b;
+    }
     g.add(model);
     g.userData.chimneys = model.userData.chimneys ?? [];
     const bounds = new T.Box3().setFromObject(g);
@@ -1141,6 +1145,7 @@ export class GameScene {
       if (slot === 5) tag.scale.set(3.5, 1.15, 1);
       g.add(tag);
     }
+    this.ocean?.absorb(g);
     return g;
   }
   private frame(preparing = false) {
@@ -1208,6 +1213,11 @@ export class GameScene {
     if (this.world && this.me) {
       const w = this.world,
         p = this.me;
+      const seaTime = w.time + Math.max(-1, Math.min(1, this.motionClock.sample(now) - w.time));
+      this.ocean.update(w, p.x, p.z, seaTime, dt, Math.max(0.08, this.sun.intensity / 3));
+      for (const model of this.buildingMeshes)
+        if (model.userData.boatyardBuilding)
+          fitBoatyardToWater(model, model.userData.boatyardBuilding, w);
       this.livestock.animate(this.elapsed);
       const assets = animateCreatorModels(this.scene, dt, this.camera.position);
       this.renderer.domElement.dataset.assetLoading = String(assets.loading);
@@ -1244,6 +1254,29 @@ export class GameScene {
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.set(0, pose.heading, 0, 'YXZ');
         const mode = vehicles[mesh.userData.vehicle]?.mode;
+        if (mode === 3) {
+          const long =
+            mesh.userData.vehicle === FISHING_BOAT
+              ? 21
+              : mesh.userData.vehicle === LIFEBOAT
+                ? 3
+                : 12;
+          const beam = mesh.userData.vehicle === FISHING_BOAT ? 6 : 3;
+          const sea = boatSeaPose(
+            w,
+            pose.x,
+            pose.z,
+            pose.heading,
+            long,
+            beam,
+            seaTime,
+            this.ocean.amplitude.value,
+          );
+          mesh.position.y = sea.y;
+          mesh.rotation.set(sea.pitch, pose.heading, sea.roll, 'YXZ');
+          if (Math.hypot(pose.x - p.x, pose.z - p.z) < 100)
+            this.ocean.splash(mesh, pose.speed, long, beam, dt, this.low);
+        }
         if (mesh.userData.wheels && mode !== 5 && pose.y < bareSurface(pose.x, pose.z) + 1) {
           const ground = vehicleGround(
             pose.x,
@@ -1283,6 +1316,7 @@ export class GameScene {
           turn,
           dt,
         );
+        if (mesh.userData.fishingBoat) this.ocean.stabilizeRig(mesh);
         const captain = skipper?.hitch ? w.players[skipper.hitch] : undefined;
         if (captain?.vehicle === FISHING_BOAT) {
           const crew = Object.values(w.players)
@@ -1312,6 +1346,36 @@ export class GameScene {
         const occupant =
           (mesh.userData.human as HumanFigure | undefined)?.group ?? mesh.userData.driver;
         if (occupant) occupant.visible = mesh !== this.meshes.get(p.id) || this.cameraMode !== 1;
+      }
+      for (const [id, mesh] of this.meshes) {
+        const q = w.players[id],
+          captain = q?.hitch && this.meshes.get(q.hitch);
+        if (captain && vehicles[captain.userData.vehicle]?.mode === 3) {
+          const crew = Object.values(w.players)
+            .filter((a) => a.hitch === q.hitch)
+            .sort((a, b) => a.id.localeCompare(b.id));
+          mesh.position.copy(
+            captain.localToWorld(
+              new T.Vector3(crew.findIndex((a) => a.id === id) === 0 ? -1.1 : 1.1, 1.15, -2.5),
+            ),
+          );
+          mesh.quaternion.copy(captain.quaternion);
+        }
+      }
+      for (const model of this.mooredGroup.children) {
+        const sea = boatSeaPose(
+          w,
+          model.position.x,
+          model.position.z,
+          model.rotation.y,
+          model.userData.oceanLength ?? 12,
+          4,
+          seaTime,
+          this.ocean.amplitude.value,
+        );
+        model.position.y = sea.y;
+        model.rotation.x = sea.pitch;
+        model.rotation.z = sea.roll;
       }
       this.headlights.visible = p.lights && !p.atHome;
       this.headlights.intensity = vehicles[p.vehicle].headlight ?? 150;
@@ -1370,7 +1434,7 @@ export class GameScene {
           cam.y,
           cameraSurfaceFloor(
             terrainHeight(w, cam.x, cam.z),
-            w.settings.seaLevel,
+            Math.max(waterLevel(w), this.ocean.height(cam.x, cam.z)),
             walking || tractorView ? 0.6 : 3,
           ),
         );
@@ -1381,7 +1445,10 @@ export class GameScene {
           this.camera.position.y,
           cameraSurfaceFloor(
             terrainHeight(w, this.camera.position.x, this.camera.position.z),
-            w.settings.seaLevel,
+            Math.max(
+              waterLevel(w),
+              this.ocean.height(this.camera.position.x, this.camera.position.z),
+            ),
             0.6,
           ),
         );
@@ -1408,7 +1475,10 @@ export class GameScene {
           direction.applyQuaternion(attitude).applyQuaternion(local.quaternion);
           this.target.copy(this.camera.position).addScaledVector(direction, 30);
           this.camera.up.applyQuaternion(attitude).applyQuaternion(local.quaternion);
-        } else if (this.cameraMode === 1 && isTractor(p.vehicle)) {
+        } else if (
+          this.cameraMode === 1 &&
+          (isTractor(p.vehicle) || vehicles[p.vehicle]?.mode === 3)
+        ) {
           const view = cabView(local.quaternion, this.orbit, cockpitPitch);
           this.target.copy(this.camera.position).addScaledVector(view.direction, 30);
           this.camera.up.copy(view.up);
@@ -1502,7 +1572,6 @@ export class GameScene {
       if (this.ground.active) {
         this.ground.setRoughness(1 - (w.climate?.wetness ?? 0) * 0.45);
         if (this.ready || this.settling) this.ground.update(this.target.x, this.target.z);
-        if (this.water) placeSea(this.water, this.target.x, this.target.z);
       }
       if (this.woods.active && (this.ready || this.settling))
         this.woods.update(this.target.x, this.target.z);
@@ -1694,17 +1763,6 @@ export class GameScene {
         if (obj.userData.blades) obj.userData.blades.rotation.z += dt * 0.35;
         if (obj.userData.clouds) obj.position.x = Math.sin(this.elapsed * 0.006) * 25;
       }
-      if (this.water && this.waterBase && !this.low) {
-        const pos = this.water.geometry.attributes.position;
-        for (let i = 0; i < pos.count; i++)
-          pos.setZ(
-            i,
-            Math.sin(this.waterBase[i * 3] * 0.15 + this.elapsed) *
-              Math.cos(this.waterBase[i * 3 + 1] * 0.12 + this.elapsed * 0.6) *
-              0.12,
-          );
-        pos.needsUpdate = true;
-      }
     } else {
       this.stars.rotation.y += dt * 0.008;
       for (const p of this.planets) p.rotation.y += dt * 0.06;
@@ -1746,7 +1804,8 @@ export class GameScene {
       const driver = model.userData.driver as T.Object3D;
       if (driver) driver.visible = false;
       model.position.set(b.x, w.settings.seaLevel, b.z);
-      model.rotation.y = b.heading;
+      model.rotation.set(0, b.heading, 0, 'YXZ');
+      model.userData.oceanLength = b.slot === FISHING_BOAT ? 21 : 12;
       this.mooredGroup.add(model);
     }
     for (const r of Object.values(w.boatRescues ?? {})) {
@@ -1755,15 +1814,18 @@ export class GameScene {
       ).group;
       model.userData.driver.visible = false;
       model.position.set(r.boat.x, w.settings.seaLevel, r.boat.z);
-      model.rotation.y = r.boat.heading;
+      model.rotation.set(0, r.boat.heading, 0, 'YXZ');
+      model.userData.oceanLength = r.boat.slot === FISHING_BOAT ? 21 : 12;
       this.mooredGroup.add(model);
       if (r.dinghy.moored) {
         const life = createLifeboat(false);
         life.position.set(r.dinghy.x, w.settings.seaLevel, r.dinghy.z);
-        life.rotation.y = r.dinghy.heading;
+        life.rotation.set(0, r.dinghy.heading, 0, 'YXZ');
+        life.userData.oceanLength = 3;
         this.mooredGroup.add(life);
       }
     }
+    this.ocean.absorb(this.mooredGroup);
   }
   nearest() {
     if (!this.world || !this.me) return undefined;

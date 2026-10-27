@@ -1,3 +1,4 @@
+import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
 import { townRoads } from '../shared/town';
@@ -273,6 +274,7 @@ export class ParishMap {
       w.townLayout,
       w.settings.mapSize,
       w.settings.seaLevel,
+      Math.round(waterLevel(w) * 10),
       w.terrainMapSize,
       w.terrain,
       w.landscape?.heightmap,
@@ -426,6 +428,7 @@ export class ParishMap {
           this.bounds.z + (py - this.offsetY) / this.scale,
         ) - this.world.settings.seaLevel,
       this.contours,
+      waterLevel(this.world) - this.world.settings.seaLevel,
     );
     if (mapHalf(this.world) > legacyHalf) {
       drawing.append(

@@ -1,3 +1,4 @@
+import { highWater } from './ocean';
 import { dockReserved } from './boathouse';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -76,7 +77,7 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
         if (Math.max(Math.abs(x), Math.abs(z)) >= mapHalf(w))
           return 'New fields would leave the map';
         const height = terrainHeight(w, x, z);
-        if (height <= w.settings.seaLevel + 0.1) return 'New fields need dry ground';
+        if (height <= highWater(w) + 0.1) return 'New fields need dry ground';
         heights.push(height);
         if (roadDistance(roads, x, z) < 1) return 'A road crosses the new fields';
         if (w.zones.some((v) => v.kind === 'noBuild' && Math.hypot(x - v.x, z - v.z) < v.radius))

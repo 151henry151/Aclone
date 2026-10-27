@@ -1,3 +1,4 @@
+import { highWater } from '../../shared/ocean';
 import { creatorBlocks } from '../../shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Input } from '../../shared/types.ts';
@@ -66,7 +67,7 @@ const cache = new WeakMap<World, Map<string, Grid>>();
 function grid(w: World, win: Window): Grid {
   const key = JSON.stringify([
     win,
-    w.settings.seaLevel,
+    highWater(w),
     w.townLayout,
     w.terrain,
     w.landscape,
@@ -85,7 +86,7 @@ function grid(w: World, win: Window): Grid {
     const p = point(win, i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
-    clear[i] = +(h >= w.settings.seaLevel + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2));
+    clear[i] = +(h >= highWater(w) + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2));
   }
   // Rasterize only a building's conservative bounding square, then use the
   // same exact rotated-volume collision test. Avoid cells × every building.
@@ -156,7 +157,7 @@ function canEscape(w: World, from: Point, to: Point) {
     };
     const h = terrainHeight(w, next.x, next.z);
     if (
-      h < w.settings.seaLevel + 0.05 ||
+      h < highWater(w) + 0.05 ||
       creatorBlocks(w, next.x, next.z, h, 2.2) ||
       w.buildings.some((b) => buildingBlocksMovement(b, previous, next, 0, 2.2))
     )

@@ -3,6 +3,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mapWaterPath, mapTerrainPaths } from '../src/client/map-water';
 
+test('tides move the mapped shore without changing topographic elevations', () => {
+  const ground = (x: number) => x - 30;
+  const low = mapTerrainPaths(240, 180, ground, true, -2);
+  const high = mapTerrainPaths(240, 180, ground, true, 2);
+  assert.notEqual(high.water, low.water);
+  assert.equal(high.major, low.major);
+  assert.equal(high.minor, low.minor);
+  assert.deepEqual(high.labels, low.labels);
+});
+
 test('diagonal coastline interpolates sea-level crossings instead of snapping to square cells', () => {
   const d = mapWaterPath(6, 6, (x, y) => x + y - 5);
   assert.match(d, /L5 0/);
