@@ -14,8 +14,11 @@ export function workShift(w: World, p: Player, b: Building) {
     b.kind !== 'farm' &&
     !!recipe &&
     p.skills.includes(recipe.skill);
-  const employee = b.owner !== p.id && p.job === b.id && w.settings.jobsEnabled !== false;
-  if (!(b.recipe || b.production) || (!owner && !employee)) return;
+  const employee =
+    (b.kind === 'lighthouse' || b.owner !== p.id) &&
+    p.job === b.id &&
+    w.settings.jobsEnabled !== false;
+  if (!(b.recipe || b.production || b.kind === 'lighthouse') || (!owner && !employee)) return;
   const interval = productionInterval(w, b);
   const until = owner ? (b.ownerActiveUntil ?? 0) : p.activeUntil;
   const remaining = Math.max(0, Math.ceil(until - w.time));
@@ -34,9 +37,11 @@ export function workShift(w: World, p: Player, b: Building) {
       ? `Shift active · ${duration(remaining)} left`
       : 'Shift ended · Renew to work again';
   const detail =
-    b.kind === 'farm'
-      ? 'Farm pay comes from completing funded harvest tasks, not automatic production checks.'
-      : `${checks === undefined ? '' : `${checks} production check${checks === 1 ? '' : 's'} covered. `}Next check in ${duration(nextIn)}. ${owner ? 'Operate without wages' : 'Wages require successful production'}; staffing efficiency may require several checks per batch; inputs, space and funding are still needed. You may drive away; the shift keeps running, even offline.`;
+    b.kind === 'lighthouse'
+      ? `Next keeper payment in ${duration(nextIn)}. The navigation service funds this wage; your private quarters remain available while employed.`
+      : b.kind === 'farm'
+        ? 'Farm pay comes from completing funded harvest tasks, not automatic production checks.'
+        : `${checks === undefined ? '' : `${checks} production check${checks === 1 ? '' : 's'} covered. `}Next check in ${duration(nextIn)}. ${owner ? 'Operate without wages' : 'Wages require successful production'}; staffing efficiency may require several checks per batch; inputs, space and funding are still needed. You may drive away; the shift keeps running, even offline.`;
   return {
     label,
     detail,

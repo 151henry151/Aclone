@@ -25,7 +25,10 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
       bounds.depth > 0 &&
         bounds.depth <= (kind === 'starport' ? 140 : kind === 'boathouse' ? 53 : 15),
     );
-    assert.ok(bounds.height > 0 && bounds.height <= (kind === 'starport' ? 194 : 12));
+    assert.ok(
+      bounds.height > 0 &&
+        bounds.height <= (kind === 'starport' ? 194 : kind === 'lighthouse' ? 30 : 12),
+    );
     shapes.add(JSON.stringify(plan.volumes));
     assert.equal(plan.doorHeight, 2.1);
   }
@@ -94,7 +97,10 @@ test('every rendered building has finite geometry and fits its planned footprint
       const bounds = new T.Box3().setFromObject(model);
       const plan = buildingBounds(buildingPlan(b));
       assert.ok(bounds.min.y >= (kind === 'boathouse' ? -4 : -0.05), `${kind}: below ground`);
-      assert.ok(bounds.max.y < (kind === 'starport' ? 194 : 12), `${kind}: height`);
+      assert.ok(
+        bounds.max.y < (kind === 'starport' ? 194 : kind === 'lighthouse' ? 30 : 12),
+        `${kind}: height`,
+      );
       assert.ok(bounds.max.x - bounds.min.x <= plan.width + 2, `${kind}: width`);
       assert.ok(bounds.max.z - bounds.min.z <= plan.depth + 4, `${kind}: depth`);
       model.traverse((o) => {

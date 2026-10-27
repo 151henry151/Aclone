@@ -1,3 +1,4 @@
+import { isLighthouseKeeper } from './lodging';
 import { waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
 import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { changeBoatLighting } from './boat-lighting';
@@ -882,7 +883,7 @@ export function act(w: World, id: string, a: Action): string {
           );
       }
       b.name = name;
-      b.wage = wage;
+      b.wage = b.kind === 'lighthouse' ? Math.min(800, wage) : wage;
       if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price);
       break;
     }
@@ -928,14 +929,17 @@ export function act(w: World, id: string, a: Action): string {
     case 'job': {
       requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       const b = nearby(w, p, a.building);
-      requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
+      requireThat(
+        b.kind === 'lighthouse' || b.owner !== id,
+        'You cannot take paid work or tasks at your own building',
+      );
       requireThat(!p.job || p.job === b.id, 'Quit your current job first');
       const recipe =
         b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
-      requireThat(recipe, 'No work at this building');
+      requireThat(recipe || b.kind === 'lighthouse', 'No work at this building');
       requireThat(
-        p.skills.includes(recipe.skill),
-        'Learn ' + recipe.skill + ' at the school first',
+        b.kind === 'lighthouse' || (recipe && p.skills.includes(recipe.skill)),
+        'Learn ' + (recipe && recipe.skill) + ' at the school first',
       );
       // Reaccepting an existing job renews its shift without a second staff slot.
       if (!b.employees.includes(id)) {
@@ -951,10 +955,17 @@ export function act(w: World, id: string, a: Action): string {
       if (p.job !== b.id) questEvent(w, p, 'job', b.id);
       queueCreatorScript(w, 'JobChanged', { id, building: b.id, previous: p.job ?? '' });
       p.job = b.id;
+      if (b.kind === 'lighthouse') {
+        b.lodging ??= { open: false, rate: 0, guests: {} };
+        b.lodging.guests[id] ??= { until: Number.MAX_SAFE_INTEGER, stock: {} };
+      }
       p.activeUntil = w.time + 2 * productionInterval(w, b);
-      result = w.settings.activeWork
-        ? 'Employed here and working for the next two cycles; production is scheduled, not instant.'
-        : 'Employed here without shift renewal, including offline. Factory wages require funded production; farms pay for completed harvests.';
+      result =
+        b.kind === 'lighthouse'
+          ? 'You are the lighthouse keeper. Your private quarters are available while employed; bring food and water. The navigation service funds your daily wage.'
+          : w.settings.activeWork
+            ? 'Employed here and working for the next two cycles; production is scheduled, not instant.'
+            : 'Employed here without shift renewal, including offline. Factory wages require funded production; farms pay for completed harvests.';
       break;
     }
     case 'quit': {
@@ -969,7 +980,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'work': {
       const b = nearby(w, p, a.building);
-      if (w.settings.ownerOperation && b.owner === p.id) {
+      if (b.kind !== 'lighthouse' && w.settings.ownerOperation && b.owner === p.id) {
         const recipe = b.production ?? (b.recipe && recipes[b.recipe]);
         requireThat(
           recipe && b.kind !== 'farm',
@@ -982,7 +993,10 @@ export function act(w: World, id: string, a: Action): string {
           : 'Qualified owner operation continues without wages, including offline; inputs are still required.';
         break;
       }
-      requireThat(b.owner !== id, 'You cannot take paid work or tasks at your own building');
+      requireThat(
+        b.kind === 'lighthouse' || b.owner !== id,
+        'You cannot take paid work or tasks at your own building',
+      );
       requireThat(w.settings.jobsEnabled !== false, 'Paid jobs are disabled in this world');
       requireThat(p.job === b.id, 'Take a job here first');
       p.activeUntil = w.time + 2 * productionInterval(w, b);
@@ -1068,7 +1082,10 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       requireThat(
         !b.construction &&
-          ((b.kind === 'home' && b.owner === id) || (b.lodging?.guests[id]?.until ?? 0) > w.time),
+          (isLighthouseKeeper(b, p) ||
+            (b.kind !== 'lighthouse' &&
+              ((b.kind === 'home' && b.owner === id) ||
+                (b.lodging?.guests[id]?.until ?? 0) > w.time))),
         'You need your own home or a booked room',
       );
       requireThat(!p.task && !p.hitch && !p.crowBody, 'Finish your activity first');
@@ -2026,8 +2043,12 @@ export function command(w: World, p: Player, text: string): string {
     case 'showjobs':
     case 'jobs':
       return w.buildings
-        .filter((b) => b.recipe)
-        .map((b) => `${b.name}: ${money(b.wage)} / cycle`)
+        .filter((b) => b.recipe || b.kind === 'lighthouse')
+        .map((b) =>
+          b.kind === 'lighthouse'
+            ? `${b.name}: ${money(Math.min(800, b.wage))} / game day; one unskilled keeper, quarters included`
+            : `${b.name}: ${money(b.wage)} / cycle`,
+        )
         .join(' · ');
     case 'showowned':
       return (
@@ -2386,12 +2407,39 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   }
 }
 export function productionInterval(w: World, b: Building) {
+  if (b.kind === 'lighthouse') return Math.max(60, w.settings.dayLength || 600);
   return (
     b.production?.seconds ??
     (((b.recipe ? recipes[b.recipe]?.seconds : 600) ?? 600) / 600) * w.settings.productionSeconds
   );
 }
 function cycle(w: World, b: Building, at: number) {
+  if (b.kind === 'lighthouse') {
+    if (b.construction) return;
+    // Navigation is a public service: a small fixed grant, independent of size or capital.
+    if (b.owner && b.owner !== 'treasury') {
+      b.investment += 400;
+      log(w, 'faucet', 400, 'navigation service', b.id, 'lighthouse owner allowance');
+    }
+    const keeper = w.players[b.employees[0]];
+    if (
+      w.settings.jobsEnabled !== false &&
+      keeper &&
+      isLighthouseKeeper(b, keeper) &&
+      (!w.settings.activeWork || keeper.activeUntil >= at)
+    ) {
+      const wage = Math.max(0, Math.min(800, b.wage));
+      const tax = Math.floor(wage * w.settings.wageTax),
+        town = taxTown(w, b.x, b.z);
+      const local = town ? Math.min(wage - tax, Math.floor(wage * town.wageTax)) : 0;
+      log(w, 'faucet', wage, 'navigation service', b.id, 'keeper wage funding');
+      keeper.cash += wage - tax - local;
+      log(w, 'transfer', wage - tax - local, b.id, keeper.id, 'wage');
+      log(w, 'sink', tax, b.id, 'treasury', 'wage tax');
+      if (town) payTown(w, town, b.id, local, 'wage tax');
+    }
+    return;
+  }
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
   if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) {

@@ -5,7 +5,7 @@ import type { World, Building } from './types.ts';
 import { migrateOutsideClaims } from './stakes.ts';
 /** An owner manages capital and stock; they cannot be their own paid employee. */
 export function removeOwnerEmployment(w: World, b: Building) {
-  if (!b.owner) return;
+  if (!b.owner || b.kind === 'lighthouse') return;
   b.employees = b.employees.filter((id) => id !== b.owner);
   const p = w.players[b.owner];
   if (p?.job === b.id) {

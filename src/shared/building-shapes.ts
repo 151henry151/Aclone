@@ -95,6 +95,9 @@ export function buildingPlan(b: {
     trim = '#526d60';
   let volumes: BuildingVolume[];
   switch (b.kind) {
+    case 'lighthouse':
+      volumes = [volume(6, 6, 19, 0.2, 'flat'), volume(7, 5, 3, 1.5, 'gable', 7, 0)];
+      break;
     case 'home':
       volumes = [
         volume(6.4 + variant * 0.5, 5.4 + variant * 0.3, 2.7, 1.7, variant === 1 ? 'hip' : 'gable'),

@@ -1954,7 +1954,9 @@ function buildingWindow(b: Building) {
       html += button('Parish supply orders', 'procurement');
     if (selfOwned)
       html +=
-        '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages. Where owner operation is enabled, qualified owners also operate factories without wages.</p>';
+        b.kind === 'lighthouse'
+          ? '<p class="notice">Your lighthouse: collect the navigation allowance in Building Admin. You may take the keeper job if its single place is vacant.</p>'
+          : '<p class="notice">Your business: use Stockroom to move goods and Building Admin to manage cash. Owners cannot trade with or take jobs at their own property. Farm owners can tend their plots without taking wages. Where owner operation is enabled, qualified owners also operate factories without wages.</p>';
     if (!b.government && (b.stakes?.length || (!selfOwned && !b.construction))) {
       const mine = b.stakes?.find((s) => s.investor === me!.id);
       const locked = unpaidPrincipal(b);
@@ -2103,6 +2105,36 @@ function buildingWindow(b: Building) {
         .join(
           ', ',
         )}. Hay does not replace water.</p><p>Up to eight animals per nearby building are shown outside; the stockroom is the full count. Extra animals are breeding reserves and add upkeep, not production capacity.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : selfOwned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'} + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
+    }
+    if (b.kind === 'lighthouse') {
+      const keeper = me.job === b.id && b.employees.includes(me.id);
+      const guest = b.lodging?.guests[me.id];
+      html += `<h3>Lighthouse keeper</h3><p>One paid place, no qualification or deposit. The keeper may live here while employed; ownership alone does not provide housing. Bring your own food and water. Keeper wage: ${money(Math.min(800, b.wage))} per game day before tax. The navigation service pays the private owner 4d per game day into Working capital.</p>`;
+      if (world.settings.jobsEnabled !== false)
+        html += button(
+          keeper ? 'Renew keeper shift' : 'Take keeper job',
+          'job',
+          `data-building="${b.id}" ${!near || !jobVacancy(world, b, me.id) ? 'disabled' : ''}`,
+        );
+      if (keeper)
+        html +=
+          button('Enter keeper quarters', 'home', `data-building="${b.id}"`) +
+          button('Leave keeper job', 'quit');
+      if (guest)
+        html += `<h3>Your keeper pantry</h3><p>${
+          Object.entries(me.roomPantries?.[b.id] ?? guest.stock)
+            .filter(([, n]) => n > 0)
+            .map(([k, n]) => `${esc(items[k]?.name ?? k)} × ${n}`)
+            .join(' · ') || 'No provisions stored.'
+        }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
+          'item',
+          Object.entries(items)
+            .filter(([, d]) => d.food || d.drink)
+            .map(([k, d]) => [k, d.name]),
+        )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
+          ['deposit', 'Store provisions'],
+          ['withdraw', 'Collect provisions'],
+        ])}<button>Transfer provisions</button></form>`;
     }
     if (b.kind === 'home')
       html += `<p>While inside, hunger and thirst drain at ${Math.round((world.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of the normal rate. Your home feeds you from its storeroom even while you are offline. ${world.settings.autoConsumeInventory ? 'Carried food and drink are also eaten automatically, online and offline.' : 'Carried food and drink must be used manually.'} ${world.settings.autoConsumeHomeStock ? 'Your selected home also supplies meals while you are away.' : 'Home supplies are used only while inside.'} Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${selfOwned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;

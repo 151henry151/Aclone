@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Three coastal lighthouses in Puddlewick, with rotating 3 km navigation beams, five tower designs, independent finishes and keeper cottages. Lighthouses are purchasable and buildable.
+- One unskilled keeper job per lighthouse, with private quarters and pantry while employed. Owners may take the vacant job, but ownership alone grants no housing. The navigation service funds a wage capped at 8d and a 4d owner allowance per game day.
 - Moon-linked tides with two cycles per lunar day and spring/neap variation. World owners can set tidal range and wave strength; Puddlewick enables a modest 0.6-metre spring range once on upgrade.
 - Weather-driven ocean swells, moving shoreline surf and offshore whitecaps. Boats rise, pitch and roll with the water; meeting steep waves at speed produces bow spray and extra resistance, with cabin views following the hull.
 

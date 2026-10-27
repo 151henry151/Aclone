@@ -407,3 +407,9 @@ Puddlewick eats and drinks from carried supplies automatically while online or o
 Indoors, home supplies are used first, then inventory. Needs grow at 80% of the outdoor rate in Puddlewick; the savings apply only while actually inside. Automatic eating uses the same meal thresholds and food effects as home feeding, prefers nonalcoholic choices within each source, and spends real servings. Supplies can still run out. World owners can independently switch off inventory feeding or remote home feeding and adjust the indoor multiplier under **Editor → Rules → Automatic food and drink**.
 
 Boat crew continue to use their captain’s provisions first. Captains use boat stores automatically while offline; online captains can take provisions into inventory for automatic eating when this world permits it. The home estimate includes all supplies available while at home and excludes starvation/death time.
+
+## Lighthouse keeping
+
+Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
+
+Keeper wages are funded by the navigation service, up to 8d per game day before taxes. In worlds requiring active shifts, renew them to keep earning; Puddlewick allows unattended employment. Private owners receive 4d per game day into Working capital. Ownership alone gives no right to live there; an owner may apply for the vacant keeper job. Larger designs still employ only one keeper and earn the same allowance. Lights continue navigating boats even when the job is vacant.

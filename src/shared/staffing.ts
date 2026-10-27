@@ -15,6 +15,7 @@ export function staffingEfficiency(active: number, ideal: number): number {
 /** A qualified working owner supplies one unpaid place, not a paid job. */
 export function ownerOperating(w: World, b: Building, at = w.time): boolean {
   // Public/remembered snapshots already report owner operation without revealing skills.
+  if (b.kind === 'lighthouse') return false;
   if (b.staffing)
     return (
       b.staffing.ownerOperating && (!w.settings.activeWork || (b.ownerActiveUntil ?? -1) >= at)
@@ -39,6 +40,7 @@ export function recommendedHiringLimit(w: World, b: Building): number {
       );
 }
 export function hiringLimit(w: World, b: Building): number {
+  if (b.kind === 'lighthouse') return 1;
   return b.hiringLimit ?? recommendedHiringLimit(w, b);
 }
 export function jobVacancy(w: World, b: Building, playerId?: string): boolean {

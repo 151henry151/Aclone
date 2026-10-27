@@ -364,3 +364,6 @@ boat response and camera clearance, storm versus calm rendering, and shoreline
 boarding throughout a full tide cycle. `scripts/ocean-preview.ts` captures the
 full production renderer in a disposable world for visual review.
 
+### Coastal lighthouses
+
+Five lightweight tower-and-cottage models use shared masonry/timber finishes, a glazed lantern, balcony rail and identification band. Gameplay attaches a rotating additive 3 km shaft after bounds and gallery framing are calculated. Terrain depth testing occludes the beam; it adds no shadow-casting spotlight. A long camera far plane keeps distant navigation lights visible while normal terrain fog remains in place. `scripts/lighthouse-preview.ts` captures day, night and offshore views using the actual GameScene.

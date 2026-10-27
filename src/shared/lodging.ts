@@ -9,11 +9,15 @@ export const roomCount = (b: Building) =>
     (b.kind === 'hotel' ? 8 : b.kind === 'bnb' ? 3 : 0) *
       (buildingSize(b.kind, b.size)?.capacity ?? 1),
   );
+export function isLighthouseKeeper(b: Building, p: Player) {
+  return b.kind === 'lighthouse' && !b.construction && p.job === b.id && b.employees.includes(p.id);
+}
 export function shelter(w: World, p: Player) {
   if (!p.atHome) return;
   const b = w.buildings.find((b) => b.id === p.home && !b.construction);
   if (!b) return;
   if (b.kind === 'home' && b.owner === p.id) return { b, stock: b.stock, until: Infinity };
+  if (b.kind === 'lighthouse' && !isLighthouseKeeper(b, p)) return;
   const guest = b.lodging?.guests[p.id];
   if (guest && guest.until > w.time) return { b, stock: guest.stock, until: guest.until };
 }
@@ -22,8 +26,13 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
   const check = (ok: unknown, message: string) => {
     if (!ok) throw Error(message);
   };
-  check(roomCount(b) && !b.construction, 'Visit a finished hotel or bed & breakfast');
+  check(
+    (roomCount(b) || b.kind === 'lighthouse') && !b.construction,
+    'Visit a finished hotel or bed & breakfast',
+  );
   const l = b.lodging ?? { open: false, rate: 600, guests: {} };
+  if (b.kind === 'lighthouse')
+    check(a.operation === 'store', 'Keeper quarters are provided by employment');
   if (a.operation === 'configure') {
     check(
       b.owner === p.id && p.skills.includes('innkeeper'),
@@ -71,7 +80,11 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
       to = deposit ? guest.stock : p.inventory;
     check((from[item] ?? 0) >= n, 'Not enough supplies');
     check(deposit ? (to[item] ?? 0) + n <= 100 : canCarry(p, item, n, w), 'Storage full');
-    if (deposit) check(guest.until > w.time, 'Renew your booking before storing more supplies');
+    if (deposit)
+      check(
+        b.kind === 'lighthouse' ? isLighthouseKeeper(b, p) : guest.until > w.time,
+        'Renew your booking before storing more supplies',
+      );
     from[item] -= n;
     to[item] = (to[item] ?? 0) + n;
   } else if (a.operation === 'checkout') {

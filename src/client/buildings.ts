@@ -1,3 +1,4 @@
+import { lighthouseModel } from './lighthouse';
 import { boatyardDetails } from './boatyard';
 import { cottageMailbox } from './mailbox';
 import { addBuildingIdentity } from './building-identity';
@@ -14,6 +15,7 @@ import { buildingFinish, finishMaterial, finishSurface } from './building-finish
 
 /** Original metre-scale village kit. Door/window dimensions never scale with the shell. */
 export function buildingModel(b: Building, finish: typeof surface = surface) {
+  if (b.kind === 'lighthouse') return lighthouseModel(b, finish);
   const root = new T.Group(),
     plan = buildingPlan(b),
     look = buildingFinish(b.kind, plan);

@@ -24,6 +24,13 @@ const hall = (
 });
 const p = (name: string, ...volumes: BuildingVolume[]) => ({ name, volumes });
 export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
+  lighthouse: [
+    p('Round headland tower', hall(6, 6, 19, 'flat'), hall(7, 5, 3, 'gable', 1.5, 7, 0)),
+    p('Octagonal harbour light', hall(7, 7, 15, 'flat'), hall(6, 7, 3, 'gable', 1.6, -7, 1)),
+    p('Square signal tower', hall(6, 6, 17, 'flat'), hall(8, 5, 3.2, 'gable', 1.4, 0, -6)),
+    p('Slender cape light', hall(5, 5, 24, 'flat'), hall(6, 5, 3, 'gable', 1.5, 6, -2)),
+    p('Broad coastal beacon', hall(8, 8, 13, 'flat'), hall(7, 6, 3.3, 'gable', 1.8, -8, -2)),
+  ],
   boathouse: [
     p('Canal boatyard', hall(14, 14, 5, 'gable', 2.6), hall(6, 7, 3, 'shed', 0.8, -11, 3)),
     p('Harbour chandlery', hall(14, 12, 5.6, 'hip', 2), hall(6, 8, 3.2, 'gable', 1.2, -11, 2)),

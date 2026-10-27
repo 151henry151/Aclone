@@ -1,3 +1,4 @@
+import { addLighthouseBeam } from './lighthouse';
 import { Ocean } from './ocean';
 import { boatSeaPose, waterLevel } from '../shared/ocean';
 import { FishingLightPool } from './fishing-lights';
@@ -118,7 +119,7 @@ export class GameScene {
   private audioFacing = new T.Vector3();
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
-  readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 950);
+  readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 12000);
   private land = new T.Group();
   private actors = new T.Group();
   private space = new T.Group();
@@ -1004,6 +1005,7 @@ export class GameScene {
       if (o.userData.clouds) animated.push(o);
     }
     this.land.traverse((o) => {
+      if (o.userData.lighthouseRotor === true) animated.push(o);
       if (o.userData.animatedFlight) animated.push(o);
       if (o.name === 'floating-jetty' || o.parent?.name === 'boatyard-gangway') animated.push(o);
       if (o.userData.flight) this.flights.push(o.userData.flight);
@@ -1077,6 +1079,7 @@ export class GameScene {
     }
     g.add(model);
     g.userData.chimneys = model.userData.chimneys ?? [];
+    if (model.userData.lighthouseRotor) g.userData.lighthouseRotor = model.userData.lighthouseRotor;
     const bounds = new T.Box3().setFromObject(g);
     const sign = label(b.name, b.construction ? '#e7b36b' : '#e5ddbe', 0.65);
     // Keep the terminal name readable at the door, not above the tall spacecraft.
@@ -1218,6 +1221,14 @@ export class GameScene {
       for (const model of this.buildingMeshes)
         if (model.userData.boatyardBuilding)
           fitBoatyardToWater(model, model.userData.boatyardBuilding, w);
+      for (const model of this.buildingMeshes) {
+        const rotor = model.userData.lighthouseRotor as T.Group | undefined;
+        if (rotor) {
+          if (!rotor.children.length) addLighthouseBeam(rotor);
+          rotor.rotation.y = (seaTime * Math.PI) / 8 + model.position.x * 0.01;
+          rotor.updateMatrixWorld(true);
+        }
+      }
       this.livestock.animate(this.elapsed);
       const assets = animateCreatorModels(this.scene, dt, this.camera.position);
       this.renderer.domElement.dataset.assetLoading = String(assets.loading);

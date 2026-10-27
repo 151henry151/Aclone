@@ -1477,5 +1477,24 @@
     "wage": 0,
     "color": "#91aba3",
     "stock": {}
+  },
+  "lighthouse": {
+    "name": "Lighthouse",
+    "price": 240000,
+    "capacity": 100,
+    "buy": {},
+    "sell": {},
+    "materials": {
+      "blocks": 80,
+      "wood": 20,
+      "steel": 12,
+      "gravel": 30
+    },
+    "tier": 0,
+    "recipe": null,
+    "wage": 800,
+    "color": "#eee4ce",
+    "stock": {},
+    "idealEmployees": 1
   }
 }

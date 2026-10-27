@@ -384,6 +384,7 @@ export interface World {
   boatyardVersion?: number;
   fishingVoyageVersion?: number;
   oceanVersion?: number;
+  lighthouseVersion?: number;
   boatDeathRulesVersion?: 1;
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;
