@@ -17,6 +17,8 @@ shop keeps paid premium bread, water and fuel on the shelf and restocks them;
 fuel costs more than typical pumps or the harbour. You can still buy if
 displayed stock is briefly zero.
 
+Shop rows show **You have** with your carried quantity. **Sell all** sells that stack in one click; if buying funds, storage or the 10,000-item transaction limit prevent that, **Sell max (N)** shows the accepted quantity and explains what stays with you. These counts update while the shop is open. Ordinary Buy/Sell buttons still use **Quantity per trade**.
+
 Repeated buys/sales of the same item at one shop show the confirmed total quantity
 and price, including when you close the window. Failed trades do not add to it;
 changing goods, direction, shop or visit starts a new total.

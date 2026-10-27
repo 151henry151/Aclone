@@ -1191,6 +1191,13 @@ kbd {
 }
 .trade-row > span {
   flex: 1;
+  min-width: 110px;
+}
+.trade-row .trade-bulk-note {
+  flex-basis: 100%;
+}
+.trade-row .trade-bulk-note:empty {
+  display: none;
 }
 .trade-row small {
   display: block;

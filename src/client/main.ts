@@ -63,6 +63,7 @@ import { caretakerBody, caretakerPanel, type CaretakerUi } from './caretaker';
 import type { CaretakerView, CaretakerLogPage } from '../shared/caretaker';
 import { workShift } from './work-shift';
 import { TradeFeedback } from './trade-feedback';
+import { bulkSale } from './bulk-sale';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { emergencyImport } from '../shared/harbour-supply';
 import { bankLoans, bankQuote } from './bank';
@@ -1299,6 +1300,20 @@ function refreshTaxInfo() {
     const summary = taxSummary(world, b);
     if (note.textContent !== summary) note.textContent = summary;
   }
+  for (const count of app.querySelectorAll<HTMLElement>('[data-trade-carried]')) {
+    count.textContent = `You have ${me.inventory[count.dataset.item!] ?? 0}`;
+  }
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-do="sellAll"]')) {
+    const item = button.dataset.item!;
+    const carried = me.inventory[item] ?? 0;
+    const sale = bulkSale(b, item, carried, Number(button.dataset.price));
+    const near = b.kind === 'boathouse' ? nearBoathouse(world, me, b) : distance(me, b) < 18;
+    button.dataset.quantity = String(sale.quantity);
+    button.disabled = !near || b.owner === me.id || sale.quantity === 0;
+    button.textContent = `${sale.quantity < carried ? 'Sell max' : 'Sell all'} (${sale.quantity})`;
+    const note = button.closest('.trade-row')?.querySelector('[data-bulk-note]');
+    if (note) note.textContent = sale.note;
+  }
   const quantity = Number((app.querySelector('#trade-quantity') as HTMLInputElement)?.value ?? 1);
   for (const quote of app.querySelectorAll<HTMLElement>('[data-trade-quote]')) {
     // Use the price actually attached to the visible button, not a fresh unseen quote.
@@ -1983,7 +1998,7 @@ function buildingWindow(b: Building) {
             )
               .map(
                 ([id, price]) =>
-                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small></span><b>${money(price)}</b>${selfOwned ? '' : `<button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button>`}<small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
+                  `<div class="trade-row"><span><b>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</b><small>${b.stock[id] ?? 0} / ${b.capacity} in stock${side === 'sell' && emergencyImport(world!, b, id) ? ' · Emergency imports available at this price' : ''}</small><small data-trade-carried data-item="${id}">You have ${me!.inventory[id] ?? 0}</small></span><b>${money(price)}</b>${selfOwned ? '' : `<button data-do="trade" data-price="${price}" data-building="${b.id}" data-item="${id}" data-direction="${side === 'sell' ? 'buy' : 'sell'}" ${!near ? 'disabled' : ''}>${side === 'sell' ? 'Buy' : 'Sell'}</button>${side === 'buy' ? `<button data-do="sellAll" data-building="${b.id}" data-item="${id}" data-price="${price}" disabled>Sell all</button><small class="trade-bulk-note" data-bulk-note></small>` : ''}`}<small class="trade-tax-quote" data-trade-quote data-item="${id}" data-side="${side}" data-price="${price}"></small></div>`,
               )
               .join('')}</div></section>`,
         )
@@ -2610,6 +2625,16 @@ app.addEventListener('click', async (e) => {
         break;
       case 'use':
         send({ type: 'use', item: id });
+        break;
+      case 'sellAll':
+        send({
+          type: 'trade',
+          building,
+          item: el.dataset.item,
+          quantity: Number(el.dataset.quantity),
+          direction: 'sell',
+          expectedPrice: Number(el.dataset.price),
+        });
         break;
       case 'trade':
         send({

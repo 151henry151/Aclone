@@ -58,3 +58,61 @@ test('repeated confirmed trades show totals after closing and reset for the next
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('shop shows live carried counts and bulk selling preserves the quantity field', async ({
+  page,
+}) => {
+  const dir = mkdtempSync(join(tmpdir(), 'aclone-bulk-sale-'));
+  const app = await createApp({ dataDir: dir, port: 0, dev: true });
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const { account, token } = app.universe.register('Fishseller');
+    const w = createWorld('trades', 'Trades', 'owner');
+    const b = w.buildings.find((b) => b.kind === 'market')!;
+    w.buildings = [b];
+    w.zones = [];
+    w.script = '';
+    w.creator = creatorSchema.parse({ scenery: false, roads: false, weather: 'clear' });
+    const p = addPlayer(w, account.id, account.name);
+    Object.assign(p, { x: b.x, z: b.z + 12, inventory: { fish: 80 }, cash: 100000 });
+    b.buy = { fish: 200 };
+    b.stock.fish = 0;
+    b.capacity = 1000;
+    b.investment = 200 * 30;
+    app.worlds.set(w.id, w);
+    const port = await app.listen();
+    await page.addInitScript(
+      ({ token }) => {
+        localStorage.setItem('aclone.pilot', token);
+        localStorage.setItem('aclone.world', 'trades');
+        localStorage.setItem('aclone.quality', 'low');
+      },
+      { token },
+    );
+    await page.goto(`http://127.0.0.1:${port}`);
+    await waitForWorld(page);
+    await page.locator('#target button').click();
+    const sell = page.locator('[data-do="sellAll"][data-item="fish"]');
+    const row = page.locator('.trade-row').filter({ has: sell });
+    await expect(row).toContainText('You have 80');
+    await expect(sell).toHaveText('Sell max (30)');
+    await page.locator('#trade-quantity').fill('7');
+    await sell.click();
+    await expect.poll(() => p.inventory.fish).toBe(50);
+    await expect(row).toContainText('You have 50');
+    await expect(sell).toBeDisabled();
+    await expect(page.locator('#trade-quantity')).toHaveValue('7');
+    b.investment = 100000;
+    await expect(sell).toHaveText('Sell all (50)');
+    await sell.click();
+    await expect.poll(() => p.inventory.fish ?? 0).toBe(0);
+    await expect(row).toContainText('You have 0');
+    await expect(sell).toBeDisabled();
+    await expect(page.locator('#toast')).toContainText('Sold 80');
+    await expect(page.locator('#trade-quantity')).toHaveValue('7');
+    await page.screenshot({ path: 'output/bulk-sale-mobile.png' });
+  } finally {
+    await app.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
