@@ -136,6 +136,10 @@ test('designs roundtrip live configuration but exclude players, savings and inve
   const { w, p } = fixture();
   p.cash = 7654321;
   w.settings.dayLength = 7;
+  w.terrainMapSize = 12500;
+  w.coastalBluffs = [
+    { id: 'headland', x: 200, z: 220, angle: 0, width: 135, inland: 260, height: 32, seed: 4 },
+  ];
   w.buildings[0].stock.wheat = 333;
   w.buildings[0].investment = 99999;
   const design = exportDesign(w);
@@ -143,6 +147,8 @@ test('designs roundtrip live configuration but exclude players, savings and inve
   applyDesign(copy, JSON.parse(JSON.stringify(design)));
   assert.deepEqual(copy.creator, w.creator);
   assert.equal(copy.settings.dayLength, 7);
+  assert.equal(copy.terrainMapSize, w.terrainMapSize);
+  assert.deepEqual(copy.coastalBluffs, w.coastalBluffs);
   assert.deepEqual(copy.players, {});
   assert.ok(!JSON.stringify(design).includes('7654321'));
   assert.notEqual(copy.buildings[0].investment, 99999);

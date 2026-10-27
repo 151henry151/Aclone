@@ -1,4 +1,5 @@
-import { addLighthouseBeam } from './lighthouse';
+import { coastalRocks } from './coastal-rocks';
+import { LighthouseLights } from './lighthouse-lights';
 import { Ocean } from './ocean';
 import { boatSeaPose, waterLevel } from '../shared/ocean';
 import { FishingLightPool } from './fishing-lights';
@@ -202,6 +203,7 @@ export class GameScene {
   private flightSnapshotAt = 0;
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
+  private lighthouseLights = new LighthouseLights();
   private ocean = new Ocean();
   private ground = new GroundTiles((mesh) => this.ocean.absorb(mesh));
   private woods = new CountrysideChunks();
@@ -266,6 +268,7 @@ export class GameScene {
     this.precipitation.mesh.visible = false;
     this.scene.add(
       this.land,
+      this.lighthouseLights.group,
       this.ground.group,
       this.woods.group,
       this.actors,
@@ -436,6 +439,7 @@ export class GameScene {
     this.sky.visible = true;
     this.space.visible = false;
     this.land.visible = true;
+    this.lighthouseLights.group.visible = true;
     this.ground.group.visible = true;
     this.woods.group.visible = true;
     this.actors.visible = true;
@@ -443,6 +447,7 @@ export class GameScene {
       world.id +
       ':' +
       JSON.stringify(world.terrain) +
+      JSON.stringify(world.coastalBluffs ?? []) +
       JSON.stringify(world.airfield ?? null) +
       JSON.stringify(world.landscape ?? {}) +
       JSON.stringify(world.roads ?? []) +
@@ -682,6 +687,7 @@ export class GameScene {
     this.me = undefined;
     this.space.visible = true;
     this.land.visible = false;
+    this.lighthouseLights.group.visible = false;
     this.ground.group.visible = false;
     this.woods.group.visible = false;
     this.actors.visible = false;
@@ -718,6 +724,7 @@ export class GameScene {
       this.land.add(this.terrain);
     }
     if (w.airfield) this.land.add(airfieldModel(w.airfield));
+    if (w.coastalBluffs?.length) this.land.add(coastalRocks(w));
     const sea = this.ocean.create(w, this.low);
     this.water = sea;
     this.land.add(sea);
@@ -1224,7 +1231,6 @@ export class GameScene {
       for (const model of this.buildingMeshes) {
         const rotor = model.userData.lighthouseRotor as T.Group | undefined;
         if (rotor) {
-          if (!rotor.children.length) addLighthouseBeam(rotor);
           rotor.rotation.y = (seaTime * Math.PI) / 8 + model.position.x * 0.01;
           rotor.updateMatrixWorld(true);
         }
@@ -1651,6 +1657,13 @@ export class GameScene {
       this.scene.background = sky;
       if (!(this.scene.fog instanceof T.Fog)) this.scene.fog = new T.Fog(sky, 125, 450);
       this.scene.fog.color.copy(sky);
+      this.lighthouseLights.update(
+        w,
+        this.camera,
+        seaTime,
+        daylight,
+        climate.storm ? 1 : climate.precipitation === 'rain' ? 0.4 : 0,
+      );
       const visibility = viewFog(climate);
       this.scene.fog.near = visibility.near;
       this.scene.fog.far = visibility.far;

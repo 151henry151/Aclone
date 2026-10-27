@@ -277,6 +277,7 @@ export class ParishMap {
       Math.round(waterLevel(w) * 10),
       w.terrainMapSize,
       w.terrain,
+      w.coastalBluffs,
       w.landscape?.heightmap,
       w.airfield,
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),

@@ -250,7 +250,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     shader.uniforms.maskSize = { value: region.size };
     // Masks are addressed in world metres so streamed tiles sample their own bake.
     shader.vertexShader =
-      'varying vec3 groundPosition; uniform float snowDepthVisual; attribute vec3 snowLift;\n' +
+      'varying vec3 groundPosition; varying float groundSlope; varying float groundRock; attribute float coastalRock; uniform float snowDepthVisual; attribute vec3 snowLift;\n' +
       shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       '#include <beginnormal_vertex>',
@@ -260,13 +260,13 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     );
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
-      '#include <begin_vertex>\ngroundPosition=(modelMatrix*vec4(position,1.)).xyz; transformed.y += snowLift.y * snowDepthVisual;',
+      '#include <begin_vertex>\ngroundRock=coastalRock; groundSlope=1.-normal.y; groundPosition=(modelMatrix*vec4(position,1.)).xyz; transformed.y += snowLift.y * snowDepthVisual;',
     );
     shader.fragmentShader =
       `
       uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform float snowDepthVisual; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore;
       uniform vec2 maskOrigin; uniform float maskSize;
-      varying vec3 groundPosition;
+      varying vec3 groundPosition; varying float groundSlope; varying float groundRock;
       uniform sampler2D groundNoise;
       float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return texture2D(groundNoise,(i+f+.5)/128.).r;}
       ` + shader.fragmentShader;
@@ -288,10 +288,16 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       painted=mix(painted,texture2D(soilMap,p/6.).rgb*soilTint,brush.g);
       painted=mix(painted,texture2D(sandMap,p/6.).rgb*sandTint,brush.b);
       vec3 base=mix(mix(turf,grit,max(road,beach)),painted,brush.a);
+      vec3 cliffNormal=normalize(cross(dFdx(groundPosition),dFdy(groundPosition)));
+      float rock=max(groundRock,smoothstep(.28,.62,1.-abs(cliffNormal.y)));
+      vec3 strata=texture2D(gravel,vec2(p.x+p.y,groundPosition.y)*.16).rgb;
+      float joints=.82+.18*noise(vec2((p.x+p.y)*.7,groundPosition.y*.11));
+      float layers=.93+.07*sin(groundPosition.y*.85+noise(p*.08)*5.);
+      base=mix(base,strata*vec3(.66,.73,.78)*joints*layers,rock);
       // Road surfaces shed snow; soft snowy verges remain visible outside the lane.
       // Shallow cover is broken by grass, deeper cover smooths into broad drifts.
       float depth=clamp(snowDepthVisual/.15,0.,1.);
-      float cover=clamp(snowCover,0.,1.)*(1.-road);
+      float cover=clamp(snowCover,0.,1.)*(1.-road)*(1.-rock);
       vec3 snow=vec3(.85,.91,.94)*mix(.87+noise(p*2.)*.13,.94+noise(p*.12)*.06,depth);
       snow*=1.-(1.-depth)*.10*(1.-noise(p*.8));
       diffuseColor.rgb*=mix(base,snow,cover);
@@ -314,7 +320,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       }`,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v9';
+  mat.customProgramCacheKey = () => 'countryside-ground-v10';
   return mat;
 }
 

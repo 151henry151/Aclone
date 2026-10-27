@@ -1,3 +1,4 @@
+import { bluffHeight, nearBluff, coastalRockCover } from './coastal-bluffs';
 import { airfieldHeight } from './airfield';
 import { heightmapAt } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -71,7 +72,12 @@ export function terrainHeight(w: World, x: number, z: number) {
   if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
-  return airfieldHeight(w.airfield, x, z, h);
+  return airfieldHeight(
+    w.airfield,
+    x,
+    z,
+    bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel),
+  );
 }
 /** Woodland cover 0..1 for the generated countryside: zero in the village, in the
  * water and on compact maps, which keep their hand-placed trees. */
@@ -81,7 +87,15 @@ export function woodland(w: World, x: number, z: number) {
   const outside = smoothstep(300, 450, Math.max(Math.abs(x), Math.abs(z)));
   if (outside <= 0) return 0;
   const h = terrainHeight(w, x, z);
-  if (h < w.settings.seaLevel + 1) return 0;
+  if (
+    nearBluff(w, x, z) &&
+    Math.max(
+      Math.abs(terrainHeight(w, x + 2, z) - terrainHeight(w, x - 2, z)),
+      Math.abs(terrainHeight(w, x, z + 2) - terrainHeight(w, x, z - 2)),
+    ) > 5
+  )
+    return 0;
+  if (h < w.settings.seaLevel + 1 || coastalRockCover(w.coastalBluffs, x, z) > 0) return 0;
   const seed = terrainSeed(w);
   const cover = smoothstep(0.08, 0.5, fbm(x / 420, z / 420, 3, seed + 29));
   const shore = smoothstep(w.settings.seaLevel + 1, w.settings.seaLevel + 4, h);

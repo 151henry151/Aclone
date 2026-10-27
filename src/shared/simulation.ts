@@ -1,3 +1,4 @@
+import { cliffBlocks } from './coastal-bluffs';
 import { isLighthouseKeeper } from './lodging';
 import { boatShoreCollision } from './boat-shore';
 import { waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
@@ -2275,7 +2276,13 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
                 : (v.collisionRadius ?? 1.3),
         )
       : undefined;
-  if (shore) {
+  if (
+    [0, 1, 4, 5, 8].includes(v.mode) &&
+    p.y <= ground + 2 &&
+    cliffBlocks(w, p, { x: nx, z: nz }, p.vehicle === 5 ? 0.35 : (v.collisionRadius ?? 1.3))
+  ) {
+    p.speed = 0;
+  } else if (shore) {
     // Copy nested fleet state: client prediction must not mutate a server snapshot.
     if (maintainable(p.vehicle) && Math.abs(p.speed) > 0.1) {
       const old = p.fleetState?.[p.vehicle] ?? { acquiredAt: w.time, metres: 0, condition: 100 };

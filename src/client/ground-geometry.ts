@@ -1,3 +1,4 @@
+import { nearBluff, coastalRockCover } from '../shared/coastal-bluffs';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -8,8 +9,10 @@ export const groundTileSize = 128;
  * join detailed tiles without cracks. Interior cell fans stitch those edges. */
 export function groundGeometry(w: World, cx: number, cz: number, detailed: boolean) {
   let geometry: T.BufferGeometry;
-  if (detailed) {
-    geometry = new T.PlaneGeometry(128, 128, 32, 32);
+  const cliff = nearBluff(w, cx, cz, 100);
+  if (detailed || cliff) {
+    const segments = cliff ? 64 : 32;
+    geometry = new T.PlaneGeometry(128, 128, segments, segments);
     geometry.rotateX(-Math.PI / 2);
   } else {
     const vertices: number[] = [],
@@ -45,10 +48,12 @@ export function groundGeometry(w: World, cx: number, cz: number, detailed: boole
   const p = geometry.attributes.position,
     normal = geometry.attributes.normal;
   const n = new T.Vector3();
+  const rock = new Float32Array(p.count);
   for (let i = 0; i < p.count; i++) {
     const x = cx + p.getX(i),
       z = cz + p.getZ(i);
     p.setY(i, terrainHeight(w, x, z));
+    rock[i] = coastalRockCover(w.coastalBluffs, x, z);
     n.set(
       -(terrainHeight(w, x + 0.75, z) - terrainHeight(w, x - 0.75, z)) / 1.5,
       1,
@@ -56,5 +61,6 @@ export function groundGeometry(w: World, cx: number, cz: number, detailed: boole
     ).normalize();
     normal.setXYZ(i, n.x, n.y, n.z);
   }
+  geometry.setAttribute('coastalRock', new T.BufferAttribute(rock, 1));
   return geometry;
 }

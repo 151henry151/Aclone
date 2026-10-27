@@ -1,3 +1,4 @@
+import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
 import { farmPlotPosition } from './farm-land';
@@ -75,6 +76,8 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  if (b.kind === 'lighthouse' && !lighthouseCliffSite(w, b.x, b.z))
+    return 'Lighthouses require a flat cliff-top site, 15–65 metres inland of a tall coastal cliff';
   if (b.kind === 'boathouse') {
     if (!boathouseSite(w, b, true))
       return 'Boathouses need dry shoreline ground, with a deep, clear berth behind the building; rotate the jetty toward the water';
@@ -126,4 +129,21 @@ export function constructionSiteReason(w: World, b: Site) {
       }
   }
   return undefined;
+}
+
+/** Keep the whole tower/keeper footprint safely back from a tall, sea-facing lip. */
+export function lighthouseCliffSite(w: World, x: number, z: number) {
+  return (w.coastalBluffs ?? []).some((b) => {
+    const { u, v } = bluffLocal(b, x, z),
+      setback = bluffEdge(b, u) - v;
+    const foot = bluffPoint(b, u, bluffEdge(b, u) + 3);
+    return (
+      Math.abs(u) < b.width * 0.5 &&
+      setback >= 15 &&
+      setback <= 65 &&
+      b.height >= 15 &&
+      terrainHeight(w, x, z) > highWater(w) + 14 &&
+      terrainHeight(w, foot.x, foot.z) < highWater(w)
+    );
+  });
 }

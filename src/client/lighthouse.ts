@@ -111,7 +111,7 @@ export function lighthouseModel(b: Building, finish: typeof surface) {
   }
   mesh(new T.ConeGeometry(radius * 0.78, 1.3, 8), '#354f51', tower.x, height + 3.15, tower.z);
   const lamp = mesh(new T.SphereGeometry(0.42, 8, 6), '#fff2ba', tower.x, lantern, tower.z);
-  lamp.material = new T.MeshBasicMaterial({ color: '#fff2ba', fog: false });
+  lamp.material = new T.MeshStandardMaterial({ color: '#d5c8a2', roughness: 0.3 });
   if (cottage) {
     const c = cottage;
     wall(box(c.width, c.eaves, c.depth, look.tint, c.x, c.eaves / 2, c.z));
@@ -155,49 +155,4 @@ export function lighthouseModel(b: Building, finish: typeof surface) {
   if (!b.construction) root.userData.lighthouseRotor = rotor;
   root.add(rotor);
   return root;
-}
-export function addLighthouseBeam(rotor: T.Group) {
-  // Visible atmospheric shaft: additive, terrain-occluded, bounded to 3 km.
-  const pixels = new Uint8Array(32 * 32 * 4);
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const i = (y * 32 + x) * 4,
-        r = Math.hypot((x - 15.5) / 15.5, (y - 15.5) / 15.5);
-      pixels[i] = 255;
-      pixels[i + 1] = 236;
-      pixels[i + 2] = 170;
-      pixels[i + 3] = Math.round(255 * Math.pow(Math.max(0, 1 - r), 3));
-    }
-  const glowMap = new T.DataTexture(pixels, 32, 32);
-  glowMap.needsUpdate = true;
-  const glow = new T.Sprite(
-    new T.SpriteMaterial({
-      map: glowMap,
-      transparent: true,
-      depthWrite: false,
-      blending: T.AdditiveBlending,
-      fog: false,
-      toneMapped: false,
-    }),
-  );
-  glow.scale.set(9, 9, 1);
-  rotor.add(glow);
-  const length = 3000;
-  const beam = new T.Mesh(
-    new T.ConeGeometry(85, length, 12, 1, true),
-    new T.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      side: T.DoubleSide,
-      blending: T.AdditiveBlending,
-      uniforms: { strength: { value: 0.2 } },
-      vertexShader:
-        'varying vec2 vUv; varying vec3 vNormal; varying vec3 vView; void main(){vUv=uv; vec4 p=modelViewMatrix*vec4(position,1.0); vNormal=normalMatrix*normal; vView=-p.xyz; gl_Position=projectionMatrix*p;}',
-      fragmentShader:
-        'uniform float strength; varying vec2 vUv; varying vec3 vNormal; varying vec3 vView; void main(){float edge=pow(abs(dot(normalize(vNormal),normalize(vView))),0.65); float fade=pow(vUv.y,1.5); gl_FragColor=vec4(1.0,0.88,0.56,strength*fade*edge);}',
-    }),
-  );
-  beam.rotation.z = Math.PI / 2;
-  beam.position.x = length / 2;
-  rotor.add(beam);
 }

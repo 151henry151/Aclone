@@ -38,6 +38,22 @@ const recipe = z
       [...Object.values(r.inputs), ...Object.values(r.outputs)].every((n) => n >= 1 && n <= 1000),
   );
 const designSchema = z.object({
+  terrainMapSize: z.number().min(500).max(20000).optional(),
+  coastalBluffs: z
+    .array(
+      z.object({
+        id: z.string().max(80),
+        x: coordinate,
+        z: coordinate,
+        angle: z.number().finite(),
+        width: z.number().min(80).max(250),
+        inland: z.number().min(150).max(500),
+        height: z.number().min(15).max(65),
+        seed: z.number().finite(),
+      }),
+    )
+    .max(32)
+    .default([]),
   landscape: landscapeSchema.default(() => landscapeSchema.parse({})),
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
   courses: z.array(courseSchema).max(16).default([]),
@@ -153,6 +169,8 @@ export function exportDesign(w: World, includeMedia = false) {
     settings: w.settings,
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
+    coastalBluffs: w.coastalBluffs,
+    terrainMapSize: w.terrainMapSize,
     landscape: w.landscape,
     zones: w.zones,
     creator,
@@ -239,6 +257,8 @@ export function applyDesign(w: World, input: unknown) {
   }
   w.landscape = validateLandscape(w, d.landscape);
   w.terrain = d.terrain;
+  w.coastalBluffs = d.coastalBluffs;
+  w.terrainMapSize = d.terrainMapSize;
   w.zones = d.zones;
   w.tier = d.tier;
   w.vehicleTuning = d.vehicleTuning;
