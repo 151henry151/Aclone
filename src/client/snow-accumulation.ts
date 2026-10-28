@@ -2,7 +2,8 @@
 import * as T from 'three';
 import type { World } from '../shared/types';
 import { buildingPlan } from '../shared/building-shapes';
-import { townRoads, roadSurfaceDistance } from '../shared/town';
+import { townRoads } from '../shared/town';
+import { nearbyRoadSurface } from './road-sampling';
 import { terrainHeight } from '../shared/terrain';
 import { snowTrackHeight, snowSurfaceGrid } from './snow-surface';
 import { snowDepthVisual, snowCover } from './materials';
@@ -25,6 +26,7 @@ export class SnowAccumulation {
   private bare: (x: number, z: number) => number;
   private snowy: (x: number, z: number) => number;
   private roads;
+  private roadDistance;
   constructor(private world: World) {
     this.group.name = 'Accumulated snow';
     this.group.userData.snowAccumulation = true;
@@ -32,6 +34,7 @@ export class SnowAccumulation {
     this.bare = snowTrackHeight({ ...world, climate: { snow: 0, snowDepth: 0, wetness: 0 } });
     this.snowy = snowTrackHeight({ ...world, climate: { snow: 1, snowDepth: 1, wetness: 0 } });
     this.roads = townRoads(world);
+    this.roadDistance = nearbyRoadSurface(world, this.roads, 0.08);
   }
   private triangle(a: Vertex, b: Vertex, c: Vertex, ground = false) {
     if (!ground) return this.storeTriangle(a, b, c, false);
@@ -131,7 +134,7 @@ export class SnowAccumulation {
   private allowed(x: number, z: number) {
     return (
       terrainHeight(this.world, x, z) > this.world.settings.seaLevel + 0.2 &&
-      roadSurfaceDistance(this.world, this.roads, x, z) > 0.08
+      this.roadDistance(x, z) > 0.08
     );
   }
   /** Query the same triangles the GPU lifts so tyres/shadows don't sink into a bank. */
@@ -220,22 +223,27 @@ export class SnowAccumulation {
     if (source !== mesh.geometry) source.dispose();
   }
   collect(root: T.Object3D) {
+    for (const _ of this.collectSteps(root)) {
+      /* synchronous world builds */
+    }
+  }
+  *collectSteps(root: T.Object3D) {
     root.updateMatrixWorld(true);
-    root.traverse((o) => {
-      if (!(o instanceof T.Mesh) || this.seen.has(o)) return;
+    const objects: T.Object3D[] = [];
+    root.traverse((o) => objects.push(o));
+    for (const o of objects) {
+      if (!(o instanceof T.Mesh) || this.seen.has(o)) continue;
       const cap = o.userData.snowCap as number | undefined;
       const obstacle = o.userData.snowObstacle as 'tree' | 'post' | undefined;
-      if (!cap && !obstacle) return;
+      if (!cap && !obstacle) continue;
       this.seen.add(o);
-      const matrices: T.Matrix4[] = [];
-      if (o instanceof T.InstancedMesh)
-        for (let i = 0; i < o.count; i++) {
-          const m = new T.Matrix4();
+      const count = o instanceof T.InstancedMesh ? o.count : 1;
+      for (let i = 0; i < count; i++) {
+        const m = new T.Matrix4();
+        if (o instanceof T.InstancedMesh) {
           o.getMatrixAt(i, m);
-          matrices.push(m.premultiply(o.matrixWorld));
-        }
-      else matrices.push(o.matrixWorld);
-      for (const m of matrices) {
+          m.premultiply(o.matrixWorld);
+        } else m.copy(o.matrixWorld);
         if (cap) this.cap(o, m, cap);
         if (obstacle) {
           const position = new T.Vector3().setFromMatrixPosition(m);
@@ -245,8 +253,9 @@ export class SnowAccumulation {
               : 0.45;
           this.mound(position.x, position.z, radius);
         }
+        yield;
       }
-    });
+    }
   }
   foundations() {
     for (const b of this.world.buildings) {
@@ -330,76 +339,86 @@ export class SnowAccumulation {
     }
   }
   finish() {
+    const job = this.finishSteps();
+    let step = job.next();
+    while (!step.done) step = job.next();
+    return step.value;
+  }
+  *finishSteps(): Generator<void, T.Group> {
     if (!this.positions.length) return this.group;
     const geometry = new T.BufferGeometry();
-    geometry.setAttribute('position', new T.Float32BufferAttribute(this.positions, 3));
-    geometry.setAttribute('snowLift', new T.Float32BufferAttribute(this.lifts, 1));
-    geometry.setAttribute('snowOpacity', new T.Float32BufferAttribute(this.opacity, 1));
-    // Area-weighted normals are linear in vertical snow displacement. Smooth
-    // ground patches across triangles, while retaining crisp roof-edge normals.
-    const count = this.lifts.length,
-      baseNormals = new Float32Array(count * 3),
-      deltaNormals = new Float32Array(count * 3);
-    const sums = new Map<string, { base: T.Vector3; delta: T.Vector3 }>(),
-      keys: string[] = [];
-    const point = (i: number, depth: number) =>
-      new T.Vector3(
-        this.positions[i * 3],
-        this.positions[i * 3 + 1]! + this.lifts[i]! * depth,
-        this.positions[i * 3 + 2],
-      );
-    for (let i = 0; i < count; i += 3) {
-      const normal = (depth: number) =>
-        new T.Vector3().crossVectors(
-          point(i + 1, depth).sub(point(i, depth)),
-          point(i + 2, depth).sub(point(i, depth)),
+    let complete = false;
+    try {
+      geometry.setAttribute('position', new T.Float32BufferAttribute(this.positions, 3));
+      geometry.setAttribute('snowLift', new T.Float32BufferAttribute(this.lifts, 1));
+      geometry.setAttribute('snowOpacity', new T.Float32BufferAttribute(this.opacity, 1));
+      // Area-weighted normals are linear in vertical snow displacement. Smooth
+      // ground patches across triangles, while retaining crisp roof-edge normals.
+      const count = this.lifts.length,
+        baseNormals = new Float32Array(count * 3),
+        deltaNormals = new Float32Array(count * 3);
+      const sums = new Map<string, { base: T.Vector3; delta: T.Vector3 }>(),
+        keys: string[] = [];
+      const point = (i: number, depth: number) =>
+        new T.Vector3(
+          this.positions[i * 3],
+          this.positions[i * 3 + 1]! + this.lifts[i]! * depth,
+          this.positions[i * 3 + 2],
         );
-      const base = normal(0),
-        delta = normal(1).sub(base);
-      for (let j = i; j < i + 3; j++) {
-        const key = this.smooth[j]
-          ? `${this.positions[j * 3]!.toFixed(4)}:${this.positions[j * 3 + 1]!.toFixed(4)}:${this.positions[j * 3 + 2]!.toFixed(4)}:${this.lifts[j]!.toFixed(4)}`
-          : `face:${j}`;
-        keys.push(key);
-        const sum = sums.get(key) ?? { base: new T.Vector3(), delta: new T.Vector3() };
-        sum.base.add(base);
-        sum.delta.add(delta);
-        sums.set(key, sum);
+      for (let i = 0; i < count; i += 3) {
+        if (i % 192 === 0) yield;
+        const normal = (depth: number) =>
+          new T.Vector3().crossVectors(
+            point(i + 1, depth).sub(point(i, depth)),
+            point(i + 2, depth).sub(point(i, depth)),
+          );
+        const base = normal(0),
+          delta = normal(1).sub(base);
+        for (let j = i; j < i + 3; j++) {
+          const key = this.smooth[j]
+            ? `${this.positions[j * 3]!.toFixed(4)}:${this.positions[j * 3 + 1]!.toFixed(4)}:${this.positions[j * 3 + 2]!.toFixed(4)}:${this.lifts[j]!.toFixed(4)}`
+            : `face:${j}`;
+          keys.push(key);
+          const sum = sums.get(key) ?? { base: new T.Vector3(), delta: new T.Vector3() };
+          sum.base.add(base);
+          sum.delta.add(delta);
+          sums.set(key, sum);
+        }
       }
-    }
-    for (let i = 0; i < count; i++) {
-      const n = sums.get(keys[i]!)!;
-      n.base.toArray(baseNormals, i * 3);
-      n.delta.toArray(deltaNormals, i * 3);
-    }
-    geometry.setAttribute('normal', new T.BufferAttribute(baseNormals, 3));
-    geometry.setAttribute('snowNormal', new T.BufferAttribute(deltaNormals, 3));
-    const material = new T.MeshStandardMaterial({
-      color: new T.Color().setRGB(0.85, 0.91, 0.94),
-      roughness: 0.98,
-      flatShading: false,
-      side: T.DoubleSide,
-    });
-    material.onBeforeCompile = (shader) => {
-      shader.uniforms.snowDepthVisual = snowDepthVisual;
-      shader.uniforms.snowCover = snowCover;
-      shader.vertexShader =
-        'uniform float snowDepthVisual; attribute float snowLift; attribute vec3 snowNormal; attribute float snowOpacity; varying float snowAlpha; varying vec3 snowPoint;\n' +
-        shader.vertexShader;
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\ntransformed.y += snowDepthVisual*snowLift; snowPoint=transformed; snowAlpha=snowOpacity;',
-      );
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <beginnormal_vertex>',
-        '#include <beginnormal_vertex>\nobjectNormal=normalize(normal+snowDepthVisual*snowNormal);',
-      );
-      shader.fragmentShader =
-        'uniform float snowCover; varying vec3 snowPoint; varying float snowAlpha;\n' +
-        shader.fragmentShader;
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <color_fragment>',
-        `#include <color_fragment>
+      for (let i = 0; i < count; i++) {
+        if (i % 192 === 0) yield;
+        const n = sums.get(keys[i]!)!;
+        n.base.toArray(baseNormals, i * 3);
+        n.delta.toArray(deltaNormals, i * 3);
+      }
+      geometry.setAttribute('normal', new T.BufferAttribute(baseNormals, 3));
+      geometry.setAttribute('snowNormal', new T.BufferAttribute(deltaNormals, 3));
+      const material = new T.MeshStandardMaterial({
+        color: new T.Color().setRGB(0.85, 0.91, 0.94),
+        roughness: 0.98,
+        flatShading: false,
+        side: T.DoubleSide,
+      });
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.snowDepthVisual = snowDepthVisual;
+        shader.uniforms.snowCover = snowCover;
+        shader.vertexShader =
+          'uniform float snowDepthVisual; attribute float snowLift; attribute vec3 snowNormal; attribute float snowOpacity; varying float snowAlpha; varying vec3 snowPoint;\n' +
+          shader.vertexShader;
+        shader.vertexShader = shader.vertexShader.replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\ntransformed.y += snowDepthVisual*snowLift; snowPoint=transformed; snowAlpha=snowOpacity;',
+        );
+        shader.vertexShader = shader.vertexShader.replace(
+          '#include <beginnormal_vertex>',
+          '#include <beginnormal_vertex>\nobjectNormal=normalize(normal+snowDepthVisual*snowNormal);',
+        );
+        shader.fragmentShader =
+          'uniform float snowCover; varying vec3 snowPoint; varying float snowAlpha;\n' +
+          shader.fragmentShader;
+        shader.fragmentShader = shader.fragmentShader.replace(
+          '#include <color_fragment>',
+          `#include <color_fragment>
          float grain=sin(snowPoint.x*3.1+sin(snowPoint.z*2.3))*sin(snowPoint.z*3.7);
          diffuseColor.rgb *= .96+grain*.025;
          float coverage=clamp(snowCover,0.,1.);
@@ -410,40 +429,44 @@ export class SnowAccumulation {
          #else
            diffuseColor.a *= coverage;
          #endif`,
-      );
-    };
-    material.customProgramCacheKey = () => 'accumulated-snow-v2';
-    // Roof shells retain depth testing. Ground skirts fade into the
-    // existing snow surface instead of leaving rectangular, differently lit tiles.
-    for (const ground of [false, true]) {
-      const indices: number[] = [];
-      for (let i = 0; i < count; i++) if (this.smooth[i] === ground) indices.push(i);
-      if (!indices.length) continue;
-      const g = geometry.clone();
-      g.setIndex(indices);
-      const m = material.clone();
-      m.onBeforeCompile = (shader, renderer) => {
-        material.onBeforeCompile(shader, renderer);
-        if (ground) shader.fragmentShader = '#define SNOW_GROUND\n' + shader.fragmentShader;
+        );
       };
-      m.customProgramCacheKey = () =>
-        `${material.customProgramCacheKey()}-${ground ? 'ground' : 'cap'}`;
-      // Smooth thaw without stippled white pixels or two transparent face passes.
-      m.transparent = true;
-      m.forceSinglePass = true;
-      m.depthWrite = !ground;
-      const mesh = new T.Mesh(g, m);
-      mesh.receiveShadow = true;
-      mesh.frustumCulled = false;
-      this.group.add(mesh);
+      material.customProgramCacheKey = () => 'accumulated-snow-v2';
+      // Roof shells retain depth testing. Ground skirts fade into the
+      // existing snow surface instead of leaving rectangular, differently lit tiles.
+      for (const ground of [false, true]) {
+        const indices: number[] = [];
+        for (let i = 0; i < count; i++) if (this.smooth[i] === ground) indices.push(i);
+        if (!indices.length) continue;
+        const g = geometry.clone();
+        g.setIndex(indices);
+        const m = material.clone();
+        m.onBeforeCompile = (shader, renderer) => {
+          material.onBeforeCompile(shader, renderer);
+          if (ground) shader.fragmentShader = '#define SNOW_GROUND\n' + shader.fragmentShader;
+        };
+        m.customProgramCacheKey = () =>
+          `${material.customProgramCacheKey()}-${ground ? 'ground' : 'cap'}`;
+        // Smooth thaw without stippled white pixels or two transparent face passes.
+        m.transparent = true;
+        m.forceSinglePass = true;
+        m.depthWrite = !ground;
+        const mesh = new T.Mesh(g, m);
+        mesh.receiveShadow = true;
+        mesh.frustumCulled = false;
+        this.group.add(mesh);
+      }
+      geometry.dispose();
+      material.dispose();
+      this.positions = [];
+      this.lifts = [];
+      this.opacity = [];
+      this.smooth = [];
+      complete = true;
+      return this.group;
+    } finally {
+      if (!complete) geometry.dispose();
     }
-    geometry.dispose();
-    material.dispose();
-    this.positions = [];
-    this.lifts = [];
-    this.opacity = [];
-    this.smooth = [];
-    return this.group;
   }
 }
 

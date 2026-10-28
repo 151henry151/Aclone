@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
-import { roadSurfaceDistance, townRoads } from '../shared/town';
+import { townRoads } from '../shared/town';
+import { nearbyRoadSurface } from './road-sampling';
 import { terrainHeight, mapHalf, legacyHalf } from '../shared/terrain';
 import { snowDepth } from '../shared/environment';
 
@@ -13,15 +14,21 @@ const smooth = (n: number) => {
  * Small, broad variations preserve the reported average depth rather than inventing
  * waist-high banks from a few centimetres of snow. */
 export function snowProfile(w: World) {
-  const roads = townRoads(w);
+  const distance = nearbyRoadSurface(w, townRoads(w), 3);
   return (x: number, z: number, y = terrainHeight(w, x, z)) =>
-    smooth(roadSurfaceDistance(w, roads, x, z) / 3) *
+    smooth(distance(x, z) / 3) *
     smooth((y - w.settings.seaLevel) / 0.5) *
     (1 + 0.12 * Math.sin(x * 0.38 + Math.sin(z * 0.13)) * Math.cos(z * 0.31));
 }
 /** One static attribute per existing terrain vertex, no extra meshes or draw calls.
  * Snow depth changes on the GPU; nothing is rebuilt as it falls or melts. */
 export function prepareSnowSurface(geometry: T.BufferGeometry, w: World, cx = 0, cz = 0) {
+  for (const _ of prepareSnowSurfaceSteps(geometry, w, cx, cz)) {
+    /* synchronous callers */
+  }
+}
+/** Small batches let streamed tiles yield without displaying unfinished attributes. */
+export function* prepareSnowSurfaceSteps(geometry: T.BufferGeometry, w: World, cx = 0, cz = 0) {
   const p = geometry.getAttribute('position');
   const data = new Float32Array(p.count * 3);
   const profile = snowProfile(w);
@@ -31,6 +38,7 @@ export function prepareSnowSurface(geometry: T.BufferGeometry, w: World, cx = 0,
     data[i * 3] = (profile(x + 0.75, z) - profile(x - 0.75, z)) / 1.5;
     data[i * 3 + 1] = profile(x, z, p.getY(i));
     data[i * 3 + 2] = (profile(x, z + 0.75) - profile(x, z - 0.75)) / 1.5;
+    if (i % 64 === 63) yield;
   }
   geometry.setAttribute('snowLift', new T.BufferAttribute(data, 3));
 }
@@ -42,8 +50,8 @@ export function snowSurfaceGrid(w: World) {
 /** Match the actual triangles, not an ideal curved drift, so prints cannot sink
  * into the snow between terrain vertices. Cache samples for one sync pass. */
 export function snowTrackHeight(w: World) {
-  const profile = snowProfile(w),
-    depth = snowDepth(w.climate),
+  const depth = snowDepth(w.climate),
+    profile = depth > 0 ? snowProfile(w) : undefined,
     { step, origin } = snowSurfaceGrid(w),
     cache = new Map<string, number>();
   const sample = (i: number, j: number) => {
@@ -53,7 +61,7 @@ export function snowTrackHeight(w: World) {
       const x = origin + i * step,
         z = origin + j * step;
       const y = terrainHeight(w, x, z);
-      value = y + depth * profile(x, z, y);
+      value = y + (profile ? depth * profile(x, z, y) : 0);
       cache.set(key, value);
     }
     return value;

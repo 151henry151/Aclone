@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.100.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.101.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -33,6 +33,8 @@ The Taxes & rates page (World/F9 or parish directory) explains live world and to
 Version 0.85 adds visible snow accumulation around tyres and vegetation without extra terrain polygons. HUD snow depths are centimetres: 4 cm is about 1.6 inches, and 11 cm is about 4.3 inches. Natural depths over six inches are exceptional; sunny weather gradually melts extra snow while roads stay exposed. Version 0.85.3 adds physical snow caps on roofs and fences, roadside banks, drifts around walls and trees, and depth-sensitive tyre-rut shading; 0.85.4 smooths road edges and fades the layers naturally during thaw. See [release changes](CHANGELOG.md#0854---2026-10-22) and the [weather rules](docs/PLAYING.md#time-and-weather).
 
 Version 0.86 adds gradual road connections between towns and detours around buildings and fields, plus grounded hillside furniture, tractor tilt and clearer distant terrain. See [release changes](CHANGELOG.md#0860---2026-10-22).
+
+Version 0.101.1 reduces scenery-loading pauses while driving by spreading terrain and woodland preparation across frames. It preserves terrain detail and snow shapes; reload the game to receive the update. See [release notes](docs/RELEASE_NOTES.md#01011--smoother-countryside-loading).
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 

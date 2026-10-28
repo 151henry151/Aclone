@@ -81,6 +81,7 @@ export class CountrysideChunks {
   readonly group = new T.Group();
   private chunks = new Map<string, T.Group>();
   private world?: World;
+  private pending?: { key: string; cx: number; cz: number; job: Generator<void, T.Group> };
   private low = false;
   private half = 0;
   reset(w: World, low: boolean) {
@@ -90,6 +91,8 @@ export class CountrysideChunks {
     this.half = mapHalf(w);
   }
   clear() {
+    this.pending?.job.return(undefined as never);
+    this.pending = undefined;
     for (const chunk of this.chunks.values()) this.drop(chunk);
     this.chunks.clear();
     this.world = undefined;
@@ -114,6 +117,14 @@ export class CountrysideChunks {
   update(x: number, z: number, budget = 1) {
     const w = this.world;
     if (!w) return;
+    const deadline = performance.now() + 4;
+    if (
+      this.pending &&
+      Math.hypot(this.pending.cx - x, this.pending.cz - z) > unloadRadius + chunkSize * 0.71
+    ) {
+      this.pending.job.return(undefined as never);
+      this.pending = undefined;
+    }
     for (const [key, chunk] of this.chunks) {
       const { cx, cz } = chunk.userData as { cx: number; cz: number };
       if (Math.hypot(cx - x, cz - z) > unloadRadius + chunkSize * 0.71) {
@@ -134,9 +145,28 @@ export class CountrysideChunks {
       }
     }
     wanted.sort((a, b) => a.d - b.d);
-    for (const { i, j } of wanted.slice(0, budget))
-      this.chunks.set(`${i}:${j}`, this.build(w, i, j));
-    return wanted.length > budget;
+    let completed = 0;
+    while (completed < budget) {
+      if (!this.pending) {
+        const next = wanted.find(({ i, j }) => !this.chunks.has(`${i}:${j}`));
+        if (!next) break;
+        const { i, j } = next;
+        this.pending = {
+          key: `${i}:${j}`,
+          cx: (i + 0.5) * chunkSize,
+          cz: (j + 0.5) * chunkSize,
+          job: this.build(w, i, j),
+        };
+      }
+      const step = this.pending.job.next();
+      if (step.done) {
+        this.chunks.set(this.pending.key, step.value);
+        this.pending = undefined;
+        completed++;
+      }
+      if (performance.now() >= deadline) break;
+    }
+    return !!this.pending || wanted.some(({ i, j }) => !this.chunks.has(`${i}:${j}`));
   }
   snowHeight(x: number, z: number, depth: number, base: number) {
     if (!this.world || Math.max(Math.abs(x), Math.abs(z)) < 240) return base;
@@ -150,7 +180,7 @@ export class CountrysideChunks {
       }
     return height;
   }
-  private build(w: World, i: number, j: number) {
+  private *build(w: World, i: number, j: number) {
     assets ??= sharedAssets();
     const low = this.low;
     const x0 = i * chunkSize,
@@ -191,125 +221,152 @@ export class CountrysideChunks {
       pines: EvergreenSite[] = [],
       rocks: number[][] = [],
       shades: T.Mesh[] = [];
-    for (let n = 0; n < (low ? 230 : 540); n++) {
-      const x = x0 + rand() * chunkSize,
-        z = z0 + rand() * chunkSize,
-        cover = woodland(w, x, z),
-        roll = rand();
-      const h = terrainHeight(w, x, z);
-      if (h < w.settings.seaLevel + 0.9) continue;
-      if (roll >= cover) {
-        // Bare uplands show their bones.
-        if (n % 9 === 0 && h > 14 && cover < 0.2 && clear(x, z, 1))
-          rocks.push([x, h + 0.2, z, 0.5 + rand() * 1.1, rand() * 6]);
-        continue;
-      }
-      if (!clear(x, z, 4)) continue;
-      const scale = 0.7 + rand() * 0.9,
-        species = hash2(Math.floor(x / 60), Math.floor(z / 50), 91) * 3;
-      if (species < 1.25) {
-        pines.push({
-          x,
-          y: h,
-          z,
-          scale,
-          rotation: rand() * 6,
-          variant: Math.floor(rand() * 3),
-          width: 0.88 + rand() * 0.24,
-          leanX: (rand() - 0.5) * 0.055,
-          leanZ: (rand() - 0.5) * 0.055,
-        });
-        const shade = contactShadow(8 * scale, 8 * scale, 0.23);
+    let installed = false;
+    try {
+      for (let n = 0; n < (low ? 230 : 540); n++) {
+        if (n % 16 === 0) yield;
+        const x = x0 + rand() * chunkSize,
+          z = z0 + rand() * chunkSize,
+          cover = woodland(w, x, z),
+          roll = rand();
+        const h = terrainHeight(w, x, z);
+        if (h < w.settings.seaLevel + 0.9) continue;
+        if (roll >= cover) {
+          // Bare uplands show their bones.
+          if (n % 9 === 0 && h > 14 && cover < 0.2 && clear(x, z, 1))
+            rocks.push([x, h + 0.2, z, 0.5 + rand() * 1.1, rand() * 6]);
+          continue;
+        }
+        if (!clear(x, z, 4)) continue;
+        const scale = 0.7 + rand() * 0.9,
+          species = hash2(Math.floor(x / 60), Math.floor(z / 50), 91) * 3;
+        if (species < 1.25) {
+          pines.push({
+            x,
+            y: h,
+            z,
+            scale,
+            rotation: rand() * 6,
+            variant: Math.floor(rand() * 3),
+            width: 0.88 + rand() * 0.24,
+            leanX: (rand() - 0.5) * 0.055,
+            leanZ: (rand() - 0.5) * 0.055,
+          });
+          const shade = contactShadow(8 * scale, 8 * scale, 0.23);
+          shade.position.set(x, h + 0.1, z);
+          shades.push(shade);
+          continue;
+        }
+        if (species < 2) birches.push([x, h, z, scale, 0]);
+        else trunks.push([x, h, z, scale, rand() * 6]);
+        for (let k = 0; k < 13; k++) {
+          const a = k * 2.399,
+            r = k < 4 ? 0.7 : species < 2 ? 1.4 : 2.4;
+          crowns.push([
+            x + Math.sin(a) * r * scale,
+            h + (3.7 + rand() * 2.5) * scale,
+            z + Math.cos(a) * r * scale,
+            (2.7 + rand() * 1.3) * scale,
+            a,
+          ]);
+        }
+        const shade = contactShadow(12 * scale, 11 * scale, 0.25);
         shade.position.set(x, h + 0.1, z);
         shades.push(shade);
-        continue;
       }
-      if (species < 2) birches.push([x, h, z, scale, 0]);
-      else trunks.push([x, h, z, scale, rand() * 6]);
-      for (let k = 0; k < 13; k++) {
-        const a = k * 2.399,
-          r = k < 4 ? 0.7 : species < 2 ? 1.4 : 2.4;
-        crowns.push([
-          x + Math.sin(a) * r * scale,
-          h + (3.7 + rand() * 2.5) * scale,
-          z + Math.cos(a) * r * scale,
-          (2.7 + rand() * 1.3) * scale,
-          a,
-        ]);
-      }
-      const shade = contactShadow(12 * scale, 11 * scale, 0.25);
-      shade.position.set(x, h + 0.1, z);
-      shades.push(shade);
-    }
-    const matrix = new T.Object3D();
-    const scatter = (geometry: T.BufferGeometry, material: T.Material, points: number[][]) => {
-      if (!points.length) return;
-      const mesh = new T.InstancedMesh(geometry, material, points.length);
-      points.forEach(([x, y, z, s = 1, rot = 0], k) => {
-        matrix.position.set(x, y, z);
-        matrix.scale.setScalar(s);
-        matrix.rotation.set(0, rot, 0);
-        matrix.updateMatrix();
-        mesh.setMatrixAt(k, matrix.matrix);
-        mesh.setColorAt(
-          k,
-          new T.Color().setRGB(0.8 + (k % 5) * 0.04, 0.84 + (k % 4) * 0.04, 0.75 + (k % 6) * 0.04),
+      const matrix = new T.Object3D();
+      const scatter = (geometry: T.BufferGeometry, material: T.Material, points: number[][]) => {
+        if (!points.length) return;
+        const mesh = new T.InstancedMesh(geometry, material, points.length);
+        points.forEach(([x, y, z, s = 1, rot = 0], k) => {
+          matrix.position.set(x, y, z);
+          matrix.scale.setScalar(s);
+          matrix.rotation.set(0, rot, 0);
+          matrix.updateMatrix();
+          mesh.setMatrixAt(k, matrix.matrix);
+          mesh.setColorAt(
+            k,
+            new T.Color().setRGB(
+              0.8 + (k % 5) * 0.04,
+              0.84 + (k % 4) * 0.04,
+              0.75 + (k % 6) * 0.04,
+            ),
+          );
+        });
+        if (geometry === assets!.trunk || geometry === assets!.birch)
+          mesh.userData.snowObstacle = 'tree';
+        mesh.castShadow = mesh.receiveShadow = true;
+        mesh.computeBoundingSphere();
+        chunk.add(mesh);
+      };
+      scatter(assets.trunk, assets.trunkMaterial, trunks);
+      yield;
+      scatter(assets.birch, assets.birchMaterial, birches);
+      yield;
+      scatter(assets.leaves.geometry, assets.leaves.material, crowns);
+      yield;
+      scatter(assets.rock, assets.rockMaterial, rocks);
+      yield;
+      evergreens(chunk, pines, low, assets.evergreen, sharedEvergreenGeometry);
+      yield;
+      resourceScenery(
+        chunk,
+        w,
+        low,
+        (n) =>
+          Math.max(Math.abs(n.x), Math.abs(n.z)) >= 300 &&
+          n.x >= x0 &&
+          n.x < x0 + chunkSize &&
+          n.z >= z0 &&
+          n.z < z0 + chunkSize,
+      );
+      // Gathering-ground materials are fresh per chunk; snow and autumn apply to them too.
+      chunk.traverse((o) => {
+        if (!(o instanceof T.Mesh)) return;
+        for (const m of Array.isArray(o.material) ? o.material : [o.material])
+          if (
+            (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
+            !m.transparent &&
+            !m.userData.shared &&
+            !m.userData.seasonal
+          ) {
+            m.userData.seasonal = true;
+            seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
+          }
+      });
+      if (shades.length) {
+        const geos = shades.map((s) => {
+          s.updateMatrix();
+          return s.geometry.clone().applyMatrix4(s.matrix);
+        });
+        const merged = new T.Mesh(
+          mergeGeometries(geos)!,
+          (shades[0].material as T.Material).clone(),
         );
-      });
-      if (geometry === assets!.trunk || geometry === assets!.birch)
-        mesh.userData.snowObstacle = 'tree';
-      mesh.castShadow = mesh.receiveShadow = true;
-      mesh.computeBoundingSphere();
-      chunk.add(mesh);
-    };
-    scatter(assets.trunk, assets.trunkMaterial, trunks);
-    scatter(assets.birch, assets.birchMaterial, birches);
-    scatter(assets.leaves.geometry, assets.leaves.material, crowns);
-    scatter(assets.rock, assets.rockMaterial, rocks);
-    evergreens(chunk, pines, low, assets.evergreen, sharedEvergreenGeometry);
-    resourceScenery(
-      chunk,
-      w,
-      low,
-      (n) =>
-        Math.max(Math.abs(n.x), Math.abs(n.z)) >= 300 &&
-        n.x >= x0 &&
-        n.x < x0 + chunkSize &&
-        n.z >= z0 &&
-        n.z < z0 + chunkSize,
-    );
-    // Gathering-ground materials are fresh per chunk; snow and autumn apply to them too.
-    chunk.traverse((o) => {
-      if (!(o instanceof T.Mesh)) return;
-      for (const m of Array.isArray(o.material) ? o.material : [o.material])
-        if (
-          (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
-          !m.transparent &&
-          !m.userData.shared &&
-          !m.userData.seasonal
-        ) {
-          m.userData.seasonal = true;
-          seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
+        chunk.add(merged);
+        for (const g of geos) g.dispose();
+        for (const s of shades) {
+          s.geometry.dispose();
+          (s.material as T.Material).dispose();
         }
-    });
-    if (shades.length) {
-      const geos = shades.map((s) => {
-        s.updateMatrix();
-        return s.geometry.clone().applyMatrix4(s.matrix);
-      });
-      const merged = new T.Mesh(mergeGeometries(geos)!, (shades[0].material as T.Material).clone());
-      chunk.add(merged);
-      for (const g of geos) g.dispose();
-      for (const s of shades) {
-        s.geometry.dispose();
-        (s.material as T.Material).dispose();
+      }
+      shades.length = 0;
+      yield;
+      const snow = new SnowAccumulation(w);
+      yield* snow.collectSteps(chunk);
+      chunk.add(yield* snow.finishSteps());
+      chunk.userData.snowDetails = snow;
+      this.group.add(chunk);
+      installed = true;
+      return chunk;
+    } finally {
+      if (!installed) {
+        for (const shade of shades) {
+          shade.geometry.dispose();
+          (shade.material as T.Material).dispose();
+        }
+        this.drop(chunk);
       }
     }
-    this.group.add(chunk);
-    const snow = new SnowAccumulation(w);
-    snow.collect(chunk);
-    chunk.add(snow.finish());
-    chunk.userData.snowDetails = snow;
-    return chunk;
   }
 }

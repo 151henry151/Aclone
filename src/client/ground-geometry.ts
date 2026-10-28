@@ -8,6 +8,18 @@ export const groundTileSize = 128;
 /** Distant tiles use 16 m cells, but retain every 4 m edge sample so they
  * join detailed tiles without cracks. Interior cell fans stitch those edges. */
 export function groundGeometry(w: World, cx: number, cz: number, detailed: boolean) {
+  const job = groundGeometrySteps(w, cx, cz, detailed);
+  let step = job.next();
+  while (!step.done) step = job.next();
+  return step.value;
+}
+/** Keep terrain sampling out of one long render-blocking task. */
+export function* groundGeometrySteps(
+  w: World,
+  cx: number,
+  cz: number,
+  detailed: boolean,
+): Generator<void, T.BufferGeometry> {
   let geometry: T.BufferGeometry;
   const cliff = nearBluff(w, cx, cz, 100);
   if (detailed || cliff) {
@@ -45,22 +57,29 @@ export function groundGeometry(w: World, cx: number, cz: number, detailed: boole
     geometry.setAttribute('normal', new T.Float32BufferAttribute(vertices.length, 3));
     geometry.setIndex(indices);
   }
-  const p = geometry.attributes.position,
-    normal = geometry.attributes.normal;
-  const n = new T.Vector3();
-  const rock = new Float32Array(p.count);
-  for (let i = 0; i < p.count; i++) {
-    const x = cx + p.getX(i),
-      z = cz + p.getZ(i);
-    p.setY(i, terrainHeight(w, x, z));
-    rock[i] = coastalRockCover(w.coastalBluffs, x, z);
-    n.set(
-      -(terrainHeight(w, x + 0.75, z) - terrainHeight(w, x - 0.75, z)) / 1.5,
-      1,
-      -(terrainHeight(w, x, z + 0.75) - terrainHeight(w, x, z - 0.75)) / 1.5,
-    ).normalize();
-    normal.setXYZ(i, n.x, n.y, n.z);
+  let complete = false;
+  try {
+    const p = geometry.attributes.position,
+      normal = geometry.attributes.normal;
+    const n = new T.Vector3();
+    const rock = new Float32Array(p.count);
+    for (let i = 0; i < p.count; i++) {
+      const x = cx + p.getX(i),
+        z = cz + p.getZ(i);
+      p.setY(i, terrainHeight(w, x, z));
+      rock[i] = coastalRockCover(w.coastalBluffs, x, z);
+      n.set(
+        -(terrainHeight(w, x + 0.75, z) - terrainHeight(w, x - 0.75, z)) / 1.5,
+        1,
+        -(terrainHeight(w, x, z + 0.75) - terrainHeight(w, x, z - 0.75)) / 1.5,
+      ).normalize();
+      normal.setXYZ(i, n.x, n.y, n.z);
+      if (i % 64 === 63) yield;
+    }
+    geometry.setAttribute('coastalRock', new T.BufferAttribute(rock, 1));
+    complete = true;
+    return geometry;
+  } finally {
+    if (!complete) geometry.dispose();
   }
-  geometry.setAttribute('coastalRock', new T.BufferAttribute(rock, 1));
-  return geometry;
 }

@@ -3,9 +3,9 @@ import * as T from 'three';
 import type { World } from '../shared/types';
 import { mapHalf } from '../shared/terrain';
 import { groundMaterial } from './materials';
-import { prepareSnowSurface } from './snow-surface';
+import { prepareSnowSurfaceSteps } from './snow-surface';
 
-import { groundGeometry, groundTileSize } from './ground-geometry';
+import { groundGeometrySteps, groundTileSize } from './ground-geometry';
 export { groundTileSize } from './ground-geometry';
 // Detail stays local; the cheaper outer band supports everything the camera sees.
 export const groundLoadRadius = 1040;
@@ -22,6 +22,12 @@ export class GroundTiles {
   readonly group = new T.Group();
   private tiles = new Map<string, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>();
   private world?: World;
+  private pending?: {
+    key: string;
+    cx: number;
+    cz: number;
+    job: Generator<void, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>;
+  };
   private half = 0;
   private roughness = 1;
   reset(w: World) {
@@ -30,6 +36,8 @@ export class GroundTiles {
     this.half = mapHalf(w);
   }
   clear() {
+    this.pending?.job.return(undefined as never);
+    this.pending = undefined;
     for (const tile of this.tiles.values()) {
       tile.geometry.dispose();
       tile.material.dispose();
@@ -53,6 +61,14 @@ export class GroundTiles {
   update(x: number, z: number, budget = 4) {
     const w = this.world;
     if (!w) return;
+    const deadline = performance.now() + 4;
+    if (
+      this.pending &&
+      Math.hypot(this.pending.cx - x, this.pending.cz - z) > unloadRadius + groundTileSize * 0.71
+    ) {
+      this.pending.job.return(undefined as never);
+      this.pending = undefined;
+    }
     for (const [key, tile] of this.tiles) {
       const { cx, cz } = tile.userData as { cx: number; cz: number };
       if (Math.hypot(cx - x, cz - z) > unloadRadius + groundTileSize * 0.71) {
@@ -79,44 +95,76 @@ export class GroundTiles {
         if (existing && existing.userData.detailed === detailed) continue;
         if (d <= loadRadius + groundTileSize * 0.71) wanted.push({ i, j, d, detailed });
       }
-    // Nearest first, a few per frame: the horizon fills in over a handful of frames
-    // instead of one long stall when arriving somewhere new.
+    // Retain the old LOD until its replacement is complete. Bound CPU work by
+    // elapsed time as well as tile count; one dense cliff tile spans many frames.
     wanted.sort((a, b) => a.d - b.d);
-    for (const { i, j, detailed } of wanted.slice(0, budget)) {
-      const old = this.tiles.get(`${i}:${j}`);
-      this.tiles.set(`${i}:${j}`, this.build(w, i, j, detailed));
-      if (old) {
-        this.group.remove(old);
-        old.geometry.dispose();
-        old.material.dispose();
+    let completed = 0;
+    while (completed < budget) {
+      if (!this.pending) {
+        const next = wanted.find(
+          ({ i, j, detailed }) => this.tiles.get(`${i}:${j}`)?.userData.detailed !== detailed,
+        );
+        if (!next) break;
+        const { i, j, detailed } = next;
+        this.pending = {
+          key: `${i}:${j}`,
+          cx: (i + 0.5) * groundTileSize,
+          cz: (j + 0.5) * groundTileSize,
+          job: this.build(w, i, j, detailed),
+        };
       }
+      const step = this.pending.job.next();
+      if (step.done) {
+        const old = this.tiles.get(this.pending.key);
+        this.tiles.set(this.pending.key, step.value);
+        this.pending = undefined;
+        if (old) {
+          this.group.remove(old);
+          old.geometry.dispose();
+          old.material.dispose();
+        }
+        completed++;
+      }
+      if (performance.now() >= deadline) break;
     }
-    return wanted.length > budget;
+    return (
+      !!this.pending ||
+      wanted.some(
+        ({ i, j, detailed }) => this.tiles.get(`${i}:${j}`)?.userData.detailed !== detailed,
+      )
+    );
   }
-  private build(w: World, i: number, j: number, detailed: boolean) {
+  private *build(w: World, i: number, j: number, detailed: boolean) {
     const x0 = i * groundTileSize,
       z0 = j * groundTileSize;
     const cx = x0 + groundTileSize / 2,
       cz = z0 + groundTileSize / 2;
-    const geometry = groundGeometry(w, cx, cz, detailed);
-    prepareSnowSurface(geometry, w, cx, cz);
-    const material = groundMaterial(w, {
-      x: x0,
-      z: z0,
-      size: groundTileSize,
-      pixels: detailed ? 256 : 64,
-    });
-    material.roughness = this.roughness;
-    const tile = new T.Mesh(geometry, material);
-    tile.position.set(cx, 0, cz);
-    tile.receiveShadow = detailed;
-    tile.userData.detailed = detailed;
-    tile.userData.cx = cx;
-    tile.userData.cz = cz;
-    tile.userData.ground = true;
-    this.decorate(tile);
-    this.group.add(tile);
-    return tile;
+    const geometry = yield* groundGeometrySteps(w, cx, cz, detailed);
+    let installed = false;
+    try {
+      yield* prepareSnowSurfaceSteps(geometry, w, cx, cz);
+      yield;
+      const material = groundMaterial(w, {
+        x: x0,
+        z: z0,
+        size: groundTileSize,
+        pixels: detailed ? 256 : 64,
+      });
+      material.roughness = this.roughness;
+      const tile = new T.Mesh(geometry, material);
+      tile.position.set(cx, 0, cz);
+      tile.receiveShadow = detailed;
+      tile.userData.detailed = detailed;
+      tile.userData.cx = cx;
+      tile.userData.cz = cz;
+      tile.userData.ground = true;
+      this.decorate(tile);
+      this.group.add(tile);
+      installed = true;
+      return tile;
+    } finally {
+      if (!installed) geometry.dispose();
+    }
   }
 }
 

@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.101.1
+
+Use the normal backup, build and restart procedure and publish the website version. Reload clients for incremental terrain and woodland preparation. No data migration or world reset is required. Verify driving through new scenery, including snowy woodland and coastal cliffs, and check that older terrain remains visible while replacement tiles load. Compare long frame pauses as well as average FPS in the affected Firefox session.
+
 ## Upgrade 0.101.0
 
 Back up and deploy client and server together; reload clients for matching cliff collision and terrain. The public Puddlewick migration upgrades `lighthouseVersion` to 2, saves 15 `coastalBluffs`, and moves/relevels the three named public lights. Harbour light is about 780 m from town. Ownership, employees, stock and working capital remain; housed keepers move with their lighthouse. Candidate footprints skip other buildings and people outside homes. A blocked migration retries missing sites on a later restart without duplicating completed headlands. Custom worlds are not reshaped.

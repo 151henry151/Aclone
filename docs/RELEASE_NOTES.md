@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.101.1 — Smoother countryside loading
+
+Driving into new scenery no longer prepares entire terrain tiles and woodland snow drifts in one uninterrupted operation. Preparation runs in small batches across frames, and existing terrain stays visible until its replacement is ready. Snow coverage checks nearby roads rather than scanning the entire road network for every sample. Terrain detail and snow shapes are preserved.
+
+Reload the game after deployment. This targets scenery-loading freezes; it does not guarantee a particular frame rate on every device. No world reset, data migration or gameplay balance change is needed.
+
 ## 0.101.0 — Rocky headlands and coastal navigation
 
 Puddlewick’s harbour light has moved out of the town bustle, roughly as far away as Mabel’s Reach. All three public lights stand above the water on rocky bluffs, with twelve additional headlands around the island. Cliff edges stop people and tractors safely. You can build a lighthouse on a suitable flat cliff-top site.

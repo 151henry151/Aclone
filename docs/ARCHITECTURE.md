@@ -66,6 +66,8 @@ Immutable geometry/materials are shared; walkers clone joint hierarchies, driver
 
 Performance mode reduces framebuffer/foliage and disables water animation and dynamic shadows. Software rendering targets 30 FPS; adaptive mode falls back on sustained slow frames. Dynamic shadows are separately opt-in outside performance mode. Device throughput varies.
 
+Streamed terrain and woodland construction use resumable generators with a four-millisecond CPU budget per subsystem per update (checked between small batches). Old terrain LODs remain visible until replacements have all attributes; unfinished jobs are disposed when leaving their region or resetting the world. Snow masks and drift clearance use a local road index, and bare-ground vehicle contact sampling skips snow coverage work entirely. Initial shared tree assets are prepared during the existing loading screen. These budgets limit scenery CPU work, not GPU rendering time.
+
 Fixed pools: 128 smoke particles, 900 precipitation particles, 512 ordnance instances; town lighting uses 12 spotlights (4 in performance mode). Crop geometry changes only at growth stages. Offline catch-up expires ordnance instead of inflicting offline combat kills. [Art](ART.md) documents ownership, budgets and visual checks.
 
 NPC actions/cursors/progress save atomically; paid calls reserve shared budgets before asynchronous dispatch. Routing caches terrain/building geometry until layout or sea level changes. Fixed-path manuals feed bounded local help lookup; credentials and other players' private conversations never enter public snapshots. See [NPC development](NPCS.md#development-and-validation).

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.101.1] - 2026-10-27
+
+### Fixed
+
+- Reduce driving freezes when new countryside loads. Terrain, tree snow drifts and their lighting normals now build in small batches across frames, with previous terrain retained until replacements are ready. Snow coverage checks nearby roads rather than every road in the world, including during clear weather preparation.
+
 ## [0.101.0] - 2026-10-26
 
 ### Added
