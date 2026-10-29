@@ -3,7 +3,11 @@ import * as T from 'three';
 import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/terrain';
 import { buildingPlan } from '../shared/building-shapes';
-import { lighthouseRange, lighthouseFlash } from '../shared/lighthouse-optics';
+import {
+  lighthouseRange,
+  lighthouseFlash,
+  lighthouseLocalLight,
+} from '../shared/lighthouse-optics';
 
 /** Signals have their own LOD: no distant terrain/house rendering is necessary. */
 export class LighthouseLights {
@@ -12,7 +16,7 @@ export class LighthouseLights {
     string,
     { sprite: T.Sprite; checked: number; clear: boolean; eye: T.Vector3 }
   >();
-  private spot = new T.SpotLight('#fff1c6', 0, 1000, 0.065, 0.5, 0);
+  private spot = new T.SpotLight('#fff1c6', 0, 350, 0.035, 0.8, 0);
   private shaft: T.Mesh<T.ConeGeometry, T.ShaderMaterial>;
   private map: T.DataTexture;
   private shadowTick = -1;
@@ -34,7 +38,7 @@ export class LighthouseLights {
     this.spot.shadow.bias = -0.0003;
     this.spot.shadow.autoUpdate = false;
     this.spot.shadow.camera.near = 1;
-    this.spot.shadow.camera.far = 1000;
+    this.spot.shadow.camera.far = 350;
     this.group.add(this.spot, this.spot.target);
     this.shaft = new T.Mesh(
       new T.ConeGeometry(20, 800, 16, 1, true),
@@ -127,19 +131,27 @@ export class LighthouseLights {
       // A projected beacon remains inside the camera far plane even at 30km.
       const draw = Math.min(Math.max(0, d - 3.5), (camera as T.PerspectiveCamera).far * 0.85);
       signal.sprite.position.copy(eye).addScaledVector(delta, -draw / Math.max(d, 0.01));
-      signal.sprite.scale.setScalar(Math.max(2, draw * 0.003));
+      signal.sprite.scale.setScalar(Math.max(0.25, draw * 0.003));
     }
     this.spot.intensity = 0;
+    this.spot.visible = false;
     this.shaft.visible = false;
     if (selected && nearest < 1200) {
       const { at, angle } = selected,
-        dir = new T.Vector3(Math.cos(angle), -0.025, -Math.sin(angle));
+        dir = new T.Vector3(Math.cos(angle), 0, -Math.sin(angle));
       this.spot.position.copy(at);
       this.spot.target.position.copy(at).addScaledVector(dir, 800);
-      this.spot.intensity = (1 - daylight) * 35;
+      // Mask the landward sector instead of sweeping a searchlight over town.
+      const seaward = [80, 200].every(
+        (distance) =>
+          terrainHeight(w, at.x + dir.x * distance, at.z + dir.z * distance) < w.settings.seaLevel,
+      );
+      const local = lighthouseLocalLight(daylight, mist, seaward);
+      this.spot.intensity = local.surface;
+      this.spot.visible = local.surface > 0;
       this.spot.shadow.needsUpdate = Math.floor(time * 4) !== this.shadowTick;
       this.shadowTick = Math.floor(time * 4);
-      this.shaft.visible = mist > 0.1;
+      this.shaft.visible = local.shaft > 0;
       if (this.shaft.visible) {
         let reach = 800;
         for (let d = 10; d < 800; d += 10) {
@@ -152,7 +164,7 @@ export class LighthouseLights {
         this.shaft.position.copy(at).addScaledVector(dir, reach / 2);
         this.shaft.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), dir.normalize());
         this.shaft.scale.set(reach / 800, reach / 800, reach / 800);
-        this.shaft.material.uniforms.strength.value = mist * (1 - daylight * 0.8);
+        this.shaft.material.uniforms.strength.value = local.shaft;
       }
     }
   }

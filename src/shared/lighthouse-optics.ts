@@ -11,3 +11,12 @@ export function lighthouseFlash(angle: number, bearing: number, elevation: numbe
   const difference = Math.atan2(Math.sin(angle - bearing), Math.cos(angle - bearing));
   return Math.exp(-((difference / 0.035) ** 2)) * (1 - smoothstep(0.06, 0.18, Math.abs(elevation)));
 }
+
+/** Nearby illumination is deliberately independent of the long-range beacon. */
+export function lighthouseLocalLight(daylight: number, mist: number, seaward: boolean) {
+  const night = 1 - Math.min(1, Math.max(0, daylight));
+  return {
+    surface: seaward ? night * 0.45 : 0,
+    shaft: seaward ? smoothstep(0.1, 1, mist) * (0.04 + 0.12 * night) : 0,
+  };
+}

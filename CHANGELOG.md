@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Lighthouse illumination no longer sweeps across inland buildings like lightning. Nearby seaward lighting is much softer, clear-weather shafts stay hidden, and the separate offshore navigation signal retains its existing horizon-limited range.
+
 ## [0.101.1] - 2026-10-27
 
 ### Fixed

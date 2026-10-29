@@ -45,6 +45,25 @@ test('coastal renderer shows clear-weather flashes, storm shafts and animated cl
       ),
     );
     expect(after).not.toEqual(before);
+    await shot('night');
+    const night = await page.evaluate(() => ({
+      intensity: (window as any).game.lighthouseLights.spot.intensity,
+      shaft: (window as any).game.lighthouseLights.shaft.visible,
+    }));
+    expect(night.intensity).toBeGreaterThan(0);
+    expect(night.intensity).toBeLessThan(1);
+    expect(night.shaft).toBe(false);
+    const inland = await page.evaluate(() => {
+      const { game, world, b, cliff } = window as any;
+      const angle = Math.atan2(Math.cos(cliff.angle), -Math.sin(cliff.angle));
+      const time = ((angle - b.x * 0.01 - b.rotation) * 8) / Math.PI;
+      game.lighthouseLights.update(world, game.camera, time, 0, 1);
+      return {
+        intensity: game.lighthouseLights.spot.intensity,
+        shaft: game.lighthouseLights.shaft.visible,
+      };
+    });
+    expect(inland).toEqual({ intensity: 0, shaft: false });
     await shot('calm');
     expect(await page.evaluate(() => (window as any).game.ocean.surf.group.visible)).toBe(false);
     expect(errors).toEqual([]);
