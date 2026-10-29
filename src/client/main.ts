@@ -1,3 +1,6 @@
+import { farmPolicyEditor, farmPolicySummary, farmPolicyFormValue } from './farm-policy';
+import { farmStaffBlocker } from '../shared/farm-policy';
+import { debtStatusHtml, debtNotice, loanStatusHtml } from './debt-status';
 import { bulkDiscountEditor, bulkDiscountFormValue, bulkDiscountSummary } from './bulk-discounts';
 import { bulkPurchaseQuote } from '../shared/bulk-discounts';
 import { waterLevel } from '../shared/ocean';
@@ -148,7 +151,7 @@ let items = defaultItems,
   skills = defaultSkills;
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><button id="debt-notice" data-do="loans" class="wide" hidden></button><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -857,6 +860,8 @@ function updateHud() {
   if (panel === 'building' && !shown) closePanel();
   if (shown) {
     if (buildingAccessSignature !== buildingAccessKey(shown)) buildingWindow(shown);
+    for (const summary of app.querySelectorAll('[data-farm-policy-status]'))
+      summary.textContent = farmPolicySummary(world, shown);
     const shift = workShift(world, me, shown);
     const facts: [string, string][] = [
       ['[data-building-owner]', buildingOwner(shown)],
@@ -874,6 +879,21 @@ function updateHud() {
     if (workButton && shift) {
       workButton.textContent = shift.button;
       workButton.disabled = !shift.canRenew || distance(me, shown) >= 18;
+    }
+  }
+  const debt = debtNotice(me);
+  $('debt-notice').hidden = !debt;
+  if ($('debt-notice').textContent !== debt) $('debt-notice').textContent = debt;
+  const debtPanel = app.querySelector('[data-debt-status]');
+  if (debtPanel) {
+    const html = debtStatusHtml(world, me);
+    if (debtPanel.outerHTML !== html) debtPanel.outerHTML = html;
+  }
+  for (const node of app.querySelectorAll<HTMLElement>('[data-loan-status]')) {
+    const loan = me.loans?.find((l) => l.id === node.dataset.loanStatus);
+    if (loan) {
+      const html = loanStatusHtml(world, me, loan);
+      if (node.outerHTML !== html) node.outerHTML = html;
     }
   }
   refreshActionVisibility(app, world, me);
@@ -1113,6 +1133,9 @@ function buildingAccessKey(b: Building) {
     me?.job,
     caretakerBuilding,
     b.kind === 'farm' && world ? calendar(world).season : undefined,
+    b.kind === 'farm' && world && me && b.owner !== me.id
+      ? Object.entries(crops).map(([id, c]) => !farmStaffBlocker(world!, me!, b, c.seed, id))
+      : undefined,
   ]);
 }
 let playtimeStats: PlaytimeStatistics | undefined;
@@ -1916,6 +1939,10 @@ function renderPanel() {
     modal('Your statistics', statisticsHtml(world, me, playtimeStats, statisticsError));
     return;
   }
+  if (panel === 'loans') {
+    modal('Loans & repayment warnings', debtStatusHtml(world, me));
+    return;
+  }
   if (panel === 'reports') {
     modal('Journal & reports', journalHtml(world, me));
     return;
@@ -1923,7 +1950,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2092,12 +2119,17 @@ function buildingWindow(b: Building) {
       html += `<p>Dry bulk storage: ${b.capacity} hay bales per item slot. Buy seasonal harvests, keep a winter reserve and sell to livestock keepers. This is a trading business, with no automatic production or paid jobs. Fund purchase bids in Building Admin; owners move their own bales through Stockroom.</p>`;
     if (b.kind === 'farm') {
       const season = calendar(world).season;
-      const plantingCrops = Object.entries(crops).filter(([, c]) => c.seasons.includes(season));
+      const plantingCrops = Object.entries(crops).filter(
+        ([id, c]) => c.seasons.includes(season) && !farmStaffBlocker(world!, me!, b, c.seed, id),
+      );
+      html += selfOwned
+        ? farmPolicyEditor(world, b)
+        : `<p data-farm-policy-status>${esc(farmPolicySummary(world, b))}</p>`;
       if (selfOwned) {
         const blocked = farmExpansionBlocker(world, b);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
-      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>No crops can be planted in ${season.toLowerCase()}.${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Wait for a suitable planting season.'}</p>`}<div class="cards">${Array.from(
+      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>${season === 'Winter' ? 'No crops can be planted in winter.' : 'No crops are currently available for you to plant.'}${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Check the planting season and the owner’s staff rules and budget.'}</p>`}<div class="cards">${Array.from(
         { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
@@ -2471,6 +2503,7 @@ app.addEventListener('click', async (e) => {
       return;
     }
     const panels = [
+      'loans',
       'menu',
       'reports',
       'statistics',
@@ -2913,6 +2946,16 @@ app.addEventListener('submit', async (e) => {
   const form = e.target as HTMLFormElement,
     data = Object.fromEntries(new FormData(form).entries());
   try {
+    if (form.hasAttribute('data-farm-policy')) {
+      send({
+        type: 'farm',
+        building: selected,
+        operation: 'policy',
+        policy: farmPolicyFormValue(form),
+      });
+      (document.activeElement as HTMLElement)?.blur();
+      return;
+    }
     if (form.hasAttribute('data-bulk-discounts')) {
       send({
         type: 'buildingAdmin',

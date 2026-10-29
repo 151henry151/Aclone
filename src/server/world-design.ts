@@ -1,3 +1,4 @@
+import { validateFarmPolicy } from '../shared/farm-policy';
 import { validateBulkDiscounts } from '../shared/bulk-discounts';
 import { courseSchema, validateCourse } from '../shared/courses.ts';
 import { roundCycleSchema } from '../shared/round-cycle.ts';
@@ -128,6 +129,22 @@ const designSchema = z.object({
           }, 'Invalid bulk discount levels')
           .transform(validateBulkDiscounts)
           .optional(),
+        farmPolicy: z
+          .object({
+            crops: z.array(z.string()).max(20),
+            dailyLimit: z.number().int().min(0).max(100000000).optional(),
+            reserve: z.number().int().min(0).max(100000000),
+          })
+          .refine((v) => {
+            try {
+              validateFarmPolicy(v);
+              return true;
+            } catch {
+              return false;
+            }
+          }, 'Invalid farm staff policy')
+          .transform(validateFarmPolicy)
+          .optional(),
         wage: z.number().int().min(0).max(100000000).optional(),
         price: z.number().int().min(0).max(100000000).optional(),
         production: recipe.optional(),
@@ -211,6 +228,7 @@ export function exportDesign(w: World, includeMedia = false) {
         buy,
         sell,
         bulkDiscounts,
+        farmPolicy,
         wage,
         price,
         production,
@@ -230,6 +248,7 @@ export function exportDesign(w: World, includeMedia = false) {
         buy,
         sell,
         bulkDiscounts,
+        farmPolicy,
         wage,
         price,
         production,

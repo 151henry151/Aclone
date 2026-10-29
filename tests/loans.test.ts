@@ -215,3 +215,118 @@ test('an owner short of working capital can be offered a bank loan without crash
   );
   assert.doesNotThrow(() => enterpriseChoices(w, p));
 });
+
+test('autopay sources are explicit, preserve legacy savings-only and conserve split payments', async () => {
+  const { advanceLoans } = await import('../src/shared/loans');
+  for (const source of ['savings', 'cash', 'savingsThenCash'] as const) {
+    const { w, p, b, borrow } = setup();
+    const l = borrow();
+    p.bank = Math.floor(l.payment / 2);
+    p.cash = l.payment;
+    act(w, p.id, {
+      type: 'loan',
+      building: b.id,
+      operation: 'autopay',
+      loan: l.id,
+      enabled: true,
+      paymentSource: source,
+    });
+    const cash = p.cash,
+      savings = p.bank,
+      till = b.investment;
+    advanceLoans(w, p, w.time, l.nextDue);
+    if (source === 'savings') {
+      assert.equal(l.due, l.payment);
+      assert.equal(p.cash, cash);
+      assert.equal(p.bank, savings);
+    } else {
+      assert.equal(l.due, 0);
+      assert.equal(b.investment - till, l.payment);
+      assert.equal(cash + savings - p.cash - p.bank, l.payment);
+      assert.equal(p.bank, source === 'cash' ? savings : 0);
+      assert.equal(p.credit!.onTime, 1);
+    }
+  }
+  const { w, p, b, borrow } = setup();
+  const l = borrow();
+  delete l.paymentSource;
+  p.bank = 0;
+  advanceLoans(w, p, w.time, l.nextDue);
+  assert.equal(l.due, l.payment);
+  const before = JSON.stringify(w);
+  assert.throws(
+    () =>
+      act(w, p.id, {
+        type: 'loan',
+        building: b.id,
+        operation: 'autopay',
+        loan: l.id,
+        enabled: false,
+        paymentSource: 'business',
+      }),
+    /Choose/,
+  );
+  assert.equal(JSON.stringify(w), before);
+});
+
+test('loan warnings survive lost chat and reload and show the actual foreclosure deadline', async () => {
+  const { advanceLoans } = await import('../src/shared/loans');
+  const { debtStatusHtml, debtNotice } = await import('../src/client/debt-status');
+  const { w, p, home, borrow } = setup();
+  const l = borrow(10000, 12, home.id);
+  p.bank = 0;
+  const start = w.time;
+  w.time = l.nextDue + LOAN_MONTH;
+  advanceLoans(w, p, start, w.time);
+  w.messages = [];
+  const loaded = JSON.parse(JSON.stringify(w)),
+    q = loaded.players[p.id];
+  assert.match(debtNotice(q), /overdue/);
+  assert.match(debtStatusHtml(loaded, q), /Bank savings only/);
+  assert.match(
+    debtStatusHtml(loaded, q),
+    new RegExp(`Foreclosure in ${Math.ceil((2 * LOAN_MONTH) / 60)} real minutes`),
+  );
+  assert.match(debtStatusHtml(loaded, q), /Not enough/);
+  assert.equal(loaded.buildings.find((b: any) => b.id === home.id).owner, p.id);
+});
+
+test('manual savings repayment and offline combined-source payments use no business funds', async () => {
+  const { advanceLoans } = await import('../src/shared/loans');
+  const { w, p, b, borrow } = setup();
+  const l = borrow();
+  const cash = p.cash,
+    savings = p.bank;
+  act(w, p.id, {
+    type: 'loan',
+    building: b.id,
+    operation: 'repay',
+    loan: l.id,
+    amount: 1000,
+    paymentSource: 'savings',
+  });
+  assert.equal(p.cash, cash);
+  assert.equal(p.bank, savings - 1000);
+  act(w, p.id, {
+    type: 'loan',
+    building: b.id,
+    operation: 'autopay',
+    loan: l.id,
+    enabled: true,
+    paymentSource: 'savingsThenCash',
+  });
+  p.bank = l.payment;
+  p.cash = l.payment * 4;
+  const fine = JSON.parse(JSON.stringify(w)),
+    bulk = JSON.parse(JSON.stringify(w));
+  const end = l.nextDue + 3 * LOAN_MONTH;
+  advanceLoans(bulk, bulk.players[p.id], w.time, end);
+  for (let t = w.time; t < end; t += 600)
+    advanceLoans(fine, fine.players[p.id], t, Math.min(t + 600, end));
+  const a = bulk.players[p.id].loans[0],
+    bLoan = fine.players[p.id].loans[0];
+  assert.ok(Math.abs(a.fraction - bLoan.fraction) < 1e-9);
+  assert.deepEqual({ ...a, fraction: 0 }, { ...bLoan, fraction: 0 });
+  assert.equal(bulk.players[p.id].bank, fine.players[p.id].bank);
+  assert.equal(bulk.players[p.id].cash, fine.players[p.id].cash);
+});

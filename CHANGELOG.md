@@ -9,6 +9,8 @@ All notable changes to Aclone are documented here. This project follows
 ### Added
 
 - Business owners can configure up to five bulk-purchase discount levels, use defaults (100 items at 1%, 250 at 2%, 500 at 3%), or disable discounts. Shop quotes and receipts show the discounted total; supplier bids are unchanged.
+- Persistent loan warnings in the status panel and F9 menu show payment funding, arrears and time until default or foreclosure. Automatic payments can use savings, cash in hand, or savings then cash; existing loans retain their selected source. Manual repayments can use either account.
+- Farm owners can choose crops staff may plant, cap daily cash purchases of seeds and fertilizer, and protect a till reserve. These rules apply to human and NPC employees and survive saves and world-design exports.
 
 ### Fixed
 

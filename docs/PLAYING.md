@@ -107,6 +107,8 @@ Water sells at 5d; local processors/lodging bid 5.60d. Harbour imports remain av
 
 ## Farming
 
+Farm owners can set **Staff planting & spending** rules in the farm menu: approved crops, a daily seed/fertilizer cash budget, and a protected till reserve. These affect both player and NPC employees. Clear every crop checkbox to pause new staff planting. Existing crops remain harvestable; the owner can still tend plots personally. The budget covers cash purchases, not stored supplies or wages, and resets every ten real minutes (one game day).
+
 Learn **farmer**, then own or work at a farm. Water, compost, gravel and topsoil for farm care come from its stockroom first, with carried supplies covering any shortfall. Staff can use these supplies for farm tasks without withdrawing them personally. Each starts with four plots; Main provides plant/water/fertilize/harvest, Building Admin funds seeds/wages, Stockroom lets owners load produce. In winter, a notice explains that planting resumes in spring; empty crop menus are replaced with resting plots. All unharvested crops die when winter begins, including ripe crops. Finish the 15-second harvest before the season changes. Stored produce is safe; cleared plots retain drainage and can be replanted in spring.
 
 - **Hay grass:** spring/summer/autumn, 10 days (1h 40m), grass; baled forage for cows/sheep. Wet weather reduces the dry-hay yield; drainage helps.
@@ -421,6 +423,12 @@ At sea, watch for a white flash when a lighthouse’s rotating light sweeps towa
 Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
 
 Keeper wages are funded by the navigation service, up to 8d per game day before taxes. In worlds requiring active shifts, renew them to keep earning; Puddlewick allows unattended employment. Private owners receive 4d per game day into Working capital. Ownership alone gives no right to live there; an owner may apply for the vacant keeper job. Larger designs still employ only one keeper and earn the same allowance. Lights continue navigating boats even when the job is vacant.
+
+## Loan reminders and payment sources
+
+Use **F9 → Loans & repayments**, or the loan button beneath your cash display, to review debts from anywhere. Warnings show unpaid instalments, insufficient automatic-payment funds and time until default/foreclosure. They remain available after chat scrolls away and after reconnecting.
+
+At the lending bank, choose whether automatic payments use savings only, cash only, or savings first followed by cash. Existing loans keep savings-only payments unless changed. Business tills never fund these payments. You can also choose cash or savings for a manual repayment. Defaulting still carries the agreed consequences; the new warnings do not pause deadlines.
 
 ## Buying in bulk
 

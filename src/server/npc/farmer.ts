@@ -1,3 +1,4 @@
+import { farmStaffBlocker } from '../../shared/farm-policy';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { labourReward } from '../../shared/public-labour.ts';
 import { acceptsHay, herdNeeds } from '../../shared/livestock.ts';
@@ -216,6 +217,7 @@ export function gameplayChoices(
         if (status.state === 'empty') {
           for (const [crop, def] of Object.entries(crops))
             if (
+              !farmStaffBlocker(w, p, b, def.seed, crop) &&
               def.seasons.includes(calendar(w).season) &&
               w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
               b.investment >= def.seed + (own ? 0 : b.wage) &&
@@ -237,7 +239,7 @@ export function gameplayChoices(
           if (
             !current!.fertilized &&
             ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
-              b.investment >= fertilizerPrice)
+              (b.investment >= fertilizerPrice && !farmStaffBlocker(w, p, b, fertilizerPrice)))
           )
             add(
               `Fertilize ${current!.crop} at ${b.name} plot ${plot + 1}; costs one farm/carried compost or ${fertilizerPrice} farm investment; increases yield.`,
@@ -373,7 +375,8 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     if (
       !current!.fertilized &&
       ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
-        (b.investment >= fertilizerPrice + harvestWages &&
+        (!farmStaffBlocker(w, p, b, fertilizerPrice) &&
+          b.investment >= fertilizerPrice + harvestWages &&
           (crops[current!.crop!]?.yield ?? 0) * 0.33 * (b.sell[current!.crop!] ?? 0) >
             fertilizerPrice))
     )
@@ -386,6 +389,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     const crop = Object.entries(crops)
       .filter(
         ([item, def]) =>
+          !farmStaffBlocker(w, p, b, def.seed, item) &&
           def.seasons.includes(season) &&
           w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
           b.investment >= def.seed + harvestWages + (own ? 0 : b.wage) &&

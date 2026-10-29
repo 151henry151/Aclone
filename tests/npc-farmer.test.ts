@@ -497,3 +497,28 @@ test('farmers choose crops that can finish before winter and never harvest winte
   assert.ok(!choices().some((c) => c.description.startsWith('Harvest ')));
   assert.deepEqual(farmDuty(w, p, farm, state), []);
 });
+
+test('NPC choices and farm duty obey owner planting and cash budgets before proposing work', () => {
+  const { w, p, state, choices } = fixture();
+  const farm = w.buildings.find((b) => b.kind === 'farm')!;
+  farm.owner = 'owner';
+  farm.employees = [p.id];
+  farm.investment = 50000;
+  farm.stock = {};
+  p.job = farm.id;
+  p.skills = ['farmer'];
+  p.x = farm.x;
+  p.z = farm.z;
+  farm.farmPolicy = { crops: ['wheat'], dailyLimit: 10000, reserve: 0 };
+  const planting = choices().filter((c) => c.description.startsWith('Plant '));
+  assert.ok(planting.length > 0);
+  assert.ok(planting.every((c) => c.description.startsWith('Plant wheat ')));
+  assert.ok(
+    farmDuty(w, p, farm, state).some(
+      (s) => s.kind === 'act' && s.action.type === 'farm' && s.action.crop === 'wheat',
+    ),
+  );
+  farm.farmPolicy.dailyLimit = 0;
+  assert.equal(choices().filter((c) => c.description.startsWith('Plant ')).length, 0);
+  assert.deepEqual(farmDuty(w, p, farm, state), []);
+});

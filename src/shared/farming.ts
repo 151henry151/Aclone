@@ -1,3 +1,4 @@
+import { validateFarmPolicy, farmStaffBlocker, recordFarmStaffSpending } from './farm-policy';
 import { recordGathered } from './player-statistics.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -111,6 +112,12 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     b.owner === p.id || (w.settings.jobsEnabled !== false && b.employees.includes(p.id)),
     'Only the farmer or farm staff can tend plots',
   );
+  if (a.operation === 'policy') {
+    check(b.owner === p.id, 'Only the farm owner can set staff rules');
+    if (a.policy === null) delete b.farmPolicy;
+    else b.farmPolicy = validateFarmPolicy(a.policy);
+    return 'Farm staff rules saved.';
+  }
   if (a.operation === 'expand') {
     check(b.owner === p.id, 'Only the owner can buy more farmland');
     check(!p.task, 'Finish your current activity first');
@@ -172,7 +179,10 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     check(Object.hasOwn(crops, key), 'Unknown crop');
     check(!old?.crop, 'Harvest this plot first');
     check(c.seasons.includes(calendar(w).season), 'Wrong planting season');
+    const blocked = farmStaffBlocker(w, p, b, c.seed, key);
+    check(!blocked, blocked ?? 'Staff planting is restricted');
     check(b.investment >= c.seed, 'Fund the farm investment account for seeds');
+    recordFarmStaffSpending(w, p, b, c.seed);
     b.investment -= c.seed;
     log(w, 'sink', c.seed, b.id, 'seed merchant', 'crop seed');
     b.plots ??= Array.from({ length: farmPlotCount(b) }, () => ({
@@ -209,6 +219,9 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
         b.investment >= fertilizerPrice,
         `Stock or carry compost or fund ${fertilizerPrice / 100}d of fertilizer`,
       );
+      const blocked = farmStaffBlocker(w, p, b, fertilizerPrice);
+      check(!blocked, blocked ?? 'Staff spending is restricted');
+      recordFarmStaffSpending(w, p, b, fertilizerPrice);
       b.investment -= fertilizerPrice;
       log(w, 'sink', fertilizerPrice, b.id, 'merchant', 'fertilizer');
     }

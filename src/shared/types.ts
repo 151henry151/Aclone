@@ -235,6 +235,8 @@ export interface Building {
   };
   plots?: import('./farming.ts').Plot[];
   /** Purchased field capacity; legacy farms have four plots. */
+  farmPolicy?: import('./farm-policy').FarmPolicy;
+  farmStaffSpending?: { day: number; amount: number };
   farmPlots?: number;
   farmLandCost?: number;
 }

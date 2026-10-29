@@ -5,6 +5,25 @@ import { log } from './simulation.ts';
 import { say } from './messages.ts';
 import type { World, Player, Building, Action } from './types.ts';
 export const LOAN_MONTH = PROPERTY_YEAR / 12;
+export type PaymentSource = 'savings' | 'cash' | 'savingsThenCash';
+export function paymentSource(value: unknown): PaymentSource {
+  if (value === undefined) return 'savings';
+  if (value === 'savings' || value === 'cash' || value === 'savingsThenCash') return value;
+  throw Error('Choose savings, cash in hand, or savings then cash');
+}
+export function automaticFunds(p: Player, l: Loan) {
+  const source = l.paymentSource ?? 'savings';
+  return source === 'cash' ? p.cash : source === 'savingsThenCash' ? p.bank + p.cash : p.bank;
+}
+function payAutomatically(w: World, p: Player, l: Loan, at: number) {
+  if (!l.autoPay || l.due <= 0 || automaticFunds(p, l) < l.due) return false;
+  const amount = l.due,
+    source = l.paymentSource ?? 'savings';
+  const savings = source === 'cash' ? 0 : Math.min(p.bank, amount);
+  if (savings) repay(w, p, l, savings, true, at);
+  if (amount > savings) repay(w, p, l, amount - savings, false, at);
+  return true;
+}
 export interface CreditRecord {
   since: number;
   observedSeconds: number;
@@ -32,6 +51,7 @@ export interface Loan {
   lateSince?: number;
   lateReported?: boolean;
   autoPay: boolean;
+  paymentSource?: PaymentSource;
   collateral?: string;
   status: 'active' | 'default' | 'foreclosed' | 'paid';
 }
@@ -277,6 +297,7 @@ export function settleForeclosure(w: World, b: Building, buyer: Player, price: n
 export function loanAction(w: World, p: Player, b: Building, a: Action) {
   check(b.kind === 'bank' && !b.construction, 'Visit an operating bank');
   if (a.operation === 'borrow') {
+    const source = paymentSource(a.paymentSource);
     const amount = Number(a.amount),
       months = Number(a.months);
     const collateral = typeof a.collateral === 'string' && a.collateral ? a.collateral : undefined;
@@ -303,6 +324,7 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
       billed: 0,
       due: 0,
       autoPay: a.autoPay === true,
+      paymentSource: source,
       collateral,
       status: 'active',
     };
@@ -319,13 +341,15 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
     p.cash += amount;
     creditRecord(w, p);
     log(w, 'transfer', amount, b.id, p.id, 'loan disbursement');
-    return `Loan opened. ${(q.payment / 100).toFixed(2)}d due every ${(LOAN_MONTH / 3600).toFixed(2)} real hours; keep bank savings funded for automatic payments.`;
+    return `Loan opened. ${(q.payment / 100).toFixed(2)}d due every ${(LOAN_MONTH / 3600).toFixed(2)} real hours; automatic payments ${l.autoPay ? `use ${source === 'savingsThenCash' ? 'savings first, then cash in hand' : source === 'cash' ? 'cash in hand only' : 'bank savings only'}` : 'are off'}.`;
   }
   const l = p.loans?.find((l) => l.id === a.loan && l.bank === b.id);
   check(l, 'Loan not found at this bank');
   if (a.operation === 'autopay') {
     check(typeof a.enabled === 'boolean', 'Choose automatic payments on or off');
+    const source = paymentSource(a.paymentSource ?? l!.paymentSource);
     l!.autoPay = a.enabled === true;
+    l!.paymentSource = source;
     return 'Automatic payments updated.';
   }
   check(a.operation === 'repay', 'Choose borrow, repay or autopay');
@@ -334,7 +358,9 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
     Number.isSafeInteger(amount) && amount > 0 && amount <= 100000000,
     'Enter a valid repayment amount',
   );
-  repay(w, p, l!, amount, false, w.time);
+  const source = paymentSource(a.paymentSource ?? 'cash');
+  check(source !== 'savingsThenCash', 'Choose one account for a manual repayment');
+  repay(w, p, l!, amount, source === 'savings', w.time);
   return 'Repayment received.';
 }
 export function advanceLoans(w: World, p: Player, start: number, end: number) {
@@ -358,8 +384,7 @@ export function advanceLoans(w: World, p: Player, start: number, end: number) {
       );
       l.nextDue += LOAN_MONTH;
       if (l.due > 0) l.lateSince ??= at;
-      if (l.autoPay && p.bank >= l.due && l.due > 0) repay(w, p, l, l.due, true, at);
-      else if (l.due > 0)
+      if (!payAutomatically(w, p, l, at) && l.due > 0)
         say(
           w,
           'Bank',
@@ -372,8 +397,7 @@ export function advanceLoans(w: World, p: Player, start: number, end: number) {
     if (l.status !== 'active') continue;
     accrue(l, end);
     checkLate(w, p, l, end);
-    if (l.status === 'active' && l.due > 0 && l.autoPay && p.bank >= l.due)
-      repay(w, p, l, l.due, true, end);
+    if (l.status === 'active') payAutomatically(w, p, l, end);
   }
 }
 function checkLate(w: World, p: Player, l: Loan, at: number) {

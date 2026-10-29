@@ -42,11 +42,33 @@ test('bank quotes require acceptance, create a loan, and support repayment witho
     await expect(page.locator('#loan-quote-result')).toContainText('Your loan offer');
     await page.getByRole('button', { name: 'Accept loan', exact: true }).click();
     expect(p.loans).toBeUndefined();
+    await page.locator('#loan-quote-result').getByLabel('Payment source').selectOption('cash');
     await page.getByLabel('I accept this payment schedule and default terms').check();
     await page.getByRole('button', { name: 'Accept loan', exact: true }).click();
     await expect.poll(() => p.loans?.length).toBe(1);
     expect(p.loans![0].original).toBe(25000);
+    expect(p.loans![0].paymentSource).toBe('cash');
     await expect(form.getByLabel('Loan amount in denarii')).toHaveValue('250');
+    const settings = page
+      .locator('form[data-action="loan"]')
+      .filter({ has: page.getByRole('button', { name: 'Save payment settings' }) });
+    await settings.getByLabel('Payment source').selectOption('savingsThenCash');
+    await settings.getByRole('button', { name: 'Save payment settings' }).click();
+    await expect.poll(() => p.loans![0].paymentSource).toBe('savingsThenCash');
+    // Persisted loan state remains discoverable without any chat history.
+    p.cash = p.bank = 0;
+    p.loans![0].due = p.loans![0].payment;
+    p.loans![0].lateSince = w.time;
+    w.messages = [];
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#debt-notice')).toContainText('overdue');
+    await page.locator('#debt-notice').click();
+    await expect(page.locator('[data-debt-status]')).toContainText('Default in');
+    await expect(page.locator('[data-debt-status]')).toContainText('Savings first, then cash');
+    await page.keyboard.press('Escape');
+    await page.locator('#target').click();
+
+    p.cash = 100000;
     await page.getByLabel('Repayment in denarii').fill('300');
     await page.getByRole('button', { name: 'Repay loan', exact: true }).click();
     await expect.poll(() => p.loans![0].status).toBe('paid');
