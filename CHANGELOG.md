@@ -6,9 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Business owners can configure up to five bulk-purchase discount levels, use defaults (100 items at 1%, 250 at 2%, 500 at 3%), or disable discounts. Shop quotes and receipts show the discounted total; supplier bids are unchanged.
+
 ### Fixed
 
 - Lighthouse illumination no longer sweeps across inland buildings like lightning. Nearby seaward lighting is much softer, clear-weather shafts stay hidden, and the separate offshore navigation signal retains its existing horizon-limited range.
+- Bulk purchase totals use exact integer rounding and reject stale discount quotes before exchanging goods or money.
 
 ## [0.101.1] - 2026-10-27
 

@@ -1,3 +1,4 @@
+import { validateBulkDiscounts } from '../shared/bulk-discounts';
 import { courseSchema, validateCourse } from '../shared/courses.ts';
 import { roundCycleSchema } from '../shared/round-cycle.ts';
 import { buildingArchitecture } from '../shared/building-architecture.ts';
@@ -109,6 +110,24 @@ const designSchema = z.object({
         size: z.enum(['standard', 'expanded', 'large']).optional(),
         buy: stock.optional(),
         sell: stock.optional(),
+        bulkDiscounts: z
+          .array(
+            z.object({
+              quantity: z.number().int().min(2).max(10000),
+              percent: z.number().min(0).max(100),
+            }),
+          )
+          .max(5)
+          .refine((v) => {
+            try {
+              validateBulkDiscounts(v);
+              return true;
+            } catch {
+              return false;
+            }
+          }, 'Invalid bulk discount levels')
+          .transform(validateBulkDiscounts)
+          .optional(),
         wage: z.number().int().min(0).max(100000000).optional(),
         price: z.number().int().min(0).max(100000000).optional(),
         production: recipe.optional(),
@@ -191,6 +210,7 @@ export function exportDesign(w: World, includeMedia = false) {
         size,
         buy,
         sell,
+        bulkDiscounts,
         wage,
         price,
         production,
@@ -209,6 +229,7 @@ export function exportDesign(w: World, includeMedia = false) {
         size,
         buy,
         sell,
+        bulkDiscounts,
         wage,
         price,
         production,

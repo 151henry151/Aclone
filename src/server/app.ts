@@ -1,3 +1,4 @@
+import { tradeTotal } from '../shared/bulk-discounts';
 import { ensurePuddlewickLighthouses } from './puddlewick-lighthouses';
 import { preparePuddlewickOcean } from './puddlewick-ocean';
 import { prepareAutomaticProvisions } from './automatic-provisions-rules';
@@ -1008,11 +1009,12 @@ export async function createApp(options: AppOptions) {
                   name: worldItems(w)[String(a.item).trim()].name,
                   direction: a.direction,
                   quantity: Number(a.quantity),
-                  total:
-                    Number(a.quantity) *
-                    before.buildings.find((b) => b.id === String(a.building).trim())![
-                      a.direction === 'buy' ? 'sell' : 'buy'
-                    ][String(a.item).trim()],
+                  total: tradeTotal(
+                    before.buildings.find((b) => b.id === String(a.building).trim())!,
+                    String(a.item).trim(),
+                    String(a.direction),
+                    Number(a.quantity),
+                  ),
                   denariiPerSheckle: w.settings.denariiPerSheckle,
                 },
               }

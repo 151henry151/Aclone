@@ -202,6 +202,8 @@ export interface Building {
   sell: Stock;
   /** Last prices for explicitly paused shop offers; absent from active market quotes. */
   pausedPrices?: { buy?: Stock; sell?: Stock };
+  /** Missing inherits modest bulk-sale defaults; [] explicitly disables discounts. */
+  bulkDiscounts?: import('./bulk-discounts').BulkDiscount[];
   capacity: number;
   employees: string[];
   /** Paid places; absent follows the recommended crew automatically. */

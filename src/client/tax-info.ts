@@ -1,3 +1,4 @@
+import { bulkPurchaseQuote } from '../shared/bulk-discounts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Building } from '../shared/types';
 import { money } from '../shared/simulation';
@@ -12,7 +13,7 @@ const pct = (v: number) => `${Number((v * 100).toFixed(2))}%`;
 
 export function taxSummary(w: World, site: { x: number; z: number }) {
   const r = taxRatesAt(w, site);
-  return `Sales tax ${pct(r.sales)} included (${pct(r.worldSales)} world + ${pct(r.townSales)} ${r.town ?? 'town'}). Buyers pay the posted price; sales tax comes out of business proceeds. Selling to a business pays its full posted bid.`;
+  return `Sales tax ${pct(r.sales)} included (${pct(r.worldSales)} world + ${pct(r.townSales)} ${r.town ?? 'town'}). Buyers pay the quoted total after any bulk discount; sales tax comes out of business proceeds. Selling to a business pays its full posted bid.`;
 }
 export function tradeQuoteText(
   w: World,
@@ -25,13 +26,14 @@ export function tradeQuoteText(
 ) {
   if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10000)
     return 'Choose a whole quantity from 1 to 10,000.';
-  const total = price * quantity;
+  const discount = bulkPurchaseQuote(b, price, quantity);
+  const total = side === 'sell' ? discount.total : price * quantity;
   const m = (v: number) => money(v, w.settings.denariiPerSheckle);
   const prefix = `${quantity} ${worldItems(w)[item]?.name ?? item}: `;
   if (side === 'buy')
     return `${prefix}${ownerView ? 'Business pays supplier' : 'you receive'} ${m(total)}. No sales-tax deduction.`;
   const t = salesReceipt(w, b, total);
-  return `${prefix}${ownerView ? 'Customer pays' : 'you pay'} ${m(total)} total. Included tax ${m(t.tax)} (${m(t.worldTax)} world + ${m(t.townTax)} town); business receives ${m(t.net)} before other costs.`;
+  return `${prefix}${ownerView ? 'Customer pays' : 'you pay'} ${m(total)} total.${discount.percent ? ` Bulk discount ${discount.percent}% saves ${m(discount.saving)}.` : ''} Included tax ${m(t.tax)} (${m(t.worldTax)} world + ${m(t.townTax)} town); business receives ${m(t.net)} before other costs.`;
 }
 export function taxesPanel(w: World, site: { x: number; z: number }) {
   const r = taxRatesAt(w, site),

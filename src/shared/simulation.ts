@@ -1,3 +1,4 @@
+import { bulkPurchaseQuote, validateBulkDiscounts } from './bulk-discounts';
 import { cliffBlocks } from './coastal-bluffs';
 import { isLighthouseKeeper } from './lodging';
 import { boatShoreCollision } from './boat-shore';
@@ -609,7 +610,11 @@ export function act(w: World, id: string, a: Action): string {
         a.expectedPrice === undefined || a.expectedPrice === price,
         'The price changed. Review the current price before trading again.',
       );
-      const total = price * n;
+      const total = buying ? bulkPurchaseQuote(b, price, n).total : price * n;
+      requireThat(
+        a.expectedTotal === undefined || a.expectedTotal === total,
+        'The price or bulk discount changed. Review the current total before trading again.',
+      );
       requireThat(Number.isSafeInteger(total), 'Trade too large');
       const day = Math.floor(w.time / 600);
       const imports = p.importDay === day ? p.imports : 0;
@@ -885,6 +890,12 @@ export function act(w: World, id: string, a: Action): string {
             true,
           );
       }
+      const bulk =
+        a.bulkDiscounts === undefined || a.bulkDiscounts === null
+          ? a.bulkDiscounts
+          : validateBulkDiscounts(a.bulkDiscounts);
+      if (bulk === null) delete b.bulkDiscounts;
+      else if (bulk !== undefined) b.bulkDiscounts = bulk;
       b.name = name;
       b.wage = b.kind === 'lighthouse' ? Math.min(800, wage) : wage;
       if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price);

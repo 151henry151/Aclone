@@ -320,3 +320,7 @@ Only a valid owned home or unexpired private booking is eligible. Public lodging
 ### Coastal headlands in world designs
 
 World-design JSON preserves `terrainMapSize` (the island footprint, separate from the larger navigable ocean) and up to 32 `coastalBluffs`. A bluff has `id`, `x`, `z`, `angle` in radians (local +Z toward water), `width` (half-width, 80–250 m), `inland` approach length (150–500 m), `height` above mean sea (15–65 m), and a deterministic numeric `seed`. Export Puddlewick’s design for examples. The ordinary height brush does not move these fixed cliff lips; edit the design and import it into a test world to reposition them. Keep them away from existing properties and put their seaward face on the shoreline. Imported headlands use the same safety boundary and lighthouse siting rules. Automatic placement/migration is limited to the public Puddlewick world.
+
+### Business discount policies
+
+World-design exports include each building's optional `bulkDiscounts` array of `{quantity, percent}` tiers. Configure these through the business owner's normal building menu before exporting. Empty discount tiers disable discounts; missing tiers use defaults except at public import/export outlets.

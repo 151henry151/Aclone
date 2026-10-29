@@ -333,3 +333,9 @@ respect the same vacancies and dismissal cooldowns as people. This does not chan
 human-owned wages, listings or rosters. NPC financial chat receives owner-filtered
 estimates with explicit denarii units; it cannot see another owner's private
 recorded accounts and must not present estimates as actual earnings.
+
+## Bulk purchase discounts
+
+Building Admin offers Default, Custom and Off policies. Defaults are 1% at 100 units, 2% at 250 and 3% at 500. Public import/export outlets have no default discounts. Owners can set up to five quantity/percentage pairs; larger tiers cannot have smaller discounts. A tier applies to one item in one transaction, across the entire quantity. Buying different items does not combine their quantities.
+
+The buyer's total is rounded upward once to the smallest currency unit; included sales tax is calculated from that discounted total. Supplier bids, owner stock transfers and wages do not receive discounts. The client displays savings and submits the quoted total; a changed discount or price requires the buyer to review before retrying. Policies are saved with buildings and included in world-design exports. Review margins before setting large discounts.

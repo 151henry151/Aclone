@@ -421,3 +421,7 @@ At sea, watch for a white flash when a lighthouse’s rotating light sweeps towa
 Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
 
 Keeper wages are funded by the navigation service, up to 8d per game day before taxes. In worlds requiring active shifts, renew them to keep earning; Puddlewick allows unattended employment. Private owners receive 4d per game day into Working capital. Ownership alone gives no right to live there; an owner may apply for the vacant keeper job. Larger designs still employ only one keeper and earn the same allowance. Lights continue navigating boats even when the job is vacant.
+
+## Buying in bulk
+
+Shop menus show available bulk discounts and the final total for your chosen quantity. Default private-business tiers are 100 items at 1%, 250 at 2%, and 500 at 3%; owners may change or disable them in Building Admin. Each purchase is for a single item. Selling goods to a business still pays its posted bid. Review the total if a seller changes prices or discounts while the menu is open.

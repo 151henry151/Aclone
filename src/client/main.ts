@@ -1,3 +1,5 @@
+import { bulkDiscountEditor, bulkDiscountFormValue, bulkDiscountSummary } from './bulk-discounts';
+import { bulkPurchaseQuote } from '../shared/bulk-discounts';
 import { waterLevel } from '../shared/ocean';
 import { homeProvisionsStatus } from './home-provisions';
 import { mapWaterPath } from './map-water';
@@ -1296,6 +1298,8 @@ function refreshTaxInfo() {
   }
   const b = world.buildings.find((b) => b.id === selected);
   if (!b) return;
+  for (const note of app.querySelectorAll<HTMLElement>('[data-bulk-summary], [data-bulk-saved]'))
+    note.textContent = bulkDiscountSummary(b);
   for (const note of app.querySelectorAll<HTMLElement>('[data-shop-tax]')) {
     const summary = taxSummary(world, b);
     if (note.textContent !== summary) note.textContent = summary;
@@ -1327,6 +1331,15 @@ function refreshTaxInfo() {
       b.owner === me.id,
     );
     if (quote.textContent !== text) quote.textContent = text;
+    const button = quote
+      .closest('.trade-row')
+      ?.querySelector<HTMLButtonElement>('[data-do="trade"]');
+    if (button)
+      button.dataset.total = String(
+        quote.dataset.side === 'sell'
+          ? bulkPurchaseQuote(b, Number(quote.dataset.price), quantity).total
+          : Number(quote.dataset.price) * quantity,
+      );
   }
 }
 let expeditionSignature = '';
@@ -1496,6 +1509,12 @@ function refreshTradingPrices() {
 }
 app.addEventListener('change', (event) => {
   const control = event.target as HTMLInputElement;
+  if (control.name === 'bulkMode') {
+    const levels = control
+      .closest('form')
+      ?.querySelector<HTMLFieldSetElement>('[data-bulk-levels]');
+    if (levels) levels.disabled = control.value !== 'custom';
+  }
   const form = control.closest<HTMLFormElement>('form[data-price-editor]');
   if (!form) return;
   if (control.name === 'enabled') {
@@ -2004,7 +2023,7 @@ function buildingWindow(b: Building) {
         )
         .join(
           '',
-        )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label>`;
+        )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label><p data-bulk-summary></p>`;
     if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false)
       html += `<p>Unskilled labour. A 15-second task pays ${money(labourReward(world, me!))}. Low-cash residents can receive ${money(RELIEF_PAY)} relief at most once per 30 minutes. You will be quite still while working.</p>${button(`Work a shift · ${money(labourReward(world, me!))}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
     if (b.kind === 'school')
@@ -2290,7 +2309,7 @@ function buildingWindow(b: Building) {
             ['false', 'Not trading this item'],
           ],
           'Trading status',
-        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="1" step="0.01" required placeholder="Enter a price to resume trading"')}<button>Save trading settings</button><div data-current-prices></div></form></div>`
+        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="1" step="0.01" required placeholder="Enter a price to resume trading"')}<button>Save trading settings</button><div data-current-prices></div></form>${bulkDiscountEditor(b)}</div>`
       : !b.government && !b.construction
         ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${OUTSIDE_RETURN_PERCENT}% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
             'direction',
@@ -2646,6 +2665,7 @@ app.addEventListener('click', async (e) => {
           ),
           direction: el.dataset.direction,
           expectedPrice: Number(el.dataset.price),
+          expectedTotal: Number(el.dataset.total),
         });
         break;
       case 'serviceVehicle':
@@ -2893,6 +2913,15 @@ app.addEventListener('submit', async (e) => {
   const form = e.target as HTMLFormElement,
     data = Object.fromEntries(new FormData(form).entries());
   try {
+    if (form.hasAttribute('data-bulk-discounts')) {
+      send({
+        type: 'buildingAdmin',
+        building: selected,
+        bulkDiscounts: bulkDiscountFormValue(data),
+      });
+      (document.activeElement as HTMLElement)?.blur();
+      return;
+    }
     if (form.id === 'arrival-form') {
       const ticket = sessionStorage.getItem('aclone.arrival');
       const local =
