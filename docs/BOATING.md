@@ -1,6 +1,6 @@
 # Boats, fishing and the coastal economy
 
-This guide describes the expedition system in Aclone 0.96.1. Prices below are defaults;
+This guide describes the expedition system in Aclone 0.103.0. Prices below are defaults;
 worlds and business owners can change them.
 
 ## Boarding and mooring
@@ -38,6 +38,18 @@ Parish Carrier is 13.5 metres long; the North Star is about 20.4 metres. Skipper
 remain at normal human scale. Buildings and farm expansions must leave the berth clear. On deployment,
 Puddlewick receives a public boatyard only if a safe site is available; existing
 property and coastline are preserved.
+
+## Canal boat lights and rod fishing
+
+The standing skipper steers with the exposed stern tiller. The Lights menu controls
+bow/stern deck lighting, warm or dim-red cabin lighting, and the searchlight.
+Navigation lights operate automatically; the canal boat does not display trawling signals.
+
+Buy Fishing tackle from a boathouse or Harbour stores. Stop the boat before casting.
+Coastal bites take 40–90 seconds; deep-water bites take 150–300 seconds, with larger
+species possible. Reel within eight seconds using the button or F3; a missed bite
+starts a new wait. Press H to hide the HUD while retaining one small stop/reel
+button along the bottom. H or Escape restores the normal controls.
 
 ## Canal boat costs
 

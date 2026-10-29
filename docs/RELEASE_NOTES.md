@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.103.0 — Canal-boat lights and quieter fishing controls
+
+The canal boat keeps its exposed stern tiller and standing skipper, with new rod racks, seating, fenders and lighting. Automatic red/green sidelights, white masthead/stern lights and a moored white light improve visibility. The Lights menu offers deck floods, warm or dim-red cabin lighting, and the existing searchlight. Window illumination uses a texture mask; boats share a bounded pool of three work lights.
+
+Boathouses now list Fishing tackle for rod fishing. The public Puddlewick boatyard buys a small replenishing shelf from its own till. Existing custom prices and paused listings are preserved; privately owned yards arrange their own supplies.
+
+Press **H** while rod fishing for a clear view with one small bottom-centred button. While waiting it stops fishing; when a fish bites it becomes **Reel in**. **F3** remains available, and **H/Escape** restores the HUD. Bite timing is unchanged: deep water waits 150–300 seconds, coastal boat fishing 40–90 seconds, with eight seconds to reel after a bite.
+
+Reload after deployment. The separate charter boat and paid passenger-trip system remain planned work and are not included in this release.
+
 ## 0.102.0 — Business controls and quieter lighthouses
 
 Business owners can use default bulk discounts (100 items at 1%, 250 at 2%, 500 at 3%), customize up to five levels, or turn discounts off. Buyers see the discount and final total before purchasing. Supplier bids and owner stock transfers are unchanged. Public import/export outlets do not inherit default discounts.

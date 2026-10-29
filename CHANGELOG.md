@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.103.0] - 2026-10-28
+
+### Added
+
+- Boathouses buy and sell Fishing tackle, the rod-and-line equipment used for angling. Puddlewick’s public boatyard keeps a small funded stock; existing owners’ prices and paused listings are preserved.
+- The canal boat gains automatic navigation lights, switchable deck and cabin lighting, illuminated windows, rod racks, seating and extra fenders while retaining its exterior stern tiller and standing skipper.
+
+### Fixed
+
+- Scenery view (H) keeps one compact rod-fishing control at the bottom of the screen: stop while waiting, or reel in when a fish bites. F3 still reels; H or Escape restores the full HUD.
+
 ## [0.102.0] - 2026-10-28
 
 ### Added

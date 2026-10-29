@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.102.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.103.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -12,7 +12,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km; shafts appear only in misty rain or storms. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
-Version 0.102.0 adds configurable bulk discounts, persistent loan warnings and payment-source controls, farm staff crop/spending rules, and softer lighthouse illumination. Existing loans retain their payment source; farm staff restrictions are owner-configured. See [release notes](docs/RELEASE_NOTES.md#01020--business-controls-and-quieter-lighthouses).
+Version 0.103.0 adds canal-boat lighting and deck details, fishing tackle at boathouses, and compact fishing controls in scenery view. The canal boat retains its exposed stern tiller. See [release notes](docs/RELEASE_NOTES.md#01030--canal-boat-lights-and-quieter-fishing-controls).
 
 ## What you can do
 
@@ -221,8 +221,13 @@ safe approaches and crash consequences.
 
 ### Boats and fishing
 
+Boathouses also sell **Fishing tackle** (rod-and-line equipment).
+Puddlewick’s public boatyard restocks a small shelf using its till; private owners
+set their own prices and arrange their stock.
+
 The paintable Parish Carrier canal boat has a rounded hull, curved cabin roof,
-timber decks and a stern tiller. Its 240-weight hold and three passenger places
+timber decks and a stern tiller. It has automatic navigation lights and switchable
+deck/cabin lighting, including illuminated cabin windows. Its 240-weight hold and three passenger places
 suit coastal hauling. Buy and board boats at a shoreline **boathouse**; owned
 boats also board at the fishing pier. Pier departures leave an empty moored boat;
 boathouses store boats inside. Their covered lifting halls extend over the water,
