@@ -96,7 +96,7 @@ export function charterAction(w: World, p: Player, a: Action) {
         !p.task &&
         !p.game &&
         !p.crowBody &&
-        !boatSlot(p.vehicle) &&
+        !boatSlot(p.vehicle, w) &&
         Math.abs(p.speed) < 0.5 &&
         Math.abs(p.y - travelHeight(w, p.x, p.z)) < 2,
       'Finish your activity on shore before boarding',

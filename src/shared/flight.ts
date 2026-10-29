@@ -28,6 +28,9 @@ export interface FlightEnvironment {
   half: number;
   grip: number;
   fuelRate: number;
+  speed?: number;
+  acceleration?: number;
+  turn?: number;
   condition: number;
 }
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -80,7 +83,7 @@ export function fly(
     const power = powered ? f.throttle * (0.7 + env.condition * 0.003) : 0;
     const speed = Math.hypot(f.vx, f.vy, f.vz),
       horizontal = Math.hypot(f.vx, f.vz);
-    const authority = clamp(speed / 22, 0, 1.25);
+    const authority = (clamp(speed / 22, 0, 1.25) * (env.turn ?? 1.2)) / 1.2;
     const pitchInput = axis(input.pitch),
       bankInput = axis(input.roll),
       rudder = axis(input.steer);
@@ -134,14 +137,16 @@ export function fly(
     let cl = clamp(0.28 + 4.5 * f.aoa, -1.15, 1.45);
     if (stall) cl *= Math.max(0.15, 1 - (absAlpha - FLIGHT.stallAngle) * 3.2);
     const q = 0.0217 * speed * speed; // rho*S/(2*m): 23 m² wing, roughly 650 kg loaded.
-    const drag = q * (0.035 + 0.065 * cl * cl + (stall ? 0.22 : 0));
+    const drag = q * (40 / (env.speed ?? 40)) ** 2 * (0.035 + 0.065 * cl * cl + (stall ? 0.22 : 0));
     const lift = q * cl;
     const inv = 1 / Math.max(0.1, speed),
       direction = [f.vx * inv, f.vy * inv, f.vz * inv];
     const projection = up[0] * direction[0] + up[1] * direction[1] + up[2] * direction[2];
     const liftDir = up.map((v, i) => v - projection * direction[i]);
     const liftLength = Math.max(0.1, Math.hypot(...liftDir));
-    const thrust = power * 4.2 * Math.max(0.2, 1 - speed / 75);
+    const thrust =
+      ((power * 4.2 * (env.acceleration ?? 9)) / 9) *
+      Math.max(0.2, 1 - speed / ((75 * (env.speed ?? 40)) / 40));
     const slipSpeed = f.vx * left[0] + f.vy * left[1] + f.vz * left[2];
     const acceleration = forward.map(
       (v, i) =>

@@ -392,7 +392,7 @@ export interface World {
   time: number;
   created: number;
   settings: Settings;
-  vehicleTuning?: Record<number, Partial<VehicleDef>>;
+  vehicleTuning?: Record<number, import('./vehicle-config').VehicleTuning>;
   players: Record<string, Player>;
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;

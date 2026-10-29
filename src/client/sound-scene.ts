@@ -1,3 +1,4 @@
+import { vehicleDef } from '../shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehicles } from '../shared/catalog';
 import type { Player, World } from '../shared/types';
@@ -72,7 +73,7 @@ export function selectLoops(
     if (!p.online || !p.engineRunning || p.atHome) continue;
     const spatial =
       p.id === me.id ? { gain: 1, pan: 0 } : spatialSound(listener, position(p.id) ?? p, 110);
-    const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] };
+    const v = { ...vehicleDef(w, p.vehicle), ...w.vehicleTuning?.[p.vehicle] };
     const rev =
       v.mode === 2 && p.flight
         ? p.flight.throttle

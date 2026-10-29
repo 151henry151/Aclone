@@ -92,7 +92,7 @@ export function dockObstruction(w: World, b: Site, players = false, except?: str
   return undefined;
 }
 export function aboardBoat(w: World, p: Player) {
-  return boatSlot(p.vehicle) || (!!p.hitch && boatSlot(w.players[p.hitch]?.vehicle));
+  return boatSlot(p.vehicle, w) || (!!p.hitch && boatSlot(w.players[p.hitch]?.vehicle, w));
 }
 
 export interface BoatLanding {
@@ -167,7 +167,7 @@ export function boatLanding(w: World, p: Pick<Player, 'x' | 'z'>, afloat: boolea
 export function nearBoathouse(w: World, p: Pick<Player, 'x' | 'z' | 'vehicle'>, b: Building) {
   return (
     Math.hypot(p.x - b.x, p.z - b.z) <= boathouseRange ||
-    (boatSlot(p.vehicle) && !!boatLanding(w, p, true, b.id))
+    (boatSlot(p.vehicle, w) && !!boatLanding(w, p, true, b.id))
   );
 }
 export function landingBlocked(

@@ -5,7 +5,7 @@ import { deepFishingWater } from './fishing-water';
 import type { Player, World } from './types';
 export const deepFish = ['cod', 'halibut', 'tuna'] as const;
 export function fishingVessel(w: World, p: Player): Player | undefined {
-  return p.hitch ? charterCaptain(w, p) : poweredBoat(p.vehicle) ? p : undefined;
+  return p.hitch ? charterCaptain(w, p) : poweredBoat(p.vehicle, w) ? p : undefined;
 }
 export function deepBoatFishing(w: World, p: Player) {
   const boat = fishingVessel(w, p);

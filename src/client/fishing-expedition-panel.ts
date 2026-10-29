@@ -1,3 +1,5 @@
+import { hasProvisions, crewBerths } from '../shared/vehicle-config';
+import { isTrawler } from '../shared/vehicle-config';
 import { boatLighting } from '../shared/boat-lighting';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../shared/types';
@@ -27,17 +29,23 @@ function expeditionContent(w: World, p: Player) {
     if (captain && boatLanding(w, captain, true) && Math.abs(captain.speed) < 0.5)
       html += '<button data-do="detach">Step ashore (keep agreed profit share)</button>';
   }
-  if (p.vehicle !== FISHING_BOAT || p.hitch) return html;
+  if (
+    !(hasProvisions(p.vehicle, w) || crewBerths(p.vehicle, w) > 0 || isTrawler(p.vehicle, w)) ||
+    p.hitch
+  )
+    return html;
   html += boatLightingPanel(p);
   const defs = worldItems(w),
     v = p.fishingVoyage;
   if ((p.inventory.fuel ?? 0) > 0) html += button('Fill tank from carried Fuel', 'refuel');
-  html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? 'this world consumes carried meals automatically' : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="10000" value="1"></label>`;
-  for (const [id, d] of Object.entries(defs).filter(([, d]) => d.food || d.drink)) {
-    const held = p.inventory[id] ?? 0,
-      stored = p.boatStores?.[id] ?? 0;
-    if (!held && !stored) continue;
-    html += `<p>${esc(d.name)}: carrying ${held}, stored ${stored} ${held ? button('Store', 'store', `data-item="${esc(id)}"`) : ''}${stored ? button('Take', 'take', `data-item="${esc(id)}"`) : ''}</p>`;
+  if (hasProvisions(p.vehicle, w)) {
+    html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? 'this world consumes carried meals automatically' : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="10000" value="1"></label>`;
+    for (const [id, d] of Object.entries(defs).filter(([, d]) => d.food || d.drink)) {
+      const held = p.inventory[id] ?? 0,
+        stored = p.boatStores?.[id] ?? 0;
+      if (!held && !stored) continue;
+      html += `<p>${esc(d.name)}: carrying ${held}, stored ${stored} ${held ? button('Store', 'store', `data-item="${esc(id)}"`) : ''}${stored ? button('Take', 'take', `data-item="${esc(id)}"`) : ''}</p>`;
+    }
   }
   if (v)
     html += `<p>Expedition expenses so far: ${(v.expenses / 100).toFixed(2)}d. Fuel is valued at the departure quote (${((v.fuelPrice * 8) / 100).toFixed(2)}d per Fuel); consumed provisions at departure prices, using catalogue prices when unavailable. Unused supplies are not charged. Profit shares are paid on settlement of landed expedition fish.</p><p>Crew: ${
@@ -46,7 +54,7 @@ function expeditionContent(w: World, p: Player) {
         .join(', ') || 'none'
     }.</p>`;
   if (boatLanding(w, p, true) && Math.abs(p.speed) < 0.5) {
-    if (!v?.departed && Object.keys(v?.members ?? {}).length < 2) {
+    if (!v?.departed && Object.keys(v?.members ?? {}).length < crewBerths(p.vehicle, w)) {
       html +=
         '<label>Offer profit share (%) <input id="crew-share" type="number" min="5" max="25" value="15"></label>';
       for (const q of Object.values(w.players).filter(

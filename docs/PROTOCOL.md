@@ -184,3 +184,9 @@ Passengers use ordinary `joinGame: fishing`, `reel`, `leaveGame` and dockside
 Returns to another dock refund the fare; time spent at the departure dock is not
 chargeable. Settlement consumes each ticket once. Captains cannot switch vehicles
 while passengers remain aboard.
+
+### Expanded vehicle definitions and grazing land
+
+Owner action `vehicleTuning` accepts `slot` (0–31), `tuning` (the partial definition) and optional `replace: true`; without replacement, fields merge with the existing override. The legacy flat action is accepted. `vehicleReset` with a slot removes its override after the same occupancy/load checks. Definitions are validated by `vehicleTuningSchema`; unknown fields, incompatible capabilities and invalid asset/model references are rejected. Simulation and client prediction resolve definitions against each world's overrides. Design exports include all slots; media-free exports omit uploaded dashboard/tread image references.
+
+`livestock` with `building` and `operation: "expand"` purchases one adjoining pasture parcel using owner cash, after server-side space and terrain checks. `Building.pasture` records local x/z and parcel count. World settings `pastureCapacityMultiplier` (0.25–4) and `pasturePriceMultiplier` (0.25–10) default to 1. Stock transfers, purchase bids and breeding enforce herd capacity; scaled production retains normal input, staffing and output-storage checks.

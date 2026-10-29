@@ -1,3 +1,5 @@
+import { vehicleEditor } from './vehicle-editor';
+import { vehicleDef } from '../shared/vehicle-config';
 import { coursesPanel } from './courses';
 import { bookSchema, townEventSchema } from '../shared/world-stories';
 import { booksEditor, eventsEditor } from './story-editor';
@@ -406,15 +408,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
       recipe?.skill,
     )}<details open><summary>Inputs</summary>${rows('inputs')}</details><details open><summary>Outputs</summary>${rows('outputs')}</details><button>Save production recipe</button></form>${b ? diagnosticsHtml(w, b) : ''}`;
   }
-  if (tab === 'Vehicles') {
-    const v = { ...vehicles[vehicleSlot], ...w.vehicleTuning?.[vehicleSlot] };
-    return `<p>Changes apply to everyone using this slot in this world. Appearance is configured separately in Workshop.</p><form data-action="vehicleTuning">${select(
-      'Vehicle slot',
-      'slot',
-      vehicles.map((v, i) => [String(i), v.name]),
-      String(vehicleSlot),
-    )}${field('Speed (m/s)', 'speed', v.speed, 'number', 'min="1" max="100" step="any"')}${field('Acceleration', 'acceleration', v.acceleration, 'number', 'min="1" max="50" step="any"')}${field('Turn rate', 'turn', v.turn, 'number', 'min="0.1" max="6" step="any"')}${field('Armour percent', 'armour', v.armour, 'number', 'min="10" max="1000" step="any"')}${field('Fuel per second', 'fuel', v.fuel, 'number', 'min="0" max="1" step="any"')}<button>Save vehicle physics</button></form>`;
-  }
+  if (tab === 'Vehicles') return vehicleEditor(w, vehicleSlot);
   if (tab === 'Transfer')
     return `<p>Export a reusable world design without players, accounts, cash or inventories. Imported designs create a new world; they never overwrite an occupied world. A media bundle carries up to 8 MiB of images, models and audio, retaining source/author/licence metadata. Only redistribute media you have permission to share; design-only exports use placeholder visuals.</p>${button('Download world design', 'export')}${button('Download design + media bundle', 'exportBundle')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
   return '';
@@ -766,12 +760,13 @@ export function creatorControls(w: World, changed?: HTMLElement) {
     (recipeForm.elements.namedItem('skill') as HTMLSelectElement).value =
       recipe?.skill ?? skills[0];
   }
-  const tuning = document.querySelector<HTMLFormElement>('form[data-action="vehicleTuning"]');
+  const tuning = document.querySelector<HTMLFormElement>('form[data-vehicle-editor]');
   if (tuning && changed?.getAttribute('name') === 'slot') {
     vehicleSlot = Number((changed as HTMLSelectElement).value);
-    const v = { ...vehicles[vehicleSlot], ...w.vehicleTuning?.[vehicleSlot] };
-    for (const key of ['speed', 'acceleration', 'turn', 'armour', 'fuel'] as const)
-      (tuning.elements.namedItem(key) as HTMLInputElement).value = String(v[key]);
+    const section = document.createElement('div');
+    section.innerHTML = vehicleEditor(w, vehicleSlot);
+    tuning.nextElementSibling?.remove();
+    tuning.replaceWith(...Array.from(section.children));
   }
   if (
     changed &&

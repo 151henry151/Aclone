@@ -1,3 +1,6 @@
+import { vehicleForm } from './vehicle-editor';
+import { isTrawler } from '../shared/vehicle-config';
+import { vehicleDef } from '../shared/vehicle-config';
 import { pastureCapacity, pastureCost } from '../shared/pasture-land';
 import { charterPanel } from './charter-panel';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
@@ -463,7 +466,7 @@ async function connect() {
       $('world-hud').hidden = !scene.ready;
       updateHud();
       if (me) {
-        const alert = trawlCapacityAlerts.update(world!.id, me);
+        const alert = trawlCapacityAlerts.update(world!.id, me, world);
         if (alert) toast(alert, false, 12000);
       }
       refreshTradingPrices();
@@ -684,13 +687,13 @@ function updateHud() {
         ? 'Eat soon'
         : me.health < 20000
           ? 'Low health'
-          : me.fuel < 8 && vehicles[me.vehicle].fuel
+          : me.fuel < 8 && vehicleDef(world, me.vehicle).fuel
             ? 'Low fuel'
             : 'Pilot status';
   $('mobile-vitals').textContent = urgent;
   $('mobile-status').classList.toggle('needs-attention', urgent !== 'Pilot status');
-  mobile.setAircraft(vehicles[me.vehicle].mode === 2);
-  $('mobile-flight').hidden = ![2, 6].includes(vehicles[me.vehicle].mode);
+  mobile.setAircraft(vehicleDef(world, me.vehicle).mode === 2);
+  $('mobile-flight').hidden = ![2, 6].includes(vehicleDef(world, me.vehicle).mode);
   $('mobile-combat').hidden = !world.settings.fighting;
   mobile.messages(world.id, JSON.stringify(world.messages.at(-1)) ?? '');
   if (panel === 'mobile-actions') {
@@ -698,7 +701,7 @@ function updateHud() {
       ['[data-do=engine]', me.engine ? 'Stop engine' : 'Start engine', 'engine'],
       [
         '[data-do=lights]',
-        me.vehicle === FISHING_BOAT
+        isTrawler(me.vehicle, world)
           ? 'Boat lighting'
           : me.lights
             ? 'Turn lights off'
@@ -737,7 +740,7 @@ function updateHud() {
     ['Hunger', me.hunger / 50000, 'hunger'],
     ['Thirst', me.thirst / 50000, 'thirst'],
     ['Wellbeing', 1 - (me.hunger + me.thirst) / 100000, 'wellbeing'],
-    ['Fuel', me.fuel / fuelCapacity(me), 'fuel'],
+    ['Fuel', me.fuel / fuelCapacity(me, world), 'fuel'],
     ['Energy', me.energy / 65000, 'energy'],
   ];
   setHudHtml(
@@ -765,10 +768,10 @@ function updateHud() {
     `Ping: round-trip network delay. FPS: rendered frames per second. Motion buffer: ${scene.motionBufferMs} ms; grows only on uneven connections.`;
   setHudHtml(
     'driving',
-    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicles[me.vehicle].name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
+    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicleDef(world, me.vehicle).name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
   );
   document.getElementById('flight-readout')?.remove();
-  if (vehicles[me.vehicle].mode === 2) {
+  if (vehicleDef(world, me.vehicle).mode === 2) {
     const f = me.flight;
     const info = document.createElement('small');
     info.id = 'flight-readout';
@@ -791,7 +794,7 @@ function updateHud() {
           `data-id="${target.id}"`,
           'wide target-button',
         )
-      : vehicles[me.vehicle].mode === 2
+      : vehicleDef(world, me.vehicle).mode === 2
         ? '<span class="hint">W/S throttle · A/D rudder · ↓ pull up · ↑ nose down · ←/→ bank · B brakes · F7 guide</span>'
         : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
   $('task-control').hidden = !me.task || !!panel || !!mobile.drawer;
@@ -828,10 +831,10 @@ function updateHud() {
       .slice(0, 4)
       .map(
         ([id, n]) =>
-          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < fuelCapacity(me!))) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
+          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < fuelCapacity(me!, world))) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
-      `<div class="carry">${carry(me, world!)} / ${vehicles[me.vehicle].capacity} carried</div>`,
+      `<div class="carry">${carry(me, world!)} / ${vehicleDef(world, me.vehicle).capacity} carried</div>`,
   );
   $('objective').textContent = me.task
     ? 'A shift in progress. Take in the view.'
@@ -915,7 +918,7 @@ function updateHud() {
     !me.game &&
     !me.crowBody &&
     (!me.hitch || !!me.charterPassage);
-  const commercial = me.vehicle === FISHING_BOAT && !me.hitch && !me.game && !me.atHome;
+  const commercial = isTrawler(me.vehicle, world) && !me.hitch && !me.game && !me.atHome;
   const fishingControl = $('fishing-control');
   const fishingHost = commercial ? app.querySelector('.bottom-left')! : $('world-hud');
   if (fishingControl.parentElement !== fishingHost) fishingHost.prepend(fishingControl);
@@ -934,7 +937,7 @@ function updateHud() {
     $('trawl-toggle').textContent =
       `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${trawlStatus()}`;
     $('trawl-throttle').textContent =
-      `Heading ${nauticalHeadingLabel(me.heading)} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicles[FISHING_BOAT].tank} · W/S adjust, A/D steer, B idle`;
+      `Heading ${nauticalHeadingLabel(me.heading)} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicleDef(world, me.vehicle).tank} · W/S adjust, A/D steer, B idle`;
   }
   $('fishing-control').hidden = (!fishing && !atDock && !commercial) || !!panel || !!mobile.drawer;
   $('fishing-cast').hidden = fishing || commercial;
@@ -1467,7 +1470,7 @@ function refreshTradingPrices() {
       '.expedition-panel input,.expedition-panel select,.expedition-panel textarea',
     )
   ) {
-    const dock = boatLanding(world, me, boatSlot(me.vehicle));
+    const dock = boatLanding(world, me, boatSlot(me.vehicle, world));
     const key = JSON.stringify([
       me.crewOffers,
       me.crewBerth,
@@ -1802,7 +1805,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(poweredBoat(me.vehicle) ? 'Boat lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -1868,7 +1871,7 @@ function renderPanel() {
     modal(
       panel === 'inventory' ? 'The things you carry.' : 'A few useful qualifications.',
       panel === 'inventory'
-        ? `<p>${carry(me, world!)} of ${vehicles[me.vehicle].capacity} capacity · ${esc(vehicles[me.vehicle].name)}</p><div class="item-list">${Object.entries(
+        ? `<p>${carry(me, world!)} of ${vehicleDef(world, me.vehicle).capacity} capacity · ${esc(vehicleDef(world, me.vehicle).name)}</p><div class="item-list">${Object.entries(
             me.inventory,
           )
             .filter(([, n]) => n)
@@ -2103,7 +2106,7 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>Buy Fuel here and use it after boarding your boat. Atlantic cod, halibut and bluefin tuna can be sold here when the till has funds. Boat fishing in water at least 8 metres deep can catch these species; shallow water yields small fish.</p>';
-    if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml();
+    if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
       html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;
     if (b.kind === 'garage' && !b.aircraftHangar && hasAircraftHangar(world))
@@ -2125,9 +2128,9 @@ function buildingWindow(b: Building) {
         .join('')}</div>`;
     if (b.kind === 'garage') {
       const record = me!.fleetState?.[me!.vehicle];
-      html += `<h3>Vehicle service</h3><p>${esc(vehicles[me!.vehicle].name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
+      html += `<h3>Vehicle service</h3><p>${esc(vehicleDef(world, me!.vehicle).name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle, world) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
     }
-    if (b.kind === 'boathouse' && poweredBoat(me.vehicle))
+    if (b.kind === 'boathouse' && poweredBoat(me.vehicle, world))
       html +=
         vehiclePaintShop(world, me, b, me.vehicle) +
         button('Service boat · 1 Steel + labour', 'serviceVehicle', `data-building="${b.id}"`);
@@ -2762,7 +2765,12 @@ app.addEventListener('click', async (e) => {
         send({ type: 'boatIdle' });
         break;
       case 'lights':
-        if (me && poweredBoat(me.vehicle) && !me.hitch) openPanel('boat-lighting');
+        if (
+          me &&
+          (poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length) &&
+          !me.hitch
+        )
+          openPanel('boat-lighting');
         else send({ type: 'lights' });
         break;
       case 'trawl-toggle':
@@ -3188,6 +3196,8 @@ app.addEventListener('submit', async (e) => {
     } else if (form.dataset.charterForm !== undefined) {
       send(charterFormAction(new FormData(form).entries()));
       (document.activeElement as HTMLElement)?.blur();
+    } else if (form.hasAttribute('data-vehicle-editor')) {
+      send(vehicleForm(form));
     } else if (form.dataset.action) {
       const values: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(data)) {
@@ -3388,7 +3398,8 @@ window.addEventListener('keydown', (e) => {
     const b = scene.nearest();
     if (b) openInteraction(b.id);
   }
-  if (key === 'b' && throttleBoat(me?.vehicle ?? -1) && !e.repeat) send({ type: 'boatIdle' });
+  if (key === 'b' && throttleBoat(me?.vehicle ?? -1, world) && !e.repeat)
+    send({ type: 'boatIdle' });
   if (key === 'f4') send({ type: 'engine' });
   if (key === 'l') send({ type: 'lights' });
   if (key === 'f5' || key === 'r') send({ type: 'crow' });
@@ -3451,9 +3462,9 @@ function drivingInput() {
     document.activeElement?.matches('input,textarea,select');
   const held = (...list: string[]) => !typing && list.some((k) => keys.has(k));
   const touch = mobile.input();
-  if (world && vehicles[world.players[account!.id]?.vehicle]?.mode === 2)
+  if (world && vehicleDef(world, world.players[account!.id]?.vehicle)?.mode === 2)
     return aircraftInput(keys, touch, controller.flight, !!typing);
-  if (throttleBoat(world?.players[account!.id]?.vehicle ?? -1))
+  if (throttleBoat(world?.players[account!.id]?.vehicle ?? -1, world))
     return {
       throttle: typing
         ? 0
@@ -3597,7 +3608,7 @@ app.addEventListener('change', (e) => {
 
 function boatControls(building?: string) {
   if (!world || !me) return '';
-  const dock = boatLanding(world, me, boatSlot(me.vehicle), building);
+  const dock = boatLanding(world, me, boatSlot(me.vehicle, world), building);
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me) + charterPanel(world, me);
@@ -3611,34 +3622,39 @@ function boatControls(building?: string) {
         `<p>Recovery lifeboat: ${esc(recoveryDock.building?.name ?? 'Fishing pier')}.</p>` +
         button('Show route to recovery lifeboat', 'boat-recovery-dock');
   }
-  if (dock && !boatSlot(me.vehicle)) {
+  if (dock && !boatSlot(me.vehicle, world)) {
     if (rescue?.dinghy.moored)
       html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
     else if (!rescue)
-      for (const slot of [3, FISHING_BOAT, CHARTER_BOAT]) {
+      for (const slot of vehicles
+        .map((_, slot) => slot)
+        .filter((slot) => poweredBoat(slot, world))) {
         if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
         html += button(
           (me.fleet ?? []).includes(slot)
-            ? `Board your ${esc(vehicles[slot].name)}`
-            : `Buy and board ${esc(vehicles[slot].name)} · ${money(vehicles[slot].price)}`,
+            ? `Board your ${esc(vehicleDef(world, slot).name)}`
+            : `Buy and board ${esc(vehicleDef(world, slot).name)} · ${money(vehicleDef(world, slot).price)}`,
           'vehicle',
           `data-id="${slot}" ${attrs}`,
         );
       }
   }
-  if (me.vehicle === FISHING_BOAT) html += trawlControls();
-  if (boatSlot(me.vehicle)) {
+  if (isTrawler(me.vehicle, world)) html += trawlControls();
+  if (boatSlot(me.vehicle, world)) {
     html += dock
       ? button('Disembark on foot', 'walk') + button('Disembark into tractor', 'tractor')
       : '<p>Return to a boathouse berth or the side of the fishing pier to disembark.</p>';
-    if (poweredBoat(me.vehicle) && me.fuel <= 0)
+    if (poweredBoat(me.vehicle, world) && me.fuel <= 0)
       html += button('Launch emergency lifeboat', 'lifeboat', 'data-id="launch"');
   }
   if (rescue) {
     html +=
       '<p>Row back in your lifeboat, or hitch a ride from shore on another player’s boat. A recovery passenger receives no crew profit share. Stop alongside your own boat to transfer; bring Fuel if its tank is empty.</p>' +
       button('Show route to stranded boat', 'boat-rescue-waypoint');
-    if (me.vehicle === LIFEBOAT || (me.hitch && boatSlot(world.players[me.hitch]?.vehicle ?? -1)))
+    if (
+      me.vehicle === LIFEBOAT ||
+      (me.hitch && boatSlot(world.players[me.hitch]?.vehicle ?? -1, world))
+    )
       html += button('Reboard your stranded boat', 'lifeboat', 'data-id="reboard"');
   }
   return (
@@ -3652,7 +3668,7 @@ function trawlStatus() {
   return fishingTrawlStatus(world, me);
 }
 function trawlControls() {
-  if (!me || !world || me.vehicle !== FISHING_BOAT) return '';
+  if (!me || !world || !isTrawler(me.vehicle, world)) return '';
   const t = me.trawl;
-  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Tank ${me.fuel.toFixed(1)} / ${vehicles[FISHING_BOAT].tank}. Nets down use ${(TRAWL_FUEL_PER_SECOND * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
+  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }

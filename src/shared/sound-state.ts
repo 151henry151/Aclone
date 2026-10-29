@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import {
   idealEmployees,
   staffingEfficiency,
@@ -11,13 +12,13 @@ import type { Building, Player, Recipe, World } from './types';
 
 /** Snapshot projection; don't expose fuel stores or other private player data. */
 export function motorRunning(w: World, p: Player): boolean {
-  const v = { ...vehicles[p.vehicle], ...w.vehicleTuning?.[p.vehicle] };
+  const v = { ...vehicleDef(w, p.vehicle), ...w.vehicleTuning?.[p.vehicle] };
   return !!(
     p.online &&
     !p.atHome &&
     !p.hitch &&
     p.health > 0 &&
-    vehicles[p.vehicle]?.fuel > 0 &&
+    vehicleDef(w, p.vehicle)?.fuel > 0 &&
     p.engine &&
     (v.fuel === 0 || p.fuel > 0)
   );

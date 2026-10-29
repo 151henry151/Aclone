@@ -1,3 +1,8 @@
+import {
+  vehicleTuningSchema,
+  vehicleSlotSchema,
+  validateVehicleTuning,
+} from '../shared/vehicle-config';
 import { pastureBlocker } from '../shared/pastures';
 import { isLivestockFarm } from '../shared/pasture-land';
 import { validateFarmPolicy } from '../shared/farm-policy';
@@ -161,18 +166,7 @@ const designSchema = z.object({
     )
     .max(500),
   tier: z.number().int().min(0).max(10).default(0),
-  vehicleTuning: z
-    .record(
-      z.string().regex(/^([0-9]|1[0-9]|2[0-3])$/),
-      z.object({
-        speed: z.number().min(1).max(100),
-        acceleration: z.number().min(1).max(50),
-        turn: z.number().min(0.1).max(6),
-        armour: z.number().min(10).max(1000),
-        fuel: z.number().min(0).max(1),
-      }),
-    )
-    .default({}),
+  vehicleTuning: z.record(vehicleSlotSchema, vehicleTuningSchema).default({}),
   creator: creatorSchema,
   script: z.string().max(16384).default(''),
 });
@@ -202,6 +196,12 @@ export function exportDesign(w: World, includeMedia = false) {
           },
         ];
     }
+  const vehicleTuning = structuredClone(w.vehicleTuning ?? {});
+  if (!includeMedia)
+    for (const v of Object.values(vehicleTuning)) {
+      delete v.dashboard;
+      delete v.trackTexture;
+    }
   return {
     catalogue: w.catalogue ?? catalogueSchema.parse({}),
     courses: w.courses?.map((c) => c.definition) ?? [],
@@ -210,7 +210,7 @@ export function exportDesign(w: World, includeMedia = false) {
     format: 'aclone-world-design',
     version: 1,
     tier: w.tier,
-    vehicleTuning: w.vehicleTuning ?? {},
+    vehicleTuning,
     settings: w.settings,
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
@@ -332,6 +332,8 @@ export function applyDesign(w: World, input: unknown) {
     })(),
   );
   w.creator = validateCreator(w, d.creator);
+  for (const [slot, tuning] of Object.entries(w.vehicleTuning ?? {}))
+    validateVehicleTuning(w, Number(slot), tuning);
   for (const b of w.buildings) {
     const m = w.creator.models.find((m) => m.id === b.creatorModel);
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };

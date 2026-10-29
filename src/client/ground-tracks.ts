@@ -139,7 +139,7 @@ export class GroundTracks {
   private fade: T.InstancedBufferAttribute;
   private relief: T.InstancedBufferAttribute;
   private ground: T.InstancedBufferAttribute[];
-  constructor() {
+  constructor(print?: T.Texture) {
     const geometry = new T.PlaneGeometry(1, TRACK_LENGTH, 2, 2);
     geometry.rotateX(-Math.PI / 2);
     this.fade = new T.InstancedBufferAttribute(new Float32Array(capacity), 1);
@@ -153,7 +153,7 @@ export class GroundTracks {
     this.ground.forEach((row, i) => geometry.setAttribute(`instanceGround${i}`, row));
     const rut = snowRutTextures();
     const material = new T.MeshStandardMaterial({
-      map: trackPrintTexture(),
+      map: print ?? trackPrintTexture(),
       transparent: true,
       opacity: 1,
       bumpMap: rut.height,
@@ -197,6 +197,7 @@ export class GroundTracks {
             vec4 rut = texture2D(rutMap, vMapUv);
             diffuseColor.rgb *= mix(vec3(1.),rut.rgb,clamp(vRutDepth/.08,0.,1.));
             diffuseColor.a *= rut.a;
+            ${print ? 'diffuseColor.rgb *= mix(vec3(.75),vec3(1.),texture2D(map,vMapUv).a);' : ''}
           } else {
             #include <map_fragment>
           }
@@ -216,7 +217,7 @@ export class GroundTracks {
           }`,
         );
     };
-    material.customProgramCacheKey = () => 'individual-wheel-ruts-v2';
+    material.customProgramCacheKey = () => 'individual-wheel-ruts-v2' + (print ? '-custom' : '');
     this.mesh = new T.InstancedMesh(geometry, material, capacity);
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;

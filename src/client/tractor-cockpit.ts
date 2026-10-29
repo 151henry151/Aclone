@@ -4,7 +4,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { vehicles } from '../shared/catalog';
 import { fuelCapacity } from '../shared/tractors';
 import { vehicleCondition } from '../shared/vehicle-services';
-import type { Player } from '../shared/types';
+import type { Player, World } from '../shared/types';
 
 // +Z is forwards: the top of the wheel must lean away from the seated driver.
 export const STEERING_TILT = 0.8;
@@ -324,12 +324,12 @@ export function addTractorCockpit(
   g.add(column);
 }
 /** Only the local, visible cockpit uploads a texture, at most four times a second. */
-export function updateTractorCockpit(g: T.Group, p: Player, time: number) {
+export function updateTractorCockpit(g: T.Group, p: Player, time: number, w?: World) {
   const cockpit = g.userData.cockpit as Cockpit | undefined;
   if (!cockpit || time - cockpit.last < 0.25) return;
   cockpit.last = time;
   const mph = Math.abs(p.speed) * 2.237,
-    fuel = p.fuel / fuelCapacity(p),
+    fuel = p.fuel / fuelCapacity(p, w),
     condition = vehicleCondition(p);
   const km = (p.fleetState?.[p.vehicle]?.metres ?? 0) / 1000;
   const powered = p.engine && p.fuel > 0;

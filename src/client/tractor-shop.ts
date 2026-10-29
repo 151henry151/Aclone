@@ -1,3 +1,4 @@
+import { vehicleDef } from '../shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { appearance, vehiclePaint, tractorPaint, paintableVehicle } from '../shared/appearance';
 import { vehicles } from '../shared/catalog';
@@ -15,10 +16,10 @@ export function vehiclePaintShop(w: World, p: Player, b: Building, slot: number)
   if (!paintableVehicle(slot) || !(p.fleet ?? [0, 5]).includes(slot)) return '';
   const finish = tractorPaint(vehiclePaint(p, slot));
   const near = Math.hypot(p.x - b.x, p.z - b.z) < (b.kind === 'boathouse' ? 32 : 18);
-  return `<section class="vehicle-paint-shop"><h3>Paint ${esc(vehicles[slot].name)}</h3><p>Finish: ${esc(finish?.name ?? 'Factory colour')}. A repaint costs ${money(appearance.paintPrice, w.settings.denariiPerSheckle)} and changes only this machine. Its colour is saved when you switch vehicles or sign out.</p><div class="paint-options">${appearance.paints.map((c) => `<button data-do="paint" data-id="${c.id}" data-vehicle="${slot}" data-building="${esc(b.id)}" ${!near || p.cash < appearance.paintPrice || finish?.id === c.id ? 'disabled' : ''}><span class="paint-chip" style="background:${c.color}"></span>${esc(c.name)}</button>`).join('')}</div></section>`;
+  return `<section class="vehicle-paint-shop"><h3>Paint ${esc(vehicleDef(w, slot).name)}</h3><p>Finish: ${esc(finish?.name ?? 'Factory colour')}. A repaint costs ${money(appearance.paintPrice, w.settings.denariiPerSheckle)} and changes only this machine. Its colour is saved when you switch vehicles or sign out.</p><div class="paint-options">${appearance.paints.map((c) => `<button data-do="paint" data-id="${c.id}" data-vehicle="${slot}" data-building="${esc(b.id)}" ${!near || p.cash < appearance.paintPrice || finish?.id === c.id ? 'disabled' : ''}><span class="paint-chip" style="background:${c.color}"></span>${esc(c.name)}</button>`).join('')}</div></section>`;
 }
-export function tractorShopHtml() {
-  return `<section class="tractor-shop"><h3>Parish Motor Works</h3><p>Six machines, six different jobs. Compare before buying. Drag the preview to inspect it; every model is shown at the same scale.</p><label>Tractor model<select id="tractor-choice">${tractorSlots.map((s) => `<option value="${s}">${esc(vehicles[s].name)} — ${esc(tractorRoles[s].role)}</option>`).join('')}</select></label><div id="tractor-preview"></div><div id="tractor-specs" aria-live="polite"></div></section>`;
+export function tractorShopHtml(w?: World) {
+  return `<section class="tractor-shop"><h3>Parish Motor Works</h3><p>Six machines, six different jobs. Compare before buying. Drag the preview to inspect it; every model is shown at the same scale.</p><label>Tractor model<select id="tractor-choice">${tractorSlots.map((s) => `<option value="${s}">${esc(vehicleDef(w, s).name)} — ${esc(tractorRoles[s].role)}</option>`).join('')}</select></label><div id="tractor-preview"></div><div id="tractor-specs" aria-live="polite"></div></section>`;
 }
 export function mountTractorShop(host: HTMLElement, w: World, p: Player, b: Building) {
   const select = host.querySelector<HTMLSelectElement>('#tractor-choice'),
@@ -33,7 +34,7 @@ export function mountTractorShop(host: HTMLElement, w: World, p: Player, b: Buil
   }
   const update = () => {
     const slot = Number(select.value),
-      base = vehicles[slot],
+      base = vehicleDef(w, slot),
       v = { ...base, ...w.vehicleTuning?.[slot] },
       role = tractorRoles[slot];
     const owned = (p.fleet ?? [0, 5]).includes(slot),

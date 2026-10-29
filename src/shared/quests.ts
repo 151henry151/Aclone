@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { catalogueItemId, catalogueSkillId, worldItems } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
@@ -128,7 +129,7 @@ export function questAction(w: World, p: Player, a: Action) {
     0,
   );
   const extra = Object.entries(q.rewards).reduce((n, [id, q]) => n + items[id].weight * q, 0);
-  if (weight + extra > vehicles[p.vehicle].capacity)
+  if (weight + extra > vehicleDef(w, p.vehicle).capacity)
     throw Error('Make room for the whole reward first');
   for (const [id, n] of Object.entries(q.rewards)) p.inventory[id] = (p.inventory[id] ?? 0) + n;
   p.kudos += q.kudos;

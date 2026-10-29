@@ -436,10 +436,13 @@ Players govern through each town's plinth. The caretaker can also adjust town
 rules or appoint a mayor there. Decide whether construction outside borders is
 allowed, governed by the nearest town, or forbidden before inviting builders.
 
-**Vehicles** edits a slot's speed, acceleration, steering, armour and fuel settings.
-**Workshop → Use as a vehicle** changes its appearance. These are separate: assigning
-a boat-shaped model to a tractor slot does not turn the tractor into a boat. Test
-handling, cargo and entrances after tuning, especially on hills and narrow roads.
+**Vehicles** configures all 32 slots independently for this world. Choose the movement mode, speed, steering, torque, weather traction, cargo hold, fuel tank/burn, purchase price and passenger limit. Custom slots 9–24 are available for original designs. Assign a model through **Workshop → Use as a vehicle**; a boat-shaped model needs **Boat** movement to function as a boat.
+
+Expand **Fishing, provisions and paid crew** to give a boat nets, stores or up to two paid deckhands. Set net capacity and towing fuel use separately. **Death and recovery** follows world rules or overrides them for this vessel, including offshore recovery, cargo spoilage days and retained fuel.
+
+The appearance can combine a body model with up to sixteen positioned Workshop components, including rotating wheels/propellers and steering parts. Upload GLB/OBJ models and images in **Assets**, then create their named Workshop models first. **Cockpit and instruments** sets the eye position, dashboard artwork and live readouts. **Tyres and tracks** controls each axle's spacing and tyre width. **Lighting** configures the main beam and up to twelve steady/blinking lamp lenses with switches. Extra lenses share the game's lighting budget rather than each adding a shadow-casting light.
+
+Test handling, cargo, fuel, cockpit position and entrances before inviting players. The server rejects invalid combinations and edits that would discard loaded fuel/cargo or strand occupants. See the [vehicle reference](WORLD_BUILDING.md#designing-a-custom-vehicle) for units, limits and portable asset bundles.
 
 ### A small Lua example
 

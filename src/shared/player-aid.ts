@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types.ts';
@@ -21,7 +22,7 @@ export function moneyGiftReason(w: World, p: Player, target?: Player) {
 export function refuellingStatus(w: World, p: Player, target?: Player, publicSnapshot = false) {
   const units = Math.max(
     0,
-    Math.min(items.fuel.fuel ?? 8, (target ? fuelCapacity(target) : 64) - (target?.fuel ?? 0)),
+    Math.min(items.fuel.fuel ?? 8, (target ? fuelCapacity(target, w) : 64) - (target?.fuel ?? 0)),
   );
   let reason: string | undefined;
   if (w.settings.allowPlayerRefuelling === false)
@@ -36,14 +37,14 @@ export function refuellingStatus(w: World, p: Player, target?: Player, publicSna
     reason = 'Move within 15 metres of the other player at the same height';
   else if (Math.abs(p.speed) > 0.5 || Math.abs(target.speed) > 0.5)
     reason = 'Both players must stop moving to refuel';
-  else if (!(vehicles[target.vehicle]?.fuel > 0))
+  else if (!(vehicleDef(w, target.vehicle)?.fuel > 0))
     reason = 'The other player must be in a fuel-powered vehicle';
-  else if (!(publicSnapshot ? target.canReceiveFuel : refuelRecipientReady(target)))
+  else if (!(publicSnapshot ? target.canReceiveFuel : refuelRecipientReady(target, w)))
     reason = 'Their vehicle is unavailable for refuelling (full tank or another activity)';
   else if (!(p.inventory.fuel > 0)) reason = 'Carry Fuel from a stocked shop or garage';
   return { units, reason };
 }
-export function refuelRecipientReady(p: Player) {
+export function refuelRecipientReady(p: Player, w?: World) {
   return !!(
     p.online &&
     !p.atHome &&
@@ -52,8 +53,8 @@ export function refuelRecipientReady(p: Player) {
     !p.game &&
     !p.task &&
     Math.abs(p.speed) <= 0.5 &&
-    vehicles[p.vehicle]?.fuel > 0 &&
+    vehicleDef(w, p.vehicle)?.fuel > 0 &&
     Number.isFinite(p.fuel) &&
-    p.fuel < fuelCapacity(p)
+    p.fuel < fuelCapacity(p, w)
   );
 }

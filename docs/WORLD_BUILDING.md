@@ -71,10 +71,7 @@ Failed GLB loads retain a wireframe placeholder.
   rotation and visual assignment. Changing appearance retains its business,
   owner and inventory. Custom bounds define its collision footprint. Occupied
   homes and buildings with running tasks cannot be moved until occupants leave.
-- **Workshop → Use as a vehicle:** assign a saved appearance to any of the 24
-  vehicle slots. **Vehicles** loads that slot’s current speed, acceleration,
-  steering, armour and fuel settings. The appearance changes the visual model;
-  the existing vehicle slot determines movement and gameplay behavior.
+- **Workshop → Use as a vehicle:** assign a saved appearance to any of the 32 vehicle slots. **Vehicles** configures that slot's movement, performance, economy, cockpit, components and capabilities independently for this world. Slots 9–24 in the menu are available for original designs; walking, creature, scout and lifeboat modes are reserved.
 - **Production:** select a building, profession and batch duration, then choose
   up to eight input and output items with quantities. Recipes use normal stockroom/payroll/capacity/scheduling without JSON.
   Farms keep their crop-plot mechanics. Editing a recipe resets batch progress.
@@ -324,3 +321,21 @@ World-design JSON preserves `terrainMapSize` (the island footprint, separate fro
 ### Business discount and farm policies
 
 World-design exports include each building's optional `bulkDiscounts` array of `{quantity, percent}` tiers and farm `farmPolicy` (`crops`, optional `dailyLimit`, `reserve`). Configure these through the business owner's normal building menu before exporting. Empty discount tiers disable discounts; missing tiers use defaults except at public import/export outlets. Cash amounts in farm policy JSON use the smallest internal currency unit (100 = 1 denarius). Empty approved crops pause staff planting. Runtime staff expenditure is saved in the world but is not copied into a new world design.
+
+## Designing a custom vehicle
+
+Open **F10 → Vehicles**, select a slot and name it. Start with its movement mode: ground, road, fixed-wing flight, boat, amphibious hovercraft or vertical flight. Expand the sections to tune acceleration, top speed, steering, armour, fuel burn and tank size, cargo capacity, purchase price and passenger places. Speeds use metres per second, lengths use metres, fuel burn uses tank units per real second, and prices use hundredths of a denarius (10,000 = 1s). Configure persistent throttle independently. Snow/rain traction and uphill torque change handling without changing other worlds.
+
+For a boat, enable trawling, provision storage and up to two paid deckhands independently. Paid crew require shared provisions. Set the net capacity, towing speed and towing fuel burn alongside the hold and tank. Death settings can follow the world's rules, remove owned vessels, or leave a boat offshore for recovery. Recovery has its own cargo spoilage period in game days and fuel-retention switch; zero spoilage days means no expiry. Existing docking, rescue, crew-consent and settlement rules still apply.
+
+Upload original GLB/OBJ assets and PNG/JPEG artwork in **Assets**, then save named models in **Workshop**. Use a Workshop model as the complete body, and attach up to sixteen additional component models with individual positions, scale and yaw. Wheels rotate with movement, steering components turn with steering, and propellers run with a fuelled engine. Coordinates are local to the vehicle: +Y is up and +Z is forward. Keep models lightweight; reusing an asset does not make its geometry free.
+
+**Cockpit and instruments** sets the driver's eye position, optional dashboard artwork and live speed, fuel, heading, altitude, pitch and condition readouts. **Tyres and tracks** sets front/rear track spacing, tyre widths and wheelbase independently, plus optional tread artwork. At most four distinct uploaded tread textures are used in one world. **Lighting** sets the main beam's power/range and up to twelve coloured lamp lenses, with steady or blinking operation and headlight/cabin/deck switches. Additional lenses are emissive; they do not each create an expensive shadow-casting light.
+
+Save and test driving, docking, fuel consumption, cargo limits and camera placement before inviting players. The server rejects invalid combinations and edits that would strand occupants or shrink loaded storage. **Restore built-in settings** returns that slot to its original configuration. World designs preserve these definitions; use a media bundle to transfer uploaded models and artwork between servers.
+
+## Livestock pastures
+
+Dairy barns, sheepfolds, piggeries and henhouses receive a fenced 16 × 16 metre pasture when suitable clear land is available. Owners may buy up to three adjoining parcels through the business's livestock controls. Each parcel supports four cows, six sheep, six pigs or twelve chickens at the default capacity setting. Expansion needs dry, clear terrain and cannot overlap buildings, crop fields, roads, other pastures or protected areas.
+
+**Pasture capacity multiplier** and **Pasture price multiplier** in Rules customize stocking density and expansion cost. More healthy, supplied animals increase production and staffing needs; feed and water use scales with the herd. Animal purchases and breeding respect the same capacity. Existing animals are never deleted during migration: if an old farm has no suitable pasture site, its original production remains available, but it cannot add animals until suitable grazing land is provided.

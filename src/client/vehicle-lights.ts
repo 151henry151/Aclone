@@ -1,3 +1,4 @@
+import { vehicleDef } from '../shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { Player, World } from '../shared/types';
@@ -61,8 +62,8 @@ export class OtherVehicleLights {
       }
       light.userData.player = s.p.id;
       light.intensity =
-        (vehicles[s.p.vehicle]?.headlight ?? 150) * Math.min(1, (140 - s.distance) / 30);
-      light.distance = vehicles[s.p.vehicle]?.lightRange ?? 110;
+        (vehicleDef(w, s.p.vehicle)?.headlight ?? 150) * Math.min(1, (140 - s.distance) / 30);
+      light.distance = vehicleDef(w, s.p.vehicle)?.lightRange ?? 110;
       this.point.copy(s.root.userData.lamp ?? new T.Vector3(0, 1.7, 0));
       light.position.copy(s.root.localToWorld(this.point));
       this.point.set(0, 0, 35);

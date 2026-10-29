@@ -1,3 +1,5 @@
+import { isTrawler } from './vehicle-config';
+import { vehicleDef } from './vehicle-config';
 import { startVoyage, stockWeight, deckhands, boatLoadFactors } from './fishing-expedition';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { FISHING_BOAT } from './boats';
@@ -96,17 +98,17 @@ export function visibleTrawl(w: World, p: Player) {
                 ['cod', 'halibut', 'tuna', 'fish', 'largeFish'].includes(id),
               ),
             ),
-          ) / vehicles[FISHING_BOAT].capacity,
+          ) / vehicleDef(w, p.vehicle).capacity,
         ) * 5,
       ) / 5,
     activity:
       weight <= 0
         ? 0
-        : weight < NET_CAPACITY / 8
+        : weight < (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) / 8
           ? 1
-          : weight < (NET_CAPACITY * 3) / 8
+          : weight < ((vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) * 3) / 8
             ? 2
-            : weight < (NET_CAPACITY * 3) / 4
+            : weight < ((vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) * 3) / 4
               ? 3
               : 4,
   };
@@ -128,7 +130,7 @@ function need(ok: unknown, reason: string): asserts ok {
 }
 export function trawlAction(w: World, p: Player, operation: unknown) {
   need(
-    p.vehicle === FISHING_BOAT && !p.hitch && !p.atHome && !p.crowBody && !p.task && !p.game,
+    isTrawler(p.vehicle, w) && !p.hitch && !p.atHome && !p.crowBody && !p.task && !p.game,
     'Board your fishing boat and finish other activities first',
   );
   need(['stow', 'haul', 'deploy'].includes(String(operation)), 'Unknown net operation');
@@ -144,7 +146,7 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
   if (operation === 'haul') {
     need(t, 'Deploy the nets first');
     need(
-      trawlLoad(w, p) <= vehicles[FISHING_BOAT].capacity,
+      trawlLoad(w, p) <= vehicleDef(w, p.vehicle).capacity,
       'Make room in your hold; your fish remain saved in the net',
     );
     const defs = worldItems(w);
@@ -177,13 +179,13 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
   need(trawlWater(w, p), 'There is not enough clear water here to deploy the nets');
   need(p.engine && p.fuel > 0, 'Start the engine with fuel aboard');
   need(
-    trawlLoad(w, p) < vehicles[FISHING_BOAT].capacity,
+    trawlLoad(w, p) < vehicleDef(w, p.vehicle).capacity,
     'Unload your catch or make room before towing again',
   );
   if (t?.shoal?.pendingFish)
     need(
       trawlLoad(w, p) + (worldItems(w)[t.shoal.pendingFish]?.weight ?? 0) <=
-        vehicles[FISHING_BOAT].capacity,
+        vehicleDef(w, p.vehicle).capacity,
       'Unload your catch or make room for the next fish before towing again',
     );
   startVoyage(w, p);
@@ -205,11 +207,11 @@ export function advanceTrawl(
   prediction = false,
   random: Random = Math.random,
 ) {
-  if (p.vehicle !== FISHING_BOAT || !p.trawl?.deployed || !p.engine || p.fuel <= 0 || dt <= 0)
-    return;
+  if (!isTrawler(p.vehicle, w) || !p.trawl?.deployed || !p.engine || p.fuel <= 0 || dt <= 0) return;
   const quality = prediction ? 0 : fishingGroundQuality(w, p);
   const t = prediction ? { ...p.trawl } : continuousTrawl(p.trawl, random, quality);
-  const burn = TRAWL_FUEL_PER_SECOND * boatLoadFactors(w, p).fuel;
+  const burn =
+    (vehicleDef(w, p.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * boatLoadFactors(w, p).fuel;
   const spent = Math.min(p.fuel, dt * burn);
   p.fuel = Math.max(0, p.fuel - spent);
   t.fuelUsed = (t.fuelUsed ?? 0) + spent;
@@ -249,13 +251,13 @@ export function advanceTrawl(
           const id = shoal.pendingFish ?? species(shoal.ground, random);
           const fishWeight = defs[id]?.weight ?? 0;
           if (
-            weight + fishWeight > vehicles[FISHING_BOAT].capacity ||
-            net + fishWeight > NET_CAPACITY
+            weight + fishWeight > vehicleDef(w, p.vehicle).capacity ||
+            net + fishWeight > (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY)
           ) {
             shoal.pendingFish = id;
             t.deployed = false;
-            t.holdFull = weight + fishWeight > vehicles[FISHING_BOAT].capacity;
-            t.netFull = net + fishWeight > NET_CAPACITY;
+            t.holdFull = weight + fishWeight > vehicleDef(w, p.vehicle).capacity;
+            t.netFull = net + fishWeight > (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY);
             break;
           }
           t.catch ??= {};
@@ -264,10 +266,13 @@ export function advanceTrawl(
           net += fishWeight;
           delete shoal.pendingFish;
           shoal.nextFish = catchDelay(shoal.ground, random);
-          if (weight >= vehicles[FISHING_BOAT].capacity || net >= NET_CAPACITY) {
+          if (
+            weight >= vehicleDef(w, p.vehicle).capacity ||
+            net >= (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY)
+          ) {
             t.deployed = false;
-            t.holdFull = weight >= vehicles[FISHING_BOAT].capacity;
-            t.netFull = net >= NET_CAPACITY;
+            t.holdFull = weight >= vehicleDef(w, p.vehicle).capacity;
+            t.netFull = net >= (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY);
             break;
           }
         }

@@ -1,3 +1,8 @@
+import { publicPath } from '../shared/public-path';
+declare const __ACLONE_BASE__: string;
+import { configureVehicleVisual } from './vehicle-custom';
+import { isTrawler } from '../shared/vehicle-config';
+import { vehicleDef } from '../shared/vehicle-config';
 import { OtherVehicleLights } from './vehicle-lights';
 import { createCharterBoat } from './charter-boat';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
@@ -202,6 +207,7 @@ export class GameScene {
   private sky = countrySky();
   private precipitation = new Precipitation();
   private tracks = new GroundTracks();
+  private customTracks = new Map<string, GroundTracks>();
   private fields = new FarmFields();
   private livestock = new LivestockScene();
   private flights: RocketFlight[] = [];
@@ -494,6 +500,11 @@ export class GameScene {
     if (this.lastWorld !== world.id) {
       this.motionClock = new MotionClock();
       this.lastWorld = world.id;
+      for (const tracks of this.customTracks.values()) {
+        this.actors.remove(tracks.mesh);
+        dispose(tracks.mesh);
+      }
+      this.customTracks.clear();
       this.plumes.clear();
       this.fields.reset();
       this.livestock.reset();
@@ -507,7 +518,7 @@ export class GameScene {
     for (const p of Object.values(world.players)) {
       const paint = vehiclePaint(p);
       const displayVehicle =
-        p.hitch && throttleBoat(world.players[p.hitch]?.vehicle ?? -1) ? 5 : p.vehicle;
+        p.hitch && throttleBoat(world.players[p.hitch]?.vehicle ?? -1, world) ? 5 : p.vehicle;
       let mesh = this.meshes.get(p.id);
       if (mesh && (mesh.userData.vehicle !== displayVehicle || mesh.userData.paint !== paint)) {
         this.actors.remove(mesh);
@@ -518,7 +529,7 @@ export class GameScene {
       const visual = world.creator?.models.find(
         (m) => m.id === world.creator?.vehicleModels[displayVehicle],
       );
-      const visualKey = JSON.stringify(visual ?? null);
+      const visualKey = JSON.stringify([visual ?? null, world.vehicleTuning?.[displayVehicle]]);
       if (mesh && mesh.userData.creatorKey !== visualKey) {
         this.actors.remove(mesh);
         dispose(mesh);
@@ -533,6 +544,7 @@ export class GameScene {
               p.id === me ? undefined : p.name + (p.npc ? ' · AI' : ''),
               paint,
             );
+        configureVehicleVisual(mesh, world, displayVehicle);
         mesh.userData.creatorKey = visualKey;
         if (visual && p.id !== me) {
           const tag = label(p.name + (p.npc ? ' · AI' : ''));
@@ -1105,7 +1117,7 @@ export class GameScene {
     return g;
   }
   private vehicle(slot: number, name?: string, paint?: string) {
-    const v = vehicles[slot],
+    const v = vehicleDef(this.world, slot),
       g = new T.Group();
     if (slot === 5) {
       const human = createHuman();
@@ -1139,7 +1151,7 @@ export class GameScene {
       g.userData.charterBoat = boat;
       for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
         g.userData[key] = boat.group.userData[key];
-    } else if (slot === FISHING_BOAT) {
+    } else if (isTrawler(slot, this.world)) {
       const boat = createFishingBoat(tractorPaint(paint)?.color ?? v.color);
       g.add(boat.group);
       g.userData.fishingBoat = boat;
@@ -1291,25 +1303,34 @@ export class GameScene {
           Math.sin(pose.heading - mesh.rotation.y),
           Math.cos(pose.heading - mesh.rotation.y),
         );
+        mesh.userData.animateConfiguration?.(
+          w.players[mesh.userData.playerId],
+          dt,
+          turn,
+          this.elapsed,
+          this.cameraMode === 1 && mesh.userData.playerId === p.id,
+        );
         mesh.userData.pose = pose;
         mesh.position.set(pose.x, pose.y, pose.z);
         mesh.rotation.set(0, pose.heading, 0, 'YXZ');
-        const mode = vehicles[mesh.userData.vehicle]?.mode;
+        const mode = vehicleDef(this.world, mesh.userData.vehicle)?.mode;
         if (mode === 3) {
           const long =
-            mesh.userData.vehicle === FISHING_BOAT
+            vehicleDef(w, mesh.userData.vehicle).length ??
+            (isTrawler(mesh.userData.vehicle, this.world)
               ? 21
               : mesh.userData.vehicle === CHARTER_BOAT
                 ? 15
                 : mesh.userData.vehicle === LIFEBOAT
                   ? 3
-                  : 12;
+                  : 12);
           const beam =
-            mesh.userData.vehicle === FISHING_BOAT
+            vehicleDef(w, mesh.userData.vehicle).beam ??
+            (isTrawler(mesh.userData.vehicle, this.world)
               ? 6
               : mesh.userData.vehicle === CHARTER_BOAT
                 ? 5
-                : 3;
+                : 3);
           const sea = boatSeaPose(
             w,
             pose.x,
@@ -1325,7 +1346,11 @@ export class GameScene {
           if (Math.hypot(pose.x - p.x, pose.z - p.z) < 100)
             this.ocean.splash(mesh, pose.speed, long, beam, dt, this.low);
         }
-        if (mesh.userData.wheels && mode !== 5 && pose.y < bareSurface(pose.x, pose.z) + 1) {
+        if (
+          (mesh.userData.wheels || mesh.userData.contacts) &&
+          [0, 1, 4].includes(mode) &&
+          pose.y < bareSurface(pose.x, pose.z) + 1
+        ) {
           const ground = vehicleGround(
             pose.x,
             pose.z,
@@ -1354,7 +1379,7 @@ export class GameScene {
         );
         const skipper = w.players[mesh.userData.playerId];
         const t = skipper?.trawl;
-        mesh.userData.fishingBoat?.animate(
+        (mesh.userData.fishingBoat ?? mesh.userData.customTrawl)?.animate(
           !!t?.deployed,
           t?.activity ?? 0,
           now / 1000,
@@ -1364,9 +1389,9 @@ export class GameScene {
           turn,
           dt,
         );
-        if (mesh.userData.fishingBoat) this.ocean.stabilizeRig(mesh);
+        if (mesh.userData.fishingBoat || mesh.userData.customTrawl) this.ocean.stabilizeRig(mesh);
         const captain = skipper?.hitch ? w.players[skipper.hitch] : undefined;
-        if (captain?.vehicle === FISHING_BOAT) {
+        if (captain && isTrawler(captain.vehicle, this.world)) {
           const crew = Object.values(w.players)
             .filter((q) => q.hitch === captain.id)
             .sort((a, b) => a.id.localeCompare(b.id));
@@ -1399,7 +1424,7 @@ export class GameScene {
       for (const [id, mesh] of this.meshes) {
         const q = w.players[id],
           captain = q?.hitch && this.meshes.get(q.hitch);
-        if (captain && vehicles[captain.userData.vehicle]?.mode === 3) {
+        if (captain && vehicleDef(this.world, captain.userData.vehicle)?.mode === 3) {
           const crew = Object.values(w.players)
             .filter((a) => a.hitch === q.hitch)
             .sort((a, b) => a.id.localeCompare(b.id));
@@ -1430,8 +1455,8 @@ export class GameScene {
       }
       this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position);
       this.headlights.visible = p.lights && !p.atHome && !p.hitch;
-      this.headlights.intensity = vehicles[p.vehicle].headlight ?? 150;
-      this.headlights.distance = vehicles[p.vehicle].lightRange ?? 110;
+      this.headlights.intensity = vehicleDef(this.world, p.vehicle).headlight ?? 150;
+      this.headlights.distance = vehicleDef(this.world, p.vehicle).lightRange ?? 110;
       const local = this.meshes.get(p.id);
       if (local) {
         if (this.cameraMode === 1 && local.userData.charterBoat)
@@ -1444,7 +1469,7 @@ export class GameScene {
             { ...p, heading: local.rotation.y, speed: local.userData.pose?.speed ?? p.speed },
             this.elapsed,
           );
-        if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed);
+        if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed, w);
         if (this.cameraMode === 1 && local.userData.hovercraft)
           updateHovercraftInstruments(local.userData.hovercraft.group, p, this.elapsed);
         if (this.cameraMode === 1 && local.userData.biplane)
@@ -1534,7 +1559,7 @@ export class GameScene {
           this.camera.up.applyQuaternion(attitude).applyQuaternion(local.quaternion);
         } else if (
           this.cameraMode === 1 &&
-          (isTractor(p.vehicle) || vehicles[p.vehicle]?.mode === 3)
+          (isTractor(p.vehicle) || vehicleDef(this.world, p.vehicle)?.mode === 3)
         ) {
           const view = cabView(local.quaternion, this.orbit, cockpitPitch);
           this.target.copy(this.camera.position).addScaledVector(view.direction, 30);
@@ -1552,18 +1577,43 @@ export class GameScene {
           },
           (id) => this.meshes.get(id)?.position,
         );
+        const usedTracks = new Set(
+          Object.values(w.vehicleTuning ?? {})
+            .map((v) => w.assets.find((a) => a.id === v.trackTexture)?.url)
+            .filter(Boolean),
+        );
+        for (const [url, tracks] of this.customTracks)
+          if (!usedTracks.has(url)) {
+            this.actors.remove(tracks.mesh);
+            dispose(tracks.mesh);
+            this.customTracks.delete(url);
+          }
         const kind = trackKind(w.climate ?? {});
         const roads = townRoads(w);
         for (const [id, mesh] of this.meshes) {
           const q = w.players[id];
-          if (!q || !isTractor(q.vehicle) || q.atHome) continue;
+          if (!q || !(vehicleDef(w, q.vehicle).tracks ?? isTractor(q.vehicle)) || q.atHome)
+            continue;
           // Use the same contact points as slope alignment, and the exact tyre
           // widths from the model. Front/rear wheels follow separate paths in turns.
           if (mesh.position.y > bareSurface(mesh.position.x, mesh.position.z) + 1) continue;
           mesh.updateWorldMatrix(true, false);
           const prints = wheelPrints(mesh.userData.tyreFootprints ?? [], mesh.matrixWorld);
+          const asset = w.assets.find((a) => a.id === vehicleDef(w, q.vehicle).trackTexture);
+          let tracks = this.tracks;
+          if (asset) {
+            let custom = this.customTracks.get(asset.url);
+            if (!custom && this.customTracks.size < 4) {
+              const texture = new T.TextureLoader().load(publicPath(__ACLONE_BASE__, asset.url));
+              texture.colorSpace = T.SRGBColorSpace;
+              custom = new GroundTracks(texture);
+              this.customTracks.set(asset.url, custom);
+              this.actors.add(custom.mesh);
+            }
+            tracks = custom ?? tracks;
+          }
           for (const [wheel, print] of prints.entries())
-            this.tracks.record(
+            tracks.record(
               `${id}:${q.vehicle}:${wheel}`,
               print.x,
               print.z,
@@ -1576,8 +1626,10 @@ export class GameScene {
               print.width,
             );
         }
-        this.tracks.tick(dt);
-        this.tracks.sync(snowHeight, snowDepth(w.climate));
+        for (const tracks of [this.tracks, ...this.customTracks.values()]) {
+          tracks.tick(dt);
+          tracks.sync(snowHeight, snowDepth(w.climate));
+        }
         if (isTractor(p.vehicle) && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(
@@ -1864,32 +1916,35 @@ export class GameScene {
     if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
     for (const b of Object.values(w.mooredBoats ?? {})) {
       const model = (
-        b.slot === FISHING_BOAT
+        isTrawler(b.slot, w)
           ? createFishingBoat
           : b.slot === CHARTER_BOAT
             ? createCharterBoat
             : createCanalBoat
-      )(tractorPaint(b.paint)?.color ?? vehicles[b.slot]?.color ?? '#407983').group;
+      )(tractorPaint(b.paint)?.color ?? vehicleDef(w, b.slot)?.color ?? '#407983').group;
       const driver = model.userData.driver as T.Object3D;
       if (driver) driver.visible = false;
       model.position.set(b.x, w.settings.seaLevel, b.z);
       model.rotation.set(0, b.heading, 0, 'YXZ');
-      model.userData.oceanLength = b.slot === FISHING_BOAT ? 21 : b.slot === CHARTER_BOAT ? 15 : 12;
+      model.userData.oceanLength =
+        vehicleDef(w, b.slot).length ??
+        (isTrawler(b.slot, w) ? 21 : b.slot === CHARTER_BOAT ? 15 : 12);
       this.mooredGroup.add(model);
     }
     for (const r of Object.values(w.boatRescues ?? {})) {
       const model = (
-        r.boat.slot === FISHING_BOAT
+        isTrawler(r.boat.slot, w)
           ? createFishingBoat
           : r.boat.slot === CHARTER_BOAT
             ? createCharterBoat
             : createCanalBoat
-      )(tractorPaint(r.boat.paint)?.color ?? vehicles[r.boat.slot]?.color ?? '#407983').group;
+      )(tractorPaint(r.boat.paint)?.color ?? vehicleDef(w, r.boat.slot)?.color ?? '#407983').group;
       model.userData.driver.visible = false;
       model.position.set(r.boat.x, w.settings.seaLevel, r.boat.z);
       model.rotation.set(0, r.boat.heading, 0, 'YXZ');
       model.userData.oceanLength =
-        r.boat.slot === FISHING_BOAT ? 21 : r.boat.slot === CHARTER_BOAT ? 15 : 12;
+        vehicleDef(w, r.boat.slot).length ??
+        (isTrawler(r.boat.slot, w) ? 21 : r.boat.slot === CHARTER_BOAT ? 15 : 12);
       this.mooredGroup.add(model);
       if (r.dinghy.moored) {
         const life = createLifeboat(false);
@@ -1909,7 +1964,8 @@ export class GameScene {
         .filter((o) => o.visible)
         .map((o) => ({ ...o, id: 'object:' + o.id })) ?? []),
       ...(nearFishingDock(this.world, this.me) ||
-      (boatSlot(this.me.vehicle) && boatLanding(this.world, this.me, true, fishingDock.id))
+      (boatSlot(this.me.vehicle, this.world) &&
+        boatLanding(this.world, this.me, true, fishingDock.id))
         ? [fishingDock]
         : []),
     ]

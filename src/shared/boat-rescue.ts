@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { waterLevel } from './ocean';
 import { stockWeight } from './fishing-expedition';
 import { boatSlot, poweredBoat } from './boats';
@@ -45,43 +46,52 @@ export function expireAbandonedCargo(w: World, at = w.time) {
 export function abandonBoatOnDeath(w: World, p: Player, at: number) {
   const aboard = aboardBoat(w, p);
   let r = w.boatRescues?.[p.id];
-  if (w.settings.loseBoatsOnDeath) {
-    const lost = [3, 30, 31].filter(
+  const loses = (slot: number) => {
+    const policy = vehicleDef(w, slot).deathPolicy ?? 'world';
+    return policy === 'lose' || (policy === 'world' && w.settings.loseBoatsOnDeath);
+  };
+  const lost = vehicles
+    .map((_, slot) => slot)
+    .filter(
       (slot) =>
-        (p.fleet ?? []).includes(slot) || r?.boat.slot === slot || (!p.hitch && p.vehicle === slot),
+        (poweredBoat(slot, w) ? loses(slot) : vehicleDef(w, slot).deathPolicy === 'lose') &&
+        ((p.fleet ?? []).includes(slot) ||
+          r?.boat.slot === slot ||
+          (!p.hitch && p.vehicle === slot)),
     );
-    if (lost.length) {
-      p.fleet = (p.fleet ?? [0, 5]).filter((slot) => !poweredBoat(slot));
-      for (const slot of [3, 30, 31]) {
-        if (p.fuelVehicle === slot || (p.fuelVehicle === undefined && p.vehicle === slot))
-          p.fuel = 0;
-        if (p.parkedFuel) delete p.parkedFuel[slot];
-        if (p.vehiclePaints) delete p.vehiclePaints[slot];
-        if (p.fleetState) delete p.fleetState[slot];
-      }
-      for (const [key, boat] of Object.entries(w.mooredBoats ?? {}))
-        if (boat.owner === p.id) delete w.mooredBoats![key];
+  const activeLost = r ? lost.includes(r.boat.slot) : !p.hitch && lost.includes(p.vehicle);
+  if (lost.length) {
+    p.fleet = (p.fleet ?? [0, 5]).filter((slot) => !lost.includes(slot));
+    for (const slot of lost) {
+      if (p.fuelVehicle === slot || (p.fuelVehicle === undefined && p.vehicle === slot)) p.fuel = 0;
+      if (p.parkedFuel) delete p.parkedFuel[slot];
+      if (p.vehiclePaints) delete p.vehiclePaints[slot];
+      if (p.fleetState) delete p.fleetState[slot];
+    }
+    for (const [key, boat] of Object.entries(w.mooredBoats ?? {}))
+      if (boat.owner === p.id && lost.includes(boat.slot)) delete w.mooredBoats![key];
+    if (activeLost) {
       if (w.boatRescues) delete w.boatRescues[p.id];
-      if (!p.hitch && poweredBoat(p.vehicle)) p.inventory = {};
+      r = undefined;
+      p.inventory = {};
       delete p.boatStores;
       delete p.boatLighting;
-      say(
-        w,
-        'Boat loss',
-        'This world removes owned boats on death, including their cargo, provisions and tank fuel. Buy a replacement at a boathouse.',
-        'system',
-        p.id,
-      );
     }
-    if (!aboard && !r) return undefined;
-    return { dock: boatLandings(w)[0] };
+    say(
+      w,
+      'Boat loss',
+      'Owned vessels subject to the death-loss rule have been removed with their cargo, provisions and fuel.',
+      'system',
+      p.id,
+    );
   }
+  if (activeLost) return aboard ? { dock: boatLandings(w)[0] } : undefined;
   if (!aboard && !r) return undefined;
   const dock = boatLandings(w).sort(
     (a, b) =>
       Math.hypot(a.berth.x - p.x, a.berth.z - p.z) - Math.hypot(b.berth.x - p.x, b.berth.z - p.z),
   )[0];
-  if ((!p.hitch && poweredBoat(p.vehicle)) || r) {
+  if ((!p.hitch && poweredBoat(p.vehicle, w)) || r) {
     if (!r) {
       w.boatRescues ??= {};
       r = w.boatRescues[p.id] = {
@@ -101,9 +111,9 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
     if (!r.spoilage) {
       r.provisions = { ...p.boatStores };
       r.net = p.trawl ? { ...structuredClone(p.trawl), deployed: false } : undefined;
-      const days = w.settings.boatCargoSpoilageDays ?? 5;
+      const days = vehicleDef(w, r.boat.slot).spoilageDays ?? w.settings.boatCargoSpoilageDays ?? 5;
       r.spoilage = { daysLeft: days, checkedAt: at, ...(days === 0 ? { never: true } : {}) };
-      if (w.settings.retainBoatFuelOnDeath === false) {
+      if ((vehicleDef(w, r.boat.slot).retainFuel ?? w.settings.retainBoatFuelOnDeath) === false) {
         if (
           p.fuelVehicle === r.boat.slot ||
           (p.fuelVehicle === undefined && p.vehicle === r.boat.slot)
@@ -143,11 +153,11 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   const r = w.boatRescues?.[p.id];
   if (operation === 'launch') {
     need(
-      poweredBoat(p.vehicle) && p.fuel <= 0 && !r,
+      poweredBoat(p.vehicle, w) && p.fuel <= 0 && !r,
       'Launch the lifeboat only from your boat when its fuel tank is empty',
     );
     need(terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65, 'Launch the lifeboat on water');
-    const clearance = (vehicles[p.vehicle].collisionRadius ?? 2) + 1.05;
+    const clearance = (vehicleDef(w, p.vehicle).collisionRadius ?? 2) + 1.05;
     const candidates = [-1, 1].map((side) => ({
       x: p.x + Math.cos(p.heading) * clearance * side,
       z: p.z - Math.sin(p.heading) * clearance * side,
@@ -177,14 +187,14 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     if (p.trawl) p.trawl = { ...p.trawl, deployed: false };
     p.inventory = {}; // Main cargo stays on the stranded boat, never duplicated into the inflatable.
     p.boatThrottle = 0;
-    switchVehicle(p, LIFEBOAT, false);
+    switchVehicle(p, LIFEBOAT, false, w);
     Object.assign(p, spot, { y: waterLevel(w), speed: 0, engine: false });
     return 'Lifeboat launched. Row to a dock, buy Fuel, then row back to your boat. Cargo remains aboard.';
   }
   need(r, 'You have no lifeboat rescue in progress');
   if (operation === 'board') {
     need(
-      !poweredBoat(p.vehicle) && p.vehicle !== LIFEBOAT && r.dinghy.moored,
+      !poweredBoat(p.vehicle, w) && p.vehicle !== LIFEBOAT && r.dinghy.moored,
       'Your lifeboat is already afloat',
     );
     const savedDockExists = boatLandings(w).some((d) => d.id === r.dinghy.landing);
@@ -202,7 +212,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     need(weight <= 40, 'The lifeboat carries 40 weight; leave heavier cargo ashore');
     r.dinghy = { ...d.berth, heading: d.heading, moored: true, landing: d.id };
     p.boatThrottle = 0;
-    switchVehicle(p, LIFEBOAT, false);
+    switchVehicle(p, LIFEBOAT, false, w);
     Object.assign(p, {
       x: r.dinghy.x,
       z: r.dinghy.z,
@@ -222,14 +232,14 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
         carrier.online &&
         !carrier.hitch &&
         !carrier.atHome &&
-        boatSlot(carrier.vehicle) &&
+        boatSlot(carrier.vehicle, w) &&
         Math.abs(carrier.speed) < 0.5,
       'Ask your boat driver to stop alongside your stranded vessel',
     );
   const from = carrier ?? p;
   const reach = carrier
-    ? (vehicles[carrier.vehicle].collisionRadius ?? 2) +
-      (vehicles[r.boat.slot].collisionRadius ?? 2) +
+    ? (vehicleDef(w, carrier.vehicle).collisionRadius ?? 2) +
+      (vehicleDef(w, r.boat.slot).collisionRadius ?? 2) +
       1.5
     : 5;
   need(
@@ -250,7 +260,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   const cargo = { ...r.cargo };
   for (const [id, q] of Object.entries(p.inventory)) cargo[id] = (cargo[id] ?? 0) + q;
   const defs = worldItems(w),
-    capacity = vehicles[r.boat.slot].capacity;
+    capacity = vehicleDef(w, r.boat.slot).capacity;
   const cargoWeight = () =>
     Object.entries(cargo).reduce((sum, [id, n]) => sum + n * (defs[id]?.weight ?? 0), 0) +
     (r.boat.slot === 30 ? stockWeight(w, r.spoilage ? r.provisions : p.boatStores) : 0);
@@ -263,11 +273,11 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     cargoWeight() > capacity &&
     poured < (p.inventory.fuel ?? 0) &&
     defs.fuel?.fuel &&
-    fuel < (vehicles[r.boat.slot].tank ?? 64)
+    fuel < (vehicleDef(w, r.boat.slot).tank ?? 64)
   ) {
     poured++;
     cargo.fuel--;
-    fuel = Math.min(vehicles[r.boat.slot].tank ?? 64, fuel + defs.fuel.fuel);
+    fuel = Math.min(vehicleDef(w, r.boat.slot).tank ?? 64, fuel + defs.fuel.fuel);
   }
   need(
     cargoWeight() <= capacity,
@@ -275,7 +285,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   );
   delete p.hitch;
   p.boatThrottle = 0;
-  switchVehicle(p, r.boat.slot, false);
+  switchVehicle(p, r.boat.slot, false, w);
   p.inventory = cargo;
   if (r.spoilage) {
     p.boatStores = r.provisions ? { ...r.provisions } : {};

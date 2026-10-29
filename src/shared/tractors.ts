@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehicles } from './catalog.ts';
-import type { Player } from './types.ts';
+import { vehicleDef } from './vehicle-config';
+import type { Player, World } from './types.ts';
 /** New machines use appended slots: existing saves and custom slots 8–23 retain their identities. */
 export const tractorSlots = [0, 24, 25, 26, 27, 28] as const;
 export const isTractor = (slot: number) => (tractorSlots as readonly number[]).includes(slot);
@@ -51,26 +52,26 @@ export function returnTractor(p: Player) {
     : 0;
 }
 /** Fuel stays in the actual machine while walking/scouting. Old saves infer their current tank. */
-export function fuelVehicle(p: Player) {
+export function fuelVehicle(p: Player, w?: World) {
   return (
     p.fuelVehicle ??
-    (vehicles[p.vehicle]?.fuel > 0 && p.vehicle !== 7
+    (vehicleDef(w, p.vehicle)?.fuel > 0 && p.vehicle !== 7
       ? p.vehicle
       : (p.crowBody?.vehicle ?? returnTractor(p)))
   );
 }
-export function fuelCapacity(p: Player) {
-  return vehicles[fuelVehicle(p)]?.tank ?? 64;
+export function fuelCapacity(p: Player, w?: World) {
+  return vehicleDef(w, fuelVehicle(p, w))?.tank ?? 64;
 }
 /** Park tanks without topping up or throwing away fuel. Newly bought machines start empty. */
-export function switchVehicle(p: Player, slot: number, remember = true) {
+export function switchVehicle(p: Player, slot: number, remember = true, w?: World) {
   // Legacy saves had one shared tank. The first switch between legacy slots
   // adopts that fuel once, preserving existing NPC recovery and player fuel.
   // New tractor purchases never receive this transfer or a free full tank.
   const legacy = p.fuelVehicle === undefined && p.parkedFuel === undefined && slot < 24;
-  const previous = legacy && vehicles[slot]?.fuel > 0 && slot !== 7 ? slot : fuelVehicle(p);
+  const previous = legacy && vehicleDef(w, slot)?.fuel > 0 && slot !== 7 ? slot : fuelVehicle(p, w);
   p.fuelVehicle = previous;
-  if (vehicles[slot]?.fuel > 0 && slot !== 7) {
+  if (vehicleDef(w, slot)?.fuel > 0 && slot !== 7) {
     if (previous !== slot) {
       p.parkedFuel = { ...p.parkedFuel, [previous]: p.fuel };
       p.fuel = p.parkedFuel[slot] ?? 0;

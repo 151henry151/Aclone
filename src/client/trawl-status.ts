@@ -1,3 +1,4 @@
+import { isTrawler } from '../shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { trawlWater } from '../shared/commercial-fishing';
 import { FISHING_BOAT } from '../shared/boats';
@@ -7,9 +8,9 @@ import type { Player, World } from '../shared/types';
  * Keep this outside HUD rendering so prediction and repeated frames cannot alert. */
 export class TrawlCapacityAlerts {
   private last = '';
-  update(worldId: string, p: Player) {
+  update(worldId: string, p: Player, w?: World) {
     const message =
-      p.vehicle !== FISHING_BOAT || p.hitch
+      !isTrawler(p.vehicle, w) || p.hitch
         ? ''
         : p.trawl?.netFull
           ? 'Your fishing net is full. Towing has stopped — haul the catch aboard.'

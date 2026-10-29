@@ -1,3 +1,6 @@
+import { hasProvisions, crewBerths } from './vehicle-config';
+import { vehicleDef } from './vehicle-config';
+import { isTrawler } from './vehicle-config';
 import { waterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, Stock, World } from './types';
@@ -29,7 +32,7 @@ export function stockWeight(w: World | undefined, stock: Stock = {}) {
   return Object.entries(stock).reduce((s, [id, n]) => s + n * (defs[id]?.weight ?? 0), 0);
 }
 export function vesselStoresWeight(w: World | undefined, p: Player) {
-  return p.vehicle === FISHING_BOAT ? stockWeight(w, p.boatStores) : 0;
+  return hasProvisions(p.vehicle, w) ? stockWeight(w, p.boatStores) : 0;
 }
 export function deckhands(w: World, p: Player) {
   return Object.keys(p.fishingVoyage?.members ?? {}).filter((id) => w.players[id]?.hitch === p.id);
@@ -41,8 +44,8 @@ export function fishingCrewCaptain(w: World, p: Player) {
 export function boatPantry(w: World, p: Player) {
   const captain = fishingCrewCaptain(w, p);
   // Stores remain on the main vessel during an emergency rowing trip.
-  if (captain?.vehicle === FISHING_BOAT) return captain.boatStores;
-  if (p.vehicle === FISHING_BOAT && !p.hitch && !p.online) return p.boatStores;
+  if (captain && hasProvisions(captain.vehicle, w)) return captain.boatStores;
+  if (hasProvisions(p.vehicle, w) && !p.hitch && !p.online) return p.boatStores;
 }
 export function startVoyage(w: World, p: Player) {
   if (p.fishingVoyage) return p.fishingVoyage;
@@ -79,17 +82,17 @@ export function fishingLoad(w: World, p: Player) {
   return Math.min(
     1,
     (stockWeight(w, p.inventory) + stockWeight(w, p.boatStores) + net * 160) /
-      vehicles[FISHING_BOAT].capacity,
+      vehicleDef(w, p.vehicle).capacity,
   );
 }
 export function boatLoadFactors(w: World, p: Player) {
-  if (p.vehicle !== FISHING_BOAT) return { speed: 1, fuel: 1 };
+  if (!isTrawler(p.vehicle, w)) return { speed: 1, fuel: 1 };
   const cargo = fishingLoad(w, p),
-    bunker = Math.min(1, p.fuel / (vehicles[FISHING_BOAT].tank ?? 1));
+    bunker = Math.min(1, p.fuel / (vehicleDef(w, p.vehicle).tank ?? 1));
   return { speed: 1 - cargo * 0.22 - bunker * 0.08, fuel: 1 + cargo * 0.35 + bunker * 0.15 };
 }
 export function voyageFuel(w: World, p: Player, spent: number) {
-  if (p.vehicle !== FISHING_BOAT) return;
+  if (!isTrawler(p.vehicle, w) && !crewBerths(p.vehicle, w)) return;
   const v = p.fishingVoyage ?? (spent > 0 ? startVoyage(w, p) : undefined);
   if (!v) return;
   v.expenses += spent * v.fuelPrice;
@@ -124,7 +127,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     const dock = boatLanding(w, captain, true);
     need(
       !v.departed &&
-        captain.vehicle === FISHING_BOAT &&
+        crewBerths(captain.vehicle, w) > 0 &&
         !captain.hitch &&
         Math.abs(captain.speed) < 0.5 &&
         dock &&
@@ -137,14 +140,15 @@ export function expeditionAction(w: World, p: Player, a: Action) {
         !p.task &&
         !p.game &&
         !p.crowBody &&
-        !boatSlot(p.vehicle) &&
+        !boatSlot(p.vehicle, w) &&
         Math.abs(p.speed) < 0.5 &&
         Math.abs(p.y - travelHeight(w, p.x, p.z)) < 2,
       'Finish your activity before joining the crew',
     );
     need(
-      Object.keys(v.members).length < 2 &&
-        Object.values(w.players).filter((q) => q.hitch === captain.id).length < 2,
+      Object.keys(v.members).length < crewBerths(captain.vehicle, w) &&
+        Object.values(w.players).filter((q) => q.hitch === captain.id).length <
+          Math.max(crewBerths(captain.vehicle, w), vehicleDef(w, captain.vehicle).hitch),
       'The two berths are taken by deckhands or recovery passengers',
     );
     need(
@@ -157,9 +161,14 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     Object.assign(p, { x: captain.x, z: captain.z, y: captain.y + 2, speed: 0 });
     return `Joined ${captain.name}: ${v.members[p.id]}% of realised expedition profit after fuel and consumed provisions. No pay on a loss. Remain aboard until return.`;
   }
-  need(p.vehicle === FISHING_BOAT && !p.hitch && !p.atHome, 'Board your fishing boat first');
+  need(
+    (hasProvisions(p.vehicle, w) || crewBerths(p.vehicle, w) > 0 || isTrawler(p.vehicle, w)) &&
+      !p.hitch &&
+      !p.atHome,
+    'Board your equipped boat first',
+  );
   if (a.operation === 'refuel') {
-    const tank = vehicles[FISHING_BOAT].tank!,
+    const tank = vehicleDef(w, p.vehicle).tank ?? 64,
       units = worldItems(w).fuel.fuel!;
     const n = Math.min(p.inventory.fuel ?? 0, Math.ceil((tank - p.fuel) / units));
     need(n > 0, 'Carry Fuel and leave room in the tank');
@@ -168,6 +177,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     return `Used ${n} Fuel to fill the tank to ${p.fuel.toFixed(1)} units`;
   }
   if (a.operation === 'store' || a.operation === 'take') {
+    need(hasProvisions(p.vehicle, w), 'This vessel has no provisions store');
     const id = String(a.item),
       d = worldItems(w)[id],
       n = Number(a.quantity ?? 1);
@@ -197,7 +207,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     need(Number.isInteger(share) && share >= 5 && share <= 25, 'Offer 5–25 percent of profit');
     const v = startVoyage(w, p);
     need(
-      !v.departed && Object.keys(v.members).length < 2 && !v.members[q.id],
+      !v.departed && Object.keys(v.members).length < crewBerths(p.vehicle, w) && !v.members[q.id],
       'Crew terms are fixed once you depart',
     );
     need(Object.keys(v.offers).length < 16 || v.offers[q.id], 'Too many outstanding offers');
@@ -306,9 +316,11 @@ export function expeditionAction(w: World, p: Player, a: Action) {
 export function endVoyageOnDeath(w: World, p: Player) {
   const captain = fishingCrewCaptain(w, p);
   if (captain) delete captain.fishingVoyage!.members[p.id];
-  for (const q of Object.values(w.players).filter((q) => boatSlot(p.vehicle) && q.hitch === p.id)) {
+  for (const q of Object.values(w.players).filter(
+    (q) => boatSlot(p.vehicle, w) && q.hitch === p.id,
+  )) {
     delete q.hitch;
-    switchVehicle(q, 29, false);
+    switchVehicle(q, 29, false, w);
     Object.assign(q, { x: p.x, z: p.z, y: waterLevel(w), speed: 0, engine: false });
   }
   delete p.fishingVoyage;

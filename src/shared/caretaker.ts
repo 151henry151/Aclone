@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehicles } from './catalog.ts';
@@ -205,8 +206,8 @@ function resident(w: World, p: Player): CaretakerResident {
     z: round(p.z),
     speed: round(p.speed),
     vehicle: p.vehicle,
-    fuelCapacity: fuelCapacity(p),
-    vehicleName: vehicles[p.vehicle]?.name ?? `Vehicle ${p.vehicle}`,
+    fuelCapacity: fuelCapacity(p, w),
+    vehicleName: vehicleDef(w, p.vehicle)?.name ?? `Vehicle ${p.vehicle}`,
     fuel: p.fuel,
     engine: p.engine,
     lights: p.lights,

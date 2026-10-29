@@ -1,3 +1,5 @@
+import { vehicleDef } from '../shared/vehicle-config';
+import { isTrawler } from '../shared/vehicle-config';
 import { fishingVessel } from '../shared/boat-fishing';
 import { throttleBoat } from '../shared/boats';
 import { poweredBoat, FISHING_BOAT } from '../shared/boats';
@@ -36,12 +38,12 @@ export function actionVisible(
     !(p.flight && !p.flight.grounded);
   switch (action) {
     case 'boatIdle':
-      return free && throttleBoat(p.vehicle);
+      return free && throttleBoat(p.vehicle, w);
     case 'trawl':
       return (
         free &&
         !p.game &&
-        p.vehicle === FISHING_BOAT &&
+        isTrawler(p.vehicle, w) &&
         (id === 'haul' ? !!p.trawl : id === 'stow' ? !!p.trawl?.deployed : !p.trawl?.deployed)
       );
     case 'lifeboat':
@@ -49,7 +51,7 @@ export function actionVisible(
         free &&
         !p.game &&
         (id === 'launch'
-          ? poweredBoat(p.vehicle) && p.fuel <= 0 && !w.boatRescues?.[p.id]
+          ? poweredBoat(p.vehicle, w) && p.fuel <= 0 && !w.boatRescues?.[p.id]
           : id === 'reboard'
             ? p.vehicle === LIFEBOAT && !!w.boatRescues?.[p.id]
             : !!w.boatRescues?.[p.id]?.dinghy.moored)
@@ -109,8 +111,8 @@ export function actionVisible(
         !!(item.food || item.drink || item.health || item.maxHealth || item.fuel) &&
         (!item.fuel ||
           (p.vehicle !== LIFEBOAT &&
-            !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1)) &&
-            p.fuel < fuelCapacity(p)))
+            !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1, w)) &&
+            p.fuel < fuelCapacity(p, w)))
       );
     }
     case 'discard':
@@ -231,14 +233,14 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
       return 'Visit the airfield hangar';
     if (slot === 2 && Math.abs(p.speed) >= 0.5) return 'Stop before boarding';
     if (
-      stockWeight(w, p.inventory) + (slot === FISHING_BOAT ? stockWeight(w, p.boatStores) : 0) >
-      vehicles[slot].capacity
+      stockWeight(w, p.inventory) + (isTrawler(slot, w) ? stockWeight(w, p.boatStores) : 0) >
+      vehicleDef(w, slot).capacity
     )
       return 'Unload cargo before changing to a smaller vehicle';
     if (
       action === 'vehicle' &&
       !(slot === 2 ? aircraftCount(p) > 0 : (p.fleet ?? [0, 5]).includes(slot)) &&
-      p.cash < vehicles[slot].price
+      p.cash < vehicleDef(w, slot).price
     )
       return 'Not enough cash';
     const licence = requiredLicence(w, slot);

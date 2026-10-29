@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { bookSchema, townEventSchema } from './world-stories.ts';
 import { ambientSchema } from './ambient.ts';
 import { maximumHealth } from './nutrition.ts';
@@ -140,7 +141,7 @@ export const creatorSchema = z.object({
   ambience: z.array(ambientSchema).max(32).default([]),
   terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
   resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
-  vehicleModels: z.record(z.string().regex(/^([0-9]|1[0-9]|2[0-8])$/), id).default({}),
+  vehicleModels: z.record(z.string().regex(/^([0-9]|[12][0-9]|3[01])$/), id).default({}),
 });
 export type Creator = z.infer<typeof creatorSchema>;
 export type Blueprint = z.infer<typeof blueprintSchema>;
@@ -215,6 +216,10 @@ export function validateCreator(w: World, input: unknown) {
     if (!c.models.some((m) => m.id === s.model)) throw Error('Model is used by landscape scatter');
   for (const o of c.objects)
     if (!models.has(o.model)) throw Error('Object refers to a missing model');
+  for (const v of Object.values(w.vehicleTuning ?? {}))
+    for (const part of v.components ?? [])
+      if (!c.models.some((m) => m.id === part.model))
+        throw Error('Vehicle component references a missing model');
   for (const model of [...Object.values(c.vehicleModels), ...Object.values(c.resourceModels)])
     if (!models.has(model)) throw Error('Vehicle refers to a missing model');
   for (const b of w.buildings)
@@ -318,7 +323,7 @@ export function applyEffect(w: World, p: Player | undefined, effect: Effect) {
         (n, [key, q]) => n + (items[key]?.weight ?? 0) * q,
         0,
       );
-      const capacity = vehicles[p.vehicle].capacity;
+      const capacity = vehicleDef(w, p.vehicle).capacity;
       if (
         have + e.quantity >= 0 &&
         (e.quantity <= 0 || weight + items[e.item].weight * e.quantity <= capacity)

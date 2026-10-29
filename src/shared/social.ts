@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { Action, Player, World } from './types.ts';
@@ -265,7 +266,7 @@ export function socialAction(w: World, p: Player, a: Action) {
   check(worldItems(w)[o.item], 'This item is no longer available');
   const bag = { ...buyer.inventory, [o.item]: (buyer.inventory[o.item] ?? 0) + o.quantity };
   check(
-    carry({ ...buyer, inventory: bag }, w) <= vehicles[buyer.vehicle].capacity,
+    carry({ ...buyer, inventory: bag }, w) <= vehicleDef(w, buyer.vehicle).capacity,
     'Buyer cargo is full',
   );
   seller.inventory[o.item] -= o.quantity;

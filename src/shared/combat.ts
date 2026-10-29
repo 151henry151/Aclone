@@ -1,3 +1,4 @@
+import { vehicleDef } from './vehicle-config';
 import { switchVehicle } from './tractors.ts';
 import { crowClasses, returnCrow } from './robocrows.ts';
 import { maximumHealth } from './nutrition.ts';
@@ -38,7 +39,7 @@ export function combatSpawn(w: World, p: Player) {
   p.health = maximumHealth(p);
   p.energy = 65000;
   p.speed = 0;
-  switchVehicle(p, p.combatVehicle ?? 0, false);
+  switchVehicle(p, p.combatVehicle ?? 0, false, w);
   p.invulnerableUntil = w.time + (w.creator?.arena.protectionSeconds ?? 3);
   p.ammo = { ...ammunition };
   delete p.weaponCharge;
@@ -167,7 +168,10 @@ export function tickCombat(w: World, seconds: number, kill: (p: Player) => void)
       if (q.crowIntegrity <= 0) returnCrow(w, q);
       return;
     }
-    q.health -= damage(amount, w.vehicleTuning?.[q.vehicle]?.armour ?? vehicles[q.vehicle].armour);
+    q.health -= damage(
+      amount,
+      w.vehicleTuning?.[q.vehicle]?.armour ?? vehicleDef(w, q.vehicle).armour,
+    );
     if (q.health > 0) return;
     leaveCombat(w, q);
     const match = q.game === 'combat';
