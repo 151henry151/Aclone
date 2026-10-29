@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.102.0] - 2026-10-28
+
 ### Added
 
 - Business owners can configure up to five bulk-purchase discount levels, use defaults (100 items at 1%, 250 at 2%, 500 at 3%), or disable discounts. Shop quotes and receipts show the discounted total; supplier bids are unchanged.

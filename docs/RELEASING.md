@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.102.0
+
+Back up and deploy client and server together, then publish the website and reload clients. No world reset or manual data migration is required. Existing loans preserve their funding source (legacy loans use savings); existing farms have no staff restrictions until their owner sets them. Private businesses without a discount policy now inherit modest default tiers; an empty tier list explicitly disables discounts. Public import/export outlets do not inherit defaults.
+
+Verify persistent loan warnings, source selection at the bank, discounted purchase quotes, and staff policy saving. Keep the pre-deploy backup: the new optional loan source and business policies must be understood by both client and server. Observe lighthouse lighting from land and offshore; the distant beacon remains independent of the softer local light.
+
 ## Upgrade 0.101.1
 
 Use the normal backup, build and restart procedure and publish the website version. Reload clients for incremental terrain and woodland preparation. No data migration or world reset is required. Verify driving through new scenery, including snowy woodland and coastal cliffs, and check that older terrain remains visible while replacement tiles load. Compare long frame pauses as well as average FPS in the affected Firefox session.

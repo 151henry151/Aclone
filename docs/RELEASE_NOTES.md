@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.102.0 — Business controls and quieter lighthouses
+
+Business owners can use default bulk discounts (100 items at 1%, 250 at 2%, 500 at 3%), customize up to five levels, or turn discounts off. Buyers see the discount and final total before purchasing. Supplier bids and owner stock transfers are unchanged. Public import/export outlets do not inherit default discounts.
+
+Loan information stays accessible beneath your cash display and through **F9 → Loans & repayments**, including insufficient funding, arrears and time until default or foreclosure. At the bank, choose savings, carried cash, or savings followed by cash for automatic payments. Existing loans keep their payment source. Business tills are not used for personal repayments.
+
+Farm owners can choose which crops staff may plant, set a daily seed/fertilizer cash budget, and protect a till reserve. Both human and NPC employees obey these rules; existing crops remain harvestable. Old farms remain unrestricted until configured. The daily budget resets every ten real minutes, and does not include wages or stored supplies.
+
+Lighthouses no longer flood inland buildings with their rotating sweep. Local seaward illumination is softer; the separate horizon-limited offshore beacon retains its existing range.
+
+Reload after deployment. No world reset or manual data migration is required. Validation: 1,138 unit tests, seven browser checks covering the new controls and existing menus, and a production build.
+
 ## 0.101.1 — Smoother countryside loading
 
 Driving into new scenery no longer prepares entire terrain tiles and woodland snow drifts in one uninterrupted operation. Preparation runs in small batches across frames, and existing terrain stays visible until its replacement is ready. Snow coverage checks nearby roads rather than scanning the entire road network for every sample. Terrain detail and snow shapes are preserved.
