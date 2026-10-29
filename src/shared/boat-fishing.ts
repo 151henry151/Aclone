@@ -23,17 +23,24 @@ export function fishingCatch(w: World, p: Player, roll = Math.random()) {
           ? 'halibut'
           : 'tuna';
 }
+/** Mean real seconds while the line is waiting; bite/reeling time is additional. */
+export function meanBiteWait(w: World, p: Player) {
+  return deepBoatFishing(w, p)
+    ? 225
+    : fishingVessel(w, p)
+      ? 65
+      : w.settings.fishingMode === 5
+        ? 20
+        : 75;
+}
+/** Exponential waiting time: constant bite chance, independent of how long one has waited.
+ * Sample once per cast on the server, rather than rolling once per simulation tick. */
+export function randomBiteWait(mean: number, roll = Math.random()) {
+  return -Math.log1p(-Math.max(Number.EPSILON, Math.min(1 - Number.EPSILON, roll))) * mean;
+}
 export function scheduleBite(w: World, p: Player, start = w.time) {
   p.fishCatch = fishingCatch(w, p);
-  p.fishAt =
-    start +
-    (deepBoatFishing(w, p)
-      ? 150 + Math.random() * 150
-      : fishingVessel(w, p)
-        ? 40 + Math.random() * 50
-        : w.settings.fishingMode === 5
-          ? 20
-          : 30 + Math.random() * 90);
+  p.fishAt = start + randomBiteWait(meanBiteWait(w, p));
   p.fishUntil = p.fishAt + 8;
 }
 export function landedFish(w: World, p: Player) {

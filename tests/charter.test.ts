@@ -112,7 +112,7 @@ test('passengers rod-fish in place, keep their catch and cannot teleport or fish
   assert.equal(deepBoatFishing(w, p), true);
   act(w, p.id, { type: 'joinGame', game: 'fishing' });
   assert.equal(p.z, 1400);
-  assert.ok(p.fishAt! >= w.time + 150);
+  assert.ok(p.fishAt! > w.time);
   p.fishAt = w.time;
   p.fishUntil = w.time + 8;
   p.fishCatch = 'cod';

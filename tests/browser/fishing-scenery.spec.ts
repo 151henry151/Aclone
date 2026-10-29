@@ -43,8 +43,8 @@ test('canal-boat scenery view retains one compact, working fishing action throug
     await waitForWorld(page);
     await page.locator('#fishing-cast').click();
     await expect.poll(() => p.game).toBe('fishing');
-    expect(p.fishAt! - w.time).toBeGreaterThan(140);
-    expect(p.fishAt! - w.time).toBeLessThanOrEqual(300);
+    expect(p.fishAt! - w.time).toBeGreaterThan(0);
+    expect(Number.isFinite(p.fishAt)).toBe(true);
     await page.keyboard.press('h');
     const action = page.locator('#scenery-fishing-action');
     await expect(action).toBeVisible();
