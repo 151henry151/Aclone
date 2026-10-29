@@ -6,6 +6,7 @@ import { gameGuide, searchGuide } from '../src/server/npc/knowledge.ts';
 test('NPC always knows the controls and retrieves relevant player help without the full manual', () => {
   const guide = gameGuide('How do I reset my password by email?');
   assert.match(guide.controls, /F4/);
+  assert.equal(new Set(guide.topics.map((t) => t.title)).size, guide.topics.length);
   assert.match(guide.controls, /\*\*M\*\*/);
   assert.match(guide.controls, /Parish map/);
   assert.match(guide.controls, /Space/);
@@ -108,6 +109,14 @@ test('long memory excerpts and help fit the resident request budget together', a
     assert.ok(
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool)) <
         96000,
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(request.observation).map(([key, value]) => [
+            key,
+            Buffer.byteLength(JSON.stringify(value) ?? ''),
+          ]),
+        ),
+      ),
     );
     assert.equal(observation.moreRecallAvailable, true);
     assert.equal(observation.recalled?.length, 8);

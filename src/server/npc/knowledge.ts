@@ -142,7 +142,11 @@ export function gameGuide(query: string, activityQuery = '') {
     // Core rules must not depend on the agent knowing which question to search for.
     fundamentals,
     controls: docs.find((e) => e.id === 'faq:controls')!.text,
-    topics: docs.map(({ id, title }) => ({ id, title })),
+    topics: [
+      ...new Map(
+        docs.map(({ id, title }) => [title, { id: id.replace(/:\d+$/, ''), title }]),
+      ).values(),
+    ],
     catalogLookup:
       'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
     excerpts,
