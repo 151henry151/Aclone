@@ -6,6 +6,23 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.105.0] - 2026-10-29
+
+### Added
+
+- Livestock pastures with terrain-following fences and roaming, grazing cows, sheep, pigs and chickens. Owners can buy adjoining parcels, expand their herds and increase production alongside feed, water and staffing costs; world owners configure pasture capacity and prices.
+- A per-world vehicle workshop covering all 32 slots: movement modes, performance, cargo, fuel, prices, passengers, paid crew, trawling, provisions, death/recovery rules, tyre dimensions and tread artwork, component models, cockpit instruments and switchable lamp lenses. Configuration is saved, validated and included in portable world designs.
+
+### Changed
+
+- Parish maps use building-type icons, reveal names on hover/focus, and show uncluttered labels automatically when sufficiently zoomed in. Exploring and zooming distant places preserves the viewed area through live updates.
+
+### Fixed
+
+- Custom vehicle capacity, fuel and movement rules are consistently applied to purchases, handling, fishing and recovery instead of falling back to the original slot's definition.
+- NPC help-topic indexes no longer repeat every paragraph heading, keeping longer planning requests within their input budget.
+- Flight browser verification holds takeoff elevator before accelerating, avoiding delayed input under software rendering while still checking departure within the runway and crash handling.
+
 ## [0.104.0] - 2026-10-28
 
 ### Added

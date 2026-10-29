@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.105.0
+
+Back up and deploy client and server together, publish the website, and reload clients. Existing livestock farms acquire the first available dry, unoccupied pasture parcel. If none fits, no animals are deleted and base production continues, but herd growth remains blocked. Inspect crowded farms and retain the pre-deploy backup; older versions do not recognize expanded pasture capacity or extended vehicle overrides.
+
+Vehicle overrides preserve slot IDs and are included in world exports. Existing default vehicles are unchanged. Test a saved custom vehicle, pasture management, and map zoom away from the player after deployment. No player grants or manual database migration are required.
+
 ## Upgrade 0.104.0
 
 Back up and deploy client and server together, publish the website, and reload clients. The charter boat appends vehicle slot 31 without changing existing slots. Charter invitations, tickets and escrow persist in the saved world; preserve these fields across restarts. No reset or manual migration is required.

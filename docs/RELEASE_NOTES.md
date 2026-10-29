@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.105.0 — Living pastures, clearer maps and vehicle configuration
+
+Livestock farms now have fenced, terrain-following pastures with animals walking, turning and grazing. Owners can purchase up to three adjoining parcels and buy or breed animals up to the resulting capacity. Larger herds increase production, feed and water use, and staffing requirements. Existing animals are preserved; if a crowded farm cannot fit a safe pasture, it keeps its base production but cannot add animals until space is available.
+
+Parish maps use building-type icons, reveal names on hover or keyboard focus, and show names automatically when zoomed in with room to spare. Zoom and live updates preserve the area being explored; Find me remains an explicit return to your character.
+
+World owners can configure all 32 vehicle slots through F10 → Vehicles, including movement, handling, fuel, cargo, pricing, passengers, paid crew, fishing, provisions, death/recovery, tracks, cockpit instruments, lamp lenses and Workshop model components. Custom slots 9–24 are available for new designs. Existing settings remain the defaults; portable world designs include the overrides and uploaded asset references. See the [world-building guide](WORLD_BUILDING_GUIDE.md).
+
+Deploy client and server together and reload. Pastures are allocated safely as worlds advance; no reset or manual migration is required. Preserve the pre-deploy backup if rolling back, because older versions do not understand pasture expansion or the extended vehicle configuration.
+
+Validation: all 1,173 unit tests passed, along with targeted browser checks for pasture management and rendering, vehicle editing and cockpit instruments, desktop/mobile map navigation, and airfield takeoff/crash handling. The production build, tracked-file formatting check and public website checks passed. A read-only dry run against Puddlewick found safe pasture locations for both existing livestock farms without changing their stock.
+
 ## 0.104.0 — Charter fishing trips and synchronized headlights
 
 The Coastal Belle is a separate 120s passenger fishing boat with six guest places, a 600-weight captain's hold and a 192-unit tank. Its enclosed helm includes a live compass, gauges and persistent W/S throttle; B idles. Deck seating, rod racks, a bait station and switchable cabin/deck lights complete the boat. The canal boat keeps its exposed stern tiller.
