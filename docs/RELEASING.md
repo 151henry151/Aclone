@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.104.0
+
+Back up and deploy client and server together, publish the website, and reload clients. The charter boat appends vehicle slot 31 without changing existing slots. Charter invitations, tickets and escrow persist in the saved world; preserve these fields across restarts. No reset or manual migration is required.
+
+Verify purchase/boarding, accepted fares, passenger rod fishing and return settlement. Check independent tractor light switches from two clients. Retain the pre-deploy backup for rollback; older code does not understand charter boats or fare escrow.
+
 ## Upgrade 0.102.0
 
 Back up and deploy client and server together, then publish the website and reload clients. No world reset or manual data migration is required. Existing loans preserve their funding source (legacy loans use savings); existing farms have no staff restrictions until their owner sets them. Private businesses without a discount policy now inherit modest default tiers; an empty tier list explicitly disables discounts. Public import/export outlets do not inherit defaults.

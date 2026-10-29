@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.104.0] - 2026-10-28
+
+### Added
+
+- Coastal Belle charter fishing boat: an enclosed helm with working compass, instruments and persistent throttle; six passenger fishing stations; seating, rod racks, bait station and switchable cabin/deck lighting. Buy it for 120s at a boathouse; the canal boat keeps its exterior stern tiller.
+- Player-run fishing charters with dockside invitations, an agreed fare and 15–180 real-minute trip length including travel. Passengers keep their rod catches. Saved fare escrow pays out on return, refunds unused time on early return, and refunds cancelled trips. Passengers remain aboard until a safe dock landing; deaths cancel and refund affected bookings under the world's existing boat-death rules.
+
+### Fixed
+
+- Tractor headlight and tail-lamp faces now follow each driver's actual switch instead of glowing permanently. Nearby other players also cast visible headlight beams, using a fixed two-light, shadow-free pool to keep rendering cost bounded.
+
 ## [0.103.0] - 2026-10-28
 
 ### Added

@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.104.0 — Charter fishing trips and synchronized headlights
+
+The Coastal Belle is a separate 120s passenger fishing boat with six guest places, a 600-weight captain's hold and a 192-unit tank. Its enclosed helm includes a live compass, gauges and persistent W/S throttle; B idles. Deck seating, rod racks, a bait station and switchable cabin/deck lights complete the boat. The canal boat keeps its exposed stern tiller.
+
+At a dock, use **Inventory → Boating** to offer a fare and a 15–180 real-minute trip, including travel. Passengers accept on shore, bring their own tackle, food and water, and keep their fish. Stop to let them cast. Fares stay in saved escrow until return; early returns refund unused time, while cancellation or return to another dock refunds the whole fare. Existing world boat-death rules apply and affected bookings are refunded. See [charter guide](CHARTER_BOAT.md).
+
+Tractor lamp faces now follow their driver's switch instead of glowing permanently. Up to two nearby other vehicles cast headlight beams, without dynamic shadows. Each player's switch is independent.
+
+Reload after deployment. No world reset or manual migration is needed. Validation includes the full 1,153-test suite, final charter regressions, four browser checks, a production build and formatting checks.
+
 ## 0.103.0 — Canal-boat lights and quieter fishing controls
 
 The canal boat keeps its exposed stern tiller and standing skipper, with new rod racks, seating, fenders and lighting. Automatic red/green sidelights, white masthead/stern lights and a moored white light improve visibility. The Lights menu offers deck floods, warm or dim-red cabin lighting, and the existing searchlight. Window illumination uses a texture mask; boats share a bounded pool of three work lights.

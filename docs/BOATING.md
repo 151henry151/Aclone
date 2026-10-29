@@ -1,6 +1,6 @@
 # Boats, fishing and the coastal economy
 
-This guide describes the expedition system in Aclone 0.103.0. Prices below are defaults;
+This guide describes the expedition system in Aclone 0.104.0. Prices below are defaults;
 worlds and business owners can change them.
 
 ## Boarding and mooring
@@ -340,3 +340,9 @@ breakers, with no simulated overturning water volume, flooding, currents or eros
 
 For an actual-renderer preview, run `npx tsx scripts/ocean-preview.ts`; outputs go to
 `output/ocean/`. This uses a disposable local world, never a live player account.
+
+## Charter fishing boat
+
+The separate Coastal Belle adds six paid passenger places and an enclosed helm. See
+[Charter boat trips and balance](CHARTER_BOAT.md) for fares, refunds, controls and
+passenger fishing. The canal boat retains its stern tiller and ordinary passenger use.

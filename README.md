@@ -12,7 +12,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km; shafts appear only in misty rain or storms. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
-Version 0.103.0 adds canal-boat lighting and deck details, fishing tackle at boathouses, and compact fishing controls in scenery view. The canal boat retains its exposed stern tiller. See [release notes](docs/RELEASE_NOTES.md#01030--canal-boat-lights-and-quieter-fishing-controls).
+Version 0.104.0 adds the Coastal Belle charter fishing boat and paid passenger trips, and fixes tractor lamp and beam visibility between players. See [release notes](docs/RELEASE_NOTES.md#01040--charter-fishing-trips-and-synchronized-headlights).
 
 ## What you can do
 
@@ -234,6 +234,18 @@ boathouses store boats inside. Their covered lifting halls extend over the water
 and each of five architectural models has its own set of repair boats on stands.
 Return to a dock to disembark. There is no offshore
 teleport to land. Boats can sail through connected water to the map boundary.
+
+**Coastal Belle charter boat.** A separate 120s,
+15-metre passenger fishing boat adds six places, a 600-weight captain's hold and a
+192-unit tank. Its enclosed helm has a live compass, fuel/speed gauges and a
+persistent W/S throttle (B idles). Use Inventory → Boating at a dock to invite
+players for an agreed fare and 15–180 real minutes including travel. Passengers
+accept on shore, bring their own tackle and provisions, and keep their catches.
+Stop before they cast; moving reels in their lines. Fare is held in saved escrow
+until return: early return pays proportionally, cancellation or return to a different
+dock refunds all. Death cancels affected bookings; existing world boat-death rules
+still apply. No overtime charge or offshore disembarking. Lighting switches remain
+under Lights. See [charter design and balance](docs/CHARTER_BOAT.md).
 
 The **North Star fishing boat** has a persistent throttle and working
 nets. Boatyard landing prices leave margins for hauliers delivering cod, halibut
