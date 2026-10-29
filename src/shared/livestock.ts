@@ -1,3 +1,4 @@
+import { pastureCapacity } from './pasture-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Building, Stock } from './types.ts';
 import { accounts, addQuantities, recordLife } from './reports.ts';
@@ -158,7 +159,11 @@ export function breedHerd(w: World, p: import('./types.ts').Player, b: Building)
     throw Error(
       `Breeding requires 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'}, 4 water and ${spec.fee / 100}d investment`,
     );
-  if ((b.stock[spec.animal] ?? 0) >= b.capacity) throw Error(`No room for a ${spec.young}`);
+  if (
+    (b.stock[spec.animal] ?? 0) >=
+    Math.min(b.capacity, pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1))
+  )
+    throw Error(`Not enough grazing area for a ${spec.young}; expand the pasture`);
   for (const [item, n] of Object.entries(ration)) b.stock[item] -= n;
   b.investment -= spec.fee;
   b.breedingEnd = w.time + spec.seconds;
@@ -175,7 +180,8 @@ export function birthHerd(w: World, b: Building, at: number) {
   const born =
     (b.stock[spec.animal] ?? 0) >= spec.minimum &&
     (b.herdCondition ?? 100) >= 60 &&
-    (b.stock[spec.animal] ?? 0) < b.capacity;
+    (b.stock[spec.animal] ?? 0) <
+      Math.min(b.capacity, pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1));
   if (born) {
     b.stock[spec.animal]++;
     addQuantities(accounts(w, b).produced, { [spec.animal]: 1 });
@@ -195,4 +201,15 @@ export function birthHerd(w: World, b: Building, at: number) {
       },
       at,
     );
+}
+
+/** Pasture bounds productive herd size; legacy excess animals survive but cannot boost yield. */
+export function livestockOutputs(b: Building, outputs: Stock, multiplier = 1): Stock {
+  const spec = herdSpec(b);
+  if (!spec) return outputs;
+  const capacity = b.pasture ? pastureCapacity(b, multiplier) : spec.minimum;
+  const productive = Math.min(capacity, Math.max(0, b.stock[spec.animal] ?? 0));
+  return Object.fromEntries(
+    Object.entries(outputs).map(([id, n]) => [id, Math.floor((n * productive) / spec.minimum)]),
+  );
 }

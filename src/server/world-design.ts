@@ -1,3 +1,5 @@
+import { pastureBlocker } from '../shared/pastures';
+import { isLivestockFarm } from '../shared/pasture-land';
 import { validateFarmPolicy } from '../shared/farm-policy';
 import { validateBulkDiscounts } from '../shared/bulk-discounts';
 import { courseSchema, validateCourse } from '../shared/courses.ts';
@@ -129,6 +131,13 @@ const designSchema = z.object({
           }, 'Invalid bulk discount levels')
           .transform(validateBulkDiscounts)
           .optional(),
+        pasture: z
+          .object({
+            x: z.number().min(-100).max(100),
+            z: z.number().min(-100).max(100),
+            parcels: z.number().int().min(1).max(4),
+          })
+          .optional(),
         farmPolicy: z
           .object({
             crops: z.array(z.string()).max(20),
@@ -229,6 +238,7 @@ export function exportDesign(w: World, includeMedia = false) {
         sell,
         bulkDiscounts,
         farmPolicy,
+        pasture,
         wage,
         price,
         production,
@@ -249,6 +259,7 @@ export function exportDesign(w: World, includeMedia = false) {
         sell,
         bulkDiscounts,
         farmPolicy,
+        pasture,
         wage,
         price,
         production,
@@ -325,9 +336,15 @@ export function applyDesign(w: World, input: unknown) {
     const m = w.creator.models.find((m) => m.id === b.creatorModel);
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };
   }
+  configureRules(w, d.settings, d.townCharter);
+  for (const b of w.buildings)
+    if (b.pasture) {
+      if (!isLivestockFarm(b)) throw Error('Only livestock farms can have pastures');
+      const blocker = pastureBlocker(w, b, b.pasture);
+      if (blocker) throw Error(blocker);
+    }
   w.script = d.script;
   anchorTowns(w);
-  configureRules(w, d.settings, d.townCharter);
   for (const c of w.courses ?? []) validateCourse(w, c.definition);
   if (w.roundCycle) {
     w.roundCycle.previousFighting = w.settings.fighting;

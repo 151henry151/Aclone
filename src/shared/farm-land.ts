@@ -1,3 +1,4 @@
+import { inPasture } from './pasture-land';
 import { highWater } from './ocean';
 import { dockReserved } from './boathouse';
 import { onAirfield } from './airfield';
@@ -36,7 +37,9 @@ export function onFarmLand(
   firstPlot = 0,
 ) {
   return w.buildings.some((b) => {
-    if (b.kind !== 'farm' || b.id === except) return false;
+    if (b.id === except) return false;
+    if (inPasture(b, x, z, padding)) return true;
+    if (b.kind !== 'farm') return false;
     const dx = x - b.x,
       dz = z - b.z,
       c = Math.cos(b.rotation),

@@ -1,3 +1,4 @@
+import { pastureFences } from './pasture-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { World, Player, Action } from './types.ts';
@@ -216,7 +217,7 @@ export function landscapeBlocks(
   padding: number,
   allowEscape: boolean,
 ) {
-  return barrierSegments(w).some((b) => {
+  return [...barrierSegments(w), ...pastureFences(w.buildings)].some((b) => {
     const start = projection(from, b.a, b.b).distance,
       end = projection(to, b.a, b.b).distance,
       r = b.width / 2 + padding;

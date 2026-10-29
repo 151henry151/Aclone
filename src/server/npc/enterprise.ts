@@ -1,3 +1,4 @@
+import { pastureCapacity } from '../../shared/pasture-land';
 import { jobTraining } from './job-training.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { pricingChoices } from './pricing.ts';
@@ -157,7 +158,8 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       p.skills.includes('livestock farmer') &&
       !b.breedingEnd &&
       (b.stock[herd.animal] ?? 0) >= herd.minimum &&
-      (b.stock[herd.animal] ?? 0) < herd.minimum + 2 &&
+      (b.stock[herd.animal] ?? 0) <
+        Math.min(herd.minimum + 2, pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1)) &&
       (b.herdCondition ?? 100) >= 80 &&
       b.investment > 15000 &&
       (b.stock.feed ?? 0) + (acceptsHay(b) ? (b.stock.hay ?? 0) : 0) >= 20 &&

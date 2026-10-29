@@ -3,7 +3,7 @@ import {
   staffingEfficiency,
   ownerOperating as isOwnerOperating,
 } from './staffing.ts';
-import { herdSpec, herdReady, livestockInputs } from './livestock.ts';
+import { herdSpec, herdReady, livestockInputs, livestockOutputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { waterworksSite } from './shoreline.ts';
 import { recipes, vehicles } from './catalog';
@@ -63,6 +63,7 @@ export function productionSupplied(
   r: Recipe,
   staff: number,
   upkeepPaid = false,
+  w?: World,
 ): boolean {
   return (
     herdReady(b) &&
@@ -71,7 +72,9 @@ export function productionSupplied(
         !(upkeepPaid && herdSpec(b) && ['hay', 'feed', 'water'].includes(item)) &&
         (b.stock[item] ?? 0) < n,
     ) &&
-    !Object.entries(r.outputs).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&
+    !Object.entries(
+      livestockOutputs(b, r.outputs, w?.settings.pastureCapacityMultiplier ?? 1),
+    ).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&
     b.investment >= b.wage * staff
   );
 }
@@ -83,7 +86,7 @@ export function productionActivity(w: World, b: Building, crafting = new Set<str
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r) return 0;
   const staff = productionStaff(w, b, w.time);
-  if (!productionSupplied(b, r, staff.length)) return 0;
+  if (!productionSupplied(b, r, staff.length, false, w)) return 0;
   return productionEfficiency(w, b, staff.length);
 }
 

@@ -243,6 +243,7 @@ export interface Building {
   farmPolicy?: import('./farm-policy').FarmPolicy;
   farmStaffSpending?: { day: number; amount: number };
   farmPlots?: number;
+  pasture?: import('./pasture-land').Pasture;
   farmLandCost?: number;
 }
 export interface Ledger {
@@ -315,6 +316,8 @@ export interface Settings {
   thirstRate: number;
   maxAge: number;
   productionSeconds: number;
+  pastureCapacityMultiplier: number;
+  pasturePriceMultiplier: number;
   offlineEfficiency: number;
   activeWork: boolean;
   maxBuildings: number;

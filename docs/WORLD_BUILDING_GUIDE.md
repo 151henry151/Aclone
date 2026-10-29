@@ -530,3 +530,7 @@ For the complete option inventory and current limits, see the
 In **Editor → Rules → Automatic food and drink**, configure `autoConsumeInventory` (eat carried supplies online/offline anywhere), `autoConsumeHomeStock` (use the selected owned home or active private guest-room pantry while away), and `homeNeedsMultiplier` (0–1; 0 disables indoor drain, 1 gives no indoor benefit). Home stores always feed occupants automatically. Inventory and remote-home feeding default off for other worlds, preserving existing behavior. Puddlewick enables both once and uses a 0.8 indoor multiplier; later owner edits survive restarts.
 
 Only a valid owned home or unexpired private booking is eligible. Public lodging/business stock and another owner’s supplies are excluded. Boat crew still use their captain’s provisions first; the normal captain rule for boat stores remains offline-only. Inventory feeding also applies to online captains when enabled. The at-home provisions estimate follows these settings and includes carried supplies when available.
+
+## Livestock grazing areas
+
+Livestock barns receive a fenced pasture on suitable clear land. Animals wander, stop and graze. Owners buy adjoining pasture parcels in the livestock business controls before adding animals; expanded herds produce more goods and need more feed, water and workers. In **Rules**, configure pasture capacity and price multipliers. Clear space must remain around fields, roads, buildings and neighbouring pastures. Existing herds are preserved when old worlds upgrade.

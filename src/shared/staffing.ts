@@ -1,3 +1,4 @@
+import { pastureSpecies, pastureAnimal } from './pasture-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings, recipes } from './catalog.ts';
 import type { Building, World } from './types.ts';
@@ -6,7 +7,10 @@ import type { Building, World } from './types.ts';
  * changes without resetting their stock, prices, wages or employee roster. */
 export function idealEmployees(w: World, b: Building): number {
   const template = b.templateId ? w.catalogue?.templates[b.templateId] : undefined;
-  return template?.idealEmployees ?? buildings[b.kind]?.idealEmployees ?? 1;
+  const base = template?.idealEmployees ?? buildings[b.kind]?.idealEmployees ?? 1;
+  const animal = pastureAnimal[b.kind as keyof typeof pastureAnimal],
+    per = pastureSpecies[b.kind as keyof typeof pastureSpecies];
+  return base * (animal ? Math.max(1, Math.ceil((b.stock[animal] ?? 0) / per)) : 1);
 }
 export function staffingEfficiency(active: number, ideal: number): number {
   return active <= 0 ? 0 : Math.min(active / ideal, ideal / active);

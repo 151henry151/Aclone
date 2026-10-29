@@ -18,6 +18,8 @@
   "thirstRate": 2.5,
   "maxAge": 90,
   "productionSeconds": 600,
+  "pastureCapacityMultiplier": 1,
+  "pasturePriceMultiplier": 1,
   "offlineEfficiency": 0.01,
   "activeWork": true,
   "maxBuildings": 4,

@@ -1,3 +1,5 @@
+import { ensurePastures, ensurePasture, pastureBlocker } from './pastures';
+import { pastureCapacity, pastureCost } from './pasture-land';
 import {
   charterAction as boatCharterAction,
   charterCaptain,
@@ -90,7 +92,7 @@ import {
   SERVICE_FEE,
   MAP_PRICE,
 } from './vehicle-services.ts';
-import { herdSpec, tendHerd, breedHerd, birthHerd } from './livestock.ts';
+import { herdSpec, tendHerd, breedHerd, birthHerd, livestockOutputs } from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
 import { landscapeAction } from './landscape.ts';
 import {
@@ -609,6 +611,26 @@ export function act(w: World, id: string, a: Action): string {
       return rescueAction(w, p, a.operation);
     case 'livestock': {
       const b = nearby(w, p, a.building);
+      ensurePasture(w, b);
+      if (a.operation === 'expand') {
+        owns(p, b);
+        requireThat(
+          herdSpec(b) && !b.construction && !p.task,
+          'Visit a completed livestock farm while free',
+        );
+        requireThat(b.pasture, 'No clear grazing parcel is available near this barn');
+        const next = { ...b.pasture!, parcels: b.pasture!.parcels + 1 };
+        const blocker = pastureBlocker(w, b, next, b.pasture!.parcels);
+        requireThat(!blocker, blocker ?? 'Cannot expand here');
+        const price = pastureCost(b, w.settings.pasturePriceMultiplier ?? 1);
+        requireThat(p.cash >= price, 'Not enough personal cash for pasture land');
+        p.cash -= price;
+        b.price += price;
+        b.pasture = next;
+        log(w, 'sink', price, p.id, 'land-registry', 'pasture land purchase');
+        result = `Pasture expanded to ${next.parcels * 256} square metres.`;
+        break;
+      }
       requireThat(a.operation === 'breed', 'Unknown livestock operation');
       const cost = breedHerd(w, p, b);
       log(w, 'sink', cost, b.id, 'treasury', 'livestock breeding');
@@ -662,6 +684,7 @@ export function act(w: World, id: string, a: Action): string {
         requireThat((p.inventory[item] ?? 0) >= n, 'Not enough items');
         requireThat(b.investment >= total, 'Building has insufficient investment');
         requireThat((b.stock[item] ?? 0) + n <= b.capacity, 'Building storage is full');
+        requireHerdRoom(w, b, item, n);
       }
       if (buying) {
         const town = taxTown(w, b.x, b.z);
@@ -893,6 +916,7 @@ export function act(w: World, id: string, a: Action): string {
         put ? (b.stock[item] ?? 0) + n <= b.capacity : canCarry(p, item, n, w),
         'Storage full',
       );
+      if (put) requireHerdRoom(w, b, item, n);
       stockAdd(source, item, -n);
       stockAdd(put ? b.stock : p.inventory, item, n);
       break;
@@ -1786,6 +1810,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'productionSeconds') num(v, 10, 86400, true);
         if (key === 'lotteryTicketPrice') num(v, 1, 1000000, true);
         if (key === 'killReward') num(v, 0, 100000, true);
+        if (key === 'pastureCapacityMultiplier') num(v, 0.25, 4);
+        if (key === 'pasturePriceMultiplier') num(v, 0.25, 10);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
         if (key === 'tidalRange') num(v, 0, 4);
@@ -2574,16 +2600,17 @@ function cycle(w: World, b: Building, at: number) {
   if (times < 1) return;
   b.progress = Math.max(0, b.progress - times);
   for (let i = 0; i < times; i++) {
-    if (!productionSupplied(b, r, staff.length, true)) return;
+    if (!productionSupplied(b, r, staff.length, true, w)) return;
     const inputs = Object.fromEntries(
       Object.entries(r.inputs).filter(([id]) => !herdSpec(b) || !['feed', 'water'].includes(id)),
     );
     for (const [item, n] of Object.entries(inputs)) stockAdd(b.stock, item, -n);
-    for (const [item, n] of Object.entries(r.outputs)) stockAdd(b.stock, item, n);
+    const outputs = livestockOutputs(b, r.outputs, w.settings.pastureCapacityMultiplier ?? 1);
+    for (const [item, n] of Object.entries(outputs)) stockAdd(b.stock, item, n);
     const statement = accounts(w, b);
     statement.batches++;
     addQuantities(statement.consumed, inputs);
-    addQuantities(statement.produced, r.outputs);
+    addQuantities(statement.produced, outputs);
     const town = taxTown(w, b.x, b.z);
     for (const p of staff) {
       const tax = Math.floor(b.wage * w.settings.wageTax),
@@ -2644,6 +2671,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
 }
 
 export function advance(w: World, seconds: number) {
+  ensurePastures(w);
   if (!Number.isFinite(seconds) || seconds <= 0 || w.maintenance?.paused) return;
   const boundary = Math.min(
     ...w.buildings.flatMap((b) =>
@@ -2858,4 +2886,14 @@ export function advance(w: World, seconds: number) {
     w.tier = Math.max(w.tier, 1);
   if (tier1.every((kind) => w.buildings.some((b) => b.kind === kind && !b.construction)))
     w.tier = Math.max(w.tier, 2);
+}
+
+function requireHerdRoom(w: World, b: Building, item: string, n: number) {
+  if (herdSpec(b)?.animal !== item) return;
+  ensurePasture(w, b);
+  requireThat(
+    (b.stock[item] ?? 0) + n + Number(!!b.breedingEnd) <=
+      pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1),
+    'Not enough grazing area; expand the pasture before adding livestock',
+  );
 }

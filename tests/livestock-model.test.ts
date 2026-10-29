@@ -1,3 +1,4 @@
+import { ensurePastures } from '../src/shared/pastures';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { defaultCreator } from '../src/shared/creator.ts';
 import { test } from 'node:test';
@@ -45,6 +46,7 @@ test('visible herds follow stock, removal and world changes without rebuilding g
   p.z = -25;
   const view = new LivestockScene(),
     before = view.group.children.map((c) => (c as T.Mesh).geometry);
+  ensurePastures(w);
   view.update(w, p);
   view.animate(1);
   const sites = livestockSites(w, p);

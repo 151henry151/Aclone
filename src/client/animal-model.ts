@@ -396,7 +396,7 @@ export function animalMaterial() {
   const atlas = detailTexture('livestock');
   const m = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 });
   m.userData.warmTextures = [atlas];
-  m.customProgramCacheKey = () => 'livestock-continuous-cow-v3';
+  m.customProgramCacheKey = () => 'livestock-continuous-cow-v4';
   const clock = { value: 0 };
   m.userData.herdClock = clock;
   m.onBeforeCompile = (shader) => {
@@ -407,6 +407,7 @@ export function animalMaterial() {
       uniform float herdClock;
       #ifdef USE_INSTANCING
       attribute float herdPhase;
+      attribute float herdWalk;
       #endif
       ` + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
@@ -415,8 +416,7 @@ export function animalMaterial() {
       float cowAngle=0.;
       #ifdef USE_INSTANCING
       float ct=herdClock+herdPhase;
-      float cycle=mod(ct,32.)/32.;
-      if(cycle>.68 && cycle<.86) cowAngle=sin(ct*5.)*cowSkin.w*.20*cowSkin.x;
+      cowAngle=sin(herdClock*5.+herdPhase)*cowSkin.w*.30*cowSkin.x*herdWalk;
       #endif
       mat3 cowRotation=mat3(1.,0.,0.,0.,cos(cowAngle),sin(cowAngle),0.,-sin(cowAngle),cos(cowAngle));
       #include <beginnormal_vertex>

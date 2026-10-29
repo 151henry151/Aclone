@@ -435,3 +435,7 @@ At the lending bank, choose whether automatic payments use savings only, cash on
 ## Buying in bulk
 
 Shop menus show available bulk discounts and the final total for your chosen quantity. Default private-business tiers are 100 items at 1%, 250 at 2%, and 500 at 3%; owners may change or disable them in Building Admin. Each purchase is for a single item. Selling goods to a business still pays its posted bid. Review the total if a seller changes prices or discounts while the menu is open.
+
+## Grazing land and larger herds
+
+Open a livestock business to see its herd, pasture capacity and operating requirements. Buy adjoining pasture parcels before adding animals. Each expansion visibly enlarges the fenced area, where the animals wander and graze. At default rules one parcel supports four cows, six sheep, six pigs or twelve chickens. The three expansions cost 2.5s, 3.5s and 4.5s; world settings can change these limits and prices. Keep feed, water and enough workers available: a larger herd increases production and running costs together.

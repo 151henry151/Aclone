@@ -1,5 +1,5 @@
 import { recordPlayerMoney } from './player-statistics.ts';
-import { herdSpec, herdRation, livestockInputs } from './livestock.ts';
+import { herdSpec, herdRation, livestockInputs, livestockOutputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import { productionStaff, productionEfficiency, productionStaffing } from './sound-state.ts';
@@ -158,7 +158,9 @@ export function productionReport(w: World, b: Building) {
     blockers.push('Water intake is dry or the pump house is flooded');
   for (const [item, n] of Object.entries(livestockInputs(b, r.inputs)))
     if ((b.stock[item] ?? 0) < n) blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item}`);
-  for (const [item, n] of Object.entries(r.outputs))
+  for (const [item, n] of Object.entries(
+    livestockOutputs(b, r.outputs, w.settings.pastureCapacityMultiplier ?? 1),
+  ))
     if ((b.stock[item] ?? 0) + n > b.capacity) blockers.push(`No room for ${n} ${item}`);
   const staff = productionStaff(w, b, w.time);
   if (b.investment < staff.length * b.wage)
