@@ -80,17 +80,25 @@ test('hangar boarding, visible runway and a server-confirmed crash preserve spar
     await page.keyboard.press('c');
     await page.keyboard.press('F4');
     await expect.poll(() => p.engine).toBe(true);
+    // Hold the elevator before accelerating: browser input delivery can lag
+    // while software WebGL renders, but the server keeps advancing the aircraft.
+    let firstAirborneZ: number | undefined;
+    const watch = setInterval(() => {
+      if (p.flight?.grounded === false && firstAirborneZ === undefined) firstAirborneZ = p.z;
+    }, 10);
+    watch.unref();
+    await page.keyboard.down('ArrowDown');
     await page.keyboard.down('w');
     await expect.poll(() => p.flight?.throttle).toBeGreaterThan(0.98);
     await page.keyboard.up('w');
     await expect
       .poll(() => p.flight?.airspeed, { timeout: 45000, intervals: [50] })
       .toBeGreaterThan(20);
-    await page.keyboard.down('ArrowDown');
     await expect.poll(() => p.flight?.grounded, { intervals: [50] }).toBe(false);
     // Record touchdown/takeoff position before the next browser round trip;
     // software WebGL can delay key-up delivery while the server keeps flying.
-    const takeoffZ = p.z;
+    clearInterval(watch);
+    const takeoffZ = firstAirborneZ ?? p.z;
     await page.keyboard.up('ArrowDown');
     expect(takeoffZ).toBeLessThan(a.z + a.length / 2);
     // Authoritative hard landing, with the normal client receiving its impact event.
