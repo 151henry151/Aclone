@@ -1,3 +1,5 @@
+import { fishingVessel } from '../shared/boat-fishing';
+import { throttleBoat } from '../shared/boats';
 import { poweredBoat, FISHING_BOAT } from '../shared/boats';
 import { aboardBoat, boatLanding, nearBoathouse } from '../shared/boathouse';
 import { LIFEBOAT } from '../shared/boat-rescue';
@@ -34,7 +36,7 @@ export function actionVisible(
     !(p.flight && !p.flight.grounded);
   switch (action) {
     case 'boatIdle':
-      return free && p.vehicle === FISHING_BOAT;
+      return free && throttleBoat(p.vehicle);
     case 'trawl':
       return (
         free &&
@@ -116,10 +118,10 @@ export function actionVisible(
       return !p.crowBody;
     case 'joinGame':
       return (
-        free &&
+        (free || (id === 'fishing' && !!p.charterPassage)) &&
         p.game !== 'combat' &&
         p.game !== id &&
-        (!aboardBoat(w, p) || (id === 'fishing' && poweredBoat(p.vehicle))) &&
+        (!aboardBoat(w, p) || (id === 'fishing' && !!fishingVessel(w, p))) &&
         (id !== 'fishing' || (w.settings.fishingMode !== 0 && !p.trawl?.deployed))
       );
     case 'joinCombat':

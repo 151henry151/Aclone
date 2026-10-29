@@ -1,3 +1,4 @@
+import { charterOffers } from '../shared/charter';
 import { fishingOffers, fishingCrewCaptain, deckhands } from '../shared/fishing-expedition';
 import { visibleTrawl } from '../shared/commercial-fishing';
 import { vehiclePaint } from '../shared/appearance.ts';
@@ -64,6 +65,10 @@ export function privatePlayer(w: World, p: Player) {
     ...p,
     departure: undefined,
     crewOffers: fishingOffers(w, p),
+    charterOffers: charterOffers(w, p),
+    charterElapsed: p.charterPassage
+      ? w.players[p.charterPassage.captain]?.charter?.elapsed
+      : undefined,
     crewBerth: (() => {
       const c = fishingCrewCaptain(w, p);
       return c
@@ -142,6 +147,8 @@ export function prepareFrame(w: World): Frame {
   for (const p of Object.values(players))
     if (
       p.online ||
+      p.charterPassage ||
+      Object.keys(p.charter?.tickets ?? {}).length ||
       deckhands(w, p).length ||
       (p.hitch && players[p.hitch]?.fishingVoyage?.members[p.id])
     )

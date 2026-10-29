@@ -435,5 +435,22 @@
     "hitch": 0,
     "tank": 3200,
     "collisionRadius": 3.7
+  },
+  {
+    "name": "Charter boat",
+    "mode": 3,
+    "speed": 8,
+    "acceleration": 2,
+    "turn": 0.65,
+    "fuel": 0.024,
+    "capacity": 600,
+    "armour": 160,
+    "price": 1200000,
+    "color": "#326f85",
+    "hitch": 6,
+    "tank": 192,
+    "collisionRadius": 2.7,
+    "headlight": 200,
+    "lightRange": 140
   }
 ]

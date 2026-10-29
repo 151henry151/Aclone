@@ -48,6 +48,7 @@ export function recordPlayerMoney(w: World, e: Ledger) {
     'sale',
     'wage',
     'deckhand profit share',
+    'charter fare',
     'harvest wage',
     'labour task',
     'property sale',

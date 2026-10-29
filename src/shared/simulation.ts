@@ -1,3 +1,13 @@
+import {
+  charterAction as boatCharterAction,
+  charterCaptain,
+  advanceCharters,
+  cancelChartersOnDeath,
+  settleCharterPassenger,
+  sameCharterDock,
+} from './charter';
+import { fishingVessel } from './boat-fishing';
+import { CHARTER_BOAT, throttleBoat } from './boats';
 import { bulkPurchaseQuote, validateBulkDiscounts } from './bulk-discounts';
 import { cliffBlocks } from './coastal-bluffs';
 import { isLighthouseKeeper } from './lodging';
@@ -460,6 +470,22 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (
+    p.charterPassage &&
+    ![
+      'chat',
+      'use',
+      'detach',
+      'charter',
+      'giveMoney',
+      'appearance',
+      'paint',
+      'joinGame',
+      'leaveGame',
+      'reel',
+    ].includes(type)
+  )
+    throw Error('You are aboard a charter; return to a dock to disembark');
   const crewCaptain = fishingCrewCaptain(w, p);
   if (
     crewCaptain &&
@@ -477,7 +503,7 @@ export function act(w: World, id: string, a: Action): string {
   if (
     aboardBoat(w, p) &&
     (['crow', 'home', 'joinCombat'].includes(type) ||
-      (type === 'joinGame' && (a.game !== 'fishing' || !poweredBoat(p.vehicle) || !!p.hitch)))
+      (type === 'joinGame' && (a.game !== 'fishing' || !fishingVessel(w, p))))
   )
     throw Error('Disembark at a boathouse before starting another activity');
   if (
@@ -563,8 +589,11 @@ export function act(w: World, id: string, a: Action): string {
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'charter':
+      result = boatCharterAction(w, p, a);
+      break;
     case 'boatIdle':
-      requireThat(p.vehicle === FISHING_BOAT && !p.hitch, 'Board your fishing boat');
+      requireThat(throttleBoat(p.vehicle) && !p.hitch, 'Board your powered boat');
       p.boatThrottle = 0;
       break;
     case 'seafoodMenu':
@@ -1414,10 +1443,13 @@ export function act(w: World, id: string, a: Action): string {
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
         requireThat(
-          !p.hitch && !p.atHome && !p.crowBody && Math.abs(p.speed) < 0.5,
+          (!p.hitch || !!charterCaptain(w, p)) &&
+            !p.atHome &&
+            !p.crowBody &&
+            Math.abs((fishingVessel(w, p) ?? p).speed) < 0.5,
           'Stop outside before fishing',
         );
-        if (poweredBoat(p.vehicle))
+        if (fishingVessel(w, p))
           requireThat(
             terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65,
             'Take the boat into water before fishing',
@@ -1447,7 +1479,7 @@ export function act(w: World, id: string, a: Action): string {
       if (game === 'fishing') {
         requireThat((p.inventory.tackle ?? 0) > 0, 'Carry Fishing tackle');
         requireThat(w.settings.fishingMode !== 0, 'Fishing is disabled');
-        if (!poweredBoat(p.vehicle)) {
+        if (!fishingVessel(w, p)) {
           p.x = fishingDock.x;
           p.z = fishingDock.z + 2;
           p.y = travelHeight(w, p.x, p.z);
@@ -1489,6 +1521,10 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'reel': {
+      requireThat(
+        !p.charterPassage || (charterCaptain(w, p) && Math.abs(charterCaptain(w, p)!.speed) < 0.5),
+        'Wait for the boat to stop before fishing',
+      );
       requireThat(p.game === 'fishing' && p.fishAt !== undefined, 'Cast a line first');
       requireThat(
         w.time >= p.fishAt && w.time <= (p.fishUntil ?? 0),
@@ -1832,7 +1868,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'hitch': {
       requireThat(
-        w.players[String(a.player)]?.vehicle !== FISHING_BOAT || !!w.boatRescues?.[p.id],
+        !throttleBoat(w.players[String(a.player)]?.vehicle ?? -1) || !!w.boatRescues?.[p.id],
         'Join a fishing boat by accepting a deckhand offer, or hitch a recovery ride to your stranded boat',
       );
       requireThat(p.game !== 'combat', 'Leave combat before hitching a ride');
@@ -1882,6 +1918,8 @@ export function act(w: World, id: string, a: Action): string {
             !creatorBlocks(w, land.x, land.z, travelHeight(w, land.x, land.z), 1.5),
           'The shore landing is blocked',
         );
+        if (p.charterPassage)
+          settleCharterPassenger(w, driver, p, !sameCharterDock(driver.charter?.dock, dock.id));
         Object.assign(p, land, { y: travelHeight(w, land.x, land.z), speed: 0 });
       }
       if (captain && !captain.fishingVoyage!.departed) delete captain.fishingVoyage!.members[p.id];
@@ -2200,11 +2238,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   let throttleInput = clamp(input.throttle, -1, 1);
   if (v.mode !== 3 || Math.sign(throttleInput) !== p.boatShoreThrottle) delete p.boatShoreThrottle;
   if (v.mode === 3 && p.boatShoreThrottle !== undefined) throttleInput = 0;
-  if (p.vehicle === FISHING_BOAT)
+  if (throttleBoat(p.vehicle))
     p.boatThrottle = input.brake
       ? 0
       : clamp((p.boatThrottle ?? 0) + throttleInput * 0.24 * dt, -0.4, 1);
-  const throttle = p.vehicle === FISHING_BOAT ? (p.boatThrottle ?? 0) : throttleInput;
+  const throttle = throttleBoat(p.vehicle) ? (p.boatThrottle ?? 0) : throttleInput;
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
@@ -2222,7 +2260,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     crowSpeed *
     loadFactors.speed *
     (trawling ? TRAWL_SPEED : v.speed) *
-    (input.boost && p.vehicle !== FISHING_BOAT ? 1.7 : 1) *
+    (input.boost && !throttleBoat(p.vehicle) ? 1.7 : 1) *
     tractorSurface(surface.speed, v.traction) *
     (0.7 + condition * 0.003);
   p.speed +=
@@ -2237,7 +2275,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
     tractorSurface(surface.grip, v.traction) *
-    (input.boost && p.vehicle !== FISHING_BOAT ? 1.15 : 1) *
+    (input.boost && !throttleBoat(p.vehicle) ? 1.15 : 1) *
     dt *
     ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
@@ -2259,8 +2297,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       p.x,
       p.z,
       p.heading,
-      p.vehicle === FISHING_BOAT ? 21 : p.vehicle === LIFEBOAT ? 3 : 12,
-      p.vehicle === FISHING_BOAT ? 6 : 3,
+      p.vehicle === FISHING_BOAT
+        ? 21
+        : p.vehicle === CHARTER_BOAT
+          ? 15
+          : p.vehicle === LIFEBOAT
+            ? 3
+            : 12,
+      p.vehicle === FISHING_BOAT ? 6 : p.vehicle === CHARTER_BOAT ? 5 : 3,
       w.time,
       amp,
     ).y;
@@ -2280,11 +2324,13 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           p.heading,
           p.vehicle === FISHING_BOAT
             ? 10.5
-            : p.vehicle === 3
-              ? 6
-              : p.vehicle === LIFEBOAT
-                ? 1.5
-                : (v.collisionRadius ?? 1.3),
+            : p.vehicle === CHARTER_BOAT
+              ? 7.5
+              : p.vehicle === 3
+                ? 6
+                : p.vehicle === LIFEBOAT
+                  ? 1.5
+                  : (v.collisionRadius ?? 1.3),
         )
       : undefined;
   if (
@@ -2373,13 +2419,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
         (Math.abs(p.speed) / v.speed) *
           v.fuel *
           loadFactors.fuel *
-          (input.boost && p.vehicle !== FISHING_BOAT ? 2 : 1) *
+          (input.boost && !throttleBoat(p.vehicle) ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
   if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  cancelChartersOnDeath(w, p);
   const recovery = !comic ? abandonBoatOnDeath(w, p, at) : undefined;
   endVoyageOnDeath(w, p);
   if (!comic) contractsOnDeath(w, p);
@@ -2621,6 +2668,7 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  advanceCharters(w, seconds);
   exportShipments(w, end);
   harbourSupply(w, end);
   restockGovernmentStores(w);

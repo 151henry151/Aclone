@@ -24,7 +24,7 @@ function map(c: HTMLCanvasElement, shared = true) {
 }
 const surfaces = new Map<string, T.CanvasTexture>();
 /** Seams, switches, chart markings and fasteners are painted, not tiny meshes. */
-function surface(kind: 'lining' | 'floor' | 'chart' | 'radio') {
+export function marineSurface(kind: 'lining' | 'floor' | 'chart' | 'radio') {
   const old = surfaces.get(kind);
   if (old) return old;
   const c = canvas(512, 512),
@@ -180,10 +180,21 @@ function panelBase() {
   x.fillText('NORTH STAR  /  WHEELHOUSE', 44, 470);
   return base;
 }
-function drawPanel(c: HTMLCanvasElement, p: Reading) {
+function drawPanel(
+  c: HTMLCanvasElement,
+  p: Reading,
+  tank = vehicles[FISHING_BOAT].tank!,
+  label = 'NORTH STAR  /  WHEELHOUSE',
+) {
   const x = c.getContext('2d')!;
   x.drawImage(panelBase(), 0, 0);
-  const fuel = clamp(p.fuel / vehicles[FISHING_BOAT].tank!),
+  x.fillStyle = '#233b3c';
+  x.fillRect(35, 435, 510, 46);
+  x.fillStyle = '#bdc5ae';
+  x.font = '18px sans-serif';
+  x.textAlign = 'left';
+  x.fillText(label, 44, 470, 495);
+  const fuel = clamp(p.fuel / tank),
     throttle = Math.abs(p.boatThrottle ?? 0);
   const values = [clamp((Math.abs(p.speed) * 1.94384) / 20), clamp(throttle), fuel];
   for (let i = 0; i < 3; i++) {
@@ -260,6 +271,50 @@ function drawCompass(c: HTMLCanvasElement, heading: number) {
   x.fillText('HEADING', 256, 305);
 }
 
+/** Per-boat instrument textures, redrawn only for changed readings at at most 10 Hz. */
+export function createMarineInstruments(label: string, tank: number) {
+  const panelCanvas = canvas(1024, 512),
+    compassCanvas = canvas(512, 512);
+  const panelMap = map(panelCanvas, false),
+    compassMap = map(compassCanvas, false);
+  const material = (texture: T.Texture) =>
+    new T.MeshStandardMaterial({
+      map: texture,
+      emissiveMap: texture,
+      emissive: '#ffffff',
+      emissiveIntensity: 0.32,
+      roughness: 0.8,
+    });
+  let last = -Infinity,
+    key = '';
+  const readings = { heading: 0, speedKnots: 0, fuel: 0, throttle: 0 };
+  function update(p: Reading, time: number) {
+    if (time - last < 0.1) return;
+    last = time;
+    const heading = nauticalHeading(p.heading);
+    const next = [
+      heading.toFixed(1),
+      p.speed.toFixed(1),
+      p.fuel.toFixed(1),
+      p.engine,
+      (p.boatThrottle ?? 0).toFixed(2),
+    ].join('/');
+    if (next === key) return;
+    key = next;
+    drawPanel(panelCanvas, p, tank, label);
+    drawCompass(compassCanvas, heading);
+    panelMap.needsUpdate = compassMap.needsUpdate = true;
+    Object.assign(readings, {
+      heading,
+      speedKnots: Math.abs(p.speed) * 1.94384,
+      fuel: p.fuel,
+      throttle: p.boatThrottle ?? 0,
+    });
+  }
+  update({ heading: 0, speed: 0, fuel: 0, engine: false }, 0);
+  return { panel: material(panelMap), compass: material(compassMap), readings, update };
+}
+
 /** Human-scale fittings in the enlarged hull; static parts batch by material. */
 export function createFishingWheelhouse() {
   const group = new T.Group(),
@@ -270,7 +325,7 @@ export function createFishingWheelhouse() {
   const wood = new T.MeshStandardMaterial({ color: '#766049', roughness: 0.8 });
   const brass = new T.MeshStandardMaterial({ color: '#a68b53', roughness: 0.4, metalness: 0.55 });
   const rubber = new T.MeshStandardMaterial({ color: '#202d2f', roughness: 0.95 });
-  const lining = new T.MeshStandardMaterial({ map: surface('lining'), roughness: 0.9 });
+  const lining = new T.MeshStandardMaterial({ map: marineSurface('lining'), roughness: 0.9 });
   function add(
     geo: T.BufferGeometry,
     mat: T.Material,
@@ -287,7 +342,7 @@ export function createFishingWheelhouse() {
   }
   const box = (w: number, h: number, d: number, mat: T.Material, x: number, y: number, z: number) =>
     add(new T.BoxGeometry(w, h, d), mat, x, y, z);
-  const floor = new T.MeshStandardMaterial({ map: surface('floor'), roughness: 1 });
+  const floor = new T.MeshStandardMaterial({ map: marineSurface('floor'), roughness: 1 });
   box(4.28, 0.045, 5.25, floor, 0, 1.15, 2.6);
   box(4.28, 0.06, 5.25, lining, 0, 3.82, 2.6);
   for (const side of [-1, 1]) {
@@ -386,7 +441,7 @@ export function createFishingWheelhouse() {
   box(0.6, 0.4, 0.15, metal, 1.7, 2.4, 4.91);
   const radio = add(
     new T.PlaneGeometry(0.56, 0.36),
-    new T.MeshStandardMaterial({ map: surface('radio'), roughness: 0.9 }),
+    new T.MeshStandardMaterial({ map: marineSurface('radio'), roughness: 0.9 }),
     1.7,
     2.4,
     4.828,
@@ -398,7 +453,7 @@ export function createFishingWheelhouse() {
   for (const z of [3.5, 4.15]) box(0.12, 0.38, 0.08, metal, -2, 1.78, z);
   const chart = add(
     new T.PlaneGeometry(0.76, 0.88),
-    new T.MeshStandardMaterial({ map: surface('chart'), roughness: 1 }),
+    new T.MeshStandardMaterial({ map: marineSurface('chart'), roughness: 1 }),
     -1.64,
     2.047,
     3.82,

@@ -31,7 +31,7 @@ function setup(slot = 30) {
   return { w, p };
 }
 
-for (const slot of [3, 30]) {
+for (const slot of [3, 30, 31]) {
   test(`boat ${slot} rebounds from shore, loses only 1 condition point, idles and can reverse away`, () => {
     const { w, p } = setup(slot);
     const held = { throttle: 1, steer: 0, boost: false };

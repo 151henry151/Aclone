@@ -46,13 +46,13 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
   const aboard = aboardBoat(w, p);
   let r = w.boatRescues?.[p.id];
   if (w.settings.loseBoatsOnDeath) {
-    const lost = [3, 30].filter(
+    const lost = [3, 30, 31].filter(
       (slot) =>
         (p.fleet ?? []).includes(slot) || r?.boat.slot === slot || (!p.hitch && p.vehicle === slot),
     );
     if (lost.length) {
       p.fleet = (p.fleet ?? [0, 5]).filter((slot) => !poweredBoat(slot));
-      for (const slot of [3, 30]) {
+      for (const slot of [3, 30, 31]) {
         if (p.fuelVehicle === slot || (p.fuelVehicle === undefined && p.vehicle === slot))
           p.fuel = 0;
         if (p.parkedFuel) delete p.parkedFuel[slot];

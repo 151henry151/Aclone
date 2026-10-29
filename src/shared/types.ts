@@ -102,6 +102,11 @@ export interface Player {
   boatShoreThrottle?: number;
   boatLighting?: import('./boat-lighting').BoatLighting;
   boatStores?: Stock;
+  charter?: import('./charter').CharterTrip;
+  charterPassage?: import('./charter').CharterPassage;
+  charterOffers?: (import('./charter').CharterPassage & { name: string })[];
+  charterRequestAt?: number;
+  charterElapsed?: number;
   fishingVoyage?: import('./fishing-expedition').FishingVoyage;
   lastFishingSettlement?: string;
   crewOffers?: { captain: string; name: string; share: number; fuelPrice: number }[];

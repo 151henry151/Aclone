@@ -6,7 +6,7 @@ import { boatLighting, navigationSector, navigationSignals } from '../src/shared
 import { prepareFrame, privatePlayer } from '../src/server/snapshots';
 import { Store } from '../src/server/store';
 
-for (const slot of [3, 30])
+for (const slot of [3, 30, 31])
   test(`boat ${slot} switches persist, replicate and remain independent of mandatory navigation lights`, () => {
     const w = createWorld('lighting', 'Lighting', 'server'),
       p = addPlayer(w, 'p', 'Skipper');

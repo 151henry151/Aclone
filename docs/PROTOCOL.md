@@ -164,3 +164,23 @@ OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally refere
 `catalogue` is world-owner-only and accepts a complete `catalogue` containing bounded `items`, `skills` and `templates` maps. References/prerequisites are validated before replacing the prior definition set. `construct.kind` can use a local template ID. Standard trade, stock, use, learn, production and quest actions resolve goods/professions in their current world.
 
 `bank` and `investment` actions accept integer `amount` values from 1 to 10,000,000 hundredths (100,000d), independently of item-quantity limits. Balances, proximity, ownership and outside-investor claims are rechecked server-side.
+
+## Charter fishing boat (unreleased)
+
+Vehicle slot 31 is the charter boat. Existing vehicle, boat lighting, idle,
+boat rescue, death-policy and dock actions apply. `charter` actions use:
+
+- `operation: "offer"`, `player`, integer `fare` in internal hundredths of a denarius
+  (0–100000), integer `minutes` (15–180 real minutes, including travel).
+- `operation: "accept" | "decline"`, `captain`.
+- `operation: "finish" | "cancel"` for the captain at a stopped dock.
+- `operation: "requestReturn"` for a passenger, rate limited to once per minute.
+
+Private player snapshots include `charterOffers`, `charterPassage` and
+`charterElapsed`. The captain's private `charter` contains persisted offers,
+escrow tickets and timing. Other players cannot read those financial fields.
+Passengers use ordinary `joinGame: fishing`, `reel`, `leaveGame` and dockside
+`detach` actions. The server validates the carrier and stops lines when it moves.
+Returns to another dock refund the fare; time spent at the departure dock is not
+chargeable. Settlement consumes each ticket once. Captains cannot switch vehicles
+while passengers remain aboard.

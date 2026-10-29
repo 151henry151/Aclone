@@ -179,7 +179,7 @@ test('a deckhand escapes offshore in a lifeboat and can disembark without owning
 });
 
 for (const reason of ['death', 'empty tank'])
-  for (const slot of [3, 30])
+  for (const slot of [3, 30, 31])
     test(`${reason}: hitch a recovery ride on boat ${slot} and transfer without teleporting or duplicating cargo`, () => {
       const s = setup(),
         { w, p } = s;
@@ -208,7 +208,11 @@ for (const reason of ['death', 'empty tank'])
       assert.equal(p.hitch, helper.id);
       assert.equal(helper.fishingVoyage, undefined); // Recovery is not a paid fishing job.
       assert.throws(() => act(w, p.id, { type: 'lifeboat', operation: 'reboard' }), /alongside/);
-      Object.assign(helper, { x: r.boat.x + (slot === 3 ? 6.5 : 8), z: r.boat.z, speed: 2 });
+      Object.assign(helper, {
+        x: r.boat.x + (slot === 3 ? 6.5 : slot === 31 ? 7.5 : 8),
+        z: r.boat.z,
+        speed: 2,
+      });
       assert.throws(
         () => act(w, p.id, { type: 'lifeboat', operation: 'reboard' }),
         /stop alongside/,

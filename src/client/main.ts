@@ -1,3 +1,6 @@
+import { charterPanel } from './charter-panel';
+import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
+import { fishingVessel } from '../shared/boat-fishing';
 import { farmPolicyEditor, farmPolicySummary, farmPolicyFormValue } from './farm-policy';
 import { farmStaffBlocker } from '../shared/farm-policy';
 import { debtStatusHtml, debtNotice, loanStatusHtml } from './debt-status';
@@ -904,12 +907,13 @@ function updateHud() {
     world.time <= (me.fishUntil ?? 0);
   const fishing = me.game === 'fishing';
   const atDock =
-    (nearFishingDock(world, me) || (poweredBoat(me.vehicle) && Math.abs(me.speed) < 0.5)) &&
+    (nearFishingDock(world, me) ||
+      (fishingVessel(world, me) && Math.abs(fishingVessel(world, me)!.speed) < 0.5)) &&
     !me.atHome &&
     !me.task &&
     !me.game &&
     !me.crowBody &&
-    !me.hitch;
+    (!me.hitch || !!me.charterPassage);
   const commercial = me.vehicle === FISHING_BOAT && !me.hitch && !me.game && !me.atHome;
   const fishingControl = $('fishing-control');
   const fishingHost = commercial ? app.querySelector('.bottom-left')! : $('world-hud');
@@ -954,7 +958,7 @@ function updateHud() {
     : world.settings.fishingMode === 0
       ? 'Fishing is disabled in this parish.'
       : me.inventory.tackle
-        ? poweredBoat(me.vehicle)
+        ? fishingVessel(world, me)
           ? deepBoatFishing(world, me)
             ? 'Offshore deep water · Cod, halibut and tuna possible.'
             : 'Coastal or shallow water · Small fish only. Larger fish need 8 m depth and 600 m from shore.'
@@ -1373,6 +1377,7 @@ function refreshTaxInfo() {
       );
   }
 }
+let charterSignature = '';
 let expeditionSignature = '';
 function refreshTradingPrices() {
   refreshTaxInfo();
@@ -1429,6 +1434,27 @@ function refreshTradingPrices() {
     if (key !== storyPanelSignature && !document.activeElement?.matches('input,select,textarea')) {
       storyPanelSignature = key;
       renderPanel();
+    }
+  }
+  const charterRoot = app.querySelector('.charter-panel');
+  if (
+    charterRoot &&
+    world &&
+    me &&
+    !document.activeElement?.matches(
+      '.charter-panel input,.charter-panel select,.charter-panel textarea',
+    )
+  ) {
+    const key = JSON.stringify([
+      me.charter ? { ...me.charter, elapsed: Math.floor(me.charter.elapsed / 60) } : undefined,
+      me.charterPassage,
+      me.charterOffers,
+      Math.floor((me.charterElapsed ?? 0) / 60),
+      Math.floor(world.time / 5),
+    ]);
+    if (key !== charterSignature) {
+      charterSignature = key;
+      charterRoot.outerHTML = charterPanel(world, me);
     }
   }
   const expeditionRoot = app.querySelector('.expedition-panel');
@@ -2745,6 +2771,21 @@ app.addEventListener('click', async (e) => {
       case 'boatLights':
         send({ type: 'boatLights', circuit: id });
         break;
+      case 'charter':
+        send({
+          type: 'charter',
+          operation: id,
+          captain: el.dataset.captain,
+          player: el.dataset.player,
+          fare: Math.round(
+            Number((document.getElementById('charter-fare') as HTMLInputElement)?.value ?? 75) *
+              100,
+          ),
+          minutes: Number(
+            (document.getElementById('charter-minutes') as HTMLInputElement)?.value ?? 60,
+          ),
+        });
+        break;
       case 'expedition':
         send({
           type: 'expedition',
@@ -3344,7 +3385,7 @@ window.addEventListener('keydown', (e) => {
     const b = scene.nearest();
     if (b) openInteraction(b.id);
   }
-  if (key === 'b' && me?.vehicle === FISHING_BOAT && !e.repeat) send({ type: 'boatIdle' });
+  if (key === 'b' && throttleBoat(me?.vehicle ?? -1) && !e.repeat) send({ type: 'boatIdle' });
   if (key === 'f4') send({ type: 'engine' });
   if (key === 'l') send({ type: 'lights' });
   if (key === 'f5' || key === 'r') send({ type: 'crow' });
@@ -3409,7 +3450,7 @@ function drivingInput() {
   const touch = mobile.input();
   if (world && vehicles[world.players[account!.id]?.vehicle]?.mode === 2)
     return aircraftInput(keys, touch, controller.flight, !!typing);
-  if (world?.players[account!.id]?.vehicle === FISHING_BOAT)
+  if (throttleBoat(world?.players[account!.id]?.vehicle ?? -1))
     return {
       throttle: typing
         ? 0
@@ -3556,7 +3597,7 @@ function boatControls(building?: string) {
   const dock = boatLanding(world, me, boatSlot(me.vehicle), building);
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
-  let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me);
+  let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me) + charterPanel(world, me);
   if (rescue?.spoilage) {
     html +=
       `<p>Your boat remains offshore. ${rescue.spoilage.spoiled ? 'Cargo and provisions have spoiled.' : rescue.spoilage.never ? 'Cargo spoilage is disabled in this world.' : `Recover cargo and provisions within ${rescue.spoilage.daysLeft.toFixed(1)} game days.`} Any remaining tank fuel does not spoil.</p>` +
@@ -3571,7 +3612,7 @@ function boatControls(building?: string) {
     if (rescue?.dinghy.moored)
       html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
     else if (!rescue)
-      for (const slot of [3, FISHING_BOAT]) {
+      for (const slot of [3, FISHING_BOAT, CHARTER_BOAT]) {
         if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
         html += button(
           (me.fleet ?? []).includes(slot)

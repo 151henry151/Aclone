@@ -1,10 +1,15 @@
+import { charterCaptain } from './charter';
 import { poweredBoat } from './boats';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { deepFishingWater } from './fishing-water';
 import type { Player, World } from './types';
 export const deepFish = ['cod', 'halibut', 'tuna'] as const;
+export function fishingVessel(w: World, p: Player): Player | undefined {
+  return p.hitch ? charterCaptain(w, p) : poweredBoat(p.vehicle) ? p : undefined;
+}
 export function deepBoatFishing(w: World, p: Player) {
-  return poweredBoat(p.vehicle) && !p.hitch && deepFishingWater(w, p);
+  const boat = fishingVessel(w, p);
+  return !!boat && deepFishingWater(w, boat);
 }
 export function fishingCatch(w: World, p: Player, roll = Math.random()) {
   if (!deepBoatFishing(w, p)) return 'fish';
@@ -24,7 +29,7 @@ export function scheduleBite(w: World, p: Player, start = w.time) {
     start +
     (deepBoatFishing(w, p)
       ? 150 + Math.random() * 150
-      : poweredBoat(p.vehicle)
+      : fishingVessel(w, p)
         ? 40 + Math.random() * 50
         : w.settings.fishingMode === 5
           ? 20

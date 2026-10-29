@@ -78,7 +78,7 @@ test('boathouse boards in water, refuses every offshore exit, and stores boats w
   assert.ok(!w.mooredBoats?.[`${p.id}:3`]);
 });
 test('boatyard purchases and owned boats board throughout the 40-metre menu range', () => {
-  for (const slot of [3, 30]) {
+  for (const slot of [3, 30, 31]) {
     for (const owned of [false, true]) {
       for (const position of ['reported', 'boundary']) {
         const { w, p, yard, d } = setup();
