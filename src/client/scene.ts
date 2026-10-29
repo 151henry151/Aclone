@@ -1,3 +1,4 @@
+import { OtherVehicleLights } from './vehicle-lights';
 import { createCharterBoat } from './charter-boat';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
 import { charterPassengerPosition } from '../shared/charter';
@@ -129,6 +130,7 @@ export class GameScene {
   private space = new T.Group();
   private terrain?: T.Mesh;
   private sun = new T.DirectionalLight(0xffe9bb, 3);
+  private otherVehicleLights = new OtherVehicleLights();
   private headlights = new T.SpotLight('#fff1b5', 150, 110, Math.PI / 3.5, 0.65, 1);
   private lightning = new T.Line(
     new T.BufferGeometry().setFromPoints([
@@ -296,6 +298,7 @@ export class GameScene {
     this.sun.shadow.bias = -0.0005;
     this.scene.add(
       this.sun.target,
+      this.otherVehicleLights.group,
       this.headlights,
       this.headlights.target,
       this.townLighting.group,
@@ -685,6 +688,7 @@ export class GameScene {
     this.sky.visible = false;
     this.precipitation.mesh.visible = false;
     this.headlights.visible = false;
+    this.otherVehicleLights.clear();
     this.townLighting.group.visible = false;
     this.lightning.visible = false;
     this.world = undefined;
@@ -1424,7 +1428,8 @@ export class GameScene {
         model.rotation.x = sea.pitch;
         model.rotation.z = sea.roll;
       }
-      this.headlights.visible = p.lights && !p.atHome;
+      this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position);
+      this.headlights.visible = p.lights && !p.atHome && !p.hitch;
       this.headlights.intensity = vehicles[p.vehicle].headlight ?? 150;
       this.headlights.distance = vehicles[p.vehicle].lightRange ?? 110;
       const local = this.meshes.get(p.id);

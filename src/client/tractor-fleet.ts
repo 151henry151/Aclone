@@ -1,3 +1,4 @@
+import { vehicleLamp } from './vehicle-lights';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { addTractorCockpit } from './tractor-cockpit';
 import * as T from 'three';
@@ -130,17 +131,23 @@ export function fleetTractor(
     opacity: 0.28,
     depthWrite: false,
   });
-  const lens = new T.MeshStandardMaterial({
-    color: '#fff3c9',
-    emissive: '#ffdb87',
-    emissiveIntensity: 0.5,
-    roughness: 0.2,
-  });
-  const rearLens = new T.MeshStandardMaterial({
-    color: '#b83d29',
-    emissive: '#771b12',
-    emissiveIntensity: 0.25,
-  });
+  const lens = vehicleLamp(
+    new T.MeshStandardMaterial({
+      color: '#fff3c9',
+      emissive: '#ffdb87',
+      emissiveIntensity: 0.5,
+      roughness: 0.2,
+    }),
+    0.9,
+  );
+  const rearLens = vehicleLamp(
+    new T.MeshStandardMaterial({
+      color: '#b83d29',
+      emissive: '#771b12',
+      emissiveIntensity: 0.25,
+    }),
+    0.4,
+  );
   const wood = detailMaterial('siding', '#ab8561', 0.02);
   const grille = detailMaterial('grille'),
     vents = detailMaterial('vents');

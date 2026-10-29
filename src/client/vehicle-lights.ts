@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import * as T from 'three';
+import type { Player, World } from '../shared/types';
+import { vehicles } from '../shared/catalog';
+/** Materials remain per-vehicle, including after geometry batching. */
+export function vehicleLamp(material: T.MeshStandardMaterial, intensity: number) {
+  material.userData.vehicleLamp = { intensity, color: material.color.clone() };
+  material.emissiveIntensity = 0;
+  material.color.multiplyScalar(0.36);
+  return material;
+}
+export function updateVehicleLamps(root: T.Object3D, on: boolean) {
+  let lamps = root.userData.switchableLamps as T.MeshStandardMaterial[] | undefined;
+  if (!lamps) {
+    const unique = new Set<T.MeshStandardMaterial>();
+    root.traverse((o) => {
+      if (o instanceof T.Mesh)
+        for (const m of Array.isArray(o.material) ? o.material : [o.material])
+          if (m.userData.vehicleLamp) unique.add(m);
+    });
+    lamps = root.userData.switchableLamps = [...unique];
+  }
+  for (const m of lamps) {
+    m.emissiveIntensity = on ? m.userData.vehicleLamp.intensity : 0;
+    m.color.copy(m.userData.vehicleLamp.color).multiplyScalar(on ? 1 : 0.36);
+  }
+}
+/** A fixed, shadow-free pool makes nearby players' beams visible without one light per player.
+ * Keep zero-intensity lamps in the scene to avoid compiling shaders every time somebody toggles. */
+export class OtherVehicleLights {
+  readonly group = new T.Group();
+  readonly lights: T.SpotLight[] = [];
+  private point = new T.Vector3();
+  constructor(limit = 2) {
+    this.group.name = 'Other players headlights';
+    for (let i = 0; i < limit; i++) {
+      const light = new T.SpotLight('#fff1b5', 0, 110, Math.PI / 3.5, 0.65, 1);
+      light.castShadow = false;
+      this.lights.push(light);
+      this.group.add(light, light.target);
+    }
+  }
+  update(w: World, models: Map<string, T.Group>, localId: string, eye: T.Vector3) {
+    const sources: { p: Player; root: T.Group; distance: number }[] = [];
+    for (const [id, root] of models) {
+      const p = w.players[id];
+      if (!p) continue;
+      updateVehicleLamps(root, !!p.lights && !p.atHome && !p.hitch);
+      if (id === localId || !p.lights || p.atHome || p.hitch || !root.visible || p.vehicle === 5)
+        continue;
+      const distance = root.position.distanceTo(eye);
+      if (distance < 140) sources.push({ p, root, distance });
+    }
+    sources.sort((a, b) => a.distance - b.distance);
+    for (const [i, light] of this.lights.entries()) {
+      const s = sources[i];
+      if (!s) {
+        light.intensity = 0;
+        delete light.userData.player;
+        continue;
+      }
+      light.userData.player = s.p.id;
+      light.intensity =
+        (vehicles[s.p.vehicle]?.headlight ?? 150) * Math.min(1, (140 - s.distance) / 30);
+      light.distance = vehicles[s.p.vehicle]?.lightRange ?? 110;
+      this.point.copy(s.root.userData.lamp ?? new T.Vector3(0, 1.7, 0));
+      light.position.copy(s.root.localToWorld(this.point));
+      this.point.set(0, 0, 35);
+      light.target.position.copy(s.root.localToWorld(this.point));
+    }
+  }
+  clear() {
+    for (const light of this.lights) {
+      light.intensity = 0;
+      delete light.userData.player;
+    }
+  }
+}

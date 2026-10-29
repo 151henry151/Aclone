@@ -1,3 +1,4 @@
+import { vehicleLamp } from './vehicle-lights';
 import { STEERING_TILT } from './tractor-cockpit';
 import { detailTexture, detailMaterial } from './detail-textures';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -108,12 +109,15 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
     const lens = add(
       g,
       new T.CircleGeometry(0.15, 16),
-      new T.MeshStandardMaterial({
-        color: '#fff0c5',
-        emissive: '#ffe4a0',
-        emissiveIntensity: 0.45,
-        roughness: 0.2,
-      }),
+      vehicleLamp(
+        new T.MeshStandardMaterial({
+          color: '#fff0c5',
+          emissive: '#ffe4a0',
+          emissiveIntensity: 0.45,
+          roughness: 0.2,
+        }),
+        0.9,
+      ),
       side * 0.62,
       2.02,
       2.33,
@@ -124,11 +128,14 @@ export function tractor(g: T.Group, color: string, makeShadow = contactShadow) {
       0.14,
       0.13,
       0.08,
-      new T.MeshStandardMaterial({
-        color: '#b3321e',
-        emissive: '#8c2813',
-        emissiveIntensity: 0.25,
-      }),
+      vehicleLamp(
+        new T.MeshStandardMaterial({
+          color: '#b3321e',
+          emissive: '#8c2813',
+          emissiveIntensity: 0.25,
+        }),
+        0.4,
+      ),
       side * 1.12,
       2.24,
       -1.9,
