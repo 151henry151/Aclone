@@ -69,7 +69,7 @@ waypoints and building markers remain visible above the terrain overlay.
 
 ## Fishing at the dock
 
-Carry Fishing tackle and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones.
+Buy Fishing tackle at a boathouse or Harbour stores and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones. While fishing, press **H** for scenery view: a compact bottom button stops fishing while waiting and becomes **Reel in** during a bite. **F3** also reels; **H/Escape** restores the HUD.
 
 ## Finding your way
 
@@ -394,7 +394,7 @@ Construction counts finished buildings owned at completion, including a helper's
 
 Boats cannot motor onto the shoreline. A shore impact removes one percentage point of powered-boat hull condition, cuts throttle to zero and pushes the vessel a short distance back into water where clear. Release the throttle key (or reverse it) before accelerating again; holding the same key through the impact cannot keep ramming the shore. Boat service repairs condition. The collision boundary follows the tide; waves do not let you climb the beach.
 
-Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored. Return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel and fish trading.
+Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored. Return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel, Fishing tackle and fish trading.
 
 The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
 

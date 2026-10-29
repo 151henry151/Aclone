@@ -2505,3 +2505,34 @@ button span {
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+
+/* Keep one small rod-fishing action available while the rest of the HUD is hidden. */
+#scenery-fishing-action {
+  display: none;
+}
+.scenery-view #fishing-control.angling {
+  visibility: visible;
+  pointer-events: auto;
+  top: auto;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  padding: 5px;
+  border-radius: 8px;
+  background: #20362cbb;
+  box-shadow: none;
+}
+.scenery-view #fishing-control.angling #fishing-status,
+.scenery-view #fishing-control.angling .fishing-buttons {
+  display: none;
+}
+.scenery-view #fishing-control.angling #scenery-fishing-action {
+  display: inline-block;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.scenery-view #fishing-control.biting #scenery-fishing-action {
+  color: #243322;
+  background: #edcf7e;
+  border-color: #ffe8a9;
+}

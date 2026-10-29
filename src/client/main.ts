@@ -156,7 +156,7 @@ document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
     'beforeend',
-    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><button id="trawl-toggle" data-do="trawl-toggle" aria-controls="trawl-controls" aria-expanded="false" hidden>Fishing controls</button><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch &amp; stow</button></div><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
+    '<section id="fishing-control" hidden aria-label="Fishing"><p id="fishing-status" role="status"></p><button id="trawl-toggle" data-do="trawl-toggle" aria-controls="trawl-controls" aria-expanded="false" hidden>Fishing controls</button><div id="trawl-controls" hidden><strong>Commercial trawling</strong><p id="trawl-status" role="status"></p><p id="trawl-throttle"></p><button data-do="boatIdle">Idle throttle (B)</button><button data-do="trawl" data-id="deploy">Deploy / resume nets</button><button data-do="trawl" data-id="stow">Stow nets</button><button data-do="trawl" data-id="haul">Haul catch &amp; stow</button></div><button id="scenery-fishing-action" type="button" data-do="leaveGame" aria-live="polite">Waiting · Stop fishing</button><div class="fishing-buttons"><button id="fishing-cast" type="button" data-do="joinGame" data-id="fishing" hidden>Cast a line</button><button id="fishing-reel" type="button" data-do="reel" aria-describedby="fishing-status" disabled>Reel in <kbd>F3</kbd></button><button id="fishing-stop" type="button" data-do="leaveGame" hidden>Stop fishing</button></div></section>',
   );
 document
   .getElementById('world-hud')!
@@ -938,6 +938,14 @@ function updateHud() {
   ($('fishing-cast') as HTMLButtonElement).disabled =
     !me.inventory.tackle || world.settings.fishingMode === 0;
   $('fishing-control').classList.toggle('biting', bite);
+  fishingControl.classList.toggle('angling', fishing);
+  const sceneryAction = $('scenery-fishing-action');
+  sceneryAction.dataset.do = bite ? 'reel' : 'leaveGame';
+  // Generic reel gating ran before this button changed back to Stop.
+  // Both contextual actions are available; the server still validates each catch.
+  (sceneryAction as HTMLButtonElement).disabled = false;
+  const sceneryLabel = bite ? 'Fish! Reel in · F3' : 'Waiting · Stop fishing';
+  if (sceneryAction.textContent !== sceneryLabel) sceneryAction.textContent = sceneryLabel;
   ($('fishing-reel') as HTMLButtonElement).disabled = !bite;
   const fishingStatus = fishing
     ? bite
