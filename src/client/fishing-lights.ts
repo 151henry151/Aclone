@@ -10,6 +10,30 @@ import type { Player } from '../shared/types';
 import { batch } from './tractor';
 const deckPositions = [new T.Vector3(-1.8, 3.86, -0.05), new T.Vector3(1.8, 3.86, -0.05)];
 const cabinPosition = new T.Vector3(0, 3.65, 3.67);
+export type MarineLightLayout = {
+  deck: T.Vector3[];
+  targets: T.Vector3[];
+  cabin: T.Vector3;
+  cabinTarget: T.Vector3;
+  deckPower: number;
+  cabinPower: number;
+  specs: [NavigationLamp, string, number, number, number][];
+};
+export const canalLightLayout: MarineLightLayout = {
+  deck: [new T.Vector3(0, 2.53, 4.84), new T.Vector3(0, 2.53, -3.65)],
+  targets: [new T.Vector3(0, 0.85, 5.7), new T.Vector3(0, 0.85, -5.4)],
+  cabin: new T.Vector3(0, 2.35, 3.2),
+  cabinTarget: new T.Vector3(0, 1.1, 3.75),
+  deckPower: 24,
+  cabinPower: 3.5,
+  specs: [
+    ['port', '#ff3020', 1.47, 2.62, 3.9],
+    ['starboard', '#1cff68', -1.47, 2.62, 3.9],
+    ['stern', '#fff4d2', 0, 1.7, -6.15],
+    ['masthead', '#fff4d2', 0, 3.8, 3.9],
+    ['trawlWhite', '#fff4d2', 0, 3.96, 3.9],
+  ],
+};
 let windowMask: T.CanvasTexture;
 export function fishingWindowMask() {
   if (!windowMask) {
@@ -31,14 +55,17 @@ export function fishingWindowMask() {
 export function createFishingLights(
   windowMaterial: T.MeshStandardMaterial,
   cabinMaterial: T.MeshStandardMaterial,
+  layout?: MarineLightLayout,
 ) {
   const group = new T.Group(),
     fittings = new T.Group();
-  group.name = 'Fishing boat navigation and work lights';
+  group.name = layout
+    ? 'Canal boat navigation and deck lights'
+    : 'Fishing boat navigation and work lights';
   group.add(fittings);
   const housing = new T.MeshStandardMaterial({ color: '#233738', roughness: 0.6, metalness: 0.4 });
   const lamps = new Map<NavigationLamp, T.Mesh<T.SphereGeometry, T.MeshBasicMaterial>>();
-  const specs: [NavigationLamp, string, number, number, number][] = [
+  const specs: [NavigationLamp, string, number, number, number][] = layout?.specs ?? [
     // Forward is +Z; port is +X, starboard -X in these model coordinates.
     ['port', '#ff3020', 2.36, 4.25, 4.3],
     ['starboard', '#1cff68', -2.36, 4.25, 4.3],
@@ -51,7 +78,7 @@ export function createFishingLights(
     const bracket = new T.Mesh(new T.CylinderGeometry(0.19, 0.19, 0.09, 8), housing);
     bracket.position.set(x, y - 0.18, z);
     fittings.add(bracket);
-    if (name === 'masthead' || name.startsWith('trawl')) {
+    if (!layout && (name === 'masthead' || name.startsWith('trawl'))) {
       const arm = new T.Mesh(new T.BoxGeometry(0.12, 0.08, 0.5), housing);
       arm.position.set(x, y - 0.18, 2.4);
       fittings.add(arm);
@@ -68,7 +95,7 @@ export function createFishingLights(
   const floodMaterial = new T.MeshBasicMaterial({ color: '#151e20', toneMapped: false });
   const floods = new T.Group();
   group.add(floods);
-  for (const pos of deckPositions) {
+  for (const [index, pos] of (layout?.deck ?? deckPositions).entries()) {
     const shell = new T.Mesh(new T.BoxGeometry(0.58, 0.31, 0.22), housing);
     shell.position.copy(pos);
     shell.rotation.x = -0.55;
@@ -77,14 +104,22 @@ export function createFishingLights(
     lens.position.copy(pos).add(new T.Vector3(0, -0.06, -0.11));
     lens.rotation.set(Math.PI + 0.55, 0, 0);
     floods.add(lens);
+    if (layout) {
+      shell.lookAt(layout.targets[index]);
+      lens.position
+        .copy(pos)
+        .addScaledVector(layout.targets[index].clone().sub(pos).normalize(), 0.12);
+      lens.lookAt(layout.targets[index]);
+    }
   }
   batch(fittings);
   batch(floods);
-  windowMaterial.emissiveMap = fishingWindowMask();
+  windowMaterial.emissiveMap ??= fishingWindowMask();
   const observer = new T.Vector3();
   function update(root: T.Object3D, camera: T.Vector3, p?: Player, moored = false) {
     const state = p ? boatLighting(p) : { deck: false, cabin: 'off' };
-    const trawling = !!(p?.trawl?.deployed || p?.trawl?.netFull);
+    const trawling = !layout && !!(p?.trawl?.deployed || p?.trawl?.netFull);
+    if (layout) root.userData.workLightLayout = layout;
     const signals = navigationSignals(trawling, p?.speed ?? 0, moored);
     root.updateWorldMatrix(true, false);
     observer.copy(camera);
@@ -136,15 +171,27 @@ export class FishingLightPool {
     const state = boatLighting(best.player),
       root = best.root;
     const fade = Math.min(1, (80 - distance) / 20);
+    const layout = root.userData.workLightLayout as MarineLightLayout | undefined;
     for (let i = 0; i < 2; i++) {
       const light = this.deck[i];
-      light.position.copy(root.localToWorld(deckPositions[i].clone()));
-      light.target.position.copy(root.localToWorld(new T.Vector3(i ? 1.4 : -1.4, 1.15, -6)));
-      light.intensity = state.deck ? 100 * fade : 0;
+      light.position.copy(root.localToWorld((layout?.deck ?? deckPositions)[i].clone()));
+      light.target.position.copy(
+        root.localToWorld(layout?.targets[i].clone() ?? new T.Vector3(i ? 1.4 : -1.4, 1.15, -6)),
+      );
+      light.intensity = state.deck ? (layout?.deckPower ?? 100) * fade : 0;
     }
-    this.cabin.position.copy(root.localToWorld(cabinPosition.clone()));
-    this.cabin.target.position.copy(root.localToWorld(new T.Vector3(0, 1.4, 3.67)));
+    this.cabin.position.copy(root.localToWorld((layout?.cabin ?? cabinPosition).clone()));
+    this.cabin.target.position.copy(
+      root.localToWorld(layout?.cabinTarget.clone() ?? new T.Vector3(0, 1.4, 3.67)),
+    );
     this.cabin.color.set(state.cabin === 'red' ? '#ff3220' : '#ffe1a3');
-    this.cabin.intensity = (state.cabin === 'off' ? 0 : state.cabin === 'red' ? 2 : 7) * fade;
+    this.cabin.intensity =
+      (state.cabin === 'off'
+        ? 0
+        : state.cabin === 'red'
+          ? layout
+            ? 1
+            : 2
+          : (layout?.cabinPower ?? 7)) * fade;
   }
 }

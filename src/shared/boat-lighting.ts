@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player } from './types';
-import { FISHING_BOAT } from './boats';
+import { poweredBoat } from './boats';
 export type BoatLighting = { deck: boolean; cabin: 'off' | 'warm' | 'red' };
 export const boatLighting = (p: Pick<Player, 'boatLighting'>): BoatLighting => ({
   deck: p.boatLighting?.deck ?? false,
@@ -8,8 +8,8 @@ export const boatLighting = (p: Pick<Player, 'boatLighting'>): BoatLighting => (
 });
 /** Captain-only, server-authoritative switches; navigation signals are automatic. */
 export function changeBoatLighting(p: Player, circuit: unknown) {
-  if (p.vehicle !== FISHING_BOAT || p.hitch || p.atHome || p.health <= 0)
-    throw Error('Board your fishing boat as captain to operate its lights');
+  if (!poweredBoat(p.vehicle) || p.hitch || p.atHome || p.health <= 0)
+    throw Error('Board your powered boat as captain to operate its lights');
   const state = boatLighting(p);
   if (circuit === 'deck') state.deck = !state.deck;
   else if (circuit === 'cabin')

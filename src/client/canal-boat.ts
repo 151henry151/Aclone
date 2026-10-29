@@ -2,6 +2,7 @@
 import * as T from 'three';
 import { batch } from './tractor';
 import { createHuman } from './human';
+import { createFishingLights, canalLightLayout } from './fishing-lights';
 
 // +Z is the bow. The simulation places the model origin at the waterline.
 const maps = new Map<string, T.CanvasTexture>();
@@ -117,6 +118,33 @@ function finish(kind: 'side' | 'door' | 'deck' | 'hull', color = '#ffffff') {
   return map;
 }
 
+let cabinMask: T.CanvasTexture;
+function cabinWindowMask() {
+  if (cabinMask) return cabinMask;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const c = canvas.getContext('2d')!;
+  c.fillStyle = '#000';
+  c.fillRect(0, 0, 1024, 512);
+  c.fillStyle = '#fff';
+  for (const x of [200, 425, 650]) c.fillRect(x + 8, 93, 156, 214);
+  for (const x of [84, 890]) {
+    c.beginPath();
+    c.ellipse(x + 25, 181, 21, 47, 0, 0, Math.PI * 2);
+    c.fill();
+  }
+  c.fillStyle = '#000';
+  for (const x of [200, 425, 650]) {
+    c.fillRect(x + 82, 90, 6, 220);
+    c.fillRect(x + 5, 155, 162, 5);
+  }
+  cabinMask = new T.CanvasTexture(canvas);
+  cabinMask.colorSpace = T.SRGBColorSpace;
+  cabinMask.userData.shared = true;
+  return cabinMask;
+}
+
 /** Rounded swim ends, flat base and flared topsides; closed, low-poly steel hull. */
 function hullGeometry() {
   const positions: number[] = [],
@@ -187,7 +215,11 @@ export function createCanalBoat(color = '#407983') {
   const iron = new T.MeshStandardMaterial({ color: '#253338', roughness: 0.72, metalness: 0.3 });
   const brass = new T.MeshStandardMaterial({ color: '#bc9c58', roughness: 0.4, metalness: 0.65 });
   const wood = new T.MeshStandardMaterial({ map: finish('deck'), roughness: 0.88 });
-  const side = new T.MeshStandardMaterial({ map: finish('side', color), roughness: 0.5 });
+  const side = new T.MeshStandardMaterial({
+    map: finish('side', color),
+    emissiveMap: cabinWindowMask(),
+    roughness: 0.5,
+  });
   const door = new T.MeshStandardMaterial({ map: finish('door'), roughness: 0.65 });
   function add(g: T.BufferGeometry, m: T.Material, x = 0, y = 0, z = 0, parent = body) {
     const mesh = new T.Mesh(g, m);
@@ -276,6 +308,37 @@ export function createCanalBoat(color = '#407983') {
   for (const y of [0.9, 1.4]) box(0.15, 0.1, 0.16, orange, -0.97, y, -1.8);
   box(0.23, 0.2, 0.16, iron, 0, 0.78, 4.08);
   box(0.15, 0.12, 0.025, cream, 0, 0.78, 4.17);
+  // Passenger rod-fishing decks: paired rod racks, tackle locker and cushioned seats.
+  const cork = new T.MeshStandardMaterial({ color: '#b79b68', roughness: 1 });
+  const line = new T.MeshStandardMaterial({ color: '#636b59', roughness: 0.9 });
+  for (const sign of [-1, 1]) {
+    box(0.36, 0.32, 0.78, paint, sign * 0.68, 0.76, 3.65);
+    box(0.38, 0.06, 0.8, cream, sign * 0.68, 0.95, 3.65);
+    for (const z of [-3.4, -3.05]) {
+      rod([sign * 0.95, 0.65, z], [sign * 0.95, 1.05, z + 0.15], 0.035, brass);
+      rod([sign * 0.95, 0.85, z], [sign * 1.03, 2.18, z + 0.72], 0.012, iron);
+      rod([sign * 0.95, 0.85, z], [sign * 0.97, 1.2, z + 0.19], 0.022, cork);
+      add(
+        new T.CylinderGeometry(0.055, 0.055, 0.045, 8),
+        brass,
+        sign * 0.92,
+        1.04,
+        z + 0.1,
+      ).rotation.z = Math.PI / 2;
+    }
+    for (const z of [-2.7, 0.4, 2.7]) {
+      rod([sign * 1.11, 0.95, z], [sign * 1.11, 0.48, z], 0.012, line);
+      add(new T.CapsuleGeometry(0.09, 0.24, 2, 8), cream, sign * 1.13, 0.34, z);
+    }
+    rod([sign * 0.91, 0.64, 3.45], [sign * 0.91, 1.1, 3.45], 0.024);
+    rod([sign * 0.91, 1.1, 3.45], [sign * 0.55, 1.1, 4.05], 0.024);
+  }
+  rod([-0.55, 1.1, 4.05], [0.55, 1.1, 4.05], 0.024);
+  box(0.55, 0.25, 0.44, cream, -0.6, 0.735, -3.3);
+  box(0.57, 0.035, 0.46, iron, -0.6, 0.88, -3.3);
+  // A short mast supports the high white light; rods do not carry trawling signals.
+  rod([0, 1.9, 2.6], [0, 2.84, 2.6], 0.028, brass);
+  box(0.12, 0.2, 0.12, iron, 0, 1.14, -4.1);
   // Tiller pivots as one separate part, without adding per-frame geometry.
   const tiller = new T.Group();
   tiller.name = 'Stern tiller';
@@ -305,9 +368,15 @@ export function createCanalBoat(color = '#407983') {
   group.userData.eye = new T.Vector3(0.55 * 1.5, 0.9 * 1.4 + 1.69, -3.38 * 1.5);
   group.userData.viewPitch = -0.06;
   group.userData.lamp = new T.Vector3(0, 0.78 * 1.4, 4.2 * 1.5);
+  const cabinLightMaterial = new T.MeshStandardMaterial({ color: '#fff0c4' });
+  add(new T.BoxGeometry(0.16, 0.05, 0.12), cabinLightMaterial, 0, 1.65, -2.28);
+  const lighting = createFishingLights(side, cabinLightMaterial, canalLightLayout);
+  group.add(lighting.group);
+  group.userData.marineLighting = lighting;
   batch(body);
   return {
     group,
+    lighting,
     animate(turn: number) {
       tiller.rotation.y = T.MathUtils.clamp(-turn * 5, -0.55, 0.55);
     },

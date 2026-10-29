@@ -30,14 +30,21 @@ try {
   globalThis.__ACLONE_BASE__='/';
   import * as T from '/node_modules/three/build/three.module.js';
   import {GameScene} from '/src/client/scene.ts';
+  import {FishingLightPool} from '/src/client/fishing-lights.ts';
   const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(1400,900);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;document.body.append(renderer.domElement);
-  const scene=new T.Scene();scene.background=new T.Color('#adc6cb');scene.add(new T.HemisphereLight('#edf3ff','#68764e',2));
+  const scene=new T.Scene();scene.background=new T.Color('#adc6cb');const ambient=new T.HemisphereLight('#edf3ff','#68764e',2);scene.add(ambient);
   const sun=new T.DirectionalLight('#ffebc9',2.8);sun.position.set(-8,14,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10});sun.shadow.normalBias=.025;scene.add(sun);
   const ground=new T.Mesh(new T.PlaneGeometry(1000,1000),new T.MeshStandardMaterial({color:'#4c838a',roughness:.4,metalness:.1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;ground.position.y=-.015;scene.add(ground);
   const plane=GameScene.prototype.vehicle.call({},${commercial ? 30 : 3});scene.add(plane);plane.position.y=0;window.plane=plane;
-  window.show=(view)=>{plane.userData.driver.visible=view!=='cockpit';let camera;
-    if(view==='cockpit'){const eye=plane.userData.eye;camera=new T.PerspectiveCamera(60,1400/900,.05,100);camera.position.copy(eye).add(plane.position);camera.lookAt(eye.x,eye.y+Math.sin(plane.userData.viewPitch)*30,eye.z+30);}
-    else{camera=new T.OrthographicCamera(-${commercial ? 13 : 9.5},${commercial ? 13 : 9.5},${commercial ? 8.36 : 6.107},-${commercial ? 8.36 : 6.107},.1,100);camera.position.set(...({front:[8,5,10],rear:[-8,5,-10],side:[12,3.4,0],top:[0,15,.01]}[view]));camera.lookAt(0,2,0);}
+  const pool=new FishingLightPool();scene.add(pool.group);
+  let clock=1;
+  window.show=(view)=>{const night=view.includes('night')||view==='red';const inside=['cockpit','night-helm','red'].includes(view);plane.userData.driver.visible=!inside;let camera;
+    ambient.intensity=night?.12:2;sun.intensity=night?.035:2.8;scene.background.set(night?'#102633':'#adc6cb');
+    if(inside){const eye=plane.userData.eye;camera=new T.PerspectiveCamera(60,1400/900,.05,100);camera.position.copy(eye).add(plane.position);camera.lookAt(eye.x,eye.y+Math.sin(plane.userData.viewPitch)*30,eye.z+30);}
+    else{camera=new T.OrthographicCamera(-${commercial ? 13 : 9.5},${commercial ? 13 : 9.5},${commercial ? 8.36 : 6.107},-${commercial ? 8.36 : 6.107},.1,100);camera.position.set(...({front:[8,5,10],rear:[-8,5,-10],side:[12,3.4,0],top:[0,15,.01]}[night?'rear':view]));camera.lookAt(0,2,0);}
+    const boat=plane.userData.canalBoat??plane.userData.fishingBoat;
+    const p={heading:Math.PI/4,speed:3,fuel:${commercial ? 2400 : 48},engine:true,boatThrottle:.6,boatLighting:{deck:night,cabin:view==='red'?'red':night?'warm':'off'}};
+    boat.cockpit?.update(p,clock++,.6);boat.lighting.update(boat.group,camera.position,p);pool.update([{root:boat.group,player:p}],camera.position);
     renderer.render(scene,camera);
     let meshes=0,triangles=0;plane.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}});return {meshes,triangles,draws:renderer.info.render.calls};
   };window.ready=true;
@@ -47,7 +54,16 @@ try {
   await page.goto(server.resolvedUrls!.local[0] + '__canalboat');
   await page.waitForFunction(() => (window as any).ready);
   const metrics = [];
-  for (const view of ['front', 'rear', 'side', 'top', 'cockpit']) {
+  for (const view of [
+    'front',
+    'rear',
+    'side',
+    'top',
+    'cockpit',
+    'night-helm',
+    'night-exterior',
+    'red',
+  ]) {
     metrics.push({ view, ...(await page.evaluate((v) => (window as any).show(v), view)) });
     await page.screenshot({ path: join(output, view + '.png') });
   }
@@ -60,7 +76,7 @@ try {
     .join('');
   await page.setViewportSize({ width: 2400, height: 1900 });
   await page.setContent(
-    `<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;padding:44px;background:#172c25;color:#f3eddc;font-family:Arial,sans-serif}.brand{font:italic bold 40px Georgia;color:#d6bf77}h1{font:normal 54px Georgia;margin:10px 0 24px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}article{overflow:hidden;border:1px solid #536354;border-radius:10px;background:#243b30}h2{font:normal 28px Georgia;margin:20px 24px}img{display:block;width:100%}footer{font-size:23px;color:#c3cdbd;margin-top:28px}</style><div class="brand">Aclone</div><h1>${commercial ? 'North Star · commercial fishing boat' : 'Parish Carrier · the new canal boat'}</h1><div class="grid">${cards}</div><footer>Actual game model · Exterior and helm views</footer>`,
+    `<!doctype html><meta charset="utf-8"><style>*{box-sizing:border-box}body{margin:0;padding:44px;background:#172c25;color:#f3eddc;font-family:Arial,sans-serif}.brand{font:italic bold 40px Georgia;color:#d6bf77}h1{font:normal 54px Georgia;margin:10px 0 24px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}article{overflow:hidden;border:1px solid #536354;border-radius:10px;background:#243b30}h2{font:normal 28px Georgia;margin:20px 24px}img{display:block;width:100%}footer{font-size:23px;color:#c3cdbd;margin-top:28px}</style><div class="brand">Aclone</div><h1>${commercial ? 'North Star · commercial fishing boat' : 'Parish Carrier · passenger & angling cruiser'}</h1><div class="grid">${cards}</div><footer>Actual game model · Exterior and helm views</footer>`,
   );
   await page
     .locator('img')

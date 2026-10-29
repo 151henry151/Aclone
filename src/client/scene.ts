@@ -1607,7 +1607,7 @@ export class GameScene {
       // their tractor at the chase camera (especially with four lights on low).
       const litBoats: { root: T.Object3D; player: Player }[] = [];
       for (const [id, model] of this.meshes) {
-        const boat = model.userData.fishingBoat;
+        const boat = model.userData.fishingBoat ?? model.userData.canalBoat;
         const captain = w.players[id];
         if (boat && captain && model.visible) {
           boat.lighting.update(boat.group, this.camera.position, captain);

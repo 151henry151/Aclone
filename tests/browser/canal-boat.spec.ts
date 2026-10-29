@@ -37,7 +37,7 @@ test('canal boat has a waterline hull, independent paint, clear helm view and bo
       const render=(kind)=>{model.userData.driver.visible=kind!=='helm';if(kind==='helm'){camera.fov=65;camera.position.copy(model.userData.eye);camera.lookAt(camera.position.clone().add(new T.Vector3(0,-.06,1)));}else{camera.fov=40;camera.position.set(kind==='stern'?-7:8,4.8,kind==='stern'?-10:10);camera.lookAt(0,.8,0);}camera.updateProjectionMatrix();renderer.render(scene,camera);};
       window.renderBoat=render;render('bow');
       const ray=new T.Raycaster(model.userData.eye,new T.Vector3(0,0,1));model.userData.driver.visible=false;model.updateMatrixWorld(true);
-      const selfHits=ray.intersectObject(boat.group,true).filter(h=>!h.object.isSkinnedMesh);
+      const selfHits=ray.intersectObject(boat.group,true).filter(h=>!h.object.isSkinnedMesh && !h.object.material?.transparent);
       model.userData.driver.visible=true;
       const fishing=GameScene.prototype.vehicle.call({},30), fishingBody=fishing.getObjectByName('Fishing hull and fittings');
       fishing.updateMatrixWorld(true);
@@ -66,7 +66,7 @@ test('canal boat has a waterline hull, independent paint, clear helm view and bo
     expect(r.low).toBeGreaterThan(-0.8);
     expect(r.length).toBeGreaterThan(13);
     expect(r.length).toBeLessThan(14);
-    expect(r.meshes).toBeLessThanOrEqual(16);
+    expect(r.meshes).toBeLessThanOrEqual(26);
     expect(r.triangles).toBeLessThan(16000);
     expect(errors).toEqual([]);
     for (const kind of ['bow', 'stern', 'helm']) {

@@ -66,7 +66,7 @@ export function expeditionPanel(w: World, p: Player) {
 
 export function boatLightingPanel(p: Player) {
   const state = boatLighting(p);
-  return `<section class="boat-lighting-panel"><h3>Wheelhouse switches</h3><p>Navigation lights stay on automatically. Green over white signals nets out; red and green sidelights show port and starboard.</p><div class="menu-grid">${[
+  return `<section class="boat-lighting-panel"><h3>Boat lighting switches</h3><p>Navigation lights stay on automatically. ${p.vehicle === FISHING_BOAT ? 'Green over white signals nets out; ' : 'White masthead and stern lights mark a powered boat; '} red and green sidelights show port and starboard.</p><div class="menu-grid">${[
     ['deck', `Deck floodlights: ${state.deck ? 'on' : 'off'}`],
     [
       'cabin',
@@ -77,5 +77,5 @@ export function boatLightingPanel(p: Player) {
     .map(([id, label]) => `<button data-do="boatLights" data-id="${id}">${label}</button>`)
     .join(
       '',
-    )}</div><p>L toggles the searchlight. Cabin: off → warm white → dim red. Aim the searchlight with the boat; deck floods face aft and down.</p></section>`;
+    )}</div><p>L toggles the searchlight. Cabin: off → warm white → dim red. Aim the searchlight with the boat; ${p.vehicle === FISHING_BOAT ? 'deck floods face aft and down.' : 'deck lights illuminate the bow and stern fishing decks.'}</p></section>`;
 }

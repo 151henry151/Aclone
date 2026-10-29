@@ -6,38 +6,39 @@ import { boatLighting, navigationSector, navigationSignals } from '../src/shared
 import { prepareFrame, privatePlayer } from '../src/server/snapshots';
 import { Store } from '../src/server/store';
 
-test('boat switches persist, replicate and remain independent of mandatory navigation lights', () => {
-  const w = createWorld('lighting', 'Lighting', 'server'),
-    p = addPlayer(w, 'p', 'Skipper');
-  Object.assign(p, { vehicle: 30, online: true });
-  assert.deepEqual(boatLighting(p), { deck: false, cabin: 'off' });
-  act(w, p.id, { type: 'boatLights', circuit: 'deck' });
-  act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
-  assert.deepEqual(p.boatLighting, { deck: true, cabin: 'warm' });
-  act(w, p.id, { type: 'boatLights', circuit: 'search' });
-  assert.equal(p.lights, true);
-  act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
-  assert.equal(p.boatLighting?.cabin, 'red');
-  const before = JSON.stringify(p);
-  assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'navigation' }));
-  assert.equal(JSON.stringify(p), before);
-  assert.deepEqual(JSON.parse(prepareFrame(w).players[p.id]).boatLighting, p.boatLighting);
-  assert.deepEqual(privatePlayer(w, p).boatLighting, p.boatLighting);
-  const store = new Store(':memory:');
-  try {
-    store.saveWorld(w);
-    assert.deepEqual(store.loadWorlds()[0].world.players[p.id].boatLighting, p.boatLighting);
-  } finally {
-    store.close();
-  }
-  act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
-  assert.equal(p.boatLighting?.cabin, 'off');
-  p.hitch = 'someone';
-  assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'deck' }));
-  delete p.hitch;
-  p.vehicle = 0;
-  assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'deck' }));
-});
+for (const slot of [3, 30])
+  test(`boat ${slot} switches persist, replicate and remain independent of mandatory navigation lights`, () => {
+    const w = createWorld('lighting', 'Lighting', 'server'),
+      p = addPlayer(w, 'p', 'Skipper');
+    Object.assign(p, { vehicle: slot, online: true });
+    assert.deepEqual(boatLighting(p), { deck: false, cabin: 'off' });
+    act(w, p.id, { type: 'boatLights', circuit: 'deck' });
+    act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
+    assert.deepEqual(p.boatLighting, { deck: true, cabin: 'warm' });
+    act(w, p.id, { type: 'boatLights', circuit: 'search' });
+    assert.equal(p.lights, true);
+    act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
+    assert.equal(p.boatLighting?.cabin, 'red');
+    const before = JSON.stringify(p);
+    assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'navigation' }));
+    assert.equal(JSON.stringify(p), before);
+    assert.deepEqual(JSON.parse(prepareFrame(w).players[p.id]).boatLighting, p.boatLighting);
+    assert.deepEqual(privatePlayer(w, p).boatLighting, p.boatLighting);
+    const store = new Store(':memory:');
+    try {
+      store.saveWorld(w);
+      assert.deepEqual(store.loadWorlds()[0].world.players[p.id].boatLighting, p.boatLighting);
+    } finally {
+      store.close();
+    }
+    act(w, p.id, { type: 'boatLights', circuit: 'cabin' });
+    assert.equal(p.boatLighting?.cabin, 'off');
+    p.hitch = 'someone';
+    assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'deck' }));
+    delete p.hitch;
+    p.vehicle = 0;
+    assert.throws(() => act(w, p.id, { type: 'boatLights', circuit: 'deck' }));
+  });
 test('navigation sectors distinguish port, starboard, bow and stern even across a heading wrap', () => {
   for (const turn of [-Math.PI * 2, 0, Math.PI * 2]) {
     assert.equal(navigationSector('port', turn - 0.5), true);

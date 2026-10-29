@@ -221,8 +221,12 @@ Paint changes the hull and cabin without tinting window glass or gold lettering.
 The standing skipper and stern camera share a real helm position; the tiller turns
 with visible heading changes. Static fittings are batched by material.
 
-The model has 12,617 triangles and 13 meshes including the skinned skipper, with
-four 1024×512 texture designs cached by finish/paint. This is a geometry budget,
+Rod racks, bow seating and extra fenders complement the stern tiller. Navigation
+lamps use view-dependent sectors; cabin-window emission uses a cached texture mask.
+Deck and cabin illumination share the existing three-light marine pool.
+
+The model has 14,677 triangles and 23 meshes including the skinned skipper, with
+four 1024×512 texture designs plus a window mask cached by finish/paint. This is a geometry budget,
 not an FPS guarantee. Existing speed, capacity, fuel use and
 world boundaries are unchanged; collision clearance now matches the larger hull. This design is an Aclone interpretation; archived
 original documentation establishes boat control mode 3 and configurable models,

@@ -1637,7 +1637,7 @@ function renderPanel() {
     return;
   }
   if (panel === 'boat-lighting' && me) {
-    modal('Fishing boat lighting.', boatLightingPanel(me));
+    modal('Boat lighting.', boatLightingPanel(me));
     return;
   }
   if (panel === 'options') {
@@ -1767,7 +1767,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(me.vehicle === FISHING_BOAT ? 'Boat lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(poweredBoat(me.vehicle) ? 'Boat lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -2725,7 +2725,7 @@ app.addEventListener('click', async (e) => {
         send({ type: 'boatIdle' });
         break;
       case 'lights':
-        if (me?.vehicle === FISHING_BOAT && !me.hitch) openPanel('boat-lighting');
+        if (me && poweredBoat(me.vehicle) && !me.hitch) openPanel('boat-lighting');
         else send({ type: 'lights' });
         break;
       case 'trawl-toggle':
