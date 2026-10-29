@@ -388,6 +388,7 @@ export interface World {
   players: Record<string, Player>;
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;
+  boathouseTackleVersion?: 1;
   fishingVoyageVersion?: number;
   oceanVersion?: number;
   lighthouseVersion?: number;

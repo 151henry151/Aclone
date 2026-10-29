@@ -951,7 +951,7 @@ function updateHud() {
             ? 'Offshore deep water · Cod, halibut and tuna possible.'
             : 'Coastal or shallow water · Small fish only. Larger fish need 8 m depth and 600 m from shore.'
           : 'Fishing dock · Ready to cast.'
-        : 'Bring Fishing tackle from Harbour stores.';
+        : 'Bring Fishing tackle from a boathouse or Harbour stores.';
   $('fishing-status').hidden = commercial;
   if ($('fishing-status').textContent !== fishingStatus)
     $('fishing-status').textContent = fishingStatus;
@@ -1724,7 +1724,7 @@ function renderPanel() {
   if (panel === 'fishing-dock') {
     modal(
       'Fishing dock',
-      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}${boatControls(fishingDock.id)}`,
+      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from a boathouse or Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}${boatControls(fishingDock.id)}`,
     );
     return;
   }

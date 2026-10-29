@@ -301,7 +301,10 @@ test('boatyard exports purchased fish with bounded real-cargo settlement, withou
   b.stock = { cod: 50, halibut: 20, tuna: 12, fuel: 50 };
   const before = b.investment;
   exportShipments(w, 1800);
-  assert.equal(b.stock.fuel, 50 + Math.min(400, Math.floor(before / 3600)));
+  const tackleCost = w.ledger
+    .filter((e) => e.reason === 'boatyard fishing tackle shipment' && e.from === b.id)
+    .reduce((sum, e) => sum + e.amount, 0);
+  assert.equal(b.stock.fuel, 50 + Math.min(400, Math.floor((before - tackleCost) / 3600)));
   assert.equal(b.stock.cod, 8);
   assert.equal(b.stock.halibut, 8);
   assert.equal(b.stock.tuna, 8);

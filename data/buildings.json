@@ -1452,6 +1452,7 @@
     "capacity": 4000,
     "buy": {
       "fuel": 4100,
+      "tackle": 9270,
       "cod": 5600,
       "halibut": 11200,
       "tuna": 18200,
@@ -1460,6 +1461,7 @@
     },
     "sell": {
       "fuel": 4500,
+      "tackle": 13950,
       "cod": 6000,
       "halibut": 12000,
       "tuna": 19500,

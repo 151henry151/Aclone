@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { restockBoathouseTackle } from './boathouse-tackle';
 import { buildings } from './catalog.ts';
 import { isPublicPuddlewick } from './harbour-supply.ts';
 import { log } from './simulation.ts';
@@ -28,6 +29,7 @@ export function exportShipments(w: World, at: number) {
     // The emergency shop is not an export terminal.
     if (port.id === 'parish-government-stores') continue;
     if (port.kind === 'boathouse') {
+      restockBoathouseTackle(w, port);
       const retail = port.sell.fuel ?? 0;
       const cost = Math.ceil(buildings.boathouse.sell.fuel * 0.8);
       // A finite, paid bunker delivery, not infinite fuel or a recurring grant.

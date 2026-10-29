@@ -1,3 +1,4 @@
+import { integrateBoathouseTackle } from '../shared/boathouse-tackle';
 import { tradeTotal } from '../shared/bulk-discounts';
 import { ensurePuddlewickLighthouses } from './puddlewick-lighthouses';
 import { preparePuddlewickOcean } from './puddlewick-ocean';
@@ -174,6 +175,7 @@ export async function createApp(options: AppOptions) {
     const boatyard = ensurePuddlewickBoatyard(world);
     const seafood = integrateSeafood(world);
     const voyages = prepareFishingVoyages(world);
+    const tackle = integrateBoathouseTackle(world);
     const boatDeath = prepareBoatDeathRules(world);
     const provisions = prepareAutomaticProvisions(world);
     const ocean = preparePuddlewickOcean(world);
@@ -186,6 +188,7 @@ export async function createApp(options: AppOptions) {
       boatyard ||
       seafood ||
       voyages ||
+      tackle ||
       boatDeath ||
       provisions ||
       ocean ||
