@@ -1937,6 +1937,7 @@ button span {
   text-align: center;
 }
 .parish-map-viewport {
+  overflow-anchor: none;
   max-height: 57vh;
   overflow: auto;
   border: 1px solid #bdc39988;
@@ -2039,6 +2040,7 @@ button span {
     padding: 8px 10px;
   }
   .parish-map-viewport {
+    overflow-anchor: none;
     max-height: 47vh;
   }
 }
@@ -2535,4 +2537,35 @@ button span {
   color: #243322;
   background: #edcf7e;
   border-color: #ffe8a9;
+}
+
+.parish-map-labels .map-icon {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  overflow: visible;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+.map-icon-name {
+  display: none;
+  position: absolute;
+  left: 26px;
+  top: -1px;
+  padding: 4px 7px;
+  border: 1px solid #b8b491;
+  border-radius: 3px;
+  background: #263c2f;
+  color: #f4e8c5;
+  max-width: 260px;
+  white-space: normal;
+  width: max-content;
+  text-align: left;
+  pointer-events: none;
+}
+.map-icon:is(:hover, :focus, .map-show-name) .map-icon-name {
+  display: block;
+}
+.map-icon:is(:hover, :focus) {
+  z-index: 10;
 }

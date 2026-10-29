@@ -1,3 +1,4 @@
+import { mapIcon } from './map-icons';
 import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
@@ -8,7 +9,6 @@ import {
   mapBounds,
   localBounds,
   inBounds,
-  placeMapLabels,
   townBorders,
   wheelZoom,
   clampZoom,
@@ -47,6 +47,8 @@ export class ParishMap {
   private contours = localStorage.getItem('aclone.map-contours') !== 'off';
   private pendingZoom?: { x: number; z: number; px: number; py: number };
   private zoomFrame = 0;
+  private interacting = false;
+  private recentreTimer = 0;
   private width = 900;
   private height = 600;
   private scale = 1;
@@ -63,9 +65,20 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Building · click name for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click a name or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for crowded labels · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
+    this.viewport.addEventListener('pointerdown', () => {
+      this.interacting = true;
+    });
+    for (const event of ['pointerup', 'pointercancel'])
+      window.addEventListener(
+        event,
+        () => {
+          this.interacting = false;
+        },
+        { signal: this.abort.signal },
+      );
     host.addEventListener(
       'click',
       (e) => {
@@ -75,7 +88,7 @@ export class ParishMap {
           this.mark({
             x: Number(button.dataset.wx),
             z: Number(button.dataset.wz),
-            name: button.textContent ?? 'Waypoint',
+            name: button.dataset.name ?? button.textContent ?? 'Waypoint',
           });
           return;
         }
@@ -109,7 +122,13 @@ export class ParishMap {
         if (action === 'you') this.local = !inBounds(mapBounds(this.world, this.me), this.me);
         if (action === 'fit' || action === 'you') this.home = this.sheetBounds();
         if (action === 'fit') this.zoom = 1;
-        this.bounds = this.frame(action === 'you' ? this.me : centre);
+        this.bounds = this.frame(
+          action === 'you'
+            ? this.me
+            : action === 'fit'
+              ? { x: this.home.x + this.home.width / 2, z: this.home.z + this.home.depth / 2 }
+              : centre,
+        );
         this.draw();
         this.updatePlayers();
         if (action === 'you') this.panTo(this.me.x, this.me.z);
@@ -223,14 +242,14 @@ export class ParishMap {
       drag = undefined;
     });
     // Zoomed out, the sheet is a window onto the world that follows panning.
-    let recentre = 0;
+
     this.viewport.addEventListener('scroll', () => {
-      if (this.zoom >= 1) return;
-      clearTimeout(recentre);
+      this.updateLabels();
+      clearTimeout(this.recentreTimer);
       const settle = () => {
-        if (this.zoom >= 1 || this.pendingZoom) return;
-        if (drag) {
-          recentre = window.setTimeout(settle, 150);
+        if (this.pendingZoom) return;
+        if (drag || this.interacting) {
+          this.recentreTimer = window.setTimeout(settle, 150);
           return;
         }
         const centre = this.centre(),
@@ -245,7 +264,7 @@ export class ParishMap {
         this.updatePlayers();
         this.panTo(centre.x, centre.z);
       };
-      recentre = window.setTimeout(settle, 150);
+      this.recentreTimer = window.setTimeout(settle, 150);
     });
     this.baseWidth = Math.max(900, this.viewport.clientWidth);
     this.update(w, me);
@@ -263,6 +282,7 @@ export class ParishMap {
   }
   dispose() {
     cancelAnimationFrame(this.zoomFrame);
+    clearTimeout(this.recentreTimer);
     this.observer.disconnect();
     this.abort.abort();
   }
@@ -283,7 +303,7 @@ export class ParishMap {
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),
       w.towns.map((t) => [t.id, t.name, t.x, t.z, t.radius]),
     ]);
-    if (signature !== this.signature) {
+    if (signature !== this.signature && !this.interacting) {
       this.signature = signature;
       const centre = this.centre();
       this.home = this.sheetBounds();
@@ -325,23 +345,21 @@ export class ParishMap {
     );
   }
   private frame(centre: { x: number; z: number }) {
-    return this.zoom < 1
-      ? outerSheet(
-          centre,
-          this.unitScale() * this.zoom,
-          this.baseWidth * 2,
-          this.baseHeight() * 2,
-          mapHalf(this.world),
-        )
-      : this.home;
+    return outerSheet(
+      centre,
+      this.unitScale() * this.zoom,
+      this.baseWidth * 2,
+      this.baseHeight() * 2,
+      mapHalf(this.world),
+    );
   }
   /** Zoom keeping the map point under (clientX, clientY) in place; redraws once per frame. */
   private zoomAt(zoom: number, clientX: number, clientY: number) {
     zoom = clampZoom(zoom, this.floor());
     if (zoom === this.zoom && !this.pendingZoom) return;
     const rect = this.viewport.getBoundingClientRect(),
-      px = clientX - rect.left,
-      py = clientY - rect.top;
+      px = clientX - rect.left - this.viewport.clientLeft,
+      py = clientY - rect.top - this.viewport.clientTop;
     const anchor = this.pendingZoom ?? {
       x: this.bounds.x + (this.viewport.scrollLeft + px - this.offsetX) / this.scale,
       z: this.bounds.z + (this.viewport.scrollTop + py - this.offsetY) / this.scale,
@@ -358,6 +376,7 @@ export class ParishMap {
       this.updatePlayers();
       this.viewport.scrollLeft = this.x(a.x) - a.px;
       this.viewport.scrollTop = this.y(a.z) - a.py;
+      this.updateLabels();
     });
   }
   private x(x: number) {
@@ -376,18 +395,44 @@ export class ParishMap {
         (this.viewport.scrollTop + this.viewport.clientHeight / 2 - this.offsetY) / this.scale,
     };
   }
+  private updateLabels() {
+    const buttons = [...this.sheet.querySelectorAll<HTMLButtonElement>('.map-icon')];
+    const left = this.viewport.scrollLeft,
+      top = this.viewport.scrollTop;
+    const visible = buttons.filter(
+      (b) =>
+        b.offsetLeft >= left &&
+        b.offsetTop >= top &&
+        b.offsetLeft < left + this.viewport.clientWidth - 24 &&
+        b.offsetTop < top + this.viewport.clientHeight - 24,
+    );
+    for (const b of buttons) b.classList.remove('map-show-name');
+    if (this.zoom < 1.5 || visible.length > 12) return;
+    const placed: { x: number; y: number; w: number }[] = [];
+    for (const b of visible) {
+      const w = Math.min(260, (b.dataset.name?.length ?? 0) * 7.4 + 16),
+        x = b.offsetLeft + 26,
+        y = b.offsetTop;
+      if (
+        x + w > left + this.viewport.clientWidth ||
+        placed.some((p) => Math.abs(p.y - y) < 28 && x < p.x + p.w + 4 && x + w + 4 > p.x)
+      )
+        continue;
+      b.classList.add('map-show-name');
+      placed.push({ x, y, w });
+    }
+  }
   private panTo(x: number, z: number) {
     this.viewport.scrollLeft = this.x(x) - this.viewport.clientWidth / 2;
     this.viewport.scrollTop = this.y(z) - this.viewport.clientHeight / 2;
+    this.updateLabels();
   }
   private draw() {
     const focusedSite = (document.activeElement as HTMLElement | null)?.dataset.site;
     const outer = this.zoom < 1;
-    this.width = this.baseWidth * (outer ? 2 : this.zoom);
-    this.height = this.baseHeight() * (outer ? 2 : this.zoom);
-    this.scale = outer
-      ? this.width / this.bounds.width
-      : Math.min((this.width - 120) / this.bounds.width, (this.height - 90) / this.bounds.depth);
+    this.width = this.baseWidth * 2;
+    this.height = this.baseHeight() * 2;
+    this.scale = this.width / this.bounds.width;
     this.offsetX = (this.width - this.bounds.width * this.scale) / 2;
     this.offsetY = (this.height - this.bounds.depth * this.scale) / 2;
     const step = mapStep(this.scale);
@@ -616,42 +661,39 @@ export class ParishMap {
       );
     const labels = document.createElement('div');
     labels.className = 'parish-map-labels';
-    const boxes = placeMapLabels(
-      sites.map((s) => ({
-        id: s.id,
-        x: this.x(s.x),
-        y: this.y(s.z),
-        width: Math.max(65, Math.min(320, 20 + s.name.length * 7.4)),
-      })),
-      this.width,
-      this.height,
-    );
-    if (this.zoom < 0.5) sites.length = 0;
-    for (let i = 0; i < sites.length; i++) {
-      const site = sites[i],
-        box = boxes[i];
-      drawing.append(
+    for (const site of sites) {
+      const label = document.createElement('button');
+      label.className = `parish-map-${site.category}-label map-icon`;
+      label.type = 'button';
+      label.setAttribute('aria-label', site.name);
+      label.title = `${site.name} · ${site.kind} · (${Math.round(site.x)}, ${Math.round(site.z)})`;
+      label.dataset.site = site.id;
+      label.dataset.name = site.name;
+      label.dataset.wx = String(site.x);
+      label.dataset.wz = String(site.z);
+      const icon = svg('svg', {
+        viewBox: '0 0 24 24',
+        width: 18,
+        height: 18,
+        'aria-hidden': 'true',
+      });
+      icon.append(
         svg('path', {
-          d: `M${box.x} ${box.y}L${Math.max(box.left, Math.min(box.left + box.width, box.x))} ${Math.max(box.top, Math.min(box.top + box.height, box.y))}`,
-          stroke: site.category === 'resource' ? '#b7d391' : '#ebddba',
-          'stroke-opacity': 0.75,
+          d: mapIcon(site.kind),
+          fill: 'none',
+          stroke: 'currentColor',
+          'stroke-width': 1.8,
+          'stroke-linejoin': 'round',
+          'stroke-linecap': 'round',
         }),
       );
-      const label = document.createElement('button');
-      label.className = `parish-map-${site.category}-label`;
-      label.textContent = site.name;
-      label.title = `${site.name} · ${site.kind} · (${Math.round(site.x)}, ${Math.round(site.z)})`;
-      if (label instanceof HTMLButtonElement) {
-        label.type = 'button';
-        if (site.category === 'building') label.dataset.site = site.id;
-        label.dataset.wx = String(site.x);
-        label.dataset.wz = String(site.z);
-      }
+      const name = document.createElement('span');
+      name.className = 'map-icon-name';
+      name.textContent = site.name;
+      label.append(icon, name);
       Object.assign(label.style, {
-        left: `${box.left}px`,
-        top: `${box.top}px`,
-        width: `${box.width}px`,
-        height: `${box.height}px`,
+        left: `${this.x(site.x) - 12}px`,
+        top: `${this.y(site.z) - 12}px`,
       });
       labels.append(label);
     }

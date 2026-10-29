@@ -86,7 +86,9 @@ export function mapTerrainPaths(
   contours = true,
   tide = 0,
 ) {
-  const grid = sampleGrid(width, height, elevation, 6);
+  // Bound terrain work for pannable sheets as well as the original viewport-sized map.
+  const cell = Math.max(6, Math.sqrt((width * height) / 16000));
+  const grid = sampleGrid(width, height, elevation, cell);
   const minor: string[] = [],
     major: string[] = [];
   const labels: { x: number; y: number; height: number }[] = [];

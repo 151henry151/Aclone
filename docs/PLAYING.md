@@ -439,3 +439,7 @@ Shop menus show available bulk discounts and the final total for your chosen qua
 ## Grazing land and larger herds
 
 Open a livestock business to see its herd, pasture capacity and operating requirements. Buy adjoining pasture parcels before adding animals. Each expansion visibly enlarges the fenced area, where the animals wander and graze. At default rules one parcel supports four cows, six sheep, six pigs or twelve chickens. The three expansions cost 2.5s, 3.5s and 4.5s; world settings can change these limits and prices. Keep feed, water and enough workers available: a larger herd increases production and running costs together.
+
+## Reading the parish map
+
+Press **M** or click the minimap. Building icons replace crowded names; hover, keyboard-focus or tap an icon to reveal its name. Click it to set a waypoint. Names also appear automatically when zoomed in with few sites visible and space available. Zoom follows the point under your pointer or pinch. Panning and live updates preserve the area you are exploring; **Find me** returns to your vehicle and **Fit parish** returns to the main town view.
