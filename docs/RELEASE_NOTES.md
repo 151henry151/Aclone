@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.112.1 — Docking large boats
+
+Large boats and towed vessels can now arrive alongside a boatyard or fishing pier when their hull reaches its approach. The check accounts for hull size and heading instead of treating the boat as a point. Delivery still requires a clear water path, preserves the vessel and its cargo, and cannot be completed offshore. Reload after updating.
+
 ## 0.111.0 — Spaceport lighting and entrance repairs
 
 The launch complex gains warm evening windows, overnight gatehouse and control-room

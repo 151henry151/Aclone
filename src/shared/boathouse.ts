@@ -1,5 +1,6 @@
 import { waterLevel, highWater, lowWater } from './ocean';
 import { boatSlot, mooringKey } from './boats';
+import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { blocksBuilding, buildingPlan } from './building-shapes';
 import { creatorBlocks } from './creator';
@@ -126,19 +127,31 @@ export function boatLandings(w: World): BoatLanding[] {
   return docks;
 }
 const boathouseRange = 40;
+type LandingPosition = Pick<Player, 'x' | 'z'> & Partial<Pick<Player, 'vehicle' | 'heading'>>;
 
 /** Shore boarding uses the same building-centred range as the boatyard menu.
  * Returning boats can come alongside the yard instead of hitting a tiny point.
- * A water-only approach prevents reaching a berth through an intervening shore. */
-export function withinBoatLanding(
-  w: World,
-  p: Pick<Player, 'x' | 'z'>,
-  d: BoatLanding,
-  afloat: boolean,
-) {
+ * A vessel is alongside when its oriented hull reaches the approach, rather than
+ * only when its centre does. The entire centre-to-berth water path is still checked. */
+export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, afloat: boolean) {
   const point = afloat ? d.berth : (d.building ?? d.land);
   const distance = Math.hypot(p.x - point.x, p.z - point.z);
-  if (distance > (afloat ? (d.building ? 30 : 14) : d.building ? boathouseRange : 5)) return false;
+  let hullDistance = distance;
+  if (afloat && p.vehicle !== undefined && p.heading !== undefined && boatSlot(p.vehicle, w)) {
+    const v = vehicleDef(w, p.vehicle),
+      dx = point.x - p.x,
+      dz = point.z - p.z,
+      s = Math.sin(p.heading),
+      c = Math.cos(p.heading);
+    // Distance from the berth to the hull footprint in vessel-local coordinates.
+    // A beam-on vessel must not receive the same reach as one approaching bow-first.
+    hullDistance = Math.hypot(
+      Math.max(0, Math.abs(dx * c - dz * s) - (v.beam ?? 0) / 2),
+      Math.max(0, Math.abs(dx * s + dz * c) - (v.length ?? 0) / 2),
+    );
+  }
+  if (hullDistance > (afloat ? (d.building ? 30 : 14) : d.building ? boathouseRange : 5))
+    return false;
   if (afloat) {
     const steps = Math.max(1, Math.ceil(distance / 2));
     for (let i = 0; i <= steps; i++) {
@@ -152,7 +165,7 @@ export function withinBoatLanding(
   }
   return true;
 }
-export function boatLanding(w: World, p: Pick<Player, 'x' | 'z'>, afloat: boolean, id?: unknown) {
+export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: unknown) {
   return boatLandings(w)
     .filter(
       (d) =>

@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, move } from '../src/shared/simulation';
 import { towAction, moveTow, maintainTows, cancelPlayerTows } from '../src/shared/towing';
-import { boatLandings } from '../src/shared/boathouse';
+import { boatLandings, boatLanding } from '../src/shared/boathouse';
+import { reboardReason } from '../src/shared/boat-rescue';
 import { ensurePuddlewickBoatyard } from '../src/server/puddlewick-boatyard';
 const setup = () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
@@ -132,4 +133,52 @@ test('invalidated and abandoned offers cancel, but disconnected captains keep th
   maintainTows(s.w);
   assert.equal(s.w.towJobs?.captain, undefined);
   assert.equal(s.captain.cash, 100000);
+});
+
+test('a long rescued hull alongside the boatyard can be delivered and reboarded ashore', () => {
+  const { w, captain } = setup();
+  ensurePuddlewickBoatyard(w);
+  const d = boatLandings(w).find((d) => d.building)!;
+  // Lightmun's reported approach: the tug is near shore, the trawler's centre
+  // is 34.33 m from the berth, but its bow is already inside the 30 m approach.
+  Object.assign(captain, {
+    vehicle: 32,
+    x: d.berth.x + 30.21998492336042,
+    z: d.berth.z + 3.46696428457142,
+  });
+  const boat = {
+    x: d.berth.x + 22.17302593146389,
+    z: d.berth.z + 26.21012979349862,
+    heading: 3.100825273516412,
+    slot: 30,
+    paint: 'blue',
+  };
+  w.boatRescues = {
+    [captain.id]: {
+      boat,
+      dinghy: { ...d.berth, heading: 0, moored: true, landing: d.id },
+      cargo: { cod: 10 },
+    },
+  };
+  w.towJobs = {
+    [captain.id]: {
+      owner: captain.id,
+      tug: captain.id,
+      slot: 30,
+      fee: 0,
+      state: 'towing',
+      created: w.time,
+      rescue: true,
+      rope: 24.33457742098003,
+    },
+  };
+  assert.equal(boatLanding(w, boat, true, d.id), undefined, 'centre-only check reproduces bug');
+  const position = { ...boat };
+  towAction(w, captain, { type: 'tow', operation: 'deliver' });
+  assert.equal(w.boatRescues[captain.id].landing, d.id);
+  assert.deepEqual(w.boatRescues[captain.id].boat, position, 'delivery does not teleport the boat');
+  assert.equal(w.boatRescues[captain.id].cargo.cod, 10);
+  assert.equal(w.towJobs[captain.id], undefined);
+  Object.assign(captain, d.land, { vehicle: 5 });
+  assert.equal(reboardReason(w, captain), undefined);
 });

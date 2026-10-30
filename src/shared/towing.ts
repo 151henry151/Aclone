@@ -198,7 +198,7 @@ export function towAction(w: World, p: Player, a: Action) {
     Math.hypot(p.x - target!.x, p.z - target!.z) <= (j.rope ?? 0) + 2,
     'Bring the tug and vessel together before delivery',
   );
-  const dock = boatLanding(w, target!, true);
+  const dock = boatLanding(w, { ...target!, vehicle: j.slot }, true);
   need(dock, 'The towed boat must reach a boatyard or fishing pier approach');
   if (j.rescue) w.boatRescues![owner].landing = dock!.id;
   else {

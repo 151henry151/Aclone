@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.112.1] - 2026-10-30
+
+### Fixed
+
+- Recognise a boat's hull size and heading when docking or delivering a tow. Large vessels already alongside a boatyard or fishing pier no longer fail because their centre lies just outside the arrival area; offshore and across-land delivery remain blocked.
+
 ## [0.112.0] - 2026-10-30
 
 ### Added

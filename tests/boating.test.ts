@@ -15,8 +15,35 @@ import { constructionSiteReason } from '../src/shared/construction-site';
 import { terrainHeight } from '../src/shared/terrain';
 import { travelHeight, fishingDock } from '../src/shared/dock';
 import { LIFEBOAT } from '../src/shared/boat-rescue';
+import { vehicleDef } from '../src/shared/vehicle-config';
 import { deepBoatFishing, fishingCatch } from '../src/shared/boat-fishing';
 import { Store } from '../src/server/store';
+
+test('docking accounts for hull heading and size without reaching across land or offshore', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  const d = {
+    id: 'test-pier',
+    berth: { x: 0, z: 1000 },
+    land: { x: 0, z: 990 },
+    heading: 0,
+  };
+  const p = { x: 0, z: 1024, vehicle: 30, heading: 0 };
+  assert.equal(withinBoatLanding(w, p, d, true), true, 'bow enters the 14 m pier approach');
+  p.heading = Math.PI / 2;
+  assert.equal(withinBoatLanding(w, p, d, true), false, 'beam does not have bow-length reach');
+  p.heading = Math.PI;
+  assert.equal(withinBoatLanding(w, p, d, true), true, 'stern approaches work too');
+  p.vehicle = 33;
+  assert.equal(withinBoatLanding(w, p, d, true), false, 'small motorboat has smaller reach');
+  p.vehicle = 30;
+  p.z = 1000 + 14 + vehicleDef(w, 30).length! / 2 + 0.1;
+  assert.equal(withinBoatLanding(w, p, d, true), false, 'entire hull still outside approach');
+  p.z = 1024;
+  w.terrain.push({ x: 0, z: 1012, radius: 5, height: 1000 });
+  w.revision++;
+  assert.equal(withinBoatLanding(w, p, d, true), false, 'intervening shore blocks delivery');
+});
+
 function setup() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   assert.ok(ensurePuddlewickBoatyard(w));
@@ -303,7 +330,7 @@ test('returning boats can disembark throughout the waterfront arrival area, but 
   }
   Object.assign(p, {
     x: d.berth.x,
-    z: d.berth.z + 35,
+    z: d.berth.z + 45,
     y: w.settings.seaLevel,
     speed: 0,
     vehicle: 3,
