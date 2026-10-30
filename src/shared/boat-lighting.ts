@@ -25,20 +25,34 @@ export function changeBoatLighting(p: Player, circuit: unknown, w?: World) {
   p.boatLighting = state;
 }
 export type NavigationLamp =
-  'port' | 'starboard' | 'stern' | 'masthead' | 'trawlGreen' | 'trawlWhite';
+  | 'port'
+  | 'starboard'
+  | 'stern'
+  | 'masthead'
+  | 'trawlGreen'
+  | 'trawlWhite'
+  | 'towWhite'
+  | 'towYellow';
 /** Relative observer bearing: zero ahead, positive to starboard. COLREG Rule 21 arcs. */
 export function navigationSector(lamp: NavigationLamp, bearing: number) {
   const b = Math.atan2(Math.sin(bearing), Math.cos(bearing)),
     edge = (Math.PI * 112.5) / 180;
   if (lamp === 'port') return b >= -edge && b <= 0;
   if (lamp === 'starboard') return b >= 0 && b <= edge;
-  if (lamp === 'masthead') return Math.abs(b) <= edge;
-  if (lamp === 'stern') return Math.abs(b) >= edge;
+  if (lamp === 'masthead' || lamp === 'towWhite') return Math.abs(b) <= edge;
+  if (lamp === 'stern' || lamp === 'towYellow') return Math.abs(b) >= edge;
   return true;
 }
 /** Stopped afloat is still underway, not anchored. Trawlers making way show sidelights/stern. */
-export function navigationSignals(trawling: boolean, speed: number, moored = false) {
+export function navigationSignals(
+  trawling: boolean,
+  speed: number,
+  moored = false,
+  towing = false,
+) {
   return {
+    towWhite: towing && !moored,
+    towYellow: towing && !moored,
     port: !moored && (!trawling || Math.abs(speed) > 0.05),
     starboard: !moored && (!trawling || Math.abs(speed) > 0.05),
     stern: !moored && (!trawling || Math.abs(speed) > 0.05),

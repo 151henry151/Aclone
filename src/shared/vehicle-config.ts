@@ -85,7 +85,7 @@ export const vehicleTuningSchema = z
   .partial()
   .strict();
 export type VehicleTuning = z.infer<typeof vehicleTuningSchema>;
-export const vehicleSlotSchema = z.string().regex(/^(?:[0-9]|[12][0-9]|3[01])$/);
+export const vehicleSlotSchema = z.string().regex(/^(?:[0-9]|[12][0-9]|3[0123])$/);
 export function vehicleDef(
   w: Pick<World, 'vehicleTuning'> | undefined,
   slot: number,

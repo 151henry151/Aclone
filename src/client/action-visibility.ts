@@ -5,7 +5,7 @@ import { fishingVessel } from '../shared/boat-fishing';
 import { throttleBoat } from '../shared/boats';
 import { poweredBoat, FISHING_BOAT } from '../shared/boats';
 import { aboardBoat, boatLanding, nearBoathouse } from '../shared/boathouse';
-import { LIFEBOAT } from '../shared/boat-rescue';
+import { LIFEBOAT, reboardReason } from '../shared/boat-rescue';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehiclePaint, paintableVehicle } from '../shared/appearance';
@@ -48,6 +48,7 @@ export function actionVisible(
         (id === 'haul' ? !!p.trawl : id === 'stow' ? !!p.trawl?.deployed : !p.trawl?.deployed)
       );
     case 'lifeboat':
+      if (id === 'reboard') return !reboardReason(w, p);
       return (
         free &&
         !p.game &&

@@ -1,3 +1,7 @@
+import { createMotorboat } from './motorboat';
+import { TowLines } from './tow-lines';
+import { createTugboat } from './tugboat';
+import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { createFlashlight } from './flashlight';
 import { spaceportFence } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
@@ -1188,6 +1192,18 @@ export class GameScene {
       g.userData.driver = hover.group.userData.driver;
       g.userData.eye = hover.group.userData.eye;
       g.userData.viewPitch = hover.group.userData.viewPitch;
+    } else if (slot === MOTORBOAT) {
+      const boat = createMotorboat(tractorPaint(paint)?.color ?? v.color);
+      g.add(boat.group);
+      g.userData.motorboat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
+        g.userData[key] = boat.group.userData[key];
+    } else if (slot === TUGBOAT) {
+      const boat = createTugboat(tractorPaint(paint)?.color ?? v.color);
+      g.add(boat.group);
+      g.userData.tugboat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
+        g.userData[key] = boat.group.userData[key];
     } else if (slot === CHARTER_BOAT) {
       const boat = createCharterBoat(tractorPaint(paint)?.color ?? v.color);
       g.add(boat.group);
@@ -1451,6 +1467,16 @@ export class GameScene {
         }
         mesh.userData.lifeboat?.userData.row(now / 1000, pose.speed);
         mesh.userData.charterBoat?.animate(dt > 0 ? turn / dt : 0);
+        mesh.userData.motorboat?.animate(
+          dt,
+          pose.speed,
+          !!(
+            w.players[mesh.userData.playerId]?.rowing ??
+            (w.players[mesh.userData.playerId]?.fuel ?? 1) <= 0
+          ),
+          dt > 0 ? turn / dt : 0,
+        );
+        mesh.userData.tugboat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.canalBoat?.animate(dt > 0 ? turn / dt : 0);
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
         if (plane) {
@@ -1499,6 +1525,8 @@ export class GameScene {
         model.rotation.x = sea.pitch;
         model.rotation.z = sea.roll;
       }
+      if (!this.towLines.group.parent) this.scene.add(this.towLines.group);
+      this.towLines.update(w, this.meshes, this.mooredGroup);
       this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position, now / 1000);
       this.headlights.visible = p.vehicle !== LIFEBOAT && p.lights && !p.atHome && !p.hitch;
       this.headlights.angle = p.vehicle === 5 ? Math.PI / 8 : Math.PI / 3.5;
@@ -1508,8 +1536,8 @@ export class GameScene {
         p.vehicle === 5 ? 28 : (vehicleDef(this.world, p.vehicle).lightRange ?? 110);
       const local = this.meshes.get(p.id);
       if (local) {
-        if (this.cameraMode === 1 && local.userData.charterBoat)
-          local.userData.charterBoat.cockpit.update(
+        if (this.cameraMode === 1 && (local.userData.charterBoat || local.userData.tugboat))
+          (local.userData.charterBoat ?? local.userData.tugboat).cockpit.update(
             {
               ...p,
               heading: local.rotation.y,
@@ -1752,10 +1780,20 @@ export class GameScene {
       const litBoats: { root: T.Object3D; player: Player }[] = [];
       for (const [id, model] of this.meshes) {
         const boat =
-          model.userData.fishingBoat ?? model.userData.canalBoat ?? model.userData.charterBoat;
+          model.userData.fishingBoat ??
+          model.userData.canalBoat ??
+          model.userData.charterBoat ??
+          model.userData.tugboat ??
+          model.userData.motorboat;
         const captain = w.players[id];
         if (boat && captain && model.visible) {
-          boat.lighting.update(boat.group, this.camera.position, captain);
+          boat.lighting.update(
+            boat.group,
+            this.camera.position,
+            captain,
+            false,
+            Object.values(w.towJobs ?? {}).some((j) => j.tug === id && j.state === 'towing'),
+          );
           litBoats.push({ root: boat.group, player: captain });
         }
       }
@@ -1965,62 +2003,58 @@ export class GameScene {
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
   }
+  private towLines = new TowLines();
   private mooredGroup = new T.Group();
   private mooredKey = '';
   private updateMooredBoats(w: World) {
-    const key =
-      w.id +
-      ':' +
-      w.settings.seaLevel +
-      ':' +
-      JSON.stringify([w.mooredBoats ?? {}, w.boatRescues ?? {}]);
-    if (key === this.mooredKey) return;
-    this.mooredKey = key;
-    dispose(this.mooredGroup);
-    this.mooredGroup.clear();
-    if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
-    for (const b of Object.values(w.mooredBoats ?? {})) {
-      const model = (
-        isTrawler(b.slot, w)
-          ? createFishingBoat
-          : b.slot === CHARTER_BOAT
-            ? createCharterBoat
-            : createCanalBoat
-      )(tractorPaint(b.paint)?.color ?? vehicleDef(w, b.slot)?.color ?? '#407983').group;
-      const driver = model.userData.driver as T.Object3D;
-      if (driver) driver.visible = false;
+    const entries = [
+      ...Object.entries(w.mooredBoats ?? {}).map(([id, b]) => ({
+        id: 'moor:' + id,
+        b,
+        raft: false,
+      })),
+      ...Object.entries(w.boatRescues ?? {}).flatMap(([id, r]) => [
+        { id: 'rescue:' + id, b: r.boat, raft: false },
+        ...(r.dinghy.moored
+          ? [{ id: 'raft:' + id, b: { ...r.dinghy, slot: LIFEBOAT, paint: '' }, raft: true }]
+          : []),
+      ]),
+    ];
+    // Moving a tow changes its position, not its geometry. Retain expensive hulls/materials.
+    const key = w.id + JSON.stringify(entries.map(({ id, b }) => [id, b.slot, b.paint]));
+    if (key !== this.mooredKey) {
+      this.mooredKey = key;
+      dispose(this.mooredGroup);
+      this.mooredGroup.clear();
+      if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
+      for (const { id, b, raft } of entries) {
+        const factory =
+          b.slot === MOTORBOAT
+            ? createMotorboat
+            : b.slot === TUGBOAT
+              ? createTugboat
+              : isTrawler(b.slot, w)
+                ? createFishingBoat
+                : b.slot === CHARTER_BOAT
+                  ? createCharterBoat
+                  : createCanalBoat;
+        const model = raft
+          ? createLifeboat(false)
+          : factory(tractorPaint(b.paint)?.color ?? vehicleDef(w, b.slot).color).group;
+        if (model.userData.driver) model.userData.driver.visible = false;
+        model.userData.moorId = id;
+        model.userData.oceanLength = vehicleDef(w, b.slot).length ?? 12;
+        this.mooredGroup.add(model);
+      }
+      this.ocean.absorb(this.mooredGroup);
+    }
+    for (const { id, b } of entries) {
+      const model = this.mooredGroup.children.find((m) => m.userData.moorId === id)!;
       model.position.set(b.x, w.settings.seaLevel, b.z);
       model.rotation.set(0, b.heading, 0, 'YXZ');
-      model.userData.oceanLength =
-        vehicleDef(w, b.slot).length ??
-        (isTrawler(b.slot, w) ? 21 : b.slot === CHARTER_BOAT ? 15 : 12);
-      this.mooredGroup.add(model);
     }
-    for (const r of Object.values(w.boatRescues ?? {})) {
-      const model = (
-        isTrawler(r.boat.slot, w)
-          ? createFishingBoat
-          : r.boat.slot === CHARTER_BOAT
-            ? createCharterBoat
-            : createCanalBoat
-      )(tractorPaint(r.boat.paint)?.color ?? vehicleDef(w, r.boat.slot)?.color ?? '#407983').group;
-      model.userData.driver.visible = false;
-      model.position.set(r.boat.x, w.settings.seaLevel, r.boat.z);
-      model.rotation.set(0, r.boat.heading, 0, 'YXZ');
-      model.userData.oceanLength =
-        vehicleDef(w, r.boat.slot).length ??
-        (isTrawler(r.boat.slot, w) ? 21 : r.boat.slot === CHARTER_BOAT ? 15 : 12);
-      this.mooredGroup.add(model);
-      if (r.dinghy.moored) {
-        const life = createLifeboat(false);
-        life.position.set(r.dinghy.x, w.settings.seaLevel, r.dinghy.z);
-        life.rotation.set(0, r.dinghy.heading, 0, 'YXZ');
-        life.userData.oceanLength = 3;
-        this.mooredGroup.add(life);
-      }
-    }
-    this.ocean.absorb(this.mooredGroup);
   }
+
   nearest() {
     if (!this.world || !this.me) return undefined;
     return [

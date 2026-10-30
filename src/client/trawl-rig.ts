@@ -342,7 +342,7 @@ export function createTrawlRig() {
           pose.scale.setScalar(1);
           pose.updateMatrix();
           doors.setMatrixAt(i, pose.matrix);
-          d.set(side * 1.2, 4.97, -6.09);
+          d.set(side * 1.44, 5.13, -6.09);
           cable(d, c, 0.25 + slack * 0.7);
           for (const angle of [
             side > 0 ? 0.35 : Math.PI - 0.35,
@@ -419,7 +419,7 @@ export function createTrawlRig() {
           row = Math.floor(i / 2);
         pose.position.set(
           side * (1.6 + (row % 3) * 0.3),
-          1.72 + Math.floor(row / 9) * 0.18,
+          1.25 + Math.floor(row / 9) * 0.18,
           -1.3 - (Math.floor(row / 3) % 3) * 0.65,
         );
         pose.rotation.set(0, i * 2.4, Math.PI / 2);

@@ -5,7 +5,7 @@ import { createWorld, addPlayer, act } from '../src/shared/simulation';
 import { actionVisible } from '../src/client/action-visibility';
 import { createHuman } from '../src/client/human';
 import { createFlashlight } from '../src/client/flashlight';
-import { LIFEBOAT } from '../src/shared/boat-rescue';
+import { LIFEBOAT, reboardReason } from '../src/shared/boat-rescue';
 import { vehicles } from '../src/shared/catalog';
 
 test('walking flashlight is usable; engines are unavailable on foot, creatures and rowing boats', () => {
@@ -41,4 +41,31 @@ test('torch follows the animated hand and its beam points ahead at walking scale
   assert.ok(b.x > a.x + 15);
   f.update(false);
   assert.equal(f.group.visible, false);
+});
+test('reboard hint requires an eligible nearby stopped boat over water', () => {
+  const w = createWorld('controls', 'Controls', 'p'),
+    p = addPlayer(w, 'p', 'Pilot');
+  w.terrain = [];
+  w.settings.seaLevel = 100;
+  p.vehicle = LIFEBOAT;
+  p.speed = 0;
+  p.x = 0;
+  p.z = 0;
+  w.boatRescues = {
+    p: {
+      boat: { x: 3, z: 0, heading: 0, paint: 'blue', slot: 3 },
+      cargo: {},
+      dinghy: { x: 0, z: 0, heading: 0, moored: false },
+    },
+  };
+  assert.equal(reboardReason(w, p), undefined);
+  p.x = 50;
+  assert.match(reboardReason(w, p)!, /five metres/);
+  assert.equal(actionVisible(w, p, 'lifeboat', 'reboard'), false);
+  p.x = 0;
+  p.vehicle = 5;
+  assert.ok(reboardReason(w, p));
+  p.vehicle = LIFEBOAT;
+  p.speed = 1;
+  assert.ok(reboardReason(w, p));
 });

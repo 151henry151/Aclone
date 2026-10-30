@@ -243,25 +243,27 @@ export function createFishingBoat(color = '#356c87') {
   // The net roll remains separate so the powered drum can turn during pay-out/hauling.
   body.remove(netRoll);
   batch(body);
-  body.scale.set(2.175, 1.35, 2.175);
+  body.scale.set(7.4 / 3.34, 1.35, 24.5 / 9.4);
   netRoll.position.multiply(body.scale);
   netRoll.scale.copy(body.scale);
   group.add(netRoll);
   const rig = createTrawlRig();
+  rig.group.position.z = -1.08;
   group.add(rig.group);
   // Controls and crew stay human-sized in the enlarged wheelhouse.
   const cockpit = createFishingWheelhouse();
+  cockpit.group.position.z = 0.9;
   group.add(cockpit.group);
   const lighting = createFishingLights(panel, cockpit.cabinLightMaterial);
   group.add(lighting.group);
   group.userData.marineLighting = lighting;
   const driver = createHuman('seated').group;
-  driver.position.set(0, 1.3 * 1.35, 2.6);
+  driver.position.set(0, 1.3 * 1.35, 3.5);
   group.add(driver);
   group.userData.driver = driver;
-  group.userData.eye = new T.Vector3(0, 1.3 * 1.35 + 0.92, 2.6);
+  group.userData.eye = new T.Vector3(0, 1.3 * 1.35 + 0.92, 3.5);
   group.userData.viewPitch = -0.12;
-  group.userData.lamp = new T.Vector3(0, 3 * 1.35, 2.5 * 2.175);
+  group.userData.lamp = new T.Vector3(0, 3 * 1.35, 2.5 * (24.5 / 9.4));
   return {
     group,
     cockpit,

@@ -1,3 +1,4 @@
+import { strandedVessel } from '../shared/towing';
 import { charterOffers } from '../shared/charter';
 import { fishingOffers, fishingCrewCaptain, deckhands } from '../shared/fishing-expedition';
 import { visibleTrawl } from '../shared/commercial-fishing';
@@ -135,7 +136,7 @@ export function prepareFrame(w: World): Frame {
     common.boatRescues = Object.fromEntries(
       Object.entries(common.boatRescues).map(([id, r]) => [
         id,
-        { boat: r.boat, dinghy: r.dinghy, cargo: {}, spoilage: r.spoilage },
+        { boat: r.boat, dinghy: r.dinghy, cargo: {}, spoilage: r.spoilage, landing: r.landing },
       ]),
     );
   common.landscapeUndo = !!landscapeHistory?.length;
@@ -147,6 +148,8 @@ export function prepareFrame(w: World): Frame {
   for (const p of Object.values(players))
     if (
       p.online ||
+      !!w.boatRescues?.[p.id] ||
+      !!w.towJobs?.[p.id] ||
       p.charterPassage ||
       Object.keys(p.charter?.tickets ?? {}).length ||
       deckhands(w, p).length ||
@@ -166,6 +169,7 @@ export function prepareFrame(w: World): Frame {
         lastFlightCrash: p.lastFlightCrash,
         vehicle: p.vehicle,
         hitch: p.hitch,
+        canBeTowed: !!strandedVessel(w, p.id),
         canReceiveFuel: refuelRecipientReady(p, w),
         canReceiveRepair: repairRecipientReady(p, w),
         tractorPaint: vehiclePaint(p),
@@ -173,6 +177,7 @@ export function prepareFrame(w: World): Frame {
         lights: p.lights,
         boatLighting: p.boatLighting,
         engineRunning: motorRunning(w, p),
+        rowing: p.vehicle === 33 && p.fuel <= 0,
         team: p.team,
         game: p.game,
         health: p.health,

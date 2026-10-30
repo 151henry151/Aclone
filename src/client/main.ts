@@ -1,3 +1,6 @@
+import { tenderOf } from '../shared/boat-tender';
+import { towingPanel } from './towing-panel';
+import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { hasMotor } from '../shared/vehicle-config';
 import { waterDepth } from '../shared/fishing-water';
 import { HudPanels, hudPanels, type HudPanel } from './hud-panels';
@@ -24,7 +27,7 @@ import { TRAWL_FUEL_PER_SECOND } from '../shared/commercial-fishing';
 import { trawlStatus as fishingTrawlStatus, TrawlCapacityAlerts } from './trawl-status';
 import { nauticalHeadingLabel } from './nautical-heading';
 import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
-import { LIFEBOAT } from '../shared/boat-rescue';
+import { LIFEBOAT, reboardReason } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 import { aircraftInput } from './flight-controls';
@@ -1450,6 +1453,11 @@ function refreshTradingPrices() {
       world.creator?.books,
       world.creator?.townEvents,
       world.lottery,
+      world.towJobs,
+      reboardReason(world, me) === undefined,
+      tenderOf(world, me)?.towedBy,
+      tenderOf(world, me)?.landing,
+      Object.values(world.players).map((q) => [q.id, q.canBeTowed]),
       me.inventory,
       me.vehicle,
       me.atHome,
@@ -1961,7 +1969,7 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `${
+      `${towingPanel(world, me)}${
         world.settings.crowAbilities && world.settings.fighting
           ? `<h3>Robocrows</h3><p>Scout: fast, unarmed. Interceptor: armoured, machine/plasma weapons. Bomber: slower, grenades/rockets. Every launch consumes one disposable robocrow. Available outside team matches; drone destruction returns you to your body.</p>${
               me.crowBody
@@ -3293,6 +3301,10 @@ app.addEventListener('submit', async (e) => {
             ? v === 'true'
             : v;
       }
+      if (data.feeDenarii !== undefined) {
+        values.fee = Math.round(Number(data.feeDenarii) * 100);
+        delete values.feeDenarii;
+      }
       if (data.rateDenarii !== undefined) {
         values.rate = Math.round(Number(data.rateDenarii) * 100);
         delete values.rateDenarii;
@@ -3684,7 +3696,16 @@ function boatControls(building?: string) {
   const dock = boatLanding(world, me, boatSlot(me.vehicle, world), building);
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
-  let html = '<section><h3>Boating</h3>' + expeditionPanel(world, me) + charterPanel(world, me);
+  let html =
+    '<section><h3>Boating</h3>' +
+    expeditionPanel(world, me) +
+    charterPanel(world, me) +
+    towingPanel(world, me);
+  const tender = tenderOf(world, me);
+  if (tender && !tender.landing && poweredBoat(me.vehicle, world) && me.vehicle !== MOTORBOAT)
+    html += `<form data-action="tender"><input type="hidden" name="operation" value="${tender.towedBy ? 'dock' : 'hook'}"><button>${tender.towedBy ? 'Secure motorboat tender at dock' : 'Attach motorboat as tender'}</button></form>`;
+  if (me.vehicle === MOTORBOAT && me.fuel <= 0)
+    html += '<p>Tank empty. Hold W/S or the arrow keys to row; your oars need no fuel.</p>';
   if (rescue?.spoilage) {
     html +=
       `<p>Your boat remains offshore. ${rescue.spoilage.spoiled ? 'Cargo and provisions have spoiled.' : rescue.spoilage.never ? 'Cargo spoilage is disabled in this world.' : `Recover cargo and provisions within ${rescue.spoilage.daysLeft.toFixed(1)} game days.`} Any remaining tank fuel does not spoil.</p>` +
@@ -3698,19 +3719,22 @@ function boatControls(building?: string) {
   if (dock && !boatSlot(me.vehicle, world)) {
     if (rescue?.dinghy.moored)
       html += button('Board your moored lifeboat', 'lifeboat', 'data-id="board"');
-    else if (!rescue)
-      for (const slot of vehicles
-        .map((_, slot) => slot)
-        .filter((slot) => poweredBoat(slot, world))) {
-        if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
-        html += button(
-          (me.fleet ?? []).includes(slot)
-            ? `Board your ${esc(vehicleDef(world, slot).name)}`
-            : `Buy and board ${esc(vehicleDef(world, slot).name)} · ${money(vehicleDef(world, slot).price)}`,
-          'vehicle',
-          `data-id="${slot}" ${attrs}`,
-        );
-      }
+    for (const slot of vehicles
+      .map((_, slot) => slot)
+      .filter(
+        (slot) =>
+          poweredBoat(slot, world) &&
+          (!rescue || ([TUGBOAT, MOTORBOAT].includes(slot) && rescue.boat.slot !== slot)),
+      )) {
+      if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
+      html += button(
+        (me.fleet ?? []).includes(slot)
+          ? `Board your ${esc(vehicleDef(world, slot).name)}`
+          : `Buy and board ${esc(vehicleDef(world, slot).name)} · ${money(vehicleDef(world, slot).price)}`,
+        'vehicle',
+        `data-id="${slot}" ${attrs}`,
+      );
+    }
   }
   if (isTrawler(me.vehicle, world)) html += trawlControls();
   if (boatSlot(me.vehicle, world)) {
@@ -3722,12 +3746,9 @@ function boatControls(building?: string) {
   }
   if (rescue) {
     html +=
-      '<p>Row back in your lifeboat, or hitch a ride from shore on another player’s boat. A recovery passenger receives no crew profit share. Stop alongside your own boat to transfer; bring Fuel if its tank is empty.</p>' +
+      '<p>Row back in your lifeboat, take your motorboat, or hitch a ride from shore on another player’s boat. A recovery passenger receives no crew profit share. Stop alongside your own boat to transfer; bring Fuel if its tank is empty.</p>' +
       button('Show route to stranded boat', 'boat-rescue-waypoint');
-    if (
-      me.vehicle === LIFEBOAT ||
-      (me.hitch && boatSlot(world.players[me.hitch]?.vehicle ?? -1, world))
-    )
+    if (!reboardReason(world, me))
       html += button('Reboard your stranded boat', 'lifeboat', 'data-id="reboard"');
   }
   return (

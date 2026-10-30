@@ -30,8 +30,8 @@ export function vehicleEditor(w: World, slot: number) {
     headlight: 150,
     lightRange: 110,
     collisionRadius: 1.3,
-    length: slot === 30 ? 21 : slot === 31 ? 15 : v.mode === 3 ? 12 : 3.7,
-    beam: slot === 30 ? 6 : slot === 31 ? 5 : v.mode === 3 ? 3 : 2.3,
+    length: v.length ?? (v.mode === 3 ? 12 : 3.7),
+    beam: v.beam ?? (v.mode === 3 ? 3 : 2.3),
     netCapacity: 640,
     trawlFuel: 8.5 / 60,
     trawlSpeed: 2.4,
@@ -85,7 +85,7 @@ export function vehicleEditor(w: World, slot: number) {
       ['8', 'Walking'],
     ],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31].includes(slot)))}${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for these features. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for these features. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
     'Death and recovery',
     select(
       'deathPolicy',

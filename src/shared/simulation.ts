@@ -1,3 +1,13 @@
+import { towingTender, tenderAction, moveTender } from './boat-tender';
+import {
+  towAction,
+  activeTow,
+  beingTowed,
+  moveTow,
+  cancelPlayerTows,
+  maintainTows,
+} from './towing';
+import { TUGBOAT, MOTORBOAT } from './boats';
 import { hasMotor } from './vehicle-config';
 import {
   vehicleDef,
@@ -590,6 +600,24 @@ export function act(w: World, id: string, a: Action): string {
   }
   if (type === 'lottery') return lotteryAction(w, p, a);
   if (type === 'foundTown' || type === 'town') return townAction(w, p, a);
+  requireThat(
+    !towingTender(w, p) ||
+      !['vehicle', 'home', 'crow', 'hitch', 'takeoff', 'joinGame', 'lifeboat', 'tow'].includes(
+        type,
+      ),
+    'Secure your motorboat tender at a dock first',
+  );
+  requireThat(
+    !activeTow(w, p.id) ||
+      !['vehicle', 'home', 'crow', 'respawn', 'hitch', 'takeoff', 'lifeboat', 'joinGame'].includes(
+        type,
+      ),
+    'Release the towline before leaving your tug',
+  );
+  requireThat(
+    !beingTowed(w, p) || ['tow', 'lights', 'boatLights', 'chat', 'use'].includes(type),
+    'Release the towline before changing your vessel or activity',
+  );
   if (type === 'townCharter') return charterAction(w, p, a);
   if (type === 'quest') return questAction(w, p, a);
   if (
@@ -600,6 +628,10 @@ export function act(w: World, id: string, a: Action): string {
     return creatorAction(w, p, a);
   let result = ''; // Routine success is acknowledged without a generic notification.
   switch (type) {
+    case 'tender':
+      return tenderAction(w, p, a.operation);
+    case 'tow':
+      return towAction(w, p, a);
     case 'charter':
       result = boatCharterAction(w, p, a);
       break;
@@ -1304,7 +1336,9 @@ export function act(w: World, id: string, a: Action): string {
           'Disembark on foot or into your tractor at a dock',
         );
         requireThat(
-          !poweredBoat(slot, w) || !w.boatRescues?.[p.id],
+          !poweredBoat(slot, w) ||
+            !w.boatRescues?.[p.id] ||
+            ([TUGBOAT, MOTORBOAT].includes(slot) && w.boatRescues[p.id].boat.slot !== slot),
           'Recover your stranded boat using its lifeboat first',
         );
         const moored = w.mooredBoats?.[mooringKey(p.id, slot)];
@@ -2208,6 +2242,12 @@ export function command(w: World, p: Player, text: string): string {
 }
 export function move(w: World, p: Player, input: Input, dt: number, prediction = false) {
   if (w.maintenance?.paused) return;
+  if (beingTowed(w, p)) {
+    p.speed = 0;
+    p.boatThrottle = 0;
+    return;
+  }
+  const towBefore = { x: p.x, z: p.z, heading: p.heading };
   if (p.game === 'fishing')
     p.y = poweredBoat(p.vehicle, w) ? waterLevel(w) : travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
@@ -2280,7 +2320,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       ? 0
       : clamp((p.boatThrottle ?? 0) + throttleInput * 0.24 * dt, -0.4, 1);
   const throttle = throttleBoat(p.vehicle, w) ? (p.boatThrottle ?? 0) : throttleInput;
-  const powered = (p.engine && p.fuel > 0) || v.fuel === 0;
+  const rowing = p.vehicle === MOTORBOAT && p.fuel <= 0;
+  const powered = (p.engine && p.fuel > 0) || v.fuel === 0 || rowing;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
   const grade = motorGrounded ? drivingGrade(w, p.x, p.z, p.heading) / (v.torque ?? 1) : 0;
@@ -2301,14 +2342,15 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     fuelBefore = p.fuel;
   const cap =
     crowSpeed *
+    (activeTow(w, p.id) ? 0.5 : towingTender(w, p) ? 0.85 : 1) *
     loadFactors.speed *
-    (trawling ? (v.trawlSpeed ?? TRAWL_SPEED) : v.speed) *
-    (input.boost && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
+    (rowing ? 1.6 : trawling ? (v.trawlSpeed ?? TRAWL_SPEED) : v.speed) *
+    (input.boost && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
     tractorSurface(surface.speed, traction) *
     (0.7 + condition * 0.003);
   p.speed +=
     ((powered ? throttle : 0) *
-      v.acceleration *
+      (rowing ? 0.65 : v.acceleration) *
       tractorSurface(surface.grip, traction) *
       slopeSpeed(grade * Math.sign(throttle)) -
       p.speed * (throttle ? 0.13 : 1.8)) *
@@ -2464,14 +2506,23 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       p.fuel -
         (Math.abs(p.speed) / v.speed) *
           v.fuel *
+          (activeTow(w, p.id) ? 1.6 : towingTender(w, p) ? 1.2 : 1) *
           loadFactors.fuel *
           (input.boost && !throttleBoat(p.vehicle, w) ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
+  moveTow(w, p, towBefore, prediction);
+  moveTender(w, p, towBefore, prediction);
   if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  cancelPlayerTows(w, p.id);
+  for (const t of Object.values(w.mooredBoats ?? {}))
+    if (t.owner === p.id) {
+      delete t.towedBy;
+      delete t.rope;
+    }
   cancelChartersOnDeath(w, p);
   const recovery = !comic ? abandonBoatOnDeath(w, p, at) : undefined;
   endVoyageOnDeath(w, p);
@@ -2717,6 +2768,7 @@ export function advance(w: World, seconds: number) {
   advanceClimate(w, start, end);
   w.time = end;
   advanceCharters(w, seconds);
+  maintainTows(w);
   exportShipments(w, end);
   harbourSupply(w, end);
   restockGovernmentStores(w);

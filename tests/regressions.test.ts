@@ -89,7 +89,7 @@ test('construction observes zones and material completion', () => {
   assert.equal(p.inventory.wood, 0);
 });
 test('armour and five driving modes are finite and consume boosted fuel', () => {
-  assert.equal(vehicles.length, 32);
+  assert.equal(vehicles.length, 34);
   assert.equal(damage(6500, 100), 6500);
   for (const vehicle of [0, 1, 2, 3, 4]) {
     const { w, p } = setup();

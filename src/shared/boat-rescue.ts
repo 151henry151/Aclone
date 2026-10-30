@@ -1,7 +1,8 @@
+import { cancelTow } from './towing';
 import { vehicleDef } from './vehicle-config';
 import { waterLevel } from './ocean';
 import { stockWeight } from './fishing-expedition';
-import { boatSlot, poweredBoat } from './boats';
+import { MOTORBOAT, mooringKey, boatSlot, poweredBoat } from './boats';
 import { vehicles } from './catalog';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { aboardBoat, boatLanding, boatLandings, landingBlocked } from './boathouse';
@@ -209,7 +210,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
       (n, [id, q]) => n + (worldItems(w)[id]?.weight ?? 0) * q,
       0,
     );
-    need(weight <= 40, 'The lifeboat carries 40 weight; leave heavier cargo ashore');
+    const capacity = vehicleDef(w, LIFEBOAT).capacity;
+    need(weight <= capacity, `The lifeboat carries ${capacity} weight; leave heavier cargo ashore`);
     r.dinghy = { ...d.berth, heading: d.heading, moored: true, landing: d.id };
     p.boatThrottle = 0;
     switchVehicle(p, LIFEBOAT, false, w);
@@ -225,38 +227,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     return 'Back in your lifeboat. Row to your stranded boat.';
   }
   need(operation === 'reboard', 'Unknown lifeboat operation');
-  const carrier = p.hitch ? w.players[p.hitch] : undefined;
-  if (p.hitch)
-    need(
-      carrier &&
-        carrier.online &&
-        !carrier.hitch &&
-        !carrier.atHome &&
-        boatSlot(carrier.vehicle, w) &&
-        Math.abs(carrier.speed) < 0.5,
-      'Ask your boat driver to stop alongside your stranded vessel',
-    );
-  const from = carrier ?? p;
-  const reach = carrier
-    ? (vehicleDef(w, carrier.vehicle).collisionRadius ?? 2) +
-      (vehicleDef(w, r.boat.slot).collisionRadius ?? 2) +
-      1.5
-    : 5;
-  need(
-    (!!carrier || p.vehicle === LIFEBOAT) &&
-      Math.hypot(from.x - r.boat.x, from.z - r.boat.z) <= reach,
-    carrier
-      ? 'Ask your boat driver to pull alongside your stranded vessel'
-      : 'Row within five metres of your stranded boat',
-  );
-  need(
-    Array.from({ length: 9 }, (_, i) => i / 8).every(
-      (t) =>
-        terrainHeight(w, from.x + (r.boat.x - from.x) * t, from.z + (r.boat.z - from.z) * t) <
-        waterLevel(w) + 0.15,
-    ),
-    'Move alongside over clear water before transferring',
-  );
+  const reason = reboardReason(w, p);
+  need(!reason, reason ?? 'Cannot reboard here');
   const cargo = { ...r.cargo };
   for (const [id, q] of Object.entries(p.inventory)) cargo[id] = (cargo[id] ?? 0) + q;
   const defs = worldItems(w),
@@ -283,6 +255,20 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     cargoWeight() <= capacity,
     'The combined cargo exceeds the boat hold; reduce your carried load first',
   );
+  if (p.vehicle === MOTORBOAT && !p.hitch) {
+    w.mooredBoats ??= {};
+    w.mooredBoats[mooringKey(p.id, MOTORBOAT)] = {
+      owner: p.id,
+      slot: MOTORBOAT,
+      x: p.x,
+      z: p.z,
+      heading: p.heading,
+      paint: vehiclePaint(p) ?? 'blue',
+      landing: '',
+    };
+  }
+  const usedMotorboat = p.vehicle === MOTORBOAT && !p.hitch;
+  cancelTow(w, p.id);
   delete p.hitch;
   p.boatThrottle = 0;
   switchVehicle(p, r.boat.slot, false, w);
@@ -301,7 +287,56 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     engine: false,
   });
   delete w.boatRescues![p.id];
+  if (usedMotorboat)
+    return 'Main boat reboarded. Your motorboat remains alongside; move ahead and attach it as a tender to tow home. Use carried Fuel to fill the main tank.';
   if (poured)
     return `Main boat reboarded, lifeboat stowed and ${poured} Fuel poured into the tank to make room in the hold.`;
   return 'Main boat reboarded and lifeboat stowed. Use Fuel from your inventory to fill its tank.';
+}
+
+/** Read-only preflight used by both presentation and authoritative boarding. */
+export function reboardReason(w: World, p: Player): string | undefined {
+  const r = w.boatRescues?.[p.id];
+  if (!r) return 'You have no stranded boat';
+  if (p.atHome || p.task || p.game || p.crowBody || Math.abs(p.speed) >= 0.5)
+    return 'Stop outside and finish your activity before boarding';
+  if (r.landing && !boatSlot(p.vehicle, w) && boatLanding(w, p, false, r.landing)) return undefined;
+  try {
+    const carrier = p.hitch ? w.players[p.hitch] : undefined;
+    if (p.hitch)
+      need(
+        carrier &&
+          carrier.online &&
+          !carrier.hitch &&
+          !carrier.atHome &&
+          boatSlot(carrier.vehicle, w) &&
+          Math.abs(carrier.speed) < 0.5,
+        'Ask your boat driver to stop alongside your stranded vessel',
+      );
+    const from = carrier ?? p;
+    const reach =
+      carrier || p.vehicle === MOTORBOAT
+        ? (vehicleDef(w, carrier?.vehicle ?? p.vehicle).collisionRadius ?? 2) +
+          (vehicleDef(w, r.boat.slot).collisionRadius ?? 2) +
+          1.5
+        : 5;
+    need(
+      (!!carrier || p.vehicle === LIFEBOAT || p.vehicle === MOTORBOAT) &&
+        Math.hypot(from.x - r.boat.x, from.z - r.boat.z) <= reach,
+      carrier
+        ? 'Ask your boat driver to pull alongside your stranded vessel'
+        : 'Row within five metres of your stranded boat',
+    );
+    need(
+      Array.from({ length: 9 }, (_, i) => i / 8).every(
+        (t) =>
+          terrainHeight(w, from.x + (r.boat.x - from.x) * t, from.z + (r.boat.z - from.z) * t) <
+          waterLevel(w) + 0.15,
+      ),
+      'Move alongside over clear water before transferring',
+    );
+  } catch (error) {
+    return (error as Error).message;
+  }
+  return undefined;
 }

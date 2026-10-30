@@ -59,6 +59,7 @@ export interface Player {
   lastFlightCrash?: { at: number; cause: string; slot: number; x?: number; y?: number; z?: number };
   fuel: number;
   /** Public snapshot hint; exact fuel and private activity details stay private. */
+  canBeTowed?: boolean;
   canReceiveFuel?: boolean;
   /** Persistent alcohol level and dose time in world seconds; absent in old saves. */
   alcohol?: { level: number; at: number };
@@ -91,6 +92,7 @@ export interface Player {
   engine: boolean;
   /** Public snapshot projection for audible motors. */
   engineRunning?: boolean;
+  rowing?: boolean;
   lights: boolean;
   task?: Task;
   team: number;
@@ -409,11 +411,14 @@ export interface World {
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;
   seafoodVersion?: number;
+  towJobs?: Record<string, import('./towing').TowJob>;
   boatRescues?: Record<
     string,
     {
       boat: { x: number; z: number; heading: number; paint: string; slot: number };
       cargo: Stock;
+      /** A tow delivered this vessel to a shore-accessible landing. */
+      landing?: string;
       /** Death-abandoned stores are separate from the respawned player's inventory. */
       provisions?: Stock;
       net?: Player['trawl'];
@@ -429,6 +434,9 @@ export interface World {
       heading: number;
       paint: string;
       landing: string;
+      /** Offshore motorboat tender; fuel remains in its owner’s per-vehicle tank. */
+      towedBy?: number;
+      rope?: number;
       owner: string;
       slot: number;
     }

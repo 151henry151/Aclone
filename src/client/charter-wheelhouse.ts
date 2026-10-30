@@ -5,7 +5,7 @@ import { createMarineInstruments, marineSurface } from './fishing-wheelhouse';
 import type { Player } from '../shared/types';
 
 /** Full-size cabin fittings; the outer boat's nonuniform scale never changes the helm. */
-export function createCharterWheelhouse() {
+export function createCharterWheelhouse(title = 'COASTAL BELLE / COASTAL CHARTERS', tank = 192) {
   const group = new T.Group(),
     fixed = new T.Group();
   group.name = 'Coastal Belle wheelhouse';
@@ -64,7 +64,7 @@ export function createCharterWheelhouse() {
   housing.geometry.translate(0, 0, -0.18);
   housing.rotation.set(0.38, Math.PI, 0);
   box(1.45, 0.57, 0.45, timber, 0.25, 1.19, 4.28);
-  const instruments = createMarineInstruments('COASTAL BELLE / COASTAL CHARTERS', 192);
+  const instruments = createMarineInstruments(title, tank);
   const panel = add(new T.PlaneGeometry(1.45, 0.38), instruments.panel, 0.25, 1.7, 4.14, group);
   panel.rotation.set(0.38, Math.PI, 0);
   panel.name = 'Live marine instruments';
