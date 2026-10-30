@@ -11,7 +11,7 @@ import {
 } from './road-routing.ts';
 
 export interface RoadProject {
-  kind: 'town' | 'detour' | 'building';
+  kind: 'town' | 'detour' | 'building' | 'connection';
   town?: string;
   building?: string;
   width: number;
@@ -81,6 +81,30 @@ export function planTownRoad(w: World): RoadProject | undefined {
       const path = roadRoute(w, start, goal);
       if (path) return { kind: 'town', town: town.id, width: 5, path };
     }
+  }
+}
+
+/** Join isolated public lanes without using runways as through roads. */
+export function planRoadConnection(w: World): RoadProject | undefined {
+  const groups = roadComponents(townRoads(w));
+  if (groups.length < 2) return;
+  const origin = w.towns[0] ?? { x: 0, z: 0 },
+    site = roadSite(w);
+  groups.sort((a, b) => roadDistance(a, origin.x, origin.z) - roadDistance(b, origin.x, origin.z));
+  const main = groups[0];
+  const candidates = groups
+    .slice(1)
+    .flatMap((group) => {
+      const goal = safeNearest(group, origin, site);
+      if (!goal) return [];
+      const start = safeNearest(main, goal, site);
+      if (!start) return [];
+      return [{ start, goal, distance: pointDistance(start, goal) }];
+    })
+    .sort((a, b) => a.distance - b.distance);
+  for (const { start, goal } of candidates) {
+    const path = roadRoute(w, start, goal);
+    if (path) return { kind: 'connection', width: 5, path };
   }
 }
 
@@ -205,7 +229,7 @@ export function advanceRoadProject(w: World, project: RoadProject, budget: numbe
     }
     if (reverse) project.path.reverse();
   };
-  if (project.kind === 'town') {
+  if (project.kind === 'town' || project.kind === 'connection') {
     lay(budget / 2);
     lay(budget / 2, true);
   } else lay(budget);

@@ -93,7 +93,14 @@ test('catch-up after a long server outage grows one stretch per missed day', () 
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   w.buildings.push(makeBuilding('far', 'home', -330, -80));
   advance(w, day(w) * 4 + 1);
-  assert.equal(grownRoads(w).length, 4);
+  const length = grownRoads(w).reduce(
+    (sum, r) => sum + Math.hypot(r.b.x - r.a.x, r.b.z - r.a.z),
+    0,
+  );
+  assert.ok(
+    Math.abs(length - 4 * roadGrowthPerDay) < 1e-6,
+    'bends do not change the daily construction budget',
+  );
 });
 
 test('a parish with no lanes at all has nothing to grow from', () => {

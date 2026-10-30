@@ -4,6 +4,7 @@ import {
   advanceRoadProject,
   planRoadDetour,
   planTownRoad,
+  planRoadConnection,
   safeNearest,
   type RoadProject,
 } from './road-projects.ts';
@@ -62,7 +63,8 @@ export function growRoads(w: World, start: number, end: number) {
     return;
   }
   for (let d = last + 1; d <= due; d++) {
-    w.roadProject ??= planRoadDetour(w) ?? planTownRoad(w) ?? planBuildingRoad(w);
+    w.roadProject ??=
+      planRoadDetour(w) ?? planTownRoad(w) ?? planRoadConnection(w) ?? planBuildingRoad(w);
     if (w.roadProject) {
       const target =
         w.roadProject.building && w.buildings.find((b) => b.id === w.roadProject!.building);

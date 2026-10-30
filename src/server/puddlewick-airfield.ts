@@ -101,11 +101,6 @@ export function ensurePuddlewickAirfield(w: World) {
       w.airfield = a;
       w.resourceRelocations = moved;
       w.buildings.push(hangar);
-      w.roads ??= [];
-      w.roads.push(
-        { a: { x, z: a.z - a.length / 2 }, b: { x, z: a.z + a.length / 2 }, width: a.width },
-        { a: { x, z: a.apronZ }, b: { x: a.apronX, z: a.apronZ }, width: 24 },
-      );
       w.revision++;
       return true;
     }

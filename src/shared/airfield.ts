@@ -27,6 +27,31 @@ export function onAirfield(w: Pick<World, 'airfield'>, x: number, z: number, mar
       (Math.abs(x - a.apronX) < 28 + margin && Math.abs(z - a.apronZ) < 25 + margin))
   );
 }
+/** Aviation pavement is intentionally excluded from the public road graph. */
+export function runwayRoad(
+  w: Pick<World, 'airfield'>,
+  r: { a: { x: number; z: number }; b: { x: number; z: number }; width: number },
+) {
+  const a = w.airfield;
+  if (!a) return false;
+  const same = (p: { x: number; z: number }, q: { x: number; z: number }) =>
+    Math.hypot(p.x - q.x, p.z - q.z) < 0.01;
+  const matches = (p: { x: number; z: number }, q: { x: number; z: number }, width: number) =>
+    Math.abs(r.width - width) < 0.01 &&
+    ((same(r.a, p) && same(r.b, q)) || (same(r.b, p) && same(r.a, q)));
+  return (
+    matches({ x: a.x, z: a.z - a.length / 2 }, { x: a.x, z: a.z + a.length / 2 }, a.width) ||
+    matches({ x: a.x, z: a.apronZ }, { x: a.apronX, z: a.apronZ }, 24)
+  );
+}
+export function onRunway(w: Pick<World, 'airfield'>, x: number, z: number, margin = 0) {
+  const a = w.airfield;
+  return (
+    !!a &&
+    Math.abs(x - a.x) < a.width / 2 + 10 + margin &&
+    Math.abs(z - a.z) < a.length / 2 + 10 + margin
+  );
+}
 /** Three metre shoulder blends the graded strip into undisturbed terrain. */
 export function airfieldHeight(a: Airfield | undefined, x: number, z: number, height: number) {
   if (!a) return height;

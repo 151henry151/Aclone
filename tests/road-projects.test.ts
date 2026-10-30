@@ -57,7 +57,7 @@ test('remote town connects from both ends, persists mid-work, then stops growing
   assert.equal(w.roadProject, undefined);
   assert.equal(roadComponents(townRoads(w)).length, 1);
   assertClear(w, townRoads(w));
-  assert.ok(w.roads!.length <= 4, 'straight country road stays compact across daily growth');
+  assert.ok(w.roads!.length <= 40, 'curving country road stays compact across daily growth');
   const length = w.roads!.length;
   for (let i = 0; i < 5; i++) day(w);
   assert.equal(w.roads!.length, length, 'no duplicate inter-town road');

@@ -1,4 +1,4 @@
-import { onAirfield } from './airfield';
+import { onAirfield, runwayRoad } from './airfield';
 import { landscapeRoads } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -174,13 +174,16 @@ export function roadKey(r: Road) {
   return `${points.join(':')}:${r.width}`;
 }
 export function townRoads(
-  w: Pick<World, 'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads' | 'retiredRoads'>,
+  w: Pick<
+    World,
+    'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads' | 'retiredRoads' | 'airfield'
+  >,
 ): readonly Road[] {
   return [
     ...(w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads),
     ...landscapeRoads(w),
     ...(w.roads ?? []),
-  ].filter((r) => !w.retiredRoads?.includes(roadKey(r)));
+  ].filter((r) => !w.retiredRoads?.includes(roadKey(r)) && !runwayRoad(w, r));
 }
 export function roadDistance(roads: readonly Road[], x: number, z: number) {
   let closest = Infinity;
