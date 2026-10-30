@@ -16,6 +16,7 @@ import {
   worldZoom,
   outerSheet,
   mapStep,
+  mapDistanceScale,
   type MapBounds,
 } from './map-layout';
 import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
@@ -65,7 +66,7 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     this.viewport.addEventListener('pointerdown', () => {
@@ -406,7 +407,15 @@ export class ParishMap {
         b.offsetLeft < left + this.viewport.clientWidth - 24 &&
         b.offsetTop < top + this.viewport.clientHeight - 24,
     );
-    for (const b of buttons) b.classList.remove('map-show-name');
+    for (const b of buttons) b.classList.remove('map-show-name', 'map-name-left', 'map-name-close');
+    // Close inspection deliberately shows every visible name, regardless of density.
+    if (this.zoom > 3.5) {
+      for (const b of visible) {
+        b.classList.add('map-show-name', 'map-name-close');
+        if (b.offsetLeft + 60 > left + this.viewport.clientWidth) b.classList.add('map-name-left');
+      }
+      return;
+    }
     if (this.zoom < 1.5 || visible.length > 12) return;
     const placed: { x: number; y: number; w: number }[] = [];
     for (const b of visible) {
@@ -433,6 +442,11 @@ export class ParishMap {
     this.width = this.baseWidth * 2;
     this.height = this.baseHeight() * 2;
     this.scale = this.width / this.bounds.width;
+    const distance = mapDistanceScale(this.scale);
+    const scaleBar = this.host.querySelector<HTMLElement>('.parish-map-distance')!;
+    scaleBar.style.width = `${distance.pixels}px`;
+    scaleBar.setAttribute('aria-label', `Map distance scale: ${distance.label}`);
+    scaleBar.querySelector('[data-distance-label]')!.textContent = distance.label;
     this.offsetX = (this.width - this.bounds.width * this.scale) / 2;
     this.offsetY = (this.height - this.bounds.depth * this.scale) / 2;
     const step = mapStep(this.scale);
@@ -600,6 +614,7 @@ export class ParishMap {
       x: b.x,
       z: b.z,
       kind: b.kind,
+      icon: mapIcon(b.kind, b),
       category: 'building',
     }));
     // Gathering grounds are scattered, so a resource-type centroid may be
@@ -613,6 +628,7 @@ export class ParishMap {
           x: n.x,
           z: n.z,
           kind: n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item,
+          icon: mapIcon(n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item),
           category: 'resource',
         });
     if (!this.local) {
@@ -623,6 +639,7 @@ export class ParishMap {
           x: 90,
           z: 45,
           kind: 'Playing field',
+          icon: mapIcon('Playing field'),
           category: 'landmark',
         },
         {
@@ -631,6 +648,7 @@ export class ParishMap {
           x: -105,
           z: 30,
           kind: 'Race checkpoints',
+          icon: mapIcon('Race checkpoints'),
           category: 'landmark',
         },
       );
@@ -679,7 +697,7 @@ export class ParishMap {
       });
       icon.append(
         svg('path', {
-          d: mapIcon(site.kind),
+          d: site.icon,
           fill: 'none',
           stroke: 'currentColor',
           'stroke-width': 1.8,

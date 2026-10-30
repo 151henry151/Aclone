@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.106.0] - 2026-10-29
+
+### Added
+
+- A distance scale on the parish map that updates with zoom, showing metres for local views and kilometres for wider views.
+
+### Changed
+
+- Distinct map symbols for all 50 building types, plus an aircraft symbol for hangars, individual gathering-ground symbols, and sports landmarks. Airfields and spaceports no longer fall back to factory icons.
+- Parish maps zoom up to 500%, with names shown automatically above 350% even in crowded areas.
+
 ## [0.105.0] - 2026-10-29
 
 ### Added

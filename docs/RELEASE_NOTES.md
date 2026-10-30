@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.106.0 — Map symbols, distance scale and closer inspection
+
+Each of the 50 building types has a dedicated map symbol. Aircraft hangars use an aircraft icon, spaceports use a rocket, and livestock, manufacturing, food and service buildings have their own recognizable symbols. Gathering grounds and sports landmarks also have specific symbols.
+
+The parish map now includes a distance scale that follows zoom, showing metres locally and kilometres at wider views. Maximum zoom increases from 300% to 500%. Above 350%, visible building and resource names appear automatically beneath their icons, with compact wrapping labels.
+
+Reload the game to receive the map improvements. No world data migration or balance changes are required. Map unit tests, desktop/mobile browser navigation, scale accuracy, close-up labels and the 500% limit have been verified. The full 1,174-test unit suite and three additional icon tests passed. The extended three-load waypoint browser test passed its map interactions but exceeded its five-minute deadline during the final reload under software rendering; that broader check remains unverified to completion.
+
 ## 0.105.0 — Living pastures, clearer maps and vehicle configuration
 
 Livestock farms now have fenced, terrain-following pastures with animals walking, turning and grazing. Owners can purchase up to three adjoining parcels and buy or breed animals up to the resulting capacity. Larger herds increase production, feed and water use, and staffing requirements. Existing animals are preserved; if a crowded farm cannot fit a safe pasture, it keeps its base production but cannot add animals until space is available.

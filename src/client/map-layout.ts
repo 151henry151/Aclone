@@ -44,7 +44,7 @@ export function inBounds(b: MapBounds, p: Point, margin = 0) {
   );
 }
 export const minZoom = 1;
-export const maxZoom = 3;
+export const maxZoom = 5;
 export const clampZoom = (zoom: number, min = minZoom) => Math.min(maxZoom, Math.max(min, zoom));
 /** Zoom after a wheel event; `mode` is WheelEvent.deltaMode (0 pixels, 1 lines, 2 pages). */
 export function wheelZoom(zoom: number, deltaY: number, mode = 0, min = minZoom) {
@@ -148,4 +148,20 @@ export function placeMapLabels(labels: MapLabel[], width: number, height: number
     placed.push(ranked[0].box);
   }
   return placed;
+}
+
+/** A readable 1/2/5 scale bar, using the same CSS pixels per metre as map geometry. */
+export function mapDistanceScale(pixelsPerMetre: number) {
+  const limit = 120 / pixelsPerMetre;
+  const magnitude = 10 ** Math.floor(Math.log10(limit));
+  const leading = limit / magnitude;
+  const metres = (leading >= 5 ? 5 : leading >= 2 ? 2 : 1) * magnitude;
+  return {
+    metres,
+    pixels: metres * pixelsPerMetre,
+    label:
+      metres >= 1000
+        ? `${Number((metres / 1000).toPrecision(3))} km`
+        : `${Number(metres.toPrecision(3))} m`,
+  };
 }

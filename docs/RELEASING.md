@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.106.0
+
+Deploy normally and publish the updated website, then reload clients. No data migration is required. Check the map scale while zooming between local and island views, the 500% maximum zoom, and names appearing without hover above 350%.
+
 ## Upgrade 0.105.0
 
 Back up and deploy client and server together, publish the website, and reload clients. Existing livestock farms acquire the first available dry, unoccupied pasture parcel. If none fits, no animals are deleted and base production continues, but herd growth remains blocked. Inspect crowded farms and retain the pre-deploy backup; older versions do not recognize expanded pasture capacity or extended vehicle overrides.

@@ -2569,3 +2569,43 @@ button span {
 .map-icon:is(:hover, :focus) {
   z-index: 10;
 }
+
+/* Outside the scrolling sheet so the distance reference stays visible while panning. */
+.parish-map-distance {
+  margin: 10px 0 8px;
+  color: #eadfae;
+  font: 11px monospace;
+}
+.map-distance-labels {
+  display: flex;
+  justify-content: space-between;
+  white-space: nowrap;
+  margin-bottom: 3px;
+}
+.map-distance-bar {
+  height: 7px;
+  background:
+    linear-gradient(currentColor, currentColor) left bottom / 1px 7px no-repeat,
+    linear-gradient(currentColor, currentColor) right bottom / 1px 7px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 100% 2px no-repeat;
+}
+
+.map-icon.map-name-left .map-icon-name {
+  left: auto;
+  right: 26px;
+}
+
+.map-icon.map-name-close .map-icon-name {
+  left: 50%;
+  right: auto;
+  top: 28px;
+  transform: translateX(-50%);
+  max-width: 96px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.map-icon.map-name-close.map-name-left .map-icon-name {
+  left: auto;
+  right: 0;
+  transform: none;
+}

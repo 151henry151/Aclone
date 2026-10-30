@@ -10,6 +10,7 @@ import {
   worldZoom,
   outerSheet,
   mapStep,
+  mapDistanceScale,
 } from '../src/client/map-layout.ts';
 import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import { resourceNodes } from '../src/shared/resources.ts';
@@ -101,7 +102,7 @@ test('wheel zoom scales smoothly by scroll distance and stays within the map lim
   assert.ok(wheelZoom(2, 100) < 2);
   assert.ok(Math.abs(wheelZoom(wheelZoom(1.5, -120), 120) - 1.5) < 1e-9);
   assert.equal(wheelZoom(1, 5000), 1);
-  assert.equal(wheelZoom(2.9, -5000), 3);
+  assert.equal(wheelZoom(2.9, -5000), 5);
   // Line-mode wheels (Firefox) scroll in lines rather than pixels.
   assert.equal(wheelZoom(1, -3, 1), wheelZoom(1, -48));
 });
@@ -135,4 +136,24 @@ test('grid and scale bar pick readable round distances', () => {
   assert.equal(mapStep(0.1), 500);
   assert.equal(mapStep(0.03), 2000);
   assert.equal(mapStep(0.01), 5000);
+});
+
+test('distance scale uses accurate round lengths and changes units for kilometre views', () => {
+  for (const [scale, metres, label] of [
+    [2, 50, '50 m'],
+    [1, 100, '100 m'],
+    [0.2, 500, '500 m'],
+    [0.1, 1000, '1 km'],
+    [0.01, 10000, '10 km'],
+  ] as const) {
+    const bar = mapDistanceScale(scale);
+    assert.equal(bar.metres, metres);
+    assert.equal(bar.label, label);
+    assert.equal(bar.pixels, metres * scale);
+  }
+  for (const scale of [0.003, 0.017, 0.15, 0.83, 1.7, 3.5, 11]) {
+    const bar = mapDistanceScale(scale);
+    assert.ok(bar.pixels >= 48 && bar.pixels <= 120);
+    assert.equal(bar.pixels / scale, bar.metres);
+  }
 });
