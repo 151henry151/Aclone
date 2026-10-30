@@ -396,7 +396,10 @@ export class GameScene {
       if (pointers.size > 1) {
         const after = span();
         if (before > 0 && after > 0)
-          this.zoom = Math.min(2.8, Math.max(0.55, (this.zoom * before) / after));
+          this.zoom = Math.min(
+            this.me && isTractor(this.me.vehicle) ? 5.6 : 2.8,
+            Math.max(0.55, (this.zoom * before) / after),
+          );
       } else {
         this.orbit += (e.clientX - previous.x) * 0.007;
         this.lookPitch = lookPitchFromDrag(this.lookPitch, previous.y - e.clientY, this.cameraMode);
@@ -424,7 +427,10 @@ export class GameScene {
     this.renderer.domElement.addEventListener(
       'wheel',
       (e) => {
-        this.zoom = Math.min(2.8, Math.max(0.55, this.zoom + e.deltaY * 0.001));
+        this.zoom = Math.min(
+          this.me && isTractor(this.me.vehicle) ? 5.6 : 2.8,
+          Math.max(0.55, this.zoom + e.deltaY * 0.001),
+        );
         e.preventDefault();
       },
       { passive: false },
