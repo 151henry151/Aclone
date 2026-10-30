@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer, act } from '../../src/shared/simulation.ts';
+import { terrainHeight } from '../../src/shared/terrain';
 import { creatorSchema } from '../../src/shared/creator.ts';
 import { constructionRefund } from '../../src/shared/construction.ts';
 for (const mobile of [false, true]) {
@@ -28,6 +29,9 @@ for (const mobile of [false, true]) {
       w.script = '';
       w.creator = creatorSchema.parse({ scenery: false, roads: false, weather: 'clear' });
       const p = addPlayer(w, account.id, account.name);
+      // Construction fixtures must stand outside the reserved respawn clearing.
+      p.x = 80;
+      p.y = terrainHeight(w, p.x, p.z);
       p.cash = 1000000;
       act(w, p.id, { type: 'construct', kind: 'home' });
       const b = w.buildings[0],

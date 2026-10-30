@@ -8,6 +8,8 @@ test.beforeEach(async ({ page }) => {
 test('pilot registration, galaxy, movement and saved position without free town teleport', async ({
   page,
 }) => {
+  // Three full world loads on software WebGL need their combined startup budget.
+  test.setTimeout(300000);
   let position: { x: number; z: number; speed: number } | undefined;
   page.on('websocket', (socket) => {
     socket.on('framereceived', ({ payload }) => {

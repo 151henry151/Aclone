@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer } from '../../src/shared/simulation.ts';
+import { terrainHeight } from '../../src/shared/terrain';
 import { creatorSchema } from '../../src/shared/creator.ts';
 import { buildingDesignQuote } from '../../src/shared/building-designs.ts';
 import { buildings } from '../../src/shared/catalog.ts';
@@ -31,6 +32,9 @@ for (const mobile of [false, true])
       w.settings.hungerRate = w.settings.thirstRate = 0;
       w.creator = creatorSchema.parse({ scenery: false, roads: false, weather: 'clear' });
       const p = addPlayer(w, account.id, account.name);
+      // Construction fixtures must stand outside the reserved respawn clearing.
+      p.x = 80;
+      p.y = terrainHeight(w, p.x, p.z);
       p.cash = 100000000;
       app.worlds.set(w.id, w);
       const port = await app.listen();

@@ -32,7 +32,9 @@ test('waterworks build preview enforces shoreline placement and the finished bui
     const p = addPlayer(w, account.id, account.name);
     p.cash = 1000000;
     p.x = 0;
-    p.z = 0;
+    // Inland, but outside the town/respawn reservation: test shoreline refusal itself.
+    p.z = 60;
+    p.y = terrainHeight(w, p.x, p.z);
     app.worlds.set(w.id, w);
     const port = await app.listen();
     await page.addInitScript(
