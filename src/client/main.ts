@@ -3081,7 +3081,7 @@ app.addEventListener('submit', async (e) => {
       (document.activeElement as HTMLElement)?.blur();
       return;
     }
-    if (form.id === 'arrival-form') {
+    if ((form.getAttribute('id') ?? '') === 'arrival-form') {
       const ticket = sessionStorage.getItem('aclone.arrival');
       const local =
         form.dataset.home === 'true' ? (localStorage.getItem('aclone.homePilot') ?? token) : token;
@@ -3097,13 +3097,13 @@ app.addEventListener('submit', async (e) => {
       localStorage.removeItem('aclone.world');
       sessionStorage.removeItem('aclone.arrival');
       await connect();
-    } else if (form.id === 'register-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'register-form') {
       const result = await api('/api/register', { method: 'POST', body: JSON.stringify(data) });
       token = result.token;
       account = result.account;
       localStorage.setItem('aclone.pilot', token);
       await connect();
-    } else if (form.id === 'signin-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'signin-form') {
       const result = await api('/api/auth/login', { method: 'POST', body: JSON.stringify(data) });
       token = result.token;
       account = result.account;
@@ -3111,7 +3111,7 @@ app.addEventListener('submit', async (e) => {
       localStorage.removeItem('aclone.world');
       if (sessionStorage.getItem('aclone.arrival')) await showArrival();
       else await connect();
-    } else if (form.id === 'account-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'account-form') {
       accountStatus = await api('/api/auth/configure', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -3124,11 +3124,11 @@ app.addEventListener('submit', async (e) => {
             : 'Password saved. You can now sign in by name.',
       );
       renderPanel();
-    } else if (form.id === 'forgot-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'forgot-form') {
       const result = await api('/api/auth/forgot', { method: 'POST', body: JSON.stringify(data) });
       toast(result.message);
       form.reset();
-    } else if (form.id === 'recovery-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'recovery-form') {
       await api(recovery.has('reset') ? '/api/auth/reset' : '/api/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ ...data, token: recoveryToken }),
@@ -3143,7 +3143,7 @@ app.addEventListener('submit', async (e) => {
           ? 'Password reset. Sign in with your new password.'
           : 'Email verified. You can now use email recovery.',
       );
-    } else if (form.id === 'restore-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'restore-form') {
       token = String(data.key).trim();
       const r = await api('/api/session');
       account = r.account;
@@ -3151,12 +3151,12 @@ app.addEventListener('submit', async (e) => {
       localStorage.removeItem('aclone.world');
       if (sessionStorage.getItem('aclone.arrival')) await showArrival();
       else await connect();
-    } else if (form.id === 'chat-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'chat-form') {
       const text = String(data.message).trim();
       if (text) send({ type: 'chat', text, ...(chatRecipient ? { to: chatRecipient.id } : {}) });
       form.reset();
       (form.querySelector('input') as HTMLInputElement).focus({ preventScroll: true });
-    } else if (form.id === 'loan-quote-form' && world && me) {
+    } else if ((form.getAttribute('id') ?? '') === 'loan-quote-form' && world && me) {
       const b = world.buildings.find((b) => b.id === String(data.building));
       if (b)
         $('loan-quote-result').innerHTML = bankQuote(
@@ -3167,7 +3167,7 @@ app.addEventListener('submit', async (e) => {
           Number(data.months),
           String(data.collateral || '') || undefined,
         );
-    } else if (form.id === 'creator-import-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'creator-import-form') {
       const file = data.file as File;
       if (file.size > 12 * 1024 * 1024) throw Error('Design/bundle file is too large');
       const imported = JSON.parse(await file.text());
@@ -3183,10 +3183,10 @@ app.addEventListener('submit', async (e) => {
         }),
       });
       toast('Imported world created in the Hearth system.');
-    } else if (form.id.startsWith('creator-') && world) {
+    } else if ((form.getAttribute('id') ?? '').startsWith('creator-') && world) {
       const action = creatorSubmit(form, world);
       if (action) send(action);
-    } else if (form.id === 'create-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'create-form') {
       const result = await api('/api/worlds', {
         method: 'POST',
         body: JSON.stringify({
@@ -3201,13 +3201,13 @@ app.addEventListener('submit', async (e) => {
         await showGalaxy();
         if (account?.system === 'hearth') send({ type: 'land', world: result.id });
       } else toast('World created. Take off from the spaceport to visit it.');
-    } else if (form.id === 'money-gift-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'money-gift-form') {
       send({
         type: 'giveMoney',
         player: form.dataset.player,
         amount: giftAmount(String(data.denarii)),
       });
-    } else if (form.id === 'settings-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'settings-form') {
       const patch: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(world!.settings))
         patch[k] =
@@ -3218,10 +3218,10 @@ app.addEventListener('submit', async (e) => {
               : Number(data[k]);
       send({ type: 'settings', patch });
       (document.activeElement as HTMLElement)?.blur();
-    } else if (form.id === 'script-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'script-form') {
       send({ type: 'script', source: String(data.source) });
       (document.activeElement as HTMLElement)?.blur();
-    } else if (form.id === 'asset-form') {
+    } else if ((form.getAttribute('id') ?? '') === 'asset-form') {
       const file = data.file as File;
       const response = await fetch(withBase('/api/assets/' + world!.id), {
         method: 'POST',
@@ -3504,7 +3504,7 @@ const controller = new Controller(
 );
 document.addEventListener('submit', (e) => {
   const form = e.target as HTMLFormElement;
-  if (form.id !== 'controller-settings') return;
+  if ((form.getAttribute('id') ?? '') !== 'controller-settings') return;
   e.preventDefault();
   const data = new FormData(form);
   for (const key of Object.keys(controller.config) as (keyof typeof controller.config)[]) {
