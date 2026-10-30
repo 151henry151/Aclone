@@ -6,6 +6,8 @@ import { landscapeSchema } from '../src/shared/landscape';
 import { roadRoute, roadSite, roadSamples, pointDistance } from '../src/shared/road-routing';
 import { terrainHeight } from '../src/shared/terrain';
 import { townRoads } from '../src/shared/town';
+import { drivingSurface } from '../src/shared/driving-surface';
+import { snowProfile } from '../src/client/snow-surface';
 function flat() {
   const w = createWorld('survey', 'Survey', 'server');
   w.buildings = [];
@@ -74,6 +76,18 @@ test('legacy runway pavement cannot satisfy a road connection and new routes avo
   const runway = { a: { x: 0, z: -150 }, b: { x: 0, z: 150 }, width: 30 };
   w.roads = [runway];
   assert.ok(!townRoads(w).includes(runway));
+  w.climate = { snow: 1, snowDepth: 0.3, wetness: 0 };
+  const snow = snowProfile(w);
+  for (const point of [
+    { x: 0, z: 100 },
+    { x: 80, z: 0 },
+  ]) {
+    assert.equal(snow(point.x, point.z), 0, 'aviation pavement remains clear of snow');
+    assert.ok(
+      drivingSurface(w, point.x, point.z).grip > drivingSurface(w, 200, 200).grip,
+      'paved grip remains independent from public-road connectivity',
+    );
+  }
   const path = roadRoute(w, { x: 0, z: -200 }, { x: 0, z: 200 });
   assert.ok(path);
   assert.ok(path.slice(1).every((p, i) => roadSite(w).segment(path[i], p)));

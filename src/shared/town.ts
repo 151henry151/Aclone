@@ -204,15 +204,26 @@ export function townSquare(w: Pick<World, 'creator'>) {
   return w.creator?.roads === false ? undefined : { x: 0, z: 0, radius: 13 };
 }
 export function roadSurfaceDistance(
-  w: Pick<World, 'creator'>,
+  w: Pick<World, 'creator' | 'airfield'>,
   roads: readonly Road[],
   x: number,
   z: number,
 ) {
   const square = townSquare(w);
+  const airfield = w.airfield;
+  // Aviation pavement shares cleared-ground traction and snow masking, but is
+  // not a public-road connection for route planning.
+  const rectangle = (cx: number, cz: number, hx: number, hz: number) =>
+    Math.hypot(Math.max(0, Math.abs(x - cx) - hx), Math.max(0, Math.abs(z - cz) - hz));
   return Math.min(
     roadDistance(roads, x, z),
     square ? Math.hypot(x - square.x, z - square.z) - square.radius : Infinity,
+    airfield
+      ? Math.min(
+          rectangle(airfield.x, airfield.z, airfield.width / 2, airfield.length / 2),
+          rectangle(airfield.apronX, airfield.apronZ, 28, 25),
+        )
+      : Infinity,
   );
 }
 /** Upgrade only untouched starter positions. Never reset a property or overwrite a custom plot. */

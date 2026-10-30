@@ -3,7 +3,7 @@ import type { World } from '../shared/types';
 import { roadSurfaceDistance, type Road } from '../shared/town';
 /** Exact within reach; farther distances may be Infinity. Built for a static scenery revision. */
 export function nearbyRoadSurface(
-  w: Pick<World, 'creator'>,
+  w: Pick<World, 'creator' | 'airfield'>,
   roads: readonly Road[],
   reach: number,
 ) {
