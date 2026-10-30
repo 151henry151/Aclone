@@ -22,6 +22,8 @@ export type Task = {
 };
 export interface Player {
   statistics?: import('./player-statistics.ts').PlayerStatistics;
+  /** Private snapshot cargo for this player's trailers. */
+  trailerCargo?: Record<string, Stock>;
   courseRun?: import('./courses').CourseRun;
   reliefAt?: number;
   needsGraceUntil?: number;
@@ -411,6 +413,8 @@ export interface World {
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;
   seafoodVersion?: number;
+  trailers?: Record<string, import('./trailers').Trailer>;
+  trailerSeq?: number;
   towJobs?: Record<string, import('./towing').TowJob>;
   boatRescues?: Record<
     string,

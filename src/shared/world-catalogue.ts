@@ -128,6 +128,7 @@ export function setCatalogue(w: World, p: Player, input: unknown) {
   const refs = JSON.stringify({
     players: w.players,
     buildings: w.buildings,
+    trailers: w.trailers,
     boatRescues: w.boatRescues,
     creator: w.creator,
     templates: next.templates,

@@ -65,6 +65,11 @@ export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
     departure: undefined,
+    trailerCargo: Object.fromEntries(
+      Object.values(w.trailers ?? {})
+        .filter((t) => t.owner === p.id)
+        .map((t) => [t.id, t.cargo]),
+    ),
     crewOffers: fishingOffers(w, p),
     charterOffers: charterOffers(w, p),
     charterElapsed: p.charterPassage
@@ -137,6 +142,21 @@ export function prepareFrame(w: World): Frame {
       Object.entries(common.boatRescues).map(([id, r]) => [
         id,
         { boat: r.boat, dinghy: r.dinghy, cargo: {}, spoilage: r.spoilage, landing: r.landing },
+      ]),
+    );
+  if (common.trailers)
+    common.trailers = Object.fromEntries(
+      Object.entries(common.trailers).map(([id, t]) => [
+        id,
+        {
+          ...t,
+          cargo: Object.fromEntries(
+            Object.entries(t.cargo).map(([item, n]) => [
+              item,
+              t.kind === 'livestock' ? n : n > 0 ? Math.ceil(n / 10) * 10 : 0,
+            ]),
+          ),
+        },
       ]),
     );
   common.landscapeUndo = !!landscapeHistory?.length;

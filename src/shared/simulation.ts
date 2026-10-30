@@ -1,4 +1,12 @@
 import { towingTender, tenderAction, moveTender } from './boat-tender';
+import { trailerAccepts, trailerBlocks } from './trailers';
+import {
+  trailerAction,
+  attachedTrailer,
+  moveTrailer,
+  trailerFactors,
+  detachTrailer,
+} from './trailers';
 import {
   towAction,
   activeTow,
@@ -608,6 +616,11 @@ export function act(w: World, id: string, a: Action): string {
     'Secure your motorboat tender at a dock first',
   );
   requireThat(
+    !attachedTrailer(w, p) ||
+      !['vehicle', 'home', 'crow', 'hitch', 'takeoff', 'joinGame'].includes(type),
+    'Unhitch your trailer before changing vehicles or activity',
+  );
+  requireThat(
     !activeTow(w, p.id) ||
       !['vehicle', 'home', 'crow', 'respawn', 'hitch', 'takeoff', 'lifeboat', 'joinGame'].includes(
         type,
@@ -630,6 +643,8 @@ export function act(w: World, id: string, a: Action): string {
   switch (type) {
     case 'tender':
       return tenderAction(w, p, a.operation);
+    case 'trailer':
+      return trailerAction(w, p, a);
     case 'tow':
       return towAction(w, p, a);
     case 'charter':
@@ -693,6 +708,17 @@ export function act(w: World, id: string, a: Action): string {
       const n = qty(a.quantity);
       requireThat(a.direction === 'buy' || a.direction === 'sell', 'Invalid trade direction');
       const buying = a.direction === 'buy';
+      const trailer = a.storage === 'trailer' ? attachedTrailer(w, p) : undefined;
+      requireThat(a.storage === undefined || a.storage === 'trailer', 'Unknown cargo storage');
+      if (a.storage === 'trailer')
+        requireThat(
+          trailer &&
+            trailer.owner === p.id &&
+            Math.abs(p.speed) < 0.5 &&
+            Math.hypot(trailer.x - b.x, trailer.z - b.z) <= 30,
+          'Pull your hitched trailer alongside this shop and stop',
+        );
+      const cargo = trailer ? trailer.cargo : p.inventory;
       const price = (buying ? b.sell : b.buy)[item];
       requireThat(
         Number.isSafeInteger(price) && price >= (buying ? 0 : MIN_BUY_PRICE),
@@ -718,11 +744,14 @@ export function act(w: World, id: string, a: Action): string {
           );
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
-        requireThat(canCarry(p, item, n, w), 'Cargo hold is full');
+        requireThat(
+          trailer ? trailerAccepts(w, trailer, item, n) : canCarry(p, item, n, w),
+          'Cargo hold is full or unsuitable',
+        );
         if (b.kind === 'starport')
           requireThat(imports + n <= w.settings.importCap, 'Daily port import limit reached');
       } else {
-        requireThat((p.inventory[item] ?? 0) >= n, 'Not enough items');
+        requireThat((cargo[item] ?? 0) >= n, 'Not enough items');
         requireThat(b.investment >= total, 'Building has insufficient investment');
         requireThat((b.stock[item] ?? 0) + n <= b.capacity, 'Building storage is full');
         requireHerdRoom(w, b, item, n);
@@ -738,7 +767,7 @@ export function act(w: World, id: string, a: Action): string {
         if (importCost)
           log(w, 'sink', importCost, b.id, 'imports', `emergency shipment: ${imported} ${item}`);
         stockAdd(b.stock, item, -n);
-        stockAdd(p.inventory, item, n);
+        stockAdd(cargo, item, n);
         log(w, 'transfer', total - tax, id, b.id, 'purchase', {
           building: b.id,
           item,
@@ -758,7 +787,7 @@ export function act(w: World, id: string, a: Action): string {
         p.cash += total;
         b.investment -= total;
         stockAdd(b.stock, item, n);
-        stockAdd(p.inventory, item, -n);
+        stockAdd(cargo, item, -n);
         log(w, 'transfer', total, b.id, id, 'sale', { building: b.id, item, quantity: n });
       }
       questEvent(w, p, buying ? 'buy' : 'sell', b.id, item, n);
@@ -2343,6 +2372,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const cap =
     crowSpeed *
     (activeTow(w, p.id) ? 0.5 : towingTender(w, p) ? 0.85 : 1) *
+    trailerFactors(w, p).speed *
     loadFactors.speed *
     (rowing ? 1.6 : trawling ? (v.trawlSpeed ?? TRAWL_SPEED) : v.speed) *
     (input.boost && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
@@ -2455,6 +2485,17 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.boatThrottle = 0;
     if (input.throttle) p.boatShoreThrottle = Math.sign(input.throttle);
   } else if (
+    !(
+      v.mode !== 3 &&
+      p.y < ground + 2 &&
+      trailerBlocks(
+        w,
+        p,
+        { x: nx, z: nz },
+        p.vehicle === 5 ? 0.25 : (v.collisionRadius ?? 1.3),
+        attachedTrailer(w, p)?.id,
+      )
+    ) &&
     !creatorBlocksSegment(
       w,
       p,
@@ -2506,17 +2547,20 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       p.fuel -
         (Math.abs(p.speed) / v.speed) *
           v.fuel *
+          trailerFactors(w, p).fuel *
           (activeTow(w, p.id) ? 1.6 : towingTender(w, p) ? 1.2 : 1) *
           loadFactors.fuel *
           (input.boost && !throttleBoat(p.vehicle, w) ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
+  moveTrailer(w, p, towBefore, dt, prediction);
   moveTow(w, p, towBefore, prediction);
   moveTender(w, p, towBefore, prediction);
   if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  detachTrailer(w, p, !comic && w.settings.loseInventoryOnDeath);
   cancelPlayerTows(w, p.id);
   for (const t of Object.values(w.mooredBoats ?? {}))
     if (t.owner === p.id) {
@@ -2960,7 +3004,7 @@ export function advance(w: World, seconds: number) {
     w.tier = Math.max(w.tier, 2);
 }
 
-function requireHerdRoom(w: World, b: Building, item: string, n: number) {
+export function requireHerdRoom(w: World, b: Building, item: string, n: number) {
   if (herdSpec(b)?.animal !== item) return;
   ensurePasture(w, b);
   requireThat(

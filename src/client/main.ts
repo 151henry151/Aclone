@@ -1,4 +1,5 @@
 import { tenderOf } from '../shared/boat-tender';
+import { trailerPanel } from './trailer-panel';
 import { towingPanel } from './towing-panel';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { hasMotor } from '../shared/vehicle-config';
@@ -1459,6 +1460,8 @@ function refreshTradingPrices() {
       tenderOf(world, me)?.landing,
       Object.values(world.players).map((q) => [q.id, q.canBeTowed]),
       me.inventory,
+      me.trailerCargo,
+      Object.values(world.trailers ?? {}).map((t) => [t.id, t.kind, t.attached]),
       me.vehicle,
       me.atHome,
       me.task?.kind,
@@ -1949,7 +1952,7 @@ function renderPanel() {
             )
             .join(
               '',
-            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${trailerPanel(world, me)}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
         : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -1969,7 +1972,7 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `${towingPanel(world, me)}${
+      `${trailerPanel(world, me)}${towingPanel(world, me)}${
         world.settings.crowAbilities && world.settings.fighting
           ? `<h3>Robocrows</h3><p>Scout: fast, unarmed. Interceptor: armoured, machine/plasma weapons. Bomber: slower, grenades/rockets. Every launch consumes one disposable robocrow. Available outside team matches; drone destruction returns you to your body.</p>${
               me.crowBody
@@ -2167,6 +2170,7 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>Buy Fuel here and use it after boarding your boat. Atlantic cod, halibut and bluefin tuna can be sold here when the till has funds. Boat fishing in water at least 8 metres deep can catch these species; shallow water yields small fish.</p>';
+    html += trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
       html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;

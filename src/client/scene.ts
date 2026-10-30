@@ -1,4 +1,5 @@
 import { createMotorboat } from './motorboat';
+import { TrailerScene } from './trailer-scene';
 import { TowLines } from './tow-lines';
 import { createTugboat } from './tugboat';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
@@ -1527,6 +1528,8 @@ export class GameScene {
       }
       if (!this.towLines.group.parent) this.scene.add(this.towLines.group);
       this.towLines.update(w, this.meshes, this.mooredGroup);
+      if (!this.trailers.group.parent) this.scene.add(this.trailers.group);
+      this.trailers.update(w, this.meshes, bareSurface, dt);
       this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position, now / 1000);
       this.headlights.visible = p.vehicle !== LIFEBOAT && p.lights && !p.atHome && !p.hitch;
       this.headlights.angle = p.vehicle === 5 ? Math.PI / 8 : Math.PI / 3.5;
@@ -2004,6 +2007,7 @@ export class GameScene {
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
   }
   private towLines = new TowLines();
+  private trailers = new TrailerScene();
   private mooredGroup = new T.Group();
   private mooredKey = '';
   private updateMooredBoats(w: World) {
