@@ -130,8 +130,9 @@ export function spaceportFence(w: World) {
       g.setIndex([0, 1, 2, 0, 2, 3]);
       g.computeVertexNormals();
       panels.push(g);
-      rod(a, a.clone().add(new T.Vector3(0, h + 0.5, 0)), 0.07);
+      rod(a, a.clone().add(new T.Vector3(0, h + 0.5, 0)), 0.1);
       rod(a.clone().add(new T.Vector3(0, h, 0)), b.clone().add(new T.Vector3(0, h, 0)));
+      rod(a.clone().add(new T.Vector3(0, h / 2, 0)), b.clone().add(new T.Vector3(0, h / 2, 0)));
       rod(
         a.clone().add(new T.Vector3(0, 0.12, 0)),
         b.clone().add(new T.Vector3(0, 0.12, 0)),

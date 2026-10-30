@@ -1,4 +1,4 @@
-import { spaceportPoint } from '../shared/spaceport-site';
+import { spaceportPoint, spaceportTerminal } from '../shared/spaceport-site';
 import { worldResources } from '../shared/resources';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types';
@@ -11,17 +11,21 @@ import { townRoads, roadKey } from '../shared/town';
  * Fail closed if private development leaves no suitable vacant launch reservation. */
 export function ensurePuddlewickSpaceport(w: World) {
   if (
-    w.spaceportSite?.layout === 3 ||
+    (w.spaceportSite?.layout ?? 0) >= 4 ||
     w.id !== 'puddlewick' ||
     w.template !== 'economy' ||
-    (w.owner !== 'server' && !w.publicParishVersion && w.spaceportSite?.layout !== 2)
+    (w.owner !== 'server' && !w.publicParishVersion && !w.spaceportSite)
   )
     return false;
   const port = w.buildings.find(
-    (b) => b.kind === 'starport' && b.government && (!b.owner || b.owner === 'treasury'),
+    (b) =>
+      b.kind === 'starport' &&
+      (w.spaceportSite
+        ? b.id === w.spaceportSite.building
+        : b.government && (!b.owner || b.owner === 'treasury')),
   );
   if (!port) return false;
-  if (w.spaceportSite?.layout === 2) return upgradeSpaceportComplex(w, port);
+  if ((w.spaceportSite?.layout ?? 0) >= 2) return upgradeSpaceportComplex(w, port);
   const previous = w.spaceportSite;
   const oldKeys = new Set(
     (previous?.access ?? [])
@@ -133,9 +137,10 @@ function upgradeSpaceportComplex(w: World, port: World['buildings'][number]) {
     )
   )
     return false;
-  const position = spaceportPoint(s, 30, s.fence - 35);
   const gate = spaceportPoint(s, 0, s.fence);
-  const site = { ...s, layout: 3, entryHeight: terrainHeight(w, gate.x, gate.z) };
+  const site = { ...s, layout: 4, entryHeight: s.entryHeight ?? terrainHeight(w, gate.x, gate.z) };
+  const terminal = spaceportTerminal(site);
+  const position = spaceportPoint(site, terminal.x, terminal.z);
   const ground = terrainHeight({ ...w, spaceportSite: site }, position.x, position.z) + 0.04;
   const moved = {
     ...port,

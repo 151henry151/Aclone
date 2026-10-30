@@ -51,9 +51,9 @@ test('spaceport moves once to a vacant site just over one kilometre away without
   assert.deepEqual(worldResources(JSON.parse(JSON.stringify(w))), resources);
   assert.equal(port.stock.fuel, 123);
   assert.equal(port.investment, 123456);
-  assert.equal(s.layout, 3);
+  assert.equal(s.layout, 4);
   const gate = spaceportPoint(s, 0, s.fence);
-  assert.ok(Math.hypot(port.x - gate.x, port.z - gate.z) < 55);
+  assert.ok(Math.hypot(port.x - gate.x, port.z - gate.z) < 80);
   assert.ok(Math.abs(port.foundationY! - terrainHeight(w, port.x, port.z) - 0.04) < 0.001);
   assert.ok(Math.abs(port.x + port.launchOffset!.x + spaceportApron.x - s.x) < 0.001);
   assert.ok(Math.abs(port.z + port.launchOffset!.z + spaceportApron.z - s.z) < 0.001);
@@ -315,4 +315,39 @@ test('yard freight has collision boundaries and leaves entrances and circulation
         'Separate freight stacks leave gaps',
       );
     }
+});
+
+test('layout-three terminal is moved clear of the taller fence without changing the launch or business', () => {
+  const w = world();
+  ensurePuddlewickSpaceport(w);
+  const s = w.spaceportSite!,
+    port = w.buildings.find((b) => b.id === s.building)!;
+  const old = spaceportPoint(s, 30, s.fence - 35);
+  s.layout = 3;
+  Object.assign(port, old);
+  port.owner = 'private-owner';
+  port.stock.fuel = 71;
+  port.investment = 12345;
+  const before = structuredClone(port);
+  assert.equal(ensurePuddlewickSpaceport(w), true);
+  assert.equal(w.spaceportSite!.layout, 4);
+  assert.equal(SPACEPORT_FENCE_HEIGHT, 8.4);
+  assert.equal(w.spaceportSite!.entryHeight, s.entryHeight);
+  assert.ok(Math.abs(Math.hypot(port.x - old.x, port.z - old.z) - 15) < 1e-8);
+  // Include every wing, not just the shop's origin or main volume.
+  for (const v of buildingPlan(port).volumes)
+    for (const dx of [-v.width / 2, v.width / 2])
+      for (const dz of [-v.depth / 2, v.depth / 2]) {
+        const radius = Math.hypot(port.x + v.x + dx - s.x, port.z + v.z + dz - s.z);
+        assert.ok(radius < s.fence - 12, 'all terminal corners have fence clearance');
+      }
+  const { x, z, foundationY, launchOffset, ...afterBusiness } = port;
+  const { x: ox, z: oz, foundationY: oy, launchOffset: oo, ...beforeBusiness } = before;
+  assert.deepEqual(afterBusiness, beforeBusiness);
+  assert.ok(Math.abs(port.x + port.launchOffset!.x + spaceportApron.x - s.x) < 1e-8);
+  assert.ok(Math.abs(port.z + port.launchOffset!.z + spaceportApron.z - s.z) < 1e-8);
+  assert.ok(Math.abs(port.foundationY! + port.launchOffset!.y - s.height - 0.04) < 1e-8);
+  const saved = JSON.stringify(w);
+  assert.equal(ensurePuddlewickSpaceport(w), false);
+  assert.equal(JSON.stringify(w), saved);
 });

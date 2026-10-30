@@ -74,7 +74,7 @@ import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surf
 import { cabView, chaseOffset, lookPitchFromDrag, cameraSurfaceFloor } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
-import { freezeScenery } from './static-scene';
+import { batchStaticScenery, freezeScenery } from './static-scene';
 import { countryside } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { GroundTiles } from './ground';
@@ -94,7 +94,6 @@ import { LocalPrediction } from './prediction';
 import type { Input } from '../shared/types';
 import { createHuman, type HumanFigure } from './human';
 import { createRobocrow, type RobocrowFigure } from './robocrow';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { terrainHeight, distance } from '../shared/simulation';
 import { vehicles, checkpoints, defaults } from '../shared/catalog';
 import type { World, Player, Building } from '../shared/types';
@@ -948,61 +947,7 @@ export class GameScene {
     this.land.updateMatrixWorld(true);
     const snowDetails = new SnowAccumulation(w);
     snowDetails.collect(this.land);
-    const batches = new Map<string, { geometries: T.BufferGeometry[]; material: T.Material }>();
-    const originals: T.Mesh[] = [];
-    this.land.traverse((o) => {
-      if (!(o instanceof T.Mesh) || o === this.terrain || Array.isArray(o.material)) return;
-      const mat = o.material as T.MeshStandardMaterial;
-      if (
-        o.userData.lightSource ||
-        o.userData.hayStack ||
-        mat.transparent ||
-        mat.vertexColors ||
-        !(mat instanceof T.MeshStandardMaterial)
-      )
-        return;
-      let parent: T.Object3D | null = o;
-      while (parent) {
-        if (
-          parent.userData.blades ||
-          parent.userData.creatorModel ||
-          parent.userData.animatedFlight
-        )
-          return;
-        parent = parent.parent;
-      }
-      const key = [
-        mat.color.getHexString(),
-        mat.map?.uuid,
-        mat.roughness,
-        mat.metalness,
-        mat.side,
-        mat.emissive.getHexString(),
-      ].join(':');
-      const batch = batches.get(key) ?? { geometries: [], material: mat.clone() };
-      batch.geometries.push(
-        (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(
-          o.matrixWorld,
-        ),
-      );
-      batches.set(key, batch);
-      originals.push(o);
-    });
-    for (const o of originals) {
-      o.removeFromParent();
-      o.geometry.dispose();
-      (o.material as T.Material).dispose();
-    }
-    for (const batch of batches.values()) {
-      const merged = mergeGeometries(batch.geometries);
-      for (const g of batch.geometries) g.dispose();
-      if (merged) {
-        const mesh = new T.Mesh(merged, batch.material);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        this.land.add(mesh);
-      }
-    }
+    batchStaticScenery(this.land, this.terrain);
     this.townLighting.reset(this.land, (x, z) => terrainHeight(w, x, z));
     if (w.creator?.scenery !== false) countryside(this.land, w, this.low);
     this.woods.clear();

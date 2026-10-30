@@ -97,7 +97,11 @@ export function spaceportFences(
 export function spaceportPoint(s: SpaceportSite, x: number, z: number) {
   return { x: s.x + (x + z) / Math.SQRT2, z: s.z + (z - x) / Math.SQRT2 };
 }
-export const SPACEPORT_FENCE_HEIGHT = 4.2;
+/** Set the terminal back far enough that its complete side wing clears the circular fence. */
+export function spaceportTerminal(s: SpaceportSite) {
+  return { x: 30, z: s.fence - ((s.layout ?? 0) >= 4 ? 50 : 35) };
+}
+export const SPACEPORT_FENCE_HEIGHT = 8.4;
 export function spaceportStructures(s: SpaceportSite) {
   if ((s.layout ?? 0) < 3) return [];
   return [
@@ -263,7 +267,7 @@ function gradePads(s: SpaceportSite) {
       ...spaceportStructures(s),
       { x: -65, z: 245, width: 17, depth: 225 },
       { x: -185, z: 335, width: 25, depth: 35 },
-      { x: 30, z: s.fence - 35, width: 40, depth: 42 },
+      { ...spaceportTerminal(s), width: 40, depth: 42 },
       { x: 23, z: s.fence + 12, width: 12, depth: 4 },
     ];
     gradeCache.set(s, pads);

@@ -49,7 +49,7 @@ const recipe = z
 const designSchema = z.object({
   spaceportSite: z
     .object({
-      layout: z.number().int().min(1).max(3).optional(),
+      layout: z.number().int().min(1).max(4).optional(),
       x: coordinate,
       z: coordinate,
       height: z.number().finite().min(-40).max(500),
