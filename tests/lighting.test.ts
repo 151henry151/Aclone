@@ -116,3 +116,52 @@ test('a streetlamp hands its spotlight over to a ground glow gradually', () => {
   assert.ok(light.intensity > 0 && light.intensity < full);
   assert.ok(glowNear(lighting, 0) > 0);
 });
+
+test('facility windows close in shifts while security windows and yard lights stay on until dawn', () => {
+  const world = createWorld('facility', 'Facility', 'owner');
+  const root = new T.Group();
+  for (const [group, closes, exterior, x, color] of [
+    ['Workshop', 21, false, 0, '#ffd5a0'],
+    ['Office', 23, false, 100, '#ffd5a0'],
+    ['Watch', undefined, false, 200, '#ffd5a0'],
+    ['Yard', undefined, true, 300, '#dfebff'],
+  ] as const) {
+    const pane = new T.Mesh(new T.BoxGeometry(1, 1, 0.1), new T.MeshStandardMaterial());
+    pane.position.set(x, 4, 0);
+    pane.userData.lightSource = 'facility';
+    pane.userData.facilityLight = { group, closes, exterior, color, power: 30 };
+    root.add(pane);
+  }
+  const lighting = new TownLighting(1);
+  lighting.reset(root);
+  const lit = () =>
+    root.children
+      .filter(
+        (o) =>
+          o instanceof T.Mesh &&
+          o.material instanceof T.MeshStandardMaterial &&
+          o.material.emissiveIntensity > 0,
+      )
+      .map((o) => o.name);
+  const update = (hour: number, x = 0) => {
+    world.settings.time = hour * 3600;
+    lighting.update(world, new T.Vector3(x, 4, 0));
+  };
+  update(20);
+  assert.deepEqual(lit(), ['Workshop', 'Office', 'Watch', 'Yard']);
+  update(22);
+  assert.deepEqual(lit(), ['Office', 'Watch', 'Yard']);
+  update(0);
+  assert.deepEqual(lit(), ['Watch', 'Yard']);
+  assert.equal(glowNear(lighting, 0), 0, 'indoor windows never get an exterior ground pool');
+  assert.ok(glowNear(lighting, 300) > 0, 'unselected yard light retains its ground pool');
+  update(0, 300);
+  const lamp = lighting.group.children.find((o) => o instanceof T.SpotLight) as T.SpotLight;
+  assert.equal(lamp.color.getHexString(), 'dfebff');
+  update(0, 200);
+  assert.equal(lamp.color.getHexString(), 'ffd5a0', 'pooled lamp restores window colour');
+  update(12);
+  assert.deepEqual(lit(), []);
+  assert.equal(lighting.glow.visible, false);
+  assert.equal(lighting.group.children.filter((o) => o instanceof T.SpotLight).length, 1);
+});

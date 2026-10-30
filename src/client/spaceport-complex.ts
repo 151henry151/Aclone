@@ -8,6 +8,7 @@ import {
   spaceportGateRequested,
   SPACEPORT_PARKING,
 } from '../shared/spaceport-site';
+import type { FacilityLight } from './lighting';
 import { spaceportPavingModel } from './spaceport-paving';
 import { terrainHeight } from '../shared/terrain';
 import type { World } from '../shared/types';
@@ -69,11 +70,43 @@ export function spaceportComplex(w: World) {
     m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize());
     return m;
   }
+  function luminous(m: T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>, config: FacilityLight) {
+    m.material = m.material.clone();
+    m.userData.lightSource = 'facility';
+    m.userData.facilityLight = config;
+    m.castShadow = false;
+    return m;
+  }
+  function windowPane(
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    z: number,
+    yaw: number,
+    group: string,
+    closes?: number,
+  ) {
+    const m = box(width, height, 0.08, 'glass', x, y, z);
+    m.rotation.y = yaw;
+    return luminous(m, { group, exterior: false, closes, color: '#ffd5a0', power: 22 });
+  }
+  function downlight(x: number, y: number, z: number, group: string, warm = false) {
+    box(1.15, 0.25, 0.85, 'dark', x, y, z);
+    luminous(box(0.95, 0.06, 0.65, 'white', x, y - 0.15, z), {
+      group,
+      exterior: true,
+      color: warm ? '#ffca83' : '#dfebff',
+      power: warm ? 26 : 42,
+    });
+  }
   function batch(g: T.Group) {
     g.updateMatrixWorld(true);
     const inverse = g.matrixWorld.clone().invert(),
       groups = new Map<T.Material, T.BufferGeometry[]>();
+    const dynamic = g.children.filter((o) => o.userData.lightSource);
     g.traverse((o) => {
+      if (o.userData.lightSource) return;
       if (o instanceof T.Mesh && !Array.isArray(o.material)) {
         const list = groups.get(o.material) ?? [];
         list.push(
@@ -86,6 +119,7 @@ export function spaceportComplex(w: World) {
       }
     });
     g.clear();
+    if (dynamic.length) g.add(...dynamic);
     for (const [m, parts] of groups) {
       const merged = mergeGeometries(parts);
       parts.forEach((p) => p.dispose());
@@ -150,11 +184,20 @@ export function spaceportComplex(w: World) {
     if (b.id === 'gatehouse') {
       box(b.width + 0.8, 0.3, b.depth + 0.8, 'blue', 0, h + 0.15, 0);
       for (const side of [-1, 1]) {
-        box(0.08, 1.4, 6, 'glass', side * (b.width / 2 + 0.04), 2.2, 0);
+        windowPane(
+          6,
+          1.4,
+          side * (b.width / 2 + 0.04),
+          2.2,
+          0,
+          (side * Math.PI) / 2,
+          'Gatehouse watch',
+        );
         for (let z = -3; z <= 3; z += 1.5)
           box(0.1, 1.5, 0.07, 'metal', side * (b.width / 2 + 0.2), 2.2, z);
       }
-      box(4, 1.4, 0.08, 'glass', 0, 2.2, b.depth / 2 + 0.05);
+      windowPane(4, 1.4, 0, 2.2, b.depth / 2 + 0.05, 0, 'Gatehouse watch');
+      downlight(0, h, b.depth / 2 + 0.8, 'Gate canopy', true);
       box(1, 2.3, 0.12, 'blue', -2, 1.15, b.depth / 2 + 0.1);
       cyl(0.05, 2, 'metal', 2, h + 1, 2);
       box(0.35, 0.25, 0.7, 'white', 2, h + 2, 2);
@@ -215,7 +258,17 @@ export function spaceportComplex(w: World) {
         for (let y = 0.6; y < doorH; y += 1.25)
           box(doorW, 0.055, 0.1, 'metal', x, y, b.depth / 2 + 0.59);
         if (b.id !== 'integration')
-          box(doorW * 0.75, 0.6, 0.05, 'glass', x, doorH * 0.75, b.depth / 2 + 0.8);
+          windowPane(
+            doorW * 0.75,
+            0.6,
+            x,
+            doorH * 0.75,
+            b.depth / 2 + 0.8,
+            0,
+            b.id + ' working windows',
+            b.id === 'workshops' ? 21 : 22,
+          );
+        downlight(x, Math.min(10, doorH + 0.8), b.depth / 2 + 1.2, b.id + ' loading lights');
         for (const side of [-1, 1]) {
           cyl(0.17, 1.3, 'yellow', x + side * (doorW / 2 + 0.7), 0.65, b.depth / 2 + 1.4);
         }
@@ -223,7 +276,22 @@ export function spaceportComplex(w: World) {
       box(1.1, 2.3, 0.15, 'blue', -b.width / 2 + 3, 1.15, b.depth / 2 + 0.13);
       for (let z = -b.depth / 2 + 10; z < b.depth / 2; z += 14)
         for (const side of [-1, 1])
-          box(0.12, 1.3, 5, 'glass', side * (b.width / 2 + 0.3), h - 3, z);
+          windowPane(
+            5,
+            1.3,
+            side * (b.width / 2 + 0.3),
+            h - 3,
+            z,
+            (side * Math.PI) / 2,
+            b.id + (b.id === 'operations' && z < 0 ? ' night watch' : ' working windows'),
+            b.id === 'operations' && z < 0
+              ? undefined
+              : b.id === 'workshops'
+                ? 21
+                : b.id === 'logistics'
+                  ? 22
+                  : 23,
+          );
       for (const x of [-b.width * 0.25, b.width * 0.25]) {
         box(5, 1.5, 4, 'metal', x, h + rise * 0.8 + 1, 0);
         for (let i = 0; i < 5; i++)
@@ -238,6 +306,24 @@ export function spaceportComplex(w: World) {
         b.depth / 2 + 0.6,
       );
     }
+    batch(g);
+  }
+  // Small, shielded fixtures: bright lenses and local pools, never a floodlit sky.
+  for (const [x, z, height, warm] of [
+    [-9, site.fence - 20, 5, 1],
+    [9, site.fence - 20, 5, 1],
+    [54, site.fence - 83, 7, 0],
+    [114, site.fence - 83, 7, 0],
+    [-45, 320, 9, 0],
+    [45, 320, 9, 0],
+    [165, 488, 9, 0],
+    [-161, 422, 9, 0],
+    [-170, 265, 9, 0],
+  ]) {
+    const g = installation('Shielded yard lamp', x, z, 0.7, 0.7);
+    cyl(0.14, height, 'metal', 0, height / 2, 0);
+    box(2.6, 0.15, 0.18, 'metal', 0, height, 0);
+    for (const side of [-1, 1]) downlight(side, height, 0, 'Exterior yard lamps', !!warm);
     batch(g);
   }
   root.add(spaceportPavingModel(w));
@@ -261,6 +347,8 @@ export function spaceportComplex(w: World) {
   box(10, 2.4, 0.35, 'blue', 0, 3.5, 0);
   sign('PUDDLEWICK SPACEPORT', 9.5, 1.2, 0, 3.9, 0.25);
   sign('TERMINAL  →     •     LAUNCH OPERATIONS', 9.5, 0.65, 0, 2.9, 0.25);
+  downlight(-3, 5, 0.7, 'Entrance sign lamps', true);
+  downlight(3, 5, 0.7, 'Entrance sign lamps', true);
   batch(monument);
 
   // Prime mover + modular multi-axle rocket trailer; dimensions match the large launcher.

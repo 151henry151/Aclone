@@ -3,7 +3,16 @@ import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { calendar, eveningLights, sunAt } from '../shared/environment';
 import type { World } from '../shared/types';
+/** Scenery lighting shares the town light budget; hours are on the game clock. */
+export type FacilityLight = {
+  group: string;
+  exterior: boolean;
+  closes?: number;
+  color: string;
+  power: number;
+};
 type Source = {
+  facility?: FacilityLight;
   pane: T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>;
   building?: string;
   position: T.Vector3;
@@ -73,21 +82,23 @@ export class TownLighting {
       if (!(o instanceof T.Mesh) || !o.userData.lightSource) return;
       const pane = o as Source['pane'],
         position = o.getWorldPosition(new T.Vector3());
-      const street = o.userData.lightSource === 'street';
+      const facility = o.userData.facilityLight as FacilityLight | undefined;
+      const street = facility ? facility.exterior : o.userData.lightSource === 'street';
       const out = street
         ? new T.Vector3(0, -1, 0)
         : new T.Vector3(0, -0.35, 1).transformDirection(o.matrixWorld);
       this.sources.push({
         pane,
+        facility,
         position: position.clone().addScaledVector(out, 0.24),
         target: position.clone().addScaledVector(out, 6),
-        building: street ? undefined : o.userData.lightSource,
+        building: street || facility ? undefined : o.userData.lightSource,
       });
     });
     // One dynamic pane draw per building, rather than one per window.
     const batches = new Map<string, Source[]>();
     for (const source of this.sources) {
-      const key = source.building ?? 'street';
+      const key = source.facility ? JSON.stringify(source.facility) : (source.building ?? 'street');
       const list = batches.get(key) ?? [];
       list.push(source);
       batches.set(key, list);
@@ -95,6 +106,7 @@ export class TownLighting {
     for (const list of batches.values()) {
       const geometries = list.map((s) => s.pane.geometry.clone().applyMatrix4(s.pane.matrixWorld));
       const pane = new T.Mesh(mergeGeometries(geometries)!, list[0].pane.material.clone());
+      pane.name = list[0].facility?.group ?? 'Town light panes';
       root.add(pane);
       for (const source of list) {
         source.pane.removeFromParent();
@@ -113,7 +125,7 @@ export class TownLighting {
     const positions: number[] = [],
       index: number[] = [];
     for (const source of this.sources) {
-      if (source.building) continue;
+      if (source.building || (source.facility && !source.facility.exterior)) continue;
       const { x: cx, z: cz } = source.position,
         start = positions.length / 3,
         falloff = new Float32Array(glowGrid * glowGrid);
@@ -165,8 +177,15 @@ export class TownLighting {
     const active = this.sources
       .filter((s) => {
         const b = s.building && byId.get(s.building);
-        const on = s.building ? !!b && eveningLights(b, w.settings.time, day) : night > 0.8;
-        s.pane.material.emissive.set('#ffca72');
+        const f = s.facility,
+          hour = (((w.settings.time / 3600) % 24) + 24) % 24;
+        const on = f
+          ? night > (f.exterior ? 0.8 : 0.35) &&
+            (f.closes === undefined || (hour >= 12 && hour < f.closes))
+          : s.building
+            ? !!b && eveningLights(b, w.settings.time, day)
+            : night > 0.8;
+        s.pane.material.emissive.set(f?.color ?? '#ffca72');
         s.pane.material.emissiveIntensity = on ? 2 : 0;
         if (on) lit.add(s);
         return on;
@@ -175,7 +194,10 @@ export class TownLighting {
     this.group.visible = active.length > 0;
     const counts = new Map<string, number>();
     const nearby = active.filter((s) => {
-      const key = s.building ?? String(s.position.z);
+      const key =
+        s.facility && !s.facility.exterior
+          ? s.facility.group
+          : (s.building ?? String(s.position.z));
       const n = counts.get(key) ?? 0;
       counts.set(key, n + 1);
       return n < 3;
@@ -190,16 +212,18 @@ export class TownLighting {
         ? Math.min(1, Math.max(0, (reach - source.position.distanceTo(focus)) / handover))
         : 0;
       if (source) strength.set(source, fade);
-      light.intensity = source ? (source.building ? 65 : 55) * fade : 0;
+      light.intensity = source ? (source.facility?.power ?? (source.building ? 65 : 55)) * fade : 0;
       if (source) {
         // Shallower distance falloff keeps the wide skirt useful between lamps.
         // Reduce output to retain the existing brightness directly underneath.
         // Reapply both profiles: a pooled lamp may have been a window last frame.
-        const street = !source.building;
-        light.distance = street ? 70 : 22;
-        light.angle = street ? 1.55 : 1.12;
-        light.penumbra = street ? 0.18 : 0.72;
-        light.decay = street ? 0.8 : 1.4;
+        const street = source.facility ? source.facility.exterior : !source.building;
+        light.color.set(source.facility?.color ?? '#ffcd83');
+        const shielded = source.facility?.exterior;
+        light.distance = shielded ? 45 : street ? 70 : 22;
+        light.angle = shielded ? 1.15 : street ? 1.55 : 1.12;
+        light.penumbra = shielded ? 0.65 : street ? 0.18 : 0.72;
+        light.decay = shielded ? 1.05 : street ? 0.8 : 1.4;
         light.position.copy(source.position);
         light.target.position.copy(source.target);
       }
@@ -216,9 +240,14 @@ export class TownLighting {
       if (next === glow.weight || !color) continue;
       glow.weight = next;
       changed = true;
+      const tint = glow.source.facility
+        ? new T.Color(glow.source.facility.color).multiplyScalar(
+            (0.12 * glow.source.facility.power) / 55,
+          )
+        : lampColour;
       for (let i = 0; i < glow.falloff.length; i++) {
         const f = glow.falloff[i] * next;
-        color.setXYZ(glow.start + i, lampColour.r * f, lampColour.g * f, lampColour.b * f);
+        color.setXYZ(glow.start + i, tint.r * f, tint.g * f, tint.b * f);
       }
     }
     if (changed && color) color.needsUpdate = true;
