@@ -333,6 +333,9 @@ export interface World {
   airfield?: import('./airfield').Airfield;
   /** Public works may relocate gathering sites, retaining depletion and task IDs. */
   resourceRelocations?: Record<string, { x: number; z: number }>;
+  /** Saved additional gathering grounds; existing procedural and surveyed sites remain intact. */
+  additionalResources?: import('./resources').ResourceNode[];
+  resourceExpansionVersion?: 1;
   /** Public, expiring voluntary supply errands; never reservations of goods. */
   supplyIntents?: {
     player: string;

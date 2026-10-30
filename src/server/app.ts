@@ -1,3 +1,4 @@
+import { ensurePuddlewickResources } from './puddlewick-resources';
 import { integrateBoathouseTackle } from '../shared/boathouse-tackle';
 import { tradeTotal } from '../shared/bulk-discounts';
 import { ensurePuddlewickLighthouses } from './puddlewick-lighthouses';
@@ -180,6 +181,7 @@ export async function createApp(options: AppOptions) {
     const provisions = prepareAutomaticProvisions(world);
     const ocean = preparePuddlewickOcean(world);
     const lighthouses = ensurePuddlewickLighthouses(world);
+    const resources = ensurePuddlewickResources(world);
     if (
       services ||
       government ||
@@ -193,6 +195,7 @@ export async function createApp(options: AppOptions) {
       provisions ||
       ocean ||
       lighthouses ||
+      resources ||
       world.publicParishVersion
     )
       store.saveWorld(world);

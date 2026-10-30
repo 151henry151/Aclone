@@ -48,6 +48,27 @@ const recipe = z
   );
 const designSchema = z.object({
   terrainMapSize: z.number().min(500).max(20000).optional(),
+  additionalResources: z
+    .array(
+      z.object({
+        id: z
+          .string()
+          .regex(/^extra-[a-zA-Z0-9:_-]+$/)
+          .max(120),
+        item: z.enum(['logs', 'stone', 'gravel', 'dirt']),
+        name: z.string().min(1).max(100),
+        x: coordinate,
+        z: coordinate,
+        capacity: z.number().int().min(1).max(10000),
+        regrowth: z.number().int().min(10).max(86400),
+      }),
+    )
+    .max(1024)
+    .refine(
+      (nodes) => new Set(nodes.map((n) => n.id)).size === nodes.length,
+      'Duplicate gathering ground IDs',
+    )
+    .default([]),
   coastalBluffs: z
     .array(
       z.object({
@@ -215,6 +236,7 @@ export function exportDesign(w: World, includeMedia = false) {
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
     coastalBluffs: w.coastalBluffs,
+    additionalResources: w.additionalResources,
     terrainMapSize: w.terrainMapSize,
     landscape: w.landscape,
     zones: w.zones,
@@ -309,6 +331,7 @@ export function applyDesign(w: World, input: unknown) {
   w.landscape = validateLandscape(w, d.landscape);
   w.terrain = d.terrain;
   w.coastalBluffs = d.coastalBluffs;
+  w.additionalResources = d.additionalResources;
   w.terrainMapSize = d.terrainMapSize;
   w.zones = d.zones;
   w.tier = d.tier;

@@ -443,3 +443,7 @@ Open a livestock business to see its herd, pasture capacity and operating requir
 ## Reading the parish map
 
 Press **M** or click the minimap. The scale bar below the map shows real ground distance, switching between metres and kilometres as you zoom. Each building type has its own symbol, including aircraft for hangars and rockets for spaceports. These icons replace crowded names; hover, keyboard-focus or tap an icon to reveal its name. Click it to set a waypoint. Names also appear automatically when zoomed in with few sites visible and space available. Zoom reaches 500%; above 350%, all visible icons show their names without hovering. Zoom follows the point under your pointer or pinch. Panning and live updates preserve the area you are exploring; **Find me** returns to your vehicle and **Fit parish** returns to the main town view.
+
+## Island gathering grounds
+
+Puddlewick’s countryside includes eight richer areas with wood, stone, gravel and topsoil together, extra woodland clearings scattered across the island, and stone outcrops inland of the coastal cliffs. Each richer area has four sites of each resource type. Original town and countryside gathering grounds remain in place. The new grounds use the same tools, carrying limits, yields and replenishment times as existing ones. Look for their resource icons on the parish map; cliff-side sites are on accessible ground above high tide.

@@ -299,6 +299,8 @@ export class ParishMap {
       w.terrainMapSize,
       w.terrain,
       w.coastalBluffs,
+      w.additionalResources?.map((n) => [n.id, n.item, n.x, n.z]),
+      w.resourceRelocations,
       w.landscape?.heightmap,
       w.airfield,
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),

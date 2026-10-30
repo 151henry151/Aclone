@@ -537,3 +537,7 @@ Only a valid owned home or unexpired private booking is eligible. Public lodging
 ## Livestock grazing areas
 
 Livestock barns receive a fenced pasture on suitable clear land. Animals wander, stop and graze. Owners buy adjoining pasture parcels in the livestock business controls before adding animals; expanded herds produce more goods and need more feed, water and workers. In **Rules**, configure pasture capacity and price multipliers. Clear space must remain around fields, roads, buildings and neighbouring pastures. Existing herds are preserved when old worlds upgrade.
+
+### Saved gathering grounds
+
+Portable world designs preserve additional surveyed gathering grounds in `additionalResources`: stable `extra-` IDs, resource type (`logs`, `stone`, `gravel` or `dirt`), name, coordinates, capacity and replenishment interval. These supplement the existing generated grounds. Puddlewick’s public-world expansion is applied once on the server and saves the chosen locations; importing its design into another world retains those sites.

@@ -62,7 +62,7 @@ export const gatheringImplements: Record<string, { item: string; need: string }>
   gravel: { item: 'shovel', need: 'a shovel' },
   dirt: { item: 'shovel', need: 'a shovel' },
 };
-const node = (id: string, item: string, x: number, z: number): ResourceNode => ({
+export const resourceNode = (id: string, item: string, x: number, z: number): ResourceNode => ({
   id,
   item,
   name: names[item],
@@ -74,7 +74,7 @@ const node = (id: string, item: string, x: number, z: number): ResourceNode => (
 export const resourceNodes: ResourceNode[] = Object.entries(gatheringSites).flatMap(
   ([item, positions]) =>
     // Retain existing depletion/task/NPC IDs when relocating the old town grids.
-    positions.map(([x, z], i) => node(`${item}-${i}`, item, x, z)),
+    positions.map(([x, z], i) => resourceNode(`${item}-${i}`, item, x, z)),
 );
 /** Countryside patches on a 400 m lattice. Stable IDs are derived from the lattice
  * cell, so depletion, tasks and NPC plans survive restarts without storing positions. */
@@ -105,21 +105,26 @@ function countrysidePatches(w: World): ResourceNode[] {
             : pick < 0.5
               ? 'dirt'
               : 'gravel';
-      out.push(node(`${item}-c${cx + cells}-${cz + cells}`, item, Math.round(x), Math.round(z)));
+      out.push(
+        resourceNode(`${item}-c${cx + cells}-${cz + cells}`, item, Math.round(x), Math.round(z)),
+      );
     }
   return out;
 }
-const resourceCache = new WeakMap<World, { key: string; nodes: ResourceNode[] }>();
-/** Every gathering ground in this world: the surveyed village sites plus countryside patches. */
+const resourceCache = new WeakMap<
+  World,
+  { key: string; additions?: ResourceNode[]; nodes: ResourceNode[] }
+>();
+/** Every gathering ground: original village sites, countryside patches and saved additions. */
 export function worldResources(w: World): ResourceNode[] {
-  const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}:${JSON.stringify(w.resourceRelocations ?? {})}`;
+  const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}:${w.additionalResources?.length ?? 0}:${JSON.stringify(w.resourceRelocations ?? {})}`;
   const cached = resourceCache.get(w);
-  if (cached?.key === key) return cached.nodes;
+  if (cached?.key === key && cached.additions === w.additionalResources) return cached.nodes;
   const patches = countrysidePatches(w);
-  const nodes = [...resourceNodes, ...patches].map((n) =>
+  const nodes = [...resourceNodes, ...patches, ...(w.additionalResources ?? [])].map((n) =>
     w.resourceRelocations?.[n.id] ? { ...n, ...w.resourceRelocations[n.id] } : n,
   );
-  resourceCache.set(w, { key, nodes });
+  resourceCache.set(w, { key, additions: w.additionalResources, nodes });
   return nodes;
 }
 export function resourceAmount(w: World, n: ResourceNode) {
