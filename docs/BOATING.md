@@ -346,3 +346,14 @@ For an actual-renderer preview, run `npx tsx scripts/ocean-preview.ts`; outputs 
 The separate Coastal Belle adds six paid passenger places and an enclosed helm. See
 [Charter boat trips and balance](CHARTER_BOAT.md) for fares, refunds, controls and
 passenger fishing. The canal boat retains its stern tiller and ordinary passenger use.
+
+## Emergency raft appearance (0.108.0)
+
+The rowable emergency lifeboat now has twin inflatable chambers, a rear shelter
+hood, reflective strips, grab ropes and a boarding ladder. Its fixed emergency
+flare casts a local red-orange glow instead of tractor-style headlights. The flare
+is visual equipment: it lights automatically while occupied and needs no consumable
+or activation. The normal rescue, fuel and boarding rules remain unchanged.
+
+The design takes cues from [VIKING liferaft construction](https://www.viking-life.com/industries/yachting/liferafts-yachting/choosing-your-liferaft/liferaft-features/),
+with an open rowing position retained for the game's rescue journey.

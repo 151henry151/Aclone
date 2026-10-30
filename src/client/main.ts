@@ -786,11 +786,18 @@ function updateHud() {
       )
       .join(''),
   );
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      '.bottom-left [data-do="lights"], .bottom-left [data-do="engine"]',
+    )
+    .forEach((button) => {
+      button.hidden = me?.vehicle === LIFEBOAT;
+    });
   $('driving').title =
     `Ping: round-trip network delay. FPS: rendered frames per second. Motion buffer: ${scene.motionBufferMs} ms; grows only on uneven connections.`;
   setHudHtml(
     'driving',
-    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicleDef(world, me.vehicle).name)}<small>${me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
+    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicleDef(world, me.vehicle).name)}<small>${me.vehicle === LIFEBOAT ? 'ROWING · FLARE LIT' : me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
   );
   document.getElementById('flight-readout')?.remove();
   if (vehicleDef(world, me.vehicle).mode === 2) {

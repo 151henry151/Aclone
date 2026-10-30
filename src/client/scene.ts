@@ -1436,7 +1436,7 @@ export class GameScene {
           );
           mesh.rotation.set(0, captain.heading, 0);
         }
-        mesh.userData.lifeboat?.userData.row(now / 1000, p.speed);
+        mesh.userData.lifeboat?.userData.row(now / 1000, pose.speed);
         mesh.userData.charterBoat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.canalBoat?.animate(dt > 0 ? turn / dt : 0);
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
@@ -1486,8 +1486,8 @@ export class GameScene {
         model.rotation.x = sea.pitch;
         model.rotation.z = sea.roll;
       }
-      this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position);
-      this.headlights.visible = p.lights && !p.atHome && !p.hitch;
+      this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position, now / 1000);
+      this.headlights.visible = p.vehicle !== LIFEBOAT && p.lights && !p.atHome && !p.hitch;
       this.headlights.intensity = vehicleDef(this.world, p.vehicle).headlight ?? 150;
       this.headlights.distance = vehicleDef(this.world, p.vehicle).lightRange ?? 110;
       const local = this.meshes.get(p.id);
