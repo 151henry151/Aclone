@@ -7,7 +7,9 @@ import type { Player } from '../shared/types';
 import { nauticalHeading } from './nautical-heading';
 export { nauticalHeading } from './nautical-heading';
 
-type Reading = Pick<Player, 'heading' | 'speed' | 'fuel' | 'engine' | 'boatThrottle' | 'trawl'>;
+type Reading = Pick<Player, 'heading' | 'speed' | 'fuel' | 'engine' | 'boatThrottle' | 'trawl'> & {
+  depth?: number;
+};
 const clamp = (n: number, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 function canvas(width: number, height: number) {
   const c = document.createElement('canvas');
@@ -213,6 +215,14 @@ function drawPanel(
     x.arc(cx, cy, 9, 0, Math.PI * 2);
     x.fill();
   }
+  if (p.depth !== undefined) {
+    x.fillStyle = '#0b2224';
+    x.fillRect(50, 375, 300, 48);
+    x.fillStyle = '#addfc2';
+    x.font = '24px monospace';
+    x.textAlign = 'center';
+    x.fillText(`DEPTH ${p.depth.toFixed(1)} m`, 200, 407);
+  }
   x.fillStyle = '#0b2224';
   x.fillRect(550, 422, 430, 59);
   x.font = '22px monospace';
@@ -297,6 +307,7 @@ export function createMarineInstruments(label: string, tank: number) {
       p.speed.toFixed(1),
       p.fuel.toFixed(1),
       p.engine,
+      p.depth?.toFixed(1),
       (p.boatThrottle ?? 0).toFixed(2),
     ].join('/');
     if (next === key) return;
@@ -309,6 +320,7 @@ export function createMarineInstruments(label: string, tank: number) {
       speedKnots: Math.abs(p.speed) * 1.94384,
       fuel: p.fuel,
       throttle: p.boatThrottle ?? 0,
+      depth: p.depth,
     });
   }
   update({ heading: 0, speed: 0, fuel: 0, engine: false }, 0);
@@ -488,6 +500,7 @@ export function createFishingWheelhouse() {
       p.speed.toFixed(1),
       Math.round(p.fuel),
       p.engine,
+      p.depth?.toFixed(1),
       (p.boatThrottle ?? 0).toFixed(2),
     ].join('/');
     if (next === key) return;
@@ -501,6 +514,7 @@ export function createFishingWheelhouse() {
       speedKnots: Math.abs(p.speed) * 1.94384,
       fuel: p.fuel,
       throttle: p.boatThrottle ?? 0,
+      depth: p.depth,
     };
   }
   update({ heading: 0, speed: 0, fuel: 0, engine: false }, 0);

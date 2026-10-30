@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Add varied bay and ocean seabeds, a fishing-boat depth sounder, deeper-water map shading and a modest depth influence on catches.
+
 - Save individual HUD panel visibility and adapt the layout to smaller laptops; move employment into the player sidebar.
 
 - Add eight mixed-resource regions, dispersed wood gathering and stone near Puddlewick’s coastal bluffs, preserving all existing sites and depletion.

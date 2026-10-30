@@ -455,3 +455,11 @@ Distant land remains visible beyond detailed scenery. Low shore disappears over 
 Use **HUD ⚙** in the upper-right corner, or **F9 → HUD & layout**, to choose individual panels. Chat, minimap, health and employment, parish players, inventory, the getting-started guide, vehicle controls, location/time/weather and action shortcuts can each be hidden independently. Choices are saved in this browser. The guide and player roster start hidden; **Show all panels** restores everything and **Essential panels** restores the compact default.
 
 The minus buttons on chat, minimap and player status hide just that panel. **Enter** restores chat from the game view; **F2** also opens chat when a HUD button has keyboard focus. **H** toggles the whole scenery view. **F9** always opens the menu. Smaller desktop windows use narrower panels, shorter scrollable lists and wrapped controls; phones retain their Map, Chat and Pilot drawers.
+
+## Soundings and offshore navigation
+
+The fishing boat's instrument panel and fishing-control header show **Depth** in metres below the tidal surface. The reading follows the actual seabed, rather than the height of passing swells. It remains visible when the fishing controls are collapsed, unless that HUD panel is hidden.
+
+Puddlewick Bay is labelled on the map. Lighter water marks the bay and shallow shelf; darker water marks depths beyond 100 metres. The seabed has banks, basins and trenches, with much deeper water beyond the headlands. Water depth modestly influences fishing; it is not a guarantee of a good haul or a fish finder.
+
+Distant land has a lightweight silhouette beyond the detailed scenery radius. As you travel farther offshore, lower land drops below the geographic horizon before higher hills. Weather limits visibility. Lighthouse lights remain dim points between brighter flashes; there is no broad light shaft or floodlighting of your boat. Clear-weather range is at most 30 km, depending on the heights of the light and observer and intervening land.

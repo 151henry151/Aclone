@@ -1,9 +1,10 @@
+import { depthFishingMultiplier } from './seabed';
 import { isTrawler } from './vehicle-config';
 import { vehicleDef } from './vehicle-config';
 import { startVoyage, stockWeight, deckhands, boatLoadFactors } from './fishing-expedition';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { FISHING_BOAT } from './boats';
-import { deepFishingWater, fishingGroundQuality } from './fishing-water';
+import { deepFishingWater, fishingGroundQuality, waterDepth } from './fishing-water';
 import { vehicles } from './catalog';
 import { worldItems } from './world-catalogue';
 import { recordGathered } from './player-statistics';
@@ -209,6 +210,7 @@ export function advanceTrawl(
 ) {
   if (!isTrawler(p.vehicle, w) || !p.trawl?.deployed || !p.engine || p.fuel <= 0 || dt <= 0) return;
   const quality = prediction ? 0 : fishingGroundQuality(w, p);
+  const depthFactor = prediction ? 1 : depthFishingMultiplier(waterDepth(w, p));
   const t = prediction ? { ...p.trawl } : continuousTrawl(p.trawl, random, quality);
   const burn =
     (vehicleDef(w, p.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * boatLoadFactors(w, p).fuel;
@@ -234,6 +236,7 @@ export function advanceTrawl(
       while (remaining > 1e-9) {
         const rate =
           1.22 *
+          depthFactor *
           (1 + deckhands(w, p).length * 0.08) *
           (1 + quality * 0.15) *
           (1 + quality * (shoal.luck! - 1));

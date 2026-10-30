@@ -1,7 +1,8 @@
+import { depthFishingMultiplier } from './seabed';
 import { charterCaptain } from './charter';
 import { poweredBoat } from './boats';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { deepFishingWater } from './fishing-water';
+import { deepFishingWater, waterDepth } from './fishing-water';
 import type { Player, World } from './types';
 export const deepFish = ['cod', 'halibut', 'tuna'] as const;
 export function fishingVessel(w: World, p: Player): Player | undefined {
@@ -40,7 +41,9 @@ export function randomBiteWait(mean: number, roll = Math.random()) {
 }
 export function scheduleBite(w: World, p: Player, start = w.time) {
   p.fishCatch = fishingCatch(w, p);
-  p.fishAt = start + randomBiteWait(meanBiteWait(w, p));
+  const boat = fishingVessel(w, p);
+  const depthFactor = boat ? depthFishingMultiplier(waterDepth(w, boat)) : 1;
+  p.fishAt = start + randomBiteWait(meanBiteWait(w, p) / depthFactor);
   p.fishUntil = p.fishAt + 8;
 }
 export function landedFish(w: World, p: Player) {

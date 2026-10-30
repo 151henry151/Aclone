@@ -35,6 +35,8 @@ const w=await(await fetch('/__resource-world')).json(),p=addPlayer(w,'surveyor',
     expect(
       await page.locator('.parish-map-sheet > svg circle[fill="#a9cf86"]').count(),
     ).toBeGreaterThanOrEqual(221);
+    await expect(page.locator('.map-bay-label')).toHaveText('Puddlewick Bay');
+    await expect(page.locator('.map-deep-water')).toHaveAttribute('d', /M/);
     await page.screenshot({ path: 'test-results/resource-island.png' });
     await page.getByRole('button', { name: 'Fit parish', exact: true }).click();
     await page.evaluate(() => {

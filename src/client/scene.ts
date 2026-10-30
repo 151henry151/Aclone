@@ -1,3 +1,4 @@
+import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
 declare const __ACLONE_BASE__: string;
 import { configureVehicleVisual } from './vehicle-custom';
@@ -1493,12 +1494,22 @@ export class GameScene {
       if (local) {
         if (this.cameraMode === 1 && local.userData.charterBoat)
           local.userData.charterBoat.cockpit.update(
-            { ...p, heading: local.rotation.y, speed: local.userData.pose?.speed ?? p.speed },
+            {
+              ...p,
+              heading: local.rotation.y,
+              speed: local.userData.pose?.speed ?? p.speed,
+              depth: waterDepth(w, { x: local.position.x, z: local.position.z }),
+            },
             this.elapsed,
           );
         if (this.cameraMode === 1 && local.userData.fishingBoat)
           local.userData.fishingBoat.cockpit.update(
-            { ...p, heading: local.rotation.y, speed: local.userData.pose?.speed ?? p.speed },
+            {
+              ...p,
+              heading: local.rotation.y,
+              speed: local.userData.pose?.speed ?? p.speed,
+              depth: waterDepth(w, { x: local.position.x, z: local.position.z }),
+            },
             this.elapsed,
           );
         if (this.cameraMode === 1) updateTractorCockpit(local, p, this.elapsed, w);

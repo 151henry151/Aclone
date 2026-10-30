@@ -1,3 +1,4 @@
+import { waterDepth } from '../shared/fishing-water';
 import { HudPanels, hudPanels, type HudPanel } from './hud-panels';
 import { FrameInbox } from './frame-inbox';
 import { vehicleForm } from './vehicle-editor';
@@ -956,7 +957,7 @@ function updateHud() {
   if (commercial) {
     $('trawl-status').textContent = trawlStatus();
     $('trawl-toggle').textContent =
-      `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${trawlStatus()}`;
+      `${trawlExpanded ? '▾ Hide controls' : '▸ Fishing controls'} · ${trawlStatus()} · Depth ${waterDepth(world, me).toFixed(1)} m`;
     $('trawl-throttle').textContent =
       `Heading ${nauticalHeadingLabel(me.heading)} · Throttle ${Math.round((me.boatThrottle ?? 0) * 100)}% · Tank ${me.fuel.toFixed(1)}/${vehicleDef(world, me.vehicle).tank} · W/S adjust, A/D steer, B idle`;
   }
@@ -3727,7 +3728,7 @@ function trawlStatus() {
 function trawlControls() {
   if (!me || !world || !isTrawler(me.vehicle, world)) return '';
   const t = me.trawl;
-  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
+  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Depth ${waterDepth(world, me).toFixed(1)} m · Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }
 
 document.addEventListener('change', (event) => {

@@ -541,3 +541,7 @@ Livestock barns receive a fenced pasture on suitable clear land. Animals wander,
 ### Saved gathering grounds
 
 Portable world designs preserve additional surveyed gathering grounds in `additionalResources`: stable `extra-` IDs, resource type (`logs`, `stone`, `gravel` or `dirt`), name, coordinates, capacity and replenishment interval. These supplement the existing generated grounds. Puddlewick’s public-world expansion is applied once on the server and saves the chosen locations; importing its design into another world retains those sites.
+
+### Procedural seabeds
+
+Generated islands include a shallow southern bay, offshore shelves, basins and trenches. The original village, beaches and docking approaches retain their elevations. Custom heightmaps remain authoritative, and terrain brushes can still create islands or edit the seabed. Depth instruments and fishing use the same terrain and tide on the server and client; deeper water adds only a modest catch-rate advantage. Map water colours distinguish depths above and below 100 metres.

@@ -19,7 +19,7 @@ import {
   mapDistanceScale,
   type MapBounds,
 } from './map-layout';
-import { mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
+import { terrainHalf, mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
 import { mapTerrainPaths } from './map-water';
@@ -66,7 +66,7 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     this.viewport.addEventListener('pointerdown', () => {
@@ -500,6 +500,23 @@ export class ParishMap {
           class: 'map-water',
         }),
       );
+      drawing.append(
+        svg('path', { d: terrain.deepWater, fill: '#526f77', class: 'map-deep-water' }),
+      );
+      if (!this.world.landscape?.heightmap && terrainHalf(this.world) > 1000) {
+        const label = svg('text', {
+          x: this.x(0),
+          y: this.y(terrainHalf(this.world) * 0.5),
+          fill: '#d7e4df',
+          'font-size': 15,
+          'font-style': 'italic',
+          'text-anchor': 'middle',
+          'pointer-events': 'none',
+          class: 'map-bay-label',
+        });
+        label.textContent = this.world.id === 'puddlewick' ? 'Puddlewick Bay' : 'Bay';
+        drawing.append(label);
+      }
     } else {
       const coast = Math.max(0, Math.min(this.height, this.y(150)));
       drawing.append(

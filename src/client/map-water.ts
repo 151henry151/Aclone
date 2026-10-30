@@ -149,6 +149,10 @@ export function mapTerrainPaths(
     water: waterPath(
       tide ? { ...grid, heights: grid.heights.map((row) => row.map((h) => h - tide)) } : grid,
     ),
+    deepWater: waterPath({
+      ...grid,
+      heights: grid.heights.map((row) => row.map((h) => h + 100 - tide)),
+    }),
     minor: minor.join(''),
     major: major.join(''),
     labels,

@@ -23,7 +23,7 @@ test('fishing wheelhouse has a clear helm view and independent live navigation i
       const cockpit=boat.userData.fishingBoat.cockpit;
       const panel=boat.getObjectByName('Live marine instruments'), compass=boat.getObjectByName('Working nautical compass');
       const independent=panel.material.map!==other.getObjectByName('Live marine instruments').material.map && compass.material.map!==other.getObjectByName('Working nautical compass').material.map;
-      const p={heading:Math.PI/2,speed:4,fuel:2400,boatThrottle:.65,engine:true};
+      const p={heading:Math.PI/2,speed:4,fuel:2400,boatThrottle:.65,engine:true,depth:863.4};
       cockpit.update(p,1);const updated=panel.material.map.version;cockpit.update(p,2);const idle=panel.material.map.version===updated;
       const before=other.getObjectByName('Working nautical compass').material.map.version;
       cockpit.update({...p,heading:Math.PI,fuel:1600,boatThrottle:-.3},3);
@@ -72,6 +72,7 @@ test('fishing wheelhouse has a clear helm view and independent live navigation i
       const frame = await page.evaluate((view) => (window as any).renderWheelhouse(view), view);
       expect(frame.readings.heading).toBe(180);
       expect(frame.readings.fuel).toBe(2400);
+      expect(frame.readings.depth).toBe(863.4);
       expect(frame.readings.speedKnots).toBeCloseTo(7.775, 2);
       expect(frame.draws).toBeLessThan(38);
       await page.screenshot({ path: 'test-results/fishing-wheelhouse-' + view + '.png' });

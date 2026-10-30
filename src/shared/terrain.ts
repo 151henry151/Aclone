@@ -1,3 +1,4 @@
+import { seabedHeight } from './seabed';
 import { bluffHeight, nearBluff, coastalRockCover } from './coastal-bluffs';
 import { airfieldHeight } from './airfield';
 import { heightmapAt } from './landscape.ts';
@@ -72,11 +73,17 @@ export function terrainHeight(w: World, x: number, z: number) {
   if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
-  return airfieldHeight(
+  const surface = airfieldHeight(
     w.airfield,
     x,
     z,
     bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel),
+  );
+  if (w.landscape?.heightmap) return surface;
+  const blend = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
+  return (
+    surface +
+    (seabedHeight(surface, w.settings.seaLevel, x, z, half, terrainSeed(w)) - surface) * blend
   );
 }
 /** Woodland cover 0..1 for the generated countryside: zero in the village, in the

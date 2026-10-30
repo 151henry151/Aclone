@@ -82,6 +82,17 @@ test('HUD panels toggle independently, persist, and fit small laptop screens wit
         }
       await page.screenshot({ path: 'test-results/hud-' + width + '.png' });
     }
+    Object.assign(p, { vehicle: 30, fleet: [0, 30], x: 0, z: 230, fuel: 2000, engine: false });
+    await expect(page.locator('#trawl-toggle')).toContainText('Depth');
+    await page.locator('#trawl-toggle').click();
+    await expect(page.locator('#trawl-throttle')).toBeVisible();
+    const fishingOverlap = await page.evaluate(() => {
+      const map = document.querySelector('.left-panel')!.getBoundingClientRect(),
+        boat = document.querySelector('.bottom-left')!.getBoundingClientRect();
+      return map.bottom > boat.top;
+    });
+    expect(fishingOverlap).toBe(false);
+    await page.screenshot({ path: 'test-results/hud-fishing-1024.png' });
     await page.getByRole('button', { name: 'Hide chat', exact: true }).click();
     await expect(page.locator('#chat-log')).toBeHidden();
     await expect(page.locator('.minimap-panel')).toBeVisible();
