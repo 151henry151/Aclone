@@ -20,6 +20,7 @@ const detailRadius = 560,
 export class GroundTiles {
   constructor(private decorate: (mesh: T.Mesh) => void = () => {}) {}
   readonly group = new T.Group();
+  revision = 0;
   private tiles = new Map<string, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>();
   private world?: World;
   private pending?: {
@@ -36,6 +37,7 @@ export class GroundTiles {
     this.half = mapHalf(w);
   }
   clear() {
+    this.revision++;
     this.pending?.job.return(undefined as never);
     this.pending = undefined;
     for (const tile of this.tiles.values()) {
@@ -76,6 +78,7 @@ export class GroundTiles {
         tile.material.dispose();
         this.group.remove(tile);
         this.tiles.delete(key);
+        this.revision++;
       }
     }
     const lo = Math.floor((-this.half - 1) / groundTileSize),
@@ -117,6 +120,7 @@ export class GroundTiles {
       if (step.done) {
         const old = this.tiles.get(this.pending.key);
         this.tiles.set(this.pending.key, step.value);
+        this.revision++;
         this.pending = undefined;
         if (old) {
           this.group.remove(old);

@@ -8,6 +8,7 @@ import { createCharterBoat } from './charter-boat';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
 import { charterPassengerPosition } from '../shared/charter';
 import { coastalRocks } from './coastal-rocks';
+import { HorizonLand } from './horizon-land';
 import { LighthouseLights } from './lighthouse-lights';
 import { Ocean } from './ocean';
 import { boatSeaPose, waterLevel } from '../shared/ocean';
@@ -129,7 +130,7 @@ export class GameScene {
   private audioFacing = new T.Vector3();
   readonly renderer: T.WebGLRenderer;
   readonly scene = new T.Scene();
-  readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 12000);
+  readonly camera = new T.PerspectiveCamera(53, 1, 0.1, 80000);
   private land = new T.Group();
   private actors = new T.Group();
   private space = new T.Group();
@@ -215,6 +216,7 @@ export class GameScene {
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
   private lighthouseLights = new LighthouseLights();
+  private horizon = new HorizonLand();
   private ocean = new Ocean();
   private ground = new GroundTiles((mesh) => this.ocean.absorb(mesh));
   private woods = new CountrysideChunks();
@@ -280,6 +282,7 @@ export class GameScene {
     this.scene.add(
       this.land,
       this.lighthouseLights.group,
+      this.horizon.group,
       this.ocean.surf.group,
       this.ground.group,
       this.woods.group,
@@ -453,6 +456,7 @@ export class GameScene {
     this.space.visible = false;
     this.land.visible = true;
     this.lighthouseLights.group.visible = true;
+    this.horizon.group.visible = mapHalf(world) > legacyHalf + 50;
     this.ground.group.visible = true;
     this.woods.group.visible = true;
     this.actors.visible = true;
@@ -614,10 +618,11 @@ export class GameScene {
       // Generate nearest tiles first, yielding between small batches rather than
       // baking the entire horizon in the first state-message handler.
       while (current()) {
+        const horizonPending = this.horizon.prepare();
         const groundPending = this.ground.update(this.me!.x, this.me!.z, 2);
         const woodsPending = this.woods.update(this.me!.x, this.me!.z, 1);
         await yieldFrame();
-        if (!groundPending && !woodsPending) break;
+        if (!groundPending && !woodsPending && !horizonPending) break;
       }
       if (!current()) return;
       performance.mark('aclone-terrain-prepared');
@@ -709,6 +714,7 @@ export class GameScene {
     this.land.visible = false;
     this.ocean.surf.group.visible = false;
     this.lighthouseLights.group.visible = false;
+    this.horizon.group.visible = false;
     this.ground.group.visible = false;
     this.woods.group.visible = false;
     this.actors.visible = false;
@@ -729,6 +735,8 @@ export class GameScene {
     // Compact parishes keep the single hand-sized plane; larger maps stream tiles.
     const streamed = mapHalf(w) > legacyHalf + 50;
     this.ground.clear();
+    this.horizon.reset(w);
+    this.horizon.group.visible = streamed;
     if (streamed) {
       this.ground.reset(w);
       this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 4);
@@ -1756,7 +1764,9 @@ export class GameScene {
         seaTime,
         daylight,
         climate.storm ? 1 : climate.precipitation === 'rain' ? 0.4 : 0,
+        this.container.clientHeight,
       );
+      this.horizon.update(w, this.camera, this.ground, this.ocean.level.value, daylight);
       const visibility = viewFog(climate);
       this.scene.fog.near = visibility.near;
       this.scene.fog.far = visibility.far;

@@ -60,6 +60,6 @@ test('ordinary haze reveals neighbouring towns while storms retain reduced visib
   const clear = viewFog({ precipitation: 'clear', storm: false });
   const rain = viewFog({ precipitation: 'rain', storm: false });
   const storm = viewFog({ precipitation: 'snow', storm: true });
-  assert.ok(clear.far < 950 && clear.near >= 250);
+  assert.ok(clear.far >= 30000 && clear.near >= 250);
   assert.ok(clear.far > rain.far && rain.far > storm.far);
 });

@@ -1,3 +1,4 @@
+import { refractedEarthRadius } from '../shared/marine-visibility';
 import { CoastalSurf } from './coastal-surf';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -81,7 +82,12 @@ export class Ocean {
             #ifdef USE_INSTANCING
             oceanWorld = instanceMatrix * oceanWorld;
             #endif
-            vOceanPosition = (modelMatrix * oceanWorld).xyz;`,
+            vOceanPosition = (modelMatrix * oceanWorld).xyz;
+            vec3 apparentWorld = vOceanPosition;
+            vec2 horizonDelta = apparentWorld.xz-cameraPosition.xz;
+            apparentWorld.y -= dot(horizonDelta,horizonDelta)/${(2 * refractedEarthRadius).toFixed(1)};
+            mvPosition = viewMatrix * vec4(apparentWorld,1.0);
+            gl_Position = projectionMatrix * mvPosition;`,
             );
           shader.fragmentShader =
             'uniform float oceanLevel;\nuniform vec3 oceanTint;\n' + decl + shader.fragmentShader;
@@ -96,7 +102,7 @@ export class Ocean {
             #include <opaque_fragment>`,
           );
         };
-        mat.customProgramCacheKey = () => key + '-ocean-extinction-v1';
+        mat.customProgramCacheKey = () => key + '-ocean-extinction-curvature-v2';
         mat.needsUpdate = true;
       }
     });
@@ -167,6 +173,15 @@ export class Ocean {
         `#include <begin_vertex>
         transformed.y+=seaWave.x;
         vSeaWorld=(modelMatrix*vec4(transformed,1.0)).xyz;vSeaGround=seaGround;`,
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <project_vertex>',
+        `#include <project_vertex>
+        vec3 apparentSea=(modelMatrix*vec4(transformed,1.)).xyz;
+        vec2 horizonDelta=apparentSea.xz-cameraPosition.xz;
+        apparentSea.y-=dot(horizonDelta,horizonDelta)/${(2 * refractedEarthRadius).toFixed(1)};
+        mvPosition=viewMatrix*vec4(apparentSea,1.);
+        gl_Position=projectionMatrix*mvPosition;`,
       );
       shader.fragmentShader =
         'uniform sampler2D seaFoam;uniform float oceanTime;uniform float oceanAmplitude;uniform float oceanLevel;varying vec3 vSeaWorld;varying float vSeaGround;\n' +

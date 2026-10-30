@@ -11,6 +11,11 @@ All notable changes to Aclone are documented here. This project follows
 - Add eight mixed-resource regions, dispersed wood gathering and stone near Puddlewick’s coastal bluffs, preserving all existing sites and depletion.
 
 
+### Fixed
+
+- Keep distant buildings supported by an island silhouette and show lighthouse flashes as navigation points up to their geographic horizon, without floodlighting the sea.
+
+
 ## [0.106.0] - 2026-10-29
 
 ### Added

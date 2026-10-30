@@ -447,3 +447,5 @@ Press **M** or click the minimap. The scale bar below the map shows real ground 
 ## Island gathering grounds
 
 Puddlewick’s countryside includes eight richer areas with wood, stone, gravel and topsoil together, extra woodland clearings scattered across the island, and stone outcrops inland of the coastal cliffs. Each richer area has four sites of each resource type. Original town and countryside gathering grounds remain in place. The new grounds use the same tools, carrying limits, yields and replenishment times as existing ones. Look for their resource icons on the parish map; cliff-side sites are on accessible ground above high tide.
+
+Distant land remains visible beyond detailed scenery. Low shore disappears over the geographic horizon before taller hills. Lighthouse navigation points brighten as they rotate toward you, with no shafts or broad illumination. Range is limited by terrain, weather and height, capped at 30 km.
