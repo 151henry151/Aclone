@@ -107,3 +107,66 @@ test('underwater contrast fades with depth and distant seabed is fully obscured'
     await server.close();
   }
 });
+
+test('storm water shader stays aligned with a rowing lifeboat in an old world', async ({
+  page,
+}) => {
+  const server = await createServer({ server: { port: 0, host: '127.0.0.1' } });
+  await server.listen();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  try {
+    await page.route('**/__old-storm', (r) =>
+      r.fulfill({
+        contentType: 'text/html',
+        body: `
+      <!doctype html><script type="module">
+      import * as T from '/node_modules/three/build/three.module.js';
+      import {Ocean} from '/src/client/ocean.ts';
+      import {createWorld} from '/src/shared/simulation.ts';
+      import {defaultCreator} from '/src/shared/creator.ts';
+      import {boatSeaPose,swell} from '/src/shared/ocean.ts';
+      const w=createWorld('puddlewick','Puddlewick','server');
+      w.settings.mapSize=18500;w.terrainMapSize=12500;w.settings.seaLevel=0;w.settings.tidalRange=0;
+      w.creator={...defaultCreator(),weather:'thunderstorm'};
+      const ocean=new Ocean(),scene=new T.Scene();scene.add(ocean.create(w));
+      // Read the actual production vertex shader's displaced surface through a
+      // one-pixel height output, rather than testing only the CPU wave formula.
+      const material=ocean.mesh.material,compile=material.onBeforeCompile;
+      material.onBeforeCompile=(shader,renderer)=>{
+        compile.call(material,shader,renderer);
+        shader.fragmentShader='varying vec3 vSeaWorld;void main(){gl_FragColor=vec4(vec3((vSeaWorld.y+3.)/6.),1.);}';
+      };
+      const camera=new T.OrthographicCamera(-.001,.001,.001,-.001,.1,200);
+      camera.up.set(0,0,-1);
+      const renderer=new T.WebGLRenderer(),target=new T.WebGLRenderTarget(1,1);
+      renderer.setRenderTarget(target);
+      let error=0,largestHullStep=0,previous;
+      const pixel=new Uint8Array(4);
+      for(let frame=0;frame<180;frame++){
+        const time=2611787.444+frame/60,x=6+frame/60*2.7,z=6500.71;
+        ocean.update(w,x,z,time,1/60);camera.position.set(x,100,z);camera.lookAt(x,0,z);
+        renderer.render(scene,camera);renderer.readRenderTargetPixels(target,0,0,1,1,pixel);
+        const expected=swell(x,z,time,ocean.amplitude.value).height;
+        error=Math.max(error,Math.abs(pixel[0]/255*6-3-expected));
+        const hull=boatSeaPose(w,x,z,Math.PI/2,3,1.6,time,ocean.amplitude.value);
+        if(previous!==undefined)largestHullStep=Math.max(largestHullStep,Math.abs(hull.y-previous));previous=hull.y;
+      }
+      window.result={error,largestHullStep};renderer.dispose();target.dispose();
+      </script>`,
+      }),
+    );
+    await page.goto(server.resolvedUrls!.local[0] + '__old-storm');
+    await page.waitForFunction(() => (window as any).result);
+    const result = await page.evaluate(() => (window as any).result);
+    expect(result.error).toBeLessThan(0.065);
+    expect(result.largestHullStep).toBeLessThan(0.08);
+    expect(errors).toEqual([]);
+  } finally {
+    await page.close();
+    await server.close();
+  }
+});

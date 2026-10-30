@@ -15,6 +15,10 @@ export class Ocean {
   readonly level = { value: 0 };
   readonly tint = { value: new T.Color('#17454c') };
   readonly time = { value: 0 };
+  // GLSL float clocks lose sub-frame precision after weeks of world uptime.
+  // Wrap each spectral component separately; their periods are not commensurate.
+  readonly wavePhase = { value: new T.Vector3() };
+  readonly foamPhase = { value: new T.Vector2() };
   readonly amplitude = { value: 0 };
   private patched = new WeakSet<T.Material>();
   mesh?: T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>;
@@ -22,6 +26,7 @@ export class Ocean {
   private sampleX = Infinity;
   private sampleZ = Infinity;
   private samples = new Float32Array();
+  private survey?: { x: number; z: number; next: number; depths: Float32Array };
   private depthKeys = new Float64Array(131072).fill(NaN);
   private depthValues = new Float32Array(131072);
   private spray: T.Points;
@@ -113,14 +118,25 @@ export class Ocean {
     this.sampleX = Infinity;
     this.sampleZ = Infinity;
     this.depthKeys.fill(NaN);
+    this.survey = undefined;
     const n = low ? 64 : 96;
     const g = new T.PlaneGeometry(1, 1, n, n);
     g.rotateX(-Math.PI / 2);
     const p = g.attributes.position;
-    // Four-metre near field, gently increasing spacing towards the fog horizon.
-    const extent = (v: number) =>
-      Math.sign(v) *
-      (Math.abs(v) < 0.65 ? Math.abs(v) * 300 : 195 + ((Math.abs(v) - 0.65) / 0.35) ** 2 * 1205);
+    // Two-metre cells around the hull resolve the shortest (13 m) swell.
+    // The 16 m recenter step is an exact multiple: retained near-field triangles
+    // stay fixed in world space instead of changing the water beneath the boat.
+    const nearCells = low ? 24 : 32;
+    const extent = (v: number) => {
+      const cell = Math.round((Math.abs(v) * n) / 2);
+      return (
+        Math.sign(v) *
+        (cell <= nearCells
+          ? cell * 2
+          : nearCells * 2 +
+            ((cell - nearCells) / (n / 2 - nearCells)) ** 2 * (1400 - nearCells * 2))
+      );
+    };
     for (let i = 0; i < p.count; i++) p.setXYZ(i, extent(p.getX(i) * 2), 0, extent(p.getZ(i) * 2));
     this.samples = new Float32Array(p.count);
     g.setAttribute('seaGround', new T.BufferAttribute(this.samples, 1));
@@ -130,14 +146,14 @@ export class Ocean {
     m.color.set('#327d87');
     m.roughness = 0.28;
     const waveCode = SWELLS.map(
-      ([x, z, l, period, a, phase]) => `{
-      float phase=dot(p,vec2(${x.toFixed(5)},${z.toFixed(5)}))*${((2 * Math.PI) / l).toFixed(7)}-oceanTime*${((2 * Math.PI) / period).toFixed(7)}+${phase.toFixed(5)};
+      ([x, z, l, , a, phase], i) => `{
+      float phase=dot(p,vec2(${x.toFixed(5)},${z.toFixed(5)}))*${((2 * Math.PI) / l).toFixed(7)}+oceanWavePhase[${i}]+${phase.toFixed(5)};
       float a=oceanAmplitude*${a.toFixed(5)}*clamp(depth/3.0,0.0,1.0);
       wave.x+=a*sin(phase);
       wave.yz+=a*${((2 * Math.PI) / l).toFixed(7)}*vec2(${x.toFixed(5)},${z.toFixed(5)})*cos(phase);
     }`,
     ).join('\n');
-    const funcs = `uniform float oceanTime;uniform float oceanAmplitude;uniform float oceanLevel;attribute float seaGround;varying vec3 vSeaWorld;varying float vSeaGround;
+    const funcs = `uniform vec3 oceanWavePhase;uniform float oceanAmplitude;uniform float oceanLevel;attribute float seaGround;varying vec3 vSeaWorld;varying float vSeaGround;
       vec3 oceanWave(vec2 p,float depth){vec3 wave=vec3(0.0);${waveCode}return wave;}`;
     const foamPixels = new Uint8Array(64 * 64 * 4);
     let seed = 712367;
@@ -155,7 +171,8 @@ export class Ocean {
     m.onBeforeCompile = (shader, renderer) => {
       compile.call(m, shader, renderer);
       Object.assign(shader.uniforms, {
-        oceanTime: this.time,
+        oceanWavePhase: this.wavePhase,
+        oceanFoamPhase: this.foamPhase,
         oceanAmplitude: this.amplitude,
         oceanLevel: this.level,
         seaFoam: { value: foamTexture },
@@ -184,15 +201,15 @@ export class Ocean {
         gl_Position=projectionMatrix*mvPosition;`,
       );
       shader.fragmentShader =
-        'uniform sampler2D seaFoam;uniform float oceanTime;uniform float oceanAmplitude;uniform float oceanLevel;varying vec3 vSeaWorld;varying float vSeaGround;\n' +
+        'uniform sampler2D seaFoam;uniform vec2 oceanFoamPhase;uniform float oceanAmplitude;uniform float oceanLevel;varying vec3 vSeaWorld;varying float vSeaGround;\n' +
         shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <color_fragment>',
         `#include <color_fragment>
         float depth=oceanLevel-vSeaGround;
         // Moving surf bands follow the actual shore-depth contour, including tides.
-        float fleck=smoothstep(.28,.7,texture2D(seaFoam,vSeaWorld.xz*.07+vec2(oceanTime*.012,0.0)).r);
-        float surf=pow(max(0.0,sin(depth*3.8+oceanTime*2.0+fleck*.8)),5.0);
+        float fleck=smoothstep(.28,.7,texture2D(seaFoam,vSeaWorld.xz*.07+vec2(oceanFoamPhase.x,0.0)).r);
+        float surf=pow(max(0.0,sin(depth*3.8+oceanFoamPhase.y+fleck*.8)),5.0);
         surf*=smoothstep(0.0,.18,depth)*(1.0-smoothstep(.5,3.0+oceanAmplitude,depth));
         surf*=smoothstep(.02,.35,oceanAmplitude);
         surf*=.12+.88*fleck;
@@ -205,7 +222,7 @@ export class Ocean {
         'diffuseColor.a *= max(foam*.9, mix(0.40, 0.97, pow(seaGrazing, 2.0)));',
       );
     };
-    m.customProgramCacheKey = () => 'ocean-swell-foam-v1';
+    m.customProgramCacheKey = () => 'ocean-swell-foam-v2';
     this.mesh = new T.Mesh(g, m);
     this.mesh.name = 'Tidal ocean and breaking surf';
     // An opaque far-water bed closes the volume beyond the extinction distance.
@@ -225,23 +242,44 @@ export class Ocean {
     this.world = w;
     this.level.value = waterLevel(w, time);
     this.time.value = time;
+    for (let i = 0; i < SWELLS.length; i++) {
+      const period = SWELLS[i][3];
+      this.wavePhase.value.setComponent(i, -(time % period) * ((2 * Math.PI) / period));
+    }
+    this.foamPhase.value.set((time * 0.012) % 1, (time * 2) % (2 * Math.PI));
     this.amplitude.value = oceanWeather(w).amplitude;
     this.tint.value.setRGB(0.012, 0.07, 0.085).multiplyScalar(0.12 + 0.88 * light);
     if (this.mesh) {
       this.mesh.position.y = this.level.value;
       const cx = Math.round(x / 16) * 16,
         cz = Math.round(z / 16) * 16;
-      if (cx !== this.sampleX || cz !== this.sampleZ) {
-        this.sampleX = cx;
-        this.sampleZ = cz;
-        this.mesh.position.x = cx;
-        this.mesh.position.z = cz;
-        const p = this.mesh.geometry.attributes.position;
-        for (let i = 0; i < p.count; i++)
-          this.samples[i] = this.bathymetry(w, cx + p.getX(i), cz + p.getZ(i));
-        this.mesh.geometry.attributes.seaGround.needsUpdate = true;
+      // A teleport must not leave the sea behind for several survey frames.
+      const relocated = Math.hypot(cx - this.sampleX, cz - this.sampleZ) > 256;
+      if (relocated || (!this.survey && (cx !== this.sampleX || cz !== this.sampleZ)))
+        this.survey = { x: cx, z: cz, next: 0, depths: new Float32Array(this.samples.length) };
+      if (this.survey) {
+        const survey = this.survey,
+          p = this.mesh.geometry.attributes.position;
+        // Initial placement is part of scene warmup. During travel, retain the
+        // previous complete surface while surveying the next one in small batches.
+        const initial = !Number.isFinite(this.sampleX) || relocated;
+        const end = Math.min(p.count, survey.next + (initial ? p.count : 512));
+        const deadline = performance.now() + 2;
+        while (survey.next < end) {
+          const i = survey.next++;
+          survey.depths[i] = this.bathymetry(w, survey.x + p.getX(i), survey.z + p.getZ(i));
+          if (!initial && survey.next % 32 === 0 && performance.now() >= deadline) break;
+        }
+        if (survey.next === p.count) {
+          this.samples.set(survey.depths);
+          this.sampleX = this.mesh.position.x = survey.x;
+          this.sampleZ = this.mesh.position.z = survey.z;
+          this.mesh.geometry.attributes.seaGround.needsUpdate = true;
+          this.survey = undefined;
+        }
       }
     }
+
     let visible = false;
     for (let i = 0; i < this.ages.length; i++) {
       this.ages[i] += dt;
