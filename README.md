@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.109.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.109.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -13,6 +13,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
 Version 0.109.0 adds a coastal tug with paid rescue contracts, a rowable outboard motorboat and tender recovery, seven specialist cargo trailers, revised boat scale, a walking flashlight and twice the tractor camera zoom range. Roads favour gentler terrain and can finally reach the cape lighthouses; runways no longer count as road connections. The fenced spaceport moves to about 1.25 km from town. See [boats, rescue and haulage](docs/HAULAGE.md) and [spaceport details](docs/SPACEPORT.md).
+
+Version 0.109.1 keeps runway and hangar-apron pavement snow-free with normal paved traction, independently of public-road connectivity, and refreshes the browser regression checks.
 
 Version 0.107.0: Puddlewick gains eight mixed resource clusters, more woodland gathering sites across the island, and stone near its coastal bluffs, while preserving every existing gathering ground.
 

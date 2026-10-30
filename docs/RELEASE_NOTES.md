@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.109.1 — Aviation pavement and regression checks
+
+The rescue and haulage release ships with this final correction: removing runways from public-road routing must not remove their cleared surface or paved traction. Runways and hangar aprons now retain both. Browser checks use current HUD menus and navigation lights, verify the relocated spaceport through the directory, and rotate aircraft at flying speed during the takeoff test.
+
 ## 0.109.0 — Rescue boats and working trailers
 
 The new 140s coastal tug handles agreed rescue fees, escrow and real towlines. The 24s outboard is a quick 50-cargo boat that can be rowed with an empty tank, fish with a rod and return as a towed tender after a fuel delivery. The canal boat now costs 60s; the trawler's hull grows to 24.5 m for its three-week game-time voyages without enlarging the crew.

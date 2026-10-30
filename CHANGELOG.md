@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.109.1] - 2026-10-30
+
+### Fixed
+
+- Runways and hangar aprons retain cleared snow surfaces and paved traction while remaining separate from the public road network.
+- Browser regression checks follow the current HUD menus, relocated spaceport and lighthouse navigation signals, and use a normal takeoff rotation instead of stalling throughout the runway roll.
+
 ## [0.109.0] - 2026-10-30
 
 ### Added
