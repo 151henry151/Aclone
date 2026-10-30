@@ -433,6 +433,27 @@ export class GameScene {
     });
     this.renderer.setAnimationLoop(() => this.frame());
   }
+  /** Drop stale interpolation/camera easing after a background or suspended frame. */
+  private resumePending = false;
+  resumeMotion() {
+    this.resumePending = true;
+    const now = performance.now();
+    this.graphicsBudget.reset();
+    this.lastTime = this.renderTime = now;
+    this.motionClock = new MotionClock();
+    this.prediction.reset();
+    if (this.world && this.me) {
+      this.motionClock.receive(this.world.time, now);
+      for (const [id, mesh] of this.meshes) {
+        const p = this.world.players[id];
+        if (!p) continue;
+        const track = new MotionTrack();
+        track.receive(this.world.time, p);
+        mesh.userData.motion = track;
+        mesh.userData.snapCamera = true;
+      }
+    }
+  }
   resize() {
     const w = this.container.clientWidth,
       h = this.container.clientHeight;
@@ -518,7 +539,9 @@ export class GameScene {
     this.aircraftCrashes.receive(world);
     this.fields.update(world, this.me);
     this.livestock.update(world, this.me);
+    if (this.resumePending) this.motionClock = new MotionClock();
     const resetMotion = this.motionClock.receive(world.time, performance.now());
+    this.resumePending = false;
     for (const p of Object.values(world.players)) {
       const paint = vehiclePaint(p);
       const displayVehicle =
@@ -1198,6 +1221,7 @@ export class GameScene {
     // and terrain work between its small asynchronous preparation batches.
     if ((!this.ready && !this.settling && !preparing) || document.hidden) return;
     const now = performance.now();
+    if (now - this.lastTime > 1000) this.resumeMotion();
     const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
     const renderTime = pacedRenderTime(now, this.renderTime, interval);
     if (renderTime === undefined) return;

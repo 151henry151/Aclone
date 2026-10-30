@@ -1,3 +1,4 @@
+import { FrameInbox } from './frame-inbox';
 import { vehicleForm } from './vehicle-editor';
 import { isTrawler } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -412,8 +413,33 @@ async function api(path: string, options: RequestInit = {}) {
   if (!res.ok) throw Error(data.error ?? 'Request failed');
   return data;
 }
+type StatePresentation = { world: string; me: string; inputAck?: number; inputElapsed?: number };
+const stateInbox = new FrameInbox<StatePresentation>((state) => {
+  if (!world || world.id !== state.world) return;
+  inSpace = false;
+  localStorage.setItem('aclone.world', world!.id);
+  $('overlay').innerHTML = '';
+  $('world-hud').hidden = !scene.ready;
+  scene.setWorld(world!, state.me);
+  scene.prediction.receive(
+    world!,
+    me!,
+    state.inputAck ?? 0,
+    state.inputElapsed ?? 0,
+    performance.now(),
+  );
+  $('world-hud').hidden = !scene.ready;
+  updateHud();
+  if (me) {
+    const alert = trawlCapacityAlerts.update(world!.id, me, world);
+    if (alert) toast(alert, false, 12000);
+  }
+  refreshTradingPrices();
+  if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
+});
 let inputStream = new InputStream();
 async function connect() {
+  stateInbox.clear();
   inputStream = new InputStream();
   scene.prediction.reset();
   clearTimeout(reconnectTimer);
@@ -451,30 +477,17 @@ async function connect() {
       items = worldItems(world!);
       skills = worldSkills(world!);
       if (msg.account) account = msg.account;
-      inSpace = false;
-      localStorage.setItem('aclone.world', world!.id);
-      $('overlay').innerHTML = '';
-      $('world-hud').hidden = !scene.ready;
-      scene.setWorld(world!, msg.me);
-      scene.prediction.receive(
-        world!,
-        me!,
-        msg.inputAck ?? 0,
-        msg.inputElapsed ?? 0,
-        performance.now(),
-      );
-      $('world-hud').hidden = !scene.ready;
-      updateHud();
-      if (me) {
-        const alert = trawlCapacityAlerts.update(world!.id, me, world);
-        if (alert) toast(alert, false, 12000);
-      }
-      refreshTradingPrices();
-      if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
+      stateInbox.push({
+        world: world!.id,
+        me: msg.me,
+        inputAck: msg.inputAck,
+        inputElapsed: msg.inputElapsed,
+      });
       if (msg.sequence !== undefined && ws?.readyState === WebSocket.OPEN)
         ws.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
     }
     if (msg.type === 'space') {
+      stateInbox.clear();
       setChatRecipient();
       account = msg.account;
       registry = msg.galaxy.worlds;
@@ -3424,9 +3437,18 @@ window.addEventListener('keyup', (e) => {
   if (wasHeld && e.key === 'Tab' && weapon === 'javelin' && world && !panel && !mobile.drawer)
     send({ type: 'fire', weapon });
 });
-window.addEventListener('blur', () => keys.clear());
+window.addEventListener('blur', () => {
+  keys.clear();
+  stateInbox.setActive(!document.hidden);
+});
+window.addEventListener('focus', () => {
+  scene.resumeMotion();
+  stateInbox.setActive(!document.hidden);
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) keys.clear();
+  else scene.resumeMotion();
+  stateInbox.setActive(!document.hidden);
   sound.setActive(!document.hidden && scene.ready);
 });
 const controller = new Controller(

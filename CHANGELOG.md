@@ -13,6 +13,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Resume at the latest game state after switching windows instead of replaying stale motion and camera interpolation.
+
 - Keep distant buildings supported by an island silhouette and show lighthouse flashes as navigation points up to their geographic horizon, without floodlighting the sea.
 
 

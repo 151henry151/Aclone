@@ -33,6 +33,16 @@ test('actual chase camera stays above offshore water after orbiting and smoothin
       }
       game.renderer.render=render;render(game.scene,game.camera);return heights;
     };
+    window.checkResume=()=>{
+      p.vehicle=30;p.x=0;p.z=6500;game.setWorld(w,p.id);
+      game.cameraMode=0;game.lookPitch=0;game.zoom=1;game.orbit=0;
+      game.camera.position.set(-900,25,6100);
+      game.resumeMotion();
+      p.x=300;w.time+=30;game.setWorld(w,p.id);
+      game.prediction.receive(w,p,0,0,performance.now());
+      game.renderTime=0;game.lastTime=performance.now()-16;game.frame(true);
+      return {gap:Math.hypot(game.camera.position.x-p.x,game.camera.position.z-p.z),actor:game.meshes.get(p.id).position.x,predicted:game.prediction.sample(performance.now(),{throttle:0,steer:0,boost:false}).x};
+    };
     window.cameraReady=()=>game.ready;
     </script>`,
       }),
@@ -45,6 +55,10 @@ test('actual chase camera stays above offshore water after orbiting and smoothin
     expect(heights).toHaveLength(12);
     for (const y of heights) expect(y).toBeGreaterThanOrEqual(0.599);
     await page.screenshot({ path: 'test-results/boat-lowest-camera.png' });
+    const resume = await page.evaluate(() => (window as any).checkResume());
+    expect(resume.gap).toBeLessThan(100);
+    expect(resume.actor).toBeCloseTo(300);
+    expect(resume.predicted).toBeCloseTo(300);
     expect(errors).toEqual([]);
   } finally {
     await page.close();

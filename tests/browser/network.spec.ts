@@ -12,6 +12,9 @@ import { slowLink } from '../fixtures/slow-link.ts';
 test('parked neighbours and a throttled internet link retain playable controls and chat', async ({
   page,
 }, info) => {
+  // Two full software-WebGL loads, shaped-network samples and teardown.
+  // Keep individual interaction deadlines unchanged.
+  test.setTimeout(300000);
   const dir = mkdtempSync(join(tmpdir(), 'aclone-browser-network-'));
   const options: AppOptions = { dataDir: dir, port: 0, dev: true };
   const app = await createApp(options);
