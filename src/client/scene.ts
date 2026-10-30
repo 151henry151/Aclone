@@ -1,3 +1,4 @@
+import { spaceportFence } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
 declare const __ACLONE_BASE__: string;
@@ -488,6 +489,7 @@ export class GameScene {
       JSON.stringify(world.terrain) +
       JSON.stringify(world.coastalBluffs ?? []) +
       JSON.stringify(world.airfield ?? null) +
+      JSON.stringify(world.spaceportSite ?? null) +
       JSON.stringify(world.landscape ?? {}) +
       JSON.stringify(world.roads ?? []) +
       JSON.stringify(world.retiredRoads ?? []) +
@@ -777,6 +779,7 @@ export class GameScene {
       this.land.add(this.terrain);
     }
     if (w.airfield) this.land.add(airfieldModel(w.airfield));
+    if (w.spaceportSite) this.land.add(spaceportFence(w));
     if (w.coastalBluffs?.length) this.land.add(coastalRocks(w));
     const sea = this.ocean.create(w, this.low);
     this.water = sea;
