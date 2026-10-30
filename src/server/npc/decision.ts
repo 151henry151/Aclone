@@ -113,7 +113,6 @@ export const playerOperations = [
   'offerTrade',
   'serviceVehicle',
   'buyMap',
-  'respawn',
   'exchange',
   'takeoff',
   'land',

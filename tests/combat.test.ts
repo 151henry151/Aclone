@@ -114,7 +114,7 @@ test('a round cannot cross even a thin safe-zone boundary between integration st
   assert.equal(w.projectiles.length, 0);
 });
 
-test('leaving via town reset drops a flag; drone and aerial objective exploits are rejected', () => {
+test('leaving combat drops a flag; drone and aerial objective exploits are rejected', () => {
   const { w, a, b } = setup();
   act(w, a.id, { type: 'joinCombat', mode: 'ctf' });
   act(w, b.id, { type: 'joinCombat', mode: 'ctf' });
@@ -124,7 +124,7 @@ test('leaving via town reset drops a flag; drone and aerial objective exploits a
   b.z = -110;
   advance(w, 0.1);
   assert.equal(w.combat!.flags[1].carrier, a.id);
-  act(w, a.id, { type: 'respawn' });
+  act(w, a.id, { type: 'leaveGame' });
   assert.equal(a.game, undefined);
   assert.equal(w.combat!.flags[1].carrier, undefined);
   act(w, a.id, { type: 'joinCombat', mode: 'ctf' });

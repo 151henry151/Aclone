@@ -701,10 +701,6 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           : 'Sound a brief horn; avoid disturbing neighbours.',
       [action({ type })],
     );
-  if (state.recovery?.streak && state.recovery.streak >= 3)
-    add('recovery', 'Use the ordinary return-to-spawn action after repeated navigation failures.', [
-      operation('respawn'),
-    ]);
   for (const b of buildings.filter(
     (b) =>
       b.owner === p.id &&

@@ -479,6 +479,11 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  // Reject legacy clients before clearing courses or changing any other player state.
+  if (type === 'respawn')
+    throw Error(
+      'Returning to town requires travel. Ask another player for fuel or recovery assistance.',
+    );
   if (
     p.charterPassage &&
     ![
@@ -526,7 +531,6 @@ export function act(w: World, id: string, a: Action): string {
         'hitch',
         'joinGame',
         'joinCombat',
-        'respawn',
         'gather',
         'construct',
         'work',
@@ -535,8 +539,6 @@ export function act(w: World, id: string, a: Action): string {
       ].includes(type))
   )
     throw Error('Land the aircraft before starting another activity');
-  if (aboardBoat(w, p) && type === 'respawn' && p.health > 0)
-    throw Error('Return to a dock to leave your boat; use the lifeboat if out of fuel');
   if (type === 'maintenance') return maintenanceAction(w, p, a);
   if (w.maintenance?.paused && type !== 'chat') throw Error('World paused for maintenance');
   if (type === 'propertyContract') return propertyContractAction(w, p, a);
@@ -575,8 +577,7 @@ export function act(w: World, id: string, a: Action): string {
   if (type === 'construct' && w.roundCycle?.phase === 'war')
     throw Error('Wait for the build or peace phase before construction');
   if (type === 'course') return courseAction(w, p, a);
-  if (['respawn', 'joinGame', 'vehicle', 'outside', 'home', 'crow'].includes(type))
-    delete p.courseRun;
+  if (['joinGame', 'vehicle', 'outside', 'home', 'crow'].includes(type)) delete p.courseRun;
   if (type === 'landscape') return landscapeAction(w, p, a);
   if (type === 'catalogue') {
     setCatalogue(w, p, a.catalogue);
@@ -2042,14 +2043,6 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'command':
       return command(w, p, str(a.text, 300));
-    case 'respawn':
-      leaveCombat(w, p);
-      if (p.game === 'combat') delete p.game;
-      p.x = 0;
-      p.z = 17;
-      p.y = 0.15;
-      p.speed = 0;
-      break;
     default:
       throw Error('Unknown action');
   }
@@ -2114,7 +2107,7 @@ export function command(w: World, p: Player, text: string): string {
   };
   switch (cmd) {
     case 'help':
-      return 'Player: *showfuel *showjobs *showowned *economy *me *resetpos *town *showresidents [town]. Admin: *say *announce *kick *gag *teleport *cash *grantitem *settime *sethealth *setvehicle *sethometown [player] [town] *fighting.';
+      return 'Player: *showfuel *showjobs *showowned *economy *me *town *showresidents [town]. Admin: *say *announce *kick *gag *teleport *cash *grantitem *settime *sethealth *setvehicle *sethometown [player] [town] *fighting.';
     case 'town': {
       const home = p.town ? findTown(w, p.town) : undefined;
       return home ? residentList(w, home) : 'You have no home town. Join one at its town plinth.';
@@ -2156,11 +2149,9 @@ export function command(w: World, p: Player, text: string): string {
       say(w, p.name, args.join(' '), 'emote');
       break;
     case 'resetpos':
-      requireThat(!aboardBoat(w, p), 'Return to a dock; use the lifeboat if out of fuel');
-      p.x = 0;
-      p.z = 17;
-      p.speed = 0;
-      break;
+      throw Error(
+        'Position reset is unavailable. Ask another player for fuel or recovery assistance.',
+      );
     case 'say':
     case 'announce':
       say(w, 'Caretaker', args.join(' '));
