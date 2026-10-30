@@ -6,6 +6,22 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.111.0] - 2026-10-30
+
+### Added
+
+- Spaceport evening window lighting with staggered closing hours, overnight gatehouse and control-room lights, and shielded loading-bay, yard, parking and entrance fixtures that stay on until dawn. Lights share the existing rendering budget.
+
+### Changed
+
+- Double the launch-site perimeter fence to 8.4 metres, with a reinforcing middle rail and concertina razor wire above the taller mesh.
+
+### Fixed
+
+- Update construction browser fixtures to build outside protected respawn areas, and allow the registration/reconnect scenario enough total time for its three world loads on software graphics.
+- Keep the entrance barrier arms out of static scenery batching so they visibly lift when traffic approaches from either side.
+- Set the spaceport terminal 15 metres farther inside the perimeter so its side wing clears the curved fence. Upgrade existing sites once while retaining the shop's business state, launch coordinates and entrance grading.
+
 ## [0.110.0] - 2026-10-30
 
 ### Added

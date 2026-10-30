@@ -2,6 +2,21 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.111.0
+
+Back up and deploy client and server together, publish the website, and reload clients.
+Puddlewick's spaceport upgrades from layout 3 to 4, moving the terminal 15 m inward
+while preserving the saved entrance height, pad coordinates and all shop business
+fields. Confirm the whole terminal clears the fence (about 13.9 m minimum wall
+clearance on the live layout). The migration defers while someone is housed or
+working at the shop; retry after they leave. Retain the matching pre-deploy backup
+if rolling back, because layout 3 uses a different terminal ground pad.
+
+Verify the 8.4 m fence and visible barrier-arm movement from both approach directions.
+Working windows close between 21:00 and 23:00; overnight watch windows and exterior
+lights remain on until dawn. No account grants, inventory changes or economy-rule
+changes are part of this release.
+
 ## Upgrade 0.110.0
 
 Back up and deploy client and server together, publish the website, and reload clients. The existing public Puddlewick spaceport upgrades its saved site to layout 3, moves only the terminal near the gate, and saves the graded entrance height and launch offset. Check layout, terminal distance from the gate (under 55 m), unchanged pad coordinates, shop ID and business records. The migration defers while someone is housed or working at the terminal; if deferred, retry after they leave. Keep the pre-deploy database backup: older code cannot represent the separated terminal and pad correctly.

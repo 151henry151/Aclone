@@ -97,3 +97,32 @@ The dimensions are scaled for Aclone’s existing fictional cargo rocket.
 Reproduce overview, entrance, parking, freight and yard renders with
 `node --import tsx scripts/spaceport-preview.ts`. The preview loads the real models,
 terrain, saved access route and gate animation, without connecting to production.
+
+## Facility lighting (0.111.0)
+
+Windows illuminate as daylight fades. Workshop shifts finish at 21:00, logistics
+at 22:00 and the remaining working windows at 23:00, on the in-game clock.
+The gatehouse and part of the operations centre retain overnight watch lighting.
+Shielded loading-door lights, twin-head yard and parking lamps, warm entrance
+lights and sign fixtures operate from dusk until dawn.
+
+The lights use the existing shared town-light budget (12 local lights, or four in
+performance mode). Window panes are batched by schedule and colour; exterior lamps
+outside that budget retain soft ground pools, without adding per-fixture shadow
+maps. The preview script also captures matching evening and midnight views and
+checks that working windows switch off while security lighting remains on.
+
+## Perimeter and entrance corrections (0.111.0)
+
+The fence is now 8.4 m tall, with 7.8 m of chain-link mesh, a reinforcing middle
+rail and razor wire at the top. Collision height uses the same shared dimension.
+Layout 4 moves the terminal 15 m inward from its layout-3 position, giving every
+wing more than 12 m of wall clearance from the curved fence. The saved entrance
+height and rocket/pad coordinates stay fixed; the shop retains all business data.
+The migration also supports privately owned terminals and is idempotent.
+
+Barrier arms retain their moving hierarchy through both the production scenery
+batching pass and matrix freezing. Regression checks measure the visible arm's
+bounds after opening and closing, alongside driving through the gate from both
+sides. The preview now runs the same batching pass as gameplay, preventing an
+isolated model preview from masking static-batching regressions.

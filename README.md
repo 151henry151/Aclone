@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.110.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.111.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -29,6 +29,8 @@ Version 0.106.0 adds distinct map icons for all 50 building types and aircraft h
 Version 0.105.0 adds expandable grazing pastures and roaming livestock, clearer map icons with stable distant zoom, and a detailed per-world vehicle configuration editor. See [release notes](docs/RELEASE_NOTES.md#01050--living-pastures-clearer-maps-and-vehicle-configuration).
 
 Version 0.110.0 expands the spaceport into a connected industrial complex with automatic entrance barriers, visitor parking, freight yards and a terminal near the gate. Construction now keeps respawn points and town centres clear. Reload after updating for matching terrain and collision geometry.
+
+Version 0.111.0 adds evening windows and overnight security, yard and parking lighting, a doubled-height perimeter fence, working barrier animations and improved shop clearance; see [lighting schedules](docs/SPACEPORT.md#facility-lighting-01110).
 
 ## What you can do
 

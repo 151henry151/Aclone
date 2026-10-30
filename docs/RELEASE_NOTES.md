@@ -2,6 +2,27 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.111.0 — Spaceport lighting and entrance repairs
+
+The launch complex gains warm evening windows, overnight gatehouse and control-room
+lighting, and shielded exterior fixtures for loading doors, yards, parking and the
+entrance. All use the existing town-light rendering budget. Working windows switch
+off in shifts between 21:00 and 23:00 while security lighting remains until dawn.
+
+The perimeter fence doubles to 8.4 m, with reinforced mesh and razor wire. The
+terminal moves 15 m farther inward so its side wing clears the curved fence.
+Barrier arms retain their moving geometry through the production scenery optimizer,
+fixing gates that appeared closed even while their animation pivots were moving.
+
+All 1,250 unit tests, TypeScript and the production build pass. Validation includes
+migration against a read-only copy of live Puddlewick, preserved
+shop business records and launch coordinates, automatic gate travel in both
+directions after production batching, and evening/midnight renders. Reload after
+updating for the matching shop position and taller collision boundary. Construction
+browser fixtures now respect respawn reservations; the registration/reconnect test
+allows the combined startup time of its three world loads without loosening
+individual gameplay assertions.
+
 ## 0.110.0 — A working launch complex and clear respawns
 
 Puddlewick's terminal moves beside the automatic entrance barriers while the pad and rocket remain fixed. The expanded site has a taller razor-wire perimeter, gatehouse, freestanding sign, four industrial buildings, tracking dishes, a crane and heavy transport trucks. Connected concrete yards, a smooth road transition, 18 marked parking bays, containers and service equipment complete the facility. Scenery has collision boundaries; doors and circulation remain clear.
