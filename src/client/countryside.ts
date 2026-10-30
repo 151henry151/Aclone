@@ -227,7 +227,11 @@ export class CountrysideChunks {
         if (n % 16 === 0) yield;
         const x = x0 + rand() * chunkSize,
           z = z0 + rand() * chunkSize,
-          cover = woodland(w, x, z),
+          cover =
+            w.spaceportSite &&
+            Math.hypot(x - w.spaceportSite.x, z - w.spaceportSite.z) < w.spaceportSite.fence + 10
+              ? 0
+              : woodland(w, x, z),
           roll = rand();
         const h = terrainHeight(w, x, z);
         if (h < w.settings.seaLevel + 0.9) continue;

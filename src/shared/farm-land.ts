@@ -1,3 +1,4 @@
+import { spaceportReserved } from './spaceport-site';
 import { inPasture } from './pasture-land';
 import { highWater } from './ocean';
 import { dockReserved } from './boathouse';
@@ -57,6 +58,8 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
   const roads = townRoads(w);
   for (let i = count; i < count + 4; i++) {
     const p = farmPlotPosition(b, i);
+    if (spaceportReserved(w, p.x, p.z, 6))
+      return 'Keep fields outside the spaceport launch reservation';
     if (onAirfield(w, p.x, p.z, 6)) return 'Keep the airfield runway and apron clear';
     // Circumscribed clearance avoids missing a narrow road or small object between samples.
     if (roadDistance(roads, p.x, p.z) < 6) return 'A road crosses the new fields';

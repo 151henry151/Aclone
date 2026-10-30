@@ -403,6 +403,7 @@ export interface World {
   fishingVoyageVersion?: number;
   oceanVersion?: number;
   lighthouseVersion?: number;
+  spaceportSite?: import('./spaceport-site').SpaceportSite;
   coastalBluffs?: import('./coastal-bluffs').CoastalBluff[];
   boatDeathRulesVersion?: 1;
   /** Original terrain extent retained when surrounding navigable ocean is extended. */

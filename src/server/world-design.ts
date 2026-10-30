@@ -47,6 +47,22 @@ const recipe = z
       [...Object.values(r.inputs), ...Object.values(r.outputs)].every((n) => n >= 1 && n <= 1000),
   );
 const designSchema = z.object({
+  spaceportSite: z
+    .object({
+      x: coordinate,
+      z: coordinate,
+      height: z.number().finite().min(-40).max(500),
+      building: z.string().max(80),
+      exclusion: z.number().min(500).max(5000),
+      fence: z.number().min(100).max(1000),
+      access: z
+        .array(z.object({ x: coordinate, z: coordinate }))
+        .min(2)
+        .max(128)
+        .optional(),
+    })
+    .refine((s) => s.fence <= s.exclusion)
+    .optional(),
   terrainMapSize: z.number().min(500).max(20000).optional(),
   additionalResources: z
     .array(
@@ -112,7 +128,7 @@ const designSchema = z.object({
         kind: z.enum(['safe', 'noBuild', 'spawn', 'game', 'script', 'vehicle']),
         x: coordinate,
         z: coordinate,
-        radius: z.number().min(1).max(100),
+        radius: z.number().min(1).max(5000),
       }),
     )
     .max(128),
@@ -236,6 +252,7 @@ export function exportDesign(w: World, includeMedia = false) {
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
     coastalBluffs: w.coastalBluffs,
+    spaceportSite: w.spaceportSite,
     additionalResources: w.additionalResources,
     terrainMapSize: w.terrainMapSize,
     landscape: w.landscape,
@@ -331,6 +348,7 @@ export function applyDesign(w: World, input: unknown) {
   w.landscape = validateLandscape(w, d.landscape);
   w.terrain = d.terrain;
   w.coastalBluffs = d.coastalBluffs;
+  w.spaceportSite = d.spaceportSite;
   w.additionalResources = d.additionalResources;
   w.terrainMapSize = d.terrainMapSize;
   w.zones = d.zones;

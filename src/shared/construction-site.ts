@@ -1,3 +1,4 @@
+import { spaceportReserved } from './spaceport-site';
 import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
@@ -76,6 +77,8 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  if (rectangles(b).some((r) => spaceportReserved(w, r.x, r.z, Math.hypot(r.hx, r.hz))))
+    return 'Keep buildings outside the spaceport launch reservation';
   if (b.kind === 'lighthouse' && !lighthouseCliffSite(w, b.x, b.z))
     return 'Lighthouses require a flat cliff-top site, 15–65 metres inland of a tall coastal cliff';
   if (b.kind === 'boathouse') {
@@ -91,6 +94,13 @@ export function constructionSiteReason(w: World, b: Site) {
     )
   )
     return 'Keep farm plots outside the airfield runway and apron';
+  if (
+    b.kind === 'farm' &&
+    Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
+      spaceportReserved(w, p.x, p.z, 6),
+    )
+  )
+    return 'Keep fields outside the spaceport launch reservation';
   const foundation = foundationProfile(w, b);
   if (foundation.rise > 2)
     return 'Ground rises more than 2 metres across this footprint; choose a flatter site or smaller building';

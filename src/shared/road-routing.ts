@@ -1,3 +1,4 @@
+import { spaceportFences } from './spaceport-site';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -34,7 +35,7 @@ export function roadSite(w: World, width = 5) {
       );
     })(),
   }));
-  const barriers = barrierSegments(w);
+  const barriers = [...barrierSegments(w), ...spaceportFences(w)];
   const occupied = (p: Point) =>
     onFarmLand(w, p.x, p.z, pad) ||
     buildings.some(

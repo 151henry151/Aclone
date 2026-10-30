@@ -1,3 +1,4 @@
+import { ensurePuddlewickSpaceport } from './puddlewick-spaceport';
 import { ensurePuddlewickResources } from './puddlewick-resources';
 import { integrateBoathouseTackle } from '../shared/boathouse-tackle';
 import { tradeTotal } from '../shared/bulk-discounts';
@@ -182,7 +183,9 @@ export async function createApp(options: AppOptions) {
     const ocean = preparePuddlewickOcean(world);
     const lighthouses = ensurePuddlewickLighthouses(world);
     const resources = ensurePuddlewickResources(world);
+    const spaceport = ensurePuddlewickSpaceport(world);
     if (
+      spaceport ||
       services ||
       government ||
       civic ||

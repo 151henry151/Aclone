@@ -1,3 +1,4 @@
+import { spaceportReserved } from './spaceport-site';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { barrierSegments, scatterObjects } from './landscape';
 import type { Building, World } from './types';
@@ -28,6 +29,8 @@ export function pastureBlocker(
         y = terrainHeight(w, q.x, q.z);
       if (Math.max(Math.abs(q.x), Math.abs(q.z)) >= mapHalf(w) - 2 || y <= highWater(w) + 0.3)
         return 'Pasture needs dry land inside the world';
+      if (spaceportReserved(w, q.x, q.z, 2))
+        return 'Keep pasture outside the spaceport launch reservation';
       if (onAirfield(w, q.x, q.z, 2)) return 'Keep the runway and apron clear';
       if (roadDistance(roads, q.x, q.z) < 2) return 'A road crosses the pasture';
       if (

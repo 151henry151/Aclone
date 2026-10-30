@@ -1,3 +1,4 @@
+import { roadSite, roadSamples } from '../../shared/road-routing';
 import { highWater } from '../../shared/ocean';
 import { creatorBlocks } from '../../shared/creator.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -71,6 +72,7 @@ function grid(w: World, win: Window): Grid {
     w.townLayout,
     w.terrain,
     w.landscape,
+    w.spaceportSite,
     w.creator?.objects,
     w.creator?.models.map((m) => [m.id, m.width, m.height, m.depth]),
     w.buildings.map((b) => [b.id, b.kind, b.architecture, b.size, b.style, b.x, b.z, b.rotation]),
@@ -166,7 +168,33 @@ function canEscape(w: World, from: Point, to: Point) {
   }
   return true;
 }
+/** Use the saved, checked access road for long port journeys. Local A* still
+ * handles both ends, and current obstacles are checked before starting. */
+function portJourney(w: World, from: Point, target: Point, radius: number): Point[] | undefined {
+  const road = w.spaceportSite?.access;
+  if (!road?.length) return;
+  const path =
+    distance(from, road[0]) < distance(from, road[road.length - 1])
+      ? [...road]
+      : [...road].reverse();
+  if (distance(from, path[0]) > 1000 || distance(target, path[path.length - 1]) > 1000) return;
+  const site = roadSite(w, 4);
+  if (path.slice(1).some((p, i) => !site.segment(path[i], p)))
+    throw Error('Spaceport access road is obstructed');
+  const start = route(w, from, path[0], 3),
+    end = route(w, path[path.length - 1], target, radius);
+  return [
+    ...start,
+    ...path.slice(1).flatMap((p, i) => roadSamples({ a: path[i], b: p, width: 4 }, 4).slice(1)),
+    ...end,
+  ];
+}
 function route(w: World, from: Point, target: Point, radius: number) {
+  if (Math.max(Math.abs(from.x - target.x), Math.abs(from.z - target.z)) > 1300) {
+    const staged = portJourney(w, from, target, radius);
+    if (staged) return staged;
+  }
+
   const g = grid(w, windowFor(w, from, target)),
     { clear, heights, sizeX, sizeZ } = g,
     size = sizeX,
@@ -256,7 +284,7 @@ export class Navigator {
     // Walking and long countryside approaches need more than the old fixed four minutes.
     // Keep a hard bound; the stuck detector still catches an obstructed route promptly.
     const speed = p.vehicle === 5 ? 1.5 : 3;
-    this.deadline = Math.min(1800, Math.max(240, 120 + length / speed));
+    this.deadline = Math.min(length > 1600 ? 7200 : 1800, Math.max(240, 120 + length / speed));
   }
   waypoints(): readonly Point[] {
     return this.path;

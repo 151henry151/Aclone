@@ -1,3 +1,4 @@
+import { spaceportGround } from './spaceport-site';
 import { seabedHeight } from './seabed';
 import { bluffHeight, nearBluff, coastalRockCover } from './coastal-bluffs';
 import { airfieldHeight } from './airfield';
@@ -73,11 +74,11 @@ export function terrainHeight(w: World, x: number, z: number) {
   if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
-  const surface = airfieldHeight(
-    w.airfield,
+  const surface = spaceportGround(
+    w.spaceportSite,
     x,
     z,
-    bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel),
+    airfieldHeight(w.airfield, x, z, bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel)),
   );
   if (w.landscape?.heightmap) return surface;
   const blend = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
