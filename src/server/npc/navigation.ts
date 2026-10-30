@@ -181,16 +181,21 @@ function portJourney(w: World, from: Point, target: Point, radius: number): Poin
   const site = roadSite(w, 4);
   if (path.slice(1).some((p, i) => !site.segment(path[i], p)))
     throw Error('Spaceport access road is obstructed');
-  const start = route(w, from, path[0], 3),
-    end = route(w, path[path.length - 1], target, radius);
+  const start = route(w, from, path[0], 3, false),
+    end = route(w, path[path.length - 1], target, radius, false);
   return [
     ...start,
     ...path.slice(1).flatMap((p, i) => roadSamples({ a: path[i], b: p, width: 4 }, 4).slice(1)),
     ...end,
   ];
 }
-function route(w: World, from: Point, target: Point, radius: number) {
-  if (Math.max(Math.abs(from.x - target.x), Math.abs(from.z - target.z)) > 1300) {
+function route(w: World, from: Point, target: Point, radius: number, usePort = true) {
+  if (
+    usePort &&
+    w.spaceportSite?.access &&
+    (Math.max(Math.abs(from.x - target.x), Math.abs(from.z - target.z)) > 1300 ||
+      distance(from, w.spaceportSite) < 200 !== distance(target, w.spaceportSite) < 200)
+  ) {
     const staged = portJourney(w, from, target, radius);
     if (staged) return staged;
   }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
 export interface SpaceportSite {
+  layout?: number;
   /** Pad centre, not the terminal doorway. */
   x: number;
   z: number;

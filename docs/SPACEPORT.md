@@ -1,13 +1,12 @@
-# Puddlewick spaceport (unreleased redesign)
+# Puddlewick spaceport
 
-The next update relocates the existing public spaceport to a vacant northwest site.
+Version 0.109.0 relocates the existing public spaceport to a vacant site just over one kilometre from Puddlewick town centre. The live-world migration preview selected a pad about 1.25 km away.
 It keeps the building ID, stock, prices, investment and ownership. Existing homes,
 businesses, farms and gathering sites are not moved. The operation runs once on
 server startup; if no safe site or access route exists, it leaves the port alone.
 The chosen site is saved, rather than selected again on every restart.
 
-The launch pad must be at least 5.2 km from every other existing building's origin
-(to allow for its footprint). A **1 km no-build reservation** prevents later
+The site search checks rings 1.15–1.25 km from town and requires 650 m clearance from other existing buildings, along with clearance from players, resources, cliffs and the airfield. A **1 km no-build reservation** prevents later
 encroachment. A smaller **600 m-radius chain-link security fence** surrounds the
 working compound. The southeast gate and access road lead to the terminal; the
 fence blocks ground vehicles and pedestrians. Farms and grazing expansions must
@@ -33,14 +32,14 @@ clocks use elapsed flight time rather than the increasingly large world age.
 - [Kennedy Space Center viewing locations](https://www.kennedyspacecenter.com/launches-and-events/see-a-launch/launch-viewing-locations/): several-kilometre public viewing distances, including about 6.27 km from LC-39A at one viewing site.
 - [FAA launch-site FAQ](https://www.faa.gov/space/additional_information/faq): public safety and useful orbital access determine launch-site location.
 
-The initial five-kilometre separation from existing buildings is a game-design choice informed by real launch-site separation,
+The earlier five-kilometre separation was replaced at the player’s request with a compact site near town. The new location is a gameplay compromise,
 not a universal real-world minimum for houses. Actual safety distances depend on
 propellants, vehicle, trajectory and site-specific risk analysis; public viewing
 distances are context, not residential planning standards. The game retains its
 fictional reusable cargo ship and abstracts terminal boarding and ground operations.
 
 The permanent reservation is only 1 km in radius, to preserve buildable countryside;
-the launch site remains more than 5 km from existing buildings. The fence stays at 600 m.
+the fence stays at 600 m. The layout migration removes the obsolete site, fence and exact old access roads, preserving the existing spaceport ID, ownership, stock and accounts. It runs once and is idempotent.
 
 The revised launch effect uses a 320 m free exhaust plume for the large fictional
 cargo ship, a soft turbulent fringe, and rolling pad clouds hundreds of metres

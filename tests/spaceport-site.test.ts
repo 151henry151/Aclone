@@ -19,7 +19,7 @@ function world() {
   w.terrainMapSize = 12500;
   return w;
 }
-test('spaceport moves once to a vacant remote site without changing property or its economy', () => {
+test('spaceport moves once to a vacant site just over one kilometre away without changing property or its economy', () => {
   const w = world(),
     port = w.buildings.find((b) => b.kind === 'starport')!;
   port.stock.fuel = 123;
@@ -28,8 +28,8 @@ test('spaceport moves once to a vacant remote site without changing property or 
   const original = structuredClone(w.buildings.filter((b) => b !== port));
   assert.equal(ensurePuddlewickSpaceport(w), true);
   const s = w.spaceportSite!;
-  assert.ok(Math.hypot(s.x, s.z) > 5000);
-  assert.ok(original.every((b) => Math.hypot(b.x - s.x, b.z - s.z) > 5200));
+  assert.ok(Math.hypot(s.x, s.z) > 1100 && Math.hypot(s.x, s.z) < 1300);
+  assert.ok(original.every((b) => Math.hypot(b.x - s.x, b.z - s.z) > 650));
   assert.deepEqual(
     w.buildings.filter((b) => b !== port),
     original,
@@ -110,10 +110,10 @@ test('NPC can plan both directions along the long access road and through its ga
   const p = addPlayer(w, 'npc', 'Traveller');
   const port = w.buildings.find((b) => b.id === w.spaceportSite!.building)!;
   const outward = new Navigator(w, p, port, 16);
-  assert.ok(outward.waypoints().length > 1000);
+  assert.ok(outward.waypoints().length > 100);
   const start = { x: p.x, z: p.z };
   p.x = port.x;
   p.z = port.z + 16;
   const inward = new Navigator(w, p, start, 12);
-  assert.ok(inward.waypoints().length > 1000);
+  assert.ok(inward.waypoints().length > 100);
 });
