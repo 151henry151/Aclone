@@ -8,7 +8,7 @@ Puddlewick's terminal moves beside the automatic entrance barriers while the pad
 
 Buildings and farm expansions now respect clear arrival areas around parish respawns, town centres and explicit spawn zones. Puddlewick's Cheese dairy was moved clear of the respawn without changing its ownership, stock or finances.
 
-Validation: all 1,247 unit tests, TypeScript, production build and tracked-file formatting pass. Browser renders exercise the real facility, terrain, lifting gates and launch effects.
+Validation: all 1,247 unit tests, TypeScript, production build and tracked-file formatting pass. Browser renders exercise the real facility, terrain, lifting gates and launch effects. Both focused spaceport browser checks pass; the flight-status fixture uses a smaller software-rendered viewport and resets its observed phase after startup so loading time cannot consume the ascent.
 
 Reload after deployment for matching terrain, shop location and collision geometry. The spaceport migration retains the shop identity and business records and defers if someone is housed or working there. The launch pad, rocket and effects retain their coordinates.
 

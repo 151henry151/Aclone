@@ -36,8 +36,14 @@ test('an arriving client renders an ongoing launch and subsequent landing withou
       localStorage.setItem('aclone.world', 'puddlewick');
       localStorage.setItem('aclone.quality', 'low');
     }, token);
+    // Keep software rendering affordable; the scenario checks flight status, not layout.
+    await page.setViewportSize({ width: 640, height: 480 });
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
+    // Scenery warmup can outlast the 65-second ascent on software WebGL.
+    // Re-enter the observed phase after startup and let a snapshot reach the client.
+    w.time = launch + 20;
+    await page.waitForTimeout(1200);
     await page.keyboard.press('e');
     await expect(page.getByText(/Cargo ship: ascending/)).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
