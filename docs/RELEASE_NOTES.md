@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.109.0 — Rescue boats and working trailers
+
+The new 140s coastal tug handles agreed rescue fees, escrow and real towlines. The 24s outboard is a quick 50-cargo boat that can be rowed with an empty tank, fish with a rod and return as a towed tender after a fuel delivery. The canal boat now costs 60s; the trawler's hull grows to 24.5 m for its three-week game-time voyages without enlarging the crew.
+
+Seven specialist trailers make hauling a separate investment, with compatible goods, farm-capacity checks, visible loads, persistence, articulation and collisions. Walking has a hand-held flashlight, the lifeboat carries 10 weight, and unpowered travel has no engine controls. Tractor camera zoom extends twice as far. The free town teleport is removed.
+
+New roads prefer gentler slopes and subtle bends, can plan long lighthouse routes, and reconnect around runways. Growth remains gradual. The spaceport moves back to about 1.25 km from town through an idempotent property-preserving migration.
+
+Reload after deployment. Existing boats, tanks, goods, property and player positions are preserved; no grants or player resets are part of this release. See [the haulage guide](HAULAGE.md) for controls, prices, calculations and modeling references.
+
+Validation: 1,230 unit tests, TypeScript, the production build and responsive website checks pass. A recorded browser walkthrough covers trailer purchase/loading/driving/unhitching, empty-tank rowing, the tug cockpit, motorboat recovery and tender attachment, self-recovery towing and walking controls. A local copy of Puddlewick completes both cape lighthouse road connections and passes the property-preserving spaceport migration; production roads still grow at their normal rate.
+
 ## 0.108.0 — Remote launches and smoother storm water
 
 Puddlewick's existing spaceport moves away from homes to a vacant remote site with an access road, graded apron and chain-link fence. A one-kilometre reservation prevents new buildings, farm plots and pastures encroaching on the launch site. Its stock, finances and identity remain intact. This is a game layout choice, not a real-world safety certification.

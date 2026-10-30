@@ -53,7 +53,7 @@ button along the bottom. H or Escape restores the normal controls.
 
 ## Canal boat costs
 
-The Parish Carrier costs **24s**, carries 240 weight plus up to three passengers,
+The Parish Carrier costs **60s**, carries 240 weight plus up to three passengers,
 and has a **64-unit fuel tank**. At the default boatyard price of 45d per Fuel
 item (eight tank units), an empty tank takes eight items and costs **3s 60d**.
 A well-maintained boat at normal full speed uses **0.72 tank units per minute**:
@@ -65,7 +65,7 @@ Stopped boats do not consume cruising fuel. New boats start empty.
 
 An empty powered boat can launch an orange inflatable lifeboat. Its main cargo
 stays on the stranded boat. Row using the normal driving controls; the inflatable
-uses no fuel and carries 40 weight. Return to a dock to step ashore. Both the
+uses no fuel and carries 10 weight. Return to a dock to step ashore. Both the
 stranded boat and the moored inflatable remain where they were left, across
 reconnects and server restarts.
 

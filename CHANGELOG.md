@@ -6,6 +6,33 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.109.0] - 2026-10-30
+
+### Added
+
+- Breakwater coastal tug with a detailed working wheelhouse, compass, towing winch and navigation lights. Captains agree paid rescue contracts; fees stay in escrow until the stranded boat reaches a dock. Free self-recovery is supported.
+- A 24s outboard motorboat with 50 cargo, rod fishing, navigation lights and oars when its tank is empty. Deliver fuel to a stranded larger boat, reboard it, then tow the motorboat home as a tender for boatyard storage or pier mooring.
+- Seven modeled, persistent trailers: hay wagon, livestock carrier, aggregate tipper, log wagon, liquid tanker, covered box trailer and chilled fish trailer. Buy at a tractor garage, load through inventory or nearby businesses, and park/reconnect them using their drawbars. Cargo compatibility, capacity, farm grazing space, articulation, collision, load drag and fuel use are enforced.
+- A hand-held flashlight for walking characters, with a narrower beam and appropriate controls.
+
+### Changed
+
+- The trawler is now 24.5 m long with a proportional beam and human-sized crew and wheelhouse. Its scale reflects three-week voyages in game time. The canal boat retains its stern tiller and now costs 60s; existing owners keep their boats.
+- Emergency lifeboat capacity is 10. Existing carried goods are preserved; motor controls and engine readouts are hidden on foot and in unpowered vehicles.
+- Tractors can zoom out twice as far in third-person view.
+- New roads prefer lower-climb routes, round safe corners and include gentle seeded bends. Long-distance routing can reach the cape lighthouses while retaining the existing gradual construction rate.
+- Puddlewick's spaceport relocates to about 1.25 km from town, preserving its property, accounts, fenced compound and no-build reservation, and removing the obsolete site's infrastructure.
+
+### Fixed
+
+- Runways no longer count as connected public roads. Isolated road branches grow around aviation surfaces to join the road network.
+- Reboarding a stranded boat is offered only within the actual transfer range, with matching checks on the server.
+- Action forms with an identifier field no longer shadow the browser's form ID and prevent submission.
+
+### Removed
+
+- The free Return to town centre shortcut and player position-reset commands. Returning now requires travel or assistance; ordinary death respawns and authorized caretaker recovery remain available.
+
 ## [0.108.0] - 2026-10-30
 
 ### Changed

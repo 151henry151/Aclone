@@ -436,7 +436,7 @@ Players govern through each town's plinth. The caretaker can also adjust town
 rules or appoint a mayor there. Decide whether construction outside borders is
 allowed, governed by the nearest town, or forbidden before inviting builders.
 
-**Vehicles** configures all 32 slots independently for this world. Choose the movement mode, speed, steering, torque, weather traction, cargo hold, fuel tank/burn, purchase price and passenger limit. Custom slots 9–24 are available for original designs. Assign a model through **Workshop → Use as a vehicle**; a boat-shaped model needs **Boat** movement to function as a boat.
+**Vehicles** configures all 34 slots independently for this world. Choose the movement mode, speed, steering, torque, weather traction, cargo hold, fuel tank/burn, purchase price and passenger limit. Custom slots 9–24 are available for original designs. Assign a model through **Workshop → Use as a vehicle**; a boat-shaped model needs **Boat** movement to function as a boat.
 
 Expand **Fishing, provisions and paid crew** to give a boat nets, stores or up to two paid deckhands. Set net capacity and towing fuel use separately. **Death and recovery** follows world rules or overrides them for this vessel, including offshore recovery, cargo spoilage days and retained fuel.
 

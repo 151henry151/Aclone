@@ -51,7 +51,9 @@ Perform a discrete action:
 
 `request` is optional and is echoed in result messages. It is a correlation ID, not a replay/idempotency key. The client does not automatically resend actions after reconnecting; it requests fresh state instead. Do not retry a timed-out purchase blindly.
 
-Local actions (`src/shared/simulation.ts`): trade, use, discard, buyBuilding, investment, stock, buildingAdmin, job, quit, work, learn, task, home, outside, bank, loan, vehicle, engine, lights, crow, joinGame, leaveGame, horn, reel, kricket, fire, construct, supply, repair, demolish, settings, terrain, zone, place, town, group, hitch, detach, give, giveMoney, refuelPlayer, chat, command and respawn.
+Local actions (`src/shared/simulation.ts`): trade, use, discard, buyBuilding, investment, stock, buildingAdmin, job, quit, work, learn, task, home, outside, bank, loan, vehicle, engine, lights, crow, joinGame, leaveGame, horn, reel, kricket, fire, construct, supply, repair, demolish, settings, terrain, zone, place, town, group, hitch, detach, give, giveMoney, refuelPlayer, chat and command.
+
+Legacy `respawn` actions and `*resetpos` commands are rejected without changing player state. Death respawns are simulation events, not client-triggered travel actions. Authorized caretaker `*teleport` remains separate.
 
 Universe actions: land, takeoff, jump, ship, spaceTrade, exchange and script. Form handlers/integration tests supply examples. Socket authentication determines the actor, never a supplied player ID.
 
@@ -187,6 +189,17 @@ while passengers remain aboard.
 
 ### Expanded vehicle definitions and grazing land
 
-Owner action `vehicleTuning` accepts `slot` (0–31), `tuning` (the partial definition) and optional `replace: true`; without replacement, fields merge with the existing override. The legacy flat action is accepted. `vehicleReset` with a slot removes its override after the same occupancy/load checks. Definitions are validated by `vehicleTuningSchema`; unknown fields, incompatible capabilities and invalid asset/model references are rejected. Simulation and client prediction resolve definitions against each world's overrides. Design exports include all slots; media-free exports omit uploaded dashboard/tread image references.
+Owner action `vehicleTuning` accepts `slot` (0–33), `tuning` (the partial definition) and optional `replace: true`; without replacement, fields merge with the existing override. The legacy flat action is accepted. `vehicleReset` with a slot removes its override after the same occupancy/load checks. Definitions are validated by `vehicleTuningSchema`; unknown fields, incompatible capabilities and invalid asset/model references are rejected. Simulation and client prediction resolve definitions against each world's overrides. Design exports include all slots; media-free exports omit uploaded dashboard/tread image references.
 
 `livestock` with `building` and `operation: "expand"` purchases one adjoining pasture parcel using owner cash, after server-side space and terrain checks. `Building.pasture` records local x/z and parcel count. World settings `pastureCapacityMultiplier` (0.25–4) and `pasturePriceMultiplier` (0.25–10) default to 1. Stock transfers, purchase bids and breeding enforce herd capacity; scaled production retains normal input, staffing and output-storage checks.
+
+## Haulage and rescue (0.109.0)
+
+- `trailer`: `operation` is `buy`, `hitch`, `unhitch`, `load` or `unload`. Purchase takes `kind` and garage `building`; subsequent actions take trailer `id`. Transfers take `item`, positive integer `quantity`, and optionally an owned nearby `building`.
+- `trade` accepts optional `storage: "trailer"` to use the attached trailer through ordinary shop accounting.
+- `tow`: `operation` is `offer`, `accept`, `self`, `hook`, `deliver` or `cancel`. Offers identify the disabled boat's `owner` and integer `fee` in hundredths of a denarius. Acceptance escrows the agreed fee. Delivery validates the disabled vessel's landing approach and settles once.
+- `tender`: `operation` is `hook` or `dock`. This acts on the captain's persistent motorboat mooring after a fuel-delivery reboarding. It never summons an offshore boat to shore.
+- `World.trailers` and `trailerSeq` persist ownership, pose, attached driver and cargo; public cargo amounts are coarsened for visual loads, while private `Player.trailerCargo` supplies the owner's exact quantities. `World.towJobs` persists contracts and escrow. Motorboat tender attachment uses `MooredBoat.towedBy` and `rope`; its separate tank remains in parked vehicle fuel.
+- Slots 32 and 33 are the tug and motorboat. Public `rowing` reflects the motorboat's empty-tank oar state without exposing remote fuel quantities.
+
+All transfers validate ownership, distance, capacity and stationary state server-side. Repeated delivery/transfer actions cannot duplicate goods or payments.

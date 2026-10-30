@@ -51,7 +51,7 @@ A captain should not promise a trip they cannot complete.
 
 ## Balance assumptions
 
-- Purchase: 120s versus 24s for the canal boat and 300s for the trawler.
+- Purchase: 120s versus 60s for the canal boat and 300s for the trawler.
 - Cruise limit: 8 m/s (about 18 mph), with no boost. Tank: 192 units; captain cargo: 600 weight.
 - At the public boatyard's 45d per 8-unit Fuel quote, filling an empty tank costs
   10.8s. Full cruise consumes 86.4 units/hour before maintenance effects; a full

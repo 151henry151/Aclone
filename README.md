@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.108.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.109.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -12,7 +12,7 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
-Version 0.108.0 adds a remote fenced spaceport, large billowing rocket exhaust, inflatable emergency rafts and smoother storm water. See [spaceport details](docs/SPACEPORT.md).
+Version 0.109.0 adds a coastal tug with paid rescue contracts, a rowable outboard motorboat and tender recovery, seven specialist cargo trailers, revised boat scale, a walking flashlight and twice the tractor camera zoom range. Roads favour gentler terrain and can finally reach the cape lighthouses; runways no longer count as road connections. The fenced spaceport moves to about 1.25 km from town. See [boats, rescue and haulage](docs/HAULAGE.md) and [spaceport details](docs/SPACEPORT.md).
 
 Version 0.107.0: Puddlewick gains eight mixed resource clusters, more woodland gathering sites across the island, and stone near its coastal bluffs, while preserving every existing gathering ground.
 
@@ -245,8 +245,12 @@ and each of five architectural models has its own set of repair boats on stands.
 Return to a dock to disembark. There is no offshore
 teleport to land. Boats can sail through connected water to the map boundary.
 
+The general Return to town centre shortcut and player
+position resets have been removed. Fuel planning and getting home require travel or assistance;
+ordinary death respawns and caretaker recovery remain separate.
+
 **Coastal Belle charter boat.** A separate 120s,
-15-metre passenger fishing boat adds six places, a 600-weight captain's hold and a
+14-metre passenger fishing boat adds six places, a 600-weight captain's hold and a
 192-unit tank. Its enclosed helm has a live compass, fuel/speed gauges and a
 persistent W/S throttle (B idles). Use Inventory → Boating at a dock to invite
 players for an agreed fare and 15–180 real minutes including travel. Passengers
@@ -265,7 +269,7 @@ can select seafood recipes.
 Fishing includes continuous catches hidden until hauling, long offshore expeditions,
 voluntary deckhands and shared provisions. The North Star costs 300s, with a 3,200-weight hold and 3,200-unit tank; at Puddlewick’s
 clock speed, that supports 21 game days (3½ real hours) of towing plus transit.
-The canal boat costs 24s. A complete trawl rig has spreading boards, floats and a
+The canal boat costs 60s. A complete trawl rig has spreading boards, floats and a
 closed catch bag, with animated pay-out, towing, retrieval and deck unloading. Fish
 activity and deck piles remain coarse visual cues;
 fuel and cargo load affect performance. Ocean expansion preserves the existing

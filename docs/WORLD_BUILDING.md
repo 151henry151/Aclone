@@ -71,7 +71,7 @@ Failed GLB loads retain a wireframe placeholder.
   rotation and visual assignment. Changing appearance retains its business,
   owner and inventory. Custom bounds define its collision footprint. Occupied
   homes and buildings with running tasks cannot be moved until occupants leave.
-- **Workshop → Use as a vehicle:** assign a saved appearance to any of the 32 vehicle slots. **Vehicles** configures that slot's movement, performance, economy, cockpit, components and capabilities independently for this world. Slots 9–24 in the menu are available for original designs; walking, creature, scout and lifeboat modes are reserved.
+- **Workshop → Use as a vehicle:** assign a saved appearance to any of the 34 vehicle slots. **Vehicles** configures that slot's movement, performance, economy, cockpit, components and capabilities independently for this world. Slots 9–24 in the menu are available for original designs; walking, creature, scout and lifeboat modes are reserved.
 - **Production:** select a building, profession and batch duration, then choose
   up to eight input and output items with quantities. Recipes use normal stockroom/payroll/capacity/scheduling without JSON.
   Farms keep their crop-plot mechanics. Editing a recipe resets batch progress.

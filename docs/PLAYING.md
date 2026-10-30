@@ -25,6 +25,10 @@ changing goods, direction, shop or visit starts a new total.
 
 When reversing a wheeled vehicle, steering follows actual backward speed, including while braking.
 
+There is no free return-to-town shortcut. Plan for the return journey's fuel and provisions.
+If stranded on land, walk for supplies or ask another player to bring fuel; at sea, use the
+boat recovery options. Genuine bugs can still be handled by a caretaker.
+
 State is server-saved; a new name creates a different identity. [Account recovery](FAQ.md#how-do-i-set-a-password-or-reset-it-by-email) and [hosting/backups](HOSTING.md) explain protection and limits.
 
 ## Biplane flight
@@ -398,7 +402,7 @@ Board the Parish Carrier canal boat or North Star fishing boat at a shoreline bo
 
 The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
 
-The North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 24s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for controls and crew agreements.
+The North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 60s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for controls and crew agreements.
 
 The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating.
 
@@ -461,3 +465,11 @@ The fishing boat's instrument panel and fishing-control header show **Depth** in
 Puddlewick Bay is labelled on the map. Lighter water marks the bay and shallow shelf; darker water marks depths beyond 100 metres. The seabed has banks, basins and trenches, with much deeper water beyond the headlands. Water depth modestly influences fishing; it is not a guarantee of a good haul or a fish finder.
 
 Distant land has a lightweight silhouette beyond the detailed scenery radius. As you travel farther offshore, lower land drops below the geographic horizon before higher hills. Weather limits visibility. Lighthouse lights remain dim points between brighter flashes; there is no broad light shaft or floodlighting of your boat. Clear-weather range is at most 30 km, depending on the heights of the light and observer and intervening land.
+
+## Haulage and rescue
+
+Buy seven specialist trailers at the tractor garage. Use **Inventory → Your trailers** to load, unload, park and reconnect them; nearby business windows support building-stock transfers and shop trades directly into the trailer. Different bodies accept different goods. Reverse to the drawbar to hitch, and unhitch before changing vehicle. Loads slow travel and use more fuel.
+
+The 24s outboard motorboat carries 50 weight and can be rowed after running out of fuel. The canal boat now costs 60s. A 140s tug can rescue another captain's boat for an agreed fee, or tow its owner's stranded boat home. **Activities → Towing** handles offers, acceptance, hookup and dock delivery. Fuel deliveries in a motorboat can end by towing it home behind your larger boat as a tender. See [the full haulage guide](HAULAGE.md) for controls and cargo restrictions.
+
+Walking uses a hand-held **Flashlight**. Walking and the 10-weight emergency raft have no engine controls. Reboard stranded boats only within transfer range. Tractors can zoom out twice as far in third-person view. There is no free town-centre teleport; allow fuel for your return journey.
