@@ -449,3 +449,9 @@ Press **M** or click the minimap. The scale bar below the map shows real ground 
 Puddlewick’s countryside includes eight richer areas with wood, stone, gravel and topsoil together, extra woodland clearings scattered across the island, and stone outcrops inland of the coastal cliffs. Each richer area has four sites of each resource type. Original town and countryside gathering grounds remain in place. The new grounds use the same tools, carrying limits, yields and replenishment times as existing ones. Look for their resource icons on the parish map; cliff-side sites are on accessible ground above high tide.
 
 Distant land remains visible beyond detailed scenery. Low shore disappears over the geographic horizon before taller hills. Lighthouse navigation points brighten as they rotate toward you, with no shafts or broad illumination. Range is limited by terrain, weather and height, capped at 30 km.
+
+## Screen layout
+
+Use **HUD ⚙** in the upper-right corner, or **F9 → HUD & layout**, to choose individual panels. Chat, minimap, health and employment, parish players, inventory, the getting-started guide, vehicle controls, location/time/weather and action shortcuts can each be hidden independently. Choices are saved in this browser. The guide and player roster start hidden; **Show all panels** restores everything and **Essential panels** restores the compact default.
+
+The minus buttons on chat, minimap and player status hide just that panel. **Enter** restores chat from the game view; **F2** also opens chat when a HUD button has keyboard focus. **H** toggles the whole scenery view. **F9** always opens the menu. Smaller desktop windows use narrower panels, shorter scrollable lists and wrapped controls; phones retain their Map, Chat and Pilot drawers.

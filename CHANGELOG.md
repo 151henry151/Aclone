@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Save individual HUD panel visibility and adapt the layout to smaller laptops; move employment into the player sidebar.
+
 - Add eight mixed-resource regions, dispersed wood gathering and stone near Puddlewick’s coastal bluffs, preserving all existing sites and depletion.
 
 

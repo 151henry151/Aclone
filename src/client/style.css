@@ -2609,3 +2609,297 @@ button span {
   right: 0;
   transform: none;
 }
+
+/* Independently pinned desktop panels; touch layouts retain their own drawers. */
+#hud-controls {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 9;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: #20362cdb;
+}
+.hud-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.hud-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #ffffff08;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.hud-options input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #d8c483;
+}
+.hud-dismiss {
+  float: right;
+  font-size: 12px;
+  padding: 1px 7px;
+  margin: -3px -3px 3px 5px;
+}
+.chat-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  font: 9px monospace;
+  color: #bac8b2;
+}
+.chat-heading button,
+.panel-heading button {
+  padding: 0 6px;
+  font-size: 14px;
+  background: transparent;
+  border-color: transparent;
+}
+#work-shift {
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: none;
+  margin-top: 12px;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  text-align: left;
+  font-size: 10px;
+  line-height: 1.5;
+}
+#work-shift strong {
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+#work-shift span {
+  color: #aabda3;
+}
+html:not(.mobile-ui).hud-hide-map .minimap-panel,
+html:not(.mobile-ui).hud-hide-journal .journal,
+html:not(.mobile-ui).hud-hide-status .pilot-summary,
+html:not(.mobile-ui).hud-hide-players .parish-players,
+html:not(.mobile-ui).hud-hide-inventory .inventory-panel,
+html:not(.mobile-ui).hud-hide-vehicle .bottom-left,
+html:not(.mobile-ui).hud-hide-location .location,
+html:not(.mobile-ui).hud-hide-shortcuts .quickbar,
+html:not(.mobile-ui).hud-hide-map.hud-hide-journal .left-panel,
+html:not(.mobile-ui).hud-hide-status.hud-hide-players .status-panel,
+html:not(.mobile-ui).hud-hide-chat .chat-panel > :not(#target) {
+  display: none;
+}
+html:not(.mobile-ui).hud-hide-chat .chat-panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
+  display: none;
+}
+.mobile-ui #hud-controls,
+.mobile-ui .hud-dismiss,
+.mobile-ui .chat-heading {
+  display: none;
+}
+
+@media (min-width: 801px) {
+  html:not(.mobile-ui) {
+    --hud-side: clamp(170px, 17vw, 220px);
+    --hud-gap: 14px;
+  }
+  html:not(.mobile-ui) .left-panel {
+    left: var(--hud-gap);
+    top: 100px;
+    width: var(--hud-side);
+    max-height: calc(100dvh - 270px);
+    overflow: auto;
+    pointer-events: auto;
+    border-radius: 8px;
+  }
+  html:not(.mobile-ui) .left-panel canvas {
+    height: auto;
+    aspect-ratio: 230 / 170;
+  }
+  html:not(.mobile-ui) .status-panel {
+    right: var(--hud-gap);
+    top: 48px;
+    width: var(--hud-side);
+    max-height: calc(100dvh - 275px);
+    overflow: auto;
+    pointer-events: auto;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  html:not(.mobile-ui) .cash {
+    margin: 12px 0;
+    gap: 3px;
+  }
+  html:not(.mobile-ui) .cash b {
+    font-size: 25px;
+  }
+  html:not(.mobile-ui) .player-heading {
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+  html:not(.mobile-ui) #players {
+    max-height: 140px;
+    overflow: auto;
+  }
+  html:not(.mobile-ui) .inventory-panel {
+    width: var(--hud-side);
+    right: var(--hud-gap);
+    bottom: 14px;
+    max-height: 195px;
+    overflow: auto;
+    pointer-events: auto;
+    border-radius: 8px;
+  }
+  html:not(.mobile-ui) #bag {
+    max-height: 145px;
+    overflow: auto;
+  }
+  html:not(.mobile-ui) .bottom-left {
+    left: var(--hud-gap);
+    bottom: 14px;
+    width: var(--hud-side);
+  }
+  html:not(.mobile-ui) .bottom-left .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  html:not(.mobile-ui) .bottom-left .button-row button {
+    font-size: 10px;
+    padding: 6px;
+  }
+  html:not(.mobile-ui) .tourney {
+    display: none;
+  }
+  html:not(.mobile-ui) .chat-panel {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(540px, calc(100vw - 2 * var(--hud-side) - 4 * var(--hud-gap)));
+    min-width: 0;
+    bottom: 14px;
+    border-radius: 8px;
+  }
+  html:not(.mobile-ui) #chat-log {
+    height: clamp(65px, 12vh, 140px);
+  }
+  html:not(.mobile-ui) .quickbar {
+    top: 78px;
+    max-width: calc(100vw - 2 * var(--hud-side) - 4 * var(--hud-gap));
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  html:not(.mobile-ui) .quickbar button {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  html:not(.mobile-ui) .location {
+    top: 12px;
+    min-width: 0;
+    width: calc(100vw - 2 * var(--hud-side) - 4 * var(--hud-gap));
+  }
+  html:not(.mobile-ui) .location .eyebrow {
+    display: none;
+  }
+  html:not(.mobile-ui) .location b {
+    font-size: 17px;
+    margin: 5px 0;
+  }
+  html:not(.mobile-ui) .brand {
+    top: 14px;
+    left: 14px;
+  }
+  html:not(.mobile-ui) .brand strong span {
+    display: none;
+  }
+  html:not(.mobile-ui) #fishing-control.commercial {
+    left: var(--hud-gap);
+    top: auto;
+    bottom: 145px;
+    transform: none;
+    width: var(--hud-side);
+    max-height: calc(100dvh - 470px);
+    overflow: auto;
+    padding: 8px;
+    font-size: 11px;
+  }
+  html:not(.mobile-ui) #fishing-control.commercial.collapsed {
+    max-height: none;
+  }
+}
+@media (min-width: 801px) and (max-height: 740px) {
+  html:not(.mobile-ui) .left-panel {
+    top: 88px;
+    max-height: calc(100dvh - 310px);
+  }
+  html:not(.mobile-ui) .map-legend {
+    display: none;
+  }
+  html:not(.mobile-ui) .panel-heading {
+    padding: 6px 10px;
+  }
+  html:not(.mobile-ui) .left-panel canvas {
+    max-height: 120px;
+    object-fit: cover;
+  }
+  html:not(.mobile-ui) .need {
+    margin: 5px 0;
+  }
+  html:not(.mobile-ui) .cash {
+    margin: 7px 0;
+  }
+  html:not(.mobile-ui) .cash small {
+    display: none;
+  }
+  html:not(.mobile-ui) .status-panel {
+    max-height: calc(100dvh - 220px);
+  }
+  html:not(.mobile-ui) .inventory-panel {
+    max-height: 145px;
+  }
+  html:not(.mobile-ui) #bag {
+    max-height: 95px;
+  }
+  html:not(.mobile-ui) .quickbar button {
+    font-size: 9px;
+    padding: 5px 6px;
+  }
+  html:not(.mobile-ui) .quickbar {
+    top: 64px;
+  }
+  html:not(.mobile-ui) .location b {
+    font-size: 15px;
+  }
+  html:not(.mobile-ui) .location > span:last-child {
+    font-size: 9px;
+  }
+  html:not(.mobile-ui) #fishing-control.commercial {
+    max-height: calc(100dvh - 400px);
+  }
+}
+
+@media (min-width: 801px) {
+  html:not(.mobile-ui) #fishing-control.commercial {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    width: 100%;
+    max-height: max(110px, calc(100dvh - 450px));
+  }
+  html:not(.mobile-ui) #world-hud:has(#fishing-control.commercial:not([hidden])) .left-panel {
+    max-height: 180px;
+  }
+}

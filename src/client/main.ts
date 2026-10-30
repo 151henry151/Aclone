@@ -1,3 +1,4 @@
+import { HudPanels, hudPanels, type HudPanel } from './hud-panels';
 import { FrameInbox } from './frame-inbox';
 import { vehicleForm } from './vehicle-editor';
 import { isTrawler } from '../shared/vehicle-config';
@@ -159,7 +160,7 @@ let items = defaultItems,
   skills = defaultSkills;
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="panel-heading"><span>PARISH MAP</span><kbd>M</kbd></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><button id="debt-notice" data-do="loans" class="wide" hidden></button><div id="needs"></div><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="minimap-panel"><div class="panel-heading"><span>PARISH MAP · M</span><button data-do="hud-hide" data-id="map" aria-label="Hide minimap">−</button></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot-summary"><button class="hud-dismiss" data-do="hud-hide" data-id="status" aria-label="Hide player status">−</button><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><button id="debt-notice" data-do="loans" class="wide" hidden></button><div id="needs"></div></div><div class="parish-players"><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div class="chat-heading"><span>PARISH CHAT · Enter</span><button data-do="hud-hide" data-id="chat" aria-label="Hide chat">−</button></div><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -185,6 +186,7 @@ document
     'beforeend',
     '<section id="work-shift" hidden aria-label="Work shift"><strong id="work-shift-name"></strong><span id="work-shift-status" role="status"></span></section>',
   );
+document.querySelector('.pilot-summary')!.appendChild(document.getElementById('work-shift')!);
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -284,6 +286,11 @@ const sound = scene.audio;
 let weapon = 'plasma';
 const keys = new Set<string>();
 const $ = (id: string) => document.getElementById(id)!;
+const hud = new HudPanels(document.documentElement, localStorage);
+$('world-hud').insertAdjacentHTML(
+  'beforeend',
+  '<button id="hud-controls" data-do="hud" aria-label="HUD layout and visible panels" title="Choose visible panels">HUD ⚙</button>',
+);
 app.insertAdjacentHTML(
   'beforeend',
   '<section id="startup-loading" hidden role="status" aria-live="polite"><div><span class="eyebrow">ENTERING THE PARISH</span><h2 id="startup-message">Preparing scenery…</h2><p>The controls will be ready when scenery preparation finishes. Slow loading? Try simpler graphics.</p><button id="startup-performance" type="button">Use Performance graphics and reload</button></div></section>',
@@ -331,6 +338,7 @@ const mobile = new MobileUI(
 );
 function focusChat() {
   keys.clear();
+  hud.set('chat', true);
   document.documentElement.classList.remove('scenery-view');
   if (mobile.active) {
     closePanel();
@@ -1836,6 +1844,22 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'hud') {
+    modal(
+      'Your screen.',
+      `<p>Choose the panels you want around the game. Saved on this browser. Press <kbd>H</kbd> for scenery view; <kbd>Enter</kbd> brings chat back.</p><div class="hud-options">${Object.entries(
+        hudPanels,
+      )
+        .map(
+          ([key, label]) =>
+            `<label><input type="checkbox" data-hud-panel="${key}" ${hud.settings[key as HudPanel] ? 'checked' : ''}>${label}</label>`,
+        )
+        .join(
+          '',
+        )}</div><div class="button-row">${button('Essential panels', 'hud-preset', 'data-id="essential"')}${button('Show all panels', 'hud-preset', 'data-id="all"')}</div><p class="note">The layout adapts to the space available. On phones, Map, Chat and Pilot remain available in their touch drawers. F9 always opens the game menu.</p>`,
+    );
+    return;
+  }
   if (panel === 'resources') {
     modal(
       'Gathering grounds',
@@ -2001,7 +2025,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('HUD & layout', 'hud')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Return to town centre', 'respawn')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2944,6 +2968,17 @@ app.addEventListener('click', async (e) => {
       case 'townEvents':
         openPanel('townEvents');
         break;
+      case 'hud-hide':
+        if (id && id in hudPanels) hud.set(id as HudPanel, false);
+        (document.activeElement as HTMLElement)?.blur();
+        break;
+      case 'hud-preset':
+        hud.preset(id === 'all');
+        renderPanel();
+        break;
+      case 'hud':
+        openPanel('hud');
+        break;
       case 'sound':
         sound.toggle();
         renderPanel();
@@ -3694,3 +3729,9 @@ function trawlControls() {
   const t = me.trawl;
   return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }
+
+document.addEventListener('change', (event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.dataset.hudPanel && input.dataset.hudPanel in hudPanels)
+    hud.set(input.dataset.hudPanel as HudPanel, input.checked);
+});
