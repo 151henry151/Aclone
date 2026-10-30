@@ -6,21 +6,23 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.107.0] - 2026-10-29
+
 ### Added
 
-- Add varied bay and ocean seabeds, a fishing-boat depth sounder, deeper-water map shading and a modest depth influence on catches.
+- Eight mixed resource concentrations around Puddlewick’s island, 48 scattered woodland gathering sites and three stone deposits on the accessible inland side of each coastal bluff. Existing sites, depletion and gathering tasks are preserved; new coordinates are saved and included in portable world designs.
+- Saved HUD controls to independently show or hide chat, minimap, player needs, parish roster, inventory, guide, vehicle controls, location and shortcuts.
+- Fishing-boat depth sounder on the wheelhouse instrument panel and fishing HUD. Procedural seabeds have a shallow bay, shelves, deeper basins and winding trenches; the map names Puddlewick Bay and shades deep ocean darker. Depth has a small influence on rod and net catch rates, while random shoals and voyage luck remain decisive.
 
-- Save individual HUD panel visibility and adapt the layout to smaller laptops; move employment into the player sidebar.
+### Changed
 
-- Add eight mixed-resource regions, dispersed wood gathering and stone near Puddlewick’s coastal bluffs, preserving all existing sites and depletion.
-
+- A compact, responsive desktop HUD keeps panels apart on smaller laptops. Employment information sits in the player sidebar; the guide and parish roster start collapsed. Enter restores hidden chat, and H still toggles scenery view.
+- Offshore views retain a lightweight island silhouette and terrain support under distant buildings. Earth curvature gradually hides lower land over the horizon; clear-weather visibility extends farther than rain or storms.
 
 ### Fixed
 
-- Resume at the latest game state after switching windows instead of replaying stale motion and camera interpolation.
-
-- Keep distant buildings supported by an island silhouette and show lighthouse flashes as navigation points up to their geographic horizon, without floodlighting the sea.
-
+- Lighthouse signals remain dimly visible between brighter rotating flashes, with a clear-weather range up to 30 km when height and terrain permit. They no longer cast shafts or floodlight the sea and town.
+- Returning to a backgrounded game drops stale interpolation and camera easing, presents only the latest merged state and avoids fast-forwarding old movement.
 
 ## [0.106.0] - 2026-10-29
 

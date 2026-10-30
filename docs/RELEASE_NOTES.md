@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.107.0 — Clearer views and deeper water
+
+The desktop HUD is smaller and adapts to laptop screens. Employment is in the player sidebar. Use **HUD ⚙** or **F9 → HUD & layout** to save separate visibility choices for nine panels. H keeps its whole-screen scenery shortcut; Enter restores hidden chat. Phone drawers remain available.
+
+Lighthouses show a dim navigation point and a brighter rotating flash without lighting the sea or town. A lightweight island mesh supports distant buildings and preserves hills beyond the detailed terrain radius. Land and lights use a geographic horizon, with clear-weather lighthouse range capped at 30 km and shorter visibility in poor weather. Returning from a background window resets camera and motion interpolation and presents the latest state.
+
+Puddlewick receives eight additional mixed-resource regions, 48 woodland gathering sites and three stone deposits near each of its 15 coastal bluffs: 221 new sites in the checked public-world layout. Existing sites and saved depletion remain intact.
+
+Fishing boats gain a live depth readout in the wheelhouse and compact HUD. The bay, offshore shelf, basins and trenches replace the largely flat submerged terrain; custom heightmaps and shore approaches remain intact. Puddlewick Bay is labelled and deeper ocean is darker on the map. Depth changes catch rates by at most four percent either way; voyage luck and shoals still dominate, and fuel, cargo and prices are unchanged.
+
+Reload clients after deploying both server and website. The resource survey is a one-time saved addition; keep the normal pre-deploy backup. No player grants or resets are included.
+
+Validation: all 1,189 unit tests, TypeScript, tracked-file formatting and the production build pass. Browser checks cover independent saved HUD panels at 1024×600, 1366×768 and 1440×900, mobile controls/drawers, 1 km and 30 km lighthouse flashes, supporting coastal terrain, the wheelhouse depth instrument, bay/resource map rendering, camera resume and a throttled network link. Website checks pass at four screen widths. These software-rendered checks verify behavior and layout, not real-device frame rates.
+
 ## 0.106.0 — Map symbols, distance scale and closer inspection
 
 Each of the 50 building types has a dedicated map symbol. Aircraft hangars use an aircraft icon, spaceports use a rocket, and livestock, manufacturing, food and service buildings have their own recognizable symbols. Gathering grounds and sports landmarks also have specific symbols.

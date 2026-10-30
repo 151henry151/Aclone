@@ -4,13 +4,17 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.106.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.107.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
-The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km; shafts appear only in misty rain or storms. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
+The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
+
+Version 0.107.0: Puddlewick gains eight mixed resource clusters, more woodland gathering sites across the island, and stone near its coastal bluffs, while preserving every existing gathering ground.
+
+The HUD now has independent saved panel toggles under **HUD ⚙** or **F9 → HUD & layout**, with a compact employment notice and responsive laptop layout. Offshore navigation keeps distant land and lighthouse flashes visible, and switching back to the game resumes current movement without replaying old frames. Fishing boats have a live depth sounder; the bay and deeper ocean now have varied seabeds and distinct map colours. See [release notes](docs/RELEASE_NOTES.md#01070--clearer-views-and-deeper-water).
 
 Version 0.106.0 adds distinct map icons for all 50 building types and aircraft hangars, a zoom-aware distance scale in metres or kilometres, zoom up to 500%, and always-visible names above 350%.
 

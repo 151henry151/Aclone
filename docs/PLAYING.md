@@ -10,7 +10,7 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 4. Take a job, or buy a business, stock inputs and fund wages. Puddlewick employment continues offline without renewal; other worlds may require **Work two cycles**. Qualified Puddlewick owners operate their factories unpaid. Actual successful production pays employee wages; signing up alone does not.
 5. Keep provisions in inventory or your selected cottage/private rented room before logging off. Puddlewick feeds you from these supplies anywhere, even without a house. Going inside reduces hunger/thirst drain by 20%; other worlds may choose different rules. Hunger, thirst and starvation still continue offline if supplies run out. **Go outside** restores movement.
 
-Your employer and shift countdown appear on the HUD; the building panel also shows
+Your employer and shift countdown appear in the player-status sidebar; the building panel also shows
 covered production checks. You can drive away while a shift runs. Renew during its
 last cycle or when it ends. In a shortage, Puddlewick's **Government necessities**
 shop keeps paid premium bread, water and fuel on the shelf and restocks them;
@@ -420,7 +420,7 @@ Boat crew continue to use their captain’s provisions first. Captains use boat 
 
 Puddlewick’s harbour light stands about 780 metres from town; West Cape and East Cape lights mark the outer tips. Use the directory to find them. Fifteen headlands around the island have steep rock faces, grassy inland approaches and protected cliff edges: walkers and tractors stop before the drop. Build your own lighthouse on flat ground 15–65 metres inland from a tall cliff lip; the normal footprint, ownership and town rules still apply.
 
-At sea, watch for a white flash when a lighthouse’s rotating light sweeps toward you. Clear nights have no solid beam in the air. Rain and storms reveal a faint shaft but also reduce visibility. Land blocks the signal. Height above the sea and your viewpoint limit the range, up to about 30 km in good conditions. Beaches have rolling breakers and wash; cliffs have uprush and falling spray, strongest in storms.
+At sea, watch for a white flash when a lighthouse’s rotating light sweeps toward you. The light remains dim between flashes and does not cast a solid beam or illuminate your boat. Rain and storms reduce visibility. Land blocks the signal. Height above the sea and your viewpoint limit the range, up to about 30 km in good conditions. Beaches have rolling breakers and wash; cliffs have uprush and falling spray, strongest in storms.
 
 Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
 
@@ -447,8 +447,6 @@ Press **M** or click the minimap. The scale bar below the map shows real ground 
 ## Island gathering grounds
 
 Puddlewick’s countryside includes eight richer areas with wood, stone, gravel and topsoil together, extra woodland clearings scattered across the island, and stone outcrops inland of the coastal cliffs. Each richer area has four sites of each resource type. Original town and countryside gathering grounds remain in place. The new grounds use the same tools, carrying limits, yields and replenishment times as existing ones. Look for their resource icons on the parish map; cliff-side sites are on accessible ground above high tide.
-
-Distant land remains visible beyond detailed scenery. Low shore disappears over the geographic horizon before taller hills. Lighthouse navigation points brighten as they rotate toward you, with no shafts or broad illumination. Range is limited by terrain, weather and height, capped at 30 km.
 
 ## Screen layout
 

@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.107.0
+
+Back up and deploy server and client together, publish the website, and reload clients. Public Puddlewick receives saved `additionalResources` and `resourceExpansionVersion: 1`; verify eight clusters and the woodland/cliff additions against the backup. Existing nodes, depletion and gathering tasks must remain unchanged. Portable world designs retain the added coordinates. No account or property reset is required.
+
+Procedural underwater terrain changes, so all clients need the same version for matching soundings and fishing. Custom heightmaps remain authoritative. Check a boat's depth reading, bay map shading, distant terrain and lighthouse flashes. Test returning from another window and HUD preferences after a reload. Keep the pre-deploy backup for rollback of the additive resource migration.
+
 ## Upgrade 0.106.0
 
 Deploy normally and publish the updated website, then reload clients. No data migration is required. Check the map scale while zooming between local and island views, the 500% maximum zoom, and names appearing without hover above 350%.
