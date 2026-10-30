@@ -12,8 +12,11 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
 }) => {
   const dir = mkdtempSync(join(tmpdir(), 'aclone-social-')),
     app = await createApp({ dataDir: dir, port: 0, dev: true });
-  const left = await browser.newContext({ viewport: { width: 1280, height: 720 } }),
-    right = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  // Warm both software renderers at a small viewport, then restore the real
+  // desktop/phone layouts before testing any social interactions. Shader first
+  // draws in two full-size contexts can starve each other on shared CI CPUs.
+  const left = await browser.newContext({ viewport: { width: 480, height: 320 } }),
+    right = await browser.newContext({ viewport: { width: 390, height: 320 } });
   left.setDefaultTimeout(15000);
   right.setDefaultTimeout(15000);
   try {
@@ -57,6 +60,8 @@ test('desktop and phone can exchange mail, family invitations and an approved tr
       await p.keyboard.press('F9');
       await p.getByRole('button', { name: 'Mail, family & trades', exact: true }).click();
     }
+    await s.setViewportSize({ width: 1280, height: 720 });
+    await t.setViewportSize({ width: 390, height: 844 });
     const mail = s.locator('#mail-compose');
     await mail.getByLabel('Resident name').fill(offline.name);
     await mail.getByLabel('Subject').fill('Delivery tomorrow');

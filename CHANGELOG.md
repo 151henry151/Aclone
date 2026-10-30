@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.109.2] - 2026-10-30
+
+### Fixed
+
+- Registration and reconnect browser checks verify that the town teleport is absent and a stopped player's position survives a reload, instead of attempting the removed shortcut.
+- Vessel regression checks use the new 24.5 m trawler scale while still requiring a human-sized helmsman and an unobstructed helm view.
+- Map navigation checks follow world coordinates when the map redraws; phone captures allow for slower rendering, and the two-player transaction test warms up both renderers at small viewports before restoring its full desktop and phone layouts.
+
 ## [0.109.1] - 2026-10-30
 
 ### Fixed

@@ -177,7 +177,7 @@ test('phone controls, mobile sheets and touch conversations support real gamepla
     await page.setViewportSize({ width: 844, height: 390 });
     await fits(page);
     await expect(page.locator('.mobile-nav')).toBeVisible();
-    await page.screenshot({ path: 'test-results/mobile-landscape.png' });
+    await page.screenshot({ path: 'test-results/mobile-landscape.png', timeout: 30000 });
     // All gameplay menus remain reachable and fit a short landscape viewport.
     for (const name of [
       'Resources',

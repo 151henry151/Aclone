@@ -1,10 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
 import { waitForWorld } from './fixtures/ready';
+import { applyFields } from '../../src/shared/state-patch';
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('aclone.quality', 'low'));
 });
-test('pilot registration, galaxy, landing, movement and persistent recovery', async ({ page }) => {
+test('pilot registration, galaxy, movement and saved position without free town teleport', async ({
+  page,
+}) => {
+  let position: { x: number; z: number; speed: number } | undefined;
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', ({ payload }) => {
+      const message = JSON.parse(String(payload));
+      if (message.self) position = message.self;
+      else if (position && message.selfPatch) position = applyFields(position, message.selfPatch);
+      else if (message.world?.players?.[message.me]) position = message.world.players[message.me];
+    });
+  });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => {
@@ -57,8 +69,16 @@ test('pilot registration, galaxy, landing, movement and persistent recovery', as
   await page.screenshot({ path: 'test-results/overhead.png' });
   await page.keyboard.press('c');
   await page.getByRole('button', { name: 'World F9' }).click();
-  await page.getByRole('button', { name: 'Return to town centre' }).click();
+  await expect(page.getByRole('button', { name: 'Return to town centre' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Close dialog' }).click();
+  await expect.poll(() => Math.abs(position?.speed ?? Infinity)).toBeLessThan(0.05);
+  const stopped = { ...position! };
+  position = undefined;
+  await page.reload();
+  await waitForWorld(page);
+  await expect
+    .poll(() => (position ? Math.hypot(position.x - stopped.x, position.z - stopped.z) : Infinity))
+    .toBeLessThan(1);
   await page.getByRole('button', { name: 'Activities', exact: true }).click();
   await page.getByRole('button', { name: 'Join Hornball' }).click();
   await page.waitForTimeout(500);

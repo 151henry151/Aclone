@@ -131,10 +131,21 @@ test('the parish map opens with M or a click and keeps navigation through live u
     await expect(map).toBeVisible();
     const viewport = map.locator('.parish-map-viewport');
     await expect.poll(() => viewport.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+    // The map recentres its backing sheet while panning. Verify the visible
+    // world coordinate, not scrollLeft, which may reset during that redraw.
+    const markCentre = map.getByRole('button', { name: 'Mark centre', exact: true });
+    const centreX = () =>
+      page.evaluate(() => JSON.parse(localStorage.getItem('aclone.waypoint.map-test')!).x);
+    await markCentre.click();
+    const left = await centreX();
     await viewport.focus();
-    const left = await viewport.evaluate((el) => el.scrollLeft);
     await page.keyboard.press('ArrowRight');
-    await expect.poll(() => viewport.evaluate((el) => el.scrollLeft)).toBeGreaterThan(left);
+    await expect
+      .poll(async () => {
+        await markCentre.click();
+        return centreX();
+      })
+      .toBeGreaterThan(left);
     // A two-finger pinch spreading to twice the distance doubles the zoom.
     await viewport.evaluate((el) => {
       const r = el.getBoundingClientRect(),

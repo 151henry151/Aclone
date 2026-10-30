@@ -56,7 +56,7 @@ test('canal boat has a waterline hull, independent paint, clear helm view and bo
     console.log(JSON.stringify(r));
     const f = await page.evaluate(() => (window as any).fishingResult);
     console.log(JSON.stringify(f));
-    expect(f.length).toBeCloseTo(20.445, 1);
+    expect(f.length).toBeCloseTo(24.5, 1);
     expect(f.width).toBeGreaterThan(7);
     expect(f.driverHeight).toBeCloseTo(f.humanHeight, 3);
     expect(f.clearView).toBe(true);
