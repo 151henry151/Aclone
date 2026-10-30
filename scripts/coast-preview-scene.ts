@@ -27,6 +27,6 @@ export const coastPreviewHTML = `<style>body{margin:0;background:#172a32}#view{w
  const align=(angle-b.x*.01-b.rotation)*8/Math.PI;
  game.lighthouseLights.update(w,game.camera,align+(mode==='off'?3:0),mode==='night'?0:1,mode==='storm'?1:0);
  game.renderer.render(game.scene,game.camera);
- return {bluffs:w.coastalBluffs.length,patches:game.ocean.surf.group.children.length,calls:game.renderer.info.render.calls,triangles:game.renderer.info.render.triangles, shaft:game.lighthouseLights.shaft.visible,signals:[...game.lighthouseLights.signals.entries()].map(([id,s])=>[id,s.sprite.material.opacity,s.clear])};
+ return {bluffs:w.coastalBluffs.length,patches:game.ocean.surf.group.children.length,calls:game.renderer.info.render.calls,triangles:game.renderer.info.render.triangles, lightCount:game.lighthouseLights.group.children.filter(o=>o.isLight).length,signals:[...game.lighthouseLights.signals.entries()].map(([id,s])=>[id,s.sprite.material.opacity,s.clear])};
  };window.b=b;
 </script>`;

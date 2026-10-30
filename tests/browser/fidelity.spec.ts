@@ -80,7 +80,8 @@ test('controller menus, buying, building rotation, courses and maintenance use r
     await pulse(15);
     await expect(page.locator('[data-design="rotation"]')).not.toHaveValue(rotation);
     await pulse(1);
-    await page.getByRole('button', { name: 'First steps & leaving safely', exact: true }).click();
+    await page.keyboard.press('F9');
+    await page.getByRole('button', { name: 'World rules & leaving safely', exact: true }).click();
     await expect(page.getByRole('dialog')).toContainText('Carry provisions');
     await page.getByRole('button', { name: 'Pause for maintenance', exact: true }).click();
     await expect.poll(() => w.maintenance?.paused).toBe(true);

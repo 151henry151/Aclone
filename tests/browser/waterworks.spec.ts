@@ -110,7 +110,8 @@ test('waterworks build preview enforces shoreline placement and the finished bui
       await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.waitForTimeout(1200);
     await page.screenshot({ path: 'test-results/shoreline-waterworks.png' });
-    await page.getByRole('button', { name: 'View parish directory' }).click();
+    await page.keyboard.press('F9');
+    await page.getByRole('button', { name: 'Directory', exact: true }).click();
     await page
       .getByRole('dialog')
       .getByRole('button', { name: /Shoreline waterworks/ })

@@ -53,7 +53,11 @@ for (const mobile of [false, true])
         await page.locator('[data-do=mobile-actions]').tap();
         await page.getByRole('button', { name: 'Players & roadside help', exact: true }).tap();
         await page.locator('#modal-host [data-do=player]').tap();
-      } else await page.locator('#players [data-do=player]').click();
+      } else {
+        await page.keyboard.press('F9');
+        await page.getByRole('button', { name: 'Players & roadside help', exact: true }).click();
+        await page.locator('#modal-host [data-do=player]').click();
+      }
       const dialog = page.getByRole('dialog'),
         form = page.locator('#money-gift-form');
       await expect(dialog).toContainText(b.name);

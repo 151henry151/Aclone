@@ -87,8 +87,12 @@ for (const mobile of [false, true])
       await choice.selectOption('28');
       await expect(paintShop).toContainText('Finish: Plum purple');
 
-      await page.locator('#tractor-preview').scrollIntoViewIfNeeded();
-      await expect(page.locator('#tractor-preview')).toBeInViewport();
+      // A paint acknowledgement may replace the preview once while scrolling.
+      // Resolve the current locator again, retaining the viewport assertion.
+      await expect(async () => {
+        await page.locator('#tractor-preview').scrollIntoViewIfNeeded();
+        await expect(page.locator('#tractor-preview')).toBeInViewport();
+      }).toPass({ timeout: 10000 });
       await page.screenshot({
         path: `test-results/tractor-shop-${mobile ? 'phone' : 'desktop'}.png`,
       });
