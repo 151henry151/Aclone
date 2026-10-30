@@ -6,6 +6,7 @@ import { boatShoreCollision } from '../src/shared/boat-shore';
 import { terrainHeight } from '../src/shared/terrain';
 import { waterLevel } from '../src/shared/ocean';
 import { vehicleCondition } from '../src/shared/vehicle-services';
+import { vehicleDef } from '../src/shared/vehicle-config';
 
 function setup(slot = 30) {
   const w = createWorld('shore-test', 'Shore test', 'owner');
@@ -45,6 +46,7 @@ for (const slot of [3, 30, 31]) {
     assert.ok(terrainHeight(w, p.x, p.z) < waterLevel(w));
     assert.equal(p.speed, 0);
     assert.equal(p.boatThrottle, 0);
+    assert.equal(p.engine, true, 'shore impacts idle the throttle without stopping the engine');
     const parked = { x: p.x, z: p.z };
     for (let i = 0; i < 600; i++) move(w, p, held, 0.05);
     assert.deepEqual({ x: p.x, z: p.z }, parked);
@@ -101,4 +103,74 @@ test('prediction matches the server without mutating shared fleet records', () =
   move(w, p, input, 0.25);
   assert.equal(vehicleCondition(p), 79);
   assert.deepEqual(predicted, p);
+});
+
+for (const slot of [3, 29, 30, 31, 32, 33]) {
+  test(`boat ${slot} can retreat from an already overlapping shoreline without further damage`, () => {
+    const { w, p } = setup(slot);
+    // A receding tide or a larger saved hull can put the bow beyond the water
+    // boundary before this tick. Starting in collision must not trap the boat.
+    const halfLength = vehicleDef(w, slot).length! / 2;
+    let boundary = 140;
+    while (terrainHeight(w, 0, boundary) >= waterLevel(w) - 0.05) boundary += 0.01;
+    p.z = boundary + halfLength - 0.25;
+    assert.ok(terrainHeight(w, 0, p.z - halfLength) >= waterLevel(w) - 0.05);
+    p.speed = 0;
+    p.boatThrottle = 0;
+    const start = p.z;
+    for (let i = 0; i < 400; i++) move(w, p, { throttle: -1, steer: 0, boost: false }, 0.05);
+    assert.ok(p.z > start + 3, `boat should reverse into water; travelled ${p.z - start} m`);
+    assert.equal(vehicleCondition(p), 100, 'escaping an overlap is not a new impact');
+  });
+}
+
+test('an overlapping hull cannot use recovery to move further onto land or cross a dry ridge', () => {
+  const { w } = setup();
+  const from = { x: 0, z: 155 };
+  const r = 3.7,
+    halfLength = 12.25;
+  assert.ok(boatShoreCollision(w, from, { x: 0, z: 154 }, r, Math.PI, halfLength));
+  // Wet endpoints on the far side are not enough: each swept step must escape
+  // the existing overlap, never climb through dry ground.
+  w.terrain = [{ x: 0, z: 190, radius: 2, height: 20 }];
+  const ridge = { x: 0, z: 189.5 },
+    beyond = { x: 0, z: 195 };
+  assert.ok(terrainHeight(w, ridge.x, ridge.z) >= waterLevel(w));
+  assert.ok(terrainHeight(w, beyond.x, beyond.z) < waterLevel(w));
+  assert.ok(boatShoreCollision(w, ridge, beyond, 0.2));
+});
+
+test('falling water allows forward escape from a stranded stern and prediction agrees', () => {
+  const { w, p } = setup();
+  p.heading = 0;
+  p.speed = 0;
+  p.boatThrottle = 0;
+  p.z = 164;
+  const v = vehicleDef(w, p.vehicle);
+  const end = { x: p.x, z: p.z + 0.1 };
+  assert.equal(
+    boatShoreCollision(w, p, end, v.collisionRadius!, p.heading, v.length! / 2),
+    undefined,
+  );
+  w.settings.seaLevel -= 1;
+  assert.ok(terrainHeight(w, p.x, p.z - v.length! / 2) >= waterLevel(w) - 0.05);
+  const predicted = structuredClone(p),
+    input = { throttle: 1, steer: 0, boost: false };
+  for (let i = 0; i < 300; i++) {
+    move(w, predicted, input, 0.05, true);
+    move(w, p, input, 0.05);
+  }
+  assert.ok(p.z > 167, 'a stranded stern can escape forwards');
+  assert.equal(vehicleCondition(p), 100);
+  for (const key of [
+    'x',
+    'y',
+    'z',
+    'heading',
+    'speed',
+    'fuel',
+    'boatThrottle',
+    'fleetState',
+  ] as const)
+    assert.deepEqual(predicted[key], p[key], `predicted ${key} matches the server`);
 });

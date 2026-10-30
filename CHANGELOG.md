@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.109.3] - 2026-10-30
+
+### Fixed
+
+- Boats already overlapping a shoreline after a tide change or hull resize can retreat into deeper water instead of having reverse repeatedly blocked. Recovery cannot move further onto land or cross a dry ridge.
+
 ## [0.109.2] - 2026-10-30
 
 ### Fixed

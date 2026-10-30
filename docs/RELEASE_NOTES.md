@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.109.3 — Shoreline recovery
+
+A boat already partly overlapping shore can retreat toward deeper water instead of having every reverse attempt blocked. Each step must reduce the overlap without introducing new ground contact; boats still cannot climb onto land or cross a dry ridge. Normal shore impacts retain minor damage, recoil and throttle cut-off. The engine remains running unless switched off separately.
+
+Validation: all 1,238 unit tests and TypeScript pass, including recovery for all six boat types, falling water, grounded bows and sterns, normal impacts, land barriers and matching client/server movement. Reload after deployment.
+
 ## 0.109.2 — Browser regression coverage
 
 Registration and reconnect checks now verify that the town teleport is absent and that a stopped player's saved position survives a reload. Vessel checks verify the new 24.5 m trawler with human-sized crew and a clear helm view. Map keyboard navigation is checked in world coordinates rather than backing-sheet scroll pixels. Phone screenshot capture allows more time on software graphics; the two-player social test warms both renderers at small viewports before testing the full desktop and phone layouts. This changes test coverage only; gameplay remains as described below.

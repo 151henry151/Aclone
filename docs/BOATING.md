@@ -357,3 +357,7 @@ or activation. The normal rescue, fuel and boarding rules remain unchanged.
 
 The design takes cues from [VIKING liferaft construction](https://www.viking-life.com/industries/yachting/liferafts-yachting/choosing-your-liferaft/liferaft-features/),
 with an open rowing position retained for the game's rescue journey.
+
+## Backing away from shore
+
+A shore impact causes minor hull damage and sets throttle to zero; it does not switch off the engine. With fuel and the engine running, apply reverse to back a grounded bow away, or forward if the stern is against shore. If a falling tide leaves the hull partly overlapping shore, movement that reduces the overlap toward deeper water remains possible. Boats cannot use this recovery to drive onto land or cross a dry ridge.
