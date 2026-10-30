@@ -61,8 +61,7 @@ export class OtherVehicleLights {
         continue;
       }
       updateVehicleLamps(root, !!p.lights && !p.atHome && !p.hitch);
-      if (id === localId || !p.lights || p.atHome || p.hitch || !root.visible || p.vehicle === 5)
-        continue;
+      if (id === localId || !p.lights || p.atHome || p.hitch || !root.visible) continue;
       const distance = root.position.distanceTo(eye);
       if (distance < 140) sources.push({ p, root, distance });
     }
@@ -90,6 +89,15 @@ export class OtherVehicleLights {
       light.intensity =
         (vehicleDef(w, s.p.vehicle)?.headlight ?? 150) * Math.min(1, (140 - s.distance) / 30);
       light.distance = vehicleDef(w, s.p.vehicle)?.lightRange ?? 110;
+      light.angle = Math.PI / 3.5;
+      if (s.root.userData.flashlight) {
+        light.intensity = 32 * Math.min(1, (140 - s.distance) / 30);
+        light.distance = 28;
+        light.angle = Math.PI / 8;
+        s.root.userData.flashlight.muzzle.getWorldPosition(light.position);
+        s.root.userData.flashlight.target.getWorldPosition(light.target.position);
+        continue;
+      }
       this.point.copy(s.root.userData.lamp ?? new T.Vector3(0, 1.7, 0));
       light.position.copy(s.root.localToWorld(this.point));
       this.point.set(0, 0, 35);

@@ -1,3 +1,4 @@
+import { hasMotor } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
 import { isTrawler } from '../shared/vehicle-config';
 import { fishingVessel } from '../shared/boat-fishing';
@@ -89,7 +90,9 @@ export function actionVisible(
     case 'crowRecall':
       return !!p.crowBody && !!p.crowMark && w.settings.crowAbilities && w.settings.fighting;
     case 'engine':
+      return !p.atHome && !p.hitch && p.health > 0 && hasMotor(w, p.vehicle);
     case 'lights':
+      return !p.atHome && !p.hitch && p.health > 0 && p.vehicle !== LIFEBOAT;
     case 'horn':
       return !p.atHome && !p.hitch && p.health > 0 && p.vehicle !== 5;
     case 'outside':

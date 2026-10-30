@@ -1,3 +1,4 @@
+import { hasMotor } from '../shared/vehicle-config';
 import { waterDepth } from '../shared/fishing-water';
 import { HudPanels, hudPanels, type HudPanel } from './hud-panels';
 import { FrameInbox } from './frame-inbox';
@@ -723,11 +724,15 @@ function updateHud() {
       ['[data-do=engine]', me.engine ? 'Stop engine' : 'Start engine', 'engine'],
       [
         '[data-do=lights]',
-        isTrawler(me.vehicle, world)
-          ? 'Boat lighting'
-          : me.lights
-            ? 'Turn lights off'
-            : 'Turn lights on',
+        me.vehicle === 5
+          ? me.lights
+            ? 'Flashlight off'
+            : 'Flashlight on'
+          : isTrawler(me.vehicle, world)
+            ? 'Boat lighting'
+            : me.lights
+              ? 'Turn lights off'
+              : 'Turn lights on',
         'lights',
       ],
     ]) {
@@ -791,13 +796,16 @@ function updateHud() {
       '.bottom-left [data-do="lights"], .bottom-left [data-do="engine"]',
     )
     .forEach((button) => {
-      button.hidden = me?.vehicle === LIFEBOAT;
+      button.hidden =
+        button.dataset.do === 'engine' ? !hasMotor(world, me!.vehicle) : me!.vehicle === LIFEBOAT;
+      if (button.dataset.do === 'lights')
+        button.textContent = me!.vehicle === 5 ? 'Flashlight' : 'Lights';
     });
   $('driving').title =
     `Ping: round-trip network delay. FPS: rendered frames per second. Motion buffer: ${scene.motionBufferMs} ms; grows only on uneven connections.`;
   setHudHtml(
     'driving',
-    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicleDef(world, me.vehicle).name)}<small>${me.vehicle === LIFEBOAT ? 'ROWING · FLARE LIT' : me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
+    `<strong>${Math.round(Math.abs(me.speed) * 2.237)}<small> MPH</small></strong><span>${esc(vehicleDef(world, me.vehicle).name)}<small>${me.vehicle === LIFEBOAT ? 'ROWING · FLARE LIT' : !hasMotor(world, me.vehicle) ? '' : me.engine ? 'ENGINE ON' : 'ENGINE OFF'} · ${mobile.active ? '' : `${ping} ms ping · ${scene.renderFps} FPS`}</small></span>`,
   );
   document.getElementById('flight-readout')?.remove();
   if (vehicleDef(world, me.vehicle).mode === 2) {
@@ -1834,7 +1842,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button(me.engine ? 'Stop engine' : 'Start engine', 'engine')}${button(poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,

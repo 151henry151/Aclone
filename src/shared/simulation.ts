@@ -1,3 +1,4 @@
+import { hasMotor } from './vehicle-config';
 import {
   vehicleDef,
   validateVehicleTuning,
@@ -1434,6 +1435,7 @@ export function act(w: World, id: string, a: Action): string {
       break;
     }
     case 'engine':
+      requireThat(hasMotor(w, p.vehicle), 'This vehicle has no motor');
       p.engine = !p.engine;
       break;
     case 'boatLights':

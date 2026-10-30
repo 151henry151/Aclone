@@ -1,3 +1,4 @@
+import { createFlashlight } from './flashlight';
 import { spaceportFence } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
@@ -1164,6 +1165,7 @@ export class GameScene {
       const human = createHuman();
       g.add(human.group);
       g.userData.human = human;
+      g.userData.flashlight = createFlashlight(human.group);
     } else if (slot === 6) {
       cylinder(g, 0.22, 1.5, '#bd9971', -0.45, 0.8, 0, 5);
       cylinder(g, 0.22, 1.5, '#bd9971', 0.45, 0.8, 0, 5);
@@ -1415,6 +1417,7 @@ export class GameScene {
           dt,
           turn,
         );
+        mesh.userData.flashlight?.update(!!w.players[mesh.userData.playerId]?.lights);
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
         (mesh.userData.hovercraft as HovercraftFigure | undefined)?.animate(
           dt,
@@ -1498,8 +1501,11 @@ export class GameScene {
       }
       this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position, now / 1000);
       this.headlights.visible = p.vehicle !== LIFEBOAT && p.lights && !p.atHome && !p.hitch;
-      this.headlights.intensity = vehicleDef(this.world, p.vehicle).headlight ?? 150;
-      this.headlights.distance = vehicleDef(this.world, p.vehicle).lightRange ?? 110;
+      this.headlights.angle = p.vehicle === 5 ? Math.PI / 8 : Math.PI / 3.5;
+      this.headlights.intensity =
+        p.vehicle === 5 ? 32 : (vehicleDef(this.world, p.vehicle).headlight ?? 150);
+      this.headlights.distance =
+        p.vehicle === 5 ? 28 : (vehicleDef(this.world, p.vehicle).lightRange ?? 110);
       const local = this.meshes.get(p.id);
       if (local) {
         if (this.cameraMode === 1 && local.userData.charterBoat)
@@ -1543,6 +1549,10 @@ export class GameScene {
         this.headlights.target.position.copy(
           new T.Vector3(0, 0, 35).applyQuaternion(local.quaternion).add(pos),
         );
+        if (local.userData.flashlight) {
+          local.userData.flashlight.muzzle.getWorldPosition(this.headlights.position);
+          local.userData.flashlight.target.getWorldPosition(this.headlights.target.position);
+        }
         this.target.copy(pos);
         const walking = p.vehicle === 5;
         const tractorView = !!local.userData.driver;

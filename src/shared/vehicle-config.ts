@@ -166,3 +166,9 @@ export function validateVehicleTuning(w: World, slot: number, input: unknown, re
   }
   return tuning;
 }
+
+/** Fuel-free creature/walking/rowing slots have no engine, including custom modes. */
+export function hasMotor(w: Pick<World, 'vehicleTuning'> | undefined, slot: number) {
+  const v = vehicleDef(w, slot);
+  return ![5, 6, 7, 29].includes(slot) && v.mode !== 8 && v.fuel > 0;
+}

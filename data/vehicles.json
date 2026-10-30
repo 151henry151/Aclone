@@ -414,7 +414,7 @@
     "acceleration": 1.4,
     "turn": 1.5,
     "fuel": 0,
-    "capacity": 40,
+    "capacity": 10,
     "armour": 100,
     "price": 0,
     "color": "#ed762e",

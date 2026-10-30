@@ -199,7 +199,7 @@ test('rescue refuses nonempty tanks, duplicate launches and overloaded lifeboat 
   vehicle(w, p, 0, fishingDock.id);
   p.inventory = { stone: 100 };
   const before = JSON.stringify(w.boatRescues);
-  assert.throws(() => act(w, p.id, { type: 'lifeboat', operation: 'board' }), /40/);
+  assert.throws(() => act(w, p.id, { type: 'lifeboat', operation: 'board' }), /10/);
   assert.equal(JSON.stringify(w.boatRescues), before);
   assert.throws(() => vehicle(w, p, 3, fishingDock.id), /Recover/);
 });
