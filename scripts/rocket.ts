@@ -40,14 +40,22 @@ try {
  const port=spaceportModel();scene.add(port);const flight=port.userData.flight;
  const camera=new T.PerspectiveCamera(45,1400/900,.1,4000);camera.position.set(320,170,390);camera.lookAt(104,115,30);
  const launch=spaceportFlight('rocket-demo',0).next;
- window.showAnimal=(name)=>{const elapsed={ignition:5,launch:27,away:110,landing:285,docked:340}[name];flight.update('rocket-demo',launch+elapsed);document.querySelector('#caption').innerHTML=name.toUpperCase()+'<small>Aclone · actual cargo ship and flight effects</small>';renderer.render(scene,camera);return {draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};};
+ window.showAnimal=(name)=>{const elapsed={ignition:5,launch:27,away:110,approach:265,landing:292,touchdown:300,settling:320,docked:340}[name];flight.update('rocket-demo',launch+elapsed);document.querySelector('#caption').innerHTML=name.toUpperCase()+'<small>Aclone · actual cargo ship and flight effects</small>';renderer.render(scene,camera);return {draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};};
  window.ready=true;
  </script></html>`,
     }),
   );
   await page.goto(`http://127.0.0.1:${port}/__rocket_preview`);
   await page.waitForFunction(() => !!(window as any).ready);
-  for (const kind of ['ignition', 'launch', 'away', 'landing', 'docked']) {
+  for (const kind of [
+    'ignition',
+    'launch',
+    'approach',
+    'landing',
+    'touchdown',
+    'settling',
+    'docked',
+  ]) {
     console.log(kind, await page.evaluate((k) => (window as any).showAnimal(k), kind));
     await page.screenshot({ path: join(output, kind + '.png') });
   }

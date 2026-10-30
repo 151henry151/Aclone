@@ -12,6 +12,18 @@ export function spaceportFlight(world: string, time: number) {
   if (second) launch += 3 * DAY_SECONDS;
   const elapsed = Math.round((dayTime - launch) * 1e6) / 1e6;
   const next = dayTime < first ? first : launch + (second ? 4 : 3) * DAY_SECONDS;
+  const motion = spaceportMotion(elapsed);
+  return {
+    ...motion,
+    elapsed,
+    launch,
+    next,
+    visible: motion.phase !== 'away',
+  };
+}
+
+/** Bounded flight-clock motion, also used to reconstruct recently emitted exhaust. */
+export function spaceportMotion(elapsed: number) {
   let phase: 'docked' | 'ignition' | 'ascending' | 'away' | 'landing' | 'settling' = 'docked',
     height = 0,
     thrust = 0;
@@ -33,14 +45,5 @@ export function spaceportFlight(world: string, time: number) {
     phase = 'settling';
     thrust = 1 - (elapsed - 300) / 12;
   }
-  return {
-    phase,
-    height,
-    thrust,
-    elapsed,
-    launch,
-    next,
-    visible: phase !== 'away',
-    smoke: (elapsed >= 0 && elapsed < 85) || (elapsed >= 250 && elapsed < 335),
-  };
+  return { phase, height, thrust };
 }

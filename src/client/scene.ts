@@ -1312,6 +1312,7 @@ export class GameScene {
         flight.update(
           w.id,
           w.time + Math.min(1, Math.max(0, (now - this.flightSnapshotAt) / 1000)),
+          Math.max(0.04, this.sun.intensity / 3),
         );
       const motionTime = this.motionClock.sample(now);
       const predicted = this.prediction.sample(now, this.localInput());
