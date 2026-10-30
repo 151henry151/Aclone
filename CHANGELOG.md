@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.112.0] - 2026-10-30
+
+### Added
+
+- Personal statistics now show the number of bug-bounty rewards received in the current world. Operator awards have stable receipt IDs to prevent duplicate payment, and the counter survives death and reconnects.
+
 ## [0.111.1] - 2026-10-30
 
 ### Fixed

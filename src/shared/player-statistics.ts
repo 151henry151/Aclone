@@ -10,6 +10,9 @@ export interface PlayerStatistics {
   capitalIn: number;
   capitalOut: number;
   buildingsCompleted: number;
+  bugBounties?: number;
+  /** Stable operator award IDs prevent duplicate grants on retry. */
+  bugBountyAwards?: string[];
   gathered: Stock;
   harvested: Stock;
 }

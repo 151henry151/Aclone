@@ -2,6 +2,20 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.112.0
+
+Deploy client and server together and reload clients. Verify carried Fuel remains
+visible and Inventory → Refuel fills a recovery tugboat or motorboat even when
+another vessel is stranded. Lifeboats and the stranded tank still cannot be
+refuelled remotely. This release includes the 0.111.1 fix.
+
+Statistics default missing bounty counts to zero without resetting older counters.
+Operator-only awards use `awardBugBounty` from `src/server/bug-bounties.ts`, with a
+stable award ID and an amount in internal hundredths of a denarius. Persist the
+world and audit receipt atomically; do not write the database while the server
+is running. Historical imports require a verified receipt and add the count/ID
+without paying the old award again. No automatic grants run on deployment.
+
 ## Upgrade 0.111.0
 
 Back up and deploy client and server together, publish the website, and reload clients.

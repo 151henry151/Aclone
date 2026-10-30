@@ -94,6 +94,6 @@ export function statisticsHtml(w: World, p: Player, time?: PlaytimeStatistics, e
     <h3>Materials gathered</h3><p>${goods(s.gathered, w)}</p><h3>Crops harvested into farm stockrooms</h3><p>${goods(s.harvested, w)}</p>`
     : '<p>Activity tracking starts after this update; earlier totals are unknown.</p>';
   return `<h3>Playtime</h3>${playtime}<h3>${esc(w.name)} · personal statistics</h3>
-    <dl class="business-accounts">${line('Deaths (existing lifetime record)', p.deaths)}${line('Buildings currently owned', w.buildings.filter((b) => b.owner === p.id && !b.construction).length)}</dl>
+    <dl class="business-accounts">${line('Deaths (existing lifetime record)', p.deaths)}${line('Bug-bounty rewards received', s?.bugBounties ?? 0)}${line('Buildings currently owned', w.buildings.filter((b) => b.owner === p.id && !b.construction).length)}</dl>
     ${activities}<p class="note">Money and activity totals belong to this world. Visit another world to view its statistics. Playtime covers your account across this server. Reopen this page to refresh playtime.</p>`;
 }
