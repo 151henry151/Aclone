@@ -125,3 +125,30 @@ test('loss-on-death removes an attached tender and the fishing boat without dupl
   assert.equal(p.fleet?.includes(MOTORBOAT), false);
   assert.equal(p.fleet?.includes(30), false);
 });
+
+test('a stranded trawler does not block refuelling its recovery motorboat or tug', () => {
+  for (const slot of [MOTORBOAT, 32]) {
+    const { w, p } = setup();
+    Object.assign(p, { vehicle: slot, fuelVehicle: slot, fuel: 0, inventory: { fuel: 2 } });
+    const rescue = structuredClone(w.boatRescues);
+    assert.equal(actionVisible(w, p, 'use', 'fuel'), true);
+    act(w, p.id, { type: 'use', item: 'fuel' });
+    assert.equal(p.fuel, 8);
+    assert.equal(p.inventory.fuel, 1);
+    assert.equal(p.parkedFuel?.[30], 0);
+    assert.deepEqual(w.boatRescues, rescue);
+  }
+});
+
+test('walking ashore cannot remotely refuel a stranded tank; a different parked tank can be filled', () => {
+  const { w, p } = setup();
+  Object.assign(p, { vehicle: 5, fuelVehicle: 30, fuel: 0 });
+  assert.equal(actionVisible(w, p, 'use', 'fuel'), false);
+  assert.throws(() => act(w, p.id, { type: 'use', item: 'fuel' }), /reboard/);
+  assert.equal(p.inventory.fuel, 2);
+  p.fuelVehicle = MOTORBOAT;
+  assert.equal(actionVisible(w, p, 'use', 'fuel'), true);
+  act(w, p.id, { type: 'use', item: 'fuel' });
+  assert.equal(p.fuel, 8);
+  assert.equal(p.inventory.fuel, 1);
+});

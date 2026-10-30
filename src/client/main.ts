@@ -45,7 +45,7 @@ import { Controller } from './controller';
 import { buildMenuHtml, mountBuildMenu } from './build-menu';
 let closeBuildPreview: (() => void) | undefined;
 import { labourReward, RELIEF_PAY } from '../shared/public-labour.ts';
-import { refreshActionVisibility } from './action-visibility';
+import { actionVisible, refreshActionVisibility } from './action-visibility';
 import {
   farmPlotCount,
   farmExpansionCost,
@@ -872,7 +872,7 @@ function updateHud() {
       .slice(0, 4)
       .map(
         ([id, n]) =>
-          `<button data-do="${!me!.crowBody && (items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || (items[id]?.fuel && me!.fuel < fuelCapacity(me!, world))) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
+          `<button data-do="${actionVisible(world!, me!, 'use', id) ? 'use' : 'inventory'}" data-id="${id}" title="${esc(items[id]?.name)}"><span>${esc(items[id]?.icon ?? '')} ${esc(items[id]?.name ?? id)}</span><b>${n}</b></button>`,
       )
       .join('') +
       `<div class="carry">${carry(me, world!)} / ${vehicleDef(world, me.vehicle).capacity} carried</div>`,
@@ -3701,7 +3701,7 @@ function boatControls(building?: string) {
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html =
-    '<section><h3>Boating</h3>' +
+    '<section><h3>Boating</h3><p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to 8 tank units. Start the engine with F4 or the Engine button.</p>' +
     expeditionPanel(world, me) +
     charterPanel(world, me) +
     towingPanel(world, me);

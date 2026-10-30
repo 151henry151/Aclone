@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.111.1] - 2026-10-30
+
+### Fixed
+
+- Refuel a recovery tugboat or motorboat while another owned boat is stranded. Carried Fuel stays visible even when it cannot currently be used; the stranded vessel still requires physical recovery before its tank can be filled.
+
 ## [0.111.0] - 2026-10-30
 
 ### Added

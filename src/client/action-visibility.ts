@@ -9,7 +9,7 @@ import { LIFEBOAT, reboardReason } from '../shared/boat-rescue';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehiclePaint, paintableVehicle } from '../shared/appearance';
-import { fuelCapacity, returnTractor } from '../shared/tractors';
+import { fuelCapacity, refuelRequiresReboarding, returnTractor } from '../shared/tractors';
 import type { Building, Player, World } from '../shared/types';
 import { jobVacancy, hiringLimit } from '../shared/staffing';
 import { propertyQuote } from '../shared/property';
@@ -113,10 +113,7 @@ export function actionVisible(
         !p.crowBody &&
         !!item &&
         !!(item.food || item.drink || item.health || item.maxHealth || item.fuel) &&
-        (!item.fuel ||
-          (p.vehicle !== LIFEBOAT &&
-            !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1, w)) &&
-            p.fuel < fuelCapacity(p, w)))
+        (!item.fuel || (!refuelRequiresReboarding(p, w) && p.fuel < fuelCapacity(p, w)))
       );
     }
     case 'discard':

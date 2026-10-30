@@ -361,3 +361,15 @@ with an open rowing position retained for the game's rescue journey.
 ## Backing away from shore
 
 A shore impact causes minor hull damage and sets throttle to zero; it does not switch off the engine. With fuel and the engine running, apply reverse to back a grounded bow away, or forward if the stern is against shore. If a falling tide leaves the hull partly overlapping shore, movement that reduces the overlap toward deeper water remains possible. Boats cannot use this recovery to drive onto land or cross a dry ridge.
+
+### Refuelling from carried cans
+
+Buy Fuel at the boatyard or another fuel seller, carry it aboard, then open
+**Inventory (I / Bag)** and select **Refuel** beside Fuel. A can adds up to eight
+tank units; any amount beyond the tank capacity is used up. Start the engine
+with **F4** or the Engine button. Fuel cans are cargo, separate from the tank.
+
+A stranded vessel does not stop you refuelling a different recovery tugboat or
+motorboat. Its own tank remains inaccessible until you physically reboard it.
+The lifeboat has no engine. Carried fuel remains visible while rowing, even
+though it cannot be used until you board a powered craft.

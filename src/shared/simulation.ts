@@ -74,6 +74,7 @@ import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
 import {
   fuelCapacity,
+  refuelRequiresReboarding,
   switchVehicle,
   isTractor,
   tractorSurface,
@@ -474,7 +475,7 @@ function usable(w: World, p: Player, item: string) {
   );
   if (def.fuel) {
     requireThat(
-      p.vehicle !== LIFEBOAT && !(w.boatRescues?.[p.id] && poweredBoat(p.fuelVehicle ?? -1, w)),
+      !refuelRequiresReboarding(p, w),
       'Carry the Fuel back to your main boat and reboard before refuelling it',
     );
     requireThat(p.fuel < fuelCapacity(p, w), 'The tank is full');

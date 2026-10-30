@@ -63,6 +63,11 @@ export function fuelVehicle(p: Player, w?: World) {
 export function fuelCapacity(p: Player, w?: World) {
   return vehicleDef(w, fuelVehicle(p, w))?.tank ?? 64;
 }
+/** Only the stranded vessel's own tank is inaccessible during a rescue. */
+export function refuelRequiresReboarding(p: Player, w: World) {
+  const rescue = w.boatRescues?.[p.id];
+  return p.vehicle === 29 || (!!rescue && fuelVehicle(p, w) === rescue.boat.slot);
+}
 /** Park tanks without topping up or throwing away fuel. Newly bought machines start empty. */
 export function switchVehicle(p: Player, slot: number, remember = true, w?: World) {
   // Legacy saves had one shared tank. The first switch between legacy slots

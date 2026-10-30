@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.111.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.111.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -304,7 +304,7 @@ when stopped alongside their stranded vessel. See the [boating guide](docs/BOATI
 
 An empty tank unlocks the **orange rowed lifeboat**. Main cargo stays offshore;
 row to a dock, buy fuel, then row back to reboard and refuel. Boats, moorings and
-rescue progress persist. Rod fishing from a stopped boat can also catch the new
+rescue progress persist. To refuel a boat, carry Fuel aboard and choose **Inventory (I / Bag) → Fuel → Refuel**, then start its engine with F4. Recovery tugboats and motorboats use their own tanks even while another vessel is stranded. Rod fishing from a stopped boat can also catch the new
 species in deep water. See the [boating guide and balance notes](docs/BOATING.md)
 and [art notes](docs/ART.md#canal-boat) for controls, costs and model details.
 
