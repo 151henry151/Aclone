@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.109.3 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.110.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -28,9 +28,11 @@ Version 0.106.0 adds distinct map icons for all 50 building types and aircraft h
 
 Version 0.105.0 adds expandable grazing pastures and roaming livestock, clearer map icons with stable distant zoom, and a detailed per-world vehicle configuration editor. See [release notes](docs/RELEASE_NOTES.md#01050--living-pastures-clearer-maps-and-vehicle-configuration).
 
+Version 0.110.0 expands the spaceport into a connected industrial complex with automatic entrance barriers, visitor parking, freight yards and a terminal near the gate. Construction now keeps respawn points and town centres clear. Reload after updating for matching terrain and collision geometry.
+
 ## What you can do
 
-- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs and chickens in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
+- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs and chickens in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Puddlewick reserves its respawn point and town centres against new construction. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Oceans have depth-faded underwater visibility, weather-driven swells and breaking surf. Boats rise and tilt with waves, and fast wave encounters produce spray and slow the hull. World owners can configure wave strength and moon-linked tidal ranges; Puddlewick uses a modest 0.6-metre spring range.
 - Commercial fishing keeps an unhauled catch in the net when towing stops. Use **Deploy / resume nets** to restart fishing after refuelling, or **Haul catch & stow** to bring it aboard. Full nets and holds trigger an alert and a highlighted status, including with the fishing controls collapsed.
@@ -154,7 +156,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Version 0.108.0 adds an inflatable emergency raft with automatic flare lighting and a remote, fenced Puddlewick spaceport with a one-kilometre building exclusion area and redesigned launch/landing exhaust. See [spaceport design and references](docs/SPACEPORT.md). It also addresses storm-water stutter in long-running worlds, improves the water surface beneath small boats, and spreads moving-ocean depth surveys across frames. These fixes do not change wave strength or boating rules.
+Version 0.108.0 adds an inflatable emergency raft with automatic flare lighting and a remote, fenced Puddlewick spaceport with a one-kilometre building exclusion area and redesigned launch/landing exhaust. See [spaceport design and references](docs/SPACEPORT.md), including the 0.110.0 entrance and industrial-complex expansion, connected concrete service yards, marked visitor parking, container stacks and ground-support equipment. It also addresses storm-water stutter in long-running worlds, improves the water surface beneath small boats, and spreads moving-ocean depth surveys across frames. These fixes do not change wave strength or boating rules.
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
 

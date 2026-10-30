@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.110.0
+
+Back up and deploy client and server together, publish the website, and reload clients. The existing public Puddlewick spaceport upgrades its saved site to layout 3, moves only the terminal near the gate, and saves the graded entrance height and launch offset. Check layout, terminal distance from the gate (under 55 m), unchanged pad coordinates, shop ID and business records. The migration defers while someone is housed or working at the terminal; if deferred, retry after they leave. Keep the pre-deploy database backup: older code cannot represent the separated terminal and pad correctly.
+
+The Cheese dairy relocation and live no-build zones were already applied; deployment does not repeat the repair or grant compensation. New shared placement rules preserve arrival clearances even without saved no-build zones. Check automatic gate travel in both directions and the clear visitor parking/service lanes.
+
 ## Upgrade 0.108.0
 
 Back up and deploy server and client together, then publish the website and reload clients. Public Puddlewick moves its existing public spaceport to a clear remote site, retaining its identity, stock and finances. The saved site adds an access road, terrain grading, a 600-metre-radius fence and a one-kilometre no-build reservation. Verify the site, road and preserved property against the backup. Other worlds are unchanged. Keep the matching database backup for rollback: older clients do not understand the graded spaceport terrain.

@@ -6,6 +6,23 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.110.0] - 2026-10-30
+
+### Added
+
+- Dress the spaceport yards with stacked shipping containers, palletized freight, cable reels, service tanks, a generator and a parked forklift, with solid boundaries and clear circulation routes.
+- Connected concrete service yard and terminal forecourt with 18 marked tractor-sized parking bays, pedestrian crossing and parking sign. The entrance widens smoothly from its existing access road and blends from gravel to concrete.
+- Expanded launch complex with a tall razor-wire security perimeter, automatic lifting barriers, a gatehouse and freestanding entrance sign. Four industrial buildings include a rocket-length integration hall, operations centre, multi-bay workshops and payload logistics, with tracking dishes, a crawler crane and decorative heavy transport trucks.
+
+### Changed
+
+- Move Puddlewick’s spaceport terminal beside the entrance while keeping the launch pad fixed and preserving the shop’s identity, stock and accounts. Grade the working yard, keep paved aprons clear of snow and give facility buildings and transport equipment collision boundaries.
+
+### Fixed
+
+- Reserve clear space around parish respawns, town centres and designated spawn zones. Building footprints, editor placement and building moves cannot intrude; new fields and pasture expansions also keep arrival areas clear.
+- Relocated Puddlewick’s Cheese dairy away from the respawn point while preserving its ownership, stock and finances; saved live no-build zones around the arrival point and town centres.
+
 ## [0.109.3] - 2026-10-30
 
 ### Fixed
