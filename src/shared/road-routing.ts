@@ -1,4 +1,4 @@
-import { spaceportFences } from './spaceport-site';
+import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -86,14 +86,15 @@ export function roadSite(w: World, width = 5) {
     const a = w.airfield;
     solids.push(rect(a.x, a.z, a.width / 2 + 10, a.length / 2 + 10));
   }
-  const fences = [...barrierSegments(w), ...spaceportFences(w)].map((b) =>
-    rect(
-      (b.a.x + b.b.x) / 2,
-      (b.a.z + b.b.z) / 2,
-      b.width / 2,
-      pointDistance(b.a, b.b) / 2,
-      Math.atan2(b.b.x - b.a.x, b.b.z - b.a.z),
-    ),
+  const fences = [...barrierSegments(w), ...spaceportFences(w), ...spaceportStructureFences(w)].map(
+    (b) =>
+      rect(
+        (b.a.x + b.b.x) / 2,
+        (b.a.z + b.b.z) / 2,
+        b.width / 2,
+        pointDistance(b.a, b.b) / 2,
+        Math.atan2(b.b.x - b.a.x, b.b.z - b.a.z),
+      ),
   );
   for (const o of w.creator?.objects ?? [])
     if (o.solid) fences.push(rect(o.x, o.z, o.radius, o.radius));

@@ -27,6 +27,7 @@ test('remote spaceport fence and phase-correct exhaust render without shader err
  import * as T from '/node_modules/three/build/three.module.js';
  import {spaceportModel} from '/src/client/spaceport.ts';
  import {spaceportFence} from '/src/client/spaceport-fence.ts';
+ import {spaceportComplex} from '/src/client/spaceport-complex.ts';
  import {terrainHeight} from '/src/shared/terrain.ts';
  import {spaceportFlight} from '/src/shared/spaceport-flight.ts';
  const w=${JSON.stringify(w)},s=w.spaceportSite,b=w.buildings.find(b=>b.id===s.building);
@@ -35,7 +36,7 @@ test('remote spaceport fence and phase-correct exhaust render without shader err
  const ground=new T.PlaneGeometry(1800,1800,160,160);ground.rotateX(-Math.PI/2);const a=ground.getAttribute('position');
  for(let i=0;i<a.count;i++){a.setXYZ(i,a.getX(i)+s.x,terrainHeight(w,a.getX(i)+s.x,a.getZ(i)+s.z),a.getZ(i)+s.z);}ground.computeVertexNormals();
  scene.add(new T.Mesh(ground,new T.MeshStandardMaterial({color:'#727b54',roughness:1})));
- const port=spaceportModel();port.position.set(b.x,b.foundationY,b.z);scene.add(port,spaceportFence(w));
+ const port=spaceportModel();port.position.set(b.x+(b.launchOffset?.x??0),b.foundationY+(b.launchOffset?.y??0),b.z+(b.launchOffset?.z??0));scene.add(port,spaceportFence(w),spaceportComplex(w));
  const camera=new T.PerspectiveCamera(45,1400/900,.2,20000),r=new T.WebGLRenderer({antialias:true});r.setSize(1400,900);r.toneMapping=T.ACESFilmicToneMapping;document.body.append(r.domElement);
  const launch=spaceportFlight(w.id,0).next;
  window.show=(name,t=340)=>{port.userData.flight.update(w.id,launch+t);

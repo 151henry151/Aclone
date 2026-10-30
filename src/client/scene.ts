@@ -1,3 +1,4 @@
+import { spaceportComplex } from './spaceport-complex';
 import { createMotorboat } from './motorboat';
 import { TrailerScene } from './trailer-scene';
 import { TowLines } from './tow-lines';
@@ -220,6 +221,7 @@ export class GameScene {
   private fields = new FarmFields();
   private livestock = new LivestockScene();
   private flights: RocketFlight[] = [];
+  private launchComplex?: T.Group;
   private flightSnapshotAt = 0;
   private combatMarkers = new T.Group();
   private water?: T.Mesh;
@@ -791,7 +793,14 @@ export class GameScene {
       this.land.add(this.terrain);
     }
     if (w.airfield) this.land.add(airfieldModel(w.airfield));
-    if (w.spaceportSite) this.land.add(spaceportFence(w));
+    this.launchComplex = undefined;
+    if (w.spaceportSite) {
+      this.land.add(spaceportFence(w));
+      if ((w.spaceportSite.layout ?? 0) >= 3) {
+        this.launchComplex = spaceportComplex(w);
+        this.land.add(this.launchComplex);
+      }
+    }
     if (w.coastalBluffs?.length) this.land.add(coastalRocks(w));
     const sea = this.ocean.create(w, this.low);
     this.water = sea;
@@ -1081,7 +1090,7 @@ export class GameScene {
     }
     this.land.traverse((o) => {
       if (o.userData.lighthouseRotor === true) animated.push(o);
-      if (o.userData.animatedFlight) animated.push(o);
+      if (o.userData.animatedFlight || o.userData.spaceportGate) animated.push(o);
       if (o.name === 'floating-jetty' || o.parent?.name === 'boatyard-gangway') animated.push(o);
       if (o.userData.flight) this.flights.push(o.userData.flight);
     });
@@ -1333,6 +1342,10 @@ export class GameScene {
         }
       }
       this.livestock.animate(this.elapsed);
+      this.launchComplex?.userData.animateGate(
+        [...Object.values(w.players).filter((p) => p.online), ...(this.me ? [this.me] : [])],
+        dt,
+      );
       const assets = animateCreatorModels(this.scene, dt, this.camera.position);
       this.renderer.domElement.dataset.assetLoading = String(assets.loading);
       this.renderer.domElement.dataset.assetFailed = String(assets.failed);

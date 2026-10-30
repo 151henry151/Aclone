@@ -1,4 +1,4 @@
-import { spaceportFences } from './spaceport-site';
+import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { pastureFences } from './pasture-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
@@ -222,6 +222,7 @@ export function landscapeBlocks(
     ...barrierSegments(w),
     ...pastureFences(w.buildings),
     ...spaceportFences(w, from, to, padding),
+    ...spaceportStructureFences(w, from, to, padding),
   ].some((b) => {
     const margin = b.width / 2 + padding;
     if (

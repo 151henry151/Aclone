@@ -1,3 +1,4 @@
+import { spaceportPavementDistance } from './spaceport-site';
 import { onAirfield, runwayRoad } from './airfield';
 import { landscapeRoads } from './landscape.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -204,7 +205,7 @@ export function townSquare(w: Pick<World, 'creator'>) {
   return w.creator?.roads === false ? undefined : { x: 0, z: 0, radius: 13 };
 }
 export function roadSurfaceDistance(
-  w: Pick<World, 'creator' | 'airfield'>,
+  w: Pick<World, 'creator' | 'airfield' | 'spaceportSite'>,
   roads: readonly Road[],
   x: number,
   z: number,
@@ -217,6 +218,7 @@ export function roadSurfaceDistance(
     Math.hypot(Math.max(0, Math.abs(x - cx) - hx), Math.max(0, Math.abs(z - cz) - hz));
   return Math.min(
     roadDistance(roads, x, z),
+    spaceportPavementDistance(w, x, z),
     square ? Math.hypot(x - square.x, z - square.z) - square.radius : Infinity,
     airfield
       ? Math.min(

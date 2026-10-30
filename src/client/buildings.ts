@@ -564,7 +564,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       mesh(new T.IcosahedronGeometry(r, 1), '#607548', x, y, z);
   }
   if (b.kind === 'starport') {
-    root.add(spaceportModel());
+    const launch = spaceportModel();
+    if (b.launchOffset) launch.position.set(b.launchOffset.x, b.launchOffset.y, b.launchOffset.z);
+    root.add(launch);
     box(main.width + 0.2, 0.32, main.depth + 0.2, '#517b7e', 0, main.eaves, 0);
     for (const x of [-5, -3, -1, 1, 3, 5]) box(0.045, 2.7, 0.04, '#829d9c', x, 1.4, front);
     const tower = plan.volumes[1];

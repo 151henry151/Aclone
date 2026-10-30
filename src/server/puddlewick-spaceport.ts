@@ -1,3 +1,4 @@
+import { spaceportPoint } from '../shared/spaceport-site';
 import { worldResources } from '../shared/resources';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types';
@@ -10,16 +11,17 @@ import { townRoads, roadKey } from '../shared/town';
  * Fail closed if private development leaves no suitable vacant launch reservation. */
 export function ensurePuddlewickSpaceport(w: World) {
   if (
-    w.spaceportSite?.layout === 2 ||
+    w.spaceportSite?.layout === 3 ||
     w.id !== 'puddlewick' ||
     w.template !== 'economy' ||
-    (w.owner !== 'server' && !w.publicParishVersion)
+    (w.owner !== 'server' && !w.publicParishVersion && w.spaceportSite?.layout !== 2)
   )
     return false;
   const port = w.buildings.find(
     (b) => b.kind === 'starport' && b.government && (!b.owner || b.owner === 'treasury'),
   );
   if (!port) return false;
+  if (w.spaceportSite?.layout === 2) return upgradeSpaceportComplex(w, port);
   const previous = w.spaceportSite;
   const oldKeys = new Set(
     (previous?.access ?? [])
@@ -116,7 +118,58 @@ export function ensurePuddlewickSpaceport(w: World) {
     w.spaceportSite.access = path;
     for (let i = 1; i < path.length; i++) w.roads.push({ a: path[i - 1], b: path[i], width: 6 });
     w.revision++;
+    upgradeSpaceportComplex(w, port);
     return true;
   }
   return false;
+}
+
+/** Keep launch coordinates and business identity while moving only the service terminal. */
+function upgradeSpaceportComplex(w: World, port: World['buildings'][number]) {
+  const s = w.spaceportSite!;
+  if (
+    Object.values(w.players).some(
+      (p) => (p.atHome && p.home === port.id) || p.task?.building === port.id,
+    )
+  )
+    return false;
+  const position = spaceportPoint(s, 30, s.fence - 35);
+  const gate = spaceportPoint(s, 0, s.fence);
+  const site = { ...s, layout: 3, entryHeight: terrainHeight(w, gate.x, gate.z) };
+  const ground = terrainHeight({ ...w, spaceportSite: site }, position.x, position.z) + 0.04;
+  const moved = {
+    ...port,
+    ...position,
+    rotation: 0,
+    foundationY: ground,
+    launchOffset: {
+      x: s.x - spaceportApron.x - position.x,
+      y: s.height + 0.04 - ground,
+      z: s.z - spaceportApron.z - position.z,
+    },
+  };
+  const trial = {
+    ...w,
+    spaceportSite: site,
+    buildings: w.buildings.map((b) => (b === port ? moved : b)),
+  };
+  const branch = roadRoute(trial, gate, { x: moved.x, z: moved.z + 16 }, 6);
+  if (!branch) return false;
+  const old = s.access ?? [];
+  let nearest = 0;
+  for (let i = 1; i < old.length; i++)
+    if (
+      Math.hypot(old[i].x - gate.x, old[i].z - gate.z) <
+      Math.hypot(old[nearest].x - gate.x, old[nearest].z - gate.z)
+    )
+      nearest = i;
+  site.access = [...old.slice(0, nearest), ...branch];
+  Object.assign(port, moved);
+  w.spaceportSite = site;
+  w.roads ??= [];
+  for (let i = 1; i < branch.length; i++)
+    w.roads.push({ a: branch[i - 1], b: branch[i], width: 6 });
+  delete w.roadProject;
+  w.revision++;
+  return true;
 }

@@ -49,10 +49,11 @@ const recipe = z
 const designSchema = z.object({
   spaceportSite: z
     .object({
-      layout: z.number().int().min(1).max(2).optional(),
+      layout: z.number().int().min(1).max(3).optional(),
       x: coordinate,
       z: coordinate,
       height: z.number().finite().min(-40).max(500),
+      entryHeight: z.number().finite().min(-40).max(500).optional(),
       building: z.string().max(80),
       exclusion: z.number().min(500).max(5000),
       fence: z.number().min(100).max(1000),
@@ -149,6 +150,7 @@ const designSchema = z.object({
           .number()
           .min(-Math.PI * 2)
           .max(Math.PI * 2),
+        launchOffset: z.object({ x: coordinate, y: coordinate, z: coordinate }).optional(),
         foundationY: z.number().finite().min(-10000).max(10000).optional(),
         creatorModel: z.string().max(64).optional(),
         style: z.string().max(40).optional(),
@@ -269,6 +271,7 @@ export function exportDesign(w: World, includeMedia = false) {
         z,
         rotation,
         foundationY,
+        launchOffset,
         creatorModel,
         templateId,
         style,
@@ -290,6 +293,7 @@ export function exportDesign(w: World, includeMedia = false) {
         z,
         rotation,
         foundationY,
+        launchOffset,
         creatorModel,
         templateId,
         style,

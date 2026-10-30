@@ -55,3 +55,45 @@ Additional visual references:
 Run `node --import tsx scripts/rocket-takeoff.ts` to generate a 46-second normal-speed
 MP4 of the production model and effects on the relocated terrain. This is a local
 preview, not a production world mutation. Set `ROCKET_STILLS=1` for screenshots only.
+
+## Entrance and industrial complex (0.110.0)
+
+The existing terminal moves within 55 m of the southeast gate. Its ID, stock, prices,
+ownership and accounts remain intact; the rocket, gantry, pad and launch effects keep
+their original world coordinates. Layout migration is idempotent and the separate
+launch offset survives saved games and world-design export/import.
+
+A 3.6 m chain-link fabric supports concertina razor wire, for about 4.2 m total height.
+Two 7.5 m barrier arms lift on approach from either direction, leaving the existing
+16 m opening. The automatic gate stays raised for nearby traffic and holds for four
+seconds after traffic clears. It is an access convenience, not an authorization
+checkpoint: the passage remains traversable rather than trapping players on stale
+network state. The gatehouse and freestanding sign stand beside the lane.
+
+Four industrial buildings form the working yard: a 72 × 230 m horizontal integration
+hall (60 m eaves, a 64 × 56 m vehicle door), flight operations, a four-bay workshop,
+and payload logistics. The game rocket is about 192 m high and 35 m across its fairing,
+so it fits inside the hall laid horizontally, including clearance for its landing gear. Three
+tracking dishes, a lattice-boom crawler crane, a 205 m modular transporter with 22
+axle lines and two conventional articulated trucks complete the scenery. They are
+not purchasable vehicles or extra economic businesses. Mixed 6.1 m and 12.2 m
+shipping containers are stacked up to two high beside the freight yards. Palletized
+crates, cable reels, utility tanks, a generator and a parked forklift fill the service
+areas; solid footprints keep vehicles out of the equipment while leaving doors,
+parking and traffic lanes clear. Their physical boundaries
+also inform movement and road routing. A connected concrete yard links every facility, the launch apron, terminal and gatehouse.
+Rounded forecourt corners and a curved, widening 60 m approach blend the existing
+six-metre gravel road into the entrance. The forecourt includes 18 visitor bays, each
+6 × 6 m to accommodate tractors, a 7 m manoeuvring aisle, a crossing and a parking sign.
+The concrete surface is tessellated as one union, avoiding overlapping apron seams;
+its shared footprint supplies cleared-ground traction and snow masking without
+becoming public road connections.
+
+The arrangement uses horizontal integration halls and specialized rocket carriers
+as visual references: [Pad 39A integration facility](https://www.collectspace.com/news/news-120915a-launch-pads-spacex-ula.html)
+and [Falcon booster transport](https://www.space.com/31479-spacex-falcon-9-rocket-landing-display.html).
+The dimensions are scaled for Aclone’s existing fictional cargo rocket.
+
+Reproduce overview, entrance, parking, freight and yard renders with
+`node --import tsx scripts/spaceport-preview.ts`. The preview loads the real models,
+terrain, saved access route and gate animation, without connecting to production.

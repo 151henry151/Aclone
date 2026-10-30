@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { spaceportFences } from '../shared/spaceport-site';
+import { spaceportFences, SPACEPORT_FENCE_HEIGHT } from '../shared/spaceport-site';
 import { terrainHeight } from '../shared/terrain';
 import type { World } from '../shared/types';
 /** Batched diamond mesh fabric and posts, following the actual ground at each panel. */
 export function spaceportFence(w: World) {
   const root = new T.Group();
-  root.name = 'Spaceport chain-link security perimeter';
+  root.name = 'Tall chain-link perimeter with concertina razor wire';
   const canvas = document.createElement('canvas');
   canvas.width = 64;
   canvas.height = 64;
@@ -34,6 +34,8 @@ export function spaceportFence(w: World) {
   const steel = new T.MeshStandardMaterial({ color: '#7c8988', roughness: 0.6, metalness: 0.45 });
   let panels: T.BufferGeometry[] = [],
     rails: T.BufferGeometry[] = [];
+  let wire: number[] = [];
+  const razor = new T.LineBasicMaterial({ color: '#8e9899' });
   const rod = (a: T.Vector3, b: T.Vector3, r = 0.055) => {
     const g = new T.CylinderGeometry(r, r, a.distanceTo(b), 6);
     const m = new T.Matrix4();
@@ -56,6 +58,12 @@ export function spaceportFence(w: World) {
       root.add(mesh);
       for (const g of list) g.dispose();
     }
+    if (wire.length) {
+      const g = new T.BufferGeometry();
+      g.setAttribute('position', new T.Float32BufferAttribute(wire, 3));
+      root.add(new T.LineSegments(g, razor));
+      wire = [];
+    }
     panels = [];
     rails = [];
   };
@@ -69,7 +77,7 @@ export function spaceportFence(w: World) {
       };
       const a = point(j / n),
         b = point((j + 1) / n),
-        h = 2.8,
+        h = SPACEPORT_FENCE_HEIGHT - 0.6,
         length = a.distanceTo(b);
       const g = new T.BufferGeometry();
       g.setAttribute(
@@ -86,10 +94,43 @@ export function spaceportFence(w: World) {
           2,
         ),
       );
+      // Continuous helical concertina coil, with alternating blade silhouettes.
+      const tangent = b.clone().sub(a).normalize(),
+        normal = new T.Vector3(-tangent.z, 0, tangent.x);
+      const steps = Math.ceil(length / 0.65) * 12;
+      const coil = (i: number) => {
+        const t = i / steps,
+          angle = ((t * length) / 0.65) * Math.PI * 2;
+        return a
+          .clone()
+          .lerp(b, t)
+          .addScaledVector(normal, Math.cos(angle) * 0.28)
+          .add(new T.Vector3(0, h + 0.28 + Math.sin(angle) * 0.28, 0));
+      };
+      for (let i = 0; i < steps; i++) {
+        const p = coil(i),
+          q = coil(i + 1);
+        wire.push(...p.toArray(), ...q.toArray());
+        if (i % 6 === 0) {
+          const d = normal.clone().multiplyScalar(0.09);
+          wire.push(
+            ...p
+              .clone()
+              .sub(d)
+              .add(new T.Vector3(0, -0.07, 0))
+              .toArray(),
+            ...p
+              .clone()
+              .add(d)
+              .add(new T.Vector3(0, 0.07, 0))
+              .toArray(),
+          );
+        }
+      }
       g.setIndex([0, 1, 2, 0, 2, 3]);
       g.computeVertexNormals();
       panels.push(g);
-      rod(a, a.clone().add(new T.Vector3(0, 3, 0)), 0.07);
+      rod(a, a.clone().add(new T.Vector3(0, h + 0.5, 0)), 0.07);
       rod(a.clone().add(new T.Vector3(0, h, 0)), b.clone().add(new T.Vector3(0, h, 0)));
       rod(
         a.clone().add(new T.Vector3(0, 0.12, 0)),
@@ -100,38 +141,5 @@ export function spaceportFence(w: World) {
     if (index % 16 === 15) flush();
   });
   flush();
-  const s = w.spaceportSite!;
-  const signCanvas = document.createElement('canvas');
-  signCanvas.width = 512;
-  signCanvas.height = 256;
-  const c = signCanvas.getContext('2d')!;
-  c.fillStyle = '#e7dec4';
-  c.fillRect(0, 0, 512, 256);
-  c.fillStyle = '#922d25';
-  c.fillRect(0, 0, 512, 64);
-  c.fillStyle = 'white';
-  c.textAlign = 'center';
-  c.font = 'bold 36px sans-serif';
-  c.fillText('LAUNCH RESERVATION', 256, 44);
-  c.fillStyle = '#23342e';
-  c.font = 'bold 34px sans-serif';
-  c.fillText('PUDDLEWICK SPACEPORT', 256, 115);
-  c.font = '26px sans-serif';
-  c.fillText(`No building within ${s.exclusion / 1000} km of pad`, 256, 163);
-  c.fillText('Terminal access through gate', 256, 210);
-  const sign = new T.Mesh(
-    new T.PlaneGeometry(5, 2.5),
-    new T.MeshStandardMaterial({ map: new T.CanvasTexture(signCanvas), side: T.DoubleSide }),
-  );
-  const angle = Math.PI / 4 + 12 / s.fence;
-  const x = s.x + Math.cos(angle) * s.fence,
-    z = s.z + Math.sin(angle) * s.fence;
-  sign.position.set(
-    x + Math.cos(angle) * 0.3,
-    terrainHeight(w, x, z) + 2,
-    z + Math.sin(angle) * 0.3,
-  );
-  sign.rotation.y = Math.PI / 4;
-  root.add(sign);
   return root;
 }

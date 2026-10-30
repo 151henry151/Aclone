@@ -175,6 +175,8 @@ export interface Building {
   aircraftHangar?: boolean;
   /** Level selected by server for new foundations; absent on legacy buildings. */
   foundationY?: number;
+  /** Local displacement of launch hardware from the terminal; preserves a fixed pad. */
+  launchOffset?: { x: number; y: number; z: number };
   leaseOffer?: import('./property-contracts').LeaseOffer;
   operatingLease?: import('./property-contracts').OperatingLease;
   auction?: import('./property-contracts').PropertyAuction;

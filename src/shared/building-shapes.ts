@@ -46,6 +46,7 @@ const volume = (
 ): BuildingVolume => ({ width, depth, eaves, rise, roof, x, z });
 const plans = new Map<string, BuildingPlan>();
 export function buildingPlan(b: {
+  launchOffset?: { x: number; y: number; z: number };
   aircraftHangar?: boolean;
   kind: string;
   id: string;
@@ -87,7 +88,9 @@ export function buildingPlan(b: {
     ':' +
     (b.size ?? 'standard') +
     ':' +
-    (b.architecture ?? '');
+    (b.architecture ?? '') +
+    ':' +
+    JSON.stringify(b.launchOffset ?? null);
   const cached = plans.get(key);
   if (cached) return cached;
   let style = b.kind,
@@ -322,12 +325,22 @@ export function buildingPlan(b: {
   }
   const plan: BuildingPlan = { style, volumes, wall, trim, siding, doorHeight: 2.1 };
   if (b.kind === 'starport') {
-    plan.apron = spaceportApron;
+    plan.apron = {
+      ...spaceportApron,
+      x: spaceportApron.x + (b.launchOffset?.x ?? 0),
+      z: spaceportApron.z + (b.launchOffset?.z ?? 0),
+    };
     plan.fixtures = [
       volume(55.2, 55.2, 192.6, 0, 'flat', spaceportApron.x, spaceportApron.z),
       volume(19.2, 19.2, 160.2, 0, 'flat', spaceportHardware.tower.x, spaceportHardware.tower.z),
       volume(13.2, 24, 27.6, 0, 'flat', spaceportHardware.tank.x, spaceportHardware.tank.z + 5.4),
     ];
+    if (b.launchOffset)
+      plan.fixtures = plan.fixtures.map((v) => ({
+        ...v,
+        x: v.x + b.launchOffset!.x,
+        z: v.z + b.launchOffset!.z,
+      }));
   }
   if (b.kind === 'scripted' && b.style && !b.architecture)
     plan.fixtures = [volume(0.6, 0.6, 6.7, 0, 'flat', 4.5, -1)];
