@@ -92,7 +92,7 @@ test('walkers and fast tractors stop before the lip, reverse away, and never fal
 });
 test('lighthouse construction requires a cliff; optical range and flashing obey height and direction', () => {
   const w = createWorld('puddlewick', 'P', 'server');
-  const b = makeBuilding('test', 'lighthouse', 0, 0);
+  const b = makeBuilding('test', 'lighthouse', 100, 0);
   assert.match(constructionSiteReason(w, b)!, /cliff/);
   assert.ok(lighthouseRange(43, 3) > 29000);
   assert.ok(lighthouseRange(20, 2) < lighthouseRange(43, 3));

@@ -117,6 +117,7 @@ test('only completed construction counts, including a helper delivering the fina
   w.buildings = [];
   w.zones = [];
   const p = addPlayer(w, 'p', 'Pilot');
+  p.x = 65; // Build outside the protected arrival area.
   p.cash = 1000000;
   act(w, p.id, { type: 'construct', kind: 'home' });
   assert.equal(p.statistics!.buildingsCompleted, 0);

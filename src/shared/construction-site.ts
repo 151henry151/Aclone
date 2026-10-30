@@ -1,3 +1,4 @@
+import { buildingSpawnReason, spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
 import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
@@ -77,6 +78,15 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  const spawnReason = buildingSpawnReason(w, b);
+  if (spawnReason) return spawnReason;
+  if (
+    b.kind === 'farm' &&
+    Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
+      spawnReserved(w, p.x, p.z, 6),
+    )
+  )
+    return 'Keep fields outside the town centre and respawn area';
   if (rectangles(b).some((r) => spaceportReserved(w, r.x, r.z, Math.hypot(r.hx, r.hz))))
     return 'Keep buildings outside the spaceport launch reservation';
   if (b.kind === 'lighthouse' && !lighthouseCliffSite(w, b.x, b.z))

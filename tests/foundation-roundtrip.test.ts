@@ -10,11 +10,11 @@ test('rotated foundations reject steep ground before construction and keep level
   const w = createWorld('foundation', 'Foundation', 'server');
   w.buildings = [];
   w.zones = [];
-  const b = makeBuilding('site', 'home', 0, 0);
+  const b = makeBuilding('site', 'home', 65, 0);
   b.rotation = Math.PI / 4;
   assert.equal(constructionSiteReason(w, b), undefined);
   assert.ok(foundationProfile(w, b).rise < 0.1);
-  w.terrain = [{ x: 0, z: 0, height: 10, radius: 15 }];
+  w.terrain = [{ x: 65, z: 0, height: 10, radius: 15 }];
   assert.match(constructionSiteReason(w, b) ?? '', /Ground rises/);
 });
 test('ten database round trips preserve terrain, roads, resource and rotated building coordinates', () => {

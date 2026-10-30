@@ -22,6 +22,7 @@ function setup() {
   w.zones = [];
   w.tier = 10;
   const p = addPlayer(w, 'builder', 'Builder');
+  p.x = 65; // Build outside the protected arrival area.
   p.cash = 100000000;
   w.towns[0].tax = 0.1;
   return { w, p };

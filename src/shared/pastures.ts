@@ -1,3 +1,4 @@
+import { spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { barrierSegments, scatterObjects } from './landscape';
@@ -29,6 +30,8 @@ export function pastureBlocker(
         y = terrainHeight(w, q.x, q.z);
       if (Math.max(Math.abs(q.x), Math.abs(q.z)) >= mapHalf(w) - 2 || y <= highWater(w) + 0.3)
         return 'Pasture needs dry land inside the world';
+      if (spawnReserved(w, q.x, q.z, 2))
+        return 'Keep pasture outside the town centre and respawn area';
       if (spaceportReserved(w, q.x, q.z, 2))
         return 'Keep pasture outside the spaceport launch reservation';
       if (onAirfield(w, q.x, q.z, 2)) return 'Keep the runway and apron clear';

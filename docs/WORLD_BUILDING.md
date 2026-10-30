@@ -30,6 +30,10 @@ Open **Caretaker dashboard** from the world menu, or press **F6**. On a phone it
    current match so old flag carriers cannot carry into the new layout.
 3. Use **Landscape** to sculpt hills. **Layout** can undo individual brushes.
    Add safe or no-build regions in **Zones**; remove them in Layout.
+   Building placement and geometry edits also preserve a 12 m clearance around the
+   parish respawn, 8 m around each town centre, and the full radius of explicit spawn
+   zones. These arrival clearances apply even without a no-build zone. Existing
+   buildings are not automatically moved; renaming them remains allowed.
 4. Use **Workshop** and **Objects** to place cover, flags/signs and obstacles.
    Bases and the capture ring render at their configured coordinates.
 5. Invite two players and use **Activities** to join. Existing team balancing,

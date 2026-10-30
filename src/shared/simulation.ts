@@ -1,3 +1,4 @@
+import { PARISH_SPAWN, buildingSpawnReason } from './spawn-reserve';
 import { towingTender, tenderAction, moveTender } from './boat-tender';
 import { trailerAccepts, trailerBlocks } from './trailers';
 import {
@@ -367,9 +368,9 @@ export function addPlayer(w: World, id: string, name: string): Player {
     bank: 0,
     kudos: 0,
     level: 1,
-    x: 0,
+    x: PARISH_SPAWN.x,
     y: 0.15,
-    z: 17,
+    z: PARISH_SPAWN.z,
     heading: Math.PI,
     speed: 0,
     fuel: 64,
@@ -1944,7 +1945,7 @@ export function act(w: World, id: string, a: Action): string {
       const shore =
         kind === 'waterworks' ? waterworksSite(w, { x, z }, undefined, true) : undefined;
       requireThat(kind !== 'waterworks' || shore, 'Waterworks require a dry shoreline site');
-      const b = makeBuilding('editor' + ++w.revision, kind, x, z);
+      const b = makeBuilding('editor' + (w.revision + 1), kind, x, z);
       if (shore) b.rotation = shore.rotation;
       if (kind === 'boathouse') {
         b.rotation = a.rotation === undefined ? 0 : num(a.rotation, -Math.PI * 2, Math.PI * 2);
@@ -1952,7 +1953,10 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(!reason, reason!);
         b.foundationY = foundationProfile(w, b).level;
       }
+      const spawnReason = buildingSpawnReason(w, b);
+      requireThat(!spawnReason, spawnReason!);
       b.owner = id;
+      w.revision++;
       w.buildings.push(b);
       break;
     }
@@ -2529,8 +2533,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     }
   } else p.speed *= -0.2;
   if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < waterLevel(w) - 1) {
-    p.x = 0;
-    p.z = 17;
+    p.x = PARISH_SPAWN.x;
+    p.z = PARISH_SPAWN.z;
     p.speed = 0;
   }
   if (trawling)
@@ -2586,8 +2590,8 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   p.hunger = 5000;
   p.thirst = 5000;
   p.speed = 0;
-  p.x = 0;
-  p.z = 17;
+  p.x = PARISH_SPAWN.x;
+  p.z = PARISH_SPAWN.z;
   p.y = 0.15;
   p.atHome = false;
   delete p.hitch;

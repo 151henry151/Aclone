@@ -10,6 +10,7 @@ function setup() {
   w.zones = [];
   w.towns[0].tax = 0.1;
   const p = addPlayer(w, 'builder', 'Builder');
+  p.x = 65; // Build outside the protected arrival area.
   p.cash = 1000000;
   act(w, p.id, { type: 'construct', kind: 'home' });
   return { w, p, b: w.buildings[0] };

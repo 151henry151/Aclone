@@ -135,6 +135,7 @@ test('a builder can drive out of the footprint just constructed around them', as
     p = addPlayer(w, 'builder', 'Builder');
   w.buildings = [];
   w.zones = [];
+  p.x = 65; // Build outside the protected arrival area.
   p.cash = 1000000;
   act(w, p.id, { type: 'construct', kind: 'bakery' });
   const target = { x: p.x + 40, z: p.z + 40 };

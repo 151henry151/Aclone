@@ -1,3 +1,4 @@
+import { buildingSpawnReason } from './spawn-reserve';
 import { vehicleDef } from './vehicle-config';
 import { bookSchema, townEventSchema } from './world-stories.ts';
 import { ambientSchema } from './ambient.ts';
@@ -523,6 +524,27 @@ export function creatorAction(w: World, p: Player, a: Action) {
         )
       )
         throw Error('Wait until occupants and workers leave before moving this building');
+    }
+    if (
+      patch.x !== undefined ||
+      patch.z !== undefined ||
+      patch.rotation !== undefined ||
+      patch.model !== undefined
+    ) {
+      const candidate = {
+        ...b,
+        x: patch.x ?? b.x,
+        z: patch.z ?? b.z,
+        rotation: patch.rotation === undefined ? b.rotation : (patch.rotation * Math.PI) / 180,
+        creatorBounds:
+          patch.model === undefined
+            ? b.creatorBounds
+            : model
+              ? { width: model.width, depth: model.depth, height: model.height }
+              : undefined,
+      };
+      const reason = buildingSpawnReason(w, candidate);
+      if (reason) throw Error(reason);
     }
     if (patch.name) b.name = patch.name;
     if (patch.x !== undefined) b.x = patch.x;
