@@ -4,13 +4,15 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.107.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.108.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
+
+Version 0.108.0 adds a remote fenced spaceport, large billowing rocket exhaust, inflatable emergency rafts and smoother storm water. See [spaceport details](docs/SPACEPORT.md).
 
 Version 0.107.0: Puddlewick gains eight mixed resource clusters, more woodland gathering sites across the island, and stone near its coastal bluffs, while preserving every existing gathering ground.
 
@@ -145,6 +147,8 @@ npx playwright install chromium
 # Start a disposable test server before browser tests:
 npm run test:e2e
 ```
+
+Version 0.108.0 adds an inflatable emergency raft with automatic flare lighting and a remote, fenced Puddlewick spaceport with a one-kilometre building exclusion area and redesigned launch/landing exhaust. See [spaceport design and references](docs/SPACEPORT.md). It also addresses storm-water stutter in long-running worlds, improves the water surface beneath small boats, and spreads moving-ocean depth surveys across frames. These fixes do not change wave strength or boating rules.
 
 For graphics settings, open **F9 → Options & pilot key** and scroll below the sound controls. Adaptive mode reduces graphics when frame rates remain low; Performance mode targets 30 FPS. A Performance-mode reload button is also available while loading.
 

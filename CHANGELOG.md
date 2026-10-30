@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.108.0] - 2026-10-30
+
+### Changed
+
+- Emergency lifeboats now resemble inflatable survival rafts, with twin buoyancy tubes, a shelter hood, grab ropes, reflective strips, boarding ladder and animated oars. An automatic red-orange emergency flare replaces their headlights; it needs no fuel, inventory item or activation.
+- Puddlewick's public spaceport moves to a vacant remote site with a graded apron, an access road, a terrain-following chain-link fence and a one-kilometre no-build reservation. Existing property and spaceport finances are preserved. Buildings, new farm plots and pasture cannot encroach on the reservation.
+- Rocket launches now produce a broad white-hot exhaust column up to 320 metres long, turbulent orange downwash and large rolling steam/dust clouds. The plume meets the pad without being squeezed into a short bulb; landing thrust remains smaller.
+
+### Fixed
+
+- Landing rockets no longer produce a ground cloud while still high above the pad. Dust begins when the exhaust reaches the surface and disperses after cutoff.
+- Storm waves retain smooth animation in long-running worlds instead of stepping as the ocean shader loses clock precision. The near-boat surface better matches hull motion and stays stable when its grid moves; depth surveys are spread across frames to reduce travel hitches.
+
 ## [0.107.0] - 2026-10-29
 
 ### Added

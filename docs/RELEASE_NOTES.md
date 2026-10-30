@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.108.0 — Remote launches and smoother storm water
+
+Puddlewick's existing spaceport moves away from homes to a vacant remote site with an access road, graded apron and chain-link fence. A one-kilometre reservation prevents new buildings, farm plots and pastures encroaching on the launch site. Its stock, finances and identity remain intact. This is a game layout choice, not a real-world safety certification.
+
+Launches produce a continuous white-hot exhaust column up to 320 metres long, orange downwash and large rolling clouds. Landing exhaust is smaller and only raises dust when it reaches the ground. Emergency lifeboats now have inflatable tubes, a shelter hood, grab ropes, reflective strips, animated oars and an automatic red-orange flare instead of headlights.
+
+Ocean animation retains precision in old worlds, the near-boat surface remains stable when moving, and depth surveys are spread across frames to reduce storm travel hitches. Wave strength and boating economics are unchanged.
+
+Validation includes 1,203 passing unit tests, TypeScript, a production build, browser launch/landing and raft checks, and a 46-second recording using production models. Reload after deployment. See [spaceport references and preview instructions](SPACEPORT.md).
+
 ## 0.107.0 — Clearer views and deeper water
 
 The desktop HUD is smaller and adapts to laptop screens. Employment is in the player sidebar. Use **HUD ⚙** or **F9 → HUD & layout** to save separate visibility choices for nine panels. H keeps its whole-screen scenery shortcut; Enter restores hidden chat. Phone drawers remain available.

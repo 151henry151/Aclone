@@ -2,6 +2,12 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.108.0
+
+Back up and deploy server and client together, then publish the website and reload clients. Public Puddlewick moves its existing public spaceport to a clear remote site, retaining its identity, stock and finances. The saved site adds an access road, terrain grading, a 600-metre-radius fence and a one-kilometre no-build reservation. Verify the site, road and preserved property against the backup. Other worlds are unchanged. Keep the matching database backup for rollback: older clients do not understand the graded spaceport terrain.
+
+Check launch/landing exhaust, raft flare lighting and storm-water motion after reloading. The graphics changes preserve boating rules, wave strength and fishing economics.
+
 ## Upgrade 0.107.0
 
 Back up and deploy server and client together, publish the website, and reload clients. Public Puddlewick receives saved `additionalResources` and `resourceExpansionVersion: 1`; verify eight clusters and the woodland/cliff additions against the backup. Existing nodes, depletion and gathering tasks must remain unchanged. Portable world designs retain the added coordinates. No account or property reset is required.
