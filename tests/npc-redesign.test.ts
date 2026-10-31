@@ -20,7 +20,9 @@ import { shortlist, decisionDomain } from '../src/server/npc/planning.ts';
 import { JevBrain } from '../src/server/npc/jev.ts';
 import type { FarmerChoice } from '../src/server/npc/farmer.ts';
 
-test('chat cannot consume protected daily/monthly spending or request capacity, including across restart', () => {
+test('chat cannot consume protected daily/monthly spending or request capacity, including across restart', (t) => {
+  // The following day must remain in the same month, including when run on its last day.
+  t.mock.method(Date, 'now', () => Date.UTC(2026, 5, 15, 12));
   const store = new Store(':memory:');
   try {
     const memory = new NpcMemory(store);
