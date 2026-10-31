@@ -4,9 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.112.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.113.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
-Version 0.112.1 fixes docking and tow delivery for large boats by accounting for hull size and heading. It retains the **Bug-bounty rewards received** counter under **F9 → Statistics** and the recovery-boat refuelling fix. Reload after updating.
+Version 0.113.0 adds automatically unfolding hot-dog-and-tomato rain umbrellas for walkers, moves map terrain calculations into a background worker and marks the ocean travel boundary. Reload after updating to receive the umbrella and map improvements.
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 

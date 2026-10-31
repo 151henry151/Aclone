@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.113.0
+
+Deploy the client/server and website normally, then reload clients. No data migration or player grants are needed. Verify that the new map-terrain worker asset is served as JavaScript under `/aclone/assets/`, and that the map loads coastlines and contours without a worker error. Check distant ocean waypoints and the visible travel boundary. Walk outdoors in rain to check umbrella opening, folding when rain clears and first-person visibility.
+
 ## Upgrade 0.112.0
 
 Deploy client and server together and reload clients. Verify carried Fuel remains

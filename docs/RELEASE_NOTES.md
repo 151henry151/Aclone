@@ -2,6 +2,16 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.113.0 — Rain umbrellas and smoother maps
+
+Outdoor walkers unfold a white umbrella patterned with hot dogs and tomatoes when rain starts, and fold it away when rain stops. Its left-hand grip follows the walking skeleton, leaving the right hand free for the flashlight. The canopy remains overhead in first-person view and excludes visible rain immediately below it. It has no purchase requirement or survival-stat bonus.
+
+The enlarged map calculates coastlines and contours in a background worker, keeps only the latest pending view during rapid zooming, retains icons during tide updates and avoids blurring the moving game behind the map. A dashed travel boundary and darker outside shading explain the extent of the navigable ocean. Clicks beyond the boundary place the waypoint at its nearest edge instead of silently failing.
+
+Validation: 1,261 unit tests, the map navigation and worker browser checks, TypeScript and the production build passed. In one local browser measurement, synchronous terrain calculation took about 391 ms; the new main-thread map redraw took about 55 ms while terrain work continued separately. This is not a promised FPS improvement on every device. Actual renderer previews cover holding, folding and first-person shelter.
+
+Reload after deployment. No saved-world migration, account changes or gameplay-boundary expansion is required.
+
 ## 0.112.1 — Docking large boats
 
 Large boats and towed vessels can now arrive alongside a boatyard or fishing pier when their hull reaches its approach. The check accounts for hull size and heading instead of treating the boat as a point. Delivery still requires a clear water path, preserves the vessel and its cargo, and cannot be completed offshore. Reload after updating.

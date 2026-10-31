@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.113.0] - 2026-10-30
+
+### Added
+
+- Walking characters automatically raise and unfold a white hot-dog-and-tomato umbrella in rain, then fold it away when the rain stops. The canopy follows the left hand, leaves the flashlight hand free, remains overhead in first-person view and shelters the local character from visible raindrops.
+
+### Fixed
+
+- Move enlarged-map coastline and contour calculations to a background worker, discard superseded zoom jobs, avoid rebuilding business icons on tide changes and remove the expensive background blur while the map is open.
+- Show the actual world travel boundary on the map and shade the unreachable area beyond it. Ocean waypoints can be placed anywhere inside that boundary; clicks beyond it select the nearest reachable edge instead of silently failing.
+
 ## [0.112.1] - 2026-10-30
 
 ### Fixed
