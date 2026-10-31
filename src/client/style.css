@@ -2903,3 +2903,10 @@ html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
     max-height: 180px;
   }
 }
+
+/* The map already covers the view; blurring a moving WebGL ocean behind it
+   adds an expensive full-screen compositor pass on integrated GPUs. */
+.modal-backdrop:has(.map-window) {
+  backdrop-filter: none;
+  background: #0d1917d9;
+}

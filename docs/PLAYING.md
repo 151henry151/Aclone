@@ -85,6 +85,8 @@ Sound starts after a click/tap/key; mute and volume persist in **Pilot & prefere
 
 Supplied mills/sawmills/workshops/furnaces/pumps make distinct machinery sounds. Missing inputs, full output stores, unfunded wages or unfinished construction silence them; unattended production is quieter. Manual forge tasks also sound while their worker is online. Sound follows production, not chimney occupancy.
 
+**Map travel boundary:** a dashed border marks the world's travel limit, with darker shading outside it. You can mark destinations throughout reachable open water; selecting beyond the border places the waypoint on the nearest edge. Coastlines and contours load in the background while map controls remain usable.
+
 ## Time and weather
 
 Outdoor walkers automatically unfold a white umbrella with a hot-dog-and-tomato print when rain begins, and fold it when rain ends. It uses the left hand so the flashlight remains available. Drivers, boat passengers and characters at home keep it put away; it is a visual rain shelter, not a new consumable or survival bonus.

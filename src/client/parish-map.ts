@@ -19,10 +19,11 @@ import {
   mapDistanceScale,
   type MapBounds,
 } from './map-layout';
-import { terrainHalf, mapHalf, legacyHalf, terrainHeight } from '../shared/terrain';
+import { terrainHalf, mapHalf, legacyHalf } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
-import { mapTerrainPaths } from './map-water';
+import type { mapTerrainPaths } from './map-water';
+import { chartWorld, type MapTerrainJob } from './map-terrain-job';
 const ns = 'http://www.w3.org/2000/svg';
 function svg(tag: string, attrs: Record<string, string | number> = {}) {
   const node = document.createElementNS(ns, tag);
@@ -48,6 +49,16 @@ export class ParishMap {
   private contours = localStorage.getItem('aclone.map-contours') !== 'off';
   private pendingZoom?: { x: number; z: number; px: number; py: number };
   private zoomFrame = 0;
+  private terrainWorker = new Worker(new URL('./map-terrain.worker.ts', import.meta.url), {
+    type: 'module',
+  });
+  private terrainSerial = 0;
+  private terrainFailed = false;
+  private markerSignature = '';
+  private terrainBusy = false;
+  private pendingTerrain?: MapTerrainJob;
+  private terrainLayer = svg('g', { class: 'map-terrain' });
+  private tide = NaN;
   private interacting = false;
   private recentreTimer = 0;
   private width = 900;
@@ -66,7 +77,30 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><p class="map-load-status" role="status" hidden></p><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean · dashed border = travel limit</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    this.terrainWorker.onmessage = (event) => {
+      this.terrainBusy = false;
+      if (event.data.id === this.terrainSerial) {
+        if (event.data.terrain) {
+          this.drawTerrain(event.data.terrain);
+          this.terrainLayer.dataset.renderedJob = String(event.data.id);
+          this.terrainStatus('');
+        } else this.terrainStatus('Terrain unavailable. Close and reopen the map to retry.');
+      }
+      if (this.pendingTerrain) {
+        const next = this.pendingTerrain;
+        this.pendingTerrain = undefined;
+        this.terrainBusy = true;
+        this.terrainWorker.postMessage(next);
+      }
+    };
+    this.terrainWorker.onerror = () => {
+      this.terrainFailed = true;
+      this.terrainBusy = false;
+      this.pendingTerrain = undefined;
+      this.terrainWorker.terminate();
+      this.terrainStatus('Terrain unavailable. Close and reopen the map to retry.');
+    };
     this.viewport = host.querySelector('.parish-map-viewport')!;
     this.sheet = host.querySelector('.parish-map-sheet')!;
     this.viewport.addEventListener('pointerdown', () => {
@@ -285,6 +319,8 @@ export class ParishMap {
     cancelAnimationFrame(this.zoomFrame);
     clearTimeout(this.recentreTimer);
     this.observer.disconnect();
+    this.terrainWorker.terminate();
+    this.pendingTerrain = undefined;
     this.abort.abort();
   }
   update(w: World, me: Player) {
@@ -295,7 +331,6 @@ export class ParishMap {
       w.townLayout,
       w.settings.mapSize,
       w.settings.seaLevel,
-      Math.round(waterLevel(w) * 10),
       w.terrainMapSize,
       w.terrain,
       w.coastalBluffs,
@@ -303,6 +338,7 @@ export class ParishMap {
       w.resourceRelocations,
       w.landscape?.heightmap,
       w.airfield,
+      w.spaceportSite,
       w.buildings.map((b) => [b.id, b.name, b.kind, b.x, b.z]),
       w.towns.map((t) => [t.id, t.name, t.x, t.z, t.radius]),
     ]);
@@ -314,6 +350,8 @@ export class ParishMap {
       this.draw();
       this.panTo(centre.x, centre.z);
     }
+    const tide = Math.round((waterLevel(w) - w.settings.seaLevel) * 10) / 10;
+    if (tide !== this.tide) this.requestTerrain();
     this.updatePlayers();
   }
   private sheetBounds() {
@@ -324,7 +362,12 @@ export class ParishMap {
   }
   private mark(point?: Waypoint) {
     const half = mapHalf(this.world);
-    if (point && (Math.abs(point.x) > half || Math.abs(point.z) > half)) return;
+    if (point)
+      point = {
+        ...point,
+        x: Math.max(-half, Math.min(half, point.x)),
+        z: Math.max(-half, Math.min(half, point.z)),
+      };
     this.navigation?.set(point);
     this.updatePlayers();
   }
@@ -401,20 +444,21 @@ export class ParishMap {
   private updateLabels() {
     const buttons = [...this.sheet.querySelectorAll<HTMLButtonElement>('.map-icon')];
     const left = this.viewport.scrollLeft,
-      top = this.viewport.scrollTop;
+      top = this.viewport.scrollTop,
+      width = this.viewport.clientWidth,
+      height = this.viewport.clientHeight;
+    const bx = (b: HTMLButtonElement) => Number(b.dataset.mapX),
+      by = (b: HTMLButtonElement) => Number(b.dataset.mapY);
     const visible = buttons.filter(
       (b) =>
-        b.offsetLeft >= left &&
-        b.offsetTop >= top &&
-        b.offsetLeft < left + this.viewport.clientWidth - 24 &&
-        b.offsetTop < top + this.viewport.clientHeight - 24,
+        bx(b) >= left && by(b) >= top && bx(b) < left + width - 24 && by(b) < top + height - 24,
     );
     for (const b of buttons) b.classList.remove('map-show-name', 'map-name-left', 'map-name-close');
     // Close inspection deliberately shows every visible name, regardless of density.
     if (this.zoom > 3.5) {
       for (const b of visible) {
         b.classList.add('map-show-name', 'map-name-close');
-        if (b.offsetLeft + 60 > left + this.viewport.clientWidth) b.classList.add('map-name-left');
+        if (bx(b) + 60 > left + width) b.classList.add('map-name-left');
       }
       return;
     }
@@ -422,10 +466,10 @@ export class ParishMap {
     const placed: { x: number; y: number; w: number }[] = [];
     for (const b of visible) {
       const w = Math.min(260, (b.dataset.name?.length ?? 0) * 7.4 + 16),
-        x = b.offsetLeft + 26,
-        y = b.offsetTop;
+        x = bx(b) + 26,
+        y = by(b);
       if (
-        x + w > left + this.viewport.clientWidth ||
+        x + w > left + width ||
         placed.some((p) => Math.abs(p.y - y) < 28 && x < p.x + p.w + 4 && x + w + 4 > p.x)
       )
         continue;
@@ -480,91 +524,33 @@ export class ParishMap {
           'stroke-opacity': 0.45,
         }),
       );
-    const terrain = mapTerrainPaths(
-      this.width,
-      this.height,
-      (px, py) =>
-        terrainHeight(
-          this.world,
-          this.bounds.x + (px - this.offsetX) / this.scale,
-          this.bounds.z + (py - this.offsetY) / this.scale,
-        ) - this.world.settings.seaLevel,
-      this.contours,
-      waterLevel(this.world) - this.world.settings.seaLevel,
+    this.terrainLayer = svg('g', { class: 'map-terrain' });
+    drawing.append(this.terrainLayer);
+    this.requestTerrain();
+    const half = mapHalf(this.world);
+    const edge = {
+      x: this.x(-half),
+      y: this.y(-half),
+      width: 2 * half * this.scale,
+      height: 2 * half * this.scale,
+    };
+    drawing.append(
+      svg('path', {
+        d: `M0 0H${this.width}V${this.height}H0Z M${edge.x} ${edge.y}h${edge.width}v${edge.height}h${-edge.width}Z`,
+        fill: '#172e3b',
+        'fill-opacity': 0.55,
+        'fill-rule': 'evenodd',
+        class: 'map-outside-world',
+      }),
+      svg('rect', {
+        ...edge,
+        fill: 'none',
+        stroke: '#d3d8bf',
+        'stroke-width': 2,
+        'stroke-dasharray': '8 6',
+        class: 'map-world-boundary',
+      }),
     );
-    if (mapHalf(this.world) > legacyHalf) {
-      drawing.append(
-        svg('path', {
-          d: terrain.water,
-          fill: '#758e86',
-          class: 'map-water',
-        }),
-      );
-      drawing.append(
-        svg('path', { d: terrain.deepWater, fill: '#526f77', class: 'map-deep-water' }),
-      );
-      if (!this.world.landscape?.heightmap && terrainHalf(this.world) > 1000) {
-        const label = svg('text', {
-          x: this.x(0),
-          y: this.y(terrainHalf(this.world) * 0.5),
-          fill: '#d7e4df',
-          'font-size': 15,
-          'font-style': 'italic',
-          'text-anchor': 'middle',
-          'pointer-events': 'none',
-          class: 'map-bay-label',
-        });
-        label.textContent = this.world.id === 'puddlewick' ? 'Puddlewick Bay' : 'Bay';
-        drawing.append(label);
-      }
-    } else {
-      const coast = Math.max(0, Math.min(this.height, this.y(150)));
-      drawing.append(
-        svg('rect', {
-          x: 0,
-          y: coast,
-          width: this.width,
-          height: this.height - coast,
-          fill: '#758e86',
-        }),
-      );
-      drawing.append(
-        svg('path', { d: `M0 ${coast}H${this.width}`, stroke: '#afbd9b', 'stroke-width': 3 }),
-      );
-    }
-    if (this.contours) {
-      const contours = svg('g', { class: 'map-contours', 'pointer-events': 'none' });
-      for (const [d, major] of [
-        [terrain.minor, false],
-        [terrain.major, true],
-      ] as const)
-        contours.append(
-          svg('path', {
-            d,
-            fill: 'none',
-            stroke: '#d0c49a',
-            'stroke-opacity': major ? 0.55 : 0.27,
-            'stroke-width': major ? 1.25 : 0.65,
-            'stroke-linecap': 'round',
-          }),
-        );
-      for (const label of terrain.labels) {
-        const text = svg('text', {
-          x: label.x,
-          y: label.y,
-          fill: '#dbd0ad',
-          'font-size': 10,
-          'text-anchor': 'middle',
-          'paint-order': 'stroke',
-          stroke: '#4e6247',
-          'stroke-width': 3,
-          'stroke-linejoin': 'round',
-        });
-        text.textContent = `${label.height} m`;
-        contours.append(text);
-      }
-      drawing.append(contours);
-    }
     const onSheet = (p: { x: number; z: number }) => inBounds(this.bounds, p, 30);
     for (const t of townBorders(this.world, this.bounds)) {
       const border = svg('circle', {
@@ -704,6 +690,8 @@ export class ParishMap {
       label.type = 'button';
       label.setAttribute('aria-label', site.name);
       label.title = `${site.name} · ${site.kind} · (${Math.round(site.x)}, ${Math.round(site.z)})`;
+      label.dataset.mapX = String(this.x(site.x) - 12);
+      label.dataset.mapY = String(this.y(site.z) - 12);
       label.dataset.site = site.id;
       label.dataset.name = site.name;
       label.dataset.wx = String(site.x);
@@ -754,6 +742,7 @@ export class ParishMap {
       'aria-hidden': 'true',
     });
     this.players = svg('g');
+    this.markerSignature = '';
     markers.append(this.players);
     this.sheet.replaceChildren(drawing, labels, markers);
     if (focusedSite)
@@ -766,9 +755,127 @@ export class ParishMap {
     (this.host.querySelector('[data-map="in"]') as HTMLButtonElement).disabled =
       this.zoom >= maxZoom;
   }
+  private terrainStatus(message: string) {
+    const status = this.host.querySelector<HTMLElement>('.map-load-status')!;
+    status.textContent = message;
+    status.hidden = !message;
+  }
+  private requestTerrain() {
+    this.tide = Math.round((waterLevel(this.world) - this.world.settings.seaLevel) * 10) / 10;
+    if (this.terrainFailed) return;
+    if (!this.terrainLayer.childElementCount) this.terrainStatus('Drawing terrain…');
+    const job: MapTerrainJob = {
+      id: ++this.terrainSerial,
+      world: chartWorld(this.world),
+      width: this.width,
+      height: this.height,
+      x: this.bounds.x,
+      z: this.bounds.z,
+      offsetX: this.offsetX,
+      offsetY: this.offsetY,
+      scale: this.scale,
+      contours: this.contours,
+      tide: this.tide,
+    };
+    // Only one active job and the newest pending view: wheel gestures cannot queue
+    // a backlog of obsolete terrain sampling on slower machines.
+    if (this.terrainBusy) this.pendingTerrain = job;
+    else {
+      this.terrainBusy = true;
+      this.terrainWorker.postMessage(job);
+    }
+  }
+  private drawTerrain(terrain: ReturnType<typeof mapTerrainPaths>) {
+    this.terrainLayer.replaceChildren();
+    if (mapHalf(this.world) > legacyHalf) {
+      this.terrainLayer.append(
+        svg('path', {
+          d: terrain.water,
+          fill: '#758e86',
+          class: 'map-water',
+        }),
+      );
+      this.terrainLayer.append(
+        svg('path', { d: terrain.deepWater, fill: '#526f77', class: 'map-deep-water' }),
+      );
+      if (!this.world.landscape?.heightmap && terrainHalf(this.world) > 1000) {
+        const label = svg('text', {
+          x: this.x(0),
+          y: this.y(terrainHalf(this.world) * 0.5),
+          fill: '#d7e4df',
+          'font-size': 15,
+          'font-style': 'italic',
+          'text-anchor': 'middle',
+          'pointer-events': 'none',
+          class: 'map-bay-label',
+        });
+        label.textContent = this.world.id === 'puddlewick' ? 'Puddlewick Bay' : 'Bay';
+        this.terrainLayer.append(label);
+      }
+    } else {
+      const coast = Math.max(0, Math.min(this.height, this.y(150)));
+      this.terrainLayer.append(
+        svg('rect', {
+          x: 0,
+          y: coast,
+          width: this.width,
+          height: this.height - coast,
+          fill: '#758e86',
+        }),
+      );
+      this.terrainLayer.append(
+        svg('path', { d: `M0 ${coast}H${this.width}`, stroke: '#afbd9b', 'stroke-width': 3 }),
+      );
+    }
+    if (this.contours) {
+      const contours = svg('g', { class: 'map-contours', 'pointer-events': 'none' });
+      for (const [d, major] of [
+        [terrain.minor, false],
+        [terrain.major, true],
+      ] as const)
+        contours.append(
+          svg('path', {
+            d,
+            fill: 'none',
+            stroke: '#d0c49a',
+            'stroke-opacity': major ? 0.55 : 0.27,
+            'stroke-width': major ? 1.25 : 0.65,
+            'stroke-linecap': 'round',
+          }),
+        );
+      for (const label of terrain.labels) {
+        const text = svg('text', {
+          x: label.x,
+          y: label.y,
+          fill: '#dbd0ad',
+          'font-size': 10,
+          'text-anchor': 'middle',
+          'paint-order': 'stroke',
+          stroke: '#4e6247',
+          'stroke-width': 3,
+          'stroke-linejoin': 'round',
+        });
+        text.textContent = `${label.height} m`;
+        contours.append(text);
+      }
+      this.terrainLayer.append(contours);
+    }
+  }
   private updatePlayers() {
-    this.players.replaceChildren();
     const goal = this.navigation?.get();
+    const visible = Object.values(this.world.players).filter(
+      (p) => p.id === this.me.id || p.online,
+    );
+    const signature = JSON.stringify([
+      goal,
+      this.me.id,
+      this.me.x,
+      this.me.z,
+      visible.map((p) => [p.id, p.name, p.npc, p.x, p.z, p.heading]),
+    ]);
+    if (signature === this.markerSignature) return;
+    this.markerSignature = signature;
+    this.players.replaceChildren();
     (this.host.querySelector('[data-map=clear]') as HTMLButtonElement).disabled = !goal;
     if (goal) {
       const marker = svg('g', {
