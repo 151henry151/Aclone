@@ -1,4 +1,5 @@
 import { householdBudget } from './household.ts';
+import { jobVacancy } from '../../shared/staffing.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World, Player } from '../../shared/types.ts';
@@ -61,8 +62,13 @@ export function resumePlan(w: World, p: Player, state: ResidentState) {
     firstAction?.type === 'gather'
       ? worldResources(w).find((n) => n.id === firstAction.node)
       : undefined;
-  const plan =
-    building && (distance(p, building) >= 18 || p.atHome)
+  const site =
+    firstAction?.type === 'construct' && state.followThrough?.kind === 'construction'
+      ? state.followThrough.site
+      : undefined;
+  const plan = site
+    ? [...travelPrep(p), { kind: 'move' as const, ...site }, ...saved.plan]
+    : building && (distance(p, building) >= 18 || p.atHome)
       ? visitBuilding(p, building, saved.plan)
       : node && (distance(p, node) >= 8 || p.atHome)
         ? [...travelPrep(p), { kind: 'move' as const, x: node.x, z: node.z }, ...saved.plan]
@@ -200,6 +206,21 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
   if (maintenance.length) return maintenance;
   const duty = employmentRoutine(w, p, state);
   if (duty.length) return duty;
+  // In persistent-employment worlds a funded job keeps paying while doing
+  // errands. Fill an idle qualified vacancy before choosing a hauling loop.
+  // Never abandon an existing job or use shift-renewal worlds this way.
+  if (!p.job && !w.settings.activeWork) {
+    const employment = careerChoices(w, p, state).find(
+      (c) =>
+        c.careerGoal?.kind === 'employment' &&
+        w.buildings.some(
+          (b) => b.id === c.careerGoal?.target && b.kind !== 'farm' && jobVacancy(w, b, p.id),
+        ) &&
+        c.plan.some((s) => s.kind === 'act' && s.action.type === 'job') &&
+        !c.plan.some((s) => s.kind === 'act' && s.action.type === 'learn'),
+    );
+    if (employment) return employment.plan;
+  }
   const hauling = careerChoices(w, p, state)
     .filter(
       (c) => ['gather', 'trade'].includes(c.careerGoal?.kind ?? '') && (c.expectedCash ?? 0) > 0,

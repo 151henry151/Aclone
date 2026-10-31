@@ -1,4 +1,10 @@
 import { fishingCrewCaptain } from '../../shared/fishing-expedition';
+import { jobVacancy } from '../../shared/staffing.ts';
+import {
+  rememberFollowThrough,
+  followThroughPlan,
+  pursuingFollowThrough,
+} from './follow-through.ts';
 import { returnResidentHome } from './home-world.ts';
 import {
   businessRequestBlocker,
@@ -450,6 +456,8 @@ export class Residents {
     });
   }
   private failure(r: Resident, w: World, message: string, attempted = r.state.plan[r.state.index]) {
+    const player = w.players[r.state.playerId];
+    if (player && pursuingFollowThrough(w, player, r.state)) r.state.followThrough!.failures++;
     if (r.state.career && !r.state.routine) r.state.career.failures++;
     failStep((r.state.recovery ??= {}), w.time, attempted, message);
     const previous = r.state.lastOutcome;
@@ -504,6 +512,8 @@ export class Residents {
             throw Error('Inspect the new workplace before leaving my job');
           if (!workplace(w, p, b)?.qualified)
             throw Error('Qualify for the new job before leaving my current one');
+          if (w.settings.jobsEnabled === false || !jobVacancy(w, b, p.id))
+            throw Error('The new workplace no longer has an available job; keep my current one');
           const blocked = shiftBlocker(w, p, b);
           if (blocked) throw Error(blocked);
         }
@@ -515,11 +525,18 @@ export class Residents {
           (b) =>
             b.owner === p.id && b.construction && !before.buildings.some((old) => old.id === b.id),
         );
-        if (site)
+        if (site) {
+          if (
+            r.state.followThrough?.kind === 'construction' &&
+            r.state.followThrough.buildingKind === site.kind &&
+            distance(site, r.state.followThrough.site) < 18
+          )
+            r.state.followThrough.building = site.id;
           startCareer(w, p, r.state, {
             kind: site.kind === 'home' ? 'housing' : 'business',
             target: site.id,
           });
+        }
       }
       const pendingReply = r.state.pendingAgreementReply;
       if (
@@ -835,6 +852,7 @@ export class Residents {
         delete r.state.evaluation;
         delete r.state.recovery;
         delete r.state.suspendedPlan;
+        delete r.state.followThrough;
         delete r.state.supplyGoal;
         finishCareer(w, p, r.state, 'Life ended; reassess all abilities and assets');
         delete r.state.ambition;
@@ -1002,6 +1020,21 @@ export class Residents {
       // freezes driving, a production wait, or an already chosen ordinary action.
       if (!r.busy && !r.nav && !p.task && now >= r.state.waitUntil && !r.state.inSpace) {
         const known = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+        if (!careNeeded(w, p) && !r.state.routine && r.state.index >= r.state.plan.length) {
+          const plan = followThroughPlan(known, p, r.state);
+          if (plan) {
+            r.state.plan = plan;
+            r.state.index = 0;
+            r.state.repeats = 1;
+            r.state.tradeQuotes = planQuotes(known, plan);
+            r.state.until = r.state.nextAt = now + 600000;
+            r.state.needsDecision = false;
+            r.wake = false;
+            this.checkpoint(r, w, 'follow-through', { goal: r.state.followThrough, plan });
+            this.runStep(r, w, p, now);
+            continue;
+          }
+        }
         if (
           !careNeeded(w, p) &&
           !p.learning &&
@@ -1028,6 +1061,7 @@ export class Residents {
         if (
           now >= (r.state.plannerRetryAt ?? 0) &&
           !careNeeded(w, p) &&
+          !pursuingFollowThrough(w, p, r.state) &&
           strategicReviewDue(w, p, r.state, r.config.preference)
         ) {
           r.wake = true;
@@ -1215,7 +1249,9 @@ export class Residents {
       if (
         r.wake ||
         this.dialogueDue(r, now) ||
-        (now >= r.state.nextAt && (!r.state.plan.length || now >= r.state.until))
+        (now >= r.state.nextAt &&
+          (!r.state.plan.length || now >= r.state.until) &&
+          !pursuingFollowThrough(w, p, r.state))
       ) {
         if (now - r.lastCall < r.config.intervalMs) continue;
         if (this.plannerBusy() >= this.budget.config.concurrency) continue;
@@ -2316,6 +2352,7 @@ export class Residents {
       if (result.supplyGoal) r.state.supplyGoal = result.supplyGoal;
       if (result.ambition) r.state.ambition = result.ambition;
       if (result.careerGoal && player) startCareer(w, player, r.state, result.careerGoal);
+      if (player) rememberFollowThrough(w, player, r.state, d.plan, result.careerGoal);
       if (player)
         r.state.tradeQuotes =
           result.tradeQuotes ??

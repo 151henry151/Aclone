@@ -28,6 +28,7 @@ export function returnResidentHome(
     'Resume my home-world responsibilities and develop the town I founded, preserving household and business reserves.';
   // World-local IDs and clocks cannot be reused in the destination economy.
   for (const key of [
+    'followThrough',
     'career',
     'ambition',
     'supplyGoal',

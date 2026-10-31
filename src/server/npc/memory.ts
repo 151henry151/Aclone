@@ -5,6 +5,7 @@ import type { Step } from './decision.ts';
 import type { Presence } from './habits.ts';
 import type { Commitment } from './commitments.ts';
 export interface ResidentState {
+  followThrough?: import('./follow-through.ts').FollowThrough;
   ambition?: import('./ambitions.ts').Ambition;
   tradeQuotes?: import('./execution.ts').TradeQuotes;
   plannerRetryAt?: number;

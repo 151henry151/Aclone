@@ -306,6 +306,33 @@ harvest wages before buying more seeds or optional fertilizer. Seasonal farm own
 have separate funding, training, plot-work and crop-export plans; they are not
 estimated as automatic factories. Farmers consider hay demand and can buy more land only when current plots are busy, sales have occurred, customers are short, and living/seed reserves remain funded. All plot actions support sixteen plots. Cattle/sheep supply errands consider affordable hay from observed markets; pigs and chickens retain feed. Hay-barn merchants can acquire, fund and restock a modest 40-bale buffer for observed customers, rather than speculatively filling their entire warehouse. These policies do not alter human permissions, wages or production rules.
 
+### Accepted project follow-through
+
+Selected job-training and construction plans now retain a separate, persistent
+outcome alongside the current career. Meals, household errands and scheduled
+absences can interrupt execution without losing the intended workplace or build
+site. A review timer alone does not replace a lesson or construction journey.
+After training, ordinary job actions recheck the vacancy, hiring permission and payroll
+at the destination before leaving an old job. After a foundation is created, continuation procures and delivers its
+remaining materials instead of repeating construction. Resuming after a meal
+returns to the selected site before building.
+
+Continuation uses observed markets, refreshes expired workplace or construction-site knowledge by visiting,
+and preserves ordinary cash, skill, property and construction checks. Player requests,
+survival and departure preparation take priority. Missing funding or supplies defer
+the goal; death, world changes, three execution failures or seven simulation days
+end it. Completed employment or construction clears the pending outcome.
+In worlds without shift renewal, unemployed qualified visitors can accept a funded
+production vacancy before gathering or trading. Existing jobs are not automatically
+abandoned for this opportunistic routine.
+
+`tests/npc-follow-through.test.ts` exercises paid lessons, actual employment and wine
+production, construction/material deliveries, meal interruptions, persistence,
+stale vacancies, funding changes and the resident executor's review timer. These
+are local mechanical regressions; live observation is still needed
+to establish whether the NPC wine and beer supply improves. This change does not
+grant qualifications, assign named live workers or create a brewery in production.
+
 ### Business continuity
 
 Factory owners keep input reserves separate from ordinary finished stock. The
