@@ -17,14 +17,23 @@ export class Precipitation {
       new T.ShaderMaterial({
         transparent: true,
         depthWrite: false,
-        uniforms: { snow: { value: 0 }, opacity: { value: 0.5 } },
+        uniforms: {
+          snow: { value: 0 },
+          opacity: { value: 0.5 },
+          shelter: { value: new T.Vector4(0, 0, 0, 0) },
+        },
         vertexShader:
-          'uniform float snow;void main(){vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=mix(5.,clamp(55./max(1.,-p.z),2.,8.),snow);}',
+          'uniform float snow;varying vec3 worldPosition;void main(){worldPosition=(modelMatrix*vec4(position,1.)).xyz;vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=mix(5.,clamp(55./max(1.,-p.z),2.,8.),snow);}',
         fragmentShader:
-          'uniform float snow;uniform float opacity;void main(){vec2 p=gl_PointCoord-.5;float a=mix(step(abs(p.x),.1),smoothstep(.5,.2,length(p)),snow);gl_FragColor=vec4(.82,.9,1.,a*opacity);}',
+          'uniform float snow;uniform float opacity;uniform vec4 shelter;varying vec3 worldPosition;void main(){if(snow<.5&&shelter.w>0.&&worldPosition.y<shelter.y&&worldPosition.y>shelter.y-2.5&&distance(worldPosition.xz,shelter.xz)<shelter.w)discard;vec2 p=gl_PointCoord-.5;float a=mix(step(abs(p.x),.1),smoothstep(.5,.2,length(p)),snow);gl_FragColor=vec4(.82,.9,1.,a*opacity);}',
       }),
     );
     this.mesh.frustumCulled = false;
+  }
+  shelter(at?: T.Vector3) {
+    const value = (this.mesh.material as T.ShaderMaterial).uniforms.shelter.value as T.Vector4;
+    if (at) value.set(at.x, at.y, at.z, 0.78);
+    else value.w = 0;
   }
   update(dt: number, at: T.Vector3, kind: string, intensity: number, wind: number) {
     this.mesh.visible = kind !== 'clear';

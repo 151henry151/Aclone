@@ -87,6 +87,8 @@ Supplied mills/sawmills/workshops/furnaces/pumps make distinct machinery sounds.
 
 ## Time and weather
 
+Outdoor walkers automatically unfold a white umbrella with a hot-dog-and-tomato print when rain begins, and fold it when rain ends. It uses the left hand so the flashlight remains available. Drivers, boat passengers and characters at home keep it put away; it is a visual rain shelter, not a new consumable or survival bonus.
+
 Default day: **10 real minutes**; 365-day year: **60h 50m**. New worlds start in spring. Spring/summer/autumn each last ~15h 20m, winter 15h. Owners may change/freeze the visual clock without accelerating crops or ageing. Default visual midnight matches date change.
 
 Sunrise/sunset vary by season. Clear moonless nights have faint starlight; full moons reveal terrain. Clouds/horizon reduce natural light; overcast moonless countryside is very dark. Use **L/headlights**. Streetlights run all night; occupied-house windows shine until varied bedtimes. Occupants left inside keep chimney smoke even offline; workplace chimneys smoke when an employed player is online, within 18m and on an active shift.

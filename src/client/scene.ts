@@ -5,6 +5,7 @@ import { TowLines } from './tow-lines';
 import { createTugboat } from './tugboat';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { createFlashlight } from './flashlight';
+import { createRainUmbrella, needsRainUmbrella } from './umbrella';
 import { spaceportFence } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
@@ -1125,6 +1126,8 @@ export class GameScene {
       g.add(human.group);
       g.userData.human = human;
       g.userData.flashlight = createFlashlight(human.group);
+      g.userData.umbrella = createRainUmbrella(human.group);
+      g.add(g.userData.umbrella.group);
     } else if (slot === 6) {
       cylinder(g, 0.22, 1.5, '#bd9971', -0.45, 0.8, 0, 5);
       cylinder(g, 0.22, 1.5, '#bd9971', 0.45, 0.8, 0, 5);
@@ -1301,6 +1304,8 @@ export class GameScene {
           Math.max(0.04, this.sun.intensity / 3),
         );
       const motionTime = this.motionClock.sample(now);
+      const date = calendar(w),
+        climate = worldWeather(w, date.absoluteDay);
       const predicted = this.prediction.sample(now, this.localInput());
       const bareSurface = snowTrackHeight({ ...w, climate: undefined });
       const snowSurface = snowTrackHeight(w),
@@ -1393,6 +1398,11 @@ export class GameScene {
           turn,
         );
         mesh.userData.flashlight?.update(!!w.players[mesh.userData.playerId]?.lights);
+        const walker = w.players[mesh.userData.playerId];
+        mesh.userData.umbrella?.update(
+          !!walker && needsRainUmbrella(walker, climate.precipitation),
+          dt,
+        );
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
         (mesh.userData.hovercraft as HovercraftFigure | undefined)?.animate(
           dt,
@@ -1705,9 +1715,7 @@ export class GameScene {
       }
       this.plumes.update(dt);
       this.aircraftCrashes.update(dt);
-      const date = calendar(w),
-        climate = worldWeather(w, date.absoluteDay),
-        skyOffset = Math.max(-1, Math.min(1, motionTime - w.time)),
+      const skyOffset = Math.max(-1, Math.min(1, motionTime - w.time)),
         clock =
           w.settings.time +
           (w.settings.dayLength > 0 ? (skyOffset * 86400) / w.settings.dayLength : 0),
@@ -1766,6 +1774,7 @@ export class GameScene {
       autumnTint.value = climate.season === 'Autumn' ? 0.85 : climate.season === 'Winter' ? 0.5 : 0;
       this.lightning.visible = flash > 0;
       this.lightning.position.set(p.x + 38, 0, p.z - 85);
+      this.precipitation.shelter(local?.userData.umbrella?.shelter());
       this.precipitation.update(
         dt,
         this.camera.position,
