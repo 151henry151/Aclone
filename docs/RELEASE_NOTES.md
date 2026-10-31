@@ -2,6 +2,18 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.113.1 — NPC project follow-through
+
+NPCs retain the intended workplace after paying for training and the selected site after starting a construction trip. Meals, scheduled absences and server restarts preserve those outcomes; review timers no longer discard an accepted lesson or build journey. Construction continues with remaining material deliveries instead of creating duplicate foundations. Residents revisit sites when their observations expire.
+
+Job changes recheck qualifications, vacancies, hiring permissions and operating funds at the destination before quitting an existing job. Unemployed qualified residents can take funded production work before gathering in worlds with persistent employment. Survival, player requests, normal building limits and cash requirements still apply; abandoned goals expire after seven simulation days or three execution failures.
+
+No live qualifications, jobs, buildings or money are granted by this update. Live wine and beer supply still depends on residents choosing viable projects, available skills and buyers. The monthly NPC budget test now uses a fixed date so month-end CI runs test the same accounting period.
+
+Validation: all 1,272 unit tests, TypeScript, the production build and tracked-file formatting passed, including 11 focused follow-through regressions.
+
+Upgrade: restart the server with the new release; saved NPC memories remain compatible. See [NPC behavior and validation](NPCS.md#accepted-project-follow-through).
+
 ## 0.113.0 — Rain umbrellas and smoother maps
 
 Outdoor walkers unfold a white umbrella patterned with hot dogs and tomatoes when rain starts, and fold it away when rain stops. Its left-hand grip follows the walking skeleton, leaving the right hand free for the flashlight. The canopy remains overhead in first-person view and excludes visible rain immediately below it. It has no purchase requirement or survival-stat bonus.

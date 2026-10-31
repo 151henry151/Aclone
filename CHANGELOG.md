@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.113.1] - 2026-10-30
+
+### Fixed
+
+- Keep accepted NPC training tied to its intended job and construction tied to its site through meals, travel and restarts. Recheck vacancies, hiring permissions, funding and supplies before continuing, and let unemployed qualified residents take ongoing production jobs alongside their earning errands.
+- Make the NPC monthly-budget regression test independent of the calendar date on which it runs.
+
 ## [0.113.0] - 2026-10-30
 
 ### Added

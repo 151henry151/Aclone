@@ -4,9 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.113.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.113.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
-Version 0.113.0 adds automatically unfolding hot-dog-and-tomato rain umbrellas for walkers, moves map terrain calculations into a background worker and marks the ocean travel boundary. Reload after updating to receive the umbrella and map improvements.
+Version 0.113.1 keeps NPC training and construction projects on track through travel, meals and restarts. Qualified unemployed residents can take funded production jobs, and job changes recheck hiring permissions before giving up existing employment. The rain umbrellas and map improvements from 0.113.0 remain included.
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 
@@ -63,6 +63,8 @@ This is a playable alpha, not complete historical feature parity. See [status an
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; stocked-home targets, complete earning trips, costed surplus pricing and protected operating capital guide their choices; see [AI neighbours](docs/NPCS.md). Gameplay now includes protected gameplay budgets, complete structured decision options, persistent savings milestones and trade-price guards; see the [redesign handoff](docs/NPC_RECOVERY.md#2026-10-18-planner-redesign-0700).
+
+NPC development checks also cover training-to-employment and construction follow-through across interruptions and restarts. The [follow-through changes](docs/NPCS.md#accepted-project-follow-through) describe their bounds and remaining live-validation needs.
 
 NPCs share explicit financial facts between chat and planning and can carry out agreed price changes and surplus withdrawals; see [AI neighbours](docs/NPCS.md#agreements-made-in-chat). Long-term autonomous prosperity remains under evaluation. Version 0.96.2 repairs replenishment checks, funded staffing, business maintenance visits and project-linked surplus withdrawals; implementation and validation limits are described in [business continuity](docs/NPCS.md#business-continuity). The [recovery handoff](docs/NPC_RECOVERY.md) records the business/career and conversation-budget fixes, and validation still needed.
 
