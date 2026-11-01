@@ -293,7 +293,7 @@ test('provisions stay aboard on disembarking and count against capacity when reb
   assert.equal(carry(p, w), 0);
   Object.assign(p, d.land, { y: travelHeight(w, d.land.x, d.land.z) });
   p.inventory = { cod: 790 };
-  assert.throws(() => act(w, p.id, { type: 'vehicle', slot: 30 }), /Unload cargo/);
+  assert.throws(() => act(w, p.id, { type: 'vehicle', slot: 30 }), /Unload \d+ before boarding/);
   p.inventory = {};
   act(w, p.id, { type: 'vehicle', slot: 30 });
   assert.equal(carry(p, w), 200);

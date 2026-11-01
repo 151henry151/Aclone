@@ -40,7 +40,7 @@ test('hangar boarding, visible runway and a server-confirmed crash preserve spar
       fleet: [0, 5, 2],
       spareBiplanes: 3,
       parkedFuel: { 2: 64 },
-      inventory: {},
+      inventory: { bread: 34, water: 46, fuel: 20, wine: 1 },
       engine: false,
     });
     await page.addInitScript((token) => {
@@ -55,8 +55,20 @@ test('hangar boarding, visible runway and a server-confirmed crash preserve spar
     await page.keyboard.press('Escape');
     await page.keyboard.press('e');
     await expect(page.getByText('4 biplane airframes owned', { exact: false })).toBeVisible();
+    // Too much cargo: the board button is disabled and the panel says why in
+    // plain view, not only in a hover tooltip.
+    const board = page.locator('[data-do="vehicle"][data-id="2"]');
+    await expect(board).toBeDisabled();
+    await expect(page.locator('.directory .blocker')).toHaveText(
+      'Carrying 101 weight; the Biplane holds 90. Unload 11 before boarding.',
+    );
+    await page.locator('.directory .blocker').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: 'test-results/airfield-hangar-overweight.png' });
+    p.inventory = {};
+    await expect(board).toBeEnabled();
+    await expect(page.locator('.directory .blocker')).toHaveCount(0);
     await page.screenshot({ path: 'test-results/airfield-hangar-menu.png' });
-    await page.locator('[data-do="vehicle"][data-id="2"]').click();
+    await board.click();
     await expect.poll(() => p.vehicle).toBe(2);
     expect(p.engine).toBe(false);
     expect(p.spareBiplanes).toBe(3);

@@ -1082,6 +1082,11 @@ kbd {
   color: #a3b497;
   margin-top: 7px;
 }
+.directory > small.blocker {
+  margin: -6px 4px 12px;
+  color: #e7cf8e;
+  font: 12px/1.4 sans-serif;
+}
 .activity-list {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -22,6 +22,7 @@ import {
 } from './towing';
 import { TUGBOAT, MOTORBOAT } from './boats';
 import { hasMotor } from './vehicle-config';
+import { cargoFitReason } from './cargo-fit';
 import {
   vehicleDef,
   validateVehicleTuning,
@@ -1434,11 +1435,8 @@ export function act(w: World, id: string, a: Action): string {
           'The aircraft apron is blocked',
         );
       }
-      requireThat(
-        stockWeight(w, p.inventory) + (hasProvisions(slot, w) ? stockWeight(w, p.boatStores) : 0) <=
-          vehicleDef(w, slot).capacity,
-        'Unload cargo before changing to a smaller vehicle',
-      );
+      const cargoReason = cargoFitReason(w, p, slot);
+      requireThat(!cargoReason, cargoReason ?? '');
       let fleet = p.fleet ?? [0, 5];
       if (slot !== 5 && slot !== 0 && !(isTractor(slot) && fleet.includes(slot))) {
         const b = poweredBoat(slot, w) ? landing!.building : nearby(w, p, a.building);

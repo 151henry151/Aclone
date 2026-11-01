@@ -118,8 +118,15 @@ test('visible alternatives explain missing cargo space, qualification and purcha
   p.z = b.z;
   p.cash = 0;
   assert.match(actionBlocker(w, p, 'buyBuilding', undefined, b)!, /cash/);
-  p.inventory.stone = 100;
-  assert.match(actionBlocker(w, p, 'walk')!, /Unload/);
+  p.inventory = { stone: 50 };
+  assert.equal(
+    actionBlocker(w, p, 'walk'),
+    'Carrying 100 weight; on foot you carry 60. Unload 40 before walking.',
+  );
+  assert.equal(
+    actionBlocker(w, p, 'vehicle', '2'),
+    'Carrying 100 weight; the Biplane holds 90. Unload 10 before boarding.',
+  );
   assert.match(actionBlocker(w, p, 'farm', 'plant', b)!, /Farmer/);
   p.skills.push('farmer');
   assert.equal(actionBlocker(w, p, 'farm', 'plant', b), undefined);

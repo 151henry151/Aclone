@@ -16,6 +16,7 @@ import { propertyQuote } from '../shared/property';
 import { winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
 import { stockWeight } from '../shared/fishing-expedition';
+import { cargoFitReason } from '../shared/cargo-fit';
 import { requiredLicence } from '../shared/vehicle-services';
 import { worldItems } from '../shared/world-catalogue';
 
@@ -233,11 +234,8 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
     if (slot === 2 && hasAircraftHangar(w) && !b?.aircraftHangar)
       return 'Visit the airfield hangar';
     if (slot === 2 && Math.abs(p.speed) >= 0.5) return 'Stop before boarding';
-    if (
-      stockWeight(w, p.inventory) + (isTrawler(slot, w) ? stockWeight(w, p.boatStores) : 0) >
-      vehicleDef(w, slot).capacity
-    )
-      return 'Unload cargo before changing to a smaller vehicle';
+    const cargo = cargoFitReason(w, p, slot);
+    if (cargo) return cargo;
     if (
       action === 'vehicle' &&
       !(slot === 2 ? aircraftCount(p) > 0 : (p.fleet ?? [0, 5]).includes(slot)) &&
@@ -258,6 +256,27 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   }
   if (action === 'joinGame' && id === 'fishing' && !(p.inventory.tackle > 0))
     return 'Carry Fishing tackle';
+}
+
+/**
+ * Controls marked `data-explain` show their blocker in plain view beneath the
+ * button, so touch players (who never see hover titles) still learn why.
+ */
+function explainBlocker(button: HTMLButtonElement, reason: string | undefined) {
+  const next = button.nextElementSibling,
+    note = next instanceof HTMLElement && next.classList.contains('blocker') ? next : undefined;
+  if (!reason) {
+    note?.remove();
+    return;
+  }
+  if (note) {
+    if (note.textContent !== reason) note.textContent = reason;
+    return;
+  }
+  const el = document.createElement('small');
+  el.className = 'blocker';
+  el.textContent = reason;
+  button.after(el);
 }
 
 /** Update existing elements, preserving focused fields and panel scroll position. */
@@ -315,6 +334,7 @@ export function refreshActionVisibility(host: HTMLElement, w: World, p: Player) 
         delete button.dataset.contextDisabled;
         delete button.dataset.contextTitle;
       }
+      if (button.dataset.explain !== undefined) explainBlocker(button, reason);
     }
     if (action === 'crow') el.textContent = p.crowBody ? 'Return to body' : 'Fly robocrow';
     if (action === 'reel' && el instanceof HTMLButtonElement)

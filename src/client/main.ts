@@ -2192,7 +2192,7 @@ function buildingWindow(b: Building) {
             : button(
                 `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(i === 2 ? aircraftCount(me!) > 0 : (me!.fleet ?? [0, 5]).includes(i)) ? (i === 2 ? 'Board owned aircraft' : 'Owned') : money(v.price)}</span>`,
                 'vehicle',
-                `data-id="${i}" data-building="${b.id}"`,
+                `data-id="${i}" data-building="${b.id}"${i === 2 ? ' data-explain' : ''}`,
                 'wide',
               ),
         )

@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.114.1 — Cargo weight shown when boarding is refused
+
+Changing vehicle with more cargo than the destination can hold now reports the carried weight, the vehicle's capacity and the exact amount to unload, for example "Carrying 101 weight; the Biplane holds 90. Unload 11 before boarding." The hangar's "Board owned aircraft" button prints that reason beneath itself while disabled, instead of only in a hover title, so touch players see it. Server rejection and client blocker share one helper, so the numbers always agree.
+
+Validation: TypeScript, all unit tests, tracked-file formatting and the airfield browser test (overweight pilot sees the disabled button and reason; emptied inventory enables boarding) passed.
+
 ## 0.114.0 — Northern island expansion
 
 Public Puddlewick grows northward to roughly ten times its land area (about 94 km² to 936 km² by a 200 m survey). Everything at or south of z = −1200 m keeps its exact terrain, woodland, buildings, roads, deposits and depletion state; the town, bay, spits and lighthouses are unchanged. The new rounded mainland adds a 1,424 m mountain with a year-round snow cap, five rivers that descend from it to the sea, eighteen ponds, large forests, rocky cliff coasts and six resource provinces that each favour one material and run short of another. Rivers are fordable by tractor near their headwaters and impassable in their deep lower reaches. Rain becomes snow at alpine elevations while lowland weather is unchanged.

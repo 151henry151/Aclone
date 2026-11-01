@@ -73,8 +73,11 @@ test('boarding requires the hangar, safe apron, stopped pilot and cargo fit befo
   p.speed = 3;
   assert.throws(() => act(w, p.id, { type: 'vehicle', slot: 2, building: b.id }), /Stop/);
   p.speed = 0;
-  p.inventory = { stone: 10000 };
-  assert.throws(() => act(w, p.id, { type: 'vehicle', slot: 2, building: b.id }), /Unload/);
+  p.inventory = { bread: 34, water: 46, fuel: 20, wine: 1 };
+  assert.throws(
+    () => act(w, p.id, { type: 'vehicle', slot: 2, building: b.id }),
+    /^Error: Carrying 101 weight; the Biplane holds 90\. Unload 11 before boarding\.$/,
+  );
   assert.equal(p.spareBiplanes, 4);
   assert.equal(!!p.fleet?.includes(2), false);
   p.inventory = {};
