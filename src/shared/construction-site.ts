@@ -1,8 +1,10 @@
+import { inlandLevel } from './inland-water';
 import { buildingSpawnReason, spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
 import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
+import { RIVER_DOCK, RIVER_DOCK_DRAFT, riverDockSite } from './river-dock';
 import { farmPlotPosition } from './farm-land';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -56,6 +58,7 @@ const projectRadius = (a: Rect, axis: { x: number; z: number }) =>
  * New buildings store this level; existing buildings retain their original datum. */
 export function foundationProfile(w: World, b: Site) {
   const samples: number[] = [];
+  let wet = false;
   for (const a of rectangles(b)) {
     const nx = Math.max(1, Math.ceil(a.hx)),
       nz = Math.max(1, Math.ceil(a.hz));
@@ -63,18 +66,16 @@ export function foundationProfile(w: World, b: Site) {
       for (let iz = 0; iz <= nz; iz++) {
         const dx = ((ix / nx) * 2 - 1) * a.hx,
           dz = ((iz / nz) * 2 - 1) * a.hz;
-        samples.push(
-          terrainHeight(
-            w,
-            a.x + dx * a.axes[0].x + dz * a.axes[1].x,
-            a.z + dx * a.axes[0].z + dz * a.axes[1].z,
-          ),
-        );
+        const x = a.x + dx * a.axes[0].x + dz * a.axes[1].x,
+          z = a.z + dx * a.axes[0].z + dz * a.axes[1].z;
+        const height = terrainHeight(w, x, z);
+        samples.push(height);
+        wet ||= height < inlandLevel(w, x, z, highWater(w));
       }
   }
   const low = Math.min(...samples),
     high = Math.max(...samples);
-  return { low, high, level: high + 0.04, rise: high - low };
+  return { low, high, wet, level: high + 0.04, rise: high - low };
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
@@ -97,6 +98,8 @@ export function constructionSiteReason(w: World, b: Site) {
     const blocked = dockObstruction(w, b);
     if (blocked) return blocked;
   }
+  if (b.kind === RIVER_DOCK && !riverDockSite(w, b))
+    return `River docks need a dry bank with at least ${RIVER_DOCK_DRAFT} m of river alongside the berth; rotate the jetty toward a deep reach`;
   if (
     b.kind === 'farm' &&
     Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
@@ -112,6 +115,7 @@ export function constructionSiteReason(w: World, b: Site) {
   )
     return 'Keep fields outside the spaceport launch reservation';
   const foundation = foundationProfile(w, b);
+  if (foundation.wet) return 'The building foundation must stay on dry land';
   if (foundation.rise > 2)
     return 'Ground rises more than 2 metres across this footprint; choose a flatter site or smaller building';
   const rects = rectangles(b),
@@ -125,7 +129,7 @@ export function constructionSiteReason(w: World, b: Site) {
         const z = a.z + sx * a.hx * a.axes[0].z + sz * a.hz * a.axes[1].z;
         if (Math.abs(x) > edge || Math.abs(z) > edge)
           return 'The building footprint would cross the world boundary';
-        if (terrainHeight(w, x, z) < highWater(w))
+        if (terrainHeight(w, x, z) < inlandLevel(w, x, z, highWater(w)))
           return 'The building foundation must stay on dry land';
       }
     for (const zone of w.zones.filter((z) => z.kind === 'noBuild')) {
@@ -135,7 +139,7 @@ export function constructionSiteReason(w: World, b: Site) {
       const z = Math.max(0, Math.abs(dx * a.axes[1].x + dz * a.axes[1].z) - a.hz);
       if (Math.hypot(x, z) < zone.radius) return 'Construction prohibited in this zone';
     }
-    if (w.buildings.some((o) => dockReserved(o, a.x, a.z, Math.hypot(a.hx, a.hz))))
+    if (w.buildings.some((o) => o.id !== b.id && dockReserved(o, a.x, a.z, Math.hypot(a.hx, a.hz))))
       return 'Keep the boathouse jetty and boat berth clear';
     for (const other of w.buildings)
       for (const o of rectangles(other)) {

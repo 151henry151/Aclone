@@ -21,7 +21,7 @@ async function until(predicate: () => boolean, timeout = 10000) {
 
 test(
   'slow compressed TCP link drives, chats and catches up without slowing a fast peer',
-  { timeout: 30000 },
+  { timeout: 45000 },
   async (t) => {
     const dir = mkdtempSync(join(tmpdir(), 'aclone-slow-'));
     const app = await createApp({ dataDir: dir, port: 0 });
@@ -67,7 +67,10 @@ test(
           ws.once('error', reject);
         });
         ws.send(JSON.stringify({ type: 'hello', protocol: 3, token: pilot.token, world: w.id }));
-        await until(() => !!state.world);
+        // The expanded island survey is sent once. At 64 kbit/s its compressed
+        // first snapshot needs more time than an ordinary compact delta. Keep
+        // the strict existing deadlines for driving/chat after it arrives.
+        await until(() => !!state.world, 20000);
         return { ws, state, id: pilot.account.id };
       };
       const fast = await connect('Fast observer', port);

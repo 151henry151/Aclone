@@ -1,3 +1,4 @@
+import { expandPuddlewickIsland } from './puddlewick-island';
 import { ensurePuddlewickSpaceport } from './puddlewick-spaceport';
 import { ensurePuddlewickResources } from './puddlewick-resources';
 import { integrateBoathouseTackle } from '../shared/boathouse-tackle';
@@ -121,6 +122,7 @@ interface Peer {
   delta?: boolean;
   stream?: DeltaStream;
   delivery?: SnapshotWindow;
+  backpressureSince?: number;
 }
 export interface AppOptions {
   dataDir: string;
@@ -184,7 +186,9 @@ export async function createApp(options: AppOptions) {
     const lighthouses = ensurePuddlewickLighthouses(world);
     const resources = ensurePuddlewickResources(world);
     const spaceport = ensurePuddlewickSpaceport(world);
+    const island = expandPuddlewickIsland(world);
     if (
+      island ||
       spaceport ||
       services ||
       government ||
@@ -247,9 +251,14 @@ export async function createApp(options: AppOptions) {
     if (p.delta) {
       if (p.socket.readyState !== WebSocket.OPEN || (p.delivery && !p.delivery.ready)) return;
       if (p.socket.bufferedAmount > 256 * 1024) {
-        p.socket.close(4005, 'Connection too slow; reconnecting');
+        // A large initial geography snapshot can still be compressing when the
+        // next tick arrives. Do not mistake one queued frame for a dead client.
+        p.backpressureSince ??= Date.now();
+        if (Date.now() - p.backpressureSince > 15000)
+          p.socket.close(4005, 'Connection too slow; reconnecting');
         return;
       }
+      p.backpressureSince = undefined;
       let frame = frames.get(w.id);
       if (!frame) {
         frame = prepareFrame(w);

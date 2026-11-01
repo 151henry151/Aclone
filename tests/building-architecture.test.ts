@@ -35,8 +35,8 @@ const release = (root: T.Object3D) =>
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) m.dispose();
     }
   });
-test('all 50 types have five distinct structural models; finishes do not change their geometry', () => {
-  assert.equal(Object.keys(buildings).length, 50);
+test('all 51 types have five distinct structural models; finishes do not change their geometry', () => {
+  assert.equal(Object.keys(buildings).length, 51);
   for (const [kind, def] of Object.entries(buildings)) {
     const models = buildingArchitectures(kind);
     assert.equal(models.length, 5, kind);

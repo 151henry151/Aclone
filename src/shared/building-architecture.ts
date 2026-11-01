@@ -18,6 +18,7 @@ type Family =
 const catalogue: Record<string, [Family, string[]]> = {
   lighthouse: ['civic', buildingRecipes.lighthouse.map((recipe) => recipe.name)],
   boathouse: ['works', buildingRecipes.boathouse.map((recipe) => recipe.name)],
+  riverDock: ['prop', buildingRecipes.riverDock.map((recipe) => recipe.name)],
   market: ['shop', buildingRecipes.market.map((recipe) => recipe.name)],
   workhouse: ['civic', buildingRecipes.workhouse.map((recipe) => recipe.name)],
   school: ['civic', buildingRecipes.school.map((recipe) => recipe.name)],

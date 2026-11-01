@@ -19,7 +19,15 @@ there must be water between you and the berth. At a fishing pier, boarding still
 requires being within five metres of its marked boarding point. The pier leaves the actual
 empty boat moored there; retrieve that particular boat from that berth. The
 boathouse puts it away inside. Different owned boats have independent moorings.
-Passengers board and disembark at the dock too. There is no offshore switch to
+Passengers board and disembark at the dock too.
+
+A player-built river dock works like the pier for small craft: it boards boats
+you already own from the landing behind its log crib and leaves them moored at
+the jetty end on the river. Canal boats, motorboats and the lifeboat fit; the
+fishing boat, charter boat and tug are refused and must use a boathouse or the
+pier. River docks sell no fuel and trade no fish. They can only be built where
+the river is at least 1.2 m deep along the whole berth, so headwaters and fords
+are refused; rotate the jetty toward the deep channel. There is no offshore switch to
 walking, tractors, robocrows or another world.
 
 A boathouse has a dry workshop and stores, plus a covered lifting hall extending

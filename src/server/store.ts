@@ -1,3 +1,4 @@
+import { changeResourceRecovery } from '../shared/resources';
 import { normalizeTradingOffers } from '../shared/trading.ts';
 import { migrateEmploymentPolicy } from '../shared/employment-policy.ts';
 import { migrateProcurement } from '../shared/procurement.ts';
@@ -73,7 +74,13 @@ export class Store {
             world.id === 'puddlewick' && world.owner === 'server' && world.template === 'economy'
               ? defaults.mapSize
               : 500;
+        const oldRecovery = world.settings.resourceRecoveryMultiplier === undefined;
         world.settings = { ...defaults, ...world.settings };
+        if (oldRecovery) {
+          // Preserve the units already recovered at the former pace on upgrade.
+          world.settings.resourceRecoveryMultiplier = 1;
+          changeResourceRecovery(world, defaults.resourceRecoveryMultiplier!);
+        }
         migrateTown(world);
         normalizeTowns(world);
         migrateEconomy(world);

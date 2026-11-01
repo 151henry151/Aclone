@@ -96,7 +96,8 @@ test('every rendered building has finite geometry and fits its planned footprint
       const model = buildingModel(b, (mesh) => mesh);
       const bounds = new T.Box3().setFromObject(model);
       const plan = buildingBounds(buildingPlan(b));
-      assert.ok(bounds.min.y >= (kind === 'boathouse' ? -4 : -0.05), `${kind}: below ground`);
+      const piled = kind === 'boathouse' || kind === 'riverDock';
+      assert.ok(bounds.min.y >= (piled ? -4 : -0.05), `${kind}: below ground`);
       assert.ok(
         bounds.max.y < (kind === 'starport' ? 194 : kind === 'lighthouse' ? 30 : 12),
         `${kind}: height`,
@@ -105,8 +106,12 @@ test('every rendered building has finite geometry and fits its planned footprint
       assert.ok(bounds.max.z - bounds.min.z <= plan.depth + 4, `${kind}: depth`);
       model.traverse((o) => {
         if (!(o instanceof T.Mesh)) return;
-        if (kind === 'boathouse' && new T.Box3().setFromObject(o).min.y < -0.5)
-          assert.equal(o.name, 'water-pile', 'Only underwater support piles extend below the site');
+        if (piled && new T.Box3().setFromObject(o).min.y < -0.5)
+          assert.equal(
+            o.name,
+            kind === 'boathouse' ? 'water-pile' : 'river-pile',
+            `${kind}: only underwater support piles extend below the site`,
+          );
         for (const attr of Object.values((o.geometry as import('three').BufferGeometry).attributes))
           assert.ok(Array.from(attr.array).every(Number.isFinite), `${kind}: non-finite geometry`);
       });

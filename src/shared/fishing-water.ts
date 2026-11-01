@@ -1,11 +1,11 @@
-import { waterLevel, lowWater } from './ocean';
+import { waterLevel, lowWater, surfaceWaterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { mapHalf, terrainHeight } from './terrain';
 import type { World } from './types';
 
 /** Sounding from the mean tidal surface, not the oscillating wave crest. */
 export function waterDepth(w: World, p: { x: number; z: number }) {
-  return Math.max(0, waterLevel(w) - terrainHeight(w, p.x, p.z));
+  return Math.max(0, surfaceWaterLevel(w, p.x, p.z) - terrainHeight(w, p.x, p.z));
 }
 export const DEEP_FISHING_DEPTH = 8;
 export const DEEP_FISHING_SHORE_DISTANCE = 150;

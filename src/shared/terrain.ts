@@ -1,3 +1,7 @@
+import { northernHeight, northernBlend, northernRegion } from './northern-island';
+import { inlandGround, inlandWaterAt } from './inland-water';
+import { minMapSize, maxMapSize } from './world-limits';
+export { minMapSize, maxMapSize } from './world-limits';
 import { spaceportGround } from './spaceport-site';
 import { seabedHeight } from './seabed';
 import { bluffHeight, nearBluff, coastalRockCover } from './coastal-bluffs';
@@ -9,8 +13,6 @@ import { fbm, seedOf, smoothstep } from './noise.ts';
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 /** The original 500 m parish square. Village terrain, lanes and gathering grounds live inside it. */
 export const legacyHalf = 250;
-export const minMapSize = 500,
-  maxMapSize = 20000;
 /** Half the configured square map side in metres; older saves default to the legacy square. */
 export function mapHalf(w: Pick<World, 'settings'>) {
   const size = w.settings.mapSize;
@@ -24,7 +26,8 @@ export function terrainHalf(w: World) {
 }
 /** Beyond this the village square gives way to the generated countryside. */
 export const countrysideEdge = legacyHalf + 150;
-export const terrainSeed = (w: Pick<World, 'id'>) => seedOf(w.id);
+export const terrainSeed = (w: Pick<World, 'id' | 'northernIsland'>) =>
+  w.northernIsland?.seed ?? seedOf(w.id);
 /** The hand-tuned village: a flat plateau, gentle surrounding hills and the harbour slope. */
 function villageHeight(w: World, x: number, z: number) {
   const hills = Math.sin(x * 0.021) * Math.cos(z * 0.019) * 8 + Math.sin(x * 0.047 + z * 0.025) * 3;
@@ -71,6 +74,11 @@ export function terrainHeight(w: World, x: number, z: number) {
     const s = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
     if (s > 0) h = h * (1 - s) + countrysideHeight(w, x, z, half) * s;
   }
+  if (w.northernIsland && z < w.northernIsland.preserveZ) {
+    const blend = northernBlend(w.northernIsland, z);
+    h += (Math.max(h, northernHeight(w.northernIsland, x, z, w.settings.seaLevel)) - h) * blend;
+    h = inlandGround(w, x, z, h);
+  }
   if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
@@ -105,7 +113,27 @@ export function woodland(w: World, x: number, z: number) {
     return 0;
   if (h < w.settings.seaLevel + 1 || coastalRockCover(w.coastalBluffs, x, z) > 0) return 0;
   const seed = terrainSeed(w);
-  const cover = smoothstep(0.08, 0.5, fbm(x / 420, z / 420, 3, seed + 29));
+  if (inlandWaterAt(w, x, z)) return 0;
+  const regional = w.northernIsland
+    ? northernRegion(w.northernIsland, x, z).forest * northernBlend(w.northernIsland, z)
+    : 0;
+  const cover = Math.max(regional, smoothstep(0.08, 0.5, fbm(x / 420, z / 420, 3, seed + 29)));
   const shore = smoothstep(w.settings.seaLevel + 1, w.settings.seaLevel + 4, h);
-  return clamp(cover * outside * shore, 0, 1);
+  const treeline =
+    w.northernIsland && z < w.northernIsland.preserveZ ? 1 - smoothstep(850, 1150, h) : 1;
+  return clamp(cover * outside * shore * treeline, 0, 1);
+}
+
+/** Geographic land bounds; ocean travel bounds and the original terrain seed stay independent. */
+export function landBounds(w: World) {
+  const half = terrainHalf(w),
+    n = w.northernIsland;
+  return n
+    ? {
+        minX: Math.min(-half, -n.radius * 1.08),
+        maxX: Math.max(half, n.radius * 1.08),
+        minZ: Math.min(-half, n.centreZ - n.radius * 1.08),
+        maxZ: half,
+      }
+    : { minX: -half, maxX: half, minZ: -half, maxZ: half };
 }

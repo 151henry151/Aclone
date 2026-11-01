@@ -52,6 +52,7 @@ export const buildingMapIcons: Readonly<Record<string, string>> = {
   henhouse: 'M4 10q0 8 9 8t7-10l3 2-3 2M17 6l-1-3 3 1 2-1v4M4 10 1 6v9l5 2M10 18v4M15 18v4M18 8h0',
   haybarn: 'M2 10 12 2 22 10M4 9v13h16V9M7 14h10v8H7zM10 14v8M14 14v8',
   boathouse: 'M2 10 12 2 22 10M4 9v10M20 9v10M7 14h10l-2 5H9zM2 23l5-2 5 2 5-2 5 2',
+  riverDock: 'M3 4h6v4H3zM9 6h12M11 6v4M15 6v4M19 6v4M2 14q3-2 6 0t6 0 6 0M2 19q3-2 6 0t6 0 6 0',
   lighthouse: 'M8 22l2-13h4l2 13M8 9h8V4H8zM5 6H1M19 6h4M5 22h14',
 };
 export const aircraftHangarIcon = 'M12 2v20M2 12l10-5 10 5M7 21l5-4 5 4M6 5h12';

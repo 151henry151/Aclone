@@ -1,4 +1,5 @@
-import { waterLevel, highWater, lowWater } from './ocean';
+import { waterLevel, highWater, lowWater, surfaceWaterLevel } from './ocean';
+import { RIVER_DOCK, riverDockAccepts, riverDockReserved, riverDockSite } from './river-dock';
 import { boatSlot, mooringKey } from './boats';
 import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -51,6 +52,7 @@ export function boathouseSite(w: World, b: Site, newSite = false) {
   };
 }
 export function dockReserved(b: Site, x: number, z: number, padding = 0) {
+  if (b.kind === RIVER_DOCK) return riverDockReserved(b, x, z, padding);
   if (b.kind !== 'boathouse') return false;
   const dx = x - b.x,
     dz = z - b.z,
@@ -101,11 +103,21 @@ export interface BoatLanding {
   berth: { x: number; z: number };
   land: { x: number; z: number };
   heading: number;
+  /** Boathouses store boats out of sight; landings without one keep them moored. */
   building?: Building;
+  /** Small-craft river berth: canal boats and motorboats only. */
+  river?: true;
 }
 export function boatLandings(w: World): BoatLanding[] {
-  const docks: BoatLanding[] = w.buildings.flatMap((b) => {
-    const site = b.kind === 'boathouse' && !b.construction && boathouseSite(w, b);
+  const docks: BoatLanding[] = w.buildings.flatMap((b): BoatLanding[] => {
+    if (b.construction) return [];
+    if (b.kind === RIVER_DOCK) {
+      const site = riverDockSite(w, b);
+      return site
+        ? [{ id: b.id, berth: site.berth, land: site.land, heading: site.heading, river: true }]
+        : [];
+    }
+    const site = b.kind === 'boathouse' && boathouseSite(w, b);
     return site ? [{ id: b.id, building: b, ...site }] : [];
   });
   for (const side of [-1, 1])
@@ -156,11 +168,9 @@ export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, 
     const steps = Math.max(1, Math.ceil(distance / 2));
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      if (
-        terrainHeight(w, p.x + (point.x - p.x) * t, p.z + (point.z - p.z) * t) >
-        waterLevel(w) + 0.15
-      )
-        return false;
+      const x = p.x + (point.x - p.x) * t,
+        z = p.z + (point.z - p.z) * t;
+      if (terrainHeight(w, x, z) > surfaceWaterLevel(w, x, z) + 0.15) return false;
     }
   }
   return true;
@@ -169,7 +179,8 @@ export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: 
   return boatLandings(w)
     .filter(
       (d) =>
-        (id === undefined || d.id === id || (id === fishingDock.id && !d.building)) &&
+        (id === undefined || d.id === id || (id === fishingDock.id && !d.building && !d.river)) &&
+        (!afloat || !d.river || p.vehicle === undefined || riverDockAccepts(w, p.vehicle)) &&
         withinBoatLanding(w, p, d, afloat),
     )
     .sort(
@@ -195,7 +206,7 @@ export function landingBlocked(
     if (reason) return reason;
   }
   const point = board ? d.berth : d.land;
-  const height = board ? waterLevel(w) : travelHeight(w, point.x, point.z);
+  const height = board ? surfaceWaterLevel(w, point.x, point.z) : travelHeight(w, point.x, point.z);
   if (
     w.buildings.some((b) => blocksBuilding(b, point.x, point.z, 0, board ? 5 : 1.5)) ||
     creatorBlocks(w, point.x, point.z, height, board ? 5 : 1.5)

@@ -77,6 +77,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    'resourceRecoveryMultiplier',
     'tidalRange',
     'oceanWaves',
     'loseBoatsOnDeath',
@@ -92,6 +93,7 @@ export function settingsFields(settings: Settings = defaults) {
     `<fieldset><legend>Ocean and tides</legend>${field('Maximum spring tidal range (metres; 0 = no tides)', 'tidalRange', settings.tidalRange ?? 0, 'number', 'min="0" max="4" step="0.1"')}${field('Wave strength (0 = flat; 1 = natural; 2 = severe)', 'oceanWaves', settings.oceanWaves ?? 1, 'number', 'min="0" max="2" step="0.1"')}<p>Two tides per lunar day, with larger ranges at new/full moon. Wind and storms drive swells. High water can flood low ground; check existing shore buildings before raising the range.</p></fieldset>` +
     provisions +
     boatRules +
+    `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))
       .map(([key, value]) =>

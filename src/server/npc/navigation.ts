@@ -1,3 +1,4 @@
+import { inlandLevel } from '../../shared/inland-water';
 import { roadSite, roadSamples } from '../../shared/road-routing';
 import { highWater } from '../../shared/ocean';
 import { creatorBlocks } from '../../shared/creator.ts';
@@ -70,6 +71,7 @@ function grid(w: World, win: Window): Grid {
     win,
     highWater(w),
     w.townLayout,
+    w.northernIsland?.version,
     w.terrain,
     w.landscape,
     w.spaceportSite,
@@ -88,7 +90,9 @@ function grid(w: World, win: Window): Grid {
     const p = point(win, i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
-    clear[i] = +(h >= highWater(w) + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2));
+    clear[i] = +(
+      h >= inlandLevel(w, p.x, p.z, highWater(w)) + 0.05 && !creatorBlocks(w, p.x, p.z, h, 2.2)
+    );
   }
   // Rasterize only a building's conservative bounding square, then use the
   // same exact rotated-volume collision test. Avoid cells × every building.
@@ -159,7 +163,7 @@ function canEscape(w: World, from: Point, to: Point) {
     };
     const h = terrainHeight(w, next.x, next.z);
     if (
-      h < highWater(w) + 0.05 ||
+      h < inlandLevel(w, next.x, next.z, highWater(w)) + 0.05 ||
       creatorBlocks(w, next.x, next.z, h, 2.2) ||
       w.buildings.some((b) => buildingBlocksMovement(b, previous, next, 0, 2.2))
     )

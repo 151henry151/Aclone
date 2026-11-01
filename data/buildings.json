@@ -1480,6 +1480,22 @@
     "color": "#91aba3",
     "stock": {}
   },
+  "riverDock": {
+    "name": "River dock",
+    "price": 30000,
+    "capacity": 100,
+    "buy": {},
+    "sell": {},
+    "materials": {
+      "logs": 30,
+      "gravel": 10
+    },
+    "tier": 0,
+    "recipe": null,
+    "wage": 0,
+    "color": "#8d7a5a",
+    "stock": {}
+  },
   "lighthouse": {
     "name": "Lighthouse",
     "price": 240000,

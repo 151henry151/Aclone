@@ -6,7 +6,7 @@
 
 **Version 0.113.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
-Version 0.113.1 keeps NPC training and construction projects on track through travel, meals and restarts. Qualified unemployed residents can take funded production jobs, and job changes recheck hiring permissions before giving up existing employment. The rain umbrellas and map improvements from 0.113.0 remain included.
+Version 0.114.0 expands public Puddlewick northward to roughly ten times its land area while preserving the southern peninsula exactly. The new mainland adds a snow-capped mountain watershed with winding rivers, sediment bars and upstream fords, deep lower channels, ponds, large forests, rocky coastal stretches and six regions with distinct resource strengths and shortages. The map gains a town-level overview and readable river outlines at island scale, and configurable deposit recovery defaults to four times slower. Players can build small log river docks on deep reaches to moor canal boats and motorboats. See the [geography notes](docs/NORTHERN_ISLAND.md). The NPC project follow-through from 0.113.1 and the rain umbrellas from 0.113.0 remain included.
 
 Aclone is an independent, open-source browser game inspired by _A tractor / The Universal_. Drive, trade, farm, run a business, employ neighbours and build a home—or create a world with your own rules. It uses original code, models, textures and synthesized sound, with no dependency on the original game's servers or assets.
 

@@ -318,6 +318,8 @@ export interface Settings {
   autoConsumeInventory: boolean;
   autoConsumeHomeStock: boolean;
   homeNeedsMultiplier: number;
+  /** Multiplies deposit recovery time; 4 is the default, 1 restores the old pace. */
+  resourceRecoveryMultiplier?: number;
   hungerRate: number;
   thirstRate: number;
   maxAge: number;
@@ -414,6 +416,7 @@ export interface World {
   boatDeathRulesVersion?: 1;
   /** Original terrain extent retained when surrounding navigable ocean is extended. */
   terrainMapSize?: number;
+  northernIsland?: import('./northern-island').NorthernIsland;
   seafoodVersion?: number;
   trailers?: Record<string, import('./trailers').Trailer>;
   trailerSeq?: number;

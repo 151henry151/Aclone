@@ -129,9 +129,11 @@ test('owners resize their world through settings within the supported range', ()
   act(w, p.id, { type: 'settings', patch: { mapSize: 3000 } });
   assert.equal(w.settings.mapSize, 3000);
   assert.equal(mapHalf(w), 1500);
-  for (const bad of [100, 499, 20001, 2500.5, -1])
+  for (const bad of [100, 499, 100001, 2500.5, -1])
     assert.throws(() => act(w, p.id, { type: 'settings', patch: { mapSize: bad } }));
   assert.equal(w.settings.mapSize, 3000);
+  act(w, p.id, { type: 'settings', patch: { mapSize: 100000 } });
+  assert.equal(mapHalf(w), 50000);
 });
 
 test('countryside has tall rolling hills without sharp land slopes across different seeds', () => {

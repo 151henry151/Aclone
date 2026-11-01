@@ -1,7 +1,8 @@
+import { ALPINE_SNOW_START, ALPINE_SNOW_FULL } from '../shared/alpine-weather';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
-import { terrainHalf, terrainHeight, mapHalf } from '../shared/terrain';
+import { landBounds, terrainHeight, mapHalf } from '../shared/terrain';
 import { nearBluff } from '../shared/coastal-bluffs';
 import { refractedEarthRadius } from '../shared/marine-visibility';
 import type { GroundTiles } from './ground';
@@ -11,29 +12,35 @@ import type { GroundTiles } from './ground';
  * edge samples stitch fine/coarse cells without cracks. Preparation is yielded.
  */
 export function* horizonGeometry(w: World): Generator<void, T.BufferGeometry> {
-  const step = Math.max(64, Math.ceil(terrainHalf(w) / 128 / 8) * 8);
-  const half = Math.ceil((terrainHalf(w) + step) / step) * step;
-  const n = Math.round((2 * half) / step),
-    fine = new Uint8Array(n * n);
+  const bounds = landBounds(w);
+  const step = Math.max(
+    64,
+    Math.ceil(Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ) / 256 / 8) * 8,
+  );
+  const originX = Math.floor(bounds.minX / step) * step - step,
+    originZ = Math.floor(bounds.minZ / step) * step - step;
+  const nx = Math.ceil((bounds.maxX - originX) / step) + 1,
+    nz = Math.ceil((bounds.maxZ - originZ) / step) + 1;
+  const fine = new Uint8Array(nx * nz);
   const buildings = new Set<string>();
   for (const b of w.buildings) {
     for (
-      let z = Math.floor((b.z - 64 + half) / step);
-      z <= Math.floor((b.z + 64 + half) / step);
+      let z = Math.floor((b.z - 64 - originZ) / step);
+      z <= Math.floor((b.z + 64 - originZ) / step);
       z++
     )
       for (
-        let x = Math.floor((b.x - 64 + half) / step);
-        x <= Math.floor((b.x + 64 + half) / step);
+        let x = Math.floor((b.x - 64 - originX) / step);
+        x <= Math.floor((b.x + 64 - originX) / step);
         x++
       )
         buildings.add(x + ':' + z);
   }
-  for (let z = 0; z < n; z++) {
-    for (let x = 0; x < n; x++)
-      fine[z * n + x] = Number(
+  for (let z = 0; z < nz; z++) {
+    for (let x = 0; x < nx; x++)
+      fine[z * nx + x] = Number(
         buildings.has(x + ':' + z) ||
-          nearBluff(w, -half + (x + 0.5) * step, -half + (z + 0.5) * step, step),
+          nearBluff(w, originX + (x + 0.5) * step, originZ + (z + 0.5) * step, step),
       );
     yield;
   }
@@ -50,13 +57,14 @@ export function* horizonGeometry(w: World): Generator<void, T.BufferGeometry> {
     }
     return i;
   };
-  const refined = (x: number, z: number) => x >= 0 && x < n && z >= 0 && z < n && fine[z * n + x];
+  const refined = (x: number, z: number) =>
+    x >= 0 && x < nx && z >= 0 && z < nz && fine[z * nx + x];
   const divisions = Math.ceil(step / 8);
-  for (let j = 0; j < n; j++)
-    for (let i = 0; i < n; i++) {
-      const x = -half + i * step,
-        z = -half + j * step;
-      if (fine[j * n + i]) {
+  for (let j = 0; j < nz; j++)
+    for (let i = 0; i < nx; i++) {
+      const x = originX + i * step,
+        z = originZ + j * step;
+      if (fine[j * nx + i]) {
         const h = step / divisions;
         for (let b = 0; b < divisions; b++) {
           for (let a = 0; a < divisions; a++) {
@@ -137,6 +145,7 @@ export class HorizonLand {
         coverageExtent: { value: this.cells * 128 },
         seaLevel: this.level,
         snowCover: this.snow,
+        alpineEnabled: { value: w.northernIsland ? 1 : 0 },
       });
       shader.vertexShader =
         'varying vec3 originalPosition;\n' +
@@ -148,17 +157,18 @@ export class HorizonLand {
         transformed.y-=d*d/${(2 * refractedEarthRadius).toFixed(1)};`,
         );
       shader.fragmentShader =
-        'varying vec3 originalPosition;uniform sampler2D terrainCoverage;uniform float coverageOrigin;uniform float coverageExtent;uniform float seaLevel;uniform float snowCover;\n' +
+        'varying vec3 originalPosition;uniform sampler2D terrainCoverage;uniform float coverageOrigin;uniform float coverageExtent;uniform float seaLevel;uniform float snowCover;uniform float alpineEnabled;\n' +
         shader.fragmentShader.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
         if(originalPosition.y<seaLevel-.25) discard;
         vec2 uv=(originalPosition.xz-coverageOrigin)/coverageExtent;
         if(all(greaterThanEqual(uv,vec2(0.)))&&all(lessThan(uv,vec2(1.)))&&texture2D(terrainCoverage,uv).r>.5) discard;
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.86,.81),snowCover);`,
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.48,.50,.49),smoothstep(750.,1120.,originalPosition.y));
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.86,.81),max(snowCover,alpineEnabled*smoothstep(${ALPINE_SNOW_START.toFixed(1)},${ALPINE_SNOW_FULL.toFixed(1)},originalPosition.y-seaLevel)));`,
         );
     };
-    material.customProgramCacheKey = () => 'island-horizon-v1';
+    material.customProgramCacheKey = () => 'island-horizon-v2';
     // Curved distant sea hides the bottoms of hills first as they go over the
     // horizon. It adds no wave simulation, depth sampling or transparent pass.
     const vertices: number[] = [],

@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.114.0
+
+Back up the database and deploy client and server together, then reload clients; both sides must share the expanded terrain, inland water and the new `riverDock` building kind. On first load of public Puddlewick (economy template, no custom heightmap) the server runs `expandPuddlewickIsland` once, appends the northern geography, rivers, ponds and resource provinces, and preserves everything at or south of z = −1200 m; a pre-deploy survey found no live property north of that line. Private and heightmap worlds are untouched. Verify the health endpoint reports 0.114.0, the map shows the full island with rivers, the summit keeps its snow, the town frame time is unchanged, and a river dock can be previewed on a deep reach but is refused at a ford. Keep the pre-deploy backup: older code cannot read the northern geography or river docks.
+
 ## Upgrade 0.113.0
 
 Deploy the client/server and website normally, then reload clients. No data migration or player grants are needed. Verify that the new map-terrain worker asset is served as JavaScript under `/aclone/assets/`, and that the map loads coastlines and contours without a worker error. Check distant ocean waypoints and the visible travel boundary. Walk outdoors in rain to check umbrella opening, folding when rain clears and first-person visibility.

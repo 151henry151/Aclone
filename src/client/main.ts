@@ -1,3 +1,4 @@
+import { alpineWeather } from '../shared/alpine-weather';
 import { tenderOf } from '../shared/boat-tender';
 import { trailerPanel } from './trailer-panel';
 import { towingPanel } from './towing-panel';
@@ -28,6 +29,7 @@ import { TRAWL_FUEL_PER_SECOND } from '../shared/commercial-fishing';
 import { trawlStatus as fishingTrawlStatus, TrawlCapacityAlerts } from './trawl-status';
 import { nauticalHeadingLabel } from './nautical-heading';
 import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
+import { riverDockAccepts } from '../shared/river-dock';
 import { LIFEBOAT, reboardReason } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
 import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
@@ -689,7 +691,7 @@ function updateHud() {
     : world.name + ' · ' + townLocation(world, me);
   const days = Math.floor(world.time / 600),
     hours = Math.floor(world.settings.time / 3600),
-    weather = worldWeather(world, calendar(world).absoluteDay),
+    weather = alpineWeather(world, worldWeather(world, calendar(world).absoluteDay), me.y),
     snow = snowDescription(world.climate),
     weatherName =
       weather.precipitation === 'clear' && weather.clouds >= 0.6
@@ -2170,6 +2172,10 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>Buy Fuel here and use it after boarding your boat. Atlantic cod, halibut and bluefin tuna can be sold here when the till has funds. Boat fishing in water at least 8 metres deep can catch these species; shallow water yields small fish.</p>';
+    if (b.kind === 'riverDock')
+      html +=
+        boatControls(b.id) +
+        '<p>A small log jetty on a navigable river reach. Canal boats and motorboats you already own board from the landing and return to the berth at the jetty end; the boat stays moored in view. Larger vessels, fuel and fish trading need a boathouse or the fishing pier.</p>';
     html += trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
@@ -3731,6 +3737,7 @@ function boatControls(building?: string) {
           (!rescue || ([TUGBOAT, MOTORBOAT].includes(slot) && rescue.boat.slot !== slot)),
       )) {
       if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
+      if (dock.river && !riverDockAccepts(world, slot)) continue;
       html += button(
         (me.fleet ?? []).includes(slot)
           ? `Board your ${esc(vehicleDef(world, slot).name)}`
@@ -3744,7 +3751,7 @@ function boatControls(building?: string) {
   if (boatSlot(me.vehicle, world)) {
     html += dock
       ? button('Disembark on foot', 'walk') + button('Disembark into tractor', 'tractor')
-      : '<p>Return to a boathouse berth or the side of the fishing pier to disembark.</p>';
+      : '<p>Return to a boathouse berth, the side of the fishing pier or a river dock to disembark.</p>';
     if (poweredBoat(me.vehicle, world) && me.fuel <= 0)
       html += button('Launch emergency lifeboat', 'lifeboat', 'data-id="launch"');
   }
@@ -3757,7 +3764,7 @@ function boatControls(building?: string) {
   }
   return (
     html +
-    '<p>The fishing pier leaves your empty boat moored outside. A boathouse stores your boat inside. Lifeboats remain moored until you return.</p></section>'
+    '<p>The fishing pier and river docks leave your empty boat moored outside. A boathouse stores your boat inside. Lifeboats remain moored until you return.</p></section>'
   );
 }
 

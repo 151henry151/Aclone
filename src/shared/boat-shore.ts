@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
 import { terrainHeight } from './terrain';
-import { waterLevel } from './ocean';
+import { surfaceWaterLevel } from './ocean';
 
 type Point = { x: number; z: number };
 
@@ -16,7 +16,6 @@ export function boatShoreCollision(
   heading = 0,
   halfLength = radius,
 ) {
-  const sea = waterLevel(w);
   const sin = Math.sin(heading),
     cos = Math.cos(heading);
   // Taper at bow/stern, with shoulders to cover a long hull approaching diagonally.
@@ -32,9 +31,17 @@ export function boatShoreCollision(
     [-radius * 0.7, -halfLength * 0.7],
   ].map(([x, z]) => [x * cos + z * sin, -x * sin + z * cos]);
   const wet = (p: Point) =>
-    footprint.every(([x, z]) => terrainHeight(w, p.x + x, p.z + z) < sea - 0.05);
+    footprint.every(
+      ([x, z]) =>
+        terrainHeight(w, p.x + x, p.z + z) < surfaceWaterLevel(w, p.x + x, p.z + z) - 0.05,
+    );
   const penetration = (p: Point) =>
-    footprint.map(([x, z]) => Math.max(0, terrainHeight(w, p.x + x, p.z + z) - sea + 0.05));
+    footprint.map(([x, z]) =>
+      Math.max(
+        0,
+        terrainHeight(w, p.x + x, p.z + z) - surfaceWaterLevel(w, p.x + x, p.z + z) + 0.05,
+      ),
+    );
   const dx = to.x - from.x,
     dz = to.z - from.z;
   const distance = Math.hypot(dx, dz);

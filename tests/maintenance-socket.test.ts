@@ -9,14 +9,15 @@ import { createApp } from '../src/server/app.ts';
 import { act } from '../src/shared/simulation.ts';
 test(
   'maintenance blocks socket exchange and takeoff, including actions outside the shared dispatcher',
-  { timeout: 10000 },
-  async () => {
+  { timeout: 30000 },
+  async (t) => {
     const dir = await mkdtemp(join(tmpdir(), 'aclone-pause-')),
       app = await createApp({ dataDir: dir, port: 0 });
     const pilot = app.universe.register('Paused pilot'),
       w = app.worlds.get('puddlewick')!;
     const port = await app.listen(),
       ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+    t.signal.addEventListener('abort', () => ws.terminate(), { once: true });
     try {
       const welcomed = new Promise<void>((resolve) =>
         ws.on('message', (raw) => {

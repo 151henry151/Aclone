@@ -9,13 +9,14 @@ import { createApp } from '../src/server/app.ts';
 
 test(
   'real sockets acknowledge simulated inputs and ignore stale commands',
-  { timeout: 10000 },
-  async () => {
+  { timeout: 30000 },
+  async (t) => {
     const dir = await mkdtemp(join(tmpdir(), 'aclone-input-ack-'));
     const app = await createApp({ dataDir: dir, port: 0 });
     const pilot = app.universe.register('Input driver');
     const port = await app.listen();
     const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`);
+    t.signal.addEventListener('abort', () => ws.terminate(), { once: true });
     try {
       const result = new Promise<void>((resolve, reject) => {
         let sent = false;

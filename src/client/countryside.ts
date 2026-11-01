@@ -1,3 +1,4 @@
+import { inlandWaterAt, nearInlandWater } from '../shared/inland-water';
 import { onAirfield } from '../shared/airfield';
 import { SnowAccumulation } from './snow-accumulation';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -234,10 +235,16 @@ export class CountrysideChunks {
               : woodland(w, x, z),
           roll = rand();
         const h = terrainHeight(w, x, z);
-        if (h < w.settings.seaLevel + 0.9) continue;
+        if (h < w.settings.seaLevel + 0.9 || inlandWaterAt(w, x, z)) continue;
         if (roll >= cover) {
           // Bare uplands show their bones.
-          if (n % 9 === 0 && h > 14 && cover < 0.2 && clear(x, z, 1))
+          if (
+            n % 9 === 0 &&
+            h > 14 &&
+            cover < 0.2 &&
+            !nearInlandWater(w, x, z, 12) &&
+            clear(x, z, 1)
+          )
             rocks.push([x, h + 0.2, z, 0.5 + rand() * 1.1, rand() * 6]);
           continue;
         }

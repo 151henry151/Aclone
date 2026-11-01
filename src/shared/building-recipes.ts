@@ -31,6 +31,25 @@ export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
     p('Slender cape light', hall(5, 5, 24, 'flat'), hall(6, 5, 3, 'gable', 1.5, 6, -2)),
     p('Broad coastal beacon', hall(8, 8, 13, 'flat'), hall(7, 6, 3.3, 'gable', 1.8, -8, -2)),
   ],
+  riverDock: [
+    p('Log landing', hall(3, 2.4, 0.5, 'flat')),
+    p(
+      'Landing with tackle store',
+      hall(3, 2.4, 0.5, 'flat'),
+      hall(2.2, 2, 2.1, 'shed', 0.5, 3, 0.4),
+    ),
+    p('Broad landing stage', hall(4.6, 2.6, 0.5, 'flat')),
+    p(
+      'Landing with waiting shelter',
+      hall(3, 2.4, 0.5, 'flat'),
+      hall(2.4, 2.4, 2.3, 'gable', 0.9, -3.3, 0.4),
+    ),
+    p(
+      'Twin-crib landing',
+      hall(3, 2.4, 0.6, 'flat', 0.2, -2.1),
+      hall(3, 2.4, 0.6, 'flat', 0.2, 2.1),
+    ),
+  ],
   boathouse: [
     p('Canal boatyard', hall(14, 14, 5, 'gable', 2.6), hall(6, 7, 3, 'shed', 0.8, -11, 3)),
     p('Harbour chandlery', hall(14, 12, 5.6, 'hip', 2), hall(6, 8, 3.2, 'gable', 1.2, -11, 2)),

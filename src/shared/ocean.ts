@@ -1,3 +1,4 @@
+import { inlandLevel, inlandWaterAt } from './inland-water';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
 import { calendar, worldWeather, DAY_SECONDS } from './environment';
@@ -24,6 +25,10 @@ export function tideOffset(date: number, range: number) {
 }
 export function waterLevel(w: Pick<World, 'time' | 'settings'>, time = w.time) {
   return w.settings.seaLevel + tideOffset(oceanDate(time), w.settings.tidalRange ?? 0);
+}
+/** Sea tide or the local elevated river/lake surface. */
+export function surfaceWaterLevel(w: World, x: number, z: number, time = w.time) {
+  return inlandLevel(w, x, z, waterLevel(w, time));
 }
 export function highWater(w: Pick<World, 'settings'>) {
   return w.settings.seaLevel + (w.settings.tidalRange ?? 0) / 2;
@@ -109,12 +114,14 @@ export function boatSeaPose(
   time = w.time,
   amplitude = oceanWeather(w).amplitude,
 ) {
-  const level = waterLevel(w, time),
+  const level = surfaceWaterLevel(w, x, z, time),
     ground = terrainHeight(w, x, z);
   const sample = (side: number, along: number) => {
     const px = x + Math.cos(heading) * side + Math.sin(heading) * along;
     const pz = z - Math.sin(heading) * side + Math.cos(heading) * along;
-    return swell(px, pz, time, amplitude, level - terrainHeight(w, px, pz)).height;
+    return inlandWaterAt(w, px, pz)
+      ? surfaceWaterLevel(w, px, pz, time) - level
+      : swell(px, pz, time, amplitude, level - terrainHeight(w, px, pz)).height;
   };
   const fore = sample(0, length / 2),
     aft = sample(0, -length / 2),

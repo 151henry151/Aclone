@@ -113,28 +113,61 @@ function countrysidePatches(w: World): ResourceNode[] {
 }
 const resourceCache = new WeakMap<
   World,
-  { key: string; additions?: ResourceNode[]; nodes: ResourceNode[] }
+  { key: string; additions?: ResourceNode[]; northern?: ResourceNode[]; nodes: ResourceNode[] }
 >();
 /** Every gathering ground: original village sites, countryside patches and saved additions. */
 export function worldResources(w: World): ResourceNode[] {
   const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}:${w.additionalResources?.length ?? 0}:${JSON.stringify(w.resourceRelocations ?? {})}`;
   const cached = resourceCache.get(w);
-  if (cached?.key === key && cached.additions === w.additionalResources) return cached.nodes;
-  const patches = countrysidePatches(w);
-  const nodes = [...resourceNodes, ...patches, ...(w.additionalResources ?? [])].map((n) =>
+  if (
+    cached?.key === key &&
+    cached.additions === w.additionalResources &&
+    cached.northern === w.northernIsland?.resources
+  )
+    return cached.nodes;
+  const base = w.northernIsland?.resources ?? [...resourceNodes, ...countrysidePatches(w)];
+  const merged = new Map(base.map((n) => [n.id, n]));
+  for (const n of w.additionalResources ?? []) merged.set(n.id, n);
+  const nodes = [...merged.values()].map((n) =>
     w.resourceRelocations?.[n.id] ? { ...n, ...w.resourceRelocations[n.id] } : n,
   );
-  resourceCache.set(w, { key, additions: w.additionalResources, nodes });
+  resourceCache.set(w, {
+    key,
+    additions: w.additionalResources,
+    northern: w.northernIsland?.resources,
+    nodes,
+  });
   return nodes;
+}
+export function resourceRecoverySeconds(w: World, n: ResourceNode) {
+  const value = w.settings.resourceRecoveryMultiplier ?? 4;
+  return n.regrowth * Math.max(0.25, Math.min(24, Number.isFinite(value) ? value : 4));
 }
 export function resourceAmount(w: World, n: ResourceNode) {
   const saved = w.resources?.[n.id];
   return saved
     ? Math.min(
         n.capacity,
-        saved.amount + Math.floor(Math.max(0, w.time - saved.updated) / n.regrowth) * 3,
+        saved.amount +
+          Math.floor(Math.max(0, w.time - saved.updated) / resourceRecoverySeconds(w, n)) * 3,
       )
     : n.capacity;
+}
+/** Retain earned stock and partial recovery when an owner changes the pace. */
+export function changeResourceRecovery(w: World, multiplier: number) {
+  const old = w.settings.resourceRecoveryMultiplier ?? 4;
+  if (old === multiplier) return;
+  for (const n of worldResources(w)) {
+    const saved = w.resources?.[n.id];
+    if (!saved) continue;
+    const period = resourceRecoverySeconds(w, n);
+    const elapsed = Math.max(0, w.time - saved.updated);
+    const amount = resourceAmount(w, n);
+    const fraction = amount >= n.capacity ? 0 : (elapsed % period) / period;
+    saved.amount = amount;
+    saved.updated = w.time - fraction * n.regrowth * multiplier;
+  }
+  w.settings.resourceRecoveryMultiplier = multiplier;
 }
 /** Read-only eligibility shared by the HUD and authoritative gathering action. */
 export function gatheringStatus(w: World, p: Player, n: ResourceNode) {

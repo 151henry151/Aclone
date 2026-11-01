@@ -1,3 +1,4 @@
+import { alpineWeather } from '../shared/alpine-weather';
 import { spaceportComplex } from './spaceport-complex';
 import { createMotorboat } from './motorboat';
 import { TrailerScene } from './trailer-scene';
@@ -21,13 +22,16 @@ import { coastalRocks } from './coastal-rocks';
 import { HorizonLand } from './horizon-land';
 import { LighthouseLights } from './lighthouse-lights';
 import { Ocean } from './ocean';
-import { boatSeaPose, waterLevel } from '../shared/ocean';
+import { InlandWater } from './inland-water';
+import { inlandWaterAt } from '../shared/inland-water';
+import { boatSeaPose, waterLevel, surfaceWaterLevel } from '../shared/ocean';
 import { FishingLightPool } from './fishing-lights';
 import { createFishingBoat } from './fishing-boat';
 import { FISHING_BOAT, boatSlot } from '../shared/boats';
 import { createLifeboat } from './lifeboat';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { fitBoatyardToWater } from './boatyard';
+import { fitRiverDockToWater } from './river-dock';
 import { boatLanding, nearBoathouse } from '../shared/boathouse';
 import { createCanalBoat } from './canal-boat';
 import { AircraftCrashes } from './aircraft-crash';
@@ -228,6 +232,7 @@ export class GameScene {
   private lighthouseLights = new LighthouseLights();
   private horizon = new HorizonLand();
   private ocean = new Ocean();
+  private inland = new InlandWater();
   private ground = new GroundTiles((mesh) => this.ocean.absorb(mesh));
   private woods = new CountrysideChunks();
   private snowDetails?: SnowAccumulation;
@@ -293,6 +298,7 @@ export class GameScene {
       this.land,
       this.lighthouseLights.group,
       this.horizon.group,
+      this.inland.group,
       this.ocean.surf.group,
       this.ground.group,
       this.woods.group,
@@ -369,6 +375,7 @@ export class GameScene {
     this.camera.lookAt(0, 0, 0);
     this.space.visible = true;
     this.land.visible = false;
+    this.inland.group.visible = false;
     this.actors.visible = false;
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
@@ -492,6 +499,7 @@ export class GameScene {
     this.sky.visible = true;
     this.space.visible = false;
     this.land.visible = true;
+    this.inland.group.visible = true;
     this.lighthouseLights.group.visible = true;
     this.horizon.group.visible = mapHalf(world) > legacyHalf + 50;
     this.ground.group.visible = true;
@@ -502,6 +510,9 @@ export class GameScene {
       ':' +
       JSON.stringify(world.terrain) +
       JSON.stringify(world.coastalBluffs ?? []) +
+      JSON.stringify(
+        world.northernIsland ? { ...world.northernIsland, resources: undefined } : null,
+      ) +
       JSON.stringify(world.airfield ?? null) +
       JSON.stringify(world.spaceportSite ?? null) +
       JSON.stringify(world.landscape ?? {}) +
@@ -752,6 +763,7 @@ export class GameScene {
     this.me = undefined;
     this.space.visible = true;
     this.land.visible = false;
+    this.inland.group.visible = false;
     this.ocean.surf.group.visible = false;
     this.lighthouseLights.group.visible = false;
     this.horizon.group.visible = false;
@@ -776,6 +788,7 @@ export class GameScene {
     const streamed = mapHalf(w) > legacyHalf + 50;
     this.ground.clear();
     this.horizon.reset(w);
+    this.inland.reset(w);
     this.horizon.group.visible = streamed;
     if (streamed) {
       this.ground.reset(w);
@@ -1107,6 +1120,7 @@ export class GameScene {
       fitBoatyardToWater(model, b, w);
       g.userData.boatyardBuilding = b;
     }
+    if (b.kind === 'riverDock') fitRiverDockToWater(model, b, w);
     g.add(model);
     g.userData.chimneys = model.userData.chimneys ?? [];
     if (model.userData.lighthouseRotor) g.userData.lighthouseRotor = model.userData.lighthouseRotor;
@@ -1269,6 +1283,7 @@ export class GameScene {
       const w = this.world,
         p = this.me;
       const seaTime = w.time + Math.max(-1, Math.min(1, this.motionClock.sample(now) - w.time));
+      this.inland.update(w, seaTime, this.me.x, this.me.z);
       this.ocean.update(w, p.x, p.z, seaTime, dt, Math.max(0.08, this.sun.intensity / 3));
       this.ocean.surf.update(
         w,
@@ -1305,7 +1320,8 @@ export class GameScene {
         );
       const motionTime = this.motionClock.sample(now);
       const date = calendar(w),
-        climate = worldWeather(w, date.absoluteDay);
+        baseClimate = worldWeather(w, date.absoluteDay),
+        climate = alpineWeather(w, baseClimate, p.y);
       const predicted = this.prediction.sample(now, this.localInput());
       const bareSurface = snowTrackHeight({ ...w, climate: undefined });
       const snowSurface = snowTrackHeight(w),
@@ -1400,7 +1416,8 @@ export class GameScene {
         mesh.userData.flashlight?.update(!!w.players[mesh.userData.playerId]?.lights);
         const walker = w.players[mesh.userData.playerId];
         mesh.userData.umbrella?.update(
-          !!walker && needsRainUmbrella(walker, climate.precipitation),
+          !!walker &&
+            needsRainUmbrella(walker, alpineWeather(w, baseClimate, walker.y).precipitation),
           dt,
         );
         (mesh.userData.robocrow as RobocrowFigure | undefined)?.animate(dt);
@@ -1578,7 +1595,7 @@ export class GameScene {
           cam.y,
           cameraSurfaceFloor(
             terrainHeight(w, cam.x, cam.z),
-            Math.max(waterLevel(w), this.ocean.height(cam.x, cam.z)),
+            Math.max(surfaceWaterLevel(w, cam.x, cam.z), this.ocean.height(cam.x, cam.z)),
             walking || tractorView ? 0.6 : 3,
           ),
         );
@@ -1590,7 +1607,7 @@ export class GameScene {
           cameraSurfaceFloor(
             terrainHeight(w, this.camera.position.x, this.camera.position.z),
             Math.max(
-              waterLevel(w),
+              surfaceWaterLevel(w, this.camera.position.x, this.camera.position.z),
               this.ocean.height(this.camera.position.x, this.camera.position.z),
             ),
             0.6,
@@ -2021,7 +2038,13 @@ export class GameScene {
     }
     for (const { id, b } of entries) {
       const model = this.mooredGroup.children.find((m) => m.userData.moorId === id)!;
-      model.position.set(b.x, w.settings.seaLevel, b.z);
+      // River berths sit above the sea datum; the ocean shader adds tide and waves at sea.
+      const inland = inlandWaterAt(w, b.x, b.z);
+      model.position.set(
+        b.x,
+        inland && inland.level > w.settings.seaLevel + 0.01 ? inland.level : w.settings.seaLevel,
+        b.z,
+      );
       model.rotation.set(0, b.heading, 0, 'YXZ');
     }
   }

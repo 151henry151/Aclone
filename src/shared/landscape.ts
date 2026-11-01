@@ -1,3 +1,5 @@
+import { maxCoordinate } from './world-limits';
+import { inlandLevel } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { pastureFences } from './pasture-land';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -5,7 +7,7 @@ import { z } from 'zod';
 import type { World, Player, Action } from './types.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
 import { townRoads, roadDistance, type Point, type Road } from './town.ts';
-const coordinate = z.number().finite().min(-10000).max(10000);
+const coordinate = z.number().finite().min(-maxCoordinate).max(maxCoordinate);
 const point = z.object({ x: coordinate, z: coordinate });
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
 const polyline = z
@@ -298,7 +300,7 @@ function makeScatter(w: World) {
       if (
         Math.abs(x) > mapHalf(w) - 2 ||
         Math.abs(z) > mapHalf(w) - 2 ||
-        terrainHeight(w, x, z) < w.settings.seaLevel + 0.3 ||
+        terrainHeight(w, x, z) < inlandLevel(w, x, z, w.settings.seaLevel) + 0.3 ||
         roadDistance(roads, x, z) < radius * scale + 2 ||
         w.buildings.some((b) => Math.hypot(b.x - x, b.z - z) < 20 + radius * scale) ||
         objects.some((o) => Math.hypot(o.x - x, o.z - z) < o.radius * o.scale + radius * scale)

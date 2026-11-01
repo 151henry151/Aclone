@@ -246,6 +246,12 @@ export function buildingPlan(b: {
       wall = '#b9c6ba';
       trim = '#365c63';
       break;
+    case 'riverDock':
+      // The dry landing crib only; the jetty and berth lie over the river.
+      volumes = [volume(3, 2.4, 0.5, 0, 'flat')];
+      wall = '#8d7a5a';
+      trim = '#5a4a33';
+      break;
     case 'waterworks':
       volumes = [volume(8, 6, 3.3, 0.7, 'shed')];
       wall = '#c8d2cf';
@@ -366,6 +372,7 @@ export function buildingPlan(b: {
       depth: v.depth * factor,
     }));
   if (b.kind === 'boathouse') plan.waterfront = [volume(24, 38, 9.6, 0, 'flat', 5, -26)];
+  if (b.kind === 'riverDock') plan.waterfront = [volume(2.2, 9.8, 1, 0, 'flat', 0, -6.1)];
   if (b.architecture || b.kind === 'boathouse') {
     plan.features = buildingFeatures(b.kind, plan.volumes);
     plan.fixtures = [

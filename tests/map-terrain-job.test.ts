@@ -30,8 +30,10 @@ test('worker chart snapshot preserves actual terrain while excluding player and 
     contours: true,
     tide: 0.2,
   };
+  const { inland, ...coastAndContours } = sampleMapTerrain(j);
+  assert.equal(inland, '');
   assert.deepEqual(
-    sampleMapTerrain(j),
+    coastAndContours,
     mapTerrainPaths(
       j.width,
       j.height,

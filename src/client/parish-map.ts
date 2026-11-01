@@ -17,12 +17,13 @@ import {
   outerSheet,
   mapStep,
   mapDistanceScale,
+  placeMapLabels,
   type MapBounds,
 } from './map-layout';
 import { terrainHalf, mapHalf, legacyHalf } from '../shared/terrain';
 
 import type { Waypoint } from './waypoint';
-import type { mapTerrainPaths } from './map-water';
+import type { sampleMapTerrain } from './map-terrain-job';
 import { chartWorld, type MapTerrainJob } from './map-terrain-job';
 const ns = 'http://www.w3.org/2000/svg';
 function svg(tag: string, attrs: Record<string, string | number> = {}) {
@@ -77,7 +78,7 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><p class="map-load-status" role="status" hidden></p><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i>Buildings · hover for names, click for a waypoint</span><span><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean · dashed border = travel limit</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><p class="map-load-status" role="status" hidden></p><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i><span data-map-site-key>Buildings · hover for names, click for a waypoint</span></span><span data-map-resource-key><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean · dashed border = travel limit</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
     this.terrainWorker.onmessage = (event) => {
       this.terrainBusy = false;
       if (event.data.id === this.terrainSerial) {
@@ -332,6 +333,7 @@ export class ParishMap {
       w.settings.mapSize,
       w.settings.seaLevel,
       w.terrainMapSize,
+      w.northernIsland ? { ...w.northernIsland, resources: undefined } : null,
       w.terrain,
       w.coastalBluffs,
       w.additionalResources?.map((n) => [n.id, n.item, n.x, n.z]),
@@ -485,6 +487,11 @@ export class ParishMap {
   private draw() {
     const focusedSite = (document.activeElement as HTMLElement | null)?.dataset.site;
     const outer = this.zoom < 1;
+    const townOverview = this.zoom < 0.25;
+    this.host.querySelector('[data-map-site-key]')!.textContent = townOverview
+      ? 'Towns · click for a waypoint'
+      : 'Buildings · hover for names, click for a waypoint';
+    this.host.querySelector<HTMLElement>('[data-map-resource-key]')!.hidden = this.zoom < 0.5;
     this.width = this.baseWidth * 2;
     this.height = this.baseHeight() * 2;
     this.scale = this.width / this.bounds.width;
@@ -552,7 +559,8 @@ export class ParishMap {
       }),
     );
     const onSheet = (p: { x: number; z: number }) => inBounds(this.bounds, p, 30);
-    for (const t of townBorders(this.world, this.bounds)) {
+    const towns = townBorders(this.world, this.bounds);
+    for (const t of townOverview ? [] : towns) {
       const border = svg('circle', {
         cx: this.x(t.x),
         cy: this.y(t.z),
@@ -599,12 +607,20 @@ export class ParishMap {
         'stroke-width': 2,
       }),
     );
-    const available = worldResources(this.world).filter(
-      (n) => onSheet(n) && !this.world.buildings.some((b) => Math.hypot(b.x - n.x, b.z - n.z) < 12),
-    );
+    // Regional/island views show geography, not thousands of gathering dots.
+    // Do not create hidden SVG nodes: avoiding them also keeps panning lighter.
+    const available =
+      this.zoom < 0.5
+        ? []
+        : worldResources(this.world).filter(
+            (n) =>
+              onSheet(n) &&
+              !this.world.buildings.some((b) => Math.hypot(b.x - n.x, b.z - n.z) < 12),
+          );
     for (const n of available)
       drawing.append(
         svg('circle', {
+          class: 'map-resource-dot',
           cx: this.x(n.x),
           cy: this.y(n.z),
           r: 3,
@@ -612,7 +628,7 @@ export class ParishMap {
           stroke: '#243b27',
         }),
       );
-    const buildings = this.world.buildings.filter(onSheet);
+    const buildings = townOverview ? [] : this.world.buildings.filter(onSheet);
     const sites = buildings.map((b) => ({
       id: b.id,
       name: b.name,
@@ -636,7 +652,7 @@ export class ParishMap {
           icon: mapIcon(n.item === 'logs' ? 'Wood / logs' : n.item === 'dirt' ? 'Dirt' : n.item),
           category: 'resource',
         });
-    if (!this.local) {
+    if (!this.local && !townOverview) {
       sites.push(
         {
           id: 'hornball',
@@ -684,6 +700,55 @@ export class ParishMap {
       );
     const labels = document.createElement('div');
     labels.className = 'parish-map-labels';
+    if (townOverview) {
+      const visibleTowns = towns.filter(onSheet);
+      const boxes = placeMapLabels(
+        visibleTowns.map((t, i) => ({
+          id: String(i),
+          x: this.x(t.x),
+          y: this.y(t.z),
+          width: Math.min(260, t.name.length * 7.4 + 18),
+        })),
+        this.width,
+        this.height,
+      );
+      for (const box of boxes) {
+        const town = visibleTowns[Number(box.id)];
+        drawing.append(
+          svg('path', {
+            d: `M${box.x} ${box.y}L${Math.max(box.left, Math.min(box.left + box.width, box.x))} ${box.top + 12}`,
+            stroke: '#e8d9a6',
+            'stroke-width': 1,
+            opacity: 0.7,
+          }),
+          svg('circle', {
+            class: 'map-town-dot',
+            cx: box.x,
+            cy: box.y,
+            r: 4,
+            fill: '#f0ddb0',
+            stroke: '#273c2d',
+            'stroke-width': 2,
+          }),
+        );
+        const label = document.createElement('button');
+        label.type = 'button';
+        label.className = 'parish-map-town-label';
+        label.textContent = town.name;
+        label.title = town.name;
+        label.setAttribute('aria-label', `Town of ${town.name}`);
+        label.dataset.site = `town-${town.id}`;
+        label.dataset.wx = String(town.x);
+        label.dataset.wz = String(town.z);
+        Object.assign(label.style, {
+          left: `${box.left}px`,
+          top: `${box.top}px`,
+          width: `${box.width}px`,
+          height: '24px',
+        });
+        labels.append(label);
+      }
+    }
     for (const site of sites) {
       const label = document.createElement('button');
       label.className = `parish-map-${site.category}-label map-icon`;
@@ -785,7 +850,7 @@ export class ParishMap {
       this.terrainWorker.postMessage(job);
     }
   }
-  private drawTerrain(terrain: ReturnType<typeof mapTerrainPaths>) {
+  private drawTerrain(terrain: ReturnType<typeof sampleMapTerrain>) {
     this.terrainLayer.replaceChildren();
     if (mapHalf(this.world) > legacyHalf) {
       this.terrainLayer.append(
@@ -860,6 +925,20 @@ export class ParishMap {
       }
       this.terrainLayer.append(contours);
     }
+    // Thin rivers remain readable at island scale without widening the actual
+    // world channel. Draw above contours so they do not obscure the watercourse.
+    if (terrain.inland)
+      this.terrainLayer.append(
+        svg('path', {
+          d: terrain.inland,
+          fill: '#8caaa9',
+          stroke: '#8caaa9',
+          'stroke-width': 0.8,
+          'stroke-linejoin': 'round',
+          class: 'map-inland-water',
+          'pointer-events': 'none',
+        }),
+      );
   }
   private updatePlayers() {
     const goal = this.navigation?.get();

@@ -1,3 +1,4 @@
+import { nearInlandWater, riverSediment } from '../shared/inland-water';
 import { nearBluff, coastalRockCover } from '../shared/coastal-bluffs';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -22,8 +23,9 @@ export function* groundGeometrySteps(
 ): Generator<void, T.BufferGeometry> {
   let geometry: T.BufferGeometry;
   const cliff = nearBluff(w, cx, cz, 100);
-  if (detailed || cliff) {
-    const segments = cliff ? 64 : 32;
+  const river = nearInlandWater(w, cx, cz);
+  if (detailed || cliff || river) {
+    const segments = cliff || river ? 64 : 32;
     geometry = new T.PlaneGeometry(128, 128, segments, segments);
     geometry.rotateX(-Math.PI / 2);
   } else {
@@ -63,10 +65,12 @@ export function* groundGeometrySteps(
       normal = geometry.attributes.normal;
     const n = new T.Vector3();
     const rock = new Float32Array(p.count);
+    const sediment = new Float32Array(p.count);
     for (let i = 0; i < p.count; i++) {
       const x = cx + p.getX(i),
         z = cz + p.getZ(i);
       p.setY(i, terrainHeight(w, x, z));
+      sediment[i] = river ? riverSediment(w, x, z) : 0;
       rock[i] = coastalRockCover(w.coastalBluffs, x, z);
       n.set(
         -(terrainHeight(w, x + 0.75, z) - terrainHeight(w, x - 0.75, z)) / 1.5,
@@ -76,6 +80,7 @@ export function* groundGeometrySteps(
       normal.setXYZ(i, n.x, n.y, n.z);
       if (i % 64 === 63) yield;
     }
+    geometry.setAttribute('riverSediment', new T.BufferAttribute(sediment, 1));
     geometry.setAttribute('coastalRock', new T.BufferAttribute(rock, 1));
     complete = true;
     return geometry;

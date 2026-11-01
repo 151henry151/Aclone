@@ -52,7 +52,7 @@ test('a gathering career buys equipment, gathers and sells through ordinary game
   assert.equal(p.inventory.logs ?? 0, 0);
   assert.equal(p.cash - before, 17000);
   // Let the harvested grove replenish before repeating the same career.
-  advance(w, 3600);
+  advance(w, 14400);
   const persisted = JSON.parse(JSON.stringify(state));
   const next = continueCareer(w, p, persisted);
   assert.ok(next);

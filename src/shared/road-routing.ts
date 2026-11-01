@@ -1,3 +1,4 @@
+import { inlandLevel } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -130,7 +131,8 @@ export function roadSite(w: World, width = 5) {
   };
   const allSolids = [...solids, ...fences];
   const occupied = (p: Point) => solids.some((r) => intersects(r, p, p));
-  const dry = (p: Point) => Math.abs(p.x) < half && Math.abs(p.z) < half && height(p) > sea;
+  const dry = (p: Point) =>
+    Math.abs(p.x) < half && Math.abs(p.z) < half && height(p) > inlandLevel(w, p.x, p.z, sea);
   const allowed = (p: Point) => {
     const town = townAt(w, p.x, p.z);
     return !town || town.permissions.residents.roads || town.permissions.guests.roads;

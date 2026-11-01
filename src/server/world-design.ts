@@ -1,3 +1,5 @@
+import { northernIslandSchema } from './northern-island-schema';
+import { maxCoordinate } from '../shared/world-limits';
 import {
   vehicleTuningSchema,
   vehicleSlotSchema,
@@ -29,7 +31,7 @@ import { act, addPlayer, makeBuilding } from '../shared/simulation.ts';
 import { anchorTowns } from '../shared/civics.ts';
 import { buildings as catalog, items, skills } from '../shared/catalog.ts';
 import type { World, Player } from '../shared/types.ts';
-const coordinate = z.number().min(-10000).max(10000);
+const coordinate = z.number().min(-maxCoordinate).max(maxCoordinate);
 const stock = z.record(catalogueItemId, z.number().int().min(0).max(100000000));
 const recipe = z
   .object({
@@ -65,6 +67,7 @@ const designSchema = z.object({
     })
     .refine((s) => s.fence <= s.exclusion)
     .optional(),
+  northernIsland: northernIslandSchema.optional(),
   terrainMapSize: z.number().min(500).max(20000).optional(),
   additionalResources: z
     .array(
@@ -94,13 +97,13 @@ const designSchema = z.object({
         x: coordinate,
         z: coordinate,
         angle: z.number().finite(),
-        width: z.number().min(80).max(250),
-        inland: z.number().min(150).max(500),
-        height: z.number().min(15).max(65),
+        width: z.number().min(80).max(700),
+        inland: z.number().min(150).max(700),
+        height: z.number().min(15).max(100),
         seed: z.number().finite(),
       }),
     )
-    .max(32)
+    .max(64)
     .default([]),
   landscape: landscapeSchema.default(() => landscapeSchema.parse({})),
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
@@ -151,7 +154,7 @@ const designSchema = z.object({
           .min(-Math.PI * 2)
           .max(Math.PI * 2),
         launchOffset: z.object({ x: coordinate, y: coordinate, z: coordinate }).optional(),
-        foundationY: z.number().finite().min(-10000).max(10000).optional(),
+        foundationY: z.number().finite().min(-maxCoordinate).max(maxCoordinate).optional(),
         creatorModel: z.string().max(64).optional(),
         style: z.string().max(40).optional(),
         architecture: z.string().max(40).optional(),
@@ -258,6 +261,7 @@ export function exportDesign(w: World, includeMedia = false) {
     spaceportSite: w.spaceportSite,
     additionalResources: w.additionalResources,
     terrainMapSize: w.terrainMapSize,
+    northernIsland: w.northernIsland,
     landscape: w.landscape,
     zones: w.zones,
     creator,
@@ -356,6 +360,7 @@ export function applyDesign(w: World, input: unknown) {
   w.spaceportSite = d.spaceportSite;
   w.additionalResources = d.additionalResources;
   w.terrainMapSize = d.terrainMapSize;
+  w.northernIsland = d.northernIsland;
   w.zones = d.zones;
   w.tier = d.tier;
   w.vehicleTuning = d.vehicleTuning;

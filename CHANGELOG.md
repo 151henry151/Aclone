@@ -6,6 +6,31 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.114.0] - 2026-10-31
+
+### Added
+
+- Expand public Puddlewick northward to approximately ten times its land area while preserving the southern coastline, settlements and existing gathering grounds. The rounded mainland has varied plains and hills, large forests, a high mountain, five descending rivers, eighteen ponds and additional rocky cliff coasts.
+- Show inland rivers and ponds on the map and in the landscape, with animated water, shallow tractor fords and impassable deep lower channels. Include the expanded geography in saved and portable worlds.
+- Keep permanent snow on the mountain summit in every season, and turn rain into snow above the alpine treeline while lowland weather is unchanged. The weather readout and walking umbrellas follow the local elevation.
+- Add the river dock, a player-built log jetty (30 logs, 10 gravel and 3s cash before tax, tier 0) that can only be sited on a navigable river reach with at least 1.2 m of water along its berth and dry bank at the landing. Canal boats and motorboats board and disembark there and stay moored in view at the jetty end; larger vessels are refused with a message pointing to the boathouse or fishing pier. The map, build menu, building panel and landscape render the dock with five architectural variants.
+- Add `scripts/island-performance.ts`, an isolated renderer and streaming comparison of the original and expanded landscapes, and `scripts/northern-island-preview.ts` for map and landscape review images, including a river dock view.
+
+### Changed
+
+- Stop submitting river reaches beyond their 1 km visibility fade to the GPU instead of relying on shader fading alone, removing the 100–190 ms frame stalls measured in town after the expansion.
+
+- Hide gathering-ground markers below 50% map zoom; below 25%, replace individual buildings with a town marker and readable town name.
+- Make deposit recovery four times slower by default, with a world-owner setting to tune the pace. Preserve earned stock and partial replenishment when changing rates.
+- Route northern rivers through lower terrain, with broader bends on level ground, narrow rapids on steep reaches, asymmetric sediment bars and pools, sparse small stones, and reflective moving water. Smooth the bank-to-valley transition to prevent parallel ridges beside the water.
+- New northern resource provinces favour a different material in each region, making local supplies and hauling opportunities vary across the expanded island while preserving existing deposits.
+- Extend distant terrain and travel bounds for the larger mainland while retaining streamed local detail. Building, farm, pasture and road placement account for inland water.
+
+### Fixed
+
+- Allow a large initial world snapshot to finish sending before preparing subsequent updates, instead of disconnecting a joining player while geography is still buffered.
+- Keep thin rivers readable above map contours at island scale, and end their charted outlines at the ocean rather than drawing submerged survey extensions offshore.
+
 ## [0.113.1] - 2026-10-30
 
 ### Fixed

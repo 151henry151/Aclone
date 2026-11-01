@@ -83,7 +83,8 @@ test('an acknowledged property purchase survives an abrupt process kill', async 
   let ws: WebSocket | undefined;
   try {
     const { port } = await new Promise<any>((resolve, reject) => {
-      const timer = setTimeout(() => reject(Error('Child startup timeout')), 10000);
+      // A fresh database surveys the expanded mainland before opening its port.
+      const timer = setTimeout(() => reject(Error('Child startup timeout')), 30000);
       child.once('message', (message) => {
         clearTimeout(timer);
         resolve(message);

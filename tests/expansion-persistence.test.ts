@@ -1,3 +1,4 @@
+import { resourceAmount, resourceNodes } from '../src/shared/resources';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -48,5 +49,26 @@ test('old worlds gain default combat rules without losing owner settings', () =>
     assert.equal(loaded.settings.dayLength, 900);
   } finally {
     s.close();
+  }
+});
+
+test('slower deposit recovery migration retains already regenerated stock and is idempotent', () => {
+  const store = new Store(':memory:');
+  try {
+    const w = createWorld('old-deposits', 'Old deposits', 'owner');
+    delete w.settings.resourceRecoveryMultiplier;
+    const node = resourceNodes.find((n) => n.item === 'stone')!;
+    w.resources = { [node.id]: { amount: 3, updated: 0 } };
+    w.time = 900;
+    store.saveWorld(w);
+    const loaded = store.loadWorlds()[0].world;
+    assert.equal(loaded.settings.resourceRecoveryMultiplier, 4);
+    assert.equal(resourceAmount(loaded, node), 6);
+    loaded.time += 1200;
+    assert.equal(resourceAmount(loaded, node), 9);
+    store.saveWorld(loaded);
+    assert.equal(resourceAmount(store.loadWorlds()[0].world, node), 9);
+  } finally {
+    store.close();
   }
 });

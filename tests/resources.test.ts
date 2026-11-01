@@ -2,7 +2,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { act, advance, addPlayer, createWorld, makeBuilding } from '../src/shared/simulation.ts';
-import { resourceNodes, resourceAmount, gatheringStatus } from '../src/shared/resources.ts';
+import {
+  resourceNodes,
+  resourceAmount,
+  gatheringStatus,
+  changeResourceRecovery,
+  resourceRecoverySeconds,
+} from '../src/shared/resources.ts';
 import { recipes, items, buildings, skills } from '../src/shared/catalog.ts';
 test('gathering reserves finite nearby resources, completes offline and regenerates slowly', () => {
   const w = createWorld('r', 'Resources', 'p'),
@@ -22,7 +28,7 @@ test('gathering reserves finite nearby resources, completes offline and regenera
   assert.equal(p.inventory.dirt, 3);
   assert.equal(p.task, undefined);
   const saved = JSON.parse(JSON.stringify(w));
-  advance(saved, 1800);
+  advance(saved, 2400);
   assert.equal(resourceAmount(saved, n), before);
 });
 test('all industry inputs, skills, construction and outputs form valid stocked production cycles', () => {
@@ -142,4 +148,37 @@ test('gathering preview matches server requirements and skilled yields without m
     p.y += 10;
     assert.match(gatheringStatus(w, p, n).reason!, /close/);
   }
+});
+
+test('deposits recover four times slower by default and configurable changes preserve earned units', () => {
+  const w = createWorld('recovery', 'Recovery', 'owner');
+  for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
+    const n = resourceNodes.find((n) => n.item === item)!;
+    w.resources = { [n.id]: { amount: 0, updated: w.time } };
+    const interval = item === 'logs' ? 7200 : 2400;
+    assert.equal(resourceRecoverySeconds(w, n), interval);
+    w.time += interval - 1;
+    assert.equal(resourceAmount(w, n), 0);
+    w.time++;
+    assert.equal(resourceAmount(w, n), 3);
+    w.time += interval * 0.5;
+    changeResourceRecovery(w, 1);
+    assert.equal(resourceAmount(w, n), 3, 'earned stock survives faster recovery');
+    w.time += n.regrowth * 0.5;
+    assert.equal(resourceAmount(w, n), 6, 'partial recovery survives setting changes');
+    changeResourceRecovery(w, 4);
+    assert.equal(resourceAmount(w, n), 6, 'slower recovery does not remove stock');
+    const saved = JSON.parse(JSON.stringify(w));
+    saved.time += interval * 100;
+    assert.equal(resourceAmount(saved, n), n.capacity, 'offline recovery caps at capacity');
+  }
+  const owner = addPlayer(w, 'owner', 'Owner');
+  assert.throws(() =>
+    act(w, owner.id, { type: 'settings', patch: { resourceRecoveryMultiplier: 0 } }),
+  );
+  assert.throws(() =>
+    act(w, owner.id, { type: 'settings', patch: { resourceRecoveryMultiplier: 25 } }),
+  );
+  act(w, owner.id, { type: 'settings', patch: { resourceRecoveryMultiplier: 2 } });
+  assert.equal(w.settings.resourceRecoveryMultiplier, 2);
 });

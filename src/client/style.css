@@ -1966,6 +1966,7 @@ button span {
   position: absolute;
   inset: 0;
 }
+.parish-map-town-label,
 .parish-map-building-label,
 .parish-map-resource-label,
 .parish-map-landmark-label {
@@ -1983,6 +1984,8 @@ button span {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.parish-map-town-label:hover,
+.parish-map-town-label:focus-visible,
 .parish-map-building-label:hover,
 .parish-map-building-label:focus-visible {
   z-index: 2;

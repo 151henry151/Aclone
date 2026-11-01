@@ -1,3 +1,4 @@
+import { inlandLevel } from './inland-water';
 import { spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -28,7 +29,10 @@ export function pastureBlocker(
     for (let z = p.z - 8; z <= p.z + 8; z += 2) {
       const q = pasturePoint(b, x, z),
         y = terrainHeight(w, q.x, q.z);
-      if (Math.max(Math.abs(q.x), Math.abs(q.z)) >= mapHalf(w) - 2 || y <= highWater(w) + 0.3)
+      if (
+        Math.max(Math.abs(q.x), Math.abs(q.z)) >= mapHalf(w) - 2 ||
+        y <= inlandLevel(w, q.x, q.z, highWater(w)) + 0.3
+      )
         return 'Pasture needs dry land inside the world';
       if (spawnReserved(w, q.x, q.z, 2))
         return 'Keep pasture outside the town centre and respawn area';

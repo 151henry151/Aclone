@@ -1,0 +1,55 @@
+# Northern island expansion (0.114.0)
+
+Puddlewick's mainland expands northward to approximately ten times its previous **land area**, rather than multiplying each map dimension by ten. A 200 m sampling survey measures roughly 94 km² before and 936 km² after expansion. The rounded new mainland is about 35 km across; its north–south extent, including the original southern peninsula, is about 42 km. The travel boundary expands to an 89 km square, leaving open ocean beyond the new shore.
+
+## Existing world preservation
+
+Coordinates are not scaled. Everything at or south of `z = -1200 m` retains its exact terrain and woodland, including Puddlewick, the existing nearby towns, the bay, both southern spits and their lighthouses. New land blends into the former upper island between `z = -3600` and `-1200 m`. Former unoccupied northern sea cliffs are replaced by cliffs on the new coast; occupied headlands are retained.
+
+Existing buildings, roads, towns, player locations, vehicles, finances and gathering-ground IDs are preserved. The migration freezes the original terrain footprint and resource survey, so a larger ocean boundary cannot move existing resource deposits or reset their depletion. New resource nodes are saved alongside that survey. Future resource additions and explicit relocations still work.
+
+The migration runs once for the public Puddlewick world, when the server first loads it after deployment. It does not expand private worlds or worlds with custom heightmaps. The deploy script backs up the live database first; the pre-release survey of the live world found no buildings, deposits, trailers or players north of `z = -1200 m`.
+
+## New countryside
+
+- One central mountain, approximately 1,424 m above world datum, with rocky upper slopes, an alpine snow cap and a treeline.
+- Six broad terrain/forest regions, including flatter plains, rolling hills and several dense woodlands extending for kilometres.
+- Five persistent rivers: Alder River, North Beck, Silverwater, River Bracken and Westmere River. Headwaters start partway down the mountain, follow surveyed valleys and reach the ocean. A deterministic route search penalizes climbing across ridges; gentle bend guidance is stronger on flatter ground. Channel width also responds to local gradient: steeper reaches narrow, flatter reaches spread out. Inside bends have shallow sediment bars; outside bends have deeper pools and steeper banks. Sediment blends into the terrain rather than forming a separate strip. Small cobbles are sparse, with larger hillside rocks excluded beside the water. Localized riffles and rapid streaks move downstream, and surface normals add moving reflections. Their courses stay north of the preserved settlement area.
+- Channels widen from about 3 m to roughly 45 m and deepen from approximately 0.3 m to around 5 m. Upper reaches are fordable; deep downstream channels stop tractors and walkers. Swept collision checks prevent fast vehicles skipping over the water. Already-submerged saved positions can retreat toward shallower ground.
+- Eighteen ponds, with individual banks and basin depths. Inland water uses its own elevation instead of a single sea-level plane. Rivers have animated downstream surface ripples; boats use local water height and depth soundings.
+- Additional coastal headlands, sea stacks and two extended stretches of rocky cliffs. Existing cliff-edge movement protection and lighthouse site validation apply to them.
+- Comparable gathering-ground density throughout the added land, plus localized mixed resource concentrations. Six broad resource provinces each favour one material and are scarce in another: eastern stone/topsoil, southeastern timber/gravel, southwestern topsoil/stone, western gravel/timber, northwestern timber/stone, and northern stone/timber (rich/scarce). Inside each province, the intended mix is 45% rich, 5% scarce, and 25% each of the other two materials. Boundaries blend gradually; local clusters follow the same regional mix. Existing deposits remain unchanged. New deposits avoid water, steep ground and buildings. Forest logging is not part of this update.
+
+## Rendering, maps and persistence
+
+The parish map shows river and pond outlines independently of the terrain sampling grid, preserving narrow watercourses at distant zoom levels. Contours still represent elevation above sea level. Resource markers disappear below 50% zoom and return for local navigation. Below 25%, individual buildings and sports landmarks give way to one dot and a persistent name button per town; crowded town labels are displaced with leader lines, and remain clickable and keyboard accessible. The distant terrain mesh covers the enlarged asymmetric mainland; local detailed terrain and trees remain streamed around the player, rather than loading the entire island. Narrow inland-water surfaces fade out with that local detail (750–1,000 m), while the map continues to show complete watercourses.
+
+Northern geography, resource IDs and its terrain seed survive snapshots, restarts and portable world-design export/import. World coordinates and editor validation accommodate the enlarged travel area. Construction, fields, livestock pastures and road routing reject inland water; NPC ground navigation also avoids it.
+
+Validation: `tests/northern-island.test.ts` covers area, southern preservation, existing resource/depletion preservation, migration idempotency, downhill channels, shallow/deep crossings using actual movement, local boat height, dry resource sites, pond construction rejection, portable designs, worker map data and bounded distant terrain. `npm run check` runs type checking and the complete unit suite. `npx tsx scripts/northern-island-preview.ts` produces screenshots using the actual game renderer and parish map in a disposable preview.
+
+For map-only review, run `MAP_ONLY=1 node --import tsx scripts/northern-island-preview.ts`. The output includes the full island, mountain watershed, a river valley, and matched before/after southern peninsula views. These use generated preview-world buildings, not a snapshot of current live player property. Thin inland-water outlines draw above contours with a minimum screen-space stroke and stop at the sea-level river mouth. `SHOTS=dock` renders a river dock with a moored canal boat on the first usable lower reach.
+
+## River docks
+
+The **river dock** (`riverDock`, tier 0; 30 logs, 10 gravel and 3s before tax) is a 3 × 2.4 m log crib on the bank with a 2.2 m wide plank jetty on driven piles running about 10 m out over the water. Its geometry is defined in `src/shared/river-dock.ts`: the jetty points along the building's local −z axis, the berth centre lies 13.2 m out, and a moored boat lies parallel to the bank with heading `rotation + π/2`. Siting (`riverDockSite`) requires a river reach at the berth, dry terrain within 0.2–2.5 m above the river surface at the landing and crib, a bank that falls to within 0.6 m of the surface along the jetty, and `riverDepth` of at least 1.2 m at fifteen samples across the 14 × 3.6 m berth. Headwaters, fords and the sea are refused by `constructionSiteReason` with a message that explains the depth requirement, and the preview rotation matters because the jetty must point toward the deep channel. The jetty and berth are reserved against other construction through `riverDockReserved`.
+
+Boat landings treat a completed river dock like the fishing pier: boarding and disembarking use the landing point 3 m behind the crib, an empty boat stays moored at the berth in view, and the scene floats both the jetty deck and the moored hull on the local river surface rather than the sea datum. `riverDockAccepts` limits docking to mode 3 vessels no longer than 14 m with a beam under 3.6 m, so canal boats, motorboats and the rowing lifeboat qualify while the trawler, charter boat and tug are refused with a message that points to the boathouse or pier. Fuel, fish trading and provisioning remain at the boatyard. `tests/river-dock.test.ts` covers the catalogue entry and map icon, usable and refused sites on the actual northern rivers, the landing, mooring and re-boarding flow with water-level placement, trawler rejection, and the jetty reservation.
+
+Performance: `npx tsx scripts/island-performance.ts` loads the original and expanded landscapes in the same headless renderer and records frame-time percentiles, long tasks, heap, draw calls and streaming state at town, river, forest, summit and storm-coast locations, plus a map open. Distant river reaches beyond their 1 km fade are culled on the CPU rather than only faded in the shader; before that change the expanded town view showed 13 frames over 100 ms in a 15-second sample, afterwards none, with p95 at 34 ms in both worlds.
+
+Large initial geography snapshots can briefly buffer while compression completes. The server pauses subsequent deltas until the queue drains, retaining the last delivered delta baseline. A continuously blocked queue still disconnects after fifteen seconds; account revocation and durable saves remain covered by their existing tests.
+
+Future logging, alternate road connections and gradual city paving are described in [the backlog](BACKLOG.md).
+
+## Slower deposit recovery
+
+World owners can set **Deposit recovery time multiplier** in the world rules. The default is 4 (range 0.25–24); 1 restores the former pace. Existing deposit capacities and gathering times are unchanged. At the default, minerals and topsoil recover three units every 40 real minutes (6 hours 40 minutes from empty to 30); woodland clearings recover three logs every two real hours (12 hours from empty to 18). This is deposit replenishment, not the future forest/tree-growth simulation.
+
+The setting applies to village, countryside and added deposits, including saved custom deposits relative to their configured base recovery interval. Upgrading older saves preserves stock already recovered; changing the setting preserves completed units and the fraction of the next recovery interval. Offline recovery remains capped at each deposit's capacity.
+
+## River form and rendering references
+
+The design follows [NC State's Natural Stream Processes](https://content.ces.ncsu.edu/natural-stream-processes): outside-bend pools, inner sediment bars, shallow riffles and steeper headwater reaches. A [University of Turku aerial river photograph](https://www.utu.fi/sites/default/files/images/AnthroCliMocs_meanderikaarre.jpg) informed the asymmetric banks and restrained stone coverage. This is a terrain-aware procedural game approximation, not a sediment-transport or fluid-dynamics solver.
+
+Saved surveys stay compact; smooth four-metre surface samples and the collision/riverbed queries use the same interpolated course. Bank cuts and fills blend continuously into the surrounding valley, including where the original ground falls below the river. There is no fixed-distance ledge. Regression checks cover submerged surfaces between survey points, asymmetric pools/bars and continuous downhill bank shoulders.

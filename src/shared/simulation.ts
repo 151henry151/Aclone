@@ -1,3 +1,7 @@
+import { inlandBlocksGround, riverDepth } from './inland-travel';
+import { riverDockAccepts } from './river-dock';
+import { surfaceWaterLevel } from './ocean';
+import { inlandWaterAt } from './inland-water';
 import { PARISH_SPAWN, buildingSpawnReason } from './spawn-reserve';
 import { towingTender, tenderAction, moveTender } from './boat-tender';
 import { trailerAccepts, trailerBlocks } from './trailers';
@@ -184,7 +188,7 @@ import {
   townAction,
   type Town,
 } from './civics.ts';
-import { gather, finishGather } from './resources.ts';
+import { gather, finishGather, changeResourceRecovery } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
 import { drivingGrade, drivingSurface, slopeSpeed } from './driving-surface.ts';
@@ -1373,13 +1377,19 @@ export function act(w: World, id: string, a: Action): string {
           'Recover your stranded boat using its lifeboat first',
         );
         const moored = w.mooredBoats?.[mooringKey(p.id, slot)];
-        const candidates = boatLandings(w).filter(
+        const hull = poweredBoat(slot, w) ? slot : p.vehicle;
+        const reachable = boatLandings(w).filter(
           (d) =>
             (a.building === undefined ||
               d.id === a.building ||
-              (!d.building && a.building === fishingDock.id)) &&
+              (!d.building && !d.river && a.building === fishingDock.id)) &&
             withinBoatLanding(w, p, d, !poweredBoat(slot, w)) &&
             (!poweredBoat(slot, w) || !moored || d.id === moored.landing),
+        );
+        const candidates = reachable.filter((d) => !d.river || riverDockAccepts(w, hull));
+        requireThat(
+          candidates.length || !reachable.length,
+          'River docks take canal boats and motorboats only; larger vessels use a boathouse or the fishing pier',
         );
         landing = candidates.find((d) => !landingBlocked(w, d, p, poweredBoat(slot, w), slot));
         requireThat(
@@ -1387,8 +1397,8 @@ export function act(w: World, id: string, a: Action): string {
           candidates.length
             ? landingBlocked(w, candidates[0], p, poweredBoat(slot, w), slot)!
             : moored && poweredBoat(slot, w)
-              ? 'Retrieve your moored boat from the fishing pier where you left it'
-              : 'Visit a completed boathouse or fishing pier: board from its land entrance, return to its water berth',
+              ? 'Retrieve your moored boat from the pier or river dock where you left it'
+              : 'Visit a completed boathouse, fishing pier or river dock: board from its land entrance, return to its water berth',
         );
         if (poweredBoat(slot, w))
           requireThat(
@@ -1496,7 +1506,7 @@ export function act(w: World, id: string, a: Action): string {
           : (landing.building?.rotation ?? Math.PI);
         p.engine = false;
       }
-      p.y = poweredBoat(slot, w) ? waterLevel(w) : travelHeight(w, p.x, p.z);
+      p.y = poweredBoat(slot, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
       break;
     }
     case 'engine':
@@ -1892,6 +1902,7 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'lotteryTicketPrice') num(v, 1, 1000000, true);
         if (key === 'killReward') num(v, 0, 100000, true);
         if (key === 'pastureCapacityMultiplier') num(v, 0.25, 4);
+        if (key === 'resourceRecoveryMultiplier') num(v, 0.25, 24);
         if (key === 'pasturePriceMultiplier') num(v, 0.25, 10);
         if (key === 'fishingMode') num(v, 0, 5, true);
         if (key === 'seaLevel') num(v, -50, 50);
@@ -1901,6 +1912,8 @@ export function act(w: World, id: string, a: Action): string {
         (clean as Record<string, unknown>)[key] = v;
       }
       expireAbandonedCargo(w);
+      if (clean.resourceRecoveryMultiplier !== undefined)
+        changeResourceRecovery(w, clean.resourceRecoveryMultiplier);
       Object.assign(w.settings, clean);
       w.revision++;
       break;
@@ -2283,7 +2296,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   }
   const towBefore = { x: p.x, z: p.z, heading: p.heading };
   if (p.game === 'fishing')
-    p.y = poweredBoat(p.vehicle, w) ? waterLevel(w) : travelHeight(w, p.x, p.z);
+    p.y = poweredBoat(p.vehicle, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
   const licence = requiredLicence(w, p.vehicle);
@@ -2294,7 +2307,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const condition = w.settings.vehicleMaintenance && !p.game ? vehicleCondition(p) : 100;
   const v = vehicleDef(w, p.vehicle),
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
-    water = ground < waterLevel(w);
+    water = ground < surfaceWaterLevel(w, p.x, p.z);
   if (v.mode === 2) {
     const previous = { x: p.x, z: p.z };
     const accident = fly(p, input, dt, {
@@ -2376,6 +2389,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     fuelBefore = p.fuel;
   const cap =
     crowSpeed *
+    (grounded && riverDepth(w, p) > 0.1 ? 0.62 : 1) *
     (activeTow(w, p.id) ? 0.5 : towingTender(w, p) ? 0.85 : 1) *
     trailerFactors(w, p).speed *
     loadFactors.speed *
@@ -2409,7 +2423,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.fuel = Math.max(0, p.fuel - 0.08 * dt);
   } else p.y = Math.max(ground, p.y - 9.8 * dt);
   if (v.mode === 3) {
-    const amp = oceanWeather(w).amplitude;
+    const amp = inlandWaterAt(w, p.x, p.z) ? 0 : oceanWeather(w).amplitude;
     const impact = waveImpact(p.x, p.z, w.time, p.heading, p.speed, amp, waterLevel(w) - ground);
     p.speed *= Math.exp(-impact * dt * 0.45);
     p.y = boatSeaPose(
@@ -2430,7 +2444,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       amp,
     ).y;
   }
-  if (v.mode === 5) p.y = Math.max(ground, waterLevel(w)) + 0.5;
+  if (v.mode === 5) p.y = Math.max(ground, surfaceWaterLevel(w, p.x, p.z)) + 0.5;
   const half = mapHalf(w);
   const previousPosition = { x: p.x, z: p.z };
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
@@ -2459,7 +2473,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (
     [0, 1, 4, 5, 8].includes(v.mode) &&
     p.y <= ground + 2 &&
-    cliffBlocks(w, p, { x: nx, z: nz }, p.vehicle === 5 ? 0.35 : (v.collisionRadius ?? 1.3))
+    (cliffBlocks(w, p, { x: nx, z: nz }, p.vehicle === 5 ? 0.35 : (v.collisionRadius ?? 1.3)) ||
+      ([0, 1, 4, 8].includes(v.mode) &&
+        inlandBlocksGround(
+          w,
+          p,
+          { x: nx, z: nz },
+          p.vehicle === 5 ? 0.35 : (v.collisionRadius ?? 1.3),
+        )))
   ) {
     p.speed = 0;
   } else if (shore) {

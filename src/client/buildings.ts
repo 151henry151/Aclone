@@ -1,5 +1,6 @@
 import { lighthouseModel } from './lighthouse';
 import { boatyardDetails } from './boatyard';
+import { riverDockDetails } from './river-dock';
 import { cottageMailbox } from './mailbox';
 import { addBuildingIdentity } from './building-identity';
 import { shippingContainers } from './shipping-container';
@@ -330,6 +331,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   if (b.construction) return root;
   if (b.kind === 'boathouse') {
     boatyardDetails(root, plan, finish, b.architecture);
+    return root;
+  }
+  if (b.kind === 'riverDock') {
+    riverDockDetails(root);
     return root;
   }
   if (b.kind === 'home') root.add(cottageMailbox(plan));
