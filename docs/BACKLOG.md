@@ -35,7 +35,6 @@
 - Use configurable density thresholds, sampling radius and sustained-development timing so gradual growth can eventually qualify a former rural area, without short-lived construction changes repeatedly flipping eligibility. Existing pavement persists if density later falls, consistent with road persistence.
 - Only after a connected urban paved route reaches a city's boundary may an intercity paved route begin growing toward another qualifying city. Reaching one suitable boundary exit is sufficient; there is no requirement to pave the whole town, every district, or its perimeter first. An eligible intercity trunk can traverse open countryside, but that does not qualify adjoining farm lanes or rural branches for paving. Never extend intercity pavement just to connect a smaller town; its ordinary roads remain available.
 - Test useful triangle/loop connections, rejection of pointless detours, gradual town development, density-directed paving, persistent dirt farm lanes inside cities, one-exit boundary-first paving, city-to-city eligibility, restart persistence and configurable timing. Choose final numerical thresholds through a survey of live settlements before implementation.
-- This is future work, separate from the current northern island expansion.
 
 ## Planned — River crossings, bridges and highway haulage
 
@@ -82,11 +81,7 @@
 5. Add the automotive factory's construction, supply chain and manufactured vehicle inventory; then detailed trucks and specialised semitrailers, articulated driving and cargo integration.
 6. Test blocked/absent fords, multiple rivers and bridges, tides/water configuration, terrain edits, new obstacles, bridge removal, town growth/shrinkage, concurrent builders, server restarts and world import/export. Test loaded truck speeds on each surface, bridge clearance, reversing, trailer persistence and long-run profitability.
 
-This entire transport/industry programme is **backlog only**. The current island expansion supplies rivers and physical shallow/deep crossings; it does not implement automatic ford-routing, paving, bridges, highway trucks or automotive manufacturing.
-
-## Planned — River trade
-
-- River docks (0.114.0) board and moor small craft only. Cargo transfer, delivery settlement and fuel at river berths, and recovery of a boat stranded upriver, are not defined yet; they should stay consistent with boatyard and pier behaviour.
+The island already has rivers with physical shallow fords and impassable deep reaches; none of the ford-aware routing, paving, bridges, highway trucks or automotive manufacturing above exists yet.
 
 ## Planned — Player-built airstrips and commercial aviation
 
@@ -141,8 +136,9 @@ The purpose is intercity air travel once towns exist far across the expanded isl
 
 ## Planned — Cargo boat for dock-to-dock freight
 
-- Add a **cargo boat** vessel definition between the canal boat (240 weight) and the trawler (3,200 weight): a coaster of roughly 18–22 m with a starting target of **1,500–2,500 weight** of general cargo, a hold that renders its load, a small wheelhouse at human scale, a fuel tank sized for a full circuit of the coast, and a price and fuel burn that leave a margin when moving bulk goods between towns with different prices. Decide whether a smaller **river barge** variant that fits the river dock limits (14 m by 3.6 m) is also offered, so river docks gain a freight role as noted under River trade.
+- Add a **cargo boat** vessel definition between the canal boat (240 weight) and the trawler (3,200 weight): a coaster of roughly 18–22 m with a starting target of **1,500–2,500 weight** of general cargo, a hold that renders its load, a small wheelhouse at human scale, a fuel tank sized for a full circuit of the coast, and a price and fuel burn that leave a margin when moving bulk goods between towns with different prices. Decide whether a smaller **river barge** variant that fits the river dock limits (14 m by 3.6 m) is also offered, so river docks gain a freight role.
 - Loading and unloading happen only when moored at a boathouse berth, the fishing pier, a river dock (if the hull fits) or a future quay, using an explicit transfer panel between the boat's hold and the captain's inventory or a shop within range; define whether a dock-side shop may buy directly from the hold. The hold enforces weight, honours existing per-good rules (livestock and perishables), and persists with the moored boat.
+- River docks currently only board and moor small craft. Define cargo transfer, delivery settlement and fuel at river berths, and recovery of a boat stranded upriver, consistent with boatyard and pier behaviour, as part of this work.
 - Reuse the existing boat ownership, mooring, fuel, maintenance, crew/deckhand, death and recovery systems unchanged; the cargo boat is a slow, sea-kindly hull that is too large for river docks and the shore-landing rules of small craft. It should be exempt from, or far less exposed to, the storm capsizing below.
 - Economics: calibrate against trailers and (later) trucks so sea freight is the cheapest per unit over long coastal distances and air freight the fastest; document in HAULAGE.md. Consider parish supply orders and supply intents deliverable from a hold at a quay.
 - Tests: hold limits, transfer at each landing type, refusal at a river dock when too large, persistence of cargo across restart and export, deckhand profit share on a freight voyage, and a profitable example route.
@@ -185,35 +181,4 @@ The purpose is intercity air travel once towns exist far across the expanded isl
 
 - Replace static wood-patch harvesting with individual forest trees that can be felled and cleared for building.
 - Persist tree age, growth, harvesting and regrowth over meaningful in-game seasons/years; define replanting and sustainable forest management.
-- Design logging equipment, vehicles, hauling and processing as a complete, balanced livelihood, with satisfying felling/loading animations and multiplayer ownership rules.
-- Keep this separate from the northern island expansion; the expansion adds forests but does not introduce logging mechanics.
-
-## Completed in 0.109.0 — 2026-10-30
-
-- Walking flashlight and appropriate controls; no engine controls/readouts for walking or the emergency raft.
-- Lifeboat capacity 10 and nearby-only stranded-boat reboarding.
-- Vessel scale audit using real three-week trawler voyages; 24.5 m trawler, 16.8 m tug and 4.3 m motorboat with human-scale crew and helms.
-- Tugboat purchase, paid rescue consent/escrow, physical towing, free self-recovery, docking settlement and cancellation/restart/death handling.
-- Seven distinct trailers with purchase, ownership, cargo restrictions, trading, livestock transfers, persistent parking, articulated reversing, collision, load effects and detailed models.
-- Spaceport relocation to about 1.25 km from Puddlewick, preserving property and replacing the old site's fences, reservation and access roads.
-- Runways excluded from the road network, with growth reconnecting isolated branches around the airfield.
-- Twice the maximum tractor third-person zoom range.
-- Cheap outboard motorboat, empty-tank rowing, rod fishing and fuel-delivery/tender-towing recovery; canal boat price increased to 60s.
-- Free town teleport removed while genuine death respawns and caretaker recovery remain.
-- Cape lighthouse road search fixed; new roads prefer gentler grades and use modest deterministic curves. Existing construction rate and safe clearance rules remain.
-
-Design references, economic calculations and usage: [Boats, rescue and haulage](HAULAGE.md). No remaining items from this batch are deferred.
-
-## Completed in 0.105.0
-
-- Livestock: fenced grazing parcels, roaming/grazing animations, adjoining expansion, herd capacity, breeding checks and production/input/staffing scaling. World owners can adjust capacity and expansion prices.
-- Maps: building-type icons, hover/focus names, sparse close-up labels and navigation that preserves a distant viewed location through zoom and snapshots.
-- Vehicle editor: per-world movement, handling, fuel, cargo, price, passengers/crew, provisions, death/recovery, trawling, tyre footprints, tread artwork, cockpit instruments, lamp lenses and Workshop components. Portable designs retain these configurations.
-
-## Completed in 0.104.0
-
-- Charter fishing boat, paid trips, passenger fishing and settlement.
-- Independent synchronized tractor headlights, including lamp faces and nearby beams.
-- Random rod-fishing bites at the configured average rates.
-
-The completed release sections describe shipped work.
+- Design logging equipment, vehicles, hauling and processing as a complete, balanced livelihood, with satisfying felling/loading animations and multiplayer ownership rules. The northern forests exist; nothing in them can be felled yet.
