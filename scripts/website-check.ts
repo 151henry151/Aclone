@@ -5,6 +5,7 @@ import { chromium, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
 import { serveWebsite } from './serve-website.ts';
+import { buildings } from '../src/shared/catalog.ts';
 const server = await serveWebsite(0);
 const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 const browser = await chromium.launch({
@@ -87,7 +88,7 @@ try {
   await expect(plain.locator('[data-gallery]').first()).toHaveAttribute('href', /\.webp$/);
   await page.goto(url + '/buildings');
   await expect(page).toHaveURL(url + '/buildings/');
-  await expect(page.locator('article')).toHaveCount(50);
+  await expect(page.locator('article')).toHaveCount(Object.keys(buildings).length);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
@@ -96,7 +97,9 @@ try {
   }
   await page.getByLabel('Find a building').fill('brewery');
   await expect(page.locator('article:visible')).toHaveCount(1);
-  await expect(page.locator('#results')).toHaveText('1 of 50 building types');
+  await expect(page.locator('#results')).toHaveText(
+    `1 of ${Object.keys(buildings).length} building types`,
+  );
   await page.setViewportSize({ width: 390, height: 900 });
   await page.screenshot({ path: `${output}/buildings-mobile.png`, fullPage: true });
   await page.getByLabel('Find a building').fill('does not exist');
@@ -257,12 +260,12 @@ try {
   await expect(noGL.getByRole('dialog')).not.toBeVisible();
   await noGL.close();
   await plain.goto(url + '/buildings/#home');
-  await expect(plain.locator('article')).toHaveCount(50);
+  await expect(plain.locator('article')).toHaveCount(Object.keys(buildings).length);
   await expect(plain.locator('.filter')).toBeHidden();
   await expect(plain.locator('#home')).toBeVisible();
   expect(errors).toEqual([]);
   console.log(
-    'PASS: 4 screen widths, images, navigation, keyboard lightbox/focus, FAQ, anchors, 50-building gallery/search/interactive previews, rotation, finishes, fixed scale, focus restoration and WebGL/no-JavaScript fallbacks.',
+    `PASS: 4 screen widths, images, navigation, keyboard lightbox/focus, FAQ, anchors, ${Object.keys(buildings).length}-building gallery/search/interactive previews, rotation, finishes, fixed scale, focus restoration and WebGL/no-JavaScript fallbacks.`,
   );
 } finally {
   await browser.close();

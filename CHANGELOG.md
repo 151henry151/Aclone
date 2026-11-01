@@ -12,6 +12,7 @@ All notable changes to Aclone are documented here. This project follows
 
 - Replace the vehicle-change rejection "Unload cargo before changing to a smaller vehicle" with a shared `cargoFitReason` message that states the carried weight, the destination vehicle's capacity and the exact weight to unload (for example "Carrying 101 weight; the Biplane holds 90. Unload 11 before boarding."). The server rejection and the client's disabled-control reason now come from the same helper.
 - Show the boarding blocker beneath the hangar's "Board owned aircraft" button as visible text (`data-explain` controls render a `.blocker` note) instead of only in the button's hover title.
+- Add the river dock contact sheet `website/assets/buildings/riverDock.webp` to the website building gallery and update the gallery's building count from 50 to 51, so `scripts/build-website.ts` succeeds again. Derive the expected gallery size in `scripts/website-check.ts` from the building catalogue instead of a fixed 50.
 
 ## [0.114.0] - 2026-10-31
 
