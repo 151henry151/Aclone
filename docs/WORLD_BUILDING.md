@@ -135,10 +135,11 @@ A rejected import does not add a world to the registry. Use the media bundle opt
 
 ## Practical limits and extension points
 
-Each world has a square map whose side is the `mapSize` setting (500–20,000 m,
-editable live in **Rules**). The public Puddlewick is 12,500 m; arenas and
-playgrounds, and worlds saved before map sizes existed, keep the 500 m
-footprint. The central 500 m village terrain is unchanged at any size; beyond it
+Each world has a square map whose side is the `mapSize` setting (500–100,000 m,
+editable live in **Rules**). A new economy world starts at 12,500 m. Public
+Puddlewick's travel boundary is an 89 km square around a mainland about 35 km
+across and about 42 km from north to south. Arenas and playgrounds, and worlds
+saved before map sizes existed, keep the 500 m footprint. The central 500 m village terrain is unchanged at any size; beyond it
 the countryside is generated deterministically from the world id: rolling hills,
 woods, inland lakes, a harbour inlet south of the village and an island coast
 that falls into open sea before the map edge. Woodland clearings, outcrops,

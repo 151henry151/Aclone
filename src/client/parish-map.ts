@@ -628,7 +628,14 @@ export class ParishMap {
           stroke: '#243b27',
         }),
       );
-    const buildings = townOverview ? [] : this.world.buildings.filter(onSheet);
+    // Town overview folds a settlement into one label. Buildings outside every town stay on the sheet.
+    const buildings = this.world.buildings.filter(
+      (b) =>
+        onSheet(b) &&
+        !(
+          townOverview && this.world.towns.some((t) => Math.hypot(b.x - t.x, b.z - t.z) <= t.radius)
+        ),
+    );
     const sites = buildings.map((b) => ({
       id: b.id,
       name: b.name,

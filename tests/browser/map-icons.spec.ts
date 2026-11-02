@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test, expect } from '@playwright/test';
+import { buildings } from '../../src/shared/catalog';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -24,7 +25,18 @@ for(const kind of kinds){const card=document.createElement('article');card.datas
       }),
     );
     await page.goto(`http://127.0.0.1:${port}/__map-icons`);
-    await expect(page.locator('article')).toHaveCount(57);
+    await expect(page.locator('article')).toHaveCount(
+      Object.keys(buildings).length +
+        [
+          'aircraftHangar',
+          'Wood / logs',
+          'stone',
+          'gravel',
+          'Dirt',
+          'Playing field',
+          'Race checkpoints',
+        ].length,
+    );
     const valid = await page.locator('path').evaluateAll((paths) =>
       paths.every((p) => {
         const path = p as SVGPathElement,

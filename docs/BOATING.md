@@ -166,9 +166,10 @@ fish are restricted while crew shares remain unsettled.
 
 ### World and balance notes for maintainers
 
-The public-world migration expands Puddlewick’s navigable square from 12.5 km to
-18.5 km. Its original terrain extent remains 12.5 km, preserving island heights,
-woodland and property. Eligibility requires eight metres of depth and roughly
+The fishing migration widened Puddlewick’s navigable square from 12.5 km to
+18.5 km and kept the original 12.5 km terrain extent, so island heights,
+woodland and property stayed put. The northern island then set the travel
+boundary to an 89 km square. Eligibility requires eight metres of depth and roughly
 150 metres of clearance from land, checked on a conservative 10-metre grid.
 The first centreline qualifying water is around the town’s southern boundary.
 

@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+
+- Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.
+
 ## [0.114.5] - 2026-11-02
 
 ### Changed

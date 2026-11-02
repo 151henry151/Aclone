@@ -29,12 +29,12 @@ const w=await(await fetch('/__resource-world')).json(),p=addPlayer(w,'surveyor',
     );
     await page.goto(`http://127.0.0.1:${port}/__resource-map`);
     await expect(page.locator('.map-icon')).not.toHaveCount(0);
-    for (let i = 0; i < 6; i++)
-      await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
-    expect(
-      await page.locator('.parish-map-sheet > svg circle[fill="#a9cf86"]').count(),
-    ).toBeGreaterThanOrEqual(221);
+    const zoomOut = page.getByRole('button', { name: 'Zoom out', exact: true });
+    for (let i = 0; i < 16 && (await zoomOut.isEnabled()); i++) await zoomOut.click();
+    await expect(zoomOut).toBeDisabled();
+    // Below 50% the island view drops gathering dots. The cluster check below
+    // still proves those saved sites reach the client.
+    await expect(page.locator('.parish-map-sheet > svg circle[fill="#a9cf86"]')).toHaveCount(0);
     await expect(page.locator('.map-bay-label')).toHaveText('Puddlewick Bay');
     await expect(page.locator('.map-deep-water')).toHaveAttribute('d', /M/);
     await page.screenshot({ path: 'test-results/resource-island.png' });

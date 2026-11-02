@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
 import { createWorld, addPlayer, terrainHeight, act } from '../../src/shared/simulation.ts';
 import { resourceNodes } from '../../src/shared/resources.ts';
+import { labourShiftPay } from '../../src/shared/public-labour.ts';
 
 for (const mobile of [false, true])
   test(`${mobile ? 'phone' : 'desktop'} gathers all nearby resource types directly from the HUD`, async ({
@@ -131,7 +132,7 @@ for (const mobile of [false, true])
       expect(Math.abs(box.x + box.width / 2 - size.width / 2)).toBeLessThan(2);
       expect(Math.abs(box.y + box.height / 2 - size.height / 2)).toBeLessThan(2);
       p.task!.end = w.time + 0.25;
-      await expect.poll(() => p.cash).toBe(prior + 100);
+      await expect.poll(() => p.cash).toBe(prior + labourShiftPay(w));
       await expect(page.locator('#task-control')).toBeHidden();
       expect(errors).toEqual([]);
     } finally {

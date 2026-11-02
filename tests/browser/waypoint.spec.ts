@@ -47,7 +47,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     const b = w.buildings.find((b) => b.kind === 'market')!;
     await map.getByRole('button', { name: b.name, exact: true }).click();
     await expect(map.locator('[data-waypoint-marker]')).toHaveCount(1);
-    // Zoom out past the village until the whole 12.5 km island fits the window.
+    // Zoom out past the village until the whole travel square fits the window.
     const zoomLevel = map.locator('.parish-map-zoom');
     const area = (await map.locator('.parish-map-viewport').boundingBox())!;
     await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
@@ -55,7 +55,7 @@ test('map waypoints persist and guide desktop and touch driving without marking 
     await expect.poll(async () => parseInt((await zoomLevel.textContent())!)).toBeLessThan(10);
     await expect(map.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
     await page.screenshot({ path: 'test-results/parish-map-world.png', timeout: 60000 });
-    // The window height now spans the map, so 30% of it east of the village is ~3.7 km.
+    // The window height now spans the map, so this click lands well east of the village.
     await page.mouse.click(area.x + area.width / 2 + area.height * 0.3, area.y + area.height / 2);
     await page.keyboard.press('Escape');
     await expect
