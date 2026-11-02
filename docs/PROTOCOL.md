@@ -74,7 +74,9 @@ Close code 4004 requires signing in again after key revocation. Code 4005 means 
 - `construct` accepts an optional `style` from `data/appearance.json` for homes.
 - `paint`: `{building, color}` at a garage; `refit`: `{building}` for ammunition.
 - `farm`: `{building, plot, operation, crop?}`. Plot is 0–3; operations are
-  `plant`, `water`, `fertilize`, `harvest`. A harvest starts a saved 15-second task.
+  `plant`, `water`, `fertilize`, `harvest`, and `harvestAll` (no plot). One harvest
+  starts a saved 15-second task. Harvest all reserves every ripe plot that fits the
+  stockroom and the till, and lasts 22.5 seconds per plot.
 - `joinCombat`: `{mode}` where mode is `deathmatch`, `capture`, or `ctf`.
   `leaveGame` exits. `chargeWeapon`: `{weapon: "javelin"}` begins a server timer;
   `fire`: `{weapon}` releases it. Client-supplied damage or charge duration is ignored.

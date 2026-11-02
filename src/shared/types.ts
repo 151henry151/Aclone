@@ -14,6 +14,8 @@ export type Task = {
   end: number;
   building?: string;
   plot?: number;
+  /** Ripe plots reserved by one Harvest all task, in field order. */
+  plots?: number[];
   resource?: string;
   item?: string;
   amount?: number;

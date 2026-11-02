@@ -2917,7 +2917,7 @@ export function advance(w: World, seconds: number) {
       }
       delete p.task;
       if (t.kind === 'harvest') {
-        finishHarvest(w, p, t.building!, t.plot!, t.end);
+        for (const index of t.plots ?? [t.plot!]) finishHarvest(w, p, t.building!, index, t.end);
         breakLabourStreak(p);
       } else if (t.kind === 'labour') {
         const reward = t.reward ?? labourReward(w, p);
@@ -2979,10 +2979,14 @@ export function advance(w: World, seconds: number) {
   );
   for (const b of w.buildings) {
     expireFarmCrops(w, b);
-    for (const plot of b.plots ?? [])
+    for (const [index, plot] of (b.plots ?? []).entries())
       if (plot.harvest) {
         const task = w.players[plot.harvest.player]?.task;
-        if (task?.kind !== 'harvest' || task.building !== b.id) delete plot.harvest;
+        const reserved =
+          task?.kind === 'harvest' &&
+          task.building === b.id &&
+          (task.plots ? task.plots.includes(index) : task.plot === index);
+        if (!reserved) delete plot.harvest;
       }
     b.smoking =
       !b.construction &&

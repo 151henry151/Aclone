@@ -13,7 +13,7 @@ import { fuelCapacity, refuelRequiresReboarding, returnTractor } from '../shared
 import type { Building, Player, World } from '../shared/types';
 import { jobVacancy, hiringLimit } from '../shared/staffing';
 import { propertyQuote } from '../shared/property';
-import { winterDeadline } from '../shared/farming';
+import { harvestOffer, winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
 import { stockWeight } from '../shared/fishing-expedition';
 import { cargoFitReason } from '../shared/cargo-fit';
@@ -169,6 +169,7 @@ export function actionVisible(
       if (id === 'expand') return b.owner === p.id;
       if (b.owner !== p.id && !(w.settings.jobsEnabled !== false && b.employees.includes(p.id)))
         return false;
+      if (id === 'harvestAll') return harvestOffer(w, b, p).ripe > 0;
       const plot = b.plots?.[plotIndex ?? -1];
       if (plot?.harvest || (plot?.crop && w.time >= winterDeadline(plot.planted))) return false;
       switch (id) {
@@ -248,6 +249,8 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   }
   if (action === 'farm' && id !== 'expand' && !p.skills.includes('farmer'))
     return 'Learn Farmer at school first';
+  if (action === 'farm' && id === 'harvestAll' && b && !harvestOffer(w, b, p).plots.length)
+    return harvestOffer(w, b, p).note;
   if (action === 'job' && b) {
     const recipe = b.kind === 'farm' ? recipes.farm : (b.production ?? recipes[b.recipe ?? '']);
     if (recipe && !p.skills.includes(recipe.skill)) return `Learn ${recipe.skill} at school first`;

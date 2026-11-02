@@ -143,7 +143,7 @@ window from now rather than stacking shifts. Expiration is shown until you renew
 You can drive away or log off during a shift: eligibility depends on the deadline,
 not your location or connection. Wages require a successful production batch with
 inputs, output space and funded payroll. An eligible check can fail without pay;
-the timer does not pause in worlds using shifts. Farms instead pay on funded manual harvest completion.
+the timer does not pause in worlds using shifts. Farms instead pay on funded manual harvest completion, once per plot, including each plot a Harvest all task finishes.
 Worlds with active work disabled need no renewals. Odd Jobs Office labour is a
 separate timed task that locks movement. Learn the corresponding profession at school.
 

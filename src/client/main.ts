@@ -128,7 +128,7 @@ import { waterworksSite } from '../shared/shoreline';
 import { roomCount } from '../shared/lodging';
 import { shipStats, routeQuote, stationPrice, spaceGoods } from '../shared/galaxy';
 import { calendar, worldWeather, snowDescription } from '../shared/environment';
-import { crops, cropStatus, fertilizerPrice } from '../shared/farming';
+import { crops, cropStatus, fertilizerPrice, harvestOffer } from '../shared/farming';
 import { VERSION } from '../shared/version';
 import './style.css';
 import './mobile.css';
@@ -2246,7 +2246,14 @@ function buildingWindow(b: Building) {
         const blocked = farmExpansionBlocker(world, b);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
-      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting takes 15 seconds. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>${season === 'Winter' ? 'No crops can be planted in winter.' : 'No crops are currently available for you to plant.'}${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Check the planting season and the owner’s staff rules and budget.'}</p>`}<div class="cards">${Array.from(
+      const canTend =
+        b.owner === me!.id ||
+        (world!.settings.jobsEnabled !== false && b.employees.includes(me!.id));
+      const offer = canTend ? harvestOffer(world!, b, me!) : undefined;
+      const harvestAll = offer?.ripe
+        ? `<p class="note" data-harvest-all>${esc(offer.note)}</p>${button(offer.percent < 100 ? `Harvest all · ${offer.percent}%` : 'Harvest all', 'farm', `data-building="${b.id}" data-id="harvestAll"`)}`
+        : '';
+      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting one plot takes 15 seconds. Harvest all takes half again as long. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${harvestAll}${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>${season === 'Winter' ? 'No crops can be planted in winter.' : 'No crops are currently available for you to plant.'}${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Check the planting season and the owner’s staff rules and budget.'}</p>`}<div class="cards">${Array.from(
         { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
@@ -2971,7 +2978,7 @@ app.addEventListener('click', async (e) => {
         break;
       case 'farm':
         send({ type: 'farm', building, plot: Number(el.dataset.plot), operation: id });
-        if (id === 'harvest') closePanel();
+        if (id === 'harvest' || id === 'harvestAll') closePanel();
         break;
       case 'paint':
         send({ type: 'paint', building, color: id, slot: Number(el.dataset.vehicle) });

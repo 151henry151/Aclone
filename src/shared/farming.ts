@@ -49,12 +49,12 @@ export function expireFarmCrops(w: World, b: Building) {
   for (const [index, plot] of (b.plots ?? []).entries()) {
     if (!plot.crop || w.time < winterDeadline(plot.planted)) continue;
     const worker = plot.harvest && w.players[plot.harvest.player];
-    if (
-      worker?.task?.kind === 'harvest' &&
-      worker.task.building === b.id &&
-      worker.task.plot === index
-    )
-      delete worker.task;
+    if (worker?.task?.kind === 'harvest' && worker.task.building === b.id) {
+      if (worker.task.plots?.includes(index)) {
+        worker.task.plots = worker.task.plots.filter((plot) => plot !== index);
+        if (!worker.task.plots.length) delete worker.task;
+      } else if (worker.task.plot === index) delete worker.task;
+    }
     b.plots![index] = {
       planted: 0,
       ready: 0,
@@ -103,6 +103,97 @@ export function cropStatus(w: World, b: Building, index: number) {
     days: Math.max(0, Math.ceil((p.ready - w.time) / DAY_SECONDS)),
   };
 }
+
+/** One plot's harvest. Harvest all takes half again this long for every plot it cuts. */
+export const HARVEST_SECONDS = 15;
+
+export interface HarvestOffer {
+  /** Ripe plots this action will reserve, in field order. */
+  plots: number[];
+  ripe: number;
+  percent: number;
+  seconds: number;
+  note: string;
+}
+
+function harvestSeconds(count: number) {
+  return (count * HARVEST_SECONDS * 3) / 2;
+}
+
+function harvestDuration(seconds: number) {
+  return `${seconds} seconds`;
+}
+
+/** Ripe plots that fit the stockroom and, for a paid hand, the till. */
+export function harvestOffer(w: World, b: Building, p: Player): HarvestOffer {
+  const ripe: { index: number; crop: string; amount: number }[] = [];
+  for (let index = 0; index < farmPlotCount(b); index++) {
+    const plot = b.plots?.[index];
+    if (!plot?.crop || plot.harvest) continue;
+    if (w.time < plot.ready || w.time >= winterDeadline(plot.planted)) continue;
+    ripe.push({ index, crop: plot.crop, amount: cropStatus(w, b, index).yield });
+  }
+  const wageEach = b.owner !== p.id && b.employees.includes(p.id) ? b.wage : 0;
+  let wageLeft = b.investment;
+  const room: Record<string, number> = {};
+  const taken: typeof ripe = [];
+  const heldStorage: typeof ripe = [];
+  const heldWages: typeof ripe = [];
+  for (const row of ripe) {
+    room[row.crop] ??= Math.max(0, b.capacity - (b.stock[row.crop] ?? 0));
+    if (row.amount > room[row.crop]) {
+      heldStorage.push(row);
+      continue;
+    }
+    if (wageEach > wageLeft) {
+      heldWages.push(row);
+      continue;
+    }
+    room[row.crop] -= row.amount;
+    wageLeft -= wageEach;
+    taken.push(row);
+  }
+  const ripeYield = ripe.reduce((sum, row) => sum + row.amount, 0);
+  const takenYield = taken.reduce((sum, row) => sum + row.amount, 0);
+  const share = (amount: number) =>
+    ripeYield === 0 ? 0 : amount === ripeYield ? 100 : Math.floor((amount * 100) / ripeYield);
+  const percent = share(takenYield);
+  const storageYield = takenYield + heldWages.reduce((sum, row) => sum + row.amount, 0);
+  const storagePercent = share(storageYield);
+  const seconds = harvestSeconds(taken.length);
+  const takenCrops = new Set(taken.map((row) => row.crop));
+  const names = [...new Set(heldStorage.map((row) => row.crop))].map((crop) =>
+    takenCrops.has(crop) ? `Some ${crops[crop].name}` : crops[crop].name,
+  );
+  const named =
+    names.length === 0
+      ? ''
+      : names.length === 1
+        ? `${names[0]} will not fit. `
+        : `${names.slice(0, -1).join(', ')} and ${names.at(-1)} will not fit. `;
+  let note = '';
+  if (ripe.length && !taken.length && heldStorage.length && !heldWages.length)
+    note =
+      'Storage has room for 0% of the ripe crops. Make room in the stockroom before harvesting all.';
+  else if (ripe.length && !taken.length) note = 'Fund harvest wages before harvesting all.';
+  else if (taken.length) {
+    const time =
+      taken.length === ripe.length
+        ? `Harvest all takes ${harvestDuration(seconds)}, half again as long as harvesting ${taken.length === 1 ? 'that plot' : 'those plots'} one by one.`
+        : `It takes ${harvestDuration(seconds)}, half again as long as harvesting ${taken.length === 1 ? 'that plot' : 'those plots'} one by one.`;
+    const storage =
+      heldStorage.length > 0
+        ? `Storage has room for ${storagePercent}% of the ripe crops (${storageYield} of ${ripeYield} units). ${named}${heldWages.length ? '' : 'Harvest all will take only that share. '}`
+        : '';
+    const wages =
+      heldWages.length > 0
+        ? `The till covers wages for ${taken.length} of ${ripe.length} ripe plots. Harvest all will take only those. `
+        : '';
+    note = `${storage}${wages}${time}`;
+  }
+  return { plots: taken.map((row) => row.index), ripe: ripe.length, percent, seconds, note };
+}
+
 export function farmAction(w: World, p: Player, b: Building, a: Action) {
   const check = (ok: unknown, message: string) => {
     if (!ok) throw Error(message);
@@ -135,6 +226,21 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     b.farmLandCost = (b.farmLandCost ?? 0) + cost;
     log(w, 'sink', cost, p.id, 'land-registry', 'farm land purchase');
     return `Purchased four more plots; this farm now has ${b.farmPlots}.`;
+  }
+  if (a.operation === 'harvestAll') {
+    check(p.skills.includes('farmer'), 'Learn Farmer at the school');
+    check(!p.task, 'Finish your current task first');
+    expireFarmCrops(w, b);
+    const offer = harvestOffer(w, b, p);
+    check(offer.plots.length > 0, offer.note);
+    const wage = b.owner !== p.id && b.employees.includes(p.id) ? b.wage : 0;
+    for (const index of offer.plots) {
+      const plot = b.plots![index];
+      plot.harvest = { player: p.id, amount: cropStatus(w, b, index).yield, wage };
+    }
+    p.task = { kind: 'harvest', building: b.id, plots: offer.plots, end: w.time + offer.seconds };
+    p.speed = 0;
+    return offer.note;
   }
   check(p.skills.includes('farmer'), 'Learn Farmer at the school');
   check(typeof a.plot === 'number', 'Choose a plot');
@@ -234,7 +340,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
     const wage = b.owner !== p.id && b.employees.includes(p.id) ? b.wage : 0;
     check(b.investment >= wage, 'Fund harvest wages first');
     plot.harvest = { player: p.id, amount: n, wage };
-    p.task = { kind: 'harvest', building: b.id, plot: index, end: w.time + 15 };
+    p.task = { kind: 'harvest', building: b.id, plot: index, end: w.time + HARVEST_SECONDS };
     p.speed = 0;
   } else throw Error('Unknown farm operation');
 }

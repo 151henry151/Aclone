@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.114.5
+
+Deploy the client and server normally, then reload clients. No save migration. Verify the health endpoint reports 0.114.5, and that a farm with two ripe plots shows Harvest all at half again the single-plot time, or Harvest all · N% when the stockroom cannot hold both.
+
 ## Upgrade 0.114.4
 
 Deploy the client and server normally, then reload clients. On load, every world renames `boatmaster` to `captain` once. Public Puddlewick turns on `requireCaptainSkill` once and grants that skill to players who already own a boat longer than the motorboat. Other worlds keep helming unrestricted until an owner enables the rule. No stock or money is rewritten. Verify the health endpoint reports 0.114.4, and that a new pilot at the Puddlewick boatyard is asked to learn captain before buying a canal boat.

@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.114.5] - 2026-11-02
+
+### Changed
+
+- Add Harvest all on a farm. It reserves every ripe plot that fits the stockroom, in field order, and takes 22.5 seconds per plot, half again a single 15-second harvest. When only part of the harvest fits, the button shows that share and the note names it; a full stockroom leaves the button disabled. Paid hands stop at the plots the till can cover.
+
 ## [0.114.4] - 2026-11-01
 
 ### Changed

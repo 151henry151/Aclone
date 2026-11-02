@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.114.5 — Harvest all
+
+A farm's Main panel offers **Harvest all** once any plot is ripe. It cuts every ripe plot that fits in the stockroom, in field order, and takes half again as long as harvesting those plots one by one (22.5 seconds each instead of 15). When the stockroom cannot hold the whole harvest, the button reads **Harvest all · N%** and a note states that clicking it takes only that share. Nothing is cut when none of it fits. A paid hand is limited to the plots the till can pay for. Each plot's own Harvest button is unchanged.
+
 ## 0.114.4 — Larger boats need a captain
 
 Buying or helming a boat longer than the outboard motorboat now needs the captain skill, learned at school like any other qualification. The motorboat and the lifeboat do not. Passengers and deckhands are not asked. New worlds start with the rule on. Public Puddlewick adopts it once and qualifies anyone who already owns a canal boat, trawler, charter boat or tug, so nobody is locked out of a boat they paid for. Other existing worlds stay as they are until the owner ticks **Require the captain skill for boats longer than the motorboat**. The old boatmaster licence is now captain. The vehicle editor can force or waive the rule for a single slot.
