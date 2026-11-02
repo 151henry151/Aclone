@@ -76,11 +76,11 @@ let socialPane = 'letters';
 import {
   mapAvailable,
   vehicleCondition,
-  requiredLicence,
   maintainable,
   SERVICE_FEE,
   MAP_PRICE,
 } from '../shared/vehicle-services';
+import { helmQualification } from '../shared/captain';
 import { maximumHealth, nutritionDescription } from '../shared/nutrition';
 import { landscapeEditor, landscapeControls } from './landscape-editor';
 import { worldItems, worldSkills, skillLesson, worldBuildings } from '../shared/world-catalogue';
@@ -2198,7 +2198,7 @@ function buildingWindow(b: Building) {
           i === 0 || i === 3 || (b.aircraftHangar ? i !== 2 : i === 2 && hasAircraftHangar(world!))
             ? ''
             : button(
-                `${esc(v.name)}${requiredLicence(world!, i) ? ` · ${esc(requiredLicence(world!, i)!)} licence` : ''} <span>${(i === 2 ? aircraftCount(me!) > 0 : (me!.fleet ?? [0, 5]).includes(i)) ? (i === 2 ? 'Board owned aircraft' : 'Owned') : money(v.price)}</span>`,
+                `${esc(v.name)}${helmQualification(world!, i) ? ` · ${esc(helmQualification(world!, i)!)} licence` : ''} <span>${(i === 2 ? aircraftCount(me!) > 0 : (me!.fleet ?? [0, 5]).includes(i)) ? (i === 2 ? 'Board owned aircraft' : 'Owned') : money(v.price)}</span>`,
                 'vehicle',
                 `data-id="${i}" data-building="${b.id}"${i === 2 ? ' data-explain' : ''}`,
                 'wide',

@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.114.4
+
+Deploy the client and server normally, then reload clients. On load, every world renames `boatmaster` to `captain` once. Public Puddlewick turns on `requireCaptainSkill` once and grants that skill to players who already own a boat longer than the motorboat. Other worlds keep helming unrestricted until an owner enables the rule. No stock or money is rewritten. Verify the health endpoint reports 0.114.4, and that a new pilot at the Puddlewick boatyard is asked to learn captain before buying a canal boat.
+
 ## Upgrade 0.114.3
 
 Deploy the client and server normally, then reload clients. On load, public Puddlewick adopts a 12d ordinary shift once (`labourRulesVersion`); a later owner edit is kept. Other existing worlds gain the 200d daily cap and keep a 1d shift until an owner sets `labourShiftPay`. No stock or money is rewritten. Verify the health endpoint reports 0.114.3, and that the Odd Jobs button shows 12d in Puddlewick.

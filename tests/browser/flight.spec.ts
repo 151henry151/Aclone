@@ -23,6 +23,7 @@ test('two-handed flight reaches the server, latches throttle, banks the aircraft
     w.terrain = [];
     w.settings.mapSize = 3000;
     w.settings.vehicleLicences = false;
+    w.settings.requireCaptainSkill = false;
     w.creator = creatorSchema.parse({ scenery: false });
     w.landscape = landscapeSchema.parse({ heightmap: Array(1089).fill(10) });
     const p = addPlayer(w, account.id, account.name);

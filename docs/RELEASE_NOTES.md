@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.114.4 — Larger boats need a captain
+
+Buying or helming a boat longer than the outboard motorboat now needs the captain skill, learned at school like any other qualification. The motorboat and the lifeboat do not. Passengers and deckhands are not asked. New worlds start with the rule on. Public Puddlewick adopts it once and qualifies anyone who already owns a canal boat, trawler, charter boat or tug, so nobody is locked out of a boat they paid for. Other existing worlds stay as they are until the owner ticks **Require the captain skill for boats longer than the motorboat**. The old boatmaster licence is now captain. The vehicle editor can force or waive the rule for a single slot.
+
 ## 0.114.3 — Odd Jobs pays a day's wage, then tapers
 
 An ordinary 15-second shift at the Odd Jobs Office pays 12d in a new world and in public Puddlewick, for the first eight shifts in a row. The next pays two thirds, then half, a third and a quarter. Waiting ten minutes, or doing other work, restores the full rate. Ordinary pay stops at 200d per game day; the button shows the amount and why it is lower, and a shift that would pay nothing cannot be started. Meal relief is unchanged: below 50d of cash and savings it still pays for a premium loaf and water, at most once per half hour, and it does not count toward the cap. Residents who can already afford a meal rank a job, gathering or hauling ahead of another shift.

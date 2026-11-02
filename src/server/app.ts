@@ -8,6 +8,7 @@ import { preparePuddlewickOcean } from './puddlewick-ocean';
 import { prepareAutomaticProvisions } from './automatic-provisions-rules';
 import { prepareBoatDeathRules } from './boat-death-rules';
 import { prepareLabourRules } from './labour-rules';
+import { prepareCaptainRules } from './captain-rules';
 import { prepareFishingVoyages } from './fishing-voyages';
 import { integrateSeafood } from '../shared/seafood';
 import { aboardBoat } from '../shared/boathouse';
@@ -184,6 +185,7 @@ export async function createApp(options: AppOptions) {
     const boatDeath = prepareBoatDeathRules(world);
     const provisions = prepareAutomaticProvisions(world);
     const labour = prepareLabourRules(world);
+    const captain = prepareCaptainRules(world);
     const ocean = preparePuddlewickOcean(world);
     const lighthouses = ensurePuddlewickLighthouses(world);
     const resources = ensurePuddlewickResources(world);
@@ -203,6 +205,7 @@ export async function createApp(options: AppOptions) {
       boatDeath ||
       provisions ||
       labour ||
+      captain ||
       ocean ||
       lighthouses ||
       resources ||

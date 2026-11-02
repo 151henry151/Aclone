@@ -35,6 +35,7 @@ const setup = () => {
     speed: 0,
   });
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   return { w, captain, tug };
 };
 const agree = (s: ReturnType<typeof setup>, fee = 20000) => {

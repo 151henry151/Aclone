@@ -85,7 +85,7 @@ export function vehicleEditor(w: World, slot: number) {
       ['8', 'Walking'],
     ],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for these features. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + bool('requiresCaptain', v.requiresCaptain ?? ((v.mode === 3 || v.mode === 5) && (v.length ?? 0) > (vehicles[33].length ?? 4.3))) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for trawling, provisions and crew. Requires captain overrides the length rule for this slot. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
     'Death and recovery',
     select(
       'deathPolicy',
@@ -132,7 +132,14 @@ export function vehicleForm(form: HTMLFormElement) {
     if (value === null || value === '') continue;
     values[key] = ['name', 'color', 'deathPolicy', 'dashboard', 'trackTexture'].includes(key)
       ? String(value)
-      : ['trawling', 'provisions', 'tracks', 'persistentThrottle', 'retainFuel'].includes(key)
+      : [
+            'trawling',
+            'provisions',
+            'tracks',
+            'persistentThrottle',
+            'retainFuel',
+            'requiresCaptain',
+          ].includes(key)
         ? value === 'true'
         : Number(value);
   }

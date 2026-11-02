@@ -36,7 +36,7 @@ export function recordTravel(w: World, p: Player, metres: number) {
 export function requiredLicence(w: World, slot: number) {
   if (!w.settings.vehicleLicences || isTractor(slot) || [5, 6, 7, 29].includes(slot)) return;
   const mode = w.vehicleTuning?.[slot]?.mode ?? vehicleDef(w, slot)?.mode;
-  return mode === 2 || mode === 6 ? 'pilot' : mode === 3 || mode === 5 ? 'boatmaster' : 'driver';
+  return mode === 2 || mode === 6 ? 'pilot' : mode === 3 || mode === 5 ? 'captain' : 'driver';
 }
 export function mapAvailable(w: World, p: Player) {
   return !w.settings.requireMapItem || (p.inventory.parishMap ?? 0) > 0;

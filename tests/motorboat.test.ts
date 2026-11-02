@@ -15,6 +15,7 @@ const setup = () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   ensurePuddlewickBoatyard(w);
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   const p = addPlayer(w, 'p', 'Captain');
   Object.assign(p, {
     vehicle: MOTORBOAT,

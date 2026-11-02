@@ -15,6 +15,7 @@ function setup() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   ensurePuddlewickBoatyard(w);
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   const d = boatLandings(w).find((d) => d.building)!;
   const c = addPlayer(w, 'c', 'Captain'),
     p = addPlayer(w, 'p', 'Passenger');

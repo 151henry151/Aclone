@@ -6,6 +6,7 @@ import { propertyQuote } from '../../shared/property.ts';
 import { businessEstimate } from './enterprise.ts';
 import { items } from '../../shared/catalog.ts';
 import { labourDailyCap, labourShiftPay } from '../../shared/public-labour.ts';
+import { skillLesson } from '../../shared/world-catalogue.ts';
 import { distance } from '../../shared/simulation.ts';
 import { shelter } from '../../shared/lodging.ts';
 import type { Player, World } from '../../shared/types.ts';
@@ -153,6 +154,9 @@ export function lifeBriefing(w: World, p: Player) {
       jobEstimates:
         'Per completed batch; no wage when inputs, capital or output space block production. Taking a qualified vacancy may supply the missing worker. Compare travel and tuition before changing careers.',
       labour: `Odd Jobs Office pays ${labourShiftPay(w)} cash per 15-second shift for the first eight in a row, then less until a 600-second break or other work, and at most ${labourDailyCap(w)} ordinary cash per game day. Below 5000 combined cash and bank, relief pays a quoted basic-meal allowance at most once per 1800 seconds and does not count toward that cap. It is emergency support, not a career; prefer a qualified job, gathering or hauling once a meal is affordable.`,
+      boats: w.settings.requireCaptainSkill
+        ? `Longer boats need captain (school, ${skillLesson(w, p, 'captain').price} cash). The motorboat does not.`
+        : 'Captain is not required for boats.',
       training: {
         tuition: p.skills.length ? 16000 : 8000,
         seconds: p.skills.length ? 2400 : 60,

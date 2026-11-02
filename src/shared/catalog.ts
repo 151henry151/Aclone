@@ -23,7 +23,7 @@ export const skills = [
     'mechanic',
     'driver',
     'pilot',
-    'boatmaster',
+    'captain',
   ]),
 ];
 export const checkpoints = [

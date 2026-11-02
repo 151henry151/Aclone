@@ -293,7 +293,7 @@ Garage **Vehicle service** shows current condition, recorded kilometres and elap
 
 Bring **Steel** spare parts from a steelworks or shop. Each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
 
-World owners may require **driver**, **pilot**, or **boatmaster** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. All six tractors and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick doesn't require these licences.
+World owners may require **driver**, **pilot**, or **captain** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. All six tractors and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick leaves those licences off. Boats longer than the motorboat also need **captain**; the motorboat and lifeboat do not.
 
 Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d, and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.
 

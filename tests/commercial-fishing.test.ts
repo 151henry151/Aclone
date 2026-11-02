@@ -34,6 +34,7 @@ function setup() {
     fuel: 50,
   });
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   const d = boatLandings(w).find((d) => d.building)!;
   Object.assign(p, d.land, { y: travelHeight(w, d.land.x, d.land.z) });
   act(w, p.id, { type: 'vehicle', slot: FISHING_BOAT, building: d.id });

@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.114.4] - 2026-11-01
+
+### Changed
+
+- Require the `captain` skill to buy or helm a boat longer than the outboard motorboat when `requireCaptainSkill` is on. New worlds and public Puddlewick turn it on; other existing worlds stay off until edited. The motorboat and lifeboat stay open. Passengers and deckhands are not asked. A per-slot `requiresCaptain` tuning flag overrides the length test.
+- Rename the `boatmaster` licence to `captain`. On load, each world replaces `boatmaster` once. Public Puddlewick also grants `captain` once to anyone who already owns a longer boat.
+- Name the school in the purchase and helm refusal, and tell residents the tuition in their economic briefing.
+
 ## [0.114.3] - 2026-11-01
 
 ### Changed

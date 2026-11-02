@@ -16,6 +16,7 @@ const fixture = () => {
   const w = createWorld('config', 'Config', 'owner'),
     p = addPlayer(w, 'owner', 'Builder');
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   w.settings.mapSize = 20000;
   return { w, p };
 };

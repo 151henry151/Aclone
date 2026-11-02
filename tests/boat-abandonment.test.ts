@@ -15,6 +15,7 @@ function setup(slot = 30) {
     hungerRate: 0,
     thirstRate: 0,
     vehicleLicences: false,
+    requireCaptainSkill: false,
     maxOfflineDays: 0,
   });
   const p = addPlayer(w, 'captain', 'Captain');

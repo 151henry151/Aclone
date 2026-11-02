@@ -14,6 +14,7 @@ function setup(slot = 30) {
   w.zones = [];
   w.terrain = [];
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   w.settings.vehicleMaintenance = false; // Isolate impact damage from normal travel wear.
   w.settings.tidalRange = 0;
   w.settings.oceanWaves = 0;

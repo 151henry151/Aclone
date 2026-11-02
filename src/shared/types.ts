@@ -286,6 +286,8 @@ export interface Settings {
   postDeathGraceSeconds: number;
   vehicleMaintenance: boolean;
   vehicleLicences: boolean;
+  /** Larger boats need the captain skill. Unset saves stay unrestricted. */
+  requireCaptainSkill?: boolean;
   requireMapItem: boolean;
   parishOrders: boolean;
   parishOrderBudget: number;
@@ -356,6 +358,7 @@ export interface Settings {
 export interface World {
   automaticProvisionsVersion?: 1 | 2;
   labourRulesVersion?: 1;
+  captainRulesVersion?: 1;
   airfield?: import('./airfield').Airfield;
   /** Public works may relocate gathering sites, retaining depletion and task IDs. */
   resourceRelocations?: Record<string, { x: number; z: number }>;
@@ -568,6 +571,8 @@ export interface VehicleDef {
   price: number;
   color: string;
   hitch: number;
+  length?: number;
+  beam?: number;
 }
 export interface Recipe {
   inputs: Stock;

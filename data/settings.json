@@ -47,6 +47,7 @@
   "resetScriptOnDeath": true,
   "vehicleMaintenance": true,
   "vehicleLicences": false,
+  "requireCaptainSkill": true,
   "requireMapItem": false,
   "jobsEnabled": true,
   "ownerOperation": false,

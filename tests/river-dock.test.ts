@@ -23,6 +23,7 @@ function world() {
   expandPuddlewickIsland(w);
   w.buildings = [];
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   return w;
 }
 const w = world();

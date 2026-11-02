@@ -21,6 +21,7 @@ test('passenger accepts a charter, fishes from the boat in scenery view and rece
     const w = createWorld('puddlewick', 'Puddlewick', 'server');
     w.script = '';
     w.settings.vehicleLicences = false;
+    w.settings.requireCaptainSkill = false;
     w.settings.hungerRate = 0;
     w.settings.thirstRate = 0;
     ensurePuddlewickBoatyard(w);

@@ -112,6 +112,7 @@ import {
 } from './public-labour.ts';
 import { onFarmLand } from './farm-land.ts';
 import { buildingBounds, buildingPlan } from './building-shapes.ts';
+import { helmBlock } from './captain.ts';
 import { constructionRefund } from './construction.ts';
 import { crowClasses, crowAbility, returnCrow, type CrowClass } from './robocrows.ts';
 import { lotteryAction, tickLottery } from './lottery.ts';
@@ -123,7 +124,6 @@ import {
   maintainable,
   vehicleRecord,
   recordTravel,
-  requiredLicence,
   repairStatus,
   repairRecipientReady,
   restoreVehicle,
@@ -1360,11 +1360,7 @@ export function act(w: World, id: string, a: Action): string {
         slot !== 7 && slot !== 6 && slot !== LIFEBOAT,
         'Use a robocrow item; ostriches happen by accident',
       );
-      const licence = requiredLicence(w, slot);
-      requireThat(
-        !licence || p.skills.includes(licence),
-        `Learn ${licence} at school to drive this vehicle`,
-      );
+      requireThat(!helmBlock(w, slot, p.skills), helmBlock(w, slot, p.skills) ?? '');
       let landing: BoatLanding | undefined;
       if (poweredBoat(slot, w) || boatSlot(p.vehicle, w)) {
         requireThat(
@@ -2308,8 +2304,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.y = poweredBoat(p.vehicle, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
   if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
     return;
-  const licence = requiredLicence(w, p.vehicle);
-  if (licence && !p.skills.includes(licence)) {
+  if (helmBlock(w, p.vehicle, p.skills)) {
     p.speed = 0;
     return;
   }

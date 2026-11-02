@@ -26,6 +26,7 @@ test('boatyard purchase desk, persistent throttle, trawl controls and fuel rescu
     const p = addPlayer(w, account.id, account.name),
       d = boatLandings(w).find((d) => d.building)!;
     w.settings.vehicleLicences = false;
+    w.settings.requireCaptainSkill = false;
     // Reproduce the live report: the building menu opens here, well beyond
     // the old five-metre boarding area around the shore entrance.
     const approach = { x: -32.27455230580994, z: 141.17068005055614 };

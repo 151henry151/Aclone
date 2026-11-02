@@ -22,6 +22,7 @@ function setup() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   ensurePuddlewickBoatyard(w);
   prepareFishingVoyages(w);
+  w.settings.requireCaptainSkill = false;
   const p = addPlayer(w, 'captain', 'Captain'),
     a = addPlayer(w, 'a', 'Able'),
     b = addPlayer(w, 'b', 'Baker');
@@ -284,6 +285,7 @@ test('offline deckhands remain visible aboard, while private catches stay hidden
 test('provisions stay aboard on disembarking and count against capacity when reboarding', () => {
   const { w, p, a, b, d } = setup();
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   a.online = false;
   b.online = false;
   p.boatStores = { bread: 200 };

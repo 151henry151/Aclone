@@ -103,6 +103,7 @@ test('an existing public boatyard remains usable throughout the tide cycle', asy
   const p = addPlayer(w, 'tide', 'Skipper');
   p.fleet = [0, 5, 3];
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   for (let time = 0; time < 600; time += 10) {
     w.time = time;
     const d = boatLandings(w).find((d) => d.building)!;

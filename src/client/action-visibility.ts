@@ -18,7 +18,7 @@ import { recipes, vehicles } from '../shared/catalog';
 import { stockWeight } from '../shared/fishing-expedition';
 import { cargoFitReason } from '../shared/cargo-fit';
 import { labourQuote } from '../shared/public-labour';
-import { requiredLicence } from '../shared/vehicle-services';
+import { helmBlock } from '../shared/captain';
 import { worldItems } from '../shared/world-catalogue';
 
 /** Context only: affordability, distance and missing supplies stay disabled with explanations.
@@ -243,8 +243,8 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
       p.cash < vehicleDef(w, slot).price
     )
       return 'Not enough cash';
-    const licence = requiredLicence(w, slot);
-    if (licence && !p.skills.includes(licence)) return `Learn ${licence} at school first`;
+    const helm = helmBlock(w, slot, p.skills);
+    if (helm) return helm;
   }
   if (action === 'farm' && id !== 'expand' && !p.skills.includes('farmer'))
     return 'Learn Farmer at school first';

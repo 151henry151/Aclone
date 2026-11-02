@@ -32,6 +32,7 @@ test('hangar boarding, visible runway and a server-confirmed crash preserve spar
     const a = w.airfield!,
       hangar = w.buildings.find((b) => b.id === a.hangar)!;
     w.settings.vehicleLicences = false;
+    w.settings.requireCaptainSkill = false;
     Object.assign(p, {
       x: hangar.x - 15,
       z: hangar.z,

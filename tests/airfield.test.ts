@@ -59,6 +59,7 @@ test('boarding requires the hangar, safe apron, stopped pilot and cargo fit befo
     b = w.buildings.find((b) => b.aircraftHangar)!,
     p = addPlayer(w, 'p', 'Pilot');
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   p.spareBiplanes = 4;
   p.cash = 0;
   p.online = true;
@@ -123,6 +124,7 @@ test('a controlled approach lands and stops within the actual public runway', ()
     a = w.airfield!,
     p = addPlayer(w, 'pilot', 'Landing pilot');
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   Object.assign(p, {
     vehicle: 2,
     fleet: [0, 5, 2],
@@ -175,6 +177,7 @@ test('worlds without a hangar retain garage boarding, and invalid sites cannot c
   const w = createWorld('custom', 'Custom', 'owner'),
     p = addPlayer(w, 'pilot', 'Pilot');
   w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
   p.spareBiplanes = 4;
   p.cash = 0;
   p.inventory = {};
