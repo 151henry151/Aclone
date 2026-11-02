@@ -65,7 +65,7 @@ test('steering weaves while moving, remains unchanged sober, and never turns a p
   assert.equal(tipsy.heading, heading);
 });
 
-test('homes and NPC self-care prefer nonalcoholic drinks, but beer-only pantry still counts', () => {
+test('homes and NPC self-care prefer nonalcoholic drinks, and beer is skipped unless allowed', () => {
   const w = createWorld('pantry', 'Pantry', 'owner'),
     p = addPlayer(w, 'p', 'Pilot');
   p.thirst = 30000;
@@ -76,7 +76,12 @@ test('homes and NPC self-care prefer nonalcoholic drinks, but beer-only pantry s
   assert.equal(stock.beer, 20);
   assert.equal(alcoholLevel(p, w.time), 0);
   p.thirst = 30000;
-  feedShelterNow(w, p, { beer: 20 }, 50);
+  const beerOnly = { beer: 20 };
+  feedShelterNow(w, p, beerOnly, 50);
+  assert.equal(beerOnly.beer, 20, 'beer is left untouched while alcohol is excluded');
+  assert.equal(alcoholLevel(p, 50), 0);
+  w.settings.autoConsumeAlcohol = true;
+  feedShelterNow(w, p, beerOnly, 50);
   assert.ok(alcoholLevel(p, 50) > 0);
 });
 
@@ -86,6 +91,7 @@ test('offline pantry drinking has the same decay timing as live ticks', () => {
   const b = makeBuilding('home', 'home', 0, 0);
   b.owner = p.id;
   b.stock = { beer: 1000, bread: 1000 };
+  w.settings.autoConsumeAlcohol = true;
   w.buildings = [b];
   p.home = b.id;
   p.atHome = true;

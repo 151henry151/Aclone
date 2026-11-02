@@ -45,6 +45,8 @@ test('mixed food/drink servings are not counted twice and use the real shelter r
   const mixed = Object.entries(items).find(([, d]) => d.food && d.drink);
   assert.ok(mixed);
   b.stock = { [mixed[0]]: 3 };
+  // The only drink in the pantry is alcoholic, so the world must allow it.
+  w.settings.autoConsumeAlcohol = true;
   const e = homeProvisions(w, p)!;
   advance(w, e.seconds + 0.001);
   assert.equal(b.stock[mixed[0]], 0);

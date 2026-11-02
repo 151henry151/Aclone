@@ -316,6 +316,11 @@ export interface Settings {
   /** Square map side in metres. The original village occupies the central 500 m. */
   mapSize: number;
   autoConsumeInventory: boolean;
+  /** Eat and drink from inventory while the player is signed in. Defaults to
+   * the offline behaviour when unset, so existing worlds keep today's rules. */
+  autoConsumeInventoryOnline?: boolean;
+  /** Automatic feeding may drink beer and wine. Off everywhere unless set. */
+  autoConsumeAlcohol?: boolean;
   autoConsumeHomeStock: boolean;
   homeNeedsMultiplier: number;
   /** Multiplies deposit recovery time; 4 is the default, 1 restores the old pace. */
@@ -337,7 +342,7 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
-  automaticProvisionsVersion?: 1;
+  automaticProvisionsVersion?: 1 | 2;
   airfield?: import('./airfield').Airfield;
   /** Public works may relocate gathering sites, retaining depletion and task IDs. */
   resourceRelocations?: Record<string, { x: number; z: number }>;

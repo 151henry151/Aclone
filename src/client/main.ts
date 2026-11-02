@@ -36,6 +36,7 @@ import { aircraftCount, hasAircraftHangar } from '../shared/airfield';
 import { aircraftInput } from './flight-controls';
 import { tractorShopHtml, mountTractorShop, vehiclePaintShop } from './tractor-shop';
 import { fuelCapacity, returnTractor, isTractor } from '../shared/tractors';
+import { onlineInventory } from '../shared/automatic-provisions';
 import type { PlaytimeStatistics } from '../shared/player-statistics';
 import { staffingPanel, economicsPanel } from './staffing-panel';
 import { hiringLimit, jobVacancy } from '../shared/staffing';
@@ -2314,7 +2315,7 @@ function buildingWindow(b: Building) {
         ])}<button>Transfer provisions</button></form>`;
     }
     if (b.kind === 'home')
-      html += `<p>While inside, hunger and thirst drain at ${Math.round((world.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of the normal rate. Your home feeds you from its storeroom even while you are offline. ${world.settings.autoConsumeInventory ? 'Carried food and drink are also eaten automatically, online and offline.' : 'Carried food and drink must be used manually.'} ${world.settings.autoConsumeHomeStock ? 'Your selected home also supplies meals while you are away.' : 'Home supplies are used only while inside.'} Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${selfOwned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
+      html += `<p>While inside, hunger and thirst drain at ${Math.round((world.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of the normal rate. Your home feeds you from its storeroom even while you are offline. ${world.settings.autoConsumeInventory ? (onlineInventory(world) ? 'Carried food and drink are also eaten automatically, online and offline.' : 'Carried food and drink are eaten automatically while you are signed off; use them yourself while signed in.') : 'Carried food and drink must be used manually.'} Beer and wine are never consumed automatically. ${world.settings.autoConsumeHomeStock ? 'Your selected home also supplies meals while you are away.' : 'Home supplies are used only while inside.'} Hunger, thirst and starvation damage continue offline. Stock enough food and water before signing off; running out can kill you. Ageing still pauses while offline. Your chimney stays active while you are inside.</p>${selfOwned ? button('Go home', 'home', `data-building="${b.id}"`) : ''}`;
     if (roomCount(b)) {
       const l = b.lodging,
         guest = l?.guests[me.id],

@@ -2,6 +2,10 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.114.2
+
+Deploy the client/server and website normally, then reload clients. The Puddlewick migration runs once on load and turns off inventory feeding while a player is signed in; offline feeding, home stores and boat stores are unchanged, and beer and wine are no longer consumed automatically in any world. No data migration of stock or money is needed. Verify the health endpoint reports 0.114.2, and that buying wine while thirsty leaves all of it in inventory.
+
 ## Upgrade 0.114.1
 
 Deploy the client/server and website normally, then reload clients. No data migration or player grants are needed. Verify the health endpoint reports 0.114.1, and at the Puddlewick airfield hangar, with more carried weight than the biplane's 90 capacity, the "Board owned aircraft" button is disabled with the reason printed beneath it; unloading to 90 or less enables it.

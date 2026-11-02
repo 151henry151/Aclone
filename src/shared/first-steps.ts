@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog';
+import { onlineInventory } from './automatic-provisions';
 import { distance } from './simulation';
 import type { World, Player } from './types';
 /** Public landmarks, personal qualifications and nearby observations only. */
@@ -15,7 +16,7 @@ export function firstSteps(w: World, p: Player) {
     steps.push({
       title: 'Carry provisions',
       detail: w.settings.autoConsumeInventory
-        ? 'Buy and carry food and water. This world eats and drinks from inventory automatically, online and offline. Check prices and stock on arrival.'
+        ? `Buy and carry food and water. This world eats and drinks from inventory automatically${onlineInventory(w) ? ', online and offline' : ' while you are signed off; eat and drink yourself while signed in'}. Alcoholic drinks are never consumed automatically. Check prices and stock on arrival.`
         : 'Buy food and water, then consume them from Inventory. Check prices and stock on arrival.',
       destination: store?.id,
     });
@@ -46,7 +47,7 @@ export function firstSteps(w: World, p: Player) {
   steps.push({
     title: home ? 'Prepare for logout' : 'Find shelter',
     detail: home
-      ? `Stock your selected home. ${w.settings.autoConsumeHomeStock ? 'These stores also feed you while away.' : 'Go inside to eat from home stores.'} ${w.settings.autoConsumeInventory ? 'Carried provisions are also consumed automatically.' : 'Carried supplies require manual eating.'} Indoors, needs drain at ${Math.round((w.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
+      ? `Stock your selected home. ${w.settings.autoConsumeHomeStock ? 'These stores also feed you while away.' : 'Go inside to eat from home stores.'} ${w.settings.autoConsumeInventory ? (onlineInventory(w) ? 'Carried provisions are also consumed automatically.' : 'Carried provisions feed you while signed off; eat and drink them yourself while signed in.') : 'Carried supplies require manual eating.'} Beer and wine are never consumed automatically. Indoors, needs drain at ${Math.round((w.settings.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
       : `Save for a cottage or inspect an inn for a room. ${w.settings.autoConsumeInventory ? 'Keep food and water in inventory: automatic meals work even without a home.' : 'Offline survival follows this world’s rules.'}`,
     destination: home?.id ?? (nearest('bnb') ?? nearest('hotel'))?.id,
   });

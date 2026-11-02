@@ -25,6 +25,8 @@ export function homeProvisionsStatus(w: World, p: Player) {
     w.settings.thirstRate,
     w.settings.homeNeedsMultiplier,
     w.settings.autoConsumeInventory,
+    w.settings.autoConsumeInventoryOnline,
+    w.settings.autoConsumeAlcohol,
     w.settings.autoConsumeHomeStock,
     w.settings.autoConsumeInventory ? p.inventory : undefined,
     p.needsGraceUntil,

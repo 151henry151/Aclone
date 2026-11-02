@@ -153,6 +153,43 @@ test('deckhands use captain provisions first and meals are charged once; online 
   );
   assert.ok(p.fishingVoyage.expenses > 0);
 });
+test('automatic feeding never drinks alcohol unless the world allows it', () => {
+  const { w, p } = setup();
+  p.online = true;
+  p.inventory = { wine: 3 };
+  p.thirst = 50000;
+  advance(w, 1);
+  assert.equal(p.inventory.wine, 3, 'wine stays in inventory while the alcohol setting is off');
+  assert.equal(p.alcohol?.level ?? 0, 0, 'no intoxication from automatic feeding');
+  w.settings.autoConsumeAlcohol = true;
+  advance(w, 1);
+  assert.ok((p.inventory.wine ?? 0) < 3, 'wine is drunk when the world opts in');
+  assert.ok((p.alcohol?.level ?? 0) > 0);
+});
+
+test('an online player does not eat from inventory when online consumption is off', () => {
+  const { w, p } = setup();
+  p.online = true;
+  w.settings.autoConsumeInventoryOnline = false;
+  advance(w, 1);
+  assert.deepEqual(p.inventory, { bread: 20, water: 20 });
+  assert.ok(p.hunger > 30000 && p.thirst > 30000, 'needs still rise while online');
+  p.online = false;
+  advance(w, 1);
+  assert.ok(p.inventory.bread < 20 && p.inventory.water < 20, 'offline catch-up still eats');
+});
+
+test('Puddlewick migration turns online inventory consumption off once and keeps owner edits', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.automaticProvisionsVersion = 1;
+  w.settings.autoConsumeInventory = true;
+  assert.equal(prepareAutomaticProvisions(w), true);
+  assert.equal(w.settings.autoConsumeInventoryOnline, false);
+  w.settings.autoConsumeInventoryOnline = true;
+  assert.equal(prepareAutomaticProvisions(w), false);
+  assert.equal(w.settings.autoConsumeInventoryOnline, true, 'a later owner edit survives');
+});
+
 test('Puddlewick migration is once-only and leaves other worlds alone', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   assert.equal(prepareAutomaticProvisions(w), true);

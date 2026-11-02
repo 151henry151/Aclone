@@ -30,7 +30,12 @@ export function feedShelterNow(w: World, p: Player, stock: Stock, at = w.time) {
   ] as const) {
     if (p[need] < 30000) continue;
     const choices = Object.entries(items)
-      .filter(([key, d]) => (stock[key] ?? 0) > 0 && (d[nutrient] ?? 0) > 0)
+      .filter(
+        ([key, d]) =>
+          (stock[key] ?? 0) > 0 &&
+          (d[nutrient] ?? 0) > 0 &&
+          (w.settings.autoConsumeAlcohol || !alcoholDose(key)),
+      )
       .sort(
         ([a], [b]) =>
           alcoholDose(a) - alcoholDose(b) || Number(a === p.lastFood) - Number(b === p.lastFood),
@@ -67,7 +72,12 @@ export function nextShelterMeal(
     if (
       rate > 0 &&
       p[need] < 30000 &&
-      Object.entries(stock).some(([key, n]) => n > 0 && (items[key]?.[nutrient] ?? 0) > 0)
+      Object.entries(stock).some(
+        ([key, n]) =>
+          n > 0 &&
+          (items[key]?.[nutrient] ?? 0) > 0 &&
+          (w.settings.autoConsumeAlcohol || !alcoholDose(key)),
+      )
     )
       next = Math.min(next, (30000 - p[need]) / rate);
   return next;

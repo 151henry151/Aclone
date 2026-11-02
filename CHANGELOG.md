@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.114.2] - 2026-11-01
+
+### Changed
+
+- Exclude beer and wine from automatic feeding unless the new world setting `autoConsumeAlcohol` is on (off by default in every world, including Puddlewick). Manual drinking is unchanged, and the home-provisions forecast counts only what will actually be eaten.
+- Split inventory feeding into `autoConsumeInventory` (while signed off) and `autoConsumeInventoryOnline` (while signed in, following the signed-off setting when unset). The Puddlewick migration (`automaticProvisionsVersion` 2) turns signed-in inventory feeding off once and keeps later owner edits; home stores, guest-room pantries, boat stores and offline catch-up are unaffected.
+- Update the Editor → Rules automatic-provisions controls, the rules summary, first-steps hints, the home panel and the boat provisions panel to describe the signed-in and alcohol rules.
+
 ## [0.114.1] - 2026-11-01
 
 ### Changed

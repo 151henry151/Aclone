@@ -17,7 +17,8 @@ export function automaticPantries(w: World, p: Player): AutomaticPantry[] {
     const boat = boatPantry(w, p);
     if (boat) sources.push({ stock: boat, until: Infinity, boat: true });
   }
-  if (w.settings.autoConsumeInventory) sources.push({ stock: p.inventory, until: Infinity });
+  if (w.settings.autoConsumeInventory && (p.online !== true || onlineInventory(w)))
+    sources.push({ stock: p.inventory, until: Infinity });
   if (!home && w.settings.autoConsumeHomeStock) {
     const remote = shelter(w, { ...p, atHome: true });
     if (remote)
@@ -25,4 +26,7 @@ export function automaticPantries(w: World, p: Player): AutomaticPantry[] {
   }
   return sources;
 }
+/** Worlds created before the split follow the offline rule while online too. */
+export const onlineInventory = (w: World) =>
+  w.settings.autoConsumeInventoryOnline ?? w.settings.autoConsumeInventory;
 export const homeNeedsMultiplier = (w: World) => w.settings.homeNeedsMultiplier ?? 0.8;

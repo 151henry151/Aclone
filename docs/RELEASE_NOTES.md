@@ -2,6 +2,10 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.114.2 — Automatic meals stop drinking your wine
+
+Automatic feeding no longer drinks beer or wine in any world unless the owner turns on **Automatic meals may include beer and wine**. Buying wine while thirsty keeps every bottle. Public Puddlewick also stops eating from your inventory while you are signed in: carried food and drink still feed you while signed off and while catching up offline, and home stores, guest rooms and boat stores are unchanged. A world owner can turn signed-in inventory feeding back on, and that choice survives restarts.
+
 ## 0.114.1 — Cargo weight shown when boarding is refused
 
 Changing vehicle with more cargo than the destination can hold now reports the carried weight, the vehicle's capacity and the exact amount to unload, for example "Carrying 101 weight; the Biplane holds 90. Unload 11 before boarding." The hangar's "Board owned aircraft" button prints that reason beneath itself while disabled, instead of only in a hover title, so touch players see it. Server rejection and client blocker share one helper, so the numbers always agree.
