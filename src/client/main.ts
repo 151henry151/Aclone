@@ -47,7 +47,12 @@ import { firstSteps } from '../shared/first-steps';
 import { Controller } from './controller';
 import { buildMenuHtml, mountBuildMenu } from './build-menu';
 let closeBuildPreview: (() => void) | undefined;
-import { labourReward, RELIEF_PAY } from '../shared/public-labour.ts';
+import {
+  labourQuote,
+  labourShiftPay,
+  labourDailyCap,
+  RELIEF_PAY,
+} from '../shared/public-labour.ts';
 import { actionVisible, refreshActionVisibility } from './action-visibility';
 import {
   farmPlotCount,
@@ -2156,8 +2161,10 @@ function buildingWindow(b: Building) {
         .join(
           '',
         )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label><p data-bulk-summary></p>`;
-    if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false)
-      html += `<p>Unskilled labour. A 15-second task pays ${money(labourReward(world, me!))}. Low-cash residents can receive ${money(RELIEF_PAY)} relief at most once per 30 minutes. You will be quite still while working.</p>${button(`Work a shift · ${money(labourReward(world, me!))}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
+    if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false) {
+      const quote = labourQuote(world, me!);
+      html += `<p>Unskilled labour. A 15-second task pays ${money(labourShiftPay(world))} for the first eight shifts in a row, then less until a ten-minute break or other work, up to ${money(labourDailyCap(world))} a game day. ${quote.reason ? `${quote.reason[0].toUpperCase()}${quote.reason.slice(1)}. ` : ''}Low-cash residents can receive ${money(RELIEF_PAY)} relief at most once per 30 minutes, and relief does not count toward the daily cap. You will be quite still while working.</p>${button(`Work a shift · ${money(quote.pay)}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
+    }
     if (b.kind === 'school')
       html += `<p>First qualification: 80d and one minute. Later standard qualifications: 160d and forty minutes. Custom courses use the prices and times below. Up to ${world.settings.maxSkills} skills.</p><div class="menu-grid">${skills
         .map((s) => {

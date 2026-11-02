@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.114.3 — Odd Jobs pays a day's wage, then tapers
+
+An ordinary 15-second shift at the Odd Jobs Office pays 12d in a new world and in public Puddlewick, for the first eight shifts in a row. The next pays two thirds, then half, a third and a quarter. Waiting ten minutes, or doing other work, restores the full rate. Ordinary pay stops at 200d per game day; the button shows the amount and why it is lower, and a shift that would pay nothing cannot be started. Meal relief is unchanged: below 50d of cash and savings it still pays for a premium loaf and water, at most once per half hour, and it does not count toward the cap. Residents who can already afford a meal rank a job, gathering or hauling ahead of another shift.
+
+World owners set both numbers under Editor → Rules → Odd Jobs. Older worlds other than Puddlewick stay at 1d until edited.
+
 ## 0.114.2 — Automatic meals stop drinking your wine
 
 Automatic feeding no longer drinks beer or wine in any world unless the owner turns on **Automatic meals may include beer and wine**. Buying wine while thirsty keeps every bottle. Public Puddlewick also stops eating from your inventory while you are signed in: carried food and drink still feed you while signed off and while catching up offline, and home stores, guest rooms and boat stores are unchanged. A world owner can turn signed-in inventory feeding back on, and that choice survives restarts.

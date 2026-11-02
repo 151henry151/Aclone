@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.114.3] - 2026-11-01
+
+### Changed
+
+- Set ordinary Odd Jobs pay with `labourShiftPay` (new worlds and public Puddlewick use 1200 hundredths, 12d; older worlds that are not Puddlewick keep 100 until an owner edits the rate). The first eight shifts in a row pay that rate, then two thirds, one half, one third and one quarter. A 600-second gap, or other work (a job, gathering, a harvest, logging, quarrying or crafting), or death, restores full pay. Death clears only the streak.
+- Cap ordinary labour with `labourDailyCap` (default 20000 hundredths, 200d, per game day). A shift that would pay nothing is refused, and the shift button names the reduced amount and the reason. Meal relief stays means-tested, ignores the cap and the streak, and does not start its cooldown on an ordinary shift.
+- Rank a public labour shift below a job, gathering or hauling in the resident menu once cash plus bank is at least 5000. Skip labour in the hustle and care routines when the quoted pay is zero. Briefings and the workhouse panel read the world's rate and cap.
+
 ## [0.114.2] - 2026-11-01
 
 ### Changed

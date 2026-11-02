@@ -318,6 +318,10 @@ In **Editor → Rules → Automatic food and drink**, configure `autoConsumeInve
 
 Only a valid owned home or unexpired private booking is eligible. Public lodging/business stock and another owner’s supplies are excluded. Boat crew still use their captain’s provisions first; the normal captain rule for boat stores remains offline-only. Inventory feeding also applies to online captains when enabled. The at-home provisions estimate follows these settings and includes carried supplies when available.
 
+## Odd Jobs
+
+In **Editor → Rules → Odd Jobs**, `labourShiftPay` is the ordinary 15-second shift in hundredths (1200 is 12d) and `labourDailyCap` is the ordinary pay a resident can earn in one game day (20000 is 200d). The first eight shifts in a row pay the full rate; later shifts pay two thirds, one half, one third, then one quarter. A ten-minute gap, a job, gathering, a harvest or a craft restores full pay. Meal relief ignores the cap and the streak. New worlds use the defaults in `data/settings.json`. Public Puddlewick is moved to 12d once (`labourRulesVersion`); a later edit is kept. Other existing worlds stay at 1d until edited.
+
 ### Coastal headlands in world designs
 
 World-design JSON preserves `terrainMapSize` (the island footprint, separate from the larger navigable ocean) and up to 32 `coastalBluffs`. A bluff has `id`, `x`, `z`, `angle` in radians (local +Z toward water), `width` (half-width, 80–250 m), `inland` approach length (150–500 m), `height` above mean sea (15–65 m), and a deterministic numeric `seed`. Export Puddlewick’s design for examples. The ordinary height brush does not move these fixed cliff lips; edit the design and import it into a test world to reposition them. Keep them away from existing properties and put their seaward face on the shoreline. Imported headlands use the same safety boundary and lighthouse siting rules. Automatic placement/migration is limited to the public Puddlewick world.

@@ -1,4 +1,5 @@
 import { householdBudget } from './household.ts';
+import { labourReward } from '../../shared/public-labour.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -236,7 +237,8 @@ export function hustleRoutine(w: World, p: Player, state: ResidentState): Step[]
     return hauling.plan;
   }
   const office = w.buildings.find((b) => b.kind === 'workhouse' && !b.construction);
-  if (!office || p.cash + p.bank > householdBudget(w, p).reserve) return [];
+  if (!office || p.cash + p.bank > householdBudget(w, p).reserve || labourReward(w, p) <= 0)
+    return [];
   const plan = visitBuilding(p, office, [
     { kind: 'act', action: { type: 'task', building: office.id, task: 'labour' } },
   ]);

@@ -119,13 +119,13 @@ test('public relief is means-tested, quoted at start, and persists across reload
   p.cash = 0;
   act(w, p.id, { type: 'task', building: office.id, task: 'labour' });
   advance(w, 15);
-  assert.equal(p.cash, 100);
+  assert.equal(p.cash, 1200);
   const copy = JSON.parse(JSON.stringify(w));
-  assert.equal(labourReward(copy, copy.players[p.id]), 100);
+  assert.equal(labourReward(copy, copy.players[p.id]), 1200);
   advance(copy, 1800);
   assert.equal(labourReward(copy, copy.players[p.id]), RELIEF_PAY);
   copy.players[p.id].bank = 6000;
-  assert.equal(labourReward(copy, copy.players[p.id]), 100);
+  assert.equal(labourReward(copy, copy.players[p.id]), 1200);
 });
 
 test('new worlds do not overwrite subsequent owner quotes when loaded', () => {

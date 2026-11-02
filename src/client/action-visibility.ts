@@ -17,6 +17,7 @@ import { winterDeadline } from '../shared/farming';
 import { recipes, vehicles } from '../shared/catalog';
 import { stockWeight } from '../shared/fishing-expedition';
 import { cargoFitReason } from '../shared/cargo-fit';
+import { labourQuote } from '../shared/public-labour';
 import { requiredLicence } from '../shared/vehicle-services';
 import { worldItems } from '../shared/world-catalogue';
 
@@ -256,6 +257,10 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   }
   if (action === 'joinGame' && id === 'fishing' && !(p.inventory.tackle > 0))
     return 'Carry Fishing tackle';
+  if (action === 'task' && id === 'labour') {
+    const quote = labourQuote(w, p);
+    if (quote.pay <= 0) return quote.reason ?? 'This shift pays nothing';
+  }
 }
 
 /**

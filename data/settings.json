@@ -59,5 +59,7 @@
   "retainBoatFuelOnDeath": true,
   "autoConsumeInventory": false,
   "autoConsumeHomeStock": false,
-  "homeNeedsMultiplier": 0.8
+  "homeNeedsMultiplier": 0.8,
+  "labourShiftPay": 1200,
+  "labourDailyCap": 20000
 }

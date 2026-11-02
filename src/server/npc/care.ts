@@ -6,6 +6,7 @@ import { alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { availableSupply } from '../../shared/harbour-supply.ts';
+import { labourReward } from '../../shared/public-labour.ts';
 import { householdBudget } from './household.ts';
 import { items } from '../../shared/catalog.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
@@ -132,7 +133,7 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
   const labour = w.buildings.find(
     (b) => b.kind === 'workhouse' && b.owner !== p.id && !b.construction && usable(b),
   );
-  if (unaffordable && labour)
+  if (unaffordable && labour && labourReward(w, p) > 0)
     return visitBuilding(p, labour, [act({ type: 'task', building: labour.id, task: 'labour' })]);
   return [];
 }

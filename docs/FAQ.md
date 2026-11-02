@@ -23,7 +23,7 @@ A horn sound: **Space/Parp** honks for nearby players and pushes the Hornball ba
 
 ## How do I start earning money?
 
-Find Odd Jobs with M; drive nearby, E/Ctrl, **Work a shift** (1d normally; 150d meal relief below 50d cash plus bank, at most once per 30 minutes). Stay for the 15-second task; no skill needed. Buy/use food and water, then learn a profession (first course 80d/one minute; later 160d/40 minutes, within skill limits), work or buy a business. Jobs pay only after funded production with inputs and output space.
+Find Odd Jobs with M; drive nearby, E/Ctrl, **Work a shift** (12d for the first eight in a row, then less, up to 200d of ordinary pay a game day; 150d meal relief below 50d cash plus bank, at most once per 30 minutes, and relief ignores the cap). Stay for the 15-second task; no skill needed. Buy/use food and water, then learn a profession (first course 80d/one minute; later 160d/40 minutes, within skill limits), work or buy a business. Jobs pay only after funded production with inputs and output space.
 
 ## Why will my tractor not move? How do I leave my house and walk?
 

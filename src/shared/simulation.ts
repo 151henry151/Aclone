@@ -103,7 +103,13 @@ import { buildingDesignQuote, type BuildingSize } from './building-designs';
 import { constructionSiteReason, foundationProfile } from './construction-site';
 import { migrateEmploymentPolicy } from './employment-policy.ts';
 import { exportShipments } from './export-shipments.ts';
-import { labourReward } from './public-labour.ts';
+import {
+  labourReward,
+  labourQuote,
+  noteLabourPaid,
+  breakLabourStreak,
+  RELIEF_PAY,
+} from './public-labour.ts';
 import { onFarmLand } from './farm-land.ts';
 import { buildingBounds, buildingPlan } from './building-shapes.ts';
 import { constructionRefund } from './construction.ts';
@@ -1098,8 +1104,10 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(jobVacancy(w, b, id), `All jobs filled (hiring limit ${hiringLimit(w, b)})`);
         b.employees.push(id);
       }
-      if (p.job !== b.id)
+      if (p.job !== b.id) {
         recordLife(w, p, { kind: 'job', building: b.id, text: `Took a job at ${b.name}` });
+        breakLabourStreak(p);
+      }
       if (p.job !== b.id) questEvent(w, p, 'job', b.id);
       queueCreatorScript(w, 'JobChanged', { id, building: b.id, previous: p.job ?? '' });
       p.job = b.id;
@@ -1210,13 +1218,15 @@ export function act(w: World, id: string, a: Action): string {
         stockAdd(p.inventory, 'wood', -2);
       } else if (task !== 'labour')
         requireThat(canCarry(p, task === 'logging' ? 'logs' : 'stone', 3, w), 'Cargo full');
+      const quote = task === 'labour' ? labourQuote(w, p) : undefined;
+      requireThat(!quote || quote.pay > 0, quote?.reason ?? 'This shift pays nothing');
       p.task = {
         kind: task,
         end: w.time + 15,
         building: b.id,
-        ...(task === 'labour' ? { reward: labourReward(w, p) } : {}),
+        ...(quote ? { reward: quote.pay, ...(quote.relief ? { relief: true } : {}) } : {}),
       };
-      if ((p.task.reward ?? 0) > 100) p.reliefAt = w.time;
+      if (quote?.relief) p.reliefAt = w.time;
       p.speed = 0;
       result = 'A bit of honest work. 15 seconds.';
       break;
@@ -1894,6 +1904,7 @@ export function act(w: World, id: string, a: Action): string {
         )
           num(v, 0, 100000000, true);
         if (key === 'homeNeedsMultiplier') num(v, 0, 1);
+        if (key === 'labourShiftPay' || key === 'labourDailyCap') num(v, 0, 1e6, true);
         if (key === 'boatCargoSpoilageDays') num(v, 0, 365);
         if (key === 'postDeathGraceSeconds') num(v, 0, 86400, true);
         if (key === 'productionSeconds') num(v, 10, 86400, true);
@@ -2604,6 +2615,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   delete p.boatThrottle;
   delete p.nutrition;
   delete p.alcohol;
+  breakLabourStreak(p);
   p.ammo = { ...ammunition };
   p.invulnerableUntil = w.time + 3;
   p.health = 60000;
@@ -2894,6 +2906,7 @@ export function advance(w: World, seconds: number) {
       const t = p.task;
       if (t.kind === 'gather') {
         if (finishGather(p, w)) {
+          breakLabourStreak(p);
           questEvent(w, p, 'gather', t.resource ?? '', t.item, t.amount);
           if (p.online) creatorEvent(w, 'task', p, t.resource ?? '');
           if (t.repeat && p.online) {
@@ -2908,18 +2921,23 @@ export function advance(w: World, seconds: number) {
         continue;
       }
       delete p.task;
-      if (t.kind === 'harvest') finishHarvest(w, p, t.building!, t.plot!, t.end);
-      else if (t.kind === 'labour') {
+      if (t.kind === 'harvest') {
+        finishHarvest(w, p, t.building!, t.plot!, t.end);
+        breakLabourStreak(p);
+      } else if (t.kind === 'labour') {
         const reward = t.reward ?? labourReward(w, p);
-        if (t.reward === undefined && reward > 100) p.reliefAt = w.time;
+        if (t.relief || (t.reward === undefined && reward >= RELIEF_PAY)) p.reliefAt = w.time;
         grant(w, p, reward, 'labour task');
+        noteLabourPaid(w, p, reward, !!t.relief);
         p.kudos++;
-      } else
+      } else {
+        breakLabourStreak(p);
         stockAdd(
           p.inventory,
           t.kind === 'logging' ? 'logs' : t.kind === 'quarrying' ? 'stone' : 'tools',
           t.kind === 'craft' ? 1 : 3,
         );
+      }
       if (t.kind === 'logging' || t.kind === 'quarrying')
         recordGathered(w, p, t.kind === 'logging' ? 'logs' : 'stone', 3);
       if (p.online) creatorEvent(w, 'task', p, t.building ?? t.resource ?? '');

@@ -37,7 +37,7 @@ export function firstSteps(w: World, p: Player) {
         title: job ? 'Use your qualification' : 'Earn your first wages',
         detail: job
           ? 'You have the required skill. Inspect supplies, vacancies and funded wages before accepting.'
-          : 'Visit the odd jobs office for available labour. A school qualification opens regular employment.',
+          : 'Visit the odd jobs office for a short paid shift. Pay falls after eight in a row and stops at the daily cap; a school qualification opens regular employment.',
         destination: b.id,
       });
   }

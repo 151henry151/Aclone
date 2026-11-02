@@ -4,7 +4,7 @@ Start with a pilot name; keep its private recovery key and set a password in **P
 
 ## Your first day
 
-1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift normally pays 1d. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes; the button shows your current payment.
+1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 12d for the first eight in a row, then less until a ten-minute break or some other work, and at most 200d of ordinary pay per game day. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes and does not count toward that cap. The button shows your current payment.
 2. Buy bread/water at Harbour stores. Puddlewick automatically eats and drinks from your inventory while you are signed off, and you eat and drink yourself while signed in; other worlds may consume inventory online too, or require manual use throughout. Beer and wine are never consumed automatically in any world unless its owner turns that on. Variety reduces repeat-food penalties; keep fuel reserves too.
 3. Learn a profession at school: first qualification 80d/one real minute, later ones 160d/40 minutes, subject to skill limits.
 4. Take a job, or buy a business, stock inputs and fund wages. Puddlewick employment continues offline without renewal; other worlds may require **Work two cycles**. Qualified Puddlewick owners operate their factories unpaid. Actual successful production pays employee wages; signing up alone does not.

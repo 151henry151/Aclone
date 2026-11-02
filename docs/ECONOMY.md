@@ -88,12 +88,7 @@ owner edits survive reloads; new worlds start with the new prices.
 
 ## Public work and exports
 
-A 15-second Odd Jobs shift normally pays **1d**. Residents below 50d combined cash
-and bank savings can receive a larger relief payment once per 30 real minutes.
-Relief covers a premium bread-and-water purchase at default prices (currently
-150d); the quoted amount is fixed when the task starts. The cooldown survives
-reconnection and death. Public labour is a safety net rather than an unlimited
-45d-per-shift career.
+A 15-second Odd Jobs shift pays **12d** in a new world (`labourShiftPay`, 1,200 hundredths) for the first eight shifts in a row. The ninth pays two thirds, then one half, one third and one quarter. A ten-minute gap or any other work restores full pay. Ordinary pay stops at **200d per game day** (`labourDailyCap`); the button says why. Residents below 50d combined cash and bank savings can receive a larger relief payment once per 30 real minutes. Relief covers a premium bread-and-water purchase at default prices (currently 150d), is fixed when the task starts, and does not count toward the daily cap or the streak. The cooldown survives reconnection and death. Public labour is a bridge, not a career: residents prefer a job, gathering or hauling once they can afford a meal. Public Puddlewick adopts 12d once; older worlds keep 1d until their owner edits the setting.
 
 Every 30 real minutes, Puddlewick's treasury-run Harbour and spaceport sell surplus
 cargo to off-world customers. Each departure clears at most 40 units per item,

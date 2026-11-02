@@ -18,6 +18,8 @@ export type Task = {
   item?: string;
   amount?: number;
   reward?: number;
+  /** The quoted reward is means-tested meal relief, not ordinary shift pay. */
+  relief?: boolean;
   repeat?: boolean;
 };
 export interface Player {
@@ -26,6 +28,12 @@ export interface Player {
   trailerCargo?: Record<string, Stock>;
   courseRun?: import('./courses').CourseRun;
   reliefAt?: number;
+  /** Consecutive ordinary Odd Jobs shifts; a break or other work clears it. */
+  labourStreak?: number;
+  labourStreakAt?: number;
+  /** Game-day index and ordinary labour already paid that day, in hundredths. */
+  labourDay?: number;
+  labourEarned?: number;
   needsGraceUntil?: number;
   mail?: import('./social.ts').Mail[];
   sentMail?: import('./social.ts').Mail[];
@@ -323,6 +331,10 @@ export interface Settings {
   autoConsumeAlcohol?: boolean;
   autoConsumeHomeStock: boolean;
   homeNeedsMultiplier: number;
+  /** Ordinary Odd Jobs shift, in hundredths. Unset saves keep the old 1d. */
+  labourShiftPay?: number;
+  /** Ordinary labour income allowed per game day, in hundredths. Relief is exempt. */
+  labourDailyCap?: number;
   /** Multiplies deposit recovery time; 4 is the default, 1 restores the old pace. */
   resourceRecoveryMultiplier?: number;
   hungerRate: number;
@@ -343,6 +355,7 @@ export interface Settings {
 }
 export interface World {
   automaticProvisionsVersion?: 1 | 2;
+  labourRulesVersion?: 1;
   airfield?: import('./airfield').Airfield;
   /** Public works may relocate gathering sites, retaining depletion and task IDs. */
   resourceRelocations?: Record<string, { x: number; z: number }>;
