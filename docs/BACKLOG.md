@@ -1,5 +1,76 @@
 # Development backlog
 
+## Planned — Seaplanes
+
+An amphibian: one aircraft that lands on the runway and on open water. The pilot has two passenger seats, and the hold is large for an aircraft without becoming a freighter.
+
+**What happens now.** The only aircraft is the biplane (slot 2, mode 2, a 90-weight hold). In `fly`, any contact with the water is `'water impact'` and the airframe is destroyed, before the landing checks run (`support < seaLevel - 0.12` and again once the wheels are down). A person who walks into deep water is sent back to the parish spawn. Passengers already ride by `hitch` on boats; aircraft have no seats. The biplane is bought and boarded at the airfield hangar.
+
+**The aircraft.** A new slot, an amphibian with a hull or floats and wheels that raise and lower. High wing, a cockpit for the pilot, and a cabin with two seats and a window each. It uses `fly` with an amphibious flag, the same crash notice, and the pilot licence where licences are on. It is bought and boarded at the hangar, like the biplane. A starting price sits above the biplane's 135s, around **220s**, checked in the balance test.
+
+**Two passengers and the pilot.** The cabin takes the pilot and **two** passengers. A third is refused. They board only while the aircraft is stopped, on the apron or moored beside a shore or boathouse, within the ordinary nearby distance. Nobody boards in flight, and a passenger cannot fly it. Their own bags stay the small per-seat allowance from the passenger-flight entry (on the order of 20–30 weight). That allowance is separate from the hold.
+
+**The hold.** About **400 weight**, the size of the parish box trailer. That is about four times the biplane's 90, and under the quarry tipping trailer's 1,000 and the planned cargo aircraft at 1,000–1,500. Heavy goods fill it the same way they fill a trailer: fuel and grain pack a long way, stone and ore fill it sooner. Loading and unloading happen only while stopped on the apron or moored, through the same carry flow the biplane uses until the shared aircraft hold exists. A load past the cap is refused. Weight aboard lengthens the takeoff run, on the runway and on the water, and raises the speed the hull needs before it will fly.
+
+**Landing and taking off.**
+
+- On land the wheels are down. It uses the runway and the same contact rules as the biplane, including whatever "Make a landing possible" relaxes them to. Wheels up on the pavement is a crash.
+- On water the wheels are up. The water surface is the runway: the same sink, pitch and bank checks, measured against the water, and a surviving touchdown leaves it afloat. Wheels down on the water is a crash. The biplane still breaks up on any water contact.
+- The water has to be deep enough that the hull clears the bottom (about a metre) and long enough for the run (on the order of 200–300 m of clear water). Open sea and wide inland water qualify. A narrow river, a short pond, or a sea with waves above a modest height does not: the landing is refused, or it is a crash if the pilot forces it. Once afloat it taxis with the throttle and rudder, and B slows it. It moors at a shore or boathouse the way a boat does. It does not drive up the beach.
+- Takeoff is a run, on the runway or on the step, then rotate. Hull drag means the water run is longer than the biplane's ground roll, and a full hold makes it longer again.
+
+**A crash.** On land, follow the passenger-flight rule: nobody dies, everyone is set down on foot at the site, and cargo that will not fit a walking load stays there for a vehicle to collect. On water, put the pilot and passengers on foot at the nearest shore. Do not use the deep-water path that sends a walker back to the parish spawn. Cargo that will not fit them stays afloat at the site for a boat to collect. Fares, if this aircraft is later used for the paid flights, refund as that entry already says.
+
+**Per-world.** Seat count (default two passengers), hold capacity (default about 400 weight), price, whether water landings are allowed, the minimum depth, run length and wave height, and whether the pilot licence applies. The default is this amphibian, including on Puddlewick. A world can turn water landings off and leave it a land plane with the same cabin and hold.
+
+**Tests.** A biplane that meets the water is destroyed; a seaplane that meets the water inside the landing limits is afloat, and one outside them is destroyed. It lands on the runway with the wheels down and stops, and takes off from the runway and from calm water. Wheels down on the water, and wheels up on the pavement, are crashes. Two passengers can board while it is stopped; a third cannot, and nobody can board in flight. The hold accepts a load up to about 400 weight and refuses more, and that cap stays above the biplane's 90 and below a tipping trailer's 1,000. A water crash leaves the people on the nearest shore, and does not move them to the parish spawn.
+
+## Planned — Walking speed follows snow depth
+
+On foot, snow does not slow you down. A tractor in the same field does. Walking should use that same depth.
+
+**What happens now.** "On foot" is slot 5, mode 8, with a speed of 5 m/s (about 11 mph), or about 19 mph while Shift is held. In `move`, a vehicle only consults the ground when its mode is 0, 1 or 4. Walking is mode 8, so it always receives a surface factor of 1. Dry ground, mud, 4 cm of snow and a metre of snow are the same pace. The playing guide says walking keeps its wet-surface handling and is not slowed by snow depth.
+
+Tractors do read the snow. `drivingSurface` in `src/shared/driving-surface.ts` keeps a road at wet-road speed (about 90% of dry, because any snow on the ground raises road wetness to at least 0.7) and, off the road, uses `snowSpeed = 0.06 + 0.34 / (1 + 7·(depth − 4 cm))`. That is about **40%** of dry-road speed in the ordinary 4 cm layer, about **10%** in a metre, and it approaches a **6%** crawl in a deeper drift. The change blends across a 2 m verge. Boost and reverse are included. Aircraft are not.
+
+**What to change.** While walking, multiply that speed cap — the ordinary pace and the Shift pace — by the same `drivingSurface` speed factor a tractor gets at that spot. On a road, walking stays near full pace. In open snow it drops along the tractor curve: a brisk walk in 4 cm, a trudge in a deep drift. Use the same 2 m blend at the verge, so stepping off the lane slows you gradually. Turning can take the same grip reduction tractors take; do not invent a separate snow formula for feet. People and residents share `move`, so a resident on foot slows in the same place. Boats, aircraft, tractors and the ostrich stay as they are.
+
+When roads later keep their own snow (the ploughing entry), walking reads that depth through the same lookup. An unploughed lane slows a person the way it slows a tractor; a ploughed lane does not. Until that exists, roads remain the clear, wet surface they are today.
+
+**Per-world.** A world rule turns this on or off, and may scale how hard field snow pulls the walk down. The default is on, using the tractor curve with no extra scale, including on Puddlewick. The curve itself stays the one tractors use.
+
+**Tests.** Off a road, 4 cm of snow cuts the walk cap to about 40% of dry, and a metre cuts it to about 10%, both with and without Shift. On a road in that same snow the cap stays at the wet-road pace, and the verge between them is gradual. Bare ground is unchanged. A walker and a tractor standing at the same off-road point receive the same surface factor. Update the playing guide, which currently says snow does not slow walking.
+
+## Planned — Make a landing possible
+
+Taking off works. Landing on the public strip, with the keyboard, does not. A careful pilot who has already flown the circuit still loses the aircraft on touchdown. The one landing the game itself can complete is a test pilot in `tests/flight.test.ts`: ten times a second it recomputes the exact pitch for a chosen sink rate, on an infinite flat plane, and taps the stick only when the error exceeds about two degrees. That is a closed-loop program. It is not the way the keys behave, and it never has to hit the runway.
+
+**What the keys actually do.** Throttle (W/S) is a setting. It moves at 0.24 per second, so idle to full, or full back to idle, takes about four seconds. In the air, S only turns the throttle down. Nose and wings are rates, not positions (`fly` in `src/shared/flight.ts`). Holding an arrow pitches at about twenty degrees a second near approach speed, and the rotation keeps going for a fraction of a second after the key comes up. Releasing the bank keys leaves the wings where they are. Releasing the pitch keys only weakly settles the nose toward the flight path. The guide tells you to use the opposite key to level the wings. B is read only while the wheels are on the ground, where it is a wheel brake of about 5.5 m/s². In the air it does nothing. There is no airbrake, spoiler or flap.
+
+**What counts as a crash, checked at the instant the wheels meet the ground.** All of these destroy the airframe. The notice names the reason, and the pilot is put down on foot, injured.
+
+- Sink faster than **3.5 m/s**. The test pilot aims for 1.4 m/s, then 0.6 m/s in the last 4 m, which is five times gentler than the limit. A flare that is a fraction of a second late crosses 3.5. The climb gauge is marked ±10 m/s with no landing mark, so 3.5 sits close to the centre and looks ordinary.
+- The sink figure is not only the aircraft's vertical speed. It is `(support - ground) / dt - vy`. Any rise in the ground between two physics steps is added in full. On the flat this is zero. On a slope it is not.
+- Nose below **−5.7°** (`pitch < -0.1`), however soft the sink. That is still the attitude of an approach that has not flared yet. Nose above **+20°** is a tail strike. That whole safe band is about a second of holding the arrow.
+- Bank past **12°**. That is about a third of a second of an arrow key, or whatever bank was left from turning onto the strip.
+- Speed past **36 m/s (about 81 mph)**, or the direction of travel differing from the nose by more than **20°**. Both are reported as one phrase, "uncontrolled landing". The 81 mph cap is the loose one. The 20° of slip is the one a turn onto final leaves behind.
+- After the wheels are down, faster than 8 m/s, if the ground 4 m to either side is more than 1.2 m above the wheels: "wing strike on terrain".
+
+`approachSpeed` (24 m/s, about 54 mph) is the number the guide and the test talk about. `fly` never reads it. Nothing holds the aircraft at that speed.
+
+**Why the runway does not save you.** Puddlewick's marked strip is **240 m by 18 m** (220 m where a new parish has the smaller town). The level grade extends 10 m past the paint, and then a **3 m** blend (`airfieldHeight`) joins ground that the siting rules allow to be **2 m** higher or lower. A wheel rolling that blend at landing speed sees a rise steep enough, through the formula above, to exceed 3.5 m/s by itself. Running off the end onto lower ground unsticks the wheels (`support` more than 0.15 m below the strip) and the fall back down is another landing check. The ground roll after a correct touchdown is short — on the order of 50 m from 55 mph with the wheel brake — so 240 m is enough pavement once the wheels are down in the first half. The misses happen in the arrival, and on the shoulder, before the length is used up. Eight destroyed aircraft is what these limits produce.
+
+**How to make a landing a thing a person can do.** Keep the same aircraft. Widen the arrival, give the air a way to slow down, and make the strip a larger, gentler target. Tune the numbers below in play; they are the starting point.
+
+1. **Survive a firm, slightly crooked arrival.** Raise the destructive sink to about **8 m/s**. Allow about **15° nose-down** when the sink is inside that limit, and about **25° nose-up**. Allow about **25° of bank** and about **40° of slip**. Keep the speed cap near 80 mph, or move it to about 100 mph, and say "too fast" and "sideways" as separate notices. A dive (around 10 m/s of sink), a steep bank (around 45°), water and buildings still destroy the aircraft. Judge the sink from the aircraft's vertical speed against the surface under a wheelbase, so a slope the wheels can roll is a roll and a sudden rise is the only one that counts as impact.
+2. **An airbrake on the key people already hold.** Holding B in the air adds drag: enough to descend at about 2–4 m/s around approach speed without pushing the nose down, and to bleed a fast arrival back toward that speed. It must not be able to stall an aircraft that is already slow with the nose level. On the ground, B stays the wheel brake. Throttle can stay a four-second lever; the brake is what makes "reduce power and come down" possible on the way in, instead of only after the wheels are on the ground.
+3. **A released stick should be a steady approach.** Slow the keyboard pitch and roll so a tap is a few degrees, and let the nose and the wings ease back toward the flight path when the keys are up. Analog sticks can keep more authority. This is stability, not an automatic landing. There should still be no "press a key to land".
+4. **A longer, wider, softer strip.** Lengthen the public runway toward **400 m** and widen the pavement toward **30 m** where the town site allows; if 400 m does not fit, take the longest level site that does, and still widen it. Stretch the blend from 3 m to about **15–20 m** so the shoulder is a slope, not a ramp. Length is the smaller half of this item. The contact rules and the shoulder are why a longer strip alone would still wreck the aircraft.
+
+**Per-world.** The sink, bank, pitch, slip and speed limits, whether the airbrake exists, and the public runway's length and width are world rules. The default is this easier set, including on Puddlewick. A world that wants today's limits can select them. The old numbers stay available as that strict option; they stop being what a new pilot meets.
+
+**Tests.** A landing flown the way the keys work — full presses, not the optimal controller — on the real graded runway survives a late flare, a few degrees of bank and a few degrees of nose-down, and stops on the pavement. Rolling off the paint onto the blend at landing speed does not by itself destroy the aircraft. The airbrake increases descent and reduces speed above the approach, does not stall a level aircraft already at that speed, and remains the wheel brake on the ground. A 10 m/s dive, a bank around 45°, water and a building still destroy the airframe. Update the flight tests that currently require the 3.5 m/s, 12° and −5.7° cuts, so those assertions are not a hidden demand to keep the old limits.
+
 ## Planned — Flight view: terrain squares, chunky ground and distant towns
 
 Seen from the biplane over open country, in clear weather, at about 66 mph and 20–30 frames per second. On foot the same world looks continuous. From the air three things show at once.
@@ -201,7 +272,7 @@ The purpose is intercity air travel once towns exist far across the expanded isl
 
 ### Buildable airstrip
 
-- Add an **airstrip** building kind, placed through the ordinary build menu with the usual five architectural variants, finishes, rotation and site plan. Its footprint is a graded runway strip plus an apron with a small hangar/office crib; the runway should be long enough for every planned aircraft's takeoff and landing run with margin (the biplane needs roughly 150–200 m; larger aircraft will need more, so size the strip to the heaviest planned type, likely 400–600 m by 30 m, and decide whether two strip lengths are offered).
+- Add an **airstrip** building kind, placed through the ordinary build menu with the usual five architectural variants, finishes, rotation and site plan. Its footprint is a graded runway strip plus an apron with a small hangar/office crib; the runway should be long enough for every planned aircraft's takeoff and landing run with margin (the biplane's ground roll is roughly 150–200 m once the wheels are already down; arriving on the present strip is the separate problem in "Make a landing possible". Larger aircraft will need more, so size the strip to the heaviest planned type, likely 400–600 m by 30 m, and decide whether two strip lengths are offered).
 - Make it **extremely expensive**, well beyond a bridge (about 800s target) and the boathouse (18s): a starting target on the order of **2,000–3,000s** plus very large material quantities drawn from goods that already exist — gravel and concrete for the strip base and apron, steel and wood or logs for the hangar, blocks for the office — with final figures calculated against the economy so it is a late-game community investment rather than something one player buys early. Support material contribution by several players and construction helpers like other large sites, with persistent unfinished progress and the existing cancellation refund rules.
 - Siting rules: the whole rotated strip must be dry ground outside protected areas, other premises, fields, pastures, roads and inland water, with limited slope end to end and across; the construction preview must show the graded profile and refuse sites that need more than a bounded cut/fill. Grading should reuse the `airfieldHeight` approach so the runway is flat and terrain, collision, trees and rendering agree; trees inside the strip and an approach cone at each end are cleared, and later construction inside the approach cones is refused.
 - Generalise the single `w.airfield` reservation into a list of airfields with arbitrary rotation and an owner, and make `onAirfield`, `onRunway`, `airfieldHeight`, road routing, farm/pasture placement, resource placement and the map honour every entry. The public Puddlewick airfield migrates into the list unchanged (same hangar ID, apron and grade). Add `hasAircraftHangar`-style checks per airstrip so boarding, commissioning and parking work at any strip, and keep the saved-aircraft model (fleet per player, active airframe, spare airframes) rather than inventing a second one.
@@ -210,7 +281,7 @@ The purpose is intercity air travel once towns exist far across the expanded isl
 
 ### Additional aircraft types
 
-- Add several new aircraft definitions in `data/vehicles.json` sharing `src/shared/flight.ts` dynamics with per-type mass, wing area, drag, thrust, stall speed, fuel burn and takeoff/landing distances, each modelled in detail with cockpit/cabin interiors at human scale. A starting set: a **light passenger aircraft** (4–6 passengers, modest cabin baggage), a **larger passenger aircraft** (8–12 passengers, needs the long strip), a **light utility/cargo aircraft** (a few hundred weight), and a **cargo aircraft** (roughly 1,000–1,500 weight, comparable to one or two tipping trailers, needs the long strip). Prices should scale sharply with capacity; the cargo aircraft and large passenger aircraft are late-game purchases.
+- Add several new aircraft definitions in `data/vehicles.json` sharing `src/shared/flight.ts` dynamics with per-type mass, wing area, drag, thrust, stall speed, fuel burn and takeoff/landing distances, each modelled in detail with cockpit/cabin interiors at human scale. A starting set: a **light passenger aircraft** (4–6 passengers, modest cabin baggage), a **larger passenger aircraft** (8–12 passengers, needs the long strip), a **light utility/cargo aircraft** (a few hundred weight), a **cargo aircraft** (roughly 1,000–1,500 weight, comparable to one or two tipping trailers, needs the long strip), and the **seaplane** in "Seaplanes" (pilot and two passengers, about 400 weight, runway and open water). Prices should scale sharply with capacity; the cargo aircraft and large passenger aircraft are late-game purchases.
 - Cargo capacity is a hard **weight** limit, not a slot count, using the existing per-item weights, so heavy goods (fish, stone, ore) fill a hold fast while light goods pack well. Loaded weight changes performance: longer ground run, slower climb, higher stall speed, more fuel; an overloaded aircraft cannot be loaded, not merely warned. Fuel is bought from a hangar/airstrip in the same way as boats buy from a boatyard, and a strip's owner may stock fuel for sale.
 - Loading and unloading happen only parked on an apron and use the ordinary carry/transfer flows; decide whether aircraft can trade directly with a shop within range (like trailers) or only through the pilot's inventory. Define parking: an aircraft shut down on an apron stays visible and persists like a moored boat; an aircraft abandoned on open ground outside any strip is either refused or recovered to the nearest strip for a fee.
 - Keep existing biplane behaviour, the Boatmaster/pilot licence rules, crash destruction of the active airframe and the authoritative crash notice unchanged; the new types extend the same code paths and tests.
@@ -334,17 +405,6 @@ A helicopter is an aircraft that can hover, land anywhere flat, and do three thi
 - **Implementation order:** (1) vessel definition, model with a rendered load, tuning fields in the vehicle editor; (2) a hold on the moored-boat record, reusing the trailer cargo code (`trailerAccepts`, weight, per-good rules) so the transfer panel, shop trades and owner transfers behave like an attached trailer; (3) a **quay** building kind (long stone or timber wharf, deeper berth than a boathouse, no lifting hall) at which freight boats moor and shops within range trade with the hold, plus the same transfers at existing landings that fit; (4) optional river barge; (5) economics pass and HAULAGE.md. Hold capacity, speed, fuel burn, price, quay cost and transfer rates are per-world rules.
 - Tests: hold limits, transfer at each landing type, refusal at a river dock when too large, persistence of cargo across restart and export, deckhand profit share on a freight voyage, and a profitable example route.
 
-## Shipped in 0.114.4 — Captain skill for larger boats
-
-Shipped. `requireCaptainSkill` is on for new worlds and, once, for public Puddlewick. The threshold is length above the motorboat (4.3 m), with a per-slot `requiresCaptain` override, so the shorter lifeboat stays open. `boatmaster` is renamed to `captain` in every world. Puddlewick grants `captain` once to anyone who already owns a longer boat; other existing worlds stay off until an owner turns the rule on. Passengers and deckhands are not asked. Residents are told the school tuition. They do not buy boats, so there is no new purchase plan.
-
-- **Today:** a `boatmaster` qualification exists (`requiredLicence` in `src/shared/vehicle-services.ts`), learned at school like `driver` and `pilot`, but it is only enforced when a world enables **vehicle licences**, it covers every mode-3 vessel including the outboard motorboat, and public Puddlewick has licences off. So anyone can buy and helm the trawler, charter boat, tug or canal boat untrained.
-- Add a **captain** skill taught at school (ordinary tuition and time, counted against the skill limit) and require it to **take the helm of any boat larger than the small motorboat**: the canal boat, charter boat, fishing boat, tugboat, the future cargo boat and river barge, and custom boat slots above the motorboat's size. The motorboat, lifeboat, canoe and rowboat need no skill. Base the threshold on the vessel definition (length or beam above the motorboat's 4.3 × 1.8 m, or an explicit per-slot flag in the vehicle editor) rather than a hard-coded slot list, so creator vessels and tuning changes behave sensibly.
-- Enforce it independently of the `vehicleLicences` toggle through a world rule **Require the captain skill for larger boats**, on by default in Puddlewick via a one-time versioned migration and on for new worlds; worlds that already use `vehicleLicences` can keep `boatmaster` as the blanket requirement or fold it into `captain` (prefer folding: migrate anyone holding `boatmaster` to `captain`, retire the old name, and update the three licence names in PLAYING.md and the ruleset summaries).
-- Grandfather existing owners: on migration, every player who currently owns a vessel above the threshold receives `captain` without charge so nobody is stranded aboard or locked out of a boat they paid for; log the grant. Buying a large boat without the skill is refused at the boathouse with a message naming the school; boarding or moving an owned large boat without it is refused the same way existing licence checks refuse (`simulation.ts` purchase and `move` paths). Deckhands, charter passengers and tug rescue clients need no skill; a captain who dies and loses skills under the world's death rules cannot helm again until re-qualified, like other licences.
-- NPC residents who buy or crew boats must learn `captain` first through the ordinary school action, and the NPC briefing should mention it; the charter and trawler earning plans account for the tuition.
-- Tests: threshold derived from vessel size including a custom slot; motorboat and lifeboat unaffected; purchase, boarding and movement refusals with the school message; migration grants to existing owners once; `boatmaster` holders migrated; setting off restores today's behaviour; NPC learns before buying.
-
 ## Planned — CB radios
 
 - Add **CB radio** to vehicles: boats, tractors, aircraft, the future tractor-trailers and cargo boat, with an optional base station in buildings as a later slice. The radio is a separate text channel from the world-wide public chat, modelled on real 27 MHz citizens' band behaviour rather than as a chat room.
@@ -429,7 +489,7 @@ Roads should not clear themselves. Snow falls on roads as it does on fields, dri
 ### Snow on roads
 
 - Add **per-segment snow** to the roads: `w.roadSnow: Record<segmentKey, { depth: number; ploughedAt: number }>` keyed by a stable hash of each segment's endpoints (creator roads already have IDs via `retiredRoads`; procedural ones get `${a.x},${a.z}-${b.x},${b.z}`). `advanceClimate` keeps the world depth for fields and, in the same loop, adds `snowfallPerDay × dt` to every segment's `depth` while `precipitation === 'snow'` and melts it with the same solar term, so an unploughed road carries exactly the field depth and a ploughed one restarts from zero. Only segments with depth > 0 are stored; a clear-weather pass deletes zero entries so the record stays small. Offline catch-up uses the same code, so snow falls on roads while the server is idle.
-- Road speed follows the road's own snow. `drivingSurface` looks up the nearest segment's `depth` and feeds it through the existing `snowSpeed` curve (speed 0.85 on a ploughed wet road, 0.40 in 4 cm, 0.10 in a metre) and the matching grip reduction, so an unploughed road is exactly as slow as the field beside it — no worse, no better. Walking is unchanged. The HUD road readout replaces "roads clear" with "Roads: 6 cm snow" / "Roads: ploughed" and the speedometer surface line names the cause.
+- Road speed follows the road's own snow. `drivingSurface` looks up the nearest segment's `depth` and feeds it through the existing `snowSpeed` curve (speed 0.85 on a ploughed wet road, 0.40 in 4 cm, 0.10 in a metre) and the matching grip reduction, so an unploughed road is exactly as slow as the field beside it — no worse, no better. Walking uses that same surface factor, including a road's own depth once roads keep snow (see Walking speed follows snow depth). The HUD road readout replaces "roads clear" with "Roads: 6 cm snow" / "Roads: ploughed" and the speedometer surface line names the cause.
 - Rendering: `roadTexture` writes each segment into the mask with its snow fraction in a second channel, so the shader shows snow on unploughed lanes (tinted and lifted like the field, with tyre ruts where tracks exist) and bare wet asphalt on ploughed ones, with a soft edge at the plough line; the roadside bank geometry grows where a lane has been ploughed (the pushed snow goes to the verge). Segment textures update when a plough pass arrives in the snapshot; the map shows unploughed roads in white and ploughed ones in grey, with a "snowed in" legend in winter.
 
 ### The plough blade
@@ -607,3 +667,152 @@ Replace the static "logs" gathering grounds with real trees that are felled, buc
 ### Tests and acceptance
 
 - Deterministic tree IDs and stages across server/client and restarts; felling refusal on an occupied fall line; yield by stage, species and skill; pile ownership grace; log wagon and hand loading rates; construction refusal and clearing; allowance and stumpage per town; sapling production, planting, growth and woodlot ownership; regeneration and overlay pruning; NPC forestry plan; map density; performance of the overlay with thousands of felled trees in `scripts/island-performance.ts`; browser coverage of felling, bucking and loading animations.
+
+## Planned — Piloted spaceflight
+
+Space is a route planner. The aim is to make it a place you fly: a ship with mass, a tank, a fitting, and a sky that has stars, planets and other ships in it. You undock from the parish spaceport, cross a system, jump to another star, and bring the ship down onto a world under that world's gravity. Trade, courier work and survey stay; they happen in the cockpit instead of on a card.
+
+### What exists today
+
+`data/galaxy.json` has seven systems (Hearth, Brindle, Farthing, Loam, Lantern, Rime, The Vessel) on a flat parsec map, each with a hazard of 0–4, and six ships (Modest shuttle, Cargo apology, Needle courier, Longview explorer, Breakwater escort, Unidentified teapot). `jumpQuote` in `src/shared/galaxy.ts` prices a hop at the ship's credits-per-parsec plus a shielding surcharge of 2cr per hazard, reduced by the hull's shield fraction. The hop takes `6 + 2 × fuel-cost` seconds. You cannot trade or steer during it. The shipyard panel says there is no random cargo loss and no space combat. Fittings are three fleet-wide levels of drive and three of hold (+2 pc and +20 cargo each). Galactic credits and a small cargo ledger are separate from parish cash and inventory; the spaceport exchanges them at `exchangeRate`, capped per real day. Courier jobs, a 15cr survey, relic gates for the teapot, and a free Hearth rescue for a broke empty ship are already there.
+
+The spaceport itself is a graded pad, a fence, a gate and a terminal on the parish (`spaceportSite`, `spaceport-complex.ts`). A scenery rocket flies a scripted loop (`spaceportFlight`): ignition, an 800 m rise, time away, a landing. Nobody pilots it. Taking off is a menu. Walking into deep water sends you to the parish spawn; there is no vacuum and no orbit.
+
+### Three ways of flying
+
+One ship, three regimes. Weapons, the cargo hatch and the landing gear work only in the first.
+
+- **Local flight.** Vacuum around a station, a star or a world. Six axes: forward and back, slide left and right, rise and fall, and pitch, yaw and roll. Flight assist is on by default: the ship holds the attitude you leave it in and cancels drift when you centre the stick, so it flies more like the boats than like a tumbling brick. Assist off is true coasting, for people who want it. Boost spends the engine reserve and is not free speed. Top speed depends on the thrusters and on how the power is shared (below). There is no air and no stall.
+- **System cruise.** Faster-than-light travel inside one star system. The drive compresses space ahead of the ship. You cannot stop. Proximity to a star, a planet or a station caps your speed: pointing at a mass slows you, pointing away lets you run, and the cap only gets large far from everything. Too close to a body, or too fast for the distance you have left, and the drive dumps you into local flight. That emergency drop heats the ship and damages the hull. Hardpoints, the hatch and the gear must be stowed or cruise will not light. A targeted station or world shows the speed and the alignment that will drop you cleanly; flying that bracket is the skill. Turn rate is best near half throttle.
+- **The jump.** A charge, interruptible by damage or by shutting the drive down, then a crossing to another system. You arrive in cruise, close to that system's star and aimed at it. The first thing you do is turn, or the star's exclusion zone drops you on top of it. Range is no longer a hard wall on the route planner. A drive has an optimal mass and a comfortable reach; past that, fuel and heat climb sharply, and past the absolute reach the jump will not light.
+
+Distances on the first chart stay the seven systems. A neighbouring hop, flown properly, is a journey of a few minutes: a charge of tens of seconds, a cruise measured in minutes, and an approach of about a minute. A world rule can stretch the chart later. The manoeuvres are the point; a delivery should not become an hour.
+
+### Gravity and coming down onto a world
+
+Every body has a surface gravity, in multiples of a standard g, and an exclusion radius. In local flight near a body the ship is pulled: thrust, inertia and that acceleration, integrated on the server in the same spirit as `fly`. Cruise will not stay lit inside the exclusion radius.
+
+The approach is its own regime, between cruise and the pad:
+
+- Drop from cruise only inside a speed band for your altitude. Faster than the band is an emergency drop.
+- A glide wants a descent angle of roughly **5° to 60°**. Steeper, or a sink the glide cannot hold, dumps you into local flight while you are still high, under gravity, with whatever speed you kept.
+- The altimeter shows orbital height, the drop height, the sink, and the body's gravity. Above about **1 g**, the safe glide is the shallow end of that band, and the landing burn has to be started earlier. A botched high-g touchdown damages the hull and can destroy the ship. Below 1 g the same burn sends you back up; the assist will not hover for you.
+- Gear down, a flat enough patch, and a sink inside the limit settles the ship. The parish spaceport pad is the first legal patch, and Hearth's world is about **1 g**. Other bodies in a system can be airless, heavy, or only a station in orbit.
+- The parish terrain, roads and buildings load for the last part of the glide, not for the whole system. Cruise and local flight above the world are a sky scene. The island stream stays on the ground.
+
+Later, a ship can set down away from the pad, and a small ground buggy can be carried in an optional slot. That waits until landing on the pad is reliable. On foot under a landed ship uses the existing walker; vacuum worlds need a suit module or the hatch will not open.
+
+### Fuel
+
+Fuel is hydrogen in a tank, measured in tonnes, not a line of credits.
+
+- Undocked, the power plant burns a little all the time. Cruise burns faster than local flight. The jump does not sip: at the moment the charge completes it takes a lump from the main tank. That lump grows with the ship's mass over the drive's optimal mass, and faster than linearly with distance, so two short jumps spend less than one long jump over the same gap.
+- A small reserve feeds the modules. When it empties it refills from the tank. The jump ignores the reserve and takes the lump from the tank itself. The gauge shows tonnes left and the current burn per hour.
+- Docked, the burn stops. Stations sell fuel for credits. A fuel scoop, an optional module, lets you skim a main-sequence star in cruise by holding the scoop band: too shallow and you collect nothing, too deep and the exclusion zone or the heat kills you. Not every star is scoopable.
+- Empty in space, the ship is stranded. Another player can transfer fuel. The existing free Hearth rescue remains for a poor, empty, uncontracted ship; anyone else pays a tow. Life support is a core module: with the canopy broken or the module unpowered, a timer starts, and running it out destroys the ship.
+
+Credits stop standing in for fuel. They pay for fuel, repairs, fittings and fines. The old per-parsec credit price and the hazard surcharge retire once the tank exists. A jump in progress on the old timer is allowed to finish.
+
+### Ships
+
+The six named hulls become real ships, with a size, a mass, a hardpoint layout and a set of internal slots. They keep their roles:
+
+- **Modest shuttle** — small, cheap, the ship you get back when you cannot afford a rebuy. Short reach, little cargo, few hardpoints.
+- **Needle courier** — small and fast, a thin hold, the ship you choose when the cargo is a parcel and the clock matters.
+- **Cargo apology** — medium trader. A large hold, a slow turn, a drive that is cheap on fuel and poor in a fight.
+- **Longview explorer** — medium. A long reach, a scoop-friendly build, a small hold, room for a scanner.
+- **Breakwater escort** — medium. Armour and shield space, a modest hold, the ship that can stay when the others run.
+- **Unidentified teapot** — still gated by the relics at Lantern, Rime and The Vessel. Odd slots, a long reach, and a heat profile that does not match the others.
+
+Size matters at the pad. Small and medium ships use the spaceport pad that exists today. A later heavy freighter, slow and huge, needs a larger pad and will not fit a small station. Switching ships at a shipyard stays free when the hold and any contract fit, as it does now.
+
+### Fittings
+
+A ship is a list of modules, changed at a station shipyard, stored per ship. The three fleet-wide drive and hold levels go away; what you bolted on is what you fly.
+
+Eight cores are required, each with a size that has to fit the slot and a grade from E up to A:
+
+- Bulkheads, the power plant, thrusters, the jump drive, life support, the power distributor, sensors, and the fuel tank.
+
+Optional slots take a shield generator, extra cargo racks, a fuel scoop, hull reinforcement, a scanner, repair or refuel gear, and (later) a buggy hangar. Hardpoints take weapons and tools, in sizes from small to huge. Utility mounts take shield boosters, chaff, heat sinks and point defence.
+
+How a weapon is mounted matters. A fixed mount hits harder and aims where the nose aims. A gimbal tracks inside a cone and needs the sensors. A turret tracks more loosely and hits for less. Thermal weapons eat shields; kinetic weapons eat hull. Ammunition is finite and bought at the station; energy weapons draw the weapon reserve instead.
+
+The plant has a budget. Deploying hardpoints adds draw. Each module has a priority from 1 to 5; when the plant cannot feed everything, the highest numbers shut off first. A sensible fighting ship keeps thrusters, life support, sensors and the guns above the scoop and the cargo hatch.
+
+The distributor has three reserves — shields, engines, weapons — and six shares, at most four in any one. Shares set how fast that reserve refills. Shields also resist more while they have share and reserve left: four shares roughly doubles how long a given shield lasts under fire, two shares adds about half again. Engines with share turn and boost sooner. Weapons with share fire longer before the reserve is empty. Moving the shares during a fight is part of flying the ship.
+
+Heat comes from the plant, from firing, and from charging the drive. Past 100% the ship starts to cook; well past that, modules fail. A heat sink dumps it. Running cold makes you harder to see on sensors. Silent running, vents closed, does that on purpose and cooks you faster.
+
+### Combat, law and losing the ship
+
+Combat happens in local flight, with the hardpoints out. Cruise is for running and for being pulled out of cruise.
+
+- Shields fall first, then hull. A target can be a whole ship or one module: the plant, the thrusters, the drive. Breaking the plant finishes a ship; breaking the drive stops it leaving; breaking the thrusters stops it turning.
+- In cruise, a hostile can try to drag you into local flight. You and they fly a short contest of alignment. Winning it keeps you in cruise. Losing it drops both of you, hardpoints hot, with some damage to the loser. Pirates want cargo. Security wants warrants.
+- Safe systems (hazard 0, which is Hearth and its quiet neighbours) have security ships and treat an unprovoked attack as a crime. Hazard systems spawn pirates and answer more slowly. Attacking a clean ship, firing on a station or blocking a pad builds a fine or a bounty, visible to other players and to security. Paying the fine at a station in that jurisdiction clears it. A bounty is claimed by whoever destroys the ship, security included.
+- Destroyed, you pay a rebuy: a world-rule fraction of the hull and the fitted modules, starting at **5%**, taken in credits. Pay it and the ship comes back as fitted, at the last station. Refuse it, or be unable to pay, and you are back in a stock Modest shuttle at Hearth. The parish character is untouched: cash, land, tractors and the body on the island stay. The ship ledger is the thing at risk.
+- Player-versus-player weapons follow the world fighting switch. With fighting off, players cannot harm each other; NPC pirates in hazard systems can still be enabled on their own. With fighting on, the safe-zone rules that already protect towns apply to the spaceport pad and to a docked ship. The flight-combat entry covers aircraft guns. This entry covers ships. They do not share a damage table.
+
+### The station and the parish
+
+Undocking and docking are flown. You request a pad, get the existing spaceport pad, and have a limited time to land on it. Sitting in the approach without clearance is a fine, then a shot from the station. An optional docking computer, a module, flies the last alignment for you and can be destroyed or switched off.
+
+On the pad you are back in the parish, on foot, under the rules you already know. The exchange, the courier board, the survey desk and the shipyard are services of this station and of stations in the other six systems. Those other stations are real rooms in space first: a pad, a shop, a board. They do not need a second island on day one. Linking a station to another hosted world stays the galaxy-passport path in `GALAXIES.md`; credits, ships and space cargo still do not cross servers.
+
+Courier packages occupy hold space and are delivered by docking at the destination, not by waiting out a timer. The three space goods keep station prices from `stationPrice`, and hauling them is flying the route. A survey is a scanner pass in cruise, sold at a station, replacing the flat 15cr button once scanners exist. The scenery rocket can stay as an unpiloted freighter on its own schedule.
+
+### Per-world
+
+Jump reach and fuel curves, cruise speed caps, approach angles, body gravities, fuel price, rebuy fraction, whether NPC pirates exist and from which hazard upward, whether players can shoot each other, heat limits, scoop availability, and whether piloted flight is on at all. The default is on for the public parish: you can fly the shuttle, cruise Hearth, jump the seven systems, and land on the pad, with pirates only from hazard 2 up and with player weapons off unless fighting is on. A world can keep today's menu jump instead.
+
+### Order
+
+1. Local flight in a small volume over the existing pad: assist on and off, boost, undock, request, land, explode on a bad landing. One hull, the shuttle, with stock cores.
+2. The home world's gravity, the glide band, and a high-g test body. The parish loads only on the way down.
+3. System cruise in Hearth: mass caps, the exclusion zone, a clean drop at the station, an emergency drop when you come in hot.
+4. The tank, the burn, the jump lump, the scoop, and stranding. Arrival beside the destination star. Retire the credit-per-parsec price. Let an in-progress old jump finish.
+5. The other five hulls, with their real slots, and shipyard fitting. Power budget and priorities. Heat.
+6. Shields, hardpoints, the three reserves, NPC interdiction, fines, bounties and rebuy. Player fire only where fighting is on.
+7. Stations and bodies for the other six systems, courier delivery by docking, scanner survey, and a generated neighbourhood beyond the seven when the minutes-long hops feel right.
+8. Off-pad landing, the buggy, and a heavy ship that needs a bigger pad.
+
+### Tests
+
+Assist holds attitude and kills drift; assist off conserves a coast. Cruise speed falls as you point at a mass and rises as you point away; an exclusion-zone crossing and an overspeed drop both damage the ship and leave you in local flight; a drop inside the published speed band does not. Jump fuel for two short hops is less than one hop of the same length, and a ship over optimal mass pays more. The scoop fills only inside the band and overheats outside it. An empty tank strands the ship, a transfer refuels it, and the free rescue still fires for a poor empty shuttle. A 1 g approach on the pad settles inside the sink limit; a steep glide and a high-g landing without a burn destroy the ship. The island is not streamed during cruise. Fittings that exceed the plant shut off by priority when the hardpoints deploy. Shields fall to thermal damage and hull to kinetic; a rebuy restores the fit, and a refused rebuy returns a stock shuttle at Hearth without touching parish cash or land. An interdiction contest has a winner. With fighting off, a player shot does nothing to another player. Courier cargo moves only when the destination pad is docked. A saved cruise, a saved glide and a saved half-charged jump resume after a restart. Browser coverage for undock, cruise, jump, approach and dock on the real pad.
+
+## Completed in 0.114.4 — 2026-11-01
+
+- Require the `captain` skill to buy or helm a boat longer than the outboard motorboat when `requireCaptainSkill` is on. New worlds and public Puddlewick turn it on; other existing worlds stay off until an owner edits the rule. The motorboat and lifeboat stay open. A per-slot `requiresCaptain` flag overrides the length test.
+- Rename `boatmaster` to `captain` in every world. Public Puddlewick grants `captain` once to anyone who already owns a longer boat.
+- Passengers and deckhands are not asked. Purchase and helm refusals name the school. Residents are told the tuition and do not buy boats, so there is no new purchase plan.
+
+## Completed in 0.109.0 — 2026-10-30
+
+- Walking flashlight and appropriate controls; no engine controls/readouts for walking or the emergency raft.
+- Lifeboat capacity 10 and nearby-only stranded-boat reboarding.
+- Vessel scale audit using real three-week trawler voyages; 24.5 m trawler, 16.8 m tug and 4.3 m motorboat with human-scale crew and helms.
+- Tugboat purchase, paid rescue consent/escrow, physical towing, free self-recovery, docking settlement and cancellation/restart/death handling.
+- Seven distinct trailers with purchase, ownership, cargo restrictions, trading, livestock transfers, persistent parking, articulated reversing, collision, load effects and detailed models.
+- Spaceport relocation to about 1.25 km from Puddlewick, preserving property and replacing the old site's fences, reservation and access roads.
+- Runways excluded from the road network, with growth reconnecting isolated branches around the airfield.
+- Twice the maximum tractor third-person zoom range.
+- Cheap outboard motorboat, empty-tank rowing, rod fishing and fuel-delivery/tender-towing recovery; canal boat price increased to 60s.
+- Free town teleport removed while genuine death respawns and caretaker recovery remain.
+- Cape lighthouse road search fixed; new roads prefer gentler grades and use modest deterministic curves. Existing construction rate and safe clearance rules remain.
+
+Design references, economic calculations and usage: [Boats, rescue and haulage](HAULAGE.md). No remaining items from this batch are deferred.
+
+## Completed in 0.105.0
+
+- Livestock: fenced grazing parcels, roaming/grazing animations, adjoining expansion, herd capacity, breeding checks and production/input/staffing scaling. World owners can adjust capacity and expansion prices.
+- Maps: building-type icons, hover/focus names, sparse close-up labels and navigation that preserves a distant viewed location through zoom and snapshots.
+- Vehicle editor: per-world movement, handling, fuel, cargo, price, passengers/crew, provisions, death/recovery, trawling, tyre footprints, tread artwork, cockpit instruments, lamp lenses and Workshop components. Portable designs retain these configurations.
+
+## Completed in 0.104.0
+
+- Charter fishing boat, paid trips, passenger fishing and settlement.
+- Independent synchronized tractor headlights, including lamp faces and nearby beams.
+- Random rod-fishing bites at the configured average rates.
+
+The completed release sections describe shipped work.
