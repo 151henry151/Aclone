@@ -674,7 +674,7 @@ Space is a route planner. The aim is to make it a place you fly: a ship with mas
 
 ### What exists today
 
-`data/galaxy.json` has seven systems (Hearth, Brindle, Farthing, Loam, Lantern, Rime, The Vessel) on a flat parsec map, each with a hazard of 0–4, and six ships (Modest shuttle, Cargo apology, Needle courier, Longview explorer, Breakwater escort, Unidentified teapot). `jumpQuote` in `src/shared/galaxy.ts` prices a hop at the ship's credits-per-parsec plus a shielding surcharge of 2cr per hazard, reduced by the hull's shield fraction. The hop takes `6 + 2 × fuel-cost` seconds. You cannot trade or steer during it. The shipyard panel says there is no random cargo loss and no space combat. Fittings are three fleet-wide levels of drive and three of hold (+2 pc and +20 cargo each). Galactic credits and a small cargo ledger are separate from parish cash and inventory; the spaceport exchanges them at `exchangeRate`, capped per real day. Courier jobs, a 15cr survey, relic gates for the teapot, and a free Hearth rescue for a broke empty ship are already there.
+`data/galaxy.json` has seven systems (Hearth, Brindle, Farthing, Loam, Lantern, Rime, The Vessel) on a flat parsec map, each with a hazard of 0–4, and six ships (Modest shuttle, Cargo apology, Needle courier, Longview explorer, Breakwater escort, Unidentified teapot). `jumpQuote` in `src/shared/galaxy.ts` prices a hop at the ship's credits-per-parsec plus a shielding surcharge of 2cr per hazard, reduced by the hull's shield fraction. The hop takes `6 + 2 × fuel-cost` seconds. You cannot trade or steer during it. The shipyard panel says there is no random cargo loss and no space combat. Fittings are three fleet-wide levels of drive and three of hold (+2 pc and +20 cargo each). Galactic credits and a small cargo ledger are separate from parish cash and inventory; the spaceport exchanges them at `exchangeRate`, capped per real day. Courier jobs, a 15cr survey, and a free Hearth rescue for a broke empty ship are already there.
 
 The spaceport itself is a graded pad, a fence, a gate and a terminal on the parish (`spaceportSite`, `spaceport-complex.ts`). A scenery rocket flies a scripted loop (`spaceportFlight`): ignition, an 800 m rise, time away, a landing. Nobody pilots it. Taking off is a menu. Walking into deep water sends you to the parish spawn; there is no vacuum and no orbit.
 
@@ -722,7 +722,7 @@ The six named hulls become real ships, with a size, a mass, a hardpoint layout a
 - **Cargo apology** — medium trader. A large hold, a slow turn, a drive that is cheap on fuel and poor in a fight.
 - **Longview explorer** — medium. A long reach, a scoop-friendly build, a small hold, room for a scanner.
 - **Breakwater escort** — medium. Armour and shield space, a modest hold, the ship that can stay when the others run.
-- **Unidentified teapot** — still gated by the relics at Lantern, Rime and The Vessel. Odd slots, a long reach, and a heat profile that does not match the others.
+- **Unidentified teapot** — the late, expensive hull. The longest reach, the largest hold, fast and light on fuel, with strong shielding.
 
 Size matters at the pad. Small and medium ships use the spaceport pad that exists today. A later heavy freighter, slow and huge, needs a larger pad and will not fit a small station. Switching ships at a shipyard stays free when the hold and any contract fit, as it does now.
 
