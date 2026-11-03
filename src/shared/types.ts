@@ -430,6 +430,8 @@ export interface World {
   players: Record<string, Player>;
   /** Empty boats left at public fishing piers; boathouses store boats out of sight. */
   boatyardVersion?: number;
+  /** Public hangar fuel bid and the one-time 500s till. */
+  airfieldFuelDeskVersion?: 1;
   boathouseTackleVersion?: 1;
   fishingVoyageVersion?: number;
   oceanVersion?: number;

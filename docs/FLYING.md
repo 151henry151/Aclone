@@ -44,7 +44,8 @@ and additional room beyond it. Trees, buildings, steep banks and water are hazar
 There is no automatic runway alignment or instant vertical takeoff.
 
 1. Drive to **Puddlewick airfield hangar**, on the western edge of the main town,
-   to buy or board a biplane. The aircraft appears on the apron with its engine off;
+   to buy or board a biplane. The purchase price is paid into the hangar till.
+   The aircraft appears on the apron with its engine off;
    start it with F4. Check fuel and, on worlds requiring
    licences, obtain the pilot qualification. Taxi at low throttle using A/D.
 2. Line up, release B, and increase power with W. The tail comes up as speed builds.
@@ -128,7 +129,10 @@ apron. The runway is reserved against new buildings and farm plots.
 Your hangar panel shows the ready aircraft plus spare airframes. A crash removes
 only the aircraft flown. The next visit commissions a spare without another
 purchase charge; its tank is empty and its condition is new. Buy Fuel at the
-hangar or bring some with you, then use it from your inventory. Existing aircraft
+hangar or bring some with you, then use it from your inventory. The hangar also
+buys Fuel for 50d, five denarii more than the boathouse pump and more than
+Harbour stores or the garage pay, and less than its own 53.50d pump. The parish
+puts 500s in the till for those purchases. Existing aircraft
 keep their parked fuel, paint and maintenance history. Spares do not copy these
 consumables or records from a destroyed machine.
 

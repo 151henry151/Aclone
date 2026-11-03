@@ -1462,7 +1462,13 @@ export function act(w: World, id: string, a: Action): string {
             !poweredBoat(slot, w) || !!landing?.building,
             'Buy your first boat at a boathouse',
           );
-          charge(w, p, vehicleDef(w, slot).price, 'vehicle purchase');
+          const price = vehicleDef(w, slot).price;
+          if (slot === 2 && b!.aircraftHangar) {
+            requireThat(p.cash >= price, 'Not enough cash');
+            p.cash -= price;
+            b!.investment += price;
+            log(w, 'transfer', price, p.id, b!.id, 'vehicle purchase');
+          } else charge(w, p, price, 'vehicle purchase');
           migrateVehiclePaint(p);
           fleet.push(slot);
         }

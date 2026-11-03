@@ -13,7 +13,7 @@ import { prepareFishingVoyages } from './fishing-voyages';
 import { integrateSeafood } from '../shared/seafood';
 import { aboardBoat } from '../shared/boathouse';
 import { ensurePuddlewickBoatyard } from './puddlewick-boatyard';
-import { ensurePuddlewickAirfield } from './puddlewick-airfield';
+import { ensurePuddlewickAirfield, prepareAirfieldFuelDesk } from './puddlewick-airfield';
 import { vehiclePaint } from '../shared/appearance.ts';
 import { Playtime } from './playtime.ts';
 import { playerStatistics } from '../shared/player-statistics.ts';
@@ -178,6 +178,7 @@ export async function createApp(options: AppOptions) {
     const government = governmentStores(world);
     const civic = restorePuddlewickCentre(world);
     const airfield = ensurePuddlewickAirfield(world);
+    const fuelDesk = prepareAirfieldFuelDesk(world);
     const boatyard = ensurePuddlewickBoatyard(world);
     const seafood = integrateSeafood(world);
     const voyages = prepareFishingVoyages(world);
@@ -198,6 +199,7 @@ export async function createApp(options: AppOptions) {
       government ||
       civic ||
       airfield ||
+      fuelDesk ||
       boatyard ||
       seafood ||
       voyages ||

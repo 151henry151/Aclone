@@ -9,6 +9,8 @@ All notable changes to Aclone are documented here. This project follows
 ### Changed
 
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.
+- The public airfield hangar buys Fuel for 50d, above the boathouse pump, the garage bid and the harbour bid, and below its own 53.50d pump. Its till receives 500s once.
+- Pay a biplane bought at the airfield hangar into that hangar's till.
 
 ## [0.114.5] - 2026-11-02
 

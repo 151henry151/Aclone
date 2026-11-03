@@ -1,12 +1,31 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types';
 import { airfieldAreas, onAirfield, type Airfield } from '../shared/airfield';
-import { makeBuilding } from '../shared/simulation';
+import { isPublicPuddlewick } from '../shared/harbour-supply';
+import { log, makeBuilding } from '../shared/simulation';
 import { terrainHeight, mapHalf } from '../shared/terrain';
 import { blocksBuilding } from '../shared/building-shapes';
 import { onFarmLand } from '../shared/farm-land';
 import { creatorBlocks } from '../shared/creator';
 import { worldResources } from '../shared/resources';
+
+/** 50d. Five denarii over the boathouse pump (45d), above the garage bid (43.12d)
+ * and the harbour bid (34.65d), and under this hangar's own pump (53.50d). */
+export const HANGAR_FUEL_BID = 5000;
+
+/** The public hangar buys fuel, and its till receives 500s once so a delivery can be paid. */
+export function prepareAirfieldFuelDesk(w: World) {
+  if (!isPublicPuddlewick(w) || w.airfieldFuelDeskVersion) return false;
+  const hangar = w.buildings.find((b) => b.aircraftHangar && b.id === w.airfield?.hangar);
+  if (!hangar) return false;
+  hangar.buy.fuel = HANGAR_FUEL_BID;
+  const till = 500 * w.settings.denariiPerSheckle * 100;
+  hangar.investment += till;
+  log(w, 'faucet', till, 'operator', hangar.id, 'Airfield hangar fuel till');
+  w.airfieldFuelDeskVersion = 1;
+  w.revision++;
+  return true;
+}
 
 /** Public works on a vacant west-side site only. Never remove or move private property. */
 export function ensurePuddlewickAirfield(w: World) {
@@ -101,6 +120,7 @@ export function ensurePuddlewickAirfield(w: World) {
       w.airfield = a;
       w.resourceRelocations = moved;
       w.buildings.push(hangar);
+      prepareAirfieldFuelDesk(w);
       w.revision++;
       return true;
     }

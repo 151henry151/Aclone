@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { flightState } from '../src/shared/flight';
+import { vehicleDef } from '../src/shared/vehicle-config';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, act, move, makeBuilding } from '../src/shared/simulation';
-import { ensurePuddlewickAirfield } from '../src/server/puddlewick-airfield';
+import { buildings } from '../src/shared/catalog';
+import {
+  ensurePuddlewickAirfield,
+  prepareAirfieldFuelDesk,
+} from '../src/server/puddlewick-airfield';
 import { airfieldAreas, aircraftCount, onAirfield } from '../src/shared/airfield';
 import { terrainHeight } from '../src/shared/terrain';
 import { constructionSiteReason } from '../src/shared/construction-site';
@@ -44,6 +49,43 @@ test('public airstrip fits town, preserves private property and gathering IDs, a
   store.db.close();
   assert.match(constructionSiteReason(w, makeBuilding('test', 'home', a.x, a.z))!, /airfield/);
 });
+test('the public hangar buys fuel above the pumps that sell it, and a delivery is paid from a 500s till', () => {
+  const w = airfield();
+  const hangar = w.buildings.find((b) => b.aircraftHangar)!;
+  assert.equal(hangar.sell.fuel, 5350);
+  assert.ok(hangar.buy.fuel > buildings.market.buy.fuel);
+  assert.ok(hangar.buy.fuel > buildings.refinery.sell.fuel);
+  assert.ok(hangar.buy.fuel > buildings.boathouse.sell.fuel);
+  assert.ok(hangar.buy.fuel > buildings.garage.buy.fuel);
+  assert.ok(hangar.buy.fuel < hangar.sell.fuel);
+  assert.equal(hangar.buy.fuel, 5000);
+  assert.equal(hangar.investment, 5_000_000);
+  const p = addPlayer(w, 'hauler', 'Hauler');
+  p.x = hangar.x;
+  p.z = hangar.z;
+  p.inventory = { fuel: 4 };
+  const cash = p.cash;
+  act(w, p.id, {
+    type: 'trade',
+    building: hangar.id,
+    item: 'fuel',
+    quantity: 2,
+    direction: 'sell',
+  });
+  assert.equal(p.cash, cash + 10_000);
+  assert.equal(p.inventory.fuel, 2);
+  assert.equal(hangar.stock.fuel, 102);
+  assert.equal(hangar.investment, 5_000_000 - 10_000);
+  hangar.buy = {};
+  hangar.investment = 12_000;
+  delete w.airfieldFuelDeskVersion;
+  assert.equal(prepareAirfieldFuelDesk(w), true);
+  assert.equal(hangar.buy.fuel, 5000);
+  assert.equal(hangar.sell.fuel, 5350);
+  assert.equal(hangar.investment, 12_000 + 5_000_000);
+  assert.equal(prepareAirfieldFuelDesk(w), false);
+  assert.equal(hangar.investment, 12_000 + 5_000_000);
+});
 test('blocked or foreign worlds do not lose property to airfield placement', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   w.towns[0].radius = 100;
@@ -53,6 +95,41 @@ test('blocked or foreign worlds do not lose property to airfield placement', () 
   w.id = 'custom';
   w.towns[0].radius = 310;
   assert.equal(ensurePuddlewickAirfield(w), false);
+});
+test('buying a biplane at the hangar pays that hangar till', () => {
+  const w = airfield(),
+    hangar = w.buildings.find((b) => b.aircraftHangar)!,
+    p = addPlayer(w, 'buyer', 'Buyer');
+  w.settings.vehicleLicences = false;
+  w.settings.requireCaptainSkill = false;
+  p.inventory = {};
+  p.x = hangar.x;
+  p.z = hangar.z;
+  const price = vehicleDef(w, 2).price;
+  const till = hangar.investment;
+  p.cash = price - 1;
+  assert.throws(
+    () => act(w, p.id, { type: 'vehicle', slot: 2, building: hangar.id }),
+    /Not enough cash/,
+  );
+  assert.equal(hangar.investment, till);
+  assert.equal(!!p.fleet?.includes(2), false);
+  p.cash = price + 50;
+  act(w, p.id, { type: 'vehicle', slot: 2, building: hangar.id });
+  assert.equal(p.vehicle, 2);
+  assert.equal(p.cash, 50);
+  assert.equal(hangar.investment, till + price);
+  const paid = w.ledger.filter((l) => l.reason === 'vehicle purchase');
+  assert.deepEqual(
+    paid.map((l) => [l.kind, l.amount, l.from, l.to]),
+    [['transfer', price, p.id, hangar.id]],
+  );
+  p.vehicle = 5;
+  p.x = hangar.x;
+  p.z = hangar.z;
+  act(w, p.id, { type: 'vehicle', slot: 2, building: hangar.id });
+  assert.equal(p.cash, 50);
+  assert.equal(hangar.investment, till + price);
 });
 test('boarding requires the hangar, safe apron, stopped pilot and cargo fit before consuming a spare', () => {
   const w = airfield(),
