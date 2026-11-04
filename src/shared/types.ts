@@ -1,3 +1,4 @@
+import type { CharterRules } from './charter-rules';
 import type { CreditRules } from './credit-rules';
 import type { LoanRules } from './loan-rules';
 import type { EconomyRules } from './economy-rules';
@@ -299,6 +300,7 @@ export interface Settings
     Partial<EconomyRules>,
     Partial<LoanRules>,
     Partial<CreditRules>,
+    Partial<CharterRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

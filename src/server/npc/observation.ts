@@ -1,3 +1,4 @@
+import { charterRules } from '../../shared/charter-rules';
 import { creditRules } from '../../shared/credit-rules';
 import { loanRules } from '../../shared/loan-rules';
 import { economyRules, lighthouseWage } from '../../shared/economy-rules';
@@ -186,6 +187,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...economyRules(w.settings),
       ...loanRules(w.settings),
       ...creditRules(w.settings),
+      ...charterRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

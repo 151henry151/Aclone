@@ -299,13 +299,15 @@ ordinary death respawns and caretaker recovery remain separate.
 14-metre passenger fishing boat adds six places, a 600-weight captain's hold and a
 192-unit tank. Its enclosed helm has a live compass, fuel/speed gauges and a
 persistent W/S throttle (B idles). Use Inventory → Boating at a dock to invite
-players for an agreed fare and 15–180 real minutes including travel. Passengers
+players for an agreed fare and, by default, 15–180 real minutes including travel. Passengers
 accept on shore, bring their own tackle and provisions, and keep their catches.
 Stop before they cast; moving reels in their lines. Fare is held in saved escrow
 until return: early return pays proportionally, cancellation or return to a different
 dock refunds all. Death cancels affected bookings; existing world boat-death rules
 still apply. No overtime charge or offshore disembarking. Lighting switches remain
-under Lights. See [charter design and balance](docs/CHARTER_BOAT.md).
+under Lights. Unreleased F10 charter rules set fare/duration defaults and limits,
+invitation counts and return-request cooldown; agreed bookings retain their terms.
+See [charter design and balance](docs/CHARTER_BOAT.md).
 
 The **North Star fishing boat** has a persistent throttle and working
 nets. Boatyard landing prices leave margins for hauliers delivering cod, halibut

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose charter fare, duration, invitation and return-request limits as world rules; quote local terms in Inventory while preserving issued offers, held fares, elapsed time and cancellation refunds across edits and reloads.
+
 - Make the lighthouse keeper wage cap a world rule shared by daily payments, wage editing, player panels and resident quotes; preserve posted wages, taxes and quarters, and keep supported owner-hiring and shift-renewal buttons visible.
 
 - Expose credit-score bounds and contribution weights as world rules; use local scores in bank displays and new rates without rewriting histories or signed loans. Compact the resident guide topic index while retaining every heading and lookup ID within the existing request limit.

@@ -692,3 +692,22 @@ separate controls. Editing weights changes computed scores, without inventing
 employment or payments, moving money, or rewriting signed loans. Missing fields
 retain defaults; new worlds, portable designs, summaries, resident observations
 and reloads use the same rules.
+
+## Charter offer rules (unreleased)
+
+**F10 → Rules → Charter offers** controls new invitations and return requests.
+`charterDefaultFare` defaults to 7,500 hundredths (75d), with
+`charterMaximumFare` 100,000 (1,000d). Both accept integer 0–100,000,000;
+the default cannot exceed the ceiling. Duration fields use real minutes:
+`charterMinimumMinutes` 15, `charterDefaultMinutes` 60 and
+`charterMaximumMinutes` 180. Each accepts integer 1–1,440, ordered minimum ≤
+default ≤ maximum. `charterMaximumOffers` defaults to 16 per captain, integer
+0–100; zero closes new invitations. `charterReturnCooldown` defaults to 60 real
+seconds, integer 0–3,600; zero permits immediate repeat requests.
+
+Inventory uses these defaults and bounds. Issued offers and accepted tickets
+retain their agreed fares and durations; changing limits never rewinds elapsed
+trip time. Full fare escrow, proportional early-return settlement, full
+cancellation refunds and one-time settlement remain unchanged. Passenger places
+and tank capacity stay in Vehicles. Missing saved fields use defaults; rules
+summaries, resident observations, portable designs and reloads preserve all seven.

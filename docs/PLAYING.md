@@ -419,7 +419,7 @@ The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is exp
 
 The North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 60s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for controls and crew agreements.
 
-The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating.
+The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating. Unreleased charter rules set local fare/duration defaults and limits, invitation counts and return-request cooldown; existing offers and bookings keep their agreed terms.
 
 See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, controls, fish menus and the full cost breakdown.
 

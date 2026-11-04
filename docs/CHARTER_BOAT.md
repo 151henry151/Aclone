@@ -17,7 +17,13 @@ Game prices, seats and durations are balancing choices, not real-world operating
 
 Buy and board at a boatyard, or board an owned boat at a fishing pier. The captain
 opens Inventory → Boating and offers a named player waiting on shore a total fare
-and 15–180 real-minute duration, including travel. Each player explicitly accepts.
+and, by default, a 15–180 real-minute duration, including travel. Each player explicitly accepts.
+Unreleased **F10 → Rules → Charter offers** controls fare and duration defaults
+and limits, invitation count and return-request cooldown. The initial suggestion
+is 75d for 60 minutes, with a 1,000d fare ceiling and 16 outstanding invitations
+per captain. Zero invitations closes new offers. Existing invitations and accepted
+trips keep their agreed terms after edits and reloads. See the
+[world rules](WORLD_BUILDING.md#charter-offer-rules-unreleased).
 There are six passenger places by default, shared with any unpaid rescue passengers.
 The world builder can change passenger places and tank capacity in **F10 → Vehicles**.
 Inventory shows the world's current limits. A full boat (including a zero-seat
@@ -33,7 +39,8 @@ the compact Reel/Stop control. The captain can fish too while stopped.
 W/S sets a persistent throttle through forward, idle and slow reverse; A/D steers;
 B idles. Lights opens cabin/deck/searchlight switches. The skipper must actually
 bring everyone back to a dock. Passengers cannot teleport ashore. At the agreed
-end time, both parties receive a notice; a passenger can also request return.
+end time, both parties receive a notice; a passenger can also request return,
+once every 60 seconds by default (the world can change this cooldown).
 There is no automatic overtime charge.
 
 ## Fair payment and recovery

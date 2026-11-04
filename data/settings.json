@@ -204,5 +204,12 @@
   "creditDebtPoints": 100,
   "creditDebtMaximum": 100,
   "creditDebtDenominatorMinimum": 10000,
-  "lighthouseWageCap": 800
+  "lighthouseWageCap": 800,
+  "charterDefaultFare": 7500,
+  "charterMaximumFare": 100000,
+  "charterDefaultMinutes": 60,
+  "charterMinimumMinutes": 15,
+  "charterMaximumMinutes": 180,
+  "charterMaximumOffers": 16,
+  "charterReturnCooldown": 60
 }

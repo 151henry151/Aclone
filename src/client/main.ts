@@ -1,3 +1,4 @@
+import { charterRules } from '../shared/charter-rules';
 import { economyRules, lighthouseWage } from '../shared/economy-rules';
 import { survivalRules, skillFits, skillSlotsUsed } from '../shared/survival-rules';
 import { RadioConsole } from './radio-console';
@@ -2945,11 +2946,14 @@ app.addEventListener('click', async (e) => {
           captain: el.dataset.captain,
           player: el.dataset.player,
           fare: Math.round(
-            Number((document.getElementById('charter-fare') as HTMLInputElement)?.value ?? 75) *
-              100,
+            Number(
+              (document.getElementById('charter-fare') as HTMLInputElement)?.value ??
+                charterRules(world?.settings).charterDefaultFare / 100,
+            ) * 100,
           ),
           minutes: Number(
-            (document.getElementById('charter-minutes') as HTMLInputElement)?.value ?? 60,
+            (document.getElementById('charter-minutes') as HTMLInputElement)?.value ??
+              charterRules(world?.settings).charterDefaultMinutes,
           ),
         });
         break;

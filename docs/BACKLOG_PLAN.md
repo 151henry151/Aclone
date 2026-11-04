@@ -1848,3 +1848,62 @@ their original deadlines. All 26 focused tests pass; TypeScript is clean and
 changed-file Prettier has been run. Browser criteria and inspected screenshots
 pass. Default-concurrency failures remain recorded above; no test, deadline,
 package script or acceptance criterion was weakened. Ready to commit and push.
+
+Pushed and verified `51005f5` on `backlog-implementation`. **Lighthouse keeper
+wage cap is done.** Continue with charter/tug fee defaults and escrow limits.
+
+### Gameplay rules — charter offer terms
+
+Before production, expose the existing charter economics: default fare 7,500
+hundredths (75d), maximum fare 100,000 (1,000d), default duration 60 minutes,
+minimum/maximum duration 15/180 minutes, maximum outstanding offers 16, and
+return-request cooldown 60 seconds. These are seven rules. Fare/default ceiling
+accept integer 0–100,000,000; durations integer 1–1,440 minutes; outstanding
+offers integer 0–100; cooldown integer 0–3,600 seconds. Validate default fare ≤
+maximum fare and minimum duration ≤ default duration ≤ maximum duration. Missing
+keys retain named defaults. Apply to new offers, UI defaults/limits and request
+throttling; keep complete fare escrow, proportional early settlement, full
+cancellation refunds and idempotence as money-conservation invariants.
+
+Issued offers and accepted tickets retain agreed prices/durations after edits
+and reloads. The elapsed-time cap must accommodate all accepted ticket durations,
+including a longer trip after lowering the rule maximum; it must also allow new
+trips longer than the old three-hour cap. Zero maximum outstanding offers stops
+new invitations but preserves existing offers/tickets. No autonomous resident
+charter purchases are introduced. Use one source for the panel and main handler's
+fallback values, and include rules in creation/editor/summary/design and live
+resident rules.
+
+Test defaults, missing keys, bounds/atomic invalid changes, maximum outstanding
+offers, insufficient passenger funds, changed return cooldown, old terms through
+reload and lower limits, long-trip settlement, cancellation/repeat-refund
+conservation. Commands: `node_modules/.bin/tsx --test tests/charter-rules.test.ts
+ tests/charter.test.ts tests/npc-guide.test.ts`; browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/charter-rules.spec.ts
+ tests/browser/charter-tuning.spec.ts`; full npm test suite (two concurrent files
+if needed for the documented machine contention), TypeScript and changed-file
+Prettier. Browser: edit/reopen seven rules, verify fare/duration defaults and
+limits, empty shore, invite a passenger, reject unaffordable acceptance, accept
+an affordable offer with exact held fare, reject an extra invitation at the
+configured count, then cancel/refund once. Inspect screenshots and page errors;
+update charter/player/world-builder docs, README and imperative Unreleased.
+
+Charter red run: all five tests fail on absent rules/defaults/editor controls
+(`/tmp/aclone-charter-rules-red.log`), before production changes.
+
+The extra elapsed-time regression fails before its fix: a two-hour trip with a
+15-minute ticket rewinds to 1,800 seconds when the new-offer maximum is reduced
+to 30 minutes (expected 7,200). Preserve accumulated time in the cap calculation;
+keep accepted long-ticket coverage and full settlement assertions unchanged.
+
+Both browser flows pass (28.2s for local charter rules, 25.5s for vehicle tuning).
+Inspect all five charter screenshots: all seven editor fields persist, empty
+shore is explained, an extra invitation is refused, insufficient cash rejects,
+and an affordable fare is held then refunded exactly once. No page errors.
+Update charter/player/world-builder docs, README and imperative Unreleased entry.
+
+Charter final gates: all 27 focused tests pass. The entire npm test suite passes
+1,484 tests in 310.1 seconds with two concurrent files. TypeScript is clean and
+Prettier has been run on all changed files. Both browser flows and inspected
+screenshots meet the criteria. The extra elapsed-time regression passes without
+changing settlement or weakening any test. Ready to commit and push.

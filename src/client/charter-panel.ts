@@ -1,3 +1,4 @@
+import { charterRules } from '../shared/charter-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../shared/types';
 import { CHARTER_BOAT } from '../shared/boats';
@@ -13,6 +14,7 @@ const button = (label: string, op: string, attrs = '') =>
   `<button data-do="charter" data-id="${op}" ${attrs}>${label}</button>`;
 export function charterPanel(w: World, p: Player) {
   let html = '';
+  const rules = charterRules(w.settings);
   for (const offer of p.charterOffers ?? [])
     html += `<h3>Charter invitation</h3><p>${esc(offer.name)} · ${offer.minutes} real minutes including travel · ${(offer.fare / 100).toFixed(2)}d total fare. Bring tackle, food and water; keep your catches. Fare is held until return. Early return refunds unused time; cancellation refunds all. You must return to a dock to leave.</p>${button('Accept & board', 'accept', `data-captain="${esc(offer.captain)}"`)}${button('Decline', 'decline', `data-captain="${esc(offer.captain)}"`)}`;
   if (p.charterPassage) {
@@ -39,8 +41,7 @@ export function charterPanel(w: World, p: Player) {
           .join('');
     if (dock && Math.abs(p.speed) < 0.5) {
       if (!v?.departed) {
-        html +=
-          '<label>Fare per passenger (d) <input id="charter-fare" type="number" min="0" max="1000" step="0.01" value="75"></label><label>Trip length (real minutes, including travel) <input id="charter-minutes" type="number" min="15" max="180" value="60"></label>';
+        html += `<label>Fare per passenger (d) <input id="charter-fare" type="number" min="0" max="${rules.charterMaximumFare / 100}" step="0.01" value="${rules.charterDefaultFare / 100}"></label><label>Trip length (real minutes, including travel) <input id="charter-minutes" type="number" min="${rules.charterMinimumMinutes}" max="${rules.charterMaximumMinutes}" value="${rules.charterDefaultMinutes}"></label>`;
         const candidates = Object.values(w.players).filter(
           (q) => q.id !== p.id && q.online && !q.hitch && boatLanding(w, q, false, dock.id),
         );

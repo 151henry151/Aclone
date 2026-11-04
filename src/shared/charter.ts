@@ -1,3 +1,4 @@
+import { charterRules } from './charter-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, World } from './types';
 import { CHARTER_BOAT, boatSlot } from './boats';
@@ -71,6 +72,7 @@ export function settleCharterPassenger(w: World, captain: Player, p: Player, can
   );
 }
 export function charterAction(w: World, p: Player, a: Action) {
+  const rules = charterRules(w.settings);
   if (a.operation === 'accept' || a.operation === 'decline') {
     const c = w.players[String(a.captain)],
       v = c?.charter,
@@ -119,7 +121,10 @@ export function charterAction(w: World, p: Player, a: Action) {
   if (a.operation === 'requestReturn') {
     const c = charterCaptain(w, p);
     need(c, 'You are not aboard a charter');
-    need(w.time >= (p.charterRequestAt ?? -Infinity) + 60, 'The captain has already been notified');
+    need(
+      w.time >= (p.charterRequestAt ?? -Infinity) + rules.charterReturnCooldown,
+      'The captain has already been notified',
+    );
     p.charterRequestAt = w.time;
     say(w, 'Charter', `${p.name} requests a return to port.`, 'system', c!.id);
     return 'The captain has been asked to return';
@@ -136,12 +141,14 @@ export function charterAction(w: World, p: Player, a: Action) {
       'Choose a passenger waiting on shore at this dock',
     );
     need(
-      Number.isSafeInteger(fare) && fare >= 0 && fare <= 100000,
-      'Fare must be between 0 and 1000d',
+      Number.isSafeInteger(fare) && fare >= 0 && fare <= rules.charterMaximumFare,
+      `Fare must be between 0 and ${rules.charterMaximumFare / 100}d`,
     );
     need(
-      Number.isSafeInteger(minutes) && minutes >= 15 && minutes <= 180,
-      'Choose 15–180 real minutes, including travel',
+      Number.isSafeInteger(minutes) &&
+        minutes >= rules.charterMinimumMinutes &&
+        minutes <= rules.charterMaximumMinutes,
+      `Choose ${rules.charterMinimumMinutes}–${rules.charterMaximumMinutes} real minutes, including travel`,
     );
     need(!p.charter?.departed, 'Finish the current charter before offering a new trip');
     need(
@@ -156,7 +163,10 @@ export function charterAction(w: World, p: Player, a: Action) {
       departed: false,
       returned: false,
     });
-    need(Object.keys(v.offers).length < 16 || !!v.offers[q!.id], 'Too many outstanding offers');
+    need(
+      Object.keys(v.offers).length < rules.charterMaximumOffers || !!v.offers[q!.id],
+      'Too many outstanding offers',
+    );
     v.offers[q!.id] = { fare, minutes, dock: dock!.id };
     say(
       w,
@@ -206,7 +216,15 @@ export function advanceCharters(w: World, seconds: number) {
     }
     if (v.departed && !v.returned) {
       if (dock && Math.abs(c.speed) < 0.5) v.returned = true;
-      else v.elapsed = Math.min(10800, v.elapsed + seconds);
+      else {
+        // Agreed tickets retain their durations even after the world lowers new-offer limits.
+        const limit =
+          Math.max(
+            charterRules(w.settings).charterMaximumMinutes,
+            ...Object.values(v.tickets).map((t) => t.minutes),
+          ) * 60;
+        v.elapsed = Math.min(Math.max(limit, v.elapsed), v.elapsed + seconds);
+      }
     }
     for (const [id, t] of Object.entries(v.tickets)) {
       const q = w.players[id];
