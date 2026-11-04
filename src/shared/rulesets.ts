@@ -1,3 +1,4 @@
+import { boatNavigationRules } from './boat-navigation-rules';
 import { vehicleRunningRules } from './vehicle-running-rules';
 import { fishingRules } from './fishing-rules';
 import { farmYieldRules, cropThirstKeys, cropFrostKeys } from './farm-yield-rules';
@@ -88,11 +89,13 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const construction = constructionRules(s);
   const fishing = fishingRules(s);
   const running = vehicleRunningRules(s);
+  const navigation = boatNavigationRules(s);
   const farmYields = farmYieldRules(s);
   const gatheringRates = gatheringRules(s);
   const implementsRules = gatheringImplementRules(s);
   const cargo = npcCargoRules(s);
   return [
+    `Boat navigation: shore impact ${navigation.boatShoreImpactLoss} condition; afloat arrival radii ${navigation.boatHouseArrivalRadius} m at boathouses / ${navigation.boatLandingArrivalRadius} m at pier/river landings; shore boarding ${navigation.boatLandingShoreRadius} m at landings. Hull orientation, water path and collision blocking remain required.`,
     `Vehicle running costs: wear ${running.vehicleWearPerMetre} condition/metre when maintenance is enabled; trailer speed 1/(${running.trailerSpeedBase} + load × ${running.trailerLoadSpeedPenalty}), fuel ${running.trailerFuelBase} + load × ${running.trailerLoadFuelPenalty}. Load is cargo/capacity; no trailer is neutral. Existing condition and cargo remain.`,
     `Resident business cargo: fallback input purchase/deposit ${businessLoads.npcRoutineSupplyBatches}/${businessLoads.npcRoutineDepositBatches} batches, crop demand ${businessLoads.npcCropDemandBatches} buyer batches; collect ${businessLoads.npcBusinessCollectionLoad} output / ${businessLoads.npcFarmCollectionLoad} crops; small input purchase ${businessLoads.npcSmallInputPurchaseLoad} items below ${businessLoads.npcSmallInputPurchaseBatches} batches; carried surplus sale ${businessLoads.npcCarriedSurplusSaleLoad}; owned supplier reserve ${businessLoads.npcOwnedSourceReserveBatches} batches; business/farm output sale loads ${businessLoads.npcBusinessOutputSaleLoad}/${businessLoads.npcFarmOutputSaleLoad}. Zero suppresses the corresponding optional leg; source breeding minima and ordinary transfer limits apply.`,
     `Resident journeys: distance multiplier ${journey.npcJourneyDistanceMultiplier}, speed fraction ${journey.npcJourneySpeedFraction}, unquoted Fuel ${journey.npcJourneyFuelFallbackPrice} hundredths/item, equipment payback ${journey.npcEquipmentPaybackLoads} loads, optional refuel below ${journey.npcDriveFuelThreshold} tank units. Estimates retain actual quotes/tuning; walking costs no fuel.`,

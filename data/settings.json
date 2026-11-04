@@ -400,5 +400,9 @@
   "trailerSpeedBase": 1.12,
   "trailerFuelBase": 1.12,
   "trailerLoadSpeedPenalty": 0.33,
-  "trailerLoadFuelPenalty": 0.3
+  "trailerLoadFuelPenalty": 0.3,
+  "boatShoreImpactLoss": 1,
+  "boatHouseArrivalRadius": 30,
+  "boatLandingArrivalRadius": 14,
+  "boatLandingShoreRadius": 5
 }

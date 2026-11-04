@@ -1,3 +1,4 @@
+import { boatNavigationRules, boatNavigationRuleFields } from './boat-navigation-rules';
 import { vehicleRunningRuleFields } from './vehicle-running-rules';
 import { fishingRuleFields } from './fishing-rules';
 import { farmYieldRuleFields } from './farm-yield-rules';
@@ -1995,6 +1996,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(farmYieldRuleFields, key) ||
             Object.hasOwn(fishingRuleFields, key) ||
             Object.hasOwn(vehicleRunningRuleFields, key) ||
+            Object.hasOwn(boatNavigationRuleFields, key) ||
             Object.hasOwn(gatheringImplementFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
@@ -2006,6 +2008,8 @@ export function act(w: World, id: string, a: Action): string {
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
         const vehicleRunningField =
           vehicleRunningRuleFields[key as keyof typeof vehicleRunningRuleFields];
+        const boatNavigationField =
+          boatNavigationRuleFields[key as keyof typeof boatNavigationRuleFields];
         const fishingField = fishingRuleFields[key as keyof typeof fishingRuleFields];
         const farmYieldField = farmYieldRuleFields[key as keyof typeof farmYieldRuleFields];
         const gatheringRateField = gatheringRuleFields[key as keyof typeof gatheringRuleFields];
@@ -2073,6 +2077,7 @@ export function act(w: World, id: string, a: Action): string {
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
+        if (boatNavigationField) num(v, boatNavigationField.min, boatNavigationField.max);
         if (fishingField) num(v, fishingField.min, fishingField.max, fishingField.step === 1);
         if (farmYieldField)
           num(v, farmYieldField.min, farmYieldField.max, farmYieldField.step === 1);
@@ -2777,7 +2782,13 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       const old = p.fleetState?.[p.vehicle] ?? { acquiredAt: w.time, metres: 0, condition: 100 };
       p.fleetState = {
         ...p.fleetState,
-        [p.vehicle]: { ...old, condition: Math.max(0, old.condition - 1) },
+        [p.vehicle]: {
+          ...old,
+          condition: Math.max(
+            0,
+            old.condition - boatNavigationRules(w.settings).boatShoreImpactLoss,
+          ),
+        },
       };
     }
     const recoilBlocked =

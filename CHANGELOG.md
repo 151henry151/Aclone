@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Configure boat shore-impact damage and arrival radii per world; retain hull-aware docking and water-path checks, and show local limits in Inventory.
+
 - Expose vehicle distance wear and trailer speed/fuel coefficients as world rules; preserve condition and cargo, and show the local wear rate at garages.
 
 - Expose trawl speed, net capacity, fuel rate and shoal interval as world rules; retain vessel overrides, earned fish and encounter clocks across rule edits.

@@ -1,3 +1,4 @@
+import { boatNavigationRules, boatNavigationRuleFields } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules, vehicleRunningRuleFields } from '../shared/vehicle-running-rules';
 import { fishingRules, fishingRuleFields } from '../shared/fishing-rules';
 import { farmYieldRules, farmYieldRuleFields } from '../shared/farm-yield-rules';
@@ -128,6 +129,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(farmYieldRuleFields),
     ...Object.keys(fishingRuleFields),
     ...Object.keys(vehicleRunningRuleFields),
+    ...Object.keys(boatNavigationRuleFields),
     ...Object.keys(gatheringImplementFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
@@ -204,6 +206,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const navigation = boatNavigationRules(settings);
+  const navigationFields = `<fieldset class="boat-death-settings"><legend>Boat navigation</legend>${Object.entries(
+    boatNavigationRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        navigation[key as keyof typeof navigation],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Zero impact damage still blocks shore crossing, recoils and idles the boat. Gentle canoe landings retain their exemption. Arrival uses the oriented hull and requires a clear water path. Shore access to boathouse menus retains its separate 40 m range. Rule edits do not move boats or change existing condition.</p></fieldset>`;
   const running = vehicleRunningRules(settings);
   const runningFields = `<fieldset class="boat-death-settings"><legend>Vehicle running costs</legend>${Object.entries(
     vehicleRunningRuleFields,
@@ -603,6 +621,7 @@ export function settingsFields(settings: Settings = defaults) {
     farmYieldFields +
     fishingFields +
     runningFields +
+    navigationFields +
     implementFields +
     journeyFields +
     businessLoadFields +

@@ -1,3 +1,4 @@
+import { boatNavigationRules } from './boat-navigation-rules';
 import { waterLevel, highWater, lowWater, surfaceWaterLevel } from './ocean';
 import { RIVER_DOCK, riverDockAccepts, riverDockReserved, riverDockSite } from './river-dock';
 import { boatSlot, mooringKey } from './boats';
@@ -162,7 +163,17 @@ export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, 
       Math.max(0, Math.abs(dx * s + dz * c) - (v.length ?? 0) / 2),
     );
   }
-  if (hullDistance > (afloat ? (d.building ? 30 : 14) : d.building ? boathouseRange : 5))
+  const rules = boatNavigationRules(w.settings);
+  if (
+    hullDistance >
+    (afloat
+      ? d.building
+        ? rules.boatHouseArrivalRadius
+        : rules.boatLandingArrivalRadius
+      : d.building
+        ? boathouseRange
+        : rules.boatLandingShoreRadius)
+  )
     return false;
   if (afloat) {
     const steps = Math.max(1, Math.ceil(distance / 2));

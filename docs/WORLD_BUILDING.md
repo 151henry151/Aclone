@@ -1407,3 +1407,20 @@ saves, portable designs, summaries and resident observations retain the rules.
 Refuelling distance and tank units per Fuel already belong to **Roadside fuel**
 (default 15 m and 8 units). Keep those existing rules for tanker sales, roadside
 help and inventory refuelling.
+
+## Boat navigation rules (Unreleased)
+
+F10 → Rules → **Boat navigation** exposes `boatShoreImpactLoss` (default 1
+condition point, range 0–100). This applies to powered-hull shore collisions,
+independently of distance maintenance. Zero disables damage but preserves
+collision blocking, recoil and the throttle cut-out; gentle canoe landings and
+unpowered craft retain existing exemptions. Edits do not restore existing damage.
+
+`boatHouseArrivalRadius` defaults to 30 m for afloat boathouse arrivals;
+`boatLandingArrivalRadius` to 14 m for afloat pier/river arrivals;
+`boatLandingShoreRadius` to 5 m for shore boarding at those landings. All accept
+0.1–100 m. Afloat distance is measured from the oriented hull, and the existing
+water-path check still rejects dry obstructions. These radii do not resize docks
+or move boats. Boathouse shore menus retain their independent 40 m range.
+Inventory shows the local values; saves/designs, summaries and resident
+observations carry them, with defaults for missing keys in old worlds.

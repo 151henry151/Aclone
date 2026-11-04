@@ -3981,3 +3981,49 @@ for saved rules, unused full-condition vehicle, real reverse travel reducing the
 displayed condition to 99.8%, and invalid negative wear. The longer drive improves
 visible evidence beyond the initial run's rounded 100.0%. No service charge or
 state mutation occurs at full condition. Changed-file Prettier and diff checks pass.
+
+**Vehicle running-cost slice done and pushed:** `753f91750bc030b6b52a925df8c37c3abe00ccee`.
+Remote SHA verified.
+
+### Boat impact and arrival rules — completion criteria before production
+
+Expose shore-impact condition loss (default 1, range 0–100), afloat boathouse
+arrival radius (30 m), afloat pier/river landing radius (14 m) and shore boarding
+radius at those landings (5 m), all radii 0.1–100 m. Preserve hull-oriented arrival
+distance, continuous clear-water path checks, the separate 40 m boathouse shore
+menu range, gentle canoe exemptions and collision recoil/throttle latch. Zero
+impact damage still blocks land crossing. Existing fleet condition is unchanged
+until a new impact; these rules do not move boats or award inventory.
+
+- Add `tests/boat-navigation-rules.test.ts`, run red. Verify default/legacy and
+  custom/zero impact loss, prediction immutability/server agreement, bounded
+  condition and retained recoil/stop. Check exact arrival boundaries, custom
+  radii, oriented hull reach, dry obstruction and unchanged shore boathouse range.
+- Validate finite ranges atomically; verify F10, summaries, resident observations,
+  saves and portable designs. Run the new tests with boat-shore, boating, dock,
+  boat-abandonment and guide tests; TypeScript and changed-file Prettier.
+- Browser `tests/browser/boat-navigation-rules.spec.ts`: configure/save/reload
+  F10, inspect local docking help, show no landing available outside a small
+  radius, enlarge it and disembark through Inventory, preserve an empty moored
+  vessel, then reject zero arrival radius and retain saved values. Inspect
+  screenshots. Update BOATING, PLAYING, WORLD_BUILDING, README and Unreleased.
+
+Failing-first boat navigation result: all three tests fail on unknown/absent
+rules after default and legacy assertions pass. Use a wet initial hull position
+for recoil, a dry ridge wider than the existing two-metre path sampling, and
+compare predicted motion/fleet state separately from server-only voyage accounts.
+Further audit gap to fix after this slice: the Inventory boating paragraph still
+says eight tank units even though `fuelUnitsPerItem` is already configurable.
+
+All 49 navigation/shore/boating/dock/abandonment tests pass. New observation
+fields exceed the unchanged guide request ceiling by 91 bytes. Shorten the
+plan-use paragraph without changing its multi-step/repeat guidance, completion
+and failure handling, human interruption/resumption or private-reply boundaries.
+
+Boat navigation validation complete: all 49 relevant physics/docking/recovery
+tests and all 16 guide tests pass (3.5 s initial run, 1.3 s guide recheck).
+TypeScript and changed-file Prettier/diff checks pass. Browser passes (30.4 s);
+correct the fixture's reboarding label to the catalogue name “Outboard motorboat”.
+Inspect all four screenshots: persisted rules, no landing within 4 m, successful
+disembark/mooring after changing to 40 m, and invalid zero radius with 40 retained.
+No full-suite or live-world tests were run.

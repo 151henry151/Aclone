@@ -13,11 +13,11 @@ its own fuel, paint and maintenance record. Boatmaster is required in worlds
 which enable vehicle licences.
 
 The fishing pier also boards boats you already own. Return to a water berth
-before switching to walking or an owned tractor. Stop within the boatyard’s
-30-metre waterfront arrival area (14 metres beside a fishing-pier berth);
-there must be water between you and the berth. At a fishing pier, boarding still
-requires being within five metres of its marked boarding point. The pier leaves the actual
-empty boat moored there; retrieve that particular boat from that berth. The
+before switching to walking or an owned tractor. Stop within the world’s waterfront arrival area (default 30 metres at a
+boathouse, 14 metres beside a fishing-pier berth); there must be water between
+you and the berth. At a fishing pier, boarding uses the world’s shore radius
+(default five metres) around its marked boarding point. The pier leaves the
+actual empty boat moored there; retrieve that particular boat from that berth. The
 boathouse puts it away inside. Different owned boats have independent moorings.
 Passengers board and disembark at the dock too.
 
@@ -393,3 +393,9 @@ per minute) and mean shoal interval (360 paid towing seconds), alongside speed.
 Per-vessel tuning overrides capacity, fuel and speed. Existing encounter clocks
 and fish remain recorded after edits; haul a net that no longer fits. The boating
 panel quotes effective limits. Raising capacity can resume a formerly full net.
+
+F10 **Boat navigation** sets those arrival radii and shore-impact condition loss
+(default one point). Arrival still uses your oriented hull and requires a clear
+water path. Zero damage still makes the boat stop and recoil; it cannot cross
+dry land. Gentle canoe landings keep their exemption. Inventory shows local
+radii and damage; edits retain your vessel’s existing condition and position.
