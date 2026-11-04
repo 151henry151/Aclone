@@ -90,7 +90,7 @@ owner edits survive reloads; new worlds start with the new prices.
 
 A 15-second Odd Jobs shift pays **12d** in a new world (`labourShiftPay`, 1,200 hundredths) for the first eight shifts in a row. The ninth pays two thirds, then one half, one third and one quarter. A ten-minute gap or any other work restores full pay. Ordinary pay stops at **200d per game day** (`labourDailyCap`); the button says why. Residents below 50d combined cash and bank savings can receive a larger relief payment once per 30 real minutes. Relief covers a premium bread-and-water purchase at default prices (currently 150d), is fixed when the task starts, and does not count toward the daily cap or the streak. The cooldown survives reconnection and death. Public labour is a bridge, not a career: residents prefer a job, gathering or hauling once they can afford a meal. Public Puddlewick adopts 12d once; older worlds keep 1d until their owner edits the setting.
 
-Every 30 real minutes, Puddlewick's treasury-run Harbour and spaceport sell surplus
+By default every 30 real minutes, Puddlewick's treasury-run Harbour and spaceport sell surplus
 cargo to off-world customers. Each departure clears at most 40 units per item,
 leaving 8 on the shelf, or a population-based reserve of 12–100 bread, water and
 fuel. Only actual cargo earns proceeds. External settlement uses a capped
@@ -342,3 +342,13 @@ The buyer's total is rounded upward once to the smallest currency unit; included
 At a farm, the owner can select approved staff crops, a cash spending limit per game day (ten real minutes), and a minimum cash reserve. Leaving the budget blank means unlimited; zero prevents cash seed/fertilizer purchases. Unchecking all crops pauses new staff planting, while existing crops can still be cared for and harvested. Older farms without a policy retain unrestricted staff planting and spending.
 
 The limit is shared by every employee, including NPCs, and covers purchased seeds and fallback fertilizer. Stored/carried compost, irrigation, soil improvement, wages and automatic business purchases are outside this budget. Staff must also respect the protected reserve when buying seeds/fertilizer. Owners tending plots personally bypass these staff limits. Spending already incurred that day remains counted when rules change; saving a policy cannot reset the budget. Policies and daily expenditure survive restart; exported world designs carry the policy but not runtime spending.
+
+## Configurable export timing (unreleased)
+
+F10 → Rules → Economy and trade sets the public export shipment interval. Changing
+it starts a fresh interval at the edit time; saving the same value leaves the
+schedule running. It applies to eligible Puddlewick economy terminals, including
+the boathouse's existing shipment service. Cargo limits, household reserves and
+settlement caps still apply. Reloads retain the time cursor, and older half-hour
+cursors convert without replay. Shorter intervals increase throughput; empty
+terminals still earn nothing.

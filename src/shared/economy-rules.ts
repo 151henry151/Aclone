@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  exportShipmentInterval: {
+    label: 'Public export shipment interval (real seconds)',
+    min: 60,
+    max: 86400,
+    step: 1,
+  },
   parishOrderPeriod: {
     label: 'Parish supply-order round (real seconds)',
     min: 60,

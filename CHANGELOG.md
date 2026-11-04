@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Make the public export interval a world rule; persist processed departure times across interval edits and reloads without replaying cargo sales, while retaining terminal scope, reserves and settlement limits.
+
 - Make parish supply-order duration, early supplier share and share-window length world rules; preserve funded terms across edits and reloads, prevent order-ID reuse and show the posted terms in the supply panel. Refresh delivery readiness and empty states while retaining quantity drafts.
 
 - Expose per-world cash gift and bank/investment transfer limits; enforce them in payments, live gift drafts, transfer forms and resident plans while preserving balances and agreed claims. Remove repeated section anchors from resident guide metadata without cutting its text or lookup citations.

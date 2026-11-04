@@ -332,6 +332,7 @@ export function createWorld(
     hayPricing: 1,
     crewPricing: 1,
     exportShipment: 0,
+    exportShipmentAt: 0,
     zones: [{ id: 'green', kind: 'safe', x: 0, z: 0, radius: 42 }],
     terrain: [],
     messages: [],
@@ -2033,6 +2034,11 @@ export function act(w: World, id: string, a: Action): string {
       expireAbandonedCargo(w);
       if (clean.resourceRecoveryMultiplier !== undefined)
         changeResourceRecovery(w, clean.resourceRecoveryMultiplier);
+      if (
+        clean.exportShipmentInterval !== undefined &&
+        clean.exportShipmentInterval !== economyRules(w.settings).exportShipmentInterval
+      )
+        w.exportShipmentAt = w.time;
       Object.assign(w.settings, clean);
       w.revision++;
       break;

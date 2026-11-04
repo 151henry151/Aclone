@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 import { restockBoathouseTackle } from './boathouse-tackle';
 import { buildings } from './catalog.ts';
 import { isPublicPuddlewick } from './harbour-supply.ts';
 import { log } from './simulation.ts';
 import type { World } from './types.ts';
 
-export const EXPORT_INTERVAL = 1800;
+export const EXPORT_INTERVAL = defaults.exportShipmentInterval;
 /** External customers buy real cargo, not an arbitrary treasury top-up. Bounded
  * loads preserve local shelves; catalogue-capped settlement cannot be inflated
  * by editing a port's bid. The cursor persists across saves and catch-up. */
 export function exportShipments(w: World, at: number) {
   if (!isPublicPuddlewick(w)) return;
-  const due = Math.floor(at / EXPORT_INTERVAL);
-  const previous = w.exportShipment ?? 0;
-  if (due <= previous) return;
-  w.exportShipment = due;
-  const departures = Math.min(48, due - previous);
+  const interval = economyRules(w.settings).exportShipmentInterval;
+  const previous = w.exportShipmentAt ?? (w.exportShipment ?? 0) * EXPORT_INTERVAL;
+  const due = Math.floor((at - previous) / interval);
+  if (due <= 0) return;
+  w.exportShipmentAt = previous + due * interval;
+  // Retain the legacy half-hour cursor for older save readers.
+  w.exportShipment = Math.floor(w.exportShipmentAt / EXPORT_INTERVAL);
+  const departures = Math.min(48, due);
   const necessities = new Set(['bread', 'water', 'fuel']);
   const population = Object.keys(w.players).length;
   for (const port of w.buildings) {

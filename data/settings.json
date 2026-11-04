@@ -171,5 +171,6 @@
   "cashTransferLimit": 10000000,
   "parishOrderPeriod": 3600,
   "parishOrderShare": 0.5,
-  "parishOrderShareWindow": 0.5
+  "parishOrderShareWindow": 0.5,
+  "exportShipmentInterval": 1800
 }

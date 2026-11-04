@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { EXPORT_INTERVAL } from './export-shipments';
 import { governmentPremium } from './harbour-supply.ts';
 import { buildings } from './catalog.ts';
 import type { World, Building } from './types.ts';
@@ -18,7 +19,8 @@ export function removeOwnerEmployment(w: World, b: Building) {
 /** Upgrade legacy quotes once. The crew rebalance explicitly includes owned Puddlewick businesses. */
 export function migrateEconomy(w: World) {
   migrateOutsideClaims(w);
-  w.exportShipment ??= Math.floor(w.time / 1800);
+  w.exportShipment ??= Math.floor(w.time / EXPORT_INTERVAL);
+  w.exportShipmentAt ??= w.exportShipment * EXPORT_INTERVAL;
   if (!w.crewPricing && w.id === 'puddlewick' && w.template === 'economy') {
     for (const b of w.buildings) {
       const def = buildings[b.kind];

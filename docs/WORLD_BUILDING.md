@@ -596,3 +596,13 @@ use the new settings; changing duration does not duplicate escrow or reuse order
 IDs. `parishOrderBudget` remains the budget per round, so shorter rounds increase
 funding frequency. Downtime funds only the current round. Missing keys use the
 named defaults; portable designs carry all three rules.
+
+`exportShipmentInterval` defaults to 1,800 real seconds and accepts integer
+60–86,400. It changes the existing Puddlewick public export/bunker shipment
+schedule; other worlds and private/emergency shops remain excluded. Changing it
+starts a new interval at the edit time, avoiding retroactive departures. Saving
+the same value does not restart the clock. The persistent time cursor preserves
+processed departures through reloads; legacy half-hour cursors convert without
+replay. Missing settings retain the default. Portable designs carry the rule,
+not shipment history. Existing cargo reserves, settlement caps and the maximum
+48-departure downtime catch-up remain in force.

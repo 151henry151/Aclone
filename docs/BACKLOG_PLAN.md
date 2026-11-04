@@ -1574,3 +1574,46 @@ draft at reopening, disabled state and expired/no-current state all behave as
 claimed. No page errors. Full `npm test` passes 1,448 tests in 200.7s. TypeScript
 and changed-file Prettier are clean. Player/economy/world-builder docs, README
 and imperative Unreleased entry are updated. Ready to commit and push.
+
+Pushed and verified `7cf24f9` on `backlog-implementation`. **Parish supply-order
+period and share limits are done.** Continue with export timing/import premiums.
+
+### Gameplay rules — economy: export shipment interval
+
+Before production, test `exportShipmentInterval` = 1,800 real seconds, integer
+60–86,400, with the same missing-key default. At 60 seconds exports must remove
+real eligible cargo and credit only its settlement, once per departure. Retain
+necessity reserves, catalogue price caps, the 48-departure catch-up bound and
+Puddlewick/public-terminal scope. A changed interval starts a fresh interval at
+the edit time; it must not reinterpret the old period counter as unprocessed
+cargo departures or trigger an immediate windfall. Saving the same value must
+not postpone departure. Persist the time cursor and convert legacy half-hour
+cursors without replay; missing legacy cursors start at the legacy current
+boundary. Failed settings edits leave schedule and rules unchanged.
+
+Commands: `node_modules/.bin/tsx --test tests/export-rules.test.ts
+ tests/economy-circulation.test.ts tests/commercial-fishing.test.ts
+ tests/boathouse-tackle.test.ts`, browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/export-rules.spec.ts`, full `npm test`,
+clean `npx tsc --noEmit` and changed-file Prettier. Check creation field, summary,
+design round-trip and changed interval across reload. Browser: F10 edit/reopen,
+inspect real terminal stock/revenue before and after a scheduled shipment, then
+an empty terminal with no export revenue. Inspect screenshots/page errors. Update
+ECONOMY, WORLD_BUILDING, README and Unreleased. Import premiums are the next slice.
+
+Export red run: all five new tests fail for absent default, Unknown setting or
+missing editor field (`/tmp/aclone-export-red.log`), before production edits.
+
+The 24 focused export/fishing tests and nine guide tests pass; TypeScript is
+clean. The first browser check reopened the terminal before the stock snapshot
+arrived, leaving its static stock row on the prior value. Retry the same
+close/reopen/read flow until the snapshot is visible; preserve the exact 160-unit
+and zero-stock assertions and revenue checks.
+
+Export verification: all 24 focused export/fishing tests and nine guide tests
+pass. The browser passes in 15.0s: F10 retains 60 seconds, a departure reduces
+terminal Tools from 200 to 160 and credits the actual settlement, and an empty
+terminal earns no export revenue. Inspect all three screenshots; no page errors.
+TypeScript and changed-file Prettier are clean. Full `npm test` passes 1,453 tests
+in 201.0s. Economy/world-builder docs, README and imperative Unreleased entry are
+updated. Ready to commit and push.

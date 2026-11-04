@@ -430,6 +430,8 @@ export interface World {
   /** Last half-hour public shortage shipment, persisted across restarts. */
   harbourShipment?: number;
   exportShipment?: number;
+  /** World time of the last processed export boundary, independent of rule changes. */
+  exportShipmentAt?: number;
   crewPricing?: 1;
   employmentPolicyVersion?: 1;
   /** Lanes the parish has laid toward buildings off the road network. */
