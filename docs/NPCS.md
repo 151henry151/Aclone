@@ -645,3 +645,9 @@ selected text; the topic and source indexes retain headings and citations.
 Catalogue entries keep their title, source and text. Direct lookups still return
 anchored citations. This removes repeated JSON fields without trimming help or
 memories to meet the existing request-size limit.
+
+Resident replacement breeding uses configurable business budgets: a till above
+150d, at least 20 feed (or hay for cattle/sheep) and 20 Water, aiming for two animals
+above the species minimum. Zero spare animals suppresses the suggestion; reducing
+other reserves never waives real fees, rations, health or capacity. Planning shares
+ordinary breeding refusal checks and starts no pregnancy by itself.

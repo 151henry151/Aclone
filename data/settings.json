@@ -296,5 +296,9 @@
   "npcFarmFundingCashThreshold": 15000,
   "npcFarmFundingAmount": 5000,
   "npcGroupTrainingCashReserve": 5000,
-  "npcTownFoundingCostMultiplier": 4
+  "npcTownFoundingCostMultiplier": 4,
+  "npcBreedingCashThreshold": 15000,
+  "npcBreedingFeedReserve": 20,
+  "npcBreedingWaterReserve": 20,
+  "npcBreedingSpareAnimals": 2
 }

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident breeding reserves and replacement-herd targets as world rules; share ordinary breeding checks so plans respect actual fees, rations, herd health and barn capacity.
+
 - Expose resident training and town-founding budget cushions as world rules while retaining actual costs, qualifications, household protection and ordinary permissions. Key embedded guide sections by lookup ID to preserve all text within the existing request budget.
 
 - Expose resident property, painting and farm-funding thresholds as world rules; share purchase reserves and bound farm deposits by cash and transfer limits.

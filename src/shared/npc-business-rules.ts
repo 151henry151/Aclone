@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcBusinessRuleFields = {
+  npcBreedingCashThreshold: {
+    label: 'Breeding till threshold (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcBreedingFeedReserve: {
+    label: 'Breeding feed/hay reserve (items)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcBreedingWaterReserve: { label: 'Breeding Water reserve (items)', min: 0, max: 10000, step: 1 },
+  npcBreedingSpareAnimals: {
+    label: 'Breeding target above minimum herd (animals; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+
   npcExperimentCashFloor: {
     label: 'Experiment funding cash floor (hundredths)',
     min: 0,

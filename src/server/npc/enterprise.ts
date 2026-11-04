@@ -2,7 +2,6 @@ import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { preferredLoanTerm } from '../../shared/loan-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
-import { pastureCapacity } from '../../shared/pasture-land';
 import { jobTraining } from './job-training.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { pricingChoices } from './pricing.ts';
@@ -21,7 +20,13 @@ import {
   inputStockTarget,
   procurementDraw,
 } from './business-policy.ts';
-import { herdSpec, herdReady, acceptsHay } from '../../shared/livestock.ts';
+import {
+  herdSpec,
+  herdReady,
+  acceptsHay,
+  breedingBlocker,
+  breedingRation,
+} from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { loanQuote } from '../../shared/loans.ts';
 import { operation } from './player-operations.ts';
@@ -163,18 +168,15 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     if (
       herd &&
       b.owner === p.id &&
-      p.skills.includes('livestock farmer') &&
-      !b.breedingEnd &&
-      (b.stock[herd.animal] ?? 0) >= herd.minimum &&
-      (b.stock[herd.animal] ?? 0) <
-        Math.min(herd.minimum + 2, pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1)) &&
-      (b.herdCondition ?? 100) >= 80 &&
-      b.investment > 15000 &&
-      (b.stock.feed ?? 0) + (acceptsHay(b) ? (b.stock.hay ?? 0) : 0) >= 20 &&
-      b.stock.water >= 20
+      (b.stock[herd.animal] ?? 0) < herd.minimum + budgets.npcBreedingSpareAnimals &&
+      !breedingBlocker(w, p, b) &&
+      b.investment > budgets.npcBreedingCashThreshold &&
+      (b.stock.feed ?? 0) + (acceptsHay(b) ? (b.stock.hay ?? 0) : 0) >=
+        budgets.npcBreedingFeedReserve &&
+      (b.stock.water ?? 0) >= budgets.npcBreedingWaterReserve
     )
       add(
-        `Breed a replacement ${herd.young} at my ${b.name}; invest 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'}, 4 water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
+        `Breed a replacement ${herd.young} at my ${b.name}; invest ${(breedingRation(b).hay ?? 0) + (breedingRation(b).feed ?? 0)} ${acceptsHay(b) ? 'hay or feed' : 'feed'}, ${breedingRation(b).water} water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
         visitBuilding(p, b, [operation('livestock', { building: b.id, operation: 'breed' })]),
       );
     const estimate = businessEstimate(w, b);

@@ -2748,3 +2748,44 @@ without paying tuition; zero still refuses unaffordable tuition; native validati
 rejects multiplier 101 and reload preserves 5.25. Both screenshots inspected, no
 page errors. No full suite or unnecessary browser rerun after the server-only
 serialization change. Ready to commit/push.
+
+Pushed and verified `03ed658` on `backlog-implementation`. **Resident training and
+town ambition budgets are done.**
+
+### Gameplay rules — resident breeding reserves
+
+Before production, expose four Resident business budgets:
+`npcBreedingCashThreshold` 15,000 hundredths (integer 0–100,000,000),
+`npcBreedingFeedReserve` 20 and `npcBreedingWaterReserve` 20 items, and
+`npcBreedingSpareAnimals` 2 (each integer 0–10,000). Consider breeding only strictly
+above the cash threshold, at or above feed/water thresholds, and below the
+species' minimum plus spare-animal target. Cattle/sheep count hay toward feed;
+other species cannot. Zero spare target disables replacement suggestions. Zero
+other budgets removes only that extra reserve: actual breeding fees, rations,
+health, qualifications, ownership, existing pregnancy and pasture/building capacity
+must still pass the ordinary action's checks. Share its pure refusal check with
+the planner rather than copying biological limits into a second policy.
+
+Write failing npc-breeding-budget-rules tests for defaults/absent fields, exact
+custom thresholds and zeros, species-specific hay, real paid breeding, no grants,
+and an independent existing building-capacity refusal. Cover validation, summaries,
+observations, editor, portable designs and reload. Run the new file, livestock,
+pastures, npc-prosperity, npc-working-capital-rules and npc-guide. Browser: persist
+four fields, observe changed breeding eligibility without starting a pregnancy,
+zero spare target produces no plan, reject invalid input and reload. Inspect
+screenshots/errors; require TypeScript, formatting and relevant docs before push.
+
+Breeding red: four tests reject missing settings; the independent capacity test
+reproduces a replacement plan for a full barn. All five pass after implementation,
+including exact boundaries, hay restrictions, zero safeguards and a paid breeding
+action that consumes the specified fee/rations without creating an immediate animal.
+The portable-design fixture uses clear flat ground, no roads and valid sea level;
+its initial default roads and out-of-range sea-level setup were corrected without
+changing design validation.
+
+Breeding gates pass: all 54 relevant tests in 5.8 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 20.4 seconds: four rules
+persist and enable the expected replacement plan without changing stock, funds or
+pregnancy; zero spare target leaves no plan; native validation rejects a negative
+target and reload preserves zero. Both screenshots inspected; no page errors.
+No full suite is run. Ready to commit/push.

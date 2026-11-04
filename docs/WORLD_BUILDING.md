@@ -1006,3 +1006,18 @@ Rules persist in saves and portable designs and are included in resident observa
 
 These rules persist in saves/designs, appear in resident observations, and change
 only future choices. They grant no money, qualifications, property or employment.
+
+## Resident breeding reserves (unreleased)
+
+**F10 → Rules → Resident business budgets** exposes four replacement-herd policies:
+
+- `npcBreedingCashThreshold`: 15,000 hundredths (150d), integer 0–100,000,000. Consider breeding only when the barn till is strictly above this balance.
+- `npcBreedingFeedReserve`: 20 items, integer 0–10,000. Require at least this much feed, counting hay only for cattle and sheep.
+- `npcBreedingWaterReserve`: 20 items, integer 0–10,000. Require at least this much Water.
+- `npcBreedingSpareAnimals`: 2, integer 0–10,000. Target the species' minimum herd plus this many replacements, within actual barn and pasture capacity. Zero suppresses replacement suggestions.
+
+Zero cash/feed/water reserves remove only extra planning cushions. Actual fees,
+rations, health, qualifications, permissions and pregnancy/capacity checks still
+apply through the same refusal check used by ordinary breeding. Settings edits
+start no pregnancy and grant no animals, money or supplies. Values persist in
+saves/designs and appear in resident observations.

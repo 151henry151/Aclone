@@ -139,7 +139,9 @@ export function tendHerd(w: World, b: Building, staff: number, at = w.time) {
   }
   return fed && herdReady(b);
 }
-export function breedHerd(w: World, p: import('./types.ts').Player, b: Building) {
+/** Ordinary breeding costs, shared by validation, execution and planning. */
+export const breedingRation = (b: Building) => herdRation(b, 4, 4);
+export function breedingBlocker(w: World, p: import('./types.ts').Player, b: Building) {
   const spec = herdSpec(b);
   if (
     !spec ||
@@ -147,23 +149,27 @@ export function breedHerd(w: World, p: import('./types.ts').Player, b: Building)
     !(b.owner === p.id || p.job === b.id) ||
     !p.skills.includes('livestock farmer')
   )
-    throw Error('The owner or an employed livestock farmer can arrange breeding here');
-  if (b.breedingEnd) throw Error('An offspring is already on the way');
+    return 'The owner or an employed livestock farmer can arrange breeding here';
+  if (b.breedingEnd) return 'An offspring is already on the way';
   if ((b.stock[spec.animal] ?? 0) < spec.minimum || (b.herdCondition ?? 100) < 80)
-    throw Error(`Breeding requires ${spec.minimum} ${spec.animal} and 80% herd condition`);
-  const ration = herdRation(b, 4, 4);
+    return `Breeding requires ${spec.minimum} ${spec.animal} and 80% herd condition`;
+  const ration = breedingRation(b);
   if (
     Object.entries(ration).some(([item, n]) => (b.stock[item] ?? 0) < n) ||
     b.investment < spec.fee
   )
-    throw Error(
-      `Breeding requires 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'}, 4 water and ${spec.fee / 100}d investment`,
-    );
+    return `Breeding requires ${(ration.hay ?? 0) + (ration.feed ?? 0)} ${acceptsHay(b) ? 'hay or feed' : 'feed'}, ${ration.water} water and ${spec.fee / 100}d investment`;
   if (
     (b.stock[spec.animal] ?? 0) >=
     Math.min(b.capacity, pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1))
   )
-    throw Error(`Not enough grazing area for a ${spec.young}; expand the pasture`);
+    return `Not enough grazing area for a ${spec.young}; expand the pasture`;
+}
+export function breedHerd(w: World, p: import('./types.ts').Player, b: Building) {
+  const blocker = breedingBlocker(w, p, b);
+  if (blocker) throw Error(blocker);
+  const spec = herdSpec(b)!,
+    ration = breedingRation(b);
   for (const [item, n] of Object.entries(ration)) b.stock[item] -= n;
   b.investment -= spec.fee;
   b.breedingEnd = w.time + spec.seconds;
