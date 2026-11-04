@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcHouseholdRuleFields = {
+  npcShoppingFuelTarget: {
+    label: 'Portable shopping Fuel target (items; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcShoppingDrinkTarget: {
+    label: 'Portable shopping drink target (total items; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcShoppingFoodTarget: {
+    label: 'Portable shopping food target (total items; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   npcPantryNeedAllowance: {
     label: 'Pantry forecast need allowance',
     min: 0,

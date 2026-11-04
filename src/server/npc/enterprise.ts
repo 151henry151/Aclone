@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { preferredLoanTerm } from '../../shared/loan-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -98,6 +99,7 @@ export function businessEstimate(w: World, b: Building) {
 /** Complete, costed operating errands precede speculative one-step purchases. */
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   const budgets = npcBusinessRules(w.settings);
+  const reserves = npcReserveRules(w.settings);
   const list: FarmerChoice[] = [
     ...pricingChoices(w, p),
     ...constructionChoices(w, p),
@@ -326,8 +328,14 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       ...(herd ? { [herd.animal]: herd.minimum } : {}),
     })) {
       const target = inputStockTarget(b, item, w) ?? perBatch * (item === herd?.animal ? 1 : 6);
-      const keep = item === 'water' ? 6 : item === 'bread' ? 3 : 0;
+      const keep =
+        item === 'water'
+          ? reserves.npcPortableWater
+          : item === 'bread'
+            ? reserves.npcPortableBread
+            : 0;
       const held = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         Math.max(0, (p.inventory[item] ?? 0) - keep),
         Math.max(0, target - (b.stock[item] ?? 0)),
         b.capacity - (b.stock[item] ?? 0),

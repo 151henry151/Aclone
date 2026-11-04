@@ -1,3 +1,4 @@
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules, skillFits } from '../../shared/survival-rules';
@@ -45,6 +46,7 @@ export function gameplayChoices(
 ): FarmerChoice[] {
   const items = worldItems(w);
   const reserves = npcReserveRules(w.settings);
+  const shopping = npcHouseholdRules(w.settings);
   const choices: FarmerChoice[] = [];
   const add = (description: string, plan: Step[], reconsiderSeconds?: number) => {
     if (choices.length < 100 && !plan.some((s) => blockedStep(state.recovery, s, w.time)))
@@ -105,7 +107,11 @@ export function gameplayChoices(
   }
   // Compare ALL stocked sources before bounding alternatives; include varied diets.
   for (const [item, def] of Object.entries(items).filter(([, d]) => d.food || d.drink || d.fuel)) {
-    const target = def.fuel ? 2 : def.drink ? 6 : 3;
+    const target = def.fuel
+      ? shopping.npcShoppingFuelTarget
+      : def.drink
+        ? shopping.npcShoppingDrinkTarget
+        : shopping.npcShoppingFoodTarget;
     const nutrient = def.fuel ? 'fuel' : def.drink ? 'drink' : 'food';
     const carried = Object.entries(p.inventory).reduce(
       (sum, [id, n]) => sum + (items[id]?.[nutrient] ? n : 0),
@@ -131,6 +137,7 @@ export function gameplayChoices(
     for (const b of new Set([nearest, cheapest])) {
       if (!b) continue;
       let n = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         consume ? 1 : needed,
         b.stock[item],
         b.sell[item] ? Math.floor(p.cash / b.sell[item]) : needed,

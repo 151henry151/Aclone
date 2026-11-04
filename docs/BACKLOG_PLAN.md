@@ -2789,3 +2789,39 @@ persist and enable the expected replacement plan without changing stock, funds o
 pregnancy; zero spare target leaves no plan; native validation rejects a negative
 target and reload preserves zero. Both screenshots inspected; no page errors.
 No full suite is run. Ready to commit/push.
+
+Pushed and verified `accbd02` on `backlog-implementation`. **Resident breeding
+reserves are done.**
+
+### Gameplay rules — resident provision shopping and carried-input reserves
+
+Before production, expose aggregate portable shopping targets under Resident
+household forecasts: `npcShoppingFuelTarget` 2, `npcShoppingDrinkTarget` 6 and
+`npcShoppingFoodTarget` 3 items (integers 0–10,000). Count all carried items with
+that nutrient, preserving the existing priority fuel → drink → food. Zero stops
+that category's optional restock choice, not urgent care/use or pantry planning.
+Shopping must obey the existing transaction limit, affordability, stock and cargo.
+Owned-business delivery of carried inputs must use the existing portable Water
+and Bread reserve rules, preserving the existing zero reserve for other input
+kinds, and cap the stock deposit by the existing transaction limit.
+
+Write failing npc-shopping-budget-rules tests for default/missing targets,
+independent custom/zero targets, aggregate carried drinks, paid conserved shopping,
+stock/funds/cargo bounds, and independent regressions for the existing transaction
+limit and owner-delivery Water/Bread reserves. Validate/persist all new fields
+through editor, summary, observation, design and reload. Run the new file,
+npc-farmer, npc-prosperity, npc-reserve-rules, npc-pantry-budget-rules and npc-guide.
+Browser: save/reopen three targets, inspect changed optional shopping quantities
+without a grant, zero target removes that choice, refuse invalid input and reload.
+Inspect screenshots/errors, then TypeScript, Prettier and relevant docs.
+
+Shopping red: missing targets, a two-item purchase despite a one-item transaction
+limit, and an owner delivering four Water instead of the two allowed by its local
+reserve all fail as expected. Existing stock/cash/cargo/conservation checks pass.
+All six checks now pass, including independent category totals and zero controls.
+
+Shopping gates pass: all 57 relevant tests in 4.7 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 20.4 seconds: all three
+targets persist, quantities change to Fuel 4/drink 9/food 5 without a purchase,
+zero drink removes only that restock, negative input is refused and reload keeps
+zero. Both screenshots inspected; no page errors. No full suite is run.

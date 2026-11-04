@@ -300,5 +300,8 @@
   "npcBreedingCashThreshold": 15000,
   "npcBreedingFeedReserve": 20,
   "npcBreedingWaterReserve": 20,
-  "npcBreedingSpareAnimals": 2
+  "npcBreedingSpareAnimals": 2,
+  "npcShoppingFuelTarget": 2,
+  "npcShoppingDrinkTarget": 6,
+  "npcShoppingFoodTarget": 3
 }

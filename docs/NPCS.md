@@ -651,3 +651,9 @@ Resident replacement breeding uses configurable business budgets: a till above
 above the species minimum. Zero spare animals suppresses the suggestion; reducing
 other reserves never waives real fees, rations, health or capacity. Planning shares
 ordinary breeding refusal checks and starts no pregnancy by itself.
+
+Optional portable shopping targets total two Fuel items, six drink items and three
+food items across the carried inventory. F10 exposes each target separately from
+per-item reserves and pantry forecasts. Zero removes that optional restock;
+ordinary purchase limits still apply. Owned-business delivery of carried inputs
+also honors the local portable Water/Bread reserves and transaction limit.

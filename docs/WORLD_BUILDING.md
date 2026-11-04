@@ -1021,3 +1021,19 @@ rations, health, qualifications, permissions and pregnancy/capacity checks still
 apply through the same refusal check used by ordinary breeding. Settings edits
 start no pregnancy and grant no animals, money or supplies. Values persist in
 saves/designs and appear in resident observations.
+
+## Resident portable shopping targets (unreleased)
+
+**F10 → Rules → Resident household budget** exposes `npcShoppingFuelTarget` 2,
+`npcShoppingDrinkTarget` 6 and `npcShoppingFoodTarget` 3 items. Each accepts an
+integer from 0 to 10,000. These optional shopping targets count all carried items
+in the corresponding category, including drinks other than Water and food other
+than Bread. Classification checks Fuel first, then drink, then food. They differ
+from per-item portable reserves and home-pantry forecasts.
+
+Zero suppresses that category's optional restock; urgent care, using carried
+supplies and pantry planning retain their own policies. Actual funds, stock,
+cargo and the world transaction limit bound each purchase. Owner-business plans
+also retain the existing portable Water/Bread reserves before depositing carried
+inputs and respect the transaction limit. Changing rules grants no goods or cash.
+All three targets persist in saves/designs and appear in resident observations.
