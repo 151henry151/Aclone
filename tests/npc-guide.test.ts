@@ -106,17 +106,19 @@ test('long memory excerpts and help fit the resident request budget together', a
     }));
     const observation = observe(w, w.players[state.playerId], state, residents.memory, 'mabel');
     const request = { instructions: instructions + 'P'.repeat(3000), observation };
+    const requestBytes =
+      Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
     assert.ok(
-      Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool)) <
-        96000,
-      JSON.stringify(
-        Object.fromEntries(
-          Object.entries(request.observation).map(([key, value]) => [
-            key,
-            Buffer.byteLength(JSON.stringify(value) ?? ''),
-          ]),
+      requestBytes < 96000,
+      `Request bytes: ${requestBytes}; ` +
+        JSON.stringify(
+          Object.fromEntries(
+            Object.entries(request.observation).map(([key, value]) => [
+              key,
+              Buffer.byteLength(JSON.stringify(value) ?? ''),
+            ]),
+          ),
         ),
-      ),
     );
     assert.equal(observation.moreRecallAvailable, true);
     assert.equal(observation.recalled?.length, 8);
@@ -201,14 +203,14 @@ test('guide compaction removes only prose soft wraps, retaining every word, para
 test('selected manual headings occur once in the topic index without repeating them in each excerpt', () => {
   const guide = gameGuide('farm school inventory water');
   for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
-    if (!entry.source.startsWith('docs/')) continue;
+    if (!Object.hasOwn(guide.sources, entry.id.split(':')[0])) continue;
     assert.ok(
       Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')),
       'heading remains available by section id',
     );
     assert.equal('title' in entry, false, 'do not repeat an indexed heading');
     assert.ok(entry.text.length > 0);
-    assert.ok(entry.source.length > 0);
+    assert.ok(guide.sources[entry.id.split(':')[0] as keyof typeof guide.sources]);
   }
 });
 
@@ -233,8 +235,12 @@ test('resident guide keeps complete cited text and ids without repeating section
     const full = original.find((e) => e.id === entry.id)!;
     assert.ok(full);
     assert.equal(entry.text, compactGuideText(full.text));
-    assert.equal(entry.source, full.source.split('#')[0]);
     if (full.source.startsWith('docs/')) {
+      assert.equal(
+        guide.sources[entry.id.split(':')[0] as keyof typeof guide.sources],
+        full.source.split('#')[0],
+      );
+      assert.equal('source' in entry, false, 'manual source is retained once per prefix');
       assert.ok(full.source.includes('#'), 'direct lookup retains the precise citation');
       assert.ok(Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')));
     }
@@ -262,4 +268,24 @@ test('topic index retains every manual heading and lookup id in a compact keyed 
     gameGuide('').topics,
     Object.fromEntries([...expected].map(([title, id]) => [id, title])),
   );
+});
+
+test('embedded manual source dictionary preserves every selected citation without repeating paths', () => {
+  const guide = gameGuide('farm school inventory water', 'miller bakery water');
+  assert.deepEqual(guide.sources, {
+    faq: 'docs/FAQ.md',
+    playing: 'docs/PLAYING.md',
+    economy: 'docs/ECONOMY.md',
+  });
+  for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
+    const prefix = entry.id.split(':')[0] as keyof typeof guide.sources;
+    if (Object.hasOwn(guide.sources, prefix)) {
+      const original = searchGuide(entry.id).find((e) => e.id === entry.id)!;
+      assert.ok(original);
+      assert.equal(guide.sources[prefix], original.source.split('#')[0]);
+      assert.equal('source' in entry, false);
+    } else {
+      assert.ok('source' in entry);
+    }
+  }
 });

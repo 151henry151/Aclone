@@ -1,3 +1,4 @@
+import { npcPricingRules } from './npc-pricing-rules';
 import { npcBusinessRules } from './npc-business-rules';
 import { npcReserveRules } from './npc-reserve-rules';
 import { npcHouseholdRules } from './npc-household-rules';
@@ -61,7 +62,8 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     towing = towingRules(s),
     household = npcHouseholdRules(s),
     reserves = npcReserveRules(s),
-    business = npcBusinessRules(s);
+    business = npcBusinessRules(s),
+    pricing = npcPricingRules(s);
   const survival = survivalRules(s),
     credit = creditRules(s);
   const fuel = fuelRules(s);
@@ -72,6 +74,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `Resident pricing: haulage spread ${pricing.npcHaulageMargin}, time ${pricing.npcTravelTimeValue} hundredths/s, input allowance ${pricing.npcInputMinimumAllowance}, maximum bid ${pricing.npcMaximumInputBid}; reopen below ${pricing.npcBidReopenFraction} of target, wage revenue share ${pricing.npcWageMarginShare}. Output cost multiplier ${pricing.npcProductionPriceMultiplier}, minimum ask ${pricing.npcMinimumOutputAsk}; surplus ${pricing.npcSurplusMinimumStock} items or capacity fraction ${pricing.npcSurplusCapacityShare}, loads ${pricing.npcPricingMinimumLoad}–${pricing.npcPricingMaximumLoad} within transaction/storage bounds.`,
     `Resident working capital: ${business.npcPayrollReserveBatches} payroll cycles, minimum ${business.npcMinimumPayrolls} payrolls, cash floor ${business.npcBusinessCashFloor} hundredths. Construction budgets ${business.npcStartupBatches} operating batches and material cost × ${business.npcStartupMaterialMultiplier}. Hay reserve ${business.npcHayReserveItems} bales; customers below ${business.npcHayCustomerStockLimit}, funded for ${business.npcHayCustomerFundedItems} bales.`,
     `Resident business input buffers: ${business.npcInputReserveBatches}–${business.npcInputMaximumBatches} batches, covering ${business.npcInputSalesHours} hours of observed sales. Output backlog cutoff: capacity fraction ${business.npcOutputCapacityShare}, minimum ${business.npcOutputMinimumBatches} batches or input batches × ${business.npcOutputBufferMultiplier}; actual storage still bounds targets.`,
     `Resident reserves: care/bank cash floors ${reserves.npcCareCashFloor}/${reserves.npcBankCashFloor} hundredths; deposit ${reserves.npcBankDepositShare * 100}% of surplus, minimum ${reserves.npcBankMinimumDeposit}. Portable Water/Bread ${reserves.npcPortableWater}/${reserves.npcPortableBread}; other food/drink ${reserves.npcPortableMinimum}–${reserves.npcPortableMaximum} items toward ${reserves.npcPortableNutrition} nutrition; equipment ${reserves.npcPortableEquipment} each, fish surplus ${reserves.npcFishingSurplus}. Opportunistic trades keep ${reserves.npcTradeFoodReserve} food or ${reserves.npcTradeDrinkReserve} drink items.`,

@@ -2315,3 +2315,74 @@ saved values survive reload. Inspect the controls, refusal and updated help text
 no page errors. Correct an action-union narrowing in the test helper, rerun its
 eight tests and confirm clean TypeScript. Prettier and diff checks pass. Relevant
 docs and Unreleased are updated; no full suite is run. Ready to commit and push.
+
+Pushed and verified `5cd6b3b` on `backlog-implementation`. **Resident working
+capital and startup budget rules are done.**
+
+### Gameplay rules — resident pricing and affordability
+
+Before production, expose eleven live policies in a separate Resident pricing
+fieldset: `npcHaulageMargin` 0.08 (fraction 0–1), `npcTravelTimeValue` 5
+hundredths/second (0–10,000), `npcInputMinimumAllowance` 100 hundredths
+(integer 0–1,000,000), `npcMaximumInputBid` 10,000,000 hundredths (integer
+0–10,000,000, bounded by the existing price validator), `npcBidReopenFraction`
+0.5 and `npcWageMarginShare` 0.8 (fractions 0–1),
+`npcProductionPriceMultiplier` 1.05 (1–10), `npcSurplusMinimumStock` 12
+(integer 0–100,000), `npcSurplusCapacityShare` 0.25 (0–1),
+`npcPricingMinimumLoad` 6 and `npcPricingMaximumLoad` 1,000 (integer
+1–100,000; minimum ≤ maximum).
+
+Defaults and missing keys preserve delivered quotes, sustainable asks and surplus
+markdowns. Share the haulage margin/time valuation between input and output quotes;
+keep the input-only minimum allowance distinct. Use the existing minimumBuyPrice
+for new and remembered input bids instead of the private 100 copy. A planned bid
+must fit the configured ceiling; zero ceiling suppresses quotes, without changing
+already-posted bids or contract prices. Estimate one load within transactionItemLimit
+and physical/funded storage bounds. Zero reopening fraction disables automatic
+reopening/raising; zero wage share cannot raise wages and never cuts an existing
+wage. Sustainable asks retain input/payroll/tax coverage. Minimum stock/capacity
+and useful-load bounds govern optional markdowns; no supplier/customer or no
+profitable route remains no offer. Farm forecast assumptions and finance approval
+budgets remain following slices.
+
+Write/run failing `tests/npc-pricing-rules.test.ts`, then relevant regressions
+npc-feedback, npc-business-continuity, npc-owner-recovery, npc-business-policy,
+npc-input-buffer-rules, npc-working-capital-rules, economy-rules, and npc-guide with `node_modules/.bin/tsx --test
+ --test-concurrency=2 <paths>`. Validate all fields, atomic inverted bounds, summary,
+editor, observations, design transfer and reload. Browser `TEST_GPU=1 npm run
+test:e2e -- tests/browser/npc-pricing-rules.spec.ts`: save/reopen eleven fields,
+observe a local input quote change with no stock/cash changes, set zero bid ceiling,
+reject inverted load bounds, reload and inspect controls/refusal/screenshots/errors.
+Finish TypeScript, changed-file Prettier and NPCS/WORLD_BUILDING/README/Unreleased.
+
+Pre-production pricing audit also identifies the one-hundredth minimum sustainable
+ask: add `npcMinimumOutputAsk` 1 (integer 0–1,000,000), bringing this batch to twelve
+fields. It is independent of the production-cost multiplier and cannot lower a
+positive cost forecast. Preserve the existing floating-point ceiling at default
+quotes: the fixture's default ask is 141, not a mathematically rounded 140.
+
+Pricing red run: seven tests fail for missing rules, input quote 200 versus 150,
+ignored ceiling, existing world bid floor 500 ignored in favor of 200, unchanged
+reopening threshold and production price multiplier. The direct existing-rule
+regression also checks load three and invalid remembered quotes; use
+`tests/economy-rules.test.ts` as the verified relevant filename.
+
+Pricing relevant gates expose a request-budget regression: the long-memory fixture
+is 96,172 bytes against the unchanged strict 96,000-byte limit. Preserve every
+rule, selected manual text, topic, memory excerpt and citation. Store manual source
+paths once in a `sources` dictionary keyed by the existing section-ID prefix,
+instead of repeating the same path on every embedded manual entry. Direct guide
+lookup keeps full anchored citations and catalogue entries keep their sources.
+Extend citation tests to reconstruct and compare every source from that dictionary,
+require no repeated source on embedded manual entries, and keep the budget test.
+Run the new representation test red before changing guide production code.
+
+Pricing gates: seven pricing tests and 63 relevant regressions pass (70 in 7.1
+seconds), including the unchanged 96 KB long-memory request budget. Citation
+dictionary assertions fail before implementation and pass afterwards; all selected
+text, topic IDs, memory limits and direct anchored lookup results remain intact.
+The browser passes in 22.1 seconds; inspect all three screenshots for saved input
+and output settings and the inverted-bound warning. Quote changes 200 → 150 and
+zero ceiling suppresses a new quote without changing posted bids, cash or stock.
+No browser errors. Finish clean TypeScript, changed-file Prettier and diff checks
+before committing this slice. No full test suite is run.

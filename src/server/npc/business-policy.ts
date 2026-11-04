@@ -1,3 +1,4 @@
+import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { businessEconomics } from '../../shared/business-economics.ts';
@@ -107,6 +108,8 @@ export function procurementDraw(
 /** The same quote powers maintenance and experiments. Only observed suppliers
  * count; never fabricate a source or pay an uneconomic bid to force activity. */
 export function inputBidQuote(w: World, p: Player, b: Building, item: string, remembered = 0) {
+  const rules = npcPricingRules(w.settings),
+    economy = economyRules(w.settings);
   const target = inputStockTarget(b, item, w);
   if (!target || (b.stock[item] ?? 0) >= target) return;
   const viable = (price: number) => {
@@ -117,17 +120,21 @@ export function inputBidQuote(w: World, p: Player, b: Building, item: string, re
     .flatMap((s) => {
       if (s.id === b.id || s.construction || !(s.stock[item] > 0) || !(s.sell[item] > 0)) return [];
       const carrier = { ...p, x: s.x, z: s.z, vehicle: travelVehicle(p), inventory: {} };
-      let load = Math.min(target - (b.stock[item] ?? 0), s.stock[item]);
+      let load = Math.min(
+        target - (b.stock[item] ?? 0),
+        s.stock[item],
+        economy.transactionItemLimit,
+      );
       while (load > 0 && !canCarry(carrier, item, load, w)) load--;
       if (!load) return [];
       const trip = journeyEstimate(w, carrier, [b, s]);
       const allowance = Math.max(
-        Math.ceil(s.sell[item] * 0.08),
-        Math.ceil((trip.cost + trip.seconds * 5) / load),
-        100,
+        Math.ceil(s.sell[item] * rules.npcHaulageMargin),
+        Math.ceil((trip.cost + trip.seconds * rules.npcTravelTimeValue) / load),
+        rules.npcInputMinimumAllowance,
       );
-      const price = Math.max(100, s.sell[item] + allowance);
-      return price <= 10_000_000 && viable(price)
+      const price = Math.max(economy.minimumBuyPrice, s.sell[item] + allowance);
+      return price <= rules.npcMaximumInputBid && viable(price)
         ? [{ price, supplier: s.id, load, allowance }]
         : [];
     })
@@ -138,7 +145,12 @@ export function inputBidQuote(w: World, p: Player, b: Building, item: string, re
   const knownSource = w.buildings.some(
     (s) => s.id !== b.id && !s.construction && s.stock[item] > 0 && s.sell[item] > 0,
   );
-  if (!knownSource && remembered > 0 && viable(remembered))
+  if (
+    !knownSource &&
+    remembered >= economy.minimumBuyPrice &&
+    remembered <= rules.npcMaximumInputBid &&
+    viable(remembered)
+  )
     return { price: remembered, supplier: undefined, load: 0, allowance: 0 };
 }
 
@@ -186,7 +198,11 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
       // Hysteresis avoids changing the price after every single consumed unit.
       const remembered = state.pausedInputBids.bids[key] || b.pausedPrices?.buy?.[item] || 0;
       const quote = inputBidQuote(w, p, b, item, remembered || bid);
-      if (quote && stock < target / 2 && (bid === 0 || bid < quote.price)) {
+      if (
+        quote &&
+        stock < target * npcPricingRules(w.settings).npcBidReopenFraction &&
+        (bid === 0 || bid < quote.price)
+      ) {
         const proposed = { ...b, buy: { ...b.buy, [item]: quote.price } };
         const budget = productionBudget(w, proposed)!;
         const funding = Math.max(0, budget.reserve + remainingClaim(b) - b.investment);
@@ -463,7 +479,11 @@ export function ownerStaffingRoutine(w: World, p: Player): Step[] {
       );
       const ceiling = Math.max(
         0,
-        Math.floor(((budget.retailReceipts - budget.inputs) * 0.8) / target),
+        Math.floor(
+          ((budget.retailReceipts - budget.inputs) *
+            npcPricingRules(w.settings).npcWageMarginShare) /
+            target,
+        ),
       );
       const wage = Math.max(b.wage, Math.min(ceiling, reference));
       const proposed = { ...b, wage };

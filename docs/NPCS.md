@@ -374,15 +374,24 @@ or insufficient output space. Every coproduct is checked. Farms and livestock
 upkeep retain their specialist policies.
 
 Maintenance and exploratory planners share one purchasing implementation. Below
-half the input target, it can restore a paused quote or create a missing/legacy-zero
+the configured reopening fraction of the input target (half by default), it can restore a paused quote or create a missing/legacy-zero
 quote from a stocked supplier the NPC has observed. A viable delivered quote includes
-round-trip fuel, a time allowance and at least an 8% price spread (minimum 1d).
+round-trip fuel, a time allowance and, by default, an 8% price spread with a 1d input allowance floor.
 It must leave positive margin with the ideal crew and nonnegative margin with the
 current crew. If those costs cannot fit, the NPC must consider collecting supplies,
 repricing output or another opportunity; it does not force an unprofitable route.
 Remembered positive bids remain available when no stocked supplier is currently
 known. An explicit agreed buying pause survives restarts and all automatic bid
 planners. Quoted stock/price can still change before delivery.
+
+Unreleased **Resident pricing** rules configure those allowances, bid ceiling,
+reopening fraction, wage revenue share, sustainable output markup/minimum ask
+and surplus/load thresholds. Input quotes honor the local minimum purchase bid;
+remembered prices outside the current bounds are refused. Delivery estimates obey
+the transaction limit as well as actual capacity/funding. Zero input ceiling
+suppresses new quotes; zero reopening fraction stops automatic reopening; zero
+wage share stops raises without cutting existing wages. See
+[pricing rules](WORLD_BUILDING.md#resident-pricing-rules-unreleased).
 
 Before posting a bid, maintenance checks cash for a useful delivery and payroll;
 when necessary it deposits available personal funds while preserving living money.

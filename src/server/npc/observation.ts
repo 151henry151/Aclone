@@ -1,3 +1,4 @@
+import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
@@ -196,6 +197,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...npcHouseholdRules(w.settings),
       ...npcReserveRules(w.settings),
       ...npcBusinessRules(w.settings),
+      ...npcPricingRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

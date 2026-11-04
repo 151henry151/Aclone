@@ -1,3 +1,4 @@
+import { npcPricingRuleFields, npcPricingRules } from '../shared/npc-pricing-rules';
 import { npcBusinessRuleFields, npcBusinessRules } from '../shared/npc-business-rules';
 import { npcReserveRuleFields, npcReserveRules } from '../shared/npc-reserve-rules';
 import { npcHouseholdRuleFields, npcHouseholdRules } from '../shared/npc-household-rules';
@@ -104,6 +105,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcHouseholdRuleFields),
     ...Object.keys(npcReserveRuleFields),
     ...Object.keys(npcBusinessRuleFields),
+    ...Object.keys(npcPricingRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -127,6 +129,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const pricing = npcPricingRules(settings);
+  const pricingFields = `<fieldset class="boat-death-settings"><legend>Resident pricing</legend>${Object.entries(
+    npcPricingRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        pricing[key as keyof typeof pricing],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Quotes use observed suppliers, costs and actual funds/space. Zero input-bid ceiling suppresses new quotes; zero reopening fraction stops automatic bid reopening. Minimum delivery cannot exceed maximum. Existing prices, wages and contracts are not changed by editing these forecasts.</p></fieldset>`;
   const business = npcBusinessRules(settings);
   const businessFields = `<fieldset class="boat-death-settings"><legend>Resident business budgets</legend>${Object.entries(
     npcBusinessRuleFields,
@@ -390,6 +408,7 @@ export function settingsFields(settings: Settings = defaults) {
     householdFields +
     reserveFields +
     businessFields +
+    pricingFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

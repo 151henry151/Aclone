@@ -861,3 +861,43 @@ Zero cash/payroll reserves never release protected investor claims or grant fund
 Farm seed/harvest costs and initial breeding-herd requirements remain catalogue
 costs. These eight fields use the same validation, summary, observation, portable
 export/import and persistence paths as the input buffers, with missing-key defaults.
+
+## Resident pricing rules (unreleased)
+
+**F10 → Rules → Resident pricing** controls optional resident price plans:
+
+- `npcHaulageMargin`: 0.08 by default, fraction 0–1. Share the price-spread
+  allowance between input bids and surplus output asks.
+- `npcTravelTimeValue`: 5 hundredths per real second, range 0–10,000. Price
+  estimated round-trip time alongside fuel and divide by the useful load.
+  Zero removes time value, while fuel still costs money.
+- `npcInputMinimumAllowance`: 100 hundredths (1d), integer 0–1,000,000.
+  The input-only minimum delivery allowance. Choose the greatest of this,
+  the price spread and estimated per-item travel costs, rounding up.
+- `npcMaximumInputBid`: 10,000,000 hundredths, integer 0–10,000,000.
+  New and remembered input quotes must also meet the existing `minimumBuyPrice`.
+  Zero, or a ceiling below that floor, produces no new quote. Existing posted
+  bids and accepted terms remain unchanged by the rule edit.
+- `npcBidReopenFraction`: 0.5, fraction 0–1. Reopen or raise a bid only when
+  input stock is strictly below this share of its target. Zero disables these
+  automatic changes; full-stock pauses and explicit human instructions still apply.
+- `npcWageMarginShare`: 0.8, fraction 0–1. Share of forecast revenue after input
+  costs available for proposed wages, divided by the target crew. Zero prevents
+  raises; the planner never cuts an existing wage through this calculation.
+- `npcProductionPriceMultiplier`: 1.05, range 1–10. Multiply replacement input
+  and payroll cost before allowing for sales tax and rounding the output ask up.
+- `npcMinimumOutputAsk`: 1 hundredth, integer 0–1,000,000. Apply this ask floor
+  after the cost calculation; zero never removes a positive production cost.
+- `npcSurplusMinimumStock`: 12 items, integer 0–100,000, and
+  `npcSurplusCapacityShare`: 0.25, fraction 0–1. Review output prices only when
+  stock reaches the greater of the item count and capacity fraction.
+- `npcPricingMinimumLoad`: 6 and `npcPricingMaximumLoad`: 1,000 items,
+  integers 1–100,000, minimum ≤ maximum. A surplus markdown needs a useful
+  funded delivery in this range. Both input and output load estimates also obey
+  `transactionItemLimit`, vehicle capacity and actual supplier/customer storage.
+
+No known supplier/customer or no profitable route means no offer. A full tax
+rate cannot yield a sustainable positive-cost ask. These are forecasts followed
+by ordinary paid/authorized actions, not guarantees of demand or income. All
+fields validate atomically, appear in summaries and resident observations, and
+survive portable design transfer and reload. Missing keys retain named defaults.

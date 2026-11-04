@@ -1,3 +1,5 @@
+import { npcPricingRules } from '../../shared/npc-pricing-rules';
+import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -16,6 +18,7 @@ import type { FarmerChoice } from './farmer.ts';
 /** Replacement cost, rather than a zero cost for stock already on the shelf.
  * Call with the resident's perceived world; unknown suppliers are not quotes. */
 export function sustainableAsk(w: World, b: Building, item: string) {
+  const rules = npcPricingRules(w.settings);
   const catalogue = worldItems(w);
   const cost = (id: string) => {
     const offers = w.buildings
@@ -50,18 +53,28 @@ export function sustainableAsk(w: World, b: Building, item: string) {
     unit = ((inputs + wages) * (catalogue[item]?.price ?? 1)) / outputValue;
   }
   const tax = Math.min(1, w.settings.salesTax + (taxTown(w, b.x, b.z)?.salesTax ?? 0));
-  return tax < 1 ? Math.max(1, Math.ceil((unit * 1.05) / (1 - tax))) : Infinity;
+  return tax < 1
+    ? Math.max(
+        rules.npcMinimumOutputAsk,
+        Math.ceil((unit * rules.npcProductionPriceMultiplier) / (1 - tax)),
+      )
+    : Infinity;
 }
 
 /** Offer a reasoned markdown on surplus, not random percentage changes.
  * A buyer must fund a useful load and the producer must retain its margin. */
 export function pricingChoices(w: World, p: Player): FarmerChoice[] {
+  const rules = npcPricingRules(w.settings);
   const list: FarmerChoice[] = [];
   for (const b of w.buildings.filter((b) => b.owner === p.id && !b.construction && !b.government)) {
     for (const [item, current] of Object.entries(b.sell)) {
       const stock = b.stock[item] ?? 0;
       const floor = sustainableAsk(w, b, item);
-      if (floor === undefined || stock < Math.max(12, b.capacity * 0.25)) continue;
+      if (
+        floor === undefined ||
+        stock < Math.max(rules.npcSurplusMinimumStock, b.capacity * rules.npcSurplusCapacityShare)
+      )
+        continue;
       const routes = w.buildings
         .flatMap((buyer) => {
           if (
@@ -73,17 +86,18 @@ export function pricingChoices(w: World, p: Player): FarmerChoice[] {
             return [];
           let load = Math.min(
             stock,
-            1000,
+            rules.npcPricingMaximumLoad,
+            economyRules(w.settings).transactionItemLimit,
             buyer.capacity - (buyer.stock[item] ?? 0),
             Math.floor(buyer.investment / buyer.buy[item]),
           );
           const traveller = { ...p, x: b.x, z: b.z, vehicle: travelVehicle(p) };
           while (load > 0 && !canCarry(traveller, item, load, w)) load--;
-          if (load < 6) return [];
+          if (load < rules.npcPricingMinimumLoad) return [];
           const trip = journeyEstimate(w, traveller, [buyer, b]);
           const allowance = Math.max(
-            Math.ceil(buyer.buy[item] * 0.08),
-            Math.ceil((trip.cost + trip.seconds * 5) / load),
+            Math.ceil(buyer.buy[item] * rules.npcHaulageMargin),
+            Math.ceil((trip.cost + trip.seconds * rules.npcTravelTimeValue) / load),
           );
           const ask = buyer.buy[item] - allowance;
           return ask >= floor && ask < current ? [{ buyer, load, ask }] : [];

@@ -126,9 +126,7 @@ const compactEntry = (e: Entry) => {
   const text = compactGuideText(e.text);
   // Manual headings are already retained in topics, keyed by this section id.
   // The id already identifies the section; direct lookups retain anchored citations.
-  return e.source.startsWith('docs/')
-    ? { id: e.id, source: e.source.split('#')[0], text }
-    : { ...e, text };
+  return e.source.startsWith('docs/') ? { id: e.id, text } : { ...e, text };
 };
 export function gameGuide(query: string, activityQuery = '') {
   const docs = corpus().filter((e) => e.source.startsWith('docs/'));
@@ -158,6 +156,8 @@ export function gameGuide(query: string, activityQuery = '') {
   });
   return {
     version: VERSION,
+    // Manual IDs use prefix:section; retain each source path once per prefix.
+    sources: { faq: 'docs/FAQ.md', playing: 'docs/PLAYING.md', economy: 'docs/ECONOMY.md' },
     // Core rules must not depend on the agent knowing which question to search for.
     fundamentals: fundamentals.map(compactEntry),
     controls: compactGuideText(docs.find((e) => e.id === 'faq:controls')!.text),

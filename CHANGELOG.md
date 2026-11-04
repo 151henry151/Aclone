@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident haulage allowances, bid ceilings, wage affordability and surplus-pricing thresholds as world rules; honor the existing bid floor and transaction limit in new and remembered price estimates. Share repeated manual citations to retain all guide content within the resident request budget.
+
 - Expose resident payroll reserves, startup budgets and hay working-capital policies as world rules; preserve investor claims and cap hay restocking plans by the existing transaction limit.
 
 - Expose resident business input buffers, sales coverage and output-backlog thresholds as world rules; apply them to procurement, cash forecasts and ordinary bid maintenance while retaining storage and breeding requirements.
