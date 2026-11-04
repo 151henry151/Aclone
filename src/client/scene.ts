@@ -1,4 +1,5 @@
-import { createCanoe, carriedCanoe } from './canoe-model';
+import { CANOE } from '../shared/canoe-rules';
+import { createCanoe, carriedCanoe, createPaddledCanoe, floatCanoe } from './canoe-model';
 import { updateResourceScenery } from './resource-scenery';
 import { alpineWeather } from '../shared/alpine-weather';
 import { spaceportComplex } from './spaceport-complex';
@@ -574,7 +575,8 @@ export class GameScene {
     const resetMotion = this.motionClock.receive(world.time, performance.now());
     this.resumePending = false;
     for (const p of Object.values(world.players)) {
-      const paint = vehiclePaint(p);
+      const paint =
+        p.vehicle === CANOE ? world.smallCraft?.[p.smallCraft ?? '']?.paint : vehiclePaint(p);
       const displayVehicle =
         p.hitch && throttleBoat(world.players[p.hitch]?.vehicle ?? -1, world) ? 5 : p.vehicle;
       let mesh = this.meshes.get(p.id);
@@ -1184,6 +1186,11 @@ export class GameScene {
       g.userData.driver = hover.group.userData.driver;
       g.userData.eye = hover.group.userData.eye;
       g.userData.viewPitch = hover.group.userData.viewPitch;
+    } else if (slot === CANOE) {
+      const boat = createPaddledCanoe(paint ?? v.color);
+      g.add(boat.group);
+      g.userData.canoe = boat;
+      for (const key of ['driver', 'eye', 'viewPitch']) g.userData[key] = boat.group.userData[key];
     } else if (slot === MOTORBOAT) {
       const boat = createMotorboat(tractorPaint(paint)?.color ?? v.color);
       g.add(boat.group);
@@ -1482,6 +1489,7 @@ export class GameScene {
           mesh.rotation.set(0, captain.heading, 0);
         }
         mesh.userData.lifeboat?.userData.row(now / 1000, pose.speed);
+        mesh.userData.canoe?.animate(now / 1000, pose.speed);
         mesh.userData.charterBoat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.motorboat?.animate(
           dt,
@@ -1525,6 +1533,19 @@ export class GameScene {
           );
           mesh.quaternion.copy(captain.quaternion);
         }
+      }
+      for (const model of this.smallCraftGroup.children) {
+        const craft = w.smallCraft?.[model.userData.craftId];
+        if (craft?.state === 'moored')
+          floatCanoe(
+            model as T.Group,
+            w,
+            craft.x,
+            craft.z,
+            craft.heading,
+            seaTime,
+            this.ocean.amplitude.value,
+          );
       }
       for (const model of this.mooredGroup.children) {
         const sea = boatSeaPose(
@@ -2026,7 +2047,9 @@ export class GameScene {
   private smallCraftGroup = new T.Group();
   private smallCraftKey = '';
   private updateSmallCraft(w: World) {
-    const hulls = Object.values(w.smallCraft ?? {}).filter((c) => c.state === 'setDown');
+    const hulls = Object.values(w.smallCraft ?? {}).filter((c) =>
+      ['setDown', 'moored'].includes(c.state),
+    );
     const key = w.id + JSON.stringify(hulls);
     if (key === this.smallCraftKey) return;
     this.smallCraftKey = key;
@@ -2035,7 +2058,12 @@ export class GameScene {
     if (!this.smallCraftGroup.parent) this.scene.add(this.smallCraftGroup);
     for (const c of hulls) {
       const model = createCanoe(c.paint);
-      model.position.set(c.x, terrainHeight(w, c.x, c.z) + 0.18, c.z);
+      model.userData.craftId = c.id;
+      model.position.set(
+        c.x,
+        c.state === 'moored' ? surfaceWaterLevel(w, c.x, c.z) : terrainHeight(w, c.x, c.z) + 0.18,
+        c.z,
+      );
       model.rotation.y = c.heading;
       this.smallCraftGroup.add(model);
     }
@@ -2076,9 +2104,12 @@ export class GameScene {
                 : b.slot === CHARTER_BOAT
                   ? createCharterBoat
                   : createCanalBoat;
-        const model = raft
-          ? createLifeboat(false)
-          : factory(tractorPaint(b.paint)?.color ?? vehicleDef(w, b.slot).color).group;
+        const model =
+          b.slot === CANOE
+            ? createCanoe(b.paint)
+            : raft
+              ? createLifeboat(false)
+              : factory(tractorPaint(b.paint)?.color ?? vehicleDef(w, b.slot).color).group;
         if (model.userData.driver) model.userData.driver.visible = false;
         model.userData.moorId = id;
         model.userData.oceanLength = vehicleDef(w, b.slot).length ?? 12;

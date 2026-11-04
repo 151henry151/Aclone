@@ -15,6 +15,8 @@ export function boatShoreCollision(
   radius: number,
   heading = 0,
   halfLength = radius,
+  minDepth = 0.05,
+  gentle = false,
 ) {
   const sin = Math.sin(heading),
     cos = Math.cos(heading);
@@ -33,13 +35,13 @@ export function boatShoreCollision(
   const wet = (p: Point) =>
     footprint.every(
       ([x, z]) =>
-        terrainHeight(w, p.x + x, p.z + z) < surfaceWaterLevel(w, p.x + x, p.z + z) - 0.05,
+        terrainHeight(w, p.x + x, p.z + z) < surfaceWaterLevel(w, p.x + x, p.z + z) - minDepth,
     );
   const penetration = (p: Point) =>
     footprint.map(([x, z]) =>
       Math.max(
         0,
-        terrainHeight(w, p.x + x, p.z + z) - surfaceWaterLevel(w, p.x + x, p.z + z) + 0.05,
+        terrainHeight(w, p.x + x, p.z + z) - surfaceWaterLevel(w, p.x + x, p.z + z) + minDepth,
       ),
     );
   const dx = to.x - from.x,
@@ -65,6 +67,7 @@ export function boatShoreCollision(
         continue;
       }
       // A small recoil into water, never an unchecked step onto an opposite bank.
+      if (gentle) return safe;
       for (let back = 0.2; back <= 1.01; back += 0.2) {
         const recoil = { x: safe.x - (dx / distance) * 0.2, z: safe.z - (dz / distance) * 0.2 };
         if (!wet(recoil)) break;

@@ -1,3 +1,5 @@
+import vehicleData from '../data/vehicles.json';
+import { CANOE } from '../src/shared/canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -89,7 +91,16 @@ test('construction observes zones and material completion', () => {
   assert.equal(p.inventory.wood, 0);
 });
 test('armour and five driving modes are finite and consume boosted fuel', () => {
-  assert.equal(vehicles.length, 34);
+  assert.equal(vehicles.length, 35);
+  assert.deepEqual(
+    vehicles.slice(0, 34),
+    vehicleData,
+    'all original slots retain their definitions',
+  );
+  assert.equal(CANOE, 34);
+  assert.equal(vehicles[CANOE].name, 'Canoe');
+  assert.equal(vehicles[CANOE].mode, 3);
+  assert.equal(vehicles[CANOE].fuel, 0);
   assert.equal(damage(6500, 100), 6500);
   for (const vehicle of [0, 1, 2, 3, 4]) {
     const { w, p } = setup();

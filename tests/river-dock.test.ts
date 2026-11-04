@@ -146,3 +146,37 @@ test('the jetty and berth stay clear of other construction', () => {
   const home = makeBuilding('home', 'home', mid.x, mid.z);
   assert.match(constructionSiteReason(copy, home) ?? '', /clear|close|dry land/);
 });
+
+test('a river dock launches, moors and reboards the same canoe with no passenger seat', () => {
+  const copy = structuredClone(w),
+    dock = usableDock();
+  copy.buildings.push(dock);
+  const landing = boatLandings(copy).find((d) => d.id === dock.id)!;
+  const p = addPlayer(copy, 'paddler', 'Paddler');
+  Object.assign(p, {
+    vehicle: 5,
+    online: true,
+    ...landing.land,
+    y: terrainHeight(copy, landing.land.x, landing.land.z),
+    speed: 0,
+    inventory: { canoe: 1 },
+  });
+  act(copy, p.id, { type: 'canoe', operation: 'carry' });
+  const id = p.carrying!;
+  act(copy, p.id, { type: 'canoe', operation: 'launch' });
+  assert.deepEqual({ x: p.x, z: p.z }, landing.berth);
+  const q = addPlayer(copy, 'passenger', 'Passenger');
+  Object.assign(q, {
+    vehicle: 5,
+    online: true,
+    ...landing.land,
+    y: terrainHeight(copy, landing.land.x, landing.land.z),
+    speed: 0,
+  });
+  assert.throws(() => act(copy, q.id, { type: 'hitch', player: p.id }), /No passenger room/);
+  q.online = false;
+  act(copy, p.id, { type: 'canoe', operation: 'beach' });
+  assert.equal(copy.smallCraft![id].landing, dock.id);
+  act(copy, p.id, { type: 'canoe', operation: 'board', id });
+  assert.equal(p.smallCraft, id);
+});

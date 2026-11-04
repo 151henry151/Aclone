@@ -509,5 +509,20 @@ retain set-down position, heading, finish and ownership. Carried hulls follow
 inventory loss on death; stored hulls follow property rules. Set-down hulls survive
 boat-loss deaths unless the world separately enables land-hull loss.
 
-This first canoe slice covers carrying and storage. Shore launching and paddling
-are the next unreleased backlog slice.
+At any clear shore or riverbank, **Launch canoe** puts your carried or nearby
+set-down hull into the water. No dock is needed. Paddle with W/S or the arrows;
+there is one seat, a 12-weight hold and no engine or fuel. Default speed is
+1.2m/s; Shift does not increase it. Narrow headwaters can be reachable even when
+the larger canal hull cannot pass. The hull needs at least 0.08m of water.
+
+Stop beside a bank and choose **Beach canoe**. By default, the water must be
+0.08–0.6m deep with a clear dry landing within 6m and no more than 1.5m above the
+water. Normal paddling into the bank stops the canoe without powered-boat recoil
+or damage. The canoe stays moored there: use **Board canoe** or **Pick up canoe**
+from its bank. Boathouses, the fishing pier and river docks also launch, moor and
+board it. Its owner, position and finish persist across server restarts.
+
+Death afloat follows the world's boat rules: loss removes the canoe and cargo;
+recovery leaves the same hull offshore with the usual cargo-spoilage deadline.
+Use the ordinary recovery lifeboat or a ride from another boat to recover it.
+A canoe cannot launch an emergency lifeboat merely because it has no fuel tank.

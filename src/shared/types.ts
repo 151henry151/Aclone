@@ -32,6 +32,8 @@ export type Task = {
 export interface Player {
   /** Owned portable hull lifted overhead; its weight is additional to inventory. */
   carrying?: string;
+  /** Hull id of the occupied canoe, preserved across snapshots and saves. */
+  smallCraft?: string;
   statistics?: import('./player-statistics.ts').PlayerStatistics;
   /** Private snapshot cargo for this player's trailers. */
   trailerCargo?: Record<string, Stock>;
@@ -467,7 +469,14 @@ export interface World {
   boatRescues?: Record<
     string,
     {
-      boat: { x: number; z: number; heading: number; paint: string; slot: number };
+      boat: {
+        x: number;
+        z: number;
+        heading: number;
+        paint: string;
+        slot: number;
+        smallCraft?: string;
+      };
       cargo: Stock;
       /** A tow delivered this vessel to a shore-accessible landing. */
       landing?: string;

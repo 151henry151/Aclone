@@ -1,7 +1,16 @@
+import { ensurePuddlewickBoatyard } from '../src/server/puddlewick-boatyard';
+import { boatLandings } from '../src/shared/boathouse';
+import { travelHeight } from '../src/shared/dock';
+import { boatShoreCollision } from '../src/shared/boat-shore';
+import { surfaceWaterLevel } from '../src/shared/ocean';
+import { expandPuddlewickIsland } from '../src/server/puddlewick-island';
+import { riverBanks } from '../src/shared/inland-water';
+import { canoeLanding, canoeWater } from '../src/shared/canoe-shore';
+import { vehicleCondition } from '../src/shared/vehicle-services';
 import { canoePanel } from '../src/client/canoe-panel';
 import { exportDesign, applyDesign } from '../src/server/world-design';
 import { canoeRules } from '../src/shared/canoe-rules';
-import { createCanoe, carriedCanoe } from '../src/client/canoe-model';
+import { createCanoe, carriedCanoe, createPaddledCanoe } from '../src/client/canoe-model';
 import { prepareFrame } from '../src/server/snapshots';
 import { vehicleDef } from '../src/shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -278,4 +287,427 @@ test('canoe purchase controls use the same completed boathouse range as the serv
   assert.match(canoePanel(w, p), /Buy canoe/);
   act(w, p.id, { type: 'canoe', operation: 'buy', building: carpenter.id });
   assert.ok(p.carrying);
+});
+
+test('canoe launches from an ordinary coast, paddles without boost or fuel, beaches and boards the same saved hull', () => {
+  const { w, p, carpenter } = setup();
+  act(w, p.id, { type: 'canoe', operation: 'buy', building: carpenter.id });
+  const id = p.carrying!;
+  w.smallCraft![id].paint = '#336699';
+  w.buildings = [];
+  w.settings.mapSize = 500;
+  w.settings.seaLevel = 0;
+  w.settings.tidalRange = 0;
+  w.settings.oceanWaves = 0;
+  // A shallow bank along x=0; no building or dock supplies this landing.
+  w.landscape = {
+    paths: [],
+    surfaces: [],
+    barriers: [],
+    scatter: [],
+    heightmap: Array.from({ length: 1089 }, (_, i) => (16 - (i % 33)) * 2),
+  };
+  Object.assign(p, {
+    x: -1,
+    z: -40,
+    y: terrainHeight(w, -1, -40),
+    heading: 0,
+    speed: 0,
+    inventory: { fuel: 12 },
+  });
+  act(w, p.id, { type: 'canoe', operation: 'launch' });
+  assert.equal(p.vehicle, 34);
+  assert.equal(p.carrying, undefined);
+  assert.equal(p.smallCraft, id);
+  assert.equal(w.smallCraft![id].state, 'launched');
+  assert.equal(p.engine, false);
+  const fuel = p.fuel;
+  for (let i = 0; i < 150; i++) move(w, p, { throttle: 1, steer: 0, boost: true }, 0.05);
+  assert.ok(p.speed <= 1.2);
+  assert.equal(p.fuel, fuel);
+  p.speed = 0;
+  assert.throws(
+    () => act(w, p.id, { type: 'lifeboat', operation: 'launch' }),
+    /canoe|motor|fuel-free/i,
+  );
+  p.speed = 0;
+  Object.assign(p, { x: 3, z: -40 });
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  assert.equal(p.vehicle, 5);
+  assert.equal(w.smallCraft![id].state, 'moored');
+  assert.equal(p.smallCraft, undefined);
+  const store = new Store(':memory:');
+  try {
+    store.saveWorld(w);
+    const saved = store.loadWorlds()[0].world,
+      sp = saved.players[p.id];
+    act(saved, sp.id, { type: 'canoe', operation: 'board', id });
+    assert.equal(sp.vehicle, 34);
+    assert.equal(sp.smallCraft, id);
+    assert.equal(sp.inventory.fuel, 12);
+    assert.equal(saved.smallCraft![id].paint, '#336699');
+  } finally {
+    store.close();
+  }
+});
+test('canoe launch refuses missing water, excessive cargo and vehicle-menu duplication without mutation', () => {
+  const { w, p, carpenter } = setup();
+  act(w, p.id, { type: 'canoe', operation: 'buy', building: carpenter.id });
+  const id = p.carrying!;
+  assert.throws(() => act(w, p.id, { type: 'canoe', operation: 'launch' }), /water|shore|bank/i);
+  assert.equal(p.carrying, id);
+  assert.equal(w.smallCraft![id].state, 'carried');
+  assert.throws(
+    () => act(w, p.id, { type: 'vehicle', slot: 34, building: carpenter.id }),
+    /canoe/i,
+  );
+  p.inventory.fuel = 13;
+  assert.throws(() => act(w, p.id, { type: 'canoe', operation: 'launch' }), /hold|weight|cargo/i);
+  assert.equal(p.inventory.fuel, 13);
+  assert.equal(p.carrying, id);
+});
+function afloatCanoe() {
+  const { w, p, carpenter } = setup();
+  act(w, p.id, { type: 'canoe', operation: 'buy', building: carpenter.id });
+  w.buildings = [];
+  Object.assign(w.settings, {
+    mapSize: 500,
+    seaLevel: 0,
+    tidalRange: 0,
+    oceanWaves: 0,
+    vehicleMaintenance: false,
+  });
+  w.landscape = {
+    paths: [],
+    surfaces: [],
+    barriers: [],
+    scatter: [],
+    heightmap: Array.from({ length: 1089 }, (_, i) => (16 - (i % 33)) * 2),
+  };
+  Object.assign(p, {
+    x: -1,
+    z: -40,
+    y: terrainHeight(w, -1, -40),
+    heading: 0,
+    speed: 0,
+    inventory: { fuel: 3 },
+  });
+  act(w, p.id, { type: 'canoe', operation: 'launch' });
+  return { w, p, id: p.smallCraft! };
+}
+test('canoe afloat death loses the hull or preserves the same recoverable hull and cargo under ordinary boat rules', () => {
+  for (const lose of [false, true]) {
+    const { w, p, id } = afloatCanoe();
+    w.settings.loseBoatsOnDeath = lose;
+    p.age = w.settings.maxAge + 1;
+    advance(w, 0.1);
+    assert.equal(p.smallCraft, undefined);
+    if (lose) {
+      assert.equal(w.smallCraft![id], undefined);
+      assert.equal(w.boatRescues?.[p.id], undefined);
+    } else {
+      const rescue = w.boatRescues![p.id];
+      assert.equal(rescue.boat.smallCraft, id);
+      assert.equal(rescue.cargo.fuel, 3);
+      Object.assign(p, {
+        vehicle: 29,
+        x: rescue.boat.x,
+        z: rescue.boat.z,
+        y: 0,
+        speed: 0,
+        inventory: {},
+      });
+      act(w, p.id, { type: 'lifeboat', operation: 'reboard' });
+      assert.equal(p.vehicle, 34);
+      assert.equal(p.smallCraft, id);
+      assert.equal(p.inventory.fuel, 3);
+      assert.equal(w.smallCraft![id].state, 'launched');
+    }
+  }
+});
+test('gentle canoe shore contact has no damage, recoil or throttle lock and allows beaching; a second person cannot board', () => {
+  const { w, p, id } = afloatCanoe();
+  p.heading = -Math.PI / 2;
+  let previous = p.x;
+  for (let i = 0; i < 160; i++) {
+    previous = p.x;
+    move(w, p, { throttle: 1, steer: 0, boost: false }, 0.05);
+    if (p.speed === 0) break;
+  }
+  assert.ok(p.x <= previous, 'no recoil away from land');
+  assert.equal(vehicleCondition(p), 100);
+  assert.equal(p.boatShoreThrottle, undefined);
+  p.speed = 0;
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  const q = addPlayer(w, 'visitor', 'Visitor');
+  Object.assign(q, { x: p.x, z: p.z, y: p.y, vehicle: 5, speed: 0, inventory: {} });
+  assert.throws(() => act(w, q.id, { type: 'canoe', operation: 'board', id }), /own/i);
+  act(w, p.id, { type: 'canoe', operation: 'board', id });
+  assert.throws(() => act(w, q.id, { type: 'hitch', player: p.id }));
+  assert.equal(q.hitch, undefined);
+});
+test('a canoe launches from an elevated riverbank using the river surface rather than the sea datum', () => {
+  const w = createWorld('puddlewick', 'River canoe', 'owner');
+  w.settings.mapSize = 18500;
+  w.terrainMapSize = 12500;
+  w.townLayout = 2;
+  expandPuddlewickIsland(w);
+  w.buildings = [];
+  const p = addPlayer(w, 'owner', 'Owner');
+  p.vehicle = 5;
+  p.speed = 0;
+  p.inventory = {};
+  p.carrying = 'river-canoe';
+  const river = w.northernIsland!.rivers[0],
+    banks = riverBanks(river.points);
+  let found = false;
+  for (let i = 3; i < river.points.length - 3 && !found; i++) {
+    const at = river.points[i],
+      prev = river.points[i - 1],
+      heading = Math.atan2(prev.x - at.x, prev.z - at.z);
+    if (at.level < w.settings.seaLevel + 5 || !canoeWater(w, at.x, at.z, heading)) continue;
+    for (const side of ['left', 'right'] as const) {
+      const bank = banks[i][side],
+        length = Math.hypot(bank.x - at.x, bank.z - at.z);
+      const x = bank.x + ((bank.x - at.x) / length) * 0.5,
+        z = bank.z + ((bank.z - at.z) / length) * 0.5,
+        y = terrainHeight(w, x, z);
+      if (y <= at.level || y - at.level > 1.5) continue;
+      Object.assign(p, { x, z, y, heading });
+      w.smallCraft = {
+        'river-canoe': {
+          id: 'river-canoe',
+          kind: 'canoe',
+          owner: p.id,
+          state: 'carried',
+          x,
+          z,
+          heading,
+          paint: '#a84e32',
+        },
+      };
+      assert.ok(canoeLanding(w, p, false), 'a clear elevated riverbank is launchable');
+      act(w, p.id, { type: 'canoe', operation: 'launch' });
+      assert.equal(p.vehicle, 34);
+      assert.ok(p.y > w.settings.seaLevel + 5);
+      found = true;
+      break;
+    }
+  }
+  assert.ok(found, 'survey finds a real headwater bank');
+});
+test('paddling animation retains a live seated skeleton and survives repeated movement updates', () => {
+  const boat = createPaddledCanoe('#336699');
+  assert.doesNotThrow(() => {
+    for (let i = 0; i < 20; i++) boat.animate(i / 10, 1.2);
+  });
+  const person = boat.group.userData.driver as import('three').Group;
+  assert.ok(person.getObjectByName('arm--1'));
+  assert.equal(person.getObjectByName('hips')!.position.y, 0);
+  assert.ok(person.getObjectByName('thigh--1')!.rotation.x < -1);
+});
+test('headwater survey finds a reach the canoe can paddle through but the canal hull cannot sweep through', () => {
+  const w = createWorld('puddlewick', 'Headwater', 'owner');
+  w.settings.mapSize = 18500;
+  w.terrainMapSize = 12500;
+  w.townLayout = 2;
+  expandPuddlewickIsland(w);
+  w.buildings = [];
+  let found = false;
+  for (const river of w.northernIsland!.rivers)
+    for (let i = 2; i < river.points.length - 2 && !found; i++) {
+      const p = river.points[i],
+        up = river.points[i - 1],
+        heading = Math.atan2(up.x - p.x, up.z - p.z),
+        to = { x: p.x + Math.sin(heading) * 3, z: p.z + Math.cos(heading) * 3 };
+      if (
+        !canoeWater(w, p.x, p.z, heading) ||
+        boatShoreCollision(w, p, to, 0.46, heading, 1.8, 0.08, true) ||
+        !boatShoreCollision(w, p, to, 1.3, heading, 6)
+      )
+        continue;
+      const player = addPlayer(w, 'owner', 'Owner');
+      Object.assign(player, {
+        vehicle: 34,
+        x: p.x,
+        z: p.z,
+        y: surfaceWaterLevel(w, p.x, p.z),
+        heading,
+        speed: 0,
+        inventory: {},
+        engine: false,
+      });
+      for (let n = 0; n < 80; n++) move(w, player, { throttle: 1, steer: 0, boost: false }, 0.05);
+      assert.ok(
+        Math.hypot(player.x - p.x, player.z - p.z) > 2,
+        'actual canoe movement enters the narrow reach',
+      );
+      found = true;
+    }
+  assert.ok(found, 'a natural upstream passage excludes the larger canal hull');
+});
+test('boathouse and fishing pier launch and moor the same canoe at their ordinary landings', () => {
+  const w = createWorld('puddlewick', 'Dock canoe', 'owner');
+  ensurePuddlewickBoatyard(w);
+  const p = addPlayer(w, 'owner', 'Owner');
+  p.vehicle = 5;
+  p.speed = 0;
+  p.inventory = { canoe: 1 };
+  const yard = boatLandings(w).find((d) => d.building)!;
+  Object.assign(p, yard.land, { y: travelHeight(w, yard.land.x, yard.land.z) });
+  act(w, p.id, { type: 'canoe', operation: 'carry' });
+  const id = p.carrying!;
+  act(w, p.id, { type: 'canoe', operation: 'launch' });
+  assert.deepEqual({ x: p.x, z: p.z }, yard.berth);
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  assert.equal(w.smallCraft![id].landing, yard.id);
+  assert.match(canoePanel(w, p), /Board canoe/);
+  act(w, p.id, { type: 'canoe', operation: 'board', id });
+  const pier = boatLandings(w).find((d) => !d.building && !d.river)!;
+  Object.assign(p, pier.berth, { speed: 0 });
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  assert.equal(w.smallCraft![id].landing, pier.id);
+  act(w, p.id, { type: 'canoe', operation: 'board', id });
+  assert.equal(p.smallCraft, id);
+});
+test('canoe has an interior floor above the calm water surface so a moored hull does not look flooded', () => {
+  const hull = createCanoe();
+  const floor = hull.getObjectByName('canoe-floor') as import('three').Mesh;
+  assert.ok(floor, 'visible watertight interior');
+  floor.geometry.computeBoundingBox();
+  assert.ok(
+    floor.geometry.boundingBox!.min.y >= 0.05,
+    'floor clears the rendered inland water plane',
+  );
+});
+test('a canoe cannot consume Fuel into a nonexistent tank', () => {
+  const { w, p } = afloatCanoe();
+  const before = { fuel: p.fuel, cargo: { ...p.inventory } };
+  assert.throws(() => act(w, p.id, { type: 'use', item: 'fuel' }), /no fuel|no motor|fuel-free/i);
+  assert.deepEqual({ fuel: p.fuel, cargo: p.inventory }, before);
+});
+
+test('lifting a moored canoe clears its old bank so later set-down pickup uses its new location', () => {
+  const { w, p, id } = afloatCanoe();
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  act(w, p.id, { type: 'canoe', operation: 'pickup', id });
+  Object.assign(p, { x: -30, z: -40, y: travelHeight(w, -30, -40), heading: 0 });
+  act(w, p.id, { type: 'canoe', operation: 'setDown' });
+  const c = w.smallCraft![id];
+  Object.assign(p, { x: c.x, z: c.z, y: travelHeight(w, c.x, c.z) });
+  assert.doesNotThrow(() => act(w, p.id, { type: 'canoe', operation: 'pickup', id }));
+  assert.equal(p.carrying, id);
+  assert.equal(c.land, undefined);
+  assert.equal(c.landing, undefined);
+});
+
+test('moving, airborne, too-shallow and obstructed shore launches refuse before changing a hull or cargo', () => {
+  for (const reason of ['moving', 'airborne', 'shallow', 'blocked']) {
+    const { w, p, id } = afloatCanoe();
+    act(w, p.id, { type: 'canoe', operation: 'beach' });
+    act(w, p.id, { type: 'canoe', operation: 'pickup', id });
+    if (reason === 'moving') p.speed = 2;
+    if (reason === 'airborne') p.y += 10;
+    if (reason === 'shallow') w.settings.canoeMinDepth = 1;
+    if (reason === 'blocked') w.buildings.push(makeBuilding('block', 'home', p.x, p.z));
+    const before = JSON.stringify({ p, hull: w.smallCraft![id] });
+    assert.throws(
+      () => act(w, p.id, { type: 'canoe', operation: 'launch' }),
+      /Stop outside|ground|No clear water/,
+    );
+    assert.equal(JSON.stringify({ p, hull: w.smallCraft![id] }), before, reason);
+  }
+});
+
+test('a bank-moored canoe follows changing water height and the river slope', async () => {
+  const { floatCanoe } = await import('../src/client/canoe-model');
+  assert.equal(typeof floatCanoe, 'function');
+  const { w, p } = afloatCanoe();
+  const model = createCanoe();
+  floatCanoe(model, w, p.x, p.z, p.heading, w.time, 0);
+  assert.ok(Math.abs(model.position.y - surfaceWaterLevel(w, p.x, p.z)) < 0.001);
+  w.settings.seaLevel += 1;
+  floatCanoe(model, w, p.x, p.z, p.heading, w.time, 0);
+  assert.ok(Math.abs(model.position.y - surfaceWaterLevel(w, p.x, p.z)) < 0.001);
+  const riverWorld = createWorld('puddlewick', 'River pose', 'owner');
+  riverWorld.settings.mapSize = 18500;
+  riverWorld.terrainMapSize = 12500;
+  riverWorld.townLayout = 2;
+  expandPuddlewickIsland(riverWorld);
+  const points = riverWorld.northernIsland!.rivers[0].points,
+    at = points[10],
+    next = points[11];
+  floatCanoe(
+    model,
+    riverWorld,
+    at.x,
+    at.z,
+    Math.atan2(next.x - at.x, next.z - at.z),
+    riverWorld.time,
+    0,
+  );
+  assert.ok(Math.abs(model.rotation.x) > 0.001, 'moored hull follows the sloping river');
+});
+
+test('ordinary vehicle controls cannot summon a moored canoe or turn an occupied hull into a second boat', () => {
+  const w = createWorld('puddlewick', 'No duplicated canoe', 'owner');
+  ensurePuddlewickBoatyard(w);
+  const p = addPlayer(w, 'owner', 'Owner'),
+    yard = boatLandings(w).find((d) => d.building)!;
+  Object.assign(p, {
+    vehicle: 5,
+    speed: 0,
+    inventory: { canoe: 1 },
+    online: true,
+    ...yard.land,
+    y: travelHeight(w, yard.land.x, yard.land.z),
+  });
+  act(w, p.id, { type: 'canoe', operation: 'carry' });
+  act(w, p.id, { type: 'canoe', operation: 'launch' });
+  const id = p.smallCraft!;
+  assert.throws(
+    () => act(w, p.id, { type: 'vehicle', slot: 5, building: yard.id }),
+    /canoe.*controls/i,
+  );
+  assert.equal(p.smallCraft, id);
+  act(w, p.id, { type: 'canoe', operation: 'beach' });
+  assert.throws(
+    () => act(w, p.id, { type: 'vehicle', slot: 34, building: yard.id }),
+    /canoe.*controls/i,
+  );
+  assert.equal(p.vehicle, 5);
+  assert.equal(w.smallCraft![id].state, 'moored');
+  assert.equal(Object.keys(w.mooredBoats ?? {}).length, 0);
+});
+
+test('canoe recovery refuses an overfull hold without pouring Fuel into a nonexistent tank', () => {
+  const { w, p } = afloatCanoe();
+  p.inventory.fuel = 12;
+  p.age = w.settings.maxAge + 1;
+  advance(w, 0.1);
+  const r = w.boatRescues![p.id];
+  Object.assign(p, { vehicle: 29, ...r.boat, y: 0, speed: 0, inventory: { fuel: 1 }, fuel: 0 });
+  const before = JSON.stringify({ p, r });
+  assert.throws(() => act(w, p.id, { type: 'lifeboat', operation: 'reboard' }), /exceeds.*hold/);
+  assert.equal(JSON.stringify({ p, r }), before);
+});
+test('a canoe abandoned on an elevated river can be recovered at that river surface', () => {
+  const { w, p, id } = afloatCanoe();
+  w.id = 'puddlewick';
+  w.settings.mapSize = 18500;
+  w.terrainMapSize = 12500;
+  w.townLayout = 2;
+  delete w.landscape;
+  expandPuddlewickIsland(w);
+  const at = w
+    .northernIsland!.rivers.flatMap((r) => r.points)
+    .find((pt) => pt.level > w.settings.seaLevel + 5 && canoeWater(w, pt.x, pt.z, 0));
+  assert.ok(at);
+  Object.assign(p, { x: at.x, z: at.z, y: at.level, age: w.settings.maxAge + 1 });
+  advance(w, 0.1);
+  const r = w.boatRescues![p.id];
+  Object.assign(p, { vehicle: 29, x: r.boat.x, z: r.boat.z, y: at.level, speed: 0, inventory: {} });
+  assert.doesNotThrow(() => act(w, p.id, { type: 'lifeboat', operation: 'reboard' }));
+  assert.equal(p.smallCraft, id);
+  assert.ok(Math.abs(p.y - surfaceWaterLevel(w, p.x, p.z)) < 0.01);
 });

@@ -104,3 +104,22 @@ New road projects penalize climbing and steep grades, round safe corners and add
 Growth remains **12 metres per game day**, shared between projects; long lighthouse routes take time. On the release's live-world snapshot, completing the queued bypass and hangar approach allowed both cape-lighthouse routes to be built. No roads were instantly laid on the live server for that test. The spaceport relocates about 1.25 km from Puddlewick centre; see [spaceport details](SPACEPORT.md).
 
 For visual QA run `TEST_GPU=1 node --import tsx scripts/rescue-fleet-preview.ts` and `node --import tsx scripts/backlog-walkthrough.ts`. Both operate locally; the walkthrough creates and removes its own temporary world and records actual UI interactions.
+
+## Canoes (unreleased)
+
+The portable canoe carries one paddler and 12 weight at 1.2m/s by default, with no
+fuel or engine. Buy one at a carpenter or boathouse, craft from Wood at a carpenter,
+or lift one carried as inventory. Overhead carrying is slow and blocks vehicles,
+fishing, gathering and construction until you set it down. Use Inventory to launch
+from any clear bank, paddle through shallow narrow reaches, and beach without a
+dock. A beached canoe stays moored at that bank and can be boarded or picked up;
+ordinary boathouses, piers and river docks work too. Cargo travels with the paddler
+when stepping ashore. Home storage defaults to two hulls.
+
+F10 → Rules → Portable canoes governs price, weight, wood cost, carrying speed,
+home limit, pickup ownership, paddling/hold limits and shore access. Death afloat
+uses the ordinary boat loss/recovery and cargo-spoilage rules. Set-down land
+property instead survives boat-loss deaths unless separate land-hull loss is on;
+carried and home-stored hulls follow inventory and property rules respectively.
+See [Playing Aclone](PLAYING.md#portable-canoes-unreleased) for the controls and
+shore limits.

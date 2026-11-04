@@ -110,5 +110,12 @@
   "canoePublicPickup": false,
   "canoeLoseOnLandDeath": false,
   "canoeRange": 3,
-  "canoeStoppedSpeed": 0.5
+  "canoeStoppedSpeed": 0.5,
+  "canoeSpeed": 1.2,
+  "canoeCapacity": 12,
+  "canoeMinDepth": 0.08,
+  "canoeStepOutDepth": 0.6,
+  "canoeBankRange": 6,
+  "canoeBankRise": 1.5,
+  "canoeShoreSpeed": 2
 }

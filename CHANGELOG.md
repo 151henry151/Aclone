@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Launch and paddle owned canoes from clear shores and riverbanks without fuel; add configurable hold and shore limits, gentle beaching, persistent bank mooring, dock access and ordinary boat death/recovery while retaining the same hull identity and finish.
 - Add portable canoe purchase and wood crafting, owned set-down hulls, inverted overhead carrying with shared movement/activity restrictions, home storage and configurable ownership/death rules. Supply ordinary canoe port quotes and remove duplicate manual headings from resident requests without cutting guidance.
 - Sell Fuel from attached or parked tankers with owner pricing, capped direct pumping, inventory purchases, ordinary sales tax and offline bank payments; add world rules, guarded resident purchases and portable parked-tanker placements. Share the configurable Fuel conversion and refuelling limits with carried assistance.
 - Add a fuel-only tanker with a shared Dales tank/chassis, distinct paint, hazard placards and rear hose; expose per-world price/capacity tuning in the garage, cargo panel and portable designs while retaining ordinary trade, load and death rules.

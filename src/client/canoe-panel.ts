@@ -1,6 +1,9 @@
+import { canoeLanding, canoeWater } from '../shared/canoe-shore';
+import { cargoFitReason } from '../shared/cargo-fit';
+import { boatLandings, withinBoatLanding } from '../shared/boathouse';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../shared/types';
-import { canoeRules } from '../shared/canoe-rules';
+import { CANOE, canoeRules } from '../shared/canoe-rules';
 import { canCarry, money, withinBuildingRange } from '../shared/simulation';
 const hidden = (key: string, value: string) =>
   `<input type="hidden" name="${key}" value="${value.replace(/[&<>"']/g, '')}">`;
@@ -17,17 +20,45 @@ export function canoePanel(w: World, p: Player) {
   const form = (op: string, label: string, disabled = false, b?: Building, id?: string) =>
     `<form data-action="canoe">${hidden('operation', op)}${b ? hidden('building', b.id) : ''}${id ? hidden('id', id) : ''}<button ${disabled ? 'disabled' : ''}>${label}</button></form>`;
   let html = '<section class="canoe-panel"><h3>Portable canoes</h3>';
+  if (p.vehicle === CANOE) {
+    const landing = canoeLanding(w, p, true),
+      ready = !p.task && !p.hitch && !p.game && Math.abs(p.speed) <= r.canoeStoppedSpeed;
+    return (
+      html +
+      `<p>Paddle with W/S or the arrows. One occupant · ${r.canoeCapacity} weight hold · no fuel. Maximum paddling speed ${r.canoeSpeed}m/s; Shift does not run.</p>` +
+      form('beach', 'Beach canoe', !ready || !landing) +
+      (!ready
+        ? '<p>Stop paddling before stepping out.</p>'
+        : !landing
+          ? `<p>Find a clear dry bank within ${r.canoeBankRange}m and water ${r.canoeMinDepth}–${r.canoeStepOutDepth}m deep, or a dock.</p>`
+          : '<p>Clear bank or dock available.</p>') +
+      '</section>'
+    );
+  }
+  const launch = (id?: string) => {
+    const reason =
+      cargoFitReason(w, p, CANOE) ??
+      (!canoeLanding(w, p, false) ? 'No clear water beside this shore or bank' : undefined);
+    return (
+      form('launch', 'Launch canoe', !stopped || p.atHome || !!reason, undefined, id) +
+      (reason ? `<p>${reason}</p>` : '')
+    );
+  };
   html += `<p>${c ? 'Carrying a canoe overhead' : 'No canoe overhead'} · hull ${r.canoeWeight} weight · walk at ${Math.round(r.canoeCarrySpeed * 100)}% pace. Set it down before running, gathering, building or changing vehicles.</p>`;
   if (!stopped) html += '<p>Stop on foot and finish your activity to handle a canoe.</p>';
-  if (c) html += form('setDown', 'Set canoe down', !stopped || p.atHome);
+  if (c) html += form('setDown', 'Set canoe down', !stopped || p.atHome) + launch();
   else if (p.inventory.canoe) html += form('carry', 'Lift inventory canoe', !stopped || p.atHome);
   const nearby = Object.values(w.smallCraft ?? {}).filter(
-    (c) => c.state === 'setDown' && Math.hypot(c.x - p.x, c.z - p.z) <= r.canoeRange,
+    (c) =>
+      ['setDown', 'moored'].includes(c.state) &&
+      (c.landing
+        ? boatLandings(w).some((d) => d.id === c.landing && withinBoatLanding(w, p, d, false))
+        : Math.hypot((c.land?.x ?? c.x) - p.x, (c.land?.z ?? c.z) - p.z) <= r.canoeRange),
   );
   if (!nearby.length && !c) html += '<p>No set-down canoe within reach.</p>';
-  for (const hull of nearby)
+  for (const hull of nearby) {
     html +=
-      `<p>${hull.owner === p.id ? 'Your canoe' : 'Another player’s canoe'} · set down</p>` +
+      `<p>${hull.owner === p.id ? 'Your canoe' : 'Another player’s canoe'} · ${hull.state === 'moored' ? 'moored at bank' : 'set down'}</p>` +
       form(
         'pickup',
         hull.owner === p.id || r.canoePublicPickup ? 'Pick up canoe' : 'Owner-only pickup',
@@ -35,6 +66,19 @@ export function canoePanel(w: World, p: Player) {
         undefined,
         hull.id,
       );
+    if (hull.owner === p.id && !c) {
+      if (hull.state === 'moored') {
+        const reason =
+          cargoFitReason(w, p, CANOE) ??
+          (!canoeWater(w, hull.x, hull.z, hull.heading) && !canoeLanding(w, p, false)
+            ? 'No clear water beside this bank'
+            : undefined);
+        html +=
+          form('board', 'Board canoe', !stopped || p.atHome || !!reason, undefined, hull.id) +
+          (reason ? `<p>${reason}</p>` : '');
+      } else html += launch(hull.id);
+    }
+  }
   for (const b of w.buildings.filter((b) => !b.construction && withinBuildingRange(w, p, b))) {
     if (['carpenter', 'boathouse'].includes(b.kind)) {
       html += form(

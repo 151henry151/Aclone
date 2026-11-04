@@ -1,6 +1,7 @@
+import { CANOE } from './canoe-rules';
 import { cancelTow } from './towing';
 import { vehicleDef } from './vehicle-config';
-import { waterLevel } from './ocean';
+import { waterLevel, surfaceWaterLevel } from './ocean';
 import { stockWeight } from './fishing-expedition';
 import { MOTORBOAT, mooringKey, boatSlot, poweredBoat } from './boats';
 import { vehicles } from './catalog';
@@ -100,8 +101,11 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
           x: p.x,
           z: p.z,
           heading: p.heading,
-          paint: vehiclePaint(p) ?? 'blue',
+          paint: p.smallCraft
+            ? (w.smallCraft?.[p.smallCraft]?.paint ?? vehicleDef(w, p.vehicle).color)
+            : (vehiclePaint(p) ?? 'blue'),
           slot: p.vehicle,
+          smallCraft: p.smallCraft,
         },
         cargo: { ...p.inventory },
         dinghy: { x: p.x, z: p.z, heading: p.heading, moored: true },
@@ -154,8 +158,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   const r = w.boatRescues?.[p.id];
   if (operation === 'launch') {
     need(
-      poweredBoat(p.vehicle, w) && p.fuel <= 0 && !r,
-      'Launch the lifeboat only from your boat when its fuel tank is empty',
+      poweredBoat(p.vehicle, w) && vehicleDef(w, p.vehicle).fuel > 0 && p.fuel <= 0 && !r,
+      'Launch the lifeboat only from a motor boat when its fuel tank is empty',
     );
     need(terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65, 'Launch the lifeboat on water');
     const clearance = (vehicleDef(w, p.vehicle).collisionRadius ?? 2) + 1.05;
@@ -243,6 +247,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   // carried Fuel needed to make room, alongside the actual boat, before boarding.
   while (
     cargoWeight() > capacity &&
+    vehicleDef(w, r.boat.slot).fuel > 0 &&
     poured < (p.inventory.fuel ?? 0) &&
     defs.fuel?.fuel &&
     fuel < (vehicleDef(w, r.boat.slot).tank ?? 64)
@@ -282,11 +287,18 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     x: r.boat.x,
     z: r.boat.z,
     heading: r.boat.heading,
-    y: waterLevel(w),
+    y: surfaceWaterLevel(w, r.boat.x, r.boat.z),
     speed: 0,
     engine: false,
   });
+  if (r.boat.smallCraft) {
+    p.smallCraft = r.boat.smallCraft;
+    const c = w.smallCraft?.[p.smallCraft];
+    if (c) Object.assign(c, { x: p.x, z: p.z, heading: p.heading, state: 'launched' });
+  }
   delete w.boatRescues![p.id];
+  if (p.vehicle === CANOE)
+    return 'Canoe recovered with its remaining cargo. Paddle to a bank or dock; no fuel is needed.';
   if (usedMotorboat)
     return 'Main boat reboarded. Your motorboat remains alongside; move ahead and attach it as a tender to tow home. Use carried Fuel to fill the main tank.';
   if (poured)
@@ -328,11 +340,11 @@ export function reboardReason(w: World, p: Player): string | undefined {
         : 'Row within five metres of your stranded boat',
     );
     need(
-      Array.from({ length: 9 }, (_, i) => i / 8).every(
-        (t) =>
-          terrainHeight(w, from.x + (r.boat.x - from.x) * t, from.z + (r.boat.z - from.z) * t) <
-          waterLevel(w) + 0.15,
-      ),
+      Array.from({ length: 9 }, (_, i) => i / 8).every((t) => {
+        const x = from.x + (r.boat.x - from.x) * t,
+          z = from.z + (r.boat.z - from.z) * t;
+        return terrainHeight(w, x, z) < surfaceWaterLevel(w, x, z) + 0.15;
+      }),
       'Move alongside over clear water before transferring',
     );
   } catch (error) {

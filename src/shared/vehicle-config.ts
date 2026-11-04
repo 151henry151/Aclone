@@ -1,3 +1,4 @@
+import { CANOE, canoeVehicle } from './canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { vehicles, items } from './catalog';
@@ -88,9 +89,10 @@ export const vehicleTuningSchema = z
 export type VehicleTuning = z.infer<typeof vehicleTuningSchema>;
 export const vehicleSlotSchema = z.string().regex(/^(?:[0-9]|[12][0-9]|3[0123])$/);
 export function vehicleDef(
-  w: Pick<World, 'vehicleTuning'> | undefined,
+  w: (Pick<World, 'vehicleTuning'> & Partial<Pick<World, 'settings'>>) | undefined,
   slot: number,
 ): VehicleDef & Omit<VehicleTuning, 'mode'> {
+  if (slot === CANOE) return canoeVehicle(w?.settings);
   return { ...vehicles[slot], ...w?.vehicleTuning?.[slot] };
 }
 export function isTrawler(slot: number, w?: Pick<World, 'vehicleTuning'>) {
@@ -103,6 +105,7 @@ export function crewBerths(slot: number, w?: Pick<World, 'vehicleTuning'>) {
   return w?.vehicleTuning?.[slot]?.crew ?? (isTrawler(slot, w) ? 2 : 0);
 }
 export function validateVehicleTuning(w: World, slot: number, input: unknown, replace = false) {
+  if (slot === CANOE) throw Error('Tune canoes in Portable canoes world rules');
   const tuning = vehicleTuningSchema.parse(input),
     v = { ...vehicles[slot], ...(replace ? {} : w.vehicleTuning?.[slot]), ...tuning };
   if (

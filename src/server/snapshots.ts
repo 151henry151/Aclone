@@ -1,3 +1,4 @@
+import { CANOE } from '../shared/canoe-rules';
 import { fuelRules } from '../shared/fuel-rules';
 import { strandedVessel } from '../shared/towing';
 import { charterOffers } from '../shared/charter';
@@ -209,10 +210,11 @@ export function prepareFrame(w: World): Frame {
         tractorPaint: vehiclePaint(p),
         atHome: p.atHome,
         carrying: p.carrying,
+        smallCraft: p.smallCraft,
         lights: p.lights,
         boatLighting: p.boatLighting,
         engineRunning: motorRunning(w, p),
-        rowing: p.vehicle === 33 && p.fuel <= 0,
+        rowing: p.vehicle === CANOE || (p.vehicle === 33 && p.fuel <= 0),
         team: p.team,
         game: p.game,
         health: p.health,

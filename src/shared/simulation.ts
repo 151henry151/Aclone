@@ -1,5 +1,5 @@
 import { canoeAction, canoeDeath } from './small-craft';
-import { canoeRules, canoeRuleFields } from './canoe-rules';
+import { CANOE, canoeRules, canoeRuleFields } from './canoe-rules';
 import { fuelRuleFields } from './fuel-rules';
 import { fuelTrailerAction } from './fuel-sales';
 import { inlandBlocksGround, riverDepth } from './inland-travel';
@@ -494,6 +494,7 @@ function usable(w: World, p: Player, item: string) {
     'That item is equipment or a trade good',
   );
   if (def.fuel) {
+    requireThat(p.vehicle !== CANOE, 'Canoes need no fuel');
     requireThat(
       !refuelRequiresReboarding(p, w),
       'Carry the Fuel back to your main boat and reboard before refuelling it',
@@ -1403,6 +1404,10 @@ export function act(w: World, id: string, a: Action): string {
     case 'vehicle': {
       requireThat(!p.hitch, 'Leave the passenger seat at the dock before changing vehicles');
       const slot = num(a.slot, 0, vehicles.length - 1, true);
+      requireThat(
+        slot !== CANOE && p.vehicle !== CANOE,
+        'Use the canoe launch, board or beach controls',
+      );
       requireThat(
         p.game !== 'combat' || [0, 5].includes(slot),
         'Arena combat uses tractors or walking',
@@ -2460,7 +2465,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       ? 0
       : clamp((p.boatThrottle ?? 0) + throttleInput * 0.24 * dt, -0.4, 1);
   const throttle = throttleBoat(p.vehicle, w) ? (p.boatThrottle ?? 0) : throttleInput;
-  const rowing = p.vehicle === MOTORBOAT && p.fuel <= 0;
+  const rowing = p.vehicle === CANOE || (p.vehicle === MOTORBOAT && p.fuel <= 0);
   const powered = (p.engine && p.fuel > 0) || v.fuel === 0 || rowing;
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
@@ -2490,7 +2495,13 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     (activeTow(w, p.id) ? 0.5 : towingTender(w, p) ? 0.85 : 1) *
     trailerFactors(w, p).speed *
     loadFactors.speed *
-    (rowing ? 1.6 : trawling ? (v.trawlSpeed ?? TRAWL_SPEED) : v.speed) *
+    (p.vehicle === CANOE
+      ? v.speed
+      : rowing
+        ? 1.6
+        : trawling
+          ? (v.trawlSpeed ?? TRAWL_SPEED)
+          : v.speed) *
     (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
     tractorSurface(surface.speed, traction) *
     (0.7 + condition * 0.003);
@@ -2506,7 +2517,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
     tractorSurface(surface.grip, traction) *
-    (input.boost && !p.carrying && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
+    (input.boost && !p.carrying && p.vehicle !== CANOE && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
     dt *
     ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
@@ -2546,6 +2557,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const previousPosition = { x: p.x, z: p.z };
   const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
+  const gentleCanoe =
+    p.vehicle === CANOE && Math.abs(p.speed) <= canoeRules(w.settings).canoeShoreSpeed;
   const shore =
     v.mode === 3
       ? boatShoreCollision(
@@ -2565,6 +2578,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
                   : p.vehicle === LIFEBOAT
                     ? 1.5
                     : (v.collisionRadius ?? 1.3),
+          p.vehicle === CANOE ? canoeRules(w.settings).canoeMinDepth : undefined,
+          gentleCanoe,
         )
       : undefined;
   if (
@@ -2582,7 +2597,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     p.speed = 0;
   } else if (shore) {
     // Copy nested fleet state: client prediction must not mutate a server snapshot.
-    if (maintainable(p.vehicle, w) && Math.abs(p.speed) > 0.1) {
+    if (!gentleCanoe && maintainable(p.vehicle, w) && Math.abs(p.speed) > 0.1) {
       const old = p.fleetState?.[p.vehicle] ?? { acquiredAt: w.time, metres: 0, condition: 100 };
       p.fleetState = {
         ...p.fleetState,
@@ -2606,7 +2621,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     }
     p.speed = 0;
     p.boatThrottle = 0;
-    if (input.throttle) p.boatShoreThrottle = Math.sign(input.throttle);
+    if (!gentleCanoe && input.throttle) p.boatShoreThrottle = Math.sign(input.throttle);
   } else if (
     !(
       v.mode !== 3 &&
@@ -2680,7 +2695,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   moveTrailer(w, p, towBefore, dt, prediction);
   moveTow(w, p, towBefore, prediction);
   moveTender(w, p, towBefore, prediction);
-  if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
+  if (!prediction) {
+    voyageFuel(w, p, fuelBefore - p.fuel);
+    const craft = p.smallCraft && w.smallCraft?.[p.smallCraft];
+    if (craft) Object.assign(craft, { x: p.x, z: p.z, heading: p.heading });
+  }
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
   if (!comic) canoeDeath(w, p);
@@ -2693,6 +2712,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
     }
   cancelChartersOnDeath(w, p);
   const recovery = !comic ? abandonBoatOnDeath(w, p, at) : undefined;
+  delete p.smallCraft;
   endVoyageOnDeath(w, p);
   if (!comic) contractsOnDeath(w, p);
   if (!comic) p.needsGraceUntil = at + (w.settings.postDeathGraceSeconds ?? 0);

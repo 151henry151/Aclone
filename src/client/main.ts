@@ -1,3 +1,4 @@
+import { CANOE } from '../shared/canoe-rules';
 import { canoePanel } from './canoe-panel';
 import { fuelPanel } from './fuel-panel';
 import { alpineWeather } from '../shared/alpine-weather';
@@ -3753,7 +3754,7 @@ app.addEventListener('change', (e) => {
 });
 
 function boatControls(building?: string) {
-  if (!world || !me) return '';
+  if (!world || !me || me.vehicle === CANOE) return '';
   const dock = boatLanding(world, me, boatSlot(me.vehicle, world), building);
   const rescue = world.boatRescues?.[me.id];
   const attrs = building ? `data-building="${esc(building)}"` : '';
@@ -3784,6 +3785,7 @@ function boatControls(building?: string) {
       .map((_, slot) => slot)
       .filter(
         (slot) =>
+          slot !== CANOE &&
           poweredBoat(slot, world) &&
           (!rescue || ([TUGBOAT, MOTORBOAT].includes(slot) && rescue.boat.slot !== slot)),
       )) {

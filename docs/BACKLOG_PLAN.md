@@ -915,3 +915,98 @@ Prettier are clean. The final browser run passes in 1.1 minutes, including a
 successful wood craft after the insufficient-cash/wood state. Inspect the overhead,
 whole set-down hull, owner-only pickup, full home, empty/poor and F10 screenshots.
 The carrying/storage slice meets its criteria; launching and rowing remain next.
+
+Pushed `b23d3b2`: portable canoe ownership, carrying and home storage are **done**.
+
+### Canoes — launch, paddle, beach and recover
+
+Before production, extend `tests/canoe.test.ts` and add shore-flow browser coverage.
+Default paddling speed 1.2m/s and hold 12 weight belong to the canoe world rules;
+one occupant and no engine/fuel are structural. Use mode 3 and ordinary rowing
+movement, with Shift unable to accelerate it. Minimum water depth 0.08m, maximum
+step-out depth 0.6m, bank reach 6m, maximum dry-bank rise 1.5m, and gentle shore
+contact threshold 2m/s are per-world rules. Dry placement keeps its existing
+handling range. World-rule values, UI explanations and authority/prediction share
+one source. Block generic vehicle purchasing/boarding of the canoe slot so it
+cannot manufacture or summon a hull.
+
+From a carried/set-down owned canoe at a shoreline or riverbank, **Launch canoe**
+finds nearby unobstructed water with depth for the whole hull; reject no-water,
+blocked, too-shallow, overweight, moving, airborne and other-owner attempts before
+mutation. The same hull id becomes an occupied launched record and mode-3 vehicle.
+Paddle upstream through a channel that stops the canal boat. A stopped canoe in
+the step-out depth band can **Beach canoe** onto nearby clear dry land, leaving
+that hull moored at the bank; board it there or pick it up from the bank. No dock
+is required. Completed boathouses, pier and river docks also launch/board/moor it.
+Keep existing powered-boat shore recoil/damage tests green; at ordinary canoe
+speed, shore contact stops travel without condition loss or recoil onto land.
+
+Tests must verify every water/land transition, unchanged identity/paint, no
+inventory duplication, exact hold boundary, seat refusal, ordinary and Shift
+paddling, narrow shallow headwater passage, save/restart mooring, other-player
+visibility/ownership, and both world boat-death policies. Death afloat loses the
+hull/cargo in loss worlds; otherwise use existing stranded-boat recovery and cargo
+spoilage, with recovery restoring the same hull. Land property keeps the previous
+slice's settled policy. Empty-tank rescue must not create a lifeboat from a
+fuel-free canoe. Show the seated paddler and moving paddle afloat; keep an empty
+moored hull visible and preserve the already verified overhead model.
+
+Browser commands: `TEST_GPU=1 npm run test:e2e -- tests/browser/canoe.spec.ts
+ tests/browser/canoe-water.spec.ts`. Exercise actual launch/paddle/beach/reboard
+controls and keyboard movement at coast and riverbank; inspect model/screenshots,
+no-water and overloaded controls, ownership refusal, restored saved mooring and
+changed F10 speed/capacity/depth rules. Unit command:
+`node_modules/.bin/tsx --test tests/canoe.test.ts tests/boat-shore.test.ts
+ tests/boat-abandonment.test.ts tests/boating.test.ts`. Require the initial red run, then green focused tests,
+full `npm test`, clean TypeScript and changed-file Prettier. Update PLAYING,
+WORLD_BUILDING, HAULAGE, README and Unreleased. Only then is the Canoes entry done.
+
+Water-slice red tests fail on the absent launch action. Subsequent regressions
+catch an occupied hull id surviving death, a grounded bow preventing deliberate
+beaching, river-bank rise measured against sea instead of adjacent river water,
+and the static seated human having no animation bones. Fix each and keep existing
+powered-boat recoil/damage tests green. The real northern headwater survey finds
+an unobstructed 3m canoe sweep where the canal hull collides, and actual canoe
+movement travels over 2m into that reach. Boathouse and pier round trips preserve
+the same hull. Browser coast and elevated-river launch/paddle/beach flows pass;
+add an explicit server-close/reopen check for mooring and finish preservation.
+A visual check catches water covering the open interior; add a failing floor
+regression and a visible lining above calm water. Full verification remains pending.
+
+The restart browser run preserves the same moored id, location and paint and
+boards it through the real control. Add moving, airborne, shallow and obstructed
+launch refusals with unchanged hull/cargo. River-dock round trips pass, including
+an online nearby passenger refused specifically for lack of a seat. A red pickup
+regression exposes a stale bank location after carrying a moored canoe inland;
+clear the old landing when lifting it. River screenshots expose the lining at
+the inland water plane and a moored hull not following the river slope. Raise
+the lining above that plane and apply the existing boat sea pose to moored
+canoes each frame, with tide/slope regression coverage. Re-run the coast flow
+with actual F10 edits to speed, hold and minimum depth.
+
+Final diff review finds the generic-vehicle guard attached to vehicle reset rather
+than vehicle switching. The new boathouse regression fails because ordinary
+walk-away controls create a second mooring. Move the guard to vehicle switching;
+test both leaving an occupied canoe and summoning a moored one through generic
+controls. Stop the overlapping verification runs and rerun after the fix, without
+source edits while the browser is running.
+
+Recovery regressions fail on Fuel being poured into a nonexistent canoe tank and
+an elevated-river transfer being checked against sea level. Restrict emergency
+hold-space refuelling to motorised hulls; check transfers and place the recovered
+hull at the local water surface. Preserve existing powered-boat recovery tests.
+
+The complete suite passes 1,384 of 1,385 tests; the sole failure asserts the old
+34-slot catalogue count. Update it to 35 and explicitly compare the original 34
+slots with their unchanged definitions, then assert the appended canoe is a
+fuel-free mode-3 hull. Retain the finite movement and fuel checks for the original
+five driving modes. All four browser flows pass in 1.6 minutes, including changed
+F10 rules, riverbank use, restart and carrying/storage. Inspect their screenshots;
+the canoe lining now remains visible above river water. Full-suite rerun required.
+
+Final water-slice verification: `npm test` passes all **1,385** tests in 192 seconds
+(exit 0, `/tmp/aclone-canoe-full-final2.status`). `npx tsc --noEmit` is clean
+(`/tmp/aclone-canoe-tsc-final2.log`); Prettier has run on every changed file.
+The 74 focused boating regressions and four real browser flows pass. The canoe
+entry's carrying, storage, water access, movement, mooring, ownership and recovery
+criteria are satisfied. Ready to commit and push this slice before marking it done.

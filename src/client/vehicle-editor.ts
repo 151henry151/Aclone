@@ -1,3 +1,4 @@
+import { CANOE } from '../shared/canoe-rules';
 import { trailerDef } from '../shared/trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import {
@@ -71,7 +72,9 @@ export function vehicleEditor(w: World, slot: number) {
     `<details><summary>${title}</summary><div class="settings-grid">${body}</div></details>`;
   return `<p>Configure each vehicle independently for this world. Custom slots 9–24 are available for your own designs. Upload GLB/OBJ models and images in Assets, then assemble named components in Workshop. Lengths use metres; speed uses m/s; fuel uses tank units per real second; price uses hundredths of a denarius (10,000 = 1s).</p><form data-vehicle-editor>${select(
     'slot',
-    vehicles.map((_, i) => [String(i), `${i + 1}: ${vehicleDef(w, i).name}`]),
+    vehicles.flatMap((_, i) =>
+      i === CANOE ? [] : [[String(i), `${i + 1}: ${vehicleDef(w, i).name}`]],
+    ),
     slot,
   )}${input('name', v.name, 'text')}${select(
     'mode',

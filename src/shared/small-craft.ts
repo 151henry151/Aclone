@@ -1,6 +1,11 @@
+import { canoeLanding, canoeWater } from './canoe-shore';
+import { switchVehicle } from './tractors';
+import { cargoFitReason } from './cargo-fit';
+import { travelHeight } from './dock';
+import { boatLandings, withinBoatLanding } from './boathouse';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from './types';
-import { canoeRules } from './canoe-rules';
+import { CANOE, canoeRules } from './canoe-rules';
 import { worldItems } from './world-catalogue';
 import { canCarry, log, nearby } from './simulation';
 import { terrainHeight, mapHalf } from './terrain';
@@ -17,6 +22,8 @@ export interface SmallCraft {
   z: number;
   heading: number;
   paint: string;
+  land?: { x: number; z: number };
+  landing?: string;
 }
 function need(ok: unknown, message: string): asserts ok {
   if (!ok) throw Error(message);
@@ -33,7 +40,34 @@ export function canoeAction(w: World, p: Player, a: Action) {
       Math.abs(p.speed) <= rules.canoeStoppedSpeed,
     'Stop outside and finish your activity before handling a canoe',
   );
+  if (operation === 'beach') {
+    const c = p.smallCraft && w.smallCraft?.[p.smallCraft];
+    need(p.vehicle === CANOE && c && c.owner === p.id, 'You are not aboard your canoe');
+    const landing = canoeLanding(w, p, true);
+    need(landing, 'Stop in shallow water beside a clear dry bank, or alongside a dock');
+    const reason = cargoFitReason(w, p, 5);
+    need(!reason, reason ?? 'Cargo full');
+    Object.assign(c, {
+      ...landing.berth,
+      heading: landing.heading,
+      land: landing.land,
+      landing: landing.id,
+      state: 'moored',
+    });
+    delete p.smallCraft;
+    switchVehicle(p, 5, true, w);
+    Object.assign(p, landing.land, {
+      y: travelHeight(w, landing.land.x, landing.land.z),
+      speed: 0,
+      engine: false,
+    });
+    return;
+  }
   need(p.vehicle === 5, 'Walk before handling a canoe');
+  need(
+    Math.abs(p.y - travelHeight(w, p.x, p.z)) <= rules.canoeBankRise,
+    'Stand on the ground to handle a canoe',
+  );
   const current = p.carrying && w.smallCraft?.[p.carrying];
   const lift = (c?: SmallCraft) => {
     need(!current, 'Set down your carried canoe first');
@@ -54,6 +88,8 @@ export function canoeAction(w: World, p: Player, a: Action) {
     }
     c.owner = p.id;
     c.state = 'carried';
+    delete c.land;
+    delete c.landing;
     c.x = p.x;
     c.z = p.z;
     c.heading = p.heading;
@@ -61,7 +97,50 @@ export function canoeAction(w: World, p: Player, a: Action) {
     p.carrying = c.id;
   };
   const building = () => nearby(w, p, a.building);
-  if (operation === 'buy' || operation === 'craft') {
+  if (operation === 'launch' || operation === 'board') {
+    const c = current || w.smallCraft?.[String(a.id)];
+    need(c && c.owner === p.id, 'Choose your own canoe');
+    need(c.state !== 'launched', 'That canoe is already afloat');
+    need(!current || current.id === c.id, 'Set down your other canoe first');
+    const reason = cargoFitReason(w, p, CANOE);
+    need(!reason, reason ?? 'Cargo exceeds the canoe hold');
+    need(!w.boatRescues?.[p.id], 'Recover your stranded boat first');
+    let landing;
+    if (c.state === 'moored') {
+      need(c.land, 'This canoe has no bank landing');
+      const dock = boatLandings(w).find((d) => d.id === c.landing);
+      need(
+        dock
+          ? withinBoatLanding(w, p, dock, false)
+          : Math.hypot(p.x - c.land.x, p.z - c.land.z) <= rules.canoeRange,
+        'Return to the bank where you left this canoe',
+      );
+      landing = canoeWater(w, c.x, c.z, c.heading)
+        ? { berth: { x: c.x, z: c.z }, land: c.land, heading: c.heading }
+        : canoeLanding(w, p, false);
+      need(landing, 'The moored canoe needs clear water of sufficient depth');
+    } else {
+      need(
+        c.state === 'carried' || Math.hypot(p.x - c.x, p.z - c.z) <= rules.canoeRange,
+        'Stand beside your canoe',
+      );
+      landing = canoeLanding(w, p, false);
+      need(landing, 'No clear water beside this shore or bank');
+    }
+    Object.assign(c, landing.berth, { heading: landing.heading, state: 'launched' });
+    delete c.land;
+    delete c.landing;
+    delete p.carrying;
+    p.smallCraft = c.id;
+    p.fleet = [...new Set([...(p.fleet ?? [0, 5]), CANOE])];
+    switchVehicle(p, CANOE, true, w);
+    Object.assign(p, landing.berth, {
+      heading: landing.heading,
+      y: surfaceWaterLevel(w, c.x, c.z),
+      speed: 0,
+      engine: false,
+    });
+  } else if (operation === 'buy' || operation === 'craft') {
     const b = building();
     need(
       b.kind === 'carpenter' || (operation === 'buy' && b.kind === 'boathouse'),
@@ -102,9 +181,12 @@ export function canoeAction(w: World, p: Player, a: Action) {
     }
   } else if (operation === 'pickup') {
     const c = w.smallCraft?.[String(a.id)];
-    need(c && c.state === 'setDown', 'Choose a set-down canoe');
+    need(c && ['setDown', 'moored'].includes(c.state), 'Choose a set-down or moored canoe');
     need(c.owner === p.id || rules.canoePublicPickup, 'Only the owner may pick up this canoe');
-    need(Math.hypot(c.x - p.x, c.z - p.z) <= rules.canoeRange, 'Stand beside the canoe');
+    need(
+      Math.hypot((c.land?.x ?? c.x) - p.x, (c.land?.z ?? c.z) - p.z) <= rules.canoeRange,
+      'Stand beside the canoe',
+    );
     lift(c);
   } else if (operation === 'setDown') {
     need(current, 'No carried canoe');
@@ -141,6 +223,11 @@ export function canoeDeath(w: World, p: Player) {
   const rules = canoeRules(w.settings);
   for (const [id, c] of Object.entries(w.smallCraft ?? {})) {
     if (c.owner !== p.id) continue;
+    if (['launched', 'moored'].includes(c.state) && w.settings.loseBoatsOnDeath) {
+      delete w.smallCraft![id];
+      continue;
+    }
+    if (c.id === p.smallCraft) Object.assign(c, { x: p.x, z: p.z, heading: p.heading });
     if (
       (c.state === 'setDown' && rules.canoeLoseOnLandDeath) ||
       (c.state === 'carried' && w.settings.loseInventoryOnDeath)

@@ -1,3 +1,4 @@
+import { canoeVehicle } from './canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import itemData from '../../data/items.json';
 import vehicleData from '../../data/vehicles.json';
@@ -12,7 +13,7 @@ export const items: Record<string, ItemDef> = {
   canoe: { name: 'Canoe', weight: settingsData.canoeWeight, price: settingsData.canoePrice },
   fuel: { ...itemData.fuel, fuel: settingsData.fuelUnitsPerItem },
 };
-export const vehicles: VehicleDef[] = vehicleData;
+export const vehicles: VehicleDef[] = [...vehicleData, canoeVehicle()];
 export const buildings: Record<string, BuildingDef> = Object.fromEntries(
   Object.entries(buildingData).map(([kind, def]) => [
     kind,

@@ -447,3 +447,12 @@ Carried canoes instead follow inventory loss and home stock follows property
 rules. Rules persist in saves and portable designs; personal canoe placements
 remain save state. A lower home limit prevents new deposits without deleting
 existing stock. Canoe weight and price also update the inventory catalogue.
+
+Canoe water rules in the same fieldset set paddling speed (1.2m/s), hold capacity
+(12 weight), minimum water depth (0.08m), maximum step-out depth (0.6m), bank reach
+(6m), maximum bank rise (1.5m) and the gentle-contact speed threshold (2m/s).
+These are shared by authority, prediction and the shore controls. The canoe is
+structurally fuel-free with one occupant; use this fieldset rather than the generic
+vehicle editor. Established docks support boarding and mooring in deeper water.
+Raising the minimum depth can leave a moored canoe needing to be lifted or eased
+back into nearby clear water. Personal hulls remain save state, not design objects.
