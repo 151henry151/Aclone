@@ -222,3 +222,35 @@ test('journey budget settings validate and survive editor summary observations d
     store.close();
   }
 });
+
+test('refuelling experiments follow the drive threshold and retain carried emergency fuel', async () => {
+  const { inventHypotheses } = await import('../src/server/npc/hypotheses');
+  const { w, p, state } = setup();
+  const shop = makeBuilding('fuel-shop', 'market', 20, 0);
+  Object.assign(shop, { owner: 'seller', sell: { fuel: 100 }, stock: { fuel: 10 }, buy: {} });
+  w.buildings = [shop];
+  const idea = (id: string) => inventHypotheses(w, p, state).find((c) => c.idea === id);
+  p.fuel = 9.9;
+  assert.ok(idea('buy fuel'));
+  delete w.settings.npcDriveFuelThreshold;
+  assert.ok(idea('buy fuel'));
+  p.fuel = 10;
+  assert.equal(idea('buy fuel'), undefined);
+  w.settings.npcDriveFuelThreshold = 20;
+  p.fuel = 15;
+  assert.ok(idea('buy fuel'));
+  p.fuel = 20;
+  assert.equal(idea('buy fuel'), undefined);
+  w.settings.npcDriveFuelThreshold = 0;
+  p.fuel = 0;
+  assert.equal(idea('buy fuel'), undefined);
+  p.inventory.fuel = 1;
+  const recovery = idea('refuel');
+  assert.ok(recovery);
+  const use = recovery.plan.find((s) => s.kind === 'act' && s.action.type === 'use');
+  assert.ok(use?.kind === 'act' && use.action.type === 'use');
+  act(w, p.id, use.action);
+  assert.ok(p.fuel > 0);
+  assert.equal(p.inventory.fuel ?? 0, 0);
+  assert.equal(idea('refuel'), undefined);
+});

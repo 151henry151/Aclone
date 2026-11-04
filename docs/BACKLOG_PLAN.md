@@ -3490,3 +3490,26 @@ skilled/cargo refusal, small limits and buyer constraints. The other 17 hypothes
 experiment checks passed in the preceding targeted run; production is unchanged
 since that run. TypeScript and formatting pass; no browser rerun is required for
 this server-only consumer fix.
+
+Pushed and verified `19cb71a` on `backlog-implementation`. **Resident experiment
+gathering-rate coverage is done.**
+
+### Journey-rule follow-up — resident refuelling experiments
+
+The same consumer audit finds an optional refuelling experiment still using a
+literal ten-unit threshold instead of `npcDriveFuelThreshold`. Before production,
+require it to follow the existing rule/default: below threshold permits a funded
+fuel purchase or carried-fuel use, equality does not, and zero suppresses optional
+purchases. An empty tank may still use carried fuel when the threshold is zero,
+as the existing drive planner does. Keep shop funds/stock and normal use actions.
+Extend npc-journey-budget-rules with a failing hypothesis check for defaults,
+missing fields, custom/equality/zero values and carried-fuel recovery. Run that
+file and npc-hypotheses, TypeScript and changed-file Prettier/diff checks. This is
+server planning only, with no UI/rendering change. Update imperative Unreleased,
+README and world-builder guidance; no new rule/default or release heading.
+
+Refuelling-experiment red: the new assertion fails at a custom threshold of 20
+with 15 tank units, because the planner still uses ten. Replace the literal with
+the shared journey rule and retain a separate carried-fuel path for an empty tank.
+All 17 journey/hypothesis checks pass in 1.1 seconds, including ordinary fuel use;
+TypeScript, changed-file formatting and diff checks pass. No UI or full-suite run.

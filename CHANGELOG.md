@@ -97,6 +97,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Apply the world refuelling threshold to resident experiments while retaining carried-fuel recovery for an empty tank.
+
 - Make resident gathering experiments use the configured load and constrain their sales and forecasts by transaction limits, buyer space and funds.
 
 - Bound resident trade, production, construction and career transfers by the world transaction limit; keep smaller plans available, retain surplus gathering yield and buy service parts in feasible instalments.

@@ -1,3 +1,4 @@
+import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
@@ -114,7 +115,8 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       act({ type: 'vehicle', slot: 0 }),
     ]);
 
-  if (p.fuel < 10) {
+  const fuelThreshold = npcJourneyRules(w.settings).npcDriveFuelThreshold;
+  if (p.fuel < fuelThreshold || p.fuel <= 0) {
     const can = Object.entries(p.inventory).find(([item, n]) => n > 0 && worldItems(w)[item]?.fuel);
     if (can)
       add('refuel', `Use carried ${can[0]} to refill the tractor.`, [
@@ -129,7 +131,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           p.cash >= b.sell.fuel,
       )
       .sort((a, b) => a.sell.fuel - b.sell.fuel)[0];
-    if (shop)
+    if (shop && p.fuel < fuelThreshold)
       add(
         'buy fuel',
         `Buy and use 1 fuel at ${shop.name} so I can drive.`,

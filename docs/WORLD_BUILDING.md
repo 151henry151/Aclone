@@ -1115,6 +1115,10 @@ takes precedence over its fallback; walking has no fuel cost. Vehicle tuning,
 cargo room, stock, household reserves and actual cash still apply. These estimates
 change plans, not actual vehicle consumption, item refuelling or money balances.
 
+Resident refuelling experiments also use `npcDriveFuelThreshold`: equality stops
+optional purchases, and zero disables them. An empty tank can still use carried
+fuel through the ordinary action.
+
 ## Resident living advice and lodging suggestions (unreleased)
 
 **F10 → Rules → Resident household budget** includes `npcAdviceCashFloor`
