@@ -1,3 +1,4 @@
+import { economyRules } from './economy-rules';
 import { hasProvisions, crewBerths } from './vehicle-config';
 import { vehicleDef } from './vehicle-config';
 import { isTrawler } from './vehicle-config';
@@ -182,7 +183,10 @@ export function expeditionAction(w: World, p: Player, a: Action) {
       d = worldItems(w)[id],
       n = Number(a.quantity ?? 1);
     need(d && (d.food || d.drink) && !d.fuel, 'Boat stores accept food and drink');
-    need(Number.isSafeInteger(n) && n > 0 && n <= 10000, 'Choose a whole positive quantity');
+    need(
+      Number.isSafeInteger(n) && n > 0 && n <= economyRules(w.settings).transactionItemLimit,
+      'Choose a whole positive quantity',
+    );
     const stores = (p.boatStores ??= {});
     if (a.operation === 'store') {
       need((p.inventory[id] ?? 0) >= n, 'Not enough carried provisions');

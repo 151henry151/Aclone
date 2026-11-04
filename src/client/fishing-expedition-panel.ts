@@ -1,3 +1,4 @@
+import { economyRules } from '../shared/economy-rules';
 import { hasProvisions, crewBerths } from '../shared/vehicle-config';
 import { isTrawler } from '../shared/vehicle-config';
 import { boatLighting } from '../shared/boat-lighting';
@@ -40,7 +41,7 @@ function expeditionContent(w: World, p: Player) {
     v = p.fishingVoyage;
   if ((p.inventory.fuel ?? 0) > 0) html += button('Fill tank from carried Fuel', 'refuel');
   if (hasProvisions(p.vehicle, w)) {
-    html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? (onlineInventory(w) ? 'this world consumes carried meals automatically' : 'this world consumes carried meals automatically while you are signed off') : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="10000" value="1"></label>`;
+    html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? (onlineInventory(w) ? 'this world consumes carried meals automatically' : 'this world consumes carried meals automatically while you are signed off') : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1"></label>`;
     for (const [id, d] of Object.entries(defs).filter(([, d]) => d.food || d.drink)) {
       const held = p.inventory[id] ?? 0,
         stored = p.boatStores?.[id] ?? 0;

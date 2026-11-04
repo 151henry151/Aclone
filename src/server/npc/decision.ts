@@ -1,10 +1,11 @@
+import { economyRuleFields } from '../../shared/economy-rules';
 import { maxCoordinate } from '../../shared/world-limits';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { MAX_CHAT_LENGTH } from '../../shared/messages.ts';
 import type { GameplayRequest } from './commitments.ts';
 const id = z.string().min(1).max(80),
-  quantity = z.number().int().min(1).max(10000);
+  quantity = z.number().int().min(1).max(economyRuleFields.transactionItemLimit.max);
 const building = {
   building: id.describe(
     'Exact building id from directory/nearbyBuildings, such as b6. Never its display name.',

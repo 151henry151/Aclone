@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -59,8 +60,12 @@ export function businessRequestBlocker(
   const q = pricingDone ? null : request.pricing;
   if (!q) return;
   if (!worldItems(w)[q.item]) return 'I cannot identify that trading item.';
-  if (q.enabled && (q.priceDenarii === null || (q.side === 'buy' && q.priceDenarii < 1)))
-    return 'Enabling a quote needs an exact price; a buy offer must be at least 1d.';
+  if (
+    q.enabled &&
+    (q.priceDenarii === null ||
+      (q.side === 'buy' && q.priceDenarii < economyRules(w.settings).minimumBuyPrice / 100))
+  )
+    return `Enabling a quote needs an exact price; a buy offer must be at least ${economyRules(w.settings).minimumBuyPrice / 100}d.`;
   const target = inputStockTarget(b, q.item, w);
   if (q.enabled && q.side === 'buy' && target !== undefined && (b.stock[q.item] ?? 0) >= target)
     return `I already have ${b.stock[q.item] ?? 0} ${q.item}; my current input target is ${target} because of the inputs and finished goods in stock. I should sell output before reopening purchases.`;

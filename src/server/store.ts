@@ -74,6 +74,7 @@ export class Store {
             world.id === 'puddlewick' && world.owner === 'server' && world.template === 'economy'
               ? defaults.mapSize
               : 500;
+        const legacyBuyFloor = world.settings.minimumBuyPrice === undefined;
         const oldRecovery = world.settings.resourceRecoveryMultiplier === undefined;
         world.settings = { ...defaults, ...world.settings };
         if (oldRecovery) {
@@ -111,7 +112,7 @@ export class Store {
               b.sell[key] ??= buildings[b.kind].sell[key];
               b.stock[key] ??= 0;
             }
-        for (const b of world.buildings) normalizeTradingOffers(b);
+        for (const b of world.buildings) normalizeTradingOffers(b, legacyBuyFloor);
         return { world, saved: Number(row.saved) };
       });
   }

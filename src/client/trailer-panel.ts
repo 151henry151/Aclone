@@ -1,3 +1,4 @@
+import { economyRules } from '../shared/economy-rules';
 import { fuelPanel } from './fuel-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../shared/types';
@@ -68,7 +69,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
             (direction === 'buy' ? trailerAccepts(w, t, id, 1) : (t.cargo[id] ?? 0) > 0),
         );
         if (choices.length)
-          html += `<form data-action="trade">${hidden('storage', 'trailer')}${hidden('building', b.id)}${hidden('direction', direction)}<label>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer<select name="item">${choices.map(([id, price]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} · ${money(price, w.settings.denariiPerSheckle)} each${direction === 'sell' ? ` · ${t.cargo[id]} carried` : ''}</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="10000" value="1" required></label><button>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer</button></form>`;
+          html += `<form data-action="trade">${hidden('storage', 'trailer')}${hidden('building', b.id)}${hidden('direction', direction)}<label>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer<select name="item">${choices.map(([id, price]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} · ${money(price, w.settings.denariiPerSheckle)} each${direction === 'sell' ? ` · ${t.cargo[id]} carried` : ''}</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1" required></label><button>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer</button></form>`;
       }
     }
     html += '</section>';

@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { fishingOffers, fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { financialBriefing, financeRules } from './finances.ts';
@@ -180,6 +181,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
     customCourses: w.catalogue?.skills,
     worldRules: {
       ...survivalRules(w.settings),
+      ...economyRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

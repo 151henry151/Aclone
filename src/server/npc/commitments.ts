@@ -1,3 +1,4 @@
+import { economyRuleFields } from '../../shared/economy-rules';
 import { skillFits } from '../../shared/survival-rules';
 import { skillLesson } from '../../shared/world-catalogue';
 import { businessRequestSchema, businessRequestChoice } from './business-requests.ts';
@@ -36,7 +37,7 @@ export const gameplayRequestSchema = z
     delivery: z
       .object({
         item: id,
-        quantity: z.number().int().min(1).max(10000),
+        quantity: z.number().int().min(1).max(economyRuleFields.transactionItemLimit.max),
         unitPrice: z.number().int().min(0).max(100000000),
         sourceBuilding: id.nullable(),
         destinationBuilding: id,

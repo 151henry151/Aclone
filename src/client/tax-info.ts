@@ -1,3 +1,4 @@
+import { economyRules } from '../shared/economy-rules';
 import { bulkPurchaseQuote } from '../shared/bulk-discounts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Building } from '../shared/types';
@@ -24,8 +25,12 @@ export function tradeQuoteText(
   quantity: number,
   ownerView = false,
 ) {
-  if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10000)
-    return 'Choose a whole quantity from 1 to 10,000.';
+  if (
+    !Number.isSafeInteger(quantity) ||
+    quantity < 1 ||
+    quantity > economyRules(w.settings).transactionItemLimit
+  )
+    return `Choose a whole quantity from 1 to ${economyRules(w.settings).transactionItemLimit.toLocaleString('en-US')}.`;
   const discount = bulkPurchaseQuote(b, price, quantity);
   const total = side === 'sell' ? discount.total : price * quantity;
   const m = (v: number) => money(v, w.settings.denariiPerSheckle);

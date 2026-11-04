@@ -535,3 +535,23 @@ rules as players.
 HUD and caretaker meters, pantry forecasts, resident need deadlines, and the
 live rules summary use these values. Empty stores provide no protection. Invalid
 threshold/health pairs are rejected together without changing other rules.
+
+## Economy and trade rules (unreleased)
+
+Creation and F10 → Rules → **Economy and trade** include:
+
+- `minimumBuyPrice`: 100 hundredths (1d), integer 1–1,000,000. This is the
+  minimum bid a building may pay suppliers. Set 50 to allow 0.5d bids. It does
+  not limit the building's selling price. Raising it leaves existing quotes
+  stored, but blocks sales into cheaper bids until the owner reprices them.
+  Paused bids stay paused. Saved configured prices survive reload unchanged.
+- `transactionItemLimit`: 10,000, integer 1–100,000. Limit new shop trades,
+  stockroom transfers, gifts/discards, owner item commands, boat provisions and
+  private trade offers. Existing private offers keep their agreed quantity.
+  Carry capacity, stockroom capacity, buying funds and import limits still apply.
+  Shop Sell all/Sell max and tax previews use the same limit. Trailer shop trades
+  follow it; loading a trailer remains governed by its own capacity rules.
+
+Missing rules retain the original defaults. Old saves without a bid rule retain
+legacy repair of free/underpriced purchase bids. Portable designs preserve both
+rules. Bulk discount tiers keep their separate catalogue validation bounds.

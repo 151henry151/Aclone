@@ -1242,7 +1242,7 @@ push; the full survival fieldset and remaining rules entry are not done.
 Pushed `25766db`; GitHub's branch SHA matches. **The tuition, licence-limit and
 public-labour slice is done.** The survival/needs section remains in progress.
 
-### Current stop — health-default clarification
+### Resolved stop — health-default clarification
 
 The next survival criterion has conflicting defaults. BACKLOG's survival bullet
 names “the base maximum health (65,000)”, while its Approach requires “the default
@@ -1316,3 +1316,60 @@ Full `npm test` passes **1,416 tests** in 197.5 seconds, exit 0
 WORLD_BUILDING, PLAYING, README and imperative Unreleased entries describe the
 rules and the 65,000 health default. This completes the survival/needs fieldset,
 pending final formatting/type checks and commit/push; economy remains next.
+
+Pushed `bf3109b`; GitHub's branch SHA matches. **The survival/needs fieldset is
+done**, including Henry's approved 65,000 base maximum health. Final TypeScript
+and explicit-file Prettier checks pass. Start economy/trade next; all work stays
+Unreleased on `backlog-implementation`.
+
+### Gameplay rules — economy: purchase bids and quantity limits
+
+First economy slice: expose the existing 1d minimum building purchase bid (100
+hundredths) and 10,000-item quantity limit, preserving missing-key defaults.
+Before production, add tests for a changed bid minimum in building administration,
+actual sales, bulk-sale hints and database reload; below-floor saved offers must
+remain unavailable until repriced, without secretly raising them on reload.
+Legacy worlds missing the rule retain the existing free-bid repair. A lowered
+minimum must allow affordable sub-denarius bids and preserve them across reload.
+
+Expose a whole-item transaction limit (1–100,000) for the existing common quantity
+operations: shop trade, stockroom transfers, giving/discarding goods and owner
+item commands. Carry/storage/cash checks still apply. Client bulk sales and shop
+quantity inputs use this limit; resident action parsing must allow the supported
+range while the server enforces each world's limit. Keep discount-tier limits as
+catalogue validation bounds; they are separate from allowed transaction size.
+
+Commands: `node_modules/.bin/tsx --test tests/economy-rules.test.ts
+ tests/trading-offers.test.ts tests/bulk-sale.test.ts tests/ownership-and-trade.test.ts`,
+full `npm test`, `npx tsc --noEmit`, explicit-file Prettier. Verify default/changed
+creation, missing keys, invalid ranges, editor summary and design round-trip.
+Browser: F10 Economy and trade save/reopen; set a 0.5d bid via Building Admin,
+then use a visitor shop's changed quantity maximum and Sell all cap. Verify the
+empty-inventory state and rejected over-limit trade preserve stock/cash, and an
+increased minimum refuses an existing cheap bid. Inspect screenshots. Update
+WORLD_BUILDING, PLAYING, README and Unreleased before commit/push. Other economy
+rules remain pending after this slice.
+
+The quantity audit also found the same 10,000 limit in boat provisions, private
+trade offers, shop tax previews and resident commitments. Include these paths in
+this slice, with a red cross-path test. Existing offers retain their quoted size
+if the limit later falls; new offers use the current rule. Trailer shop trades
+use the common transaction rule; trailer loading retains its separate capacity
+checks. Initial five tests fail on missing settings/fields as expected.
+
+Economy bid/quantity verification: the seven new tests pass, including saved
+sub-denarius bids, rejection without mutation, raised limits, boat stores,
+private offers, tax previews and resident business requests. The resident request
+regression first caught a separate fixed 1d check and now uses the shared minimum.
+The 32-test trade/social/boat run and 19-test resident-finance run pass.
+
+The real browser flow passes in 16.9 seconds: F10 save/reopen, 0.5d Building Admin
+price, a three-item shop limit, rejected excess quantity, capped Sell all down to
+empty goods, a raised minimum refusing a saved bid, private-offer quantity/empty
+state, a trailer sale and boat-store transfer. Inspected the rule, empty goods
+and boat-store screenshots; no page errors. Full `npm test` passes **1,423 tests**
+in 197.8 seconds, exit 0 (`/tmp/aclone-economy-full.status`). TypeScript is clean
+(`/tmp/aclone-economy-tsc-final.log`), and all changed files pass Prettier.
+Documentation and Unreleased are updated; ready to commit/push. Outside investment
+is the next economy slice, followed by the remaining fees, finance and construction
+rules. No whole economy section is marked done yet.

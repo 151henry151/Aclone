@@ -1,3 +1,4 @@
+import { economyRules, economyRuleFields } from './economy-rules';
 import {
   survivalRules,
   survivalRuleFields,
@@ -105,7 +106,7 @@ import {
 import { playerStatistics, recordGathered } from './player-statistics.ts';
 import { hiringLimit, jobVacancy } from './staffing.ts';
 import { salesReceipt } from './taxes.ts';
-import { MIN_BUY_PRICE, setTradingOffer } from './trading.ts';
+import { setTradingOffer } from './trading.ts';
 import { maintenanceAction } from './maintenance.ts';
 import {
   propertyContractAction,
@@ -447,8 +448,8 @@ function str(value: unknown, max = 80) {
   );
   return value.trim();
 }
-function qty(v: unknown) {
-  return num(v, 1, 10000, true);
+function qty(w: World, v: unknown) {
+  return num(v, 1, economyRules(w.settings).transactionItemLimit, true);
 }
 function owner(p: Player) {
   requireThat(p.authority >= 20, 'Owner authority required');
@@ -758,7 +759,7 @@ export function act(w: World, id: string, a: Action): string {
         item = str(a.item);
       requireThat(b.owner !== id, 'Owners use the Stockroom, not trades with their own building');
       requireThat(items[item], 'Unknown item');
-      const n = qty(a.quantity);
+      const n = qty(w, a.quantity);
       requireThat(a.direction === 'buy' || a.direction === 'sell', 'Invalid trade direction');
       const buying = a.direction === 'buy';
       const trailer = a.storage === 'trailer' ? attachedTrailer(w, p) : undefined;
@@ -774,7 +775,8 @@ export function act(w: World, id: string, a: Action): string {
       const cargo = trailer ? trailer.cargo : p.inventory;
       const price = (buying ? b.sell : b.buy)[item];
       requireThat(
-        Number.isSafeInteger(price) && price >= (buying ? 0 : MIN_BUY_PRICE),
+        Number.isSafeInteger(price) &&
+          price >= (buying ? 0 : economyRules(w.settings).minimumBuyPrice),
         'This building does not trade that item',
       );
       requireThat(
@@ -866,7 +868,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'discard': {
       const item = str(a.item),
-        n = qty(a.quantity);
+        n = qty(w, a.quantity);
       requireThat(
         Object.hasOwn(items, item) && (p.inventory[item] ?? 0) >= n,
         'You do not carry that quantity',
@@ -1043,7 +1045,7 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       owns(p, b);
       const item = str(a.item),
-        n = qty(a.quantity);
+        n = qty(w, a.quantity);
       requireThat(items[item], 'Unknown item');
       requireThat(['deposit', 'withdraw'].includes(String(a.direction)), 'Invalid direction');
       const put = a.direction === 'deposit';
@@ -1080,7 +1082,7 @@ export function act(w: World, id: string, a: Action): string {
         if (a.enabled !== false)
           price = num(
             a.price ?? b.pausedPrices?.[a.side]?.[item] ?? b[a.side][item],
-            a.side === 'buy' ? MIN_BUY_PRICE : 0,
+            a.side === 'buy' ? economyRules(w.settings).minimumBuyPrice : 0,
             10000000,
             true,
           );
@@ -1093,7 +1095,7 @@ export function act(w: World, id: string, a: Action): string {
       else if (bulk !== undefined) b.bulkDiscounts = bulk;
       b.name = name;
       b.wage = b.kind === 'lighthouse' ? Math.min(800, wage) : wage;
-      if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price);
+      if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price, w);
       break;
     }
     case 'staffing': {
@@ -1936,7 +1938,8 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(fuelRuleFields, key) ||
             Object.hasOwn(canoeRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
-            Object.hasOwn(survivalRuleFields, key),
+            Object.hasOwn(survivalRuleFields, key) ||
+            Object.hasOwn(economyRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1957,6 +1960,8 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
+        if (economyField) num(v, economyField.min, economyField.max, true);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
         if (survivalField && 'min' in survivalField)
           num(v, survivalField.min, survivalField.max, survivalField.step === 1);
@@ -2215,7 +2220,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'give': {
       const target = w.players[String(a.player)],
         item = str(a.item),
-        n = qty(a.quantity);
+        n = qty(w, a.quantity);
       requireThat(
         target && target.id !== id && distance(p, target) < 15,
         'Recipient must be nearby',
@@ -2359,7 +2364,7 @@ export function command(w: World, p: Player, text: string): string {
       delete target().courseRun;
       const t = target(),
         item = args[1],
-        n = qty(Number(args[2]));
+        n = qty(w, Number(args[2]));
       requireThat(worldItems(w)[item] && canCarry(t, item, n, w), 'Unknown item or cargo full');
       stockAdd(t.inventory, item, n);
       break;

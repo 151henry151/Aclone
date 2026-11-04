@@ -1,3 +1,4 @@
+import { economyRules } from '../shared/economy-rules';
 import { survivalRules, skillFits, skillSlotsUsed } from '../shared/survival-rules';
 import { RadioConsole } from './radio-console';
 import { CANOE } from '../shared/canoe-rules';
@@ -1426,7 +1427,7 @@ function refreshTaxInfo() {
   for (const button of app.querySelectorAll<HTMLButtonElement>('[data-do="sellAll"]')) {
     const item = button.dataset.item!;
     const carried = me.inventory[item] ?? 0;
-    const sale = bulkSale(b, item, carried, Number(button.dataset.price));
+    const sale = bulkSale(b, item, carried, Number(button.dataset.price), world);
     const near = b.kind === 'boathouse' ? nearBoathouse(world, me, b) : distance(me, b) < 18;
     button.dataset.quantity = String(sale.quantity);
     button.disabled = !near || b.owner === me.id || sale.quantity === 0;
@@ -1648,12 +1649,13 @@ function refreshTradingPrices() {
   const enabled = form.elements.namedItem('enabled') as HTMLSelectElement;
   if (enabled.dataset.dirty !== 'true') enabled.value = price === undefined ? 'false' : 'true';
   const input = form.elements.namedItem('priceDenarii') as HTMLInputElement;
-  input.min = side === 'buy' ? '1' : '0';
+  input.min = side === 'buy' ? String(economyRules(world?.settings).minimumBuyPrice / 100) : '0';
   input.disabled = enabled.value === 'false';
   input.required = !input.disabled;
   if (input.dataset.dirty !== 'true')
     input.value =
-      remembered === undefined || (side === 'buy' && remembered < 100)
+      remembered === undefined ||
+      (side === 'buy' && remembered < economyRules(world?.settings).minimumBuyPrice)
         ? ''
         : String(remembered / 100);
   form.querySelector('[data-saved-price]')!.textContent =
@@ -2226,7 +2228,7 @@ function buildingWindow(b: Building) {
         )
         .join(
           '',
-        )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="10000" value="1"></label><p data-bulk-summary></p>`;
+        )}</div><label class="quantity">${selfOwned ? 'Quantity for estimate' : 'Quantity per trade'}<input id="trade-quantity" type="number" min="1" max="${economyRules(world.settings).transactionItemLimit}" value="1"></label><p data-bulk-summary></p>`;
     if (b.kind === 'workhouse' && !selfOwned && world.settings.jobsEnabled !== false) {
       const quote = labourQuote(world, me!);
       html += `<p>Unskilled labour. A ${survivalRules(world.settings).labourShiftSeconds}-second task pays ${money(labourShiftPay(world))} for the first eight shifts in a row, then less until a ten-minute break or other work, up to ${money(labourDailyCap(world))} a game day. ${quote.reason ? `${quote.reason[0].toUpperCase()}${quote.reason.slice(1)}. ` : ''}Residents below ${money(survivalRules(world.settings).labourReliefMeans)} cash plus bank can receive ${money(survivalRules(world.settings).labourReliefPay)} relief at most once per ${survivalRules(world.settings).labourReliefCooldown / 60} minutes, and relief does not count toward the daily cap. You will be quite still while working.</p>${button(`Work a shift · ${money(quote.pay)}`, 'task', `data-building="${b.id}" data-id="labour"`, 'primary')}`;
@@ -2533,7 +2535,7 @@ function buildingWindow(b: Building) {
             ['false', 'Not trading this item'],
           ],
           'Trading status',
-        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', 'min="1" step="0.01" required placeholder="Enter a price to resume trading"')}<button>Save trading settings</button><div data-current-prices></div></form>${bulkDiscountEditor(b)}</div>`
+        )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', `min="${economyRules(world.settings).minimumBuyPrice / 100}" step="0.01" required placeholder="Enter a price to resume trading"`)}<button>Save trading settings</button><div data-current-prices></div></form>${bulkDiscountEditor(b)}</div>`
       : !b.government && !b.construction
         ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${OUTSIDE_RETURN_PERCENT}% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
             'direction',

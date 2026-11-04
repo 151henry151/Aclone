@@ -158,5 +158,7 @@
   "nutritionAdjustmentLimit": 6000,
   "repeatServingFrom": 3,
   "repeatServingMultiplier": 0.5,
-  "energyRegeneration": 3000
+  "energyRegeneration": 3000,
+  "minimumBuyPrice": 100,
+  "transactionItemLimit": 10000
 }

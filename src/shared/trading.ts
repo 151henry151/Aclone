@@ -1,7 +1,9 @@
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { Building } from './types.ts';
+import type { Building, World } from './types.ts';
 
-export const MIN_BUY_PRICE = 100; // One denarius, in integer hundredths.
+export const MIN_BUY_PRICE = defaults.minimumBuyPrice; // One denarius, in integer hundredths.
 
 /** Paused quotes are retained separately; all market consumers see only active offers. */
 export function setTradingOffer(
@@ -10,6 +12,7 @@ export function setTradingOffer(
   item: string,
   enabled: boolean,
   price?: number,
+  w?: Pick<World, 'settings'>,
 ) {
   if (!enabled) {
     const saved = price ?? b[side][item];
@@ -23,18 +26,22 @@ export function setTradingOffer(
   if (
     price === undefined ||
     !Number.isSafeInteger(price) ||
-    price < (side === 'buy' ? MIN_BUY_PRICE : 0)
+    price < (side === 'buy' ? economyRules(w?.settings).minimumBuyPrice : 0)
   )
-    throw Error(side === 'buy' ? 'Buying prices must be at least 1d' : 'Invalid selling price');
+    throw Error(
+      side === 'buy'
+        ? `Buying prices must be at least ${economyRules(w?.settings).minimumBuyPrice / 100}d`
+        : 'Invalid selling price',
+    );
   b[side][item] = price;
   if (b.pausedPrices?.[side]) delete b.pausedPrices[side]![item];
 }
 
 /** Upgrade legacy free purchases safely, after other catalogue migrations. */
-export function normalizeTradingOffers(b: Building) {
+export function normalizeTradingOffers(b: Building, repairLegacyFloor = true) {
   for (const [item, price] of Object.entries(b.buy)) {
     if (price <= 0) setTradingOffer(b, 'buy', item, false);
-    else if (price < MIN_BUY_PRICE) b.buy[item] = MIN_BUY_PRICE;
+    else if (repairLegacyFloor && price < MIN_BUY_PRICE) b.buy[item] = MIN_BUY_PRICE;
   }
   // A catalogue migration must not reopen explicitly suspended trading.
   for (const side of ['buy', 'sell'] as const)

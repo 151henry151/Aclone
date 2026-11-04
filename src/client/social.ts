@@ -1,3 +1,4 @@
+import { economyRules } from '../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../shared/types';
 import { money } from '../shared/simulation';
@@ -47,7 +48,7 @@ export function socialHtml(w: World, p: Player) {
    .map(([id, d]) => `<option value="${esc(id)}">${esc(d.name)}</option>`)
    .join(
      '',
-   )}</select></label><label>Quantity<input name="quantity" type="number" value="1" min="1" max="10000" required></label><label>Unit price in denarii<input name="priceDenarii" type="number" min="0" max="1000000" step="0.01" value="1" required></label><button>Offer trade</button></form><h3>Pending offers</h3>${offers || '<p>No pending offers.</p>'}</section>`;
+   )}</select></label><label>Quantity<input name="quantity" type="number" value="1" min="1" max="${economyRules(w.settings).transactionItemLimit}" required></label><label>Unit price in denarii<input name="priceDenarii" type="number" min="0" max="1000000" step="0.01" value="1" required></label><button>Offer trade</button></form><h3>Pending offers</h3>${offers || '<p>No pending offers.</p>'}</section>`;
 }
 export function showSocialPane(host: HTMLElement, pane: string) {
   for (const section of host.querySelectorAll<HTMLElement>('[data-social-pane]'))

@@ -1,3 +1,4 @@
+import type { EconomyRules } from './economy-rules';
 import type { SurvivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { RadioRules } from './radio-rules';
@@ -293,6 +294,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<EconomyRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

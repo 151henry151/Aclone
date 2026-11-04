@@ -1,3 +1,4 @@
+import { economyRules } from './economy-rules';
 import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
@@ -199,7 +200,12 @@ export function socialAction(w: World, p: Player, a: Action) {
   if (a.type === 'offerTrade') {
     const q = target(w, p, a.player),
       item = text(80).parse(a.item),
-      quantity = z.number().int().min(1).max(10000).parse(a.quantity),
+      quantity = z
+        .number()
+        .int()
+        .min(1)
+        .max(economyRules(w.settings).transactionItemLimit)
+        .parse(a.quantity),
       price = z.number().int().min(0).max(100000000).parse(a.price);
     check(a.direction === 'buy' || a.direction === 'sell', 'Choose buy or sell');
     check(p.online && q.online, 'Both traders must be online');

@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose minimum building purchase bids and item transaction limits as per-world rules; apply them to trade validation, bulk-sale hints, boat stores, private offers and live controls while preserving configured quotes on reload.
 - Expose automatic meal and damage thresholds, health and nutrition limits, repeat-serving penalties and energy regeneration as validated per-world rules; share them with survival catch-up, forecasts, player meters and the caretaker dashboard.
 - Expose standard tuition, lesson duration, licence skill-limit accounting and public labour relief terms as validated per-world rules; use them in player panels, resident planning, portable designs and live guidance while preserving defaults and active quotes.
 - Add a vehicle CB dashboard with private received traffic, call signs, signal/carrier status, keyboard, touch and configurable controller push-to-talk, volume/squelch controls and manual rescue links; preserve drafts and held controls during live updates.

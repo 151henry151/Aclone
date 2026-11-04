@@ -1,3 +1,4 @@
+import { economyRules, economyRuleFields } from '../shared/economy-rules';
 import { survivalRules, survivalRuleFields, type SurvivalRules } from '../shared/survival-rules';
 import { radioRules, radioRuleFields, type RadioRules } from '../shared/radio-rules';
 import { canoeRules, canoeRuleFields, type CanoeRules } from '../shared/canoe-rules';
@@ -88,6 +89,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...Object.keys(economyRuleFields),
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
     ...Object.keys(canoeRuleFields),
@@ -110,6 +112,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const economy = economyRules(settings);
+  const economyFields = `<fieldset class="boat-death-settings"><legend>Economy and trade</legend>${Object.entries(
+    economyRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        economy[key as keyof typeof economy],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Purchase bids below the minimum cannot accept sales until repriced. Existing quotes are preserved. Quantity limits apply to new trades and goods transfers; carry, storage and cash limits still apply.</p></fieldset>`;
   const survival = survivalRules(settings);
   const survivalFields = `<fieldset class="boat-death-settings"><legend>Survival and needs</legend>${Object.entries(
     survivalRuleFields,
@@ -237,6 +255,7 @@ export function settingsFields(settings: Settings = defaults) {
     canoeFields +
     radioFields +
     survivalFields +
+    economyFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

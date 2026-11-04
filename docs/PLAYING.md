@@ -17,7 +17,7 @@ shop keeps paid premium bread, water and fuel on the shelf and restocks them;
 fuel costs more than typical pumps or the harbour. You can still buy if
 displayed stock is briefly zero.
 
-Shop rows show **You have** with your carried quantity. **Sell all** sells that stack in one click; if buying funds, storage or the 10,000-item transaction limit prevent that, **Sell max (N)** shows the accepted quantity and explains what stays with you. These counts update while the shop is open. Ordinary Buy/Sell buttons still use **Quantity per trade**.
+Shop rows show **You have** with your carried quantity. **Sell all** sells that stack in one click; if buying funds, storage or the world transaction limit (10,000 items by default) prevent that, **Sell max (N)** shows the accepted quantity and explains what stays with you. These counts update while the shop is open. Ordinary Buy/Sell buttons still use **Quantity per trade**.
 
 Repeated buys/sales of the same item at one shop show the confirmed total quantity
 and price, including when you close the window. Failed trades do not add to it;
@@ -576,3 +576,10 @@ Default relief remains 150d for residents below 50d combined cash and bank, at
 most once per 30 minutes, with 15-second public labour shifts. The ordinary wage,
 daily cap and diminishing returns are unchanged. Changing world rules does not
 alter a course or shift already underway.
+
+Unreleased economy rules let the world owner change the minimum price buildings
+pay suppliers (normally 1d) and the quantity per transaction. Building Admin
+shows the current minimum; shop quantity controls and Sell max show the current
+limit. If the owner raises the minimum above a saved bid, that building cannot
+buy at the old price until it is repriced. Existing private offers retain their
+agreed quantity. Cash, cargo and storage limits still apply.
