@@ -96,6 +96,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     )
       .map(([crop, key]) => `${crop} ${farmYields[key]}`)
       .join(', ')}.`,
+    `Ripe quality: full for ${farmYields.farmRipeQualitySeconds} real seconds after ripening, then lose ${farmYields.farmLateLossPerDay} per game day up to ${farmYields.farmLateMaximumLoss}. Zero rate or maximum loss disables lateness loss. Winter still kills field crops; reserved harvest amounts remain unchanged.`,
     `Crop yield: compost bonus ${farmYields.farmCompostYieldBonus}, repeated-family penalty ${farmYields.farmRotationYieldPenalty}; fractions apply before floor rounding, minimum one unit. Started harvests retain reserved amounts.`,
     `Gathering implements: logs ${implementsRules.gatheringLogsImplement}, stone ${implementsRules.gatheringStoneImplement}, gravel ${implementsRules.gatheringGravelImplement}, topsoil ${implementsRules.gatheringDirtImplement}. None removes the tool requirement; implements are reusable.`,
     `Deposits: standard woodland/mineral capacities ${gatheringRates.resourceLogsCapacity}/${gatheringRates.resourceOtherCapacity}, base recovery intervals ${gatheringRates.resourceLogsRegrowthSeconds}/${gatheringRates.resourceOtherRegrowthSeconds} seconds times the recovery multiplier. Authored non-default survey values remain overrides.`,

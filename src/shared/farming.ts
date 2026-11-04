@@ -91,7 +91,12 @@ export function cropStatus(w: World, b: Building, index: number) {
   );
   const rotation =
     p.previous && crops[p.previous].family === c.family ? 1 - rules.farmRotationYieldPenalty : 1;
-  const late = Math.max(0.65, 1 - Math.max(0, (w.time - p.ready) / DAY_SECONDS - 36) * 0.005);
+  const late = Math.max(
+    1 - rules.farmLateMaximumLoss,
+    1 -
+      Math.max(0, (w.time - p.ready) / DAY_SECONDS - rules.farmRipeQualitySeconds / DAY_SECONDS) *
+        rules.farmLateLossPerDay,
+  );
   return {
     state: w.time >= p.ready ? 'ripe' : 'growing',
     progress: Math.max(0, Math.min(1, (w.time - p.planted) / (p.ready - p.planted))),

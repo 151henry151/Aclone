@@ -3703,3 +3703,53 @@ the local two-water quote; fallow plots have no watering action; zero thirst is
 rejected and reload retains one. The original browser run also exercised the
 server's limit refusal before correcting visibility. Server tests retain explicit
 limit, empty and ripe refusal coverage. No acceptance criterion was weakened.
+
+**Irrigation slice done and pushed:** `ac1df60de1fba21af24ee9a0a1eecc58b4ae29a4`.
+Remote branch SHA verified. Henry's formula decision is implemented; the earlier
+irrigation stop is closed. Continue the remaining hard-coded rules in order.
+
+### Ripe-quality rules — completion criteria before production
+
+The entry names “the ripe-quality window (six real hours, up to 35% loss)”. Expose
+`farmRipeQualitySeconds` (21,600), `farmLateMaximumLoss` (0.35) and the existing
+`farmLateLossPerDay` (0.005). Keep the shipped formula's arithmetic order:
+`max(1 - maximumLoss, 1 - max(0, age / DAY_SECONDS - window / DAY_SECONDS) × lossPerDay)`.
+Days here are the existing 600-second crop/calendar day; the window is real seconds.
+
+- Default and missing-rule worlds retain exactly the same yields before, at and
+  after the six-hour boundary and at the capped loss. Custom settings change only
+  that factor. Zero loss rate or maximum loss disables lateness loss; zero window
+  starts loss immediately after ripening. Winter still kills unharvested crops.
+- Validate finite values: window integer 0–604,800 seconds, maximum loss 0–1 and
+  loss rate 0–1 per game day. Invalid mixed patches change nothing. Persist in
+  saves/designs; include in F10, rule summaries and resident observations.
+- New harvests use current estimates; an already reserved harvest retains its
+  amount. Empty plots remain empty and winter crops cannot be harvested.
+- Add `tests/farm-ripe-quality-rules.test.ts`, confirm the missing-setting failure,
+  then run that test with the affected farming, winter, harvest-all and guide tests.
+  Run TypeScript, changed-file Prettier and diff checks.
+- Browser `TEST_GPU=1 npm run test:e2e -- tests/browser/farm-ripe-quality-rules.spec.ts`:
+  save/reload custom rules in F10, inspect a ripe crop's changed estimate and
+  updated quality-window/loss help, inspect a fallow plot, refuse harvesting with
+  a full store, reject an out-of-range loss and preserve saved values. Inspect
+  screenshots. Update the player/world-builder docs, README and Unreleased changelog.
+
+Failing-first: one default/boundary test passes; three new-rule tests fail on
+`Unknown setting` or missing `farmRipeQualitySeconds`. Inspection confirms winter
+expiry deliberately clears the plot before refusing care; the winter regression
+checks the unchanged no-harvest/no-task behavior, not preservation of a dead crop.
+
+Ripe-quality validation so far: all 35 relevant tests pass (13.9 s), covering the
+new rules, ordinary farming, winter expiry, harvest-all and guide request budget;
+TypeScript, changed-file Prettier and diff checks pass. The first browser run
+failed because the fixture's negative planting date fell in winter and correctly
+showed “Crop lost to winter.” Move only the isolated fixture clock into spring,
+keeping the same 18-day crop duration and 30-minute age; rerun the affected browser.
+
+Final browser flow passes (27.6 s). All six states have been visually inspected:
+custom saved rules, 48-unit ripe estimate, dynamic 600-second/10%/50% help, fallow
+plots, full-stockroom refusal and invalid maximum-loss input with saved value
+retained. The second fixture correction acknowledged that choosing Harvest already
+closes its dialog before the stockroom refusal; the test now asserts that state
+instead of trying to close an absent dialog. Production criteria are unchanged.
+Final TypeScript and formatting checks pass; no unrelated test suite was rerun.

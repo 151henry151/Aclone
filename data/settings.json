@@ -374,5 +374,8 @@
   "farmGrapesThirst": 0.5,
   "farmTeaThirst": 0.8,
   "farmCoffeeThirst": 0.7,
-  "farmHayThirst": 0.35
+  "farmHayThirst": 0.35,
+  "farmRipeQualitySeconds": 21600,
+  "farmLateMaximumLoss": 0.35,
+  "farmLateLossPerDay": 0.005
 }

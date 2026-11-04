@@ -1295,3 +1295,21 @@ already started retain their reserved amount. Both resident farm planners share
 the cost and limit. These rules persist in saves and portable world designs, appear
 in rules summaries and resident observations, and fall back to the same JSON
 defaults in older worlds. Editing a rule grants no water or harvested stock.
+
+### Ripe quality (unreleased)
+
+**F10 → Rules → Crop yield rules** also exposes:
+
+- `farmRipeQualitySeconds`: 21,600 (six real hours), integer 0–604,800. Full
+  quality lasts through this interval after ripening; zero starts decay immediately.
+- `farmLateLossPerDay`: 0.005 (0.5%), range 0–1. Loss per existing 600-second game day
+  after that interval. Zero disables lateness loss.
+- `farmLateMaximumLoss`: 0.35 (35%), range 0–1. Caps the lateness loss; zero
+  disables it. One permits loss down to the general minimum one-unit harvest.
+
+The factor is `max(1 - maximumLoss, 1 - max(0, ageInDays - windowInDays) × lossPerDay)`.
+It multiplies the weather/soil-adjusted crop yield before integer rounding. The
+farm panel shows local values. Changes affect estimates and new reservations;
+started harvests retain reserved amounts. Winter expiry remains unchanged.
+These values persist in saves/designs and appear in summaries and NPC observations;
+older worlds fall back to the same JSON defaults.

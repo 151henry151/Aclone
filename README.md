@@ -30,7 +30,7 @@ Unreleased economy rules make minimum building purchase bids, transaction quanti
 
 Unreleased tug rules expose the suggested rescue fee, fee ceiling and offer lifetime in F10. Posted terms and accepted escrow survive edits and reloads; expired offers cannot take payment. See [rescue and haulage](docs/HAULAGE.md#hiring-a-tug).
 
-Unreleased crop yield rules in F10 configure the irrigation formula, each crop’s thirst, watering costs/limits, compost bonus and repeated-family penalty; farm estimates and resident decisions use them while preserving started harvests.
+Unreleased crop yield rules in F10 configure the irrigation formula, each crop’s thirst, watering costs/limits, ripe-quality window and loss, compost bonus and repeated-family penalty; farm estimates and resident decisions use them while preserving started harvests.
 
 Unreleased gathering rules in F10 configure untrained/skilled loads and durations, plus deposit capacities, recovery intervals and per-material reusable implement requirements (including none); the HUD, Resources menu and resident plans, including gathering experiments, use the local rates.
 

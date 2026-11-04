@@ -2342,7 +2342,7 @@ function buildingWindow(b: Building) {
         },
       ).join(
         '',
-      )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Harvest within six real hours of ripening for best yield; later crops retain at least 65% of their quality-adjusted yield until winter kills all unharvested crops.</p>`;
+      )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Ripe crops keep full quality for ${farmYieldRules(world!.settings).farmRipeQualitySeconds} real seconds after ripening, then lose ${farmYieldRules(world!.settings).farmLateLossPerDay.toLocaleString('en', { style: 'percent', maximumFractionDigits: 10 })} per game day up to ${farmYieldRules(world!.settings).farmLateMaximumLoss.toLocaleString('en', { style: 'percent', maximumFractionDigits: 10 })}. Zero rate or maximum loss removes lateness loss. Winter kills all unharvested crops.</p>`;
     }
     if (b.kind === 'garage' && world.settings.fighting)
       html += button(

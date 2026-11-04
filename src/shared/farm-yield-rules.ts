@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const farmYieldRuleFields = {
+  farmRipeQualitySeconds: {
+    label: 'Full ripe-quality window (real seconds)',
+    min: 0,
+    max: 604800,
+    step: 1,
+  },
+  farmLateMaximumLoss: {
+    label: 'Maximum late-harvest loss (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  farmLateLossPerDay: {
+    label: 'Late-harvest loss per game day (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.001,
+  },
   farmIrrigationBaseline: { label: 'Baseline moisture', min: 0, max: 5, step: 0.01 },
   farmIrrigationRain: { label: 'Rain contribution', min: 0, max: 5, step: 0.01 },
   farmIrrigationTreatment: { label: 'Moisture per watering', min: 0, max: 5, step: 0.01 },
