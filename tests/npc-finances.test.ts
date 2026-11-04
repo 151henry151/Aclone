@@ -401,3 +401,28 @@ test('a small remaining housing shortfall still has a capital draw', () => {
   assert.ok(action?.kind === 'act' && action.action.type === 'investment');
   assert.equal(action.action.amount, 5000);
 });
+
+test('financial bid advice follows the local reopening fraction and zero switch', () => {
+  const { w, p, b, state } = setup();
+  b.stock = { flour: 0, bread: 0 };
+  const policy = () =>
+    financialBriefing(w, p, state).businesses[0].purchasing.find((q) => q.item === 'flour')!.policy;
+  assert.match(policy(), /below 50% of target/);
+  w.settings.npcBidReopenFraction = 0.75;
+  assert.match(policy(), /below 75% of target/);
+  const memory = { recent: () => [], conversation: () => [] } as unknown as NpcMemory;
+  const briefing = observe(w, p, state, memory, 'toby').finances;
+  assert.equal(briefing.businesses[0].purchasing.find((q) => q.item === 'flour')!.policy, policy());
+  w.settings.npcBidReopenFraction = 0;
+  assert.match(policy(), /automatic bid reopening is disabled/i);
+  assert.doesNotMatch(policy(), /replenish below/i);
+  b.stock.flour = 100;
+  assert.match(policy(), /Input reserve is stocked/);
+  state.pausedInputBids = {
+    world: w.id,
+    deaths: p.deaths,
+    bids: {},
+    manual: { [`${b.id}:flour`]: true },
+  };
+  assert.match(policy(), /Explicitly paused by agreement/);
+});

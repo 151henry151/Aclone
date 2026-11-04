@@ -2553,3 +2553,24 @@ zero batch stops shopping, cash/stock remain unchanged, native upper-bound refus
 protects the saved lodging padding and reload preserves it. Inspect both
 screenshots; no page errors. TypeScript, changed-file Prettier and diff checks are
 clean. No full suite is run. Ready to commit and push.
+
+Pushed and verified `f233725` on `backlog-implementation`. **Pantry shopping and
+lodging budgets are done.**
+
+### Gameplay rules — bid-policy briefing follow-up
+
+The follow-on budget audit finds a stale claim in `npc/finances.ts`: the resident
+briefing still says below half target after the reopening fraction became a rule.
+Before production, extend npc-finances tests to require the actual default 50%,
+custom 75%, and a clear disabled policy at zero while preserving explicit manual
+pause and overstock messages. Both the direct briefing and the observation used
+for dialogue must carry the same correct policy; the change grants no actions or
+prices. Run the new tests red, then npc-finances, npc-pricing-rules and npc-guide,
+clean TypeScript and changed-file Prettier. Update NPCS, README and imperative
+Unreleased. This changes model briefing text, with no UI/rendering implementation
+change; the pricing editor browser flow is already verified for this rule.
+
+Bid-policy briefing red reproduces the stale “half target” sentence. After the
+small text fix, all 33 relevant checks pass in 1.6 seconds, including matching
+conversation observations, zero policy, manual pause and overstock precedence.
+TypeScript, changed-file Prettier and diff checks pass. Ready to commit and push.

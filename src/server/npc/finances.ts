@@ -1,3 +1,4 @@
+import { npcPricingRules } from '../../shared/npc-pricing-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -70,7 +71,9 @@ export function financialBriefing(w: World, p: Player, state: ResidentState) {
                   ? 'No automatic recipe-buffer target.'
                   : (b.stock[item] ?? 0) >= target
                     ? 'Input reserve is stocked, or finished goods are genuinely backed up; pause purchasing and find output buyers.'
-                    : 'Below target; replenish below half target using a funded, profitable delivery quote. Input reserves are separate from ordinary finished stock and grow with observed sales.',
+                    : npcPricingRules(w.settings).npcBidReopenFraction === 0
+                      ? 'Below target; automatic bid reopening is disabled by the world rule. Existing prices remain posted until an ordinary action changes them.'
+                      : `Below target; replenish below ${npcPricingRules(w.settings).npcBidReopenFraction * 100}% of target using a funded, profitable delivery quote. Input reserves are separate from ordinary finished stock and grow with observed sales.`,
             observedSupplier: supplier
               ? {
                   building: supplier.id,

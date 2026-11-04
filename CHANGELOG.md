@@ -61,6 +61,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Report the configured bid-reopening percentage and disabled state in resident financial advice, preserving manual pauses and overstock explanations.
+
 - Patch changed world settings in negotiated protocol 4 snapshots to retain the compact-traffic budget as radio rules grow; keep complete settings for older clients.
 
 - Preserve fog shader behavior when batching static building geometry so distant building silhouettes fade with the terrain, and schedule rendering from display timestamps to prevent callback jitter skipping frames.

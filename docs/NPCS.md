@@ -401,7 +401,7 @@ reopening fraction, wage revenue share, sustainable output markup/minimum ask
 and surplus/load thresholds. Input quotes honor the local minimum purchase bid;
 remembered prices outside the current bounds are refused. Delivery estimates obey
 the transaction limit as well as actual capacity/funding. Zero input ceiling
-suppresses new quotes; zero reopening fraction stops automatic reopening; zero
+suppresses new quotes; zero reopening fraction stops automatic reopening. Financial briefings quote the local percentage or the disabled policy; zero
 wage share stops raises without cutting existing wages. See
 [pricing rules](WORLD_BUILDING.md#resident-pricing-rules-unreleased).
 
