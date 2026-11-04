@@ -698,3 +698,9 @@ unquoted Fuel price, equipment payback loads and optional refuelling threshold.
 Plans use tuned vehicle speeds and observed stocked Fuel quotes; walking budgets
 no fuel. Disabling optional fuel shopping still permits empty-tank walking or
 normal use of carried fuel. See [journey budgets](WORLD_BUILDING.md#resident-journey-budgets-unreleased).
+
+Living-cash advice has configurable floor, meal and drink allowances. It uses
+observed nutrition-value quotes and still identifies missing supplies. Resident
+innkeepers use the local suggested lodging rate when considering configuration;
+only an ordinary authorized configuration action changes a posted rate, while
+paid stays remain intact. See [living advice and lodging suggestions](WORLD_BUILDING.md#resident-living-advice-and-lodging-suggestions-unreleased).

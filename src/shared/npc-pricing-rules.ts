@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcPricingRuleFields = {
+  npcLodgingOfferRate: {
+    label: 'Suggested owned lodging rate (hundredths/hour)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
   npcHaulageMargin: { label: 'Haulage price spread (fraction)', min: 0, max: 1, step: 0.01 },
   npcTravelTimeValue: {
     label: 'Haulage time value (hundredths per second)',

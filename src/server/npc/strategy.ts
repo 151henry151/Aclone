@@ -1,3 +1,4 @@
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { survivalRules, servingMultiplier } from '../../shared/survival-rules';
 import { alcoholLevel, alcoholDose } from '../../shared/intoxication.ts';
@@ -58,6 +59,7 @@ export function spareSupplies(p: Player, item: string, w?: World) {
 }
 /** Small, protected Jev context. All prices/rates are live; none of these forecasts grant supplies. */
 export function lifeBriefing(w: World, p: Player) {
+  const advice = npcHouseholdRules(w.settings);
   const items = worldItems(w);
   const carried = Object.entries(p.inventory)
     .filter(([item, n]) => n > 0 && (items[item]?.food || items[item]?.drink))
@@ -114,7 +116,11 @@ export function lifeBriefing(w: World, p: Player) {
       healthRule: `Below starvation, health recovers 2/second to its current nutritional maximum (base ${survivalRules(w.settings).baseMaximumHealth}, nutrition adjustment up to ±${survivalRules(w.settings).nutritionAdjustmentLimit}); at starvation it loses 6/second, online or offline. Waiting outdoors cannot lower needs.`,
       carried,
       supplies,
-      suggestedLivingCash: Math.max(12000, (meal?.price ?? 0) * 3 + (drink?.price ?? 0) * 6),
+      suggestedLivingCash: Math.max(
+        advice.npcAdviceCashFloor,
+        (meal?.price ?? 0) * advice.npcAdviceMealItems +
+          (drink?.price ?? 0) * advice.npcAdviceDrinkItems,
+      ),
       reserveAvailable: !!meal && !!drink,
     },
     economy: {

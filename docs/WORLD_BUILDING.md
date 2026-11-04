@@ -1114,3 +1114,19 @@ Missing fields retain these defaults. The cheapest stocked positive Fuel quote
 takes precedence over its fallback; walking has no fuel cost. Vehicle tuning,
 cargo room, stock, household reserves and actual cash still apply. These estimates
 change plans, not actual vehicle consumption, item refuelling or money balances.
+
+## Resident living advice and lodging suggestions (unreleased)
+
+**F10 → Rules → Resident household budget** includes `npcAdviceCashFloor`
+(default 12,000 hundredths, integer 0–100,000,000), `npcAdviceMealItems` (3) and
+`npcAdviceDrinkItems` (6), both integer 0–10,000. Living-cash advice is the greater
+of the floor and the observed meal/drink price allowance. It retains the existing
+selection by nutrition value. Zero removes each component; missing supplies are
+still reported as unavailable and no advice grants cash or provisions.
+
+**Resident pricing** includes `npcLodgingOfferRate`: default 600 hundredths per
+real hour, integer 0–1,000,000. This is the suggested rate for a resident owner's
+ordinary innkeeper configuration action; zero permits a free offer. Editing it
+does not change any posted rate, paid booking or balance. Rental costs still use
+the actual posted rate. Saves, rules summaries, observations and portable designs
+carry these fields; missing fields retain the defaults above.

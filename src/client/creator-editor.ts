@@ -198,7 +198,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Quotes use observed suppliers, costs and actual funds/space. Zero input-bid ceiling suppresses new quotes; zero reopening fraction stops automatic bid reopening. Minimum delivery cannot exceed maximum. Existing prices, wages and contracts are not changed by editing these forecasts.</p></fieldset>`;
+    )}<p>Lodging rates are suggestions for an ordinary owner/innkeeper action; zero permits a free offer. Quotes use observed suppliers, costs and actual funds/space. Zero input-bid ceiling suppresses new quotes; zero reopening fraction stops automatic bid reopening. Minimum delivery cannot exceed maximum. Existing prices, wages and contracts are not changed by editing these forecasts.</p></fieldset>`;
   const business = npcBusinessRules(settings);
   const businessFields = `<fieldset class="boat-death-settings"><legend>Resident business budgets</legend>${Object.entries(
     npcBusinessRuleFields,
@@ -246,7 +246,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Forecasts protect cash for meals, valid shelter and low fuel. Explicit trip horizons take precedence. Carried credit and need allowance change estimates, not actual consumption. Zero fuel threshold removes the fuel reserve; no cash or supplies are granted. Pantry budgets govern ordinary shopping and room booking; zero shopping batch stops source purchases/withdrawals, while carried supplies can still be stored. Transaction, storage, cargo and room limits still apply.</p></fieldset>`;
+    )}<p>Living advice uses the greater of its cash floor and observed meal/drink allowances; zero removes each component. Forecasts protect cash for meals, valid shelter and low fuel. Explicit trip horizons take precedence. Carried credit and need allowance change estimates, not actual consumption. Zero fuel threshold removes the fuel reserve; no cash or supplies are granted. Pantry budgets govern ordinary shopping and room booking; zero shopping batch stops source purchases/withdrawals, while carried supplies can still be stored. Transaction, storage, cargo and room limits still apply.</p></fieldset>`;
   const towing = towingRules(settings);
   const towingFields = `<fieldset class="boat-death-settings"><legend>Tug rescue offers</legend>${Object.entries(
     towingRuleFields,

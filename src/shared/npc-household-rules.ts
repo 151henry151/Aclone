@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcHouseholdRuleFields = {
+  npcAdviceCashFloor: {
+    label: 'Living advice minimum cash (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcAdviceMealItems: {
+    label: 'Living advice meal allowance (items)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcAdviceDrinkItems: {
+    label: 'Living advice drink allowance (items)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   npcShoppingFuelTarget: {
     label: 'Portable shopping Fuel target (items; 0 disables)',
     min: 0,

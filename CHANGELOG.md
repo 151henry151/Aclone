@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident living-cash advice and suggested lodging rates as world rules; preserve observed prices, actual owner permissions, posted rates and paid stays.
+
 - Expose resident journey, equipment-payback and refuelling budgets as world rules; preserve quoted prices, vehicle tuning and empty-tank walking or carried-fuel recovery.
 
 - Expose routine resident input-purchase/deposit fallbacks and crop-demand forecasts as world rules; honor the existing input-reserve setting for larger livestock supply targets.

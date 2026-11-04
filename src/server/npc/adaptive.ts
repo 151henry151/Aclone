@@ -1,3 +1,4 @@
+import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -451,9 +452,14 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       if (['bnb', 'hotel'].includes(b.kind))
         add(
           'housing',
-          `${b.lodging?.open ? 'Review' : 'Open'} my ${b.name} for guests at 600 per real hour; requires innkeeper.`,
+          `${b.lodging?.open ? 'Review' : 'Open'} my ${b.name} for guests at ${npcPricingRules(w.settings).npcLodgingOfferRate} per real hour; requires innkeeper.`,
           visit(b, [
-            operation('lodging', { building: b.id, operation: 'configure', open: true, rate: 600 }),
+            operation('lodging', {
+              building: b.id,
+              operation: 'configure',
+              open: true,
+              rate: npcPricingRules(w.settings).npcLodgingOfferRate,
+            }),
           ]),
         );
       if (b.kind === 'farm')

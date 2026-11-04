@@ -327,5 +327,9 @@
   "npcJourneySpeedFraction": 0.6,
   "npcJourneyFuelFallbackPrice": 4500,
   "npcEquipmentPaybackLoads": 8,
-  "npcDriveFuelThreshold": 10
+  "npcDriveFuelThreshold": 10,
+  "npcAdviceCashFloor": 12000,
+  "npcAdviceMealItems": 3,
+  "npcAdviceDrinkItems": 6,
+  "npcLodgingOfferRate": 600
 }

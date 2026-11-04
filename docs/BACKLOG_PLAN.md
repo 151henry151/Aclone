@@ -3051,3 +3051,46 @@ all five controls persist, estimates change from 25 seconds/625 hundredths to
 40/1,000, the higher refuel threshold enables an affordable option, zero removes
 it without changing fuel/cargo/cash, and negative input is refused across reload.
 Inspect all three screenshots; no browser errors occur. No full suite runs.
+
+Pushed and verified `fd6a221` on `backlog-implementation`. **Resident journey and
+equipment budgets are done.**
+
+### Gameplay rules — resident living advice and lodging offers
+
+Before production, add `npcAdviceCashFloor` 12,000 hundredths (integer
+0–100,000,000), `npcAdviceMealItems` 3 and `npcAdviceDrinkItems` 6 (integers
+0–10,000) to Resident household forecasts, and `npcLodgingOfferRate` 600
+hundredths/hour (integer 0–1,000,000, matching the ordinary rate bound) to Resident
+pricing. Advice remains max(cash floor, observed meal price × meal items + observed
+drink price × drink items); preserve the existing nutrition-value selection and
+empty-source reporting. Zero removes the respective advisory component. Lodging
+suggestions use the configured rate, including free zero-rate offers, only through
+ordinary owner/innkeeper configuration. Rule edits never rewrite posted rates,
+bookings or balances; renter descriptions keep actual posted rates. Missing fields
+retain defaults. DailyLivingCost's 86,400-second normalization is a unit conversion
+for a per-day figure, not an additional optional forecast horizon.
+
+Write failing npc-advice-budget-rules tests for defaults/missing keys, exact custom
+and zero advice, absent supplies, quote selection, lodging suggestion text and
+operation, owner/qualification restrictions, ordinary configuration preserving
+paid bookings and balances, invalid settings, editor/summary/observations/design
+and reload. Browser: edit all four in their existing fieldsets, reopen, inspect
+changed advice and suggested rate without a transfer, zero advice/rate, native
+invalid input and reload, and screenshots/browser errors. Run new tests plus
+npc-strategy, npc-adaptive, npc-household, npc-pricing-budget-rules (if present),
+lodging and npc-guide; require TypeScript, Prettier and NPC/world-builder/README/
+imperative Unreleased docs before push.
+
+Advice red: all four tests fail for absent fields/validation and fixed 24,000
+advice despite the configured 7,000 allowance. After implementation all four
+pass, including empty-source advice, unchanged snapshots, exact posted-operation
+rates, zero, ordinary configuration, paid bookings and ownership/qualification
+restrictions. The relevant price suite is npc-pricing-rules; lodging behavior is
+in living-world, so use those actual files rather than nonexistent planned names.
+
+Advice gates pass: 64 relevant tests in 8.3 seconds, TypeScript clean, changed-file
+Prettier and diff checks clean. Browser passes in 22.1 seconds with no errors:
+all four fields persist, advice changes from 24,000 to 7,000 and zero, suggested
+rates change to 800 then zero while the posted 200 rate remains intact, invalid
+negative input is refused and saved zero survives reload. Inspect all three
+screenshots in the household/pricing panels. No full suite runs.
