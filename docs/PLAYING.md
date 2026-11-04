@@ -526,3 +526,38 @@ Death afloat follows the world's boat rules: loss removes the canoe and cargo;
 recovery leaves the same hull offshore with the usual cargo-spoilage deadline.
 Use the ordinary recovery lifeboat or a ride from another boat to recover it.
 A canoe cannot launch an emergency lifeboat merely because it has no fuel tank.
+
+## CB radio (unreleased)
+
+In a tractor, boat or aircraft, open **CB radio** in the vehicle HUD, press **V**,
+or choose **Actions → CB radio** on a phone. Choose a channel and a call sign;
+these, volume and squelch are saved separately for each of your vehicles. The
+usual defaults are road channel **19** and emergency channel **9**. The world
+owner can change these rules.
+
+Type in **Radio message**, leave the text field, then hold **T**, or hold the
+**Hold to transmit** button. Release to end early. A message occupies the air
+for its speaking time and finishes automatically if you keep holding. Typed T
+characters stay in your draft. On a controller, **View (8)** opens CB and the
+**right trigger (7)** holds the microphone; D-pad up/down moves focus and
+left/right changes the selected channel or slider. Remap radio buttons under
+Pilot & preferences → Controller settings.
+
+Only nearby stations on your channel hear you. Hills and aircraft height can
+extend reach; ridges obstruct it, and open water carries signals further. A
+weak message loses words or becomes static. Raise **Squelch** to hide weak
+stations; **Volume** sets the received-message tone and respects the usual sound
+mute. The pane shows the current carrier, remaining airtime and signal strength.
+Wait when the channel is busy. Simultaneous keys cause garbled “doubling”. The
+public-chat mute and lock rules also apply by default. AI neighbours do not reply.
+
+Received traffic appears after a carrier finishes. It stays separate from parish
+chat and is cleared when you leave the vehicle or disconnect. Closing the pane,
+losing focus or cancelling a touch releases your microphone. Your draft stays
+while you close and reopen the pane in the same vehicle; changing vehicles clears
+it. Walking and disabled-world states explain why the microphone is unavailable.
+
+A nearby boat receiving an emergency-channel call from a stranded vessel can
+choose **Open rescue options**. This opens the existing player aid panel: fuel,
+towing and rescue still require the usual proximity, equipment and manual actions.
+A radio call never grants supplies or automatically sends a rescuer.

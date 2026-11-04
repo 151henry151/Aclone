@@ -1,4 +1,4 @@
-import { radioCheckpoint, restoreRadio } from '../shared/radio';
+import { radioCheckpoint, restoreRadio, radioView, leaveRadio } from '../shared/radio';
 import { expandPuddlewickIsland } from './puddlewick-island';
 import { ensurePuddlewickSpaceport } from './puddlewick-spaceport';
 import { ensurePuddlewickResources } from './puddlewick-resources';
@@ -124,6 +124,7 @@ interface Peer {
   born: number;
   delta?: boolean;
   settingsDelta?: boolean;
+  radio?: string;
   stream?: DeltaStream;
   delivery?: SnapshotWindow;
   backpressureSince?: number;
@@ -258,6 +259,20 @@ export async function createApp(options: AppOptions) {
     const w = p.world && worlds.get(p.world);
     if (!w || !p.account) return;
     const me = w.players[p.account.id];
+    const radio = JSON.stringify({
+      type: 'radio',
+      world: w.id,
+      vehicle: me.vehicle,
+      view: radioView(w, me),
+    });
+    if (
+      p.radio !== radio &&
+      p.socket.readyState === WebSocket.OPEN &&
+      p.socket.bufferedAmount < 256 * 1024
+    ) {
+      send(p, radio);
+      p.radio = radio;
+    }
     if (p.delta) {
       if (p.socket.readyState !== WebSocket.OPEN || (p.delivery && !p.delivery.ready)) return;
       if (p.socket.bufferedAmount > 256 * 1024) {
@@ -348,6 +363,7 @@ export async function createApp(options: AppOptions) {
         me.speed = 0;
         if (me.task?.repeat) cancelGather(w, me);
         me.online = false;
+        leaveRadio(w, me);
         me.lastSeen = w.time;
         leaveReport(w, me);
         say(w, 'Parish notice', me.name + ' has left.');
@@ -355,6 +371,7 @@ export async function createApp(options: AppOptions) {
       }
       delete p.world;
       delete p.stream;
+      delete p.radio;
       p.delivery?.reset();
     }
     p.input = { throttle: 0, steer: 0, boost: false };

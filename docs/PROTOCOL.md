@@ -217,3 +217,20 @@ to the prior settings object, including explicit removals; an absent patch means
 settings are unchanged. Protocols 1–3 retain their previous complete-settings
 behaviour. Negotiate protocol 4 in the hello message; a fresh baseline is required
 on reconnect or world change.
+
+## Private CB radio events (unreleased)
+
+A landed socket receives `{type:"radio", world, vehicle, view}` when its radio
+view changes. `view` contains availability, that vehicle's channel/handle/volume/
+squelch configuration, received traffic and audible keyed stations with remaining
+seconds and signal strength. It is recipient-specific, separate from public world
+state and chat. A traffic record contains its ID, sender, handle, channel,
+degraded text, strength, collision flag and optional manual rescue coordinates.
+Scope events by world and vehicle; clear the pane on departure or disconnect.
+Do not replay notifications for previously received IDs.
+
+Send `radio` actions with `operation` `key` (`text`), `release`, `channel`,
+`squelch`, `volume` or `handle` (`value`). Keying uses authoritative transient
+state and normal action-result errors. Hold/release client inputs never change
+the speaking-rate limit or create financial/rescue effects. Settings persist;
+carriers and received logs do not.

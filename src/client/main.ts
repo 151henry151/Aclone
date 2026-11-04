@@ -1,3 +1,4 @@
+import { RadioConsole } from './radio-console';
 import { CANOE } from '../shared/canoe-rules';
 import { canoePanel } from './canoe-panel';
 import { fuelPanel } from './fuel-panel';
@@ -178,7 +179,7 @@ let items = defaultItems,
   skills = defaultSkills;
 const button = (text: string, action: string, extra = '', className = '') =>
   `<button type="button" data-do="${action}" ${extra} class="${className}">${text}</button>`;
-app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="minimap-panel"><div class="panel-heading"><span>PARISH MAP · M</span><button data-do="hud-hide" data-id="map" aria-label="Hide minimap">−</button></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot-summary"><button class="hud-dismiss" data-do="hud-hide" data-id="status" aria-label="Hide player status">−</button><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><button id="debt-notice" data-do="loans" class="wide" hidden></button><div id="needs"></div></div><div class="parish-players"><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div class="chat-heading"><span>PARISH CHAT · Enter</span><button data-do="hud-hide" data-id="chat" aria-label="Hide chat">−</button></div><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
+app.innerHTML = `<div id="viewport"></div><div class="grain" aria-hidden="true"></div><header class="brand"><button id="brand-button" aria-label="Open game menu"><span class="brand-icon">a</span><strong>Aclone<span>A SMALL, PERSISTENT UNIVERSE</span></strong></button><span id="connection" role="status">OFFLINE</span></header><div id="world-hud" hidden><div class="location"><span class="eyebrow">YOUR LITTLE CORNER OF THE UNIVERSE</span><b id="location">Puddlewick</b><span id="clock"></span></div><aside class="left-panel"><div class="minimap-panel"><div class="panel-heading"><span>PARISH MAP · M</span><button data-do="hud-hide" data-id="map" aria-label="Hide minimap">−</button></div><button type="button" class="minimap-button" data-do="map" aria-label="Open parish map"><canvas id="minimap" width="230" height="170" aria-hidden="true"></canvas></button><div class="map-legend"><i class="dot rust"></i> You <i class="dot cream"></i> Buildings <span>N ↑</span></div></div><section class="journal"><span class="eyebrow">GETTING ESTABLISHED</span><h2>An honest day's work.</h2><p id="objective">Drive to the Odd Jobs Office and take a shift. The economy won't run itself. Mostly.</p>${button('First steps & leaving safely', 'worldRules', '', 'wide')}${button('View parish directory <span>↗</span>', 'directory', '', 'wide')}${button('How things work <kbd>F7</kbd>', 'help', '', 'wide quiet')}<p class="menu-tip">Press <kbd>F9</kbd> or click Menu for maps, reports and settings.</p></section></aside><aside class="status-panel"><div class="pilot-summary"><button class="hud-dismiss" data-do="hud-hide" data-id="status" aria-label="Hide player status">−</button><div class="pilot"><span class="dot live"></span><strong id="pilot-name"></strong><span id="age"></span></div><div class="cash"><small>CASH IN HAND</small><b id="cash"></b></div><button id="debt-notice" data-do="loans" class="wide" hidden></button><div id="needs"></div></div><div class="parish-players"><div class="player-heading">IN THE PARISH <span id="player-count"></span></div><div id="players"></div></div></aside><div class="bottom-left"><div id="driving"></div><div id="intoxication-status" role="status" hidden></div><div class="button-row">${button('Engine <kbd>F4</kbd>', 'engine')}${button('Lights', 'lights')}${button('View <kbd>C</kbd>', 'camera')}${button('CB radio <kbd>V</kbd>', 'radio')}${button('Sound: tap to start', 'sound')}</div><p class="tourney">◈ A modest ambition: live a long life. Get reasonably rich.</p></div><section class="chat-panel"><div class="chat-heading"><span>PARISH CHAT · Enter</span><button data-do="hud-hide" data-id="chat" aria-label="Hide chat">−</button></div><div id="target"></div><div id="npc-notice" hidden><button type="button" data-do="npc">AI resident · chat &amp; memory info</button></div><div id="chat-recipient" hidden></div><div id="chat-log" title="Scroll for earlier messages; Page Up / Page Down also work while typing" role="log" aria-label="Recent parish and private messages" aria-live="polite" tabindex="0"></div><button type="button" id="chat-latest" hidden>New messages · jump to latest ↓</button><form id="chat-form"><span>›</span><input id="chat-input" name="message" maxlength="${MAX_CHAT_LENGTH}" placeholder="Enter to chat · *help for commands" aria-label="Chat message" autocomplete="off"><button aria-label="Send message">↵</button></form></section><aside class="inventory-panel"><nav>${button('Inventory <kbd>I</kbd>', 'inventory')}${button('Skills', 'skills')}${button('World <kbd>F9</kbd>', 'menu')}</nav><div id="bag"></div></aside><nav class="quickbar" aria-label="Game actions">${button('Menu <kbd>F9</kbd>', 'menu', 'title="Game menu: maps, reports, settings and pilot key"')}${button('Parp <kbd>Space</kbd>', 'horn')}${button('Activities', 'activities')}${button('Resources', 'resources')}${button('Build', 'construction')}${button('Editor <kbd>F10</kbd>', 'editor')}</nav></div><div id="overlay"></div><div id="modal-host"></div><div id="toast" role="status" aria-live="polite"></div>`;
 document
   .getElementById('world-hud')!
   .insertAdjacentHTML(
@@ -409,6 +410,8 @@ document.addEventListener('input', (e) => {
       Number(input.value) / 100,
     );
 });
+const radioRequests = new Set<number>();
+const radioConsole = new RadioConsole(send, (volume) => sound.radio(volume));
 const actionViews = new Map<number, string | undefined>();
 const tradeFeedback = new TradeFeedback();
 const tradeVisits = new Map<number, number>();
@@ -420,6 +423,7 @@ function send(action: Action) {
     return;
   }
   const id = ++request;
+  if (action.type === 'radio') radioRequests.add(id);
   actionViews.set(id, $('modal-host').dataset.viewKey);
   if (action.type === 'trade') tradeVisits.set(id, tradeVisit);
   if (tradeVisits.size > 128) tradeVisits.delete(tradeVisits.keys().next().value!);
@@ -460,6 +464,7 @@ const stateInbox = new FrameInbox<StatePresentation>((state) => {
     const alert = trawlCapacityAlerts.update(world!.id, me, world);
     if (alert) toast(alert, false, 12000);
   }
+  if (world && me) radioConsole.sync(world, me);
   refreshTradingPrices();
   if (world && me && panel === 'player') refreshPlayerAid($('modal-host'), world, me, selected);
 });
@@ -497,6 +502,7 @@ async function connect() {
       $('connection').textContent = 'CONNECTED';
       if (!world) showGalaxy();
     }
+    if (msg.type === 'radio') radioConsole.receive(msg);
     if (msg.type === 'state') {
       world = mergeState(world, msg);
       me = world!.players[msg.me];
@@ -513,6 +519,7 @@ async function connect() {
         ws.send(JSON.stringify({ type: 'ack', sequence: msg.sequence }));
     }
     if (msg.type === 'space') {
+      radioConsole.reset();
       stateInbox.clear();
       setChatRecipient();
       account = msg.account;
@@ -540,17 +547,28 @@ async function connect() {
       if (panel === 'caretaker' && !editing && !readingChat) renderPanel();
     }
     if (msg.type === 'result') {
+      const radioResult = radioRequests.delete(msg.request);
+      if (radioResult) radioConsole.result(msg.ok, msg.message ?? '');
       const visit = tradeVisits.get(msg.request);
       tradeVisits.delete(msg.request);
       if (msg.ok && msg.trade && visit !== undefined) {
         msg.message = tradeFeedback.add(msg.trade, visit);
         lastTradeVisit = visit;
       }
-      if (msg.message && !['Parp.', 'Done. Quietly competent.'].includes(msg.message))
+      if (
+        !radioResult &&
+        msg.message &&
+        !['Parp.', 'Done. Quietly competent.'].includes(msg.message)
+      )
         toast(msg.message, !msg.ok);
       const view = actionViews.get(msg.request);
       actionViews.delete(msg.request);
-      if ((msg.ok || visit !== undefined) && panel && view === $('modal-host').dataset.viewKey)
+      if (
+        !radioResult &&
+        (msg.ok || visit !== undefined) &&
+        panel &&
+        view === $('modal-host').dataset.viewKey
+      )
         setTimeout(() => {
           // A prior action must never replace a newly opened tab or an input being edited.
           const editing = document.activeElement?.matches('input,select,textarea');
@@ -566,6 +584,8 @@ async function connect() {
   });
   ws.addEventListener('close', (e) => {
     if (ws !== socket) return;
+    radioConsole.reset();
+    radioRequests.clear();
     $('connection').textContent = 'DISCONNECTED';
     sound.clear();
     keys.clear();
@@ -1211,6 +1231,8 @@ function buildingAccessKey(b: Building) {
 let playtimeStats: PlaytimeStatistics | undefined;
 let statisticsError = '';
 function openPanel(name: string) {
+  if (panel === 'radio' && name === 'radio') return;
+  if (panel === 'radio') radioConsole.unmount();
   if (name === 'statistics') {
     playtimeStats = undefined;
     statisticsError = '';
@@ -1304,6 +1326,7 @@ function watchCaretaker(open: boolean) {
 }
 let closeTractorPreview: (() => void) | undefined;
 function closePanel() {
+  radioConsole.unmount();
   if (panel === 'building' && lastTradeVisit === tradeVisit && tradeFeedback.summary)
     toast(tradeFeedback.summary);
   tradeVisit++;
@@ -1706,6 +1729,14 @@ app.addEventListener('input', (event) => {
 });
 function renderPanel() {
   if (!panel) return;
+  if (panel === 'radio' && world && me) {
+    radioConsole.sync(world, me);
+    if (!$('modal-host').querySelector('.radio-console')) {
+      modal('CB radio', '<section class="radio-console"></section>');
+      radioConsole.mount($('modal-host').querySelector('.radio-console')!);
+    }
+    return;
+  }
   if (panel === 'create') {
     modal(
       'A parish of your own.',
@@ -1896,7 +1927,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('CB radio', 'radio')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -2664,6 +2695,7 @@ app.addEventListener('click', async (e) => {
       return;
     }
     const panels = [
+      'radio',
       'loans',
       'menu',
       'reports',
@@ -3470,6 +3502,16 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const key = e.key.toLowerCase();
+  if (key === 'v' && world) {
+    e.preventDefault();
+    openPanel('radio');
+    return;
+  }
+  if (key === 't' && panel === 'radio') {
+    e.preventDefault();
+    radioConsole.transmit(true);
+    return;
+  }
   if (key === 'h' && world && !panel) {
     document.documentElement.classList.toggle('scenery-view');
     toast(
@@ -3557,12 +3599,14 @@ window.addEventListener('keydown', (e) => {
   }
 });
 window.addEventListener('keyup', (e) => {
+  if (e.key.toLowerCase() === 't') radioConsole.transmit(false);
   const wasHeld = keys.has(e.key);
   keys.delete(e.key);
   if (wasHeld && e.key === 'Tab' && weapon === 'javelin' && world && !panel && !mobile.drawer)
     send({ type: 'fire', weapon });
 });
 window.addEventListener('blur', () => {
+  radioConsole.transmit(false);
   keys.clear();
   stateInbox.setActive(!document.hidden);
 });
@@ -3571,8 +3615,10 @@ window.addEventListener('focus', () => {
   stateInbox.setActive(!document.hidden);
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) keys.clear();
-  else scene.resumeMotion();
+  if (document.hidden) {
+    keys.clear();
+    radioConsole.transmit(false);
+  } else scene.resumeMotion();
   stateInbox.setActive(!document.hidden);
   sound.setActive(!document.hidden && scene.ready);
 });
@@ -3583,6 +3629,10 @@ const controller = new Controller(
     const button = document.querySelector<HTMLButtonElement>('#target button');
     button?.click();
   },
+  () => {
+    if (world) openPanel('radio');
+  },
+  (down) => radioConsole.transmit(down),
 );
 document.addEventListener('submit', (e) => {
   const form = e.target as HTMLFormElement;

@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Add a vehicle CB dashboard with private received traffic, call signs, signal/carrier status, keyboard, touch and configurable controller push-to-talk, volume/squelch controls and manual rescue links; preserve drafts and held controls during live updates.
 - Add transient CB transmission authority, per-vehicle radio selections, terrain/range reception, deterministic doubling and word loss, manual emergency cues and configurable world rules; preserve radio sessions across failed action transactions.
 
 - Launch and paddle owned canoes from clear shores and riverbanks without fuel; add configurable hold and shore limits, gentle beaching, persistent bank mooring, dock access and ordinary boat death/recovery while retaining the same hull identity and finish.

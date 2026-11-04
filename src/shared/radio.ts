@@ -300,6 +300,14 @@ export function tickRadio(w: World, seconds: number) {
   for (const tx of [...s.transmitters.values()])
     if (s.now - tx.since >= tx.duration) finish(w, s, tx);
 }
+/** Departure must clear immediately, even when reconnect happens before the next tick. */
+export function leaveRadio(w: World, p: Player) {
+  const s = states.get(w);
+  if (!s) return;
+  s.transmitters.delete(p.id);
+  s.listeners.delete(p.id);
+  for (const tx of s.transmitters.values()) tx.heard.delete(p.id);
+}
 /** Server action transactions retain transient radio traffic across rollback world copies. */
 export function radioCheckpoint(w: World) {
   const s = states.get(w);

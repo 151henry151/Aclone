@@ -2918,3 +2918,63 @@ html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
   backdrop-filter: none;
   background: #0d1917d9;
 }
+
+.radio-console {
+  min-width: 0;
+}
+.radio-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.radio-console label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.radio-console input,
+.radio-console select,
+.radio-console textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.radio-console [data-radio-ptt] {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  touch-action: none;
+  user-select: none;
+}
+.radio-console [data-radio-ptt][aria-pressed='true'] {
+  background: var(--rust, #a3452c);
+  color: white;
+}
+.radio-console [data-radio-error] {
+  color: #bd492c;
+}
+.radio-console [data-radio-keyed] {
+  min-height: 2.5em;
+  font-variant-numeric: tabular-nums;
+}
+.radio-log {
+  max-height: 240px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.radio-log article {
+  padding: 12px 0;
+  border-top: 1px solid #baac9255;
+}
+.radio-log small {
+  display: block;
+}
+.radio-log p {
+  white-space: pre-wrap;
+}
+
+.radio-console textarea {
+  min-height: 80px;
+  height: 90px;
+}

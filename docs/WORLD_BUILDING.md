@@ -478,5 +478,7 @@ is disabled by default and enabling it does not add an AI reply routine. Channel
 9 rescue cues are local and manual. Selected channel, handle, volume and squelch
 persist per driver and vehicle; active transmissions and received logs are transient
 and never enter the public chat archive. Portable designs retain the world rules.
-The radio authority and rule editor are available in this slice; the dashboard
-and keyboard/touch/controller controls remain the next unreleased slice.
+Players open the vehicle dashboard with V, the CB HUD button or mobile Actions.
+Keyboard, touch and configurable controller push-to-talk use the same authority.
+Disabled worlds show an explanatory dashboard state. Radio volume controls the
+received-message tone and respects master mute; squelch changes server reception.

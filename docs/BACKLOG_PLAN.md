@@ -1111,3 +1111,66 @@ range, speech rate and disabled-radio state. The unchanged snapshot benchmark no
 uses 11,028 compact bytes against 248,985 legacy bytes (4.4%, below the 30% ceiling).
 Authority, rules and transport meet this slice's criteria; dashboard/input/event
 presentation still remains before the CB radio entry can be marked done.
+
+Pushed `1a75606`: CB authority, world rules and compact settings transport are
+**done**. SSH push failed with a public-key error; the existing authenticated
+`gh` credential helper successfully pushed over HTTPS, and the GitHub branch SHA
+was verified. No reauthentication or remote configuration change was needed.
+
+### CB radios — dashboard, controls and received events
+
+Before production, add browser coverage in `tests/browser/radio.spec.ts` and
+extend socket tests. Initial red: a vehicle has no CB dashboard button/pane and
+no private `radio` socket event. Send listener-specific radio views only to that
+peer, on change, with world/vehicle identity; never expose other channels through
+public state. Events show the keyed stations, remaining airtime, strength,
+dropped text/static, doubling and manual rescue cues. Preserve transient clearing
+when walking, changing vehicles, disconnecting or changing worlds.
+
+Dashboard criteria: a dedicated CB panel on tractors, boats and aircraft, opened
+from the vehicle HUD or V, also from mobile Actions. Show channel, call sign,
+volume, squelch, a draft, Hold to transmit, current carrier and a received log.
+No received traffic has a clear empty state. Disabled worlds and walking explain
+why controls are unavailable. Empty messages cannot key; busy and muted refusals
+remain visible. Snapshots/action results preserve a focused draft and held button.
+Volume changes the radio notification sound; existing master mute still applies.
+
+Keyboard: V opens the panel; after drafting, hold T to key and release T to stop;
+normal typing must never key or change channels. Touch: hold/release the actual
+transmit button, including pointer cancellation. Controller: View (8) opens CB,
+right trigger (7) holds/releases PTT, and existing D-pad navigation/adjustment
+operates channel, volume and squelch. Bindings are configurable with other
+controller controls. Blur, lost capture, hiding the page or disconnecting must
+release/cancel PTT. No stale held input can resume a transmission on reconnect.
+
+Browser command: `TEST_GPU=1 npm run test:e2e -- tests/browser/radio.spec.ts
+ tests/browser/radio-rules.spec.ts`. Two real local pilots exchange a keyboard
+transmission; test channel isolation, busy, doubling, weak reception, selected
+channel/handle after reload, foot/disabled/empty/muted states, and manual channel-9
+rescue options. Inspect screenshots of the pane in a tractor, boat and aircraft.
+A mobile viewport must fit without horizontal overflow and send by touch; an
+emulated Gamepad must use the actual polling/binding path for open, channel and
+PTT. Require private socket-event tests, full `npm test`, clean TypeScript and
+changed-file Prettier. Update PLAYING, WORLD_BUILDING, README and Unreleased, and
+only then mark the complete CB entry done.
+
+Dashboard progress: the initial browser failure was the missing CB button; the
+private-event socket test timed out because no event existed, and the audio test
+failed on the missing radio notification method. The first integrated desktop
+and mobile/controller flows pass. Visual inspection found the desktop's generic
+230px textarea pushes the received log below the fold: add an in-viewport empty
+log assertion before reducing the radio draft's own height. A no-tick reconnect
+regression also fails correctly: received traffic survives a rapid reconnect.
+Clear that listener and microphone at server departure rather than relying on a
+future simulation tick. Preserve channel/handle configuration.
+
+CB dashboard verification: all 15 focused radio/audio/socket tests pass, including
+listener isolation, unchanged-event suppression and immediate reconnect cleanup.
+All three real browser flows pass (F10 rules, two-pilot desktop, mobile/controller)
+in 2 minutes. Inspected screenshots show the compact empty log, tractor/boat/
+aircraft dashboards, doubling/static traffic and the mobile controls without
+horizontal overflow. Full `npm test` passes **1,401 tests** in 215 seconds (exit 0,
+`/tmp/aclone-radio-ui-full.status`); `npx tsc --noEmit` is clean
+(`/tmp/aclone-radio-ui-tsc2.log`). Prettier ran and its explicit-file check passes.
+Player/world-building/protocol docs, README and imperative Unreleased changelog
+are updated. The CB entry is ready to commit and push without a version bump.

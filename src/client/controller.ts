@@ -8,6 +8,8 @@ export const controllerDefaults = {
   back: 1,
   menu: 9,
   boost: 5,
+  radio: 8,
+  radioTransmit: 7,
 };
 export type ControllerBindings = typeof controllerDefaults;
 export function controllerInput(
@@ -55,6 +57,8 @@ export class Controller {
     private onMenu: () => void,
     private onBack: () => void,
     private onInteract: () => void,
+    private onRadio: () => void = () => {},
+    private onRadioTransmit: (down: boolean) => void = () => {},
   ) {
     try {
       const saved = JSON.parse(localStorage.getItem('aclone.controller') ?? '{}');
@@ -79,6 +83,9 @@ export class Controller {
     this.flight = aircraftControllerInput(pad, this.config);
     const pressed = new Set(pad?.buttons.flatMap((b, i) => (b.pressed ? [i] : [])) ?? []);
     const edge = (i: number) => pressed.has(i) && !this.previous.has(i);
+    if (edge(this.config.radio)) this.onRadio();
+    if (pressed.has(this.config.radioTransmit) !== this.previous.has(this.config.radioTransmit))
+      this.onRadioTransmit(pressed.has(this.config.radioTransmit));
     if (edge(this.config.menu)) this.onMenu();
     if (edge(this.config.back)) this.onBack();
     if (menu) {

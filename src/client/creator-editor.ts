@@ -125,7 +125,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Vehicle radio traffic is local and transient. Channel and call sign stay with each driver's vehicle. Ground range grows with antenna elevation and over water; ridges attenuate it. Default channel 19 is for road traffic; channel 9 is for emergencies. Residents do not answer calls. The dashboard controls are the next unreleased slice.</p></fieldset>`;
+    )}<p>Vehicle radio traffic is local and transient. Channel and call sign stay with each driver's vehicle. Ground range grows with antenna elevation and over water; ridges attenuate it. Default channel 19 is for road traffic; channel 9 is for emergencies. Residents do not answer calls. Open CB radio or press V in a vehicle; mobile Actions and configurable controller bindings provide the same controls.</p></fieldset>`;
   const canoe = canoeRules(settings);
   const canoeFields = `<fieldset class="boat-death-settings"><legend>Portable canoes</legend>${Object.entries(
     canoeRuleFields,

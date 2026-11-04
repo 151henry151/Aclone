@@ -178,6 +178,13 @@ export class GameAudio {
         this.playHorn(spatial.gain * (p.atHome ? 0.25 : 1), spatial.pan, id);
     }
   }
+  /** One notification per received carrier; master/chat buses retain their usual controls. */
+  radio(volume: number) {
+    if (!(volume > 0) || !this.audible() || this.shots.size >= MAX_HORNS) return;
+    const voice = this.voice('chat', false);
+    voice.gain.gain.value = 0.3 * Math.min(1, volume);
+    this.shots.set(voice, undefined);
+  }
   private audible() {
     return this.enabled && this.active && this.volume > 0 && this.context?.state === 'running';
   }
