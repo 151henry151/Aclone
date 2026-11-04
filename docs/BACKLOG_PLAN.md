@@ -2874,3 +2874,53 @@ gathering sells one and retains two from the unchanged three-item yield, includi
 a buyer with only one free slot and funds for one item. No new UI/rendering code
 or settings controls changed, so the already-verified browser flow is not repeated.
 No full suite is run. Ready to commit/push.
+
+Pushed and verified `47f5449` on `backlog-implementation`. **Remaining audited
+resident transaction-limit consumers are done.**
+
+### Gameplay rules — general resident trade and storage load targets
+
+Before production, add a Resident trade and storage loads fieldset with eight
+integer 0–10,000 policies: `npcGeneralSupplyTarget` 3,
+`npcConstructionLoadLimit` 20, `npcParishSupplyLoadLimit` 20,
+`npcGeneralTradeLoadLimit` 10, `npcStorageDepositLoadLimit` 10,
+`npcStorageWithdrawalLoadLimit` 5, `npcRoomStorageLoadLimit` 3, and
+`npcCareerTradeLoadLimit` 1,000. Keep absent-field defaults in the shared settings
+source. General supply target governs the optional small purchase, carried target
+and free-source allowance; construction load bounds both those purchases and
+explicit construction procurement. Parish load limits obtaining goods from a
+supplier, not fulfilling an order from cargo already carried. Storage deposit,
+withdrawal and room transfer limits remain distinct; career trading has its own
+larger load target. Zero suppresses the corresponding optional leg, while owned
+cargo, order terms and existing world transaction/stock/cash/capacity limits remain
+intact. No setting edit makes a transfer.
+
+Write failing npc-cargo-budget-rules tests for exact default/custom/zero behavior,
+all eight missing-field fallbacks, general trade/storage, construction, public
+supply, room pantry and career trade. Cover atomic validation, editor/summary,
+observations, design and save reload; retain the one-item transaction regressions.
+Run new tests plus npc-transfer-limit, npc-adaptive, npc-projects, npc-construction,
+npc-guide and the existing NPC guide integration if its request format changes.
+Browser: save/reopen all eight, observe changed trade loads without a transfer,
+zero removes the trade option, reject invalid input and reload; inspect screenshots
+and errors. Require TypeScript, Prettier, NPC/world-builder/README and imperative
+Unreleased documentation before push.
+
+Cargo red: all six tests fail for missing rules after giving the parish fixture
+its ordinary full share so the 20-item policy can be observed independently of
+share limits. All six now pass. The unchanged request-size check fails at 96,074
+bytes. Before further guide production changes, require a lossless topic encoding:
+retain every full title grouped by source prefix and document the existing exact
+slug algorithm for reconstructing its lookup ID. Compare the complete reconstructed
+ID/title index against all original manual headings, retain all selected text and
+citations, and leave lookup/memory/size limits unchanged. This avoids repeating
+both a long heading and its mechanically derived slug in every request.
+
+Cargo gates pass: 55 relevant tests plus one resident guide integration; the
+browser passes persistence, changed/zero trade loads and invalid-input handling
+in 20.1 seconds. Inspect all three screenshots. TypeScript exposes the missing
+Settings cargo-rules intersection; add that type declaration and rerun TypeScript
+successfully, without repeating unaffected runtime checks. Changed-file Prettier
+and diff checks are clean. All eight absent-field defaults and the 1,000-item
+career baseline pass. The lossless topic index reconstructs every original lookup
+ID and the unchanged request-size limit passes. No full suite is run.

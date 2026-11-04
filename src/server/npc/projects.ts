@@ -1,3 +1,4 @@
+import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { jobTraining } from './job-training.ts';
@@ -232,11 +233,12 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       const available = Math.max(0, carried - keep);
       let n = Math.min(
         transferLimit,
-        1000,
+        npcCargoRules(w.settings).npcCareerTradeLoadLimit,
         available || (source.stock[item] ?? 0),
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
-        available || affordableLoad(p.cash, price, reserve, 1000),
+        available ||
+          affordableLoad(p.cash, price, reserve, npcCargoRules(w.settings).npcCareerTradeLoadLimit),
       );
       while (n > 0 && !available && !canCarry({ ...p, vehicle: travelVehicle(p) }, item, n, w)) n--;
       if (!n) continue;

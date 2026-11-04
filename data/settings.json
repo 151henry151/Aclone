@@ -303,5 +303,13 @@
   "npcBreedingSpareAnimals": 2,
   "npcShoppingFuelTarget": 2,
   "npcShoppingDrinkTarget": 6,
-  "npcShoppingFoodTarget": 3
+  "npcShoppingFoodTarget": 3,
+  "npcGeneralSupplyTarget": 3,
+  "npcConstructionLoadLimit": 20,
+  "npcParishSupplyLoadLimit": 20,
+  "npcGeneralTradeLoadLimit": 10,
+  "npcStorageDepositLoadLimit": 10,
+  "npcStorageWithdrawalLoadLimit": 5,
+  "npcRoomStorageLoadLimit": 3,
+  "npcCareerTradeLoadLimit": 1000
 }

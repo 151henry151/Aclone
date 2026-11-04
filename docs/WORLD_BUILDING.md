@@ -1044,3 +1044,22 @@ and career sales. Paired legs use the same quantity. A small limit does not redu
 actual gathering yield: excess stays in inventory for later sales. Service parts
 can be bought in smaller instalments before arranging service. These policies
 change future plans, not inventories, money or posted agreement terms.
+
+## Resident trade and storage loads (unreleased)
+
+**F10 → Rules → Resident trade and storage loads** exposes eight integer item
+counts, each from 0 to 10,000:
+
+- `npcGeneralSupplyTarget`: 3. Optional general-purchase and carried-stock target; also the allowance for a free source.
+- `npcConstructionLoadLimit`: 20. Ceiling for explicit construction procurement and general purchases, including non-construction supplies.
+- `npcParishSupplyLoadLimit`: 20. Load obtained from a supplier for a parish order; cargo already carried can still fulfil the order within its ordinary limits.
+- `npcGeneralTradeLoadLimit`: 10. Optional general trading route load.
+- `npcStorageDepositLoadLimit`: 10. Deposit into an owned stockroom.
+- `npcStorageWithdrawalLoadLimit`: 5. Withdraw from an owned stockroom.
+- `npcRoomStorageLoadLimit`: 3. Transfer into or out of a guest's room pantry.
+- `npcCareerTradeLoadLimit`: 1,000. Longer-term trading career load, including carried trading stock.
+
+Zero suppresses the corresponding optional transfer leg. World transaction limits,
+stock, funds, reserves, cargo and storage still apply. Edits make no transfer and
+rewrite no order or agreement. Values survive saves/designs and are visible to
+resident planning. Separate business and farm delivery policies remain separate.

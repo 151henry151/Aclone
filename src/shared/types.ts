@@ -1,3 +1,4 @@
+import type { NpcCargoRules } from './npc-cargo-rules';
 import type { NpcPricingRules } from './npc-pricing-rules';
 import type { NpcBusinessRules } from './npc-business-rules';
 import type { NpcReserveRules } from './npc-reserve-rules';
@@ -311,6 +312,7 @@ export interface Settings
     Partial<NpcReserveRules>,
     Partial<NpcBusinessRules>,
     Partial<NpcPricingRules>,
+    Partial<NpcCargoRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

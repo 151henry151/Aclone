@@ -168,16 +168,16 @@ export function gameGuide(query: string, activityQuery = '') {
     // Core rules must not depend on the agent knowing which question to search for.
     fundamentals: compactEntries(fundamentals),
     controls: compactGuideText(docs.find((e) => e.id === 'faq:controls')!.text),
-    // Every lookup ID is prefix:section. Share the repeated source prefixes.
-    topicIdFormat: 'prefix:section',
+    // Lookup slugs derive exactly from the retained full titles.
+    topicIdFormat: 'prefix:slug(title)',
+    topicSlug:
+      'Lowercase the title; replace each run outside [a-z0-9] with a hyphen; trim leading/trailing hyphens. Search the exact title or this ID.',
     topics: Object.fromEntries(
       ['faq', 'playing', 'economy'].map((prefix) => [
         prefix,
-        Object.fromEntries(
-          [...new Map(docs.map(({ id, title }) => [title, id.replace(/:\d+$/, '')]))]
-            .filter(([, id]) => id.startsWith(prefix + ':'))
-            .map(([title, id]) => [id.slice(prefix.length + 1), title]),
-        ),
+        [...new Map(docs.map(({ id, title }) => [title, id.replace(/:\d+$/, '')]))]
+          .filter(([, id]) => id.startsWith(prefix + ':'))
+          .map(([title]) => title),
       ]),
     ),
     catalogLookup:

@@ -10,7 +10,13 @@ function embeddedEntries(group: ReturnType<typeof gameGuide>['fundamentals']) {
 function topicIndex(guide: ReturnType<typeof gameGuide>) {
   return Object.fromEntries(
     Object.entries(guide.topics).flatMap(([prefix, sections]) =>
-      Object.entries(sections).map(([section, title]) => [`${prefix}:${section}`, title]),
+      sections.map((title) => [
+        `${prefix}:${title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')}`,
+        title,
+      ]),
     ),
   );
 }
@@ -326,8 +332,8 @@ test('gameplay instructions retain explicit AI identity and one copy of the oper
 test('guide groups manual topic prefixes once and documents the complete lookup ID format', () => {
   const guide = gameGuide('farm school inventory water');
   assert.deepEqual(Object.keys(guide.topics), ['faq', 'playing', 'economy']);
-  assert.equal(guide.topicIdFormat, 'prefix:section');
-  assert.ok(Object.keys(guide.topics.faq).includes('controls'));
+  assert.equal(guide.topicIdFormat, 'prefix:slug(title)');
+  assert.ok(guide.topics.faq.includes('Controls'));
   assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
 });
 
@@ -361,4 +367,19 @@ test('embedded guide uses keyed sections while preserving selected text and cata
         });
     }
   }
+});
+
+test('topic title lists reconstruct exact lookup IDs using the documented slug rule', () => {
+  const guide = gameGuide('');
+  for (const titles of Object.values(guide.topics)) assert.ok(Array.isArray(titles));
+  assert.equal(guide.topicIdFormat, 'prefix:slug(title)');
+  assert.equal(
+    (guide as any).topicSlug,
+    'Lowercase the title; replace each run outside [a-z0-9] with a hyphen; trim leading/trailing hyphens. Search the exact title or this ID.',
+  );
+  assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
+  assert.equal(
+    topicIndex(guide)['playing:outside-investment-terms-unreleased'],
+    'Outside investment terms (unreleased)',
+  );
 });

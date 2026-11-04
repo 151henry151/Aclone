@@ -1,3 +1,4 @@
+import { npcCargoRules, npcCargoRuleFields } from '../shared/npc-cargo-rules';
 import { npcPricingRuleFields, npcPricingRules } from '../shared/npc-pricing-rules';
 import { npcBusinessRuleFields, npcBusinessRules } from '../shared/npc-business-rules';
 import { npcReserveRuleFields, npcReserveRules } from '../shared/npc-reserve-rules';
@@ -106,6 +107,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcReserveRuleFields),
     ...Object.keys(npcBusinessRuleFields),
     ...Object.keys(npcPricingRuleFields),
+    ...Object.keys(npcCargoRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -129,6 +131,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const cargo = npcCargoRules(settings);
+  const cargoFields = `<fieldset class="boat-death-settings"><legend>Resident trade and storage loads</legend>${Object.entries(
+    npcCargoRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        cargo[key as keyof typeof cargo],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Zero suppresses the corresponding optional transfer leg. Construction ceiling also bounds general purchases; the general target is also the free-source allowance. Parish supplier limits do not restrict orders fulfilled from carried cargo. World transaction limits, actual stock, funds, cargo and storage still apply. Setting edits make no transfers.</p></fieldset>`;
   const pricing = npcPricingRules(settings);
   const pricingFields = `<fieldset class="boat-death-settings"><legend>Resident pricing</legend>${Object.entries(
     npcPricingRuleFields,
@@ -409,6 +427,7 @@ export function settingsFields(settings: Settings = defaults) {
     reserveFields +
     businessFields +
     pricingFields +
+    cargoFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

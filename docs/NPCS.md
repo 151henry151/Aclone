@@ -665,3 +665,14 @@ sells only the allowed amount and keeps excess aboard for a later sale; its text
 distinguishes new gathering from delivered cargo. A parts purchase smaller than
 the service requirement buys the permitted instalment first and leaves servicing
 for a later plan. All transfers use ordinary validation and accounting.
+
+General trade and storage load rules preserve distinct defaults for small purchases
+(3), the general/construction ceiling (20), parish supplier loads (20), general
+trades (10), owned deposits/withdrawals (10/5), room pantry transfers (3), and trading
+careers (1,000). F10 can change each or suppress its optional leg with zero. Ordinary
+transaction limits, cash, stock, capacities and reserves still bound every plan.
+
+Guide topic titles are retained in full, grouped by source. The documented slug
+algorithm reconstructs every exact lookup ID; direct title or ID searches still
+work. This avoids repeating derived slugs while keeping all headings, help text,
+citations and memory within the existing request-size limit.

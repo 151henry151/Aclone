@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident general-trade, construction, parish-supply, storage and career load targets in a dedicated world-rules fieldset; derive guide topic IDs from retained titles to preserve all help within the request budget.
+
 - Expose resident portable shopping targets as world rules; bound shopping and carried-input deposits by transaction limits and honor local Water/Bread reserves in owner deliveries.
 
 - Expose resident breeding reserves and replacement-herd targets as world rules; share ordinary breeding checks so plans respect actual fees, rations, herd health and barn capacity.

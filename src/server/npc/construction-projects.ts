@@ -1,3 +1,4 @@
+import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -226,7 +227,7 @@ export function constructionChoices(w: World, p: Player): FarmerChoice[] {
       let quantity = Math.min(
         economyRules(w.settings).transactionItemLimit,
         need,
-        20,
+        npcCargoRules(w.settings).npcConstructionLoadLimit,
         shop.stock[item],
         price ? Math.floor(surplus / price) : need,
       );

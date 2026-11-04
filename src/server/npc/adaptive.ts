@@ -1,3 +1,4 @@
+import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { boatLanding } from '../../shared/boathouse';
@@ -135,6 +136,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     ];
   const reserves = npcReserveRules(w.settings);
   const transferLimit = economyRules(w.settings).transactionItemLimit;
+  const cargo = npcCargoRules(w.settings);
   const base = gameplayChoices(w, p, state, 'independent');
   if (p.task) return base;
   const groups = new Map<string, FarmerChoice[]>();
@@ -236,8 +238,10 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         transferLimit,
         allowance,
         source.stock[order.item],
-        20,
-        cost ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / cost) : 20,
+        cargo.npcParishSupplyLoadLimit,
+        cost
+          ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / cost)
+          : cargo.npcParishSupplyLoadLimit,
       );
       while (quantity > 0 && !canCarry(p, order.item, quantity, w)) quantity--;
       if (quantity > 0)
@@ -283,13 +287,15 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       .reduce((n, v) => Math.max(n, v.construction?.[item] ?? 0), 0);
     const quantity = Math.min(
       transferLimit,
-      Math.max(1, Math.min(needed || 3, 20)),
+      Math.min(needed || cargo.npcGeneralSupplyTarget, cargo.npcConstructionLoadLimit),
       b.stock[item],
-      b.sell[item] ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / b.sell[item]) : 3,
+      b.sell[item]
+        ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / b.sell[item])
+        : cargo.npcGeneralSupplyTarget,
     );
     if (
       quantity > 0 &&
-      (p.inventory[item] ?? 0) < Math.max(needed, 3) &&
+      (p.inventory[item] ?? 0) < Math.max(needed, cargo.npcGeneralSupplyTarget) &&
       canCarry(p, item, quantity, w)
     )
       add(
@@ -309,11 +315,18 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
     if (buyer) {
       let n = Math.min(
         transferLimit,
-        10,
+        cargo.npcGeneralTradeLoadLimit,
         b.stock[item],
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
-        b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 10) : 10,
+        b.sell[item]
+          ? affordableLoad(
+              p.cash,
+              b.sell[item],
+              livingReserve(w, p),
+              cargo.npcGeneralTradeLoadLimit,
+            )
+          : cargo.npcGeneralTradeLoadLimit,
       );
       while (n > 0 && !canCarry(p, item, n, w)) n--;
       if (n > 0)
@@ -377,7 +390,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             b.kind === 'home' && p.hunger < 15000 && p.thirst < 15000
               ? n
               : spareSupplies(p, item, w),
-            10,
+            cargo.npcStorageDepositLoadLimit,
             b.capacity - (b.stock[item] ?? 0),
           );
           if (quantity > 0)
@@ -391,8 +404,8 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         }
       for (const [item, n] of Object.entries(b.stock))
         if (n > 0) {
-          const quantity = Math.min(transferLimit, n, 5);
-          if (canCarry(p, item, quantity, w))
+          const quantity = Math.min(transferLimit, n, cargo.npcStorageWithdrawalLoadLimit);
+          if (quantity > 0 && canCarry(p, item, quantity, w))
             add(
               'storage',
               `Withdraw ${quantity} ${item} from my ${b.name}.`,
@@ -472,7 +485,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             for (const direction of ['deposit', 'withdraw'] as const) {
               const quantity = Math.min(
                 transferLimit,
-                3,
+                cargo.npcRoomStorageLoadLimit,
                 direction === 'deposit' && (p.hunger >= 15000 || p.thirst >= 15000)
                   ? spareSupplies(p, item, w)
                   : ((direction === 'deposit' ? p.inventory : booking.stock)[item] ?? 0),
