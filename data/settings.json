@@ -357,5 +357,7 @@
   "gatheringLogsImplement": "chainsaw",
   "gatheringStoneImplement": "pickaxe",
   "gatheringGravelImplement": "shovel",
-  "gatheringDirtImplement": "shovel"
+  "gatheringDirtImplement": "shovel",
+  "farmCompostYieldBonus": 0.33,
+  "farmRotationYieldPenalty": 0.2
 }

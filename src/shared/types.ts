@@ -1,3 +1,4 @@
+import type { FarmYieldRules } from './farm-yield-rules';
 import type { GatheringRules, GatheringImplementRules } from './gathering-rules';
 import type { ConstructionRules } from './construction-rules';
 import type { NpcAccountRules } from './npc-account-rules';
@@ -321,6 +322,7 @@ export interface Settings
     Partial<NpcAccountRules>,
     Partial<ConstructionRules>,
     Partial<GatheringRules>,
+    Partial<FarmYieldRules>,
     Partial<GatheringImplementRules>,
     Partial<NpcJourneyRules>,
     Partial<NpcBusinessLoadRules>,

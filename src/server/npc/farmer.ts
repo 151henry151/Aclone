@@ -1,3 +1,4 @@
+import { farmYieldRules } from '../../shared/farm-yield-rules';
 import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
@@ -266,6 +267,7 @@ export function gameplayChoices(
               visit(b, [farm('water')]),
             );
           if (
+            farmYieldRules(w.settings).farmCompostYieldBonus > 0 &&
             !current!.fertilized &&
             ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
               (b.investment >= fertilizerPrice && !farmStaffBlocker(w, p, b, fertilizerPrice)))
@@ -409,11 +411,14 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
     if ((current?.water ?? 0) < 3 && (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >= 3)
       return take([farm(plot, 'water')]);
     if (
+      farmYieldRules(w.settings).farmCompostYieldBonus > 0 &&
       !current!.fertilized &&
       ((b.stock.compost ?? 0) + (p.inventory.compost ?? 0) > 0 ||
         (!farmStaffBlocker(w, p, b, fertilizerPrice) &&
           b.investment >= fertilizerPrice + harvestWages &&
-          (crops[current!.crop!]?.yield ?? 0) * 0.33 * (b.sell[current!.crop!] ?? 0) >
+          (crops[current!.crop!]?.yield ?? 0) *
+            farmYieldRules(w.settings).farmCompostYieldBonus *
+            (b.sell[current!.crop!] ?? 0) >
             fertilizerPrice))
     )
       return take([farm(plot, 'fertilize')]);
@@ -434,8 +439,10 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
       .sort(([a, da], [bName, db]) => {
         const demand = demandFor(bName) - demandFor(a);
         const rotate =
-          Number(previousFamily !== undefined && db.family !== previousFamily) -
-          Number(previousFamily !== undefined && da.family !== previousFamily);
+          farmYieldRules(w.settings).farmRotationYieldPenalty === 0
+            ? 0
+            : Number(previousFamily !== undefined && db.family !== previousFamily) -
+              Number(previousFamily !== undefined && da.family !== previousFamily);
         return demand || rotate || da.seed - db.seed;
       })[0]?.[0];
     if (crop) return take([farm(plot, 'plant', crop)]);

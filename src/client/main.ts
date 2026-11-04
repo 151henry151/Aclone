@@ -1,3 +1,4 @@
+import { farmYieldRules } from '../shared/farm-yield-rules';
 import { gatheringImplements } from '../shared/resources';
 import { constructionRefundPercentage, constructionRules } from '../shared/construction-rules';
 import { charterRules } from '../shared/charter-rules';
@@ -2317,7 +2318,7 @@ function buildingWindow(b: Building) {
       const harvestAll = offer?.ripe
         ? `<p class="note" data-harvest-all>${esc(offer.note)}</p>${button(offer.percent < 100 ? `Harvest all · ${offer.percent}%` : 'Harvest all', 'farm', `data-building="${b.id}" data-id="harvestAll"`)}`
         : '';
-      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families reduce yield. Harvesting one plot takes 15 seconds. Harvest all takes half again as long. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${harvestAll}${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>${season === 'Winter' ? 'No crops can be planted in winter.' : 'No crops are currently available for you to plant.'}${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Check the planting season and the owner’s staff rules and budget.'}</p>`}<div class="cards">${Array.from(
+      html += `<h3>${farmPlotCount(b)} plots · ${season}</h3><p>Learn farmer and own this farm or take a job here. Seeds and fertilizer use its investment account. Rain helps irrigation; repeated crop families lose ${farmYieldRules(world!.settings).farmRotationYieldPenalty.toLocaleString('en', { style: 'percent', maximumFractionDigits: 10 })} yield. Harvesting one plot takes 15 seconds. Harvest all takes half again as long. Staff receive the posted wage per harvested plot. Growth continues offline. Finish harvesting before winter begins or the crop is lost.</p>${harvestAll}${plantingCrops.length ? '' : `<p class="notice" data-planting-notice>${season === 'Winter' ? 'No crops can be planted in winter.' : 'No crops are currently available for you to plant.'}${season === 'Winter' ? ' Planting resumes in spring. Unharvested crops die at the start of winter; stored produce is safe.' : ' Check the planting season and the owner’s staff rules and budget.'}</p>`}<div class="cards">${Array.from(
         { length: farmPlotCount(b) },
         (_, i) => {
           const plot = b.plots?.[i],
@@ -2327,7 +2328,7 @@ function buildingWindow(b: Building) {
             status.state === 'withered'
               ? '<p class="notice">Crop lost to winter.</p>'
               : plot?.crop
-                ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? '33% bonus' : 'none'}</p>${button('Water · 3 stocked/carried water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · stocked/carried compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
+                ? `<p>${status.state === 'ripe' ? 'Ready to harvest' : `${status.days} game days remaining`} · estimated ${status.yield} units<br>Irrigation ${Math.round(status.water * 100)}% · fertilizer ${plot.fertilized ? `${farmYieldRules(world!.settings).farmCompostYieldBonus.toLocaleString('en', { style: 'percent', maximumFractionDigits: 10 })} bonus` : 'none'}</p>${button('Water · 3 stocked/carried water', 'farm', attrs + ' data-id="water"')}${button(`Fertilize · stocked/carried compost or ${money(fertilizerPrice)}`, 'farm', attrs + ' data-id="fertilize"')}${button('Harvest', 'farm', attrs + ' data-id="harvest"')}`
                 : plantingCrops.length
                   ? `<form data-action="farm">${hidden('building', b.id)}${hidden('plot', String(i))}${hidden('operation', 'plant')}${select(
                       'crop',

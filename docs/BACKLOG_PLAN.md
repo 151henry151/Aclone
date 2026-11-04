@@ -3562,3 +3562,63 @@ a narrow single-column group. Rerun only browser/typecheck for that layout chang
 browser passes in 27.7 seconds, TypeScript stays clean; inspect the corrected
 full-width rules capture. Formatting/diff checks pass and no browser errors occur.
 No full suite runs.
+
+Pushed and verified `d940a91` on `backlog-implementation`. **Per-material gathering
+implement requirements are done.**
+
+### Gameplay rules — compost bonus and rotation penalty
+
+Irrigation requires clarification before implementation: the backlog names +33%,
+but shipped irrigation changes moisture using rain/thirst/water and multiplies
+yield by 0.6–1.0; only compost uses a fixed +33%. Ask Henry whether to preserve and
+expose that formula or replace it with a +33% bonus. Leave irrigation pending;
+these two independent crop modifiers can proceed without deciding that question.
+
+Before production, add `farmCompostYieldBonus` default 0.33 (fraction 0–5) and
+`farmRotationYieldPenalty` default 0.2 (fraction 0–1). Compost multiplies the
+existing weather/moisture-adjusted crop yield by one plus its bonus; repeating
+the previous crop family multiplies it by one minus the penalty. Retain existing
+floor rounding and minimum one unit. Zero removes only that modifier, and missing
+fields retain shipped defaults. Existing compost applications remain recorded;
+new estimates and harvest reservations use current rules, while a started harvest
+retains its already-reserved quantity. Soil restoration still clears the previous
+family and consumes the same real goods; irrigation/weather/crop timing stay intact.
+
+Player estimates and fertilizer bonus text must use these values. Both ordinary
+resident farm choices and the serial farmer routine must avoid spending compost
+or money when its bonus is zero, and their fertilizer value estimate must use the
+configured bonus. Permissions, staff budgets, real inputs and import price remain.
+Write failing farm-yield-rules tests for defaults/missing fields, zero/custom
+bonuses/penalties with floor rounding, same/different families, real compost and
+soil restoration, reservations, resident decisions, invalid input and all rule
+persistence/editor/summary/observation paths. Run new tests plus farming,
+farm-supplies, farm-policy, actual NPC farmer suites and npc-guide. Browser must
+save/reopen both rules, fertilize a growing plot with real compost, see the custom
+bonus/estimate, show the empty plot and no-compost/funds refusal, reject invalid
+input/reload, and inspect screenshots/errors. TypeScript, changed-file Prettier,
+player/economy/world-builder/README and imperative Unreleased remain required.
+
+Include the farmer's rotation tie-break: when demand ties and the penalty is zero,
+choose by the existing seed-cost tie-break instead of avoiding the prior family.
+All five initial farm-yield tests fail on absent defaults/unknown settings before
+production. The additional rotation assertion uses empty plots with previous hay:
+default penalty prefers wheat, zero penalty permits cheaper hay.
+
+All five farm-yield checks pass after implementation; the 46 relevant checks pass
+in 12.8 seconds, including harvest-all reservations, offline catch-up, staff budgets,
+resident farm behavior and the guide budget. TypeScript catches the farm panel
+referencing `w` where this renderer uses `world`; correct that reference before
+accepting the browser result. Do not rerun unaffected simulation tests for this
+renderer-only correction.
+
+The initial browser run cannot update the fertilizer label because of that bad
+reference. Correct it; browser passes in 27.9 seconds and TypeScript is clean.
+Replace stale hard-coded fertilizer prices in the player/economy docs with the
+catalogue-price source; all 15 guide checks pass in 1.3 seconds. Inspect all five
+screenshots. Show the configured rotation percentage in the farm introduction
+(including zero), and wait for the refusal toast's opacity/colour transition before
+capturing it. The affected browser flow passes in 27.4 seconds after that change;
+TypeScript and formatting stay clean. Inspect the final crop/refusal captures:
+50% fertilizer bonus, 25% repeated-family penalty, estimated 67 units after one
+real compost, and a readable no-compost/funds refusal. Empty plots and invalid
+input/reload also pass, with no browser errors. No full suite runs.

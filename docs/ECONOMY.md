@@ -214,8 +214,8 @@ Existing saves add only missing hay quotes on ordinary farms and livestock busin
 After a plot's first harvest, install permanent drainage using **6 gravel**.
 Drainage removes its waterlogging penalty and survives future harvests. **6 topsoil + 1 compost** restores an empty plot, clearing its previous crop-family penalty
 for the next planting. **1 compost** fertilizes a growing plot; if you carry none,
-the imported-fertilizer fallback costs the default Harbour compost price (currently 39.53d), so buying locally produced compost at 25.50d is cheaper. Fertilize once per crop
-for the existing 33% yield bonus. These choices consume real goods; improvements
+the imported-fertilizer fallback uses Harbour's default compost price; compare local compost quotes. Fertilize once per crop
+for the world yield bonus (default 33%). These choices consume real goods; improvements
 cannot be repeatedly applied to gain free items or stack bonuses.
 
 ## Running a guesthouse

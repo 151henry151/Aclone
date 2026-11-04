@@ -1,3 +1,4 @@
+import { farmYieldRules, farmYieldRuleFields } from '../shared/farm-yield-rules';
 import {
   gatheringRules,
   gatheringRuleFields,
@@ -122,6 +123,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcAccountRuleFields),
     ...Object.keys(constructionRuleFields),
     ...Object.keys(gatheringRuleFields),
+    ...Object.keys(farmYieldRuleFields),
     ...Object.keys(gatheringImplementFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
@@ -198,6 +200,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const farmYields = farmYieldRules(settings);
+  const farmYieldFields = `<fieldset class="boat-death-settings"><legend>Crop yield rules</legend>${Object.entries(
+    farmYieldRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        farmYields[key as keyof typeof farmYields],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Compost multiplies yield by one plus the bonus; repeated crop families multiply it by one minus the penalty. Zero removes that modifier. Estimates and new harvest reservations use current rules; started harvests retain their reserved amount. Inputs, weather, soil, permissions and minimum one-unit yields still apply.</p></fieldset>`;
   const gatheringRates = gatheringRules(settings);
   const gatheringRateFields = `<fieldset class="boat-death-settings"><legend>Gathering rules</legend>${Object.entries(
     gatheringRuleFields,
@@ -546,6 +564,7 @@ export function settingsFields(settings: Settings = defaults) {
     accountFields +
     constructionFields +
     gatheringRateFields +
+    farmYieldFields +
     implementFields +
     journeyFields +
     businessLoadFields +

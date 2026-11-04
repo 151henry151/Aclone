@@ -1,3 +1,4 @@
+import { farmYieldRuleFields } from './farm-yield-rules';
 import {
   gatheringRuleFields,
   gatheringImplementFields,
@@ -1989,6 +1990,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(npcAccountRuleFields, key) ||
             Object.hasOwn(constructionRuleFields, key) ||
             Object.hasOwn(gatheringRuleFields, key) ||
+            Object.hasOwn(farmYieldRuleFields, key) ||
             Object.hasOwn(gatheringImplementFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
@@ -1998,6 +2000,7 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const farmYieldField = farmYieldRuleFields[key as keyof typeof farmYieldRuleFields];
         const gatheringRateField = gatheringRuleFields[key as keyof typeof gatheringRuleFields];
         const constructionField =
           constructionRuleFields[key as keyof typeof constructionRuleFields];
@@ -2044,6 +2047,7 @@ export function act(w: World, id: string, a: Action): string {
               npcAccountField?.max ??
               constructionField?.max ??
               gatheringRateField?.max ??
+              farmYieldField?.max ??
               npcCargoField?.max ??
               npcPricingField?.max ??
               npcBusinessField?.max ??
@@ -2060,6 +2064,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (farmYieldField) num(v, farmYieldField.min, farmYieldField.max);
         if (constructionField)
           num(v, constructionField.min, constructionField.max, constructionField.step === 1);
         if (key === 'maximumFarmPlots')

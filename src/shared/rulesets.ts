@@ -1,3 +1,4 @@
+import { farmYieldRules } from './farm-yield-rules';
 import { gatheringRules, gatheringImplementRules } from './gathering-rules';
 import { constructionRefundPercentage, constructionRules } from './construction-rules';
 import { npcAccountRules } from './npc-account-rules';
@@ -83,12 +84,14 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const journey = npcJourneyRules(s);
   const account = npcAccountRules(s);
   const construction = constructionRules(s);
+  const farmYields = farmYieldRules(s);
   const gatheringRates = gatheringRules(s);
   const implementsRules = gatheringImplementRules(s);
   const cargo = npcCargoRules(s);
   return [
     `Resident business cargo: fallback input purchase/deposit ${businessLoads.npcRoutineSupplyBatches}/${businessLoads.npcRoutineDepositBatches} batches, crop demand ${businessLoads.npcCropDemandBatches} buyer batches; collect ${businessLoads.npcBusinessCollectionLoad} output / ${businessLoads.npcFarmCollectionLoad} crops; small input purchase ${businessLoads.npcSmallInputPurchaseLoad} items below ${businessLoads.npcSmallInputPurchaseBatches} batches; carried surplus sale ${businessLoads.npcCarriedSurplusSaleLoad}; owned supplier reserve ${businessLoads.npcOwnedSourceReserveBatches} batches; business/farm output sale loads ${businessLoads.npcBusinessOutputSaleLoad}/${businessLoads.npcFarmOutputSaleLoad}. Zero suppresses the corresponding optional leg; source breeding minima and ordinary transfer limits apply.`,
     `Resident journeys: distance multiplier ${journey.npcJourneyDistanceMultiplier}, speed fraction ${journey.npcJourneySpeedFraction}, unquoted Fuel ${journey.npcJourneyFuelFallbackPrice} hundredths/item, equipment payback ${journey.npcEquipmentPaybackLoads} loads, optional refuel below ${journey.npcDriveFuelThreshold} tank units. Estimates retain actual quotes/tuning; walking costs no fuel.`,
+    `Crop yield: compost bonus ${farmYields.farmCompostYieldBonus}, repeated-family penalty ${farmYields.farmRotationYieldPenalty}; fractions apply before floor rounding, minimum one unit. Started harvests retain reserved amounts.`,
     `Gathering implements: logs ${implementsRules.gatheringLogsImplement}, stone ${implementsRules.gatheringStoneImplement}, gravel ${implementsRules.gatheringGravelImplement}, topsoil ${implementsRules.gatheringDirtImplement}. None removes the tool requirement; implements are reusable.`,
     `Deposits: standard woodland/mineral capacities ${gatheringRates.resourceLogsCapacity}/${gatheringRates.resourceOtherCapacity}, base recovery intervals ${gatheringRates.resourceLogsRegrowthSeconds}/${gatheringRates.resourceOtherRegrowthSeconds} seconds times the recovery multiplier. Authored non-default survey values remain overrides.`,
     `Gathering: untrained ${gatheringRates.gatheringBaseYield} items in ${gatheringRates.gatheringBaseSeconds} seconds; skilled ${gatheringRates.gatheringSkilledYield} in ${gatheringRates.gatheringSkilledSeconds}. Existing tasks retain their load/time; implements, resources and cargo apply.`,

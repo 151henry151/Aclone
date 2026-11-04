@@ -1242,3 +1242,21 @@ Resources lists local requirements and the nearby HUD names a missing implement.
 Resident career, experiment, ordinary and construction plans share the requirement,
 including tool procurement and no-tool routes. Values persist in saves/designs,
 summaries and observations; omitted fields retain the defaults.
+
+## Crop yield rules (unreleased)
+
+**F10 → Rules → Crop yield rules** exposes `farmCompostYieldBonus` (0.33, range
+0–5) and `farmRotationYieldPenalty` (0.2, range 0–1). These are fractions: compost
+multiplies yield by one plus its bonus; repeating a previous crop family multiplies
+it by one minus the penalty. Weather, moisture and soil still apply, followed by
+floor rounding and the existing minimum one unit. Zero removes that modifier.
+Existing compost applications remain recorded; new estimates and harvest
+reservations use current rules, while started harvests keep their reserved amount.
+Soil restoration still clears the previous family using real topsoil and compost.
+
+Farm panels show the configured fertilizer percentage and yield estimate. Residents
+avoid fertilizer spending with a zero bonus; their fallback fertilizer valuation
+uses the configured bonus. Zero rotation penalty removes their rotation tie-break,
+retaining demand and seed-cost priorities. Permissions, staff budgets and the
+ordinary import price remain enforced. Values survive saves, portable designs,
+observations and summaries; omitted fields retain the defaults above.

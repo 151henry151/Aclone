@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose compost yield bonuses and repeated crop-family penalties as world rules; update farm estimates and resident choices while retaining reserved harvest amounts.
+
 - Expose per-material gathering implement requirements, including no implement; share them across player controls and resident procurement/plans while preserving started loads.
 
 - Expose deposit capacities and base regrowth intervals as world rules; preserve earned stock, fractional recovery and authored survey overrides across edits, and display effective reserves.
