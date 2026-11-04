@@ -785,6 +785,7 @@ function updateHud() {
   setHudHtml(
     'needs',
     bars
+      .filter(([, , cls]) => cls !== 'fuel' || hasMotor(world, me!.vehicle))
       .map(
         ([name, value, cls]) =>
           `<div class="need"><label>${name}</label><div class="bar"><i class="${cls}" style="width:${Math.round(Math.max(0, Math.min(100, value * 100)) * 10) / 10}%"></i></div><small>${Math.round(value * 100)}%</small></div>`,

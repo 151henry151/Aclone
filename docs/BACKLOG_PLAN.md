@@ -253,12 +253,17 @@ implementation order rather than building paving before ford-aware persistence.
 
 ### Plan commit
 
-- Initial audit and full dependency order: ready for the first commit.
-- Whole-suite baseline: `npm test > /tmp/aclone-backlog-baseline.log 2>&1`, running.
+- Done: initial audit and full dependency order committed and pushed as `5252631`.
+- Whole-suite baseline: `npm test > /tmp/aclone-backlog-baseline.log 2>&1`,
+  1,313 passed, zero failed.
 - Type baseline: `npx tsc --noEmit`, clean.
 - No implementation changes before this plan commit.
 
 ### G1 — motor-free HUD
+
+Red evidence: `npm run test:e2e -- tests/browser/personal-controls.spec.ts`
+failed at the walking Fuel assertion: expected zero bars, received one, after
+the actual inventory Walk action successfully changed the player to slot 5.
 
 Claim: “Walking flashlight and appropriate controls; no engine controls/readouts
 for walking or the emergency raft.”
@@ -278,6 +283,19 @@ Completion criteria, fixed before production changes:
   Prettier on the changed files. Browser screenshots prove both motor-free states.
 - Update PLAYING.md and README for the visible HUD correction; add an imperative
   Unreleased fix. No new gameplay values or switches are necessary for this fix.
+
+Green evidence: the browser flow passed, including the flashlight, restored 50%
+tractor fuel readout, raft ROWING status and hidden mobile engine/lights controls.
+`npm test -- --test-name-pattern='walking flashlight|torch follows|reboard hint'`
+ran the whole suite under this runner: 1,313 passed. `npx tsc --noEmit` is clean.
+Prettier ran on all six changed paths. The first screenshots showed the HUD
+ahead of the software-rendered model, so the fixture now freezes daylight and
+allows the model to settle before the final visual check; acceptance assertions
+are unchanged.
+The final browser rerun passed in 1.0 minutes. Visually inspected
+`test-results/personal-controls-walking.png` and
+`test-results/personal-controls-lifeboat.png`: the walking figure and orange raft
+are rendered, Fuel is absent, and their distinct controls remain visible.
 
 ### G2 — menu zoom
 

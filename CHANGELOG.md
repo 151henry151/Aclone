@@ -10,6 +10,10 @@ All notable changes to Aclone are documented here. This project follows
 
 - Record the shipped-feature audit, ordered backlog and test-first completion criteria in the backlog implementation plan.
 
+### Fixed
+
+- Hide the Fuel bar while walking or rowing the emergency raft, and restore it when boarding a motor vehicle.
+
 ### Changed
 
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.

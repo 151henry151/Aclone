@@ -62,6 +62,8 @@ This is a playable alpha, not complete historical feature parity. See [status an
 
 The [backlog implementation plan](docs/BACKLOG_PLAN.md) records the shipped-feature
 audit, dependency order and acceptance evidence for ongoing unreleased work.
+The unreleased HUD correction hides the Fuel bar while walking or rowing the
+emergency raft; boarding a motor vehicle restores its fuel readout.
 
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 
