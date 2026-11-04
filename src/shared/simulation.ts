@@ -1,3 +1,4 @@
+import { creditRuleFields, creditRulesError } from './credit-rules';
 import { loanRuleFields, validLoanTerms } from './loan-rules';
 import { economyRules, economyRuleFields, governmentImportRuleKeys } from './economy-rules';
 import {
@@ -1950,10 +1951,12 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
             Object.hasOwn(loanRuleFields, key) ||
+            Object.hasOwn(creditRuleFields, key) ||
             key === 'loanTerms',
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
+        const creditField = creditRuleFields[key as keyof typeof creditRuleFields];
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
         else if (key === 'loanTerms')
@@ -1975,9 +1978,10 @@ export function act(w: World, id: string, a: Action): string {
           num(
             v,
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
-            economyField?.max ?? (key === 'startingCash' ? 1e8 : 1e6),
+            creditField?.max ?? economyField?.max ?? (key === 'startingCash' ? 1e8 : 1e6),
           );
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
+        if (creditField) num(v, creditField.min, creditField.max, true);
         const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
         if (loanField) num(v, loanField.min, loanField.max, loanField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
@@ -2044,6 +2048,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const creditError = creditRulesError({ ...w.settings, ...clean });
+      requireThat(!creditError, creditError ?? 'Invalid credit rules');
       const survivalError = survivalRulesError({ ...w.settings, ...clean });
       requireThat(!survivalError, survivalError ?? 'Invalid survival rules');
       expireAbandonedCargo(w);

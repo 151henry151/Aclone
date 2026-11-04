@@ -1721,3 +1721,57 @@ loan tests pass. Full `npm test` passes 1,466 tests in 204.1 seconds. TypeScript
 and changed-file Prettier are clean. Both bank browser flows and inspected
 screenshots pass the criteria. Signed mortgage terms and liens also survive
 settings changes and a Store reload. Ready to commit and push.
+
+Pushed and verified `72cda6a` on `backlog-implementation`. **Loan offer rules are
+done.** Continue with credit-score weights.
+
+### Gameplay rules — credit-score weights
+
+Before production, preserve the existing score table as named defaults: minimum
+300, maximum 850, starting score 550; history 3/month capped at 60; on-time
+repayments 6 each capped at 120; observed employment up to 60; one asset point
+per 50,000 hundredths capped at 35; late/default penalties 25/100 capped together
+at 220; debt ratio ×100 capped at 100 with a denominator floor of 10,000
+hundredths. Expose all 16 values in a Credit score fieldset, summary, creation,
+portable designs and resident world rules. Point values/bounds accept integer
+0–1,000; currency divisors integer 1–100,000,000. Require minimum ≤ starting ≤
+maximum. Missing keys preserve defaults. Rate distance uses the configured score
+maximum; bank score/explanation and rule descriptions show the actual bounds.
+
+Test exact default and custom scores with recorded history, employment, assets,
+late/default events and debt; each cap, zero-weight disabling, lower/upper score
+clamps, invalid atomic edits, reload/design parity, and updated quotes without
+rewriting signed loans or credit records. No invented credit history or balance
+changes. Browser: edit/reopen all weights; show 700/900 and the corresponding
+20.29% APR with zero weights; accept a loan, lower the starting score to 400,
+show borrowing refusal while the existing signed rate persists, then repay.
+Attempt minimum above maximum and verify rejection without server mutation.
+Run `node_modules/.bin/tsx --test tests/credit-rules.test.ts tests/loan-rules.test.ts
+ tests/npc-guide.test.ts`, affected bank browser flows, full `npm test`,
+`npx tsc --noEmit`, changed-file Prettier; inspect screenshots/errors and update
+ECONOMY, WORLD_BUILDING, README and imperative Unreleased.
+
+Credit-score red run: all five tests fail for missing defaults, Unknown setting
+or absent controls (`/tmp/aclone-credit-red.log`), before production changes.
+
+All score/loan tests passed, but adding the 16 rules exceeded the resident's
+existing 96,000-byte request limit. Preserve the limit, notebook, memory, all
+manual text, citations and lookup topics. A new red test requires every manual
+heading and exact lookup ID in a keyed topic index. Replace repeated
+`{id,title}` objects with `{id: title}` entries, preserving the whole index;
+update existing assertions only for that representation, retaining their
+content/citation/uniqueness assertions. No guidance or test limits are cut.
+
+Credit-score verification: all 22 focused rules/guide tests pass, including the
+unchanged request budget and full topic-index conservation test. The existing
+loan-rules browser passes in 18.6s; the credit-rules browser passes in 16.7s.
+All 16 editor values persist; the bank shows 700/900 at 20.29% APR; changing to
+400 rejects borrowing while preserving the signed rate/payment; repayment works;
+invalid score bounds reject atomically. Inspect all four screenshots; no page
+errors. Documentation and imperative Unreleased entry are updated.
+
+Credit-score final gates: full `npm test` passes 1,472 tests in 200.1 seconds;
+all 22 focused tests pass after docs updates, TypeScript is clean, and Prettier
+has been run on every changed file. Browser flows and inspected screenshots
+satisfy score display, new APR, refusal, repayment and invalid-bound criteria.
+Ready to commit and push.

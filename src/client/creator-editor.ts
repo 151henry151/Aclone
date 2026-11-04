@@ -1,3 +1,4 @@
+import { creditRuleFields, creditRules } from '../shared/credit-rules';
 import { loanRuleFields, loanRules } from '../shared/loan-rules';
 import { economyRules, economyRuleFields } from '../shared/economy-rules';
 import { survivalRules, survivalRuleFields, type SurvivalRules } from '../shared/survival-rules';
@@ -92,6 +93,7 @@ export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
+    ...Object.keys(creditRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -115,6 +117,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const credit = creditRules(settings);
+  const creditFields = `<fieldset class="boat-death-settings"><legend>Credit score</legend>${Object.entries(
+    creditRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        credit[key as keyof typeof credit],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Minimum ≤ starting ≤ maximum. Zero points disable that contribution. Scores recalculate from recorded history and balances; signed loan terms stay fixed.</p></fieldset>`;
   const loans = loanRules(settings);
   const loanFields = `<fieldset class="boat-death-settings"><legend>Loan offers</legend>${Object.entries(
     loanRuleFields,
@@ -130,7 +148,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below 850 divided by the score span, times the spread. Signed loans retain their rate, term and payment.</p></fieldset>`;
+    )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below ${credit.creditScoreMaximum} divided by the score span, times the spread. Signed loans retain their rate, term and payment.</p></fieldset>`;
   const economy = economyRules(settings);
   const economyFields = `<fieldset class="boat-death-settings"><legend>Economy and trade</legend>${Object.entries(
     economyRuleFields,
@@ -276,6 +294,7 @@ export function settingsFields(settings: Settings = defaults) {
     survivalFields +
     economyFields +
     loanFields +
+    creditFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

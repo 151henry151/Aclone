@@ -1,3 +1,4 @@
+import { creditRules } from '../shared/credit-rules';
 import { loanRules, loanTerms, preferredLoanTerm } from '../shared/loan-rules';
 import { paymentSourceSelect, loanStatusHtml } from './debt-status';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -16,8 +17,8 @@ export function bankLoans(w: World, p: Player, b: Building) {
   const collateral = w.buildings.filter(
     (v) => v.owner === p.id && !v.government && !v.construction && !v.lien && !v.forSale,
   );
-  return `<hr><h3>Loans & credit</h3><p data-credit-score>Credit score: <b>${c.score} / 850</b> · debt ${money(c.debt)} · verified income ${money(c.monthlyIncome)} per bank month.</p>
-  <p class="note">${Math.round(c.employment * 100)}% of observed life employed · ${c.onTime} on-time repayments · ${c.late} late episodes · ${c.defaults} defaults. Employment and buildings help; repayment history and debt matter most. History starts when recorded, not retroactively.</p>
+  return `<hr><h3>Loans & credit</h3><p data-credit-score>Credit score: <b>${c.score} / ${creditRules(w.settings).creditScoreMaximum}</b> · debt ${money(c.debt)} · verified income ${money(c.monthlyIncome)} per bank month.</p>
+  <p class="note">${Math.round(c.employment * 100)}% of observed life employed · ${c.onTime} on-time repayments · ${c.late} late episodes · ${c.defaults} defaults. Local score weights determine the effect of history, employment, buildings and debt. History starts when recorded, not retroactively.</p>
   <p>Fixed annual rates, equal monthly instalments, no origination or early-repayment fees. One bank month is ${(LOAN_MONTH / 3600).toFixed(2)} real hours (30.42 game days). Rates are fictional game terms. Automatic payments use your selected source, including offline. Existing loans keep savings-only payments until you change them. Business capital is never taken. A half-month grace period precedes a late report; three months in arrears leads to default and foreclosure of pledged property. Debt survives death.</p>
   <p>Up to ${rules.loanMaximumActive} active loans; mortgages cover up to ${rules.loanMortgageLtv * 100}% of structural value. Minimum scores: personal ${rules.loanPersonalMinimumScore}, mortgage ${rules.loanMortgageMinimumScore}.</p>
   <form id="loan-quote-form">${hidden('building', b.id)}<label>Loan amount in denarii<input name="denarii" type="number" min="10" max="100000" step="0.01" value="100" required></label>

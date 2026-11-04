@@ -1,3 +1,4 @@
+import { creditRules } from './credit-rules';
 import { loanRules, loanTerms } from './loan-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings } from './catalog.ts';
@@ -81,7 +82,8 @@ export function recordCreditIncome(w: World, id: string, amount: number, reason:
   else c.income.push({ month, amount });
 }
 export function creditProfile(w: World, p: Player) {
-  const c = p.credit;
+  const c = p.credit,
+    r = creditRules(w.settings);
   const loans = (p.loans ?? []).filter((l) => l.status !== 'paid');
   const debt = loans.reduce((n, l) => n + l.principal + l.interest, 0);
   const assets = w.buildings
@@ -93,13 +95,35 @@ export function creditProfile(w: World, p: Player) {
     )
     .reduce((n, b) => n + ((buildings[b.kind]?.price ?? 0) * Math.max(0, b.condition)) / 100, 0);
   const employment = c?.observedSeconds ? Math.min(1, c.employedSeconds / c.observedSeconds) : 0;
-  const history = c ? Math.min(60, Math.floor((w.time - c.since) / LOAN_MONTH) * 3) : 0;
-  const punctual = Math.min(120, (c?.onTime ?? 0) * 6);
-  const stability = Math.round(employment * 60) + Math.min(35, Math.floor(assets / 50000));
+  const history = c
+    ? Math.min(
+        r.creditHistoryMaximum,
+        Math.floor((w.time - c.since) / LOAN_MONTH) * r.creditHistoryMonthlyPoints,
+      )
+    : 0;
+  const punctual = Math.min(r.creditOnTimeMaximum, (c?.onTime ?? 0) * r.creditOnTimePoints);
+  const stability =
+    Math.round(employment * r.creditEmploymentPoints) +
+    Math.min(r.creditAssetMaximum, Math.floor(assets / r.creditAssetUnit));
   const penalties =
-    Math.min(220, (c?.late ?? 0) * 25 + (c?.defaults ?? 0) * 100) +
-    Math.min(100, Math.round((debt / Math.max(10000, assets + p.cash + p.bank)) * 100));
-  const score = Math.max(300, Math.min(850, 550 + history + punctual + stability - penalties));
+    Math.min(
+      r.creditPenaltyMaximum,
+      (c?.late ?? 0) * r.creditLatePoints + (c?.defaults ?? 0) * r.creditDefaultPoints,
+    ) +
+    Math.min(
+      r.creditDebtMaximum,
+      Math.round(
+        (debt / Math.max(r.creditDebtDenominatorMinimum, assets + p.cash + p.bank)) *
+          r.creditDebtPoints,
+      ),
+    );
+  const score = Math.max(
+    r.creditScoreMinimum,
+    Math.min(
+      r.creditScoreMaximum,
+      r.creditScoreInitial + history + punctual + stability - penalties,
+    ),
+  );
   const month = Math.floor(w.time / LOAN_MONTH);
   const income =
     (c?.income ?? []).filter((i) => i.month >= month - 1).reduce((n, i) => n + i.amount, 0) / 2;
@@ -114,8 +138,7 @@ export function creditProfile(w: World, p: Player) {
     onTime: c?.onTime ?? 0,
     late: c?.late ?? 0,
     defaults: c?.defaults ?? 0,
-    explanation:
-      'Game score (300–850): repayment history, debt burden, observed employment and owned buildings. It is not a real-world credit score. New histories build from this upgrade; no past employment is invented.',
+    explanation: `Game score (${r.creditScoreMinimum}–${r.creditScoreMaximum}): repayment history, debt burden, observed employment and owned buildings, weighted by local rules. It is not a real-world credit score. New histories build from this upgrade; no past employment is invented.`,
   };
 }
 export function amortizedPayment(principal: number, apr: number, months: number) {
@@ -139,10 +162,11 @@ export function loanQuote(
     Math.round(
       (secured
         ? rules.loanMortgageBaseApr / 100 +
-          ((850 - profile.score) / rules.loanRateScoreSpan) * (rules.loanMortgageAprSpread / 100)
+          ((creditRules(w.settings).creditScoreMaximum - profile.score) / rules.loanRateScoreSpan) *
+            (rules.loanMortgageAprSpread / 100)
         : rules.loanPersonalBaseApr / 100 +
-          ((850 - profile.score) / rules.loanRateScoreSpan) * (rules.loanPersonalAprSpread / 100)) *
-        10000,
+          ((creditRules(w.settings).creditScoreMaximum - profile.score) / rules.loanRateScoreSpan) *
+            (rules.loanPersonalAprSpread / 100)) * 10000,
     ) / 10000;
   const payment = amortizedPayment(amount, apr, months);
   const value = property

@@ -6,7 +6,7 @@ import { gameGuide, searchGuide } from '../src/server/npc/knowledge.ts';
 test('NPC always knows the controls and retrieves relevant player help without the full manual', () => {
   const guide = gameGuide('How do I reset my password by email?');
   assert.match(guide.controls, /F4/);
-  assert.equal(new Set(guide.topics.map((t) => t.title)).size, guide.topics.length);
+  assert.equal(new Set(Object.values(guide.topics)).size, Object.keys(guide.topics).length);
   assert.match(guide.controls, /\*\*M\*\*/);
   assert.match(guide.controls, /Parish map/);
   assert.match(guide.controls, /Space/);
@@ -69,7 +69,7 @@ test('guide is bounded, cites bundled sources and never treats a query as a path
   assert.ok(result.length <= 3);
   assert.ok(result.reduce((n, e) => n + e.text.length, 0) <= 6500);
   for (const entry of result) assert.match(entry.source, /^(docs|data)\//);
-  assert.ok(gameGuide('').topics.some((t) => t.id.includes('farming')));
+  assert.ok(Object.keys(gameGuide('').topics).some((id) => id.includes('farming')));
 });
 
 test('long memory excerpts and help fit the resident request budget together', async () => {
@@ -203,7 +203,7 @@ test('selected manual headings occur once in the topic index without repeating t
   for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
     if (!entry.source.startsWith('docs/')) continue;
     assert.ok(
-      guide.topics.some((topic) => topic.id === entry.id.replace(/:\d+$/, '')),
+      Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')),
       'heading remains available by section id',
     );
     assert.equal('title' in entry, false, 'do not repeat an indexed heading');
@@ -213,12 +213,12 @@ test('selected manual headings occur once in the topic index without repeating t
 });
 
 test('outside investment help has its own topic instead of expanding school guidance', () => {
-  const topic = gameGuide('').topics.find(
-    (t) => t.title === 'Outside investment terms (unreleased)',
+  const topic = Object.entries(gameGuide('').topics).find(
+    ([, title]) => title === 'Outside investment terms (unreleased)',
   );
   assert.ok(topic, 'Investment terms need their own searchable player-guide section');
   const entries = searchGuide('outside investments operating reserve');
-  assert.ok(entries.some((e) => e.id.startsWith(topic.id) && /principal plus 8%/.test(e.text)));
+  assert.ok(entries.some((e) => e.id.startsWith(topic[0]) && /principal plus 8%/.test(e.text)));
   const schools = searchGuide('Local school and relief terms');
   for (const entry of schools.filter((e) => e.id.startsWith('playing:local-school')))
     assert.doesNotMatch(entry.text, /Outside investments default/);
@@ -236,7 +236,30 @@ test('resident guide keeps complete cited text and ids without repeating section
     assert.equal(entry.source, full.source.split('#')[0]);
     if (full.source.startsWith('docs/')) {
       assert.ok(full.source.includes('#'), 'direct lookup retains the precise citation');
-      assert.ok(guide.topics.some((t) => t.id === entry.id.replace(/:\d+$/, '')));
+      assert.ok(Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')));
     }
   }
+});
+
+test('topic index retains every manual heading and lookup id in a compact keyed index', async () => {
+  const { readFileSync } = await import('node:fs');
+  const expected = new Map<string, string>();
+  for (const file of ['FAQ', 'PLAYING', 'ECONOMY']) {
+    const sections = readFileSync(new URL(`../docs/${file}.md`, import.meta.url), 'utf8')
+      .split(/^## /m)
+      .slice(1);
+    for (const section of sections) {
+      const title = section.slice(0, section.indexOf('\n')).trim();
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      expected.set(title, `${file.toLowerCase()}:${slug}`);
+    }
+  }
+  assert.equal(Object.keys(gameGuide('').topics).length, expected.size);
+  assert.deepEqual(
+    gameGuide('').topics,
+    Object.fromEntries([...expected].map(([title, id]) => [id, title])),
+  );
 });

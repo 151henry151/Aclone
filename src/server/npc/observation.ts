@@ -1,3 +1,4 @@
+import { creditRules } from '../../shared/credit-rules';
 import { loanRules } from '../../shared/loan-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
@@ -184,6 +185,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...survivalRules(w.settings),
       ...economyRules(w.settings),
       ...loanRules(w.settings),
+      ...creditRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

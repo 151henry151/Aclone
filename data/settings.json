@@ -187,5 +187,21 @@
   "loanMortgageMinimumScore": 500,
   "loanTerms": "6,12,24,36,60",
   "loanMaximumActive": 3,
-  "loanMortgageLtv": 0.75
+  "loanMortgageLtv": 0.75,
+  "creditScoreMinimum": 300,
+  "creditScoreMaximum": 850,
+  "creditScoreInitial": 550,
+  "creditHistoryMonthlyPoints": 3,
+  "creditHistoryMaximum": 60,
+  "creditOnTimePoints": 6,
+  "creditOnTimeMaximum": 120,
+  "creditEmploymentPoints": 60,
+  "creditAssetUnit": 50000,
+  "creditAssetMaximum": 35,
+  "creditLatePoints": 25,
+  "creditDefaultPoints": 100,
+  "creditPenaltyMaximum": 220,
+  "creditDebtPoints": 100,
+  "creditDebtMaximum": 100,
+  "creditDebtDenominatorMinimum": 10000
 }

@@ -630,7 +630,7 @@ keys use named defaults; portable designs carry all five rules.
 **F10 → Rules → Loan offers** controls new quotes. `loanPersonalBaseApr` defaults
 to 10 and `loanPersonalAprSpread` to 18; `loanMortgageBaseApr` to 6 and
 `loanMortgageAprSpread` to 8. Each accepts 0–100 percentage points. APR is base
-plus `(850-score) / loanRateScoreSpan × spread`, rounded to two decimal places.
+plus `(creditScoreMaximum-score) / loanRateScoreSpan × spread`, rounded to two decimal places. The score maximum defaults to 850.
 `loanRateScoreSpan` defaults to 350 and accepts integer 1–1,000. Zero base and
 spread offer interest-free loans. Minimum eligibility scores are
 `loanPersonalMinimumScore` 540 and `loanMortgageMinimumScore` 500; each accepts
@@ -648,4 +648,37 @@ checks still apply.
 These settings affect new offers only. Signed loans keep their APR, monthly
 payment, duration and collateral; repayment remains available when lending is
 closed. Missing keys use named defaults. Creation, rules summaries, portable
-designs and reloads retain all ten fields. Credit-score weights remain separate.
+designs and reloads retain all ten fields. The Credit score fieldset controls the score calculation.
+
+## Credit score rules (unreleased)
+
+**F10 → Rules → Credit score** provides the existing score table as 16 rules.
+Point values accept integers 0–1,000. Currency divisors accept integer
+1–100,000,000 hundredths. The combined patch must satisfy minimum ≤ starting ≤
+maximum; invalid edits are atomic. Zero weights disable their contributions.
+
+- `creditScoreMinimum` 300, `creditScoreMaximum` 850 and `creditScoreInitial` 550
+  set the score bounds and baseline.
+- `creditHistoryMonthlyPoints` 3 adds points per recorded bank month, capped by
+  `creditHistoryMaximum` 60.
+- `creditOnTimePoints` 6 per on-time repayment is capped by
+  `creditOnTimeMaximum` 120.
+- `creditEmploymentPoints` 60 is multiplied by the observed employed fraction
+  and rounded to whole points.
+- `creditAssetUnit` 50,000 hundredths buys one whole score point from finished
+  nongovernment structural assets, capped by `creditAssetMaximum` 35. Existing
+  operating-lease landlord ownership still determines whose asset it is.
+- `creditLatePoints` 25 per late episode and `creditDefaultPoints` 100 per default
+  are jointly capped by `creditPenaltyMaximum` 220.
+- `creditDebtPoints` 100 multiplies the ratio of outstanding principal/interest
+  to assets plus cash and savings. The denominator is at least
+  `creditDebtDenominatorMinimum` 10,000 hundredths. Round the result, then cap
+  it at `creditDebtMaximum` 100.
+
+Add history, punctuality, employment and asset points to the baseline; subtract
+late/default and debt penalties; clamp to the score bounds. The bank and new
+loan rates use the configured maximum. Loan eligibility thresholds remain
+separate controls. Editing weights changes computed scores, without inventing
+employment or payments, moving money, or rewriting signed loans. Missing fields
+retain defaults; new worlds, portable designs, summaries, resident observations
+and reloads use the same rules.

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose credit-score bounds and contribution weights as world rules; use local scores in bank displays and new rates without rewriting histories or signed loans. Compact the resident guide topic index while retaining every heading and lookup ID within the existing request limit.
+
 - Expose loan rates, offered terms, eligibility, active-loan count and collateral limits as world rules; use local offers in bank controls and resident plans while preserving signed loans and repayment access.
 
 - Expose government import premiums, necessity price floors and the margin above public bids as world rules; republish government necessity prices on explicit pricing-rule changes while preserving other shops and unchanged food quotes.

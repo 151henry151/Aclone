@@ -262,7 +262,7 @@ This safety net buys time for waterworks, farms and processors to operate. It do
 
 Banks offer fixed-rate, amortizing personal loans and property-backed loans. Quotes show principal, annual rate, equal instalment, scheduled total and collateral before acceptance. Default terms are 6/12/24/36/60 bank months; a month is 1/12 of the fixed game year (~5.07 real hours). Rates are fictional game tuning: eligible personal borrowers pay roughly 10–26% APR; mortgages roughly 6–14%. There are no arrangement or early-payment fees.
 
-The 300–850 game score weighs recorded employment, buildings owned, debt burden and repayment history. Only verified wages/labour earnings count as income; gifts and borrowed cash do not. Affordability also considers liquid reserves after existing debt and a living allowance. Histories start at upgrade; past employment is not invented. Banks lend from actual investment, with defaults of at most three active loans per borrower and 75% structural loan-to-value for collateral. Stock/capital inside a building cannot inflate its collateral valuation.
+The default 300–850 game score weighs recorded employment, buildings owned, debt burden and repayment history. Only verified wages/labour earnings count as income; gifts and borrowed cash do not. Affordability also considers liquid reserves after existing debt and a living allowance. Histories start at upgrade; past employment is not invented. Banks lend from actual investment, with defaults of at most three active loans per borrower and 75% structural loan-to-value for collateral. Stock/capital inside a building cannot inflate its collateral valuation.
 
 Interest accrues on outstanding principal. Payments settle interest first, then principal. Automatic payments use the explicitly selected source: **bank savings**, **cash in hand**, or **savings first, then cash**. They work offline and require enough combined funds to clear the amount due. Existing loans default to savings only until the borrower changes this at the bank. Manual repayments default to cash, with an option to use savings. Business working capital is never drawn for a personal loan. A half-month grace period precedes a late mark. After three bank months in arrears the loan defaults; pledged property becomes an unclaimed estate. Sale receipts repay the lender, surplus returns to the former owner, and any shortfall remains debt. Repaying early releases the lien; listed/mortgaged properties cannot be pledged twice or sold/demolished to evade it. Death does not erase debt.
 
@@ -286,6 +286,14 @@ rate, term, payment and collateral, and can still be repaid. An offer whose rate
 or payment changed must be quoted and accepted again. Banks still require
 available lending capital and affordability; changing these rules creates no
 money. See [world-builder controls](WORLD_BUILDING.md#loan-offer-rules-unreleased).
+
+The **Credit score** fieldset exposes the starting score, bounds and each
+history, on-time, employment, asset, late/default and debt-ratio contribution and
+cap. The defaults preserve the original score. Zero weights disable the selected
+contribution. Scores recalculate from existing facts; edits do not invent history
+or change balances, signed loan payments or rates. Rate distance is measured from
+the configured maximum score, and the bank displays that maximum. Changing score
+rules can change eligibility and the price of a new offer.
 
 ## Business statements
 

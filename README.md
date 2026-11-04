@@ -22,7 +22,7 @@ Unreleased CB radios add a vehicle dashboard with keyboard, touch and configurab
 
 Unreleased economy rules make minimum building purchase bids, transaction quantities, outside-investment returns, operating reserves, garage labour/parts, map printing, ammunition refit prices, cash gifts, bank/investment transfer limits parish supply-order timing/shares, public export intervals and government import premiums configurable, including live shop limits, bulk-sale hints and portable designs. See [economy rules](docs/WORLD_BUILDING.md#economy-and-trade-rules-unreleased).
 
-Unreleased loan rules expose rates, offered months, eligibility, active-loan count and structural collateral limits in F10. Banks and resident plans use local terms; existing signed loans retain their agreements. See [loan rules](docs/WORLD_BUILDING.md#loan-offer-rules-unreleased).
+Unreleased loan rules expose rates, offered months, eligibility, active-loan count, structural collateral limits and credit-score weights in F10. Banks and resident plans use local terms; existing signed loans retain their agreements. See [loan rules](docs/WORLD_BUILDING.md#loan-offer-rules-unreleased).
 
 Unreleased survival rules let world owners set feeding and damage thresholds, maximum health and nutrition limits, repeated-serving benefits, energy regeneration, school tuition/time, licence skill-limit exemptions and Odd Jobs relief terms. Base maximum health now defaults to 65,000; other defaults and active work are preserved. Player panels and resident forecasts use the same rules. See [world-building rules](docs/WORLD_BUILDING.md#survival-and-needs-rules-unreleased).
 

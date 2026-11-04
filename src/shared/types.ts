@@ -1,3 +1,4 @@
+import type { CreditRules } from './credit-rules';
 import type { LoanRules } from './loan-rules';
 import type { EconomyRules } from './economy-rules';
 import type { SurvivalRules } from './survival-rules';
@@ -297,6 +298,7 @@ export interface Settings
   extends
     Partial<EconomyRules>,
     Partial<LoanRules>,
+    Partial<CreditRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

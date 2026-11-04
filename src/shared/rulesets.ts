@@ -1,3 +1,4 @@
+import { creditRules } from './credit-rules';
 import { loanRules } from './loan-rules';
 import { economyRules } from './economy-rules';
 import { survivalRules } from './survival-rules';
@@ -51,7 +52,8 @@ export const rulesets: Record<
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
-  const survival = survivalRules(s);
+  const survival = survivalRules(s),
+    credit = creditRules(s);
   const fuel = fuelRules(s);
   const radio = radioRules(s),
     loans = loanRules(s);
@@ -60,7 +62,8 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
-    `Loans: ${loans.loanTerms} months; ${loans.loanMaximumActive} active; ${loans.loanMortgageLtv * 100}% structural LTV. Personal/mortgage base APR ${loans.loanPersonalBaseApr}/${loans.loanMortgageBaseApr}%, spreads ${loans.loanPersonalAprSpread}/${loans.loanMortgageAprSpread} points per ${loans.loanRateScoreSpan} score points below 850; minimum scores ${loans.loanPersonalMinimumScore}/${loans.loanMortgageMinimumScore}. Existing loans keep signed terms.`,
+    `Credit score: ${credit.creditScoreMinimum}–${credit.creditScoreMaximum}, starting ${credit.creditScoreInitial}; history ${credit.creditHistoryMonthlyPoints}/month up to ${credit.creditHistoryMaximum}, on-time ${credit.creditOnTimePoints} each up to ${credit.creditOnTimeMaximum}, employment up to ${credit.creditEmploymentPoints}, assets per point ${credit.creditAssetUnit} hundredths up to ${credit.creditAssetMaximum}; late/default ${credit.creditLatePoints}/${credit.creditDefaultPoints} capped at ${credit.creditPenaltyMaximum}; debt ratio ×${credit.creditDebtPoints} capped at ${credit.creditDebtMaximum}, denominator floor ${credit.creditDebtDenominatorMinimum} hundredths.`,
+    `Loans: ${loans.loanTerms} months; ${loans.loanMaximumActive} active; ${loans.loanMortgageLtv * 100}% structural LTV. Personal/mortgage base APR ${loans.loanPersonalBaseApr}/${loans.loanMortgageBaseApr}%, spreads ${loans.loanPersonalAprSpread}/${loans.loanMortgageAprSpread} points per ${loans.loanRateScoreSpan} score points below ${credit.creditScoreMaximum}; minimum scores ${loans.loanPersonalMinimumScore}/${loans.loanMortgageMinimumScore}. Existing loans keep signed terms.`,
     `Economy: minimum purchase bid ${economyRules(s).minimumBuyPrice} hundredths; up to ${economyRules(s).transactionItemLimit} items per transaction. New outside deposits earn up to ${economyRules(s).outsideReturnPercent}% above principal; operating reserve floor ${economyRules(s).outsideOperatingReserve} hundredths.`,
     `Government imports: ${economyRules(s).governmentImportPremium}% premium; water/bread/fuel floors ${economyRules(s).governmentWaterFloor}/${economyRules(s).governmentBreadFloor}/${economyRules(s).governmentFuelFloor}; public bid margin ${economyRules(s).governmentImportBidMargin} hundredths.`,
     `Public export interval: ${economyRules(s).exportShipmentInterval} seconds (Puddlewick economy terminals only).`,

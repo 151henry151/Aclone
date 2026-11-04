@@ -161,11 +161,12 @@ export function gameGuide(query: string, activityQuery = '') {
     // Core rules must not depend on the agent knowing which question to search for.
     fundamentals: fundamentals.map(compactEntry),
     controls: compactGuideText(docs.find((e) => e.id === 'faq:controls')!.text),
-    topics: [
-      ...new Map(
-        docs.map(({ id, title }) => [title, { id: id.replace(/:\d+$/, ''), title }]),
-      ).values(),
-    ],
+    // Keep every lookup id and heading; avoid repeating JSON field names per topic.
+    topics: Object.fromEntries(
+      [...new Map(docs.map(({ id, title }) => [title, id.replace(/:\d+$/, '')]))].map(
+        ([title, id]) => [id, title],
+      ),
+    ),
     catalogLookup:
       'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
     excerpts: excerpts.map(compactEntry),
