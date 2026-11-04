@@ -30,6 +30,8 @@ Unreleased economy rules make minimum building purchase bids, transaction quanti
 
 Unreleased tug rules expose the suggested rescue fee, fee ceiling and offer lifetime in F10. Posted terms and accepted escrow survive edits and reloads; expired offers cannot take payment. See [rescue and haulage](docs/HAULAGE.md#hiring-a-tug).
 
+Unreleased boating fuel help quotes the world’s effective tank units per Fuel, matching inventory refills.
+
 Unreleased F10 Boat navigation rules configure shore-impact damage and docking radii while preserving hull-aware arrival and clear-water checks. Inventory shows local values.
 
 Unreleased F10 Vehicle running costs configure distance wear and trailer speed/fuel penalties, preserving recorded condition, mileage and cargo. Garage service shows the local wear rate.

@@ -3820,7 +3820,7 @@ function boatControls(building?: string) {
   const navigation = boatNavigationRules(world.settings);
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html =
-    '<section><h3>Boating</h3><p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to 8 tank units. Start the engine with F4 or the Engine button.</p>' +
+    `<section><h3>Boating</h3><p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to ${worldItems(world).fuel.fuel} tank units. Start the engine with F4 or the Engine button.</p>` +
     `<p>Arrival: hull within ${navigation.boatHouseArrivalRadius} m of a boathouse berth or ${navigation.boatLandingArrivalRadius} m of a pier/river berth, with a clear water path. Shore boarding at those landings: ${navigation.boatLandingShoreRadius} m. Shore impacts cost ${navigation.boatShoreImpactLoss} condition points; the boat still stops and recoils when damage is zero.</p>` +
     expeditionPanel(world, me) +
     charterPanel(world, me) +

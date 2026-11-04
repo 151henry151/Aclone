@@ -117,6 +117,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Quote the effective world Fuel conversion in boating help instead of always showing eight tank units.
+
 - Apply the world refuelling threshold to resident experiments while retaining carried-fuel recovery for an empty tank.
 
 - Make resident gathering experiments use the configured load and constrain their sales and forecasts by transaction limits, buyer space and funds.

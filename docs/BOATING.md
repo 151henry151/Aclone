@@ -64,6 +64,8 @@ button along the bottom. H or Escape restores the normal controls.
 The Parish Carrier costs **60s**, carries 240 weight plus up to three passengers,
 and has a **64-unit fuel tank**. At the default boatyard price of 45d per Fuel
 item (eight tank units), an empty tank takes eight items and costs **3s 60d**.
+F10 Roadside fuel can change units per Fuel; Inventory boating help quotes the
+effective conversion used when you refuel, capped by the active tank’s room.
 A well-maintained boat at normal full speed uses **0.72 tank units per minute**:
 about **89 minutes** per full tank, or **2s 43d/hour** at the yard's fuel price.
 Slower travel burns less per minute; boosting and poor condition use more.

@@ -4027,3 +4027,33 @@ correct the fixture's reboarding label to the catalogue name “Outboard motorbo
 Inspect all four screenshots: persisted rules, no landing within 4 m, successful
 disembark/mooring after changing to 40 m, and invalid zero radius with 40 retained.
 No full-suite or live-world tests were run.
+
+**Boat navigation slice done and pushed:** `c656e6c99c28d855e4c4e632cdb3258378ac2a5f`.
+Remote SHA verified.
+
+### Boating fuel-help audit gap — completion criteria before production
+
+The existing Fuel conversion rule works, but Inventory boating help hard-codes
+eight units. Extend `tests/browser/boat-refuelling.spec.ts` to keep the existing
+eight-unit fill, edit F10 Roadside fuel to 12, then require help to say 12 and a
+second can to add 12 units. Confirm the help assertion fails before production.
+Keep lifeboat blocked-refuelling visibility and unchanged remaining Fuel; inspect
+screenshots of custom help/refill and blocked use. Render help from the same
+effective item definition as inventory consumption. Run relevant motorboat and
+fuel-sales tests, TypeScript and changed-file Prettier. Update BOATING, README
+and Unreleased; no new rule or duplicate default.
+
+The first browser attempt cannot open Rules: the old public-world fixture's
+player lacks editor authority. Move this test to an isolated owner-created world,
+retaining the same rescue state and original assertions, and rerun red. This
+changes only the local test fixture; no live authority is granted.
+
+Correct red result: browser fails at the custom-help assertion after saving 12;
+the panel still displays “Each can adds up to 8 tank units” (21.8 s).
+
+Fuel-help validation complete: 19 relevant fuel-sales/motorboat tests pass
+(1.5 s), TypeScript is clean, and browser passes (16.8 s). Retry only the
+screenshot scroll when a live snapshot replaces its DOM node. Inspect both
+screenshots: custom twelve-unit help after a real 8 → 20 refill, and carried
+Fuel still visible on the lifeboat with its tank and inventory unchanged.
+Changed-file Prettier and diff checks pass; no consumption logic changed.
