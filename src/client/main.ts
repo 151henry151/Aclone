@@ -2430,7 +2430,7 @@ function buildingWindow(b: Building) {
     if (b.kind === 'starport')
       html += `<div class="notice">Local cash → galactic credits. ${world.settings.exchangeRate}d buys 1cr. Limit ${world.settings.exchangeCap}cr per real day.</div><form data-action="exchange">${field('Credits to receive', 'amount', 1, 'number', 'min="1" max="100"')}<button>Exchange</button></form>${button('Take off to space', 'takeoff', '', 'primary')}`;
     if (b.kind === 'bank')
-      html += `<p>Bank balance: ${money(me.bank)}</p><form data-action="bank">${hidden('building', b.id)}${field('Amount in denarii', 'denarii', 10, 'number', 'min="0.01" step="0.01"')}${select(
+      html += `<p>Bank balance: ${money(me.bank)}</p><form data-action="bank">${hidden('building', b.id)}${field('Amount in denarii', 'denarii', 10, 'number', `min="0.01" max="${economyRules(world.settings).cashTransferLimit / 100}" step="0.01"`)}${select(
         'direction',
         [
           ['deposit', 'Deposit'],
@@ -2509,7 +2509,7 @@ function buildingWindow(b: Building) {
           remainingClaim(b)
             ? `<p>Outside stakes lock ${money(remainingClaim(b))} in this till. You may withdraw ${money(ownerWithdrawable(world, b))} of your own surplus; invested cash stays until investors are paid from earnings.</p>`
             : ''
-        }${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+        }${field('Denarii', 'denarii', 50, 'number', `min="0.01" max="${economyRules(world.settings).cashTransferLimit / 100}" step="0.01"`)}${select(
           'direction',
           [
             ['deposit', 'Invest cash'],
@@ -2537,7 +2537,7 @@ function buildingWindow(b: Building) {
           'Trading status',
         )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', `min="${economyRules(world.settings).minimumBuyPrice / 100}" step="0.01" required placeholder="Enter a price to resume trading"`)}<button>Save trading settings</button><div data-current-prices></div></form>${bulkDiscountEditor(b)}</div>`
       : !b.government && !b.construction
-        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${economyRules(world.settings).outsideReturnPercent}% above what you put in, and you cannot take the stake back. The operating reserve is at least ${money(economyRules(world.settings).outsideOperatingReserve)}; existing claims keep their agreed terms.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${economyRules(world.settings).outsideReturnPercent}% above what you put in, and you cannot take the stake back. The operating reserve is at least ${money(economyRules(world.settings).outsideOperatingReserve)}; existing claims keep their agreed terms.</p>${field('Denarii', 'denarii', 50, 'number', `min="0.01" max="${economyRules(world.settings).cashTransferLimit / 100}" step="0.01"`)}${select(
             'direction',
             [
               ['deposit', 'Invest cash'],
@@ -3315,7 +3315,7 @@ app.addEventListener('submit', async (e) => {
       send({
         type: 'giveMoney',
         player: form.dataset.player,
-        amount: giftAmount(String(data.denarii)),
+        amount: giftAmount(String(data.denarii), world),
       });
     } else if ((form.getAttribute('id') ?? '') === 'settings-form') {
       const patch: Record<string, unknown> = {};

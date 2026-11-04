@@ -20,7 +20,7 @@ Unreleased portable canoes add carpenter/boathouse purchase, wood crafting, slow
 
 Unreleased CB radios add a vehicle dashboard with keyboard, touch and configurable controller push-to-talk, local terrain-aware reception, per-vehicle channel/call sign settings and manual rescue cues. Open CB radio or press V. See [Playing Aclone](docs/PLAYING.md#cb-radio-unreleased) and the [world rules](docs/WORLD_BUILDING.md#cb-radio-rules-unreleased).
 
-Unreleased economy rules make minimum building purchase bids, transaction quantities, outside-investment returns, operating reserves, garage labour/parts, map printing and ammunition refit prices configurable, including live shop limits, bulk-sale hints and portable designs. See [economy rules](docs/WORLD_BUILDING.md#economy-and-trade-rules-unreleased).
+Unreleased economy rules make minimum building purchase bids, transaction quantities, outside-investment returns, operating reserves, garage labour/parts, map printing ammunition refit prices, cash gifts and bank/investment transfer limits configurable, including live shop limits, bulk-sale hints and portable designs. See [economy rules](docs/WORLD_BUILDING.md#economy-and-trade-rules-unreleased).
 
 Unreleased survival rules let world owners set feeding and damage thresholds, maximum health and nutrition limits, repeated-serving benefits, energy regeneration, school tuition/time, licence skill-limit exemptions and Odd Jobs relief terms. Base maximum health now defaults to 65,000; other defaults and active work are preserved. Player panels and resident forecasts use the same rules. See [world-building rules](docs/WORLD_BUILDING.md#survival-and-needs-rules-unreleased).
 

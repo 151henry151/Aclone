@@ -75,7 +75,11 @@ function drawAmount(w: World, p: Player, request: BusinessRequest) {
   const keep = Math.max(internal(request.keepDenarii ?? 0), retainedCapital(w, b));
   return Math.max(
     0,
-    Math.min(10_000_000, ownerWithdrawable(w, b), b.investment - remainingClaim(b) - keep),
+    Math.min(
+      economyRules(w.settings).cashTransferLimit,
+      ownerWithdrawable(w, b),
+      b.investment - remainingClaim(b) - keep,
+    ),
   );
 }
 function complete(c: Commitment) {

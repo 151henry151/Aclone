@@ -223,3 +223,20 @@ test('outside investment help has its own topic instead of expanding school guid
   for (const entry of schools.filter((e) => e.id.startsWith('playing:local-school')))
     assert.doesNotMatch(entry.text, /Outside investments default/);
 });
+
+test('resident guide keeps complete cited text and ids without repeating section anchors', async () => {
+  const { compactGuideText } = await import('../src/server/npc/knowledge');
+  const query = 'Local cash transfer limits',
+    original = searchGuide(query),
+    guide = gameGuide(query);
+  for (const entry of guide.excerpts) {
+    const full = original.find((e) => e.id === entry.id)!;
+    assert.ok(full);
+    assert.equal(entry.text, compactGuideText(full.text));
+    assert.equal(entry.source, full.source.split('#')[0]);
+    if (full.source.startsWith('docs/')) {
+      assert.ok(full.source.includes('#'), 'direct lookup retains the precise citation');
+      assert.ok(guide.topics.some((t) => t.id === entry.id.replace(/:\d+$/, '')));
+    }
+  }
+});

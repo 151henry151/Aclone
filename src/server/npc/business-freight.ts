@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -62,7 +63,11 @@ export function settleBusinessProceeds(w: World, p: Player, state: ResidentState
       delete state.businessProceeds![id];
       continue;
     }
-    const amount = Math.min(10_000_000, owed, Math.max(0, p.cash - householdBudget(w, p).reserve));
+    const amount = Math.min(
+      economyRules(w.settings).cashTransferLimit,
+      owed,
+      Math.max(0, p.cash - householdBudget(w, p).reserve),
+    );
     if (amount > 0)
       return visitBuilding(p, b, [
         { kind: 'act', action: { type: 'investment', building: id, direction: 'deposit', amount } },

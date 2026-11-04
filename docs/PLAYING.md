@@ -601,3 +601,13 @@ bank balance.
 The garage ammunition refit button quotes the local price, normally 25d. World
 owners can change it in Economy and trade, including free refits. The existing
 ten-second wait after firing and full ammunition/energy refill remain in place.
+
+## Local cash transfer limits (unreleased)
+
+The world owner can limit each cash gift and each bank/investment transfer in
+F10 → Rules → Economy and trade. Defaults remain 1,000,000d per gift and 100,000d
+per bank deposit, withdrawal or investment transfer. Forms show the local maximum;
+gift readiness updates without erasing your draft. A smaller limit leaves your
+balances and agreed investment claims intact. Gifts still need an online
+recipient and available cash; investments still require earned, collectable
+returns. These are per-transfer caps, not taxes or total-balance limits.

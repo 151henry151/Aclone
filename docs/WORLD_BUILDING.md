@@ -576,3 +576,12 @@ integer 0–1,000,000 hundredths. Zero means free. Garage owners retain their la
 exemption; map printing still pays the garage and service still restores up to
 25 condition points. Panels and resident plans quote these rules. Missing keys
 use the same defaults, and portable designs include all four.
+
+`maximumMoneyGift` defaults to 100,000,000 hundredths (1,000,000d), and
+`cashTransferLimit` defaults to 10,000,000 hundredths (100,000d). Both accept
+integer 1–1,000,000,000 hundredths. The latter applies to both directions at banks
+and to owner/outside investment transfers, including collections. These fields
+limit each new transfer without rewriting balances or agreed claims. Player
+controls and resident transfer plans follow the limits; independent stock,
+property-price, lending and household-budget rules still apply. Missing keys
+use the defaults, and portable designs retain both fields.

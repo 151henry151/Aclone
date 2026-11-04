@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { businessEconomics } from '../../shared/business-economics.ts';
 import { journeyEstimate } from './projects.ts';
 import { travelVehicle } from './travel.ts';
@@ -85,7 +86,7 @@ export function procurementDraw(
   );
   const supplied = { ...b, stock: { ...b.stock, [item]: (b.stock[item] ?? 0) + quantity } };
   const available = Math.min(
-    10_000_000,
+    economyRules(w.settings).cashTransferLimit,
     ownerWithdrawable(w, b),
     Math.max(0, b.investment - remainingClaim(b) - retainedCapital(w, supplied)),
   );
@@ -179,7 +180,7 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
         const budget = productionBudget(w, proposed)!;
         const funding = Math.max(0, budget.reserve + remainingClaim(b) - b.investment);
         const deposit = Math.min(
-          10_000_000,
+          economyRules(w.settings).cashTransferLimit,
           funding,
           Math.max(0, p.cash - householdBudget(w, p).reserve),
         );
@@ -291,7 +292,7 @@ export function ownerLivingDraw(w: World, p: Player, b: Building) {
         0,
       );
   return Math.min(
-    10_000_000,
+    economyRules(w.settings).cashTransferLimit,
     Math.max(0, target - p.cash),
     ownerWithdrawable(w, b),
     Math.max(0, b.investment - remainingClaim(b) - retainedCapital(w, b)),
@@ -321,7 +322,7 @@ export function ownerRoutine(w: World, p: Player, state?: ResidentState): Step[]
     if (!budget) continue;
     // Never pour fresh capital into production with a structurally negative margin.
     const amount = Math.min(
-      10_000_000,
+      economyRules(w.settings).cashTransferLimit,
       Math.max(0, budget.reserve - b.investment),
       Math.max(0, p.cash - living),
     );
@@ -445,7 +446,7 @@ export function ownerStaffingRoutine(w: World, p: Player): Step[] {
       const proposed = { ...b, wage };
       const reserve = productionBudget(w, proposed)!.reserve + remainingClaim(b);
       const deposit = Math.min(
-        10_000_000,
+        economyRules(w.settings).cashTransferLimit,
         Math.max(0, reserve - b.investment),
         Math.max(0, p.cash - householdBudget(w, p).reserve),
       );

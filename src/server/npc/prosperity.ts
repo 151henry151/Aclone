@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { constructionBudget } from './construction-projects.ts';
 import { pickBuildSite } from './chains.ts';
 import { businessHealth } from '../../shared/business-health.ts';
@@ -170,7 +171,7 @@ export function capitalChoices(w: World, p: Player): FarmerChoice[] {
     ? Math.max(0, (target ?? status.householdReserve) - p.cash)
     : Infinity;
   return status.holdings.flatMap((h) => {
-    const amount = Math.min(10_000_000, needed, h.drawableSurplus);
+    const amount = Math.min(economyRules(w.settings).cashTransferLimit, needed, h.drawableSurplus);
     if (amount < (status.housed ? 10000 : 1000)) return [];
     const b = w.buildings.find((b) => b.id === h.id)!;
     return [

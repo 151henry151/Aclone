@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { herdSpec } from '../../shared/livestock.ts';
@@ -64,7 +65,7 @@ export function economyChoices(
       const capital =
         budget && budget.margin >= 0 && budget.idealMargin >= 0
           ? Math.min(
-              10_000_000,
+              economyRules(w.settings).cashTransferLimit,
               Math.max(0, budget.reserve - b.investment),
               Math.max(0, p.cash - livingReserve(w, p)),
             )
@@ -272,7 +273,10 @@ export function economyChoices(
   if (p.atHome) add('Go outside my home to resume work or travel.', [act({ type: 'outside' })]);
   const bank = buildings.find((b) => b.kind === 'bank');
   const reserve = Math.max(40000, livingReserve(w, p));
-  const deposit = Math.min(10_000_000, Math.floor(Math.max(0, p.cash - reserve) / 2));
+  const deposit = Math.min(
+    economyRules(w.settings).cashTransferLimit,
+    Math.floor(Math.max(0, p.cash - reserve) / 2),
+  );
   if (bank && deposit >= 1000)
     add(
       `Deposit ${deposit / 100}d of spare cash at the bank; retain living and opportunity funds.`,
@@ -288,7 +292,7 @@ export function economyChoices(
           type: 'bank',
           building: bank.id,
           direction: 'withdraw',
-          amount: Math.min(10_000_000, p.bank, reserve - p.cash),
+          amount: Math.min(economyRules(w.settings).cashTransferLimit, p.bank, reserve - p.cash),
         }),
       ]),
     );

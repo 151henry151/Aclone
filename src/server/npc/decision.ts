@@ -54,14 +54,14 @@ const action = z.discriminatedUnion('type', [
     .object({
       type: z.literal('investment'),
       ...transfer,
-      amount: z.number().int().min(1).max(10_000_000),
+      amount: z.number().int().min(1).max(economyRuleFields.cashTransferLimit.max),
     })
     .strict(),
   z
     .object({
       type: z.literal('bank'),
       ...transfer,
-      amount: z.number().int().min(1).max(10_000_000),
+      amount: z.number().int().min(1).max(economyRuleFields.cashTransferLimit.max),
     })
     .strict(),
   z

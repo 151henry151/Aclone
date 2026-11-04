@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { canKeepFishing } from './cargo.ts';
 import {
@@ -204,7 +205,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       (!budget || budget.margin >= 0)
     ) {
       const amount = Math.min(
-        10_000_000,
+        economyRules(w.settings).cashTransferLimit,
         Math.max(cheapestBid * 4, 2000),
         Math.max(0, p.cash - reserve),
       );
@@ -222,7 +223,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       Math.min(ownerWithdrawable(w, b), b.investment - remainingClaim(b) - retainedCapital(w, b)),
     );
     if (need > 0 && available > 0) {
-      const amount = Math.min(10_000_000, need, available);
+      const amount = Math.min(economyRules(w.settings).cashTransferLimit, need, available);
       add(
         'withdraw till',
         `Experiment: withdraw ${amount} from my ${b.name} for fuel, supplies or a living reserve, keeping enough till for wages and bids.`,
@@ -309,9 +310,9 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const cheapest = bids.length ? Math.min(...bids) : 0;
     if (cheapest > 0 && b.investment < cheapest && p.cash >= cheapest) {
       const amount = Math.min(
-        10_000_000,
+        economyRules(w.settings).cashTransferLimit,
         Math.max(cheapest, 2000),
-        affordableLoad(p.cash, 1, livingReserve(w, p), 10_000_000),
+        affordableLoad(p.cash, 1, livingReserve(w, p), economyRules(w.settings).cashTransferLimit),
       );
       if (amount >= cheapest)
         add(
@@ -321,7 +322,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
           -amount,
         );
     }
-    const due = Math.min(10_000_000, collectableReturn(w, b, p.id));
+    const due = Math.min(economyRules(w.settings).cashTransferLimit, collectableReturn(w, b, p.id));
     if (due > 0)
       add(
         'collect return',
@@ -379,7 +380,11 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     const quote = propertyQuote(w, b);
     const till = Math.max(...Object.values(b.buy).filter((price) => price > 0), b.wage || 0, 2000);
     if (p.cash < quote.total + till) continue;
-    const deposit = Math.min(10_000_000, Math.max(till * 4, 2000), p.cash - quote.total - reserve);
+    const deposit = Math.min(
+      economyRules(w.settings).cashTransferLimit,
+      Math.max(till * 4, 2000),
+      p.cash - quote.total - reserve,
+    );
     if (deposit <= 0) continue;
     add(
       `buy ${b.kind}`,

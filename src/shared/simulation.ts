@@ -206,7 +206,7 @@ import {
   type Town,
 } from './civics.ts';
 import { gather, finishGather, changeResourceRecovery } from './resources.ts';
-import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
+import { moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
 import { drivingGrade, drivingSurface, walkingSurface, slopeSpeed } from './driving-surface.ts';
 import { shelter, lodgingAction, roomCount } from './lodging.ts';
@@ -997,7 +997,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'investment': {
       const b = nearby(w, p, a.building);
-      const n = num(a.amount, 1, 10_000_000, true);
+      const n = num(a.amount, 1, economyRules(w.settings).cashTransferLimit, true);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
       const proprietor = b.owner === p.id || (p.authority >= 20 && a.caretaker === true);
       if (proprietor) {
@@ -1319,7 +1319,7 @@ export function act(w: World, id: string, a: Action): string {
     case 'bank': {
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'bank', 'Visit the bank');
-      const n = num(a.amount, 1, 10_000_000, true);
+      const n = num(a.amount, 1, economyRules(w.settings).cashTransferLimit, true);
       requireThat(a.direction === 'deposit' || a.direction === 'withdraw', 'Invalid direction');
       const deposit = a.direction === 'deposit';
       requireThat((deposit ? p.cash : p.bank) >= n, 'Insufficient funds');
@@ -1944,6 +1944,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(economyRuleFields, key),
           'Unknown setting',
         );
+        const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
         else if (key === 'gatheringScenery')
@@ -1960,9 +1961,8 @@ export function act(w: World, id: string, a: Action): string {
           num(
             v,
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
-            key === 'startingCash' ? 1e8 : 1e6,
+            economyField?.max ?? (key === 'startingCash' ? 1e8 : 1e6),
           );
-        const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
         if (survivalField && 'min' in survivalField)
@@ -2172,7 +2172,7 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'giveMoney': {
       const target = w.players[str(a.player)],
-        n = num(a.amount, 1, MAX_MONEY_GIFT, true);
+        n = num(a.amount, 1, economyRules(w.settings).maximumMoneyGift, true);
       const reason = moneyGiftReason(w, p, target);
       requireThat(!reason, reason ?? 'Cannot give money');
       requireThat(p.cash >= n, 'Not enough cash in hand');

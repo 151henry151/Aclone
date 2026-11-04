@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { pastureCapacity } from '../../shared/pasture-land';
 import { jobTraining } from './job-training.ts';
@@ -208,7 +209,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     ) {
       const deposit = Math.max(0, estimate.reserve - b.investment);
       const plan =
-        deposit <= 10_000_000
+        deposit <= economyRules(w.settings).cashTransferLimit
           ? fundProject(w, p, propertyQuote(w, b).total + deposit + living, (funded) =>
               visitBuilding(funded, b, [
                 act({ type: 'buyBuilding', building: b.id }),
@@ -283,7 +284,10 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           ],
         );
     }
-    const deposit = Math.min(10_000_000, Math.max(0, reserve - b.investment));
+    const deposit = Math.min(
+      economyRules(w.settings).cashTransferLimit,
+      Math.max(0, reserve - b.investment),
+    );
     if (deposit > 0 && estimate && estimate.margin >= 0 && (!operating || operating.margin >= 0)) {
       const plan = fundProject(
         w,
@@ -414,7 +418,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
               type: 'investment',
               building: b.id,
               direction: 'deposit',
-              amount: Math.min(10_000_000, n * buyer.buy[item]),
+              amount: Math.min(economyRules(w.settings).cashTransferLimit, n * buyer.buy[item]),
             }),
           ],
         );

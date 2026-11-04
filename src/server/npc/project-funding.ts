@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
@@ -30,7 +31,7 @@ export function fundProject(
     }))
     .sort((a, b) => b.available - a.available);
   for (const { b, available } of sources) {
-    const amount = Math.min(missing, available, 10_000_000);
+    const amount = Math.min(missing, available, economyRules(w.settings).cashTransferLimit);
     if (!amount) continue;
     prefix.push(
       ...visitBuilding(position, b, [
@@ -45,7 +46,7 @@ export function fundProject(
     if (!missing) break;
   }
   // Savings are real money too. Keep all transfers coupled to the actual project.
-  if (missing && p.bank >= missing && missing <= 10_000_000) {
+  if (missing && p.bank >= missing && missing <= economyRules(w.settings).cashTransferLimit) {
     const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction);
     if (bank) {
       prefix.push(

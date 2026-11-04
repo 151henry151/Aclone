@@ -1466,3 +1466,53 @@ Empty-map and Activities help quote the same prices. Inspect all three captured
 screenshots; no page errors. `npx tsc --noEmit` is clean. Full `npm test` passes
 1,435 tests in 201.5s. Run changed-file Prettier; player/world-builder docs, README
 and imperative Unreleased entry are updated. Ready to commit and push.
+
+Pushed and verified `d68f434` on `backlog-implementation`. **Garage labour and
+service Steel, map printing and ammunition refit rules are done.** Continue with
+money gifts and bank/investment transfer limits.
+
+### Gameplay rules — economy: money gifts and cash transfers
+
+Before production, test `maximumMoneyGift` = 100,000,000 hundredths (1,000,000d)
+and `cashTransferLimit` = 10,000,000 hundredths (100,000d). Missing save keys use
+those same named defaults. Both accept integer 1–1,000,000,000 hundredths; the
+upper bound remains far below unsafe integer balances. Changing the gift cap
+must affect exact-decimal parsing, player form maximum/readiness and authoritative
+gifts without changing online/permission/cash/overflow checks. Changing the cash
+transfer cap must affect bank deposits/withdrawals and owner/outside investments
+in both directions; over-cap attempts leave balances, contracts and ledger intact.
+Existing balances and claims remain intact when limits fall. NPC transfer plans
+and schemas must support configured limits without changing household budgets or
+price validation. Keep separate property/catalogue/loan limits untouched.
+
+Commands: `node_modules/.bin/tsx --test tests/money-transfer-rules.test.ts
+ tests/player-aid.test.ts tests/outside-investment.test.ts tests/npc-finances.test.ts`,
+`TEST_GPU=1 npm run test:e2e -- tests/browser/money-transfer-rules.spec.ts`, full
+`npm test`, `npx tsc --noEmit`, and changed-file Prettier. Verify rule validation,
+creation fields, summary and portable designs. Browser: edit/reopen both rules,
+enter an over-cap gift (disabled with reason), send the exact cap, change the cap
+with a drafted gift, and exercise bank and investment limits with successful
+transfers and insufficient-funds/empty-return failures. Inspect screenshots and
+page errors. Update PLAYING, WORLD_BUILDING, README and Unreleased.
+
+Transfer red run: all six new tests fail for absent defaults, Unknown setting
+or missing editor fields before production edits (`/tmp/aclone-transfer-red.log`).
+
+Transfer browser verification passes in 18.8s after using the Close dialog button
+for focused inputs and the actual target HUD selector. Inspect all four
+screenshots; no page errors. TypeScript is clean. Focused transfers/finance tests
+pass, but the unchanged 96,000-byte resident request test now fails as rules and
+manual topics grow. Do not raise the budget or cut guidance. Selected manual
+entries duplicate their section slug in both `id` and `source`. Add a regression
+requiring source document paths without repeated anchors while preserving every
+selected text, section id and title index; full `searchGuide` citations keep
+anchors. Confirm it fails before compacting this redundant request metadata.
+
+The new guide-metadata test failed on the repeated anchor as expected; compacting
+only that duplicate makes both it and the unchanged request-budget test pass.
+All 45 focused tests pass, including gift permission/overflow protections and
+resident finance regressions. Full `npm test` passes 1,442 tests in 199.7s;
+`npx tsc --noEmit` is clean. Changed-file Prettier is complete. Browser evidence
+covers configured limits, an unchanged live gift draft, exact-cap payment, empty
+bank failure and unearned-investment-return failure. Docs and Unreleased are
+updated. Ready to commit and push the transfer-rule slice.

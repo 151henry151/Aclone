@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { propertyQuote } from '../../shared/property.ts';
@@ -57,7 +58,7 @@ export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
       continue;
     }
     const deposit = Math.min(
-      10_000_000,
+      economyRules(w.settings).cashTransferLimit,
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );

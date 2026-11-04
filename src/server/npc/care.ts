@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { operation } from './player-operations.ts';
 import { blockedStep } from './recovery.ts';
@@ -118,7 +119,7 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
         type: 'bank',
         building: bank.id,
         direction: 'withdraw',
-        amount: Math.min(p.bank, 10_000_000, reserve - p.cash),
+        amount: Math.min(p.bank, economyRules(w.settings).cashTransferLimit, reserve - p.cash),
       }),
     ]);
   // Only earn emergency money if a stocked meal exists and cannot be afforded.

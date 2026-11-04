@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  maximumMoneyGift: {
+    label: 'Maximum money gift (hundredths of a denarius)',
+    min: 1,
+    max: 1000000000,
+    step: 1,
+  },
+  cashTransferLimit: {
+    label: 'Maximum bank/investment transfer (hundredths of a denarius)',
+    min: 1,
+    max: 1000000000,
+    step: 1,
+  },
   vehicleServiceFee: {
     label: 'Vehicle service labour (hundredths of a denarius)',
     min: 0,

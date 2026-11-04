@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { skillFits } from '../../shared/survival-rules';
 import { fundProject } from './project-funding.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../../shared/farm-land.ts';
@@ -49,7 +50,11 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
         (s) => s.owner === p.id && !['home', 'warehouse'].includes(s.kind),
       ).length;
       const deposit = Math.max(0, reserve - b.investment);
-      if ((!b.owner || b.forSale) && count < w.settings.maxBuildings && deposit <= 10_000_000) {
+      if (
+        (!b.owner || b.forSale) &&
+        count < w.settings.maxBuildings &&
+        deposit <= economyRules(w.settings).cashTransferLimit
+      ) {
         const plan = fundProject(w, p, propertyQuote(w, b).total + deposit + living, (funded) =>
           visitBuilding(funded, b, [
             { kind: 'act', action: { type: 'buyBuilding', building: b.id } },
@@ -77,7 +82,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       continue;
     }
     const deposit = Math.min(
-      10_000_000,
+      economyRules(w.settings).cashTransferLimit,
       Math.max(0, reserve - b.investment),
       Math.max(0, p.cash - living),
     );
@@ -181,7 +186,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
               action: {
                 type: 'investment',
                 building: b.id,
-                amount: Math.min(10_000_000, n * buyer.buy[item]),
+                amount: Math.min(economyRules(w.settings).cashTransferLimit, n * buyer.buy[item]),
                 direction: 'deposit',
               },
             },

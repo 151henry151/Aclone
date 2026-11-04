@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose per-world cash gift and bank/investment transfer limits; enforce them in payments, live gift drafts, transfer forms and resident plans while preserving balances and agreed claims. Remove repeated section anchors from resident guide metadata without cutting its text or lookup citations.
+
 - Make garage labour, service Steel, printed maps and ammunition refit prices configurable per world; share service parts checks with roadside mechanics and quote local terms in player controls and resident plans.
 
 - Make outside-investment return caps and minimum operating reserves world rules; preserve agreed claims across rate changes, top-ups and reloads, and quote current terms in the investment panel.

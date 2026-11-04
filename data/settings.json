@@ -166,5 +166,7 @@
   "vehicleServiceFee": 1000,
   "vehicleServiceSteel": 1,
   "mapPrintPrice": 1000,
-  "ammunitionRefitPrice": 2500
+  "ammunitionRefitPrice": 2500,
+  "maximumMoneyGift": 100000000,
+  "cashTransferLimit": 10000000
 }

@@ -125,7 +125,10 @@ export function compactGuideText(text: string) {
 const compactEntry = (e: Entry) => {
   const text = compactGuideText(e.text);
   // Manual headings are already retained in topics, keyed by this section id.
-  return e.source.startsWith('docs/') ? { id: e.id, source: e.source, text } : { ...e, text };
+  // The id already identifies the section; direct lookups retain anchored citations.
+  return e.source.startsWith('docs/')
+    ? { id: e.id, source: e.source.split('#')[0], text }
+    : { ...e, text };
 };
 export function gameGuide(query: string, activityQuery = '') {
   const docs = corpus().filter((e) => e.source.startsWith('docs/'));

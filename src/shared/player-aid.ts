@@ -1,17 +1,22 @@
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 import { fuelRules } from './fuel-rules';
 import { worldItems } from './world-catalogue';
 import { vehicleDef } from './vehicle-config';
 import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types.ts';
-export const MAX_MONEY_GIFT = 100000000; // Internal hundredths; 1,000,000d per gift.
-export function giftAmount(text: string) {
+export const MAX_MONEY_GIFT = defaults.maximumMoneyGift; // Internal hundredths; 1,000,000d per gift.
+export function giftAmount(text: string, w?: World) {
   if (!/^\d+(?:\.\d{1,2})?$/.test(text.trim()))
     throw Error('Enter denarii with at most two decimal places');
   const [whole, fraction = ''] = text.trim().split('.');
   const amount = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
-  if (!Number.isSafeInteger(amount) || amount < 1 || amount > MAX_MONEY_GIFT)
-    throw Error('Choose a gift between 0.01d and 1,000,000d');
+  const maximum = economyRules(w?.settings).maximumMoneyGift;
+  if (!Number.isSafeInteger(amount) || amount < 1 || amount > maximum)
+    throw Error(
+      `Choose a gift between 0.01d and ${(maximum / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}d`,
+    );
   return amount;
 }
 export function moneyGiftReason(w: World, p: Player, target?: Player) {
