@@ -12,7 +12,7 @@ test('low shore disappears before hills, with observer height extending the hori
   assert.ok(earthDrop(1000) < 0.1);
   assert.ok(earthDrop(30000) > 60);
 });
-test('island fallback samples real terrain and refines land under buildings before detailed tiles load', () => {
+test('island fallback samples real terrain and retains supporting cliff samples before detailed tiles load', () => {
   const w = createWorld('island', 'Island', 'server');
   w.settings.mapSize = 2500;
   const b = makeBuilding('tower', 'lighthouse', 576, 576);

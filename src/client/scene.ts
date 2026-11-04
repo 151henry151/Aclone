@@ -45,6 +45,7 @@ import { SnowAccumulation, showSnowAccumulation } from './snow-accumulation';
 import { vehicleGround } from './vehicle-ground';
 import { townCentreGround } from './town-centre-ground';
 import { viewFog } from './view-distance';
+import { fadeSceneryIntoFog } from './scenery-fog';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
@@ -667,7 +668,7 @@ export class GameScene {
       // baking the entire horizon in the first state-message handler.
       while (current()) {
         const horizonPending = this.horizon.prepare();
-        const groundPending = this.ground.update(this.me!.x, this.me!.z, 2);
+        const groundPending = this.ground.update(this.me!.x, this.me!.z, 2, this.groundView());
         const woodsPending = this.woods.update(this.me!.x, this.me!.z, 1);
         await yieldFrame();
         if (!groundPending && !woodsPending && !horizonPending) break;
@@ -789,7 +790,7 @@ export class GameScene {
     this.horizon.group.visible = streamed;
     if (streamed) {
       this.ground.reset(w);
-      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 4);
+      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 4, this.groundView());
       this.terrain = undefined;
     } else {
       const geometry = new T.PlaneGeometry(540, 540, 128, 128);
@@ -824,6 +825,13 @@ export class GameScene {
       g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
       g.rotation.y = b.rotation;
       g.userData.building = b.id;
+      g.traverse((object) => {
+        if (object instanceof T.Mesh)
+          for (const material of Array.isArray(object.material)
+            ? object.material
+            : [object.material])
+            fadeSceneryIntoFog(material);
+      });
       this.buildingMeshes.push(g);
       this.land.add(g);
     }
@@ -1212,6 +1220,16 @@ export class GameScene {
     }
     this.ocean?.absorb(g);
     return g;
+  }
+  private groundView() {
+    const p = this.me;
+    if (!this.world || p?.vehicle !== 2 || p.flight?.grounded !== false) return undefined;
+    return {
+      height: Math.max(0, p.y - terrainHeight(this.world, p.x, p.z)),
+      vx: p.flight.vx,
+      vz: p.flight.vz,
+      vy: p.flight.vy,
+    };
   }
   private frame(preparing = false) {
     // Warmup owns rendering until settling; avoid repeating all scene animation
@@ -1754,7 +1772,10 @@ export class GameScene {
           1 - (w.climate?.wetness ?? 0) * 0.45;
       if (this.ground.active) {
         this.ground.setRoughness(1 - (w.climate?.wetness ?? 0) * 0.45);
-        if (this.ready || this.settling) this.ground.update(this.target.x, this.target.z);
+        if (this.ready || this.settling) {
+          const view = this.groundView();
+          this.ground.update(view ? p.x : this.target.x, view ? p.z : this.target.z, 4, view);
+        }
       }
       if (this.woods.active && (this.ready || this.settling))
         this.woods.update(this.target.x, this.target.z);
@@ -1844,7 +1865,7 @@ export class GameScene {
         this.container.clientHeight,
       );
       this.horizon.update(w, this.camera, this.ground, this.ocean.level.value, daylight);
-      const visibility = viewFog(climate);
+      const visibility = viewFog(climate, p.vehicle === 2 && p.flight?.grounded === false);
       this.scene.fog.near = visibility.near;
       this.scene.fog.far = visibility.far;
       // The nearby pair shares the existing shadow-casting directional light.

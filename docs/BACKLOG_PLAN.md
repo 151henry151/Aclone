@@ -373,6 +373,8 @@ failed (`/tmp/aclone-g3-unit.log`).
 
 ### Make a landing possible
 
+Done: committed and pushed as `f154a0a` after the checks below.
+
 Completion criteria, before production changes:
 
 - `node_modules/.bin/tsx --test tests/landing.test.ts tests/flight.test.ts tests/airfield.test.ts`:
@@ -435,3 +437,99 @@ fields, the final landing browser rerun also passed (1.1 minutes). Portable
 designs, creation overrides, missing-key defaults, ground wing/drop rules and
 the original western hangar/property preservation are covered. Stable terrain
 interpolation preserves already-equal ground heights exactly.
+
+### Flight view: terrain squares, chunky ground and distant towns
+
+In progress; no production changes yet. Implement/measure fog first, then slant
+range and directional preparation, then soften the surface transition. Replace
+the tile system with rings only if those smaller changes fail these criteria.
+Remove town-specific horizon refinement without rebuilding the shipped scenery.
+Graphics limits belong to client quality settings, not world-owner rules.
+
+Concrete completion criteria:
+
+- At ground height preserve the existing 560 m enter / 680 m retain detail disc.
+  At height above 680 m, settle to coarse tiles everywhere, including underneath.
+  Descending at 8 m/s restores the fine tile underneath by 20 m above terrain.
+- Along a warmed, clear-weather 66 mph path at 120 m altitude, no detailed/coarse
+  boundary or missing tile within 300 m horizontally may persist over 2 seconds.
+  Prioritise forward preparation within the existing 4 ms builder budget. Exercise
+  reversal, climb/descent and cancellation while streaming as well as steady flight.
+- Shared boundary vertices retain equal heights for every adjacent resolution;
+  snow, river and cliff attributes remain valid. Surface-mask resolution changes
+  must not leave a tile-aligned inked line in cockpit and chase views.
+- Flight fog hides the distant coarse silhouette; walking/boating visibility
+  remains unchanged. Buildings use the same atmosphere as land. A town outside
+  loaded tiles must not introduce a special mesh-density pad. Inspect both that
+  state and the approach after ground tiles arrive in the browser.
+- Performance baseline: `PROFILE_OUT=/tmp/aclone-flight-before npx tsx
+scripts/flight-view-performance.ts`. Fixed Performance graphics, 1280×800,
+  frozen clear noon, 45 seconds at 66 mph from (1300,120,-1300) toward town.
+  Proposed budget awaiting Henry's response: hardware Chromium median ≤50 ms,
+  p95 ≤66.7 ms and no more than 10% regression on the same machine/path.
+  Save GPU identity and screenshots so software fallback cannot masquerade as
+  hardware performance evidence. Repeat after the fog-only experiment and at end.
+- Before production edits add and run regression tests for flight fog, streaming
+  height/priority, shared edges and town horizon density, recording actual failures.
+  Browser verification must render the real `GameScene`, including initially
+  empty streamed ground, town approach, high flight and descent to the runway.
+  Finish with `npm test`, `npx tsc --noEmit`, explicit-path Prettier, and update
+  `docs/FLYING.md`, README and the imperative Unreleased changelog.
+
+Red evidence: both `tests/flight-view.test.ts` assertions failed (45 km airborne
+fog and town-only fine cells); the new browser height test failed with 61 detailed
+tiles at 800 m instead of zero. Baseline on actual Quadro M1200 OpenGL hardware:
+1,350 frames / 45 seconds, median 33.3 ms, p95 38.0 ms, p99 44.9 ms, 457,048
+triangles, 277 tiles, 0 browser errors. Start/end cockpit screenshots inspected.
+The first production experiment changes only airborne fog (1,600 m clear,
+1,000 m storm); ground/boat visibility is untouched.
+
+Further red evidence: the intermediate-grid test initially received the full
+fine mesh, and the scenery range test found no per-fragment range uniform.
+The real-scene test initially counted 28 invisible picking boxes as visible
+building materials; its inspection now excludes those non-rendered hit targets.
+Visible building geometry retains the fog-fade assertion.
+
+Height/descent, original ground hysteresis, streaming cancellation and the
+66 mph forward/reversed path now pass. All shared edge tests pass with the
+intermediate grid; lighthouse-support cliffs keep their shipped geometry while
+ordinary towns no longer select a finer horizon cell size. The real browser
+flow passes for initially empty streamed ground, town loading, 800 m flight,
+runway approach and grounded visibility restoration. Final screenshots and
+performance measurements are still being checked before completion.
+
+Use the proposed 30 FPS acceptance budget as the working limit unless Henry
+selects a different one. The fog-only run measured median 33.4 / p95 43.7 ms;
+a later run with scenery fading measured 33.4 / 43.3 ms, both missing the 10%
+p95-regression limit. Sharing duplicated cell vertices kept identical triangles
+and edge heights while reducing terrain/snow sampling. The next isolated run
+passed at median 33.3 / p95 37.3 / p99 39.5 ms with 1,350 frames, 277 tiles and
+zero browser errors. The benchmark now asserts the hardware and absolute budget,
+and `PROFILE_BASELINE=/tmp/aclone-flight-before/results.json` also asserts both
+10% regression limits. No builder time-budget increase was needed.
+
+A further high-altitude cliff regression failed because the old feature override
+still built a dense interior even when a tile was labelled coarse. High flight
+now coarsens that interior while preserving every 2 m cliff/river boundary
+sample and the surface attributes. Ground and low flight retain feature detail.
+
+Final browser group: `TEST_GPU=1 npm run test:e2e --
+tests/browser/flight-view.spec.ts tests/browser/flight-terrain.spec.ts
+tests/browser/terrain-streaming.spec.ts tests/browser/coastal-visibility.spec.ts`
+passed all four checks (1.2 minutes). Inspected the empty-town, fully loaded town,
+high-flight and cockpit-approach images. Loaded ground is continuous; the empty
+state retains supporting land; coastal flashes remain visible at 1 and 30 km.
+The completed terrain screenshots wait for all requested tiles rather than
+mistaking the first tile under the aircraft for completed loading.
+
+Final hardware verification (`PROFILE_OUT=/tmp/aclone-flight-verified
+PROFILE_BASELINE=/tmp/aclone-flight-before/results.json npx tsx
+scripts/flight-view-performance.ts`) exited successfully: median 33.3 ms,
+p95 41.0 ms (7.9% above baseline), p99 45.4 ms, 1,350 frames / 45 seconds,
+277 tiles, 472,588 triangles and no browser errors. Both absolute limits and
+both 10% regression assertions pass. TypeScript is clean and Prettier has run
+on every changed path. Full-suite verification remains in progress.
+
+Full `npm test` passed all 1,330 tests, zero failures (195 seconds;
+`/tmp/aclone-flight-full.log`). The final diff check is clean. This slice meets
+its criteria without replacing the tile system or increasing its frame budget.

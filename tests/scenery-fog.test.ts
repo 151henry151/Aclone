@@ -51,3 +51,25 @@ test('fog-faded and ordinary scenery cannot share a cached shader program', () =
   seasonalMaterial(faded);
   assert.notEqual(ordinary.customProgramCacheKey(), faded.customProgramCacheKey());
 });
+
+test('streamed scenery fades by individual fragment distance before its chunk boundary', () => {
+  const material = new T.MeshLambertMaterial();
+  fadeSceneryIntoFog(material);
+  fadeSceneryIntoFog(material, 480);
+  const shader = {
+    uniforms: {} as Record<string, { value: unknown }>,
+    vertexShader: T.ShaderLib.lambert.vertexShader,
+    fragmentShader: T.ShaderLib.lambert.fragmentShader,
+  };
+  material.onBeforeCompile(
+    shader as Parameters<T.Material['onBeforeCompile']>[0],
+    {} as T.WebGLRenderer,
+  );
+  assert.equal(shader.uniforms.sceneryRange?.value, 480);
+  assert.match(shader.vertexShader, /vSceneryDistance=length\(mvPosition.xyz\)/);
+  assert.match(
+    shader.fragmentShader,
+    /smoothstep\(sceneryRange\*\.6,sceneryRange,vSceneryDistance\)/,
+  );
+  assert.equal(material.transparent, false);
+});

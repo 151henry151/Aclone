@@ -11,6 +11,13 @@ export { groundTileSize } from './ground-geometry';
 export const groundLoadRadius = 1040;
 const loadRadius = groundLoadRadius,
   unloadRadius = 1200;
+export interface GroundView {
+  height: number;
+  vx: number;
+  vz: number;
+  vy: number;
+}
+type Detail = boolean | 'medium';
 const detailRadius = 560,
   detailUnloadRadius = 680;
 
@@ -27,6 +34,8 @@ export class GroundTiles {
     key: string;
     cx: number;
     cz: number;
+    detail: Detail;
+    coarseFeatures: boolean;
     job: Generator<void, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>;
   };
   private half = 0;
@@ -60,13 +69,36 @@ export class GroundTiles {
     for (const tile of this.tiles.values()) tile.material.roughness = value;
   }
   /** Add tiles that came within reach of (x, z) and drop the ones left far behind. */
-  update(x: number, z: number, budget = 4) {
+  update(x: number, z: number, budget = 4, view?: GroundView) {
     const w = this.world;
     if (!w) return;
     const deadline = performance.now() + 4;
+    const height = Math.max(0, view?.height ?? 0);
+    const coarseFeatures = height > detailUnloadRadius;
+    const aheadX = x + (view?.vx ?? 0) * 4,
+      aheadZ = z + (view?.vz ?? 0) * 4;
+    const detailAt = (cx: number, cz: number, existing?: T.Mesh): Detail => {
+      const slant = Math.min(
+        Math.hypot(cx - x, height, cz - z),
+        Math.hypot(cx - aheadX, height, cz - aheadZ),
+      );
+      if (slant <= (existing?.userData.detailed ? detailUnloadRadius : detailRadius)) return true;
+      // Only flight needs an intermediate band. Ground detail/hysteresis is unchanged.
+      if (
+        height > 0 &&
+        height <= detailUnloadRadius &&
+        slant <= (existing?.userData.detail === 'medium' ? 950 : 850)
+      )
+        return 'medium';
+      return false;
+    };
     if (
       this.pending &&
-      Math.hypot(this.pending.cx - x, this.pending.cz - z) > unloadRadius + groundTileSize * 0.71
+      (Math.hypot(this.pending.cx - x, this.pending.cz - z) >
+        unloadRadius + groundTileSize * 0.71 ||
+        this.pending.coarseFeatures !== coarseFeatures ||
+        this.pending.detail !==
+          detailAt(this.pending.cx, this.pending.cz, this.tiles.get(this.pending.key)))
     ) {
       this.pending.job.return(undefined as never);
       this.pending = undefined;
@@ -87,16 +119,28 @@ export class GroundTiles {
       i1 = Math.min(hi - 1, Math.floor((x + loadRadius) / groundTileSize)),
       j0 = Math.max(lo, Math.floor((z - loadRadius) / groundTileSize)),
       j1 = Math.min(hi - 1, Math.floor((z + loadRadius) / groundTileSize));
-    const wanted: { i: number; j: number; d: number; detailed: boolean }[] = [];
+    const wanted: { i: number; j: number; d: number; detailed: Detail }[] = [];
     for (let j = j0; j <= j1; j++)
       for (let i = i0; i <= i1; i++) {
         const existing = this.tiles.get(`${i}:${j}`);
         const cx = (i + 0.5) * groundTileSize,
           cz = (j + 0.5) * groundTileSize,
           d = Math.hypot(cx - x, cz - z);
-        const detailed = d <= (existing?.userData.detailed ? detailUnloadRadius : detailRadius);
-        if (existing && existing.userData.detailed === detailed) continue;
-        if (d <= loadRadius + groundTileSize * 0.71) wanted.push({ i, j, d, detailed });
+        const detailed = detailAt(cx, cz, existing);
+        if (
+          existing &&
+          existing.userData.detail === detailed &&
+          existing.userData.coarseFeatures === coarseFeatures
+        )
+          continue;
+        if (d <= loadRadius + groundTileSize * 0.71) {
+          // Landing ground wins over outward streaming; otherwise prepare towards velocity.
+          const priority =
+            view && view.vy < 0 && d < 200
+              ? d - 1000
+              : Math.min(d, Math.hypot(cx - aheadX, cz - aheadZ) + 80);
+          wanted.push({ i, j, d: priority, detailed });
+        }
       }
     // Retain the old LOD until its replacement is complete. Bound CPU work by
     // elapsed time as well as tile count; one dense cliff tile spans many frames.
@@ -104,16 +148,21 @@ export class GroundTiles {
     let completed = 0;
     while (completed < budget) {
       if (!this.pending) {
-        const next = wanted.find(
-          ({ i, j, detailed }) => this.tiles.get(`${i}:${j}`)?.userData.detailed !== detailed,
-        );
+        const next = wanted.find(({ i, j, detailed }) => {
+          const tile = this.tiles.get(`${i}:${j}`);
+          return (
+            tile?.userData.detail !== detailed || tile?.userData.coarseFeatures !== coarseFeatures
+          );
+        });
         if (!next) break;
         const { i, j, detailed } = next;
         this.pending = {
           key: `${i}:${j}`,
           cx: (i + 0.5) * groundTileSize,
           cz: (j + 0.5) * groundTileSize,
-          job: this.build(w, i, j, detailed),
+          detail: detailed,
+          coarseFeatures,
+          job: this.build(w, i, j, detailed, coarseFeatures),
         };
       }
       const step = this.pending.job.next();
@@ -133,17 +182,20 @@ export class GroundTiles {
     }
     return (
       !!this.pending ||
-      wanted.some(
-        ({ i, j, detailed }) => this.tiles.get(`${i}:${j}`)?.userData.detailed !== detailed,
-      )
+      wanted.some(({ i, j, detailed }) => {
+        const tile = this.tiles.get(`${i}:${j}`);
+        return (
+          tile?.userData.detail !== detailed || tile?.userData.coarseFeatures !== coarseFeatures
+        );
+      })
     );
   }
-  private *build(w: World, i: number, j: number, detailed: boolean) {
+  private *build(w: World, i: number, j: number, detailed: Detail, coarseFeatures: boolean) {
     const x0 = i * groundTileSize,
       z0 = j * groundTileSize;
     const cx = x0 + groundTileSize / 2,
       cz = z0 + groundTileSize / 2;
-    const geometry = yield* groundGeometrySteps(w, cx, cz, detailed);
+    const geometry = yield* groundGeometrySteps(w, cx, cz, detailed, coarseFeatures);
     let installed = false;
     try {
       yield* prepareSnowSurfaceSteps(geometry, w, cx, cz);
@@ -152,13 +204,15 @@ export class GroundTiles {
         x: x0,
         z: z0,
         size: groundTileSize,
-        pixels: detailed ? 256 : 64,
+        pixels: 256,
       });
       material.roughness = this.roughness;
       const tile = new T.Mesh(geometry, material);
       tile.position.set(cx, 0, cz);
-      tile.receiveShadow = detailed;
-      tile.userData.detailed = detailed;
+      tile.receiveShadow = detailed === true;
+      tile.userData.detailed = detailed === true;
+      tile.userData.detail = detailed;
+      tile.userData.coarseFeatures = coarseFeatures;
       tile.userData.cx = cx;
       tile.userData.cz = cz;
       tile.userData.ground = true;

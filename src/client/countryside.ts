@@ -367,6 +367,14 @@ export class CountrysideChunks {
       yield* snow.collectSteps(chunk);
       chunk.add(yield* snow.finishSteps());
       chunk.userData.snowDetails = snow;
+      // Fade individual trees/rocks before the streaming edge, not whole square chunks.
+      chunk.traverse((object) => {
+        if (object instanceof T.Mesh)
+          for (const material of Array.isArray(object.material)
+            ? object.material
+            : [object.material])
+            fadeSceneryIntoFog(material, loadRadius);
+      });
       this.group.add(chunk);
       installed = true;
       return chunk;

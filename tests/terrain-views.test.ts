@@ -63,3 +63,55 @@ test('ordinary haze reveals neighbouring towns while storms retain reduced visib
   assert.ok(clear.far >= 30000 && clear.near >= 250);
   assert.ok(clear.far > rain.far && rain.far > storm.far);
 });
+
+test('intermediate terrain softens the grid step while sharing every fine and coarse edge sample', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  const near = groundGeometry(w, 448, -704, true);
+  const middle = groundGeometry(w, 576, -704, 'medium');
+  const far = groundGeometry(w, 704, -704, false);
+  const edge = (g: typeof near, x: number) => {
+    const p = g.attributes.position;
+    return new Map(
+      Array.from({ length: p.count }, (_, i) => i)
+        .filter((i) => p.getX(i) === x)
+        .map((i) => [p.getZ(i), p.getY(i)]),
+    );
+  };
+  assert.deepEqual(edge(near, 64), edge(middle, -64));
+  assert.deepEqual(edge(middle, 64), edge(far, -64));
+  assert.ok(
+    middle.index!.count > far.index!.count,
+    'middle ring needs more shape than the distant mesh',
+  );
+  assert.ok(middle.index!.count < near.index!.count, 'middle ring must not rebuild the fine mesh');
+  for (const g of [near, middle, far]) g.dispose();
+});
+
+test('high flight uses coarse cliff interiors while retaining every dense edge and surface attribute', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.coastalBluffs = [
+    { id: 'flight-cliff', x: 576, z: 576, angle: 0, width: 100, inland: 140, height: 35, seed: 3 },
+  ];
+  const fine = groundGeometry(w, 576, 576, true);
+  const high = groundGeometry(w, 576, 576, false, true);
+  assert.ok(
+    high.attributes.position.count < fine.attributes.position.count / 4,
+    'high flight must not keep the dense cliff interior',
+  );
+  for (const axis of ['x', 'z'] as const)
+    for (const sign of [-64, 64]) {
+      const edge = (g: typeof fine) => {
+        const p = g.attributes.position;
+        return new Map(
+          Array.from({ length: p.count }, (_, i) => i)
+            .filter((i) => (axis === 'x' ? p.getX(i) : p.getZ(i)) === sign)
+            .map((i) => [axis === 'x' ? p.getZ(i) : p.getX(i), p.getY(i)]),
+        );
+      };
+      assert.deepEqual(edge(high), edge(fine));
+    }
+  assert.equal(high.attributes.coastalRock.count, high.attributes.position.count);
+  assert.equal(high.attributes.riverSediment.count, high.attributes.position.count);
+  fine.dispose();
+  high.dispose();
+});

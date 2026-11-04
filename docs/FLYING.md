@@ -40,6 +40,23 @@ leaves throttle set. Stay clear of terrain before opening a panel. A disconnecte
 pilot's movement stops under Aclone's existing offline rules; reconnecting resumes
 the saved flight state. Land and shut down before signing off.
 
+## Flight visibility and terrain
+
+Airborne views use haze out to 1.6 km in clear weather and 1 km in storms.
+Ground and marine visibility returns after landing. Buildings fade into the same
+haze, while streamed trees and rocks thin out individually before their loading
+boundary. Distant towns use the surrounding island mesh rather than a separate
+patch of finer terrain.
+
+Terrain detail accounts for height as well as distance. The renderer prepares
+squares ahead of your velocity, restores nearby detail first during descent, and
+uses an intermediate grid between fine and distant ground at circuit height.
+Above the detail-retention height the loaded ground uses the coarse selection.
+Road and surface masks keep the same resolution across those selections. On foot
+the existing detail distances are unchanged. These are client graphics choices;
+there is no new world-owner rule. **F9 → Options & pilot key → Performance**
+targets 30 FPS if the default graphics mode is too slow.
+
 ## First practice flight
 
 Choose clear, reasonably level land with **at least 150–200 metres of straight run**

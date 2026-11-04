@@ -6,10 +6,17 @@ import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/terrain';
 export const groundTileSize = 128;
 
-/** Distant tiles use 16 m cells, but retain every 4 m edge sample so they
- * join detailed tiles without cracks. Interior cell fans stitch those edges. */
-export function groundGeometry(w: World, cx: number, cz: number, detailed: boolean) {
-  const job = groundGeometrySteps(w, cx, cz, detailed);
+/** Intermediate/distant tiles use 8/16 m cells, retaining every 4 m edge
+ * sample (2 m at cliffs/rivers). Shared cell vertices avoid repeated terrain
+ * and snow queries; boundary fans join detailed tiles without cracks. */
+export function groundGeometry(
+  w: World,
+  cx: number,
+  cz: number,
+  detailed: boolean | 'medium',
+  coarseFeatures = false,
+) {
+  const job = groundGeometrySteps(w, cx, cz, detailed, coarseFeatures);
   let step = job.next();
   while (!step.done) step = job.next();
   return step.value;
@@ -19,40 +26,53 @@ export function* groundGeometrySteps(
   w: World,
   cx: number,
   cz: number,
-  detailed: boolean,
+  detailed: boolean | 'medium',
+  coarseFeatures = false,
 ): Generator<void, T.BufferGeometry> {
   let geometry: T.BufferGeometry;
   const cliff = nearBluff(w, cx, cz, 100);
   const river = nearInlandWater(w, cx, cz);
-  if (detailed || cliff || river) {
+  if (detailed === true || (!coarseFeatures && (cliff || river))) {
     const segments = cliff || river ? 64 : 32;
     geometry = new T.PlaneGeometry(128, 128, segments, segments);
     geometry.rotateX(-Math.PI / 2);
   } else {
     const vertices: number[] = [],
       indices: number[] = [];
-    for (let z = -64; z < 64; z += 16)
-      for (let x = -64; x < 64; x += 16) {
-        const start = vertices.length / 3;
-        vertices.push(x + 8, 0, z + 8);
+    const sampled = new Map<string, number>();
+    const vertex = (x: number, z: number) => {
+      const key = `${x}:${z}`;
+      let index = sampled.get(key);
+      if (index === undefined) {
+        index = vertices.length / 3;
+        sampled.set(key, index);
+        vertices.push(x, 0, z);
+      }
+      return index;
+    };
+    const cell = detailed === 'medium' ? 8 : 16;
+    for (let z = -64; z < 64; z += cell)
+      for (let x = -64; x < 64; x += cell) {
+        const centre = vertex(x + cell / 2, z + cell / 2);
+        const edge: number[] = [];
         const edges = [
-          [x, z, x, z + 16, x === -64],
-          [x, z + 16, x + 16, z + 16, z === 48],
-          [x + 16, z + 16, x + 16, z, x === 48],
-          [x + 16, z, x, z, z === -64],
+          [x, z, x, z + cell, x === -64],
+          [x, z + cell, x + cell, z + cell, z === 64 - cell],
+          [x + cell, z + cell, x + cell, z, x === 64 - cell],
+          [x + cell, z, x, z, z === -64],
         ];
         for (const [ax, az, bx, bz, boundary] of edges) {
-          const n = boundary ? 4 : 1;
+          const n = boundary ? cell / (cliff || river ? 2 : 4) : 1;
           for (let i = 0; i < n; i++)
-            vertices.push(
-              Number(ax) + ((Number(bx) - Number(ax)) * i) / n,
-              0,
-              Number(az) + ((Number(bz) - Number(az)) * i) / n,
+            edge.push(
+              vertex(
+                Number(ax) + ((Number(bx) - Number(ax)) * i) / n,
+                Number(az) + ((Number(bz) - Number(az)) * i) / n,
+              ),
             );
         }
-        const count = vertices.length / 3 - start - 1;
-        for (let i = 0; i < count; i++)
-          indices.push(start, start + 1 + i, start + 1 + ((i + 1) % count));
+        for (let i = 0; i < edge.length; i++)
+          indices.push(centre, edge[i], edge[(i + 1) % edge.length]);
       }
     geometry = new T.BufferGeometry();
     geometry.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));

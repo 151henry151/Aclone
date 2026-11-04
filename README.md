@@ -70,7 +70,10 @@ Charter boarding and its Inventory panel now honour the world's configured
 passenger and tank limits, including zero passenger places.
 Unreleased flight changes add forgiving landing contacts, an airborne B brake,
 steadier keyboard handling and wider public strips with gentle shoulders. World
-owners can tune them or select strict contacts. See the [flight guide](docs/FLYING.md).
+owners can tune them or select strict contacts. Flight rendering now uses shorter
+haze, height-aware terrain detail and forward preparation; distant towns share
+the surrounding horizon mesh. These graphics follow the player's graphics mode.
+See the [flight guide](docs/FLYING.md).
 
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 

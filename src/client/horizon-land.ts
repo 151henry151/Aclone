@@ -8,7 +8,8 @@ import { refractedEarthRadius } from '../shared/marine-visibility';
 import type { GroundTiles } from './ground';
 
 /** One low-cost island mesh, without trees, textures, buildings or shadow maps.
- * Fine cells under buildings/headlands retain their supporting land. Shared
+ * Towns share the countryside resolution. Coastal headlands retain their
+ * supporting cliff samples for offshore navigation. Shared
  * edge samples stitch fine/coarse cells without cracks. Preparation is yielded.
  */
 export function* horizonGeometry(w: World): Generator<void, T.BufferGeometry> {
@@ -22,25 +23,10 @@ export function* horizonGeometry(w: World): Generator<void, T.BufferGeometry> {
   const nx = Math.ceil((bounds.maxX - originX) / step) + 1,
     nz = Math.ceil((bounds.maxZ - originZ) / step) + 1;
   const fine = new Uint8Array(nx * nz);
-  const buildings = new Set<string>();
-  for (const b of w.buildings) {
-    for (
-      let z = Math.floor((b.z - 64 - originZ) / step);
-      z <= Math.floor((b.z + 64 - originZ) / step);
-      z++
-    )
-      for (
-        let x = Math.floor((b.x - 64 - originX) / step);
-        x <= Math.floor((b.x + 64 - originX) / step);
-        x++
-      )
-        buildings.add(x + ':' + z);
-  }
   for (let z = 0; z < nz; z++) {
     for (let x = 0; x < nx; x++)
       fine[z * nx + x] = Number(
-        buildings.has(x + ':' + z) ||
-          nearBluff(w, originX + (x + 0.5) * step, originZ + (z + 0.5) * step, step),
+        nearBluff(w, originX + (x + 0.5) * step, originZ + (z + 0.5) * step, step),
       );
     yield;
   }
