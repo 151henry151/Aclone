@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { towingRules } from '../../shared/towing-rules';
@@ -194,6 +195,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...towingRules(w.settings),
       ...npcHouseholdRules(w.settings),
       ...npcReserveRules(w.settings),
+      ...npcBusinessRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

@@ -1,3 +1,4 @@
+import { npcBusinessRuleFields, npcBusinessRules } from '../shared/npc-business-rules';
 import { npcReserveRuleFields, npcReserveRules } from '../shared/npc-reserve-rules';
 import { npcHouseholdRuleFields, npcHouseholdRules } from '../shared/npc-household-rules';
 import { towingRuleFields, towingRules } from '../shared/towing-rules';
@@ -102,6 +103,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(towingRuleFields),
     ...Object.keys(npcHouseholdRuleFields),
     ...Object.keys(npcReserveRuleFields),
+    ...Object.keys(npcBusinessRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -125,6 +127,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const business = npcBusinessRules(settings);
+  const businessFields = `<fieldset class="boat-death-settings"><legend>Resident business budgets</legend>${Object.entries(
+    npcBusinessRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        business[key as keyof typeof business],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock.</p></fieldset>`;
   const reserves = npcReserveRules(settings);
   const reserveFields = `<fieldset class="boat-death-settings"><legend>Resident cash and portable reserves</legend>${Object.entries(
     npcReserveRuleFields,
@@ -371,6 +389,7 @@ export function settingsFields(settings: Settings = defaults) {
     towingFields +
     householdFields +
     reserveFields +
+    businessFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

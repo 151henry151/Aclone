@@ -1,3 +1,4 @@
+import { npcBusinessRules } from './npc-business-rules';
 import { npcReserveRules } from './npc-reserve-rules';
 import { npcHouseholdRules } from './npc-household-rules';
 import { towingRules } from './towing-rules';
@@ -59,7 +60,8 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     charter = charterRules(s),
     towing = towingRules(s),
     household = npcHouseholdRules(s),
-    reserves = npcReserveRules(s);
+    reserves = npcReserveRules(s),
+    business = npcBusinessRules(s);
   const survival = survivalRules(s),
     credit = creditRules(s);
   const fuel = fuelRules(s);
@@ -70,6 +72,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `Resident business input buffers: ${business.npcInputReserveBatches}–${business.npcInputMaximumBatches} batches, covering ${business.npcInputSalesHours} hours of observed sales. Output backlog cutoff: capacity fraction ${business.npcOutputCapacityShare}, minimum ${business.npcOutputMinimumBatches} batches or input batches × ${business.npcOutputBufferMultiplier}; actual storage still bounds targets.`,
     `Resident reserves: care/bank cash floors ${reserves.npcCareCashFloor}/${reserves.npcBankCashFloor} hundredths; deposit ${reserves.npcBankDepositShare * 100}% of surplus, minimum ${reserves.npcBankMinimumDeposit}. Portable Water/Bread ${reserves.npcPortableWater}/${reserves.npcPortableBread}; other food/drink ${reserves.npcPortableMinimum}–${reserves.npcPortableMaximum} items toward ${reserves.npcPortableNutrition} nutrition; equipment ${reserves.npcPortableEquipment} each, fish surplus ${reserves.npcFishingSurplus}. Opportunistic trades keep ${reserves.npcTradeFoodReserve} food or ${reserves.npcTradeDrinkReserve} drink items.`,
     `Resident household forecast: ${household.npcHouseholdSeconds} seconds; strategic reserve ${household.npcStrategicSeconds} seconds, pantry buffer ${household.npcPantryBufferSeconds} seconds; ${household.npcBudgetNeedAllowance} need allowance, ${household.npcBudgetCarriedShare * 100}% carried nutrition credit; reserve one Fuel purchase below ${household.npcBudgetFuelThreshold} tank units when none is carried. Explicit trip horizons and actual shelter consumption rules still apply.`,
     `Tug rescue: default fee ${towing.towDefaultFee}, maximum ${towing.towMaximumFee} hundredths; offers last ${towing.towOfferSeconds} seconds. Posted terms persist; acceptance holds the full fee, cancellation refunds it, delivery pays once. Self recovery is free.`,

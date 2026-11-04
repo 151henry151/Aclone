@@ -2202,3 +2202,52 @@ coverage accepts zero buffer, and native validation rejects 59 seconds. Reload
 restores the saved values. Inspect both screenshots; no page errors. TypeScript,
 changed-file Prettier and diff checks are clean; update NPCS, WORLD_BUILDING,
 README and imperative Unreleased. Ready to commit and push.
+
+Pushed and verified `42eba20` on `backlog-implementation`. **Resident strategic
+horizon and pantry buffer rules are done.**
+
+### Gameplay rules — resident business input buffers
+
+Before production, expose six related stock-budget rules under Resident business
+budgets: `npcInputReserveBatches` 6 and `npcInputMaximumBatches` 24 (integer
+0–1,000, reserve ≤ maximum), `npcInputSalesHours` 2 (0–168),
+`npcOutputCapacityShare` 0.75 (0–1), `npcOutputMinimumBatches` 12 (integer
+0–1,000), and `npcOutputBufferMultiplier` 2 (0–10). Keep actual per-hour sales
+measurement as a time unit. Use the reserve-batch rule for the existing fallback
+input and acquisition budgets; payroll multiples are a separate following slice.
+
+Defaults/absent keys preserve six-to-24 batches, two hours of measured sales and
+backlog cutoff at the lesser of 75% capacity and the larger of 12 or twice the
+planned output batches. Changed rules alter targets, input cash budgets,
+procurement bounds and ordinary bid pause/reopen decisions. Physical output room
+and input storage capacity still bound every target. Farms retain their manual
+policy; breeding-animal minimums remain catalogue requirements. Zero target or
+zero backlog threshold stops automatic input buying without creating stock.
+Negative/fractional count values and inverted min/max reject atomically. Editor,
+summary, observations, designs and reloads carry all six fields.
+
+Tests: red/green `node_modules/.bin/tsx --test tests/npc-input-buffer-rules.test.ts`;
+regressions `tests/npc-business-continuity.test.ts`, `tests/npc-owner-recovery.test.ts`,
+`tests/npc-business-policy.test.ts`, `tests/npc-prosperity.test.ts`,
+`tests/npc-construction.test.ts`, `tests/npc-finances.test.ts`,
+`tests/npc-planning-rules.test.ts` and `tests/npc-guide.test.ts` with the same
+runner, concurrency two. Browser: `TEST_GPU=1 npm run test:e2e --
+ tests/browser/npc-input-buffer-rules.spec.ts`; edit/reopen six fields, observe a
+known factory's server input target change, test a zero target and invalid joint
+bounds, reload saved values and inspect screenshots/page errors. Finish TypeScript,
+changed-file Prettier, NPCS/WORLD_BUILDING/README and Unreleased documentation.
+
+Input-buffer red run: all six tests fail before production. Observed differences
+include target 12 versus 4, zero target still 12, unchanged cash reserve 2,400
+versus 1,600, a bid raised to 200 instead of paused at zero, and missing settings/
+editor fields (`/tmp/aclone-input-buffer-red.log`).
+
+Correct two fixture assumptions exposed after the new behavior passes: give the
+dairy two cattle so it actually needs water, and assert the established pause
+representation (no active bid, preserved paused price 100) rather than an active
+zero price. Preserve the required pause/reopen and breeding checks. All six new
+tests then pass; all 79 relevant checks pass in 7.0 seconds. Browser passes in
+21.0 seconds with six saved fields, target 12 → 4 → 0, unchanged stock/cash, and
+atomic inverted-bound refusal. Inspect all three screenshots; no page errors.
+TypeScript, changed-file Prettier and diff checks pass. Documentation and
+Unreleased are updated. Ready to commit and push.

@@ -150,6 +150,13 @@ Earning routines prefer complete, costed trips to funded buyers. Owned tools rem
 
 Owners can withdraw the exact input-purchasing cost for a supply trip, leaving three full payrolls and investor claims intact. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
 
+Unreleased **Resident business budgets** rules set input stock buffers (6–24
+batches by default, covering two hours of observed sales) and output-backlog
+thresholds (the lesser of 75% capacity and the larger of 12 or twice the planned
+batch count). Procurement, input cash budgets and ordinary bid pause/reopen plans
+use these values. Zero targets stop automatic input buying; real storage and
+breeding requirements remain. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules-unreleased).
+
 Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
 
 ### How the providers cooperate

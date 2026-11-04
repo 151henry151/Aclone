@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident business input buffers, sales coverage and output-backlog thresholds as world rules; apply them to procurement, cash forecasts and ordinary bid maintenance while retaining storage and breeding requirements.
+
 - Expose the resident strategic reserve horizon and pantry coverage buffer as world rules; align property, business and home-provisioning plans while preserving daily replacement-cost comparisons.
 
 - Expose resident emergency and banking cash targets, deposit policies and portable/trade supply reserves as world rules; preserve their distinct defaults, and cap stranded recovery and surplus unloading by the existing transaction limit.

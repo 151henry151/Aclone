@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { businessEconomics } from '../../shared/business-economics.ts';
 import { journeyEstimate } from './projects.ts';
@@ -32,6 +33,7 @@ import { operation } from './player-operations.ts';
  * a reason to close the supply chain. Proven sales increase the working buffer;
  * genuinely backed-up joint outputs stop further purchases before storage fills. */
 export function inputStockTarget(b: Building, item: string, w?: World) {
+  const rules = npcBusinessRules(w?.settings);
   const recipe = b.production ?? recipes[b.recipe ?? ''];
   if (!recipe || b.kind === 'farm' || herdSpec(b) || !recipe.inputs[item]) return undefined;
   const outputs = Object.entries(recipe.outputs);
@@ -40,10 +42,18 @@ export function inputStockTarget(b: Building, item: string, w?: World) {
   const salesBatches = Math.min(
     ...outputs.map(([id, n]) => (w ? (b.accounts?.sold[id] ?? 0) / hours / n : 0)),
   );
-  const batches = Math.min(24, Math.max(6, Math.ceil(salesBatches * 2)));
+  const batches = Math.min(
+    rules.npcInputMaximumBatches,
+    Math.max(rules.npcInputReserveBatches, Math.ceil(salesBatches * rules.npcInputSalesHours)),
+  );
   if (
     outputs.some(
-      ([id, n]) => (b.stock[id] ?? 0) >= Math.min(b.capacity * 0.75, Math.max(12, batches * 2) * n),
+      ([id, n]) =>
+        (b.stock[id] ?? 0) >=
+        Math.min(
+          b.capacity * rules.npcOutputCapacityShare,
+          Math.max(rules.npcOutputMinimumBatches, batches * rules.npcOutputBufferMultiplier) * n,
+        ),
     )
   )
     return 0;
@@ -64,7 +74,8 @@ export function procurementTarget(w: World, b: Building, item: string) {
     inputStockTarget(b, item, w) ??
       (herd?.animal === item
         ? herd.minimum
-        : (livestockSupplyInputs(w, b, recipe.inputs)[item] ?? 0) * 6),
+        : (livestockSupplyInputs(w, b, recipe.inputs)[item] ?? 0) *
+          npcBusinessRules(w.settings).npcInputReserveBatches),
   );
 }
 
@@ -239,7 +250,11 @@ export function productionBudget(w: World, b: Building) {
       Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
         (sum, [item, n]) =>
           sum +
-          Math.max(0, (inputStockTarget(b, item, w) ?? n * 6) - (b.stock[item] ?? 0)) *
+          Math.max(
+            0,
+            (inputStockTarget(b, item, w) ??
+              n * npcBusinessRules(w.settings).npcInputReserveBatches) - (b.stock[item] ?? 0),
+          ) *
             (b.buy[item] || b.pausedPrices?.buy?.[item] || worldItems(w)[item]?.price || 0),
         0,
       ) +

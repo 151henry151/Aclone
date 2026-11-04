@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { preferredLoanTerm } from '../../shared/loan-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
@@ -82,7 +83,8 @@ export function businessEstimate(w: World, b: Building) {
       (herd.minimum - (b.stock[herd.animal] ?? 0)) *
       Math.min(...sellers.map((s) => s.sell[herd.animal]));
   }
-  const reserve = Math.ceil((inputs + wages) * 6) + setup;
+  const reserve =
+    Math.ceil(inputs * npcBusinessRules(w.settings).npcInputReserveBatches + wages * 6) + setup;
   return { inputs, wages, revenue, margin: revenue - inputs - wages, reserve, skill: recipe.skill };
 }
 /** Complete, costed operating errands precede speculative one-step purchases. */

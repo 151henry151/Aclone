@@ -798,3 +798,33 @@ large excess. Setting reserves above carrying capacity cannot create room or
 supplies. Carried fuel still takes priority over discarding cargo when stranded.
 Missing keys retain defaults; creation, summaries, resident observations, portable
 designs and reloads preserve all fields. Invalid joint bounds reject atomically.
+
+## Resident business budget rules (unreleased)
+
+**F10 → Rules → Resident business budgets** exposes input-stock policy:
+
+- `npcInputReserveBatches` defaults to 6; `npcInputMaximumBatches` to 24.
+  Both accept integer 0–1,000, with reserve ≤ maximum. Measured sales can raise
+  targets within these bounds; fallback input reserves use the minimum.
+- `npcInputSalesHours` defaults to 2, range 0–168. Multiply observed hourly
+  sales batches by this coverage, round up, then clamp to the batch bounds.
+  Zero retains only the minimum target. Hourly measurement uses at least one
+  hour of account history, preserving its existing rate calculation.
+- `npcOutputCapacityShare` defaults to 0.75, fraction 0–1.
+- `npcOutputMinimumBatches` defaults to 12, integer 0–1,000.
+- `npcOutputBufferMultiplier` defaults to 2, range 0–10.
+
+For each output, the backlog cutoff is the lesser of its capacity fraction and
+its per-batch quantity times the larger of the minimum output batches or the
+planned input batches multiplied by the buffer multiplier. At that cutoff,
+stop buying inputs. Any blocked coproduct stops the whole recipe. Zero capacity
+share therefore stops automatic input buying, even with empty output stock.
+Input targets also respect actual input storage and remaining output room.
+
+Input cash forecasts, acquisition reserves and procurement limits share the
+reserve-batch rule. Existing payroll reserves remain separate. Manual farming,
+actual recipe quantities and catalogue breeding minimums are unchanged. Rules
+never create supplies, waive ownership, or bypass cash/stock checks. Ordinary
+bid maintenance pauses and reopens against the configured target. All six fields
+are validated, summarized, included in resident observations and portable designs,
+and retained across reload; absent keys use named defaults.

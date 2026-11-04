@@ -1,3 +1,4 @@
+import type { NpcBusinessRules } from './npc-business-rules';
 import type { NpcReserveRules } from './npc-reserve-rules';
 import type { NpcHouseholdRules } from './npc-household-rules';
 import type { TowingRules } from './towing-rules';
@@ -307,6 +308,7 @@ export interface Settings
     Partial<TowingRules>,
     Partial<NpcHouseholdRules>,
     Partial<NpcReserveRules>,
+    Partial<NpcBusinessRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,
