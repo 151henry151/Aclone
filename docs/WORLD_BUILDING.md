@@ -1169,3 +1169,10 @@ cash cost, excluding taxes and delivered materials. Editing the asking price
 cannot inflate a recorded refund. Older receipt-less sites use the lower saved
 price/catalogue base. Zero means no cash refund. The build menu and cancellation
 panel display the current share; a rule change affects subsequent cancellations.
+
+The same fieldset exposes `expandedConstructionCostMultiplier` (1.55) and
+`largeConstructionCostMultiplier` (2.15), each 1–10. Both cash and material
+requirements use the multiplier, rounded up after model/finish costs. A value of
+1 removes the expansion surcharge. Standard sizes, footprints, storage, rooms
+and production stay unchanged; existing sites retain their recorded bills and
+refund base. Preview estimates and server charges use the same world rules.

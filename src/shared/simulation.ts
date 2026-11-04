@@ -1815,7 +1815,7 @@ export function act(w: World, id: string, a: Action): string {
           (architecture === undefined && style === undefined && (!size || size === 'standard')),
         'Custom models use their creator-defined design',
       );
-      const design = buildingDesignQuote(kind, def, style, size, architecture);
+      const design = buildingDesignQuote(kind, def, style, size, architecture, w.settings);
       requireThat(def && def.tier <= w.tier, 'Building unavailable at this civilization tier');
       requireThat(
         !w.zones.some((z) => z.kind === 'noBuild' && distance(site, z) < z.radius),

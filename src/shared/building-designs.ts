@@ -1,3 +1,5 @@
+import { constructionRules, type ConstructionRules } from './construction-rules';
+import defaults from '../../data/settings.json';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingArchitecture } from './building-architecture';
 import { appearance } from './appearance';
@@ -116,14 +118,35 @@ const scalable = new Set([
 ]);
 export const buildingSizes = [
   { id: 'standard', name: 'Standard', capacity: 1, footprint: 1, cost: 1 },
-  { id: 'expanded', name: 'Expanded', capacity: 1.5, footprint: Math.sqrt(1.5), cost: 1.55 },
-  { id: 'large', name: 'Large', capacity: 2, footprint: Math.sqrt(2), cost: 2.15 },
+  {
+    id: 'expanded',
+    name: 'Expanded',
+    capacity: 1.5,
+    footprint: Math.sqrt(1.5),
+    cost: defaults.expandedConstructionCostMultiplier,
+  },
+  {
+    id: 'large',
+    name: 'Large',
+    capacity: 2,
+    footprint: Math.sqrt(2),
+    cost: defaults.largeConstructionCostMultiplier,
+  },
 ] as const;
 export function sizesForBuilding(kind: string) {
   return scalable.has(kind) ? buildingSizes : buildingSizes.slice(0, 1);
 }
-export function buildingSize(kind: string, id?: string) {
-  return sizesForBuilding(kind).find((s) => s.id === (id ?? 'standard'));
+export function buildingSize(kind: string, id?: string, settings?: Partial<ConstructionRules>) {
+  const size = sizesForBuilding(kind).find((s) => s.id === (id ?? 'standard'));
+  if (!size || !settings || size.id === 'standard') return size;
+  const rules = constructionRules(settings);
+  return {
+    ...size,
+    cost:
+      size.id === 'expanded'
+        ? rules.expandedConstructionCostMultiplier
+        : rules.largeConstructionCostMultiplier,
+  };
 }
 /** Legacy action callers retain catalogue specifications. New designer requests always name a style.
  * Specialist equipment stays in the bill; only shell materials are replaced. */
@@ -133,9 +156,10 @@ export function buildingDesignQuote(
   style?: string,
   size?: string,
   architecture?: string,
+  settings: Partial<ConstructionRules> = {},
 ) {
   const selected = buildingStyle(kind, style, architecture),
-    scale = buildingSize(kind, size);
+    scale = buildingSize(kind, size, settings);
   const model = buildingArchitecture(kind, architecture);
   if (architecture !== undefined && (!model || !selected))
     throw Error('Choose a valid architectural model and finish');

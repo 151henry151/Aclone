@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose Expanded and Large construction cost multipliers as world rules; apply the same cash and material bills in previews and server placement while preserving existing sites.
+
 - Expose construction spacing, shoreline placement reach, respawn/town clearances and cancellation refunds as world rules; show the current refund share and keep resident site searches within the same spacing constraints.
 
 - Expose existing resident currency-conversion and account-trade budgets as world rules; use the saved last local world for off-world planning and retain ordinary transaction and cargo limits.

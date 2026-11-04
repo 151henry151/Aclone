@@ -3210,3 +3210,45 @@ ordinary refund matches the recorded cost; zero refunds, walking clear to build,
 settings persistence and invalid-input refusal all pass without browser errors.
 Inspect the updated refund screenshot. All slice criteria are met; no full suite
 was run and no live state was touched.
+
+Pushed and verified `c714a98` on `backlog-implementation`. **Construction clearances,
+placement reach and cancellation refunds are done.**
+
+### Gameplay rules — construction expansion cost multipliers
+
+Before production, add `expandedConstructionCostMultiplier` 1.55 and
+`largeConstructionCostMultiplier` 2.15 to Construction rules, each 1–10 with
+fractional values. One means no expansion surcharge; retain ordinary base and
+finish/model costs and materials. The lower bound keeps expansion from costing
+less than the same standard shell. Store defaults only in settings JSON. Both
+cash and material bills use the configured size multiplier with existing ceiling
+rounding; capacity, geometry, room counts, specialist inputs and standard-size
+quotes remain unchanged. Existing buildings/sites retain recorded prices,
+materials and capacity when rules change. Missing fields retain shipped defaults.
+
+Write failing construction-expansion-rules tests for default/missing/custom/unit
+multipliers, ceiling rounding, unsupported sizes, exact server base/tax/materials,
+refund from the recorded design cost, no rewriting existing sites, validation,
+editor/summary/observation/design/reload. Browser: save/reopen both, select Expanded
+and Large in Build, compare visible cash/materials and stored foundation bill,
+see normal insufficient-cash refusal, unit multiplier, invalid input/reload;
+inspect screenshots and browser errors. Run new tests, building-designs,
+building-architecture, construction-cancel, construction-rules, civics-construction,
+npc-construction and npc-guide (manual changes). Require clean TypeScript,
+changed-file Prettier, player/world-builder/README and imperative Unreleased docs.
+Farm limits and pasture dimensions remain the next slice.
+
+Expansion red: all three tests fail for absent defaults/validation and a fixed
+124,000 base charge against the configured 240,000. All three pass after sharing
+world multipliers with quote and placement. Default/context-free geometry callers
+retain their size metadata without additional rule resolution. Browser and focused
+regression gates follow.
+
+Expansion gates pass: 61 relevant checks in 8.3 seconds, browser in 22.3 seconds.
+The browser saves/reopens both rules, displays 3× Expanded and 4× Large bills,
+refuses the unaffordable Large foundation without charging, persists a 1× Large
+setting after rejecting zero, and places the Expanded foundation for exactly its
+quoted cash/material bill. Inspect all five screenshots; no browser errors.
+TypeScript identifies an unreachable fallback after the standard-size early
+return; remove that dead branch and rerun TypeScript cleanly. Changed-file
+Prettier and diff checks pass. No unaffected runtime/browser tests are repeated.

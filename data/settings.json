@@ -341,5 +341,7 @@
   "constructionPlacementReach": 4,
   "spawnClearance": 12,
   "townCentreClearance": 8,
-  "constructionRefundShare": 0.75
+  "constructionRefundShare": 0.75,
+  "expandedConstructionCostMultiplier": 1.55,
+  "largeConstructionCostMultiplier": 2.15
 }

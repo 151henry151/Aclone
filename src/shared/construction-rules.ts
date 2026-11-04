@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const constructionRuleFields = {
+  expandedConstructionCostMultiplier: {
+    label: 'Expanded construction cost multiplier',
+    min: 1,
+    max: 10,
+    step: 0.01,
+  },
+  largeConstructionCostMultiplier: {
+    label: 'Large construction cost multiplier',
+    min: 1,
+    max: 10,
+    step: 0.01,
+  },
   constructionMinimumSpacing: {
     label: 'Minimum building centre spacing (m)',
     min: 0,

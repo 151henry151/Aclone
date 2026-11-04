@@ -134,6 +134,7 @@ export function mountBuildMenu(
       custom ? undefined : draft.style,
       draft.size,
       custom ? undefined : draft.architecture,
+      w.settings,
     );
     const b = makeBuilding('construction', kind, p.x, p.z);
     applyBuildingTemplate(w, b, draft.kind);
