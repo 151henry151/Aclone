@@ -221,3 +221,58 @@ test('larger skilled loads do not hide carried sales within a smaller transactio
   assert.ok(sale?.kind === 'act' && sale.action.type === 'trade');
   assert.equal(sale.action.quantity, 2);
 });
+
+test('resident experiments gather the configured load and bound the sale by actual limits', async () => {
+  const { inventHypotheses } = await import('../src/server/npc/hypotheses');
+  const { w, p, n } = setup();
+  const buyer = makeBuilding('buyer', 'market', n.x + 20, n.z);
+  Object.assign(buyer, {
+    owner: 'buyer',
+    buy: { dirt: 1000 },
+    sell: {},
+    stock: {},
+    investment: 100000,
+    capacity: 100,
+  });
+  w.buildings = [buyer];
+  Object.assign(w.settings, { gatheringBaseYield: 2, gatheringBaseSeconds: 1, salesTax: 0 });
+  for (const ground of worldResources(w)) w.resources![ground.id] = { amount: 0, updated: w.time };
+  w.resources![n.id] = { amount: 2, updated: w.time };
+  const state = { plan: [], index: 0 } as any;
+  const idea = () => inventHypotheses(w, p, state).find((c) => c.idea === 'gather dirt');
+  const sale = () =>
+    idea()?.plan.flatMap((s) =>
+      s.kind === 'act' && s.action.type === 'trade' ? [s.action] : [],
+    )[0];
+  assert.equal(sale()?.quantity, 2);
+  assert.equal(idea()?.expectedCash, 2000);
+  const before = p.cash;
+  act(w, p.id, { type: 'gather', node: n.id });
+  advance(w, 1);
+  assert.equal(p.inventory.dirt, 2);
+  Object.assign(p, { x: buyer.x, z: buyer.z });
+  act(w, p.id, { type: 'trade', building: buyer.id, item: 'dirt', quantity: 2, direction: 'sell' });
+  assert.equal(p.inventory.dirt ?? 0, 0);
+  assert.equal(p.cash, before + 2000);
+  w.resources![n.id] = { amount: 2, updated: w.time };
+  p.skills = ['excavator'];
+  assert.equal(idea(), undefined, 'insufficient stock for the skilled load');
+  w.resources![n.id].amount = 30;
+  p.inventory.stone = 10000;
+  assert.equal(idea(), undefined, 'actual load needs cargo room');
+  p.inventory = { shovel: 1 };
+  w.settings.transactionItemLimit = 1;
+  assert.equal(sale()?.quantity, 1);
+  w.settings.transactionItemLimit = 1000;
+  buyer.investment = 1000;
+  assert.equal(sale()?.quantity, 1);
+  assert.equal(idea()?.expectedCash, 1000);
+  buyer.investment = 100000;
+  buyer.stock.dirt = 99;
+  assert.equal(sale()?.quantity, 1);
+  buyer.stock.dirt = 100;
+  assert.equal(idea(), undefined);
+  buyer.stock.dirt = 0;
+  w.settings.npcExperimentLoadLimit = 0;
+  assert.equal(idea(), undefined);
+});

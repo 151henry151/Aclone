@@ -12,7 +12,12 @@ import {
 } from './business-policy.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { worldItems } from '../../shared/world-catalogue.ts';
-import { worldResources, resourceAmount, gatheringImplements } from '../../shared/resources.ts';
+import {
+  worldResources,
+  resourceAmount,
+  gatheringImplements,
+  gatheringRate,
+} from '../../shared/resources.ts';
 import { canCarry, distance } from '../../shared/simulation.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { propertyQuote } from '../../shared/property.ts';
@@ -426,15 +431,27 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
   for (const node of [...worldResources(w)]
     .filter(
       (n) =>
-        resourceAmount(w, n) >= 3 &&
-        canCarry(p, n.item, 3, w) &&
+        resourceAmount(w, n) >= gatheringRate(w, p, n.item).amount &&
+        canCarry(p, n.item, gatheringRate(w, p, n.item).amount, w) &&
         (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0,
     )
     .slice(0, 4)) {
     const buyer = w.buildings
-      .filter((b) => (b.buy[node.item] ?? 0) > 0 && b.investment >= b.buy[node.item])
+      .filter(
+        (b) =>
+          (b.buy[node.item] ?? 0) > 0 &&
+          b.investment >= b.buy[node.item] &&
+          (b.stock[node.item] ?? 0) < b.capacity,
+      )
       .sort((a, c) => c.buy[node.item] - a.buy[node.item])[0];
     if (!buyer) continue;
+    const quantity = Math.min(
+      gatheringRate(w, p, node.item).amount,
+      loadLimit,
+      Math.floor(buyer.investment / buyer.buy[node.item]),
+      buyer.capacity - (buyer.stock[node.item] ?? 0),
+    );
+    if (quantity <= 0) continue;
     add(
       `gather ${node.item}`,
       `Experiment: gather ${node.item} at ${node.id} and sell at ${buyer.name}.`,
@@ -443,9 +460,9 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         { kind: 'travel', destination: node.id },
         act({ type: 'gather', node: node.id }),
         { kind: 'travel', destination: buyer.id },
-        act({ type: 'trade', building: buyer.id, item: node.item, quantity: 3, direction: 'sell' }),
+        act({ type: 'trade', building: buyer.id, item: node.item, quantity, direction: 'sell' }),
       ],
-      3 * buyer.buy[node.item],
+      quantity * buyer.buy[node.item],
     );
   }
 

@@ -3459,3 +3459,34 @@ with persisted settings and an empty list without browser errors. Inspect the
 replacement depleted screenshot and confirm readable refusal/disabled controls.
 All slice gates pass; changed files are formatted and the diff is clean. No full
 suite runs.
+
+Pushed and verified `182f6b3` on `backlog-implementation`. **Deposit capacities
+and regrowth are done.**
+
+### Gathering-rate follow-up — resident experiments
+
+Before the next rule family, inspection of implement consumers reveals a missed
+consumer of gathering rates: `inventHypotheses` still checks, sells and values a
+fixed three units. Fix this gap to the gathering-rate criteria before proceeding.
+An experiment must require enough stock/cargo for the actual skill-selected load,
+then sell no more than that load, the existing transaction/experiment limits,
+buyer funds and buyer space. Zero experiment allowance suppresses the experiment.
+Keep ordinary timed gathering and sales; do not change tools or other ideas yet.
+
+Extend gathering-rate-rules with a failing experiment regression for a two-unit
+load, skilled load refusal, small transaction limits, buyer capacity/cash and zero
+allowance. Execute its actual gather/completion/sale and assert inventory/cash.
+Run gathering-rate-rules, npc-hypotheses and npc-experiment-budget-rules, then
+TypeScript, changed-file Prettier/diff checks. This is server planning only; the
+unchanged player gathering UI already passed both rate/deposit browser flows.
+Update imperative Unreleased and review/update README and world-builder guidance.
+
+Experiment-rate regression initially also encounters the planner's existing
+four-ground candidate cap. Isolate the intended ground by depleting other fixture
+grounds; rerun against the original committed planner and confirm it still fails
+because two units cannot satisfy its fixed-three check. Restore the implementation:
+all seven gathering checks pass in 0.74 seconds, including actual gathering/sale,
+skilled/cargo refusal, small limits and buyer constraints. The other 17 hypothesis/
+experiment checks passed in the preceding targeted run; production is unchanged
+since that run. TypeScript and formatting pass; no browser rerun is required for
+this server-only consumer fix.

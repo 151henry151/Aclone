@@ -1200,6 +1200,8 @@ seconds 1–600. Forester applies to logs; excavator to the other gathering grou
 Skill chooses time independently of yield. Started tasks retain their reserved
 amount and end time; subsequent tasks/repeats use current rules. Both HUD and
 Resources show local rates, and resident plans use them for loads and estimates.
+Gathering experiments require room/stock for the selected load and limit their
+sale to experiment/transaction allowances, buyer funds and storage.
 Implements, shared stock, permissions and cargo limits remain enforced. Values
 persist in saves/designs; missing fields retain the shipped defaults.
 
