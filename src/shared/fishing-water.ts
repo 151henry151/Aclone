@@ -1,3 +1,4 @@
+import { fishingRules } from './fishing-rules';
 import { waterLevel, lowWater, surfaceWaterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { mapHalf, terrainHeight } from './terrain';
@@ -7,11 +8,12 @@ import type { World } from './types';
 export function waterDepth(w: World, p: { x: number; z: number }) {
   return Math.max(0, surfaceWaterLevel(w, p.x, p.z) - terrainHeight(w, p.x, p.z));
 }
-export const DEEP_FISHING_DEPTH = 8;
-export const DEEP_FISHING_SHORE_DISTANCE = 150;
+export const DEEP_FISHING_DEPTH = fishingRules().fishingDeepDepth;
+export const DEEP_FISHING_SHORE_DISTANCE = fishingRules().fishingShoreDistance;
 const GRID = 10;
 interface CoastCache {
   worldId: string;
+  shoreDistance: number;
   townLayout: World['townLayout'];
   revision: number;
   landscape: World['landscape'];
@@ -29,16 +31,18 @@ interface CoastCache {
 const coastCache = new WeakMap<World['terrain'], CoastCache>();
 /** Both rod and net fishing use the same offshore rule. Sample the whole disk,
  * not just a few rays (which miss islands). A conservative grid margin keeps
- * the accepted area beyond 150m; coastal boundaries are approximate to 10m.
+ * the accepted area beyond the configured shore clearance; coastal boundaries are approximate to 10m.
  * Cache bounded spatial cells so moving/rendering never scans a coast per tick. */
 export function deepFishingWater(w: World, p: { x: number; z: number }) {
-  if (waterLevel(w) - terrainHeight(w, p.x, p.z) < DEEP_FISHING_DEPTH) return false;
+  const rules = fishingRules(w.settings);
+  if (waterLevel(w) - terrainHeight(w, p.x, p.z) < rules.fishingDeepDepth) return false;
   const half = mapHalf(w);
   if (Math.max(Math.abs(p.x), Math.abs(p.z)) > half) return false;
   let cache = coastCache.get(w.terrain);
   if (
     !cache ||
     cache.worldId !== w.id ||
+    cache.shoreDistance !== rules.fishingShoreDistance ||
     cache.townLayout !== w.townLayout ||
     cache.revision !== w.revision ||
     cache.landscape !== w.landscape ||
@@ -51,6 +55,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
   ) {
     cache = {
       worldId: w.id,
+      shoreDistance: rules.fishingShoreDistance,
       townLayout: w.townLayout,
       revision: w.revision,
       landscape: w.landscape,
@@ -66,6 +71,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
     };
     coastCache.set(w.terrain, cache);
   }
+  if (rules.fishingShoreDistance === 0) return true;
   const cx = Math.floor(p.x / GRID),
     cz = Math.floor(p.z / GRID),
     key = `${cx},${cz}`;
@@ -73,7 +79,7 @@ export function deepFishingWater(w: World, p: { x: number; z: number }) {
   if (known !== undefined) return known;
   const x = (cx + 0.5) * GRID,
     z = (cz + 0.5) * GRID;
-  const radius = DEEP_FISHING_SHORE_DISTANCE + Math.SQRT2 * GRID;
+  const radius = rules.fishingShoreDistance + Math.SQRT2 * GRID;
   // Creator-made islets can be smaller than a grid cell. Check their summits
   // explicitly and conservatively include the brush footprint as coastline.
   let offshore = !w.terrain.some(

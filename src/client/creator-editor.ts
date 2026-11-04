@@ -217,7 +217,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>These are base mean waits, not countdowns. Boats retain the depth multiplier; catches and the eight-second bite window are unchanged. New casts and waits use current means; already scheduled bites retain their catch and deadlines. Fishing mode still controls whether and where fishing is allowed.</p></fieldset>`;
+    )}<p>Rods and nets share the minimum depth and shore clearance. Coast checks retain a conservative 10 m grid; zero clearance removes only that buffer, not depth or world bounds.</p><p>These are base mean waits, not countdowns. Boats retain the depth multiplier; catches and the eight-second bite window are unchanged. New casts and waits use current means; already scheduled bites retain their catch and deadlines. Fishing mode still controls whether and where fishing is allowed.</p></fieldset>`;
   const farmYields = farmYieldRules(settings);
   const farmYieldFields = `<fieldset class="boat-death-settings"><legend>Crop yield rules</legend>${Object.entries(
     farmYieldRuleFields,

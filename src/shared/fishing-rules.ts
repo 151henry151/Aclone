@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const fishingRuleFields = {
+  fishingDeepDepth: {
+    label: 'Deep-fishing minimum depth (metres)',
+    min: 0.1,
+    max: 1000,
+    step: 0.1,
+  },
+  fishingShoreDistance: {
+    label: 'Offshore clearance (metres; zero removes buffer)',
+    min: 0,
+    max: 1000,
+    step: 0.1,
+  },
   fishingShoreWaitSeconds: {
     label: 'Ordinary shore mean bite wait (seconds)',
     min: 1,

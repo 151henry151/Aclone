@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose shared deep-fishing depth and shore clearance as world rules; refresh cached coast decisions after edits while preserving earned catches and world boundaries.
+
 - Expose shore, anywhere-mode, coastal and deep-water bite-wait means as world rules; retain depth adjustment, random waits and already scheduled bites.
 
 - Expose crop frost sensitivities and maximum frost yield loss as world rules; retain existing default yields, winter expiry and reserved harvest quantities.

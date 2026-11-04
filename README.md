@@ -30,7 +30,7 @@ Unreleased economy rules make minimum building purchase bids, transaction quanti
 
 Unreleased tug rules expose the suggested rescue fee, fee ceiling and offer lifetime in F10. Posted terms and accepted escrow survive edits and reloads; expired offers cannot take payment. See [rescue and haulage](docs/HAULAGE.md#hiring-a-tug).
 
-Unreleased F10 Fishing rules configure the four base bite-wait means while preserving scheduled catches and deadlines.
+Unreleased F10 Fishing rules configure shared offshore depth/clearance and the four base bite-wait means while preserving scheduled catches and deadlines.
 
 Unreleased crop yield rules in F10 configure the irrigation formula, each crop’s thirst, watering costs/limits, ripe-quality window and loss, crop frost sensitivities/loss cap, compost bonus and repeated-family penalty; farm estimates and resident decisions use them while preserving started harvests.
 

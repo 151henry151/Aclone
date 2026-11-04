@@ -3837,3 +3837,43 @@ all five screenshots inspected: saved rules, local seven-second base mean help,
 real cast with disabled reel and no caught fish, rejected zero mean, and disabled
 fishing with no cast action. The server test confirms the disabled-mode refusal;
 reload/editor activity preserves the recorded catch and bite deadlines.
+
+**Bite-wait slice done and pushed:** `05562636124e70fa048a8bb879cf3da712d75ef3`.
+Remote SHA verified. Continue with the shared offshore depth and coast clearance.
+
+### Offshore fishing limits — completion criteria before production
+
+Expose the entry's deep-fishing depth (8 m) and shore distance (150 m), shared by
+rod fishing and trawling. Keep the existing conservative 10 m coastal grid and
+small-islet checks, world bounds, seabed influence, species and saved clocks.
+Depth range 0.1–1,000 m; shore clearance 0–1,000 m, where zero disables only the
+shore buffer. Dry ground remains ineligible. No duplicate defaults.
+
+- Add `tests/fishing-depth-rules.test.ts` and confirm missing-setting failures.
+  Default/legacy worlds preserve current inshore/offshore outcomes; custom depth
+  and shore rules change both rod species eligibility and trawl deployment.
+  Repeated edits invalidate cached shoreline decisions even without replacing
+  the terrain array; unchanged snapshots still reuse the cache. Zero buffer
+  retains depth and world bounds. Invalid patches are atomic.
+- New worlds, saves/designs, F10, summaries and resident observations agree.
+  Run new tests with fishing-water, fishing-timing, commercial-fishing, charter
+  and guide tests, then TypeScript and changed-file Prettier/diff checks.
+- Browser `tests/browser/fishing-depth-rules.spec.ts`: configure/save/reload F10,
+  inspect the local depth/clearance help; from an isolated fishing boat fail net
+  deployment under an excessive depth rule, lower it and deploy successfully,
+  then haul an empty net. Reject invalid zero depth and retain saved values.
+  Inspect screenshots. Update player/boating/world-builder docs, README and
+  Unreleased changelog; push only after these gates pass.
+
+Failing-first offshore result: default/legacy rod/net comparison passes; three
+custom/validation tests fail because the new rule keys are absent or unknown.
+
+Offshore validation complete: 48 relevant tests pass (31.9 s, including existing
+commercial-fishing voyage balance checks). Added explicit 60 m → 300 m → zero
+shore edits on the same terrain/cache; all four new tests pass again (0.9 s).
+The first browser attempt looked for trawl controls in Activities; corrected it
+to the existing Inventory boating panel. Final browser passes (25.8 s), with all
+five screenshots inspected: saved depth/clearance, excessive-depth refusal,
+successful deployment after lowering depth, empty haul and invalid depth with
+saved value retained. Final TypeScript, Prettier and diff checks pass. No whole
+suite or live-world work was performed.

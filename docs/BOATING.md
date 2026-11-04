@@ -382,3 +382,8 @@ A stranded vessel does not stop you refuelling a different recovery tugboat or
 motorboat. Its own tank remains inaccessible until you physically reboard it.
 The lifeboat has no engine. Carried fuel remains visible while rowing, even
 though it cannot be used until you board a powered craft.
+
+Offshore rod catches and trawl deployment share world limits: by default at least
+8 m depth and 150 m shore clearance. The conservative coastal grid and small-islet
+checks still apply. Owners can edit these in F10 Fishing rules; zero shore clearance
+removes only the buffer. Depth and world bounds remain required.

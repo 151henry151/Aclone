@@ -1,3 +1,4 @@
+import { fishingRules } from '../shared/fishing-rules';
 import { meanBiteWait } from '../shared/boat-fishing';
 import { farmYieldRules, cropFrostKeys } from '../shared/farm-yield-rules';
 import { gatheringImplements } from '../shared/resources';
@@ -3885,7 +3886,7 @@ function trawlStatus() {
 function trawlControls() {
   if (!me || !world || !isTrawler(me.vehicle, world)) return '';
   const t = me.trawl;
-  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Depth ${waterDepth(world, me).toFixed(1)} m · Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
+  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Depth ${waterDepth(world, me).toFixed(1)} m · Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Deep fishing requires ${fishingRules(world.settings).fishingDeepDepth} m depth and ${fishingRules(world.settings).fishingShoreDistance} m shore clearance. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }
 
 document.addEventListener('change', (event) => {

@@ -106,6 +106,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
       .join(
         ', ',
       )}. Frost-day share times sensitivity sets loss up to the cap; zero sensitivity or cap removes frost yield loss. Winter expiry remains unchanged.`,
+    `Offshore fishing: minimum depth ${fishing.fishingDeepDepth} m, shore clearance ${fishing.fishingShoreDistance} m. Rods and nets share these limits; zero clearance removes the shore buffer but retains depth and world bounds.`,
     `Fishing mean waits: ordinary shore ${fishing.fishingShoreWaitSeconds}s, anywhere-mode shore ${fishing.fishingAnywhereWaitSeconds}s, coastal boat ${fishing.fishingCoastalWaitSeconds}s, deep-water boat ${fishing.fishingDeepWaitSeconds}s before depth adjustment. New waits only; scheduled catches and deadlines remain recorded.`,
     `Crop yield: compost bonus ${farmYields.farmCompostYieldBonus}, repeated-family penalty ${farmYields.farmRotationYieldPenalty}; fractions apply before floor rounding, minimum one unit. Started harvests retain reserved amounts.`,
     `Gathering implements: logs ${implementsRules.gatheringLogsImplement}, stone ${implementsRules.gatheringStoneImplement}, gravel ${implementsRules.gatheringGravelImplement}, topsoil ${implementsRules.gatheringDirtImplement}. None removes the tool requirement; implements are reusable.`,

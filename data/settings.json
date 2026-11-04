@@ -389,5 +389,7 @@
   "fishingShoreWaitSeconds": 75,
   "fishingAnywhereWaitSeconds": 20,
   "fishingCoastalWaitSeconds": 65,
-  "fishingDeepWaitSeconds": 225
+  "fishingDeepWaitSeconds": 225,
+  "fishingDeepDepth": 8,
+  "fishingShoreDistance": 150
 }

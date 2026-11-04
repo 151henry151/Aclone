@@ -1348,3 +1348,19 @@ bite deadlines. Species selection and the eight-second response window remain
 unchanged. Fishing mode still controls availability and tackle is still required.
 Activities/dock help shows the current base mean. Rules persist in saves/designs,
 summaries and resident observations, with JSON defaults for older worlds.
+
+### Offshore fishing limits (unreleased)
+
+**F10 → Rules → Fishing rules** exposes `fishingDeepDepth` (8 m, range 0.1–1,000)
+and `fishingShoreDistance` (150 m, range 0–1,000). Rod deep-species eligibility and
+trawl deployment share these limits. Depth uses the existing mean tidal surface,
+not wave crests. Coast checks retain the conservative 10 m grid margin and explicit
+small-islet checks; positive clearance is an approximate conservative boundary.
+Zero clearance removes the buffer while retaining water depth and world bounds.
+
+Shore-rule edits invalidate cached coastal decisions immediately, including across
+client snapshots. Catches already in a net and encounter clocks are retained;
+hauling remains possible after an area becomes ineligible. The trawling panel
+shows local limits. These rules use the same save/design, summary, observation
+and legacy-default paths as fishing wait rules. Larger clearance searches scan
+more terrain on cache misses; unchanged locations reuse cached results.
