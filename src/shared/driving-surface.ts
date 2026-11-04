@@ -3,6 +3,7 @@ import type { World } from './types.ts';
 import { roadConditions, snowDepth, WINTER_BASE_SNOW } from './environment.ts';
 import { roadSurfaceDistance, townRoads } from './town.ts';
 import { travelHeight } from './dock.ts';
+import { walkingRules } from './walking-rules';
 
 /** Rise/run along the tractor's forward axis, sampled across its wheelbase.
  * Support height includes the fishing dock, so its seabed is not a driving slope. */
@@ -34,5 +35,19 @@ export function drivingSurface(w: World, x: number, z: number) {
   return {
     speed: conditions.speed + (fieldSpeed - conditions.speed) * offRoad,
     grip: conditions.grip + (fieldGrip - conditions.grip) * offRoad,
+  };
+}
+
+/** Feet share the tractor snow lookup, while bare ground keeps its existing pace.
+ * Strength scales only the field/road ratio; it does not introduce another depth curve. */
+export function walkingSurface(w: World, x: number, z: number) {
+  const rules = walkingRules(w.settings);
+  if (!rules.walkingSnow || snowDepth(w.climate) <= 0) return { speed: 1, grip: 1 };
+  const surface = drivingSurface(w, x, z);
+  if (rules.walkingSnowScale === 1) return surface;
+  const road = roadConditions(w);
+  return {
+    speed: road.speed * (surface.speed / road.speed) ** rules.walkingSnowScale,
+    grip: surface.grip,
   };
 }

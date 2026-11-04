@@ -78,6 +78,7 @@ import {
 import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
 import { flightRuleFields } from './flight-rules';
+import { walkingRuleFields } from './walking-rules';
 import {
   fuelCapacity,
   refuelRequiresReboarding,
@@ -199,7 +200,7 @@ import {
 import { gather, finishGather, changeResourceRecovery } from './resources.ts';
 import { MAX_MONEY_GIFT, moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
-import { drivingGrade, drivingSurface, slopeSpeed } from './driving-surface.ts';
+import { drivingGrade, drivingSurface, walkingSurface, slopeSpeed } from './driving-surface.ts';
 import { shelter, lodgingAction, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
 import {
@@ -1870,7 +1871,9 @@ export function act(w: World, id: string, a: Action): string {
       const clean: Partial<Settings> = {};
       for (const [key, v] of Object.entries(patch)) {
         requireThat(
-          Object.hasOwn(w.settings, key) || Object.hasOwn(flightRuleFields, key),
+          Object.hasOwn(w.settings, key) ||
+            Object.hasOwn(flightRuleFields, key) ||
+            Object.hasOwn(walkingRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1886,6 +1889,8 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const walkingField = walkingRuleFields[key as keyof typeof walkingRuleFields];
+        if (walkingField && 'min' in walkingField) num(v, walkingField.min, walkingField.max);
         const flightField = flightRuleFields[key as keyof typeof flightRuleFields];
         if (flightField && 'min' in flightField) num(v, flightField.min, flightField.max);
         if (
@@ -2394,11 +2399,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const grounded = [0, 1, 4].includes(v.mode) && p.y <= ground + 1;
   const motorGrounded = grounded && v.fuel > 0;
   const grade = motorGrounded ? drivingGrade(w, p.x, p.z, p.heading) / (v.torque ?? 1) : 0;
-  const surface = grounded
-    ? v.fuel > 0
-      ? drivingSurface(w, p.x, p.z)
-      : roadConditions(w)
-    : { speed: 1, grip: 1 };
+  const surface =
+    v.mode === 8 && p.y <= ground + 1
+      ? walkingSurface(w, p.x, p.z)
+      : grounded
+        ? v.fuel > 0
+          ? drivingSurface(w, p.x, p.z)
+          : roadConditions(w)
+        : { speed: 1, grip: 1 };
   const traction =
     (w.climate?.snow ?? 0) > 0.08
       ? (v.snowTraction ?? v.traction)

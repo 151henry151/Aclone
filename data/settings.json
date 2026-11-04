@@ -45,6 +45,8 @@
   "parishOrders": false,
   "parishOrderBudget": 120000,
   "resetScriptOnDeath": true,
+  "walkingSnow": true,
+  "walkingSnowScale": 1,
   "vehicleMaintenance": true,
   "vehicleLicences": false,
   "requireCaptainSkill": true,

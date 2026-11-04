@@ -74,6 +74,9 @@ owners can tune them or select strict contacts. Flight rendering now uses shorte
 haze, height-aware terrain detail and forward preparation; distant towns share
 the surrounding horizon mesh. These graphics follow the player's graphics mode.
 See the [flight guide](docs/FLYING.md).
+Walking and Shift now follow the tractor snow-depth factor, with clear-road pace
+and gradual verges. Owners can disable or scale field snow drag; bare-ground
+walking and other vehicles keep their previous behavior.
 
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 

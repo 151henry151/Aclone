@@ -440,7 +440,9 @@ interpolation preserves already-equal ground heights exactly.
 
 ### Flight view: terrain squares, chunky ground and distant towns
 
-In progress; no production changes yet. Implement/measure fog first, then slant
+Done: committed and pushed as `80520ca` after the checks below.
+
+Initial approach: Implement/measure fog first, then slant
 range and directional preparation, then soften the surface transition. Replace
 the tile system with rings only if those smaller changes fail these criteria.
 Remove town-specific horizon refinement without rebuilding the shipped scenery.
@@ -533,3 +535,62 @@ on every changed path. Full-suite verification remains in progress.
 Full `npm test` passed all 1,330 tests, zero failures (195 seconds;
 `/tmp/aclone-flight-full.log`). The final diff check is clean. This slice meets
 its criteria without replacing the tile system or increasing its frame budget.
+
+### Walking speed follows snow depth
+
+Concrete completion criteria before production changes:
+
+- Exercise `move` for slot 5 at a flat, clear fixture, starting above the speed
+  cap: ordinary and Shift caps must equal 5 and 8.5 m/s times the existing
+  `drivingSurface` factor in snow. Off-road 4 cm gives 40%; 1 m gives about 10%.
+  Compare the normalised walker and tractor caps at the same point.
+- Across the existing 2 m verge, sampled caps decrease gradually from the
+  unchanged wet-road factor to the field factor. Roads keep today's clear/wet
+  behavior. Without snow, preserve walking's existing dry and wet-ground pace.
+- Default-on `walkingSnow` and `walkingSnowScale` default 1 live in the settings
+  catalogue. Disabled restores the prior walking cap. Scale 0 removes additional
+  field drag while keeping wet-road pace; 1 uses the tractor factor exactly;
+  greater values strengthen field drag, without a second snow-depth formula.
+  Scale the field-to-road ratio, not the road speed. Validate scale 0–2.
+- New worlds (including Puddlewick), old saves missing the keys, settings edits,
+  creation overrides, portable design export/import, saved reload and the rules
+  summary all use those defaults/overrides. Invalid types and scale bounds reject.
+- Server movement, predicted movement and a resident's Navigator inputs use the
+  same snow cap. Keep boats, aircraft, tractors and ostriches unchanged when
+  toggling the walking rule. An ordinary resident still reaches a short snowy
+  destination through actual movement.
+- Red first: `node_modules/.bin/tsx --test tests/walking-snow.test.ts`. Browser:
+  isolated local world, actual Walk/forward/Shift input in snowy field and on a
+  road; observe reduced movement and normal road pace. In F10 Rules disable and
+  re-enable snow drag, change the scale and verify actual travel; inspect the
+  empty-snow state too. No live-world changes.
+- Finish with the browser flow, full `npm test`, clean `npx tsc --noEmit`, and
+  explicit-path Prettier. Update `docs/PLAYING.md`, world-building rules guidance,
+  README and the imperative Unreleased changelog.
+
+Red evidence (`/tmp/aclone-walking-red.log`): the normalised walker cap stayed 1
+instead of the tractor factor, the default rule was absent, and a resident's
+maximum in a metre of snow remained 5 m/s. The unchanged-other-vehicle check
+passed. After implementation all nine walking/driving checks pass, including
+server/prediction equality, road/verge samples, settings validation, legacy
+fallback, persistence/designs and a completed resident journey. The old driving
+test now asserts walking's changed snow pace and retains the ostrich/flying
+exemptions. Its expected Shift value uses the same multiplication order to avoid
+an irrelevant 3.4 versus 3.4000000000000004 floating-point mismatch.
+
+The first browser run revealed noon thaw changing the seeded 4 cm layer while
+speed was measured (3.454 rather than 3.4 m/s). The isolated fixture now uses
+existing overcast-rain weather, where snow does not melt. The speed assertions
+are unchanged; this measures fixed depth rather than silently accepting thaw.
+
+`TEST_GPU=1 npm run test:e2e -- tests/browser/walking-snow.spec.ts` passed
+(40.8 seconds). Actual Walk, W and Shift input covered 4 cm and 1 m fields,
+clear roads, disabled drag, strengths 0/2/1 and bare ground. Travel distance per
+second and the visible MPH readout matched the expected caps. Inspected deep
+snow, clear road, bare-ground and world-rule screenshots; the new full-width
+fieldset is readable. Full-suite checks are running before this slice is committed.
+
+Final verification: full `npm test` passed all 1,334 tests, zero failures
+(194 seconds; `/tmp/aclone-walking-full.log`). TypeScript is clean, Prettier ran
+on every changed path, and the diff check passed. Player/world-builder guides,
+README and the Unreleased changelog describe the new behavior and rules.

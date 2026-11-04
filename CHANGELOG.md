@@ -12,6 +12,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Slow walking and Shift movement with the shared tractor snow-depth factor, preserve clear-road and bare-ground behavior, and expose default-on world rules for walking snow drag and field strength.
 - Reduce airborne terrain boundaries with height-aware detail, forward preparation, an intermediate grid and shared surface masks; shorten flight haze, fade streamed scenery individually, and remove town-only horizon refinement.
 - Hide the Fuel bar while walking or rowing the emergency raft, and restore it when boarding a motor vehicle.
 - Apply the doubled tractor camera range to menu zoom buttons as well as wheel and pinch input through one shared limit.

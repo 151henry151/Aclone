@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { FlightRules } from './flight-rules';
+import type { WalkingRules } from './walking-rules';
 export type Stock = Record<string, number>;
 export type Input = {
   throttle: number;
@@ -280,7 +281,7 @@ export interface Zone {
   z: number;
   radius: number;
 }
-export interface Settings extends Partial<FlightRules> {
+export interface Settings extends Partial<FlightRules>, Partial<WalkingRules> {
   crowAbilities: boolean;
   lotteryEnabled: boolean;
   lotteryTicketPrice: number;

@@ -1,4 +1,5 @@
 import { vehicleEditor } from './vehicle-editor';
+import { walkingRules, walkingRuleFields } from '../shared/walking-rules';
 import { vehicleDef } from '../shared/vehicle-config';
 import { flightRuleFields, flightRules, type FlightRuleKey } from '../shared/flight-rules';
 import { coursesPanel } from './courses';
@@ -79,6 +80,7 @@ const friendly = (key: string) =>
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(flightRuleFields),
+    ...Object.keys(walkingRuleFields),
     'resourceRecoveryMultiplier',
     'tidalRange',
     'oceanWaves',
@@ -94,6 +96,8 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const walking = walkingRules(settings);
+  const walkingFields = `<fieldset class="boat-death-settings"><legend>Walking in snow</legend><label class="check"><input name="walkingSnow" type="checkbox" ${walking.walkingSnow ? 'checked' : ''}>${walkingRuleFields.walkingSnow.label}</label>${field(walkingRuleFields.walkingSnowScale.label, 'walkingSnowScale', walking.walkingSnowScale, 'number', `min="${walkingRuleFields.walkingSnowScale.min}" max="${walkingRuleFields.walkingSnowScale.max}" step="0.1"`)}<p>Default 1 uses the tractor snow curve. 0 removes extra field drag; 2 strengthens it. Roads retain their wet-road pace. Ordinary walking and Shift share this limit; bare ground is unchanged.</p></fieldset>`;
   const flying = flightRules(settings);
   const flightFields = `<fieldset class="boat-death-settings"><legend>Flight and public runway</legend>${Object.entries(
     flightRuleFields,
@@ -121,6 +125,7 @@ export function settingsFields(settings: Settings = defaults) {
     labour +
     boatRules +
     flightFields +
+    walkingFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

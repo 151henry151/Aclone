@@ -232,6 +232,21 @@ Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness map
 
 Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences** (driver, pilot or captain required for advanced slots according to their configured movement mode), **Require the captain skill for boats longer than the motorboat** (`requireCaptainSkill`, on for new worlds; public Puddlewick adopts it once and qualifies existing owners) and **Require map item** (hide visitor maps unless carrying a Parish map). Defaults enable gentle wear but leave the general licences and map ownership optional. Basic tractor, walking, ostrich and disposable robocrow controls are exempt from licences. The motorboat and lifeboat stay open when only the captain rule is on. In the vehicle editor, **Requires captain** forces or waives the rule for that slot; otherwise length above the motorboat's 4.3 m decides. Creator maps remain available for editing. Garage map printing and steel-part servicing are ordinary paid services, also available on existing saves.
 
+## Walking in snow
+
+**F10 → Rules → Walking in snow** controls `walkingSnow` (default **on**) and
+`walkingSnowScale` (default **1**, range **0–2**). Ordinary walking and Shift use
+the tractor's snow-depth lookup and its 2 m verge transition. Roads keep today's
+clear/wet-road pace; bare-ground walking does not change.
+
+Strength 1 uses the tractor factor exactly. Strength 0 removes the additional
+field penalty, leaving wet-road pace everywhere in snow. Larger strengths apply
+the field-to-road speed ratio more strongly; 2 squares that ratio. Unticking the
+switch restores the previous walking pace. Turning uses the shared snowy grip.
+Residents and player prediction use the same rules. These settings are saved,
+shown in the rules summary and included in exported designs; old saves missing
+them use the defaults, including Puddlewick. Other vehicles are unaffected.
+
 ## Flight and public runway
 
 **Rules → Flight and public runway** controls landing sink, bank, minimum/maximum

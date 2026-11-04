@@ -76,7 +76,7 @@ test('road edges blend smoothly and road changes take effect immediately', () =>
   };
   assert.equal(drivingSurface(w, 0, 0).speed, 1, 'creator paths also carry traffic');
 });
-test('real driving obeys road limits forward, reversing and boosted; walking and flying do not', () => {
+test('real driving obeys road limits forward, reversing and boosted; walking shares snow while ostriches and flying retain their handling', () => {
   function speed(
     x: number,
     snow: number,
@@ -111,7 +111,11 @@ test('real driving obeys road limits forward, reversing and boosted; walking and
         assert.ok(speed(20, snow, wet, 0, throttle, boost) < road);
       }
   }
-  for (const vehicle of [5, 7]) assert.equal(speed(0, 1, 1, vehicle), speed(20, 1, 1, vehicle));
+  for (const vehicle of [4, 7]) assert.equal(speed(0, 1, 1, vehicle), speed(20, 1, 1, vehicle));
+  for (const boost of [false, true]) {
+    assert.equal(speed(20, 1, 1, 5, 1, boost), 5 * (boost ? 1.7 : 1) * 0.4);
+    assert.ok(speed(0, 1, 1, 5, 1, boost) > speed(20, 1, 1, 5, 1, boost));
+  }
 });
 
 test('hill driving changes acceleration and speed in the direction of travel, including reverse', () => {
