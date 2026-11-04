@@ -567,3 +567,12 @@ The return rate applies to new deposits. A top-up adds a claim at the new rate;
 previous claim amounts remain agreed contracts. World reload preserves newly
 quoted 25% claims, while launch-era unversioned claims retain their historical
 repair. Export/import carries the rules, never player investments.
+
+Garage and roadside service share `vehicleServiceSteel` (default 1, integer
+0–100). A zero setting needs no Steel; roadside mechanics still need Tools and
+the qualification. `vehicleServiceFee` (default 1,000 hundredths / 10d),
+`mapPrintPrice` (1,000 / 10d), and `ammunitionRefitPrice` (2,500 / 25d) each accept
+integer 0–1,000,000 hundredths. Zero means free. Garage owners retain their labour
+exemption; map printing still pays the garage and service still restores up to
+25 condition points. Panels and resident plans quote these rules. Missing keys
+use the same defaults, and portable designs include all four.

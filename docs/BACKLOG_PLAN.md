@@ -1422,3 +1422,47 @@ Full rerun passes **1,429 tests** in 198.7 seconds, exit 0
 README, PLAYING, WORLD_BUILDING and imperative Unreleased entries are updated.
 Ready to commit/push the outside return and operating-reserve slice; fees and
 money-transfer limits follow, with broader finance/NPC budgets still pending.
+
+Pushed `d19d296`; GitHub's branch SHA matches. **Outside return and minimum
+operating reserve are done.** Continue with garage/map/ammunition fees and parts;
+transfer-size limits and the remaining economy rules stay pending.
+
+### Gameplay rules — economy: service, maps and ammunition
+
+Before production, add tests for named defaults: garage labour 1,000 hundredths
+(10d), one Steel per service, a 1,000-hundredth printed map and a 2,500-hundredth
+ammunition refit. Change all four through validated settings. Check actual cash
+and garage revenue, parts consumption, owner labour exemption, roadside repairs,
+map uniqueness, refit inventory/energy, and atomic missing-parts/cash failures.
+Zero fee/parts settings must work without manufacturing or subtracting phantom
+stock. Resident service plans and all live labels must quote the same prices and
+buy only the missing number of parts. Keep the existing 25-point repair unchanged.
+
+Commands: `node_modules/.bin/tsx --test tests/service-rules.test.ts
+ tests/vehicle-services.test.ts`; full `npm test`; `npx tsc --noEmit`; Prettier.
+Verify old-key fallback, validation, creation fields, summary and design transfer.
+Browser: F10 edit/reopen all four, visit a garage, refuse missing Steel, service
+with the correct parts/fee, buy the priced map, refit at the changed price, and
+exercise roadside repair readiness and empty-parts failure. Inspect UI screenshots
+and page errors. Update PLAYING, WORLD_BUILDING, README and Unreleased.
+
+Service red run: all six tests in `tests/service-rules.test.ts` fail for missing
+named defaults, Unknown setting, or absent editor fields. No production changes
+preceded that run (`/tmp/aclone-service-red.log`).
+
+The first browser run reached payment/refit but the test world used energy
+combat, hiding the ammunition control. Correct the fixture to fighting + ammo;
+the same flow then passes in 16.4s. A source sweep found the empty-map and
+Activities help still quoting old prices. Extend the browser assertions first;
+the empty-map check fails on 10d versus configured 1.23d. Update both help strings
+to the shared rules, retaining their existing visibility conditions.
+
+Service verification: all 22 focused service/guide tests pass; the existing phone
+garage browser test passes. The extended browser flow passes in 16.4s after
+scoping Activities to its dialog: all four editor fields persist, missing parts
+leave money/condition untouched, garage service takes 2 Steel and 3.21d, map
+printing takes 1.23d, refit takes 4.56d, and roadside readiness/consumption agree.
+Empty-map and Activities help quote the same prices. Inspect all three captured
+screenshots; no page errors. `npx tsc --noEmit` is clean. Full `npm test` passes
+1,435 tests in 201.5s. Run changed-file Prettier; player/world-builder docs, README
+and imperative Unreleased entry are updated. Ready to commit and push.

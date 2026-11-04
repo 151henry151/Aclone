@@ -75,13 +75,7 @@ import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
 import { adoptCarriedPilot } from './pilot-handoff';
 let socialPane = 'letters';
-import {
-  mapAvailable,
-  vehicleCondition,
-  maintainable,
-  SERVICE_FEE,
-  MAP_PRICE,
-} from '../shared/vehicle-services';
+import { mapAvailable, vehicleCondition, maintainable } from '../shared/vehicle-services';
 import { helmQualification } from '../shared/captain';
 import { maximumHealth, nutritionDescription } from '../shared/nutrition';
 import { landscapeEditor, landscapeControls } from './landscape-editor';
@@ -1864,7 +1858,7 @@ function renderPanel() {
       parishMap = undefined;
       modal(
         'Parish map.',
-        '<p>This world requires a Parish map in your inventory. Garages print one for 10d.</p>',
+        `<p>This world requires a Parish map in your inventory. Garages print one for ${money(economyRules(world.settings).mapPrintPrice)}.</p>`,
       );
       return;
     }
@@ -1915,7 +1909,7 @@ function renderPanel() {
     const target = world.players[selected];
     modal(
       target?.name ?? 'Player unavailable',
-      target ? playerAidPanel(target) : '<p>This player has left the parish.</p>',
+      target ? playerAidPanel(target, world) : '<p>This player has left the parish.</p>',
     );
     refreshPlayerAid($('modal-host'), world, me, selected);
     return;
@@ -2057,7 +2051,7 @@ function renderPanel() {
                     .join('')
             }`
           : ''
-      }${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced ${esc(world.creator?.arena.teams[0] ?? 'Rust')} and ${esc(world.creator?.arena.teams[1] ?? 'Moss')} teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? 'Ammunition is limited per life; garage refits cost 25d.' : 'Weapons use regenerating energy.'} ${world.creator ? `Win at ${world.creator.arena.scoreLimit} points; rounds last ${world.creator.arena.roundSeconds} seconds. ${world.creator.arena.mode === 'open' ? 'Choose a mode below.' : 'Fixed mode: ' + esc(world.creator.arena.mode) + '.'}` : 'Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.'}</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · ${esc(world.creator?.arena.teams[0] ?? 'Rust')} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${esc(world.creator?.arena.teams[1] ?? 'Moss')} · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
+      }${world.settings.fighting ? `<h3>Combat arena</h3><p>Balanced ${esc(world.creator?.arena.teams[0] ?? 'Rust')} and ${esc(world.creator?.arena.teams[1] ?? 'Moss')} teams. Keys 1–6 select weapons, Tab fires; hold and release Tab to charge javelins. Safe zones and teammates are protected. ${world.settings.weaponMode === 'ammo' ? `Ammunition is limited per life; garage refits cost ${money(economyRules(world.settings).ammunitionRefitPrice)}.` : 'Weapons use regenerating energy.'} ${world.creator ? `Win at ${world.creator.arena.scoreLimit} points; rounds last ${world.creator.arena.roundSeconds} seconds. ${world.creator.arena.mode === 'open' ? 'Choose a mode below.' : 'Fixed mode: ' + esc(world.creator.arena.mode) + '.'}` : 'Win at 10 kills, 120 capture seconds or 3 flags; rounds last ten minutes.'}</p><div class="button-row">${button('Team deathmatch', 'joinCombat', 'data-id="deathmatch"')}${button('Capture point', 'joinCombat', 'data-id="capture"')}${button('Capture the flag', 'joinCombat', 'data-id="ctf"')}</div>${world.combat ? `<p>${world.combat.mode} · ${esc(world.creator?.arena.teams[0] ?? 'Rust')} ${Math.floor(world.combat.scores[0])} : ${Math.floor(world.combat.scores[1])} ${esc(world.creator?.arena.teams[1] ?? 'Moss')} · round ${world.combat.round}</p>` : ''}` : ''}<div class="activity-list"><article><span>01 / TEAM SPORT</span><h3>Hornball</h3><p>Two teams. One oversized ball. Honk within 22 metres to push it into the other goal. Rust ${world.scores[0]} : ${world.scores[1]} Moss.</p>${button('Join Hornball', 'joinGame', 'data-id="hornball"')}</article><article><span>02 / MOTORISED OPTIMISM</span><h3>Puddlewick circuit</h3><p>A three-second countdown, four checkpoints, and your tractor. Pass through each gate in order.</p>${button('Start a lap', 'joinGame', 'data-id="race"')}<small>${Object.entries(
         world.raceBest,
       )
         .map(([n, t]) => `${esc(n)} ${t.toFixed(1)}s`)
@@ -2273,12 +2267,16 @@ function buildingWindow(b: Building) {
         .join('')}</div>`;
     if (b.kind === 'garage') {
       const record = me!.fleetState?.[me!.vehicle];
-      html += `<h3>Vehicle service</h3><p>${esc(vehicleDef(world, me!.vehicle).name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes 1 carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : SERVICE_FEE)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle, world) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(MAP_PRICE)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
+      html += `<h3>Vehicle service</h3><p>${esc(vehicleDef(world, me!.vehicle).name)} · condition ${vehicleCondition(me!).toFixed(1)}%${record ? ` · ${(record.metres / 1000).toFixed(1)} km · ${((world!.time - record.acquiredAt) / 3600).toFixed(1)} hours since first recorded use` : ' · no journey recorded yet'}. Distance slowly wears vehicles; poor condition slightly reduces top speed and increases fuel use. No wear while parked or in minigames.</p><p>Each service consumes ${economyRules(world.settings).vehicleServiceSteel} carried Steel and restores up to 25 condition points. Labour ${money(b.owner === me!.id ? 0 : economyRules(world.settings).vehicleServiceFee)}; paid to this garage. Buy parts at a steelworks or shop.</p>${button('Service vehicle', 'serviceVehicle', `data-building="${b.id}" ${!near || !maintainable(me!.vehicle, world) || vehicleCondition(me!) >= 100 ? 'disabled' : ''}`)}<p>Printed Parish map: ${money(economyRules(world.settings).mapPrintPrice)}. ${world!.settings.requireMapItem ? 'Required in this world to view maps.' : 'Maps are free to view in this world; purchase is optional.'}</p>${button('Buy parish map', 'buyMap', `data-building="${b.id}" ${!near || me!.inventory.parishMap > 0 ? 'disabled' : ''}`)}`;
     }
     if (b.kind === 'boathouse' && poweredBoat(me.vehicle, world))
       html +=
         vehiclePaintShop(world, me, b, me.vehicle) +
-        button('Service boat · 1 Steel + labour', 'serviceVehicle', `data-building="${b.id}"`);
+        button(
+          `Service boat · ${economyRules(world.settings).vehicleServiceSteel} Steel + ${money(b.owner === me!.id ? 0 : economyRules(world.settings).vehicleServiceFee)}`,
+          'serviceVehicle',
+          `data-building="${b.id}"`,
+        );
     if (b.kind === 'boathouse')
       html +=
         '<h3>Commercial fishing</h3><p>North Star: 300s, 3,200-weight hold, 3,200-unit tank. New boats start empty. Bring food, water and fuel for the return. Deploy the nets while moving, and haul whenever you want to inspect your catch. A full net stops towing until you haul it aboard. Sell landed fish here or take them to another buyer; prices, available cash and storage vary.</p>';
@@ -2346,7 +2344,11 @@ function buildingWindow(b: Building) {
       )}</div><p class="note">One day = 10 real minutes. Four seasons span ~61 hours. Harvest within six real hours of ripening for best yield; later crops retain at least 65% of their quality-adjusted yield until winter kills all unharvested crops.</p>`;
     }
     if (b.kind === 'garage' && world.settings.fighting)
-      html += button('Refit ammunition · 25d', 'refit', `data-building="${b.id}"`);
+      html += button(
+        `Refit ammunition · ${money(economyRules(world.settings).ammunitionRefitPrice)}`,
+        'refit',
+        `data-building="${b.id}"`,
+      );
     if (b.kind === 'starport') {
       const flight = spaceportFlight(world.id, world.time);
       html += `<h3>Cargo launcher</h3><p>${flight.phase === 'docked' ? `Next launch in ${Math.ceil((flight.next - world.time) / 60)} minutes.` : flight.phase === 'away' ? 'Cargo ship in flight; returning to the pad half a game day after departure.' : `Cargo ship: ${flight.phase}.`} The service departs every three or four game days. Keep clear of the reserved launch pad; this ambient flight does not change your own travel bookings.</p>`;

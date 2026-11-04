@@ -1,3 +1,5 @@
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { isTractor } from './tractors.ts';
@@ -8,8 +10,8 @@ export interface VehicleRecord {
   metres: number;
   condition: number;
 }
-export const SERVICE_FEE = 1000;
-export const MAP_PRICE = 1000;
+export const SERVICE_FEE = defaults.vehicleServiceFee;
+export const MAP_PRICE = defaults.mapPrintPrice;
 export function maintainable(slot: number, w?: World) {
   return slot !== 7 && vehicleDef(w, slot)?.fuel > 0;
 }
@@ -56,6 +58,7 @@ export function repairRecipientReady(p: Player, w?: World) {
   return !!(stoppedOutside(p) && maintainable(p.vehicle, w) && vehicleCondition(p) < 100);
 }
 export function repairStatus(w: World, p: Player, target?: Player, publicSnapshot = false) {
+  const parts = economyRules(w.settings).vehicleServiceSteel;
   let reason: string | undefined;
   if (!target || target.id === p.id || !target.online || !p.online)
     reason = 'Choose another online player';
@@ -65,8 +68,8 @@ export function repairStatus(w: World, p: Player, target?: Player, publicSnapsho
   else if (!(publicSnapshot ? target.canReceiveRepair : repairRecipientReady(target, w)))
     reason = 'Their vehicle must be stopped outside, available and below full condition';
   else if (!p.skills.includes('mechanic')) reason = 'Learn mechanic at school';
-  else if (!(p.inventory.tools > 0) || !(p.inventory.steel > 0))
-    reason = 'Carry Tools and Steel spare parts';
+  else if (!(p.inventory.tools > 0) || (p.inventory.steel ?? 0) < parts)
+    reason = `Carry Tools and ${parts} Steel spare parts`;
   return { reason };
 }
 export function restoreVehicle(w: World, p: Player) {

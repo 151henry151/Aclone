@@ -140,8 +140,6 @@ import {
   repairRecipientReady,
   restoreVehicle,
   stoppedOutside,
-  SERVICE_FEE,
-  MAP_PRICE,
 } from './vehicle-services.ts';
 import { herdSpec, tendHerd, breedHerd, birthHerd, livestockOutputs } from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
@@ -1363,11 +1361,12 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'garage' && !b.construction, 'Visit a completed garage');
       requireThat(!(p.inventory.parishMap > 0), 'You already carry a parish map');
-      requireThat(p.cash >= MAP_PRICE, 'Not enough cash');
-      p.cash -= MAP_PRICE;
-      b.investment += MAP_PRICE;
+      const price = economyRules(w.settings).mapPrintPrice;
+      requireThat(p.cash >= price, 'Not enough cash');
+      p.cash -= price;
+      b.investment += price;
       stockAdd(p.inventory, 'parishMap', 1);
-      log(w, 'transfer', MAP_PRICE, p.id, b.id, 'map printing');
+      log(w, 'transfer', price, p.id, b.id, 'map printing');
       break;
     }
     case 'serviceVehicle': {
@@ -1381,12 +1380,14 @@ export function act(w: World, id: string, a: Action): string {
         repairRecipientReady(p, w),
         'Stop an available vehicle outside below full condition',
       );
-      requireThat(p.inventory.steel > 0, 'Carry Steel spare parts');
-      const fee = b.owner === p.id ? 0 : SERVICE_FEE;
+      const rules = economyRules(w.settings),
+        parts = rules.vehicleServiceSteel;
+      requireThat((p.inventory.steel ?? 0) >= parts, `Carry ${parts} Steel spare parts`);
+      const fee = b.owner === p.id ? 0 : rules.vehicleServiceFee;
       requireThat(p.cash >= fee, 'Not enough cash');
       p.cash -= fee;
       b.investment += fee;
-      stockAdd(p.inventory, 'steel', -1);
+      if (parts > 0) stockAdd(p.inventory, 'steel', -parts);
       restoreVehicle(w, p);
       log(w, 'transfer', fee, p.id, b.id, 'vehicle service');
       break;
@@ -1395,12 +1396,13 @@ export function act(w: World, id: string, a: Action): string {
       const target = w.players[str(a.player)],
         status = repairStatus(w, p, target);
       requireThat(!status.reason, status.reason ?? 'Cannot repair');
-      stockAdd(p.inventory, 'steel', -1);
+      const parts = economyRules(w.settings).vehicleServiceSteel;
+      if (parts > 0) stockAdd(p.inventory, 'steel', -parts);
       restoreVehicle(w, target);
       say(
         w,
         'Roadside help',
-        `${p.name} repaired your vehicle with Steel spare parts.`,
+        `${p.name} repaired your vehicle using ${parts} Steel spare parts.`,
         'system',
         target.id,
       );
@@ -1759,7 +1761,7 @@ export function act(w: World, id: string, a: Action): string {
       const b = nearby(w, p, a.building);
       requireThat(b.kind === 'garage', 'Visit the garage');
       requireThat(w.time - p.lastShot >= 10, 'Wait ten seconds after firing');
-      charge(w, p, 2500, 'ammunition refit');
+      charge(w, p, economyRules(w.settings).ammunitionRefitPrice, 'ammunition refit');
       p.ammo = { ...ammunition };
       p.energy = 65000;
       break;

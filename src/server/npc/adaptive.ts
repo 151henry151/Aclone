@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { boatLanding } from '../../shared/boathouse';
 import { travelHeight } from '../../shared/dock';
 import { fishingOffers, fishingCrewCaptain } from '../../shared/fishing-expedition';
@@ -492,26 +493,29 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       }
     }
     if (b.kind === 'garage') {
+      const rules = economyRules(w.settings),
+        parts = rules.vehicleServiceSteel;
+      const missingParts = Math.max(0, parts - (p.inventory.steel ?? 0));
       if (vehicleCondition(p) < 80) {
-        if (p.inventory.steel > 0)
+        if (!missingParts)
           add(
             'maintenance',
-            `Service my vehicle at ${b.name} using 1 Steel and 1000 labour; restores up to 25 condition. Current ${vehicleCondition(p).toFixed(1)}%.`,
+            `Service my vehicle at ${b.name} using ${parts} Steel and ${b.owner === p.id ? 0 : rules.vehicleServiceFee} labour; restores up to 25 condition. Current ${vehicleCondition(p).toFixed(1)}%.`,
             visit(b, [operation('serviceVehicle', { building: b.id })]),
           );
         else {
-          const supplier = shops.find((s) => s.sell.steel > 0 && s.stock.steel > 0);
+          const supplier = shops.find((s) => s.sell.steel > 0 && s.stock.steel >= missingParts);
           if (supplier)
             add(
               'maintenance',
-              `Buy 1 Steel spare part from ${supplier.name} then service my vehicle at ${b.name}.`,
+              `Buy ${missingParts} Steel spare parts from ${supplier.name} then service my vehicle at ${b.name}.`,
               [
                 ...visit(supplier, [
                   action({
                     type: 'trade',
                     building: supplier.id,
                     item: 'steel',
-                    quantity: 1,
+                    quantity: missingParts,
                     direction: 'buy',
                   }),
                 ]),
@@ -524,7 +528,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       if (w.settings.requireMapItem && !p.inventory.parishMap)
         add(
           'equipment',
-          `Buy a Parish map at ${b.name} for 1000.`,
+          `Buy a Parish map at ${b.name} for ${rules.mapPrintPrice}.`,
           visit(b, [operation('buyMap', { building: b.id })]),
         );
       if (p.cash > 20000)
@@ -545,7 +549,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       });
       add(
         'combat',
-        `Refit armour/ammunition at ${b.name} for 2500.`,
+        `Refit armour/ammunition at ${b.name} for ${rules.ammunitionRefitPrice}.`,
         visit(b, [operation('refit', { building: b.id })]),
       );
     }
@@ -668,10 +672,16 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   for (const q of Object.values(w.players).filter(
     (q) => q.id !== p.id && q.online && distance(p, q) < 15,
   )) {
-    if (p.skills.includes('mechanic') && p.inventory.steel > 0 && p.inventory.tools > 0)
-      add('social', `Help repair ${q.name}'s vehicle with 1 Steel.`, [
-        operation('repairVehicle', { player: q.id }),
-      ]);
+    if (
+      p.skills.includes('mechanic') &&
+      (p.inventory.steel ?? 0) >= economyRules(w.settings).vehicleServiceSteel &&
+      p.inventory.tools > 0
+    )
+      add(
+        'social',
+        `Help repair ${q.name}'s vehicle with ${economyRules(w.settings).vehicleServiceSteel} Steel.`,
+        [operation('repairVehicle', { player: q.id })],
+      );
     if (!p.hitch)
       add('social', `Hitch a ride with nearby ${q.name}.`, [operation('hitch', { player: q.id })]);
     if (p.inventory.bread > 2)

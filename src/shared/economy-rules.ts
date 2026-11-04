@@ -1,6 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  vehicleServiceFee: {
+    label: 'Vehicle service labour (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  vehicleServiceSteel: { label: 'Steel per vehicle service', min: 0, max: 100, step: 1 },
+  mapPrintPrice: {
+    label: 'Printed map price (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  ammunitionRefitPrice: {
+    label: 'Ammunition refit price (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
   outsideReturnPercent: {
     label: 'Outside investment return above principal (%)',
     min: 0,

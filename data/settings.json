@@ -162,5 +162,9 @@
   "minimumBuyPrice": 100,
   "transactionItemLimit": 10000,
   "outsideReturnPercent": 8,
-  "outsideOperatingReserve": 2000
+  "outsideOperatingReserve": 2000,
+  "vehicleServiceFee": 1000,
+  "vehicleServiceSteel": 1,
+  "mapPrintPrice": 1000,
+  "ammunitionRefitPrice": 2500
 }
