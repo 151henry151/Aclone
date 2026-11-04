@@ -1,3 +1,4 @@
+import { canoePanel } from './canoe-panel';
 import { fuelPanel } from './fuel-panel';
 import { alpineWeather } from '../shared/alpine-weather';
 import { tenderOf } from '../shared/boat-tender';
@@ -1438,6 +1439,15 @@ let fuelPanelRoot: Element | null = null;
 let charterSignature = '';
 let expeditionSignature = '';
 function refreshTradingPrices() {
+  if (world && me)
+    for (const panel of app.querySelectorAll('.canoe-panel')) {
+      const html = canoePanel(world, me),
+        wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      if (panel.outerHTML !== wrapper.firstElementChild!.outerHTML)
+        panel.replaceWith(wrapper.firstElementChild!);
+    }
+
   refreshTaxInfo();
   const fuelRoot = app.querySelector('.fuel-services');
   if (
@@ -1984,7 +1994,7 @@ function renderPanel() {
             )
             .join(
               '',
-            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${trailerPanel(world, me)}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${canoePanel(world, me)}${trailerPanel(world, me)}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}`
         : `<p>${me.skills.length} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -2004,7 +2014,7 @@ function renderPanel() {
   if (panel === 'activities') {
     modal(
       'An entirely productive afternoon.',
-      `${trailerPanel(world, me)}${towingPanel(world, me)}${
+      `${canoePanel(world, me)}${trailerPanel(world, me)}${towingPanel(world, me)}${
         world.settings.crowAbilities && world.settings.fighting
           ? `<h3>Robocrows</h3><p>Scout: fast, unarmed. Interceptor: armoured, machine/plasma weapons. Bomber: slower, grenades/rockets. Every launch consumes one disposable robocrow. Available outside team matches; drone destruction returns you to your body.</p>${
               me.crowBody
@@ -2208,7 +2218,7 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>A small log jetty on a navigable river reach. Canal boats and motorboats you already own board from the landing and return to the berth at the jetty end; the boat stays moored in view. Larger vessels, fuel and fish trading need a boathouse or the fishing pier.</p>';
-    html += trailerPanel(world, me, b);
+    html += canoePanel(world, me) + trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
       html += `<h3>Aircraft hangar</h3><p>${aircraftCount(me)} biplane airframes owned (${me.spareBiplanes ?? 0} spare). Board here; your tractor is parked safely. Aircraft appear outside on the apron with the engine off. Press F4 to start, then taxi west to the runway (${world.airfield?.length ?? 240} metres). Spare airframes start with empty tanks: buy and use Fuel here before flying. Crashes destroy one aircraft only.</p>`;

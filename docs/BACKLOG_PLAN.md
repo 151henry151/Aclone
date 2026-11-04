@@ -852,3 +852,66 @@ Final verification: `npm test` passes all 1,357 tests in 191 seconds, exit 0
 (recorded in `/tmp/aclone-fuel-sales-full-final.status`); both NPC integration
 regressions are green in that run. TypeScript, changed-file Prettier and diff
 checks pass. The roadside slice meets its criteria, completing the tanker item.
+
+Pushed `3ef141b`: roadside sales and the complete fuel-tanker item are **done**.
+
+### Canoes — portable ownership and storage slice
+
+Concrete criteria before production: a canoe is a purchasable/craftable inventory
+item and a persistent owned small-craft record when carried or set down. Buy at a
+completed carpenter or boathouse; craft at a carpenter using wood. Default price
+150d, hull weight 8, wood cost 8, carrying speed 0.4 of ordinary walking, interaction
+range 3m, stopped speed 0.5m/s and two canoes per owned home are world rules.
+Use an explicit carry action to lift a canoe transported in inventory; an overhead
+canoe's weight is included exactly once. Pickup defaults to owner-only; an enabled
+world rule transfers ownership when another player picks up a set-down hull.
+A carried canoe prevents running, jetpack/jumping, vehicle changes, fishing,
+gathering and construction. Set it down on dry, unobstructed ground, persist its
+owner/position/heading/paint, and let both players see it and the inverted carried
+hull. Store at the owner's home as ordinary home inventory, removing the world
+object; retrieve at the door, respecting weight and home limit. Stored stock uses
+ordinary property death rules; carried hulls follow inventory death rules;
+set-down hulls survive boat-loss deaths unless the separate land-loss rule is on.
+
+Run `node_modules/.bin/tsx --test tests/canoe.test.ts` with assertions covering
+purchase/craft, carrying/weight/blocked actions, two-player ownership, set-down,
+home storage/limits, invalid actions without mutation, save/restart and death.
+First confirm the new action fails because it is absent. Browser:
+`TEST_GPU=1 npm run test:e2e -- tests/browser/canoe.spec.ts`: buy/carry/set-down/
+pickup/store/retrieve through real controls; inspect overhead and ground hulls,
+empty state, insufficient funds/wood, full home and ownership refusal; inspect
+F10 changed rules. Capture screenshots and inspect the hull orientation. Finish
+with `npm test`, `npx tsc --noEmit` and changed-file Prettier. Update PLAYING,
+WORLD_BUILDING, README and Unreleased. Shore launch and the rowing vehicle are
+explicitly the following slice; the canoe item is not done until both slices pass.
+
+Initial canoe red run: all four original tests fail on missing `canoe` action or
+unknown canoe setting. Extend coverage to exact 0.3/0.7 carrying multipliers,
+Shift and jetpack input, ordinary construction/task actions, public snapshot
+visibility, both carried-death policies, portable rules and home-stock bypasses.
+Use old-age death in fixtures: zero health heals before the ordinary injury check.
+
+Browser inspection finds the overhead inverted hull and upright set-down hull
+visible. Seal the bow/stern ends after a mesh-boundary regression fails (20 open
+edges instead of the intended 14 rim edges). The focus regression initially also
+races the existing delayed action-result redraw; wait for that response to finish
+and then verify steady snapshots preserve focus. Normalize the generated DOM
+before replacing changed controls. The repeated real browser flow passes with
+owner-only pickup, empty/poor state, full home and all F10 canoe rules visible.
+
+The first full suite passes 1,363 of 1,365 tests. The new commodity lacks default
+port import/export quotes, and its documentation pushes the existing worst-case
+NPC request over 96,000 bytes. Add quotes derived from the single canoe price,
+retaining the port anti-arbitrage test. Remove physical prose line wraps and
+manual headings duplicated in the guide topic index, preserving all words,
+structured Markdown, source links and every indexed heading. Added red tests
+confirm that these transformations preserve the content. Keep the 12,500-character
+guide budget and 96,000-byte request limit unchanged. Focused canoe/economy/guide
+regressions pass; full-suite verification remains required before commit.
+
+Final portable-canoe verification: `npm test` passes all 1,368 tests in 204 seconds
+(exit 0 in `/tmp/aclone-canoe-full-final.status`); TypeScript and changed-file
+Prettier are clean. The final browser run passes in 1.1 minutes, including a
+successful wood craft after the insufficient-cash/wood state. Inspect the overhead,
+whole set-down hull, owner-only pickup, full home, empty/poor and F10 screenshots.
+The carrying/storage slice meets its criteria; launching and rowing remain next.

@@ -208,6 +208,7 @@ export function prepareFrame(w: World): Frame {
         canReceiveRepair: repairRecipientReady(p, w),
         tractorPaint: vehiclePaint(p),
         atHome: p.atHome,
+        carrying: p.carrying,
         lights: p.lights,
         boatLighting: p.boatLighting,
         engineRunning: motorRunning(w, p),

@@ -434,3 +434,16 @@ price/capacity remain in the separate Vehicles trailer editor above.
 Dairy barns, sheepfolds, piggeries and henhouses receive a fenced 16 × 16 metre pasture when suitable clear land is available. Owners may buy up to three adjoining parcels through the business's livestock controls. Each parcel supports four cows, six sheep, six pigs or twelve chickens at the default capacity setting. Expansion needs dry, clear terrain and cannot overlap buildings, crop fields, roads, other pastures or protected areas.
 
 **Pasture capacity multiplier** and **Pasture price multiplier** in Rules customize stocking density and expansion cost. More healthy, supplied animals increase production and staffing needs; feed and water use scales with the herd. Animal purchases and breeding respect the same capacity. Existing animals are never deleted during migration: if an old farm has no suitable pasture site, its original production remains available, but it cannot add animals until suitable grazing land is provided.
+
+### Portable canoe rules (unreleased)
+
+F10 → Rules → **Portable canoes** controls purchase price (15000 hundredths =
+150d), carried weight (8), carpenter wood cost (8), walking multiplier (0.4), home
+limit (2), handling range (3m) and stopped speed (0.5m/s). Building interactions use
+the ordinary building-access range. Public pickup is off by default; enabling it
+transfers an unoccupied set-down hull to whoever picks it up. Land-hull death loss
+is separately off by default, regardless of **Lose all owned boats on death**.
+Carried canoes instead follow inventory loss and home stock follows property
+rules. Rules persist in saves and portable designs; personal canoe placements
+remain save state. A lower home limit prevents new deposits without deleting
+existing stock. Canoe weight and price also update the inventory catalogue.

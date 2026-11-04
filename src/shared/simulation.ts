@@ -1,3 +1,5 @@
+import { canoeAction, canoeDeath } from './small-craft';
+import { canoeRules, canoeRuleFields } from './canoe-rules';
 import { fuelRuleFields } from './fuel-rules';
 import { fuelTrailerAction } from './fuel-sales';
 import { inlandBlocksGround, riverDepth } from './inland-travel';
@@ -448,13 +450,13 @@ function qty(v: unknown) {
 function owner(p: Player) {
   requireThat(p.authority >= 20, 'Owner authority required');
 }
-function nearby(w: World, p: Player, id: unknown) {
+export function withinBuildingRange(w: World, p: Player, b: Building) {
+  return b.kind === 'boathouse' ? nearBoathouse(w, p, b) : distance(p, b) < 18;
+}
+export function nearby(w: World, p: Player, id: unknown) {
   const b = w.buildings.find((x) => x.id === id);
   requireThat(b, 'Building not found');
-  requireThat(
-    b.kind === 'boathouse' ? nearBoathouse(w, p, b) : distance(p, b) < 18,
-    'Drive near the building first',
-  );
+  requireThat(withinBuildingRange(w, p, b), 'Drive near the building first');
   requireThat(!b.construction, 'Supply the construction materials first');
   return b;
 }
@@ -467,6 +469,7 @@ export function canCarry(p: Player, item: string, n: number, w?: World) {
 }
 export function carry(p: Player, w?: World) {
   return (
+    (p.carrying ? worldItems(w).canoe.weight : 0) +
     vesselStoresWeight(w, p) +
     Object.entries(p.inventory).reduce((s, [k, n]) => s + (worldItems(w)[k]?.weight ?? 0) * n, 0)
   );
@@ -517,6 +520,31 @@ export function act(w: World, id: string, a: Action): string {
   const p = w.players[id];
   requireThat(p, 'Unknown player');
   const type = a.type;
+  if (
+    p.carrying &&
+    [
+      'vehicle',
+      'crow',
+      'gather',
+      'build',
+      'work',
+      'joinGame',
+      'joinCombat',
+      'hitch',
+      'farm',
+      'plant',
+      'harvest',
+      'fish',
+      'reel',
+      'buildSupply',
+      'produce',
+      'task',
+      'construct',
+      'supply',
+      'production',
+    ].includes(type)
+  )
+    throw Error('Set down your canoe before starting this activity');
   // Reject legacy clients before clearing courses or changing any other player state.
   if (type === 'respawn')
     throw Error(
@@ -1004,6 +1032,9 @@ export function act(w: World, id: string, a: Action): string {
       }
       break;
     }
+    case 'canoe':
+      canoeAction(w, p, a);
+      break;
     case 'stock': {
       const b = nearby(w, p, a.building);
       owns(p, b);
@@ -1018,6 +1049,11 @@ export function act(w: World, id: string, a: Action): string {
         put ? (b.stock[item] ?? 0) + n <= b.capacity : canCarry(p, item, n, w),
         'Storage full',
       );
+      if (put && item === 'canoe' && b.kind === 'home')
+        requireThat(
+          (b.stock.canoe ?? 0) + n <= canoeRules(w.settings).canoeHomeLimit,
+          'Home canoe limit is full',
+        );
       if (put) requireHerdRoom(w, b, item, n);
       stockAdd(source, item, -n);
       stockAdd(put ? b.stock : p.inventory, item, n);
@@ -1888,7 +1924,8 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
-            Object.hasOwn(fuelRuleFields, key),
+            Object.hasOwn(fuelRuleFields, key) ||
+            Object.hasOwn(canoeRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1909,6 +1946,9 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const canoeField = canoeRuleFields[key as keyof typeof canoeRuleFields];
+        if (canoeField && 'min' in canoeField)
+          num(v, canoeField.min, canoeField.max, canoeField.step === 1);
         const fuelField = fuelRuleFields[key as keyof typeof fuelRuleFields];
         if (fuelField && 'min' in fuelField)
           num(v, fuelField.min, fuelField.max, fuelField.step === 1);
@@ -2444,13 +2484,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const loadFactors = boatLoadFactors(w, p),
     fuelBefore = p.fuel;
   const cap =
+    (p.carrying ? canoeRules(w.settings).canoeCarrySpeed : 1) *
     crowSpeed *
     (grounded && riverDepth(w, p) > 0.1 ? 0.62 : 1) *
     (activeTow(w, p.id) ? 0.5 : towingTender(w, p) ? 0.85 : 1) *
     trailerFactors(w, p).speed *
     loadFactors.speed *
     (rowing ? 1.6 : trawling ? (v.trawlSpeed ?? TRAWL_SPEED) : v.speed) *
-    (input.boost && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
+    (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
     tractorSurface(surface.speed, traction) *
     (0.7 + condition * 0.003);
   p.speed +=
@@ -2465,7 +2506,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     intoxicatedSteer(p, w.time, clamp(input.steer, -1, 1)) *
     v.turn *
     tractorSurface(surface.grip, traction) *
-    (input.boost && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
+    (input.boost && !p.carrying && !throttleBoat(p.vehicle, w) ? 1.15 : 1) *
     dt *
     ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
     (Math.abs(p.speed) > 0.1 ? 1 : 0);
@@ -2474,7 +2515,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       ground,
       p.y + ((input.lift ?? 0) * 12 + (v.mode === 2 ? (Math.abs(p.speed) > 14 ? 2 : -4) : 0)) * dt,
     );
-  else if ((input.lift ?? 0) > 0 && (p.inventory.jetpack ?? 0) > 0 && p.fuel > 0) {
+  else if (!p.carrying && (input.lift ?? 0) > 0 && (p.inventory.jetpack ?? 0) > 0 && p.fuel > 0) {
     p.y += 12 * dt;
     p.fuel = Math.max(0, p.fuel - 0.08 * dt);
   } else p.y = Math.max(ground, p.y - 9.8 * dt);
@@ -2632,7 +2673,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           trailerFactors(w, p).fuel *
           (activeTow(w, p.id) ? 1.6 : towingTender(w, p) ? 1.2 : 1) *
           loadFactors.fuel *
-          (input.boost && !throttleBoat(p.vehicle, w) ? 2 : 1) *
+          (input.boost && !p.carrying && !throttleBoat(p.vehicle, w) ? 2 : 1) *
           (1 + (100 - condition) * 0.003) *
           dt,
     );
@@ -2642,6 +2683,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (!prediction) voyageFuel(w, p, fuelBefore - p.fuel);
 }
 function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time) {
+  if (!comic) canoeDeath(w, p);
   detachTrailer(w, p, !comic && w.settings.loseInventoryOnDeath);
   cancelPlayerTows(w, p.id);
   for (const t of Object.values(w.mooredBoats ?? {}))

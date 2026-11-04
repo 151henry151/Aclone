@@ -101,5 +101,14 @@
   "autoConsumeHomeStock": false,
   "homeNeedsMultiplier": 0.8,
   "labourShiftPay": 1200,
-  "labourDailyCap": 20000
+  "labourDailyCap": 20000,
+  "canoePrice": 15000,
+  "canoeWeight": 8,
+  "canoeWood": 8,
+  "canoeCarrySpeed": 0.4,
+  "canoeHomeLimit": 2,
+  "canoePublicPickup": false,
+  "canoeLoseOnLandDeath": false,
+  "canoeRange": 3,
+  "canoeStoppedSpeed": 0.5
 }

@@ -1,3 +1,4 @@
+import { canoeRules, canoeRuleFields, type CanoeRules } from '../shared/canoe-rules';
 import { fuelRules, fuelRuleFields, type FuelRules } from '../shared/fuel-rules';
 import {
   gatheringSceneryRules,
@@ -86,6 +87,7 @@ const friendly = (key: string) =>
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(fuelRuleFields),
+    ...Object.keys(canoeRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
     ...Object.keys(gatheringSceneryFields),
@@ -104,6 +106,24 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const canoe = canoeRules(settings);
+  const canoeFields = `<fieldset class="boat-death-settings"><legend>Portable canoes</legend>${Object.entries(
+    canoeRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            canoe[key as keyof CanoeRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${canoe[key as keyof CanoeRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Owner-only pickup by default. Taking a hull transfers ownership when enabled. Stored canoes follow property rules; carried hulls follow inventory loss. Set-down hulls survive boat-loss deaths unless land loss is enabled.</p></fieldset>`;
   const fuel = fuelRules(settings);
   const fuelFields = `<fieldset class="boat-death-settings"><legend>Roadside fuel</legend>${Object.entries(
     fuelRuleFields,
@@ -174,6 +194,7 @@ export function settingsFields(settings: Settings = defaults) {
     walkingFields +
     gatheringFields +
     fuelFields +
+    canoeFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

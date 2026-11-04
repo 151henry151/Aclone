@@ -111,6 +111,22 @@ export function searchGuide(query: string): Entry[] {
   }
   return found;
 }
+/** Physical prose line wraps carry no meaning. Preserve structured Markdown blocks. */
+export function compactGuideText(text: string) {
+  return text
+    .split('\n\n')
+    .map((paragraph) =>
+      /^(?: {4}|[\t#>*`~|+-]|\d+[.)]\s)/m.test(paragraph)
+        ? paragraph
+        : paragraph.replace(/\n/g, ' '),
+    )
+    .join('\n\n');
+}
+const compactEntry = (e: Entry) => {
+  const text = compactGuideText(e.text);
+  // Manual headings are already retained in topics, keyed by this section id.
+  return e.source.startsWith('docs/') ? { id: e.id, source: e.source, text } : { ...e, text };
+};
 export function gameGuide(query: string, activityQuery = '') {
   const docs = corpus().filter((e) => e.source.startsWith('docs/'));
   const excerpts = searchGuide(query);
@@ -140,8 +156,8 @@ export function gameGuide(query: string, activityQuery = '') {
   return {
     version: VERSION,
     // Core rules must not depend on the agent knowing which question to search for.
-    fundamentals,
-    controls: docs.find((e) => e.id === 'faq:controls')!.text,
+    fundamentals: fundamentals.map(compactEntry),
+    controls: compactGuideText(docs.find((e) => e.id === 'faq:controls')!.text),
     topics: [
       ...new Map(
         docs.map(({ id, title }) => [title, { id: id.replace(/:\d+$/, ''), title }]),
@@ -149,7 +165,7 @@ export function gameGuide(query: string, activityQuery = '') {
     ],
     catalogLookup:
       'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
-    excerpts,
-    activityExcerpts,
+    excerpts: excerpts.map(compactEntry),
+    activityExcerpts: activityExcerpts.map(compactEntry),
   };
 }

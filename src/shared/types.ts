@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import type { CanoeRules } from './canoe-rules';
 import type { FuelRules } from './fuel-rules';
 import type { FlightRules } from './flight-rules';
 import type { WalkingRules } from './walking-rules';
@@ -29,6 +30,8 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  /** Owned portable hull lifted overhead; its weight is additional to inventory. */
+  carrying?: string;
   statistics?: import('./player-statistics.ts').PlayerStatistics;
   /** Private snapshot cargo for this player's trailers. */
   trailerCargo?: Record<string, Stock>;
@@ -285,6 +288,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<CanoeRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -367,6 +371,8 @@ export interface Settings
   exchangeCap: number;
 }
 export interface World {
+  smallCraft?: Record<string, import('./small-craft').SmallCraft>;
+  smallCraftSeq?: number;
   /** Last safely surveyed public runway targets; never overwrites private property. */
   airfieldLandingVersion?: string;
   automaticProvisionsVersion?: 1 | 2;

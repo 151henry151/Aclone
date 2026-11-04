@@ -488,3 +488,26 @@ Buy eight specialist trailers at the tractor garage. Use **Inventory → Your tr
 The 24s outboard motorboat carries 50 weight and can be rowed after running out of fuel. The canal boat now costs 60s. A 140s tug can rescue another captain's boat for an agreed fee, or tow its owner's stranded boat home. **Activities → Towing** handles offers, acceptance, hookup and dock delivery. Fuel deliveries in a motorboat can end by towing it home behind your larger boat as a tender. See [the full haulage guide](HAULAGE.md) for controls and cargo restrictions.
 
 Walking uses a hand-held **Flashlight**. Walking and the 10-weight emergency raft have no engine controls or Fuel bar; the Fuel bar returns when you board a motor vehicle. Reboard stranded boats only within transfer range. Tractors can zoom out twice as far in third-person view, using the mouse wheel, pinch or **Actions → Zoom out**. There is no free town-centre teleport; allow fuel for your return journey.
+
+## Portable canoes (unreleased)
+
+Walk to a carpenter or boathouse, stop, and open **Inventory (I / Bag)**. Buy a
+canoe for 150d, or at a carpenter craft one from 8 carried Wood. It appears upside
+down overhead and adds 8 carry weight. Carrying limits walking to 40% pace;
+Shift cannot run, and jumping/jetpacks, vehicle changes, fishing, gathering and
+construction wait until you set it down. These defaults can differ by world.
+
+**Set canoe down** leaves owned property on clear dry ground in front of you.
+Stand within 3m to pick it up again. Other players see it but cannot take it unless
+the world enables public pickup, which transfers ownership. A canoe transported
+as ordinary inventory can be lifted with **Lift inventory canoe**.
+
+At your own home, **Store canoe at home** converts the overhead hull into home
+inventory; the default limit is two. **Take canoe out at the door** lifts one again
+when outside. Stored hulls use the standard finish when taken out. Normal saves
+retain set-down position, heading, finish and ownership. Carried hulls follow
+inventory loss on death; stored hulls follow property rules. Set-down hulls survive
+boat-loss deaths unless the world separately enables land-hull loss.
+
+This first canoe slice covers carrying and storage. Shore launching and paddling
+are the next unreleased backlog slice.

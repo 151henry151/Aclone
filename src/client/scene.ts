@@ -1,3 +1,4 @@
+import { createCanoe, carriedCanoe } from './canoe-model';
 import { updateResourceScenery } from './resource-scenery';
 import { alpineWeather } from '../shared/alpine-weather';
 import { spaceportComplex } from './spaceport-complex';
@@ -544,6 +545,7 @@ export class GameScene {
       ':' +
       world.buildings.map((b) => b.creatorModel ?? '').join(',');
     this.updateMooredBoats(world);
+    this.updateSmallCraft(world);
     const rebuilt = this.revision !== rev;
     if (rebuilt) {
       this.revision = rev;
@@ -613,6 +615,15 @@ export class GameScene {
         mesh.position.set(p.x, p.y, p.z);
         this.meshes.set(p.id, mesh);
         this.actors.add(mesh);
+      }
+      if (mesh.userData.carrying !== p.carrying) {
+        const old = mesh.getObjectByName('carried-canoe');
+        if (old) {
+          old.removeFromParent();
+          dispose(old);
+        }
+        if (p.carrying) mesh.add(carriedCanoe(world.smallCraft?.[p.carrying]?.paint));
+        mesh.userData.carrying = p.carrying;
       }
       mesh.visible = !p.atHome;
       mesh.userData.engineRunning = p.engineRunning ?? (p.engine && p.fuel > 0);
@@ -2011,6 +2022,23 @@ export class GameScene {
     this.renderer.domElement.dataset.pixelRatio = String(this.renderer.getPixelRatio());
     this.renderer.domElement.dataset.drawCalls = String(this.renderer.info.render.calls);
     this.renderer.domElement.dataset.triangles = String(this.renderer.info.render.triangles);
+  }
+  private smallCraftGroup = new T.Group();
+  private smallCraftKey = '';
+  private updateSmallCraft(w: World) {
+    const hulls = Object.values(w.smallCraft ?? {}).filter((c) => c.state === 'setDown');
+    const key = w.id + JSON.stringify(hulls);
+    if (key === this.smallCraftKey) return;
+    this.smallCraftKey = key;
+    dispose(this.smallCraftGroup);
+    this.smallCraftGroup.clear();
+    if (!this.smallCraftGroup.parent) this.scene.add(this.smallCraftGroup);
+    for (const c of hulls) {
+      const model = createCanoe(c.paint);
+      model.position.set(c.x, terrainHeight(w, c.x, c.z) + 0.18, c.z);
+      model.rotation.y = c.heading;
+      this.smallCraftGroup.add(model);
+    }
   }
   private towLines = new TowLines();
   private trailers = new TrailerScene();

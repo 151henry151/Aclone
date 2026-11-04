@@ -180,3 +180,34 @@ test('a distant workplace remains in context even when local buildings crowd the
     store.close();
   }
 });
+
+test('guide compaction removes only prose soft wraps, retaining every word, paragraph, list and code line', async () => {
+  const { compactGuideText } = await import('../src/server/npc/knowledge');
+  assert.equal(
+    compactGuideText('First wrapped\nparagraph continues.\n\nNext paragraph.'),
+    'First wrapped paragraph continues.\n\nNext paragraph.',
+  );
+  for (const block of [
+    '- First\n- Second',
+    '1. First\n2. Second',
+    '```\ncode\n```',
+    '| A | B |\n| C | D |',
+    '> First\n> Second',
+    '    indented\n    code',
+  ])
+    assert.equal(compactGuideText(block), block);
+});
+
+test('selected manual headings occur once in the topic index without repeating them in each excerpt', () => {
+  const guide = gameGuide('farm school inventory water');
+  for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
+    if (!entry.source.startsWith('docs/')) continue;
+    assert.ok(
+      guide.topics.some((topic) => topic.id === entry.id.replace(/:\d+$/, '')),
+      'heading remains available by section id',
+    );
+    assert.equal('title' in entry, false, 'do not repeat an indexed heading');
+    assert.ok(entry.text.length > 0);
+    assert.ok(entry.source.length > 0);
+  }
+});
