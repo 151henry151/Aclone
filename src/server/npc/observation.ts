@@ -1,6 +1,6 @@
 import { creditRules } from '../../shared/credit-rules';
 import { loanRules } from '../../shared/loan-rules';
-import { economyRules } from '../../shared/economy-rules';
+import { economyRules, lighthouseWage } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { fishingOffers, fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { financialBriefing, financeRules } from './finances.ts';
@@ -294,7 +294,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       sell: b.sell,
       investment: b.investment,
       capacity: b.capacity,
-      wage: b.wage,
+      wage: b.kind === 'lighthouse' ? lighthouseWage(w.settings, b.wage) : b.wage,
       recipe:
         b.kind === 'farm'
           ? undefined

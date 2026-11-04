@@ -159,7 +159,12 @@ export function actionVisible(
     case 'learn':
       return !p.crowBody && !p.skills.includes(id ?? '');
     case 'job':
-      return free && w.settings.jobsEnabled !== false && !!b && b.owner !== p.id && !p.job;
+      return (
+        free &&
+        w.settings.jobsEnabled !== false &&
+        !!b &&
+        (b.kind === 'lighthouse' ? !p.job || p.job === b.id : b.owner !== p.id && !p.job)
+      );
     case 'task':
       return (
         free && !!b && b.owner !== p.id && (id !== 'labour' || w.settings.jobsEnabled !== false)

@@ -625,6 +625,16 @@ cash are unaffected by publishing prices. Initial shop pricing uses the same
 formula. Import-cost accounting and catalogue prices remain separate. Missing
 keys use named defaults; portable designs carry all five rules.
 
+`lighthouseWageCap` defaults to 800 hundredths (8d) per game day and accepts
+integer 0–1,000,000 under Economy and trade. Keeper pay is the lower of this cap
+and the building's posted wage, before world/town wage taxes. Editing the cap
+does not overwrite posted wages; Building Admin clamps newly saved keeper wages
+to the cap. Raising the cap allows a higher posted wage. Zero stops keeper pay
+while preserving employment and quarters. Daily scheduling, active-shift rules,
+the separate 4d private-owner allowance and other buildings' wages stay the same.
+The player panel, jobs command, resident observations and payout use one rule;
+missing keys use the default, and portable designs/reloads retain the cap.
+
 ## Loan offer rules (unreleased)
 
 **F10 → Rules → Loan offers** controls new quotes. `loanPersonalBaseApr` defaults

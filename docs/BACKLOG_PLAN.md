@@ -1775,3 +1775,76 @@ all 22 focused tests pass after docs updates, TypeScript is clean, and Prettier
 has been run on every changed file. Browser flows and inspected screenshots
 satisfy score display, new APR, refusal, repayment and invalid-bound criteria.
 Ready to commit and push.
+
+Pushed and verified `f9851bc` on `backlog-implementation`. **Credit-score weights
+are done.** Continue with lighthouse wage and boat-service defaults/escrow rules.
+
+### Gameplay rules — lighthouse keeper wage cap
+
+Before production, expose the claimed 8d/game-day cap as `lighthouseWageCap`,
+default 800 hundredths, integer 0–1,000,000. Use one effective-wage calculation
+for payouts, building-admin clamps, jobs command, building UI and resident
+observations. Editing the cap alone preserves the building's posted wage;
+raising it permits a higher owner-configured wage. Zero caps keeper pay at zero
+without removing employment/quarters. Keep taxes, daily scheduling, the separate
+4d private-owner allowance and ordinary factory wages unchanged.
+
+Test missing-key defaults, lower/higher/zero caps, admin edits, actual payments
+and taxes, inactive shifts/no keeper, filled-job failure, ordinary wage isolation,
+summary/editor/design/reload and live resident quotes. Commands:
+`node_modules/.bin/tsx --test tests/lighthouse-rules.test.ts tests/lighthouse.test.ts
+ tests/npc-guide.test.ts`, `TEST_GPU=1 npm run test:e2e --
+ tests/browser/lighthouse-rules.spec.ts`, full `npm test`, clean
+`npx tsc --noEmit`, changed-file Prettier. Browser: F10 cap 321 persists, lighthouse
+quotes 3.21d, take the job and receive exactly that gross wage on a local test
+cycle; cap zero shows 0d and pays nothing while quarters remain available; filled
+job is unavailable to another player. Inspect screenshots/errors. Update
+PLAYING, WORLD_BUILDING, README and imperative Unreleased.
+
+Keeper-cap red run: all five tests fail for absent defaults, Unknown setting or
+missing editor field (`/tmp/aclone-keeper-red.log`), before production.
+
+Browser failure: the actual keeper button is rendered then hidden by the shared
+job-visibility filter, which excludes all building owners and anyone already
+employed. This conflicts with existing supported lighthouse owner-hiring and
+renewal. A new unit regression fails on owner visibility before the fix. Apply
+the lighthouse exception in that filter only; retain ordinary owner-job,
+other-employment and jobs-disabled restrictions, with filled places visible but
+disabled by the existing blocker. Keep all original browser assertions.
+
+Keeper browser now passes in 20.6s. The editor retains 321; the owner can take
+and renew the keeper job; the panel and cash HUD show exactly 3.21d; a visitor
+sees a disabled filled-job button; a zero cap pays nothing and keeps quarters
+available. The local fixture pauses autonomous ticks and advances two explicit
+daily cycles so gross pay and the separate 4d owner allowance are exact. Inspect
+all four screenshots; no page errors. Update player/world-builder docs, README
+and imperative Unreleased entry.
+
+The first full keeper run has 1,477 passes and one cancellation: the unchanged
+slow compressed TCP integration test hits its 45-second timeout under the full
+suite (`/tmp/aclone-keeper-full.log`). No deadline or assertion is changed.
+The isolated test then passes in 33.9 seconds with maximum state age 0.95s,
+18 slow frames and 134 fast frames (`/tmp/aclone-keeper-network.log`). Retry the
+full suite unchanged before declaring this slice done.
+
+The unchanged default-concurrency retry also times out the abrupt-kill durability
+and delayed-input network tests, alongside the slow-link test. The machine load
+rose to 24; this is broader than the keeper flow. Run the same full `npm test`
+with `--test-concurrency=2` to reduce unrelated CPU contention. Keep every test,
+assertion, link rate and timeout unchanged; do not change package scripts. The
+isolated slow-link result remains the strict latency check.
+
+The appended npm argument did not control Node concurrency: inspection showed
+more than two child test processes. Stop that incorrectly configured attempt.
+Use the exact test-script command with the option before the files:
+`node_modules/.bin/tsx --test --test-concurrency=2 tests/*.test.ts`.
+This runs the entire npm test suite with unchanged assertions and deadlines;
+only parallel scheduling differs. No repository test script is modified.
+
+Keeper final gates: the entire unchanged test suite passes all 1,478 tests with
+two concurrent files in 371.0 seconds. The previously timed-out durability,
+delayed-input and slow-link tests pass in 11.8s, 8.0s and 33.9s respectively under
+their original deadlines. All 26 focused tests pass; TypeScript is clean and
+changed-file Prettier has been run. Browser criteria and inspected screenshots
+pass. Default-concurrency failures remain recorded above; no test, deadline,
+package script or acceptance criterion was weakened. Ready to commit and push.

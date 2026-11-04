@@ -203,5 +203,6 @@
   "creditPenaltyMaximum": 220,
   "creditDebtPoints": 100,
   "creditDebtMaximum": 100,
-  "creditDebtDenominatorMinimum": 10000
+  "creditDebtDenominatorMinimum": 10000,
+  "lighthouseWageCap": 800
 }

@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  lighthouseWageCap: {
+    label: 'Keeper wage cap per game day (hundredths)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
   governmentImportPremium: {
     label: 'Government import premium above other sellers (%)',
     min: 0,
@@ -123,3 +129,8 @@ export const governmentImportRuleKeys = [
   'governmentFuelFloor',
   'governmentImportBidMargin',
 ] as const;
+
+/** Keep posted wages intact while applying the world cap at payment/quotation time. */
+export function lighthouseWage(settings: Partial<EconomyRules>, wage: number) {
+  return Math.max(0, Math.min(economyRules(settings).lighthouseWageCap, wage));
+}

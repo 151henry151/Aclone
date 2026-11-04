@@ -1,4 +1,4 @@
-import { economyRules } from '../shared/economy-rules';
+import { economyRules, lighthouseWage } from '../shared/economy-rules';
 import { survivalRules, skillFits, skillSlotsUsed } from '../shared/survival-rules';
 import { RadioConsole } from './radio-console';
 import { CANOE } from '../shared/canoe-rules';
@@ -2370,7 +2370,7 @@ function buildingWindow(b: Building) {
     if (b.kind === 'lighthouse') {
       const keeper = me.job === b.id && b.employees.includes(me.id);
       const guest = b.lodging?.guests[me.id];
-      html += `<h3>Lighthouse keeper</h3><p>One paid place, no qualification or deposit. The keeper may live here while employed; ownership alone does not provide housing. Bring your own food and water. Keeper wage: ${money(Math.min(800, b.wage))} per game day before tax. The navigation service pays the private owner 4d per game day into Working capital.</p>`;
+      html += `<h3>Lighthouse keeper</h3><p>One paid place, no qualification or deposit. The keeper may live here while employed; ownership alone does not provide housing. Bring your own food and water. Keeper wage: ${money(lighthouseWage(world.settings, b.wage))} per game day before tax. The navigation service pays the private owner 4d per game day into Working capital.</p>`;
       if (world.settings.jobsEnabled !== false)
         html += button(
           keeper ? 'Renew keeper shift' : 'Take keeper job',

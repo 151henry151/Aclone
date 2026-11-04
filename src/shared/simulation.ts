@@ -1,6 +1,11 @@
 import { creditRuleFields, creditRulesError } from './credit-rules';
 import { loanRuleFields, validLoanTerms } from './loan-rules';
-import { economyRules, economyRuleFields, governmentImportRuleKeys } from './economy-rules';
+import {
+  economyRules,
+  economyRuleFields,
+  governmentImportRuleKeys,
+  lighthouseWage,
+} from './economy-rules';
 import {
   survivalRules,
   survivalRuleFields,
@@ -1100,7 +1105,7 @@ export function act(w: World, id: string, a: Action): string {
       if (bulk === null) delete b.bulkDiscounts;
       else if (bulk !== undefined) b.bulkDiscounts = bulk;
       b.name = name;
-      b.wage = b.kind === 'lighthouse' ? Math.min(800, wage) : wage;
+      b.wage = b.kind === 'lighthouse' ? lighthouseWage(w.settings, wage) : wage;
       if (item) setTradingOffer(b, a.side as 'buy' | 'sell', item, a.enabled !== false, price, w);
       break;
     }
@@ -2367,7 +2372,7 @@ export function command(w: World, p: Player, text: string): string {
         .filter((b) => b.recipe || b.kind === 'lighthouse')
         .map((b) =>
           b.kind === 'lighthouse'
-            ? `${b.name}: ${money(Math.min(800, b.wage))} / game day; one unskilled keeper, quarters included`
+            ? `${b.name}: ${money(lighthouseWage(w.settings, b.wage))} / game day; one unskilled keeper, quarters included`
             : `${b.name}: ${money(b.wage)} / cycle`,
         )
         .join(' · ');
@@ -2880,7 +2885,7 @@ function cycle(w: World, b: Building, at: number) {
       isLighthouseKeeper(b, keeper) &&
       (!w.settings.activeWork || keeper.activeUntil >= at)
     ) {
-      const wage = Math.max(0, Math.min(800, b.wage));
+      const wage = lighthouseWage(w.settings, b.wage);
       const tax = Math.floor(wage * w.settings.wageTax),
         town = taxTown(w, b.x, b.z);
       const local = town ? Math.min(wage - tax, Math.floor(wage * town.wageTax)) : 0;
