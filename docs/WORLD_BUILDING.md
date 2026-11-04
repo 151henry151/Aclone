@@ -606,3 +606,21 @@ processed departures through reloads; legacy half-hour cursors convert without
 replay. Missing settings retain the default. Portable designs carry the rule,
 not shipment history. Existing cargo reserves, settlement caps and the maximum
 48-departure downtime catch-up remain in force.
+
+Government import pricing exposes `governmentImportPremium` (25%, range 0–500),
+`governmentWaterFloor` (1,000 hundredths / 10d), `governmentBreadFloor`
+(10,000 / 100d), `governmentFuelFloor` (4,500 / 45d), and
+`governmentImportBidMargin` (100 / 1d). Floors accept integer 0–1,000,000; the
+bid margin accepts integer 1–1,000,000. Prices take the highest applicable floor,
+premium on other public sells and margin above public bids. Fuel also considers
+private sellers. Zero premium/floors retain the bid-margin protection. On-demand
+imports still require the resulting quote to meet catalogue value and exceed
+public bids; exceptionally cheap configured prices can disable that fallback.
+
+Changing any of these rules republishes all three prices at the treasury-owned
+Government necessities shop in Puddlewick's economy world. Unchanged settings
+and unrelated edits preserve manually configured food quotes; periodic fuel
+repricing continues as before. Private shops, other worlds, stock, ownership and
+cash are unaffected by publishing prices. Initial shop pricing uses the same
+formula. Import-cost accounting and catalogue prices remain separate. Missing
+keys use named defaults; portable designs carry all five rules.

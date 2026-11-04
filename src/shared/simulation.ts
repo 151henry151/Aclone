@@ -1,4 +1,4 @@
-import { economyRules, economyRuleFields } from './economy-rules';
+import { economyRules, economyRuleFields, governmentImportRuleKeys } from './economy-rules';
 import {
   survivalRules,
   survivalRuleFields,
@@ -172,7 +172,12 @@ import {
   raiseWatermark,
   takeStakeRefunds,
 } from './stakes.ts';
-import { harbourSupply, emergencyImport, restockGovernmentStores } from './harbour-supply.ts';
+import {
+  harbourSupply,
+  emergencyImport,
+  restockGovernmentStores,
+  repriceGovernmentStores,
+} from './harbour-supply.ts';
 import {
   creatorAction,
   creatorEvent,
@@ -2039,7 +2044,12 @@ export function act(w: World, id: string, a: Action): string {
         clean.exportShipmentInterval !== economyRules(w.settings).exportShipmentInterval
       )
         w.exportShipmentAt = w.time;
+      const priorEconomy = economyRules(w.settings);
+      const importPricingChanged = governmentImportRuleKeys.some(
+        (key) => clean[key] !== undefined && clean[key] !== priorEconomy[key],
+      );
       Object.assign(w.settings, clean);
+      if (importPricingChanged) repriceGovernmentStores(w);
       w.revision++;
       break;
     }

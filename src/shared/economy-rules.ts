@@ -1,6 +1,36 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  governmentImportPremium: {
+    label: 'Government import premium above other sellers (%)',
+    min: 0,
+    max: 500,
+    step: 0.1,
+  },
+  governmentWaterFloor: {
+    label: 'Government water price floor (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  governmentBreadFloor: {
+    label: 'Government bread price floor (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  governmentFuelFloor: {
+    label: 'Government fuel price floor (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  governmentImportBidMargin: {
+    label: 'Government import margin above public bids (hundredths of a denarius)',
+    min: 1,
+    max: 1000000,
+    step: 1,
+  },
   exportShipmentInterval: {
     label: 'Public export shipment interval (real seconds)',
     min: 60,
@@ -85,3 +115,11 @@ export function economyRules(settings: Partial<EconomyRules> = {}): EconomyRules
     ]),
   ) as EconomyRules;
 }
+
+export const governmentImportRuleKeys = [
+  'governmentImportPremium',
+  'governmentWaterFloor',
+  'governmentBreadFloor',
+  'governmentFuelFloor',
+  'governmentImportBidMargin',
+] as const;

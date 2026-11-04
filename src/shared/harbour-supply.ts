@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 import { items } from './catalog.ts';
 import { log } from './simulation.ts';
 import type { World, Building } from './types.ts';
@@ -10,18 +12,45 @@ export function isPublicPuddlewick(w: World) {
 }
 
 export const GOVERNMENT_RESERVE = { water: 24, bread: 24, fuel: 24 } as const;
-export const GOVERNMENT_FLOORS = { water: 1000, bread: 10000, fuel: 4500 } as const;
+export const GOVERNMENT_FLOORS = {
+  water: defaults.governmentWaterFloor,
+  bread: defaults.governmentBreadFloor,
+  fuel: defaults.governmentFuelFloor,
+} as const;
 
 /** Premium enough to stay above other public shelves; fuel also beats every other posted sell. */
 export function governmentPremium(w: World, shop: Building, item: keyof typeof GOVERNMENT_RESERVE) {
+  const rules = economyRules(w.settings);
+  const floors = {
+    water: rules.governmentWaterFloor,
+    bread: rules.governmentBreadFloor,
+    fuel: rules.governmentFuelFloor,
+  };
+  const multiplier = (100 + rules.governmentImportPremium) / 100;
   const others = w.buildings.filter((s) => s !== shop && !s.construction);
   const publicShops = others.filter((s) => s.government && s.owner === 'treasury');
   return Math.max(
-    GOVERNMENT_FLOORS[item],
-    ...publicShops.map((s) => Math.ceil((s.sell[item] ?? 0) * 1.25)),
-    ...publicShops.map((s) => (s.buy[item] ?? 0) + 100),
-    ...(item === 'fuel' ? others.map((s) => Math.ceil((s.sell[item] ?? 0) * 1.25)) : []),
+    floors[item],
+    ...publicShops.map((s) => Math.ceil((s.sell[item] ?? 0) * multiplier)),
+    ...publicShops.map((s) => (s.buy[item] ?? 0) + rules.governmentImportBidMargin),
+    ...(item === 'fuel' ? others.map((s) => Math.ceil((s.sell[item] ?? 0) * multiplier)) : []),
   );
+}
+
+/** An explicit premium-rule edit republishes only the reserved public shop's quotes. */
+export function repriceGovernmentStores(w: World) {
+  if (!isPublicPuddlewick(w)) return;
+  const shop = w.buildings.find(
+    (b) =>
+      b.id === 'parish-government-stores' &&
+      b.kind === 'market' &&
+      b.government &&
+      b.owner === 'treasury' &&
+      !b.construction,
+  );
+  if (!shop) return;
+  for (const item of Object.keys(GOVERNMENT_RESERVE) as (keyof typeof GOVERNMENT_RESERVE)[])
+    shop.sell[item] = governmentPremium(w, shop, item);
 }
 
 /** Keep a visible shelf of premium bread, water and fuel at Government necessities.

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose government import premiums, necessity price floors and the margin above public bids as world rules; republish government necessity prices on explicit pricing-rule changes while preserving other shops and unchanged food quotes.
+
 - Make the public export interval a world rule; persist processed departure times across interval edits and reloads without replaying cargo sales, while retaining terminal scope, reserves and settlement limits.
 
 - Make parish supply-order duration, early supplier share and share-window length world rules; preserve funded terms across edits and reloads, prevent order-ID reuse and show the posted terms in the supply panel. Refresh delivery readiness and empty states while retaining quantity drafts.

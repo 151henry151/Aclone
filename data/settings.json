@@ -172,5 +172,10 @@
   "parishOrderPeriod": 3600,
   "parishOrderShare": 0.5,
   "parishOrderShareWindow": 0.5,
-  "exportShipmentInterval": 1800
+  "exportShipmentInterval": 1800,
+  "governmentImportPremium": 25,
+  "governmentWaterFloor": 1000,
+  "governmentBreadFloor": 10000,
+  "governmentFuelFloor": 4500,
+  "governmentImportBidMargin": 100
 }

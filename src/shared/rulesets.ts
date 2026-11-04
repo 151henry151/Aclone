@@ -59,6 +59,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     limits = landingLimits(s);
   return [
     `Economy: minimum purchase bid ${economyRules(s).minimumBuyPrice} hundredths; up to ${economyRules(s).transactionItemLimit} items per transaction. New outside deposits earn up to ${economyRules(s).outsideReturnPercent}% above principal; operating reserve floor ${economyRules(s).outsideOperatingReserve} hundredths.`,
+    `Government imports: ${economyRules(s).governmentImportPremium}% premium; water/bread/fuel floors ${economyRules(s).governmentWaterFloor}/${economyRules(s).governmentBreadFloor}/${economyRules(s).governmentFuelFloor}; public bid margin ${economyRules(s).governmentImportBidMargin} hundredths.`,
     `Public export interval: ${economyRules(s).exportShipmentInterval} seconds (Puddlewick economy terminals only).`,
     `Supply orders: ${economyRules(s).parishOrderPeriod}-second rounds; ${economyRules(s).parishOrderShare * 100}% per supplier for the first ${economyRules(s).parishOrderShareWindow * 100}% of each new round. Funded rounds keep posted terms.`,
     `Transfers: gift maximum ${economyRules(s).maximumMoneyGift}; bank/investment maximum ${economyRules(s).cashTransferLimit} hundredths per transfer.`,

@@ -1617,3 +1617,53 @@ terminal earns no export revenue. Inspect all three screenshots; no page errors.
 TypeScript and changed-file Prettier are clean. Full `npm test` passes 1,453 tests
 in 201.0s. Economy/world-builder docs, README and imperative Unreleased entry are
 updated. Ready to commit and push.
+
+Pushed and verified `c5d2b09` on `backlog-implementation`. **Export shipment
+interval is done.** Continue with import premiums.
+
+### Gameplay rules — economy: government import premiums
+
+Before production, test the existing premium formula as named defaults:
+`governmentImportPremium` 25%, `governmentWaterFloor` 1,000 hundredths,
+`governmentBreadFloor` 10,000, `governmentFuelFloor` 4,500, and
+`governmentImportBidMargin` 100 hundredths above public bids. Premium accepts
+0–500%; floors integer 0–1,000,000 and bid margin integer 1–1,000,000. Missing keys
+use the same defaults. Computed quotes take the maximum of the floor, premium
+on public sell quotes and margin above public bids; Fuel also considers private
+sell quotes. Preserve construction exclusion and existing Puddlewick shop scope.
+
+Changing these pricing rules explicitly republishes the reserved government's
+three necessity quotes. Saving unchanged values or unrelated rules must preserve
+manually configured food prices. Other public/private shops, stock, ownership,
+and cash remain untouched. Ordinary periodic fuel repricing and initial shop
+creation use the same rule formula. Empty-shelf purchases charge the configured
+published price, with existing import-cost accounting and no guaranteed resale
+profit; insufficient cash is atomic. Import settlement-cost fractions and
+catalogue shop prices are separate from this premium slice.
+
+Commands: `node_modules/.bin/tsx --test tests/import-premium-rules.test.ts
+ tests/government-stores.test.ts`, browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/import-premium-rules.spec.ts`, full
+`npm test`, clean `npx tsc --noEmit`, changed-file Prettier. Verify editor fields,
+summary, validation, defaults, portable designs and reload without repricing
+custom food quotes. Browser: edit/reopen all five, view published prices, buy at
+the changed price from an empty shelf, and reject an unaffordable purchase without
+changing cash or stock. Inspect screenshots/page errors. Update ECONOMY,
+WORLD_BUILDING, README and imperative Unreleased entry.
+
+Import-premium red run: all six tests fail for absent defaults, Unknown setting
+or missing editor fields (`/tmp/aclone-import-red.log`), before production.
+
+The initial accounting assertion included the fixture's town sales tax; remove
+that fixture tax to isolate the unchanged 80% import cost. All six new rules and
+nine guide tests then pass. The browser passes in 15.2s with automatic ticks
+paused solely to observe an empty shelf: all five rules persist, fuel is quoted
+and charged at 170d, the shop receives 34d after import costs, and a second
+purchase rejects insufficient cash without changing inventory or stock. Inspect
+all three screenshots; no page errors. TypeScript is clean.
+
+Import-premium final verification: all 12 premium/government-store tests and nine
+guide tests pass. Full `npm test` passes 1,459 tests in 201.0s. TypeScript and
+changed-file Prettier are clean. Browser and screenshots satisfy the prices,
+empty-shelf purchase and insufficient-cash criteria. Economy/world-builder docs,
+README and imperative Unreleased entry are updated. Ready to commit and push.

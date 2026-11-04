@@ -154,7 +154,14 @@ the shop is a last resort, not a cheap pump. The shop belongs to the reserved
 public parish (world id `puddlewick`, economy template), including when a
 player holds world-owner rights. Purchases pay for the imports; nothing is
 free. Local producers are normally cheaper. The harbour keeps finite stock once
-the dedicated shop is present.
+the dedicated shop is present. In unreleased worlds, Economy and trade exposes the
+government import premium, its three price floors and the margin over public
+purchase bids. Changing those rules republishes the government shop's bread,
+water and fuel prices; other shops retain their own quotes. Unchanged/unrelated
+rule saves preserve manually edited food quotes, while fuel continues to follow
+live seller prices. Defaults remain a 25% premium and a 1d margin above public
+bids, with water/bread/fuel floors of 10d/100d/45d. Empty-shelf purchases still
+pay the displayed price and use the same import-cost accounting.
 
 ## Connected industries
 
