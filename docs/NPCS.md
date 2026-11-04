@@ -169,6 +169,8 @@ quote using local income/liquidity rules; deposits must fit the cash-transfer
 limit and an unpaid loan prevents another financing plan. These forecasts grant
 no funds and do not alter signed debts. See [loan budgets](WORLD_BUILDING.md#loan-affordability-budgets-unreleased).
 
+Unreleased farm forecasts use a configurable half-yield assumption and price six Water plus one Compost alongside seed and wages. Expansion demand checks a buyer funded for twenty items with fewer than twenty in stock by default. These **Resident business budgets** change estimates, not actual farming. A zero whole-unit harvest forecast refuses pricing/acquisition; zero buyer stock cutoff stops that expansion signal. Funding advice uses the farm’s actual plot count. See [farm forecasts](WORLD_BUILDING.md#resident-farm-forecast-budgets-unreleased).
+
 Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
 
 ### How the providers cooperate

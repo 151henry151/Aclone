@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -31,11 +32,17 @@ export function sustainableAsk(w: World, b: Building, item: string) {
   };
   let unit: number;
   if (b.kind === 'farm' && crops[item]) {
-    const crop = crops[item];
-    // Budget a modest harvest, a paid farmer, two waterings and compost.
+    const crop = crops[item],
+      budgets = npcBusinessRules(w.settings),
+      harvest = Math.floor(crop.yield * budgets.npcFarmYieldShare);
+    if (harvest <= 0) return Infinity;
+    // Forecast inputs and a paid harvest; actual tending and yield remain separate.
     unit =
-      (crop.seed + b.wage + 6 * cost('water') + cost('compost')) /
-      Math.max(1, Math.floor(crop.yield * 0.5));
+      (crop.seed +
+        b.wage +
+        budgets.npcFarmWaterBudget * cost('water') +
+        budgets.npcFarmCompostBudget * cost('compost')) /
+      harvest;
   } else {
     const r = b.production ?? recipes[b.recipe ?? ''];
     if (!r?.outputs[item]) return;

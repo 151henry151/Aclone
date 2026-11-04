@@ -1,6 +1,36 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcBusinessRuleFields = {
+  npcFarmYieldShare: {
+    label: 'Farm forecast harvest share (fraction; 0 rejects forecasts)',
+    min: 0,
+    max: 1,
+    step: 0.05,
+  },
+  npcFarmWaterBudget: {
+    label: 'Farm price forecast Water budget (items)',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  npcFarmCompostBudget: {
+    label: 'Farm price forecast Compost budget (items)',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  npcFarmCustomerFundedItems: {
+    label: 'Farm expansion buyer funded load (items)',
+    min: 1,
+    max: 10000,
+    step: 1,
+  },
+  npcFarmCustomerStockLimit: {
+    label: 'Farm expansion buyer stock cutoff (items; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   npcLoanMinimumShortfall: {
     label: 'Minimum financing shortfall (hundredths)',
     min: 0,

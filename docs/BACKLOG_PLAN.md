@@ -2574,3 +2574,45 @@ Bid-policy briefing red reproduces the stale “half target” sentence. After t
 small text fix, all 33 relevant checks pass in 1.6 seconds, including matching
 conversation observations, zero policy, manual pause and overstock precedence.
 TypeScript, changed-file Prettier and diff checks pass. Ready to commit and push.
+
+Pushed and verified `66b504e` on `backlog-implementation`. **Bid-policy briefing
+follow-up is done.**
+
+### Gameplay rules — resident farm forecasts
+
+Before production, expose five Resident business budgets:
+`npcFarmYieldShare` 0.5 (0–1), `npcFarmWaterBudget` 6 and
+`npcFarmCompostBudget` 1 (integers 0–1,000),
+`npcFarmCustomerFundedItems` 20 (integer 1–10,000), and
+`npcFarmCustomerStockLimit` 20 (integer 0–10,000).
+Default and absent fields preserve sustainable farm asks, acquisition viability
+and expansion demand checks. Share the yield fraction between pricing and farm
+acquisition. A forecast of zero whole harvested units has no sustainable ask and
+cannot justify acquiring a farm; no division by zero. Water/compost zero removes
+only that estimated input cost. Actual crop yield, tending, seed prices, wages
+and land costs remain separate. Expansion still requires a busy farm, proven
+receipts, reserve funds, a clear parcel and a funded buyer below its stock cutoff;
+zero stock cutoff disables this demand signal. Funding descriptions must name the
+actual current plot count rather than claiming four on an expanded farm.
+
+Write failing `tests/npc-farm-budget-rules.test.ts`: exact default/missing-field
+asks, independent custom costs/yield, zero/tiny-yield refusal, changed acquisition
+viability, buyer funding/stock boundaries, no new cash/stock, correct expanded-farm
+funding text, and all fields' validation/editor/summary/observation/design/reload.
+Run the new file plus npc-pricing-rules, npc-farmer, npc-prosperity,
+npc-working-capital-rules and npc-guide. Browser: save/reopen five fields, observe
+a changed wheat ask, zero yield (no finite quote), native range refusal and saved
+reload; inspect screenshots/errors. Require TypeScript, Prettier, WORLD_BUILDING,
+NPCS, README and imperative Unreleased before commit/push.
+
+Farm forecast red: all six tests fail for missing settings or the stale four-plot
+funding description. After implementation, all six pass, including exact asks
+90 → 31 → 43, no finite zero/tiny-yield quote, shared acquisition viability,
+funded-buyer and stock boundaries, and unchanged real cash/stock.
+
+Farm forecast gates pass: all 58 relevant tests in 4.2 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 20.1 seconds: five fields
+persist, wheat ask changes 90 → 31, zero yield has no finite quote, native range
+validation refuses a share above one, and reload preserves zero. Inspect saved
+controls/refusal screenshots; no page errors or cash/stock grants. No full suite
+is run. Ready to commit and push.

@@ -160,7 +160,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock. Payroll and startup reserves do not change actual wages, construction prices or investor claims. Financing minimum cannot exceed maximum; zero maximum or profit batches stops new loan plans. Actual bank approval and transfer limits still apply.</p></fieldset>`;
+    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock. Payroll and startup reserves do not change actual wages, construction prices or investor claims. Financing minimum cannot exceed maximum; zero maximum or profit batches stops new loan plans. Actual bank approval and transfer limits still apply. Farm yield and input budgets change forecasts, not real harvests or tending costs. Zero forecast harvest prevents an acquisition/price quote; zero buyer stock cutoff stops expansion demand.</p></fieldset>`;
   const reserves = npcReserveRules(settings);
   const reserveFields = `<fieldset class="boat-death-settings"><legend>Resident cash and portable reserves</legend>${Object.entries(
     npcReserveRuleFields,

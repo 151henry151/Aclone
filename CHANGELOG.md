@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident farm harvest, input-cost and expansion-demand forecasts as world rules; reject zero-yield forecasts and describe the actual plot count when planning funding.
+
 - Expose resident pantry-shopping and lodging budgets as world rules; respect transaction limits on shopping and storage, and share guide topic prefixes without losing lookup IDs or text.
 
 - Expose resident owner-withdrawal cash and fuel forecasts as world rules while preserving observed quotes, investor claims, operating reserves and transfer limits. Remove a duplicated instruction clause to retain the existing resident request budget.

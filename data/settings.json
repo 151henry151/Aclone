@@ -280,5 +280,10 @@
   "npcProvisionDrinkCashReserve": 1500,
   "npcProvisionBatchLimit": 20,
   "npcLodgingBufferSeconds": 1200,
-  "npcLodgingCashReserve": 2000
+  "npcLodgingCashReserve": 2000,
+  "npcFarmYieldShare": 0.5,
+  "npcFarmWaterBudget": 6,
+  "npcFarmCompostBudget": 1,
+  "npcFarmCustomerFundedItems": 20,
+  "npcFarmCustomerStockLimit": 20
 }

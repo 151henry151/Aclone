@@ -955,3 +955,15 @@ keys retain defaults, and all fields survive designs and saves.
 These are ordinary forecasts and actions, not cash or supply grants. Existing
 room bookings and personal pantry ownership are unchanged. Missing values use
 the defaults; creation, summaries, designs and reloads retain every field.
+
+## Resident farm forecast budgets (unreleased)
+
+**F10 → Rules → Resident business budgets** includes these forecast assumptions:
+
+- `npcFarmYieldShare`: 0.5, range 0–1. Estimate the whole units harvested from that share of catalogue yield, both for sustainable asks and acquisition viability. Zero (or a fraction producing no whole units) rejects a price/acquisition forecast; it does not stop actual farming.
+- `npcFarmWaterBudget`: 6 and `npcFarmCompostBudget`: 1, integers 0–1,000. Include these input quantities when estimating a crop's sustainable price, alongside seed and harvest wages. Zero removes the relevant forecast cost. These assumptions do not change actual irrigation, fertilizing or crop outcomes.
+- `npcFarmCustomerFundedItems`: 20, integer 1–10,000, and `npcFarmCustomerStockLimit`: 20, integer 0–10,000. Consider expansion demand only when a buyer can fund that many units at its posted bid and has fewer units than the cutoff. A zero cutoff disables this signal. Busy plots, previous receipts, crop/household reserves and clear land remain required; sales are not guaranteed.
+
+Edits grant no goods or cash. Existing plots, land costs, bids, wages and harvests
+are unchanged. Defaults apply to missing fields, and settings survive creation,
+summaries, portable designs and save/reload.

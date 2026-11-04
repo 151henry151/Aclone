@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { skillFits } from '../../shared/survival-rules';
 import { fundProject } from './project-funding.ts';
@@ -20,6 +21,7 @@ import type { Step } from './decision.ts';
  * not disappear when automatic factory purchases are replaced by costed plans. */
 export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
   const choices: FarmerChoice[] = [];
+  const budgets = npcBusinessRules(w.settings);
   if (p.task || p.learning) return choices;
   const living = strategicHouseholdBudget(w, p).reserve;
   for (const b of w.buildings.filter(
@@ -31,7 +33,8 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
         crop.seasons.includes(calendar(w).season) &&
         w.time + crop.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
         (b.stock[item] ?? 0) + crop.yield <= b.capacity &&
-        Math.floor(crop.yield * 0.5) * (b.sell[item] ?? 0) * (1 - tax) > crop.seed + b.wage,
+        Math.floor(crop.yield * budgets.npcFarmYieldShare) * (b.sell[item] ?? 0) * (1 - tax) >
+          crop.seed + b.wage,
     );
     if (!growing.length && b.owner !== p.id) continue;
     const reserve = farmPlotCount(b) * Math.max(b.wage, ...growing.map(([, c]) => c.seed + b.wage));
@@ -88,7 +91,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
     );
     if (deposit)
       add(
-        `Fund my ${b.name}: reserve seed and harvest wages for four seasonal plots.`,
+        `Fund my ${b.name}: reserve seed and harvest wages for ${farmPlotCount(b)} seasonal plots.`,
         visitBuilding(p, b, [
           {
             kind: 'act',
@@ -109,8 +112,8 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
           (s) =>
             s.id !== b.id &&
             s.buy[item] > 0 &&
-            s.investment >= s.buy[item] * 20 &&
-            (s.stock[item] ?? 0) < 20,
+            s.investment >= s.buy[item] * budgets.npcFarmCustomerFundedItems &&
+            (s.stock[item] ?? 0) < budgets.npcFarmCustomerStockLimit,
         ),
       )
     ) {
