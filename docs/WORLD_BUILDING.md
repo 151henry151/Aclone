@@ -1190,3 +1190,15 @@ use the same size. Existing parcels without a saved dimension retain the origina
 price policies remain separate. Clearance checks, road reservations, fences,
 grazing routes and displayed areas all use the saved dimension, including after
 save/design reload. A barn without clear grazing land keeps its empty-state panel.
+
+## Gathering rate rules (unreleased)
+
+**F10 → Rules → Gathering rules** exposes `gatheringBaseYield` (3),
+`gatheringSkilledYield` (6), `gatheringBaseSeconds` (20) and
+`gatheringSkilledSeconds` (12). Yields are integers 1–1,000; durations are integer
+seconds 1–600. Forester applies to logs; excavator to the other gathering grounds.
+Skill chooses time independently of yield. Started tasks retain their reserved
+amount and end time; subsequent tasks/repeats use current rules. Both HUD and
+Resources show local rates, and resident plans use them for loads and estimates.
+Implements, shared stock, permissions and cargo limits remain enforced. Values
+persist in saves/designs; missing fields retain the shipped defaults.

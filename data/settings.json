@@ -345,5 +345,9 @@
   "expandedConstructionCostMultiplier": 1.55,
   "largeConstructionCostMultiplier": 2.15,
   "maximumFarmPlots": 16,
-  "pastureParcelSize": 16
+  "pastureParcelSize": 16,
+  "gatheringBaseYield": 3,
+  "gatheringSkilledYield": 6,
+  "gatheringBaseSeconds": 20,
+  "gatheringSkilledSeconds": 12
 }

@@ -1,3 +1,4 @@
+import { gatheringRate } from '../../shared/resources';
 import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -113,12 +114,16 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
   };
   const shops = w.buildings.filter((b) => !b.construction && b.owner !== p.id);
   for (const node of worldResources(w)
-    .filter((n) => resourceAmount(w, n) >= 3 || (p.inventory[n.item] ?? 0) >= 3)
+    .filter(
+      (n) =>
+        resourceAmount(w, n) >= gatheringRate(w, p, n.item).amount ||
+        (p.inventory[n.item] ?? 0) >= Math.min(transferLimit, gatheringRate(w, p, n.item).amount),
+    )
     .sort((a, b) => distance(p, a) - distance(p, b))
     .slice(0, 12)) {
     const tool = gatheringImplements[node.item]?.item;
     if (!tool) continue;
-    const perGather = p.skills.includes(node.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
+    const { amount: perGather, seconds: gatherSeconds } = gatheringRate(w, p, node.item);
     let quantity = Math.min(perGather, transferLimit);
     if (
       ((p.inventory[node.item] ?? 0) < quantity && resourceAmount(w, node) < quantity) ||
@@ -219,7 +224,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       `Gathering career: ${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}, gather ${rounds * perGather} ${node.item}, deliver ${quantity} to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
       plan,
       earned - equipment,
-      trip.seconds + rounds * (perGather === 6 ? 12 : 20),
+      trip.seconds + rounds * gatherSeconds,
     );
   }
   for (const source of shops)

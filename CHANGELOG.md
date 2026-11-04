@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose untrained and skilled gathering yields and durations as world rules; share rates with HUD/menu eligibility and resident plans while preserving loads already in progress.
+
 - Expose new pasture parcel dimensions as a world rule; preserve claimed dimensions across rule edits and use them consistently for paid expansion, fences, road reservations, grazing routes and displayed areas.
 
 - Expose the maximum farm plot count as a world rule; preserve purchased land and crops when limits fall, render and reserve larger farms, and retain purchased plot counts in portable designs.

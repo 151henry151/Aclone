@@ -1,3 +1,4 @@
+import { gatheringRules, gatheringRuleFields } from '../shared/gathering-rules';
 import { constructionRules, constructionRuleFields } from '../shared/construction-rules';
 import { npcAccountRules, npcAccountRuleFields } from '../shared/npc-account-rules';
 import { npcJourneyRules, npcJourneyRuleFields } from '../shared/npc-journey-rules';
@@ -114,6 +115,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcCargoRuleFields),
     ...Object.keys(npcAccountRuleFields),
     ...Object.keys(constructionRuleFields),
+    ...Object.keys(gatheringRuleFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
     'loanTerms',
@@ -171,6 +173,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Estimates use actual vehicle tuning and stocked Fuel quotes; walking costs no fuel. Zero unquoted allowance removes that fallback. Zero payback rejects paid new implements, retaining owned tools. Zero refuel threshold suppresses optional shopping; an empty tank can still walk or use carried fuel. Rules change plans, not actual travel costs or supplies.</p></fieldset>`;
+  const gatheringRates = gatheringRules(settings);
+  const gatheringRateFields = `<fieldset class="boat-death-settings"><legend>Gathering rules</legend>${Object.entries(
+    gatheringRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        gatheringRates[key as keyof typeof gatheringRates],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Forester or excavator selects the skilled rate. Positive yields/times keep ordinary timed loads. Existing tasks retain their reserved load and end time; new tasks use current rules. Implements, available stock, cargo and permissions still apply.</p></fieldset>`;
   const construction = constructionRules(settings);
   const constructionFields = `<fieldset class="boat-death-settings"><legend>Construction rules</legend>${Object.entries(
     constructionRuleFields,
@@ -502,6 +520,7 @@ export function settingsFields(settings: Settings = defaults) {
     cargoFields +
     accountFields +
     constructionFields +
+    gatheringRateFields +
     journeyFields +
     businessLoadFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +

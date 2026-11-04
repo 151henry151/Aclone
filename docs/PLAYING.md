@@ -57,7 +57,7 @@ Labour, gathering and harvesting lock movement while a large centered countdown 
 
 Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil grounds outside town. On large maps such as Puddlewick the countryside holds hundreds more: timber in the woods, stone on high ground, gravel and topsoil on the lowlands. **Resources** lists the forty nearest; the maps show the rest. Approach within 10m for a direct HUD **Gather** button, reserve count and tool/cargo feedback. No menu is needed. Logs need a chainsaw, stone a pickaxe, and gravel or topsoil a shovel, bought from Harbour stores, the spaceport or the garage. Workshop tools are for furniture, not digging. Scenic trees are not individually cuttable.
 
-Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. The right implement is reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
+World gathering rules set load size and duration. Defaults are 3 units in 20 seconds untrained, or 6 in 12 seconds with forester (wood) or excavator (minerals/soil). The HUD and Resources menu show the local rate. Started loads retain their reserved amount and finish time after rule edits. The right implement is reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
 
 Untouched grounds look natural: timber stands with windfall, weathered stone,
 gravel hollows and eroded soil banks. By default a small earth footpath marks

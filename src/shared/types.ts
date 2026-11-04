@@ -1,3 +1,4 @@
+import type { GatheringRules } from './gathering-rules';
 import type { ConstructionRules } from './construction-rules';
 import type { NpcAccountRules } from './npc-account-rules';
 import type { NpcJourneyRules } from './npc-journey-rules';
@@ -319,6 +320,7 @@ export interface Settings
     Partial<NpcCargoRules>,
     Partial<NpcAccountRules>,
     Partial<ConstructionRules>,
+    Partial<GatheringRules>,
     Partial<NpcJourneyRules>,
     Partial<NpcBusinessLoadRules>,
     Partial<SurvivalRules>,

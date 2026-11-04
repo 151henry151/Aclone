@@ -1,3 +1,4 @@
+import { gatheringRate } from '../../shared/resources';
 import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -266,15 +267,9 @@ export function economyChoices(
     .filter(
       (n) =>
         (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0 &&
-        resourceAmount(w, n) >=
-          (p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3) &&
+        resourceAmount(w, n) >= gatheringRate(w, p, n.item).amount &&
         !w.buildings.some((b) => distance(b, n) < 12) &&
-        canCarry(
-          p,
-          n.item,
-          p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3,
-          w,
-        ),
+        canCarry(p, n.item, gatheringRate(w, p, n.item).amount, w),
     )
     .slice(0, 4)) {
     // Resource travel has a tighter interaction radius; Navigator handles the node ID.
@@ -283,7 +278,7 @@ export function economyChoices(
       ...prep,
       { kind: 'travel', destination: n.id },
       act({ type: 'gather', node: n.id }),
-      { kind: 'wait', seconds: 20 },
+      { kind: 'wait', seconds: gatheringRate(w, p, n.item).seconds },
     ]);
   }
   for (const b of buildings.filter((b) => b.kind === 'home' && b.owner === p.id).slice(0, 2))

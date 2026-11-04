@@ -3336,3 +3336,60 @@ retain that size after switching new parcels to 8 m, reject seven and preserve
 with both cows inside. Inspect all six screenshots; no browser errors occur.
 The actual livestock suites cover resident herd choices; no npc-livestock test
 file exists. No full suite runs.
+
+Pushed and verified `7563245` on `backlog-implementation`. **Pasture parcel
+dimensions are done.** The listed construction constants are now world rules.
+
+### Gameplay rules — gathering yields and durations
+
+Before production, add Gathering rules: `gatheringBaseYield` 3 and
+`gatheringSkilledYield` 6 (integer 1–1,000), `gatheringBaseSeconds` 20 and
+`gatheringSkilledSeconds` 12 (integer 1–600). Positive values prevent empty loads
+or zero-time repeat loops. Forester/excavator eligibility selects yield and time
+independently; an unskilled yield of six must not accidentally get the skilled
+duration. Missing fields retain defaults. Existing in-progress reservations keep
+their recorded amount/end; new tasks and repeats use current rules. HUD, resource
+menu and resident capacity/availability/batch/time estimates use the same rate.
+Keep implements, node capacity/regrowth, permissions, cargo, cancellation returns
+and ordinary task completion intact; their named rules follow in later slices.
+
+Write failing gathering-rate-rules tests for defaults/missing fields, swapped
+3/6 amounts with independent durations, exact reservation/completion/cancellation,
+in-flight rule edits, shortage/cargo refusal, NPC career load/duration and general
+gathering choice eligibility, invalid settings, editor/summary/observations/design/
+reload. Browser: save/reopen all four, see changed HUD/menu rates, perform an
+ordinary timed gather, inspect depleted and missing-implement refusals, reject
+invalid input and reload; inspect screenshots/errors. Run new tests plus resources,
+repeat-gathering if present, npc-projects, npc-construction, npc-journey-budget-rules
+and npc-guide; require TypeScript, Prettier and player/economy/world-builder/README/
+imperative Unreleased docs before push.
+
+Gathering-rate red: correct the test-only journeyEstimate import, then all five
+checks fail for missing defaults/validation, fixed rates, shortage checks and NPC
+choices. All five pass after sharing the skill-selected rate. Swapping basic and
+skilled yields verifies that duration selection does not depend on the number
+six; edits retain active reservations/end times and cancellation returns once.
+
+Gathering-rate verification: 42 relevant checks pass (new rates, resources,
+npc-projects/construction/journey budgets and guide) in 4.4 seconds; the actual
+repeat-gathering coverage is first-steps-controller, whose three checks pass in
+0.7 seconds. Browser passes in 34.6 seconds through saved rates, HUD/menu, ordinary
+timed completion, depletion, skill, missing implement and invalid input/reload.
+Review catches a carried-sale edge case: a larger skilled load must not hide a
+sale of carried goods under a smaller transaction limit. A sixth test fails for
+that reason; fix the candidate filter and all 15 rate/career tests pass in 1.7
+seconds. TypeScript fixture assertions need optional-map and action narrowing;
+correct test types and the subsequent typecheck passes.
+
+Inspect all six screenshots. Their menu introduction still promises that school
+always doubles yield and shortens time, which is false for custom rates. Before
+correcting that text, extend the browser check to require wording that describes
+selection of the world's skilled load and time; retain the actual displayed
+numeric assertions. Run that browser regression red, then correct the introduction
+and rerun only the affected browser flow and TypeScript.
+
+The browser assertion fails on the old unconditional school promise, then passes
+with the corrected introduction (33.5 seconds). Inspect the updated menu capture:
+text and configured numeric load/time are readable. The other five visual states
+were inspected before this text-only correction. TypeScript and changed-file
+Prettier/diff checks pass. No full suite runs.

@@ -1,3 +1,4 @@
+import { gatheringRules } from '../../shared/gathering-rules';
 import { constructionRules } from '../../shared/construction-rules';
 import { npcAccountRules } from '../../shared/npc-account-rules';
 import { npcJourneyRules } from '../../shared/npc-journey-rules';
@@ -206,6 +207,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...npcCargoRules(w.settings),
       ...npcAccountRules(w.settings),
       ...constructionRules(w.settings),
+      ...gatheringRules(w.settings),
       ...npcJourneyRules(w.settings),
       ...npcBusinessLoadRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,

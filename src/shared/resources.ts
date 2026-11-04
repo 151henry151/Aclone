@@ -1,3 +1,4 @@
+import { gatheringRules } from './gathering-rules';
 import { recordGathered } from './player-statistics.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types.ts';
@@ -169,9 +170,18 @@ export function changeResourceRecovery(w: World, multiplier: number) {
   }
   w.settings.resourceRecoveryMultiplier = multiplier;
 }
+/** Skill selects both rate components independently of the configured load amount. */
+export function gatheringRate(w: World, p: Pick<Player, 'skills'>, item: string) {
+  const rules = gatheringRules(w.settings),
+    skilled = p.skills.includes(item === 'logs' ? 'forester' : 'excavator');
+  return {
+    amount: skilled ? rules.gatheringSkilledYield : rules.gatheringBaseYield,
+    seconds: skilled ? rules.gatheringSkilledSeconds : rules.gatheringBaseSeconds,
+  };
+}
 /** Read-only eligibility shared by the HUD and authoritative gathering action. */
 export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
-  const amount = p.skills.includes(n.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
+  const { amount, seconds } = gatheringRate(w, p, n.item);
   const available = resourceAmount(w, n);
   let reason: string | undefined;
   if (distance(p, n) > 10 || Math.abs(p.y - terrainHeight(w, p.x, p.z)) > 3)
@@ -186,7 +196,7 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
     reason = `Carry ${gatheringImplements[n.item].need} to gather ${n.item === 'dirt' ? 'topsoil' : n.item}`;
   else if (available < amount) reason = 'This ground needs time to replenish';
   else if (!canCarry(p, n.item, amount, w)) reason = 'Make room in your cargo';
-  return { amount, available, seconds: amount === 6 ? 12 : 20, reason };
+  return { amount, available, seconds, reason };
 }
 export function gather(w: World, p: Player, id: string) {
   const n = worldResources(w).find((n) => n.id === id);
