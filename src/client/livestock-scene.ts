@@ -2,7 +2,7 @@
 import * as T from 'three';
 import { animalMaterial, animalModel, type AnimalPart } from './animal-model';
 import { herdSpec, type AnimalKind } from '../shared/livestock';
-import { pasturePoint, pastureFences } from '../shared/pasture-land';
+import { pasturePoint, pastureFences, pastureParcelSize } from '../shared/pasture-land';
 import { grazingPose, type GrazingPoint } from './pasture-motion';
 import { terrainHeight } from '../shared/simulation';
 import type { World, Player } from '../shared/types';
@@ -41,12 +41,14 @@ export function livestockSites(w: World, p: Pick<Player, 'x' | 'z'>): AnimalSite
       };
       // Separate lanes keep herds from passing through one another; each animal explores
       // a different strip of the pasture, with room to turn clear of the fence.
-      const width = pasture.parcels * 16 - 6;
+      const size = pastureParcelSize(pasture),
+        width = pasture.parcels * size - 6;
       const lane = i % 4,
         row = Math.floor(i / 4);
       const points: GrazingPoint[] = Array.from({ length: 6 }, (_, j) => {
-        const x = pasture.x - 5 + (width * (row + 0.1 + random() * 0.8)) / Math.ceil(n / 4);
-        const z = pasture.z - 5 + (lane + 0.15 + random() * 0.7) * 2.5;
+        const x =
+          pasture.x - size / 2 + 3 + (width * (row + 0.1 + random() * 0.8)) / Math.ceil(n / 4);
+        const z = pasture.z - size / 2 + 3 + (lane + 0.15 + random() * 0.7) * ((size - 6) / 4);
         const q = pasturePoint(b, x, z);
         return { ...q, y: terrainHeight(w, q.x, q.z) };
       });

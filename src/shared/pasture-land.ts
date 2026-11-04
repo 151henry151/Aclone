@@ -1,9 +1,12 @@
+import defaults from '../../data/settings.json';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building } from './types';
 export interface Pasture {
   x: number;
   z: number;
   parcels: number;
+  /** Fixed when first claimed; older saves retain the original dimension. */
+  parcelSize?: number;
 }
 export const pastureAnimal = {
   dairy: 'cows',
@@ -13,8 +16,10 @@ export const pastureAnimal = {
 };
 export const pastureSpecies = { dairy: 4, sheepfold: 6, piggery: 6, henhouse: 12 };
 export const isLivestockFarm = (b: Pick<Building, 'kind'>) => Object.hasOwn(pastureSpecies, b.kind);
-export const PASTURE_PARCEL = 16,
-  MAX_PASTURE_PARCELS = 4;
+export const MAX_PASTURE_PARCELS = 4;
+export function pastureParcelSize(p: Pasture) {
+  return p.parcelSize ?? defaults.pastureParcelSize;
+}
 /** Stored offset is local to the barn; adjoining parcels extend along its local X axis. */
 export function pasturePoint(b: Pick<Building, 'x' | 'z' | 'rotation'>, x: number, z: number) {
   const c = Math.cos(b.rotation),
@@ -24,13 +29,18 @@ export function pasturePoint(b: Pick<Building, 'x' | 'z' | 'rotation'>, x: numbe
 export function inPasture(b: Building, x: number, z: number, padding = 0) {
   const p = b.pasture;
   if (!p || !isLivestockFarm(b)) return false;
+  const size = pastureParcelSize(p);
   const dx = x - b.x,
     dz = z - b.z,
     c = Math.cos(b.rotation),
     s = Math.sin(b.rotation);
   const lx = dx * c - dz * s - p.x,
     lz = dx * s + dz * c - p.z;
-  return lx > -8 - padding && lx < p.parcels * 16 - 8 + padding && Math.abs(lz) < 8 + padding;
+  return (
+    lx > -size / 2 - padding &&
+    lx < p.parcels * size - size / 2 + padding &&
+    Math.abs(lz) < size / 2 + padding
+  );
 }
 export function pastureCapacity(b: Building, multiplier = 1) {
   const per = pastureSpecies[b.kind as keyof typeof pastureSpecies] ?? 0;
@@ -56,13 +66,14 @@ export function pastureFences(buildings: Building[]): PastureFence[] {
   for (const b of buildings) {
     if (!b.pasture || !isLivestockFarm(b) || b.construction) continue;
     const p = b.pasture,
-      key = `${b.x},${b.z},${b.rotation},${p.x},${p.z},${p.parcels}`;
+      size = pastureParcelSize(p),
+      key = `${b.x},${b.z},${b.rotation},${p.x},${p.z},${p.parcels},${size}`;
     let cached = fenceCache.get(b);
     if (!cached || cached.key !== key) {
-      const l = p.x - 8,
-        r = p.x + p.parcels * 16 - 8,
-        t = p.z - 8,
-        d = p.z + 8;
+      const l = p.x - size / 2,
+        r = p.x + p.parcels * size - size / 2,
+        t = p.z - size / 2,
+        d = p.z + size / 2;
       const edges = [
         [l, t, r, t],
         [r, t, r, d],

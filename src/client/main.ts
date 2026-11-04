@@ -18,7 +18,7 @@ import { FrameInbox } from './frame-inbox';
 import { vehicleForm } from './vehicle-editor';
 import { isTrawler } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
-import { pastureCapacity, pastureCost } from '../shared/pasture-land';
+import { pastureCapacity, pastureCost, pastureParcelSize } from '../shared/pasture-land';
 import { charterPanel } from './charter-panel';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
 import { fishingVessel } from '../shared/boat-fishing';
@@ -2355,7 +2355,7 @@ function buildingWindow(b: Building) {
     if (herd) {
       const needs = herdNeeds(b);
       const room = pastureCapacity(b, world.settings.pastureCapacityMultiplier ?? 1);
-      html += `<h3>Grazing pasture</h3><p>${b.pasture ? `${b.pasture.parcels} parcels · ${b.pasture.parcels * 256} m² · capacity ${room} ${herd.animal}` : 'No clear grazing area available near this barn.'}. ${b.stock[herd.animal] ?? 0} animals present${b.breedingEnd ? ', one place reserved for offspring' : ''}.</p>${selfOwned && b.pasture && b.pasture.parcels < 4 ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'expand')}<button>Buy adjoining pasture · 256 m² · ${money(pastureCost(b, world.settings.pasturePriceMultiplier ?? 1))}</button></form>` : ''}<p class="note">Buy livestock at a supplier and deposit them through the Stockroom, or fund this farm’s purchase bids. Animal deliveries and breeding require free pasture space. Pasture expansion uses personal cash and must clear roads, buildings, water and other plots.</p>`;
+      html += `<h3>Grazing pasture</h3><p>${b.pasture ? `${b.pasture.parcels} parcels · ${b.pasture.parcels * pastureParcelSize(b.pasture) ** 2} m² · capacity ${room} ${herd.animal}` : 'No clear grazing area available near this barn.'}. ${b.stock[herd.animal] ?? 0} animals present${b.breedingEnd ? ', one place reserved for offspring' : ''}.</p>${selfOwned && b.pasture && b.pasture.parcels < 4 ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'expand')}<button>Buy adjoining pasture · ${pastureParcelSize(b.pasture) ** 2} m² · ${money(pastureCost(b, world.settings.pasturePriceMultiplier ?? 1))}</button></form>` : ''}<p class="note">Buy livestock at a supplier and deposit them through the Stockroom, or fund this farm’s purchase bids. Animal deliveries and breeding require free pasture space. Pasture expansion uses personal cash and must clear roads, buildings, water and other plots.</p>`;
       html += `<h3>${b.kind === 'dairy' ? 'Dairy herd' : 'Livestock'}</h3><p>${b.stock[herd.animal] ?? 0} ${herd.animal} · ${b.herdCondition ?? 100}% condition. Production needs ${herd.minimum} animals and at least 40% condition. The whole herd consumes ${needs.feed} ${acceptsHay(b) ? 'hay bales or feed (mixable, hay used first)' : 'feed'} and ${needs.water} water each production check, including when output is full. Qualified workers restore condition; neglect can kill animals.</p><p>Feed automatically comes from this building’s Stockroom, including offline. Owners deposit carried supplies there; other players sell into the building’s funded purchase bids. Current next-check ration: ${Object.entries(
         herdRation(b),
       )

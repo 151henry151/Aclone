@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose new pasture parcel dimensions as a world rule; preserve claimed dimensions across rule edits and use them consistently for paid expansion, fences, road reservations, grazing routes and displayed areas.
+
 - Expose the maximum farm plot count as a world rule; preserve purchased land and crops when limits fall, render and reserve larger farms, and retain purchased plot counts in portable designs.
 
 - Expose Expanded and Large construction cost multipliers as world rules; apply the same cash and material bills in previews and server placement while preserving existing sites.

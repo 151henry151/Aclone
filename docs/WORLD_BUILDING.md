@@ -1182,3 +1182,11 @@ limit preserves existing land and crops, which remain usable. New purchases add
 four plots and retain normal costs, ownership, funds and land-clearance checks.
 Saves and portable designs preserve purchased plot counts; designs omit active
 crops and stock. The farm panel shows its purchased count and current limit.
+
+`pastureParcelSize` defaults to 16 m and accepts integer side lengths from 8 to
+64 m. A newly claimed pasture records that dimension; its adjoining expansions
+use the same size. Existing parcels without a saved dimension retain the original
+16 m default. Rule edits do not move fences, animals or claimed land. Capacity and
+price policies remain separate. Clearance checks, road reservations, fences,
+grazing routes and displayed areas all use the saved dimension, including after
+save/design reload. A barn without clear grazing land keeps its empty-state panel.

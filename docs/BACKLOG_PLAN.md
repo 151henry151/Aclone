@@ -3293,3 +3293,46 @@ errors: purchase the fifth parcel for 450d, show 20 cards and the cap refusal,
 lower to four without removing fields, reject six as a non-four increment, and
 retain four/20 across reload. Inspect all five screenshots, including the new
 rows of field geometry and the twentieth fallow plot. No full suite runs.
+
+Pushed and verified `d5d4868` on `backlog-implementation`. **Maximum farm plots
+are done.**
+
+### Gameplay rules — pasture parcel dimensions
+
+Before production, add `pastureParcelSize` (default 16 m), integer 8–64, to
+Construction rules. Save the chosen dimension on each newly claimed pasture;
+legacy parcels without a saved size retain the shared JSON default. Changing the
+rule must not move existing fences, claim occupied land, move animals or alter
+capacity/price. Adjoining expansion uses that pasture's recorded dimension.
+Reservations, rotated fences, road obstacles, grazing routes and displayed areas
+must use the same dimension. Keep the four-parcel maximum, gate width, capacity
+multiplier, price rules and ordinary permission/funds/clearance checks unchanged.
+Include odd dimensions in boundary sampling; no unsampled outer edge may admit
+water or property. Existing empty/no-clear-parcel states remain usable.
+
+Write failing pasture-size-rules tests for default/missing/custom/legacy dimensions,
+8/21/64 geometry and rotation, cache invalidation, full boundary reservations,
+paid expansion with correct area, rule edits preserving old land and herds,
+animal paths inside fences, invalid input, editor/summary/observations/design/save
+reload and empty blocked siting. Browser: save/reopen rule, inspect a new 20 m
+pasture and its 400 m² offer, buy adjoining land and see 800 m²/fences, change rule
+without resizing that pasture, inspect a barn with no clear land, reject invalid
+input/reload, and inspect screenshots/errors. Run new tests plus pastures,
+spawn-reserve, road-projects, npc-livestock and relevant animal/render tests after
+identifying actual files, plus npc-guide for player docs. Require TypeScript,
+Prettier, player/world-builder/README and imperative Unreleased before push.
+
+Pasture-size red: all five checks fail for absent defaults/validation, fixed
+16 m geometry, a 512 m² message instead of 800 m², and missed outer-edge
+obstructions. All five pass with stored dimensions and endpoint-inclusive
+sampling. Legacy plots retain 16 m; new plots use the selected rule and ordinary
+expansion preserves that recorded size and existing capacity/prices.
+
+Pasture-size gates pass: 47 relevant checks in 6.7 seconds, TypeScript clean,
+changed-file Prettier/diff checks clean. Browser passes in 36.6 seconds: save/reopen
+20 m, quote and purchase 400 m² adjoining land for the ordinary 250d, show 800 m²,
+retain that size after switching new parcels to 8 m, reject seven and preserve
+8 m across reload, show the no-clear-land state and render the enlarged fence
+with both cows inside. Inspect all six screenshots; no browser errors occur.
+The actual livestock suites cover resident herd choices; no npc-livestock test
+file exists. No full suite runs.

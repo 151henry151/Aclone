@@ -1,3 +1,4 @@
+import { pastureParcelSize } from './pasture-land';
 import { validFarmPlotCount } from './farm-land';
 import { constructionRules, constructionRuleFields } from './construction-rules';
 import { npcAccountRuleFields } from './npc-account-rules';
@@ -759,7 +760,7 @@ export function act(w: World, id: string, a: Action): string {
         b.price += price;
         b.pasture = next;
         log(w, 'sink', price, p.id, 'land-registry', 'pasture land purchase');
-        result = `Pasture expanded to ${next.parcels * 256} square metres.`;
+        result = `Pasture expanded to ${next.parcels * pastureParcelSize(next) ** 2} square metres.`;
         break;
       }
       requireThat(a.operation === 'breed', 'Unknown livestock operation');
@@ -2044,7 +2045,8 @@ export function act(w: World, id: string, a: Action): string {
         if (npcBusinessLoadField) num(v, npcBusinessLoadField.min, npcBusinessLoadField.max, true);
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
-        if (constructionField) num(v, constructionField.min, constructionField.max);
+        if (constructionField)
+          num(v, constructionField.min, constructionField.max, constructionField.step === 1);
         if (key === 'maximumFarmPlots')
           requireThat(validFarmPlotCount(v), 'Choose a farm plot limit in multiples of four');
         if (npcAccountField) num(v, npcAccountField.min, npcAccountField.max, true);

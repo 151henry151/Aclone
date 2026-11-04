@@ -1,3 +1,4 @@
+import { pastureParcelSize } from './pasture-land';
 import { inlandLevel } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { highWater } from './ocean';
@@ -80,8 +81,15 @@ export function roadSite(w: World, width = 5) {
         const p = farmPlotLocal(i);
         local(p.x, p.z, 4, 4);
       }
-    if (b.pasture && isLivestockFarm(b))
-      local(b.pasture.x + (b.pasture.parcels - 1) * 8, b.pasture.z, b.pasture.parcels * 8, 8);
+    if (b.pasture && isLivestockFarm(b)) {
+      const half = pastureParcelSize(b.pasture) / 2;
+      local(
+        b.pasture.x + (b.pasture.parcels - 1) * half,
+        b.pasture.z,
+        b.pasture.parcels * half,
+        half,
+      );
+    }
   }
   if (w.airfield) {
     const a = w.airfield;

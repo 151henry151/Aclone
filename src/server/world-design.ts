@@ -1,3 +1,4 @@
+import { constructionRuleFields } from '../shared/construction-rules';
 import { validFarmPlotCount } from '../shared/farm-land';
 import {
   trailerTuningSchema,
@@ -195,6 +196,12 @@ const designSchema = z.object({
             x: z.number().min(-100).max(100),
             z: z.number().min(-100).max(100),
             parcels: z.number().int().min(1).max(4),
+            parcelSize: z
+              .number()
+              .int()
+              .min(constructionRuleFields.pastureParcelSize.min)
+              .max(constructionRuleFields.pastureParcelSize.max)
+              .optional(),
           })
           .optional(),
         farmPolicy: z

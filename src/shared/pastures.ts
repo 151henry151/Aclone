@@ -1,3 +1,5 @@
+import { constructionRules } from './construction-rules';
+import { pastureParcelSize } from './pasture-land';
 import { inlandLevel } from './inland-water';
 import { spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
@@ -25,8 +27,15 @@ export function pastureBlocker(
   const heights: number[] = [];
   const barriers = barrierSegments(w).map((b) => ({ ...b, width: b.width ?? 0.2 }));
   const obstacles = [...(w.creator?.objects ?? []), ...scatterObjects(w)];
-  for (let x = p.x - 8 + first * 16; x <= p.x - 8 + p.parcels * 16; x += 2)
-    for (let z = p.z - 8; z <= p.z + 8; z += 2) {
+  const size = pastureParcelSize(p),
+    span = (p.parcels - first) * size;
+  const across = Math.ceil(span / 2),
+    deep = Math.ceil(size / 2);
+  // Include every outer edge even when the parcel dimension is odd.
+  for (let ix = 0; ix <= across; ix++)
+    for (let iz = 0; iz <= deep; iz++) {
+      const x = p.x - size / 2 + first * size + (span * ix) / across,
+        z = p.z - size / 2 + (size * iz) / deep;
       const q = pasturePoint(b, x, z),
         y = terrainHeight(w, q.x, q.z);
       if (
@@ -70,7 +79,12 @@ export function ensurePasture(w: World, b: Building, roads = townRoads(w)) {
       [1, -1],
       [-1, -1],
     ]) {
-      const p = { x: dx * radius, z: dz * radius, parcels: 1 };
+      const p = {
+        x: dx * radius,
+        z: dz * radius,
+        parcels: 1,
+        parcelSize: constructionRules(w.settings).pastureParcelSize,
+      };
       if (!pastureBlocker(w, b, p, 0, roads)) {
         b.pasture = p;
         return;
