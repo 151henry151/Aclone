@@ -1961,7 +1961,7 @@ export function act(w: World, id: string, a: Action): string {
             key === 'startingCash' ? 1e8 : 1e6,
           );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
-        if (economyField) num(v, economyField.min, economyField.max, true);
+        if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
         if (survivalField && 'min' in survivalField)
           num(v, survivalField.min, survivalField.max, survivalField.step === 1);

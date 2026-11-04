@@ -211,3 +211,15 @@ test('selected manual headings occur once in the topic index without repeating t
     assert.ok(entry.source.length > 0);
   }
 });
+
+test('outside investment help has its own topic instead of expanding school guidance', () => {
+  const topic = gameGuide('').topics.find(
+    (t) => t.title === 'Outside investment terms (unreleased)',
+  );
+  assert.ok(topic, 'Investment terms need their own searchable player-guide section');
+  const entries = searchGuide('outside investments operating reserve');
+  assert.ok(entries.some((e) => e.id.startsWith(topic.id) && /principal plus 8%/.test(e.text)));
+  const schools = searchGuide('Local school and relief terms');
+  for (const entry of schools.filter((e) => e.id.startsWith('playing:local-school')))
+    assert.doesNotMatch(entry.text, /Outside investments default/);
+});

@@ -156,7 +156,6 @@ import {
   ownerWithdrawable,
   remainingClaim,
   unpaidPrincipal,
-  OUTSIDE_RETURN_PERCENT,
 } from '../shared/stakes';
 import { mapHalf, legacyHalf } from '../shared/terrain';
 import { publicPath } from '../shared/public-path';
@@ -2202,9 +2201,8 @@ function buildingWindow(b: Building) {
       const due = mine ? collectableReturn(world, b, me!.id) : 0;
       html += `<p class="notice">${
         locked
-          ? `Outside stakes ${money(locked)} remain in this till until the business earns. Investors recoup their cash plus ${OUTSIDE_RETURN_PERCENT}%, then the claim ends.`
-          : `Neighbours can invest working capital here. Returns come only from later earnings, capped at ${OUTSIDE_RETURN_PERCENT}% above the stake, and never empty the operating reserve.`
-      }
+          ? `Outside stakes ${money(locked)} remain in this till until the business earns. Existing claims keep their agreed terms. New deposits earn up to ${economyRules(world.settings).outsideReturnPercent}% above principal.`
+          : `Neighbours can invest working capital here. Returns come only from later earnings, capped at ${economyRules(world.settings).outsideReturnPercent}% above the stake, and never empty the operating reserve.`
       }${
         mine
           ? ` You have put in ${money(mine.principal)}, collected ${money(mine.paid)}, and may take ${money(due)} now (claim ${money(mine.claim)}).`
@@ -2537,7 +2535,7 @@ function buildingWindow(b: Building) {
           'Trading status',
         )}<p data-saved-price></p>${field('Denarii per item', 'priceDenarii', '', 'number', `min="${economyRules(world.settings).minimumBuyPrice / 100}" step="0.01" required placeholder="Enter a price to resume trading"`)}<button>Save trading settings</button><div data-current-prices></div></form>${bulkDiscountEditor(b)}</div>`
       : !b.government && !b.construction
-        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${OUTSIDE_RETURN_PERCENT}% above what you put in, and you cannot take the stake back.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
+        ? `<form data-action="investment">${hidden('building', b.id)}<h3>Outside investment</h3><p>Fund this till so it can buy goods and pay wages even if the owner is away. You collect a return only after the business earns, up to ${economyRules(world.settings).outsideReturnPercent}% above what you put in, and you cannot take the stake back. The operating reserve is at least ${money(economyRules(world.settings).outsideOperatingReserve)}; existing claims keep their agreed terms.</p>${field('Denarii', 'denarii', 50, 'number', 'min="0.01" step="0.01"')}${select(
             'direction',
             [
               ['deposit', 'Invest cash'],

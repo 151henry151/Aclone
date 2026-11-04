@@ -160,5 +160,7 @@
   "repeatServingMultiplier": 0.5,
   "energyRegeneration": 3000,
   "minimumBuyPrice": 100,
-  "transactionItemLimit": 10000
+  "transactionItemLimit": 10000,
+  "outsideReturnPercent": 8,
+  "outsideOperatingReserve": 2000
 }

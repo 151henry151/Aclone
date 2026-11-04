@@ -555,3 +555,15 @@ Creation and F10 → Rules → **Economy and trade** include:
 Missing rules retain the original defaults. Old saves without a bid rule retain
 legacy repair of free/underpriced purchase bids. Portable designs preserve both
 rules. Bulk discount tiers keep their separate catalogue validation bounds.
+
+Outside investment also exposes `outsideReturnPercent` (default 8%, range 0–100)
+and `outsideOperatingReserve` (default 2,000 hundredths / 20d, integer 0–1,000,000).
+Zero percent offers principal recovery without profit; zero reserve removes only
+the floor, while payroll/input needs still protect operating cash. Collection
+still requires actual earnings above the till watermark and cannot take the
+protected reserve. Owner withdrawals still protect outstanding investor claims.
+
+The return rate applies to new deposits. A top-up adds a claim at the new rate;
+previous claim amounts remain agreed contracts. World reload preserves newly
+quoted 25% claims, while launch-era unversioned claims retain their historical
+repair. Export/import carries the rules, never player investments.

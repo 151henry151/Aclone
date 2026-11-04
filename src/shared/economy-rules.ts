@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  outsideReturnPercent: {
+    label: 'Outside investment return above principal (%)',
+    min: 0,
+    max: 100,
+    step: 0.1,
+  },
+  outsideOperatingReserve: {
+    label: 'Minimum operating reserve (hundredths of a denarius)',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
   minimumBuyPrice: {
     label: 'Minimum building purchase bid (hundredths of a denarius)',
     min: 1,

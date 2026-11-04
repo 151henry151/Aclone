@@ -577,9 +577,21 @@ most once per 30 minutes, with 15-second public labour shifts. The ordinary wage
 daily cap and diminishing returns are unchanged. Changing world rules does not
 alter a course or shift already underway.
 
+## Local trading limits (unreleased)
+
 Unreleased economy rules let the world owner change the minimum price buildings
 pay suppliers (normally 1d) and the quantity per transaction. Building Admin
 shows the current minimum; shop quantity controls and Sell max show the current
 limit. If the owner raises the minimum above a saved bid, that building cannot
 buy at the old price until it is repriced. Existing private offers retain their
 agreed quantity. Cash, cargo and storage limits still apply.
+
+## Outside investment terms (unreleased)
+
+Outside investments default to a maximum return of principal plus 8%, paid only
+from later earnings. World owners can change the return for new deposits and the
+minimum protected operating reserve (normally 20d). Existing claim amounts stay
+agreed, including when you top up at a new rate. The Investment panel quotes the
+current rate and reserve; Main shows your principal, paid amount, claim and what
+you can collect now. Depositing cash is not an immediate profit or a withdrawable
+bank balance.

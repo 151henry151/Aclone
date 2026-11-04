@@ -1,9 +1,11 @@
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import type { Building, Player, World } from './types.ts';
 
 /** Modest note-style profit on working capital, not a private-equity windfall. */
-export const OUTSIDE_RETURN_PERCENT = 8;
+export const OUTSIDE_RETURN_PERCENT = defaults.outsideReturnPercent;
 
 export type OutsideStake = {
   investor: string;
@@ -11,10 +13,12 @@ export type OutsideStake = {
   claim: number;
   paid: number;
   opened: number;
+  /** Versioned agreed claims are not launch-era 25% migration candidates. */
+  termsVersion?: 1;
 };
 
-export function stakeClaim(principal: number) {
-  return Math.floor((principal * (100 + OUTSIDE_RETURN_PERCENT)) / 100);
+export function stakeClaim(principal: number, w?: Pick<World, 'settings'>) {
+  return Math.floor((principal * (100 + economyRules(w?.settings).outsideReturnPercent)) / 100);
 }
 
 /** Rewrite the first-day 25% claims down to the current 8% cap. */
@@ -22,7 +26,7 @@ export function migrateOutsideClaims(w: World) {
   for (const b of w.buildings) {
     if (!b.stakes?.length) continue;
     b.stakes = b.stakes.filter((s) => {
-      if (s.claim === Math.floor((s.principal * 125) / 100)) {
+      if (!s.termsVersion && s.claim === Math.floor((s.principal * 125) / 100)) {
         s.claim = stakeClaim(s.principal);
         if (s.paid > s.claim) s.paid = s.claim;
       }
@@ -47,7 +51,7 @@ export function operatingReserve(w: World, b: Building) {
     for (const [item, n] of Object.entries(recipe.inputs)) reserve += n * (b.buy[item] ?? 0);
   const bids = Object.values(b.buy).filter((price) => price > 0);
   if (bids.length) reserve = Math.max(reserve, Math.min(...bids));
-  return Math.max(reserve, 2000);
+  return Math.max(reserve, economyRules(w.settings).outsideOperatingReserve);
 }
 
 export function collectableReturn(w: World, b: Building, investor: string) {
@@ -89,12 +93,14 @@ export function addOutsideStake(w: World, b: Building, investor: string, amount:
   const existing = b.stakes.find((s) => s.investor === investor);
   if (existing) {
     existing.principal += amount;
-    existing.claim += stakeClaim(amount);
+    existing.claim += stakeClaim(amount, w);
+    existing.termsVersion = 1;
   } else
     b.stakes.push({
       investor,
       principal: amount,
-      claim: stakeClaim(amount),
+      claim: stakeClaim(amount, w),
+      termsVersion: 1,
       paid: 0,
       opened: w.time,
     });

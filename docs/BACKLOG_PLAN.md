@@ -1373,3 +1373,52 @@ in 197.8 seconds, exit 0 (`/tmp/aclone-economy-full.status`). TypeScript is clea
 Documentation and Unreleased are updated; ready to commit/push. Outside investment
 is the next economy slice, followed by the remaining fees, finance and construction
 rules. No whole economy section is marked done yet.
+
+Pushed `b5215c4`; GitHub's branch SHA matches. **Minimum purchase bids and item
+transaction limits are done.** Continue with outside investment; all remaining
+economy/trade rules and later fieldsets stay pending.
+
+### Gameplay rules — economy: outside return and operating reserve
+
+Next slice: expose the outside-investor return cap (8%) and minimum operating
+reserve (2,000 hundredths). Before production, test named/missing-key defaults,
+changed and zero values, reserve-protected collection, and existing-claim locks.
+A changed return applies to new deposits only; topping up adds a separately priced
+claim to the existing total. Persist the agreed total across reload. The old
+migration that recognizes 25% launch-era claims must not rewrite a newly agreed
+25% stake. Legacy unmarked 25% claims still receive their existing default repair.
+
+Commands: `node_modules/.bin/tsx --test tests/investment-rules.test.ts
+ tests/outside-investment.test.ts tests/npc-finances.test.ts`; full `npm test`;
+`npx tsc --noEmit`; Prettier. Check validation, creation fields, rules summary and
+portable designs. Browser: edit/reopen Economy and trade, invest at 25%, change
+rate to 10%, verify the original claim and a new top-up, reject collection without
+profits and with funds at the operating reserve, then collect from earned surplus.
+Check current terms and existing-claim wording, empty stake state and screenshots.
+Update player/world-building docs, README and Unreleased. Transfer-size and NPC
+budget constants remain for later economy slices.
+
+Initial investment run: four tests fail on missing defaults/settings/editor fields;
+the unchanged legacy-repair test passes. Record `/tmp/aclone-investment-red.log`.
+
+The first full investment run fails one unchanged criterion: the 96,000-byte
+resident request budget (`tests/npc-guide.test.ts`). Investigation found the new
+trade and investment paragraphs appended beneath the school/relief heading in
+PLAYING, so a school-help query retrieves unrelated investment text with it.
+Give these complete paragraphs their own accurate headings, preserving every
+word and every budget/memory assertion; test that investment help is indexed
+under its own topic. Do not truncate required memory or raise request limits.
+
+Final investment verification: 28 focused investment/finance tests and all eight
+guide tests pass. The real browser flow passes in 16.5 seconds, covering edited
+terms, a retained 25% claim plus 10% top-up, no-profit/reserve refusals, actual
+shop earnings and a 50d collection. Inspected the rules and claim screenshots;
+no page errors. The guide fix only adds accurate chapter headings: no text,
+memory, assertions or budgets were removed or weakened.
+
+Full rerun passes **1,429 tests** in 198.7 seconds, exit 0
+(`/tmp/aclone-investment-full-final.status`). TypeScript is clean
+(`/tmp/aclone-investment-tsc-final.log`), and explicit-file Prettier passes.
+README, PLAYING, WORLD_BUILDING and imperative Unreleased entries are updated.
+Ready to commit/push the outside return and operating-reserve slice; fees and
+money-transfer limits follow, with broader finance/NPC budgets still pending.
