@@ -18,7 +18,10 @@ Game prices, seats and durations are balancing choices, not real-world operating
 Buy and board at a boatyard, or board an owned boat at a fishing pier. The captain
 opens Inventory → Boating and offers a named player waiting on shore a total fare
 and 15–180 real-minute duration, including travel. Each player explicitly accepts.
-There are six passenger places, shared with any unpaid rescue passengers.
+There are six passenger places by default, shared with any unpaid rescue passengers.
+The world builder can change passenger places and tank capacity in **F10 → Vehicles**.
+Inventory shows the world's current limits. A full boat (including a zero-seat
+configuration) refuses boarding without taking the guest's fare.
 
 Bring Fishing tackle, food, water and inventory space. Food consumption follows the
 world's ordinary inventory/shelter rules; charter tickets do not include communal
@@ -68,5 +71,5 @@ A captain should not promise a trip they cannot complete.
 
 Slot 31 appends to the catalogue without changing saved vehicle IDs. The usual
 world vehicle tuning, fishing rules, licences and boat-loss/recovery settings apply.
-Escrow and individual tickets survive database saves. The detailed vehicle editor
-remains separate future work.
+Escrow, individual tickets and vehicle settings survive database saves. The detailed
+vehicle editor also includes these settings in portable world designs.

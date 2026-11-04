@@ -301,6 +301,8 @@ are rendered, Fuel is absent, and their distinct controls remain visible.
 
 ### G2 — menu zoom
 
+Done: committed and pushed as `09ed219` after the checks below.
+
 Red evidence: `npm run test:e2e -- tests/browser/camera-zoom.spec.ts` failed
 after repeated actual menu clicks: expected scene zoom 5.6, received 2.8.
 
@@ -327,6 +329,20 @@ limit. Prettier and a final TypeScript/diff check passed.
 
 ### G3 — charter tuning
 
+Red evidence: the new Store-backed unit regression failed with “Missing expected
+exception” when a zero-seat charter accepted and charged a guest. The browser
+successfully saved zero seats and a 300-unit tank via the editor, then failed:
+the panel still read “Six passenger places”, “Tank 0.0/192”, “Passengers 0/6”.
+
+- Concrete commands: `node_modules/.bin/tsx --test tests/charter.test.ts`
+  (red), `npm test` (green), and
+  `npm run test:e2e -- tests/browser/charter-tuning.spec.ts`.
+  In the local browser, save zero passenger berths and a 300-unit tank through
+  F10 → Vehicles; Inventory must show 0/0 passengers, the 300-unit tank, and no
+  waiting passengers. Save two berths, fill the boat, then accept an invitation
+  as a third guest: show the two-place refusal and retain the guest's money.
+  After a cancellation, boarding must work again. Retain default six-seat tests
+  and persist tuned capacity through a Store save/load.
 - Before code, extend `charter.test.ts`: tune passenger capacity to two, board
   two, reject the third without taking fare; tune to zero and reject all; retain
   six-seat default coverage and repeat/save behaviour. Verify changed tank and
@@ -335,3 +351,20 @@ limit. Prettier and a final TypeScript/diff check passed.
 - Run the red unit test, then the changed unit suite through `npm test`, the
   charter browser flow, TypeScript and Prettier. Update WORLD_BUILDING.md,
   charter/player documentation, README and the Unreleased changelog.
+
+Validation in progress: all 11 charter unit tests pass; TypeScript is clean.
+Browser attempts passed the editor, empty panel and full refusal, but failed the
+post-cancellation boarding check. Initially suspected slow rendering/input; the
+actual cause was the test retaining its world reference after the server correctly
+rolled a rejected action back to a cloned world. The test now cancels/reoffers on
+the live world and asserts its live player state. The fixture uses only the
+boatyard, with scenery disabled, and keyboard activation for guest acceptance.
+The screenshot scroll also avoids waiting for a periodically replaced panel to
+become stable. All original acceptance criteria remain.
+
+Final browser run passed in 2.0 minutes, including successful boarding after
+cancellation. Visually inspected `test-results/charter-tuning-empty.png`,
+`charter-tuning-full.png` and `charter-tuning-refused.png`: configured 0/0 and 2/2
+places, 300-unit tank capacity, empty waiting area and the correct refusal are
+visible. TypeScript and Prettier pass. `npm test` passed all 1,314 tests, zero
+failed (`/tmp/aclone-g3-unit.log`).

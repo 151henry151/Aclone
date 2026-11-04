@@ -41,6 +41,41 @@ function setup() {
   const port = () => Object.assign(c, d.berth, { speed: 0 });
   return { w, c, p, d, action, invite, sea, port };
 }
+test('world passenger tuning survives restart and refuses full or zero-seat charters without taking fares', () => {
+  for (const seats of [0, 2]) {
+    const fixture = setup();
+    fixture.w.vehicleTuning = { [CHARTER_BOAT]: { hitch: seats, tank: 300 } };
+    const store = new Store(':memory:');
+    store.saveWorld(fixture.w);
+    const w = store.loadWorlds()[0].world;
+    store.db.close();
+    const c = w.players.c;
+    for (let i = 0; i <= seats; i++) {
+      const q = addPlayer(w, `tuned-${i}`, `Guest ${i}`);
+      Object.assign(q, fixture.d.land, {
+        y: travelHeight(w, fixture.d.land.x, fixture.d.land.z),
+        cash: 10000,
+        online: true,
+      });
+      c.online = true;
+      act(w, c.id, { type: 'charter', operation: 'offer', player: q.id, fare: 7500, minutes: 60 });
+      const accept = () => act(w, q.id, { type: 'charter', operation: 'accept', captain: c.id });
+      if (i < seats) {
+        accept();
+        assert.equal(q.cash, 2500);
+        assert.equal(q.hitch, c.id);
+      } else {
+        assert.throws(accept, new RegExp(`All ${seats} passenger places are occupied`));
+        assert.equal(q.cash, 10000);
+        assert.equal(q.hitch, undefined);
+        assert.equal(q.charterPassage, undefined);
+        assert.equal(c.charter!.tickets[q.id], undefined);
+        assert.equal(c.charter!.offers[q.id].fare, 7500);
+      }
+    }
+    assert.equal(Object.keys(c.charter!.tickets).length, seats);
+  }
+});
 test('charter purchase, consent, escrow and cancellation conserve money without duplicating refunds', () => {
   const { w, c, p, action, invite } = setup();
   assert.equal(c.cash, 3000000 - vehicles[CHARTER_BOAT].price);
@@ -155,7 +190,7 @@ test('six seats, dock-only offers and accepting, finite prices, no free hitch to
     action('offer', { player: q.id, fare: 0, minutes: 15 });
     const join = () => act(w, q.id, { type: 'charter', operation: 'accept', captain: c.id });
     if (i < 6) join();
-    else assert.throws(join, /six/);
+    else assert.throws(join, /All 6 passenger places are occupied/);
   }
   assert.equal(Object.keys(c.charter!.tickets).length, 6);
 });

@@ -6,6 +6,7 @@ import { blocksBuilding } from './building-shapes';
 import { creatorBlocks } from './creator';
 import { fishingDock, travelHeight } from './dock';
 import { log, say } from './simulation';
+import { vehicleDef } from './vehicle-config';
 export interface CharterOffer {
   fare: number;
   minutes: number;
@@ -101,9 +102,10 @@ export function charterAction(w: World, p: Player, a: Action) {
         Math.abs(p.y - travelHeight(w, p.x, p.z)) < 2,
       'Finish your activity on shore before boarding',
     );
+    const seats = vehicleDef(w, c.vehicle).hitch;
     need(
-      Object.values(w.players).filter((q) => q.hitch === c.id).length < 6,
-      'All six passenger places are occupied',
+      Object.values(w.players).filter((q) => q.hitch === c.id).length < seats,
+      `All ${seats} passenger places are occupied`,
     );
     need(p.cash >= t!.fare, 'Not enough cash for the agreed fare');
     p.cash -= t!.fare;

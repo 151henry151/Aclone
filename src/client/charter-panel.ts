@@ -2,6 +2,8 @@
 import type { Player, World } from '../shared/types';
 import { CHARTER_BOAT } from '../shared/boats';
 import { boatLanding } from '../shared/boathouse';
+import { vehicleDef } from '../shared/vehicle-config';
+import { fuelCapacity } from '../shared/tractors';
 const esc = (s: string) =>
   s.replace(
     /[&<>"']/g,
@@ -23,8 +25,9 @@ export function charterPanel(w: World, p: Player) {
   }
   if (p.vehicle === CHARTER_BOAT && !p.hitch) {
     const v = p.charter,
+      seats = vehicleDef(w, p.vehicle).hitch,
       dock = boatLanding(w, p, true);
-    html += `<h3>Coastal Belle charters</h3><p>Six passenger places. W/S sets throttle (including reverse); A/D steers; B idles. Stop the engine while fishing to save fuel. Agree a total fare and trip duration including travel. Passengers keep their own fish. Fares are held until return to the departure dock; early return pays only elapsed time. A different dock or cancellation refunds all fares.</p><button data-do="boatIdle">Idle throttle</button><p>Throttle ${Math.round((p.boatThrottle ?? 0) * 100)}% · Tank ${p.fuel.toFixed(1)}/192 · Passengers ${Object.values(w.players).filter((q) => q.hitch === p.id).length}/6.</p>`;
+    html += `<h3>Coastal Belle charters</h3><p>${seats} passenger places. W/S sets throttle (including reverse); A/D steers; B idles. Stop the engine while fishing to save fuel. Agree a total fare and trip duration including travel. Passengers keep their own fish. Fares are held until return to the departure dock; early return pays only elapsed time. A different dock or cancellation refunds all fares.</p><button data-do="boatIdle">Idle throttle</button><p>Throttle ${Math.round((p.boatThrottle ?? 0) * 100)}% · Tank ${p.fuel.toFixed(1)}/${fuelCapacity(p, w)} · Passengers ${Object.values(w.players).filter((q) => q.hitch === p.id).length}/${seats}.</p>`;
     if (v)
       html +=
         `<p>${v.returned ? 'Returned — settle before another trip' : v.departed ? 'At sea' : 'Boarding'} · ${Math.floor(v.elapsed / 60)} minutes away · ${Object.keys(v.tickets).length} paid bookings.</p>` +

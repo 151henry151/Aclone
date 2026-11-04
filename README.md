@@ -66,6 +66,8 @@ The unreleased HUD correction hides the Fuel bar while walking or rowing the
 emergency raft; boarding a motor vehicle restores its fuel readout.
 The Actions menu's zoom buttons now reach the same extended tractor camera range
 as the mouse wheel and pinch gesture.
+Charter boarding and its Inventory panel now honour the world's configured
+passenger and tank limits, including zero passenger places.
 
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 
