@@ -1516,3 +1516,61 @@ resident finance regressions. Full `npm test` passes 1,442 tests in 199.7s;
 covers configured limits, an unchanged live gift draft, exact-cap payment, empty
 bank failure and unearned-investment-return failure. Docs and Unreleased are
 updated. Ready to commit and push the transfer-rule slice.
+
+Pushed and verified `33996ad` on `backlog-implementation`. **Money gift and
+bank/investment transfer limits are done.** Continue with parish supply-order
+period and share limits.
+
+### Gameplay rules — economy: parish supply-order timing and shares
+
+Before production, test defaults `parishOrderPeriod` = 3,600 real seconds,
+`parishOrderShare` = 0.5 (rounded-up per-supplier fraction), and
+`parishOrderShareWindow` = 0.5 of the round. Period accepts integer 60–86,400;
+fractions accept 0–1. Missing keys use these named defaults. A changed period
+must rotate/fund orders once per current round, retire expired escrow and avoid
+replaying missed rounds. Each funded round keeps its posted duration/share terms
+through subsequent rule edits and reloads; new rounds use new rules. Avoid order
+ID reuse when a duration change repeats a period index. Zero share permits no
+early deliveries; zero share-window opens demand immediately. Reaching the
+window boundary removes the share cap; stock, funded budget, location and
+expiry checks still apply. Rejected deliveries are atomic.
+
+Commands: `node_modules/.bin/tsx --test tests/procurement-rules.test.ts
+ tests/procurement.test.ts`, real browser via
+`TEST_GPU=1 npm run test:e2e -- tests/browser/procurement-rules.spec.ts`, full
+`npm test`, `npx tsc --noEmit`, changed-file Prettier. Verify editor fields,
+summary, portable designs and saved-round preservation. Browser: edit/reopen
+120-second rounds, 25% early share for the first quarter; see the local terms,
+deliver exactly the allowed share, see exhausted allowance, open remaining demand
+at the boundary, and inspect disabled and no-current-order states. Capture and
+inspect screenshots/page errors. Update PLAYING, ECONOMY, WORLD_BUILDING, README
+and imperative Unreleased entry.
+
+Supply-order red run: all five tests fail for absent defaults, Unknown setting
+or missing editor fields (`/tmp/aclone-procurement-red.log`), before production.
+
+The browser exposes a stale supply panel: only its countdown refreshed, so newly
+carried goods and a newly open share window could leave delivery disabled. Keep
+the failing live flow and use existing panel draft preservation to refresh
+changed supply facts. Also strengthen the duration-change test: after downtime
+the new round schedule must retain its phase, not reset to the global grid.
+Verify a stale order ID cannot deliver into the new round and legacy round
+metadata retains original half-order/half-round terms.
+
+The extended schedule test fails by 3,480 seconds after downtime; anchor future
+rounds to the previous expiry to preserve the new schedule. The browser now
+passes live cargo, exact-share exhaustion, boundary reopening with draft retained,
+and disabled-state checks. For its no-current-order case, expire the funded
+round with no eligible public collection point, matching the normal refresh path.
+Deleting the optional world record directly in a test fixture left an older
+record in the client's partial snapshot; ordinary expiry retains the record and
+marks it unavailable. Keep the same no-current-text/no-form assertions.
+
+Supply-order verification: six new rule tests plus nine guide tests pass, and
+the two existing procurement tests pass. The final browser flow passes in 16.5s;
+the existing phone delivery flow also passes. Inspect all four final screenshots:
+120-second rounds, 25% early share for 0.5 minutes, exhausted share, retained
+draft at reopening, disabled state and expired/no-current state all behave as
+claimed. No page errors. Full `npm test` passes 1,448 tests in 200.7s. TypeScript
+and changed-file Prettier are clean. Player/economy/world-builder docs, README
+and imperative Unreleased entry are updated. Ready to commit and push.

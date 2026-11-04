@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import defaults from '../../data/settings.json';
+import { economyRules } from './economy-rules';
 import { items } from './catalog.ts';
 import { log } from './simulation.ts';
 import { recordLife } from './reports.ts';
 import type { World, Player, Action } from './types.ts';
-export const ORDER_PERIOD = 3600;
+export const ORDER_PERIOD = defaults.parishOrderPeriod;
 const projects = [
   ['gravel', 'Repair parish paths'],
   ['wood', 'Replace public benches'],
@@ -27,6 +29,8 @@ export interface Procurement {
   building: string;
   opensAt: number;
   expiresAt: number;
+  earlyShare?: number;
+  shareUntil?: number;
   remainingBudget: number;
   paid: number;
   orders: SupplyOrder[];
@@ -37,15 +41,19 @@ export function migrateProcurement(w: World) {
     w.settings.parishOrders = true;
   w.procurementVersion = 1;
 }
-/** Fund only the current hour. Expired escrow is retired, never rolled into a windfall. */
+/** Fund only the current round. Expired escrow is retired, never rolled into a windfall. */
 export function refreshOrders(w: World) {
   if (!w.settings.parishOrders) return;
-  const period = Math.floor(w.time / ORDER_PERIOD);
-  if (w.procurement && w.procurement.period >= period) return;
+  const rules = economyRules(w.settings);
+  const period = Math.floor(w.time / rules.parishOrderPeriod);
+  if (w.procurement && w.time < w.procurement.expiresAt) return;
   const building = w.buildings.find((b) => b.government && b.kind === 'market' && !b.construction);
   if (!building) return;
   const budget = w.settings.parishOrderBudget;
   const prior = w.procurement;
+  const anchor = prior?.expiresAt ?? 0;
+  const opensAt =
+    anchor + Math.floor((w.time - anchor) / rules.parishOrderPeriod) * rules.parishOrderPeriod;
   if (prior?.remainingBudget)
     log(
       w,
@@ -62,7 +70,7 @@ export function refreshOrders(w: World) {
     const quantity = Math.min(80, Math.floor(budget / 3 / unitPrice));
     if (quantity > 0)
       orders.push({
-        id: `${period}:${i}`,
+        id: `${opensAt}:${i}`,
         item,
         project,
         unitPrice,
@@ -75,20 +83,30 @@ export function refreshOrders(w: World) {
   w.procurement = {
     period,
     building: building.id,
-    opensAt: period * ORDER_PERIOD,
-    expiresAt: (period + 1) * ORDER_PERIOD,
+    opensAt,
+    expiresAt: opensAt + rules.parishOrderPeriod,
+    earlyShare: rules.parishOrderShare,
+    shareUntil: opensAt + rules.parishOrderPeriod * rules.parishOrderShareWindow,
     remainingBudget: funded,
     paid: 0,
     orders,
   };
   log(w, 'faucet', funded, 'treasury', 'parish-orders', 'parish procurement budget');
 }
+/** Legacy funded rounds retain their original half-round/half-order terms. */
+export function orderShareTerms(c: Procurement) {
+  return {
+    share: c.earlyShare ?? defaults.parishOrderShare,
+    until: c.shareUntil ?? c.opensAt + (c.expiresAt - c.opensAt) * defaults.parishOrderShareWindow,
+  };
+}
 export function orderAllowance(w: World, p: Player, o: SupplyOrder) {
   const c = w.procurement;
   if (!c || w.time >= c.expiresAt || !w.settings.parishOrders) return 0;
+  const terms = orderShareTerms(c);
   const individual =
-    w.time < (c.opensAt + c.expiresAt) / 2
-      ? Math.max(0, Math.ceil(o.quantity / 2) - (o.contributions[p.id] ?? 0))
+    w.time < terms.until
+      ? Math.max(0, Math.ceil(o.quantity * terms.share) - (o.contributions[p.id] ?? 0))
       : Infinity;
   return Math.max(
     0,

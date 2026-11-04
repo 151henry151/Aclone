@@ -585,3 +585,14 @@ limit each new transfer without rewriting balances or agreed claims. Player
 controls and resident transfer plans follow the limits; independent stock,
 property-price, lending and household-budget rules still apply. Missing keys
 use the defaults, and portable designs retain both fields.
+
+`parishOrderPeriod` sets supply-round duration in real seconds: default 3,600,
+integer 60–86,400. `parishOrderShare` (default 0.5, range 0–1) caps each supplier
+at that fraction of the order, rounded up, during `parishOrderShareWindow`
+(default 0.5, range 0–1) of the round. A zero share bars early deliveries; a zero
+window opens demand immediately. Funded rounds keep their posted terms through
+rule edits and reloads, including legacy half-order/half-round terms. New rounds
+use the new settings; changing duration does not duplicate escrow or reuse order
+IDs. `parishOrderBudget` remains the budget per round, so shorter rounds increase
+funding frequency. Downtime funds only the current round. Missing keys use the
+named defaults; portable designs carry all three rules.

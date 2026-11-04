@@ -168,5 +168,8 @@
   "mapPrintPrice": 1000,
   "ammunitionRefitPrice": 2500,
   "maximumMoneyGift": 100000000,
-  "cashTransferLimit": 10000000
+  "cashTransferLimit": 10000000,
+  "parishOrderPeriod": 3600,
+  "parishOrderShare": 0.5,
+  "parishOrderShareWindow": 0.5
 }

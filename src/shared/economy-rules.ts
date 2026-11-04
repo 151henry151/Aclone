@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const economyRuleFields = {
+  parishOrderPeriod: {
+    label: 'Parish supply-order round (real seconds)',
+    min: 60,
+    max: 86400,
+    step: 1,
+  },
+  parishOrderShare: {
+    label: 'Early supply-order share per supplier (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  parishOrderShareWindow: {
+    label: 'Supply-order share window (fraction of round)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
   maximumMoneyGift: {
     label: 'Maximum money gift (hundredths of a denarius)',
     min: 1,

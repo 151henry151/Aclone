@@ -1395,6 +1395,7 @@ function refreshBusinessDetails() {
     `Saved wage: ${money(b.wage)} per worker per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'}, before wage tax. Edit and press Save details to change it.`;
 }
 let questSignature = '';
+let procurementSignature = '';
 let socialSignature = '';
 function refreshTaxInfo() {
   if (!world || !me) return;
@@ -1609,11 +1610,10 @@ function refreshTradingPrices() {
       renderPanel();
     }
   }
-  const expiry = app.querySelector('[data-parish-expires]');
-  if (expiry && world?.procurement)
-    expiry.textContent = String(
-      Math.max(0, Math.ceil((world.procurement.expiresAt - world.time) / 60)),
-    );
+  if (panel === 'procurement' && world && me) {
+    const html = procurementHtml(world, me);
+    if (html !== procurementSignature) renderPanel();
+  }
   const statement = app.querySelector<HTMLElement>('[data-business-statement]');
   if (statement && world && me) {
     const b = world.buildings.find((b) => b.id === statement.dataset.businessStatement);
@@ -2099,7 +2099,8 @@ function renderPanel() {
     return;
   }
   if (panel === 'procurement') {
-    modal('Parish supply orders', procurementHtml(world, me));
+    procurementSignature = procurementHtml(world, me);
+    modal('Parish supply orders', procurementSignature);
     return;
   }
   if (panel === 'quests') {

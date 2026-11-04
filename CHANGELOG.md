@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Make parish supply-order duration, early supplier share and share-window length world rules; preserve funded terms across edits and reloads, prevent order-ID reuse and show the posted terms in the supply panel. Refresh delivery readiness and empty states while retaining quantity drafts.
+
 - Expose per-world cash gift and bank/investment transfer limits; enforce them in payments, live gift drafts, transfer forms and resident plans while preserving balances and agreed claims. Remove repeated section anchors from resident guide metadata without cutting its text or lookup citations.
 
 - Make garage labour, service Steel, printed maps and ammunition refit prices configurable per world; share service parts checks with roadside mechanics and quote local terms in player controls and resident plans.

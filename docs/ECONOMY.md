@@ -269,7 +269,7 @@ The design uses ordinary amortization and ability-to-repay concepts ([CFPB expla
 
 ## Parish maintenance orders
 
-Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. Early in each hour, each supplier can fill at most half an order; the remaining demand opens to everyone in the second half-hour. Orders share a fixed hourly budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.
+Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. By default, each supplier can fill at most half an order during the first half-hour of a one-hour round; the remaining demand then opens to everyone. Unreleased Economy and trade rules let owners change round length, early share and its window. Funded rounds retain their posted terms until expiry, including after reload. Orders share a fixed per-round budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.
 
 ## Business health (0.78.0)
 

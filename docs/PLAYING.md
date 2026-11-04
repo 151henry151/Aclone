@@ -253,7 +253,7 @@ A building’s **Statement** tab shows current production blockers. Owners and w
 
 ## Parish supply orders
 
-At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. Each order limits your share during its first half-hour and expires after one real hour.
+At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. By default each order limits each supplier to half its quantity during its first half-hour and expires after one real hour. Unreleased world rules can change the round length, early share and share-window fraction. The panel quotes the funded round’s terms; rule edits apply to the next round.
 
 ## Creator quests
 

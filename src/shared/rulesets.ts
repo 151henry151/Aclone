@@ -59,6 +59,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     limits = landingLimits(s);
   return [
     `Economy: minimum purchase bid ${economyRules(s).minimumBuyPrice} hundredths; up to ${economyRules(s).transactionItemLimit} items per transaction. New outside deposits earn up to ${economyRules(s).outsideReturnPercent}% above principal; operating reserve floor ${economyRules(s).outsideOperatingReserve} hundredths.`,
+    `Supply orders: ${economyRules(s).parishOrderPeriod}-second rounds; ${economyRules(s).parishOrderShare * 100}% per supplier for the first ${economyRules(s).parishOrderShareWindow * 100}% of each new round. Funded rounds keep posted terms.`,
     `Transfers: gift maximum ${economyRules(s).maximumMoneyGift}; bank/investment maximum ${economyRules(s).cashTransferLimit} hundredths per transfer.`,
     `Services: ${economyRules(s).vehicleServiceSteel} Steel and ${economyRules(s).vehicleServiceFee} hundredths labour; map ${economyRules(s).mapPrintPrice}; ammunition ${economyRules(s).ammunitionRefitPrice} hundredths.`,
     `Survival: automatic meals at ${survival.needsAutoFeedThreshold}, damage at ${survival.needsDamageThreshold}; base maximum health ${survival.baseMaximumHealth}, nutrition adjustment ±${survival.nutritionAdjustmentLimit}. Repeated manual servings use ${survival.repeatServingMultiplier}× food/drink from serving ${survival.repeatServingFrom}; online energy regenerates ${survival.energyRegeneration}/s.`,
