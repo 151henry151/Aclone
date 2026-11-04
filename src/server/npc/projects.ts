@@ -121,8 +121,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     )
     .sort((a, b) => distance(p, a) - distance(p, b))
     .slice(0, 12)) {
-    const tool = gatheringImplements[node.item]?.item;
-    if (!tool) continue;
+    const tool = gatheringImplements(w.settings)[node.item]?.item ?? '';
     const { amount: perGather, seconds: gatherSeconds } = gatheringRate(w, p, node.item);
     let quantity = Math.min(perGather, transferLimit);
     if (
@@ -139,7 +138,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       )
       .sort((a, b) => b.buy[node.item] - a.buy[node.item])[0];
     if (!buyer) continue;
-    const owned = (p.inventory[tool] ?? 0) > 0;
+    const owned = !tool || (p.inventory[tool] ?? 0) > 0;
     const seller = owned
       ? undefined
       : shops
@@ -150,7 +149,9 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     const carry = {
       ...p,
       vehicle: travelVehicle(p),
-      inventory: { ...p.inventory, [tool]: Math.max(1, p.inventory[tool] ?? 0) },
+      inventory: tool
+        ? { ...p.inventory, [tool]: Math.max(1, p.inventory[tool] ?? 0) }
+        : p.inventory,
     };
     if (
       (p.inventory[node.item] ?? 0) < quantity &&
@@ -221,7 +222,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
           ];
     add(
       { kind: 'gather', target: node.id, source: buyer.id, item: node.item },
-      `Gathering career: ${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}, gather ${rounds * perGather} ${node.item}, deliver ${quantity} to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
+      `Gathering career: ${tool ? `${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}` : 'use no implement'}, gather ${rounds * perGather} ${node.item}, deliver ${quantity} to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
       plan,
       earned - equipment,
       trip.seconds + rounds * gatherSeconds,

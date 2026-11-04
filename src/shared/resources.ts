@@ -1,5 +1,9 @@
 import defaults from '../../data/settings.json';
-import { gatheringRules } from './gathering-rules';
+import {
+  gatheringRules,
+  gatheringImplementRules,
+  gatheringImplementFields,
+} from './gathering-rules';
 import { recordGathered } from './player-statistics.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Settings } from './types.ts';
@@ -58,12 +62,17 @@ const names: Record<string, string> = {
   dirt: 'Exposed topsoil',
 };
 /** One reusable implement per ground. Workshop tools are for furniture, not digging. */
-export const gatheringImplements: Record<string, { item: string; need: string }> = {
-  logs: { item: 'chainsaw', need: 'a chainsaw' },
-  stone: { item: 'pickaxe', need: 'a pickaxe' },
-  gravel: { item: 'shovel', need: 'a shovel' },
-  dirt: { item: 'shovel', need: 'a shovel' },
-};
+export function gatheringImplements(
+  settings: Partial<Settings> = {},
+): Record<string, { item: string; need: string }> {
+  const rules = gatheringImplementRules(settings);
+  return Object.fromEntries(
+    Object.entries(gatheringImplementFields).flatMap(([key, spec]) => {
+      const item = rules[key as keyof typeof rules];
+      return item === 'none' ? [] : [[spec.material, { item, need: `a ${item}` }]];
+    }),
+  );
+}
 export const resourceNode = (id: string, item: string, x: number, z: number): ResourceNode => ({
   id,
   item,
@@ -234,7 +243,8 @@ export function gatheringRate(w: World, p: Pick<Player, 'skills'>, item: string)
 /** Read-only eligibility shared by the HUD and authoritative gathering action. */
 export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
   const { amount, seconds } = gatheringRate(w, p, n.item);
-  const available = resourceAmount(w, n);
+  const available = resourceAmount(w, n),
+    implement = gatheringImplements(w.settings)[n.item];
   let reason: string | undefined;
   if (distance(p, n) > 10 || Math.abs(p.y - terrainHeight(w, p.x, p.z)) > 3)
     reason = 'Move close to a marked gathering ground';
@@ -244,8 +254,8 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
     reason = 'Buildings obstruct this gathering ground';
   else if (townRefusal(w, p.id, n.x, n.z, 'environment'))
     reason = townRefusal(w, p.id, n.x, n.z, 'environment');
-  else if (gatheringImplements[n.item] && !(p.inventory[gatheringImplements[n.item].item] > 0))
-    reason = `Carry ${gatheringImplements[n.item].need} to gather ${n.item === 'dirt' ? 'topsoil' : n.item}`;
+  else if (implement && !(p.inventory[implement.item] > 0))
+    reason = `Carry ${implement.need} to gather ${n.item === 'dirt' ? 'topsoil' : n.item}`;
   else if (available < amount) reason = 'This ground needs time to replenish';
   else if (!canCarry(p, n.item, amount, w)) reason = 'Make room in your cargo';
   return { amount, available, seconds, capacity: resourceLimits(w, n).capacity, reason };

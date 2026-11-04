@@ -178,7 +178,7 @@ export function economyChoices(
   }
   // A small, affordable cargo choice per owned recipe; never buy employer inputs already in its stockroom.
   const needed = new Set<string>(
-    [...new Set(Object.values(gatheringImplements).map((v) => v.item))].filter(
+    [...new Set(Object.values(gatheringImplements(w.settings)).map((v) => v.item))].filter(
       (item) => !(p.inventory[item] > 0),
     ),
   );
@@ -208,7 +208,8 @@ export function economyChoices(
       )
       .slice(0, 1)) {
       const maximum =
-        item === 'tools' || Object.values(gatheringImplements).some((v) => v.item === item)
+        item === 'tools' ||
+        Object.values(gatheringImplements(w.settings)).some((v) => v.item === item)
           ? 1
           : loads.npcSmallInputPurchaseLoad;
       const n = Math.min(
@@ -266,7 +267,8 @@ export function economyChoices(
     .sort((a, b) => distance(p, a) - distance(p, b))
     .filter(
       (n) =>
-        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0 &&
+        (!gatheringImplements(w.settings)[n.item] ||
+          (p.inventory[gatheringImplements(w.settings)[n.item].item] ?? 0) > 0) &&
         resourceAmount(w, n) >= gatheringRate(w, p, n.item).amount &&
         !w.buildings.some((b) => distance(b, n) < 12) &&
         canCarry(p, n.item, gatheringRate(w, p, n.item).amount, w),

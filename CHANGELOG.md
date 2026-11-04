@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose per-material gathering implement requirements, including no implement; share them across player controls and resident procurement/plans while preserving started loads.
+
 - Expose deposit capacities and base regrowth intervals as world rules; preserve earned stock, fractional recovery and authored survey overrides across edits, and display effective reserves.
 
 - Expose untrained and skilled gathering yields and durations as world rules; share rates with HUD/menu eligibility and resident plans while preserving loads already in progress.

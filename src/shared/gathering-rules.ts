@@ -49,3 +49,23 @@ export function gatheringRules(settings: Partial<GatheringRules> = {}): Gatherin
     ]),
   ) as GatheringRules;
 }
+
+export const gatheringImplementChoices = ['none', 'chainsaw', 'pickaxe', 'shovel'] as const;
+export const gatheringImplementFields = {
+  gatheringLogsImplement: { label: 'Logs implement', material: 'logs' },
+  gatheringStoneImplement: { label: 'Stone implement', material: 'stone' },
+  gatheringGravelImplement: { label: 'Gravel implement', material: 'gravel' },
+  gatheringDirtImplement: { label: 'Topsoil implement', material: 'dirt' },
+} as const;
+export type GatheringImplementRules = Pick<typeof defaults, keyof typeof gatheringImplementFields>;
+export function gatheringImplementRules(
+  settings: Partial<GatheringImplementRules> = {},
+): GatheringImplementRules {
+  return Object.fromEntries(
+    Object.keys(gatheringImplementFields).map((key) => [
+      key,
+      settings[key as keyof GatheringImplementRules] ??
+        defaults[key as keyof GatheringImplementRules],
+    ]),
+  ) as GatheringImplementRules;
+}

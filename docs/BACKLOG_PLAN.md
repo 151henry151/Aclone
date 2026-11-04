@@ -3513,3 +3513,52 @@ with 15 tank units, because the planner still uses ten. Replace the literal with
 the shared journey rule and retain a separate carried-fuel path for an empty tank.
 All 17 journey/hypothesis checks pass in 1.1 seconds, including ordinary fuel use;
 TypeScript, changed-file formatting and diff checks pass. No UI or full-suite run.
+
+Pushed and verified `55ebcb8` on `backlog-implementation`. **Resident refuelling
+experiment coverage is done.**
+
+### Gameplay rules — gathering implements per material
+
+Before production, make each material's implement requirement a world rule:
+`gatheringLogsImplement` defaults to `chainsaw`, `gatheringStoneImplement` to
+`pickaxe`, and `gatheringGravelImplement`/`gatheringDirtImplement` to `shovel`.
+Allow `none` or one of those three existing gathering implements. A required
+implement remains reusable; workshop tools do not become gathering implements.
+Missing rules retain defaults. New tasks use current requirements; started tasks
+retain their reservation and finish time. No change to rates, stock, cargo,
+permissions, movement or ordinary completion/cancellation.
+
+The HUD and Resources menu must name current requirements. F10 must expose four
+selectors and preserve them on reopen/reload. Resident career, general, experiment
+and construction procurement plans must use the configured implement (or no
+implement), without buying disabled requirements or producing an undefined item.
+A rule edit never grants a tool. Validate unknown values atomically and preserve
+values through saves, portable designs, summaries and observations.
+
+Write failing gathering-implement-rules tests for every default/missing/custom/
+none requirement, wrong/missing tools, reuse, mid-task edits and ordinary remaining
+refusals, all four resident planning consumers and tool-shopping choices, invalid
+settings and persistence. Run the new tests, resources, gathering-rate-rules,
+npc-projects, npc-construction, npc-hypotheses and npc-guide as relevant consumers.
+Browser `TEST_GPU=1 npm run test:e2e -- tests/browser/gathering-implement-rules.spec.ts`:
+save/reopen all selectors, change topsoil to pickaxe and see wrong/missing-tool
+HUD/menu refusal, choose none and complete a normal gather without that implement,
+inspect depleted refusal and persistence across reload; inspect screenshots/errors.
+Require TypeScript, changed-file Prettier/diff checks, player/economy/world-builder/
+README documentation and imperative Unreleased before commit/push.
+
+Implement-rule red: all four new tests fail on missing defaults/unknown settings.
+The shared resolver replaces the fixed per-material map; all four pass, including
+custom procurement and no-implement routes in career, general, experiment and
+construction planners. No inventory entries are fabricated for a disabled tool.
+The 54 relevant checks pass in 5.1 seconds; TypeScript is clean and changed files
+are formatted. Browser verification remains before commit.
+
+Implement browser passes in 28.4 seconds: saved selectors, current pickaxe refusal
+with a shovel and then an empty inventory, menu requirements, ordinary no-tool
+gather, depletion, tampered-selector rejection and persisted reload. Inspect all
+six screenshots. Apply the editor's existing full-width fieldset class to avoid
+a narrow single-column group. Rerun only browser/typecheck for that layout change:
+browser passes in 27.7 seconds, TypeScript stays clean; inspect the corrected
+full-width rules capture. Formatting/diff checks pass and no browser errors occur.
+No full suite runs.

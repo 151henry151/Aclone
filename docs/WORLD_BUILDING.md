@@ -1227,3 +1227,18 @@ loads keep their quantity and completion time; cancellation returns stock once u
 to current capacity. HUD/Resources show effective capacity and shared stock.
 A capacity below the selected gathering load leaves that ground unavailable until
 rules allow a complete load. Offline recovery remains capped at local capacity.
+
+## Gathering implement rules (unreleased)
+
+**F10 → Rules → Gathering implements** selects one requirement per material:
+`gatheringLogsImplement` defaults to `chainsaw`, `gatheringStoneImplement` to
+`pickaxe`, and `gatheringGravelImplement`/`gatheringDirtImplement` to `shovel`.
+Each accepts `none`, `chainsaw`, `pickaxe` or `shovel`. Required implements are
+reusable; workshop tools remain production inputs. `none` removes only that
+material's implement requirement. Stock, cargo, permissions and timed loads still
+apply. Edits grant no tools and preserve already-started reservations/end times.
+
+Resources lists local requirements and the nearby HUD names a missing implement.
+Resident career, experiment, ordinary and construction plans share the requirement,
+including tool procurement and no-tool routes. Values persist in saves/designs,
+summaries and observations; omitted fields retain the defaults.

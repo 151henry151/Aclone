@@ -26,11 +26,9 @@ import type { FarmerChoice } from './farmer.ts';
 /** Raw construction materials can be gathered using a bought or owned implement.
  * Resource locations are public; shop stock still comes only from the caller's known markets. */
 function materialGather(w: World, p: Player, item: string) {
-  const implement = gatheringImplements[item];
-  if (!implement) return;
-  const tool = implement.item;
+  const tool = gatheringImplements(w.settings)[item]?.item ?? '';
   const shop =
-    (p.inventory[tool] ?? 0) > 0
+    !tool || (p.inventory[tool] ?? 0) > 0
       ? undefined
       : w.buildings
           .filter(
@@ -39,8 +37,10 @@ function materialGather(w: World, p: Player, item: string) {
           .sort(
             (a, b) => (a.owner === p.id ? 0 : a.sell[tool]) - (b.owner === p.id ? 0 : b.sell[tool]),
           )[0];
-  if (!(p.inventory[tool] > 0) && !shop) return;
-  const inventory = { ...p.inventory, [tool]: Math.max(1, p.inventory[tool] ?? 0) };
+  if (tool && !(p.inventory[tool] > 0) && !shop) return;
+  const inventory = tool
+    ? { ...p.inventory, [tool]: Math.max(1, p.inventory[tool] ?? 0) }
+    : p.inventory;
   for (const node of worldResources(w)
     .filter((n) => n.item === item)
     .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))) {
@@ -208,7 +208,7 @@ export function constructionChoices(w: World, p: Player): FarmerChoice[] {
           : travelPrep(p);
         result.push({
           id: `finish_gather_${b.id}_${item}`,
-          description: `Finish my ${b.name}: gather ${gather.status.amount} ${item} with ${gather.tool}, then deliver it. Implement cost ${gather.cost}.`,
+          description: `Finish my ${b.name}: gather ${gather.status.amount} ${item} with ${gather.tool || 'no implement'}, then deliver it. Implement cost ${gather.cost}.`,
           careerGoal: goal,
           plan: [
             ...prep,

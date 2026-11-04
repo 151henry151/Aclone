@@ -435,7 +435,8 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       (n) =>
         resourceAmount(w, n) >= gatheringRate(w, p, n.item).amount &&
         canCarry(p, n.item, gatheringRate(w, p, n.item).amount, w) &&
-        (p.inventory[gatheringImplements[n.item]?.item] ?? 0) > 0,
+        (!gatheringImplements(w.settings)[n.item] ||
+          (p.inventory[gatheringImplements(w.settings)[n.item].item] ?? 0) > 0),
     )
     .slice(0, 4)) {
     const buyer = w.buildings

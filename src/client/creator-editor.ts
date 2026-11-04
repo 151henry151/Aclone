@@ -1,4 +1,10 @@
-import { gatheringRules, gatheringRuleFields } from '../shared/gathering-rules';
+import {
+  gatheringRules,
+  gatheringRuleFields,
+  gatheringImplementFields,
+  gatheringImplementChoices,
+  gatheringImplementRules,
+} from '../shared/gathering-rules';
 import { constructionRules, constructionRuleFields } from '../shared/construction-rules';
 import { npcAccountRules, npcAccountRuleFields } from '../shared/npc-account-rules';
 import { npcJourneyRules, npcJourneyRuleFields } from '../shared/npc-journey-rules';
@@ -116,6 +122,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcAccountRuleFields),
     ...Object.keys(constructionRuleFields),
     ...Object.keys(gatheringRuleFields),
+    ...Object.keys(gatheringImplementFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
     'loanTerms',
@@ -173,6 +180,24 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Estimates use actual vehicle tuning and stocked Fuel quotes; walking costs no fuel. Zero unquoted allowance removes that fallback. Zero payback rejects paid new implements, retaining owned tools. Zero refuel threshold suppresses optional shopping; an empty tank can still walk or use carried fuel. Rules change plans, not actual travel costs or supplies.</p></fieldset>`;
+  const implementsRules = gatheringImplementRules(settings);
+  const implementFields = `<fieldset class="boat-death-settings"><legend>Gathering implements</legend>${Object.entries(
+    gatheringImplementFields,
+  )
+    .map(([key, spec]) =>
+      select(
+        spec.label,
+        key,
+        gatheringImplementChoices.map((item) => [
+          item,
+          item === 'none' ? 'No implement required' : item,
+        ]),
+        implementsRules[key as keyof typeof implementsRules],
+      ),
+    )
+    .join(
+      '',
+    )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
   const gatheringRates = gatheringRules(settings);
   const gatheringRateFields = `<fieldset class="boat-death-settings"><legend>Gathering rules</legend>${Object.entries(
     gatheringRuleFields,
@@ -521,6 +546,7 @@ export function settingsFields(settings: Settings = defaults) {
     accountFields +
     constructionFields +
     gatheringRateFields +
+    implementFields +
     journeyFields +
     businessLoadFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Multiply the base recovery intervals in Gathering rules. Higher values replenish deposits more slowly; 1 uses the base interval. Each interval restores three units, up to the local capacity. Changing the multiplier preserves earned stock and partial recovery.</p></fieldset>` +

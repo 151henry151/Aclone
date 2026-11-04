@@ -1,4 +1,4 @@
-import { gatheringRules } from './gathering-rules';
+import { gatheringRules, gatheringImplementRules } from './gathering-rules';
 import { constructionRefundPercentage, constructionRules } from './construction-rules';
 import { npcAccountRules } from './npc-account-rules';
 import { npcJourneyRules } from './npc-journey-rules';
@@ -84,10 +84,12 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const account = npcAccountRules(s);
   const construction = constructionRules(s);
   const gatheringRates = gatheringRules(s);
+  const implementsRules = gatheringImplementRules(s);
   const cargo = npcCargoRules(s);
   return [
     `Resident business cargo: fallback input purchase/deposit ${businessLoads.npcRoutineSupplyBatches}/${businessLoads.npcRoutineDepositBatches} batches, crop demand ${businessLoads.npcCropDemandBatches} buyer batches; collect ${businessLoads.npcBusinessCollectionLoad} output / ${businessLoads.npcFarmCollectionLoad} crops; small input purchase ${businessLoads.npcSmallInputPurchaseLoad} items below ${businessLoads.npcSmallInputPurchaseBatches} batches; carried surplus sale ${businessLoads.npcCarriedSurplusSaleLoad}; owned supplier reserve ${businessLoads.npcOwnedSourceReserveBatches} batches; business/farm output sale loads ${businessLoads.npcBusinessOutputSaleLoad}/${businessLoads.npcFarmOutputSaleLoad}. Zero suppresses the corresponding optional leg; source breeding minima and ordinary transfer limits apply.`,
     `Resident journeys: distance multiplier ${journey.npcJourneyDistanceMultiplier}, speed fraction ${journey.npcJourneySpeedFraction}, unquoted Fuel ${journey.npcJourneyFuelFallbackPrice} hundredths/item, equipment payback ${journey.npcEquipmentPaybackLoads} loads, optional refuel below ${journey.npcDriveFuelThreshold} tank units. Estimates retain actual quotes/tuning; walking costs no fuel.`,
+    `Gathering implements: logs ${implementsRules.gatheringLogsImplement}, stone ${implementsRules.gatheringStoneImplement}, gravel ${implementsRules.gatheringGravelImplement}, topsoil ${implementsRules.gatheringDirtImplement}. None removes the tool requirement; implements are reusable.`,
     `Deposits: standard woodland/mineral capacities ${gatheringRates.resourceLogsCapacity}/${gatheringRates.resourceOtherCapacity}, base recovery intervals ${gatheringRates.resourceLogsRegrowthSeconds}/${gatheringRates.resourceOtherRegrowthSeconds} seconds times the recovery multiplier. Authored non-default survey values remain overrides.`,
     `Gathering: untrained ${gatheringRates.gatheringBaseYield} items in ${gatheringRates.gatheringBaseSeconds} seconds; skilled ${gatheringRates.gatheringSkilledYield} in ${gatheringRates.gatheringSkilledSeconds}. Existing tasks retain their load/time; implements, resources and cargo apply.`,
     `Construction: new pasture parcels ${construction.pastureParcelSize} m per side (existing dimensions retained); maximum ${construction.maximumFarmPlots} farm plots (existing land retained); Expanded/Large cash and material multipliers ${construction.expandedConstructionCostMultiplier}/${construction.largeConstructionCostMultiplier}; centre spacing > ${construction.constructionMinimumSpacing} m; shoreline placement reach ${construction.constructionPlacementReach} m; respawn/town centre clearance ${construction.spawnClearance}/${construction.townCentreClearance} m; unfinished-site refund ${constructionRefundPercentage(s)} of base cash cost, excluding tax and materials. Footprints and explicit reservations still apply.`,

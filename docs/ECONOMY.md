@@ -4,7 +4,7 @@ Defaults below are original Aclone tuning; live recipes, taxes and quotes overri
 
 ## Gather, deliver, produce
 
-Use Resources/M for locations and reserves, then the nearby HUD Gather button within 10m. Logs need a chainsaw, stone a pickaxe, and gravel or topsoil a shovel.
+Use Resources/M for locations and reserves, then the nearby HUD Gather button within 10m. Default requirements are chainsaw for logs, pickaxe for stone and shovel for gravel/topsoil; world rules may select another gathering implement or none.
 Workshop tools stay a furniture input and do not unlock gathering. The default basic load is three units after 20 seconds; world gathering rules set both values.
 Foresters (wood) and excavators (minerals/soil) use the separate skilled rate, default six in 12 seconds. The matching implement is reusable. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
 

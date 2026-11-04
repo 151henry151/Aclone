@@ -1,4 +1,8 @@
-import { gatheringRuleFields } from './gathering-rules';
+import {
+  gatheringRuleFields,
+  gatheringImplementFields,
+  gatheringImplementChoices,
+} from './gathering-rules';
 import { pastureParcelSize } from './pasture-land';
 import { validFarmPlotCount } from './farm-land';
 import { constructionRules, constructionRuleFields } from './construction-rules';
@@ -1985,6 +1989,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(npcAccountRuleFields, key) ||
             Object.hasOwn(constructionRuleFields, key) ||
             Object.hasOwn(gatheringRuleFields, key) ||
+            Object.hasOwn(gatheringImplementFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
             key === 'loanTerms',
@@ -2014,6 +2019,11 @@ export function act(w: World, id: string, a: Action): string {
           requireThat(
             validLoanTerms(v),
             'Choose ascending unique loan terms from 1 to 120 months, separated by commas',
+          );
+        else if (Object.hasOwn(gatheringImplementFields, key))
+          requireThat(
+            gatheringImplementChoices.includes(v as (typeof gatheringImplementChoices)[number]),
+            'Choose none, chainsaw, pickaxe or shovel',
           );
         else if (key === 'gatheringScenery')
           requireThat(

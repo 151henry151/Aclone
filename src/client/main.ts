@@ -1,3 +1,4 @@
+import { gatheringImplements } from '../shared/resources';
 import { constructionRefundPercentage, constructionRules } from '../shared/construction-rules';
 import { charterRules } from '../shared/charter-rules';
 import { economyRules, lighthouseWage } from '../shared/economy-rules';
@@ -1954,9 +1955,10 @@ function renderPanel() {
     return;
   }
   if (panel === 'resources') {
+    const implementsRules = gatheringImplements(world!.settings);
     modal(
       'Gathering grounds',
-      `<p>Drive within 10 metres of a marked ground. Carry a chainsaw for timber, a pickaxe for stone and a shovel for gravel or topsoil. School qualifications select this world’s skilled load and gathering time. Reserves replenish slowly, including offline. The nearest forty grounds are listed; the parish map shows the rest.</p><div class="directory">${[
+      `<p>Drive within 10 metres of a marked ground. ${['logs', 'stone', 'gravel', 'dirt'].map((item) => `${esc(items[item].name)}: ${esc(implementsRules[item]?.item ?? 'no implement')}`).join('; ')}. School qualifications select this world’s skilled load and gathering time. Reserves replenish slowly, including offline. The nearest forty grounds are listed; the parish map shows the rest.</p><div class="directory">${[
         ...worldResources(world!),
       ]
         .sort((a, b) => distance(me!, a) - distance(me!, b))

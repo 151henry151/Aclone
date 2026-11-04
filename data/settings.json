@@ -353,5 +353,9 @@
   "resourceLogsCapacity": 18,
   "resourceOtherCapacity": 30,
   "resourceLogsRegrowthSeconds": 1800,
-  "resourceOtherRegrowthSeconds": 600
+  "resourceOtherRegrowthSeconds": 600,
+  "gatheringLogsImplement": "chainsaw",
+  "gatheringStoneImplement": "pickaxe",
+  "gatheringGravelImplement": "shovel",
+  "gatheringDirtImplement": "shovel"
 }
