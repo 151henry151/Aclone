@@ -1,3 +1,4 @@
+import type { NpcAccountRules } from './npc-account-rules';
 import type { NpcJourneyRules } from './npc-journey-rules';
 import type { NpcBusinessLoadRules } from './npc-business-load-rules';
 import type { NpcCargoRules } from './npc-cargo-rules';
@@ -315,6 +316,7 @@ export interface Settings
     Partial<NpcBusinessRules>,
     Partial<NpcPricingRules>,
     Partial<NpcCargoRules>,
+    Partial<NpcAccountRules>,
     Partial<NpcJourneyRules>,
     Partial<NpcBusinessLoadRules>,
     Partial<SurvivalRules>,

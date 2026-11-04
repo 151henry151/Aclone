@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
-import { shipStats, stationPrice, spaceGoods, jumpQuote } from '../shared/galaxy.ts';
+import {
+  shipStats,
+  stationPrice,
+  spaceGoods,
+  jumpQuote,
+  SPACE_TRADE_LIMIT,
+} from '../shared/galaxy.ts';
 import { galaxy } from '../shared/catalog.ts';
 import type { Stock } from '../shared/types.ts';
 import type { Store } from './store.ts';
@@ -146,7 +152,7 @@ export class Universe {
   }
   trade(a: Account, item: string, n: number, buy: boolean) {
     this.change(a, (d) => {
-      if (!spaceGoods.includes(item) || !Number.isSafeInteger(n) || n <= 0 || n > 100)
+      if (!spaceGoods.includes(item) || !Number.isSafeInteger(n) || n <= 0 || n > SPACE_TRADE_LIMIT)
         throw Error('Invalid space trade');
       const station = this.market(d.system),
         price = stationPrice(d.system, item),

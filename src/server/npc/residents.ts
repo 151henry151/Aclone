@@ -1,3 +1,4 @@
+import { npcAccountRules } from '../../shared/npc-account-rules';
 import { checkResidentFuelPurchase } from './fuel';
 import { fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { jobVacancy } from '../../shared/staffing.ts';
@@ -624,7 +625,7 @@ export class Residents {
   private choices(r: Resident, w: World, p: Player) {
     const a = this.account(r);
     if (r.state.inSpace)
-      return r.config.homeWorldOnly ? [] : spaceChoices(a, this.worlds, this.universe);
+      return r.config.homeWorldOnly ? [] : spaceChoices(a, this.worlds, this.universe, w.settings);
     const actual = w;
     w = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
     const deliveries = commitmentChoices(w, p, r.state, actual.buildings);
@@ -675,9 +676,12 @@ export class Residents {
       const spent =
         a.exchanged[w.id]?.day === Math.floor(w.time / 86400) ? a.exchanged[w.id].amount : 0;
       const n = Math.min(
-        10,
+        npcAccountRules(w.settings).npcExchangeCreditLoad,
         w.settings.exchangeCap - spent,
-        Math.floor(Math.max(0, p.cash - 20000) / (w.settings.exchangeRate * 100)),
+        Math.floor(
+          Math.max(0, p.cash - npcAccountRules(w.settings).npcExchangeCashReserve) /
+            (w.settings.exchangeRate * 100),
+        ),
       );
       if (n > 0)
         choices.push({
@@ -1367,7 +1371,7 @@ export class Residents {
     if (r.state.inSpace) {
       const a = this.account(r);
       this.universe.arrive(a);
-      const landing = spaceChoices(a, this.worlds, this.universe).find((c) =>
+      const landing = spaceChoices(a, this.worlds, this.universe, w.settings).find((c) =>
         c.plan.some((step) => step.kind === 'operation' && step.operation === 'land'),
       );
       if (!landing) return true;

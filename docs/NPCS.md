@@ -704,3 +704,9 @@ observed nutrition-value quotes and still identifies missing supplies. Resident
 innkeepers use the local suggested lodging rate when considering configuration;
 only an ordinary authorized configuration action changes a posted rate, while
 paid stays remain intact. See [living advice and lodging suggestions](WORLD_BUILDING.md#resident-living-advice-and-lodging-suggestions-unreleased).
+
+Existing account-based trading uses configurable conversion cash/credit budgets
+and station purchase/sale loads. The resident's current local world governs
+conversion; its saved last local world governs off-world plans until it lands
+elsewhere. Normal exchange caps, fees, station stock, the account transaction
+ceiling, hold space and courier cargo still apply. See [account trade budgets](WORLD_BUILDING.md#resident-account-trade-budgets-unreleased).

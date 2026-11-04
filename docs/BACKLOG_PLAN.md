@@ -3094,3 +3094,51 @@ all four fields persist, advice changes from 24,000 to 7,000 and zero, suggested
 rates change to 800 then zero while the posted 200 rate remains intact, invalid
 negative input is refused and saved zero survives reload. Inspect all three
 screenshots in the household/pricing panels. No full suite runs.
+
+Pushed and verified `a234b09` on `backlog-implementation`. **Resident living advice
+and lodging suggestions are done.**
+
+### Gameplay rules — existing resident currency conversion and account trade budgets
+
+Before production, expose five integer policies in Resident account trade budgets:
+`npcExchangeCashReserve` 20,000 hundredths (0–100,000,000),
+`npcExchangeCreditLoad` 10 credits (0–1,000,000), `npcAccountTradeCreditReserve`
+10 credits (0–1,000,000), `npcAccountTradeBuyLoad` 5 and
+`npcAccountTradeSellLoad` 100 items (0–10,000). These govern existing account-based
+currency conversion and station trade suggestions. Use the resident's current
+local world for conversion and its saved last local world for off-world planning;
+landing already changes that saved world. Calls without world context retain
+JSON defaults. Zero load suppresses that optional leg; zero reserve removes only
+the optional cushion. Preserve exchange caps/rates, actual station/ship/cargo
+limits, courier cargo, normal credit charges and rescue eligibility. This slice
+introduces no new travel mode or flight behavior.
+
+Write failing npc-account-budget-rules tests for exact default/custom/missing/zero
+buy and sell quantities and credit reserve boundaries, conversion cash/load/day
+cap, current-world isolation and saved last-world selection, ordinary economic
+execution/conservation, validation, editor/summary/observation/design/reload.
+Use the existing resident choice flow for conversion/world-context checks.
+Browser: save/reopen all five, observe changed/zero account trade suggestions
+without transferring cargo/credits/cash, invalid input and reload; inspect
+screenshots/errors. Run new tests plus npc-adaptive, npc-projects, npc-guide and
+relevant account/universe/resident integration checks after identifying actual
+file names. Require TypeScript, Prettier and NPC/world-builder/README/imperative
+Unreleased docs before push. The excluded piloted-spaceflight work remains
+unstarted and is not part of this slice.
+
+Account red: missing defaults/validation, the fixed credit reserve and the fixed
+local cash cushion fail. Isolate the port fixture from a crowded construction/
+shopping menu to test conversion itself. Four checks pass after implementation.
+A new large-load check then reproduces 120 suggested items against the ordinary
+100-item account transaction ceiling. Share that existing ceiling between execution
+and planning, then verify courier hold reservation too. Do not change its value or
+any rescue, ship, mission or travel behavior.
+
+Account-budget gates pass: 48 relevant tests in 5.7 seconds, including existing
+galactic transaction/persistence checks and new resident current/last-world
+integration. Browser persistence, five-item to two-item and zero suggestions,
+unchanged credits/cargo/cash, invalid input and reload pass in 20.6 seconds; inspect
+all three screenshots, with no browser errors. TypeScript catches three test-only
+filter predicates that need explicit operation narrowing; annotate those types
+and rerun TypeScript cleanly without repeating unaffected runtime/browser gates.
+Changed-file Prettier and diff checks are clean. No full suite runs.

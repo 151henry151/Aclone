@@ -1,3 +1,5 @@
+/** Ordinary account trade transaction ceiling, shared by execution and planning. */
+export const SPACE_TRADE_LIMIT = 100;
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { galaxy, items } from './catalog.ts';
 export const spaceGoods = ['electronics', 'rareEarth', 'shipParts'];

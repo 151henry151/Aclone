@@ -1,3 +1,4 @@
+import { npcAccountRuleFields } from './npc-account-rules';
 import { npcJourneyRuleFields } from './npc-journey-rules';
 import { npcBusinessLoadRuleFields } from './npc-business-load-rules';
 import { npcCargoRuleFields } from './npc-cargo-rules';
@@ -1973,6 +1974,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(npcBusinessRuleFields, key) ||
             Object.hasOwn(npcPricingRuleFields, key) ||
             Object.hasOwn(npcCargoRuleFields, key) ||
+            Object.hasOwn(npcAccountRuleFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
             key === 'loanTerms',
@@ -1981,6 +1983,7 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const npcAccountField = npcAccountRuleFields[key as keyof typeof npcAccountRuleFields];
         const npcCargoField = npcCargoRuleFields[key as keyof typeof npcCargoRuleFields];
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
@@ -2015,6 +2018,7 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             npcBusinessLoadField?.max ??
               npcJourneyField?.max ??
+              npcAccountField?.max ??
               npcCargoField?.max ??
               npcPricingField?.max ??
               npcBusinessField?.max ??
@@ -2030,6 +2034,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcBusinessLoadField) num(v, npcBusinessLoadField.min, npcBusinessLoadField.max, true);
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
+        if (npcAccountField) num(v, npcAccountField.min, npcAccountField.max, true);
         if (npcCargoField) num(v, npcCargoField.min, npcCargoField.max, true);
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
         if (creditField) num(v, creditField.min, creditField.max, true);

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose existing resident currency-conversion and account-trade budgets as world rules; use the saved last local world for off-world planning and retain ordinary transaction and cargo limits.
+
 - Expose resident living-cash advice and suggested lodging rates as world rules; preserve observed prices, actual owner permissions, posted rates and paid stays.
 
 - Expose resident journey, equipment-payback and refuelling budgets as world rules; preserve quoted prices, vehicle tuning and empty-tank walking or carried-fuel recovery.

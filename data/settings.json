@@ -331,5 +331,10 @@
   "npcAdviceCashFloor": 12000,
   "npcAdviceMealItems": 3,
   "npcAdviceDrinkItems": 6,
-  "npcLodgingOfferRate": 600
+  "npcLodgingOfferRate": 600,
+  "npcExchangeCashReserve": 20000,
+  "npcExchangeCreditLoad": 10,
+  "npcAccountTradeCreditReserve": 10,
+  "npcAccountTradeBuyLoad": 5,
+  "npcAccountTradeSellLoad": 100
 }

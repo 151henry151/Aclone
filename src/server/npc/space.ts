@@ -1,9 +1,16 @@
+import { npcAccountRules, type NpcAccountRules } from '../../shared/npc-account-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Account, Universe } from '../universe.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import type { FarmerChoice } from './farmer.ts';
 import { galaxy } from '../../shared/catalog.ts';
-import { shipStats, spaceGoods, stationPrice, jumpQuote } from '../../shared/galaxy.ts';
+import {
+  shipStats,
+  spaceGoods,
+  stationPrice,
+  jumpQuote,
+  SPACE_TRADE_LIMIT,
+} from '../../shared/galaxy.ts';
 import { operation } from './player-operations.ts';
 import { distance, log } from '../../shared/simulation.ts';
 export const spaceOperations = new Set([
@@ -68,7 +75,9 @@ export function spaceChoices(
   a: Account,
   worlds: Map<string, World>,
   universe: Universe,
+  settings: Partial<NpcAccountRules> = {},
 ): FarmerChoice[] {
+  const rules = npcAccountRules(settings);
   const choices: FarmerChoice[] = [];
   const add = (
     description: string,
@@ -131,14 +140,25 @@ export function spaceChoices(
       stats.capacity -
       Object.values(a.cargo).reduce((a, b) => a + b, 0) -
       (a.mission?.quantity ?? 0);
-    const n = Math.min(5, stock, free, Math.floor(Math.max(0, a.credits - 10) / price.buy));
+    const n = Math.min(
+      SPACE_TRADE_LIMIT,
+      rules.npcAccountTradeBuyLoad,
+      stock,
+      free,
+      Math.floor(Math.max(0, a.credits - rules.npcAccountTradeCreditReserve) / price.buy),
+    );
     if (n > 0)
       add(
         `Buy ${n} ${item} for ${n * price.buy} credits; compare other stations before trading.`,
         'spaceTrade',
         { item, quantity: n, buy: true },
       );
-    const sell = Math.min(a.cargo[item] ?? 0, 400 - stock, 100);
+    const sell = Math.min(
+      SPACE_TRADE_LIMIT,
+      a.cargo[item] ?? 0,
+      400 - stock,
+      rules.npcAccountTradeSellLoad,
+    );
     if (sell > 0)
       add(`Sell ${sell} ${item} for ${sell * price.sell} credits.`, 'spaceTrade', {
         item,

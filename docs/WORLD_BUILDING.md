@@ -1130,3 +1130,23 @@ ordinary innkeeper configuration action; zero permits a free offer. Editing it
 does not change any posted rate, paid booking or balance. Rental costs still use
 the actual posted rate. Saves, rules summaries, observations and portable designs
 carry these fields; missing fields retain the defaults above.
+
+## Resident account trade budgets (unreleased)
+
+**F10 → Rules → Resident account trade budgets** exposes five integer policies
+for existing resident currency conversion and account-based station trading:
+
+- `npcExchangeCashReserve`: 20,000 local hundredths retained before optional conversion, range 0–100,000,000.
+- `npcExchangeCreditLoad`: 10 credits per suggested conversion, range 0–1,000,000.
+- `npcAccountTradeCreditReserve`: 10 account credits retained before optional purchasing, range 0–1,000,000.
+- `npcAccountTradeBuyLoad`: 5 items per suggested station purchase, range 0–10,000.
+- `npcAccountTradeSellLoad`: 100 items per suggested station sale, range 0–10,000.
+
+Zero load suppresses its optional leg; zero reserve removes only the cushion.
+Actual exchange caps and rates, the ordinary 100-item account transaction ceiling,
+station stock/warehouse space, ship capacity, reserved courier cargo and available
+funds still apply. Editing a rule transfers nothing and does not change rescue
+eligibility or existing journeys. Local conversion uses the current world;
+off-world planning uses the resident's saved last local world until landing in
+another. Defaults apply when world context or fields are absent. Saves, portable
+designs, observations and summaries preserve these policies.
