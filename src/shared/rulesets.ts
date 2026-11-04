@@ -1,4 +1,4 @@
-import { farmYieldRules } from './farm-yield-rules';
+import { farmYieldRules, cropThirstKeys } from './farm-yield-rules';
 import { gatheringRules, gatheringImplementRules } from './gathering-rules';
 import { constructionRefundPercentage, constructionRules } from './construction-rules';
 import { npcAccountRules } from './npc-account-rules';
@@ -91,6 +91,11 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   return [
     `Resident business cargo: fallback input purchase/deposit ${businessLoads.npcRoutineSupplyBatches}/${businessLoads.npcRoutineDepositBatches} batches, crop demand ${businessLoads.npcCropDemandBatches} buyer batches; collect ${businessLoads.npcBusinessCollectionLoad} output / ${businessLoads.npcFarmCollectionLoad} crops; small input purchase ${businessLoads.npcSmallInputPurchaseLoad} items below ${businessLoads.npcSmallInputPurchaseBatches} batches; carried surplus sale ${businessLoads.npcCarriedSurplusSaleLoad}; owned supplier reserve ${businessLoads.npcOwnedSourceReserveBatches} batches; business/farm output sale loads ${businessLoads.npcBusinessOutputSaleLoad}/${businessLoads.npcFarmOutputSaleLoad}. Zero suppresses the corresponding optional leg; source breeding minima and ordinary transfer limits apply.`,
     `Resident journeys: distance multiplier ${journey.npcJourneyDistanceMultiplier}, speed fraction ${journey.npcJourneySpeedFraction}, unquoted Fuel ${journey.npcJourneyFuelFallbackPrice} hundredths/item, equipment payback ${journey.npcEquipmentPaybackLoads} loads, optional refuel below ${journey.npcDriveFuelThreshold} tank units. Estimates retain actual quotes/tuning; walking costs no fuel.`,
+    `Irrigation: moisture = min(${farmYields.farmIrrigationCap}, (rain fraction × ${farmYields.farmIrrigationRain} + ${farmYields.farmIrrigationBaseline} + treatments × ${farmYields.farmIrrigationTreatment}) / crop thirst); yield multiplier ${farmYields.farmIrrigationDryYield} + ${farmYields.farmIrrigationMoistureYield} × moisture. Water per treatment ${farmYields.farmIrrigationWaterCost}, maximum treatments ${farmYields.farmIrrigationTreatments}; zero limit disables watering. Thirst: ${Object.entries(
+      cropThirstKeys,
+    )
+      .map(([crop, key]) => `${crop} ${farmYields[key]}`)
+      .join(', ')}.`,
     `Crop yield: compost bonus ${farmYields.farmCompostYieldBonus}, repeated-family penalty ${farmYields.farmRotationYieldPenalty}; fractions apply before floor rounding, minimum one unit. Started harvests retain reserved amounts.`,
     `Gathering implements: logs ${implementsRules.gatheringLogsImplement}, stone ${implementsRules.gatheringStoneImplement}, gravel ${implementsRules.gatheringGravelImplement}, topsoil ${implementsRules.gatheringDirtImplement}. None removes the tool requirement; implements are reusable.`,
     `Deposits: standard woodland/mineral capacities ${gatheringRates.resourceLogsCapacity}/${gatheringRates.resourceOtherCapacity}, base recovery intervals ${gatheringRates.resourceLogsRegrowthSeconds}/${gatheringRates.resourceOtherRegrowthSeconds} seconds times the recovery multiplier. Authored non-default survey values remain overrides.`,

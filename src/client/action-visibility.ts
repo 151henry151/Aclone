@@ -1,3 +1,4 @@
+import { farmYieldRules } from '../shared/farm-yield-rules';
 import { hasMotor } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
 import { isTrawler } from '../shared/vehicle-config';
@@ -183,7 +184,11 @@ export function actionVisible(
         case 'harvest':
           return !!plot?.crop && w.time >= plot.ready;
         case 'water':
-          return !!plot?.crop && w.time < plot.ready && plot.water < 3;
+          return (
+            !!plot?.crop &&
+            w.time < plot.ready &&
+            plot.water < farmYieldRules(w.settings).farmIrrigationTreatments
+          );
         case 'fertilize':
           return !!plot?.crop && w.time < plot.ready && !plot.fertilized;
         case 'drain':

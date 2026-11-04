@@ -3643,3 +3643,63 @@ hard-coded rules or later Planned sections. All completed slices above are pushe
 unreleased, tested within their relevant scope and recorded; the full backlog
 is not complete. Piloted spaceflight remains excluded and unstarted. No PR,
 version bump, deployment, live-server edit or player grant has occurred.
+
+### Irrigation decision resolved — preserve the existing formula
+
+Henry chose to preserve and expose the shipped irrigation formula and make it fully
+configurable in world-building. The previous stop is resolved; the backlog's
+“+33% irrigation” shorthand does not replace the formula with a fixed bonus.
+
+Before production changes, completion criteria for this slice:
+
+- Preserve default and missing-setting results for all seven crops and both clear
+  and rainy weather: moisture = min(cap, (rainFraction × rainContribution +
+  baseline + treatments × treatmentContribution) / cropThirst); yield moisture
+  multiplier = dryYield + moistureYield × moisture. Defaults remain cap 1,
+  rainContribution 0.9, baseline 0.25, treatmentContribution 0.25, dryYield 0.6,
+  moistureYield 0.4. Move each crop's existing thirst default into the same JSON
+  settings source; expose all seven separately with positive denominators.
+- Expose water per treatment (3) and maximum treatments (3), integral rules.
+  Allow zero cost; zero treatments disables watering. Consume farm stock before
+  personal water, refuse insufficient supplies/empty or ripe plots/the limit,
+  and leave balances and treatment counts unchanged on refusal. A lower limit
+  preserves recorded treatments. Existing harvest reservations keep their yield.
+- Both resident farm planners use the same cost and limit, including zero and
+  limits above three, while retaining drinking reserves and ordinary permissions.
+- Validate finite ranges, integer counts and positive thirst; reject an invalid
+  mixed patch atomically. New worlds, legacy fallbacks, F10 fields, rules summary,
+  NPC observations, save/reload and portable design round-trips agree.
+- Add `tests/farm-irrigation-rules.test.ts`, run it before production and record
+  the actual red failure. Run it and relevant farming, supplies, policy, winter,
+  harvest-all, farmer, crop-yield and guide tests after implementation. Run
+  `npx tsc --noEmit` and Prettier on every changed path.
+- Browser: `TEST_GPU=1 npm run test:e2e -- tests/browser/farm-irrigation-rules.spec.ts`.
+  In an isolated world edit F10 crop yield rules, save/reopen/reload; open a farm,
+  see a changed moisture/yield estimate and local water price, perform watering
+  with real stock, inspect a fallow plot, and show insufficient-water and
+  treatment-limit refusals. Reject invalid zero thirst and retain saved values.
+  Inspect screenshots of these states. Update player/world-builder/economy docs,
+  README and Unreleased changelog; commit/push only this coherent slice.
+
+Failing-first result: the legacy formula test passes for all seven crops in clear
+and rainy weather; four new-rule tests fail because `farmIrrigationBaseline` is
+absent and the settings action rejects the custom patch as `Unknown setting`.
+The first run also exposed an invalid test-only weather enum (`default`); corrected
+it to the supported `rain` fixture and reran before any production edits.
+
+Irrigation validation complete: 56 targeted tests passed (16.3 s), including the
+new formula/rules tests, farming, supplies, policy, winter, harvest-all, resident
+farmer and guide budget tests. A further consumer audit found the farm button's
+fixed three-treatment visibility cap; an additional regression failed `false !==
+true` for a configured fourth treatment before fixing that consumer. The final
+12 irrigation/action-visibility tests pass (1.3 s). TypeScript is clean after the
+final change; Prettier and `git diff --check` pass.
+
+The final affected browser flow passes (29.0 s), with all six screenshots inspected:
+F10 saved/reloaded values; real watering moves 10%/15 units to 40%/24 units and
+consumes one stocked plus one carried water; a limit of one hides the completed
+care action and explains “watering limit reached”; missing supplies refuse with
+the local two-water quote; fallow plots have no watering action; zero thirst is
+rejected and reload retains one. The original browser run also exercised the
+server's limit refusal before correcting visibility. Server tests retain explicit
+limit, empty and ripe refusal coverage. No acceptance criterion was weakened.

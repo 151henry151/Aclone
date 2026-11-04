@@ -1,4 +1,4 @@
-import { farmYieldRules } from './farm-yield-rules';
+import { farmYieldRules, cropThirstKeys } from './farm-yield-rules';
 import { validateFarmPolicy, farmStaffBlocker, recordFarmStaffSpending } from './farm-policy';
 import { recordGathered } from './player-statistics.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
@@ -17,7 +17,6 @@ export const crops: Record<
     seed: number;
     seasons: string[];
     family: string;
-    thirst: number;
     frost: number;
     rot: number;
     description: string;
@@ -82,8 +81,14 @@ export function cropStatus(w: World, b: Building, index: number) {
     rain += v.precipitation === 'rain' ? 1 : 0;
     frost += v.temperature < 0 ? 1 : 0;
   }
-  const moisture = Math.min(1, ((rain / c.days) * 0.9 + 0.25 + p.water * 0.25) / c.thirst);
   const rules = farmYieldRules(w.settings);
+  const moisture = Math.min(
+    rules.farmIrrigationCap,
+    ((rain / c.days) * rules.farmIrrigationRain +
+      rules.farmIrrigationBaseline +
+      p.water * rules.farmIrrigationTreatment) /
+      rules[cropThirstKeys[p.crop as keyof typeof cropThirstKeys]],
+  );
   const rotation =
     p.previous && crops[p.previous].family === c.family ? 1 - rules.farmRotationYieldPenalty : 1;
   const late = Math.max(0.65, 1 - Math.max(0, (w.time - p.ready) / DAY_SECONDS - 36) * 0.005);
@@ -94,7 +99,7 @@ export function cropStatus(w: World, b: Building, index: number) {
       1,
       Math.floor(
         c.yield *
-          (0.6 + 0.4 * moisture) *
+          (rules.farmIrrigationDryYield + rules.farmIrrigationMoistureYield * moisture) *
           (p.fertilized ? 1 + rules.farmCompostYieldBonus : 1) *
           rotation *
           Math.max(0.35, 1 - (frost / c.days) * c.frost) *
@@ -316,9 +321,13 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   const plot = old!;
   if (op === 'water') {
     check(w.time < plot.ready, 'This crop is already ripe');
-    check(plot.water < 3, 'This plot has enough irrigation');
-    check(available('water') >= 3, 'Stock or carry three water');
-    consume('water', 3);
+    const rules = farmYieldRules(w.settings);
+    check(plot.water < rules.farmIrrigationTreatments, 'This plot has enough irrigation');
+    check(
+      available('water') >= rules.farmIrrigationWaterCost,
+      `Stock or carry ${rules.farmIrrigationWaterCost} water`,
+    );
+    consume('water', rules.farmIrrigationWaterCost);
     plot.water++;
   } else if (op === 'fertilize') {
     check(w.time < plot.ready && !plot.fertilized, 'Fertilize once during growth');

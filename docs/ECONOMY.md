@@ -211,6 +211,8 @@ A hay barn is a 3,000-bale merchant store, not a factory: no recipe, wages or fr
 
 Existing saves add only missing hay quotes on ordinary farms and livestock businesses, and public Harbour/spaceport shops. Existing quotes, balances, stock and custom building templates remain unchanged; the necessities shop keeps its limited catalogue.
 
+Irrigation's world rules preserve rainfall, watering and crop thirst in the moisture formula; its default yield factor ranges from 60% to 100%, rather than a fixed bonus. The farm panel quotes the local water cost.
+
 After a plot's first harvest, install permanent drainage using **6 gravel**.
 Drainage removes its waterlogging penalty and survives future harvests. **6 topsoil + 1 compost** restores an empty plot, clearing its previous crop-family penalty
 for the next planting. **1 compost** fertilizes a growing plot; if you carry none,

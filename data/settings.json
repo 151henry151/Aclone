@@ -359,5 +359,20 @@
   "gatheringGravelImplement": "shovel",
   "gatheringDirtImplement": "shovel",
   "farmCompostYieldBonus": 0.33,
-  "farmRotationYieldPenalty": 0.2
+  "farmRotationYieldPenalty": 0.2,
+  "farmIrrigationBaseline": 0.25,
+  "farmIrrigationRain": 0.9,
+  "farmIrrigationTreatment": 0.25,
+  "farmIrrigationCap": 1,
+  "farmIrrigationDryYield": 0.6,
+  "farmIrrigationMoistureYield": 0.4,
+  "farmIrrigationWaterCost": 3,
+  "farmIrrigationTreatments": 3,
+  "farmWheatThirst": 0.5,
+  "farmPotatoesThirst": 0.4,
+  "farmHopsThirst": 0.7,
+  "farmGrapesThirst": 0.5,
+  "farmTeaThirst": 0.8,
+  "farmCoffeeThirst": 0.7,
+  "farmHayThirst": 0.35
 }

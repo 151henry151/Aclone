@@ -261,9 +261,13 @@ export function gameplayChoices(
                 visit(b, [farm('plant', crop)]),
               );
         } else if (status.state === 'growing') {
-          if ((current?.water ?? 0) < 3 && (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >= 3)
+          if (
+            (current?.water ?? 0) < farmYieldRules(w.settings).farmIrrigationTreatments &&
+            (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >=
+              farmYieldRules(w.settings).farmIrrigationWaterCost
+          )
             add(
-              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; uses 3 water from farm stock first, then personal surplus; protect drinking supplies. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
+              `Water ${current!.crop} at ${b.name} plot ${plot + 1}; uses ${farmYieldRules(w.settings).farmIrrigationWaterCost} water from farm stock first, then personal surplus; protect drinking supplies. Moisture ${Math.round(status.water * 100)}%; ${status.days} days remain.`,
               visit(b, [farm('water')]),
             );
           if (
@@ -408,7 +412,11 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
   for (let plot = 0; plot < farmPlotCount(b); plot++) {
     const current = b.plots?.[plot];
     if (current?.harvest || cropStatus(w, b, plot).state !== 'growing') continue;
-    if ((current?.water ?? 0) < 3 && (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >= 3)
+    if (
+      (current?.water ?? 0) < farmYieldRules(w.settings).farmIrrigationTreatments &&
+      (b.stock.water ?? 0) + spareSupplies(p, 'water', w) >=
+        farmYieldRules(w.settings).farmIrrigationWaterCost
+    )
       return take([farm(plot, 'water')]);
     if (
       farmYieldRules(w.settings).farmCompostYieldBonus > 0 &&

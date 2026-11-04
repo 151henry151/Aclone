@@ -1260,3 +1260,38 @@ uses the configured bonus. Zero rotation penalty removes their rotation tie-brea
 retaining demand and seed-cost priorities. Permissions, staff budgets and the
 ordinary import price remain enforced. Values survive saves, portable designs,
 observations and summaries; omitted fields retain the defaults above.
+
+### Irrigation formula (unreleased)
+
+In **F10 → Rules → Crop yield rules**, configure the existing moisture formula:
+
+`moisture = min(cap, (rainFraction × rainContribution + baseline + treatments × treatmentContribution) / cropThirst)`
+
+`yieldMultiplier = dryYield + moistureYield × moisture`
+
+Rain fraction is the rainy-day share of the crop's full growth period, as before.
+Other yield factors (compost, rotation, frost, wet rot and lateness) still apply,
+followed by flooring and the minimum one-unit harvest. There is no fixed +33%
+irrigation bonus. The defaults preserve the shipped behavior:
+
+- `farmIrrigationBaseline` 0.25, `farmIrrigationRain` 0.9 and
+  `farmIrrigationTreatment` 0.25: each ranges from 0 to 5. Setting a contribution
+  to zero removes that source of moisture.
+- `farmIrrigationCap` 1, range 0–1: caps the displayed moisture fraction.
+- `farmIrrigationDryYield` 0.6 and `farmIrrigationMoistureYield` 0.4, each range
+  0–5: set yield without moisture and the additional yield per moisture unit.
+- `farmWheatThirst` 0.5, `farmPotatoesThirst` 0.4, `farmHopsThirst` 0.7,
+  `farmGrapesThirst` 0.5, `farmTeaThirst` 0.8, `farmCoffeeThirst` 0.7 and
+  `farmHayThirst` 0.35: each ranges from 0.01 to 10. Larger values need more
+  moisture; zero is rejected to keep the divisor valid.
+- `farmIrrigationWaterCost` 3, integer 0–1,000: water per treatment. Zero is free.
+  Farm stock is consumed before carried water. Residents preserve drinking reserves.
+- `farmIrrigationTreatments` 3, integer 0–100: maximum treatments per crop.
+  Zero disables watering; lowering the limit retains existing treatments and their
+  moisture contribution. Empty or ripe plots cannot be watered.
+
+Existing plots use the current formula for estimates and new harvests. Harvests
+already started retain their reserved amount. Both resident farm planners share
+the cost and limit. These rules persist in saves and portable world designs, appear
+in rules summaries and resident observations, and fall back to the same JSON
+defaults in older worlds. Editing a rule grants no water or harvested stock.

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose the existing irrigation formula, crop thirst, water cost and treatment limit as world rules; share them with farm controls and resident planners while preserving default yields and started harvests.
+
 - Expose compost yield bonuses and repeated crop-family penalties as world rules; update farm estimates and resident choices while retaining reserved harvest amounts.
 
 - Expose per-material gathering implement requirements, including no implement; share them across player controls and resident procurement/plans while preserving started loads.

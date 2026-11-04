@@ -2064,7 +2064,8 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
-        if (farmYieldField) num(v, farmYieldField.min, farmYieldField.max);
+        if (farmYieldField)
+          num(v, farmYieldField.min, farmYieldField.max, farmYieldField.step === 1);
         if (constructionField)
           num(v, constructionField.min, constructionField.max, constructionField.step === 1);
         if (key === 'maximumFarmPlots')
