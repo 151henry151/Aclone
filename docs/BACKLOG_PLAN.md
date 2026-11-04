@@ -2924,3 +2924,46 @@ successfully, without repeating unaffected runtime checks. Changed-file Prettier
 and diff checks are clean. All eight absent-field defaults and the 1,000-item
 career baseline pass. The lossless topic index reconstructs every original lookup
 ID and the unchanged request-size limit passes. No full suite is run.
+
+Pushed and verified `c43bd9c` on `backlog-implementation`. **General resident trade
+and storage load targets are done.**
+
+### Gameplay rules — resident business and farm cargo budgets
+
+Before production, expose eight integer 0–10,000 rules in Resident business cargo:
+`npcBusinessCollectionLoad` 20, `npcSmallInputPurchaseLoad` 5,
+`npcSmallInputPurchaseBatches` 2, `npcCarriedSurplusSaleLoad` 25,
+`npcFarmCollectionLoad` 25, `npcOwnedSourceReserveBatches` 3,
+`npcBusinessOutputSaleLoad` 30 and `npcFarmOutputSaleLoad` 20. Preserve distinct
+collection and sale policies. Small-input batches select optional restocking;
+zero disables that optional restocking, without suppressing the separate purchase
+of one required gathering implement. Source reserve batches protect inputs at an
+owned supplier, with actual breeding minima retained even at zero. Zero load
+suppresses that optional transfer. All paths retain transaction, available stock,
+capacity, affordability and household protections. Missing keys use JSON defaults.
+
+Write failing `npc-business-load-rules` tests for defaults and missing fields,
+custom/zero behavior for all eight policies, exact input-stock boundary, owned
+supplier reserves including breeding minimum, ordinary execution and conservation,
+and settings validation, summary, observation, design and reload. Run this file
+plus npc-transfer-limit, npc-farmer, npc-business-policy, npc-enterprise (if present),
+npc-prosperity and npc-guide. Browser `npc-business-load-rules.spec.ts`: edit all
+eight, reopen/reload, observe changed collection load and zero's absent option
+without a transfer, reject negative input, inspect screenshots and browser errors.
+Require TypeScript, changed-file Prettier, world-builder/NPC docs, README review and
+imperative Unreleased entry before push. Do not repeat the full suite.
+
+Business cargo red: six checks fail for absent defaults/validation, unchanged
+20-item collections, 25-item surplus sales, two-batch purchase thresholds and
+three-batch supplier reserves. After implementation five pass immediately; the
+breeding-minimum fixture names the output item as a recipe. Correct that fixture
+to the actual dairy recipe and all six pass, including the unchanged two-animal
+source minimum. No assertion or acceptance criterion is weakened.
+
+Business cargo gates pass: all 61 relevant checks in 3.6 seconds, including the
+unchanged guide request-size check. TypeScript and diff checks are clean; Prettier
+runs on every changed file. Browser persistence, changed/zero collection load,
+invalid input and reload pass in 20.0 seconds, with no browser errors; inspect all
+three screenshots. No full suite is run. The named npc-enterprise test file does
+not exist; enterprise behavior is covered directly by the new tests and existing
+transfer, business-policy and prosperity tests.

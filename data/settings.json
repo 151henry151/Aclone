@@ -311,5 +311,13 @@
   "npcStorageDepositLoadLimit": 10,
   "npcStorageWithdrawalLoadLimit": 5,
   "npcRoomStorageLoadLimit": 3,
-  "npcCareerTradeLoadLimit": 1000
+  "npcCareerTradeLoadLimit": 1000,
+  "npcBusinessCollectionLoad": 20,
+  "npcSmallInputPurchaseLoad": 5,
+  "npcSmallInputPurchaseBatches": 2,
+  "npcCarriedSurplusSaleLoad": 25,
+  "npcFarmCollectionLoad": 25,
+  "npcOwnedSourceReserveBatches": 3,
+  "npcBusinessOutputSaleLoad": 30,
+  "npcFarmOutputSaleLoad": 20
 }

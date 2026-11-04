@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident business and farm collection, input-purchase, source-reserve and sale budgets as world rules; preserve breeding minima, required implements and ordinary transfer limits.
+
 - Expose resident general-trade, construction, parish-supply, storage and career load targets in a dedicated world-rules fieldset; derive guide topic IDs from retained titles to preserve all help within the request budget.
 
 - Expose resident portable shopping targets as world rules; bound shopping and carried-input deposits by transaction limits and honor local Water/Bread reserves in owner deliveries.

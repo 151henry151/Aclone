@@ -1,3 +1,4 @@
+import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { preferredLoanTerm } from '../../shared/loan-rules';
@@ -99,6 +100,7 @@ export function businessEstimate(w: World, b: Building) {
 /** Complete, costed operating errands precede speculative one-step purchases. */
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   const budgets = npcBusinessRules(w.settings);
+  const loads = npcBusinessLoadRules(w.settings);
   const reserves = npcReserveRules(w.settings);
   const list: FarmerChoice[] = [
     ...pricingChoices(w, p),
@@ -360,7 +362,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           const sourceHerd = herdSpec(s);
           const keep = own
             ? Math.max(
-                3 *
+                loads.npcOwnedSourceReserveBatches *
                   (sourceRecipe
                     ? (livestockSupplyInputs(w, s, sourceRecipe.inputs)[item] ?? 0)
                     : 0),
@@ -425,7 +427,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       let n = Math.min(
         economyRules(w.settings).transactionItemLimit,
         b.stock[item] ?? 0,
-        30,
+        loads.npcBusinessOutputSaleLoad,
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),
       );

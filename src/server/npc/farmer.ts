@@ -1,3 +1,4 @@
+import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -286,7 +287,11 @@ export function gameplayChoices(
     }
     if (own)
       for (const crop of Object.keys(crops)) {
-        let n = Math.min(economyRules(w.settings).transactionItemLimit, b.stock[crop] ?? 0, 25);
+        let n = Math.min(
+          economyRules(w.settings).transactionItemLimit,
+          b.stock[crop] ?? 0,
+          npcBusinessLoadRules(w.settings).npcFarmCollectionLoad,
+        );
         while (n && !canCarry(p, crop, n, w)) n--;
         if (n)
           add(

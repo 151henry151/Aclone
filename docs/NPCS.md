@@ -676,3 +676,12 @@ Guide topic titles are retained in full, grouped by source. The documented slug
 algorithm reconstructs every exact lookup ID; direct title or ID searches still
 work. This avoids repeating derived slugs while keeping all headings, help text,
 citations and memory within the existing request-size limit.
+
+Resident business cargo budgets (unreleased) distinguish collecting output from
+selling it, farm crop loads, carried surplus sales and optional small input
+purchases. F10 configures their load limits and the batch threshold that triggers
+small restocking. Owned suppliers retain their configured production-input buffer
+and actual breeding minima. Zero load suppresses an optional transfer; required
+gathering implements remain separate one-item purchases. Plans still use actual
+stock, affordable cash, storage and transaction limits, and transfers create no
+money or goods. See [business cargo rules](WORLD_BUILDING.md#resident-business-cargo-unreleased).

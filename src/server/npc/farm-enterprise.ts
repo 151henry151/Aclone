@@ -1,3 +1,4 @@
+import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { skillFits } from '../../shared/survival-rules';
@@ -163,7 +164,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       if (!buyer) continue;
       let n = Math.min(
         economyRules(w.settings).transactionItemLimit,
-        20,
+        npcBusinessLoadRules(w.settings).npcFarmOutputSaleLoad,
         b.stock[item] ?? 0,
         buyer.capacity - (buyer.stock[item] ?? 0),
         Math.floor(buyer.investment / buyer.buy[item]),

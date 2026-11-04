@@ -1063,3 +1063,24 @@ Zero suppresses the corresponding optional transfer leg. World transaction limit
 stock, funds, reserves, cargo and storage still apply. Edits make no transfer and
 rewrite no order or agreement. Values survive saves/designs and are visible to
 resident planning. Separate business and farm delivery policies remain separate.
+
+## Resident business cargo (unreleased)
+
+**F10 → Rules → Resident business cargo** exposes integer budgets from 0 to
+10,000, stored in saves and portable designs and included in the rules summary:
+
+- `npcBusinessCollectionLoad`: 20 items collected from an owned producer.
+- `npcSmallInputPurchaseLoad`: 5 items in an optional small input purchase.
+- `npcSmallInputPurchaseBatches`: restock when input stock is below 2 batches, subject to the existing production stock target.
+- `npcCarriedSurplusSaleLoad`: 25 carried surplus items sold in an optional sale.
+- `npcFarmCollectionLoad`: 25 crop items collected from an owned farm.
+- `npcOwnedSourceReserveBatches`: retain 3 batches of inputs when transferring stock from another owned business.
+- `npcBusinessOutputSaleLoad`: 30 producer output items collected and delivered to a buyer.
+- `npcFarmOutputSaleLoad`: 20 crop items hauled to a buyer, returning receipts to the farm.
+
+Zero load disables that optional transfer; zero small-input batches disables that
+restock suggestion. Missing gathering implements still have a separate one-item
+purchase. Zero supplier reserve removes only the optional input buffer: breeding
+animals remain protected. Actual stock, cargo/storage, cash, household reserves
+and the world transaction limit still apply. Rule edits transfer nothing. Old
+saves without these fields retain the defaults above.

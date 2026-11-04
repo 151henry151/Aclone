@@ -1,3 +1,4 @@
+import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { jobVacancy } from '../../shared/staffing.ts';
@@ -26,6 +27,7 @@ export function economyChoices(
   add: AddChoice,
   visit: (b: Building, steps: Step[]) => Step[],
 ) {
+  const loads = npcBusinessLoadRules(w.settings);
   for (const b of buildings
     .filter((b) => b.kind !== 'farm' && (b.production || b.recipe))
     .slice(0, 12)) {
@@ -139,7 +141,11 @@ export function economyChoices(
           );
       }
       for (const item of Object.keys(recipe.outputs)) {
-        let n = Math.min(economyRules(w.settings).transactionItemLimit, b.stock[item] ?? 0, 20);
+        let n = Math.min(
+          economyRules(w.settings).transactionItemLimit,
+          b.stock[item] ?? 0,
+          loads.npcBusinessCollectionLoad,
+        );
         while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
           add(
@@ -175,7 +181,10 @@ export function economyChoices(
     for (const item of Object.keys(recipe?.inputs ?? {}))
       if (
         (b.stock[item] ?? 0) <
-          Math.min(recipe.inputs[item] * 2, inputStockTarget(b, item, w) ?? Infinity) &&
+          Math.min(
+            recipe.inputs[item] * loads.npcSmallInputPurchaseBatches,
+            inputStockTarget(b, item, w) ?? Infinity,
+          ) &&
         !(p.inventory[item] > 0) &&
         (productionBudget(w, b)?.idealMargin ?? -1) >= 0
       )
@@ -192,11 +201,15 @@ export function economyChoices(
           b.stock[item] > 0,
       )
       .slice(0, 1)) {
+      const maximum =
+        item === 'tools' || Object.values(gatheringImplements).some((v) => v.item === item)
+          ? 1
+          : loads.npcSmallInputPurchaseLoad;
       const n = Math.min(
         economyRules(w.settings).transactionItemLimit,
-        item === 'tools' || Object.values(gatheringImplements).some((v) => v.item === item) ? 1 : 5,
+        maximum,
         b.stock[item],
-        b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 5) : 5,
+        b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), maximum) : maximum,
       );
       if (n > 0 && canCarry(p, item, n, w))
         add(
@@ -233,7 +246,7 @@ export function economyChoices(
     const n = Math.min(
       economyRules(w.settings).transactionItemLimit,
       spareSupplies(p, item, w),
-      25,
+      loads.npcCarriedSurplusSaleLoad,
       Math.floor(b.investment / b.buy[item]),
       b.capacity - (b.stock[item] ?? 0),
     );

@@ -1,3 +1,4 @@
+import { npcBusinessLoadRules, npcBusinessLoadRuleFields } from '../shared/npc-business-load-rules';
 import { npcCargoRules, npcCargoRuleFields } from '../shared/npc-cargo-rules';
 import { npcPricingRuleFields, npcPricingRules } from '../shared/npc-pricing-rules';
 import { npcBusinessRuleFields, npcBusinessRules } from '../shared/npc-business-rules';
@@ -108,6 +109,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcBusinessRuleFields),
     ...Object.keys(npcPricingRuleFields),
     ...Object.keys(npcCargoRuleFields),
+    ...Object.keys(npcBusinessLoadRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -131,6 +133,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const businessLoads = npcBusinessLoadRules(settings);
+  const businessLoadFields = `<fieldset class="boat-death-settings"><legend>Resident business cargo</legend>${Object.entries(
+    npcBusinessLoadRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        businessLoads[key as keyof typeof businessLoads],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Zero load suppresses that optional transfer; zero input batches suppress optional small restocking. Required gathering implements still use one item. Supplier reserves protect production inputs; breeding minima remain protected even at zero. Transaction, stock, cargo, storage and cash limits still apply. Editing rules transfers nothing.</p></fieldset>`;
   const cargo = npcCargoRules(settings);
   const cargoFields = `<fieldset class="boat-death-settings"><legend>Resident trade and storage loads</legend>${Object.entries(
     npcCargoRuleFields,
@@ -428,6 +446,7 @@ export function settingsFields(settings: Settings = defaults) {
     businessFields +
     pricingFields +
     cargoFields +
+    businessLoadFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))
