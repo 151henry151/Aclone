@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
+import { economyRules } from '../../shared/economy-rules';
 import type { Player, World } from '../../shared/types.ts';
 import { vehicles } from '../../shared/catalog.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
@@ -7,17 +9,30 @@ import type { Step } from './decision.ts';
 
 /** A portable reserve, not an unlimited stockpile. Home stores are separate. */
 export function portableReserve(item: string, w?: World) {
-  const def = worldItems(w)[item];
+  const rules = npcReserveRules(w?.settings),
+    def = worldItems(w)[item];
   if (!def) return 0;
-  if (item === 'water') return 6;
-  if (item === 'bread') return 3;
+  if (item === 'water') return rules.npcPortableWater;
+  if (item === 'bread') return rules.npcPortableBread;
   if (def.food || def.drink)
-    return Math.min(12, Math.max(3, Math.ceil(24000 / Math.max(def.food ?? 0, def.drink ?? 0, 1))));
-  return ['tools', 'tackle', 'pickaxe', 'chainsaw', 'shovel', 'fuel'].includes(item) ? 1 : 0;
+    return Math.min(
+      rules.npcPortableMaximum,
+      Math.max(
+        rules.npcPortableMinimum,
+        Math.ceil(rules.npcPortableNutrition / Math.max(def.food ?? 0, def.drink ?? 0, 1)),
+      ),
+    );
+  return ['tools', 'tackle', 'pickaxe', 'chainsaw', 'shovel', 'fuel'].includes(item)
+    ? rules.npcPortableEquipment
+    : 0;
 }
 
 export function canKeepFishing(w: World, p: Player) {
-  return canCarry(p, 'fish', 1, w) && (p.inventory.fish ?? 0) < portableReserve('fish', w) + 3;
+  return (
+    canCarry(p, 'fish', 1, w) &&
+    (p.inventory.fish ?? 0) <
+      portableReserve('fish', w) + npcReserveRules(w.settings).npcFishingSurplus
+  );
 }
 
 /** Last resort when an empty tank and a heavy load prevent walking. Use nearby
@@ -40,7 +55,7 @@ export function strandedCargo(p: Player, w?: World): Step[] {
   for (const [item, count] of freight) {
     if (excessWeight <= 0) break;
     const n = Math.min(
-      10000,
+      economyRules(w?.settings).transactionItemLimit,
       count - portableReserve(item, w),
       Math.ceil(excessWeight / catalogue[item].weight),
     );

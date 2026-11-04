@@ -753,3 +753,39 @@ without NaN. Daily replacement-cost comparisons remain 86,400 real seconds and
 exclude fuel, independently of the ordinary forecast horizon and fuel threshold.
 All four fields are validated, summarized, included in resident observations and
 portable designs, and retained on reload. Missing keys use named defaults.
+
+## Resident cash and portable reserve rules (unreleased)
+
+**F10 → Rules → Resident cash and portable reserves** exposes thirteen policy
+values. These guide residents' ordinary actions; they never grant money, waive
+ownership or storage checks, or change a human player's bank permissions.
+
+- `npcCareCashFloor` defaults to 12,000 hundredths (120d) for emergency savings
+  withdrawals; `npcBankCashFloor` defaults to 40,000 (400d) for ordinary banking.
+  Both take the maximum with the computed household reserve.
+- `npcBankDepositShare` defaults to 0.5, fraction 0–1. Deposit that share of cash
+  above the protected reserve, rounded down and capped by `cashTransferLimit`.
+  Zero disables saving deposits while leaving withdrawals available.
+- `npcBankMinimumDeposit` defaults to 1,000 hundredths (10d). A proposed deposit
+  must reach it and be positive. All three currency fields accept integer
+  0–100,000,000; withdrawals cannot exceed savings or the transfer limit.
+- `npcPortableWater` 6 and `npcPortableBread` 3 set specific carried reserves.
+- `npcPortableMinimum` 3 and `npcPortableMaximum` 12 clamp other food/drink
+  reserves. Require minimum ≤ maximum. `npcPortableNutrition` 24,000 sets their
+  nutrition target: divide by the item's larger food/drink value, round up,
+  then clamp. Nutrition accepts integer 0–1,000,000.
+- `npcPortableEquipment` 1 keeps that many of each Tools, Fishing tackle,
+  Pickaxe, Chainsaw, Shovel and Fuel item. Other non-provisions are unreserved.
+- `npcFishingSurplus` 3 permits that many fish above the portable reserve before
+  fishing stops. Actual cargo capacity still applies.
+- `npcTradeFoodReserve` 1 and `npcTradeDrinkReserve` 2 retain the distinct smaller
+  reserves used for opportunistic trades; drink takes precedence for an item
+  providing both nutrients. Cargo recovery/unloading keeps the portable reserve.
+
+All item counts accept integer 0–100, including zero. Water/Bread counts are
+independent of the generic minimum/maximum. Cargo recovery and surplus unloading
+also obey `transactionItemLimit`; repeated bounded recovery actions can unload a
+large excess. Setting reserves above carrying capacity cannot create room or
+supplies. Carried fuel still takes priority over discarding cargo when stranded.
+Missing keys retain defaults; creation, summaries, resident observations, portable
+designs and reloads preserve all fields. Invalid joint bounds reject atomically.

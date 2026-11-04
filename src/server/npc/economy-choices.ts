@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
@@ -272,12 +273,13 @@ export function economyChoices(
       );
   if (p.atHome) add('Go outside my home to resume work or travel.', [act({ type: 'outside' })]);
   const bank = buildings.find((b) => b.kind === 'bank');
-  const reserve = Math.max(40000, livingReserve(w, p));
+  const rules = npcReserveRules(w.settings);
+  const reserve = Math.max(rules.npcBankCashFloor, livingReserve(w, p));
   const deposit = Math.min(
     economyRules(w.settings).cashTransferLimit,
-    Math.floor(Math.max(0, p.cash - reserve) / 2),
+    Math.floor(Math.max(0, p.cash - reserve) * rules.npcBankDepositShare),
   );
-  if (bank && deposit >= 1000)
+  if (bank && deposit > 0 && deposit >= rules.npcBankMinimumDeposit)
     add(
       `Deposit ${deposit / 100}d of spare cash at the bank; retain living and opportunity funds.`,
       visit(bank, [

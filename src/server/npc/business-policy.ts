@@ -368,6 +368,7 @@ export function cargoRelief(w: World, p: Player, state?: ResidentState): Step[] 
     const n = Math.min(
       excess,
       20,
+      economyRules(w.settings).transactionItemLimit,
       b.capacity - (b.stock[item] ?? 0),
       own ? Infinity : Math.floor(b.investment / b.buy[item]),
     );

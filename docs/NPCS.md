@@ -132,6 +132,17 @@ day and exclude fuel purchases. See [world rules](WORLD_BUILDING.md#resident-hou
 
 During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household. Both general property choices and queued purchases check for an existing owned cottage or foundation before acquiring another; a stale home reference or a rented room does not hide owned housing. Human property permissions are unchanged.
 
+Unreleased **Resident cash and portable reserves** rules set emergency cash
+floors (120d), banking cash floors (400d), the saved share of surplus (50%) and
+minimum deposit (10d). Computed household costs still take priority. A zero
+saving share stops new deposits; normal withdrawals remain available. Portable
+recovery keeps six Water, three Bread, 3–12 other provisions toward 24,000
+nutrition, and one of each listed tool/tackle/Fuel by default; fishing stops at
+three fish above that reserve. Ordinary opportunistic trades retain their
+separate one-food/two-drink reserve. All counts are world rules. Recovery and
+surplus unloading obey the local transaction limit through ordinary actions;
+settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#resident-cash-and-portable-reserve-rules-unreleased).
+
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 
 Owners can withdraw the exact input-purchasing cost for a supply trip, leaving three full payrolls and investor claims intact. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.

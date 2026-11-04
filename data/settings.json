@@ -218,5 +218,18 @@
   "npcHouseholdSeconds": 21600,
   "npcBudgetNeedAllowance": 15000,
   "npcBudgetCarriedShare": 0.5,
-  "npcBudgetFuelThreshold": 8
+  "npcBudgetFuelThreshold": 8,
+  "npcCareCashFloor": 12000,
+  "npcBankCashFloor": 40000,
+  "npcBankDepositShare": 0.5,
+  "npcBankMinimumDeposit": 1000,
+  "npcPortableWater": 6,
+  "npcPortableBread": 3,
+  "npcPortableMinimum": 3,
+  "npcPortableMaximum": 12,
+  "npcPortableNutrition": 24000,
+  "npcPortableEquipment": 1,
+  "npcFishingSurplus": 3,
+  "npcTradeFoodReserve": 1,
+  "npcTradeDrinkReserve": 2
 }

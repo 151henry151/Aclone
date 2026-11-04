@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { survivalRules, servingMultiplier } from '../../shared/survival-rules';
 import { alcoholLevel, alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
@@ -41,12 +42,18 @@ export function careNeeded(w: World, p: Player) {
   if (shelter(w, p) && offlineReadiness(w, p, 600).stocked) return false;
   return p.hunger >= 25000 || p.thirst >= 25000 || secondsToDamage(w, p) <= 600 || p.health < 30000;
 }
-/** Surplus for optional sales/production: keep at least one meal and two drinks of each kind. */
+/** Surplus for optional sales/production after the world's food/drink reserve. */
 export function spareSupplies(p: Player, item: string, w?: World) {
-  const items = worldItems(w);
+  const rules = npcReserveRules(w?.settings),
+    items = worldItems(w);
   return Math.max(
     0,
-    (p.inventory[item] ?? 0) - (items[item]?.drink ? 2 : items[item]?.food ? 1 : 0),
+    (p.inventory[item] ?? 0) -
+      (items[item]?.drink
+        ? rules.npcTradeDrinkReserve
+        : items[item]?.food
+          ? rules.npcTradeFoodReserve
+          : 0),
   );
 }
 /** Small, protected Jev context. All prices/rates are live; none of these forecasts grant supplies. */

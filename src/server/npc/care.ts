@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { operation } from './player-operations.ts';
@@ -112,7 +113,10 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
       ]);
   }
   const bank = w.buildings.find((b) => b.kind === 'bank' && !b.construction && usable(b));
-  const reserve = Math.max(12000, householdBudget(w, p).reserve);
+  const reserve = Math.max(
+    npcReserveRules(w.settings).npcCareCashFloor,
+    householdBudget(w, p).reserve,
+  );
   if (p.bank > 0 && p.cash < reserve && bank)
     return visitBuilding(p, bank, [
       act({

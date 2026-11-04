@@ -14,13 +14,21 @@ Use the existing world rule/catalogue as the single source for gameplay values;
 new gameplay defaults require validation, creation, summary, editor and portable
 design coverage. Flight graphics follow client graphics settings instead.
 
-Every finished slice requires its acceptance checks, the touched unit tests via
-`npm test`, clean `npx tsc --noEmit`, and
+Every finished slice requires its acceptance checks, relevant tests selected from
+the `npm test` suite with its `tsx --test` runner, clean `npx tsc --noEmit`, and
 `npx prettier --write <explicit changed paths>`. UI/rendering slices also require
 the affected real browser flow, including specified empty/refusal states. Record
 commands and outcomes below. Commit explicit paths only, excluding `output/` and
 `docs/NPC_STATUS*.md`, push this branch, then mark the slice done in this plan.
 Stop at a failed completion criterion; do not weaken it or move on.
+
+Henry revised the testing policy during the reserve-rules slice: run tests only
+when the change could reasonably make them fail, rather than the full suite after
+every change. Select the changed behavior and direct consumers; record the scope
+and results. Keep failing-first tests, TypeScript, formatting and affected browser
+flows. Broaden testing when shared behavior, a failure or an unresolved concern
+justifies it. This policy supersedes the whole-suite gates in older slice records;
+historical results remain recorded accurately.
 
 ## Shipped-claim review
 
@@ -2046,3 +2054,101 @@ deadline, with maximum state age 1.19 seconds. All 21 focused tests pass; TypeSc
 changed-file Prettier, browser criteria and inspected screenshots are clean.
 The earlier timeout and isolated result remain recorded above; no tests, limits,
 deadlines or package scripts were changed. Ready to commit and push.
+
+Pushed and verified `c6f2227` on `backlog-implementation`. **Resident household
+forecast rules are done.** Continue with cash and portable-supply reserves.
+
+### Gameplay rules — resident cash and portable reserves
+
+Before production, expose four cash rules: `npcCareCashFloor` 12,000 hundredths,
+`npcBankCashFloor` 40,000, `npcBankDepositShare` 0.5 and
+`npcBankMinimumDeposit` 1,000 hundredths. Currency values accept integer
+0–100,000,000 and share 0–1. Cash floors take the maximum with the computed
+household reserve; all transfers remain capped by the existing world cash limit
+and actual balances. Zero share disables saving deposits, not withdrawals; zero
+minimum must never create a zero-value action. Planning never grants cash.
+
+Expose seven portable-supply rules: `npcPortableWater` 6, `npcPortableBread` 3,
+`npcPortableMinimum` 3, `npcPortableMaximum` 12, `npcPortableNutrition` 24,000
+need units, `npcPortableEquipment` 1 per listed tool/tackle/Fuel item, and
+`npcFishingSurplus` 3 fish above the reserve. Counts accept integer 0–100;
+nutrition integer 0–1,000,000; require minimum ≤ maximum. Water/bread retain their
+specific counts; other nutrition uses the catalogue value and clamped ceiling of
+target/value. Non-provisions stay unreserved. Fishing still respects actual
+cargo capacity, and sales/unloading keep the same configured reserves. Zero is
+supported without granting supplies or bypassing storage/ownership/stock checks.
+Defaults and absent keys preserve old behavior.
+
+The existing `transactionItemLimit` must also cap stranded-cargo actions; its
+current private 10,000 copy can produce rejected recovery plans in edited worlds.
+Add a failing small-limit regression, then reuse the existing rule and prove
+repeated bounded recovery actions can make walking possible while keeping the
+configured provisions. Do not change physical carry capacities in this slice.
+
+Tests: default and custom care/bank plans; zero/minimum/share boundaries; actual
+ordinary transfer conservation; changed household reserve and existing transfer
+cap; portable item classes, min/max, fishing cutoff, surplus sales and bounded
+stranded recovery; atomic invalid settings, missing fields, editor/summary/design/
+reload parity. Commands: `node_modules/.bin/tsx --test tests/npc-reserve-rules.test.ts
+ tests/npc-cargo.test.ts tests/npc-household.test.ts tests/npc-guide.test.ts`, browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/npc-reserve-rules.spec.ts`, whole npm
+test suite (serial if contention persists), TypeScript and changed-file Prettier.
+Browser: edit/reopen all eleven, observe resulting local plan quantities and
+reserved supplies through the server calculations, reject inverted reserve bounds
+atomically, reload to verify saved values. Inspect screenshots/errors; update
+NPCS, WORLD_BUILDING, README and imperative Unreleased. Strategic horizons and
+business budgets remain subsequent slices.
+
+The existing opportunistic trade reserve differs from unloading: `spareSupplies`
+keeps one food or two drink items, while cargo recovery uses the larger portable
+reserve. Preserve that distinction with `npcTradeFoodReserve` 1 and
+`npcTradeDrinkReserve` 2 (integer 0–100), bringing this batch to thirteen fields.
+Test both defaults and changed values rather than unifying them and changing
+shipped behavior. Surplus unloading also caps its ordinary trade/stock action by
+the existing transaction limit; test that bounded plan separately.
+
+Reserve red run: all eight tests fail before production for missing defaults,
+Unknown setting or absent editor controls. Existing small-limit regressions also
+fail directly: stranded recovery proposes more than five items and surplus sale
+proposes 20 instead of the configured five (`/tmp/aclone-reserves-red.log`).
+
+All 28 focused tests pass. The browser passes in 33.1 seconds: thirteen values
+persist, planned savings change from 30,000 to 20,000 hundredths, configured
+portable reserves are used without inventory/cash changes, and inverted min/max
+reject atomically with a visible reason. Inspect all three screenshots; no page
+errors. Typecheck identifies fixture typing only: resources are a record, not an
+array, and recovery assertions must narrow quantity-bearing actions. Correct
+those fixture types without changing expected outcomes, then rerun gates.
+
+Final reserve browser rerun passes in 35.8 seconds after explicitly narrowing the
+bank action in the fixture; inspect all three screenshots again. TypeScript is
+clean. The full unchanged npm test suite is running serially to avoid the earlier
+host-contention timeout. Do not commit or begin the next slice until it passes.
+
+Henry requests relevant-test selection instead of repeating the full suite. Stop
+the serial run intentionally after 846 passing checks; this is not a full-suite
+pass. Replace that completion gate with the changed reserve tests, household and
+guide checks, and existing direct-consumer tests for care, cargo, strategy, bank
+choices and business policy. Run the twenty selected test files with
+`node_modules/.bin/tsx --test --test-concurrency=2`, recorded in
+`/tmp/aclone-reserves-relevant.log`. The global protocol above now governs later
+slices; browser, TypeScript and formatting requirements remain in force.
+
+Relevant reserve gate: all 166 tests pass in 54.9 seconds. The explicit command is:
+
+```sh
+node_modules/.bin/tsx --test --test-concurrency=2 \
+  tests/npc-reserve-rules.test.ts tests/npc-cargo.test.ts \
+  tests/npc-household.test.ts tests/npc-guide.test.ts \
+  tests/npc-business-policy.test.ts tests/npc-business-continuity.test.ts \
+  tests/npc-owner-recovery.test.ts tests/npc-strategy.test.ts \
+  tests/npc-finances.test.ts tests/npc-prosperity.test.ts \
+  tests/npc-audit.test.ts tests/npc-circulation.test.ts \
+  tests/economy-recovery.test.ts tests/money-transfer-rules.test.ts \
+  tests/staffing.test.ts tests/intoxication.test.ts tests/captain.test.ts \
+  tests/survival-needs.test.ts tests/business-health.test.ts \
+  tests/business-management.test.ts
+```
+
+TypeScript, changed-file formatting and the browser criteria pass. No production
+change followed those checks. Ready to commit and push this slice.

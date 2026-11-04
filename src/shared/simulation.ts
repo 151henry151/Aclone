@@ -1,3 +1,4 @@
+import { npcReserveRuleFields, npcReserveRulesError } from './npc-reserve-rules';
 import { npcHouseholdRuleFields } from './npc-household-rules';
 import { towingRuleFields, towingRulesError } from './towing-rules';
 import { charterRuleFields, charterRulesError } from './charter-rules';
@@ -1963,11 +1964,13 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(charterRuleFields, key) ||
             Object.hasOwn(towingRuleFields, key) ||
             Object.hasOwn(npcHouseholdRuleFields, key) ||
+            Object.hasOwn(npcReserveRuleFields, key) ||
             key === 'loanTerms',
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const creditField = creditRuleFields[key as keyof typeof creditRuleFields];
+        const npcReserveField = npcReserveRuleFields[key as keyof typeof npcReserveRuleFields];
         const npcHouseholdField =
           npcHouseholdRuleFields[key as keyof typeof npcHouseholdRuleFields];
         const towingField = towingRuleFields[key as keyof typeof towingRuleFields];
@@ -1993,7 +1996,8 @@ export function act(w: World, id: string, a: Action): string {
           num(
             v,
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
-            towingField?.max ??
+            npcReserveField?.max ??
+              towingField?.max ??
               charterField?.max ??
               creditField?.max ??
               economyField?.max ??
@@ -2003,6 +2007,8 @@ export function act(w: World, id: string, a: Action): string {
         if (creditField) num(v, creditField.min, creditField.max, true);
         if (charterField) num(v, charterField.min, charterField.max, true);
         if (towingField) num(v, towingField.min, towingField.max, true);
+        if (npcReserveField)
+          num(v, npcReserveField.min, npcReserveField.max, npcReserveField.step === 1);
         if (npcHouseholdField)
           num(v, npcHouseholdField.min, npcHouseholdField.max, npcHouseholdField.step === 1);
         const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
@@ -2071,6 +2077,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const npcReserveError = npcReserveRulesError({ ...w.settings, ...clean });
+      requireThat(!npcReserveError, npcReserveError ?? 'Invalid resident reserves');
       const towingError = towingRulesError({ ...w.settings, ...clean });
       requireThat(!towingError, towingError ?? 'Invalid towing rules');
       const charterError = charterRulesError({ ...w.settings, ...clean });
