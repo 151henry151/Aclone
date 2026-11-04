@@ -1261,3 +1261,58 @@ completion criteria, red tests and implementation. All later ordered work also
 remains pending. Piloted spaceflight stays excluded. Resume with this same branch
 and plan after the default is resolved; deployment still requires Henry's explicit
 authorization.
+
+### Resume — survival thresholds, health and nutrition
+
+Henry resolved the default conflict: **change base maximum health to 65,000**.
+The preceding stop is resolved. Keep the other stated defaults: automatic meals
+at 30,000; damage at 50,000; nutrition adjustment ±6,000; repeated manual servings
+receive half value starting with serving three; online energy regenerates at
+3,000/second. Define each once in settings, with missing-key fallback.
+
+Before production, add concrete regression tests in `tests/survival-needs.test.ts`.
+Verify new-player and death/arena health, positive and negative nutrition bounds,
+healing caps, changed automatic feeding/damage thresholds, pantry exhaustion,
+empty stores, online/offline chunk equivalence, repeat-serving start and factor,
+resident forecasts and changed/zero energy regeneration. Use non-default settings
+so tests detect a second literal copy. Reject invalid values and cross-field pairs
+atomically: feeding must precede damage, nutrition adjustment must stay below base
+health. Validate creation/export/import, editor fields and live summary text.
+
+Commands: `node_modules/.bin/tsx --test tests/survival-needs.test.ts`, then relevant
+nutrition/offline/combat/creator/resident tests and full `npm test`;
+`npx tsc --noEmit`; run Prettier on every changed file. Record the first red result
+before production edits. Update existing default-health assertions only where
+Henry's 65,000 decision changes their expected outcome.
+
+Browser: extend the local survival-rule flow. F10 → Rules → Survival and needs;
+edit/apply/reopen all seven fields. An invalid threshold pair must show an error
+and preserve settings. Check health/hunger/thirst/wellbeing HUD percentages against
+configured ceilings, consume repeated food through Inventory, and observe stocked
+home feeding followed by empty-pantry damage. Inspect screenshots and page errors.
+Update WORLD_BUILDING, PLAYING, README and Unreleased. No later item starts before
+these criteria pass and this slice is pushed.
+
+Initial red run: all seven survival-needs tests fail as expected (missing defaults,
+Unknown setting, absent editor fields and unchanged fixed damage threshold).
+Evidence: `/tmp/aclone-survival-needs-red.log`. Proceed to production changes.
+
+Survival verification: eight new tests pass; the caretaker regression first failed
+because its need meters still used 50,000 and now passes using the world limit.
+The 60-test focused run passes. Existing health assertions were updated only for
+Henry's approved baseline change; damage, collision, consumption and timing
+requirements remain intact. TypeScript is clean.
+
+The real browser flow passes in 16.9 seconds: all seven settings save/reopen,
+invalid threshold pairs leave the world unchanged and show a toast, HUD and
+caretaker meters use the configured ceilings, manual repeat meals use the changed
+factor, and entering a stocked home consumes its water before empty-pantry damage.
+Inspected all three screenshots; no page errors. Two test-harness corrections
+selected the error toast and scoped Use to Inventory rather than the HUD shortcut.
+No behavior criteria were weakened.
+
+Full `npm test` passes **1,416 tests** in 197.5 seconds, exit 0
+(`/tmp/aclone-survival-needs-full.status`). Prettier has run on every changed file;
+WORLD_BUILDING, PLAYING, README and imperative Unreleased entries describe the
+rules and the 65,000 health default. This completes the survival/needs fieldset,
+pending final formatting/type checks and commit/push; economy remains next.

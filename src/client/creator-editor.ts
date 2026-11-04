@@ -127,7 +127,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Catalogue courses override standard tuition and duration. Licence exemption changes skill-limit accounting only; later tuition still follows any previous qualification. Active shifts retain their quoted reward and end time. Ordinary pay and daily caps are under Odd Jobs.</p></fieldset>`;
+    )}<p>Automatic meals must start below the damage threshold. Nutrition adjustment must be smaller than base health. Meals aim below half the automatic threshold; sheltered meals retain full value. Zero repeat multiplier removes the food/drink benefit; zero energy regeneration stops recovery.</p><p>Catalogue courses override standard tuition and duration. Licence exemption changes skill-limit accounting only; later tuition still follows any previous qualification. Active shifts retain their quoted reward and end time. Ordinary pay and daily caps are under Odd Jobs.</p></fieldset>`;
   const radio = radioRules(settings);
   const radioFields = `<fieldset class="boat-death-settings"><legend>CB radios</legend>${Object.entries(
     radioRuleFields,

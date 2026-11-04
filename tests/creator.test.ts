@@ -227,7 +227,7 @@ test('swept custom obstacles stop fast movement and projectiles while allowing e
   act(w, p.id, { type: 'fire', weapon: 'machine' });
   const { advance } = await import('../src/shared/simulation.ts');
   advance(w, 0.4);
-  assert.equal(guest.health, 60000);
+  assert.equal(guest.health, 65000);
   assert.equal(w.projectiles.length, 0);
 });
 test('weather and road overrides remain consistent after design import', async () => {

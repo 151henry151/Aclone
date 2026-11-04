@@ -36,7 +36,7 @@ export function combatSpawn(w: World, p: Player) {
   p.x = combatBases(w)[p.team].x;
   p.z = combatBases(w)[p.team].z;
   p.y = terrainHeight(w, p.x, p.z);
-  p.health = maximumHealth(p);
+  p.health = maximumHealth(p, w);
   p.energy = 65000;
   p.speed = 0;
   switchVehicle(p, p.combatVehicle ?? 0, false, w);

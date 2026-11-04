@@ -795,10 +795,14 @@ function updateHud() {
   if (immobile) mobile.reset();
 
   const bars: [string, number, string][] = [
-    ['Health', me.health / maximumHealth(me), 'health'],
-    ['Hunger', me.hunger / 50000, 'hunger'],
-    ['Thirst', me.thirst / 50000, 'thirst'],
-    ['Wellbeing', 1 - (me.hunger + me.thirst) / 100000, 'wellbeing'],
+    ['Health', me.health / maximumHealth(me, world), 'health'],
+    ['Hunger', me.hunger / survivalRules(world.settings).needsDamageThreshold, 'hunger'],
+    ['Thirst', me.thirst / survivalRules(world.settings).needsDamageThreshold, 'thirst'],
+    [
+      'Wellbeing',
+      1 - (me.hunger + me.thirst) / (2 * survivalRules(world.settings).needsDamageThreshold),
+      'wellbeing',
+    ],
     ['Fuel', me.fuel / fuelCapacity(me, world), 'fuel'],
     ['Energy', me.energy / 65000, 'energy'],
   ];

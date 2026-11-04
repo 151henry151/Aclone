@@ -1,3 +1,4 @@
+import { survivalRules } from '../../shared/survival-rules';
 import { operation } from './player-operations.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
@@ -39,7 +40,9 @@ export function carePlan(w: World, p: Player, state?: ResidentState): Step[] {
     .filter(
       ([nutrient, n]) =>
         n >= 25000 ||
-        (50000 - n) / (nutrient === 'food' ? w.settings.hungerRate : w.settings.thirstRate) <= 600,
+        (survivalRules(w.settings).needsDamageThreshold - n) /
+          (nutrient === 'food' ? w.settings.hungerRate : w.settings.thirstRate) <=
+          600,
     )
     .sort((a, b) => b[1] - a[1]);
   for (const [nutrient] of needs) {

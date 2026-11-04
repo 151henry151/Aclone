@@ -18,13 +18,13 @@ test('fast rounds use swept hits and cannot pass through safe zones', () => {
   const { w, a, b } = setup();
   act(w, a.id, { type: 'fire', weapon: 'machine' });
   advance(w, 0.2);
-  assert.ok(b.health < 60000);
+  assert.ok(b.health < 65000);
   a.lastShot = -10;
-  b.health = 60000;
+  b.health = 65000;
   w.zones.push({ id: 'shield', kind: 'safe', x: 100, z: -44, radius: 2 });
   act(w, a.id, { type: 'fire', weapon: 'machine' });
   advance(w, 0.2);
-  assert.equal(b.health, 60000);
+  assert.equal(b.health, 65000);
 });
 test('javelin charge is server timed and ammo mode cannot manufacture ammunition', () => {
   const { w, a } = setup();
@@ -56,7 +56,7 @@ test('teams balance, allies are protected, and capture scoring requires an oppon
   a.invulnerableUntil = b.invulnerableUntil = 0;
   act(w, a.id, { type: 'fire', weapon: 'machine' });
   advance(w, 0.15);
-  assert.equal(b.health, 60000);
+  assert.equal(b.health, 65000);
 });
 test('fighting disabled cancels in-flight weapons and mines cannot detonate at deployment', () => {
   const { w, a, b } = setup();
@@ -64,10 +64,10 @@ test('fighting disabled cancels in-flight weapons and mines cannot detonate at d
   b.z = a.z;
   act(w, a.id, { type: 'fire', weapon: 'mine' });
   advance(w, 0.1);
-  assert.equal(b.health, 60000);
+  assert.equal(b.health, 65000);
   w.settings.fighting = false;
   advance(w, 2);
-  assert.equal(b.health, 60000);
+  assert.equal(b.health, 65000);
   assert.equal(w.projectiles.length, 0);
 });
 test('flags require your own flag home; disconnect and leave drop possession', () => {
@@ -110,7 +110,7 @@ test('a round cannot cross even a thin safe-zone boundary between integration st
   w.zones.push({ id: 'thin', kind: 'safe', x: 100, z: -49.2, radius: 0.1 });
   act(w, a.id, { type: 'fire', weapon: 'machine' });
   advance(w, 0.2);
-  assert.equal(b.health, 60000);
+  assert.equal(b.health, 65000);
   assert.equal(w.projectiles.length, 0);
 });
 

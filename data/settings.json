@@ -151,5 +151,12 @@
   "labourReliefPay": 15000,
   "labourReliefMeans": 5000,
   "labourReliefCooldown": 1800,
-  "labourShiftSeconds": 15
+  "labourShiftSeconds": 15,
+  "needsAutoFeedThreshold": 30000,
+  "needsDamageThreshold": 50000,
+  "baseMaximumHealth": 65000,
+  "nutritionAdjustmentLimit": 6000,
+  "repeatServingFrom": 3,
+  "repeatServingMultiplier": 0.5,
+  "energyRegeneration": 3000
 }

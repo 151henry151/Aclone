@@ -206,7 +206,7 @@ In **Access rules**, require a qualification, carried item or minimum Lua progre
 
 ## World catalogues and building templates
 
-**Catalogue** defines up to 32 custom goods and 16 professions. IDs start with `custom:` and stay stable; built-in goods/skills are unchanged. Goods have a label, short icon, weight, reference price and optional food/drink/fuel effect. Health effects range from −6000 to +6000 per serving, and maximum-health changes from −600 to +600; the latter accumulate only within ±6000 for the current life and reset on death. Inventory shows these effects. Professions have a label, tuition, lesson duration and up to eight prerequisites; cycles are rejected. Schools show actual course prices and prerequisites.
+**Catalogue** defines up to 32 custom goods and 16 professions. IDs start with `custom:` and stay stable; built-in goods/skills are unchanged. Goods have a label, short icon, weight, reference price and optional food/drink/fuel effect. Health effects range from −6000 to +6000 per serving, and maximum-health changes from −600 to +600; the latter accumulate within the world nutrition adjustment limit (default ±6,000) for the current life and reset on death. Inventory shows these effects. Professions have a label, tuition, lesson duration and up to eight prerequisites; cycles are rejected. Schools show actual course prices and prerequisites.
 
 Use custom definitions in **Production**, behavior item effects, quest rewards, shop quotes and building stock. Custom supplies obey cargo limits and feed sheltered players offline. Referenced definitions cannot be deleted; changes to weight/value/effects apply to existing goods. Recipes in use must retain valid professions and items. Lua source is not statically analyzed; update scripts yourself when changing their referenced definitions.
 
@@ -485,8 +485,8 @@ received-message tone and respects master mute; squelch changes server reception
 
 ## Survival and needs rules (unreleased)
 
-F10 → Rules → **Survival and needs** exposes standard school and public labour
-terms. Missing keys in older worlds use the same defaults; no save migration is
+F10 → Rules → **Survival and needs** exposes needs, health, nutrition, standard
+school and public labour terms. Missing keys in older worlds use the same defaults; no save migration is
 required. Portable designs and newly created worlds include these settings.
 
 - `schoolFirstPrice` and `schoolLaterPrice`: 8,000 and 16,000 hundredths of a
@@ -510,3 +510,28 @@ diminishing returns. Relief stays outside the ordinary cap. An active course or
 shift keeps the price/reward and end time agreed when it started; later edits
 apply to new work. Resident tuition planning and skill-limit checks use the same
 rules as players.
+
+- `needsAutoFeedThreshold`: 30,000, integer 1,000–1,000,000. Automatic meals
+  trigger here and aim below half this value, using whole servings. The same
+  threshold applies to enabled automatic inventory/home/crew stores.
+- `needsDamageThreshold`: 50,000, integer 10,000–1,000,000. Hunger/thirst cap here
+  and either need at this threshold causes damage, online or offline. Set it
+  strictly above the automatic meal threshold; change both together if needed.
+- `baseMaximumHealth`: **65,000**, integer 10,000–1,000,000. This unreleased change
+  raises the former 60,000 default. New lives start here; existing health recovers
+  normally to the configured maximum, rather than receiving an immediate heal.
+- `nutritionAdjustmentLimit`: 6,000, integer 0–999,999, strictly below base health.
+  Nutrition may raise or lower the maximum by this amount. Zero disables its
+  effect on the ceiling. Nutrition still resets on ordinary death.
+- `repeatServingFrom`: 3, integer 1–100. Consecutive manual servings of the same
+  item use the penalty from this serving onward. Choosing another item resets
+  the count. A value of 1 applies even to the first serving.
+- `repeatServingMultiplier`: 0.5, from 0–1. It affects hunger/thirst relief, not
+  health effects. Zero removes relief for penalized servings; 1 removes the
+  penalty. Automatic sheltered meals retain full relief.
+- `energyRegeneration`: 3,000 units/second online, integer 0–65,000. Zero stops
+  regeneration. The existing energy capacity stays 65,000.
+
+HUD and caretaker meters, pantry forecasts, resident need deadlines, and the
+live rules summary use these values. Empty stores provide no protection. Invalid
+threshold/health pairs are rejected together without changing other rules.

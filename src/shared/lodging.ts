@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingSize } from './building-designs';
 import { worldItems } from './world-catalogue.ts';
@@ -110,16 +111,24 @@ export function feedAtHome(
   ] as const) {
     let value = p[need] + seconds * rate * 0.8;
     for (const [key, def] of Object.entries(worldItems(w))) {
-      if (!def[nutrient] || value < 30000) continue;
-      const count = Math.min(stock[key] ?? 0, Math.floor((value - 30000) / def[nutrient]!) + 1);
+      if (!def[nutrient] || value < survivalRules(w?.settings).needsAutoFeedThreshold) continue;
+      const count = Math.min(
+        stock[key] ?? 0,
+        Math.floor((value - survivalRules(w?.settings).needsAutoFeedThreshold) / def[nutrient]!) +
+          1,
+      );
       stock[key] = (stock[key] ?? 0) - count;
       value -= count * def[nutrient]!;
     }
     const effectiveRate = rate * 0.8;
     const healthy =
-      effectiveRate > 0 ? (50000 - value) / effectiveRate + seconds : value >= 50000 ? 0 : seconds;
+      effectiveRate > 0
+        ? (survivalRules(w?.settings).needsDamageThreshold - value) / effectiveRate + seconds
+        : value >= survivalRules(w?.settings).needsDamageThreshold
+          ? 0
+          : seconds;
     healthySeconds = Math.min(healthySeconds, Math.max(0, healthy));
-    p[need] = Math.max(0, Math.min(50000, value));
+    p[need] = Math.max(0, Math.min(survivalRules(w?.settings).needsDamageThreshold, value));
   }
   return healthySeconds;
 }

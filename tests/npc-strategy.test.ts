@@ -179,11 +179,11 @@ test('need forecasting matches the simulation reaching starvation', () => {
   w.settings.thirstRate = 20;
   p.hunger = 0;
   p.thirst = 40000;
-  p.health = 60000;
+  p.health = 65000;
   const seconds = lifeBriefing(w, p).survival.secondsToDamageOutside!;
   advance(w, seconds);
-  assert.equal(p.health, 60000);
+  assert.equal(p.health, 65000);
   assert.equal(p.thirst, 50000);
   advance(w, 1);
-  assert.equal(p.health, 59994);
+  assert.equal(p.health, 64994);
 });

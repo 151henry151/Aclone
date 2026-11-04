@@ -23,15 +23,15 @@ test('food health and maximum health are bounded, visible effects and reset on d
   p.inventory['custom:meal'] = 1;
   act(w, p.id, { type: 'use', item: 'custom:meal' });
   assert.equal(p.health, 51200);
-  assert.equal(maximumHealth(p), 60100);
+  assert.equal(maximumHealth(p), 65100);
   nutritionEffects(p, w.catalogue.items['custom:meal'], 100000);
-  assert.equal(maximumHealth(p), 66000);
-  assert.equal(p.health, 66000);
+  assert.equal(maximumHealth(p), 71000);
+  assert.equal(p.health, 71000);
   p.online = true;
   p.age = w.settings.maxAge;
   advance(w, 1);
   assert.equal(p.deaths, 1);
-  assert.equal(maximumHealth(p), 60000);
+  assert.equal(maximumHealth(p), 65000);
 });
 test('sheltered nutrition catches up identically across pantry exhaustion and death', () => {
   const w = createWorld('home-diet', 'Diet', 'owner'),

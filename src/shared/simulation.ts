@@ -1,4 +1,10 @@
-import { survivalRules, survivalRuleFields, skillFits } from './survival-rules';
+import {
+  survivalRules,
+  survivalRuleFields,
+  skillFits,
+  survivalRulesError,
+  servingMultiplier,
+} from './survival-rules';
 import { radioAction, tickRadio } from './radio';
 import { radioRuleFields } from './radio-rules';
 import { canoeAction, canoeDeath } from './small-craft';
@@ -391,7 +397,7 @@ export function addPlayer(w: World, id: string, name: string): Player {
     heading: Math.PI,
     speed: 0,
     fuel: 64,
-    health: 60000,
+    health: survivalRules(w.settings).baseMaximumHealth,
     hunger: 5000,
     thirst: 5000,
     age: 18,
@@ -501,11 +507,11 @@ function usable(w: World, p: Player, item: string) {
   } else {
     p.repeats = p.lastFood === item ? p.repeats + 1 : 0;
     p.lastFood = item;
-    const scale = p.repeats >= 2 ? 0.5 : 1;
+    const scale = servingMultiplier(w.settings, p.repeats + 1);
     p.hunger = Math.max(0, p.hunger - (def.food ?? 0) * scale);
     p.thirst = Math.max(0, p.thirst - (def.drink ?? 0) * scale);
   }
-  nutritionEffects(p, def);
+  nutritionEffects(p, def, 1, w);
   drinkAlcohol(p, item, w.time);
   stockAdd(p.inventory, item, -1);
   if (isTrawler(p.vehicle, w) && p.fishingVoyage && (def.food || def.drink))
@@ -2015,6 +2021,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const survivalError = survivalRulesError({ ...w.settings, ...clean });
+      requireThat(!survivalError, survivalError ?? 'Invalid survival rules');
       expireAbandonedCargo(w);
       if (clean.resourceRecoveryMultiplier !== undefined)
         changeResourceRecovery(w, clean.resourceRecoveryMultiplier);
@@ -2357,7 +2365,7 @@ export function command(w: World, p: Player, text: string): string {
       break;
     }
     case 'sethealth':
-      target().health = num(Number(args[1]), 1, maximumHealth(target()));
+      target().health = num(Number(args[1]), 1, maximumHealth(target(), w));
       break;
     case 'setvehicle':
       switchVehicle(target(), num(Number(args[1]), 0, vehicles.length - 1, true), true, w);
@@ -2734,7 +2742,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   breakLabourStreak(p);
   p.ammo = { ...ammunition };
   p.invulnerableUntil = w.time + 3;
-  p.health = 60000;
+  p.health = survivalRules(w.settings).baseMaximumHealth;
   p.hunger = 5000;
   p.thirst = 5000;
   p.speed = 0;
@@ -2893,6 +2901,8 @@ function cycle(w: World, b: Building, at: number) {
 /** Exact need/health boundaries keep disconnect catch-up equivalent to live ticks.
  * Split only at room expiry and death, not at every simulated second. */
 function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
+  const { needsAutoFeedThreshold: feedThreshold, needsDamageThreshold: damageThreshold } =
+    survivalRules(w.settings);
   let elapsed = 0;
   while (elapsed < seconds) {
     const grace = Math.max(0, (p.needsGraceUntil ?? 0) - start - elapsed);
@@ -2904,7 +2914,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
     if (!current) p.atHome = false;
     // Snap numerical boundaries so a near-zero duration cannot stall catch-up.
     for (const need of ['hunger', 'thirst'] as const) {
-      for (const boundary of [30000, 50000])
+      for (const boundary of [feedThreshold, damageThreshold])
         if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
     }
     const pantries = automaticPantries({ ...w, time: start + elapsed }, p);
@@ -2915,9 +2925,9 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
     }
     const hungerRate = w.settings.hungerRate * (current ? homeNeedsMultiplier(w) : 1),
       thirstRate = w.settings.thirstRate * (current ? homeNeedsMultiplier(w) : 1);
-    const starving = p.hunger >= 50000 || p.thirst >= 50000;
+    const starving = p.hunger >= damageThreshold || p.thirst >= damageThreshold;
     const boundary = (value: number, rate: number) =>
-      value < 50000 && rate > 0 ? (50000 - value) / rate : Infinity;
+      value < damageThreshold && rate > 0 ? (damageThreshold - value) / rate : Infinity;
     const duration = Math.min(
       seconds - elapsed,
       current ? current.until - start - elapsed : Infinity,
@@ -2927,12 +2937,21 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
       boundary(p.thirst, thirstRate),
       starving ? p.health / 6 : Infinity,
     );
-    p.hunger = Math.min(50000, p.hunger + hungerRate * duration);
-    p.thirst = Math.min(50000, p.thirst + thirstRate * duration);
-    p.health = Math.max(0, Math.min(maximumHealth(p), p.health + (starving ? -6 : 2) * duration));
+    p.hunger = Math.min(damageThreshold, p.hunger + hungerRate * duration);
+    p.thirst = Math.min(damageThreshold, p.thirst + thirstRate * duration);
+    p.health = Math.max(
+      0,
+      Math.min(maximumHealth(p, w), p.health + (starving ? -6 : 2) * duration),
+    );
     elapsed += duration;
     if (p.health <= 1e-7)
-      kill(w, p, false, p.thirst >= 50000 ? 'dehydration' : 'starvation', start + elapsed);
+      kill(
+        w,
+        p,
+        false,
+        p.thirst >= damageThreshold ? 'dehydration' : 'starvation',
+        start + elapsed,
+      );
   }
   if (p.atHome && !shelter(w, p)) p.atHome = false;
 }
@@ -3006,7 +3025,7 @@ export function advance(w: World, seconds: number) {
       advanceSurvival(w, p, boundary, end - boundary);
     }
     if (p.online) {
-      p.energy = Math.min(65000, p.energy + 3000 * seconds);
+      p.energy = Math.min(65000, p.energy + survivalRules(w.settings).energyRegeneration * seconds);
       if (!p.health || p.age >= w.settings.maxAge)
         kill(w, p, false, p.age >= w.settings.maxAge ? 'old age' : 'injury');
     }

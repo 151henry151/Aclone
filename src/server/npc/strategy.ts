@@ -1,4 +1,4 @@
-import { survivalRules } from '../../shared/survival-rules';
+import { survivalRules, servingMultiplier } from '../../shared/survival-rules';
 import { alcoholLevel, alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -14,13 +14,14 @@ import type { Player, World } from '../../shared/types.ts';
 import { workplace } from './workplace.ts';
 import { offlineReadiness } from './homecoming.ts';
 
-/** Match usable(): the third consecutive serving of the same food OR drink is halved. */
+/** Predict the same world-configured repeat penalty as manual consumption. */
 export function nextNutrition(p: Player, item: string, w?: World) {
   const items = worldItems(w);
-  const scale = p.lastFood === item && p.repeats >= 1 ? 0.5 : 1;
+  const scale = servingMultiplier(w?.settings, p.lastFood === item ? p.repeats + 2 : 1);
   return { food: (items[item]?.food ?? 0) * scale, drink: (items[item]?.drink ?? 0) * scale };
 }
 export function secondsToDamage(w: World, p: Player) {
+  const threshold = survivalRules(w.settings).needsDamageThreshold;
   return Math.max(
     0,
     Math.min(
@@ -29,7 +30,9 @@ export function secondsToDamage(w: World, p: Player) {
           [p.hunger, w.settings.hungerRate],
           [p.thirst, w.settings.thirstRate],
         ] as const
-      ).map(([value, rate]) => (value >= 50000 ? 0 : rate > 0 ? (50000 - value) / rate : Infinity)),
+      ).map(([value, rate]) =>
+        value >= threshold ? 0 : rate > 0 ? (threshold - value) / rate : Infinity,
+      ),
     ),
   );
 }
@@ -98,12 +101,10 @@ export function lifeBriefing(w: World, p: Player) {
       needsAttention: careNeeded(w, p),
       sheltered: !!shelter(w, p),
       secondsToDamageOutside: Number.isFinite(time) ? Math.floor(time) : null,
-      forecast:
-        'Seconds until either need reaches 50000 outdoors without consumption, NOT time until death. null means no rising needs. Shelter slows needs to 80% and automatically consumes its own stores at 30000; carried food is not automatically eaten outdoors.',
+      forecast: `Seconds until either need reaches ${survivalRules(w.settings).needsDamageThreshold} outdoors without consumption, NOT time until death. null means no rising needs. Shelter scales needs to ${Math.round((w.settings.homeNeedsMultiplier ?? 0.8) * 100)}% and automatically consumes its own stores at ${survivalRules(w.settings).needsAutoFeedThreshold}; carried food uses the world's automatic inventory rules.`,
       hungerPerSecond: w.settings.hungerRate,
       thirstPerSecond: w.settings.thirstRate,
-      healthRule:
-        'Below starvation, health recovers 2/second to its current nutritional maximum (normally 60000); at starvation it loses 6/second, online or offline. Waiting outdoors cannot lower needs.',
+      healthRule: `Below starvation, health recovers 2/second to its current nutritional maximum (base ${survivalRules(w.settings).baseMaximumHealth}, nutrition adjustment up to ±${survivalRules(w.settings).nutritionAdjustmentLimit}); at starvation it loses 6/second, online or offline. Waiting outdoors cannot lower needs.`,
       carried,
       supplies,
       suggestedLivingCash: Math.max(12000, (meal?.price ?? 0) * 3 + (drink?.price ?? 0) * 6),

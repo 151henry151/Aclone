@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types';
 import { shelter } from './lodging';
@@ -39,7 +40,8 @@ export function homeProvisions(w: World, p: Player): ProvisionEstimate | undefin
   for (let i = 0; i < 1024; i++) {
     if (seconds >= booking) return { seconds: booking, limit: 'booking' };
     for (const key of ['hunger', 'thirst'] as const)
-      if (Math.abs(q[key] - 30000) < 1e-7) q[key] = 30000;
+      if (Math.abs(q[key] - survivalRules(w?.settings).needsAutoFeedThreshold) < 1e-7)
+        q[key] = survivalRules(w?.settings).needsAutoFeedThreshold;
     for (const stock of stocks) feedShelterNow(w, q, stock, w.time + seconds);
     const exhausted = empty();
     if (exhausted) return { seconds, exhausted };
@@ -48,8 +50,14 @@ export function homeProvisions(w: World, p: Player): ProvisionEstimate | undefin
     );
     if (!Number.isFinite(next) || next <= 0) return { seconds, limit: 'calculation' };
     seconds += next;
-    q.hunger = Math.min(50000, q.hunger + next * foodRate);
-    q.thirst = Math.min(50000, q.thirst + next * drinkRate);
+    q.hunger = Math.min(
+      survivalRules(w?.settings).needsDamageThreshold,
+      q.hunger + next * foodRate,
+    );
+    q.thirst = Math.min(
+      survivalRules(w?.settings).needsDamageThreshold,
+      q.thirst + next * drinkRate,
+    );
   }
   return { seconds, limit: 'calculation' };
 }

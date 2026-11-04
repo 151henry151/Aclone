@@ -1,3 +1,4 @@
+import { survivalRules } from '../../shared/survival-rules';
 import { housingChoices } from './housing.ts';
 import { alcoholDose } from '../../shared/intoxication.ts';
 import { constructionChoices } from './construction-projects.ts';
@@ -35,12 +36,22 @@ export function offlineReadiness(w: World, p: Player, awaySeconds: number) {
   const until = !b ? 0 : b.kind === 'home' ? Infinity : b.lodging!.guests[p.id].until;
   const foodSeconds =
     w.settings.hungerRate > 0
-      ? Math.max(0, 30000 - p.hunger + nutritionIn(w, stock, 'food')) /
+      ? Math.max(
+          0,
+          survivalRules(w.settings).needsAutoFeedThreshold -
+            p.hunger +
+            nutritionIn(w, stock, 'food'),
+        ) /
         (w.settings.hungerRate * 0.8)
       : Infinity;
   const drinkSeconds =
     w.settings.thirstRate > 0
-      ? Math.max(0, 30000 - p.thirst + nutritionIn(w, stock, 'drink')) /
+      ? Math.max(
+          0,
+          survivalRules(w.settings).needsAutoFeedThreshold -
+            p.thirst +
+            nutritionIn(w, stock, 'drink'),
+        ) /
         (w.settings.thirstRate * 0.8)
       : Infinity;
   const coveredSeconds = b ? Math.max(0, Math.min(foodSeconds, drinkSeconds, until - w.time)) : 0;

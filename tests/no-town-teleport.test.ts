@@ -52,7 +52,7 @@ test('real deaths still respawn with the configured losses, without a client req
   p.inventory.stone = 1;
   advance(w, 1);
   assert.equal(p.deaths, 1);
-  assert.equal(p.health, 60000);
+  assert.equal(p.health, 65000);
   assert.equal(p.x, 0);
   assert.equal(p.z, 17);
   assert.deepEqual(p.inventory, {});

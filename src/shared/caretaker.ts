@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 import { vehicleDef } from './vehicle-config';
 import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -26,6 +27,7 @@ export interface CaretakerResident {
   level: number;
   health: number;
   maximumHealth: number;
+  needsDamageThreshold: number;
   hunger: number;
   thirst: number;
   nutrition: number;
@@ -195,7 +197,8 @@ function resident(w: World, p: Player): CaretakerResident {
     kudos: p.kudos,
     level: p.level,
     health: p.health,
-    maximumHealth: maximumHealth(p),
+    maximumHealth: maximumHealth(p, w),
+    needsDamageThreshold: survivalRules(w.settings).needsDamageThreshold,
     hunger: p.hunger,
     thirst: p.thirst,
     nutrition: p.nutrition ?? 0,

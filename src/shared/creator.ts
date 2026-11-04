@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 import { buildingSpawnReason } from './spawn-reserve';
 import { vehicleDef } from './vehicle-config';
 import { bookSchema, townEventSchema } from './world-stories.ts';
@@ -307,10 +308,17 @@ export function applyEffect(w: World, p: Player | undefined, effect: Effect) {
       scores[team] = Math.max(0, scores[team] + e.amount);
     }
   } else if (p) {
-    if (e.type === 'heal') p.health = Math.max(1, Math.min(maximumHealth(p), p.health + e.amount));
+    if (e.type === 'heal')
+      p.health = Math.max(1, Math.min(maximumHealth(p, w), p.health + e.amount));
     if (e.type === 'needs') {
-      p.hunger = Math.max(0, Math.min(50000, p.hunger + e.amount));
-      p.thirst = Math.max(0, Math.min(50000, p.thirst + e.amount));
+      p.hunger = Math.max(
+        0,
+        Math.min(survivalRules(w.settings).needsDamageThreshold, p.hunger + e.amount),
+      );
+      p.thirst = Math.max(
+        0,
+        Math.min(survivalRules(w.settings).needsDamageThreshold, p.thirst + e.amount),
+      );
     }
     if (e.type === 'teleport' && !p.task && !p.atHome && !p.hitch && !p.crowBody) {
       p.x = e.x;

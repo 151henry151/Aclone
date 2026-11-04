@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose automatic meal and damage thresholds, health and nutrition limits, repeat-serving penalties and energy regeneration as validated per-world rules; share them with survival catch-up, forecasts, player meters and the caretaker dashboard.
 - Expose standard tuition, lesson duration, licence skill-limit accounting and public labour relief terms as validated per-world rules; use them in player panels, resident planning, portable designs and live guidance while preserving defaults and active quotes.
 - Add a vehicle CB dashboard with private received traffic, call signs, signal/carrier status, keyboard, touch and configurable controller push-to-talk, volume/squelch controls and manual rescue links; preserve drafts and held controls during live updates.
 - Add transient CB transmission authority, per-vehicle radio selections, terrain/range reception, deterministic doubling and word loss, manual emergency cues and configurable world rules; preserve radio sessions across failed action transactions.
@@ -32,6 +33,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Raise default base maximum health to 65,000 while retaining ordinary recovery for existing characters.
 - Render untouched gathering grounds as natural features without abandoned tools or worked debris; add configurable settlement/use wear, retain an explicit legacy scenery mode, and update loaded sites when their state changes.
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.
 - The public airfield hangar buys Fuel for 50d, above the boathouse pump, the garage bid and the harbour bid, and below its own 53.50d pump. Its till receives 500s once.
