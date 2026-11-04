@@ -85,7 +85,8 @@ export function economyChoices(
         ...(herdSpec(b) ? { [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 } : {}),
       })) {
         const missing = Math.min(
-          (inputStockTarget(b, item, w) ?? quantity * 2) - (b.stock[item] ?? 0),
+          (inputStockTarget(b, item, w) ?? quantity * loads.npcRoutineSupplyBatches) -
+            (b.stock[item] ?? 0),
           b.capacity - (b.stock[item] ?? 0),
         );
         const seller = buildings
@@ -130,7 +131,11 @@ export function economyChoices(
           economyRules(w.settings).transactionItemLimit,
           spareSupplies(p, item, w),
           b.capacity - (b.stock[item] ?? 0),
-          Math.max(0, (inputStockTarget(b, item, w) ?? quantity * 4) - (b.stock[item] ?? 0)),
+          Math.max(
+            0,
+            (inputStockTarget(b, item, w) ?? quantity * loads.npcRoutineDepositBatches) -
+              (b.stock[item] ?? 0),
+          ),
         );
         if (n > 0)
           add(

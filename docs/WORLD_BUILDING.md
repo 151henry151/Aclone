@@ -1084,3 +1084,17 @@ purchase. Zero supplier reserve removes only the optional input buffer: breeding
 animals remain protected. Actual stock, cargo/storage, cash, household reserves
 and the world transaction limit still apply. Rule edits transfer nothing. Old
 saves without these fields retain the defaults above.
+
+The same business-cargo fieldset also exposes fallback input and crop-demand budgets:
+
+- `npcRoutineSupplyBatches`: 2 batches for routine input purchasing when no calculated stock target exists, including livestock.
+- `npcRoutineDepositBatches`: 4 batches for depositing carried inputs under that fallback.
+- `npcCropDemandBatches`: 6 downstream production batches when choosing a crop for funded buyer demand.
+
+These accept integer 0–10,000 values; missing keys retain those defaults. Zero
+suppresses the respective input fallback or removes the crop forecast buffer.
+Calculated producer stock targets keep precedence; urgent funded production need,
+seed costs, crop rotation and staff planting policies still apply. Routine animal
+replenishment retains its half-minimum-herd quantity basis. Enterprise supply
+uses the existing `npcInputReserveBatches` for fallback feed/water targets, while
+replacement breeding animals retain their actual minimum target.

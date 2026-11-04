@@ -685,3 +685,10 @@ and actual breeding minima. Zero load suppresses an optional transfer; required
 gathering implements remain separate one-item purchases. Plans still use actual
 stock, affordable cash, storage and transaction limits, and transfers create no
 money or goods. See [business cargo rules](WORLD_BUILDING.md#resident-business-cargo-unreleased).
+
+Routine input purchases and carried deposits use separate configurable fallback
+batch budgets when a producer has no calculated stock target. Enterprise feed
+and water supply follows the existing input-reserve setting, including larger
+reserves; breeding-minimum replacement remains separate. Farm crop choice uses
+configured downstream forecast batches while retaining urgent funded demand,
+rotation, seed costs and staff crop policies.

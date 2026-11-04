@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose routine resident input-purchase/deposit fallbacks and crop-demand forecasts as world rules; honor the existing input-reserve setting for larger livestock supply targets.
+
 - Expose resident business and farm collection, input-purchase, source-reserve and sale budgets as world rules; preserve breeding minima, required implements and ordinary transfer limits.
 
 - Expose resident general-trade, construction, parish-supply, storage and career load targets in a dedicated world-rules fieldset; derive guide topic IDs from retained titles to preserve all help within the request budget.

@@ -2967,3 +2967,44 @@ invalid input and reload pass in 20.0 seconds, with no browser errors; inspect a
 three screenshots. No full suite is run. The named npc-enterprise test file does
 not exist; enterprise behavior is covered directly by the new tests and existing
 transfer, business-policy and prosperity tests.
+
+Pushed and verified `80c9d47` on `backlog-implementation`. **Resident business and
+farm cargo budgets are done.**
+
+### Gameplay rules — resident fallback input and crop-demand budgets
+
+Before production, expose three integer 0–10,000 fields in Resident business cargo:
+`npcRoutineSupplyBatches` 2 and `npcRoutineDepositBatches` 4 for the routine
+procurement/carried-deposit fallback when a producer has no calculated stock target
+(including livestock), and `npcCropDemandBatches` 6 for funded downstream crop
+demand. Preserve the herd-minimum/2 quantity basis of routine herd replenishment;
+zero suppresses the corresponding fallback. Calculated ordinary producer targets
+retain precedence. Crop demand zero removes the forecast buffer, but retains
+actual urgent one-batch need and ordinary seed, staffing and farm policies.
+Enterprise supply uses the existing `npcInputReserveBatches` (default 6) for its
+fallback inputs, preserving actual breeding-minimum targets separately.
+
+Extend npc-business-load-rules with red checks for exact defaults/missing fields,
+custom/zero routine purchases and deposits, real input delivery, ordinary-target
+precedence, enterprise fallback input reserves and breeding minima, and crop
+selection changed by funded demand. Extend validation/design/summary/observation
+and browser persistence to all three fields. Browser must show changed/zero
+routine livestock-supply options, retained goods/cash, invalid input and reload.
+Run the changed test file plus npc-transfer-limit, npc-farmer, npc-business-policy,
+npc-prosperity, npc-breeding-budget-rules and npc-guide; require TypeScript,
+Prettier and world-builder/NPC/README/Unreleased documentation before push.
+
+Fallback red: missing defaults/validation, fixed two-batch purchases and fixed
+six-batch crop forecasts fail. A larger nine-batch enterprise reserve reproduces
+a 12-versus-18-item cap; smaller custom reserves already work through the shared
+procurement bound. Preserve those bounds and replace the stale six-batch copy.
+The crop fixture initially names nonexistent Barley; use actual Potatoes and
+an employed farmer with valid crop policy/rotation so the test isolates funded
+demand. All ten targeted checks then pass without weakening criteria.
+
+Fallback-input gates pass: 70 relevant tests in 5.4 seconds, TypeScript clean,
+changed-file Prettier and diff checks clean. Browser passes in 21.8 seconds with
+no errors, saving/reopening all three new controls, changing the dairy supply
+from four to six items, suppressing it at zero, preserving source/target stock,
+rejecting negative input and retaining saved zero after reload. Inspect all three
+screenshots, including new fields and full explanatory text. No full suite runs.

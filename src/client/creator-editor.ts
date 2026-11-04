@@ -148,7 +148,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Zero load suppresses that optional transfer; zero input batches suppress optional small restocking. Required gathering implements still use one item. Supplier reserves protect production inputs; breeding minima remain protected even at zero. Transaction, stock, cargo, storage and cash limits still apply. Editing rules transfers nothing.</p></fieldset>`;
+    )}<p>Zero load suppresses that optional transfer; zero input batches suppress optional small restocking. Fallback purchase/deposit targets apply only without a calculated stock target; zero disables that fallback. Crop demand zero removes the forecast buffer, retaining urgent production needs. Required gathering implements still use one item. Supplier reserves protect production inputs; breeding minima remain protected even at zero. Transaction, stock, cargo, storage and cash limits still apply. Editing rules transfers nothing.</p></fieldset>`;
   const cargo = npcCargoRules(settings);
   const cargoFields = `<fieldset class="boat-death-settings"><legend>Resident trade and storage loads</legend>${Object.entries(
     npcCargoRuleFields,

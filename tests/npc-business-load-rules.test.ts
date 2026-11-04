@@ -9,7 +9,7 @@ import {
   advance,
   terrainHeight,
 } from '../src/shared/simulation';
-import { gameplayChoices } from '../src/server/npc/farmer';
+import { gameplayChoices, farmDuty } from '../src/server/npc/farmer';
 import { enterpriseChoices } from '../src/server/npc/enterprise';
 import { Store } from '../src/server/store';
 import { worldResources } from '../src/shared/resources';
@@ -113,6 +113,9 @@ function run(w: ReturnType<typeof createWorld>, p: ReturnType<typeof addPlayer>,
 }
 
 const defaults = {
+  npcRoutineSupplyBatches: 2,
+  npcRoutineDepositBatches: 4,
+  npcCropDemandBatches: 6,
   npcBusinessCollectionLoad: 20,
   npcSmallInputPurchaseLoad: 5,
   npcSmallInputPurchaseBatches: 2,
@@ -284,4 +287,109 @@ test('business cargo settings validate and survive editor summary observations d
   } finally {
     store.close();
   }
+});
+
+function herdFixture() {
+  const f = setup();
+  Object.assign(f.b, {
+    kind: 'dairy',
+    recipe: 'dairy',
+    production: undefined,
+    stock: { cows: 2, water: 20 },
+    sell: { milk: 5000 },
+    buy: { feed: 100 },
+    herdCondition: 100,
+  });
+  Object.assign(f.seller, { stock: { feed: 100, cows: 10 }, sell: { feed: 100, cows: 100 } });
+  f.buyer.buy = { milk: 5000 };
+  f.p.skills = ['livestock farmer', 'farmer'];
+  return f;
+}
+test('routine livestock supply and deposit fallbacks retain defaults and honor independent zero budgets', () => {
+  for (const missing of [false, true]) {
+    const { w, p, state, b } = herdFixture();
+    if (missing) {
+      delete (w.settings as any).npcRoutineSupplyBatches;
+      delete (w.settings as any).npcRoutineDepositBatches;
+    }
+    const choices = () => gameplayChoices(w, p, state, 'farmer');
+    assert.equal(load(choices(), /^Supply my .*buy and deliver .* feed from/), 4);
+    p.inventory = { feed: 20 };
+    assert.equal(load(choices(), /^Deposit .* carried feed /), 8);
+    Object.assign(w.settings, { npcRoutineSupplyBatches: 3, npcRoutineDepositBatches: 2 });
+    assert.equal(load(choices(), /^Supply my .*buy and deliver .* feed from/), 6);
+    assert.equal(load(choices(), /^Deposit .* carried feed /), 4);
+    Object.assign(w.settings, { npcRoutineSupplyBatches: 0, npcRoutineDepositBatches: 0 });
+    assert.equal(load(choices(), /^Supply my .*buy and deliver .* feed from/), undefined);
+    assert.equal(load(choices(), /^Deposit .* carried feed /), undefined);
+    Object.assign(w.settings, { npcRoutineSupplyBatches: 1 });
+    p.inventory = {};
+    const choice = choices().find((c) =>
+      /^Supply my .*buy and deliver .* feed from/.test(c.description),
+    )!;
+    const cash = p.cash,
+      source = w.buildings[1].stock.feed;
+    run(w, p, choice.plan);
+    assert.equal(b.stock.feed, 2);
+    assert.equal(w.buildings[1].stock.feed, source - 2);
+    assert.equal(p.inventory.feed ?? 0, 0);
+    assert.equal(p.cash, cash - 200);
+  }
+});
+test('calculated ordinary input targets take precedence over routine fallback budgets', () => {
+  const { w, p, state } = setup();
+  Object.assign(w.settings, { npcRoutineSupplyBatches: 0, npcRoutineDepositBatches: 0 });
+  p.inventory = { flour: 20 };
+  const choices = gameplayChoices(w, p, state, 'farmer');
+  assert.equal(load(choices, /^Supply my .*buy and deliver .* flour from/), 12);
+  assert.equal(load(choices, /^Deposit .* carried flour /), 12);
+});
+test('enterprise livestock input fallback shares existing reserve batches while retaining breeding minimum', () => {
+  const { w, p, b } = herdFixture();
+  const feed = () => load(enterpriseChoices(w, p), /^Supply my .*buy and deliver .* feed /);
+  assert.equal(feed(), 12);
+  delete w.settings.npcInputReserveBatches;
+  assert.equal(feed(), 12);
+  act(w, p.id, { type: 'settings', patch: { npcInputReserveBatches: 9 } });
+  assert.equal(feed(), 18);
+  act(w, p.id, { type: 'settings', patch: { npcInputReserveBatches: 2 } });
+  assert.equal(feed(), 4);
+  act(w, p.id, { type: 'settings', patch: { npcInputReserveBatches: 0 } });
+  assert.equal(feed(), undefined);
+  b.stock.cows = 0;
+  assert.equal(load(enterpriseChoices(w, p), /^Supply my .*buy and deliver .* cows /), 2);
+});
+test('funded crop demand uses the configured batch horizon without removing actual urgent need', () => {
+  const { w, p, state, farm, buyer } = setup();
+  farm.stock = {};
+  farm.owner = 'employer';
+  farm.employees = [p.id];
+  farm.plots = [{ planted: 0, ready: 0, water: 0, fertilized: false, previous: 'wheat' }];
+  farm.farmPolicy = { crops: ['wheat', 'potatoes'], dailyLimit: 100000, reserve: 0 };
+  w.buildings = [farm, buyer];
+  buyer.buy = { wheat: 100, potatoes: 100 };
+  buyer.stock = { wheat: 20 };
+  buyer.production = {
+    skill: 'miller',
+    tier: 1,
+    seconds: 600,
+    inputs: { wheat: 20 },
+    outputs: { flour: 20 },
+  };
+  const crop = () =>
+    farmDuty(w, p, farm, state)
+      .filter((s) => s.kind === 'act')
+      .map((s) => s.action)
+      .find((a) => a.type === 'farm')?.crop;
+  assert.equal(crop(), 'wheat');
+  delete (w.settings as any).npcCropDemandBatches;
+  assert.equal(crop(), 'wheat');
+  Object.assign(w.settings, { npcCropDemandBatches: 1 });
+  assert.equal(crop(), 'potatoes');
+  Object.assign(w.settings, { npcCropDemandBatches: 0 });
+  assert.equal(crop(), 'potatoes');
+  buyer.stock.wheat = 0;
+  assert.equal(crop(), 'wheat');
+  buyer.investment = 0;
+  assert.equal(crop(), 'potatoes');
 });

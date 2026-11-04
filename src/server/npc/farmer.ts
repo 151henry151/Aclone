@@ -360,7 +360,9 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
           item === 'hay' && acceptsHay(shop)
             ? Math.max(0, herdNeeds(shop).feed - (shop.stock.feed ?? 0))
             : r?.inputs[item];
-        const target = needed ? needed * 6 : def.yield;
+        const target = needed
+          ? needed * npcBusinessLoadRules(w.settings).npcCropDemandBatches
+          : def.yield;
         const urgent =
           needed && (shop.stock[item] ?? 0) < needed && shop.investment >= shop.buy[item] * needed
             ? def.yield * 3

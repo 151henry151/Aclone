@@ -59,7 +59,23 @@ test('business cargo budgets persist, change collection loads and refuse invalid
       sell: {},
       stock: {},
     });
-    initial.buildings = [shop, buyer];
+    const herd = makeBuilding('herd', 'dairy', 90, 0);
+    Object.assign(herd, {
+      owner: account.id,
+      stock: { cows: 2, water: 20 },
+      sell: { milk: 5000 },
+      buy: { feed: 100 },
+      investment: 100000,
+    });
+    const supplier = makeBuilding('supplier', 'market', 110, 0);
+    Object.assign(supplier, {
+      owner: 'seller',
+      stock: { feed: 100 },
+      sell: { feed: 100 },
+      buy: {},
+    });
+    buyer.buy.milk = 5000;
+    initial.buildings = [shop, buyer, herd, supplier];
     const player = addPlayer(initial, account.id, account.name);
     Object.assign(player, {
       x: 0,
@@ -116,12 +132,22 @@ test('business cargo budgets persist, change collection loads and refuse invalid
           s.kind === 'act' && s.action.type === 'stock' ? [s.action.quantity] : [],
         )[0];
     expect(load()).toBe(20);
+    const supply = () =>
+      gameplayChoices(w(), p(), state, 'farmer')
+        .find((c) => /^Supply my .*buy and deliver .* feed from/.test(c.description))
+        ?.plan.flatMap((s) =>
+          s.kind === 'act' && s.action.type === 'trade' ? [s.action.quantity] : [],
+        )[0];
+    expect(supply()).toBe(4);
     const group = page.getByRole('group', {
       name: 'Resident business cargo',
       exact: true,
     });
     await edit();
     const patch = {
+      npcRoutineSupplyBatches: 3,
+      npcRoutineDepositBatches: 2,
+      npcCropDemandBatches: 4,
       npcSmallInputPurchaseLoad: 2,
       npcSmallInputPurchaseBatches: 4,
       npcCarriedSurplusSaleLoad: 6,
@@ -138,21 +164,26 @@ test('business cargo budgets persist, change collection loads and refuse invalid
     await apply();
     await expect.poll(() => w().settings.npcBusinessCollectionLoad).toBe(3);
     expect(load()).toBe(3);
+    expect(supply()).toBe(6);
     expect(p().cash).toBe(20000);
     expect(w().buildings[0].investment).toBe(0);
     await close();
     await edit();
     for (const [k, v] of Object.entries(patch))
       await expect(group.locator(`[name="${k}"]`)).toHaveValue(String(v));
-    await group.locator('[name="npcSmallInputPurchaseLoad"]').scrollIntoViewIfNeeded();
+    await group.locator('[name="npcRoutineSupplyBatches"]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/business-load-rules.png' });
     await group.locator('[name="npcFarmOutputSaleLoad"]').scrollIntoViewIfNeeded();
     await page.screenshot({ path: 'test-results/business-load-last-fields.png' });
     await group.locator('[name="npcBusinessCollectionLoad"]').fill('0');
+    await group.locator('[name="npcRoutineSupplyBatches"]').fill('0');
     await apply();
     await expect.poll(() => w().settings.npcBusinessCollectionLoad).toBe(0);
     expect(load()).toBeUndefined();
-    const invalid = group.locator('[name="npcBusinessCollectionLoad"]');
+    expect(supply()).toBeUndefined();
+    expect(w().buildings[2].stock.feed ?? 0).toBe(0);
+    expect(w().buildings[3].stock.feed).toBe(100);
+    const invalid = group.locator('[name="npcRoutineSupplyBatches"]');
     await invalid.fill('-1');
     await apply();
     await expect(invalid).toBeFocused();
@@ -168,6 +199,7 @@ test('business cargo budgets persist, change collection loads and refuse invalid
     await waitForWorld(page);
     await edit();
     await expect(group.locator('[name="npcBusinessCollectionLoad"]')).toHaveValue('0');
+    await expect(group.locator('[name="npcRoutineSupplyBatches"]')).toHaveValue('0');
     expect(errors).toEqual([]);
   } finally {
     await page.close();

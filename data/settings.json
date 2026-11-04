@@ -319,5 +319,8 @@
   "npcFarmCollectionLoad": 25,
   "npcOwnedSourceReserveBatches": 3,
   "npcBusinessOutputSaleLoad": 30,
-  "npcFarmOutputSaleLoad": 20
+  "npcFarmOutputSaleLoad": 20,
+  "npcRoutineSupplyBatches": 2,
+  "npcRoutineDepositBatches": 4,
+  "npcCropDemandBatches": 6
 }

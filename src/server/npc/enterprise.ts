@@ -329,7 +329,9 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       ...livestockSupplyInputs(w, b, recipe.inputs),
       ...(herd ? { [herd.animal]: herd.minimum } : {}),
     })) {
-      const target = inputStockTarget(b, item, w) ?? perBatch * (item === herd?.animal ? 1 : 6);
+      const target =
+        inputStockTarget(b, item, w) ??
+        perBatch * (item === herd?.animal ? 1 : budgets.npcInputReserveBatches);
       const keep =
         item === 'water'
           ? reserves.npcPortableWater
