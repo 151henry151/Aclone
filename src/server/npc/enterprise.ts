@@ -6,7 +6,7 @@ import { jobTraining } from './job-training.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { pricingChoices } from './pricing.ts';
 import { housingChoices } from './housing.ts';
-import { household } from './household.ts';
+import { strategicHouseholdBudget, household } from './household.ts';
 import { capitalChoices } from './prosperity.ts';
 import { fundProject } from './project-funding.ts';
 import { hayMerchantChoices } from './hay-merchant.ts';
@@ -20,7 +20,6 @@ import {
   inputStockTarget,
   procurementDraw,
 } from './business-policy.ts';
-import { householdBudget } from './household.ts';
 import { herdSpec, herdReady, acceptsHay } from '../../shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { loanQuote } from '../../shared/loans.ts';
@@ -120,7 +119,8 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         careerGoal,
       });
   };
-  const living = householdBudget(w, p, 86400).reserve;
+  const householdForecast = strategicHouseholdBudget(w, p),
+    living = householdForecast.reserve;
   for (const loan of p.loans ?? []) {
     const bank = w.buildings.find((b) => b.id === loan.bank);
     if (!bank || loan.status === 'paid') continue;
@@ -137,13 +137,12 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       );
   }
   const home = household(w, p);
-  if (home && !offlineReadiness(w, p, 86400).stocked) {
-    const pantry = homecomingPlan(w, p, 86400, undefined, false);
+  if (home && !offlineReadiness(w, p, householdForecast.horizonSeconds).stocked) {
+    const pantry = homecomingPlan(w, p, householdForecast.horizonSeconds, undefined, false);
     if (pantry.length && pantry.length <= 12)
       list.push({
         id: `household_${home.id}`,
-        description:
-          'Provision my home: stock a day of food and drink; stay outside while playing and enter only when leaving or resting. A completed household ends repeated emergency visits.',
+        description: `Provision my home: stock ${householdForecast.horizonSeconds} real seconds of food and drink plus the local pantry buffer; stay outside while playing and enter only when leaving or resting. A completed household ends repeated emergency visits.`,
         plan: pantry,
         careerGoal: { kind: 'housing', target: home.id },
         reconsiderSeconds: 600,

@@ -1,3 +1,4 @@
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { homeNeedsMultiplier } from '../../shared/automatic-provisions';
 import { survivalRules } from '../../shared/survival-rules';
 import { housingChoices } from './housing.ts';
@@ -62,7 +63,8 @@ export function offlineReadiness(w: World, p: Player, awaySeconds: number) {
     comfortable: p.hunger < 25000 && p.thirst < 25000 && p.health >= 30000,
     coveredSeconds,
     plannedAwaySeconds: awaySeconds,
-    stocked: coveredSeconds >= awaySeconds + 900,
+    stocked:
+      !!b && coveredSeconds >= awaySeconds + npcHouseholdRules(w.settings).npcPantryBufferSeconds,
     reminder:
       'Use your own home or personal booked-room stores. Eat and drink before leaving, stock for the expected absence, then enter home. No free supplies or immunity. Without shelter or sufficient stores you will return sooner. Hunger, thirst and starvation damage continue offline for everyone; empty stores or expired lodging can kill you.',
   };
@@ -173,7 +175,9 @@ export function homecomingPlan(
           Math.max(
             0,
             need +
-              (awaySeconds + 900) * rate * homeNeedsMultiplier(w) -
+              (awaySeconds + npcHouseholdRules(w.settings).npcPantryBufferSeconds) *
+                rate *
+                homeNeedsMultiplier(w) -
               20000 -
               nutritionIn(w, stock, nutrient),
           ) / items[item][nutrient]!,

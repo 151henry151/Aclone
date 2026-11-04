@@ -2152,3 +2152,53 @@ node_modules/.bin/tsx --test --test-concurrency=2 \
 
 TypeScript, changed-file formatting and the browser criteria pass. No production
 change followed those checks. Ready to commit and push this slice.
+
+Pushed and verified `d7b003b` on `backlog-implementation`. **Resident cash and
+portable reserve rules are done.**
+
+### Gameplay rules — resident strategic horizon and pantry buffer
+
+Before production, add `npcStrategicSeconds` (86,400 real seconds, integer
+60–604,800) and `npcPantryBufferSeconds` (900 real seconds, integer 0–86,400) to
+Resident household budget. The first governs existing one-day reserves for
+property, construction, business procurement/withdrawals, ambitions and household
+provisioning; the second is the existing extra pantry/housing coverage. Ordinary
+household forecasts keep their separate rule. Explicit absence lengths still
+apply, with housing protecting the greater of the strategic horizon and the
+absence plus buffer. Fixed daily replacement-cost comparisons remain 86,400
+seconds; career review timers are outside this budget slice.
+
+Completion criteria: defaults and absent keys preserve results; changed horizons
+alter actual protected cash, owner draws and procurement execution guards in
+agreement; home provisioning and career completion use the same horizon; zero
+buffer permits exact coverage but never counts a missing home as stocked;
+explicit longer absences still require coverage. Changing rules grants no cash,
+stock or shelter. Replace the fixed "a day" pantry-plan text with the configured
+horizon. Both fields validate atomically, appear in summaries/editor/observations,
+and survive design export/import and storage reload.
+
+Commands: red then green `node_modules/.bin/tsx --test
+ tests/npc-planning-rules.test.ts`; relevant regressions include npc-household-rules,
+npc-household, npc-housing, npc-construction, npc-business-policy,
+npc-business-continuity, npc-prosperity, npc-finances, npc-circulation and npc-guide.
+Run them with the same runner, two files concurrently. Browser command:
+`TEST_GPU=1 npm run test:e2e -- tests/browser/npc-planning-rules.spec.ts`.
+Browser: F10 → Rules, edit/reopen both fields, verify the fixture's actual server
+owner draw changes from 2,400 to 300 hundredths without changing balances;
+verify a zero buffer at the coverage boundary, reject a horizon below 60, reload
+and inspect the saved values, screenshots and page errors. Finish with clean
+`npx tsc --noEmit`, changed-file Prettier, NPCS/WORLD_BUILDING/README and imperative
+Unreleased updates. No full-suite run is planned under Henry's revised policy.
+
+Planning red run: all seven tests fail before production. Exact failures include
+2,400 versus 300 for a shortened owner/housing reserve, a 100 versus 0 procurement
+draw, false versus true at zero-buffer exact coverage, an unnecessary one-day
+pantry errand and missing defaults/editor fields (`/tmp/aclone-planning-red.log`).
+
+Planning gates: all seven new tests and 83 relevant regression tests pass (90
+checks in 11.1 seconds). Browser passes in 19.2 seconds: both fields persist, the
+owner draw changes from 2,400 to 300 without a transfer, exact 7,500-second home
+coverage accepts zero buffer, and native validation rejects 59 seconds. Reload
+restores the saved values. Inspect both screenshots; no page errors. TypeScript,
+changed-file Prettier and diff checks are clean; update NPCS, WORLD_BUILDING,
+README and imperative Unreleased. Ready to commit and push.

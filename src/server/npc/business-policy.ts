@@ -21,7 +21,7 @@ import {
 } from '../../shared/sound-state.ts';
 import { salesReceipt } from '../../shared/taxes.ts';
 import { productionInterval, distance, canCarry } from '../../shared/simulation.ts';
-import { household, householdBudget } from './household.ts';
+import { strategicHouseholdBudget, household, householdBudget } from './household.ts';
 import { visitBuilding } from './care.ts';
 import { blockedStep } from './recovery.ts';
 import type { ResidentState } from './memory.ts';
@@ -82,7 +82,7 @@ export function procurementDraw(
     return;
   const draw = Math.max(
     0,
-    quantity * price - Math.max(0, p.cash - householdBudget(w, p, 86400).reserve),
+    quantity * price - Math.max(0, p.cash - strategicHouseholdBudget(w, p).reserve),
   );
   const supplied = { ...b, stock: { ...b.stock, [item]: (b.stock[item] ?? 0) + quantity } };
   const available = Math.min(
@@ -280,7 +280,7 @@ export function retainedCapital(w: World, b: Building) {
 }
 export function ownerLivingDraw(w: World, p: Player, b: Building) {
   if (b.owner !== p.id || b.construction || b.government) return 0;
-  let target = householdBudget(w, p, 86400).reserve;
+  let target = strategicHouseholdBudget(w, p).reserve;
   // A viable owner needs somewhere to live. Save toward a modest cottage rather
   // than reinvesting every penny forever; this is a savings target, not a quote.
   const home = worldBuildings(w).home;

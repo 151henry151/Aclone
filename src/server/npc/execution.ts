@@ -1,4 +1,4 @@
-import { householdBudget } from './household.ts';
+import { strategicHouseholdBudget } from './household.ts';
 import { retainedCapital, procurementTarget } from './business-policy.ts';
 import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -73,7 +73,7 @@ export function checkOwnerCapitalAction(
   }
   const shortfall = Math.max(
     0,
-    purchasing - Math.max(0, p.cash - householdBudget(w, p, 86400).reserve),
+    purchasing - Math.max(0, p.cash - strategicHouseholdBudget(w, p).reserve),
   );
   const procurement = Math.min(
     shortfall,

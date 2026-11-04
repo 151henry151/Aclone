@@ -216,6 +216,8 @@
   "towMaximumFee": 10000000,
   "towOfferSeconds": 600,
   "npcHouseholdSeconds": 21600,
+  "npcStrategicSeconds": 86400,
+  "npcPantryBufferSeconds": 900,
   "npcBudgetNeedAllowance": 15000,
   "npcBudgetCarriedShare": 0.5,
   "npcBudgetFuelThreshold": 8,

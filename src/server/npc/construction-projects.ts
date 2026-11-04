@@ -15,7 +15,7 @@ import { recipes } from '../../shared/catalog.ts';
 import { constructionTerms } from '../../shared/civics.ts';
 import { canCarry } from '../../shared/simulation.ts';
 import type { World, Player } from '../../shared/types.ts';
-import { householdBudget } from './household.ts';
+import { strategicHouseholdBudget, householdBudget } from './household.ts';
 import { visitBuilding } from './care.ts';
 import { operation } from './player-operations.ts';
 import type { FarmerChoice } from './farmer.ts';
@@ -127,7 +127,7 @@ export function constructionBudget(
           0,
         ))
     : 0;
-  const living = householdBudget(w, p, 86400).reserve;
+  const living = strategicHouseholdBudget(w, p).reserve;
   return {
     materialCost,
     tax,

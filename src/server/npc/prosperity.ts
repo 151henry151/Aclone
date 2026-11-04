@@ -6,7 +6,7 @@ import { businessHealth } from '../../shared/business-health.ts';
 import type { World, Player } from '../../shared/types.ts';
 import { ownerWithdrawable, remainingClaim } from '../../shared/stakes.ts';
 import { retainedCapital, inputStockTarget, productionBudget } from './business-policy.ts';
-import { householdBudget, household, dailyLivingCost } from './household.ts';
+import { strategicHouseholdBudget, household, dailyLivingCost } from './household.ts';
 import { visitBuilding } from './care.ts';
 import type { ResidentState } from './memory.ts';
 import type { FarmerChoice } from './farmer.ts';
@@ -69,7 +69,7 @@ export function strategicReviewDue(w: World, p: Player, state: ResidentState, pr
 
 /** Only the caller's observed shops and their own accounts are used here. */
 export function prosperityBriefing(w: World, p: Player, choices: FarmerChoice[] = []) {
-  const reserve = householdBudget(w, p, 86400).reserve;
+  const reserve = strategicHouseholdBudget(w, p).reserve;
   const businesses = w.buildings.filter(
     (b) => b.owner === p.id && !b.government && !['home', 'warehouse'].includes(b.kind),
   );

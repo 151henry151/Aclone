@@ -124,7 +124,10 @@ Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked 
 Unreleased **F10 → Rules → Resident household budget** exposes the ordinary
 forecast horizon (six real hours), need allowance (15,000), carried-nutrition
 credit (50%) and low-fuel reserve threshold (8 tank units). Explicit trip horizons
-still take precedence. The allowance and credit affect forecasts only; no funds
+still take precedence. Strategic property/business reserves and home provisioning
+use a separate one-day horizon; pantry coverage adds a 15-minute buffer. Both are
+world rules, including zero buffer for exact coverage in valid shelter. The
+allowance and credit affect forecasts only; no funds
 or supplies are granted. A zero fuel threshold omits that purchase reserve.
 Forecasts and pantry errands use the world's existing shelter-consumption
 multiplier, including zero. Daily replacement comparisons still cover one real

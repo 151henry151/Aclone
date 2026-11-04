@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose the resident strategic reserve horizon and pantry coverage buffer as world rules; align property, business and home-provisioning plans while preserving daily replacement-cost comparisons.
+
 - Expose resident emergency and banking cash targets, deposit policies and portable/trade supply reserves as world rules; preserve their distinct defaults, and cap stranded recovery and surplus unloading by the existing transaction limit.
 
 - Expose resident household forecast horizons, need allowances, carried-nutrition credit and fuel reserves as world rules; align household and homecoming forecasts with the existing shelter-consumption multiplier while retaining explicit trip horizons and daily cost comparisons.

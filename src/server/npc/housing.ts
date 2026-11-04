@@ -1,3 +1,4 @@
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { fundProject } from './project-funding.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -30,9 +31,18 @@ export function checkHousingPurchase(w: World, p: Player, a: Action) {
 
 /** Permanent shelter is a costed project, including completion and pantry money.
  * Use only known suppliers. Existing foundations must be finished first. */
-export function housingChoices(w: World, p: Player, away = 86400): FarmerChoice[] {
+export function housingChoices(
+  w: World,
+  p: Player,
+  away = npcHouseholdRules(w.settings).npcStrategicSeconds,
+): FarmerChoice[] {
   if (ownsHome(w, p) || w.buildings.some((b) => b.owner === p.id && b.construction)) return [];
-  const living = householdBudget(w, p, Math.max(86400, away + 900)).reserve;
+  const rules = npcHouseholdRules(w.settings);
+  const living = householdBudget(
+    w,
+    p,
+    Math.max(rules.npcStrategicSeconds, away + rules.npcPantryBufferSeconds),
+  ).reserve;
   const house = w.buildings
     .filter((b) => b.kind === 'home' && !b.construction && !b.government && (!b.owner || b.forSale))
     .sort((a, b) => propertyQuote(w, a).total - propertyQuote(w, b).total)[0];

@@ -108,6 +108,11 @@ export function householdBudget(
   };
 }
 
+/** Longer cash protection for property, business and household projects. */
+export function strategicHouseholdBudget(w: World, p: Player) {
+  return householdBudget(w, p, npcHouseholdRules(w.settings).npcStrategicSeconds);
+}
+
 /** Replacement cost for one day of nutrition, even when today's pantry is full.
  * A full pantry lowers immediate spending, not the recurring cost of living. */
 export function dailyLivingCost(w: World, p: Player) {

@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcHouseholdRuleFields = {
+  npcStrategicSeconds: {
+    label: 'Strategic household reserve horizon (real seconds)',
+    min: 60,
+    max: 604800,
+    step: 1,
+  },
+  npcPantryBufferSeconds: {
+    label: 'Extra pantry coverage (real seconds)',
+    min: 0,
+    max: 86400,
+    step: 1,
+  },
   npcHouseholdSeconds: {
     label: 'Household forecast horizon (real seconds)',
     min: 60,

@@ -735,6 +735,15 @@ use named defaults. Physical tow limits and boat-death recovery stay separate.
 
 - `npcHouseholdSeconds`: 21,600 real seconds by default (six hours), integer
   60–604,800. Explicit trip and strategic horizons take precedence.
+- `npcStrategicSeconds`: 86,400 real seconds by default (one day), integer
+  60–604,800. Protect this longer household reserve when planning property,
+  construction, business procurement, owner withdrawals and saving ambitions.
+  Home-provisioning choices and their completion checks use the same horizon.
+- `npcPantryBufferSeconds`: 900 real seconds by default (15 minutes), integer
+  0–86,400. Add this coverage to pantry targets and absence checks. Zero permits
+  exact coverage in a valid home or room; it never creates shelter. Housing
+  purchase budgets protect the greater of the strategic horizon and the explicit
+  absence plus this buffer.
 - `npcBudgetNeedAllowance`: 15,000 need units, integer 0–1,000,000. Subtract
   this allowance from current need plus forecast consumption before pricing
   replacement food and drink. Higher allowance lowers the immediate reserve.
@@ -751,7 +760,7 @@ expired rooms and another player's house do not count as shelter. Household and
 homecoming forecasts use the existing `homeNeedsMultiplier`; zero is supported
 without NaN. Daily replacement-cost comparisons remain 86,400 real seconds and
 exclude fuel, independently of the ordinary forecast horizon and fuel threshold.
-All four fields are validated, summarized, included in resident observations and
+All six fields are validated, summarized, included in resident observations and
 portable designs, and retained on reload. Missing keys use named defaults.
 
 ## Resident cash and portable reserve rules (unreleased)

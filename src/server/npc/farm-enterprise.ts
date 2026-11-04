@@ -10,7 +10,7 @@ import { skillLesson } from '../../shared/world-catalogue.ts';
 import { taxTown } from '../../shared/town-charter.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import type { World, Player } from '../../shared/types.ts';
-import { householdBudget } from './household.ts';
+import { strategicHouseholdBudget } from './household.ts';
 import { visitBuilding } from './care.ts';
 import { farmDuty, type FarmerChoice } from './farmer.ts';
 import type { ResidentState } from './memory.ts';
@@ -21,7 +21,7 @@ import type { Step } from './decision.ts';
 export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
   const choices: FarmerChoice[] = [];
   if (p.task || p.learning) return choices;
-  const living = householdBudget(w, p, 86400).reserve;
+  const living = strategicHouseholdBudget(w, p).reserve;
   for (const b of w.buildings.filter(
     (b) => b.kind === 'farm' && !b.construction && !b.government,
   )) {

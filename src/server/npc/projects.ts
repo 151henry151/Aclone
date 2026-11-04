@@ -1,3 +1,4 @@
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { jobTraining } from './job-training.ts';
 import { liquidCapital, netAssets } from './wealth.ts';
 import { offlineReadiness } from './homecoming.ts';
@@ -337,7 +338,7 @@ export function continueCareer(
     return;
   }
   if (c.kind === 'housing') {
-    const ready = offlineReadiness(w, p, 86400);
+    const ready = offlineReadiness(w, p, npcHouseholdRules(w.settings).npcStrategicSeconds);
     if (ready.home === c.target && ready.stocked) {
       finishCareer(w, p, state, 'Home provisioned for the planned absence');
       return;

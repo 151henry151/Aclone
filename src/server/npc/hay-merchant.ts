@@ -4,7 +4,7 @@ import type { World, Player } from '../../shared/types.ts';
 import { propertyQuote } from '../../shared/property.ts';
 import { taxTown } from '../../shared/town-charter.ts';
 import { canCarry } from '../../shared/simulation.ts';
-import { householdBudget } from './household.ts';
+import { strategicHouseholdBudget } from './household.ts';
 import { visitBuilding } from './care.ts';
 import type { FarmerChoice } from './farmer.ts';
 import type { Step } from './decision.ts';
@@ -12,7 +12,7 @@ import type { Step } from './decision.ts';
 export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
   if (p.task || p.learning) return [];
   const choices: FarmerChoice[] = [],
-    living = householdBudget(w, p, 86400).reserve;
+    living = strategicHouseholdBudget(w, p).reserve;
   for (const b of w.buildings.filter(
     (b) => b.kind === 'haybarn' && !b.construction && !b.government,
   )) {

@@ -2,7 +2,7 @@
 import type { World, Player } from '../../shared/types.ts';
 import { townCharter } from '../../shared/town-charter.ts';
 import { mapHalf, terrainHeight } from '../../shared/terrain.ts';
-import { household, householdBudget } from './household.ts';
+import { strategicHouseholdBudget, household } from './household.ts';
 import { retainedCapital } from './business-policy.ts';
 import { constructionBudget } from './construction-projects.ts';
 import { travelPrep } from './travel.ts';
@@ -31,7 +31,7 @@ export function settlementChoices(w: World, p: Player): FarmerChoice[] {
     !holdings.some((b) => (b.accounts?.receipts ?? 0) > 0)
   )
     return [];
-  const living = householdBudget(w, p, 86400).reserve;
+  const living = strategicHouseholdBudget(w, p).reserve;
   if (p.cash < living + charter.foundingCost * 4) return [];
   const half = mapHalf(w) - charter.initialRadius;
   for (const distance of [Math.max(600, charter.minSpacing + charter.initialRadius), 1000, 1400])

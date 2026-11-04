@@ -5,7 +5,7 @@ import type { FarmerChoice } from './farmer.ts';
 import { businessEstimate } from './enterprise.ts';
 import { careerChoices } from './projects.ts';
 import { propertyQuote } from '../../shared/property.ts';
-import { householdBudget } from './household.ts';
+import { strategicHouseholdBudget } from './household.ts';
 
 export interface Ambition {
   world: string;
@@ -37,7 +37,7 @@ export function savingChoices(w: World, p: Player, state: ResidentState): Farmer
     )
     .sort((a, b) => b.expectedCash! / b.durationSeconds! - a.expectedCash! / a.durationSeconds!)[0];
   if (!income) return [];
-  const living = householdBudget(w, p, 86400).reserve;
+  const living = strategicHouseholdBudget(w, p).reserve;
   const prospects = w.buildings
     .flatMap((b) => {
       if (b.owner === p.id || b.construction || b.government || (b.owner && !b.forSale)) return [];
