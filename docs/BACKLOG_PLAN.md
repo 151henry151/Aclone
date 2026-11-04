@@ -168,38 +168,38 @@ implementation order rather than building paving before ford-aware persistence.
    transfers, direct refuelling, taxed sales/offline payment, rules and balance.
 9. **Canoes**: owned state model, carrying and blocked actions, launch/beach,
    home storage, death/ownership policy, persistence and carried rendering.
-10. **Rowboats**: reuse canoe bank/shore access, rowed hull, seats and hold,
-    beached persistence, tender policy and no-carry enforcement.
-11. **CB radios**: channel/transmission state, duration and collisions,
+10. **CB radios**: channel/transmission state, duration and collisions,
     propagation/moderation, rescue prompts, dashboard and input methods.
-12. **Make the remaining hard-coded gameplay numbers per-world rules**:
+11. **Make the remaining hard-coded gameplay numbers per-world rules**:
     separate fieldset batches in the spec's order: survival/needs; economy/trade;
     gathering/farming/production; vehicles/travel; climate/calendar/environment.
     Default-preserving tests plus changed-value, editor and export tests for each.
-13. **Solid trees, boulders and vehicles**: shared deterministic obstacle data,
+12. **Solid trees, boulders and vehicles**: shared deterministic obstacle data,
     spatial queries, static collision/escape, pedestrian sliding, moving-vehicle
     contacts and offline policy; integrate road/navigation/build/snow users and
     measure tick/frame cost before proceeding.
-14. **Cargo boat for dock-to-dock freight**: definition/model/tuning; persistent
+13. **Cargo boat for dock-to-dock freight**: definition/model/tuning; persistent
     hold; quay and existing landing transfers; decide optional barge; route
     economics. Follow the entry's internal order.
-15. **Storm capsizing**: sea survey and defaults; seeded/ramped risk by hull;
-    warnings and forecast; occupants/death/loss; shelter-time checks. Canoe,
-    rowboat and cargo hull classifications now exist.
-16. **Springs, pump-houses and desalination plants**: deterministic frozen
+14. **Rowboats**, together with **Storm capsizing** (15): rowboat shore access,
+    seats/hold, beached persistence, tender policy and no-carry enforcement; then
+    the storm sea survey/defaults, seeded/ramped risk, warnings, occupants/death/
+    loss and shelter-time checks. Verify rowboat storm acceptance before marking
+    either section done. Canoe and cargo hull classifications already exist.
+15. **Springs, pump-houses and desalination plants**: deterministic frozen
     springs/headwaters; scenery/drinking; grandfathered desalination; fresh-water
     siting/recipes/models; northern NPC founding, migration and catalogue/docs.
-17. **Butcher, meat and livestock life cycle**: young/cohorts/rations/breeding;
+16. **Butcher, meat and livestock life cycle**: young/cohorts/rations/breeding;
     adult slaughter service/shop; raw meat/spoilage; business and home cooking;
     NPCs, migration, portable catalogues and taxed chain margins.
-18. **Open bay doors and modelled interiors**: derived hours/staff state and
+17. **Open bay doors and modelled interiors**: derived hours/staff state and
     real apertures; motion/visibility; shells and every listed trade's props;
     stock/architecture variants, reduced detail, preview mode and bounds/budget.
-19. **Tractors stay where you leave them; walking, doors and arrival
+18. **Tractors stay where you leave them; walking, doors and arrival
     animations**: parked records and migration; walk/return/refuel; home/lodging;
     sign-off/sign-in/towing/solid footprints and trailers; NPC return constraint;
     mount/dismount and approach/panel timing on desktop/mobile/controller.
-20. **Alternate road routes and gradual city paving** together with **River
+19. **Alternate road routes and gradual city paving** together with **River
     crossings, bridges and highway haulage**, in this exact sub-order:
     - Survey current settlements and haulage economics read-only; define shared
       city/surface/ford/bridge records and configurable defaults. Decide access,
@@ -216,35 +216,35 @@ implementation order rather than building paving before ford-aware persistence.
       articulation, loading, surface speeds and profitable long-run balance.
     - Restart/export, concurrent construction, water/terrain/obstruction edits,
       bridge removal, growth/shrinkage and browser travel validation.
-21. **Earthmoving machines and a building slope limit** (factory and solid
+20. **Earthmoving machines and a building slope limit** (factory and solid
     scenery now exist): grade rule/refusal/site shading; cached earthwork pads;
     plant licence/manufactured machines; survey/passes/material balance and
     weathering; contracts/permissions/NPC posting; hillside-to-building browser
     flow, roads/trees and mobile/controller implements.
-22. **Snow ploughing: roads that stay snowed in until someone clears them**:
+21. **Snow ploughing: roads that stay snowed in until someone clears them**:
     segment accumulation/lookup/rendering; tractor blade/pay; factory-made truck;
     salt/hopper/pay; NPC/council acquisition; one-time Puddlewick defaults;
     offline catch-up, clean/raised/empty states and browser map/road coverage.
-23. **Player-built airstrips and commercial aviation**: rotated owned airfield
+22. **Player-built airstrips and commercial aviation**: rotated owned airfield
     list; expensive multi-contributor airstrip/access/parking/fuel; land aircraft
     definitions and weight performance; passenger fares/seats/baggage/crash
     stranding; apron freight/economics; restart, import, demolition, licences,
     night lighting and input coverage. Preserve its six-stage internal order;
     add the amphibian variant in the following dedicated item, using these
     shared seats, baggage and crash rules.
-24. **Seaplanes**: amphibian definition/model/price/hold; two seats and loading;
+23. **Seaplanes**: amphibian definition/model/price/hold; two seats and loading;
     gear-dependent land/water contacts, depth/run/wave qualification, taxi/moor
     and loaded takeoff; nearest-shore rescue and floating surplus cargo. Landing
     and shared aviation acceptance must already pass.
-25. **Helicopters: sling loads, sea rescue and passenger charters**: rotorcraft
+24. **Helicopters: sling loads, sea rescue and passenger charters**: rotorcraft
     and cockpit; owned parked-tractor sling; consent/winch/return hull; passenger
     lifts and directory; contracts/escrow/bounty/NPC requests. Parked vehicles,
     aviation crash/seats and storm thresholds are prerequisites.
-26. **Forestry and logging**: shared tree IDs/stages; sparse overlay; safe
+25. **Forestry and logging**: shared tree IDs/stages; sparse overlay; safe
     felling/bucking/piles; hand/log-wagon/backhoe loading; construction clearing;
     permissions/stumpage/nurseries/woodlots; NPC plan, regeneration, map and
     performance. Solid trees and earthmoving must be complete first.
-27. **Flight combat for fighting worlds**: health/damage; fixed guns with
+26. **Flight combat for fighting worlds**: health/damage; fixed guns with
     bounded rewind/reload; bombs/rockets/turrets; arena round and dogfight;
     additional hull hardpoints/gunner; recorded replay, performance and inputs.
     Non-fighting worlds must retain civil behaviour throughout.
@@ -1010,3 +1010,104 @@ Final water-slice verification: `npm test` passes all **1,385** tests in 192 sec
 The 74 focused boating regressions and four real browser flows pass. The canoe
 entry's carrying, storage, water access, movement, mooring, ownership and recovery
 criteria are satisfied. Ready to commit and push this slice before marking it done.
+
+Pushed `894ae4a`: canoe launch, paddling, beaching and recovery are **done**;
+the entire Canoes entry is now complete.
+
+### Remaining-order dependency correction
+
+The Rowboats tests explicitly require “the storm behaviour below”. The initial
+order separated that acceptance dependency from its hull work. Keep Rowboats and
+Storm capsizing together, after the cargo hull, and move independent CB radios,
+world-rule batches and solid scenery ahead of that pair. This changes no completed
+work or completion criteria; do not mark rowboats done with storm tests deferred.
+
+### CB radios — transient authority and propagation slice
+
+Before production, add `tests/radio.test.ts`. Define the full radio entry's
+criteria here, with this slice implementing server authority and the following
+slice supplying the real dashboard/input/event flow. Neither completes the whole
+CB entry on its own.
+
+Each supported vehicle has persistent per-player/per-slot channel, handle, volume
+and squelch; the enabled rule defaults on, 40 channels, emergency channel 9 and
+road convention 19. Foot travel has no radio. All gameplay thresholds belong to
+world rules: base ground range 3km, water range multiplier 1.5, antenna height by
+vehicle type, terrain attenuation, speaking rate, simultaneous-key window,
+message length, static/drop thresholds and rescue reach. Residents default off.
+Text uses the same moderation and chat lock as ordinary chat; no public chat log
+entry is created. Radio keys need a nonempty permitted message; duration derives
+from its length and the configured speaking rate. Reject out-of-range channels,
+invalid controls, disabled radios, walking and duplicate keys without mutation.
+
+Hold transmitter/session state outside the saved World. `key`, `release`,
+`channel`, `squelch`, volume and handle actions affect only the caller's radio.
+A later key while hearing a transmission is refused as busy; simultaneous keys
+inside the per-world key window collide for listeners who hear both. Different
+channels remain isolated, and remote stations outside reception can reuse a
+channel. Tick reception per listener from positions, distance, antenna altitude
+and bounded terrain samples. Squelch hides weak signals, then dropped words and
+static progressively obscure reception. Flat-ground 3km reach, hills/aircraft
+extension, over-water extension, ridge obstruction and no cross-island reception
+must be reproducible in tests. A released/expired transmission ends, leaving a
+finite received event log. Preserve selected channel/handle across save/reload,
+but restart drops active transmissions and received traffic. Leaving a vehicle
+clears its transient log. Residents do not respond.
+
+The later UI slice must render a separate radio pane in tractors, boats and
+aircraft, including channel, handle, volume/squelch, keyed status, received signal
+and busy/doubling notices. Use actual keyboard, touch and controller bindings and
+verify them in browser flows, including disabled/no-radio/empty-message/busy and
+weak reception. Channel 9 stranded-vessel calls surface a nearby rescue prompt
+with ordinary manual recovery controls; no automatic response or rescue. Test
+moderation parity and chatLocked. Update PLAYING, WORLD_BUILDING and README.
+
+For this authority slice: focused `node_modules/.bin/tsx --test
+ tests/radio.test.ts`, then full `npm test`, `npx tsc --noEmit` and explicit-file
+Prettier. Initial red tests must show missing radio authority before implementation.
+The real action/event integration and editor belong to the next slice, whose
+browser command and concrete platform steps will be recorded before its code.
+
+Authority slice refinement before editor code: the shared completion protocol
+requires new rules in the editor and summary now. Add editor/export regressions,
+and `tests/browser/radio-rules.spec.ts`: open F10 → Rules → CB radios, inspect
+all controls, change channel count/range/speaking rate, disable radios, apply,
+reopen and verify saved values. The initial grouped-fieldset assertion must fail.
+Run `TEST_GPU=1 npm run test:e2e -- tests/browser/radio-rules.spec.ts` and inspect
+the screenshot. Degradation boundary tests also expose correlated word hashes
+that leave weak messages fully legible; fix the deterministic distribution.
+
+Initial authority tests fail on the missing radio action/module. Eleven focused
+regressions now cover channels, time, collision, reach, squelch, degradation,
+persistent selections, transient logs, world switches, emergency cues and portable
+rules. Weak-word hashing initially leaves all ten words intact at reduced signal;
+add a deterministic avalanche so nearby word indices do not correlate. A real
+socket regression then fails because a rejected action replaces World and erases
+its WeakMap radio state. Checkpoint radio state with the action transaction and
+restore it onto the rollback copy, including rollback of a key whose save fails.
+Keep this integration in the authority slice rather than defer a known failure.
+
+The socket transaction regression passes after checkpoint restoration. A late-range
+listener regression then receives “firs” instead of the actually spoken “last”:
+record the received character spans on each tick rather than taking a prefix at
+completion. Capture the speaking rate when keying so changing a world rule does
+not rewrite an in-progress transmission's timeline.
+
+Full verification passes 1,397/1,398 tests. Compact snapshot traffic is 75,708 bytes
+against a 74,695-byte ceiling (30% of legacy), because every clock update repeats
+all world settings, including the new radio rules. Preserve the existing size
+limit. Add a red settings-delta regression for clock-only updates, edits and
+explicit removal. Introduce negotiated protocol 4 for settings field patches;
+protocol 3 must continue receiving complete settings objects. Verify reconstruction,
+legacy compatibility and the unchanged snapshot budget, then rerun the real editor
+browser flow using protocol 4. Update protocol/architecture/hosting documentation.
+
+Final authority-slice verification: `npm test` passes all **1,399** tests in 197
+seconds (exit 0, `/tmp/aclone-radio-full-final.status`). TypeScript is clean
+(`/tmp/aclone-radio-transport-tsc.log`), and explicit changed-file Prettier has run.
+The 26 focused transport/radio regressions pass. The F10 browser flow passes on
+protocol 4 in 16.7 seconds; inspect its screenshot with changed channel count,
+range, speech rate and disabled-radio state. The unchanged snapshot benchmark now
+uses 11,028 compact bytes against 248,985 legacy bytes (4.4%, below the 30% ceiling).
+Authority, rules and transport meet this slice's criteria; dashboard/input/event
+presentation still remains before the CB radio entry can be marked done.

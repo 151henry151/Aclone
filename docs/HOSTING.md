@@ -101,7 +101,7 @@ Load probe defaults: 100 clients, 10s, 20 Hz stress input (more than normal brow
 
 Network test shapes compressed TCP to 64/16 kbit/s down/up, 200ms latency plus ≤150ms jitter each way. It checks driving/stopping/chat/ACK recovery and unaffected fast peers, without .env or AI. Byte order is preserved; radio loss/retransmission is not modeled. Browser tests compare one/three tractors and shaped input/chat; FPS is diagnostic, not a universal threshold.
 
-Protocol 3 shares deltas and keeps three outstanding snapshots/peer; slow peers resume from current state, excessive send queues reconnect. Older clients still work. Deploy client/server together; reconnect starts full private-filtered state. [Wire details](PROTOCOL.md#compact-delivery-protocol-3-0110).
+Protocols 3 and 4 share deltas and keeps three outstanding snapshots/peer; slow peers resume from current state, excessive send queues reconnect. Older clients still work. Deploy client/server together; reconnect starts full private-filtered state. [Wire details](PROTOCOL.md#compact-delivery-protocol-3-0110).
 
 Production builds include build-time Brotli/gzip sidecars to `dist/`. Deploy the whole directory: the game server negotiates compressed responses, marks hashed `/assets/` files immutable for one year, and revalidates HTML and other mutable files with ETags. Keep `Vary: Accept-Encoding` and `Cache-Control` intact in your reverse proxy; do not cache `/api/` responses. Older builds without sidecars still serve normally. No extra compression dependency or proxy module is required.
 
@@ -143,3 +143,5 @@ actions are rejected while chat and resume remain available. Resuming does not
 replay the paused interval, including after a server restart. Ordinary offline
 survival still applies outside maintenance. Back up before maintenance involving
 manual data edits; pause is not a database backup or a global server shutdown.
+
+Unreleased clients negotiate protocol 4 for compact settings patches. Protocols 1–3 remain supported with their existing settings representation.

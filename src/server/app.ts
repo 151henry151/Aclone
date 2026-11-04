@@ -1,3 +1,4 @@
+import { radioCheckpoint, restoreRadio } from '../shared/radio';
 import { expandPuddlewickIsland } from './puddlewick-island';
 import { ensurePuddlewickSpaceport } from './puddlewick-spaceport';
 import { ensurePuddlewickResources } from './puddlewick-resources';
@@ -92,7 +93,7 @@ const messageSchema = z.discriminatedUnion('type', [
     type: z.literal('hello'),
     token: z.string().max(100),
     world: z.string().max(80).optional(),
-    protocol: z.union([z.literal(2), z.literal(3)]).optional(),
+    protocol: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
   }),
   z.object({
     type: z.literal('input'),
@@ -122,6 +123,7 @@ interface Peer {
   alive: boolean;
   born: number;
   delta?: boolean;
+  settingsDelta?: boolean;
   stream?: DeltaStream;
   delivery?: SnapshotWindow;
   backpressureSince?: number;
@@ -272,7 +274,7 @@ export async function createApp(options: AppOptions) {
         frame = prepareFrame(w);
         frames.set(w.id, frame);
       }
-      p.stream ??= new DeltaStream(!!p.delivery);
+      p.stream ??= new DeltaStream(!!p.delivery, !!p.settingsDelta);
       const body = p.stream.encode(w, p.account, frame);
       const encoded =
         '{"inputAck":' +
@@ -862,8 +864,9 @@ export async function createApp(options: AppOptions) {
               other.socket.close(4001, 'Connected elsewhere');
             }
           p.account = a;
-          p.delta = m.protocol === 2 || m.protocol === 3;
-          if (m.protocol === 3) p.delivery = new SnapshotWindow();
+          p.delta = m.protocol === 2 || m.protocol === 3 || m.protocol === 4;
+          p.settingsDelta = m.protocol === 4;
+          if (m.protocol === 3 || m.protocol === 4) p.delivery = new SnapshotWindow();
           if (m.world) {
             try {
               enter(p, m.world);
@@ -987,6 +990,7 @@ export async function createApp(options: AppOptions) {
           return;
         }
         const before = structuredClone(w);
+        const radioBefore = radioCheckpoint(w);
         const accountBefore = structuredClone(p.account);
         let message: string;
         try {
@@ -1018,6 +1022,7 @@ export async function createApp(options: AppOptions) {
           });
         } catch (e) {
           p.account = accountBefore;
+          restoreRadio(before, radioBefore);
           worlds.set(w.id, before);
           throw e;
         }

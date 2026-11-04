@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Add transient CB transmission authority, per-vehicle radio selections, terrain/range reception, deterministic doubling and word loss, manual emergency cues and configurable world rules; preserve radio sessions across failed action transactions.
+
 - Launch and paddle owned canoes from clear shores and riverbanks without fuel; add configurable hold and shore limits, gentle beaching, persistent bank mooring, dock access and ordinary boat death/recovery while retaining the same hull identity and finish.
 - Add portable canoe purchase and wood crafting, owned set-down hulls, inverted overhead carrying with shared movement/activity restrictions, home storage and configurable ownership/death rules. Supply ordinary canoe port quotes and remove duplicate manual headings from resident requests without cutting guidance.
 - Sell Fuel from attached or parked tankers with owner pricing, capped direct pumping, inventory purchases, ordinary sales tax and offline bank payments; add world rules, guarded resident purchases and portable parked-tanker placements. Share the configurable Fuel conversion and refuelling limits with carried assistance.
@@ -15,6 +17,8 @@ All notable changes to Aclone are documented here. This project follows
 - Record the shipped-feature audit, ordered backlog and test-first completion criteria in the backlog implementation plan.
 
 ### Fixed
+
+- Patch changed world settings in negotiated protocol 4 snapshots to retain the compact-traffic budget as radio rules grow; keep complete settings for older clients.
 
 - Preserve fog shader behavior when batching static building geometry so distant building silhouettes fade with the terrain, and schedule rendering from display timestamps to prevent callback jitter skipping frames.
 - Slow walking and Shift movement with the shared tractor snow-depth factor, preserve clear-road and bare-ground behavior, and expose default-on world rules for walking snow drag and field strength.

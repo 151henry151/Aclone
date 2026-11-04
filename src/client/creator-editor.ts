@@ -1,3 +1,4 @@
+import { radioRules, radioRuleFields, type RadioRules } from '../shared/radio-rules';
 import { canoeRules, canoeRuleFields, type CanoeRules } from '../shared/canoe-rules';
 import { fuelRules, fuelRuleFields, type FuelRules } from '../shared/fuel-rules';
 import {
@@ -88,6 +89,7 @@ export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(fuelRuleFields),
     ...Object.keys(canoeRuleFields),
+    ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
     ...Object.keys(gatheringSceneryFields),
@@ -106,6 +108,24 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const radio = radioRules(settings);
+  const radioFields = `<fieldset class="boat-death-settings"><legend>CB radios</legend>${Object.entries(
+    radioRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            radio[key as keyof RadioRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${radio[key as keyof RadioRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Vehicle radio traffic is local and transient. Channel and call sign stay with each driver's vehicle. Ground range grows with antenna elevation and over water; ridges attenuate it. Default channel 19 is for road traffic; channel 9 is for emergencies. Residents do not answer calls. The dashboard controls are the next unreleased slice.</p></fieldset>`;
   const canoe = canoeRules(settings);
   const canoeFields = `<fieldset class="boat-death-settings"><legend>Portable canoes</legend>${Object.entries(
     canoeRuleFields,
@@ -195,6 +215,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringFields +
     fuelFields +
     canoeFields +
+    radioFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

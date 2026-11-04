@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World } from './types.ts';
+import type { World, Player } from './types.ts';
 export const MAX_CHAT_LENGTH = 1200;
 type Message = World['messages'][number];
 // Opt-in server buffer: preserve bursts between durable saves without growing
@@ -21,4 +21,17 @@ export function say(w: World, name: string, text: string, kind = 'system', to?: 
   w.messages.push({ id: w.messageSeq, name, text, kind, time: w.time, ...(to ? { to } : {}) });
   if (!to) archives.get(w)?.push(w.messages.at(-1)!);
   if (w.messages.length > 100) w.messages.shift();
+}
+
+/** Public chat and CB share their mute/lock and text validation. CB never runs commands. */
+export function chatText(
+  w: World,
+  p: Player,
+  value: unknown,
+  max = MAX_CHAT_LENGTH,
+  moderated = true,
+) {
+  if (moderated && (p.muted || w.settings.chatLocked)) throw Error('Chat is currently muted');
+  if (typeof value !== 'string' || !value.trim() || value.length > max) throw Error('Invalid text');
+  return value.trim();
 }

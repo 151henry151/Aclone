@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import type { RadioRules } from './radio-rules';
 import type { CanoeRules } from './canoe-rules';
 import type { FuelRules } from './fuel-rules';
 import type { FlightRules } from './flight-rules';
@@ -30,6 +31,7 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  radios?: Record<number, import('./radio').RadioConfig>;
   /** Owned portable hull lifted overhead; its weight is additional to inventory. */
   carrying?: string;
   /** Hull id of the occupied canoe, preserved across snapshots and saves. */
@@ -290,6 +292,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<RadioRules>,
     Partial<CanoeRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,

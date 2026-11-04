@@ -8,6 +8,7 @@ export interface StateMessage {
   me: string;
   self?: Player;
   selfPatch?: FieldPatch;
+  settingsPatch?: FieldPatch;
   entities?: {
     buildings: Record<string, FieldPatch | null>;
     players: Record<string, FieldPatch | null>;
@@ -50,5 +51,8 @@ export function mergeState(previous: World | undefined, message: StateMessage): 
   if (message.entities) players[message.me] = previous.players[message.me];
   if (message.selfPatch) players[message.me] = applyFields(players[message.me], message.selfPatch);
   if (message.self) players[message.me] = message.self;
-  return { ...previous, ...message.world, players, buildings } as World;
+  const settings = message.settingsPatch
+    ? applyFields(previous.settings, message.settingsPatch)
+    : (message.world.settings ?? previous.settings);
+  return { ...previous, ...message.world, players, buildings, settings } as World;
 }

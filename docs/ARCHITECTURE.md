@@ -4,7 +4,7 @@
 
 One Node process hosts HTTP/WebSocket, the universe and independent world state machines; SQLite stores them transactionally. Worlds own terrain, economy, players, rules and scripts. The universe owns identities, galactic credits, ships and cargo. Clients render Three.js plus HTML and request actions; the server owns physics, money, stock, timers and damage.
 
-Simulation/input polling run at 20 Hz; snapshots normally at 5 Hz. Protocol 3 limits each peer to three unacknowledged states and expires controls after 500 ms (older protocols: 350 ms). Slow peers catch up without stalling others. [Protocol](PROTOCOL.md) specifies deltas, input rates, privacy and limits.
+Simulation/input polling run at 20 Hz; snapshots normally at 5 Hz. Protocols 3 and 4 limit each peer to three unacknowledged states and expires controls after 500 ms (older protocols: 350 ms). Slow peers catch up without stalling others. [Protocol](PROTOCOL.md) specifies deltas, input rates, privacy and limits.
 
 Optional [federation](GALAXIES.md) uses pinned Ed25519 hosts and single-use arrival tickets. Identity travels; economies remain independent. Native home returns require native authentication. [Creator designs](WORLD_BUILDING.md) are bounded optional `World.creator` documents; exports omit private runtime state.
 
@@ -75,3 +75,5 @@ NPC actions/cursors/progress save atomically; paid calls reserve shared budgets 
 ## Validation scope
 
 Unit, transaction, real-socket, browser and configurable 100-client movement probes cover critical behavior. They do not certify heavy production trading, hostile public scale or long-term AI/economic balance. See [Status](STATUS.md) and [capacity checks](HOSTING.md#connection-and-multiplayer-checks).
+
+Unreleased protocol 4 adds settings field patches so clock updates do not resend all world rules; older protocols retain complete settings objects.

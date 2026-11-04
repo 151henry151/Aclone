@@ -482,7 +482,7 @@ async function connect() {
       JSON.stringify({
         type: 'hello',
         token,
-        protocol: 3,
+        protocol: 4,
         world: localStorage.getItem('aclone.world') ?? undefined,
       }),
     );

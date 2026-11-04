@@ -456,3 +456,27 @@ structurally fuel-free with one occupant; use this fieldset rather than the gene
 vehicle editor. Established docks support boarding and mooring in deeper water.
 Raising the minimum depth can leave a moored canoe needing to be lifted or eased
 back into nearby clear water. Personal hulls remain save state, not design objects.
+
+## CB radio rules (unreleased)
+
+F10 → Rules → CB radios configures local vehicle transmissions. Defaults enable
+40 channels, road channel 19, emergency channel 9, a 3km ground range and 1.5×
+over-water range. Antenna elevation extends reach; a bounded terrain survey
+attenuates signals behind ridges. Ground, boat and aircraft antenna offsets,
+elevation scaling, terrain sample count and attenuation are configurable.
+
+Speech defaults to 12 characters/second, with a 0.5-second minimum and 1,200-character
+limit. Keys within 0.12 seconds can collide; later callers who hear the carrier
+receive a busy refusal. Squelch defaults to 0.12. Reception below 0.2 becomes
+static; below 0.7 it loses words. These thresholds, the retained traffic count,
+handle limit and emergency prompt range are also rules. Channel choices clamp to
+a reduced channel count without deleting saved per-vehicle settings.
+
+Public-chat mute and lock restrictions apply by default; disabling radio moderation
+explicitly removes those restrictions from CB transmissions. Resident radio use
+is disabled by default and enabling it does not add an AI reply routine. Channel
+9 rescue cues are local and manual. Selected channel, handle, volume and squelch
+persist per driver and vehicle; active transmissions and received logs are transient
+and never enter the public chat archive. Portable designs retain the world rules.
+The radio authority and rule editor are available in this slice; the dashboard
+and keyboard/touch/controller controls remain the next unreleased slice.

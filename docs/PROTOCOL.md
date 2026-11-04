@@ -108,7 +108,7 @@ Use the ordinary `{type: "chat", text, to: playerId}` action for private NPC cha
 
 ## Compact delivery: protocol 3 (0.11.0)
 
-The current browser requests `protocol: 3`. Protocols 1 and 2 remain supported. Initial state and every world/reconnection baseline remain complete, including `self`, `account`, `world.players` and `world.buildings`. Each protocol 3 state also contains a socket-wide monotonic integer `sequence`. After merging and handling it, the browser sends `{ "type": "ack", "sequence": 123 }`. Acknowledgements are cumulative; stale or unsent sequence numbers are ignored.
+Protocol 3 remains supported alongside protocols 1 and 2. The current unreleased browser requests protocol 4, described below. Initial state and every world/reconnection baseline remain complete, including `self`, `account`, `world.players` and `world.buildings`. Each protocol 3 state also contains a socket-wide monotonic integer `sequence`. After merging and handling it, the browser sends `{ "type": "ack", "sequence": 123 }`. Acknowledgements are cumulative; stale or unsent sequence numbers are ignored.
 
 Later states use `partial: true` with these changes:
 
@@ -205,3 +205,15 @@ Owner action `vehicleTuning` accepts `slot` (0–33), `tuning` (the partial defi
 - Slots 32 and 33 are the tug and motorboat. Public `rowing` reflects the motorboat's empty-tank oar state without exposing remote fuel quantities.
 
 All transfers validate ownership, distance, capacity and stationary state server-side. Repeated delivery/transfer actions cannot duplicate goods or payments.
+
+## Settings patches: protocol 4 (unreleased)
+
+Protocol 4 retains protocol 3 delivery, acknowledgement and entity patches. Initial
+and reconnect states still include complete world settings. Later states replace
+repeated `world.settings` objects with `settingsPatch`, using the existing
+`{set: {...}, unset: [...]}` field-patch format. A clock-only update therefore
+sends the changed time without repeating every world rule. Clients apply the patch
+to the prior settings object, including explicit removals; an absent patch means
+settings are unchanged. Protocols 1–3 retain their previous complete-settings
+behaviour. Negotiate protocol 4 in the hello message; a fresh baseline is required
+on reconnect or world change.

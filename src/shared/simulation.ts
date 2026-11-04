@@ -1,3 +1,5 @@
+import { radioAction, tickRadio } from './radio';
+import { radioRuleFields } from './radio-rules';
 import { canoeAction, canoeDeath } from './small-craft';
 import { CANOE, canoeRules, canoeRuleFields } from './canoe-rules';
 import { fuelRuleFields } from './fuel-rules';
@@ -183,7 +185,7 @@ import { terrainHeight, mapHalf, legacyHalf, minMapSize, maxMapSize } from './te
 import { fishingDock, travelHeight } from './dock';
 export { terrainHeight, mapHalf } from './terrain.ts';
 import { waterworksSite } from './shoreline.ts';
-import { say, MAX_CHAT_LENGTH } from './messages.ts';
+import { say, chatText } from './messages.ts';
 export { say } from './messages.ts';
 import { productionStaff, productionSupplied, productionEfficiency } from './sound-state';
 import { removeOwnerEmployment } from './economy.ts';
@@ -1930,7 +1932,8 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
             Object.hasOwn(fuelRuleFields, key) ||
-            Object.hasOwn(canoeRuleFields, key),
+            Object.hasOwn(canoeRuleFields, key) ||
+            Object.hasOwn(radioRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1951,6 +1954,9 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const radioField = radioRuleFields[key as keyof typeof radioRuleFields];
+        if (radioField && 'min' in radioField)
+          num(v, radioField.min, radioField.max, radioField.step === 1);
         const canoeField = canoeRuleFields[key as keyof typeof canoeRuleFields];
         if (canoeField && 'min' in canoeField)
           num(v, canoeField.min, canoeField.max, canoeField.step === 1);
@@ -2212,9 +2218,10 @@ export function act(w: World, id: string, a: Action): string {
       stockAdd(target.inventory, item, n);
       break;
     }
+    case 'radio':
+      return radioAction(w, p, a);
     case 'chat': {
-      requireThat(!p.muted && !w.settings.chatLocked, 'Chat is currently muted');
-      const text = str(a.text, MAX_CHAT_LENGTH);
+      const text = chatText(w, p, a.text);
       if (text.startsWith('*')) return command(w, p, text);
       const to = a.to === undefined ? undefined : str(a.to);
       requireThat(!to || w.players[to], 'Unknown recipient');
@@ -2958,6 +2965,7 @@ export function advance(w: World, seconds: number) {
   w.time = end;
   advanceCharters(w, seconds);
   maintainTows(w);
+  tickRadio(w, seconds);
   exportShipments(w, end);
   harbourSupply(w, end);
   restockGovernmentStores(w);

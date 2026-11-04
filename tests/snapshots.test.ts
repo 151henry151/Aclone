@@ -235,3 +235,30 @@ for (const compact of [false, true])
     assert.equal(next.world.roadProject, undefined, 'unfinished plans remain server-side');
     assert.deepEqual(next.world.retiredRoads, ['old-road']);
   });
+
+test('current compact snapshots patch changed settings while protocol 3 retains full settings objects', async () => {
+  const { mergeState } = await import('../src/client/state');
+  const w = createWorld('settings-delta', 'Settings delta', 'a');
+  addPlayer(w, 'a', 'Ada').online = true;
+  const account = { id: 'a' } as Account,
+    current = new DeltaStream(true),
+    v3 = new DeltaStream(true, false);
+  let merged = mergeState(undefined, JSON.parse(current.encode(w, account, prepareFrame(w))));
+  v3.encode(w, account, prepareFrame(w));
+  w.settings.time += 1;
+  let packet = JSON.parse(current.encode(w, account, prepareFrame(w)));
+  assert.equal(packet.world.settings, undefined, 'unchanged rules are not repeated with the clock');
+  assert.deepEqual(packet.settingsPatch, { set: { time: w.settings.time } });
+  merged = mergeState(merged, packet);
+  assert.deepEqual(merged.settings, w.settings);
+  const old = JSON.parse(v3.encode(w, account, prepareFrame(w)));
+  assert.deepEqual(old.world.settings, w.settings, 'old clients still receive complete settings');
+  assert.equal(old.settingsPatch, undefined);
+  w.settings.radioRange = 4000;
+  delete w.settings.radioDefaultSquelch;
+  packet = JSON.parse(current.encode(w, account, prepareFrame(w)));
+  assert.equal(packet.settingsPatch.set.radioRange, 4000);
+  assert.ok(packet.settingsPatch.unset.includes('radioDefaultSquelch'));
+  merged = mergeState(merged, packet);
+  assert.deepEqual(merged.settings, w.settings);
+});

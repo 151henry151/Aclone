@@ -112,7 +112,17 @@ export interface Frame {
   buildings: Record<string, SerializedFields>;
   buildingOrder: string;
   playerFields: Record<string, SerializedFields>;
-  compact?: WeakMap<Frame, { world: string[]; entities: string; order?: string }>;
+  settingsFields: SerializedFields;
+  compact?: WeakMap<
+    Frame,
+    {
+      world: string[];
+      entities: string;
+      order?: string;
+      settings?: string;
+      settingsPatch?: FieldPatch;
+    }
+  >;
 }
 /** Serialize shared world data once per broadcast, rather than once per recipient. */
 export function prepareFrame(w: World): Frame {
@@ -229,6 +239,7 @@ export function prepareFrame(w: World): Frame {
     players: publicPlayers,
     buildings: Object.fromEntries(common.buildings.map((b) => [b.id, serializeFields(b)])),
     buildingOrder: JSON.stringify(common.buildings.map((b) => b.id)),
+    settingsFields: serializeFields(w.settings),
     playerFields: Object.fromEntries(
       Object.entries(publicPlayers).map(([id, value]) => [id, serializeFields(JSON.parse(value))]),
     ),
@@ -239,7 +250,10 @@ export class DeltaStream {
   private privateFields: Record<string, string> = {};
   private selfFields: SerializedFields = {};
   private accountJson?: string;
-  constructor(private compact = false) {}
+  constructor(
+    private compact = false,
+    private settingsDelta = true,
+  ) {}
   encode(w: World, account: Account, frame: Frame) {
     if (this.compact) return this.encodeCompact(w, account, frame);
     const fields: string[] = [],
@@ -315,17 +329,29 @@ export class DeltaStream {
         const order = frame.buildingOrder;
         shared = {
           world: Object.entries(frame.fields)
-            .filter(([key, value]) => key !== 'buildings' && this.previous!.fields[key] !== value)
+            .filter(
+              ([key, value]) =>
+                key !== 'buildings' && key !== 'settings' && this.previous!.fields[key] !== value,
+            )
             .map(([key, value]) => JSON.stringify(key) + ':' + value),
           entities: JSON.stringify({
             buildings: entities(this.previous.buildings, frame.buildings),
             players: entities(this.previous.playerFields, frame.playerFields),
           }),
           order: order === this.previous.buildingOrder ? undefined : order,
+          settings:
+            frame.fields.settings === this.previous.fields.settings
+              ? undefined
+              : frame.fields.settings,
+          settingsPatch: diffFields(this.previous.settingsFields, frame.settingsFields),
         };
         frame.compact.set(this.previous, shared);
       }
       fields.push(...shared.world);
+      if (this.settingsDelta) {
+        if (shared.settingsPatch)
+          tail.push('"settingsPatch":' + JSON.stringify(shared.settingsPatch));
+      } else if (shared.settings) fields.push('"settings":' + shared.settings);
       tail.push('"entities":' + shared.entities);
       if (shared.order) tail.push('"buildingOrder":' + shared.order);
     }
