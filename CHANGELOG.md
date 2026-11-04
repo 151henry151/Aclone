@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident owner-withdrawal cash and fuel forecasts as world rules while preserving observed quotes, investor claims, operating reserves and transfer limits. Remove a duplicated instruction clause to retain the existing resident request budget.
+
 - Expose bank affordability and resident financing budgets as world rules; show local borrowing bounds, preserve signed debts and prevent financing plans whose capital deposit exceeds the transfer limit.
 
 - Expose resident haulage allowances, bid ceilings, wage affordability and surplus-pricing thresholds as world rules; honor the existing bid floor and transaction limit in new and remembered price estimates. Share repeated manual citations to retain all guide content within the resident request budget.

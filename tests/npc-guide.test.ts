@@ -289,3 +289,9 @@ test('embedded manual source dictionary preserves every selected citation withou
     }
   }
 });
+
+test('gameplay instructions retain explicit AI identity and one copy of the operator impersonation prohibition', async () => {
+  const { instructions } = await import('../src/server/npc/observation');
+  assert.match(instructions, /You are openly an AI NPC/);
+  assert.equal(instructions.match(/never pretend to be a human operator/gi)?.length, 1);
+});

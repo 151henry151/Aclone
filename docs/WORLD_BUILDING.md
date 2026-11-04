@@ -924,3 +924,19 @@ required. Estimates do not guarantee sales or repayment.
 Edits affect future offers/plans; existing debt, APR, instalments, liens and
 repayments remain intact. Missing fields use the defaults; all fields survive
 creation, summaries, portable designs and save/reload.
+
+## Resident owner withdrawal reserves (unreleased)
+
+**F10 → Rules → Resident cash and portable reserves** includes the separate
+small owner-withdrawal forecast. `npcOwnerCashFloor` defaults to 4,000 hundredths
+(40d), integer 0–100,000,000. It targets that cash balance before adding a fuel
+allowance when the tank is below `npcOwnerFuelThreshold` (10 units, range
+0–1,000,000) and no Fuel is carried. The allowance uses the cheapest stocked
+positive-price Fuel supplier; without one, `npcOwnerFuelFallback` defaults to
+800 hundredths (8d), integer 0–100,000,000. Zero cash target or fuel threshold
+removes that component; a zero fallback removes only the unquoted allowance.
+
+These forecasts are distinct from emergency care and household reserves. An
+ordinary withdrawal can take no more than needed, transferable surplus after
+investor claims and operating reserves. Changing rules moves no money. Missing
+keys retain defaults, and all fields survive designs and saves.

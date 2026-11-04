@@ -176,7 +176,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Cash floors also protect the computed household reserve. Zero deposit share disables saving deposits. Portable minimum cannot exceed maximum; Water and Bread use separate counts. Opportunistic trades keep their own smaller reserve. All actions still require actual funds, supplies and capacity.</p></fieldset>`;
+    )}<p>Emergency and banking cash floors also protect the computed household reserve. The separate owner withdrawal target uses the cheapest stocked fuel quote, or its fallback if none exists; carried Fuel suppresses that allowance. Zero owner floor/threshold disables that component. Zero deposit share disables saving deposits. Portable minimum cannot exceed maximum; Water and Bread use separate counts. Opportunistic trades keep their own smaller reserve. All actions still require actual funds, supplies and capacity.</p></fieldset>`;
   const household = npcHouseholdRules(settings);
   const householdFields = `<fieldset class="boat-death-settings"><legend>Resident household budget</legend>${Object.entries(
     npcHouseholdRuleFields,

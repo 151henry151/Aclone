@@ -1,3 +1,4 @@
+import { npcReserveRules } from './npc-reserve-rules';
 import defaults from '../../data/settings.json';
 import { economyRules } from './economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -69,15 +70,15 @@ export function ownerWithdrawable(w: World, b: Building, keepReserve = false) {
 }
 
 export function ownerDrawNeed(w: World, p: Player) {
-  let need = 0;
-  if (p.cash < 4000) need += 4000 - p.cash;
-  if (p.fuel < 10) {
+  const rules = npcReserveRules(w.settings);
+  let need = Math.max(0, rules.npcOwnerCashFloor - p.cash);
+  if (p.fuel < rules.npcOwnerFuelThreshold) {
     const carried = (p.inventory.fuel ?? 0) > 0;
     if (!carried) {
       const shop = w.buildings
         .filter((b) => !b.construction && (b.sell.fuel ?? 0) > 0 && (b.stock.fuel ?? 0) > 0)
         .sort((a, c) => a.sell.fuel - c.sell.fuel)[0];
-      need += shop?.sell.fuel ?? 800;
+      need += shop?.sell.fuel ?? rules.npcOwnerFuelFallback;
     }
   }
   return need;

@@ -271,5 +271,8 @@
   "npcLoanMinimumShortfall": 1000,
   "npcLoanMaximumShortfall": 10000,
   "npcLoanPaymentBuffer": 3,
-  "npcLoanProfitBatches": 20
+  "npcLoanProfitBatches": 20,
+  "npcOwnerCashFloor": 4000,
+  "npcOwnerFuelThreshold": 10,
+  "npcOwnerFuelFallback": 800
 }

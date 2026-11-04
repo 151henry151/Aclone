@@ -148,6 +148,8 @@ settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#re
 
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 
+A separate discretionary owner draw targets 40d cash and adds a fuel purchase below 10 tank units when none is carried, using a stocked quote or an 8d fallback. These are configurable **Resident cash and portable reserves** rules. Investor claims, operating reserves and transfer limits still bound any ordinary withdrawal.
+
 Owners can withdraw the exact input-purchasing cost for a supply trip, protecting configured input/payroll reserves and investor claims. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
 
 Unreleased **Resident business budgets** rules set input stock buffers (6–24

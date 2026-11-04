@@ -2443,3 +2443,60 @@ reload. The final new-flow rerun passes in 21.0 seconds after waiting for the
 warning's color transition before capture. Inspect saved bank/resident settings,
 the quote, closed-lending notice and readable warning; no page errors. No full
 suite is run. Ready to commit and push.
+
+Pushed and verified `32d93e2` on `backlog-implementation`. **Loan affordability
+budgets are done.**
+
+### Gameplay rules — owner withdrawal reserves
+
+Before production, expose the active owner-draw forecast in `shared/stakes.ts`,
+used by resident withdrawal hypotheses: `npcOwnerCashFloor` 4,000 hundredths
+(integer 0–100,000,000), `npcOwnerFuelThreshold` 10 tank units (0–1,000,000),
+and `npcOwnerFuelFallback` 800 hundredths (integer 0–100,000,000). Add them to
+Resident cash and portable reserves. Keep this small discretionary forecast
+separate from the emergency and household reserve defaults. The fuel allowance
+uses the cheapest stocked, positive-price supplier; the fallback applies only
+when none exists, and carried Fuel suppresses it. Zero floor/threshold disables
+that part of the forecast. Rule edits grant nothing. An actual withdrawal remains
+bounded by claims, operating reserves and the cash-transfer limit.
+
+Write failing `tests/npc-owner-reserve-rules.test.ts`; require exact defaults and
+missing-field behavior, custom/zero boundaries, stocked supplier versus fallback,
+carried Fuel, an actual ordinary withdrawal with conservation and investor lock,
+and all-field validation, editor, summary, observation, designs and reload. Run
+this file plus npc-hypotheses, npc-reserve-rules, npc-business-policy, stakes and
+npc-guide (verify exact filenames). Browser: save/reopen all three fields, observe
+a changed forecast, zero both components, reject an out-of-range value and reload
+saved values. Inspect controls/refusal and page errors; require TypeScript,
+Prettier, WORLD_BUILDING/NPCS/README and imperative Unreleased before push.
+
+Owner-reserve red: all four tests fail before production for missing rules or
+unknown settings. After implementation, four pass: default need 3,800 hundredths,
+custom 1,300, stocked quote 1,700, zero controls and conserved capped withdrawal.
+The verified relevant stake files are outside-investment and investment-rules.
+
+Owner-reserve relevant run: 56 pass, with the unchanged long-memory budget at
+96,019 bytes (strict limit 96,000). The gameplay instructions repeat the exact
+prohibition on pretending to be a human operator in their opening and later
+resident-voice paragraph. Keep the prohibition in residentVoice (also used by
+chat), and keep the opening's explicit AI identity, while removing only that
+repeated clause. Add a red assertion that the gameplay instruction contains the
+prohibition exactly once and still identifies an openly AI resident. Preserve
+all guide content/rules/memory and the byte limit. Also narrow the test's
+investment action before reading its amount; this is a test typing correction.
+
+The browser's out-of-range field correctly prevents form submission using native
+number-input validation; there is no server toast because no request is sent.
+Correct the harness to check focus, rangeOverflow, the nonempty native message
+naming the limit, unchanged saved value and reload. Keep all refusal criteria.
+The duplicate-clause test fails 2 versus 1 before editing; the revised instructions
+retain explicit AI identity and the full prohibition, and the unchanged budget
+now passes. Sixteen changed-file tests pass; prior relevant checks remain green.
+
+Owner-reserve gates pass: 56 initially passing relevant checks plus the corrected
+budget and new identity test (58 unique checks); the 16 tests in both changed
+unit files pass in 1.1 seconds after the narrow repair. Browser passes in 19.6
+seconds, with saved controls, forecast 3,800 → 1,300 → 0, unchanged cash, native
+upper-bound refusal and preserved value after reload. Inspect both screenshots;
+no page errors. TypeScript is clean after action narrowing; changed-file Prettier
+and diff checks pass. No full suite is run. Ready to commit and push.

@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcReserveRuleFields = {
+  npcOwnerCashFloor: {
+    label: 'Owner withdrawal cash target (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcOwnerFuelThreshold: {
+    label: 'Owner withdrawal fuel threshold (tank units)',
+    min: 0,
+    max: 1000000,
+    step: 0.5,
+  },
+  npcOwnerFuelFallback: {
+    label: 'Owner fuel allowance without a stocked quote (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
   npcCareCashFloor: {
     label: 'Emergency cash reserve floor (hundredths)',
     min: 0,
