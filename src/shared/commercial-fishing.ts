@@ -1,3 +1,4 @@
+import { fishingRules } from './fishing-rules';
 import { depthFishingMultiplier } from './seabed';
 import { isTrawler } from './vehicle-config';
 import { vehicleDef } from './vehicle-config';
@@ -12,10 +13,20 @@ import type { Player, Stock, World } from './types';
 
 // A balance reference interval, not a required tow duration or completion timer.
 export const TRAWL_REFERENCE_SECONDS = 720;
-export const TRAWL_FUEL_PER_SECOND = 8.5 / 60;
-export const TRAWL_SPEED = 2.4;
-export const NET_CAPACITY = 640;
-export const SHOAL_MEAN_SECONDS = 360;
+export const TRAWL_FUEL_PER_SECOND = fishingRules().trawlFuelPerMinute / 60;
+export const TRAWL_SPEED = fishingRules().trawlSpeed;
+export const NET_CAPACITY = fishingRules().trawlNetCapacity;
+export const SHOAL_MEAN_SECONDS = fishingRules().trawlShoalMeanSeconds;
+/** Per-slot tuning takes precedence over world defaults, for simulation and UI. */
+export function trawlParameters(w: World, slot: number) {
+  const rules = fishingRules(w.settings),
+    vehicle = vehicleDef(w, slot);
+  return {
+    speed: vehicle.trawlSpeed ?? rules.trawlSpeed,
+    netCapacity: vehicle.netCapacity ?? rules.trawlNetCapacity,
+    fuelPerSecond: vehicle.trawlFuel ?? rules.trawlFuelPerMinute / 60,
+  };
+}
 /** Expected fish per reference interval while in each kind of fishing ground.
  * The ground can change during a trip; individual arrivals are random. */
 export const FISHING_GROUNDS = [
@@ -48,7 +59,7 @@ function species(ground: number, random: Random) {
 /** Upgrade old partial tows once, preserving their paid progress and ready catches.
  * The encounter clock survives hauling, stowing, docking and reconnecting so none
  * of those actions provide a free reroll of an unproductive fishing ground. */
-function continuousTrawl(t: Trawl, random: Random, quality = 0): Trawl {
+function continuousTrawl(w: World, t: Trawl, random: Random, quality = 0): Trawl {
   if (t.shoal) return { ...t, catch: t.catch ? { ...t.catch } : undefined, shoal: { ...t.shoal } };
   const ground = groundIndex(random, quality);
   let caught = t.catch;
@@ -66,7 +77,7 @@ function continuousTrawl(t: Trawl, random: Random, quality = 0): Trawl {
     catch: caught,
     shoal: {
       ground,
-      nextChange: delay(SHOAL_MEAN_SECONDS, random),
+      nextChange: delay(fishingRules(w.settings).trawlShoalMeanSeconds, random),
       nextFish: catchDelay(ground, random),
     },
   };
@@ -82,7 +93,8 @@ export function netWeight(w: World, caught: Stock = {}) {
 export function visibleTrawl(w: World, p: Player) {
   const t = p.trawl;
   if (!t) return undefined;
-  const weight = netWeight(w, t.catch);
+  const weight = netWeight(w, t.catch),
+    capacity = trawlParameters(w, p.vehicle).netCapacity;
   return {
     deployed: t.deployed,
     netFull: !!t.netFull,
@@ -105,11 +117,11 @@ export function visibleTrawl(w: World, p: Player) {
     activity:
       weight <= 0
         ? 0
-        : weight < (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) / 8
+        : weight < capacity / 8
           ? 1
-          : weight < ((vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) * 3) / 8
+          : weight < (capacity * 3) / 8
             ? 2
-            : weight < ((vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY) * 3) / 4
+            : weight < (capacity * 3) / 4
               ? 3
               : 4,
   };
@@ -135,7 +147,7 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
     'Board your fishing boat and finish other activities first',
   );
   need(['stow', 'haul', 'deploy'].includes(String(operation)), 'Unknown net operation');
-  if (p.trawl) p.trawl = continuousTrawl(p.trawl, Math.random, fishingGroundQuality(w, p));
+  if (p.trawl) p.trawl = continuousTrawl(w, p.trawl, Math.random, fishingGroundQuality(w, p));
   const t = p.trawl;
   if (operation === 'stow') {
     need(t?.deployed, 'Your nets are already stowed');
@@ -176,7 +188,12 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
   }
   need(w.settings.fishingMode !== 0, 'Fishing is disabled in this world');
   need(!t?.deployed, 'Your nets are already deployed');
-  need(!t?.netFull, 'The net is full — haul it aboard first');
+  const net = netWeight(w, t?.catch),
+    capacity = trawlParameters(w, p.vehicle).netCapacity;
+  const pendingWeight = t?.shoal?.pendingFish
+    ? (worldItems(w)[t.shoal.pendingFish]?.weight ?? 0)
+    : 0;
+  need(net < capacity && net + pendingWeight <= capacity, 'The net is full — haul it aboard first');
   need(trawlWater(w, p), 'There is not enough clear water here to deploy the nets');
   need(p.engine && p.fuel > 0, 'Start the engine with fuel aboard');
   need(
@@ -191,7 +208,10 @@ export function trawlAction(w: World, p: Player, operation: unknown) {
     );
   startVoyage(w, p);
   p.trawl = continuousTrawl(
-    t ? { ...t, deployed: true, holdFull: false } : { seconds: 0, fuelUsed: 0, deployed: true },
+    w,
+    t
+      ? { ...t, deployed: true, holdFull: false, netFull: false }
+      : { seconds: 0, fuelUsed: 0, deployed: true },
     Math.random,
     fishingGroundQuality(w, p),
   );
@@ -209,11 +229,11 @@ export function advanceTrawl(
   random: Random = Math.random,
 ) {
   if (!isTrawler(p.vehicle, w) || !p.trawl?.deployed || !p.engine || p.fuel <= 0 || dt <= 0) return;
+  const parameters = trawlParameters(w, p.vehicle);
   const quality = prediction ? 0 : fishingGroundQuality(w, p);
   const depthFactor = prediction ? 1 : depthFishingMultiplier(waterDepth(w, p));
-  const t = prediction ? { ...p.trawl } : continuousTrawl(p.trawl, random, quality);
-  const burn =
-    (vehicleDef(w, p.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * boatLoadFactors(w, p).fuel;
+  const t = prediction ? { ...p.trawl } : continuousTrawl(w, p.trawl, random, quality);
+  const burn = parameters.fuelPerSecond * boatLoadFactors(w, p).fuel;
   const spent = Math.min(p.fuel, dt * burn);
   p.fuel = Math.max(0, p.fuel - spent);
   t.fuelUsed = (t.fuelUsed ?? 0) + spent;
@@ -248,19 +268,19 @@ export function advanceTrawl(
         if (shoal.nextLuck! <= 1e-9) rollLuck();
         if (shoal.nextChange <= 1e-9 && !shoal.pendingFish) {
           shoal.ground = groundIndex(random, quality);
-          shoal.nextChange = delay(SHOAL_MEAN_SECONDS, random);
+          shoal.nextChange = delay(fishingRules(w.settings).trawlShoalMeanSeconds, random);
           shoal.nextFish = catchDelay(shoal.ground, random);
         } else if (shoal.nextFish <= 1e-9) {
           const id = shoal.pendingFish ?? species(shoal.ground, random);
           const fishWeight = defs[id]?.weight ?? 0;
           if (
             weight + fishWeight > vehicleDef(w, p.vehicle).capacity ||
-            net + fishWeight > (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY)
+            net + fishWeight > parameters.netCapacity
           ) {
             shoal.pendingFish = id;
             t.deployed = false;
             t.holdFull = weight + fishWeight > vehicleDef(w, p.vehicle).capacity;
-            t.netFull = net + fishWeight > (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY);
+            t.netFull = net + fishWeight > parameters.netCapacity;
             break;
           }
           t.catch ??= {};
@@ -269,13 +289,10 @@ export function advanceTrawl(
           net += fishWeight;
           delete shoal.pendingFish;
           shoal.nextFish = catchDelay(shoal.ground, random);
-          if (
-            weight >= vehicleDef(w, p.vehicle).capacity ||
-            net >= (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY)
-          ) {
+          if (weight >= vehicleDef(w, p.vehicle).capacity || net >= parameters.netCapacity) {
             t.deployed = false;
             t.holdFull = weight >= vehicleDef(w, p.vehicle).capacity;
-            t.netFull = net >= (vehicleDef(w, p.vehicle).netCapacity ?? NET_CAPACITY);
+            t.netFull = net >= parameters.netCapacity;
             break;
           }
         }

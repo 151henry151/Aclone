@@ -1364,3 +1364,22 @@ hauling remains possible after an area becomes ineligible. The trawling panel
 shows local limits. These rules use the same save/design, summary, observation
 and legacy-default paths as fishing wait rules. Larger clearance searches scan
 more terrain on cache misses; unchanged locations reuse cached results.
+
+### Trawl defaults (unreleased)
+
+**F10 → Rules → Fishing rules** also exposes:
+
+- `trawlSpeed`: 2.4 m/s, range 1–8.
+- `trawlNetCapacity`: 640 weight units, integer 10–5,000.
+- `trawlFuelPerMinute`: 8.5 tank units/minute, range 0.06–60. Existing vessel
+  `trawlFuel` overrides remain in units/second.
+- `trawlShoalMeanSeconds`: 360 paid towing seconds, integer 1–86,400.
+
+Per-slot vehicle tuning overrides the first three; the boating panel quotes the
+effective values. Shoal changes use an exponential distribution with the local
+mean. Existing encounter clocks, voyage luck, catches and paid progress survive
+edits. Catch mix, depth/crew modifiers and reference catch interval remain unchanged.
+Lowering net capacity retains fish and refuses deployment if the net or its pending
+next fish cannot fit; hauling remains available. Raising the capacity can resume a
+formerly full net. Rules persist in saves/designs, summaries and observations with
+shared JSON legacy defaults. They grant no fish, supplies or free towing time.

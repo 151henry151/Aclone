@@ -1,3 +1,4 @@
+import { trawlParameters } from '../shared/commercial-fishing';
 import { CANOE } from '../shared/canoe-rules';
 import { trailerDef } from '../shared/trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -22,7 +23,8 @@ const input = (name: string, value: unknown, type = 'number') =>
   `<label>${label(name)}<input name="${name}" type="${type}" value="${esc(value)}" ${type === 'number' ? 'step="any" required' : ''}></label>`;
 export function vehicleEditor(w: World, slot: number) {
   const v = vehicleDef(w, slot),
-    tuning = w.vehicleTuning?.[slot] ?? {};
+    tuning = w.vehicleTuning?.[slot] ?? {},
+    trawl = trawlParameters(w, slot);
   const defaults = {
     tank: 64,
     traction: 0,
@@ -34,9 +36,9 @@ export function vehicleEditor(w: World, slot: number) {
     collisionRadius: 1.3,
     length: v.length ?? (v.mode === 3 ? 12 : 3.7),
     beam: v.beam ?? (v.mode === 3 ? 3 : 2.3),
-    netCapacity: 640,
-    trawlFuel: 8.5 / 60,
-    trawlSpeed: 2.4,
+    netCapacity: trawl.netCapacity,
+    trawlFuel: trawl.fuelPerSecond,
+    trawlSpeed: trawl.speed,
     frontTrack: 1.8,
     rearTrack: 2.2,
     frontTyre: 0.35,

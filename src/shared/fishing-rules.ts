@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const fishingRuleFields = {
+  trawlSpeed: { label: 'Default towing speed (metres/second)', min: 1, max: 8, step: 0.1 },
+  trawlNetCapacity: { label: 'Default net capacity (weight)', min: 10, max: 5000, step: 1 },
+  trawlShoalMeanSeconds: {
+    label: 'Mean shoal interval (paid towing seconds)',
+    min: 1,
+    max: 86400,
+    step: 1,
+  },
+  trawlFuelPerMinute: {
+    label: 'Default towing fuel (units/minute)',
+    min: 0.06,
+    max: 60,
+    step: 0.01,
+  },
   fishingDeepDepth: {
     label: 'Deep-fishing minimum depth (metres)',
     min: 0.1,

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose trawl speed, net capacity, fuel rate and shoal interval as world rules; retain vessel overrides, earned fish and encounter clocks across rule edits.
+
 - Expose shared deep-fishing depth and shore clearance as world rules; refresh cached coast decisions after edits while preserving earned catches and world boundaries.
 
 - Expose shore, anywhere-mode, coastal and deep-water bite-wait means as world rules; retain depth adjustment, random waits and already scheduled bites.

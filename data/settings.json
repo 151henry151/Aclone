@@ -391,5 +391,9 @@
   "fishingCoastalWaitSeconds": 65,
   "fishingDeepWaitSeconds": 225,
   "fishingDeepDepth": 8,
-  "fishingShoreDistance": 150
+  "fishingShoreDistance": 150,
+  "trawlSpeed": 2.4,
+  "trawlNetCapacity": 640,
+  "trawlShoalMeanSeconds": 360,
+  "trawlFuelPerMinute": 8.5
 }

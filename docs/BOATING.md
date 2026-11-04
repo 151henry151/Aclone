@@ -113,7 +113,7 @@ The radio and paper chart are cabin detail, not working communication or fish-fi
   the offshore round trip. At 600 seconds per game day this is **3½ real hours
   fishing**, with travel on top. Detours, maintenance and time with idle nets
   affect actual endurance; a full hold may bring a trip to an earlier end.
-- Cruise: up to 6 m/s; towing up to 2.4 m/s. Fuel and cargo weight reduce speed
+- Cruise: up to 6 m/s; towing uses the world default (2.4 m/s) unless the vessel overrides it. Fuel and cargo weight reduce speed
   and increase fuel use. There is no boost.
 - W/S or up/down adjust persistent throttle. A/D or left/right steer. Lower
   throttle through idle for reverse. B or **Idle** sets zero; the hull coasts.
@@ -387,3 +387,9 @@ Offshore rod catches and trawl deployment share world limits: by default at leas
 8 m depth and 150 m shore clearance. The conservative coastal grid and small-islet
 checks still apply. Owners can edit these in F10 Fishing rules; zero shore clearance
 removes only the buffer. Depth and world bounds remain required.
+
+F10 Fishing rules set default net capacity (640 weight), towing fuel (8.5 units
+per minute) and mean shoal interval (360 paid towing seconds), alongside speed.
+Per-vessel tuning overrides capacity, fuel and speed. Existing encounter clocks
+and fish remain recorded after edits; haul a net that no longer fits. The boating
+panel quotes effective limits. Raising capacity can resume a formerly full net.

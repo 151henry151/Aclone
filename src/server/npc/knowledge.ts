@@ -180,7 +180,7 @@ export function gameGuide(query: string, activityQuery = '') {
     // Lookup slugs derive exactly from the retained full titles.
     topicIdFormat: 'prefix:slug(title)',
     topicSlug:
-      'Lowercase the title; replace each run outside [a-z0-9] with a hyphen; trim leading/trailing hyphens. Search the exact title or this ID.',
+      'Lowercase title, replace runs outside [a-z0-9] with hyphens, trim edge hyphens. Search exact title or ID.',
     topics: Object.fromEntries(
       ['faq', 'playing', 'economy'].map((prefix) => [
         prefix,
@@ -190,7 +190,7 @@ export function gameGuide(query: string, activityQuery = '') {
       ]),
     ),
     catalogLookup:
-      'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
+      'Item/recipe/building/vehicle/weapon/crop names or exact IDs (recipe:sawmill); defaults, not live quotes.',
     excerpts: compactEntries(excerpts),
     activityExcerpts: compactEntries(activityExcerpts),
   };

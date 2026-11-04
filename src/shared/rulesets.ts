@@ -106,6 +106,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
       .join(
         ', ',
       )}. Frost-day share times sensitivity sets loss up to the cap; zero sensitivity or cap removes frost yield loss. Winter expiry remains unchanged.`,
+    `Trawl defaults: towing speed ${fishing.trawlSpeed} m/s, net capacity ${fishing.trawlNetCapacity}, fuel ${fishing.trawlFuelPerMinute} units/minute; per-vessel tuning overrides these. Mean shoal interval ${fishing.trawlShoalMeanSeconds} paid towing seconds; existing clocks and catches remain recorded.`,
     `Offshore fishing: minimum depth ${fishing.fishingDeepDepth} m, shore clearance ${fishing.fishingShoreDistance} m. Rods and nets share these limits; zero clearance removes the shore buffer but retains depth and world bounds.`,
     `Fishing mean waits: ordinary shore ${fishing.fishingShoreWaitSeconds}s, anywhere-mode shore ${fishing.fishingAnywhereWaitSeconds}s, coastal boat ${fishing.fishingCoastalWaitSeconds}s, deep-water boat ${fishing.fishingDeepWaitSeconds}s before depth adjustment. New waits only; scheduled catches and deadlines remain recorded.`,
     `Crop yield: compost bonus ${farmYields.farmCompostYieldBonus}, repeated-family penalty ${farmYields.farmRotationYieldPenalty}; fractions apply before floor rounding, minimum one unit. Started harvests retain reserved amounts.`,

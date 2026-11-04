@@ -375,7 +375,7 @@ test('topic title lists reconstruct exact lookup IDs using the documented slug r
   assert.equal(guide.topicIdFormat, 'prefix:slug(title)');
   assert.equal(
     (guide as any).topicSlug,
-    'Lowercase the title; replace each run outside [a-z0-9] with a hyphen; trim leading/trailing hyphens. Search the exact title or this ID.',
+    'Lowercase title, replace runs outside [a-z0-9] with hyphens, trim edge hyphens. Search exact title or ID.',
   );
   assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
   assert.equal(

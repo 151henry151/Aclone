@@ -3877,3 +3877,55 @@ five screenshots inspected: saved depth/clearance, excessive-depth refusal,
 successful deployment after lowering depth, empty haul and invalid depth with
 saved value retained. Final TypeScript, Prettier and diff checks pass. No whole
 suite or live-world work was performed.
+
+**Offshore limits slice done and pushed:** `e12a5ec942779c9cd4e577c8c97297b0753c5823`.
+Remote SHA verified. Continue with the four named trawl constants.
+
+### Trawl world rules — completion criteria before production
+
+Expose default towing speed 2.4 m/s, net capacity 640 weight, shoal mean interval
+360 seconds and towing fuel rate 8.5 units/minute. Existing per-slot vehicle tuning
+continues to override speed/capacity/fuel; world values are their shared fallback.
+Use ranges matching vehicle tuning: speed 1–8, capacity integer 10–5,000, fuel
+0.06–60 per minute; shoal mean integer 1–86,400 seconds. Retain catch distribution,
+reference interval, voyage luck, crew/depth modifiers and paid-time requirements.
+
+- Add `tests/trawl-rules.test.ts`, run red before production. Verify default/legacy
+  and custom/vehicle-override fuel, speed, capacity and activity cues. New shoal
+  schedules use the local mean; existing encounter clocks survive rule edits.
+- Lower capacity without deleting earned fish; refuse redeployment if the net or
+  pending fish no longer fits. Raising capacity may resume a formerly full net.
+  Hauling retains real fish and cannot duplicate them. Invalid patches are atomic;
+  editor, summaries, observations, saves and designs share defaults and overrides.
+- Run new tests with commercial-fishing, vehicle-config, fishing-water, trawl-status
+  and guide tests. Run TypeScript and changed-file Prettier/diff checks.
+- Browser `tests/browser/trawl-rules.spec.ts`: save/reload F10 trawl rules, inspect
+  effective speed/capacity/fuel help, deploy and haul an empty net, reject invalid
+  capacity, and verify full-net refusal in an isolated fixture with a recorded
+  catch. Inspect screenshots. Update player/boating/world-builder docs, README
+  and Unreleased changelog; push only after all criteria pass.
+
+Failing-first trawl result: default/missing burn and speed checks pass before the
+custom mode; all four tests then fail on unknown or absent new settings.
+
+Additional consumer check: F10 Vehicles must show the effective world trawl defaults
+(20 weight, 0.1 fuel/second and 1.5 m/s in the fixture), retaining explicit vessel
+overrides. The added vehicle-editor test fails on its hard-coded net capacity.
+Extend the same browser flow to inspect these three fields. The guide request
+currently exceeds its unchanged 96,000-byte limit by 74 bytes; tighten the boating
+paragraph without removing any instructions or facts, then rerun guide tests.
+
+The boating paragraph is not selected by the budget fixture, so its shorter
+wording does not change that request. Compact the guide's lookup instructions
+with the same topic-slug algorithm, catalogue kinds, example ID and default-value
+warning. Preserve every selected manual section and all memory limits.
+
+Trawl validation complete: all 46 non-guide tests from the initial relevant run
+pass, including the long voyage balance regression. The additional vehicle-editor
+test and eight vehicle configuration tests pass. All 16 guide tests now pass
+(1.3 s), including the unchanged 96,000-byte ceiling and complete source/text/ID
+retention checks; update only the exact wording assertion for the equivalent
+shorter slug instructions. Extended browser passes (31.4 s); inspect all six
+screenshots covering rules, effective vessel defaults, deployment, empty hauling,
+full-net refusal and invalid capacity. TypeScript, changed-file Prettier and diff
+checks pass. No repeat of the long voyage simulation after UI/text-only changes.

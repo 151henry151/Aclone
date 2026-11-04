@@ -37,7 +37,7 @@ import { mapWaterPath } from './map-water';
 import { expeditionPanel, boatLightingPanel } from './fishing-expedition-panel';
 import { seafoodKitchens } from '../shared/seafood';
 import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
-import { TRAWL_FUEL_PER_SECOND } from '../shared/commercial-fishing';
+import { trawlParameters } from '../shared/commercial-fishing';
 import { trawlStatus as fishingTrawlStatus, TrawlCapacityAlerts } from './trawl-status';
 import { nauticalHeadingLabel } from './nautical-heading';
 import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
@@ -3885,8 +3885,9 @@ function trawlStatus() {
 }
 function trawlControls() {
   if (!me || !world || !isTrawler(me.vehicle, world)) return '';
-  const t = me.trawl;
-  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Depth ${waterDepth(world, me).toFixed(1)} m · Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Deep fishing requires ${fishingRules(world.settings).fishingDeepDepth} m depth and ${fishingRules(world.settings).fishingShoreDistance} m shore clearance. Nets down use ${((vehicleDef(world, me.vehicle).trawlFuel ?? TRAWL_FUEL_PER_SECOND) * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
+  const t = me.trawl,
+    parameters = trawlParameters(world, me.vehicle);
+  return `<strong>Commercial trawling</strong><p>W/S or ↑/↓ adjust throttle; A/D or ←/→ steer. S continues through idle into slow reverse. B sets idle. Chat and menus keep the set throttle.</p>${button('Idle throttle', 'boatIdle')}<p>${esc(trawlStatus())}</p><p>Depth ${waterDepth(world, me).toFixed(1)} m · Tank ${me.fuel.toFixed(1)} / ${vehicleDef(world, me.vehicle).tank}. Deep fishing requires ${fishingRules(world.settings).fishingDeepDepth} m depth and ${fishingRules(world.settings).fishingShoreDistance} m shore clearance. Towing speed up to ${parameters.speed} m/s; net capacity ${parameters.netCapacity} weight. Nets down use ${(parameters.fuelPerSecond * 60).toFixed(1)} fuel units per minute; keep a reserve for your return.</p>${t ? button('Haul catch and stow nets', 'trawl', 'data-id="haul"') : ''}${t?.deployed ? button('Stow nets', 'trawl', 'data-id="stow"') : button('Deploy nets', 'trawl', 'data-id="deploy"')}<p class="note">Watch the net, then haul to inspect your catch. Food, water and fuel cans share the hold with landed fish. Idle before docking.</p>`;
 }
 
 document.addEventListener('change', (event) => {

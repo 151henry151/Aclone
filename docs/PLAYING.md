@@ -417,7 +417,7 @@ Board the Parish Carrier canal boat or North Star fishing boat at a shoreline bo
 
 The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
 
-The North Star costs 300s with a larger hold and tank for extended expeditions; the canal boat costs 60s. Nets catch continuously, and hauling reveals the catch. You can recruit up to two consenting deckhands for a share of profit and stock shared provisions. Stop alongside the boatyard within its wider waterfront arrival area to disembark. See [Boating](BOATING.md) for controls and crew agreements.
+The North Star (300s) has a larger hold and tank for long expeditions; the canal boat costs 60s. Nets catch continuously; hauling reveals fish. World defaults set trawl speed/capacity/fuel and new shoal intervals; vessels can override the first three. Recruit up to two consenting deckhands for shared profit and stock shared provisions. Disembark beside the boatyard within its wider waterfront arrival area. [Boating](BOATING.md) covers controls and crew agreements.
 
 The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating. Unreleased charter rules set local fare/duration defaults and limits, invitation counts and return-request cooldown; existing offers and bookings keep their agreed terms.
 

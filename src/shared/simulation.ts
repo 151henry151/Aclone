@@ -103,7 +103,7 @@ import {
   endVoyageOnDeath,
 } from './fishing-expedition';
 import { setSeafoodMenu } from './seafood';
-import { trawlAction, advanceTrawl, TRAWL_SPEED } from './commercial-fishing';
+import { trawlAction, advanceTrawl, trawlParameters } from './commercial-fishing';
 import { FISHING_BOAT } from './boats';
 import { poweredBoat, boatSlot, mooringKey } from './boats';
 import { LIFEBOAT, rescueAction, abandonBoatOnDeath, expireAbandonedCargo } from './boat-rescue';
@@ -2068,7 +2068,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
-        if (fishingField) num(v, fishingField.min, fishingField.max);
+        if (fishingField) num(v, fishingField.min, fishingField.max, fishingField.step === 1);
         if (farmYieldField)
           num(v, farmYieldField.min, farmYieldField.max, farmYieldField.step === 1);
         if (constructionField)
@@ -2671,7 +2671,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       : rowing
         ? 1.6
         : trawling
-          ? (v.trawlSpeed ?? TRAWL_SPEED)
+          ? trawlParameters(w, p.vehicle).speed
           : v.speed) *
     (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
     tractorSurface(surface.speed, traction) *
