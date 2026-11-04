@@ -231,7 +231,7 @@ import {
   townAction,
   type Town,
 } from './civics.ts';
-import { gather, finishGather, changeResourceRecovery } from './resources.ts';
+import { gather, finishGather, changeResourceRules } from './resources.ts';
 import { moneyGiftReason, refuellingStatus } from './player-aid.ts';
 import { advanceClimate, roadConditions } from './environment.ts';
 import { drivingGrade, drivingSurface, walkingSurface, slopeSpeed } from './driving-surface.ts';
@@ -2150,8 +2150,7 @@ export function act(w: World, id: string, a: Action): string {
       const survivalError = survivalRulesError({ ...w.settings, ...clean });
       requireThat(!survivalError, survivalError ?? 'Invalid survival rules');
       expireAbandonedCargo(w);
-      if (clean.resourceRecoveryMultiplier !== undefined)
-        changeResourceRecovery(w, clean.resourceRecoveryMultiplier);
+      changeResourceRules(w, clean);
       if (
         clean.exportShipmentInterval !== undefined &&
         clean.exportShipmentInterval !== economyRules(w.settings).exportShipmentInterval

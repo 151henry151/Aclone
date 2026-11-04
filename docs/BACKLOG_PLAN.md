@@ -3393,3 +3393,69 @@ with the corrected introduction (33.5 seconds). Inspect the updated menu capture
 text and configured numeric load/time are readable. The other five visual states
 were inspected before this text-only correction. TypeScript and changed-file
 Prettier/diff checks pass. No full suite runs.
+
+Pushed and verified `5554b32` on `backlog-implementation`. **Gathering yields and
+durations are done.**
+
+### Gameplay rules — deposit capacities and regrowth
+
+Before production, transcribe the backlog's node capacities (18 logs / 30 others)
+and regrowth seconds (1,800 / 600), beyond the existing recovery multiplier, into
+`resourceLogsCapacity`, `resourceOtherCapacity` (integer 1–10,000), and
+`resourceLogsRegrowthSeconds`, `resourceOtherRegrowthSeconds` (integer 10–86,400).
+Use the JSON defaults once. World rules govern generated and saved grounds with
+standard survey values; preserve an authored non-default capacity or interval as
+a per-ground override. Do not change stable IDs, locations, scenery or the
+three-unit recovery increment. Missing rules keep shipped behavior.
+
+An owner edit must settle earned stock under the old pace, preserve partial
+interval progress under the new pace/multiplier, and cap stock at the new capacity.
+Increasing capacity must not mint stock in untouched or depleted grounds; new
+headroom refills normally. Simultaneous edits must use one old-to-new transition.
+Existing reserved loads retain their amount/time, cancellation returns once up
+to current capacity, and offline recovery remains finite and capped. Cache changes
+must update HUD/menu and resident availability immediately. Preserve custom survey
+overrides in saves and portable designs.
+
+Write failing resource-deposit-rules tests for default/missing fields, generated
+and saved grounds, custom overrides, cache refresh, old/new earned stock and
+fractional progress, simultaneous changes, capacity decrease/increase, untouched
+stock, cancellation, invalid atomic patches, settings/editor/summary/observation,
+portable designs and save/offline reload. Run explicit relevant files with
+`node_modules/.bin/tsx --test --test-concurrency=2`: new deposit tests, resources,
+resource-patches, resource-expansion, gathering-rate-rules and npc-guide. Browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/resource-deposit-rules.spec.ts` must
+save/reopen rules, display changed capacity in HUD/Resources, show depleted refusal,
+recover and gather after the configured interval, reject invalid input/reload,
+and expose an empty gathering list without errors. Inspect screenshots. Require
+clean `npx tsc --noEmit`, changed-file Prettier/diff checks and updated player,
+economy/world-builder/README and imperative Unreleased notes before commit/push.
+
+Deposit red: all five new tests fail on missing defaults, unchanged stock and
+unknown settings. Keep raw survey geometry/values stable and resolve live limits
+when reading status/stock; this avoids rewriting frozen surveys into accidental
+per-ground overrides and preserves cached node references. The same resolver
+must compare scenery depletion against the effective capacity.
+
+Deposit implementation: all five tests pass after correcting the new transition
+import. The 45 relevant checks pass in 8.0 seconds, including resource-scenery
+because its depletion comparison now uses effective capacity. Browser passes in
+37.4 seconds; TypeScript and formatting pass. Inspect rules, recovered stock,
+invalid input and the empty-list captures. The depleted capture precedes the HUD's
+return after closing the editor; strengthen the test to await HUD visibility and
+assert `0/9 available`, then rerun that flow for usable evidence.
+
+Review adds a sixth regression: shrinking an untouched full deposit must not
+mark it recently worked. It fails (`worn` instead of `natural`); avoid creating a
+depletion record when an untouched capacity stays equal or shrinks. The six
+deposit, six resource and 15 guide checks pass in 2.4 seconds after this change
+and the economy-doc clarification of base intervals versus the multiplier.
+TypeScript is clean again. The earlier geometry/travel tests need no rerun for
+this narrowly scoped stock-transition branch.
+
+The strengthened browser flow passes in 36.2 seconds, showing a visible depleted
+`0/9` HUD, then three recovered units, ordinary gathering, invalid-input rejection
+with persisted settings and an empty list without browser errors. Inspect the
+replacement depleted screenshot and confirm readable refusal/disabled controls.
+All slice gates pass; changed files are formatted and the diff is clean. No full
+suite runs.

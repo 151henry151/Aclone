@@ -1202,3 +1202,22 @@ amount and end time; subsequent tasks/repeats use current rules. Both HUD and
 Resources show local rates, and resident plans use them for loads and estimates.
 Implements, shared stock, permissions and cargo limits remain enforced. Values
 persist in saves/designs; missing fields retain the shipped defaults.
+
+## Deposit rules (unreleased)
+
+**F10 → Rules → Gathering rules** also exposes `resourceLogsCapacity` (18),
+`resourceOtherCapacity` (30), `resourceLogsRegrowthSeconds` (1,800) and
+`resourceOtherRegrowthSeconds` (600). Capacities are integers 1–10,000 and base
+intervals are integer seconds 10–86,400. The existing **Gathering grounds** recovery
+multiplier scales those intervals; each complete interval restores three units.
+Standard survey fields inherit these rules, including frozen northern grounds and
+saved additions; a non-default authored capacity or interval stays a local
+override. Raw surveys, stable IDs and locations are preserved in saves/designs.
+
+Owner edits retain earned stock and fractional interval progress, including when
+changing the multiplier and base interval together. Lower caps clip stock; raising
+a cap creates headroom that refills normally, even at untouched grounds. Reserved
+loads keep their quantity and completion time; cancellation returns stock once up
+to current capacity. HUD/Resources show effective capacity and shared stock.
+A capacity below the selected gathering load leaves that ground unavailable until
+rules allow a complete load. Offline recovery remains capped at local capacity.

@@ -8,8 +8,9 @@ Use Resources/M for locations and reserves, then the nearby HUD Gather button wi
 Workshop tools stay a furniture input and do not unlock gathering. The default basic load is three units after 20 seconds; world gathering rules set both values.
 Foresters (wood) and excavators (minerals/soil) use the separate skilled rate, default six in 12 seconds. The matching implement is reusable. Capacity is checked at start/completion; free cargo space to finish a blocked reserved load.
 
-Each woodland ground holds 18 logs and regrows three per 30 real minutes. Each
-mineral/soil ground holds 30 and replenishes three per ten minutes. The village
+World rules set standard capacities (18 logs / 30 other units) and base recovery
+intervals (30 / 10 real minutes). The recovery multiplier, default 4, stretches
+these to two hours / 40 minutes per three units. Authored non-default survey values remain local overrides. The village
 has six grounds of each kind; large maps add countryside patches on a 400 m
 lattice (timber in woodland, stone above 16 m, gravel and topsoil lower down),
 each with the same capacity and regrowth. Reserves are shared, saved and recover offline. Buildings

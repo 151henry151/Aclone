@@ -349,5 +349,9 @@
   "gatheringBaseYield": 3,
   "gatheringSkilledYield": 6,
   "gatheringBaseSeconds": 20,
-  "gatheringSkilledSeconds": 12
+  "gatheringSkilledSeconds": 12,
+  "resourceLogsCapacity": 18,
+  "resourceOtherCapacity": 30,
+  "resourceLogsRegrowthSeconds": 1800,
+  "resourceOtherRegrowthSeconds": 600
 }

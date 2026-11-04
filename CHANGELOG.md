@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose deposit capacities and base regrowth intervals as world rules; preserve earned stock, fractional recovery and authored survey overrides across edits, and display effective reserves.
+
 - Expose untrained and skilled gathering yields and durations as world rules; share rates with HUD/menu eligibility and resident plans while preserving loads already in progress.
 
 - Expose new pasture parcel dimensions as a world rule; preserve claimed dimensions across rule edits and use them consistently for paid expansion, fences, road reservations, grazing routes and displayed areas.

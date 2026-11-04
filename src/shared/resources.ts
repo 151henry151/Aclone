@@ -1,7 +1,8 @@
+import defaults from '../../data/settings.json';
 import { gatheringRules } from './gathering-rules';
 import { recordGathered } from './player-statistics.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { World, Player } from './types.ts';
+import type { World, Player, Settings } from './types.ts';
 import { canCarry, distance, terrainHeight } from './simulation.ts';
 import { legacyHalf, mapHalf, terrainSeed, woodland } from './terrain.ts';
 import { hash2 } from './noise.ts';
@@ -69,8 +70,9 @@ export const resourceNode = (id: string, item: string, x: number, z: number): Re
   name: names[item],
   x,
   z,
-  capacity: item === 'logs' ? 18 : 30,
-  regrowth: item === 'logs' ? 1800 : 600,
+  capacity: item === 'logs' ? defaults.resourceLogsCapacity : defaults.resourceOtherCapacity,
+  regrowth:
+    item === 'logs' ? defaults.resourceLogsRegrowthSeconds : defaults.resourceOtherRegrowthSeconds,
 });
 export const resourceNodes: ResourceNode[] = Object.entries(gatheringSites).flatMap(
   ([item, positions]) =>
@@ -140,35 +142,85 @@ export function worldResources(w: World): ResourceNode[] {
   });
   return nodes;
 }
-export function resourceRecoverySeconds(w: World, n: ResourceNode) {
-  const value = w.settings.resourceRecoveryMultiplier ?? 4;
-  return n.regrowth * Math.max(0.25, Math.min(24, Number.isFinite(value) ? value : 4));
+/** Standard survey fields inherit world rules; authored non-default fields remain overrides.
+ * Keep raw node records stable so frozen geography never captures a transient rule value. */
+export function resourceLimits(w: Pick<World, 'settings'>, n: ResourceNode) {
+  const rules = gatheringRules(w.settings),
+    logs = n.item === 'logs';
+  const baseCapacity = logs ? defaults.resourceLogsCapacity : defaults.resourceOtherCapacity;
+  const baseRegrowth = logs
+    ? defaults.resourceLogsRegrowthSeconds
+    : defaults.resourceOtherRegrowthSeconds;
+  return {
+    capacity:
+      n.capacity === baseCapacity
+        ? logs
+          ? rules.resourceLogsCapacity
+          : rules.resourceOtherCapacity
+        : n.capacity,
+    regrowth:
+      n.regrowth === baseRegrowth
+        ? logs
+          ? rules.resourceLogsRegrowthSeconds
+          : rules.resourceOtherRegrowthSeconds
+        : n.regrowth,
+  };
+}
+export function resourceRecoverySeconds(w: Pick<World, 'settings'>, n: ResourceNode) {
+  const value = w.settings.resourceRecoveryMultiplier ?? defaults.resourceRecoveryMultiplier;
+  return (
+    resourceLimits(w, n).regrowth *
+    Math.max(
+      0.25,
+      Math.min(24, Number.isFinite(value) ? value : defaults.resourceRecoveryMultiplier),
+    )
+  );
 }
 export function resourceAmount(w: World, n: ResourceNode) {
-  const saved = w.resources?.[n.id];
+  const saved = w.resources?.[n.id],
+    { capacity } = resourceLimits(w, n);
   return saved
     ? Math.min(
-        n.capacity,
+        capacity,
         saved.amount +
           Math.floor(Math.max(0, w.time - saved.updated) / resourceRecoverySeconds(w, n)) * 3,
       )
-    : n.capacity;
+    : capacity;
 }
-/** Retain earned stock and partial recovery when an owner changes the pace. */
-export function changeResourceRecovery(w: World, multiplier: number) {
-  const old = w.settings.resourceRecoveryMultiplier ?? 4;
-  if (old === multiplier) return;
+const depositKeys = [
+  'resourceLogsCapacity',
+  'resourceOtherCapacity',
+  'resourceLogsRegrowthSeconds',
+  'resourceOtherRegrowthSeconds',
+  'resourceRecoveryMultiplier',
+] as const;
+/** Settle the old pace once, preserving earned stock and fractional recovery under new rules. */
+export function changeResourceRules(w: World, patch: Partial<Settings>) {
+  const changes = Object.fromEntries(
+    depositKeys
+      .filter((k) => patch[k] !== undefined && patch[k] !== (w.settings[k] ?? defaults[k]))
+      .map((k) => [k, patch[k]]),
+  );
+  if (!Object.keys(changes).length) return;
+  const next = { settings: { ...w.settings, ...changes } };
   for (const n of worldResources(w)) {
-    const saved = w.resources?.[n.id];
-    if (!saved) continue;
-    const period = resourceRecoverySeconds(w, n);
-    const elapsed = Math.max(0, w.time - saved.updated);
-    const amount = resourceAmount(w, n);
-    const fraction = amount >= n.capacity ? 0 : (elapsed % period) / period;
-    saved.amount = amount;
-    saved.updated = w.time - fraction * n.regrowth * multiplier;
+    const saved = w.resources?.[n.id],
+      oldCapacity = resourceLimits(w, n).capacity,
+      capacity = resourceLimits(next, n).capacity;
+    if (!saved && capacity <= oldCapacity) continue;
+    const period = resourceRecoverySeconds(w, n),
+      elapsed = saved ? Math.max(0, w.time - saved.updated) : 0;
+    const earned = resourceAmount(w, n),
+      amount = Math.min(capacity, earned);
+    const fraction = earned >= oldCapacity || amount >= capacity ? 0 : (elapsed % period) / period;
+    w.resources ??= {};
+    w.resources[n.id] = { amount, updated: w.time - fraction * resourceRecoverySeconds(next, n) };
   }
-  w.settings.resourceRecoveryMultiplier = multiplier;
+  Object.assign(w.settings, changes);
+}
+/** Backwards-compatible multiplier entry point; use the same atomic transition. */
+export function changeResourceRecovery(w: World, multiplier: number) {
+  changeResourceRules(w, { resourceRecoveryMultiplier: multiplier });
 }
 /** Skill selects both rate components independently of the configured load amount. */
 export function gatheringRate(w: World, p: Pick<Player, 'skills'>, item: string) {
@@ -196,7 +248,7 @@ export function gatheringStatus(w: World, p: Player, n: ResourceNode) {
     reason = `Carry ${gatheringImplements[n.item].need} to gather ${n.item === 'dirt' ? 'topsoil' : n.item}`;
   else if (available < amount) reason = 'This ground needs time to replenish';
   else if (!canCarry(p, n.item, amount, w)) reason = 'Make room in your cargo';
-  return { amount, available, seconds, reason };
+  return { amount, available, seconds, capacity: resourceLimits(w, n).capacity, reason };
 }
 export function gather(w: World, p: Player, id: string) {
   const n = worldResources(w).find((n) => n.id === id);
@@ -235,7 +287,7 @@ export function cancelGather(w: World, p: Player) {
   const n = worldResources(w).find((n) => n.id === task.resource);
   if (n && task.amount && w.resources)
     w.resources[n.id] = {
-      amount: Math.min(n.capacity, resourceAmount(w, n) + task.amount),
+      amount: Math.min(resourceLimits(w, n).capacity, resourceAmount(w, n) + task.amount),
       updated: w.time,
     };
 }

@@ -188,7 +188,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Forester or excavator selects the skilled rate. Positive yields/times keep ordinary timed loads. Existing tasks retain their reserved load and end time; new tasks use current rules. Implements, available stock, cargo and permissions still apply.</p></fieldset>`;
+    )}<p>Forester or excavator selects the skilled rate. Positive yields/times keep ordinary timed loads. Standard deposits inherit the capacity and recovery interval; authored non-default survey fields remain overrides. Recovery adds three units per interval times the recovery multiplier. Edits retain earned stock and partial recovery, capped at the new capacity; extra capacity refills normally. Existing tasks retain their reserved load and end time; new tasks use current rules. Implements, available stock, cargo and permissions still apply.</p></fieldset>`;
   const construction = constructionRules(settings);
   const constructionFields = `<fieldset class="boat-death-settings"><legend>Construction rules</legend>${Object.entries(
     constructionRuleFields,
@@ -523,7 +523,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     journeyFields +
     businessLoadFields +
-    `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
+    `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Multiply the base recovery intervals in Gathering rules. Higher values replenish deposits more slowly; 1 uses the base interval. Each interval restores three units, up to the local capacity. Changing the multiplier preserves earned stock and partial recovery.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))
       .map(([key, value]) =>

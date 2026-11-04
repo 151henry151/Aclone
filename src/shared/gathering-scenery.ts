@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 import type { World } from './types';
-import { resourceAmount, type ResourceNode } from './resources';
+import { resourceAmount, resourceLimits, type ResourceNode } from './resources';
 
 export const gatheringSceneryModes = [
   'natural',
@@ -33,7 +33,7 @@ export function gatheringSceneryStyle(w: World, node: ResourceNode): GatheringSc
   return w.towns.some(
     (t) => Math.hypot(t.x - node.x, t.z - node.z) <= t.radius + rules.gatheringTownDistance,
   ) ||
-    resourceAmount(w, node) < node.capacity ||
+    resourceAmount(w, node) < resourceLimits(w, node).capacity ||
     (saved &&
       rules.gatheringRecentSeconds > 0 &&
       w.time >= saved.updated &&

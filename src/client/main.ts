@@ -1059,7 +1059,7 @@ function updateHud() {
       ['resource-name', `${resource.name} · ${item}`],
       [
         'resource-stock',
-        `${status.available}/${resource.capacity} available · ${Math.round(distance(me, resource))}m away`,
+        `${status.available}/${status.capacity} available · ${Math.round(distance(me, resource))}m away`,
       ],
       [
         'resource-status',
@@ -1963,7 +1963,7 @@ function renderPanel() {
         .slice(0, 40)
         .map((n) => {
           const status = gatheringStatus(world!, me!, n);
-          return `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${status.available}/${n.capacity} available</p><p>${esc(status.reason ?? `${status.amount} per load · ${status.seconds} seconds`)}</p>${button('Gather', 'gather', `data-id="${n.id}" ${status.reason ? 'disabled' : ''}`)}</article>`;
+          return `<article><h3>${esc(n.name)} · ${esc(items[n.item].name)}</h3><p>${Math.round(distance(me!, n))}m away · map (${n.x}, ${n.z}) · ${status.available}/${status.capacity} available</p><p>${esc(status.reason ?? `${status.amount} per load · ${status.seconds} seconds`)}</p>${button('Gather', 'gather', `data-id="${n.id}" ${status.reason ? 'disabled' : ''}`)}</article>`;
         })
         .join(
           '',
