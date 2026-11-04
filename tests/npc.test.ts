@@ -337,7 +337,11 @@ test('Mabel receives help for addressed questions and can look up more without g
   await s.residents.settled();
   const initial = seen[0].observation as any;
   assert.match(initial.gameGuide.controls, /F4/);
-  assert.ok(initial.gameGuide.excerpts.some((e: any) => /sawmill/i.test(e.text)));
+  assert.ok(
+    Object.values(initial.gameGuide.excerpts).some((e: any) =>
+      /sawmill/i.test(typeof e === 'string' ? e : e.text),
+    ),
+  );
   assert.equal(initial.worldRules.maxSkills, s.w.settings.maxSkills);
   assert.equal(initial.currentConversation.speakerId, 'ada');
   assert.match(initial.currentConversation.question, /sawmill/i);
@@ -345,7 +349,7 @@ test('Mabel receives help for addressed questions and can look up more without g
   s.residents.tick(0.05, now + 6000);
   await s.residents.settled();
   const lookedUp = seen[1].observation as any;
-  assert.equal(lookedUp.gameGuide.excerpts[0].id, 'recipe:sawmill');
+  assert.equal(Object.keys(lookedUp.gameGuide.excerpts)[0], 'recipe:sawmill');
   assert.deepEqual({ cash: p.cash, x: p.x, z: p.z }, before);
   assert.equal(s.w.messages.at(-1)?.to, 'ada');
   assert.ok(s.residents.memory.recent('resident-0', 30).some((e) => e.kind === 'guide-lookup'));

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident training and town-founding budget cushions as world rules while retaining actual costs, qualifications, household protection and ordinary permissions. Key embedded guide sections by lookup ID to preserve all text within the existing request budget.
+
 - Expose resident property, painting and farm-funding thresholds as world rules; share purchase reserves and bound farm deposits by cash and transfer limits.
 
 - Expose resident experiment funding, restock and load budgets as world rules; fit trade and output-sale plans within transaction limits and actual buyer storage.

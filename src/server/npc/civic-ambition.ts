@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { townCharter } from '../../shared/town-charter.ts';
@@ -32,7 +33,11 @@ export function settlementChoices(w: World, p: Player): FarmerChoice[] {
   )
     return [];
   const living = strategicHouseholdBudget(w, p).reserve;
-  if (p.cash < living + charter.foundingCost * 4) return [];
+  if (
+    p.cash <
+    living + charter.foundingCost * npcReserveRules(w.settings).npcTownFoundingCostMultiplier
+  )
+    return [];
   const half = mapHalf(w) - charter.initialRadius;
   for (const distance of [Math.max(600, charter.minSpacing + charter.initialRadius), 1000, 1400])
     for (let i = 0; i < 12; i++) {

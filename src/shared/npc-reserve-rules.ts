@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcReserveRuleFields = {
+  npcGroupTrainingCashReserve: {
+    label: 'Group training cash reserve (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcTownFoundingCostMultiplier: {
+    label: 'Town ambition charter cost multiplier',
+    min: 0,
+    max: 100,
+    step: 0.25,
+  },
   npcPropertyCashReserve: {
     label: 'Property purchase cash reserve (hundredths)',
     min: 0,

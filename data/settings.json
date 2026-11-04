@@ -294,5 +294,7 @@
   "npcPaintCashThreshold": 20000,
   "npcFarmFundingTillThreshold": 10000,
   "npcFarmFundingCashThreshold": 15000,
-  "npcFarmFundingAmount": 5000
+  "npcFarmFundingAmount": 5000,
+  "npcGroupTrainingCashReserve": 5000,
+  "npcTownFoundingCostMultiplier": 4
 }

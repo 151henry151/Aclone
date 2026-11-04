@@ -2,6 +2,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gameGuide, searchGuide } from '../src/server/npc/knowledge.ts';
+function embeddedEntries(group: ReturnType<typeof gameGuide>['fundamentals']) {
+  return Object.entries(group).map(([id, value]) =>
+    typeof value === 'string' ? { id, text: value } : { id, ...value },
+  );
+}
 function topicIndex(guide: ReturnType<typeof gameGuide>) {
   return Object.fromEntries(
     Object.entries(guide.topics).flatMap(([prefix, sections]) =>
@@ -21,10 +26,12 @@ test('NPC always knows the controls and retrieves relevant player help without t
   assert.match(guide.controls, /Parish map/);
   assert.match(guide.controls, /Space/);
   assert.ok(
-    guide.excerpts.some((e) => /verified/i.test(e.text) && /Forgot your password/i.test(e.text)),
+    embeddedEntries(guide.excerpts).some(
+      (e) => /verified/i.test(e.text) && /Forgot your password/i.test(e.text),
+    ),
   );
   assert.ok(JSON.stringify(guide).length < 35000);
-  assert.ok(guide.fundamentals.reduce((n, e) => n + e.text.length, 0) <= 12500);
+  assert.ok(embeddedEntries(guide.fundamentals).reduce((n, e) => n + e.text.length, 0) <= 12500);
   assert.match(
     searchGuide('loans credit mortgage')
       .map((e) => e.text)
@@ -32,14 +39,16 @@ test('NPC always knows the controls and retrieves relevant player help without t
     /repayment|instalment/,
   );
   const combined = gameGuide('How do I produce water?', 'How do I produce water?');
-  const ids = [...combined.fundamentals, ...combined.excerpts, ...combined.activityExcerpts].map(
-    (e) => e.id,
-  );
+  const ids = [
+    ...embeddedEntries(combined.fundamentals),
+    ...embeddedEntries(combined.excerpts),
+    ...embeddedEntries(combined.activityExcerpts),
+  ].map((e) => e.id);
   assert.equal(new Set(ids).size, ids.length, 'guide sections are not sent multiple times');
   assert.ok(!ids.includes('faq:controls'), 'controls are included separately');
-  assert.ok(gameGuide('').excerpts.length === 0);
-  const core = gameGuide('')
-    .fundamentals.map((e) => e.text)
+  assert.ok(Object.keys(gameGuide('').excerpts).length === 0);
+  const core = embeddedEntries(gameGuide('').fundamentals)
+    .map((e) => e.text)
     .join('\n');
   assert.match(core, /Take this job/);
   assert.match(core, /Work two cycles/);
@@ -212,7 +221,11 @@ test('guide compaction removes only prose soft wraps, retaining every word, para
 
 test('selected manual headings occur once in the topic index without repeating them in each excerpt', () => {
   const guide = gameGuide('farm school inventory water');
-  for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
+  for (const entry of [
+    ...embeddedEntries(guide.fundamentals),
+    ...embeddedEntries(guide.excerpts),
+    ...embeddedEntries(guide.activityExcerpts),
+  ]) {
     if (!Object.hasOwn(guide.sources, entry.id.split(':')[0])) continue;
     assert.ok(
       Object.hasOwn(topicIndex(guide), entry.id.replace(/:\d+$/, '')),
@@ -241,7 +254,7 @@ test('resident guide keeps complete cited text and ids without repeating section
   const query = 'Local cash transfer limits',
     original = searchGuide(query),
     guide = gameGuide(query);
-  for (const entry of guide.excerpts) {
+  for (const entry of embeddedEntries(guide.excerpts)) {
     const full = original.find((e) => e.id === entry.id)!;
     assert.ok(full);
     assert.equal(entry.text, compactGuideText(full.text));
@@ -287,7 +300,11 @@ test('embedded manual source dictionary preserves every selected citation withou
     playing: 'docs/PLAYING.md',
     economy: 'docs/ECONOMY.md',
   });
-  for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
+  for (const entry of [
+    ...embeddedEntries(guide.fundamentals),
+    ...embeddedEntries(guide.excerpts),
+    ...embeddedEntries(guide.activityExcerpts),
+  ]) {
     const prefix = entry.id.split(':')[0] as keyof typeof guide.sources;
     if (Object.hasOwn(guide.sources, prefix)) {
       const original = searchGuide(entry.id).find((e) => e.id === entry.id)!;
@@ -312,4 +329,36 @@ test('guide groups manual topic prefixes once and documents the complete lookup 
   assert.equal(guide.topicIdFormat, 'prefix:section');
   assert.ok(Object.keys(guide.topics.faq).includes('controls'));
   assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
+});
+
+test('embedded guide uses keyed sections while preserving selected text and catalogue citations', async () => {
+  const { compactGuideText } = await import('../src/server/npc/knowledge');
+  for (const query of [
+    'farm school inventory water',
+    'recipe:sawmill',
+    'Local cash transfer limits',
+  ]) {
+    const guide = gameGuide(query);
+    for (const group of [guide.fundamentals, guide.excerpts, guide.activityExcerpts])
+      assert.equal(
+        Array.isArray(group),
+        false,
+        'Lookup IDs are dictionary keys, not repeated fields',
+      );
+    const selected = searchGuide(query);
+    assert.deepEqual(
+      Object.keys(guide.excerpts),
+      selected.map((e) => e.id),
+    );
+    for (const original of selected) {
+      const value = (guide.excerpts as any)[original.id];
+      if (original.source.startsWith('docs/')) assert.equal(value, compactGuideText(original.text));
+      else
+        assert.deepEqual(value, {
+          title: original.title,
+          source: original.source,
+          text: compactGuideText(original.text),
+        });
+    }
+  }
 });

@@ -122,12 +122,19 @@ export function compactGuideText(text: string) {
     )
     .join('\n\n');
 }
-const compactEntry = (e: Entry) => {
-  const text = compactGuideText(e.text);
-  // Manual headings are already retained in topics, keyed by this section id.
-  // The id already identifies the section; direct lookups retain anchored citations.
-  return e.source.startsWith('docs/') ? { id: e.id, text } : { ...e, text };
-};
+function compactEntries(entries: Entry[]): Record<string, string | Omit<Entry, 'id'>> {
+  return Object.fromEntries(
+    entries.map((e) => {
+      const text = compactGuideText(e.text);
+      // Manual headings and source paths already live in the topic/source indexes.
+      // Retain the lookup ID as the key instead of repeating id/text object fields.
+      return [
+        e.id,
+        e.source.startsWith('docs/') ? text : { title: e.title, source: e.source, text },
+      ];
+    }),
+  );
+}
 export function gameGuide(query: string, activityQuery = '') {
   const docs = corpus().filter((e) => e.source.startsWith('docs/'));
   const excerpts = searchGuide(query);
@@ -159,7 +166,7 @@ export function gameGuide(query: string, activityQuery = '') {
     // Manual IDs use prefix:section; retain each source path once per prefix.
     sources: { faq: 'docs/FAQ.md', playing: 'docs/PLAYING.md', economy: 'docs/ECONOMY.md' },
     // Core rules must not depend on the agent knowing which question to search for.
-    fundamentals: fundamentals.map(compactEntry),
+    fundamentals: compactEntries(fundamentals),
     controls: compactGuideText(docs.find((e) => e.id === 'faq:controls')!.text),
     // Every lookup ID is prefix:section. Share the repeated source prefixes.
     topicIdFormat: 'prefix:section',
@@ -175,7 +182,7 @@ export function gameGuide(query: string, activityQuery = '') {
     ),
     catalogLookup:
       'Search item, recipe, building, vehicle, weapon or crop names; exact IDs such as recipe:sawmill also work. All catalog values are defaults, not live quotes.',
-    excerpts: excerpts.map(compactEntry),
-    activityExcerpts: activityExcerpts.map(compactEntry),
+    excerpts: compactEntries(excerpts),
+    activityExcerpts: compactEntries(activityExcerpts),
   };
 }

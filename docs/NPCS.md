@@ -150,6 +150,8 @@ settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#re
 
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 
+Unreleased training/town ambition budgets let world owners change the 50d cushion above tuition when considering a group invitation to train, and the four-times-charter-cost cash gate for founding a town. Zero removes the extra cushion without waiving actual tuition, settlement or household costs. Interest alone accepts no job; founding still requires funded proven businesses, a home, permissions and a clear site.
+
 Unreleased property and optional spending budgets share a 200d purchase reserve across general and farmer choices, consider painting above 200d cash, and suggest a 50d farm deposit below 100d in its till when personal cash exceeds 150d. F10 exposes each threshold independently; the deposit fits actual cash and the world transfer limit. Zero deposit or till threshold suppresses that funding suggestion. These eligibility policies do not replace household or startup budgets and never execute a transfer by themselves.
 
 A separate discretionary owner draw targets 40d cash and adds a fuel purchase below 10 tank units when none is carried, using a stocked quote or an 8d fallback. These are configurable **Resident cash and portable reserves** rules. Investor claims, operating reserves and transfer limits still bound any ordinary withdrawal.
@@ -637,3 +639,9 @@ Projects still require affordable construction materials, operating reserves and
 ordinary permissions; founding a town grants no extra building slots or customers.
 Existing businesses and household supplies still need care. These changes provide
 feasible choices, not a guarantee that the model will choose or finish them.
+
+Embedded resident guide sections are keyed by lookup ID. Manual values retain the
+selected text; the topic and source indexes retain headings and citations.
+Catalogue entries keep their title, source and text. Direct lookups still return
+anchored citations. This removes repeated JSON fields without trimming help or
+memories to meet the existing request-size limit.

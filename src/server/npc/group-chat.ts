@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { skillFits } from '../../shared/survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
@@ -66,7 +67,10 @@ export function groupInterest(w: World, p: Player, c: GroupCandidate, text: stri
       if (p.learning && p.learning.skill !== skill) return;
       if (
         !p.learning &&
-        (!skillFits(w, p, skill) || p.cash < skillLesson(w, p, skill).price + 5000)
+        (!skillFits(w, p, skill) ||
+          p.cash <
+            skillLesson(w, p, skill).price +
+              npcReserveRules(w.settings).npcGroupTrainingCashReserve)
       )
         return;
       if (!['employee', 'farmer', 'balanced'].includes(config.preference)) return;

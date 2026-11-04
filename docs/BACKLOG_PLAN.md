@@ -2697,3 +2697,54 @@ changed-file Prettier and diff checks. Browser passes in 20.2 seconds: five sett
 persist; the planned farm deposit changes 5,000 → 200 without moving money; zero
 suppresses it; native validation refuses a negative amount and reload preserves
 zero. Both screenshots inspected; no page errors. No full suite is run.
+
+Pushed and verified `db980d3` on `backlog-implementation`. **Resident property,
+paint and farm-funding thresholds are done.**
+
+### Gameplay rules — resident training and town ambition budgets
+
+Before production, expose `npcGroupTrainingCashReserve` 5,000 hundredths (integer
+0–100,000,000) and `npcTownFoundingCostMultiplier` 4 (0–100, step 0.25) in Resident
+cash and portable reserves. The first only controls whether an unqualified
+resident considers a group employment invitation to train: require actual tuition
+plus this cushion, while retaining needs, skill limits, other-course, preference
+and existing-job gates. It does not accept a job or pay tuition. The second gates
+an optional town ambition at household reserve plus charter cost times the local
+multiplier; retain actual charter/cottage/household affordability, proven funded
+businesses, home, permissions and site checks. Zero removes only the extra budget
+gate, never actual costs. Defaults and missing fields preserve existing behavior.
+
+Write failing npc-ambition-budget-rules tests for exact default/custom/zero
+boundaries, no acceptance or grants, actual charter costs and all rule persistence
+surfaces. Run that file, npc-group-chat, npc-prosperity, npc-guide and
+npc-discretionary-budget-rules. Browser: save/reopen both values, observe changed
+training interest with unchanged cash/skill/job, zero reserve still refuses
+unaffordable tuition, invalid multiplier is refused and saved values reload.
+Inspect screenshots/errors; finish TypeScript, Prettier, world-builder/NPC/README
+and imperative Unreleased documentation before commit/push.
+
+Ambition-budget red: all four checks fail for missing settings after isolating the
+charter-multiple boundary with an already-stocked household (otherwise the actual
+cottage-plus-household cost correctly dominates that boundary). All four now pass,
+including zero cushions without waived tuition or charter costs and unchanged
+qualifications/ownership/accounts.
+
+The relevant request-budget regression fails at 96,032 bytes against the unchanged
+96,000-byte ceiling. Before changing guide production, add a failing round-trip
+criterion: embed selected sections as a dictionary keyed by their lookup ID,
+with manual text as the value and catalogue metadata retained. Reconstruct every
+selected ID/text/source and preserve the complete topic index, selection limits,
+memories and direct lookup citations. This removes repeated JSON id/text fields;
+it must not shorten any content or relax the request ceiling. Update existing
+shape consumers in guide tests and the one resident guide integration test.
+
+Ambition gates pass: 42 unique relevant checks across focused runs, including the
+new guide round-trip and resident lookup integration. The original request ceiling
+passes with every selected passage and citation preserved; guide/ambition checks
+take 1.2 seconds, affected group/prosperity consumers 1.0 second, lookup integration
+0.9 second. TypeScript, changed-file Prettier and diff checks pass. Browser passes
+in 19.5 seconds: both rules persist; lowering the training reserve changes interest
+without paying tuition; zero still refuses unaffordable tuition; native validation
+rejects multiplier 101 and reload preserves 5.25. Both screenshots inspected, no
+page errors. No full suite or unnecessary browser rerun after the server-only
+serialization change. Ready to commit/push.

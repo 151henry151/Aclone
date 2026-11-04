@@ -996,3 +996,13 @@ Zero property/painting/cash thresholds remove only their eligibility cushion.
 Changing a rule grants nothing and executes no purchases or transfers. Existing
 ownership, accounts and stock remain intact; plans still use ordinary actions.
 Rules persist in saves and portable designs and are included in resident observations.
+
+## Resident training and town ambition budgets (unreleased)
+
+**F10 → Rules → Resident cash and portable reserves** includes:
+
+- `npcGroupTrainingCashReserve`: 5,000 hundredths (50d), integer 0–100,000,000. An unqualified resident considers a group invitation to train for work only with tuition plus this cushion. Zero still requires tuition. Needs, preferences, skill limits, active studies and known job terms remain relevant; interest is not acceptance or a payment.
+- `npcTownFoundingCostMultiplier`: 4, from 0 to 100, editor step 0.25. Optional town ambitions require cash covering the household reserve plus this multiple of the charter cost. Zero removes this extra gate, but actual charter, cottage and household costs must still be affordable. Existing home, profitable funded holdings, permission and clear-site requirements still apply.
+
+These rules persist in saves/designs, appear in resident observations, and change
+only future choices. They grant no money, qualifications, property or employment.
