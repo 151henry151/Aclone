@@ -72,3 +72,23 @@ test('pacing retains its long-term cap on faster and jittery displays', () => {
       );
     }
 });
+
+test('display timestamps keep 30 FPS evenly paced when animation callbacks arrive with several milliseconds of jitter', () => {
+  let previous = -Infinity;
+  const renders: number[] = [];
+  for (let frame = 0; frame < 600; frame++) {
+    const displayTime = (frame * 1000) / 60;
+    const arrival = displayTime + 3 + Math.sin(frame * 1.7) * 3;
+    const next = pacedRenderTime(arrival, previous, 1000 / 30, displayTime);
+    if (next !== undefined) {
+      previous = next;
+      renders.push(arrival);
+    }
+  }
+  assert.ok(renders.length >= 299 && renders.length <= 301);
+  const gaps = renders.slice(1).map((at, i) => at - renders[i]);
+  assert.ok(
+    Math.max(...gaps) < 40,
+    `callback arrival jitter caused a skipped display frame: ${Math.max(...gaps)} ms`,
+  );
+});

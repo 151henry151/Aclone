@@ -73,3 +73,65 @@ test('streamed scenery fades by individual fragment distance before its chunk bo
   );
   assert.equal(material.transparent, false);
 });
+
+test('static building batches preserve fog shader hooks and stay separate from ordinary materials', async () => {
+  const { batchStaticScenery } = await import('../src/client/static-scene');
+  const root = new T.Group();
+  const faded = new T.MeshStandardMaterial({ color: '#aaaabb' });
+  const ordinary = new T.MeshStandardMaterial({ color: '#aaaabb' });
+  fadeSceneryIntoFog(faded);
+  const key = faded.customProgramCacheKey();
+  root.add(new T.Mesh(new T.BoxGeometry(), faded), new T.Mesh(new T.BoxGeometry(), ordinary));
+  batchStaticScenery(root);
+  assert.equal(root.children.length, 2, 'different shader behavior cannot share a static batch');
+  const material = (root.children as T.Mesh[])
+    .map((m) => m.material as T.Material)
+    .find((m) => m.customProgramCacheKey() === key);
+  assert.ok(material, 'batch clone must retain the fade hook');
+  const shader = {
+    uniforms: {},
+    vertexShader: T.ShaderLib.standard.vertexShader,
+    fragmentShader: T.ShaderLib.standard.fragmentShader,
+  };
+  material.onBeforeCompile(
+    shader as Parameters<T.Material['onBeforeCompile']>[0],
+    {} as T.WebGLRenderer,
+  );
+  assert.match(shader.fragmentShader, /sceneryCoverage/);
+  for (const mesh of root.children as T.Mesh[]) {
+    mesh.geometry.dispose();
+    (mesh.material as T.Material).dispose();
+  }
+});
+
+test('unbounded building haze omits streaming-distance work and can acquire a range after other decorators', () => {
+  const material = new T.MeshStandardMaterial();
+  fadeSceneryIntoFog(material);
+  seasonalMaterial(material);
+  const compile = () => {
+    const shader = {
+      uniforms: {} as Record<string, { value: unknown }>,
+      vertexShader: T.ShaderLib.standard.vertexShader,
+      fragmentShader: T.ShaderLib.standard.fragmentShader,
+    };
+    material.onBeforeCompile(
+      shader as Parameters<T.Material['onBeforeCompile']>[0],
+      {} as T.WebGLRenderer,
+    );
+    return shader;
+  };
+  const unbounded = compile(),
+    key = material.customProgramCacheKey();
+  assert.doesNotMatch(unbounded.vertexShader, /vSceneryDistance/);
+  assert.doesNotMatch(unbounded.fragmentShader, /sceneryRange/);
+  fadeSceneryIntoFog(material, 480);
+  assert.notEqual(
+    material.customProgramCacheKey(),
+    key,
+    'adding a range must invalidate even an externally decorated shader',
+  );
+  const bounded = compile();
+  assert.equal(bounded.uniforms.sceneryRange.value, 480);
+  assert.match(bounded.vertexShader, /vSceneryDistance/);
+  assert.ok('snowCover' in bounded.uniforms);
+});

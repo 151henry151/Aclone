@@ -52,8 +52,16 @@ export function batchStaticScenery(root: T.Group, excluded?: T.Object3D) {
       mat.metalness,
       mat.side,
       mat.emissive.getHexString(),
+      mat.customProgramCacheKey(),
     ].join(':');
-    const batch = batches.get(key) ?? { geometries: [], material: mat.clone() };
+    let batch = batches.get(key);
+    if (!batch) {
+      const material = mat.clone();
+      // Three.js cloning omits callbacks; keep the shader behavior of this batch.
+      material.onBeforeCompile = mat.onBeforeCompile;
+      material.customProgramCacheKey = mat.customProgramCacheKey;
+      batch = { geometries: [], material };
+    }
     batch.geometries.push(
       (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(
         o.matrixWorld,

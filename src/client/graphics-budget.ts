@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Preserve fractional frame time, including the forced first render after warmup. */
-export function pacedRenderTime(now: number, previous: number, interval: number) {
+export function pacedRenderTime(
+  now: number,
+  previous: number,
+  interval: number,
+  displayTime = now,
+) {
+  // Callback arrival varies with other main-thread work. Schedule against the
+  // display clock so that jitter does not turn every other refresh into a miss.
+  now = displayTime;
   const elapsed = now - previous;
   if (!Number.isFinite(elapsed) || elapsed < 0) return now;
   // rAF timestamps can land just before the nominal refresh boundary. Waiting

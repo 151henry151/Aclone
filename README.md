@@ -72,7 +72,8 @@ Unreleased flight changes add forgiving landing contacts, an airborne B brake,
 steadier keyboard handling and wider public strips with gentle shoulders. World
 owners can tune them or select strict contacts. Flight rendering now uses shorter
 haze, height-aware terrain detail and forward preparation; distant towns share
-the surrounding horizon mesh. These graphics follow the player's graphics mode.
+the surrounding horizon mesh. Distant building silhouettes fade with the land.
+These graphics follow the player's graphics mode.
 See the [flight guide](docs/FLYING.md).
 Walking and Shift now follow the tractor snow-depth factor, with clear-road pace
 and gradual verges. Owners can disable or scale field snow drag; bare-ground

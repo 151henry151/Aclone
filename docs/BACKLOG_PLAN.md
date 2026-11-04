@@ -538,6 +538,8 @@ its criteria without replacing the tile system or increasing its frame budget.
 
 ### Walking speed follows snow depth
 
+Done: committed and pushed as `03a8aa7` after the checks below.
+
 Concrete completion criteria before production changes:
 
 - Exercise `move` for slot 5 at a flat, clear fixture, starting above the speed
@@ -594,3 +596,49 @@ Final verification: full `npm test` passed all 1,334 tests, zero failures
 (194 seconds; `/tmp/aclone-walking-full.log`). TypeScript is clean, Prettier ran
 on every changed path, and the diff check passed. Player/world-builder guides,
 README and the Unreleased changelog describe the new behavior and rules.
+
+### Flight-view follow-up: retain fading through static batching
+
+Before continuing gathering-ground production work, inspection found that
+`batchStaticScenery` cloned building materials without their shader hooks and
+merged equal-looking materials with different shader behavior. The previous
+browser assertion covered remaining unbatched meshes, leaving this blind spot.
+
+Criteria: a fog-decorated building material must keep its shader hook/cache key
+through batching, and may not merge with an ordinary material. Write/run a red
+`tests/scenery-fog.test.ts` regression, then preserve those properties in the
+batch clone/key. Re-run the real flight-view and coastal browser flows, the same
+hardware performance budget, full `npm test`, TypeScript and explicit-path
+Prettier. Update the Unreleased fix note and flight guide/README as appropriate.
+
+Red evidence: the batching regression merged two different shader behaviors into
+one mesh (`1 !== 2`). The fix includes shader identity in the batch key and
+retains shader callbacks on the cloned material. All four fog unit checks now
+pass. The flight guide already describes buildings fading into the same haze;
+reviewed it unchanged, and clarified the README/Unreleased fix note.
+
+The strengthened browser check also verifies the static building batches. The
+flight-view/coastal flows passed, but the performance run missed the unchanged
+41.8 ms p95 limit at 45.0 ms. Removing unused streaming-distance shader work from
+unbounded building materials passed its new red/green regression, but an isolated
+repeat still measured 46.5 ms. Neither result satisfies the acceptance budget.
+
+Frame-pacing investigation reproduced a 51.2 ms gap in a new regression with
+ordinary animation-callback arrival jitter (`/tmp/aclone-flight-pacing-red.log`).
+The criterion is to keep 30 FPS on a 60 Hz display, with no skipped refresh caused
+by callback arrival jitter; the simulated maximum gap must stay below 40 ms.
+Use the browser display timestamp for scheduling while retaining actual elapsed
+time for movement and performance measurements. All eleven focused pacing/fog
+tests pass; the same hardware benchmark is being rerun without concurrent checks.
+
+The display-clock benchmark passes: 1,350 frames in 45 seconds, median 33.3 ms,
+p95 37.2 ms and p99 39.7 ms on the same Quadro M1200, with 277 terrain tiles,
+472,588 triangles and no page errors. The original p95 baseline is 38.0 ms and
+the unchanged regression limit is 41.8 ms. Evidence:
+`/tmp/aclone-flight-display-clock/results.json`.
+
+Final verification: both real flight/coast browser flows pass (58.5 seconds),
+including static-batch haze, empty terrain, loaded town, high flight, landing
+approach and distant lighthouse support. Inspected the town screenshots.
+Full `npm test` passes all 1,337 tests (196 seconds), TypeScript is clean,
+Prettier ran on every changed path, and `git diff --check` is clean.

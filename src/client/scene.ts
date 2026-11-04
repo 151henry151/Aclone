@@ -452,7 +452,7 @@ export class GameScene {
       this.graphicsBudget.reset();
       this.lastTime = this.renderTime = performance.now();
     });
-    this.renderer.setAnimationLoop(() => this.frame());
+    this.renderer.setAnimationLoop((time) => this.frame(false, time));
   }
   /** Drop stale interpolation/camera easing after a background or suspended frame. */
   private resumePending = false;
@@ -1231,14 +1231,14 @@ export class GameScene {
       vy: p.flight.vy,
     };
   }
-  private frame(preparing = false) {
+  private frame(preparing = false, displayTime?: number) {
     // Warmup owns rendering until settling; avoid repeating all scene animation
     // and terrain work between its small asynchronous preparation batches.
     if ((!this.ready && !this.settling && !preparing) || document.hidden) return;
     const now = performance.now();
     if (now - this.lastTime > 1000) this.resumeMotion();
     const interval = this.paused ? 250 : 1000 / (this.software || this.low ? 30 : 60);
-    const renderTime = pacedRenderTime(now, this.renderTime, interval);
+    const renderTime = pacedRenderTime(now, this.renderTime, interval, displayTime);
     if (renderTime === undefined) return;
     // Preserve the fractional interval so a 60 Hz display can reliably deliver 30 FPS.
     this.renderTime = renderTime;

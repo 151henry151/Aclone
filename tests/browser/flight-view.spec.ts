@@ -76,10 +76,18 @@ test('flight views render empty terrain, a distant town, high flight and the lan
                 if (!m.customProgramCacheKey().includes('scenery-fog')) missing++;
               }
           });
-      return { count, missing };
+      const batched = game.land.children.filter(
+        (o: any) =>
+          o.isMesh &&
+          !o.isInstancedMesh &&
+          o.material?.isMeshStandardMaterial &&
+          o.material.customProgramCacheKey().includes('scenery-fog'),
+      ).length;
+      return { count, missing, batched };
     });
     expect(buildingsFade.count).toBeGreaterThan(0);
     expect(buildingsFade.missing).toBe(0);
+    expect(buildingsFade.batched, 'static batches must retain building haze').toBeGreaterThan(0);
     await page.evaluate(() => {
       const { w, game } = (window as any).fixture;
       game.ground.reset(w);

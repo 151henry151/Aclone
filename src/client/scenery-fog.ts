@@ -10,35 +10,47 @@ const decorated = new WeakMap<Material, { value: number }>();
 export function fadeSceneryIntoFog(material: Material, range?: number) {
   const existing = decorated.get(material);
   if (existing) {
-    if (range !== undefined) existing.value = range;
+    if (range !== undefined) {
+      if (!Number.isFinite(existing.value)) {
+        // Other decorators may already have captured our old cache key.
+        const key = material.customProgramCacheKey;
+        material.customProgramCacheKey = () => `${key.call(material)}:bounded`;
+        material.needsUpdate = true;
+      }
+      existing.value = range;
+    }
     return;
   }
-  const distance = { value: range ?? 1e20 };
+  const distance = { value: range ?? Infinity };
   decorated.set(material, distance);
   const previous = material.onBeforeCompile;
   const key = material.customProgramCacheKey();
   material.onBeforeCompile = (shader, renderer) => {
     previous.call(material, shader, renderer);
-    shader.uniforms.sceneryRange = distance;
-    shader.vertexShader =
-      'varying float vSceneryDistance;\n' +
-      shader.vertexShader.replace(
-        '#include <project_vertex>',
-        '#include <project_vertex>\nvSceneryDistance=length(mvPosition.xyz);',
-      );
-    shader.fragmentShader =
-      'varying float vSceneryDistance;uniform float sceneryRange;\n' + shader.fragmentShader;
+    const bounded = Number.isFinite(distance.value);
+    if (bounded) {
+      shader.uniforms.sceneryRange = distance;
+      shader.vertexShader =
+        'varying float vSceneryDistance;\n' +
+        shader.vertexShader.replace(
+          '#include <project_vertex>',
+          '#include <project_vertex>\nvSceneryDistance=length(mvPosition.xyz);',
+        );
+      shader.fragmentShader =
+        'varying float vSceneryDistance;uniform float sceneryRange;\n' + shader.fragmentShader;
+    }
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <fog_fragment>',
       `#include <fog_fragment>
       #ifdef USE_FOG
         float sceneryCoverage = 1.0 - smoothstep(0.6, 1.0, fogFactor);
-        sceneryCoverage *= 1.0-smoothstep(sceneryRange*.6,sceneryRange,vSceneryDistance);
+        ${bounded ? 'sceneryCoverage *= 1.0-smoothstep(sceneryRange*.6,sceneryRange,vSceneryDistance);' : ''}
         // A bounded threshold avoids lingering pixels when coverage reaches zero.
         float sceneryThreshold = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
         if (sceneryCoverage <= sceneryThreshold) discard;
       #endif`,
     );
   };
-  material.customProgramCacheKey = () => `${key}:scenery-fog-v2`;
+  material.customProgramCacheKey = () =>
+    `${key}:scenery-fog-v3${range === undefined ? '' : ':bounded'}`;
 }
