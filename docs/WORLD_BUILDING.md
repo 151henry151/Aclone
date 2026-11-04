@@ -125,7 +125,7 @@ examples, cooldowns, limits and failure behavior.
 
 **Transfer → Download world design** exports settings, terrain, zones, custom
 models, placed objects, behavior rules, scripts, building layouts/appearances,
-prices/wages/recipes, civilization tier and vehicle tuning. **Create world from
+prices/wages/recipes, civilization tier and vehicle/trailer tuning. **Create world from
 design** validates the file and creates a separate world; it cannot overwrite
 occupied worlds. Players, accounts, chat, stock, investment, inventories, match
 progress and script variables are excluded. Imported businesses belong to the
@@ -402,6 +402,17 @@ Upload original GLB/OBJ assets and PNG/JPEG artwork in **Assets**, then save nam
 **Cockpit and instruments** sets the driver's eye position, optional dashboard artwork and live speed, fuel, heading, altitude, pitch and condition readouts. **Tyres and tracks** sets front/rear track spacing, tyre widths and wheelbase independently, plus optional tread artwork. At most four distinct uploaded tread textures are used in one world. **Lighting** sets the main beam's power/range and up to twelve coloured lamp lenses, with steady or blinking operation and headlight/cabin/deck switches. Additional lenses are emissive; they do not each create an expensive shadow-casting light.
 
 Save and test driving, docking, fuel consumption, cargo limits and camera placement before inviting players. The server rejects invalid combinations and edits that would strand occupants or shrink loaded storage. **Restore built-in settings** returns that slot to its original configuration. World designs preserve these definitions; use a media bundle to transfer uploaded models and artwork between servers.
+
+### Fuel tanker tuning
+
+In **F10 → Vehicles → Fuel tanker trailer**, set the purchase price in denarii
+and capacity in weight units. Defaults are 5,750d (57.5s) and 700 weight, from the
+trailer catalogue. Price accepts 0–1,000,000d in hundredths; capacity accepts whole
+values from 1 to 100,000. A reduction below an existing tanker's load is refused:
+unload first. These settings affect garage purchases, load checks, cargo panels
+and load-dependent handling, and survive world saves and design export/import.
+They do not alter the Dales water/milk tanker. Fuel-to-tank conversion continues
+to use the world's Fuel item definition (8 tank units per Fuel by default).
 
 ## Livestock pastures
 

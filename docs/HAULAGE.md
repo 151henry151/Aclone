@@ -23,7 +23,7 @@ Since 0.112.1, docking measures arrival from the vessel's oriented hull, allowin
 
 Buy fuel cans and drive the motorboat to your stranded vessel. Reboarding appears only when close enough for transfer. Reboard, use the carried fuel, then move your larger boat a hull length ahead of the motorboat and stop. **Attach motorboat tender** secures it astern. Tow both back; bring the tender itself into the landing approach, then secure it. A boathouse stores it inside; a fishing pier leaves it afloat at the berth. The motorboat keeps its own tank contents. Cargo moves with you when reboarding, subject to hold capacity. An offshore tender cannot be summoned to shore through the vehicle menu.
 
-## Seven specialist trailers
+## Eight specialist trailers
 
 Buy a trailer at an ordinary tractor garage with a tractor and clear dry space behind it. Use **Inventory → Your trailers**, Activities, or the nearby building window to load, unload, hitch and unhitch. Reverse the tractor hitch to the parked drawbar to reconnect. Trailers remain where parked; ownership and cargo survive reconnects and restarts. Buildings and terrain obstruct the whole trailer, and sharp reversing can jackknife it. Loaded trailers slow the tractor and increase fuel burn. Unhitch before changing vehicles.
 
@@ -32,6 +32,7 @@ Buy a trailer at an ordinary tractor garage with a tractor and clear dry space b
 - **Quarry tipping trailer — 42s.** 4.6 × 2.45 m deep steel body, reinforced sides, tipping ram and visible aggregate heap; 1,000 weight of stone, gravel, sand, ore or topsoil.
 - **Forester log wagon — 60s.** 5.2 × 2.45 m bolsters, stakes, headboard and restrained logs; 900 weight of logs or sawn wood.
 - **Dales liquid tanker — 55s.** 4.7 × 2.35 m tank assembly with bands, access ladder, manhole and outlet valve; 700 water or milk. Empty it before changing liquids.
+- **Dales fuel tanker — 57.5s.** The same 4.7 × 2.35 m tank/chassis with amber paint, flammable-liquid placards and a rear hose reel/nozzle; 700 weight of Fuel only. Water and milk still belong in the liquid tanker. At default item settings, 700 Fuel supplies 5,600 tank units: one 3,200-unit trawler refill plus 2,400 spare. Load at a refinery through **Buy into trailer**, then unload into your own inventory as needed. World owners can tune purchase price and capacity in **F10 → Vehicles → Fuel tanker trailer**; the garage and cargo panel show the effective values.
 - **Parish box trailer — 90s.** 4.4 × 2.35 m covered body, ribbed panels and locking rear doors; 400 weight of mixed dry goods. No livestock, loose liquids or seafood.
 - **Harbour chilled fish trailer — 65s.** 4.8 × 2.4 m insulated seafood body, refrigeration unit and drainage fittings; 800 weight of ordinary and large fish, cod, halibut or tuna. Refrigeration is the model's cargo specialization, not a new general spoilage or fuel system.
 

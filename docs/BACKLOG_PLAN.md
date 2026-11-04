@@ -647,6 +647,8 @@ Prettier ran on every changed path, and `git diff --check` is clean.
 
 ### Natural gathering grounds without abandoned tools
 
+Done: committed and pushed as `b17b036` after the checks below.
+
 Completion criteria, before production changes:
 
 - Default geometry for all four materials contains no wheelbarrow, shovel,
@@ -726,3 +728,80 @@ status file before committing. TypeScript, formatting and diff checks are clean.
 Confirmation: all 1,341 tests pass again (189 seconds), and both the command and
 `/tmp/aclone-natural-full-confirm.status` report exit 0. The slice meets its
 completion criteria; no gameplay gathering, business models or map icons changed.
+
+### Fuel tanker trailer with roadside fuel sales
+
+Completion criteria, before production changes (two sequential slices):
+
+1. **Fuel-only rig, model and tuning.** Add an eighth trailer using the Dales
+   tank/chassis assembly, with a distinct tank colour, hazard placards and rear
+   hose/nozzle. Keep the Dales water/milk acceptance unchanged. Default price
+   57.5s and capacity 700 weight, held once in the trailer catalogue and adjustable
+   through per-world trailer tuning in F10 Vehicles. Validate whole price
+   0–100,000,000 internal units and capacity 1–100,000; refuse reducing capacity
+   below any existing load. Missing tuning uses catalogue defaults. Preserve
+   tuning in saves/designs and show effective values in purchase/cargo panels.
+   Test garage purchase, fuel-only acceptance, refinery-to-trailer loading, owner
+   inventory transfers, loaded drag/fuel penalties, death parking/cargo policy,
+   restart and an empty/full model in the browser. Default 700 Fuel supplies
+   5,600 tank units using the existing per-world Fuel catalogue value of 8: one
+   3,200-unit trawler plus 2,400 spare, or bounded smaller-vessel refills. Do not
+   introduce another hard-coded Fuel conversion. Run red unit tests first.
+2. **Roadside service.** Persist an owner-set whole-unit sell price; zero means
+   closed to other buyers, while owner pumping/transfers remain free. Permit
+   attached and parked service only outside, stationary, within the shared
+   refuelling range (default 15 m), with valid vehicle/height/activity checks.
+   Buy Fuel into inventory or pump directly, consuming/charging whole Fuel and
+   capping the vehicle tank without a partial-item refund. Assert exact stock,
+   buyer cash, online-owner cash/offline-owner bank, town tax and ledger entries;
+   refuse insufficient cash/cargo, empty/full tank, closed sales, excess quantity,
+   moving/out-of-range/airborne users, missing owners and repeated invalid actions
+   without mutations. Nearby boats must be alongside the land-based trailer.
+   Set defaults: roadside sales on, offline sales on, transaction limit 10,000,
+   optional shop-relative ceiling 0 (off), resident purchasing on with a separate
+   reasonable-price factor 1.25. NPCs may buy only when no usable shop is within
+   normal trading reach; never spend their protected needs reserve. Put these
+   defaults/limits in the world rules and cover creation, editor, summary,
+   persistence and portable designs. Use the existing per-world Fuel catalogue
+   conversion for pumping and economics.
+
+For roadside export acceptance, extend the unoccupied-world design import with
+parked fuel-tanker placements, load and sell price only; exclude attached rigs
+and private source-owner IDs, and assign imported placements to the new world's
+owner as with imported businesses. Validate IDs, positions, price, fuel-only
+load and tuned capacity before accepting the design. Ordinary world saves retain
+actual ownership. Do not change export behavior for the seven existing trailers.
+
+Browser steps: buy the new kind at the garage, inspect empty/full rig and its
+hazard/hose details, load from a refinery, transfer inventory fuel, then park.
+Use a second local player to purchase inventory fuel and refuel a nearly full
+vehicle; inspect owner price control, refusal/empty states and offline service.
+Edit tuning/rules in F10 and verify effective panels and transactions. Test NPC
+fair-price versus overpriced/no-shop cases through its normal decision path.
+
+Each slice requires its red-to-green tests, affected browser flows, full
+`npm test`, clean TypeScript, explicit-path Prettier and diff checks. Update
+`docs/HAULAGE.md`, player/world-builder guidance, README and imperative Unreleased
+changelog. The whole item remains pending until both slices meet these criteria.
+
+Fuel rig red evidence: all three new unit tests failed for the missing fuel
+catalogue/action; the browser model check failed for the absent rear hose.
+The fixture initially used vehicle slot 3 instead of the shipped trawler slot 30
+and omitted the existing 3% bulk discount at 500 units; correct those fixture
+expectations without changing trading behavior. Ten fuel/existing-haulage unit
+tests now pass, including tuned-capacity refusal without mutation.
+
+Browser evidence: both `tests/browser/fuel-trailer.spec.ts` flows pass on hardware
+WebGL (25 seconds). Inspect the empty/full amber tank, hazard diamond, ladder,
+valve, hose reel and nozzle, and unchanged silver liquid tank; inspect tuned
+60s/800-weight garage purchase, full refinery load, own inventory unload/parking,
+and refusal to reduce capacity below the parked load. No browser page errors.
+An additional red test caught partial tuning clearing an untouched field; preserve
+omitted values and confirm all 11 focused haulage tests pass. TypeScript is clean.
+The first full-suite process ended early with 143 and no assertion failure;
+repeat the full suite and require a recorded exit 0 before committing.
+
+Confirmation: full `npm test` passes all 1,345 tests in 191 seconds, with command
+and `/tmp/aclone-fuel-full-confirm.status` both reporting exit 0. TypeScript,
+Prettier and diff checks are clean. The fuel-only rig/model/tuning slice meets
+its criteria; roadside sales and parked-tanker design placements remain next.

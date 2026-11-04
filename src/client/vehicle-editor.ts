@@ -1,3 +1,4 @@
+import { trailerDef } from '../shared/trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import {
   vehicleDef,
@@ -177,4 +178,9 @@ export function vehicleForm(form: HTMLFormElement) {
     replace: true,
     tuning: vehicleTuningSchema.parse(values),
   };
+}
+
+export function fuelTrailerEditor(w: World) {
+  const d = trailerDef(w, 'fuel');
+  return `<form data-action="trailerTuning"><h3>Fuel tanker trailer</h3><p>Price and capacity apply throughout this world. Unload existing tankers before reducing capacity below their load.</p><input type="hidden" name="kind" value="fuel"><label>Price in denarii<input type="number" name="priceDenarii" min="0" max="1000000" step="0.01" value="${d.price / 100}" required></label><label>Fuel capacity (weight)<input type="number" name="capacity" min="1" max="100000" step="1" value="${d.capacity}" required></label><button>Save fuel tanker configuration</button></form>`;
 }

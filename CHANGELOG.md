@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Add a fuel-only tanker with a shared Dales tank/chassis, distinct paint, hazard placards and rear hose; expose per-world price/capacity tuning in the garage, cargo panel and portable designs while retaining ordinary trade, load and death rules.
 - Record the shipped-feature audit, ordered backlog and test-first completion criteria in the backlog implementation plan.
 
 ### Fixed

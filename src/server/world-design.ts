@@ -1,3 +1,4 @@
+import { trailerTuningSchema } from '../shared/trailers';
 import { northernIslandSchema } from './northern-island-schema';
 import { maxCoordinate } from '../shared/world-limits';
 import {
@@ -209,6 +210,7 @@ const designSchema = z.object({
     )
     .max(500),
   tier: z.number().int().min(0).max(10).default(0),
+  trailerTuning: trailerTuningSchema.default({}),
   vehicleTuning: z.record(vehicleSlotSchema, vehicleTuningSchema).default({}),
   creator: creatorSchema,
   script: z.string().max(16384).default(''),
@@ -254,6 +256,7 @@ export function exportDesign(w: World, includeMedia = false) {
     version: 1,
     tier: w.tier,
     vehicleTuning,
+    trailerTuning: structuredClone(w.trailerTuning ?? {}),
     settings: w.settings,
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
@@ -364,6 +367,7 @@ export function applyDesign(w: World, input: unknown) {
   w.zones = d.zones;
   w.tier = d.tier;
   w.vehicleTuning = d.vehicleTuning;
+  w.trailerTuning = d.trailerTuning;
   w.buildings = d.buildings.map((b) =>
     (() => {
       if (b.architecture && !buildingArchitecture(b.kind, b.architecture))

@@ -483,7 +483,7 @@ Distant land has a lightweight silhouette beyond the detailed scenery radius. As
 
 ## Haulage and rescue
 
-Buy seven specialist trailers at the tractor garage. Use **Inventory → Your trailers** to load, unload, park and reconnect them; nearby business windows support building-stock transfers and shop trades directly into the trailer. Different bodies accept different goods. Reverse to the drawbar to hitch, and unhitch before changing vehicle. Loads slow travel and use more fuel.
+Buy eight specialist trailers at the tractor garage. Use **Inventory → Your trailers** to load, unload, park and reconnect them; nearby business windows support building-stock transfers and shop trades directly into the trailer. Different bodies accept different goods. Reverse to the drawbar to hitch, and unhitch before changing vehicle. Loads slow travel and use more fuel. The amber Dales fuel tanker carries only Fuel (700 weight for 57.5s by default); buy directly into it at a refinery or other fuel shop, then unload Fuel into your inventory. The silver Dales liquid tanker continues to carry water or milk only.
 
 The 24s outboard motorboat carries 50 weight and can be rowed after running out of fuel. The canal boat now costs 60s. A 140s tug can rescue another captain's boat for an agreed fee, or tow its owner's stranded boat home. **Activities → Towing** handles offers, acceptance, hookup and dock delivery. Fuel deliveries in a motorboat can end by towing it home behind your larger boat as a tender. See [the full haulage guide](HAULAGE.md) for controls and cargo restrictions.
 

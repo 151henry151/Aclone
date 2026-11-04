@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { cliffBlocks } from './coastal-bluffs';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action, Stock } from './types';
@@ -12,6 +13,7 @@ import { landscapeBlocks } from './landscape';
 import { stockWeight } from './fishing-expedition';
 import { requireHerdRoom, canCarry } from './simulation';
 import { log } from './simulation';
+const tankAssembly = { length: 4.7, width: 2.35, axles: 2 } as const;
 export const trailerDefs = {
   hay: {
     name: 'Harvest hay wagon',
@@ -54,14 +56,20 @@ export const trailerDefs = {
     description: 'Open bolsters and stakes for logs and sawn wood.',
   },
   tanker: {
+    ...tankAssembly,
     name: 'Dales liquid tanker',
-    length: 4.7,
-    width: 2.35,
     capacity: 700,
     price: 550000,
     color: '#a7b9b8',
-    axles: 2,
     description: 'Sealed tank for water or milk. Empty it before changing liquids.',
+  },
+  fuel: {
+    ...tankAssembly,
+    name: 'Dales fuel tanker',
+    capacity: 700,
+    price: 575000,
+    color: '#ce8635',
+    description: 'Sealed fuel-only tank with rear dispensing hose. No water or milk.',
   },
   box: {
     name: 'Parish box trailer',
@@ -85,6 +93,32 @@ export const trailerDefs = {
   },
 } as const;
 export type TrailerKind = keyof typeof trailerDefs;
+export const fuelTrailerTuningSchema = z
+  .object({
+    price: z.number().int().min(0).max(100000000).optional(),
+    capacity: z.number().int().min(1).max(100000).optional(),
+  })
+  .strict();
+export const trailerTuningSchema = z.object({ fuel: fuelTrailerTuningSchema.optional() }).strict();
+export type TrailerTuning = z.infer<typeof trailerTuningSchema>;
+export function trailerDef(w: Pick<World, 'trailerTuning'>, kind: TrailerKind) {
+  return { ...trailerDefs[kind], ...(kind === 'fuel' ? w.trailerTuning?.fuel : {}) };
+}
+export function tuneTrailer(w: World, input: unknown) {
+  const tuning = fuelTrailerTuningSchema.parse(input),
+    next = {
+      ...w.trailerTuning?.fuel,
+      ...Object.fromEntries(Object.entries(tuning).filter(([, value]) => value !== undefined)),
+    },
+    capacity = next.capacity ?? trailerDefs.fuel.capacity;
+  need(
+    Object.values(w.trailers ?? {}).every(
+      (t) => t.kind !== 'fuel' || stockWeight(w, t.cargo) <= capacity,
+    ),
+    'Unload fuel tankers before reducing their capacity',
+  );
+  w.trailerTuning = { ...w.trailerTuning, fuel: next };
+}
 export interface Trailer {
   id: string;
   owner: string;
@@ -103,7 +137,7 @@ function need(v: unknown, message: string): asserts v {
 const animals: Record<string, number> = { cows: 1, sheep: 0.25, pigs: 0.35, chickens: 0.05 };
 const seafood = ['fish', 'largeFish', 'cod', 'halibut', 'tuna'];
 export function trailerAccepts(w: World, t: Trailer, item: string, n: number) {
-  const def = trailerDefs[t.kind],
+  const def = trailerDef(w, t.kind),
     items = worldItems(w),
     cargo = { ...t.cargo, [item]: (t.cargo[item] ?? 0) + n };
   if (!items[item] || stockWeight(w, cargo) > def.capacity) return false;
@@ -117,6 +151,7 @@ export function trailerAccepts(w: World, t: Trailer, item: string, n: number) {
       ['water', 'milk'].includes(item) &&
       Object.entries(t.cargo).every(([id, q]) => !q || id === item)
     );
+  if (t.kind === 'fuel') return item === 'fuel';
   if (t.kind === 'fish') return seafood.includes(item);
   if (t.kind === 'logs') return ['logs', 'wood'].includes(item);
   if (t.kind === 'dump') return ['stone', 'gravel', 'sand', 'ore', 'topsoil'].includes(item);
@@ -129,7 +164,7 @@ export function trailerAccepts(w: World, t: Trailer, item: string, n: number) {
 }
 export function trailerLoad(w: World, p: Player) {
   const t = attachedTrailer(w, p);
-  return t ? stockWeight(w, p.trailerCargo?.[t.id] ?? t.cargo) / trailerDefs[t.kind].capacity : 0;
+  return t ? stockWeight(w, p.trailerCargo?.[t.id] ?? t.cargo) / trailerDef(w, t.kind).capacity : 0;
 }
 export function trailerFactors(w: World, p: Player) {
   return attachedTrailer(w, p)
@@ -203,7 +238,7 @@ export function trailerAction(w: World, p: Player, a: Action) {
   if (a.operation === 'buy') {
     const kind = String(a.kind) as TrailerKind;
     need(Object.hasOwn(trailerDefs, kind), 'Unknown trailer');
-    const def = trailerDefs[kind];
+    const def = trailerDef(w, kind);
     const garage = w.buildings.find((b) => b.id === a.building);
     need(
       garage &&

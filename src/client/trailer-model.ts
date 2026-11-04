@@ -132,17 +132,18 @@ export function createTrailer(kind: TrailerKind, cargo: Stock = {}) {
     for (const z of [-l * 0.3, l * 0.3]) {
       rod([-w * 0.45, 2.55, z], [w * 0.45, 2.55, z], 0.025, mat('#b59554'));
     }
-  } else if (kind === 'tanker') {
+  } else if (kind === 'tanker' || kind === 'fuel') {
+    const tankMaterial = kind === 'fuel' ? paint : alloy;
     for (const z of [-1.1, 1.1]) box(w * 0.7, 0.25, 0.35, steel, 0, 1.1, z);
-    const tank = add(
+    add(
       new T.CylinderGeometry(0.96, 0.96, l - 0.6, 32).rotateX(Math.PI / 2),
-      alloy,
+      tankMaterial,
       0,
       2,
       0,
     );
     for (const z of [-(l - 0.6) / 2, (l - 0.6) / 2])
-      add(new T.SphereGeometry(0.96, 24, 12).scale(1, 1, 0.25), alloy, 0, 2, z);
+      add(new T.SphereGeometry(0.96, 24, 12).scale(1, 1, 0.25), tankMaterial, 0, 2, z);
     for (const z of [-l * 0.3, l * 0.3])
       add(new T.TorusGeometry(0.97, 0.035, 6, 32), steel, 0, 2, z);
     add(new T.CylinderGeometry(0.32, 0.32, 0.14, 16), steel, 0, 3.01, 0.1);
@@ -151,6 +152,55 @@ export function createTrailer(kind: TrailerKind, cargo: Stock = {}) {
     add(new T.TorusGeometry(0.16, 0.022, 6, 16), red, 0.5, 1.7, -l / 2);
     for (const x of [-0.24, 0.24]) rod([x, 1.1, rear], [x, 3, rear], 0.025, alloy);
     for (let y = 1.15; y < 3; y += 0.26) rod([-0.24, y, rear], [0.24, y, rear], 0.022, alloy);
+    if (kind === 'fuel') {
+      // Flammable-liquid diamonds on both sides; white border and a dark flame.
+      const white = mat('#f4ebd8'),
+        hazard = mat('#bd3428');
+      for (const side of [-1, 1]) {
+        const placard = new T.Group();
+        placard.position.set(side * 0.99, 2.1, 0.2);
+        placard.rotation.y = (side * Math.PI) / 2;
+        fixed.add(placard);
+        box(0.58, 0.58, 0.025, white, 0, 0, 0, placard).rotation.z = Math.PI / 4;
+        box(0.51, 0.51, 0.027, hazard, 0, 0, 0.015, placard).rotation.z = Math.PI / 4;
+        const flame = new T.Shape();
+        flame.moveTo(-0.11, -0.1);
+        flame.lineTo(-0.15, 0.02);
+        flame.lineTo(-0.07, 0.13);
+        flame.lineTo(-0.04, 0.04);
+        flame.lineTo(0.04, 0.24);
+        flame.lineTo(0.09, 0.1);
+        flame.lineTo(0.08, 0.03);
+        flame.lineTo(0.14, 0.1);
+        flame.lineTo(0.15, -0.03);
+        flame.lineTo(0.09, -0.1);
+        flame.closePath();
+        add(new T.ShapeGeometry(flame), steel, 0, 0, 0.033, placard);
+        box(0.25, 0.035, 0.015, steel, 0, -0.15, 0.035, placard);
+      }
+      // Rear reel sits beside the retained access ladder, with a clipped nozzle.
+      for (const z of [rear - 0.12, rear - 0.37])
+        add(
+          new T.CylinderGeometry(0.36, 0.36, 0.045, 20).rotateX(Math.PI / 2),
+          alloy,
+          -0.65,
+          1.85,
+          z,
+        );
+      for (const z of [rear - 0.18, rear - 0.25, rear - 0.32])
+        add(new T.TorusGeometry(0.26, 0.055, 8, 24), rubber, -0.65, 1.85, z);
+      rod([-0.65, 1.85, rear], [-0.65, 1.85, rear - 0.43], 0.065, steel);
+      const hose = new T.CatmullRomCurve3([
+        new T.Vector3(-0.88, 1.7, rear - 0.3),
+        new T.Vector3(-0.75, 1.2, rear - 0.32),
+        new T.Vector3(0.35, 1.13, rear - 0.32),
+        new T.Vector3(0.72, 1.65, rear - 0.28),
+      ]);
+      add(new T.TubeGeometry(hose, 20, 0.04, 8, false), rubber);
+      rod([0.72, 1.65, rear - 0.28], [0.72, 1.95, rear - 0.28], 0.06, steel);
+      rod([0.72, 1.95, rear - 0.28], [0.54, 2.07, rear - 0.28], 0.035, alloy);
+      box(0.12, 0.24, 0.08, paint, 0.8, 1.81, rear - 0.28);
+    }
   } else {
     box(w - 0.2, 0.12, l, kind === 'hay' ? wood : steel, 0, 1.1, 0);
     if (kind === 'hay') {

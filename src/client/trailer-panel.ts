@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../shared/types';
-import { trailerDefs, trailerAccepts } from '../shared/trailers';
+import { trailerDefs, trailerDef, trailerAccepts, type TrailerKind } from '../shared/trailers';
 import { worldItems } from '../shared/world-catalogue';
 import { stockWeight } from '../shared/fishing-expedition';
 import { money } from '../shared/simulation';
@@ -16,8 +16,10 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
   if (b?.kind === 'garage' && !b.aircraftHangar) {
     html +=
       '<h3>Specialist trailers</h3><p>Bring your tractor with clear space behind it. Trailers stay where you unhitch them, with their cargo.</p><div class="directory">';
-    for (const [kind, d] of Object.entries(trailerDefs))
+    for (const kind of Object.keys(trailerDefs) as TrailerKind[]) {
+      const d = trailerDef(w, kind);
       html += `<section><h4>${d.name} · ${money(d.price, w.settings.denariiPerSheckle)}</h4><p>${d.description} ${d.capacity} weight capacity.</p><form data-action="trailer">${hidden('operation', 'buy')}${hidden('kind', kind)}${hidden('building', b.id)}<button>Buy &amp; hitch</button></form></section>`;
+    }
     html += '</div>';
   }
   if (!owned.length) return html;
@@ -29,7 +31,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
         ...publicTrailer,
         cargo: p.trailerCargo?.[publicTrailer.id] ?? publicTrailer.cargo,
       },
-      d = trailerDefs[t.kind],
+      d = trailerDef(w, t.kind),
       distance = Math.hypot(t.x - p.x, t.z - p.z);
     html += `<section class="notice"><h4>${d.name}</h4><p>${Math.round(distance)}m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
     if (distance > d.length / 2 + 9) {

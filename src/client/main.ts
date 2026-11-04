@@ -3306,6 +3306,7 @@ app.addEventListener('submit', async (e) => {
           'hours',
           'rate',
           'quantity',
+          'capacity',
           'amount',
           'tax',
           'x',

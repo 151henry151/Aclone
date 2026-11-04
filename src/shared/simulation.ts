@@ -7,6 +7,7 @@ import { towingTender, tenderAction, moveTender } from './boat-tender';
 import { trailerAccepts, trailerBlocks } from './trailers';
 import {
   trailerAction,
+  tuneTrailer,
   attachedTrailer,
   moveTrailer,
   trailerFactors,
@@ -938,6 +939,13 @@ export function act(w: World, id: string, a: Action): string {
       const slot = num(a.slot, 0, vehicles.length - 1, true);
       validateVehicleTuning(w, slot, {}, true);
       if (w.vehicleTuning) delete w.vehicleTuning[slot];
+      w.revision++;
+      break;
+    }
+    case 'trailerTuning': {
+      owner(p);
+      requireThat(a.kind === 'fuel', 'Choose the fuel tanker');
+      tuneTrailer(w, { price: a.price, capacity: a.capacity });
       w.revision++;
       break;
     }

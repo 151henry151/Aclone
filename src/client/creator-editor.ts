@@ -3,7 +3,7 @@ import {
   gatheringSceneryFields,
   gatheringSceneryModes,
 } from '../shared/gathering-scenery';
-import { vehicleEditor } from './vehicle-editor';
+import { vehicleEditor, fuelTrailerEditor } from './vehicle-editor';
 import { walkingRules, walkingRuleFields } from '../shared/walking-rules';
 import { vehicleDef } from '../shared/vehicle-config';
 import { flightRuleFields, flightRules, type FlightRuleKey } from '../shared/flight-rules';
@@ -470,7 +470,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
       recipe?.skill,
     )}<details open><summary>Inputs</summary>${rows('inputs')}</details><details open><summary>Outputs</summary>${rows('outputs')}</details><button>Save production recipe</button></form>${b ? diagnosticsHtml(w, b) : ''}`;
   }
-  if (tab === 'Vehicles') return vehicleEditor(w, vehicleSlot);
+  if (tab === 'Vehicles') return vehicleEditor(w, vehicleSlot) + fuelTrailerEditor(w);
   if (tab === 'Transfer')
     return `<p>Export a reusable world design without players, accounts, cash or inventories. Imported designs create a new world; they never overwrite an occupied world. A media bundle carries up to 8 MiB of images, models and audio, retaining source/author/licence metadata. Only redistribute media you have permission to share; design-only exports use placeholder visuals.</p>${button('Download world design', 'export')}${button('Download design + media bundle', 'exportBundle')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
   return '';
