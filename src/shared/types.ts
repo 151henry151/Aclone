@@ -1,3 +1,4 @@
+import type { VehicleRunningRules } from './vehicle-running-rules';
 import type { FishingRules } from './fishing-rules';
 import type { FarmYieldRules } from './farm-yield-rules';
 import type { GatheringRules, GatheringImplementRules } from './gathering-rules';
@@ -325,6 +326,7 @@ export interface Settings
     Partial<GatheringRules>,
     Partial<FarmYieldRules>,
     Partial<FishingRules>,
+    Partial<VehicleRunningRules>,
     Partial<GatheringImplementRules>,
     Partial<NpcJourneyRules>,
     Partial<NpcBusinessLoadRules>,

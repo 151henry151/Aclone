@@ -1383,3 +1383,27 @@ Lowering net capacity retains fish and refuses deployment if the net or its pend
 next fish cannot fit; hauling remains available. Raising the capacity can resume a
 formerly full net. Rules persist in saves/designs, summaries and observations with
 shared JSON legacy defaults. They grant no fish, supplies or free towing time.
+
+## Vehicle running costs (Unreleased)
+
+F10 → Rules → **Vehicle running costs** controls maintenance wear and trailer
+penalties. `vehicleWearPerMetre` defaults to 0.0002 condition points per metre
+(0.2/km); range 0–1, with zero disabling distance wear. The existing
+`vehicleMaintenance` switch gates both wear and condition's speed/fuel effects.
+Mileage still records actual powered travel; parked/offline vehicles, walking
+and minigames do not wear. Edits retain condition and mileage. Garage service
+shows the local rate, condition and recorded distance.
+
+Trailer speed factor is `1 / (trailerSpeedBase + load × trailerLoadSpeedPenalty)`;
+fuel factor is `trailerFuelBase + load × trailerLoadFuelPenalty`. Load is cargo
+weight divided by trailer capacity, including private cargo in client prediction.
+Both bases default to 1.12 (range 1–10); load coefficients default to 0.33 for
+speed and 0.3 for fuel (range 0–10). Zero coefficients remove the load contribution;
+base 1 and coefficient 0 remove that penalty. No trailer always gives factors 1.
+These multipliers combine with existing vehicle, terrain, load and condition
+effects. Live edits preserve cargo and fuel. Missing fields use shipped defaults;
+saves, portable designs, summaries and resident observations retain the rules.
+
+Refuelling distance and tank units per Fuel already belong to **Roadside fuel**
+(default 15 m and 8 units). Keep those existing rules for tanker sales, roadside
+help and inventory refuelling.

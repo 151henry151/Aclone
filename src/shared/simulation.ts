@@ -1,3 +1,4 @@
+import { vehicleRunningRuleFields } from './vehicle-running-rules';
 import { fishingRuleFields } from './fishing-rules';
 import { farmYieldRuleFields } from './farm-yield-rules';
 import {
@@ -1993,6 +1994,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(gatheringRuleFields, key) ||
             Object.hasOwn(farmYieldRuleFields, key) ||
             Object.hasOwn(fishingRuleFields, key) ||
+            Object.hasOwn(vehicleRunningRuleFields, key) ||
             Object.hasOwn(gatheringImplementFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
@@ -2002,6 +2004,8 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const vehicleRunningField =
+          vehicleRunningRuleFields[key as keyof typeof vehicleRunningRuleFields];
         const fishingField = fishingRuleFields[key as keyof typeof fishingRuleFields];
         const farmYieldField = farmYieldRuleFields[key as keyof typeof farmYieldRuleFields];
         const gatheringRateField = gatheringRuleFields[key as keyof typeof gatheringRuleFields];
@@ -2068,6 +2072,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
         if (fishingField) num(v, fishingField.min, fishingField.max, fishingField.step === 1);
         if (farmYieldField)
           num(v, farmYieldField.min, farmYieldField.max, farmYieldField.step === 1);

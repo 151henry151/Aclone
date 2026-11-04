@@ -395,5 +395,10 @@
   "trawlSpeed": 2.4,
   "trawlNetCapacity": 640,
   "trawlShoalMeanSeconds": 360,
-  "trawlFuelPerMinute": 8.5
+  "trawlFuelPerMinute": 8.5,
+  "vehicleWearPerMetre": 0.0002,
+  "trailerSpeedBase": 1.12,
+  "trailerFuelBase": 1.12,
+  "trailerLoadSpeedPenalty": 0.33,
+  "trailerLoadFuelPenalty": 0.3
 }

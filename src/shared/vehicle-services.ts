@@ -1,3 +1,4 @@
+import { vehicleRunningRules } from './vehicle-running-rules';
 import defaults from '../../data/settings.json';
 import { economyRules } from './economy-rules';
 import { vehicleDef } from './vehicle-config';
@@ -31,7 +32,13 @@ export function recordTravel(w: World, p: Player, metres: number) {
     [p.vehicle]: {
       ...old,
       metres: old.metres + metres,
-      condition: Math.max(0, old.condition - (w.settings.vehicleMaintenance ? metres * 0.0002 : 0)),
+      condition: Math.max(
+        0,
+        old.condition -
+          (w.settings.vehicleMaintenance
+            ? metres * vehicleRunningRules(w.settings).vehicleWearPerMetre
+            : 0),
+      ),
     },
   };
 }

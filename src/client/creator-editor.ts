@@ -1,3 +1,4 @@
+import { vehicleRunningRules, vehicleRunningRuleFields } from '../shared/vehicle-running-rules';
 import { fishingRules, fishingRuleFields } from '../shared/fishing-rules';
 import { farmYieldRules, farmYieldRuleFields } from '../shared/farm-yield-rules';
 import {
@@ -126,6 +127,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(gatheringRuleFields),
     ...Object.keys(farmYieldRuleFields),
     ...Object.keys(fishingRuleFields),
+    ...Object.keys(vehicleRunningRuleFields),
     ...Object.keys(gatheringImplementFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
@@ -202,6 +204,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const running = vehicleRunningRules(settings);
+  const runningFields = `<fieldset class="boat-death-settings"><legend>Vehicle running costs</legend>${Object.entries(
+    vehicleRunningRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        running[key as keyof typeof running],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Maintenance must be enabled for distance wear. Zero wear preserves condition while mileage still accumulates. Parked vehicles and minigames do not wear. Edits preserve condition, mileage and cargo.</p><p>Trailer speed factor = 1 / (base + load × speed coefficient); fuel factor = base + load × fuel coefficient. Load is cargo weight / trailer capacity. With no trailer both factors are 1; zero load coefficients remove only the load contribution.</p></fieldset>`;
   const fishing = fishingRules(settings);
   const fishingFields = `<fieldset class="boat-death-settings"><legend>Fishing rules</legend>${Object.entries(
     fishingRuleFields,
@@ -584,6 +602,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     farmYieldFields +
     fishingFields +
+    runningFields +
     implementFields +
     journeyFields +
     businessLoadFields +

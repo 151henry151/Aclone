@@ -3929,3 +3929,55 @@ shorter slug instructions. Extended browser passes (31.4 s); inspect all six
 screenshots covering rules, effective vessel defaults, deployment, empty hauling,
 full-net refusal and invalid capacity. TypeScript, changed-file Prettier and diff
 checks pass. No repeat of the long voyage simulation after UI/text-only changes.
+
+**Trawl slice done and pushed:** `3fb5fdee3a22d937312824d8930e9747b53cd9c4`.
+Remote SHA verified. Continue with vehicle/travel rules.
+
+### Vehicle running costs — completion criteria before production
+
+Refuelling audit: matches already configurable behavior. `fuel-rules.ts`,
+`player-aid.ts`, `fuel-sales.ts` and `world-catalogue.ts` share the 15 m range and
+8 tank-units conversion; `fuel-sales.test.ts` covers custom limits, missing-key
+fallback, validation, F10, summaries and save/design round-trips; the existing
+`browser/fuel-sales.spec.ts` edits the range. Leave that shipped implementation.
+
+Expose wear per metre (0.0002, range 0–1), trailer speed/fuel base coefficients
+(each 1.12, range 1–10) and load coefficients (0.33 speed / 0.3 fuel, range 0–10).
+Preserve speed = 1/(speed base + load fraction × speed coefficient) and fuel =
+fuel base + load fraction × fuel coefficient. No trailer remains neutral. Zero
+wear disables distance loss but retains mileage; the maintenance switch still
+gates wear and condition effects. Do not erase condition, mileage, cargo or fuel.
+
+- Add `tests/vehicle-running-rules.test.ts`; confirm missing-rule failures first.
+  Test default/legacy/custom wear, immutable prediction records, walking/minigame
+  exemptions, zero wear and disabled maintenance. Test empty/half/full trailers,
+  no trailer, zero load coefficients, actual speed/fuel integration, live edits
+  preserving cargo and saved state; test invalid patches atomically.
+- Verify creation, F10, summaries, observation and save/design round-trips. Run
+  new tests with vehicle-services, trailers and guide tests; run TypeScript and
+  changed-file Prettier/diff checks. Refuelling code is unchanged: inspect existing
+  tests, without rerunning unrelated sales tests.
+- Browser `tests/browser/vehicle-running-rules.spec.ts`: save/reload custom rules,
+  inspect garage wear help and a real movement's recorded wear, show an unused
+  vehicle's no-journey state and refuse service at full condition, reject invalid
+  negative wear and retain saved values. Inspect screenshots. Update PLAYING,
+  WORLD_BUILDING, README and Unreleased changelog before committing/pushing.
+
+Failing-first running-cost result: all four tests fail on unknown/absent rules.
+Correct the fixture's trailer dictionary and Wood weight (2) first; original
+default/legacy factor assertions then pass up to the missing custom-rule edit.
+
+All 19 running-cost/vehicle-service/trailer tests pass. The guide budget catches
+136 bytes of new rules (request 96,129 bytes). Keep the ceiling and content limits;
+shorten the equivalent help-use instructions while retaining trusted sources,
+lookup sequencing, private-state boundaries, human controls, response limit,
+no incidental purchases/jobs/travel, uncertainty and credential prohibitions.
+Include the maintenance switch alongside the wear rate in observations.
+
+Running-cost validation complete: all 19 new/service/trailer tests pass; all 16
+guide tests pass (1.4 s), retaining the request ceiling and complete guide/memory
+coverage. TypeScript is clean. Browser passes (39.7 s); inspect all four screenshots
+for saved rules, unused full-condition vehicle, real reverse travel reducing the
+displayed condition to 99.8%, and invalid negative wear. The longer drive improves
+visible evidence beyond the initial run's rounded 100.0%. No service charge or
+state mutation occurs at full condition. Changed-file Prettier and diff checks pass.

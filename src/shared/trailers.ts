@@ -1,3 +1,4 @@
+import { vehicleRunningRules } from './vehicle-running-rules';
 import { z } from 'zod';
 import { cliffBlocks } from './coastal-bluffs';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -171,9 +172,13 @@ export function trailerLoad(w: World, p: Player) {
   return t ? stockWeight(w, p.trailerCargo?.[t.id] ?? t.cargo) / trailerDef(w, t.kind).capacity : 0;
 }
 export function trailerFactors(w: World, p: Player) {
-  return attachedTrailer(w, p)
-    ? { speed: 1 / (1.12 + trailerLoad(w, p) * 0.33), fuel: 1.12 + trailerLoad(w, p) * 0.3 }
-    : { speed: 1, fuel: 1 };
+  if (!attachedTrailer(w, p)) return { speed: 1, fuel: 1 };
+  const rules = vehicleRunningRules(w.settings),
+    load = trailerLoad(w, p);
+  return {
+    speed: 1 / (rules.trailerSpeedBase + load * rules.trailerLoadSpeedPenalty),
+    fuel: rules.trailerFuelBase + load * rules.trailerLoadFuelPenalty,
+  };
 }
 export function detachTrailer(w: World, p: Player, loseCargo = false) {
   const t = attachedTrailer(w, p);

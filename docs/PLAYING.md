@@ -296,7 +296,7 @@ lights to illuminate the instruments.
 
 ## Vehicle care and roadside services
 
-Garage **Vehicle service** shows current condition, recorded kilometres and elapsed hours since first recorded use (old vehicles start with no invented history). Ordinary powered travel loses 0.2 condition points per kilometre. Parking, offline time and minigames cause no wear. At zero condition, top speed is 70% and fuel use is 30% higher; you can still reach help. Other damage/armour rules are separate.
+Garage **Vehicle service** shows current condition, recorded kilometres and elapsed hours since first recorded use (old vehicles start with no invented history). Ordinary powered travel loses 0.2 condition points per kilometre by default; F10 Vehicle running costs sets the rate (zero stops distance wear). Parking, offline time and minigames cause no wear. At zero condition, top speed is 70% and fuel use is 30% higher; you can still reach help. Other damage/armour rules are separate.
 
 Bring **Steel** spare parts from a steelworks or shop. By default each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. In unreleased worlds, F10 → Rules → Economy and trade sets the Steel quantity and garage labour fee; both repair methods use the same parts quantity, including zero. The panels quote local terms. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
 
