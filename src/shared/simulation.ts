@@ -2006,6 +2006,7 @@ export function act(w: World, id: string, a: Action): string {
             npcPricingField?.max ??
               npcBusinessField?.max ??
               npcReserveField?.max ??
+              npcHouseholdField?.max ??
               towingField?.max ??
               charterField?.max ??
               creditField?.max ??

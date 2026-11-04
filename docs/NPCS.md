@@ -133,6 +133,8 @@ Forecasts and pantry errands use the world's existing shelter-consumption
 multiplier, including zero. Daily replacement comparisons still cover one real
 day and exclude fuel purchases. See [world rules](WORLD_BUILDING.md#resident-household-forecast-rules-unreleased).
 
+Unreleased pantry budgets expose the 20,000 need allowance, two-item unhoused provision target, 15d protected drink cash and twenty-item shopping batch. Lodging plans add twenty minutes before rounding to booking hours and retain 20d cash by default; both are configurable. Shopping, owned-stock withdrawals and carried deposits honor the world transaction limit. Zero shopping batch stops source errands, while urgent care and carried deposits remain available. See [pantry and lodging budgets](WORLD_BUILDING.md#resident-pantry-and-lodging-budgets-unreleased).
+
 During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household. Both general property choices and queued purchases check for an existing owned cottage or foundation before acquiring another; a stale home reference or a rented room does not hide owned housing. Human property permissions are unchanged.
 
 Unreleased **Resident cash and portable reserves** rules set emergency cash

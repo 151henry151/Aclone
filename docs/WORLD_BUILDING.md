@@ -940,3 +940,18 @@ These forecasts are distinct from emergency care and household reserves. An
 ordinary withdrawal can take no more than needed, transferable surplus after
 investor claims and operating reserves. Changing rules moves no money. Missing
 keys retain defaults, and all fields survive designs and saves.
+
+## Resident pantry and lodging budgets (unreleased)
+
+**F10 → Rules → Resident household budget** includes:
+
+- `npcPantryNeedAllowance`: 20,000, integer 0–1,000,000. Subtract this need allowance when estimating pantry purchases for the planned absence plus the coverage buffer. Zero budgets enough nutrition without that allowance; actual feeding and readiness remain governed by survival rules.
+- `npcUnhousedProvisionItems`: 2, integer 0–100. Without a home, plan this many provisions when the corresponding need is at least 15,000. Zero stops this reserve purchase; urgent care remains separate.
+- `npcProvisionDrinkCashReserve`: 1,500 hundredths (15d), integer 0–100,000,000. Protect this cash when buying food while thirst is at least 15,000. Zero removes that cash protection.
+- `npcProvisionBatchLimit`: 20, integer 0–10,000. Cap each source purchase or owned-stock withdrawal; zero stops these shopping actions. Carried supplies can still be stored. Shopping and deposits also obey the world transaction limit, stock, funds, cargo and storage bounds.
+- `npcLodgingBufferSeconds`: 1,200, integer 0–86,400. Add this padding to the planned absence, then round up to whole booking hours within the existing 1–24 hour lodging range. Zero removes the padding.
+- `npcLodgingCashReserve`: 2,000 hundredths (20d), integer 0–100,000,000. Retain this much cash after a planned room booking. Zero allows spending all available cash on the quoted room.
+
+These are ordinary forecasts and actions, not cash or supply grants. Existing
+room bookings and personal pantry ownership are unchanged. Missing values use
+the defaults; creation, summaries, designs and reloads retain every field.

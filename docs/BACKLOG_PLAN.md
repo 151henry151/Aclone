@@ -2500,3 +2500,56 @@ seconds, with saved controls, forecast 3,800 → 1,300 → 0, unchanged cash, na
 upper-bound refusal and preserved value after reload. Inspect both screenshots;
 no page errors. TypeScript is clean after action narrowing; changed-file Prettier
 and diff checks pass. No full suite is run. Ready to commit and push.
+
+Pushed and verified `a4934f6` on `backlog-implementation`. **Owner withdrawal
+reserve rules are done.**
+
+### Gameplay rules — pantry shopping and lodging budgets
+
+Before production, add six Resident household forecast fields:
+`npcPantryNeedAllowance` 20,000 (integer 0–1,000,000),
+`npcUnhousedProvisionItems` 2 (integer 0–100),
+`npcProvisionDrinkCashReserve` 1,500 hundredths (integer 0–100,000,000),
+`npcProvisionBatchLimit` 20 (integer 0–10,000),
+`npcLodgingBufferSeconds` 1,200 (integer 0–86,400), and
+`npcLodgingCashReserve` 2,000 hundredths (integer 0–100,000,000).
+Preserve current pantry target, homeless two-item purchase, money protected for
+drink when buying food, shopping batch, booking padding and retained cash by
+default and with missing keys. These are budgets; care/consume triggers and
+actual room capacity/booking limits are unchanged. Zero budget components remove
+only that allowance; zero shopping batch suppresses source purchases/withdrawals.
+Carried deposits retain their current quantity logic, bounded by the existing
+transaction limit. Shopping, owned-stock withdrawal and deposits obey that same
+limit, actual funds, supplier stock, storage and carry capacity. Preserve room
+expiry, personal pantry ownership and ordinary conservation.
+
+Write failing `tests/npc-pantry-budget-rules.test.ts`. Assert exact defaults,
+changed pantry quantities, zero unhomed provision count, drink cash protection,
+zero/reduced batches, owned-output withdrawals, carried-deposit transaction caps,
+booking duration/cash boundaries and real paid booking. Validate fields, editor,
+summary, observation, portable designs and save/reload. Run new tests plus
+npc-household, npc-household-rules, npc-planning-rules, npc-habits, npc-housing and
+npc-guide using the npm-test runner; broaden only for a discovered shared risk.
+Browser: save/reopen all six fields, observe pantry quantity change without cash
+or stock grants, zero shopping batch, native range refusal and saved-value reload.
+Inspect screenshots/page errors. Finish clean TypeScript, changed-file Prettier,
+WORLD_BUILDING/NPCS/README and imperative Unreleased before commit/push.
+
+Pantry red: all five new tests fail before production for missing budget fields.
+After implementation, five pass; relevant household flows pass, but adding live
+rules brings the long-memory request to 96,166 bytes against the unchanged 96 KB
+limit. Group the manual topic index by its existing source prefixes once, retaining
+every section slug and title and explicitly documenting `prefix:section` IDs.
+The all-manual-heading test must reconstruct exactly the same complete ID/title
+mapping from grouped keys; retain all selected text, citations and memory. The
+new grouped-prefix assertion fails against the flat index before production.
+This changes only repeated JSON metadata, not topic coverage or lookup behavior.
+
+Pantry gates pass: 44 initially passing relevant checks plus the repaired byte
+budget and new grouped-index assertion (46 unique checks). All 13 guide checks
+pass after the metadata-only change, including exact reconstructed topic mapping.
+Browser passes in 19.6 seconds: six values persist, bread quantity changes 2 → 3,
+zero batch stops shopping, cash/stock remain unchanged, native upper-bound refusal
+protects the saved lodging padding and reload preserves it. Inspect both
+screenshots; no page errors. TypeScript, changed-file Prettier and diff checks are
+clean. No full suite is run. Ready to commit and push.

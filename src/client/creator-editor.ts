@@ -192,7 +192,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Forecasts protect cash for meals, valid shelter and low fuel. Explicit trip horizons take precedence. Carried credit and need allowance change estimates, not actual consumption. Zero fuel threshold removes the fuel reserve; no cash or supplies are granted.</p></fieldset>`;
+    )}<p>Forecasts protect cash for meals, valid shelter and low fuel. Explicit trip horizons take precedence. Carried credit and need allowance change estimates, not actual consumption. Zero fuel threshold removes the fuel reserve; no cash or supplies are granted. Pantry budgets govern ordinary shopping and room booking; zero shopping batch stops source purchases/withdrawals, while carried supplies can still be stored. Transaction, storage, cargo and room limits still apply.</p></fieldset>`;
   const towing = towingRules(settings);
   const towingFields = `<fieldset class="boat-death-settings"><legend>Tug rescue offers</legend>${Object.entries(
     towingRuleFields,

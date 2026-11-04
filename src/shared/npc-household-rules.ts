@@ -1,6 +1,42 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcHouseholdRuleFields = {
+  npcPantryNeedAllowance: {
+    label: 'Pantry forecast need allowance',
+    min: 0,
+    max: 1000000,
+    step: 1,
+  },
+  npcUnhousedProvisionItems: {
+    label: 'Provision target without a home (items)',
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+  npcProvisionDrinkCashReserve: {
+    label: 'Drink cash protected when buying food (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcProvisionBatchLimit: {
+    label: 'Maximum pantry shopping batch (items; 0 stops shopping)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcLodgingBufferSeconds: {
+    label: 'Extra lodging booking time (real seconds)',
+    min: 0,
+    max: 86400,
+    step: 1,
+  },
+  npcLodgingCashReserve: {
+    label: 'Cash retained after a room booking (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
   npcStrategicSeconds: {
     label: 'Strategic household reserve horizon (real seconds)',
     min: 60,

@@ -274,5 +274,11 @@
   "npcLoanProfitBatches": 20,
   "npcOwnerCashFloor": 4000,
   "npcOwnerFuelThreshold": 10,
-  "npcOwnerFuelFallback": 800
+  "npcOwnerFuelFallback": 800,
+  "npcPantryNeedAllowance": 20000,
+  "npcUnhousedProvisionItems": 2,
+  "npcProvisionDrinkCashReserve": 1500,
+  "npcProvisionBatchLimit": 20,
+  "npcLodgingBufferSeconds": 1200,
+  "npcLodgingCashReserve": 2000
 }

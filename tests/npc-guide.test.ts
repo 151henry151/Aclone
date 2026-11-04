@@ -2,11 +2,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gameGuide, searchGuide } from '../src/server/npc/knowledge.ts';
+function topicIndex(guide: ReturnType<typeof gameGuide>) {
+  return Object.fromEntries(
+    Object.entries(guide.topics).flatMap(([prefix, sections]) =>
+      Object.entries(sections).map(([section, title]) => [`${prefix}:${section}`, title]),
+    ),
+  );
+}
 
 test('NPC always knows the controls and retrieves relevant player help without the full manual', () => {
   const guide = gameGuide('How do I reset my password by email?');
   assert.match(guide.controls, /F4/);
-  assert.equal(new Set(Object.values(guide.topics)).size, Object.keys(guide.topics).length);
+  assert.equal(
+    new Set(Object.values(topicIndex(guide))).size,
+    Object.keys(topicIndex(guide)).length,
+  );
   assert.match(guide.controls, /\*\*M\*\*/);
   assert.match(guide.controls, /Parish map/);
   assert.match(guide.controls, /Space/);
@@ -69,7 +79,7 @@ test('guide is bounded, cites bundled sources and never treats a query as a path
   assert.ok(result.length <= 3);
   assert.ok(result.reduce((n, e) => n + e.text.length, 0) <= 6500);
   for (const entry of result) assert.match(entry.source, /^(docs|data)\//);
-  assert.ok(Object.keys(gameGuide('').topics).some((id) => id.includes('farming')));
+  assert.ok(Object.keys(topicIndex(gameGuide(''))).some((id) => id.includes('farming')));
 });
 
 test('long memory excerpts and help fit the resident request budget together', async () => {
@@ -205,7 +215,7 @@ test('selected manual headings occur once in the topic index without repeating t
   for (const entry of [...guide.fundamentals, ...guide.excerpts, ...guide.activityExcerpts]) {
     if (!Object.hasOwn(guide.sources, entry.id.split(':')[0])) continue;
     assert.ok(
-      Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')),
+      Object.hasOwn(topicIndex(guide), entry.id.replace(/:\d+$/, '')),
       'heading remains available by section id',
     );
     assert.equal('title' in entry, false, 'do not repeat an indexed heading');
@@ -215,7 +225,7 @@ test('selected manual headings occur once in the topic index without repeating t
 });
 
 test('outside investment help has its own topic instead of expanding school guidance', () => {
-  const topic = Object.entries(gameGuide('').topics).find(
+  const topic = Object.entries(topicIndex(gameGuide(''))).find(
     ([, title]) => title === 'Outside investment terms (unreleased)',
   );
   assert.ok(topic, 'Investment terms need their own searchable player-guide section');
@@ -242,7 +252,7 @@ test('resident guide keeps complete cited text and ids without repeating section
       );
       assert.equal('source' in entry, false, 'manual source is retained once per prefix');
       assert.ok(full.source.includes('#'), 'direct lookup retains the precise citation');
-      assert.ok(Object.hasOwn(guide.topics, entry.id.replace(/:\d+$/, '')));
+      assert.ok(Object.hasOwn(topicIndex(guide), entry.id.replace(/:\d+$/, '')));
     }
   }
 });
@@ -263,9 +273,9 @@ test('topic index retains every manual heading and lookup id in a compact keyed 
       expected.set(title, `${file.toLowerCase()}:${slug}`);
     }
   }
-  assert.equal(Object.keys(gameGuide('').topics).length, expected.size);
+  assert.equal(Object.keys(topicIndex(gameGuide(''))).length, expected.size);
   assert.deepEqual(
-    gameGuide('').topics,
+    topicIndex(gameGuide('')),
     Object.fromEntries([...expected].map(([title, id]) => [id, title])),
   );
 });
@@ -294,4 +304,12 @@ test('gameplay instructions retain explicit AI identity and one copy of the oper
   const { instructions } = await import('../src/server/npc/observation');
   assert.match(instructions, /You are openly an AI NPC/);
   assert.equal(instructions.match(/never pretend to be a human operator/gi)?.length, 1);
+});
+
+test('guide groups manual topic prefixes once and documents the complete lookup ID format', () => {
+  const guide = gameGuide('farm school inventory water');
+  assert.deepEqual(Object.keys(guide.topics), ['faq', 'playing', 'economy']);
+  assert.equal(guide.topicIdFormat, 'prefix:section');
+  assert.ok(Object.keys(guide.topics.faq).includes('controls'));
+  assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
 });

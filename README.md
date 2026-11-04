@@ -20,6 +20,8 @@ Unreleased portable canoes add carpenter/boathouse purchase, wood crafting, slow
 
 Unreleased CB radios add a vehicle dashboard with keyboard, touch and configurable controller push-to-talk, local terrain-aware reception, per-vehicle channel/call sign settings and manual rescue cues. Open CB radio or press V. See [Playing Aclone](docs/PLAYING.md#cb-radio-unreleased) and the [world rules](docs/WORLD_BUILDING.md#cb-radio-rules-unreleased).
 
+Unreleased pantry budgets make resident provision quantities, shopping limits, protected cash and room-booking padding configurable while preserving paid transfers and actual storage limits. See [pantry and lodging budgets](docs/WORLD_BUILDING.md#resident-pantry-and-lodging-budgets-unreleased).
+
 Unreleased owner reserve rules expose the resident cash target and fuel allowance used for small till withdrawals, preserving investor claims and operating capital. See [owner withdrawal reserves](docs/WORLD_BUILDING.md#resident-owner-withdrawal-reserves-unreleased).
 
 Unreleased loan budgets make bank income/liquidity limits, borrowing bounds and resident financing thresholds configurable. Bank inputs show local terms; existing loans retain their agreements. See [loan affordability rules](docs/WORLD_BUILDING.md#loan-affordability-budgets-unreleased).

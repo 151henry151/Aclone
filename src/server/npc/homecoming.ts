@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { homeNeedsMultiplier } from '../../shared/automatic-provisions';
 import { survivalRules } from '../../shared/survival-rules';
@@ -97,6 +98,8 @@ export function homecomingPlan(
   state?: ResidentState,
   enterForLogout = true,
 ): Step[] {
+  const budgets = npcHouseholdRules(w.settings),
+    transferLimit = economyRules(w.settings).transactionItemLimit;
   w = {
     ...w,
     buildings: w.buildings.filter(
@@ -178,18 +181,19 @@ export function homecomingPlan(
               (awaySeconds + npcHouseholdRules(w.settings).npcPantryBufferSeconds) *
                 rate *
                 homeNeedsMultiplier(w) -
-              20000 -
+              budgets.npcPantryNeedAllowance -
               nutritionIn(w, stock, nutrient),
           ) / items[item][nutrient]!,
         )
       : need >= 15000
-        ? 2
+        ? budgets.npcUnhousedProvisionItems
         : 0;
     const carried = p.inventory[item] ?? 0;
     if (b && carried > 0 && target > 0) {
       const n = Math.min(
         carried,
         target,
+        transferLimit,
         (b.kind === 'home' ? b.capacity : 100) - (stock[item] ?? 0),
       );
       if (n > 0)
@@ -223,14 +227,21 @@ export function homecomingPlan(
       if (shop) {
         const cost = shop.owner === p.id ? 0 : shop.sell[item];
         let n = Math.min(
-          20,
+          budgets.npcProvisionBatchLimit,
+          transferLimit,
           target - carried,
           availableSupply(w, shop, item),
           cost
             ? Math.floor(
-                Math.max(0, p.cash - (nutrient === 'food' && p.thirst >= 15000 ? 1500 : 0)) / cost,
+                Math.max(
+                  0,
+                  p.cash -
+                    (nutrient === 'food' && p.thirst >= 15000
+                      ? budgets.npcProvisionDrinkCashReserve
+                      : 0),
+                ) / cost,
               )
-            : 20,
+            : budgets.npcProvisionBatchLimit,
         );
         while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
@@ -251,7 +262,10 @@ export function homecomingPlan(
   }
   const establish = housingChoices(w, p, awaySeconds)[0];
   if (establish) return establish.plan;
-  const hours = Math.max(1, Math.min(24, Math.ceil((awaySeconds + 1200) / 3600)));
+  const hours = Math.max(
+    1,
+    Math.min(24, Math.ceil((awaySeconds + budgets.npcLodgingBufferSeconds) / 3600)),
+  );
   const inn = w.buildings
     .filter(
       (v) =>
@@ -260,7 +274,7 @@ export function homecomingPlan(
         v.owner !== p.id &&
         v.lodging?.open &&
         roomCount(v) > Object.values(v.lodging.guests).filter((g) => g.until > w.time).length &&
-        p.cash >= hours * v.lodging.rate + 2000,
+        p.cash >= hours * v.lodging.rate + budgets.npcLodgingCashReserve,
     )
     .sort((a, b) => distance(p, a) - distance(p, b))[0];
   if (inn)
