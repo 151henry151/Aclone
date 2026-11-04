@@ -3622,3 +3622,24 @@ TypeScript and formatting stay clean. Inspect the final crop/refusal captures:
 50% fertilizer bonus, 25% repeated-family penalty, estimated 67 units after one
 real compost, and a readable no-compost/funds refusal. Empty plots and invalid
 input/reload also pass, with no browser errors. No full suite runs.
+
+Pushed and verified `e49cef4` on `backlog-implementation`. **Compost bonus and
+crop-rotation penalty rules are done.**
+
+### Stopped pending irrigation clarification
+
+The next unresolved crop rule cannot yet have an unambiguous default acceptance
+criterion. `BACKLOG.md` names a +33% irrigation bonus, while `cropStatus` computes
+moisture from rain, crop thirst and watering, then scales yield by `0.6 + 0.4 *
+moisture`. The resulting watering benefit varies by crop and weather; there is no
+fixed +33% irrigation value to expose. Only compost had the fixed 1.33 multiplier,
+now implemented as its world rule.
+
+Henry's decision is pending: preserve the shipped irrigation formula and expose
+its existing values, or replace that behavior with a +33% irrigation bonus. No
+irrigation production change or acceptance test has been made. Do not treat the
+unanswered question as approval. Stop here and wait before continuing the remaining
+hard-coded rules or later Planned sections. All completed slices above are pushed,
+unreleased, tested within their relevant scope and recorded; the full backlog
+is not complete. Piloted spaceflight remains excluded and unstarted. No PR,
+version bump, deployment, live-server edit or player grant has occurred.
