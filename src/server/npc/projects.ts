@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
 import { jobTraining } from './job-training.ts';
 import { liquidCapital, netAssets } from './wealth.ts';
@@ -83,6 +84,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
   if (p.task || p.learning) return [];
   const result: FarmerChoice[] = [];
   const reserve = livingReserve(w, p);
+  const transferLimit = economyRules(w.settings).transactionItemLimit;
   const add = (
     goal: CareerGoal,
     description: string,
@@ -109,7 +111,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     const tool = gatheringImplements[node.item]?.item;
     if (!tool) continue;
     const perGather = p.skills.includes(node.item === 'logs' ? 'forester' : 'excavator') ? 6 : 3;
-    let quantity = perGather;
+    let quantity = Math.min(perGather, transferLimit);
     if (
       ((p.inventory[node.item] ?? 0) < quantity && resourceAmount(w, node) < quantity) ||
       w.buildings.some((b) => distance(b, node) < 12)
@@ -143,7 +145,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     )
       continue;
     const carried = Math.min(
-      10000,
+      transferLimit,
       p.inventory[node.item] ?? 0,
       Math.floor(buyer.investment / buyer.buy[node.item]),
       buyer.capacity - (buyer.stock[node.item] ?? 0),
@@ -162,12 +164,15 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
     let rounds = 0;
     while (
       rounds < maxRounds &&
+      carried + rounds * perGather < transferLimit &&
       canCarry(carry, node.item, (rounds + 1) * perGather, w) &&
-      carried + (rounds + 1) * perGather <= buyer.capacity - (buyer.stock[node.item] ?? 0) &&
-      (carried + (rounds + 1) * perGather) * buyer.buy[node.item] <= buyer.investment
+      Math.min(transferLimit, carried + (rounds + 1) * perGather) <=
+        buyer.capacity - (buyer.stock[node.item] ?? 0) &&
+      Math.min(transferLimit, carried + (rounds + 1) * perGather) * buyer.buy[node.item] <=
+        buyer.investment
     )
       rounds++;
-    quantity = carried + rounds * perGather;
+    quantity = Math.min(transferLimit, carried + rounds * perGather);
     if (!quantity) continue;
     const trip = journeyEstimate(
       w,
@@ -202,7 +207,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
           ];
     add(
       { kind: 'gather', target: node.id, source: buyer.id, item: node.item },
-      `Gathering career: ${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}, gather ${quantity} ${node.item}, deliver to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
+      `Gathering career: ${owned ? 'use my' : `buy a ${equipment}-unit`} ${tool}, gather ${rounds * perGather} ${node.item}, deliver ${quantity} to ${buyer.name}. Estimated net ${earned} per load after travel; equipment pays back in ${Math.ceil(equipment / earned)} loads. Keep household reserve ${reserve}.`,
       plan,
       earned - equipment,
       trip.seconds + rounds * (perGather === 6 ? 12 : 20),
@@ -226,6 +231,7 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       const keep = portableReserve(item, w);
       const available = Math.max(0, carried - keep);
       let n = Math.min(
+        transferLimit,
         1000,
         available || (source.stock[item] ?? 0),
         Math.floor(buyer.investment / buyer.buy[item]),

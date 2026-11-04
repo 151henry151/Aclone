@@ -2825,3 +2825,52 @@ changed-file Prettier and diff checks. Browser passes in 20.4 seconds: all three
 targets persist, quantities change to Fuel 4/drink 9/food 5 without a purchase,
 zero drink removes only that restock, negative input is refused and reload keeps
 zero. Both screenshots inspected; no page errors. No full suite is run.
+
+Pushed and verified `9e94cfe` on `backlog-implementation`. **Resident portable
+shopping targets and carried-input reserves are done.**
+
+### Gameplay rules — remaining resident goods-transfer limit consumers
+
+Before production, extend the existing transaction-limit rule to the remaining
+ordinary NPC purchase, input delivery, crop/output collection and sale,
+construction procurement, general trade and career loops. Every trade/stock leg
+must use the same bounded quantity as its paired leg and description. A one-item
+limit must produce a feasible smaller plan instead of either an oversized action
+or a missing option from the adaptive dry-run. Worker input errands must bound
+carried and purchased inputs. Gathering retains the actual timed yield; gather
+only enough whole batches for the bounded sale, keep any excess aboard, and state
+newly gathered versus delivered quantities accurately. Preserve default volumes,
+ordinary costs, stock/cargo/funds/reserves and supply permissions.
+
+Write failing npc-transfer-limit tests for each planner family, including the
+one-item world rule, an executed conserved output sale, a construction purchase,
+worker delivery and gathering with a yield larger than the sale limit. Run these
+plus npc-farmer, npc-adaptive, npc-projects, npc-construction, npc-prosperity,
+npc-business-policy, npc-shopping-budget-rules and npc-experiment-budget-rules.
+No UI/rendering implementation changes: the existing rule's browser editor and
+transaction refusal flow are already verified; this slice fixes server-side plan
+consumers. Require TypeScript, changed-file formatting and NPC/world-builder,
+README and imperative Unreleased docs before pushing.
+
+Transfer-limit red: eight checks reproduce oversized 2–100-item actions or missing
+adaptive alternatives under a one-item limit. The setup uses a non-backlogged
+producer and the real Wood item ID so failures concern transfer sizing, not absent
+stock targets or unknown cargo. A ninth red check exposes gathering's buyer filter
+still requiring room/funds for the entire yield; it must budget the bounded sale
+while retaining the actual whole gather and surplus cargo.
+
+All nine transfer checks pass. Strengthening the service-parts fixture to a supplier
+with only one Steel exposes a second missing-option filter; the supplier lookup
+and quantity must use available stock as well as the transfer limit, preserving
+the partial-purchase/no-premature-service behavior. That test fails before the
+filter change. TypeScript also catches incomplete test state objects and optional
+empty-inventory inference; fix the fixture types without changing assertions.
+
+Transfer-limit gates pass: 76 unique relevant tests; initial regression run takes
+5.9 seconds, followed by 22 affected transfer/adaptive checks in 1.8 seconds after
+the stricter supplier-stock fix. TypeScript, changed-file Prettier and diff checks
+are clean. Ordinary output sales and construction delivery conserve goods/money;
+gathering sells one and retains two from the unchanged three-item yield, including
+a buyer with only one free slot and funds for one item. No new UI/rendering code
+or settings controls changed, so the already-verified browser flow is not repeated.
+No full suite is run. Ready to commit/push.

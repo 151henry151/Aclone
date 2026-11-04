@@ -134,6 +134,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       },
     ];
   const reserves = npcReserveRules(w.settings);
+  const transferLimit = economyRules(w.settings).transactionItemLimit;
   const base = gameplayChoices(w, p, state, 'independent');
   if (p.task) return base;
   const groups = new Map<string, FarmerChoice[]>();
@@ -199,7 +200,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
   if (collection && w.settings.parishOrders && w.procurement && w.time < w.procurement.expiresAt) {
     for (const order of w.procurement.orders) {
       const allowance = orderAllowance(w, p, order);
-      const carried = Math.min(allowance, p.inventory[order.item] ?? 0);
+      const carried = Math.min(transferLimit, allowance, p.inventory[order.item] ?? 0);
       const deliver = (quantity: number) =>
         visit(collection, [
           operation('fulfilOrder', { building: collection.id, order: order.id, quantity }),
@@ -232,6 +233,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       const owned = source.owner === p.id,
         cost = owned ? 0 : source.sell[order.item];
       let quantity = Math.min(
+        transferLimit,
         allowance,
         source.stock[order.item],
         20,
@@ -280,6 +282,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       .filter((v) => v.owner === p.id)
       .reduce((n, v) => Math.max(n, v.construction?.[item] ?? 0), 0);
     const quantity = Math.min(
+      transferLimit,
       Math.max(1, Math.min(needed || 3, 20)),
       b.stock[item],
       b.sell[item] ? Math.floor(Math.max(0, p.cash - livingReserve(w, p)) / b.sell[item]) : 3,
@@ -305,6 +308,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       .sort((a, b) => b.buy[item] - a.buy[item])[0];
     if (buyer) {
       let n = Math.min(
+        transferLimit,
         10,
         b.stock[item],
         Math.floor(buyer.investment / buyer.buy[item]),
@@ -369,6 +373,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             (b.production ?? recipes[b.recipe ?? ''])?.inputs[item])
         ) {
           const quantity = Math.min(
+            transferLimit,
             b.kind === 'home' && p.hunger < 15000 && p.thirst < 15000
               ? n
               : spareSupplies(p, item, w),
@@ -386,7 +391,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         }
       for (const [item, n] of Object.entries(b.stock))
         if (n > 0) {
-          const quantity = Math.min(n, 5);
+          const quantity = Math.min(transferLimit, n, 5);
           if (canCarry(p, item, quantity, w))
             add(
               'storage',
@@ -466,6 +471,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           if (def.food || def.drink)
             for (const direction of ['deposit', 'withdraw'] as const) {
               const quantity = Math.min(
+                transferLimit,
                 3,
                 direction === 'deposit' && (p.hunger >= 15000 || p.thirst >= 15000)
                   ? spareSupplies(p, item, w)
@@ -506,25 +512,33 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
             visit(b, [operation('serviceVehicle', { building: b.id })]),
           );
         else {
-          const supplier = shops.find((s) => s.sell.steel > 0 && s.stock.steel >= missingParts);
-          if (supplier)
+          const supplier = shops.find((s) => s.sell.steel > 0 && s.stock.steel > 0);
+          if (supplier) {
+            const quantity = Math.min(missingParts, transferLimit, supplier.stock.steel);
             add(
               'maintenance',
-              `Buy ${missingParts} Steel spare parts from ${supplier.name} then service my vehicle at ${b.name}.`,
+              quantity === missingParts
+                ? `Buy ${quantity} Steel spare parts from ${supplier.name} then service my vehicle at ${b.name}.`
+                : `Buy ${quantity} Steel spare parts from ${supplier.name} toward the ${missingParts} missing parts for service at ${b.name}.`,
               [
                 ...visit(supplier, [
                   action({
                     type: 'trade',
                     building: supplier.id,
                     item: 'steel',
-                    quantity: missingParts,
+                    quantity,
                     direction: 'buy',
                   }),
                 ]),
-                { kind: 'travel', destination: b.id },
-                operation('serviceVehicle', { building: b.id }),
+                ...(quantity === missingParts
+                  ? [
+                      { kind: 'travel' as const, destination: b.id },
+                      operation('serviceVehicle', { building: b.id }),
+                    ]
+                  : []),
               ],
             );
+          }
         }
       }
       if (w.settings.requireMapItem && !p.inventory.parishMap)

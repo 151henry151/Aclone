@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import {
@@ -223,6 +224,7 @@ export function constructionChoices(w: World, p: Player): FarmerChoice[] {
       const price = own ? 0 : shop.sell[item];
       const surplus = Math.max(0, p.cash - householdBudget(w, p).reserve);
       let quantity = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         need,
         20,
         shop.stock[item],

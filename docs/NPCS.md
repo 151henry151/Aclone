@@ -657,3 +657,11 @@ food items across the carried inventory. F10 exposes each target separately from
 per-item reserves and pantry forecasts. Zero removes that optional restock;
 ordinary purchase limits still apply. Owned-business delivery of carried inputs
 also honors the local portable Water/Bread reserves and transaction limit.
+
+Resident trade/stock plans cap each paired purchase, collection, delivery and sale
+by the world transaction limit. Construction, worker-input errands and career
+loads remain available at smaller limits. Gathering performs whole timed batches,
+sells only the allowed amount and keeps excess aboard for a later sale; its text
+distinguishes new gathering from delivered cargo. A parts purchase smaller than
+the service requirement buys the permitted instalment first and leaves servicing
+for a later plan. All transfers use ordinary validation and accounting.

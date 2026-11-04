@@ -375,6 +375,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       if (!source) continue;
       const { shop: seller, own, available, price } = source;
       let n = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         Math.max(0, target - (b.stock[item] ?? 0)),
         available,
         b.capacity - (b.stock[item] ?? 0),
@@ -422,6 +423,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         .sort((a, b) => b.buy[item] - a.buy[item])[0];
       if (!buyer) continue;
       let n = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         b.stock[item] ?? 0,
         30,
         Math.floor(buyer.investment / buyer.buy[item]),

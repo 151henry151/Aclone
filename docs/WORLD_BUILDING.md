@@ -1037,3 +1037,10 @@ cargo and the world transaction limit bound each purchase. Owner-business plans
 also retain the existing portable Water/Bread reserves before depositing carried
 inputs and respect the transaction limit. Changing rules grants no goods or cash.
 All three targets persist in saves/designs and appear in resident observations.
+
+Resident consumers of the **transaction item limit** also bound trade routes,
+owned stock transfers, farm/output sales, construction purchases, worker errands
+and career sales. Paired legs use the same quantity. A small limit does not reduce
+actual gathering yield: excess stays in inventory for later sales. Service parts
+can be bought in smaller instalments before arranging service. These policies
+change future plans, not inventories, money or posted agreement terms.

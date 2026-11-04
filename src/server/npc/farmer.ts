@@ -286,7 +286,7 @@ export function gameplayChoices(
     }
     if (own)
       for (const crop of Object.keys(crops)) {
-        let n = Math.min(b.stock[crop] ?? 0, 25);
+        let n = Math.min(economyRules(w.settings).transactionItemLimit, b.stock[crop] ?? 0, 25);
         while (n && !canCarry(p, crop, n, w)) n--;
         if (n)
           add(
@@ -316,6 +316,7 @@ export function gameplayChoices(
       )
       .slice(0, 2)) {
       const quantity = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         n,
         Math.floor(b.investment / b.buy[crop]),
         b.capacity - (b.stock[crop] ?? 0),

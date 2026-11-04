@@ -98,6 +98,7 @@ export function economyChoices(
           .sort((a, b) => a.sell[item] - b.sell[item])[0];
         if (missing > 0 && seller && budget && budget.idealMargin >= 0 && budget.margin >= 0) {
           let load = Math.min(
+            economyRules(w.settings).transactionItemLimit,
             missing,
             seller.stock[item],
             seller.sell[item]
@@ -124,6 +125,7 @@ export function economyChoices(
             );
         }
         const n = Math.min(
+          economyRules(w.settings).transactionItemLimit,
           spareSupplies(p, item, w),
           b.capacity - (b.stock[item] ?? 0),
           Math.max(0, (inputStockTarget(b, item, w) ?? quantity * 4) - (b.stock[item] ?? 0)),
@@ -137,7 +139,7 @@ export function economyChoices(
           );
       }
       for (const item of Object.keys(recipe.outputs)) {
-        let n = Math.min(b.stock[item] ?? 0, 20);
+        let n = Math.min(economyRules(w.settings).transactionItemLimit, b.stock[item] ?? 0, 20);
         while (n > 0 && !canCarry(p, item, n, w)) n--;
         if (n > 0)
           add(
@@ -191,6 +193,7 @@ export function economyChoices(
       )
       .slice(0, 1)) {
       const n = Math.min(
+        economyRules(w.settings).transactionItemLimit,
         item === 'tools' || Object.values(gatheringImplements).some((v) => v.item === item) ? 1 : 5,
         b.stock[item],
         b.sell[item] ? affordableLoad(p.cash, b.sell[item], livingReserve(w, p), 5) : 5,
@@ -228,6 +231,7 @@ export function economyChoices(
     );
     if (!b) continue;
     const n = Math.min(
+      economyRules(w.settings).transactionItemLimit,
       spareSupplies(p, item, w),
       25,
       Math.floor(b.investment / b.buy[item]),

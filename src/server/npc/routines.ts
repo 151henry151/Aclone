@@ -1,3 +1,4 @@
+import { economyRules } from '../../shared/economy-rules';
 import { householdBudget } from './household.ts';
 import { labourReward } from '../../shared/public-labour.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
@@ -97,7 +98,13 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
     if (have >= b.capacity) continue;
     const carried = p.inventory[item] ?? 0;
     if (carried > 0) {
-      const n = Math.min(carried, need - have, b.capacity - have, Math.floor(available / bid));
+      const n = Math.min(
+        economyRules(w.settings).transactionItemLimit,
+        carried,
+        need - have,
+        b.capacity - have,
+        Math.floor(available / bid),
+      );
       if (n <= 0) continue;
       const plan = visitBuilding(p, b, [
         act({ type: 'trade', building: b.id, item, quantity: n, direction: 'sell' }),
@@ -120,6 +127,7 @@ function fetchWorkplaceInputs(w: World, p: Player, b: Building, state: ResidentS
       .sort((a, c) => a.sell[item] - c.sell[item])[0];
     if (!seller || seller.owner === p.id || seller.sell[item] > bid) continue;
     const n = Math.min(
+      economyRules(w.settings).transactionItemLimit,
       need - have,
       seller.stock[item],
       b.capacity - have,

@@ -73,6 +73,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Bound resident trade, production, construction and career transfers by the world transaction limit; keep smaller plans available, retain surplus gathering yield and buy service parts in feasible instalments.
+
 - Report the configured bid-reopening percentage and disabled state in resident financial advice, preserving manual pauses and overstock explanations.
 
 - Patch changed world settings in negotiated protocol 4 snapshots to retain the compact-traffic budget as radio rules grow; keep complete settings for older clients.
