@@ -1,3 +1,4 @@
+import { nearbyFuelTanker } from './fuel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../../shared/types.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
@@ -53,8 +54,9 @@ function fuelShop(w: World, p: Player) {
 export function drivePlan(w: World, p: Player): Step[] {
   const catalogue = worldItems(w);
   const carried = Object.entries(p.inventory).find(([item, n]) => n > 0 && catalogue[item]?.fuel);
-  const shop = p.fuel < 10 && !carried ? fuelShop(w, p) : undefined;
-  const willFuel = p.fuel > 0 || !!carried || !!shop;
+  const tanker = p.fuel < 10 && !carried ? nearbyFuelTanker(w, p) : undefined;
+  const shop = p.fuel < 10 && !carried && !tanker ? fuelShop(w, p) : undefined;
+  const willFuel = p.fuel > 0 || !!carried || !!shop || !!tanker;
   if (
     !p.atHome &&
     !p.game &&
@@ -70,7 +72,17 @@ export function drivePlan(w: World, p: Player): Step[] {
   let walkedToPump = false;
   let engineStarted = false;
   if (p.fuel < 10 && carried) steps.push(act({ type: 'use', item: carried[0] }));
-  else if (shop) {
+  else if (tanker) {
+    steps.push(
+      operation('fuelTrailer', {
+        operation: 'buy',
+        id: tanker.id,
+        quantity: 1,
+        price: tanker.owner === p.id ? 0 : (tanker.sellPrice ?? 0),
+      }),
+      act({ type: 'use', item: 'fuel' }),
+    );
+  } else if (shop) {
     if (p.vehicle !== 5 && p.fuel <= 0) {
       steps.push(act({ type: 'vehicle', slot: 5 }));
       walkedToPump = true;

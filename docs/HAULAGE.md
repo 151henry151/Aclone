@@ -32,13 +32,47 @@ Buy a trailer at an ordinary tractor garage with a tractor and clear dry space b
 - **Quarry tipping trailer — 42s.** 4.6 × 2.45 m deep steel body, reinforced sides, tipping ram and visible aggregate heap; 1,000 weight of stone, gravel, sand, ore or topsoil.
 - **Forester log wagon — 60s.** 5.2 × 2.45 m bolsters, stakes, headboard and restrained logs; 900 weight of logs or sawn wood.
 - **Dales liquid tanker — 55s.** 4.7 × 2.35 m tank assembly with bands, access ladder, manhole and outlet valve; 700 water or milk. Empty it before changing liquids.
-- **Dales fuel tanker — 57.5s.** The same 4.7 × 2.35 m tank/chassis with amber paint, flammable-liquid placards and a rear hose reel/nozzle; 700 weight of Fuel only. Water and milk still belong in the liquid tanker. At default item settings, 700 Fuel supplies 5,600 tank units: one 3,200-unit trawler refill plus 2,400 spare. Load at a refinery through **Buy into trailer**, then unload into your own inventory as needed. World owners can tune purchase price and capacity in **F10 → Vehicles → Fuel tanker trailer**; the garage and cargo panel show the effective values.
+- **Dales fuel tanker — 57.5s.** The same 4.7 × 2.35 m tank/chassis with amber paint, flammable-liquid placards and a rear hose reel/nozzle; 700 weight of Fuel only. Water and milk still belong in the liquid tanker. At default item settings, 700 Fuel supplies 5,600 tank units: one 3,200-unit trawler refill plus 2,400 spare. Load at a refinery through **Buy into trailer**, then unload into your own inventory or pump directly as needed. World owners can tune purchase price and capacity in **F10 → Vehicles → Fuel tanker trailer**; the garage and cargo panel show the effective values.
 - **Parish box trailer — 90s.** 4.4 × 2.35 m covered body, ribbed panels and locking rear doors; 400 weight of mixed dry goods. No livestock, loose liquids or seafood.
 - **Harbour chilled fish trailer — 65s.** 4.8 × 2.4 m insulated seafood body, refrigeration unit and drainage fittings; 800 weight of ordinary and large fish, cod, halibut or tuna. Refrigeration is the model's cargo specialization, not a new general spoilage or fuel system.
 
 Dimensions describe the load body; drawbars add about 1.4 m. Chassis rails, leaf springs, tandem axles, tyres, mudguards, brake lines, jacks, rear lamps and reflectors are modeled on every type. Weight and cargo restrictions are checked by the server. Shop trades into/from an attached trailer use the same stock, cash, tax, bulk-discount and investment rules as ordinary trades. Nearby owners can transfer directly to/from their building stock.
 
 A death parks the attached trailer. Its load follows the world's inventory-loss rule; the trailer remains owned. Parked trailers retain their cargo. There is no free Return to town centre shortcut: plan fuel and routes or arrange assistance.
+
+### Roadside fuel service
+
+Open **Inventory → Roadside fuel** alongside an amber tanker. Its owner sets a
+price per Fuel in denarii; **0 closes public sales**, while the owner's own
+pumping and inventory transfers remain free. Stop outside and finish other
+activities, within 15 m and 3 m of the tanker's ground height at defaults. Both
+the customer and any tractor towing the tanker must be stopped (at most 0.5 m/s).
+Boats can refuel alongside the shore; an airborne aircraft or a passenger cannot
+pump. The tanker must stand on dry land.
+
+Choose **Pump into vehicle** or **Buy Fuel into inventory**. Pumping uses at most
+the entered quantity and the whole Fuel items needed to fill the tank; each adds
+8 tank units at defaults. The final item is charged in full even if only part of
+its tank units fits. Inventory buying requires room for the entire quantity.
+The default per-transaction limit is 10,000 Fuel. Empty, closed, unavailable or
+unaffordable sales are refused without changing cargo, cash or fuel.
+
+Posted prices include normal world and local-town sales tax, measured at the
+tanker's location. The owner receives the net amount as cash while online or in
+the bank while offline; tax and sales enter the ledger. Parked tankers retain
+ownership, price and cargo across restarts. A portable world design includes
+parked fuel tankers with their price/load but assigns them to the new world
+owner; attached rigs and the other trailer kinds are not copied.
+
+World owners configure sales, offline selling, quantity limits, a shop-relative
+price ceiling, resident purchasing and refuelling limits in **F10 → Rules →
+Roadside fuel**. The ceiling is off by default. When enabled, it compares against
+the cheapest posted Fuel price at any completed shop, even if stock is empty;
+a shopless world uses its catalogue Fuel price. Residents may buy one Fuel from
+a nearby tanker when no usable fuel shop is within ordinary 18 m trade reach,
+provided the tanker price is at most 1.25 times that reference price by default.
+They preserve their measured food, drink and shelter reserve and recheck price,
+shop availability and reserve before purchase.
 
 ### Economic calibration
 

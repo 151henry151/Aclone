@@ -1,3 +1,4 @@
+import { fuelRules, fuelRuleFields, type FuelRules } from '../shared/fuel-rules';
 import {
   gatheringSceneryRules,
   gatheringSceneryFields,
@@ -84,6 +85,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...Object.keys(fuelRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
     ...Object.keys(gatheringSceneryFields),
@@ -102,6 +104,24 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const fuel = fuelRules(settings);
+  const fuelFields = `<fieldset class="boat-death-settings"><legend>Roadside fuel</legend>${Object.entries(
+    fuelRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            fuel[key as keyof FuelRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${fuel[key as keyof FuelRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Zero posted price closes a tanker to customers; owner use is free. Taxes are included in the posted price. The shop-relative ceiling is off at 0; when no completed shop posts Fuel prices, the catalogue price is the reference. Refuelling distance, height, speed and Fuel conversion also govern carried roadside assistance.</p></fieldset>`;
   const gathering = gatheringSceneryRules(settings);
   const gatheringFields = `<fieldset class="boat-death-settings"><legend>Gathering scenery</legend>${select(
     gatheringSceneryFields.gatheringScenery.label,
@@ -153,6 +173,7 @@ export function settingsFields(settings: Settings = defaults) {
     flightFields +
     walkingFields +
     gatheringFields +
+    fuelFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))
@@ -472,7 +493,7 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   }
   if (tab === 'Vehicles') return vehicleEditor(w, vehicleSlot) + fuelTrailerEditor(w);
   if (tab === 'Transfer')
-    return `<p>Export a reusable world design without players, accounts, cash or inventories. Imported designs create a new world; they never overwrite an occupied world. A media bundle carries up to 8 MiB of images, models and audio, retaining source/author/licence metadata. Only redistribute media you have permission to share; design-only exports use placeholder visuals.</p>${button('Download world design', 'export')}${button('Download design + media bundle', 'exportBundle')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
+    return `<p>Export a reusable world design without players, accounts or cash. Parked fuel tankers include their load and sale price, assigned to the new world owner; other inventories are excluded. Imported designs create a new world; they never overwrite an occupied world. A media bundle carries up to 8 MiB of images, models and audio, retaining source/author/licence metadata. Only redistribute media you have permission to share; design-only exports use placeholder visuals.</p>${button('Download world design', 'export')}${button('Download design + media bundle', 'exportBundle')}<form id="creator-import-form">${field('New world name', 'name', 'Imported world')}<label>World design JSON<input type="file" name="file" accept="application/json,.json" required></label><button>Create world from design</button></form>`;
   return '';
 }
 export function creatorClick(action: string, value: string, w: World, send: (a: Action) => void) {

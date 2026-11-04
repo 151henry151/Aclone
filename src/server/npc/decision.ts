@@ -107,6 +107,7 @@ export const playerOperations = [
   'give',
   'giveMoney',
   'refuelPlayer',
+  'fuelTrailer',
   'repairVehicle',
   'family',
   'acceptTrade',
@@ -128,6 +129,7 @@ export const playerOperations = [
 const operationParameter = z
   .object({
     name: z.enum([
+      'id',
       'x',
       'z',
       'building',

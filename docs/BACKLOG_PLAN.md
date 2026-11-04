@@ -805,3 +805,50 @@ Confirmation: full `npm test` passes all 1,345 tests in 191 seconds, with comman
 and `/tmp/aclone-fuel-full-confirm.status` both reporting exit 0. TypeScript,
 Prettier and diff checks are clean. The fuel-only rig/model/tuning slice meets
 its criteria; roadside sales and parked-tanker design placements remain next.
+
+Fuel-only rig/model/tuning: **done**, pushed as `e220ec4` on
+`backlog-implementation`. Begin the roadside-service slice under the criteria
+above. Additional concrete decisions: posted Fuel prices at completed shops
+anchor the optional ceiling even when out of stock; if none exist, use the
+world catalogue Fuel price. Protect NPC food/drink/rent reserves, allowing its
+one-fuel reserve to pay for fuel. Refuse a stale expected sale price. Keep exact
+Fuel stock public for nearby purchase quotes, like shop stock.
+
+Roadside red evidence: sales actions and settings were missing, parked design
+placements were absent, and normal resident drive preparation selected no tanker.
+The browser failed on the absent roadside sales panel. The initial free-owner
+ledger expectation incorrectly counted the two player-creation faucet entries;
+assert no additional entries instead. All eleven focused roadside tests now pass.
+
+Correction to the earlier conversion assumption: the existing world catalogue
+allows custom items but refuses built-in Fuel overrides. A new red settings test
+confirmed this missing per-world rule. Move Fuel's default conversion (8) into
+`data/settings.json` once, derive the built-in catalogue value from it, and expose
+`fuelUnitsPerItem` to world owners. Ordinary item use, carried assistance and
+pumping read the effective world item definition. Shared refuelling distance,
+height and stopped-speed rules default to the existing 15 m, 3 m and 0.5 m/s.
+
+Browser failures found and fixed: offline owners are intentionally absent from
+player snapshots, so publish only seller name/online/stopped facts for the
+customer quote; never trust those hints for server execution. Add a red snapshot
+test, then verify offline sales without exposing balances. The next browser run
+caught stale stock/closed-sale displays after remote changes; refresh only the
+roadside panel while preserving active inputs. The flow now passes in 29 seconds,
+covering owner price/free use, near-full pumping, offline bank payment, inventory
+sales, empty/closed/full states and saved rules. Twenty-eight focused tests pass;
+TypeScript is clean. The final combined browser/full-suite checks are running.
+
+The combined browser run passes all three tanker flows (1.9 minutes under full
+suite load); the focused sales repeat passes in 33 seconds and the actual rules
+fieldset is visually inspected. Full-suite integration initially found two NPC
+regressions: an optional field violated the strict provider schema, and the new
+standalone action exceeded the existing 96,000-byte worst-case request limit.
+Reuse the existing player-operation protocol and its price parameter instead;
+retain stale-price validation, the complete existing guide budget and both tests'
+limits. All 19 NPC-provider/guide/roadside tests pass. Do not commit until the
+new full-suite run is green.
+
+Final verification: `npm test` passes all 1,357 tests in 191 seconds, exit 0
+(recorded in `/tmp/aclone-fuel-sales-full-final.status`); both NPC integration
+regressions are green in that run. TypeScript, changed-file Prettier and diff
+checks pass. The roadside slice meets its criteria, completing the tanker item.

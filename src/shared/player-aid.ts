@@ -1,8 +1,9 @@
+import { fuelRules } from './fuel-rules';
+import { worldItems } from './world-catalogue';
 import { vehicleDef } from './vehicle-config';
 import { fuelCapacity } from './tractors.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types.ts';
-import { items, vehicles } from './catalog.ts';
 export const MAX_MONEY_GIFT = 100000000; // Internal hundredths; 1,000,000d per gift.
 export function giftAmount(text: string) {
   if (!/^\d+(?:\.\d{1,2})?$/.test(text.trim()))
@@ -20,9 +21,13 @@ export function moneyGiftReason(w: World, p: Player, target?: Player) {
   if (!p.online) return 'Sign in to give money';
 }
 export function refuellingStatus(w: World, p: Player, target?: Player, publicSnapshot = false) {
+  const rules = fuelRules(w.settings);
   const units = Math.max(
     0,
-    Math.min(items.fuel.fuel ?? 8, (target ? fuelCapacity(target, w) : 64) - (target?.fuel ?? 0)),
+    Math.min(
+      worldItems(w).fuel.fuel ?? 0,
+      (target ? fuelCapacity(target, w) : 64) - (target?.fuel ?? 0),
+    ),
   );
   let reason: string | undefined;
   if (w.settings.allowPlayerRefuelling === false)
@@ -33,9 +38,12 @@ export function refuellingStatus(w: World, p: Player, target?: Player, publicSna
     reason = 'Both players must be outside and not riding as a passenger or scouting';
   else if (p.game || target.game || p.task || target.task)
     reason = 'Finish other activities before refuelling';
-  else if (Math.hypot(p.x - target.x, p.z - target.z) >= 15 || Math.abs(p.y - target.y) > 3)
-    reason = 'Move within 15 metres of the other player at the same height';
-  else if (Math.abs(p.speed) > 0.5 || Math.abs(target.speed) > 0.5)
+  else if (
+    Math.hypot(p.x - target.x, p.z - target.z) >= rules.refuelRange ||
+    Math.abs(p.y - target.y) > rules.refuelHeight
+  )
+    reason = `Move within ${rules.refuelRange} metres of the other player at the same height`;
+  else if (Math.abs(p.speed) > rules.refuelSpeed || Math.abs(target.speed) > rules.refuelSpeed)
     reason = 'Both players must stop moving to refuel';
   else if (!(vehicleDef(w, target.vehicle)?.fuel > 0))
     reason = 'The other player must be in a fuel-powered vehicle';
@@ -52,7 +60,7 @@ export function refuelRecipientReady(p: Player, w?: World) {
     !p.hitch &&
     !p.game &&
     !p.task &&
-    Math.abs(p.speed) <= 0.5 &&
+    Math.abs(p.speed) <= fuelRules(w?.settings).refuelSpeed &&
     vehicleDef(w, p.vehicle)?.fuel > 0 &&
     Number.isFinite(p.fuel) &&
     p.fuel < fuelCapacity(p, w)

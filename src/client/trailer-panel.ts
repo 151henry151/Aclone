@@ -1,3 +1,4 @@
+import { fuelPanel } from './fuel-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../shared/types';
 import { trailerDefs, trailerDef, trailerAccepts, type TrailerKind } from '../shared/trailers';
@@ -12,7 +13,7 @@ const esc = (s: string) =>
 const hidden = (k: string, v: string) => `<input type="hidden" name="${k}" value="${esc(v)}">`;
 export function trailerPanel(w: World, p: Player, b?: Building) {
   const owned = Object.values(w.trailers ?? {}).filter((t) => t.owner === p.id);
-  let html = '';
+  let html = fuelPanel(w, p);
   if (b?.kind === 'garage' && !b.aircraftHangar) {
     html +=
       '<h3>Specialist trailers</h3><p>Bring your tractor with clear space behind it. Trailers stay where you unhitch them, with their cargo.</p><div class="directory">';

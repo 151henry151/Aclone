@@ -128,6 +128,10 @@ export interface Trailer {
   heading: number;
   cargo: Stock;
   attached?: string;
+  /** Whole internal currency units per Fuel. Zero or absent closes public sales. */
+  sellPrice?: number;
+  /** Snapshot-only service facts; never trusted by authoritative transactions. */
+  fuelService?: { ownerName: string; ownerOnline: boolean; stopped: boolean };
 }
 export const attachedTrailer = (w: World, p: Pick<Player, 'id'>) =>
   Object.values(w.trailers ?? {}).find((t) => t.attached === p.id);
@@ -178,7 +182,7 @@ export function detachTrailer(w: World, p: Player, loseCargo = false) {
     if (loseCargo) t.cargo = {};
   }
 }
-function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; heading: number }) {
+export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; heading: number }) {
   const d = trailerDefs[t.kind],
     radius = d.width / 2;
   const distance = Math.hypot(to.x - t.x, to.z - t.z),

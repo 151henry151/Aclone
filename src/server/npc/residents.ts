@@ -1,3 +1,4 @@
+import { checkResidentFuelPurchase } from './fuel';
 import { fishingCrewCaptain } from '../../shared/fishing-expedition';
 import { jobVacancy } from '../../shared/staffing.ts';
 import {
@@ -490,6 +491,7 @@ export class Residents {
       const p = w.players[r.state.playerId],
         stats = this.actionStats(w, p, a);
       checkHousingPurchase(w, p, a);
+      checkResidentFuelPurchase(w, p, a);
       checkOwnerCapitalAction(w, p, a, r.state.plan.slice(r.state.index + 1), r.state.tradeQuotes);
       checkCommitmentPrice(w, r.state, a);
       checkBusinessAction(w, p, r.state, a);

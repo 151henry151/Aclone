@@ -1,3 +1,4 @@
+import { fuelRules } from './fuel-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Settings, World } from './types.ts';
 import { flightRules, landingLimits } from './flight-rules';
@@ -46,11 +47,13 @@ export const rulesets: Record<
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
+  const fuel = fuelRules(s);
   const walking = walkingRules(s);
   const gathering = gatheringSceneryRules(s);
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `Roadside tanker sales ${fuel.fuelTankerSales ? 'on' : 'off'}; offline sales ${fuel.fuelTankerOfflineSales ? 'on' : 'off'}; limit ${fuel.fuelTankerTransactionLimit} Fuel; shop ceiling ${fuel.fuelTankerPriceCeiling || 'off'}; resident purchases ${fuel.fuelTankerNpcPurchasing ? 'on' : 'off'} at up to ${fuel.fuelTankerNpcPriceFactor}× shop price. Refuelling: ${fuel.refuelRange} m range, ${fuel.refuelHeight} m height, ${fuel.refuelSpeed} m/s speed; ${fuel.fuelUnitsPerItem} tank units per Fuel.`,
     s.hungerRate || s.thirstRate
       ? `Needs continue offline (hunger ${s.hungerRate}/s, thirst ${s.thirstRate}/s). Odd Jobs pays ${s.labourShiftPay ?? 100} per 15-second shift, up to ${s.labourDailyCap ?? 20000} a game day. ${s.autoConsumeInventory ? `Inventory food and drink are consumed automatically ${s.autoConsumeInventoryOnline === false ? 'while signed off' : 'online and offline'}.` : 'Inventory eating is manual.'} ${s.autoConsumeAlcohol ? 'Automatic meals may include beer and wine.' : 'Beer and wine are never consumed automatically.'} ${s.autoConsumeHomeStock ? 'Your selected home supplies also feed you while away.' : 'Home stores feed you only while inside.'} At home, needs drain at ${Math.round((s.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
       : 'Hunger and thirst are disabled.',

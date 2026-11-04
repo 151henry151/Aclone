@@ -8,6 +8,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Sell Fuel from attached or parked tankers with owner pricing, capped direct pumping, inventory purchases, ordinary sales tax and offline bank payments; add world rules, guarded resident purchases and portable parked-tanker placements. Share the configurable Fuel conversion and refuelling limits with carried assistance.
 - Add a fuel-only tanker with a shared Dales tank/chassis, distinct paint, hazard placards and rear hose; expose per-world price/capacity tuning in the garage, cargo panel and portable designs while retaining ordinary trade, load and death rules.
 - Record the shipped-feature audit, ordered backlog and test-first completion criteria in the backlog implementation plan.
 

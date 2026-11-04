@@ -1,4 +1,9 @@
-import { trailerTuningSchema } from '../shared/trailers';
+import {
+  trailerTuningSchema,
+  trailerAccepts,
+  clearTrailer,
+  type Trailer,
+} from '../shared/trailers';
 import { northernIslandSchema } from './northern-island-schema';
 import { maxCoordinate } from '../shared/world-limits';
 import {
@@ -210,6 +215,21 @@ const designSchema = z.object({
     )
     .max(500),
   tier: z.number().int().min(0).max(10).default(0),
+  parkedFuelTankers: z
+    .array(
+      z
+        .object({
+          id: z.string().regex(/^trailer-[1-9]\d{0,8}$/),
+          x: z.number().finite().min(-maxCoordinate).max(maxCoordinate),
+          z: z.number().finite().min(-maxCoordinate).max(maxCoordinate),
+          heading: z.number().finite(),
+          cargo: z.object({ fuel: z.number().int().min(0).max(100000).optional() }).strict(),
+          sellPrice: z.number().int().min(0).max(100000000).default(0),
+        })
+        .strict(),
+    )
+    .max(2000)
+    .default([]),
   trailerTuning: trailerTuningSchema.default({}),
   vehicleTuning: z.record(vehicleSlotSchema, vehicleTuningSchema).default({}),
   creator: creatorSchema,
@@ -257,6 +277,16 @@ export function exportDesign(w: World, includeMedia = false) {
     tier: w.tier,
     vehicleTuning,
     trailerTuning: structuredClone(w.trailerTuning ?? {}),
+    parkedFuelTankers: Object.values(w.trailers ?? {})
+      .filter((t) => t.kind === 'fuel' && !t.attached)
+      .map((t) => ({
+        id: t.id,
+        x: t.x,
+        z: t.z,
+        heading: t.heading,
+        cargo: structuredClone(t.cargo),
+        sellPrice: t.sellPrice ?? 0,
+      })),
     settings: w.settings,
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
@@ -394,6 +424,18 @@ export function applyDesign(w: World, input: unknown) {
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };
   }
   configureRules(w, d.settings, d.townCharter);
+  const placements: Record<string, Trailer> = {};
+  for (const input of d.parkedFuelTankers) {
+    if (placements[input.id]) throw Error('Duplicate tanker IDs');
+    const t: Trailer = { ...input, kind: 'fuel', owner: w.owner };
+    if (!trailerAccepts(w, { ...t, cargo: {} }, 'fuel', t.cargo.fuel ?? 0))
+      throw Error('Fuel tanker load exceeds capacity');
+    if (!clearTrailer({ ...w, trailers: placements }, t, t))
+      throw Error('Fuel tanker needs clear dry ground inside the world');
+    placements[t.id] = t;
+  }
+  w.trailers = placements;
+  w.trailerSeq = Math.max(0, ...d.parkedFuelTankers.map((t) => Number(t.id.slice(8))));
   for (const b of w.buildings)
     if (b.pasture) {
       if (!isLivestockFarm(b)) throw Error('Only livestock farms can have pastures');

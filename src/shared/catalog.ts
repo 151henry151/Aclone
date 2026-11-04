@@ -7,7 +7,10 @@ import weaponData from '../../data/weapons.json';
 import settingsData from '../../data/settings.json';
 import galaxyData from '../../data/galaxy.json';
 import type { ItemDef, VehicleDef, BuildingDef, Recipe, WeaponDef, Settings } from './types';
-export const items: Record<string, ItemDef> = itemData;
+export const items: Record<string, ItemDef> = {
+  ...itemData,
+  fuel: { ...itemData.fuel, fuel: settingsData.fuelUnitsPerItem },
+};
 export const vehicles: VehicleDef[] = vehicleData;
 export const buildings: Record<string, BuildingDef> = buildingData;
 export const recipes: Record<string, Recipe> = recipeData;

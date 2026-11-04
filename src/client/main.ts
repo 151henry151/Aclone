@@ -1,3 +1,4 @@
+import { fuelPanel } from './fuel-panel';
 import { alpineWeather } from '../shared/alpine-weather';
 import { tenderOf } from '../shared/boat-tender';
 import { trailerPanel } from './trailer-panel';
@@ -1432,10 +1433,31 @@ function refreshTaxInfo() {
       );
   }
 }
+let fuelSignature = '';
+let fuelPanelRoot: Element | null = null;
 let charterSignature = '';
 let expeditionSignature = '';
 function refreshTradingPrices() {
   refreshTaxInfo();
+  const fuelRoot = app.querySelector('.fuel-services');
+  if (
+    fuelRoot &&
+    world &&
+    me &&
+    !fuelRoot.contains(
+      document.activeElement?.matches('input,select,textarea') ? document.activeElement : null,
+    )
+  ) {
+    const html = fuelPanel(world, me);
+    if (fuelPanelRoot !== fuelRoot || fuelSignature !== html) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      const next = wrapper.firstElementChild!;
+      fuelRoot.replaceWith(next);
+      fuelPanelRoot = next;
+      fuelSignature = html;
+    }
+  }
   if (panel === 'social' && world && me) {
     const key = JSON.stringify([
       me.mail,
@@ -3307,6 +3329,7 @@ app.addEventListener('submit', async (e) => {
           'rate',
           'quantity',
           'capacity',
+          'expectedPrice',
           'amount',
           'tax',
           'x',

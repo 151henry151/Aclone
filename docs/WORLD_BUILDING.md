@@ -128,7 +128,7 @@ models, placed objects, behavior rules, scripts, building layouts/appearances,
 prices/wages/recipes, civilization tier and vehicle/trailer tuning. **Create world from
 design** validates the file and creates a separate world; it cannot overwrite
 occupied worlds. Players, accounts, chat, stock, investment, inventories, match
-progress and script variables are excluded. Imported businesses belong to the
+progress and script variables are excluded, except the cargo of parked fuel tankers. Parked fuel tankers retain their position, heading, Fuel load and sale price; attached rigs and other trailers are omitted. Imports validate clear dry placement and tuned capacity, and assign these tankers to the new world owner. Imported businesses belong to the
 new world’s owner and start from ordinary building defaults. Asset-only models
 become labelled gray placeholder shapes until their media is uploaded/reassigned.
 A rejected import does not add a world to the registry. Use the media bundle option to retain model and texture bindings.
@@ -411,8 +411,23 @@ trailer catalogue. Price accepts 0–1,000,000d in hundredths; capacity accepts 
 values from 1 to 100,000. A reduction below an existing tanker's load is refused:
 unload first. These settings affect garage purchases, load checks, cargo panels
 and load-dependent handling, and survive world saves and design export/import.
-They do not alter the Dales water/milk tanker. Fuel-to-tank conversion continues
-to use the world's Fuel item definition (8 tank units per Fuel by default).
+They do not alter the Dales water/milk tanker. Fuel-to-tank conversion uses **Rules → Roadside fuel → Tank units per Fuel item** (8 by default), shared with ordinary inventory use and carried assistance.
+
+### Roadside fuel rules
+
+**Rules → Roadside fuel** defaults to sales on, offline sales on, a 10,000-Fuel
+transaction limit, shop-relative price ceiling 0 (off), resident purchasing on,
+and resident price factor 1.25. The price reference is the cheapest Fuel listing
+at a completed shop, including empty shops; without a listing it is the world
+catalogue price. Resident purchases also require no usable shop within normal
+trade reach and enough money left for meals and shelter. Prices of zero close
+public sales. Owners pump and transfer their own stock free even with sales off.
+
+The shared refuelling defaults are 15 m horizontal range, 3 m height difference,
+0.5 m/s stopped-speed allowance and 8 tank units per Fuel. These affect tanker
+service and carried roadside assistance; the conversion also affects ordinary
+Fuel use. Rules are world-local and survive saves and portable designs. Purchase
+price/capacity remain in the separate Vehicles trailer editor above.
 
 ## Livestock pastures
 

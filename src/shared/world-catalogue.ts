@@ -79,7 +79,26 @@ export const catalogueSchema = z.object({
 });
 export type Catalogue = z.infer<typeof catalogueSchema>;
 const cache = new WeakMap<Catalogue, Record<string, ItemDef>>();
-export function worldItems(w?: Pick<World, 'catalogue'>): Record<string, ItemDef> {
+const fuelCache = new WeakMap<Record<string, ItemDef>, Map<number, Record<string, ItemDef>>>();
+export function worldItems(
+  w?: Pick<World, 'catalogue'> & Partial<Pick<World, 'settings'>>,
+): Record<string, ItemDef> {
+  const base = catalogueItems(w);
+  const units = w?.settings?.fuelUnitsPerItem ?? items.fuel.fuel!;
+  if (units === base.fuel.fuel) return base;
+  let tuned = fuelCache.get(base);
+  if (!tuned) {
+    tuned = new Map();
+    fuelCache.set(base, tuned);
+  }
+  let result = tuned.get(units);
+  if (!result) {
+    result = { ...base, fuel: { ...base.fuel, fuel: units } };
+    tuned.set(units, result);
+  }
+  return result;
+}
+function catalogueItems(w?: Pick<World, 'catalogue'>): Record<string, ItemDef> {
   if (!w?.catalogue) return items;
   let result = cache.get(w.catalogue);
   if (!result) {

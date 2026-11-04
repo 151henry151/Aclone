@@ -1,3 +1,4 @@
+import { fuelRules } from '../shared/fuel-rules';
 import { strandedVessel } from '../shared/towing';
 import { charterOffers } from '../shared/charter';
 import { fishingOffers, fishingCrewCaptain, deckhands } from '../shared/fishing-expedition';
@@ -150,10 +151,23 @@ export function prepareFrame(w: World): Frame {
         id,
         {
           ...t,
+          fuelService:
+            t.kind === 'fuel' && w.players[t.owner]
+              ? {
+                  ownerName: w.players[t.owner].name,
+                  ownerOnline: w.players[t.owner].online,
+                  stopped:
+                    !t.attached ||
+                    !!(
+                      w.players[t.attached] &&
+                      Math.abs(w.players[t.attached].speed) <= fuelRules(w.settings).refuelSpeed
+                    ),
+                }
+              : undefined,
           cargo: Object.fromEntries(
             Object.entries(t.cargo).map(([item, n]) => [
               item,
-              t.kind === 'livestock' ? n : n > 0 ? Math.ceil(n / 10) * 10 : 0,
+              t.kind === 'livestock' || t.kind === 'fuel' ? n : n > 0 ? Math.ceil(n / 10) * 10 : 0,
             ]),
           ),
         },

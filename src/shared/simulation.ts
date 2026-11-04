@@ -1,3 +1,5 @@
+import { fuelRuleFields } from './fuel-rules';
+import { fuelTrailerAction } from './fuel-sales';
 import { inlandBlocksGround, riverDepth } from './inland-travel';
 import { riverDockAccepts } from './river-dock';
 import { surfaceWaterLevel } from './ocean';
@@ -717,6 +719,8 @@ export function act(w: World, id: string, a: Action): string {
       farmAction(w, p, nearby(w, p, a.building), a);
       break;
     }
+    case 'fuelTrailer':
+      return fuelTrailerAction(w, p, a);
     case 'trade': {
       const b = nearby(w, p, a.building),
         item = str(a.item);
@@ -1883,7 +1887,8 @@ export function act(w: World, id: string, a: Action): string {
           Object.hasOwn(w.settings, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
-            Object.hasOwn(gatheringSceneryFields, key),
+            Object.hasOwn(gatheringSceneryFields, key) ||
+            Object.hasOwn(fuelRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1904,6 +1909,9 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const fuelField = fuelRuleFields[key as keyof typeof fuelRuleFields];
+        if (fuelField && 'min' in fuelField)
+          num(v, fuelField.min, fuelField.max, fuelField.step === 1);
         const walkingField = walkingRuleFields[key as keyof typeof walkingRuleFields];
         const gatheringField = gatheringSceneryFields[key as keyof typeof gatheringSceneryFields];
         if (gatheringField && 'min' in gatheringField)

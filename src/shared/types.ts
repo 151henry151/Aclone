@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import type { FuelRules } from './fuel-rules';
 import type { FlightRules } from './flight-rules';
 import type { WalkingRules } from './walking-rules';
 import type { GatheringSceneryRules } from './gathering-scenery';
@@ -266,7 +267,7 @@ export interface Building {
   farmLandCost?: number;
 }
 export interface Ledger {
-  details?: { building?: string; item?: string; quantity?: number };
+  details?: { building?: string; trailer?: string; item?: string; quantity?: number };
   id: number;
   time: number;
   kind: 'faucet' | 'transfer' | 'sink';
@@ -283,7 +284,11 @@ export interface Zone {
   radius: number;
 }
 export interface Settings
-  extends Partial<FlightRules>, Partial<WalkingRules>, Partial<GatheringSceneryRules> {
+  extends
+    Partial<FlightRules>,
+    Partial<WalkingRules>,
+    Partial<GatheringSceneryRules>,
+    Partial<FuelRules> {
   crowAbilities: boolean;
   lotteryEnabled: boolean;
   lotteryTicketPrice: number;

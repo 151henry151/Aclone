@@ -95,8 +95,7 @@
   "fuel": {
     "name": "Fuel",
     "weight": 1,
-    "price": 2000,
-    "fuel": 8
+    "price": 2000
   },
   "fish": {
     "name": "Small fish",
