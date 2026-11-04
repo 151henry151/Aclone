@@ -214,5 +214,9 @@
   "charterReturnCooldown": 60,
   "towDefaultFee": 20000,
   "towMaximumFee": 10000000,
-  "towOfferSeconds": 600
+  "towOfferSeconds": 600,
+  "npcHouseholdSeconds": 21600,
+  "npcBudgetNeedAllowance": 15000,
+  "npcBudgetCarriedShare": 0.5,
+  "npcBudgetFuelThreshold": 8
 }

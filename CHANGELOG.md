@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident household forecast horizons, need allowances, carried-nutrition credit and fuel reserves as world rules; align household and homecoming forecasts with the existing shelter-consumption multiplier while retaining explicit trip horizons and daily cost comparisons.
+
 - Expose tug-rescue fee defaults, ceilings and offer lifetimes as world rules; preserve posted terms and full escrow through edits and reloads, and reject expired acceptance before taking payment.
 
 - Expose charter fare, duration, invitation and return-request limits as world rules; quote local terms in Inventory while preserving issued offers, held fares, elapsed time and cancellation refunds across edits and reloads.

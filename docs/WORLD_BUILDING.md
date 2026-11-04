@@ -728,3 +728,28 @@ holds the full agreed fee, delivery pays it once, and cancellation refunds it in
 full; those conservation rules cannot be disabled. Rules summaries, resident
 observations, portable designs and saves retain the fields; missing settings
 use named defaults. Physical tow limits and boat-death recovery stay separate.
+
+## Resident household forecast rules (unreleased)
+
+**F10 → Rules → Resident household budget** controls estimated living reserves:
+
+- `npcHouseholdSeconds`: 21,600 real seconds by default (six hours), integer
+  60–604,800. Explicit trip and strategic horizons take precedence.
+- `npcBudgetNeedAllowance`: 15,000 need units, integer 0–1,000,000. Subtract
+  this allowance from current need plus forecast consumption before pricing
+  replacement food and drink. Higher allowance lowers the immediate reserve.
+- `npcBudgetCarriedShare`: 0.5, fraction 0–1. Credit this fraction of carried
+  nutrition; valid home/personal-room stocks retain full nutritional credit.
+- `npcBudgetFuelThreshold`: 8 tank units, numeric 0–1,000,000. Below it, with no
+  fuel carried, reserve one Fuel purchase at a known stocked quote or catalogue
+  fallback. Zero removes the fuel reserve.
+
+Budgeting uses perceived suppliers and ordinary prices. It changes discretionary
+spending estimates without creating cash, changing nutrition, or forbidding
+emergency purchases. Valid rooms include rent for the uncovered forecast time;
+expired rooms and another player's house do not count as shelter. Household and
+homecoming forecasts use the existing `homeNeedsMultiplier`; zero is supported
+without NaN. Daily replacement-cost comparisons remain 86,400 real seconds and
+exclude fuel, independently of the ordinary forecast horizon and fuel threshold.
+All four fields are validated, summarized, included in resident observations and
+portable designs, and retained on reload. Missing keys use named defaults.

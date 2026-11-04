@@ -1,3 +1,4 @@
+import { npcHouseholdRuleFields, npcHouseholdRules } from '../shared/npc-household-rules';
 import { towingRuleFields, towingRules } from '../shared/towing-rules';
 import { charterRuleFields, charterRules } from '../shared/charter-rules';
 import { creditRuleFields, creditRules } from '../shared/credit-rules';
@@ -98,6 +99,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(creditRuleFields),
     ...Object.keys(charterRuleFields),
     ...Object.keys(towingRuleFields),
+    ...Object.keys(npcHouseholdRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -121,6 +123,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const household = npcHouseholdRules(settings);
+  const householdFields = `<fieldset class="boat-death-settings"><legend>Resident household budget</legend>${Object.entries(
+    npcHouseholdRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        household[key as keyof typeof household],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Forecasts protect cash for meals, valid shelter and low fuel. Explicit trip horizons take precedence. Carried credit and need allowance change estimates, not actual consumption. Zero fuel threshold removes the fuel reserve; no cash or supplies are granted.</p></fieldset>`;
   const towing = towingRules(settings);
   const towingFields = `<fieldset class="boat-death-settings"><legend>Tug rescue offers</legend>${Object.entries(
     towingRuleFields,
@@ -333,6 +351,7 @@ export function settingsFields(settings: Settings = defaults) {
     creditFields +
     charterFields +
     towingFields +
+    householdFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

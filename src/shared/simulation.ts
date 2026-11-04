@@ -1,3 +1,4 @@
+import { npcHouseholdRuleFields } from './npc-household-rules';
 import { towingRuleFields, towingRulesError } from './towing-rules';
 import { charterRuleFields, charterRulesError } from './charter-rules';
 import { creditRuleFields, creditRulesError } from './credit-rules';
@@ -1961,11 +1962,14 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(creditRuleFields, key) ||
             Object.hasOwn(charterRuleFields, key) ||
             Object.hasOwn(towingRuleFields, key) ||
+            Object.hasOwn(npcHouseholdRuleFields, key) ||
             key === 'loanTerms',
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const creditField = creditRuleFields[key as keyof typeof creditRuleFields];
+        const npcHouseholdField =
+          npcHouseholdRuleFields[key as keyof typeof npcHouseholdRuleFields];
         const towingField = towingRuleFields[key as keyof typeof towingRuleFields];
         const charterField = charterRuleFields[key as keyof typeof charterRuleFields];
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1999,6 +2003,8 @@ export function act(w: World, id: string, a: Action): string {
         if (creditField) num(v, creditField.min, creditField.max, true);
         if (charterField) num(v, charterField.min, charterField.max, true);
         if (towingField) num(v, towingField.min, towingField.max, true);
+        if (npcHouseholdField)
+          num(v, npcHouseholdField.min, npcHouseholdField.max, npcHouseholdField.step === 1);
         const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
         if (loanField) num(v, loanField.min, loanField.max, loanField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];

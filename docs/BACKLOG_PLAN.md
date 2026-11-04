@@ -1967,3 +1967,82 @@ seconds with two concurrent files; all 22 focused tests pass. TypeScript is clea
 changed-file Prettier is complete, and the browser plus inspected screenshots
 meet the criteria. No economic assertions or deadlines were weakened. Ready to
 commit and push.
+
+Pushed and verified `616d5a1` on `backlog-implementation`. **Tug rescue offer rules
+are done.** Continue with resident household reserves and budget constants.
+
+### Gameplay rules — resident household forecast
+
+Before production, expose four household forecasting constants:
+`npcHouseholdSeconds` 21,600 real seconds (integer 60–604,800),
+`npcBudgetNeedAllowance` 15,000 need units (integer 0–1,000,000),
+`npcBudgetCarriedShare` 0.5 (fraction 0–1), and `npcBudgetFuelThreshold` 8 tank
+units (0–1,000,000). Missing settings retain the defaults. The ordinary household
+reserve uses the configured horizon; explicit trip/long-term horizons still take
+precedence. The need allowance and carried nutrition share affect estimated
+replacement purchases, not actual feeding or inventory. A low tank with no
+carried fuel reserves one quoted Fuel purchase; fuel threshold zero disables
+that reserve. Preserve perceived-market quotes, fallback catalogue prices,
+owned-house/valid-room eligibility, stocked pantry deductions and rent accounting.
+Daily replacement-cost comparisons remain exactly one real day, using the same
+need baseline and excluding fuel purchases at every configured threshold.
+
+Test exact default and custom forecasts, explicit horizons, carried credit at
+zero/one, low-fuel boundaries, full pantry, missing suppliers/catalogue fallback,
+expired rooms and no mutation/grants; verify reserve changes feed into optional
+spending. Validate atomic bad edits and creation/summary/editor/design/reload
+parity. Commands: `node_modules/.bin/tsx --test tests/npc-household-rules.test.ts
+ tests/npc-household.test.ts tests/npc-guide.test.ts`, browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/npc-household-rules.spec.ts`, entire
+npm test suite, TypeScript and changed-file Prettier. Browser: edit/reopen all
+four fields, observe the local fixture's reserve change from the actual server
+calculation, and reject an out-of-range fraction without changing saved rules.
+Inspect screenshot/errors. Update WORLD_BUILDING, NPCS, README and imperative
+Unreleased. Further cash floors, strategic horizons, portable reserves and
+business budget rules remain subsequent slices; server AI dollar budgets are
+operational controls, not gameplay currency rules.
+
+Code inspection also found that household/homecoming forecasts repeat 0.8 despite
+the existing `homeNeedsMultiplier` rule already governing actual survival. Before
+production, add regressions for that existing rule at zero and one, including
+zero-rate readiness without NaN and changed pantry-shopping quantities. Reuse
+`homeNeedsMultiplier(w)` in these forecasts; do not add a second shelter setting.
+
+Household red run: correct the fixture's nonexistent store/inn catalogue IDs to
+market/hotel, then confirm all six tests fail for absent rules or editor controls,
+and the existing shelter-rule mismatch (forecast 300 instead of 0 with shelter
+consumption disabled). No production edits precede this run.
+
+The first household browser run confirms saved values and native out-of-range
+refusal, then fails because closing/reopening intentionally preserves an unsaved
+invalid draft. Keep the exact saved-value assertion and reload the page before
+checking it. This tests the authoritative saved value without changing editor
+draft-preservation behavior or removing the refusal check.
+
+Household browser passes in 19.3 seconds: all four controls persist; the local
+fixture's actual server forecast changes from 800 to 300 hundredths without
+changing cash or inventory; an invalid 1.1 fraction displays native range refusal,
+and reload restores the saved 1.0. Inspect both screenshots; no page errors.
+All 21 focused tests pass after docs changes; TypeScript and changed-file
+Prettier are clean. NPC/world-builder docs, README and imperative Unreleased
+are updated. Run the full suite before committing.
+
+The full household run passes 1,495 tests but cancels the unchanged slow compressed
+TCP integration test at its 45-second deadline (581.4 seconds total). Machine
+load averages were 13.70/12.64/8.11 despite two-file scheduling. No test or deadline
+is changed. Run that test alone to distinguish a reproducible network failure
+from contention before deciding whether the completion gate can be met. Do not
+commit this slice or begin the next while the full-suite gate is unresolved.
+
+The isolated slow-link test passes in 37.8 seconds with maximum state age 0.95s,
+18 slow frames and 134 fast frames. Retry the entire unchanged npm test suite with
+one concurrent file (`node_modules/.bin/tsx --test --test-concurrency=1
+ tests/*.test.ts`) to reduce contention further. Preserve all tests, deadlines,
+link rates and acceptance assertions; do not alter the package script.
+
+Household final gates: all 1,496 tests pass in the serial full-suite run (967.2
+seconds). The slow-link test passes in 36.5 seconds under its original 45-second
+deadline, with maximum state age 1.19 seconds. All 21 focused tests pass; TypeScript,
+changed-file Prettier, browser criteria and inspected screenshots are clean.
+The earlier timeout and isolated result remain recorded above; no tests, limits,
+deadlines or package scripts were changed. Ready to commit and push.

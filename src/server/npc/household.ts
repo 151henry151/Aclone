@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { npcHouseholdRules } from '../../shared/npc-household-rules';
+import { homeNeedsMultiplier } from '../../shared/automatic-provisions';
 import type { Player, World, Stock } from '../../shared/types.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 import { alcoholDose } from '../../shared/intoxication.ts';
@@ -27,29 +29,34 @@ export function nutritionIn(w: World, stock: Stock, nutrient: 'food' | 'drink') 
 }
 /** Quotes are from the caller's perceived world, never a hidden market query.
  * Reserve is a target, not a cash grant or a rule preventing emergency purchases. */
-export function householdBudget(w: World, p: Player, seconds = 6 * 3600) {
-  const catalogue = worldItems(w),
+export function householdBudget(
+  w: World,
+  p: Player,
+  seconds = npcHouseholdRules(w.settings).npcHouseholdSeconds,
+) {
+  const rules = npcHouseholdRules(w.settings),
+    catalogue = worldItems(w),
     h = household(w, p),
     stock = householdStock(w, p);
   const roomSeconds =
     h?.kind === 'home'
       ? seconds
       : Math.max(0, Math.min(seconds, (h?.lodging?.guests[p.id]?.until ?? w.time) - w.time));
-  const coveredRateSeconds = seconds - 0.2 * roomSeconds;
+  const coveredRateSeconds = seconds - (1 - homeNeedsMultiplier(w)) * roomSeconds;
   let food = 0,
     drink = 0;
   for (const [nutrient, deficit, rate] of [
     ['food', p.hunger, w.settings.hungerRate],
     ['drink', p.thirst, w.settings.thirstRate],
   ] as const) {
-    // Half carried value is conservative for repeated manual servings; home meals use full value.
+    // Credit carried nutrition conservatively; stocked home meals use their full value.
     const units = Math.max(
       0,
       deficit -
-        15000 +
+        rules.npcBudgetNeedAllowance +
         coveredRateSeconds * rate -
         nutritionIn(w, stock, nutrient) -
-        nutritionIn(w, p.inventory, nutrient) * 0.5,
+        nutritionIn(w, p.inventory, nutrient) * rules.npcBudgetCarriedShare,
     );
     const quotes = w.buildings.flatMap((b) =>
       Object.entries(b.sell).flatMap(([id, price]) =>
@@ -83,7 +90,7 @@ export function householdBudget(w: World, p: Player, seconds = 6 * 3600) {
     )
     .map((b) => b.sell.fuel);
   const fuel =
-    p.fuel < 8 && !hasFuel
+    p.fuel < rules.npcBudgetFuelThreshold && !hasFuel
       ? fuelQuotes.length
         ? Math.min(...fuelQuotes)
         : (catalogue.fuel?.price ?? 0)
@@ -129,9 +136,16 @@ export function dailyLivingCost(w: World, p: Player) {
         ),
       }
     : w;
+  const rules = npcHouseholdRules(w.settings);
   return householdBudget(
     empty,
-    { ...p, inventory: {}, hunger: 15000, thirst: 15000, fuel: 100 },
+    {
+      ...p,
+      inventory: {},
+      hunger: rules.npcBudgetNeedAllowance,
+      thirst: rules.npcBudgetNeedAllowance,
+      fuel: rules.npcBudgetFuelThreshold,
+    },
     86400,
   );
 }

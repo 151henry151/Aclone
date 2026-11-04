@@ -1,3 +1,4 @@
+import { homeNeedsMultiplier } from '../../shared/automatic-provisions';
 import { survivalRules } from '../../shared/survival-rules';
 import { housingChoices } from './housing.ts';
 import { alcoholDose } from '../../shared/intoxication.ts';
@@ -35,24 +36,24 @@ export function offlineReadiness(w: World, p: Player, awaySeconds: number) {
   const stock = b ? (b.kind === 'home' ? b.stock : b.lodging!.guests[p.id].stock) : {};
   const until = !b ? 0 : b.kind === 'home' ? Infinity : b.lodging!.guests[p.id].until;
   const foodSeconds =
-    w.settings.hungerRate > 0
+    w.settings.hungerRate * homeNeedsMultiplier(w) > 0
       ? Math.max(
           0,
           survivalRules(w.settings).needsAutoFeedThreshold -
             p.hunger +
             nutritionIn(w, stock, 'food'),
         ) /
-        (w.settings.hungerRate * 0.8)
+        (w.settings.hungerRate * homeNeedsMultiplier(w))
       : Infinity;
   const drinkSeconds =
-    w.settings.thirstRate > 0
+    w.settings.thirstRate * homeNeedsMultiplier(w) > 0
       ? Math.max(
           0,
           survivalRules(w.settings).needsAutoFeedThreshold -
             p.thirst +
             nutritionIn(w, stock, 'drink'),
         ) /
-        (w.settings.thirstRate * 0.8)
+        (w.settings.thirstRate * homeNeedsMultiplier(w))
       : Infinity;
   const coveredSeconds = b ? Math.max(0, Math.min(foodSeconds, drinkSeconds, until - w.time)) : 0;
   return {
@@ -171,7 +172,10 @@ export function homecomingPlan(
       ? Math.ceil(
           Math.max(
             0,
-            need + (awaySeconds + 900) * rate * 0.8 - 20000 - nutritionIn(w, stock, nutrient),
+            need +
+              (awaySeconds + 900) * rate * homeNeedsMultiplier(w) -
+              20000 -
+              nutritionIn(w, stock, nutrient),
           ) / items[item][nutrient]!,
         )
       : need >= 15000
