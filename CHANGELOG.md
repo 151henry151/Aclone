@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose the maximum farm plot count as a world rule; preserve purchased land and crops when limits fall, render and reserve larger farms, and retain purchased plot counts in portable designs.
+
 - Expose Expanded and Large construction cost multipliers as world rules; apply the same cash and material bills in previews and server placement while preserving existing sites.
 
 - Expose construction spacing, shoreline placement reach, respawn/town clearances and cancellation refunds as world rules; show the current refund share and keep resident site searches within the same spacing constraints.

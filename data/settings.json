@@ -343,5 +343,6 @@
   "townCentreClearance": 8,
   "constructionRefundShare": 0.75,
   "expandedConstructionCostMultiplier": 1.55,
-  "largeConstructionCostMultiplier": 2.15
+  "largeConstructionCostMultiplier": 2.15,
+  "maximumFarmPlots": 16
 }

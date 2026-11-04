@@ -134,7 +134,7 @@ Learn **farmer**, then own or work at a farm. Water, compost, gravel and topsoil
 - **Tea:** spring/summer, 36 days (6h), leaf; packed tea.
 - **Coffee:** spring, 60 days (10h), bean; roasted coffee.
 
-Owners can buy four adjoining plots from the farm's Main panel: **150d**, then **250d**, then **350d**, up to **16 plots**. This uses personal cash, not the farm till; no farmer skill is needed to buy land. New parcels extend beside the existing fields and require dry, level, unoccupied land clear of roads and no-build zones. Expansion preserves crops and stays with the property on sale or death. Nearby buildings cannot be built over reserved fields. Seed costs and harvest labour still apply to every plot.
+Owners can buy four adjoining plots from the farm's Main panel: **150d**, then **250d**, then **350d** and 100d more per subsequent parcel, up to the world’s plot limit (default **16 plots**). Lowering the limit preserves purchased land and crops. This uses personal cash, not the farm till; no farmer skill is needed to buy land. New parcels extend beside the existing fields and require dry, level, unoccupied land clear of roads and no-build zones. Expansion preserves crops and stays with the property on sale or death. Nearby buildings cannot be built over reserved fields. Seed costs and harvest labour still apply to every plot.
 
 Seeds draw farm investment. Irrigate with 3 carried water, up to three treatments. Rain helps; crops differ in demand, frost and wet-soil sensitivity. One compost fertilizes for +33% yield; lacking compost buys imported fertilizer at Harbour's default compost price (39.53d). Repeating a crop family loses 20% yield; rotate or restore soil. [Economy](ECONOMY.md#crops-and-soil) explains drainage/restoration.
 

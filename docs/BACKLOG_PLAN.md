@@ -3252,3 +3252,44 @@ quoted cash/material bill. Inspect all five screenshots; no browser errors.
 TypeScript identifies an unreachable fallback after the standard-size early
 return; remove that dead branch and rerun TypeScript cleanly. Changed-file
 Prettier and diff checks pass. No unaffected runtime/browser tests are repeated.
+
+Pushed and verified `668adea` on `backlog-implementation`. **Construction expansion
+cost multipliers are done.**
+
+### Gameplay rules — maximum farm plots
+
+Before production, add `maximumFarmPlots` (default 16) to Construction rules;
+validate multiples of four from 4 through 64. Four retains the starting parcel
+and disables further expansion. Buying still adds four plots, charges the existing
+increasing land price and checks the full reserved land. Lowering the cap must not
+remove purchased plots, planted crops or access to them. Saved counts above 16
+must remain usable and rendered, with terrain/roads/property reservations intact.
+Missing settings retain 16. Preserve the farm's purchased plot count in portable
+designs as well as saves; designs still omit active crops and operating stock.
+
+Write failing farm-plot-limit-rules tests for defaults/missing keys, 4/8/20 caps,
+64-count support, invalid/fractional/non-four values, exact one-time charges,
+blocked/unauthorized/poor expansion, planting and harvesting the twentieth plot,
+lowered-cap preservation, field geometry/road reservation and design/save reload.
+Check editor/summary/observation values. Browser: edit/reopen the rule, buy the
+fifth parcel from a sixteen-plot fixture, inspect 20 field cards and the new land,
+see the cap message with no purchase button, lower to four without losing land,
+reject invalid six, and verify reload. Run new tests plus hay, farming, spawn-reserve,
+npc-farm-budget-rules, npc-hay and npc-guide; TypeScript, changed-file Prettier,
+player/economy/world-builder docs, README and imperative Unreleased are gates.
+Pasture parcel dimensions follow separately.
+
+Farm limit red: defaults/validation are absent, expansion stops at the fixed 16
+cap, and the twentieth plot is absent from land reservations. Correct the owner
+fixture to make the nonowner a worker so it reaches the owner-only purchase
+check; then it exposes the fixed-cap error for the other scenarios. All five
+checks pass after implementation. Compare serialized crop records without
+undefined-only properties because JSON intentionally omits those keys; crop
+content, dates and care values still compare exactly.
+
+Farm-limit gates pass: 46 relevant checks in 11.7 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 29.5 seconds with no
+errors: purchase the fifth parcel for 450d, show 20 cards and the cap refusal,
+lower to four without removing fields, reject six as a non-four increment, and
+retain four/20 across reload. Inspect all five screenshots, including the new
+rows of field geometry and the twentieth fallow plot. No full suite runs.

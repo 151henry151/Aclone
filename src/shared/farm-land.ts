@@ -1,3 +1,4 @@
+import { constructionRules, constructionRuleFields } from './construction-rules';
 import { inlandLevel } from './inland-water';
 import { spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
@@ -10,9 +11,19 @@ import type { Building, World } from './types.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
 import { blocksBuilding } from './building-shapes.ts';
 import { townRoads, roadDistance } from './town.ts';
-export const MAX_FARM_PLOTS = 16;
+/** Stored counts survive a lower current purchase limit. */
+export function validFarmPlotCount(value: unknown): value is number {
+  const spec = constructionRuleFields.maximumFarmPlots;
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= spec.min &&
+    value <= spec.max &&
+    value % spec.step === 0
+  );
+}
 export function farmPlotCount(b: Pick<Building, 'farmPlots'>) {
-  return [4, 8, 12, 16].includes(b.farmPlots ?? 4) ? (b.farmPlots ?? 4) : 4;
+  return validFarmPlotCount(b.farmPlots) ? b.farmPlots : 4;
 }
 /** Four plots per parcel, two rows. Existing four-plot farms keep their coordinates. */
 export function farmPlotLocal(index: number) {
@@ -56,7 +67,8 @@ export function onFarmLand(
 }
 export function farmExpansionBlocker(w: World, b: Building): string | undefined {
   const count = farmPlotCount(b);
-  if (count >= MAX_FARM_PLOTS) return 'This farm already has the maximum 16 plots';
+  const limit = constructionRules(w.settings).maximumFarmPlots;
+  if (count >= limit) return `This farm already has the maximum ${limit} plots`;
   const roads = townRoads(w);
   for (let i = count; i < count + 4; i++) {
     const p = farmPlotPosition(b, i);

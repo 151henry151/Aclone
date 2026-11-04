@@ -1,4 +1,4 @@
-import { constructionRefundPercentage } from '../shared/construction-rules';
+import { constructionRefundPercentage, constructionRules } from '../shared/construction-rules';
 import { charterRules } from '../shared/charter-rules';
 import { economyRules, lighthouseWage } from '../shared/economy-rules';
 import { survivalRules, skillFits, skillSlotsUsed } from '../shared/survival-rules';
@@ -58,12 +58,7 @@ import { buildMenuHtml, mountBuildMenu } from './build-menu';
 let closeBuildPreview: (() => void) | undefined;
 import { labourQuote, labourShiftPay, labourDailyCap } from '../shared/public-labour.ts';
 import { actionVisible, refreshActionVisibility } from './action-visibility';
-import {
-  farmPlotCount,
-  farmExpansionCost,
-  farmExpansionBlocker,
-  MAX_FARM_PLOTS,
-} from '../shared/farm-land';
+import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../shared/farm-land';
 import { constructionRefund } from '../shared/construction';
 import { crowClasses } from '../shared/robocrows';
 import { lotteryPanel } from './lottery';
@@ -2311,7 +2306,7 @@ function buildingWindow(b: Building) {
         : `<p data-farm-policy-status>${esc(farmPolicySummary(world, b))}</p>`;
       if (selfOwned) {
         const blocked = farmExpansionBlocker(world, b);
-        html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${MAX_FARM_PLOTS} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < MAX_FARM_PLOTS ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
+        html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${constructionRules(world.settings).maximumFarmPlots} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < constructionRules(world.settings).maximumFarmPlots ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
       const canTend =
         b.owner === me!.id ||

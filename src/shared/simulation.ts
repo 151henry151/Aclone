@@ -1,3 +1,4 @@
+import { validFarmPlotCount } from './farm-land';
 import { constructionRules, constructionRuleFields } from './construction-rules';
 import { npcAccountRuleFields } from './npc-account-rules';
 import { npcJourneyRuleFields } from './npc-journey-rules';
@@ -2044,6 +2045,8 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (constructionField) num(v, constructionField.min, constructionField.max);
+        if (key === 'maximumFarmPlots')
+          requireThat(validFarmPlotCount(v), 'Choose a farm plot limit in multiples of four');
         if (npcAccountField) num(v, npcAccountField.min, npcAccountField.max, true);
         if (npcCargoField) num(v, npcCargoField.min, npcCargoField.max, true);
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);

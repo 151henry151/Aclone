@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const constructionRuleFields = {
+  maximumFarmPlots: { label: 'Maximum farm plots', min: 4, max: 64, step: 4 },
   expandedConstructionCostMultiplier: {
     label: 'Expanded construction cost multiplier',
     min: 1,

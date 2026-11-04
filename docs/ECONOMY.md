@@ -206,7 +206,7 @@ frost-sensitive crop. See [the farming guide](PLAYING.md#farming) for planting w
 
 Hay is a ten-day grass crop for cattle and sheep. Its default route is **farm sells 5d → hay barn buys 5.60d / sells 7d → dairy or sheepfold buys 7.80d**. Harbour/spaceport export bids are 4.50d and import asks 10d, favouring local trade. Hay replaces manufactured feed one-for-one for cows/sheep, including breeding, but never replaces water; pigs/chickens still need feed. All upkeep is charged once per check and recorded as the actual hay/feed consumed.
 
-A hay barn is a 3,000-bale merchant store, not a factory: no recipe, wages or free restocking. Owners fund bids, buy seasonal surplus and keep winter reserves. Storage has no spoilage. Farm expansion buys four more plots at a time (150d, 250d, 350d), up to sixteen; land cost increases property base value, including a later estate. It grants no stock, seed capital or harvesting labour.
+A hay barn is a 3,000-bale merchant store, not a factory: no recipe, wages or free restocking. Owners fund bids, buy seasonal surplus and keep winter reserves. Storage has no spoilage. Farm expansion buys four more plots at a time (150d, 250d, 350d, then 100d more per parcel), up to the world’s plot limit (default sixteen); land cost increases property base value, including a later estate. It grants no stock, seed capital or harvesting labour.
 
 Existing saves add only missing hay quotes on ordinary farms and livestock businesses, and public Harbour/spaceport shops. Existing quotes, balances, stock and custom building templates remain unchanged; the necessities shop keeps its limited catalogue.
 

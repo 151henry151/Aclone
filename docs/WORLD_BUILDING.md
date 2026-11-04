@@ -1176,3 +1176,9 @@ requirements use the multiplier, rounded up after model/finish costs. A value of
 1 removes the expansion surcharge. Standard sizes, footprints, storage, rooms
 and production stay unchanged; existing sites retain their recorded bills and
 refund base. Preview estimates and server charges use the same world rules.
+
+`maximumFarmPlots` defaults to 16 and accepts multiples of four from 4 through 64. Four disables further purchases beyond the starting parcel. Lowering the
+limit preserves existing land and crops, which remain usable. New purchases add
+four plots and retain normal costs, ownership, funds and land-clearance checks.
+Saves and portable designs preserve purchased plot counts; designs omit active
+crops and stock. The farm panel shows its purchased count and current limit.

@@ -1,3 +1,4 @@
+import { validFarmPlotCount } from '../shared/farm-land';
 import {
   trailerTuningSchema,
   trailerAccepts,
@@ -185,6 +186,10 @@ const designSchema = z.object({
           }, 'Invalid bulk discount levels')
           .transform(validateBulkDiscounts)
           .optional(),
+        farmPlots: z
+          .number()
+          .refine(validFarmPlotCount, 'Invalid purchased farm plot count')
+          .optional(),
         pasture: z
           .object({
             x: z.number().min(-100).max(100),
@@ -318,6 +323,7 @@ export function exportDesign(w: World, includeMedia = false) {
         sell,
         bulkDiscounts,
         farmPolicy,
+        farmPlots,
         pasture,
         wage,
         price,
@@ -340,6 +346,7 @@ export function exportDesign(w: World, includeMedia = false) {
         sell,
         bulkDiscounts,
         farmPolicy,
+        farmPlots,
         pasture,
         wage,
         price,
@@ -402,6 +409,8 @@ export function applyDesign(w: World, input: unknown) {
     (() => {
       if (b.architecture && !buildingArchitecture(b.kind, b.architecture))
         throw Error('Invalid architectural model');
+      if (b.farmPlots !== undefined && b.kind !== 'farm')
+        throw Error('Only farms can have purchased plots');
       const result = Object.assign(makeBuilding(b.id, b.kind, b.x, b.z), b, { owner: w.owner });
       if (b.architecture || b.size) {
         const def = worldBuildings(w)[b.templateId ?? b.kind];
