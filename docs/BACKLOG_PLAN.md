@@ -1238,3 +1238,26 @@ rule tests pass, TypeScript is clean (`/tmp/aclone-survival-school-tsc-final.log
 and explicit-file Prettier checking passes. Browser acceptance and screenshots
 are verified as described above. Tuition/licence/relief is ready to commit and
 push; the full survival fieldset and remaining rules entry are not done.
+
+Pushed `25766db`; GitHub's branch SHA matches. **The tuition, licence-limit and
+public-labour slice is done.** The survival/needs section remains in progress.
+
+### Current stop — health-default clarification
+
+The next survival criterion has conflicting defaults. BACKLOG's survival bullet
+names “the base maximum health (65,000)”, while its Approach requires “the default
+reproduces today's behaviour”. `src/shared/nutrition.ts` currently computes
+60,000 plus the bounded nutrition adjustment; `tests/nutrition.test.ts` asserts
+that 60,000 baseline and 66,000 upper ceiling. The 65,000 value in simulation is
+the energy ceiling. Choosing either health default would silently override one
+of those requirements, so the explicit question sent to Henry remains pending:
+**preserve 60,000 health, or change the health default to 65,000?**
+
+No health default has been changed. Stop here for that answer; do not mark the
+remaining survival/needs work or the gameplay-rules entry done, and do not move
+on to economy or later backlog sections. Automatic feeding/starvation thresholds,
+health/nutrition limits, repeat-serving and energy-regeneration rules still need
+completion criteria, red tests and implementation. All later ordered work also
+remains pending. Piloted spaceflight stays excluded. Resume with this same branch
+and plan after the default is resolved; deployment still requires Henry's explicit
+authorization.
