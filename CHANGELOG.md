@@ -22,6 +22,7 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Render untouched gathering grounds as natural features without abandoned tools or worked debris; add configurable settlement/use wear, retain an explicit legacy scenery mode, and update loaded sites when their state changes.
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.
 - The public airfield hangar buys Fuel for 50d, above the boathouse pump, the garage bid and the harbour bid, and below its own 53.50d pump. Its till receives 500s once.
 - Pay a biplane bought at the airfield hangar into that hangar's till.

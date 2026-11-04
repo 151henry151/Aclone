@@ -17,7 +17,7 @@ import {
   type EvergreenSite,
 } from './evergreen';
 import { foliage, random } from './scenery';
-import { resourceScenery } from './resource-scenery';
+import { resourceScenery, updateResourceScenery } from './resource-scenery';
 import { fadeSceneryIntoFog } from './scenery-fog';
 import { contactShadow, seasonalMaterial, texture } from './materials';
 
@@ -98,6 +98,11 @@ export class CountrysideChunks {
     this.chunks.clear();
     this.world = undefined;
   }
+  setWorld(w: World) {
+    if (!this.world) return;
+    this.world = w;
+    for (const chunk of this.chunks.values()) updateResourceScenery(chunk, w);
+  }
   get active() {
     return !!this.world;
   }
@@ -161,6 +166,7 @@ export class CountrysideChunks {
       }
       const step = this.pending.job.next();
       if (step.done) {
+        updateResourceScenery(step.value, this.world!);
         this.chunks.set(this.pending.key, step.value);
         this.pending = undefined;
         completed++;
@@ -330,6 +336,7 @@ export class CountrysideChunks {
           n.x < x0 + chunkSize &&
           n.z >= z0 &&
           n.z < z0 + chunkSize,
+        loadRadius,
       );
       // Gathering-ground materials are fresh per chunk; snow and autumn apply to them too.
       chunk.traverse((o) => {

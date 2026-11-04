@@ -1,3 +1,8 @@
+import {
+  gatheringSceneryRules,
+  gatheringSceneryFields,
+  gatheringSceneryModes,
+} from '../shared/gathering-scenery';
 import { vehicleEditor } from './vehicle-editor';
 import { walkingRules, walkingRuleFields } from '../shared/walking-rules';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -81,6 +86,7 @@ export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
+    ...Object.keys(gatheringSceneryFields),
     'resourceRecoveryMultiplier',
     'tidalRange',
     'oceanWaves',
@@ -96,6 +102,26 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const gathering = gatheringSceneryRules(settings);
+  const gatheringFields = `<fieldset class="boat-death-settings"><legend>Gathering scenery</legend>${select(
+    gatheringSceneryFields.gatheringScenery.label,
+    'gatheringScenery',
+    gatheringSceneryModes.map((mode) => [mode, mode.replaceAll('-', ' ')]),
+    gathering.gatheringScenery,
+  )}${Object.entries(gatheringSceneryFields)
+    .filter(([, spec]) => 'min' in spec)
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        gathering[key as keyof typeof gathering],
+        'number',
+        'min' in spec ? `min="${spec.min}" max="${spec.max}" step="1"` : '',
+      ),
+    )
+    .join(
+      '',
+    )}<p>Natural sites have no tools or wear. Near-settlement mode adds a footpath within the town buffer, while depleted or actively gathered, or during the recent-use window. Set the window to 0 to disable recent-use wear. Always-worked restores legacy tools and cut timber. These visual rules do not change gathering or required inventory implements.</p></fieldset>`;
   const walking = walkingRules(settings);
   const walkingFields = `<fieldset class="boat-death-settings"><legend>Walking in snow</legend><label class="check"><input name="walkingSnow" type="checkbox" ${walking.walkingSnow ? 'checked' : ''}>${walkingRuleFields.walkingSnow.label}</label>${field(walkingRuleFields.walkingSnowScale.label, 'walkingSnowScale', walking.walkingSnowScale, 'number', `min="${walkingRuleFields.walkingSnowScale.min}" max="${walkingRuleFields.walkingSnowScale.max}" step="0.1"`)}<p>Default 1 uses the tractor snow curve. 0 removes extra field drag; 2 strengthens it. Roads retain their wet-road pace. Ordinary walking and Shift share this limit; bare ground is unchanged.</p></fieldset>`;
   const flying = flightRules(settings);
@@ -126,6 +152,7 @@ export function settingsFields(settings: Settings = defaults) {
     boatRules +
     flightFields +
     walkingFields +
+    gatheringFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

@@ -59,6 +59,13 @@ Use **Resources** or **M** to find finite woodland, stone, gravel and topsoil gr
 
 Untrained gathering yields 3 units in 20 seconds; forester (wood) or excavator (minerals/soil) yields 6 in 12 seconds. The right implement is reusable. Shared reserves, regrowth, obstruction and production chains are in [Economy](ECONOMY.md#gather-deliver-produce).
 
+Untouched grounds look natural: timber stands with windfall, weathered stone,
+gravel hollows and eroded soil banks. By default a small earth footpath marks
+sites near towns or recently worked; tools are carried in your inventory rather
+than left at each site. A world builder can choose completely natural scenery or
+restore the old worked-site models. Appearance does not change the resource icon,
+required implement, yield or remaining reserve shown by Gather.
+
 Open **Inventory** to use supplies or **Discard 1** unwanted item. Discarding is permanent and pays nothing; sell or store goods when possible. If an empty tractor tank leaves too much cargo to switch to walking, discarding surplus frees capacity.
 
 ## Reading the terrain map

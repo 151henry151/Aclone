@@ -1,9 +1,11 @@
 import { creatorModel } from './creator-model';
 import { fadeSceneryIntoFog } from './scenery-fog';
+import { seasonalMaterial } from './materials';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { worldResources } from '../shared/resources';
+import { gatheringSceneryStyle, type GatheringSceneryStyle } from '../shared/gathering-scenery';
 import { terrainHeight } from '../shared/simulation';
 import type { World } from '../shared/types';
 
@@ -13,7 +15,13 @@ function random(seed: number) {
 type Surface =
   'rock' | 'cutStone' | 'soil' | 'gravel' | 'bark' | 'wood' | 'leaves' | 'metal' | 'rubber';
 /** Authored natural silhouettes, batched by surface. Metres match tractors and people. */
-export function resourceGeometry(item: string, variant: number, low: boolean) {
+export function resourceGeometry(
+  item: string,
+  variant: number,
+  low: boolean,
+  style: GatheringSceneryStyle = 'natural',
+) {
+  const legacy = style === 'legacy';
   const rand = random(7419 + variant * 2371 + item.length * 91);
   const parts = new Map<Surface, T.BufferGeometry[]>();
   const add = (
@@ -107,6 +115,7 @@ export function resourceGeometry(item: string, variant: number, low: boolean) {
     const dx = (Math.sin(angle) * length) / 2,
       dz = (Math.cos(angle) * length) / 2;
     stick('bark', [x - dx, radius, z - dz], [x + dx, radius + 0.05, z + dz], radius, radius * 0.78);
+    if (!legacy) return;
     const axis = new T.Vector3(dx * 2, 0.05, dz * 2).normalize();
     for (const sign of [-1, 1]) {
       const disc = new T.CircleGeometry(radius * (sign === 1 ? 0.77 : 0.99), low ? 12 : 20);
@@ -225,37 +234,46 @@ export function resourceGeometry(item: string, variant: number, low: boolean) {
         }
       }
     }
-    // One felled trunk with a broken branch and scattered short firewood rounds.
+    // A windfall retains bark and a broken branch; only legacy sites add cut ends/rounds.
     log(-0.6, 0.3, 4.7, 0.31, 0.72 + variant * 0.12);
     stick('bark', [-1.5, 0.32, -0.8], [-2.35, 0.7, -1.6], 0.09, 0.025);
-    for (let i = 0; i < 3; i++)
-      log(
-        1.2 + rand() * 1.9,
-        -0.3 + rand() * 2,
-        0.65 + rand() * 0.5,
-        0.17 + rand() * 0.07,
-        rand() * 5,
-      );
-    stick('bark', [-2.7, 0, -1.9], [-2.7, 0.58, -1.9], 0.4, 0.32);
-    add('wood', new T.CircleGeometry(0.31, 20), -2.7, 0.585, -1.9, new T.Euler(-Math.PI / 2, 0, 0));
-    for (let i = 0; i < (low ? 12 : 28); i++) {
-      const x = (rand() - 0.5) * 3,
-        z = (rand() - 0.5) * 2;
+    if (legacy) {
+      for (let i = 0; i < 3; i++)
+        log(
+          1.2 + rand() * 1.9,
+          -0.3 + rand() * 2,
+          0.65 + rand() * 0.5,
+          0.17 + rand() * 0.07,
+          rand() * 5,
+        );
+      stick('bark', [-2.7, 0, -1.9], [-2.7, 0.58, -1.9], 0.4, 0.32);
       add(
         'wood',
-        new T.BoxGeometry(0.035 + rand() * 0.07, 0.012, 0.02 + rand() * 0.06),
-        x,
-        0.065,
-        z,
-        new T.Euler(0, rand() * 6, 0),
+        new T.CircleGeometry(0.31, 20),
+        -2.7,
+        0.585,
+        -1.9,
+        new T.Euler(-Math.PI / 2, 0, 0),
       );
+      for (let i = 0; i < (low ? 12 : 28); i++) {
+        const x = (rand() - 0.5) * 3,
+          z = (rand() - 0.5) * 2;
+        add(
+          'wood',
+          new T.BoxGeometry(0.035 + rand() * 0.07, 0.012, 0.02 + rand() * 0.06),
+          x,
+          0.065,
+          z,
+          new T.Euler(0, rand() * 6, 0),
+        );
+      }
     }
   } else if (item === 'stone') {
     patch('gravel', 5.7, 0.12);
-    stone(-1.25, -0.6, 2.15, 1.9, 1.7, true);
+    stone(-1.25, -0.6, 2.15, 1.9, 1.7, legacy);
     stone(2, -1.2, 1.45, 1.4, 1.2);
     stone(0.2, 2.4, 0.7, 0.43, 0.55);
-    // Fresh angular spalls contrast with weathered grey exteriors.
+    // Naturally fractured stones share the weathered exterior; legacy workings expose fresh spalls.
     for (let i = 0; i < (low ? 14 : 32); i++) {
       const a = rand() * Math.PI * 2,
         r = 1.7 + rand() * 3,
@@ -263,7 +281,7 @@ export function resourceGeometry(item: string, variant: number, low: boolean) {
       const g = new T.DodecahedronGeometry(s, 0);
       g.scale(1, 0.55, 0.75);
       add(
-        i % 3 === 0 ? 'cutStone' : 'rock',
+        legacy && i % 3 === 0 ? 'cutStone' : 'rock',
         g,
         Math.sin(a) * r,
         s * 0.45,
@@ -271,12 +289,16 @@ export function resourceGeometry(item: string, variant: number, low: boolean) {
         new T.Euler(rand(), rand() * 6, rand()),
       );
     }
-    stick('wood', [1.1, 0.1, 1.2], [1.4, 0.65, 1.45], 0.035);
-    add('metal', new T.BoxGeometry(0.38, 0.13, 0.13), 1.4, 0.65, 1.45, new T.Euler(0, 0.4, 0.5));
+    if (legacy) {
+      stick('wood', [1.1, 0.1, 1.2], [1.4, 0.65, 1.45], 0.035);
+      add('metal', new T.BoxGeometry(0.38, 0.13, 0.13), 1.4, 0.65, 1.45, new T.Euler(0, 0.4, 0.5));
+    }
   } else {
     patch(item === 'gravel' ? 'gravel' : 'soil', 6.5, item === 'gravel' ? 0.85 : 1.0);
-    if (item === 'gravel') wheelbarrow();
-    else shovel(2.3, 0.4);
+    if (legacy) {
+      if (item === 'gravel') wheelbarrow();
+      else shovel(2.3, 0.4);
+    }
     for (let i = 0; i < (low ? 24 : 64); i++) {
       const a = rand() * Math.PI * 2,
         r = 2.1 + rand() * 3.3,
@@ -310,6 +332,17 @@ export function resourceGeometry(item: string, variant: number, low: boolean) {
         );
       }
     }
+  }
+  if (style === 'worn') {
+    // A short earth footpath into the hollow, conformed to the terrain below.
+    add(
+      'soil',
+      new T.PlaneGeometry(0.75, 2.8, 1, 2),
+      0,
+      0.09,
+      item === 'logs' ? 4.8 : 6,
+      new T.Euler(-Math.PI / 2, 0, 0.12),
+    );
   }
   const result: Partial<Record<Surface, T.BufferGeometry>> = {};
   for (const [key, geometries] of parts) {
@@ -466,11 +499,18 @@ function resourceTexture(kind: 'rock' | 'soil' | 'gravel' | 'bark' | 'wood' | 'l
   maps.set(kind, map);
   return map;
 }
+const siteUpdates = new WeakMap<T.Group, { group: T.Group; update: (world: World) => void }[]>();
+/** Refresh only installed sites; geometry is rebuilt only when its visual state changes. */
+export function updateResourceScenery(root: T.Group, world: World) {
+  for (const site of siteUpdates.get(root) ?? [])
+    if (site.group.parent === root) site.update(world);
+}
 export function resourceScenery(
   root: T.Group,
   world: World,
   low: boolean,
   include: (node: { x: number; z: number }) => boolean = () => true,
+  fadeRange?: number,
 ) {
   const materials: Record<Surface, T.Material> = {
     rock: new T.MeshStandardMaterial({ map: resourceTexture('rock'), roughness: 1 }),
@@ -496,7 +536,13 @@ export function resourceScenery(
     }),
     rubber: new T.MeshStandardMaterial({ color: '#292a25', roughness: 1 }),
   };
-  for (const surface of ['leaves', 'bark', 'wood'] as const) fadeSceneryIntoFog(materials[surface]);
+  for (const [surface, material] of Object.entries(materials)) {
+    fadeSceneryIntoFog(material, fadeRange);
+    seasonalMaterial(material, surface === 'leaves');
+    material.userData.seasonal = true;
+  }
+  const updates: { group: T.Group; update: (world: World) => void }[] = [];
+  siteUpdates.set(root, updates);
   for (const node of worldResources(world)) {
     if (
       !include(node) ||
@@ -518,19 +564,31 @@ export function resourceScenery(
     const group = new T.Group();
     group.name = `Gathering ground ${node.id}`;
     group.userData.resource = node.id;
-    for (const [surface, g] of Object.entries(resourceGeometry(node.item, variant, low))) {
-      const p = g.attributes.position;
-      for (let i = 0; i < p.count; i++) {
-        const x = p.getX(i) + node.x,
-          z = p.getZ(i) + node.z;
-        p.setXYZ(i, x, p.getY(i) + terrainHeight(world, x, z), z);
+    let style: GatheringSceneryStyle | undefined;
+    const update = (world: World) => {
+      const next = gatheringSceneryStyle(world, node);
+      if (next === style) return;
+      style = next;
+      for (const child of [...group.children]) {
+        (child as T.Mesh).geometry.dispose();
+        group.remove(child);
       }
-      g.computeBoundingSphere();
-      const mesh = new T.Mesh(g, materials[surface as Surface]);
-      mesh.name = `${node.id} ${surface}`;
-      mesh.receiveShadow = true;
-      group.add(mesh);
-    }
+      for (const [surface, g] of Object.entries(resourceGeometry(node.item, variant, low, style))) {
+        const p = g.attributes.position;
+        for (let i = 0; i < p.count; i++) {
+          const x = p.getX(i) + node.x,
+            z = p.getZ(i) + node.z;
+          p.setXYZ(i, x, p.getY(i) + terrainHeight(world, x, z), z);
+        }
+        g.computeBoundingSphere();
+        const mesh = new T.Mesh(g, materials[surface as Surface]);
+        mesh.name = `${node.id} ${surface}`;
+        mesh.receiveShadow = true;
+        group.add(mesh);
+      }
+    };
+    update(world);
+    updates.push({ group, update });
     root.add(group);
   }
 }

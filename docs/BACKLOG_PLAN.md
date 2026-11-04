@@ -599,6 +599,8 @@ README and the Unreleased changelog describe the new behavior and rules.
 
 ### Flight-view follow-up: retain fading through static batching
 
+Done: committed and pushed as `df1ebb4` after the checks below.
+
 Before continuing gathering-ground production work, inspection found that
 `batchStaticScenery` cloned building materials without their shader hooks and
 merged equal-looking materials with different shader behavior. The previous
@@ -642,3 +644,85 @@ including static-batch haze, empty terrain, loaded town, high flight, landing
 approach and distant lighthouse support. Inspected the town screenshots.
 Full `npm test` passes all 1,337 tests (196 seconds), TypeScript is clean,
 Prettier ran on every changed path, and `git diff --check` is clean.
+
+### Natural gathering grounds without abandoned tools
+
+Completion criteria, before production changes:
+
+- Default geometry for all four materials contains no wheelbarrow, shovel,
+  hammer, sawn rounds, chopping block or chips. Retain banks, surface textures,
+  weathered rock, roots/sod, trees and a bark-covered windfall. Both detail levels
+  preserve tree placement. Check six variants per kind, finite position/normal/UV,
+  x/z inside the existing 10 m radius bounds and y between -1.5 and 11 m.
+- Do not grow the measured per-site triangle budgets (high/low): logs 4004/2500,
+  stone 3876/1720, gravel 4022/2282, dirt 3500/1860. Include worn and legacy modes
+  in the budget checks; keep at most five merged surface draws per site.
+- Per-world `gatheringScenery` chooses natural, worked-near-settlements (default),
+  or always-worked. Defaults for the adjustable town-edge distance and recent-use
+  window are 100 metres and 600 simulation seconds, respectively. Keep defaults
+  solely in `data/settings.json`; validate distances 0–5000 m and times 0–86400 s.
+  Zero means no extra town buffer / no recent-use window. Missing legacy keys use
+  defaults; creation, F10 Rules, summary, saves and portable designs preserve edits.
+- Natural mode never adds wear. Default mode adds only light wear inside a town
+  or its configured buffer, while depleted, during an active gathering task, or
+  within the recent-use window. Fully regrown, expired and remote sites return
+  to natural. No towns/no saved use is the empty state. Update visible sites from
+  snapshots without reloading the world. Always-worked retains legacy scenery:
+  this follows the explicit compact-world wheelbarrow exception. The optional
+  clarification question was unanswered; the two other modes stay tool-free.
+- Red first: extend `tests/resource-scenery.test.ts` with no-tool/natural timber,
+  exact triangle ceilings and wear conditions; run and record the actual failures.
+  Keep the existing actual gather, inventory implement/yield and NPC access tests.
+- Browser: view all four kinds near and at streaming distance in lowland and
+  northern provinces. Change all three rules through F10, check untouched,
+  depleted/recent, expired and empty states, and verify no page errors. Run
+  `scripts/resources.ts`, `PREVIEW_GPU=1 npx tsx scripts/northern-island-preview.ts`
+  and building catalogue previews for quarry, mine and sawmill; inspect images.
+- Finish with full `npm test`, clean TypeScript, explicit-path Prettier and diff
+  checks. Update player/world-builder guidance, README and imperative Unreleased
+  changelog. No gameplay, map-icon or business-building changes.
+
+Red evidence: `/tmp/aclone-natural-red.log` reports worked wood in the natural
+timber variant; `/tmp/aclone-gathering-rules-red.log` reports missing default
+scenery rules. The geometry/rule implementation now passes seven focused tests,
+including all 144 kind/variant/quality/style combinations, exact previous triangle
+ceilings, natural/default tool absence, wear conditions and rule persistence.
+The existing real gathering and resident-access tests also pass. A real browser
+regression is checking live mode changes before snapshot/render integration.
+
+The live browser regression failed because switching an installed timber site to
+always-worked did not restore its worked wood. Snapshot updates now refresh only
+installed local/chunk sites whose style changes; new chunk jobs also receive the
+latest state. Geometry and material decoration survive switching without a full
+world reload. An initial browser fixture omitted the optional `resources` map;
+initialising that empty map fixed the fixture without changing its assertions.
+
+Both browser flows passed (65 seconds): all four kinds near/far in lowland and
+northern provinces, depletion/natural/expired changes, all three F10 modes and
+threshold edits, plus an invalid negative threshold remaining unapplied. Inspected
+all sixteen site images and the readable Rules panel. The catalogue, northern
+preview, recent-full-site check and final suite are still being verified.
+
+`PREVIEW_GPU=1 SCREENSHOT_OUTPUT_DIR=/tmp/aclone-natural-resources npx tsx
+scripts/resources.ts` rendered the four catalogue views and completed an ordinary
+three-unit gravel Gather action with no page errors. Visual inspection found the
+wear patch could hide under the existing bank. A new regression failed because
+the path did not extend outside that patch; move its existing four triangles onto
+the approach, retaining the same budget. Recheck worn screenshots before finishing.
+
+Final browser repeat passes both flows (67 seconds), including full-but-recent
+sites retaining wear and no browser console errors. Inspected all eight corrected
+worn views: the short approach path is visible for every kind in both regions.
+The full northern-island preview completed its terrain/water/dock and map checks;
+inspected headwater, river and dock images. The quarry, mine and sawmill catalogue
+preview completed without errors and all three contact sheets were inspected.
+
+The final resource catalogue/Gather repeat also completed without page errors;
+inspected all four final catalogue views. Full `npm test` reports 1,341 passes,
+zero failures/cancellations (194 seconds), but the command wrapper returned 143.
+Do not accept that ambiguous process result: repeat with an explicit shell exit
+status file before committing. TypeScript, formatting and diff checks are clean.
+
+Confirmation: all 1,341 tests pass again (189 seconds), and both the command and
+`/tmp/aclone-natural-full-confirm.status` report exit 0. The slice meets its
+completion criteria; no gameplay gathering, business models or map icons changed.

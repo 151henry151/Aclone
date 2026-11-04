@@ -123,3 +123,68 @@ test('resource models have finite geometry and bounded draw/triangle cost in bot
       for (const g of [...Object.values(high), ...Object.values(low)]) g.dispose();
     }
 });
+
+test('natural and lightly worn gathering grounds have no abandoned tools or freshly cut timber', () => {
+  const budgets = {
+    logs: [4004, 2500],
+    stone: [3876, 1720],
+    gravel: [4022, 2282],
+    dirt: [3500, 1860],
+  };
+  for (const item of ['logs', 'stone', 'gravel', 'dirt'] as const)
+    for (let variant = 0; variant < 6; variant++)
+      for (const low of [false, true])
+        for (const style of ['natural', 'worn', 'legacy'] as const) {
+          const model = resourceGeometry(item, variant, low, style);
+          try {
+            if (style !== 'legacy') {
+              for (const surface of ['metal', 'rubber', 'wood', 'cutStone'] as const)
+                assert.equal(
+                  model[surface],
+                  undefined,
+                  `${item}/${style}: no tool or worked ${surface}`,
+                );
+            }
+            const triangles = Object.values(model).reduce(
+              (n, g) => n + g.attributes.position.count / 3,
+              0,
+            );
+            assert.ok(
+              triangles <= budgets[item][Number(low)],
+              `${item}/${style}/${low}: ${triangles} triangles`,
+            );
+            assert.ok(Object.keys(model).length <= 5);
+            for (const g of Object.values(model)) {
+              for (const attr of ['position', 'normal', 'uv'])
+                assert.ok(Array.from(g.attributes[attr].array).every(Number.isFinite));
+              g.computeBoundingBox();
+              assert.ok(g.boundingBox!.min.x > -10 && g.boundingBox!.max.x < 10);
+              assert.ok(g.boundingBox!.min.z > -10 && g.boundingBox!.max.z < 10);
+              assert.ok(g.boundingBox!.min.y > -1.5 && g.boundingBox!.max.y < 11);
+            }
+          } finally {
+            for (const g of Object.values(model)) g.dispose();
+          }
+        }
+  for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
+    const model = resourceGeometry(item, 0, false);
+    assert.equal(model.metal, undefined, `${item}: default is tool-free`);
+    assert.equal(model.wood, undefined, `${item}: default has no worked timber`);
+    for (const g of Object.values(model)) g.dispose();
+  }
+});
+
+test('light-wear paths extend visibly beyond the existing bare patch instead of hiding underneath it', () => {
+  for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
+    const natural = resourceGeometry(item, 0, true),
+      worn = resourceGeometry(item, 0, true, 'worn');
+    const patch = natural[item === 'logs' || item === 'dirt' ? 'soil' : 'gravel']!;
+    patch.computeBoundingBox();
+    worn.soil!.computeBoundingBox();
+    assert.ok(
+      worn.soil!.boundingBox!.max.z > patch.boundingBox!.max.z + 1,
+      `${item}: visible approach footpath outside the bank`,
+    );
+    for (const g of [...Object.values(natural), ...Object.values(worn)]) g.dispose();
+  }
+});

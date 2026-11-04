@@ -1,3 +1,4 @@
+import { updateResourceScenery } from './resource-scenery';
 import { alpineWeather } from '../shared/alpine-weather';
 import { spaceportComplex } from './spaceport-complex';
 import { createMotorboat } from './motorboat';
@@ -562,6 +563,8 @@ export class GameScene {
       this.camera.position.set(this.me.x + 25, 30, this.me.z + 30);
       this.chase = this.me.heading;
     }
+    updateResourceScenery(this.land, world);
+    this.woods.setWorld(world);
     this.aircraftCrashes.receive(world);
     this.fields.update(world, this.me);
     this.livestock.update(world, this.me);
@@ -981,7 +984,8 @@ export class GameScene {
           if (
             (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
             !m.transparent &&
-            !seasonal.has(m)
+            !seasonal.has(m) &&
+            !m.userData.seasonal
           ) {
             seasonal.add(m);
             seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);

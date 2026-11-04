@@ -79,6 +79,7 @@ import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
 import { flightRuleFields } from './flight-rules';
 import { walkingRuleFields } from './walking-rules';
+import { gatheringSceneryFields, gatheringSceneryModes } from './gathering-scenery';
 import {
   fuelCapacity,
   refuelRequiresReboarding,
@@ -1873,11 +1874,17 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(
           Object.hasOwn(w.settings, key) ||
             Object.hasOwn(flightRuleFields, key) ||
-            Object.hasOwn(walkingRuleFields, key),
+            Object.hasOwn(walkingRuleFields, key) ||
+            Object.hasOwn(gatheringSceneryFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (key === 'gatheringScenery')
+          requireThat(
+            gatheringSceneryModes.includes(v as (typeof gatheringSceneryModes)[number]),
+            'Choose natural, worked-near-settlements or always-worked',
+          );
         else if (key === 'weaponMode')
           requireThat(
             typeof v === 'string' && ['energy', 'ammo'].includes(v),
@@ -1890,6 +1897,9 @@ export function act(w: World, id: string, a: Action): string {
             key === 'startingCash' ? 1e8 : 1e6,
           );
         const walkingField = walkingRuleFields[key as keyof typeof walkingRuleFields];
+        const gatheringField = gatheringSceneryFields[key as keyof typeof gatheringSceneryFields];
+        if (gatheringField && 'min' in gatheringField)
+          num(v, gatheringField.min, gatheringField.max);
         if (walkingField && 'min' in walkingField) num(v, walkingField.min, walkingField.max);
         const flightField = flightRuleFields[key as keyof typeof flightRuleFields];
         if (flightField && 'min' in flightField) num(v, flightField.min, flightField.max);

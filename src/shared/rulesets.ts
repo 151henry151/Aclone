@@ -2,6 +2,7 @@
 import type { Settings, World } from './types.ts';
 import { flightRules, landingLimits } from './flight-rules';
 import { walkingRules } from './walking-rules';
+import { gatheringSceneryRules } from './gathering-scenery';
 export const rulesets: Record<
   string,
   { name: string; description: string; settings: Partial<Settings> }
@@ -46,6 +47,7 @@ export const rulesets: Record<
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
   const walking = walkingRules(s);
+  const gathering = gatheringSceneryRules(s);
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
@@ -60,6 +62,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
       : 'Owners cannot employ themselves.',
     `Death: ${s.loseSkillsOnDeath ? 'lose' : 'keep'} skills, ${s.loseInventoryOnDeath ? 'lose' : 'keep'} inventory, ${s.losePropertyOnDeath ? 'release' : 'keep'} property; retain ${Math.round(s.deathCashRetention * 100)}% cash and ${Math.round(s.deathBankRetention * 100)}% savings.`,
     `Walking snow: ${walking.walkingSnow ? `enabled, field strength ${walking.walkingSnowScale}` : 'disabled'}. Bare-ground walking is unchanged.`,
+    `Gathering scenery: ${gathering.gatheringScenery}, ${gathering.gatheringTownDistance} m beyond towns, ${gathering.gatheringRecentSeconds} s recent-use window.`,
     s.requireCaptainSkill ? 'Boats longer than the motorboat need the captain skill.' : '',
     `Flight contacts: ${flight.flightStrictLanding ? 'strict' : 'custom/default'}, maximum sink ${limits.sink} m/s, bank ${Math.round((limits.bank * 180) / Math.PI)}°, speed ${limits.speed} m/s. Airbrake ${flight.flightAirbrake ? 'enabled' : 'disabled'}; approach ${flight.flightApproachSpeed} m/s. Public runway target ${flight.runwayLength} × ${flight.runwayWidth} m, shoulder ${flight.runwayShoulder} m.`,
     s.loseBoatsOnDeath

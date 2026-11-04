@@ -232,6 +232,22 @@ Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness map
 
 Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences** (driver, pilot or captain required for advanced slots according to their configured movement mode), **Require the captain skill for boats longer than the motorboat** (`requireCaptainSkill`, on for new worlds; public Puddlewick adopts it once and qualifies existing owners) and **Require map item** (hide visitor maps unless carrying a Parish map). Defaults enable gentle wear but leave the general licences and map ownership optional. Basic tractor, walking, ostrich and disposable robocrow controls are exempt from licences. The motorboat and lifeboat stay open when only the captain rule is on. In the vehicle editor, **Requires captain** forces or waives the rule for that slot; otherwise length above the motorboat's 4.3 m decides. Creator maps remain available for editing. Garage map printing and steel-part servicing are ordinary paid services, also available on existing saves.
 
+## Gathering ground scenery
+
+**F10 → Rules → Gathering scenery** controls `gatheringScenery`: **natural**,
+**worked-near-settlements** (default), or **always-worked**. Natural grounds have
+no tools or wear. The default adds a small earth footpath inside a town or within
+`gatheringTownDistance` metres of its edge (default **100**, range **0–5000**),
+while a site's reserves are depleted, during an active gathering task, or within
+`gatheringRecentSeconds` of its last recorded use (default **600** simulation
+seconds, range **0–86400**). Zero disables the recent-use window; a zero town
+buffer still includes sites inside the town. Regrown remote sites lose their wear
+after the window expires. Always-worked restores the legacy wheelbarrows, shovels,
+hammers and cut timber for compact village worlds. Changes apply to loaded sites
+and travel with saved worlds and exported designs. Custom Resource visuals take
+precedence. These rules affect scenery only, not gathering, inventory tools or
+business buildings.
+
 ## Walking in snow
 
 **F10 → Rules → Walking in snow** controls `walkingSnow` (default **on**) and

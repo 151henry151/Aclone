@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { createApp } from '../src/server/app.ts';
 import { createWorld, addPlayer, terrainHeight } from '../src/shared/simulation.ts';
 import { resourceNodes } from '../src/shared/resources.ts';
+import { waitForWorld } from '../tests/browser/fixtures/ready';
 const dir = mkdtempSync(join(tmpdir(), 'aclone-resources-'));
 const output = process.env.SCREENSHOT_OUTPUT_DIR ?? 'test-results/resources';
 mkdirSync(output, { recursive: true });
@@ -28,12 +29,9 @@ const port = await app.listen();
 const browser = await chromium.launch({
   headless: true,
   ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
-  args: [
-    '--no-sandbox',
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
-    '--enable-unsafe-swiftshader',
-  ],
+  args: process.env.PREVIEW_GPU
+    ? ['--no-sandbox', '--enable-gpu', '--use-angle=gl', '--ignore-gpu-blocklist']
+    : ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -50,7 +48,7 @@ try {
     { token, world: w.id },
   );
   await page.goto(`http://127.0.0.1:${port}`);
-  await expect(page.locator('#world-hud')).toBeVisible({ timeout: 60000 });
+  await waitForWorld(page);
   await page.keyboard.press('h');
   for (const item of ['logs', 'stone', 'gravel', 'dirt']) {
     const node = resourceNodes.find((n) => n.item === item)!;
