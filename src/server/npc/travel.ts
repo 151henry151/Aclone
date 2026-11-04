@@ -1,3 +1,4 @@
+import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { nearbyFuelTanker } from './fuel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../../shared/types.ts';
@@ -52,11 +53,12 @@ function fuelShop(w: World, p: Player) {
 
 /** Refuel and remount before touring the parish. Walk only as far as the pump. */
 export function drivePlan(w: World, p: Player): Step[] {
+  const threshold = npcJourneyRules(w.settings).npcDriveFuelThreshold;
   const catalogue = worldItems(w);
   const carried = Object.entries(p.inventory).find(([item, n]) => n > 0 && catalogue[item]?.fuel);
-  const tanker = p.fuel < 10 && !carried ? nearbyFuelTanker(w, p) : undefined;
-  const shop = p.fuel < 10 && !carried && !tanker ? fuelShop(w, p) : undefined;
-  const willFuel = p.fuel > 0 || !!carried || !!shop || !!tanker;
+  const tanker = p.fuel < threshold && !carried ? nearbyFuelTanker(w, p) : undefined;
+  const shop = p.fuel < threshold && !carried && !tanker ? fuelShop(w, p) : undefined;
+  const willFuel = p.fuel > 0 || (p.fuel < threshold && !!carried) || !!shop || !!tanker;
   if (
     !p.atHome &&
     !p.game &&
@@ -64,14 +66,15 @@ export function drivePlan(w: World, p: Player): Step[] {
     !p.crowBody &&
     p.vehicle !== 5 &&
     p.engine &&
-    p.fuel >= 10
+    p.fuel > 0 &&
+    p.fuel >= threshold
   )
     return [];
   if (!willFuel) return travelPrep(p);
   const steps: Step[] = [...leaveDistractions(p)];
   let walkedToPump = false;
   let engineStarted = false;
-  if (p.fuel < 10 && carried) steps.push(act({ type: 'use', item: carried[0] }));
+  if (p.fuel < threshold && carried) steps.push(act({ type: 'use', item: carried[0] }));
   else if (tanker) {
     steps.push(
       operation('fuelTrailer', {

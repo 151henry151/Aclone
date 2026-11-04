@@ -1,3 +1,4 @@
+import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
 import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { npcPricingRules } from '../../shared/npc-pricing-rules';
@@ -201,6 +202,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...npcBusinessRules(w.settings),
       ...npcPricingRules(w.settings),
       ...npcCargoRules(w.settings),
+      ...npcJourneyRules(w.settings),
       ...npcBusinessLoadRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,

@@ -1,3 +1,4 @@
+import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { npcCargoRules } from '../../shared/npc-cargo-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { npcHouseholdRules } from '../../shared/npc-household-rules';
@@ -60,6 +61,7 @@ const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind:
 
 /** Conservative distance allowance; quoted product spread alone is not profit. */
 export function journeyEstimate(w: World, p: Player, points: { x: number; z: number }[]) {
+  const rules = npcJourneyRules(w.settings);
   let metres = 0,
     previous = { x: p.x, z: p.z };
   for (const point of points) {
@@ -68,13 +70,18 @@ export function journeyEstimate(w: World, p: Player, points: { x: number; z: num
   }
   const slot = travelVehicle(p);
   const v = { ...vehicles[slot], ...w.vehicleTuning?.[slot] };
-  const seconds = (metres * 1.5) / Math.max(1, v.speed * 0.6);
+  const seconds =
+    (metres * rules.npcJourneyDistanceMultiplier) /
+    Math.max(1, v.speed * rules.npcJourneySpeedFraction);
   const prices = w.buildings
     .filter((b) => b.sell.fuel > 0 && (b.stock.fuel ?? 0) > 0)
     .map((b) => b.sell.fuel);
   const cost =
     slot !== 5
-      ? Math.ceil(((seconds * v.fuel) / 8) * (prices.length ? Math.min(...prices) : 4500))
+      ? Math.ceil(
+          ((seconds * v.fuel) / 8) *
+            (prices.length ? Math.min(...prices) : rules.npcJourneyFuelFallbackPrice),
+        )
       : 0;
   return { seconds, cost };
 }
@@ -181,7 +188,8 @@ export function careerChoices(w: World, p: Player, state: ResidentState): Farmer
       rounds === 0 ? [buyer] : [...(seller ? [seller] : []), node, buyer],
     );
     const earned = quantity * buyer.buy[node.item] - trip.cost;
-    if (earned <= 0 || equipment > earned * 8) continue;
+    if (earned <= 0 || equipment > earned * npcJourneyRules(w.settings).npcEquipmentPaybackLoads)
+      continue;
     const plan: Step[] =
       rounds === 0
         ? visitBuilding(p, buyer, [

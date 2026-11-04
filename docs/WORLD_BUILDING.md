@@ -1098,3 +1098,19 @@ seed costs, crop rotation and staff planting policies still apply. Routine anima
 replenishment retains its half-minimum-herd quantity basis. Enterprise supply
 uses the existing `npcInputReserveBatches` for fallback feed/water targets, while
 replacement breeding animals retain their actual minimum target.
+
+## Resident journey budgets (unreleased)
+
+**F10 → Rules → Resident journey budgets** exposes these planning rules, saved
+in worlds and portable designs and included in the rules summary:
+
+- `npcJourneyDistanceMultiplier`: 1.5, range 1–10. Multiply straight-line route legs to budget for indirect travel.
+- `npcJourneySpeedFraction`: 0.6, range 0.01–1. Estimate travel at this fraction of the selected vehicle's tuned speed, retaining a minimum divisor of 1.
+- `npcJourneyFuelFallbackPrice`: 4,500 hundredths per Fuel item, integer 0–100,000,000. Use only when no stocked positive Fuel quote exists; zero removes this allowance.
+- `npcEquipmentPaybackLoads`: 8, range 0–1,000. New gathering equipment must cost no more than this many loads' estimated receipts after travel. Zero excludes paid new implements while allowing owned ones.
+- `npcDriveFuelThreshold`: 10 tank units, range 0–1,000,000. Below this level, residents consider affordable refuelling before touring. Zero suppresses optional shopping; empty vehicles can still walk or use carried fuel.
+
+Missing fields retain these defaults. The cheapest stocked positive Fuel quote
+takes precedence over its fallback; walking has no fuel cost. Vehicle tuning,
+cargo room, stock, household reserves and actual cash still apply. These estimates
+change plans, not actual vehicle consumption, item refuelling or money balances.

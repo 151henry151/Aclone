@@ -322,5 +322,10 @@
   "npcFarmOutputSaleLoad": 20,
   "npcRoutineSupplyBatches": 2,
   "npcRoutineDepositBatches": 4,
-  "npcCropDemandBatches": 6
+  "npcCropDemandBatches": 6,
+  "npcJourneyDistanceMultiplier": 1.5,
+  "npcJourneySpeedFraction": 0.6,
+  "npcJourneyFuelFallbackPrice": 4500,
+  "npcEquipmentPaybackLoads": 8,
+  "npcDriveFuelThreshold": 10
 }

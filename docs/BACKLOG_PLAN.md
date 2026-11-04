@@ -3008,3 +3008,46 @@ no errors, saving/reopening all three new controls, changing the dairy supply
 from four to six items, suppressing it at zero, preserving source/target stock,
 rejecting negative input and retaining saved zero after reload. Inspect all three
 screenshots, including new fields and full explanatory text. No full suite runs.
+
+Pushed and verified `c20ccec` on `backlog-implementation`. **Resident fallback input
+and crop-demand budgets are done.**
+
+### Gameplay rules — resident journey and equipment budgets
+
+Before production, add Resident journey budgets with `npcJourneyDistanceMultiplier`
+1.5 (1–10), `npcJourneySpeedFraction` 0.6 (0.01–1),
+`npcJourneyFuelFallbackPrice` 4,500 hundredths (integer 0–100,000,000),
+`npcEquipmentPaybackLoads` 8 (0–1,000), and `npcDriveFuelThreshold` 10 tank units
+(0–1,000,000). Share JSON defaults for absent fields. Journey estimates use actual
+vehicle tuning, the cheapest stocked positive Fuel quote, and walking's zero fuel
+cost. Zero fallback price removes only the unquoted allowance. Equipment payback
+zero rejects new paid implements but permits owned tools. Zero drive threshold
+suppresses optional fuel shopping; an empty vehicle can still walk or use carried
+fuel through normal travel preparation. Do not change actual fuel use/refuel units
+in this slice; the vehicle/travel rules slice will supply that shared conversion.
+
+Write failing npc-journey-budget-rules tests: exact default/custom/missing journey
+estimates, quoted/absent Fuel, walking, multi-leg distance, equipment purchase
+boundary and owned tools, drive threshold boundary/zero/empty tank/insufficient
+cash, atomic validation, editor/summary/observation/design/reload. Browser: save all
+five fields, reopen, inspect changed estimates and absent optional refuel choice
+without transfers, reject invalid input, reload and inspect screenshots/errors.
+Run new tests plus npc-projects, npc-drive, npc-feedback, npc-household,
+npc-business-policy, fuel-sales and npc-guide. Require TypeScript, Prettier and
+world-builder/NPC/README/imperative Unreleased docs before push.
+
+Journey red: five checks fail for absent defaults/validation, fixed distance/speed/
+price estimates, fixed eight-load equipment allowance and fixed refuelling
+threshold. Isolate the tool supplier so a cheaper alternate quote cannot mask the
+payback boundary. After implementation the zero-threshold test catches an early
+return that skips empty-tank recovery; require positive tank fuel for that early
+return and retain ordinary travel preparation when optional refuelling is off.
+All five focused checks pass, including exact eight-load equality, custom and
+zero values and missing-field defaults.
+
+Journey gates pass: all 62 relevant checks in 6.4 seconds, TypeScript clean,
+Prettier on changed files and diff checks clean. Browser passes in 20.6 seconds:
+all five controls persist, estimates change from 25 seconds/625 hundredths to
+40/1,000, the higher refuel threshold enables an affordable option, zero removes
+it without changing fuel/cargo/cash, and negative input is refused across reload.
+Inspect all three screenshots; no browser errors occur. No full suite runs.

@@ -692,3 +692,9 @@ and water supply follows the existing input-reserve setting, including larger
 reserves; breeding-minimum replacement remains separate. Farm crop choice uses
 configured downstream forecast batches while retaining urgent funded demand,
 rotation, seed costs and staff crop policies.
+
+Resident journey budgets (unreleased) configure distance/speed allowances, the
+unquoted Fuel price, equipment payback loads and optional refuelling threshold.
+Plans use tuned vehicle speeds and observed stocked Fuel quotes; walking budgets
+no fuel. Disabling optional fuel shopping still permits empty-tank walking or
+normal use of carried fuel. See [journey budgets](WORLD_BUILDING.md#resident-journey-budgets-unreleased).

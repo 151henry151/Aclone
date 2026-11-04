@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident journey, equipment-payback and refuelling budgets as world rules; preserve quoted prices, vehicle tuning and empty-tank walking or carried-fuel recovery.
+
 - Expose routine resident input-purchase/deposit fallbacks and crop-demand forecasts as world rules; honor the existing input-reserve setting for larger livestock supply targets.
 
 - Expose resident business and farm collection, input-purchase, source-reserve and sale budgets as world rules; preserve breeding minima, required implements and ordinary transfer limits.
