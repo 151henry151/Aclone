@@ -60,6 +60,9 @@ Version 0.101.1 reduces scenery-loading pauses while driving by spreading terrai
 
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
+The [backlog implementation plan](docs/BACKLOG_PLAN.md) records the shipped-feature
+audit, dependency order and acceptance evidence for ongoing unreleased work.
+
 The [fidelity implementation plan](docs/FIDELITY_PLAN.md) tracks seven implementation passes from the Games For May research, with acceptance checks, results and outstanding validation. Version 0.78.0 adds controller menus, repeat gathering, business diagnostics, slope foundations, creator competitions and optional property contracts/maintenance. Contracts and round phases default off.
 
 AI neighbours inspect shops, remember recent quotes, and can restore essential production through ordinary training, delivery and work. Accepted survival and career routines continue without AI credits; stocked-home targets, complete earning trips, costed surplus pricing and protected operating capital guide their choices; see [AI neighbours](docs/NPCS.md). Gameplay now includes protected gameplay budgets, complete structured decision options, persistent savings milestones and trade-price guards; see the [redesign handoff](docs/NPC_RECOVERY.md#2026-10-18-planner-redesign-0700).

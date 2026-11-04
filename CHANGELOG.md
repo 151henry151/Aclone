@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Record the shipped-feature audit, ordered backlog and test-first completion criteria in the backlog implementation plan.
+
 ### Changed
 
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.
