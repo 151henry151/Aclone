@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
@@ -11,12 +12,13 @@ import type { Step } from './decision.ts';
 /** Storage is a merchant business: no imaginary production recipe or paid idle job. */
 export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
   if (p.task || p.learning) return [];
+  const rules = npcBusinessRules(w.settings);
   const choices: FarmerChoice[] = [],
     living = strategicHouseholdBudget(w, p).reserve;
   for (const b of w.buildings.filter(
     (b) => b.kind === 'haybarn' && !b.construction && !b.government,
   )) {
-    const reserve = 40 * (b.buy.hay ?? 0);
+    const reserve = rules.npcHayReserveItems * (b.buy.hay ?? 0);
     const add = (description: string, plan: Step[]) =>
       choices.push({
         id: `hay_merchant_${b.id}_${choices.length}`,
@@ -37,8 +39,8 @@ export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
         s.id !== b.id &&
         !s.construction &&
         s.buy.hay > b.sell.hay &&
-        s.investment >= s.buy.hay * 10 &&
-        (s.stock.hay ?? 0) < 40,
+        s.investment >= s.buy.hay * rules.npcHayCustomerFundedItems &&
+        (s.stock.hay ?? 0) < rules.npcHayCustomerStockLimit,
     );
     const margin = b.sell.hay * (1 - tax) - (supplier?.sell.hay ?? Infinity);
     if (b.owner !== p.id) {
@@ -73,7 +75,11 @@ export function hayMerchantChoices(w: World, p: Player): FarmerChoice[] {
         ]),
       );
     // Retain a modest seasonal buffer rather than filling 3,000 slots speculatively.
-    let quantity = Math.min(40 - (b.stock.hay ?? 0), b.capacity - (b.stock.hay ?? 0));
+    let quantity = Math.min(
+      rules.npcHayReserveItems - (b.stock.hay ?? 0),
+      b.capacity - (b.stock.hay ?? 0),
+      economyRules(w.settings).transactionItemLimit,
+    );
     const held = Math.min(quantity, p.inventory.hay ?? 0);
     if (held > 0)
       add(

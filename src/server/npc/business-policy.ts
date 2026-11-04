@@ -198,7 +198,9 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
         // A published bid needs cash for a useful delivery and protected payroll.
         const minimum =
           quote.price * Math.max(1, quote.load) +
-          b.wage * Math.max(budget.idealWorkers, budget.activeWorkers) * 3;
+          b.wage *
+            Math.max(budget.idealWorkers, budget.activeWorkers) *
+            npcBusinessRules(w.settings).npcMinimumPayrolls;
         if (b.investment + deposit - remainingClaim(b) < minimum) continue;
         return visitBuilding(p, b, [
           ...(deposit > 0
@@ -258,7 +260,9 @@ export function productionBudget(w: World, b: Building) {
             (b.buy[item] || b.pausedPrices?.buy?.[item] || worldItems(w)[item]?.price || 0),
         0,
       ) +
-        b.wage * Math.max(idealWorkers, staff) * 6,
+        b.wage *
+          Math.max(idealWorkers, staff) *
+          npcBusinessRules(w.settings).npcPayrollReserveBatches,
     ),
     activeWorkers: staff,
     idealWorkers,
@@ -288,10 +292,13 @@ export function usefulShift(w: World, p: Player, b: Building) {
 
 /** Keep enough cash in the business before paying its owner for household needs. */
 export function retainedCapital(w: World, b: Building) {
-  if (b.kind === 'haybarn') return Math.max(2000, 40 * (b.buy.hay ?? 0));
+  const rules = npcBusinessRules(w.settings);
+  if (b.kind === 'haybarn')
+    return Math.max(rules.npcBusinessCashFloor, rules.npcHayReserveItems * (b.buy.hay ?? 0));
   return b.kind === 'farm'
     ? farmPlotCount(b) * Math.max(b.wage, ...Object.values(crops).map((c) => c.seed + b.wage))
-    : (productionBudget(w, b)?.reserve ?? Math.max(2000, b.wage * 3));
+    : (productionBudget(w, b)?.reserve ??
+        Math.max(rules.npcBusinessCashFloor, b.wage * rules.npcMinimumPayrolls));
 }
 export function ownerLivingDraw(w: World, p: Player, b: Building) {
   if (b.owner !== p.id || b.construction || b.government) return 0;
@@ -445,7 +452,7 @@ export function ownerStaffingRoutine(w: World, p: Player): Step[] {
             other.id !== b.id &&
             !other.construction &&
             (other.production ?? recipes[other.recipe ?? ''])?.skill === recipe?.skill &&
-            other.investment >= other.wage * 3 &&
+            other.investment >= other.wage * npcBusinessRules(w.settings).npcMinimumPayrolls &&
             other.wage > 0,
         )
         .map((other) => other.wage)

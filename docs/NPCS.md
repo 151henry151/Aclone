@@ -148,14 +148,14 @@ settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#re
 
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 
-Owners can withdraw the exact input-purchasing cost for a supply trip, leaving three full payrolls and investor claims intact. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
+Owners can withdraw the exact input-purchasing cost for a supply trip, protecting configured input/payroll reserves and investor claims. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
 
 Unreleased **Resident business budgets** rules set input stock buffers (6–24
 batches by default, covering two hours of observed sales) and output-backlog
 thresholds (the lesser of 75% capacity and the larger of 12 or twice the planned
 batch count). Procurement, input cash budgets and ordinary bid pause/reopen plans
 use these values. Zero targets stop automatic input buying; real storage and
-breeding requirements remain. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules-unreleased).
+breeding requirements remain. Payroll reserves (six cycles), minimum funding (three payrolls), cash floors (20d), construction startup estimates (three batches and 1.1× materials) and hay reserves/customer thresholds are also world rules. These defaults guide forecasts; actual prices, wages, claims and storage checks still apply. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules-unreleased).
 
 Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
 
@@ -259,7 +259,7 @@ These are explicit opt-in API charges; they never target production saves. Histo
 
 Routine self-care runs locally, before paid decision cooldowns: consume carried supplies, visit a stocked shop (including Government necessities and expensive Harbour emergency imports), use bank savings, or earn emergency meal money. It uses ordinary actions, travel and prices; no invulnerability or free inventory. A qualified worker honours the job they already hold without waiting for Jev: plant, water, fertilise or harvest at a farm; buy one missing recipe input from a remembered seller and sell it into the workplace bid; or renew a funded shift. That workplace stays in their live parish model even across town. They remount a fueled tractor and buy fuel when the tank is low instead of touring the parish on foot. Scheduled visitors (everyone but Mabel) keep earning while the visit has time left: honour a live job, gather with the right implement, or work a public labour shift rather than sit or wander. Once cash and savings cover a meal they rank a job, gathering or hauling ahead of another shift; ordinary shifts pay the world's `labourShiftPay` for eight in a row, then less, and stop at `labourDailyCap` for the game day. Meal relief is unchanged and does not count toward that cap. Leisure wandering and welfare logout wait until they are in danger, departing, or the job cannot advance this visit. Offline survival remains governed by home/room stores.
 
-Jev receives a bounded, rotating shortlist with intact costs instead of hundreds of truncated descriptions. Choices include provisioning a home with varied food/drink, funded productive jobs and training, acquiring a business with six batches of reserves, delivering inputs, and selling outputs to solvent buyers. Owned-business upkeep and personality preferences affect ranking. Blocked production is not an attractive endless waiting plan. Existing pilots reconsider old plans once after this upgrade.
+Jev receives a bounded, rotating shortlist with intact costs instead of hundreds of truncated descriptions. Choices include provisioning a home with varied food/drink, funded productive jobs and training, acquiring a business with configured input/payroll reserves (six each by default), delivering inputs, and selling outputs to solvent buyers. Owned-business upkeep and personality preferences affect ranking. Blocked production is not an attractive endless waiting plan. Existing pilots reconsider old plans once after this upgrade.
 
 Credit/debt appears in private observations. Ordinary loan actions are available, with conservative working-capital quotes for profitable owned businesses and repayment choices that protect living money. Earnings forecasts are estimates, not promises; staffing, travel, changing stock and buyers still matter. Human-like decision quality and long-term profitability require live playtesting; no paid model trial was part of this upgrade.
 
@@ -328,13 +328,13 @@ matter. Broader evaluations continue to compare net assets and health.
 NPCs compare active staffing with each factory's ideal crew before taking or renewing a shift. Extra workers help up to the ideal; overcrowding slows batches and raises payroll. Existing workers retain useful positions in roster order so an overcrowded crew does not all stop renewing at once. Planner observations include ideal staffing and expected speed; wage estimates distinguish completed batches from clock checks. Owner top-ups preserve meal
 money; output-export errands return receipts to operating capital. Owners can draw
 from surplus capital for a day of living costs and modest cottage savings, preserving
-the input replenishment target and six cycles of payroll (or all purchased farm plots) and investor claims. These withdrawals
+the input replenishment target and configured payroll cycles (six by default) (or all purchased farm plots) and investor claims. These withdrawals
 are transfers, not newly earned profit. Crop selection
 accounts for funded downstream shortages, farm stock, planted crops, seasons and
 rotation. Farming careers include study and seasonal plot work, keeping money for
 harvest wages before buying more seeds or optional fertilizer. Seasonal farm owners
 have separate funding, training, plot-work and crop-export plans; they are not
-estimated as automatic factories. Farmers consider hay demand and can buy more land only when current plots are busy, sales have occurred, customers are short, and living/seed reserves remain funded. All plot actions support sixteen plots. Cattle/sheep supply errands consider affordable hay from observed markets; pigs and chickens retain feed. Hay-barn merchants can acquire, fund and restock a modest 40-bale buffer for observed customers, rather than speculatively filling their entire warehouse. These policies do not alter human permissions, wages or production rules.
+estimated as automatic factories. Farmers consider hay demand and can buy more land only when current plots are busy, sales have occurred, customers are short, and living/seed reserves remain funded. All plot actions support sixteen plots. Cattle/sheep supply errands consider affordable hay from observed markets; pigs and chickens retain feed. Hay-barn merchants can acquire, fund and restock a configured buffer (40 bales by default) for observed customers, rather than speculatively filling their entire warehouse. These policies do not alter human permissions, wages or production rules.
 
 ### Accepted project follow-through
 
@@ -366,7 +366,7 @@ grant qualifications, assign named live workers or create a brewery in productio
 ### Business continuity
 
 Factory owners keep input reserves separate from ordinary finished stock. The
-minimum buffer is six batches; measured lifetime output sales can raise it to two
+default minimum buffer is six batches; measured lifetime output sales can raise it to two
 hours of observed demand, capped at 24 batches. This is a bounded heuristic, not a
 guaranteed demand forecast. Purchasing stops for a genuine finished-goods backlog
 (at least twelve batches, increasing with demand, and never above 75% of storage)
@@ -386,7 +386,7 @@ planners. Quoted stock/price can still change before delivery.
 
 Before posting a bid, maintenance checks cash for a useful delivery and payroll;
 when necessary it deposits available personal funds while preserving living money.
-Retained business capital covers missing target inputs and six payroll cycles, plus
+Retained business capital covers missing target inputs and configured payroll cycles (six by default), plus
 protected investor claims before withdrawals. Stock already held is not purchased
 again. Direct supply runs can withdraw the exact purchase shortfall from input
 capital, replacing that cash with delivered stock while protecting other inputs,

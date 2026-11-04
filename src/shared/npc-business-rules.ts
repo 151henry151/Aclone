@@ -1,6 +1,44 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcBusinessRuleFields = {
+  npcPayrollReserveBatches: {
+    label: 'Production payroll reserve (cycles)',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  npcMinimumPayrolls: { label: 'Minimum funded payrolls', min: 0, max: 1000, step: 1 },
+  npcBusinessCashFloor: {
+    label: 'Business cash reserve floor (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcStartupBatches: {
+    label: 'Construction startup operating batches',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  npcStartupMaterialMultiplier: {
+    label: 'Construction material budget multiplier',
+    min: 1,
+    max: 10,
+    step: 0.05,
+  },
+  npcHayReserveItems: { label: 'Hay merchant stock reserve (bales)', min: 0, max: 10000, step: 1 },
+  npcHayCustomerStockLimit: {
+    label: 'Hay customer stock cutoff (bales)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
+  npcHayCustomerFundedItems: {
+    label: 'Hay customer funded purchase minimum (bales)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   npcInputReserveBatches: { label: 'Minimum input reserve (batches)', min: 0, max: 1000, step: 1 },
   npcInputMaximumBatches: {
     label: 'Maximum sales-driven input reserve (batches)',

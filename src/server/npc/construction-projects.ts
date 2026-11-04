@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import {
   worldResources,
@@ -61,6 +62,7 @@ export function constructionBudget(
   site: { x: number; z: number },
   style?: string,
 ) {
+  const rules = npcBusinessRules(w.settings);
   const source = worldBuildings(w)[kind];
   if (!source) return;
   const def = {
@@ -120,7 +122,7 @@ export function constructionBudget(
     if (missing) return;
   }
   const operating = recipe
-    ? 3 *
+    ? rules.npcStartupBatches *
       (def.wage * (def.idealEmployees ?? 1) +
         Object.entries(recipe.inputs).reduce(
           (sum, [item, n]) => sum + n * (def.buy[item] || worldItems(w)[item]?.price || 0),
@@ -134,7 +136,13 @@ export function constructionBudget(
     operating,
     livestockCost,
     living,
-    total: def.price + tax + Math.ceil(materialCost * 1.1) + operating + livestockCost + living,
+    total:
+      def.price +
+      tax +
+      Math.ceil(materialCost * rules.npcStartupMaterialMultiplier) +
+      operating +
+      livestockCost +
+      living,
   };
 }
 

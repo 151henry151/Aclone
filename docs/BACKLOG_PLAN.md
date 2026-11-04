@@ -2251,3 +2251,67 @@ tests then pass; all 79 relevant checks pass in 7.0 seconds. Browser passes in
 atomic inverted-bound refusal. Inspect all three screenshots; no page errors.
 TypeScript, changed-file Prettier and diff checks pass. Documentation and
 Unreleased are updated. Ready to commit and push.
+
+Pushed and verified `0eba6af` on `backlog-implementation`. **Resident business
+input-buffer rules are done.**
+
+### Gameplay rules — resident working capital and startup budgets
+
+Before production, add nine fields to Resident business budgets:
+`npcPayrollReserveBatches` 6 and `npcMinimumPayrolls` 3 (integer 0–1,000),
+`npcBusinessCashFloor` 2,000 and `npcPropertyOperatingReserve` 20,000 hundredths
+(integer 0–100,000,000), `npcStartupBatches` 3 (integer 0–1,000),
+`npcStartupMaterialMultiplier` 1.1 (1–10), `npcHayReserveItems` 40,
+`npcHayCustomerStockLimit` 40 and `npcHayCustomerFundedItems` 10 (integer
+0–10,000). Keep distinct hay ownership and customer thresholds despite their
+matching old defaults. Payroll cycles govern operating and acquisition reserves;
+minimum payrolls govern minimum bid funding, non-production reserves and funded
+peer-wage references. Property fallback reserve, startup operating batches and
+material contingency use their corresponding rules. Farm seed/harvest costs,
+actual quotes, investor claims and ordinary ownership/transaction checks remain.
+
+Default/absent-key tests must retain exact existing reserves. Changed values must
+alter actual production/acquisition, retained capital, property affordability,
+construction estimates, hay funding/restocking and customer selection. Zero
+reserves are supported, but a zero rule grants no money or goods. Bound hay
+purchase/deposit plans by the existing transaction limit as well as real capacity;
+prove a low-limit ordinary plan executes. Validate all nine fields, include them
+in editor/summary/observations/designs/reloads, and keep documents' quoted counts
+labelled as defaults of the relevant rule.
+
+Commands: failing-first `node_modules/.bin/tsx --test
+ tests/npc-working-capital-rules.test.ts`; relevant tests are npc-input-buffer-rules,
+npc-business-policy, npc-business-continuity, npc-owner-recovery, npc-prosperity,
+npc-finances, npc-construction, npc-hay, npc-planning-rules and npc-guide (same
+runner, concurrency two). Browser `TEST_GPU=1 npm run test:e2e --
+ tests/browser/npc-working-capital-rules.spec.ts`: save/reopen all nine fields,
+observe a local actual retained-capital change, exercise zero reserves and native
+refusal below the material multiplier's minimum, reload saved values and inspect
+screenshots/errors. Require clean TypeScript, changed-file Prettier, relevant docs
+and imperative Unreleased. Bid pricing, loan-affordability and remaining household
+shopping cash budgets follow before construction world rules.
+
+Pre-production inspection corrects one mistaken criterion above: the 20,000
+property fallback is unreachable in both economyChoices and enterpriseChoices.
+Each loop requires a non-farm production recipe and skips unknown recipes before
+calling productionBudget, which consequently returns a reserve. Ordinary markets
+are not candidates in that loop. Do not add a setting with no live effect or add
+new market acquisition behavior. Keep the affordability regression, using a real
+production reserve and checking that ordinary markets remain excluded. Omit
+`npcPropertyOperatingReserve`; this slice has eight active rules. All other
+criteria remain. The inactive legacy fallback can remain without a new rule.
+
+Working-capital red run: all eight tests fail before production, including the
+corrected production-affordability check. Failures show payroll reserve 2,400
+instead of 1,600, startup operating capital 27,612 instead of 9,204, hay quantity
+40 instead of 5, and the independent transaction-limit failure 40 instead of 3.
+
+Working-capital gates: all eight new tests and 82 relevant regressions pass (90
+checks in 7.1 seconds). Input-buffer and working-capital browser flows both pass
+(20.8/16.4 seconds); the final working-capital rerun after help text/formatting
+passes in 19.6 seconds. Eight settings persist; retained capital changes
+2,000 → 400 → 0 without transfers; below-one material contingency is refused and
+saved values survive reload. Inspect the controls, refusal and updated help text;
+no page errors. Correct an action-union narrowing in the test helper, rerun its
+eight tests and confirm clean TypeScript. Prettier and diff checks pass. Relevant
+docs and Unreleased are updated; no full suite is run. Ready to commit and push.

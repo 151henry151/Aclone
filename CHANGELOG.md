@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident payroll reserves, startup budgets and hay working-capital policies as world rules; preserve investor claims and cap hay restocking plans by the existing transaction limit.
+
 - Expose resident business input buffers, sales coverage and output-backlog thresholds as world rules; apply them to procurement, cash forecasts and ordinary bid maintenance while retaining storage and breeding requirements.
 
 - Expose the resident strategic reserve horizon and pantry coverage buffer as world rules; align property, business and home-provisioning plans while preserving daily replacement-cost comparisons.

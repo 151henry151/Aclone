@@ -142,7 +142,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock.</p></fieldset>`;
+    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock. Payroll and startup reserves do not change actual wages, construction prices or investor claims.</p></fieldset>`;
   const reserves = npcReserveRules(settings);
   const reserveFields = `<fieldset class="boat-death-settings"><legend>Resident cash and portable reserves</legend>${Object.entries(
     npcReserveRuleFields,

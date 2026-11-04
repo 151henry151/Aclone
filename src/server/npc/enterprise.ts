@@ -84,7 +84,10 @@ export function businessEstimate(w: World, b: Building) {
       Math.min(...sellers.map((s) => s.sell[herd.animal]));
   }
   const reserve =
-    Math.ceil(inputs * npcBusinessRules(w.settings).npcInputReserveBatches + wages * 6) + setup;
+    Math.ceil(
+      inputs * npcBusinessRules(w.settings).npcInputReserveBatches +
+        wages * npcBusinessRules(w.settings).npcPayrollReserveBatches,
+    ) + setup;
   return { inputs, wages, revenue, margin: revenue - inputs - wages, reserve, skill: recipe.skill };
 }
 /** Complete, costed operating errands precede speculative one-step purchases. */
@@ -252,7 +255,9 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         });
     }
     const operating = productionBudget(w, b);
-    const reserve = operating?.reserve ?? Math.max(20000, b.wage * 6);
+    const reserve =
+      operating?.reserve ??
+      Math.max(20000, b.wage * npcBusinessRules(w.settings).npcPayrollReserveBatches);
     const bank = w.buildings.find((s) => s.kind === 'bank' && !s.construction);
     const shortfall = Math.max(0, reserve - b.investment - Math.max(0, p.cash - living));
     if (

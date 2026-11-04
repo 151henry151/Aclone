@@ -825,6 +825,39 @@ Input cash forecasts, acquisition reserves and procurement limits share the
 reserve-batch rule. Existing payroll reserves remain separate. Manual farming,
 actual recipe quantities and catalogue breeding minimums are unchanged. Rules
 never create supplies, waive ownership, or bypass cash/stock checks. Ordinary
-bid maintenance pauses and reopens against the configured target. All six fields
+bid maintenance pauses and reopens against the configured target. All input-buffer fields
 are validated, summarized, included in resident observations and portable designs,
 and retained across reload; absent keys use named defaults.
+
+The same fieldset exposes eight working-capital policies:
+
+- `npcPayrollReserveBatches`: 6 payroll cycles by default, integer 0–1,000.
+  Production and acquisition forecasts reserve this many full crew payrolls,
+  separately from input-stock reserves.
+- `npcMinimumPayrolls`: 3 by default, integer 0–1,000. Minimum bid funding
+  protects this many payrolls; non-production retained cash uses the greater
+  of this many wages and the cash floor. A peer employer must fund this many
+  wages to influence a competitive wage quote.
+- `npcBusinessCashFloor`: 2,000 hundredths (20d), integer 0–100,000,000.
+  The minimum retained capital for non-production businesses and hay merchants;
+  production businesses use their input/payroll forecasts instead.
+- `npcStartupBatches`: 3 by default, integer 0–1,000. Construction forecasts
+  include this many batches of recipe inputs and the full ideal crew's wages.
+- `npcStartupMaterialMultiplier`: 1.1 by default, range 1–10. Multiply quoted
+  construction material cost by this contingency and round up. Setting 1 removes
+  the contingency; it never changes actual material quantities or prices.
+- `npcHayReserveItems`: 40 bales by default, integer 0–10,000. Set the hay
+  merchant's own stocking target and buying-cash reserve. The cash floor still
+  applies to retained capital; zero stops discretionary hay restocking.
+- `npcHayCustomerStockLimit`: 40 bales by default, integer 0–10,000. A potential
+  customer must hold fewer bales than this to justify merchant restocking.
+  Zero selects no customers.
+- `npcHayCustomerFundedItems`: 10 bales by default, integer 0–10,000. A potential
+  customer must fund this many bales at its posted bid. Zero removes this planning
+  check; actual sales still require real funds and space.
+
+Hay purchases and deposits also obey `transactionItemLimit` and actual capacity.
+Zero cash/payroll reserves never release protected investor claims or grant funds.
+Farm seed/harvest costs and initial breeding-herd requirements remain catalogue
+costs. These eight fields use the same validation, summary, observation, portable
+export/import and persistence paths as the input buffers, with missing-key defaults.
