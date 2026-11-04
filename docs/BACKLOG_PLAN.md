@@ -2616,3 +2616,45 @@ persist, wheat ask changes 90 → 31, zero yield has no finite quote, native ran
 validation refuses a share above one, and reload preserves zero. Inspect saved
 controls/refusal screenshots; no page errors or cash/stock grants. No full suite
 is run. Ready to commit and push.
+
+Pushed and verified `07599c5` on `backlog-implementation`. **Resident farm
+forecast budgets are done.**
+
+### Gameplay rules — resident experiment budgets
+
+Before production, expose four Resident business budgets used by hypotheses:
+`npcExperimentCashFloor` 2,000 hundredths (integer 0–100,000,000),
+`npcExperimentOwnerFundingUnits` 4 (integer 1–1,000),
+`npcExperimentRestockBatches` 2 (integer 0–1,000), and
+`npcExperimentLoadLimit` 8 (integer 0–10,000).
+The cash floor applies to owner/outside funding and acquisition startup budgets;
+the owner multiplier applies to an owned shop's cheapest bid and an acquired
+producer's initial till estimate. Restock batches govern only the small experiment,
+within the ordinary input target. Load limits govern speculative trade, restock,
+output sales and surplus fish, bounded by the existing world transaction limit.
+Zero restock batches or load disables that corresponding experiment. Actual
+household/operating reserves, cash transfer limits, funds, cargo, stock and buyer
+room remain required; changing a setting grants nothing.
+
+Write failing `tests/npc-experiment-budget-rules.test.ts`, including independent
+existing-rule tests for a transaction limit of one and a buyer with only one free
+slot. Assert exact defaults and missing fields, custom funding/acquisition budgets,
+restock/load zeros, output/fish capacity bounds and an ordinary conserved sale.
+Validate all fields, summaries, observations, editor, designs and reload. Run new
+tests plus npc-hypotheses, npc-owner-reserve-rules, npc-input-buffer-rules,
+npc-business-policy, npc-finances and npc-guide. Browser: save/reopen all four,
+observe changed owned-shop funding without a grant, refuse invalid input and
+reload saved values. Inspect screenshots/page errors; finish TypeScript,
+Prettier, WORLD_BUILDING/NPCS/README and imperative Unreleased before push.
+
+Experiment red: all six tests fail before production. The independent transaction
+and buyer-room regressions both reproduce quantity 8 instead of 1, without new
+settings. After implementation, six pass, including a conserved real sale,
+unchanged default loads, zero controls and funding 2,000 → 600/250/1,500 by role.
+
+Experiment gates pass: all 60 relevant checks in 3.1 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 19.5 seconds: four rules
+persist, owned-shop funding changes 2,000 → 600 without a transfer, native
+validation rejects a multiplier below one and saved values survive reload.
+Inspect both screenshots; no page errors. No full suite is run. Ready to commit
+and push.

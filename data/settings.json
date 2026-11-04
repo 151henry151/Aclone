@@ -285,5 +285,9 @@
   "npcFarmWaterBudget": 6,
   "npcFarmCompostBudget": 1,
   "npcFarmCustomerFundedItems": 20,
-  "npcFarmCustomerStockLimit": 20
+  "npcFarmCustomerStockLimit": 20,
+  "npcExperimentCashFloor": 2000,
+  "npcExperimentOwnerFundingUnits": 4,
+  "npcExperimentRestockBatches": 2,
+  "npcExperimentLoadLimit": 8
 }

@@ -1,6 +1,30 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcBusinessRuleFields = {
+  npcExperimentCashFloor: {
+    label: 'Experiment funding cash floor (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcExperimentOwnerFundingUnits: {
+    label: 'Owner experiment funding multiplier',
+    min: 1,
+    max: 1000,
+    step: 1,
+  },
+  npcExperimentRestockBatches: {
+    label: 'Experiment input restock target (batches; 0 disables)',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  npcExperimentLoadLimit: {
+    label: 'Experiment trade load (items; 0 disables)',
+    min: 0,
+    max: 10000,
+    step: 1,
+  },
   npcFarmYieldShare: {
     label: 'Farm forecast harvest share (fraction; 0 rejects forecasts)',
     min: 0,

@@ -967,3 +967,16 @@ the defaults; creation, summaries, designs and reloads retain every field.
 Edits grant no goods or cash. Existing plots, land costs, bids, wages and harvests
 are unchanged. Defaults apply to missing fields, and settings survive creation,
 summaries, portable designs and save/reload.
+
+## Resident experiment budgets (unreleased)
+
+**F10 → Rules → Resident business budgets** includes small trading experiments:
+
+- `npcExperimentCashFloor`: 2,000 hundredths (20d), integer 0–100,000,000. This minimum planned funding applies to an owned shop, an outside investment and an acquired producer's initial till. Zero removes the floor while retaining quoted costs.
+- `npcExperimentOwnerFundingUnits`: 4, integer 1–1,000. Multiply an owned shop's cheapest bid, or an acquisition's estimated initial till, by this value before applying the cash floor and available-funds limits. Outside investments keep their separate one-bid minimum.
+- `npcExperimentRestockBatches`: 2, integer 0–1,000. Limit a small input-restocking experiment to this many batches, within the ordinary input target. Zero stops those restock experiments.
+- `npcExperimentLoadLimit`: 8, integer 0–10,000. Cap speculative trading, restocking, output sales and surplus fish. Zero stops these goods-transfer experiments. The world transaction limit, buyer room/funds, stock and cargo capacity also apply.
+
+These choices use ordinary paid actions. Household and operating reserves,
+investor claims and cash-transfer limits remain protected. Edits grant no money
+or goods; defaults apply to missing keys and all values survive designs/reloads.

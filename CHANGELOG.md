@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident experiment funding, restock and load budgets as world rules; fit trade and output-sale plans within transaction limits and actual buyer storage.
+
 - Expose resident farm harvest, input-cost and expansion-demand forecasts as world rules; reject zero-yield forecasts and describe the actual plot count when planning funding.
 
 - Expose resident pantry-shopping and lodging budgets as world rules; respect transaction limits on shopping and storage, and share guide topic prefixes without losing lookup IDs or text.

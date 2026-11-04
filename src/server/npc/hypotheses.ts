@@ -1,3 +1,4 @@
+import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { livestockSupplyInputs } from '../../shared/livestock.ts';
 import { canKeepFishing } from './cargo.ts';
@@ -64,7 +65,12 @@ export function rankIdeas(ideas: Idea[], experiences: ResidentState['experiences
 /** Invent currently legal experiments from the live parish: any good, any building. */
 export function inventHypotheses(w: World, p: Player, state: ResidentState): Idea[] {
   const ideas: Idea[] = [];
-  const reserve = livingReserve(w, p);
+  const reserve = livingReserve(w, p),
+    budgets = npcBusinessRules(w.settings),
+    loadLimit = Math.min(
+      budgets.npcExperimentLoadLimit,
+      economyRules(w.settings).transactionItemLimit,
+    );
   const add = (idea: string, description: string, plan: Step[], expectedCash = 0) => {
     if (
       plan.length > 12 ||
@@ -166,11 +172,11 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         if (buyer.id === seller.id || buyer.buy[item] <= seller.sell[item]) continue;
         if (!canCarry(p, item, 1, w)) continue;
         const n = Math.min(
-          8,
+          loadLimit,
           seller.stock[item],
           buyer.capacity - (buyer.stock[item] ?? 0),
           Math.floor(buyer.investment / buyer.buy[item]),
-          affordableLoad(p.cash, seller.sell[item], reserve, 8),
+          affordableLoad(p.cash, seller.sell[item], reserve, loadLimit),
         );
         if (n <= 0) continue;
         const expected = n * (buyer.buy[item] - seller.sell[item]);
@@ -206,7 +212,10 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     ) {
       const amount = Math.min(
         economyRules(w.settings).cashTransferLimit,
-        Math.max(cheapestBid * 4, 2000),
+        Math.max(
+          cheapestBid * budgets.npcExperimentOwnerFundingUnits,
+          budgets.npcExperimentCashFloor,
+        ),
         Math.max(0, p.cash - reserve),
       );
       if (amount >= cheapestBid)
@@ -235,7 +244,10 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     for (const [item, need] of Object.entries(livestockSupplyInputs(w, b, recipe.inputs))) {
       const missing = Math.max(
         0,
-        Math.min(need * 2, inputStockTarget(b, item, w) ?? need * 2) - (b.stock[item] ?? 0),
+        Math.min(
+          need * budgets.npcExperimentRestockBatches,
+          inputStockTarget(b, item, w) ?? need * budgets.npcExperimentRestockBatches,
+        ) - (b.stock[item] ?? 0),
       );
       if (missing <= 0) continue;
       const seller = w.buildings
@@ -246,7 +258,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         .sort((a, c) => a.sell[item] - c.sell[item])[0];
       if (!seller) continue;
       const price = seller.sell[item];
-      let n = Math.min(missing, seller.stock[item], 8, b.capacity - (b.stock[item] ?? 0));
+      let n = Math.min(missing, seller.stock[item], loadLimit, b.capacity - (b.stock[item] ?? 0));
       while (
         n > 0 &&
         (!canCarry(p, item, n, w) || procurementDraw(w, p, b, item, n, price) === undefined)
@@ -286,7 +298,12 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
         )
         .sort((a, c) => c.buy[item] - a.buy[item])[0];
       if (!buyer) continue;
-      const qty = Math.min(have, 8, Math.floor(buyer.investment / buyer.buy[item]));
+      const qty = Math.min(
+        have,
+        loadLimit,
+        buyer.capacity - (buyer.stock[item] ?? 0),
+        Math.floor(buyer.investment / buyer.buy[item]),
+      );
       if (qty <= 0 || !canCarry(p, item, qty, w)) continue;
       add(
         `sell ${item}`,
@@ -311,7 +328,7 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
     if (cheapest > 0 && b.investment < cheapest && p.cash >= cheapest) {
       const amount = Math.min(
         economyRules(w.settings).cashTransferLimit,
-        Math.max(cheapest, 2000),
+        Math.max(cheapest, budgets.npcExperimentCashFloor),
         affordableLoad(p.cash, 1, livingReserve(w, p), economyRules(w.settings).cashTransferLimit),
       );
       if (amount >= cheapest)
@@ -349,7 +366,12 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       )
       .sort((a, c) => c.buy.fish - a.buy.fish)[0];
     if (buyer) {
-      const qty = Math.min(n, 8, Math.floor(buyer.investment / buyer.buy.fish));
+      const qty = Math.min(
+        n,
+        loadLimit,
+        buyer.capacity - (buyer.stock.fish ?? 0),
+        Math.floor(buyer.investment / buyer.buy.fish),
+      );
       if (qty > 0)
         add(
           'sell fish',
@@ -378,11 +400,15 @@ export function inventHypotheses(w: World, p: Player, state: ResidentState): Ide
       b.kind !== 'farm',
   )) {
     const quote = propertyQuote(w, b);
-    const till = Math.max(...Object.values(b.buy).filter((price) => price > 0), b.wage || 0, 2000);
+    const till = Math.max(
+      ...Object.values(b.buy).filter((price) => price > 0),
+      b.wage || 0,
+      budgets.npcExperimentCashFloor,
+    );
     if (p.cash < quote.total + till) continue;
     const deposit = Math.min(
       economyRules(w.settings).cashTransferLimit,
-      Math.max(till * 4, 2000),
+      Math.max(till * budgets.npcExperimentOwnerFundingUnits, budgets.npcExperimentCashFloor),
       p.cash - quote.total - reserve,
     );
     if (deposit <= 0) continue;
