@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { idealEmployees } from './staffing.ts';
@@ -120,11 +121,12 @@ export function worldSkills(w?: Pick<World, 'catalogue'>) {
 }
 export function skillLesson(w: World, p: Player, id: string) {
   const def = w.catalogue?.skills[id];
+  const rules = survivalRules(w.settings);
   return (
     def ?? {
       name: id,
-      price: p.skills.length ? 16000 : 8000,
-      seconds: p.skills.length ? 2400 : 60,
+      price: p.skills.length ? rules.schoolLaterPrice : rules.schoolFirstPrice,
+      seconds: p.skills.length ? rules.schoolLaterSeconds : rules.schoolFirstSeconds,
       prerequisites: [],
     }
   );

@@ -1,3 +1,4 @@
+import { skillFits, skillSlotsUsed, skillCounts } from '../../shared/survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -9,12 +10,7 @@ import type { FarmerChoice } from './farmer.ts';
 /** Keep the workplace as the goal across prerequisite lessons and restarts. */
 export function jobTraining(w: World, p: Player, b: Building): FarmerChoice | undefined {
   const recipe = b.production ?? recipes[b.recipe ?? ''];
-  if (
-    !recipe ||
-    p.learning ||
-    p.skills.includes(recipe.skill) ||
-    p.skills.length >= w.settings.maxSkills
-  )
+  if (!recipe || p.learning || p.skills.includes(recipe.skill) || !skillFits(w, p, recipe.skill))
     return;
   const school = w.buildings.find((s) => s.kind === 'school' && !s.construction);
   if (!school) return;
@@ -30,7 +26,11 @@ export function jobTraining(w: World, p: Player, b: Building): FarmerChoice | un
     ordered.push(skill);
     return true;
   };
-  if (!collect(recipe.skill) || ordered.length + p.skills.length > w.settings.maxSkills) return;
+  if (
+    !collect(recipe.skill) ||
+    ordered.filter((id) => skillCounts(w, id)).length + skillSlotsUsed(w, p) > w.settings.maxSkills
+  )
+    return;
   const trainee = { ...p, skills: [...p.skills] };
   let totalTuition = 0;
   for (const skill of ordered) {

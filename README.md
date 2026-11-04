@@ -20,6 +20,8 @@ Unreleased portable canoes add carpenter/boathouse purchase, wood crafting, slow
 
 Unreleased CB radios add a vehicle dashboard with keyboard, touch and configurable controller push-to-talk, local terrain-aware reception, per-vehicle channel/call sign settings and manual rescue cues. Open CB radio or press V. See [Playing Aclone](docs/PLAYING.md#cb-radio-unreleased) and the [world rules](docs/WORLD_BUILDING.md#cb-radio-rules-unreleased).
 
+Unreleased survival rules let world owners set standard school tuition/time, licence skill-limit exemptions and Odd Jobs relief terms. Player panels and resident planning use the same values; existing defaults and active work are preserved. See [world-building rules](docs/WORLD_BUILDING.md#survival-and-needs-rules-unreleased).
+
 Version 0.109.0 adds a coastal tug with paid rescue contracts, a rowable outboard motorboat and tender recovery, seven specialist cargo trailers, revised boat scale, a walking flashlight and twice the tractor camera zoom range. Roads favour gentler terrain and can finally reach the cape lighthouses; runways no longer count as road connections. The fenced spaceport moves to about 1.25 km from town. See [boats, rescue and haulage](docs/HAULAGE.md) and [spaceport details](docs/SPACEPORT.md). Shore collisions idle the throttle; they do not switch off the engine. To back away, the engine must be running with fuel available. To complete a tow, stop with the disabled vessel alongside a boatyard or fishing pier and choose **Deliver at dock** in the towing panel.
 
 Version 0.109.1 keeps runway and hangar-apron pavement snow-free with normal paved traction, independently of public-road connectivity, and refreshes the browser regression checks.

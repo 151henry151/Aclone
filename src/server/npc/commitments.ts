@@ -1,3 +1,5 @@
+import { skillFits } from '../../shared/survival-rules';
+import { skillLesson } from '../../shared/world-catalogue';
 import { businessRequestSchema, businessRequestChoice } from './business-requests.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -211,9 +213,9 @@ export function employmentBlocker(w: World, p: Player, request: Employment): str
     if (p.learning && p.learning.skill !== recipe.skill)
       return `I am already studying ${p.learning.skill}; that course must finish first.`;
     if (!p.learning) {
-      if (p.skills.length >= w.settings.maxSkills)
+      if (!skillFits(w, p, recipe.skill))
         return `I have reached the ${w.settings.maxSkills}-skill limit and cannot learn ${recipe.skill}.`;
-      if (p.cash < (p.skills.length ? 16000 : 8000))
+      if (p.cash < skillLesson(w, p, recipe.skill).price)
         return 'I do not have enough cash for tuition yet.';
       if (!w.buildings.some((b) => b.kind === 'school' && !b.construction))
         return 'There is no finished school available.';
@@ -246,7 +248,7 @@ function employmentChoice(w: World, p: Player, c: Commitment): FarmerChoice | un
       const school = w.buildings
         .filter((b) => b.kind === 'school' && !b.construction)
         .sort((a, b) => distance(p, a) - distance(p, b))[0];
-      description = `Study ${recipe.skill} at ${school.name} for the agreed job at ${b.name}. Tuition ${p.skills.length ? 160 : 80}d; course ${p.skills.length ? 40 : 1} minutes. Qualification and employment are not complete yet.`;
+      description = `Study ${recipe.skill} at ${school.name} for the agreed job at ${b.name}. Tuition ${skillLesson(w, p, recipe.skill).price / 100}d; course ${skillLesson(w, p, recipe.skill).seconds / 60} minutes. Qualification and employment are not complete yet.`;
       plan.push(
         { kind: 'travel', destination: school.id },
         action({ type: 'learn', building: school.id, skill: recipe.skill }),

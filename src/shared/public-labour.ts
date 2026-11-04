@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { buildings } from './catalog.ts';
+import defaults from '../../data/settings.json';
+import { survivalRules } from './survival-rules';
 import { DAY_SECONDS } from './environment.ts';
 import type { World, Player } from './types.ts';
-// One premium bread-and-water purchase, rounded up to whole denarii.
-export const RELIEF_PAY = Math.max(
-  4500,
-  Math.ceil(((buildings.market.sell.bread + buildings.market.sell.water) * 1.25) / 100) * 100,
-);
+/** Named default retained for callers inspecting the ordinary world's relief allowance. */
+export const RELIEF_PAY = defaults.labourReliefPay;
 /** Eight full shifts, then two thirds, one half, one third and one quarter. */
 export const LABOUR_FULL_SHIFTS = 8;
 /** A gap this long, or any other work, restores full ordinary pay. */
@@ -36,10 +34,14 @@ export interface LabourQuote {
   relief: boolean;
   reason?: string;
 }
-/** What the next 15-second shift pays, and why it is less than the full rate. */
+/** What the next public labour shift pays, and why it is less than the full rate. */
 export function labourQuote(w: World, p: Player): LabourQuote {
-  if (p.cash + p.bank < 5000 && w.time >= (p.reliefAt ?? -Infinity) + 1800)
-    return { pay: RELIEF_PAY, relief: true };
+  const rules = survivalRules(w.settings);
+  if (
+    p.cash + p.bank < rules.labourReliefMeans &&
+    w.time >= (p.reliefAt ?? -Infinity) + rules.labourReliefCooldown
+  )
+    return { pay: rules.labourReliefPay, relief: true };
   const room = labourDailyCap(w) - earnedToday(w, p);
   if (room <= 0) return { pay: 0, relief: false, reason: 'daily labour cap reached' };
   const full = labourShiftPay(w);

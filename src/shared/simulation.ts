@@ -1,3 +1,4 @@
+import { survivalRules, survivalRuleFields, skillFits } from './survival-rules';
 import { radioAction, tickRadio } from './radio';
 import { radioRuleFields } from './radio-rules';
 import { canoeAction, canoeDeath } from './small-craft';
@@ -113,13 +114,7 @@ import { buildingDesignQuote, type BuildingSize } from './building-designs';
 import { constructionSiteReason, foundationProfile } from './construction-site';
 import { migrateEmploymentPolicy } from './employment-policy.ts';
 import { exportShipments } from './export-shipments.ts';
-import {
-  labourReward,
-  labourQuote,
-  noteLabourPaid,
-  breakLabourStreak,
-  RELIEF_PAY,
-} from './public-labour.ts';
+import { labourReward, labourQuote, noteLabourPaid, breakLabourStreak } from './public-labour.ts';
 import { onFarmLand } from './farm-land.ts';
 import { buildingBounds, buildingPlan } from './building-shapes.ts';
 import { helmBlock } from './captain.ts';
@@ -1219,7 +1214,7 @@ export function act(w: World, id: string, a: Action): string {
       const skill = str(a.skill);
       requireThat(skills.includes(skill), 'Unknown skill');
       requireThat(
-        !p.learning && !p.skills.includes(skill) && p.skills.length < w.settings.maxSkills,
+        !p.learning && !p.skills.includes(skill) && skillFits(w, p, skill),
         'Already learning, already qualified, or skill limit reached',
       );
       const lesson = skillLesson(w, p, skill);
@@ -1273,16 +1268,17 @@ export function act(w: World, id: string, a: Action): string {
       } else if (task !== 'labour')
         requireThat(canCarry(p, task === 'logging' ? 'logs' : 'stone', 3, w), 'Cargo full');
       const quote = task === 'labour' ? labourQuote(w, p) : undefined;
+      const taskSeconds = task === 'labour' ? survivalRules(w.settings).labourShiftSeconds : 15;
       requireThat(!quote || quote.pay > 0, quote?.reason ?? 'This shift pays nothing');
       p.task = {
         kind: task,
-        end: w.time + 15,
+        end: w.time + taskSeconds,
         building: b.id,
         ...(quote ? { reward: quote.pay, ...(quote.relief ? { relief: true } : {}) } : {}),
       };
       if (quote?.relief) p.reliefAt = w.time;
       p.speed = 0;
-      result = 'A bit of honest work. 15 seconds.';
+      result = `A bit of honest work. ${taskSeconds} seconds.`;
       break;
     }
     case 'lodging': {
@@ -1933,7 +1929,8 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(gatheringSceneryFields, key) ||
             Object.hasOwn(fuelRuleFields, key) ||
             Object.hasOwn(canoeRuleFields, key) ||
-            Object.hasOwn(radioRuleFields, key),
+            Object.hasOwn(radioRuleFields, key) ||
+            Object.hasOwn(survivalRuleFields, key),
           'Unknown setting',
         );
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
@@ -1954,6 +1951,9 @@ export function act(w: World, id: string, a: Action): string {
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
             key === 'startingCash' ? 1e8 : 1e6,
           );
+        const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
+        if (survivalField && 'min' in survivalField)
+          num(v, survivalField.min, survivalField.max, survivalField.step === 1);
         const radioField = radioRuleFields[key as keyof typeof radioRuleFields];
         if (radioField && 'min' in radioField)
           num(v, radioField.min, radioField.max, radioField.step === 1);
@@ -3043,7 +3043,11 @@ export function advance(w: World, seconds: number) {
         breakLabourStreak(p);
       } else if (t.kind === 'labour') {
         const reward = t.reward ?? labourReward(w, p);
-        if (t.relief || (t.reward === undefined && reward >= RELIEF_PAY)) p.reliefAt = w.time;
+        if (
+          t.relief ||
+          (t.reward === undefined && reward >= survivalRules(w.settings).labourReliefPay)
+        )
+          p.reliefAt = w.time;
         grant(w, p, reward, 'labour task');
         noteLabourPaid(w, p, reward, !!t.relief);
         p.kudos++;

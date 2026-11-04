@@ -1,3 +1,4 @@
+import { survivalRules } from '../../shared/survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../../shared/types.ts';
 
@@ -8,6 +9,7 @@ export function characterRevision(p: Player) {
 }
 
 export function characterFacts(w: World, p: Player) {
+  const rules = survivalRules(w.settings);
   return {
     source:
       'Authoritative current character state. Overrides all memories, earlier chat and catalogues.',
@@ -24,7 +26,10 @@ export function characterFacts(w: World, p: Player) {
         }
       : null,
     firstCourse: p.skills.length === 0,
-    nextCourse: { costDenarii: p.skills.length ? 160 : 80, seconds: p.skills.length ? 2400 : 60 },
+    nextCourse: {
+      costDenarii: (p.skills.length ? rules.schoolLaterPrice : rules.schoolFirstPrice) / 100,
+      seconds: p.skills.length ? rules.schoolLaterSeconds : rules.schoolFirstSeconds,
+    },
     rule: 'A past-life qualification or a course in the school catalogue is NOT an acquired skill. Death may remove skills and jobs. A completed past employment agreement does not prove I still have that job. Correct an earlier mistaken claim plainly; do not ask the player to use the interface for me.',
   };
 }

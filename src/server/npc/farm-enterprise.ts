@@ -1,3 +1,4 @@
+import { skillFits } from '../../shared/survival-rules';
 import { fundProject } from './project-funding.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from '../../shared/farm-land.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -131,7 +132,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
     } else {
       const school = w.buildings.find((b) => b.kind === 'school' && !b.construction);
       const lesson = skillLesson(w, p, 'farmer');
-      if (school && p.skills.length < w.settings.maxSkills && p.cash >= lesson.price + living)
+      if (school && skillFits(w, p, 'farmer') && p.cash >= lesson.price + living)
         add(
           `Supply my ${b.name}: learn farmer so I can tend my own plots.`,
           visitBuilding(p, school, [

@@ -1,3 +1,4 @@
+import { survivalRules, survivalRuleFields, type SurvivalRules } from '../shared/survival-rules';
 import { radioRules, radioRuleFields, type RadioRules } from '../shared/radio-rules';
 import { canoeRules, canoeRuleFields, type CanoeRules } from '../shared/canoe-rules';
 import { fuelRules, fuelRuleFields, type FuelRules } from '../shared/fuel-rules';
@@ -87,6 +88,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
     ...Object.keys(canoeRuleFields),
     ...Object.keys(radioRuleFields),
@@ -108,6 +110,24 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const survival = survivalRules(settings);
+  const survivalFields = `<fieldset class="boat-death-settings"><legend>Survival and needs</legend>${Object.entries(
+    survivalRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            survival[key as keyof SurvivalRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${survival[key as keyof SurvivalRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Catalogue courses override standard tuition and duration. Licence exemption changes skill-limit accounting only; later tuition still follows any previous qualification. Active shifts retain their quoted reward and end time. Ordinary pay and daily caps are under Odd Jobs.</p></fieldset>`;
   const radio = radioRules(settings);
   const radioFields = `<fieldset class="boat-death-settings"><legend>CB radios</legend>${Object.entries(
     radioRuleFields,
@@ -216,6 +236,7 @@ export function settingsFields(settings: Settings = defaults) {
     fuelFields +
     canoeFields +
     radioFields +
+    survivalFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

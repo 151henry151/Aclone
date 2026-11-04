@@ -1,7 +1,8 @@
+import { skillFits } from '../../shared/survival-rules';
 import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from '../../shared/catalog.ts';
-import { worldItems } from '../../shared/world-catalogue.ts';
+import { worldItems, skillLesson } from '../../shared/world-catalogue.ts';
 import { availableSupply } from '../../shared/harbour-supply.ts';
 import { canCarry, distance, productionInterval } from '../../shared/simulation.ts';
 import { herdReady } from '../../shared/livestock.ts';
@@ -89,17 +90,15 @@ export function estimateSupply(
         if (!p.skills.includes(recipe.skill)) {
           if (
             (p.learning && p.learning.skill !== recipe.skill) ||
-            (!p.learning && p.skills.length >= w.settings.maxSkills)
+            (!p.learning && !skillFits(w, p, recipe.skill))
           )
             throw Error('Cannot qualify');
           const school = w.buildings.find((b) => b.kind === 'school' && !b.construction && safe(b));
           if (!p.learning && !school) throw Error('Need to inspect a school');
-          const fee = p.learning ? 0 : p.skills.length ? 16000 : 8000;
+          const fee = p.learning ? 0 : skillLesson(w, p, recipe.skill).price;
           const training = p.learning
             ? Math.max(0, p.learning.end - w.time)
-            : p.skills.length
-              ? 2400
-              : 60;
+            : skillLesson(w, p, recipe.skill).seconds;
           spend(fee);
           tuition += fee;
           seconds += training;

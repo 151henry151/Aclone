@@ -561,3 +561,18 @@ A nearby boat receiving an emergency-channel call from a stranded vessel can
 choose **Open rescue options**. This opens the existing player aid panel: fuel,
 towing and rescue still require the usual proximity, equipment and manual actions.
 A radio call never grants supplies or automatically sends a rescuer.
+
+## Local school and relief terms (unreleased)
+
+School tuition, lesson time, public labour shift length and relief terms can now
+vary by world. The school and Odd Jobs panels show the current amounts and times;
+check them before starting. Default standard courses remain 80d/60 seconds first,
+then 160d/40 minutes, with any catalogue course using its own terms. A world can
+exempt driver, pilot and captain licences from its professional skill limit. The
+school disables courses that would exceed that limit; a licence exemption does
+not turn later lessons into first lessons.
+
+Default relief remains 150d for residents below 50d combined cash and bank, at
+most once per 30 minutes, with 15-second public labour shifts. The ordinary wage,
+daily cap and diminishing returns are unchanged. Changing world rules does not
+alter a course or shift already underway.

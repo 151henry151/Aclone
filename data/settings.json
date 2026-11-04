@@ -142,5 +142,14 @@
   "radioRescuePrompts": true,
   "radioRescueRange": 5000,
   "radioModeration": true,
-  "radioResidents": false
+  "radioResidents": false,
+  "schoolFirstPrice": 8000,
+  "schoolLaterPrice": 16000,
+  "schoolFirstSeconds": 60,
+  "schoolLaterSeconds": 2400,
+  "licencesCountSkills": true,
+  "labourReliefPay": 15000,
+  "labourReliefMeans": 5000,
+  "labourReliefCooldown": 1800,
+  "labourShiftSeconds": 15
 }

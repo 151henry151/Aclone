@@ -482,3 +482,31 @@ Players open the vehicle dashboard with V, the CB HUD button or mobile Actions.
 Keyboard, touch and configurable controller push-to-talk use the same authority.
 Disabled worlds show an explanatory dashboard state. Radio volume controls the
 received-message tone and respects master mute; squelch changes server reception.
+
+## Survival and needs rules (unreleased)
+
+F10 → Rules → **Survival and needs** exposes standard school and public labour
+terms. Missing keys in older worlds use the same defaults; no save migration is
+required. Portable designs and newly created worlds include these settings.
+
+- `schoolFirstPrice` and `schoolLaterPrice`: 8,000 and 16,000 hundredths of a
+  denarius (80d/160d), each from 0 to 1,000,000. Zero allows free standard tuition.
+- `schoolFirstSeconds` and `schoolLaterSeconds`: 60 and 2,400 seconds, each from
+  1 to 86,400. A course in the world catalogue overrides both price and time.
+- `licencesCountSkills`: true. Turn it off to exempt driver, pilot and captain
+  from `maxSkills`. They remain qualifications and still make the next standard
+  course use the later price/time. Already learned skills are never removed.
+- `labourReliefPay`: 15,000 hundredths (150d), from 1 to 1,000,000.
+- `labourReliefMeans`: 5,000 hundredths (50d), from 0 to 1,000,000. Cash plus bank
+  must be strictly below this threshold. Zero disables means-tested relief.
+- `labourReliefCooldown`: 1,800 seconds, from 0 to 604,800. Zero removes the wait
+  between eligible relief shifts; the means test still applies.
+- `labourShiftSeconds`: 15 seconds, from 1 to 3,600. It changes public labour,
+  not personal tool crafting, harvesting or qualified production cycles.
+
+The school, help text, rules summary and resident plans quote the current terms.
+Ordinary shift pay and daily caps remain in **Odd Jobs**, including its existing
+diminishing returns. Relief stays outside the ordinary cap. An active course or
+shift keeps the price/reward and end time agreed when it started; later edits
+apply to new work. Resident tuition planning and skill-limit checks use the same
+rules as players.

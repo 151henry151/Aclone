@@ -1174,3 +1174,67 @@ horizontal overflow. Full `npm test` passes **1,401 tests** in 215 seconds (exit
 (`/tmp/aclone-radio-ui-tsc2.log`). Prettier ran and its explicit-file check passes.
 Player/world-building/protocol docs, README and imperative Unreleased changelog
 are updated. The CB entry is ready to commit and push without a version bump.
+
+Pushed `39602ab`; GitHub's branch SHA matches. **CB radios are done**, including
+both the authority/rules and dashboard/input slices. All work remains Unreleased.
+
+### Gameplay rules — survival and needs: tuition, licences and public labour
+
+Read the complete rules entry before implementation. One spec discrepancy needs
+Henry's answer: its health bullet says 65,000, but `maximumHealth` and its tests
+use 60,000; 65,000 is the energy ceiling. The same entry requires current defaults
+to be preserved. An explicit clarification is pending; do not choose or change
+the health default without that answer. Continue the independent tuition/labour
+portion of this same fieldset first; finish survival/needs before economy.
+
+Before production, add `tests/survival-rules.test.ts` and a browser flow.
+Concrete criteria: new worlds and missing-key old saves retain 80d/60s first
+lessons, 160d/2,400s later lessons, catalogue overrides, and licences counting
+against the skill limit. Change each default via validated owner settings;
+learning charges the changed price and uses the changed end time. Excluding
+`driver`, `pilot` and `captain` from the skill limit permits those licences at a
+full professional limit, and permits a profession when only licences are held.
+Server, school controls and resident training plans must agree. The pricing
+first/later distinction still counts lessons already learned; only limit counting
+is optional.
+
+Public relief currently evaluates to 150d (15,000 internal money units), with a
+50d means test, 1,800-second cooldown and a 15-second shift. Preserve those
+values as named defaults in settings. Changed relief amount, means threshold,
+cooldown and labour shift duration affect quotes, task completion, payout and
+all live help/rules/agent text that quotes them. Ordinary pay/cap and diminishing
+returns stay as they are. In-progress shifts retain their quoted payout and end.
+Reject invalid bounds/types atomically, including edits to old saves missing keys.
+Export/import and new-world creation retain the rules.
+
+Commands: `node_modules/.bin/tsx --test tests/survival-rules.test.ts
+ tests/public-labour.test.ts tests/npc-follow-through.test.ts tests/npc-employment.test.ts`, full `npm test`, `npx tsc --noEmit`, and
+Prettier on changed files. Browser: F10 → Rules → Survival and needs, edit/apply/
+reopen tuition and relief controls; open the actual school and Odd Jobs Office,
+verify changed quotes and durations, the skill-limit refusal and exempt licence
+case; inspect screenshots. Update WORLD_BUILDING, PLAYING, README and Unreleased.
+
+School/relief progress: all initial tests failed on absent settings/fieldset.
+The first focused run passes 38 tests, and the real browser flow passes in 32.5s:
+F10 save/reopen, changed tuition and course completion, disabled profession at the
+limit, exempt pilot enrolment and a changed-duration relief payout. Inspected the
+rule, school-limit and Odd Jobs screenshots. A further default-preservation test
+caught a proposed resident check-in changing from 60s to 600s; restore its original
+60s maximum while shortening it for shorter configured lessons. Seven new rule
+tests now pass. TypeScript is clean and changed files have been formatted.
+
+The first full run reports 1,407 passes and one cancelled test: the unchanged
+45s slow-network integration test times out. The preceding CB full run took
+42.8s for that same test. Diagnose with an isolated unchanged test and then run
+the full suite without concurrent formatting or focused test processes; do not
+raise its timeout or relax its delivery/lag assertions. No commit until it passes.
+
+Final school/relief verification: the unchanged isolated slow-network test passes
+in 34.2s with maximum state age 0.76s. The full rerun, without concurrent test or
+formatter work, passes **1,408 tests** in 198.7s (exit 0,
+`/tmp/aclone-survival-school-full-final.status`), including that same unchanged
+45s network test. No assertions, limits or timeouts were weakened. The seven new
+rule tests pass, TypeScript is clean (`/tmp/aclone-survival-school-tsc-final.log`),
+and explicit-file Prettier checking passes. Browser acceptance and screenshots
+are verified as described above. Tuition/licence/relief is ready to commit and
+push; the full survival fieldset and remaining rules entry are not done.

@@ -30,7 +30,7 @@ const action = z.discriminatedUnion('type', [
       task: z
         .enum(['labour', 'craft'])
         .describe(
-          'labour: 15-second public workhouse shift. craft: forge-only personal steel/wood toolmaking. Never use task for milling or other automatic factory production.',
+          'labour: public workhouse shift; duration/pay follow observed world rules. craft: forge-only personal steel/wood toolmaking. Never use task for milling or other automatic factory production.',
         ),
     })
     .strict(),

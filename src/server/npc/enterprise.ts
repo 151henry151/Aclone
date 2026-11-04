@@ -1,3 +1,4 @@
+import { survivalRules } from '../../shared/survival-rules';
 import { pastureCapacity } from '../../shared/pasture-land';
 import { jobTraining } from './job-training.ts';
 import { jobVacancy } from '../../shared/staffing.ts';
@@ -478,7 +479,8 @@ export function economicMenu(
     if (c.description.startsWith('Gather ')) n += preference === 'gatherer' ? 45 : 10;
     if (c.description.startsWith('Learn ')) n -= 15;
     if (busyVisit) {
-      if (/labour shift/.test(c.description)) n += p.cash + p.bank < 5000 ? 55 : -80;
+      if (/labour shift/.test(c.description))
+        n += p.cash + p.bank < survivalRules(w.settings).labourReliefMeans ? 55 : -80;
       if (c.description.startsWith('Gather ')) n += 35;
       if (c.description.startsWith('Trade route:') || c.description.startsWith('Experiment:'))
         n += 25;

@@ -1,3 +1,4 @@
+import { skillFits } from '../../shared/survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
@@ -65,7 +66,7 @@ export function groupInterest(w: World, p: Player, c: GroupCandidate, text: stri
       if (p.learning && p.learning.skill !== skill) return;
       if (
         !p.learning &&
-        (p.skills.length >= w.settings.maxSkills || p.cash < skillLesson(w, p, skill).price + 5000)
+        (!skillFits(w, p, skill) || p.cash < skillLesson(w, p, skill).price + 5000)
       )
         return;
       if (!['employee', 'farmer', 'balanced'].includes(config.preference)) return;

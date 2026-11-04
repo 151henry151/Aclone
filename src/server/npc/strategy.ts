@@ -1,3 +1,4 @@
+import { survivalRules } from '../../shared/survival-rules';
 import { alcoholLevel, alcoholDose } from '../../shared/intoxication.ts';
 import { worldItems } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -153,13 +154,17 @@ export function lifeBriefing(w: World, p: Player) {
         .slice(0, 5),
       jobEstimates:
         'Per completed batch; no wage when inputs, capital or output space block production. Taking a qualified vacancy may supply the missing worker. Compare travel and tuition before changing careers.',
-      labour: `Odd Jobs Office pays ${labourShiftPay(w)} cash per 15-second shift for the first eight in a row, then less until a 600-second break or other work, and at most ${labourDailyCap(w)} ordinary cash per game day. Below 5000 combined cash and bank, relief pays a quoted basic-meal allowance at most once per 1800 seconds and does not count toward that cap. It is emergency support, not a career; prefer a qualified job, gathering or hauling once a meal is affordable.`,
+      labour: `Odd Jobs Office pays ${labourShiftPay(w)} cash per ${survivalRules(w.settings).labourShiftSeconds}-second shift for the first eight in a row, then less until a 600-second break or other work, and at most ${labourDailyCap(w)} ordinary cash per game day. Below ${survivalRules(w.settings).labourReliefMeans} combined cash and bank, relief pays ${survivalRules(w.settings).labourReliefPay} at most once per ${survivalRules(w.settings).labourReliefCooldown} seconds and does not count toward that cap. It is emergency support, not a career; prefer a qualified job, gathering or hauling once a meal is affordable.`,
       boats: w.settings.requireCaptainSkill
         ? `Longer boats need captain (school, ${skillLesson(w, p, 'captain').price} cash). The motorboat does not.`
         : 'Captain is not required for boats.',
       training: {
-        tuition: p.skills.length ? 16000 : 8000,
-        seconds: p.skills.length ? 2400 : 60,
+        tuition: p.skills.length
+          ? survivalRules(w.settings).schoolLaterPrice
+          : survivalRules(w.settings).schoolFirstPrice,
+        seconds: p.skills.length
+          ? survivalRules(w.settings).schoolLaterSeconds
+          : survivalRules(w.settings).schoolFirstSeconds,
         learning: p.learning ?? null,
       },
       ownership:

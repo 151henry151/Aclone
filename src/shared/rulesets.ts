@@ -1,3 +1,4 @@
+import { survivalRules } from './survival-rules';
 import { radioRules } from './radio-rules';
 import { fuelRules } from './fuel-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -48,6 +49,7 @@ export const rulesets: Record<
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
+  const survival = survivalRules(s);
   const fuel = fuelRules(s);
   const radio = radioRules(s);
   const walking = walkingRules(s);
@@ -55,10 +57,11 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `School: first tuition ${survival.schoolFirstPrice}, ${survival.schoolFirstSeconds} seconds; later ${survival.schoolLaterPrice}, ${survival.schoolLaterSeconds} seconds. Licences ${survival.licencesCountSkills ? 'count' : 'do not count'} against the skill limit. Odd Jobs: ${survival.labourShiftSeconds}-second shifts; relief ${survival.labourReliefPay} below ${survival.labourReliefMeans} cash plus bank, every ${survival.labourReliefCooldown} seconds.`,
     `CB radios ${radio.radioEnabled ? 'on' : 'off'}; ${radio.radioChannelCount} channels; ground range ${radio.radioRange} m; speech ${radio.radioCharsPerSecond} characters/s; chat moderation ${radio.radioModeration ? 'on' : 'off'}; resident radio use ${radio.radioResidents ? 'on' : 'off'}.`,
     `Roadside tanker sales ${fuel.fuelTankerSales ? 'on' : 'off'}; offline sales ${fuel.fuelTankerOfflineSales ? 'on' : 'off'}; limit ${fuel.fuelTankerTransactionLimit} Fuel; shop ceiling ${fuel.fuelTankerPriceCeiling || 'off'}; resident purchases ${fuel.fuelTankerNpcPurchasing ? 'on' : 'off'} at up to ${fuel.fuelTankerNpcPriceFactor}× shop price. Refuelling: ${fuel.refuelRange} m range, ${fuel.refuelHeight} m height, ${fuel.refuelSpeed} m/s speed; ${fuel.fuelUnitsPerItem} tank units per Fuel.`,
     s.hungerRate || s.thirstRate
-      ? `Needs continue offline (hunger ${s.hungerRate}/s, thirst ${s.thirstRate}/s). Odd Jobs pays ${s.labourShiftPay ?? 100} per 15-second shift, up to ${s.labourDailyCap ?? 20000} a game day. ${s.autoConsumeInventory ? `Inventory food and drink are consumed automatically ${s.autoConsumeInventoryOnline === false ? 'while signed off' : 'online and offline'}.` : 'Inventory eating is manual.'} ${s.autoConsumeAlcohol ? 'Automatic meals may include beer and wine.' : 'Beer and wine are never consumed automatically.'} ${s.autoConsumeHomeStock ? 'Your selected home supplies also feed you while away.' : 'Home stores feed you only while inside.'} At home, needs drain at ${Math.round((s.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
+      ? `Needs continue offline (hunger ${s.hungerRate}/s, thirst ${s.thirstRate}/s). Odd Jobs pays ${s.labourShiftPay ?? 100} per ${survival.labourShiftSeconds}-second shift, up to ${s.labourDailyCap ?? 20000} a game day. ${s.autoConsumeInventory ? `Inventory food and drink are consumed automatically ${s.autoConsumeInventoryOnline === false ? 'while signed off' : 'online and offline'}.` : 'Inventory eating is manual.'} ${s.autoConsumeAlcohol ? 'Automatic meals may include beer and wine.' : 'Beer and wine are never consumed automatically.'} ${s.autoConsumeHomeStock ? 'Your selected home supplies also feed you while away.' : 'Home stores feed you only while inside.'} At home, needs drain at ${Math.round((s.homeNeedsMultiplier ?? 0.8) * 100)}% of normal.`
       : 'Hunger and thirst are disabled.',
     s.jobsEnabled === false
       ? 'Paid jobs are disabled.'

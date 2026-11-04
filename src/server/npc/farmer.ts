@@ -1,9 +1,10 @@
+import { survivalRules, skillFits } from '../../shared/survival-rules';
 import { farmStaffBlocker } from '../../shared/farm-policy';
 import { jobVacancy } from '../../shared/staffing.ts';
 import { labourReward } from '../../shared/public-labour.ts';
 import { acceptsHay, herdNeeds } from '../../shared/livestock.ts';
 import { farmPlotCount } from '../../shared/farm-land.ts';
-import { worldItems } from '../../shared/world-catalogue.ts';
+import { worldItems, skillLesson } from '../../shared/world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { propertyQuote } from '../../shared/property.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
@@ -144,26 +145,28 @@ export function gameplayChoices(
   }
   for (const b of buildings.filter((b) => b.kind === 'workhouse' && b.owner !== p.id).slice(0, 2))
     add(
-      `Earn ${labourReward(w, p)} cash with a 15-second public labour shift at ${b.name}; useful for tuition and supplies.`,
+      `Earn ${labourReward(w, p)} cash with a ${survivalRules(w.settings).labourShiftSeconds}-second public labour shift at ${b.name}; useful for tuition and supplies.`,
       visit(b, [
         action({ type: 'task', building: b.id, task: 'labour' }),
-        { kind: 'wait', seconds: 15 },
+        { kind: 'wait', seconds: Math.min(600, survivalRules(w.settings).labourShiftSeconds) },
       ]),
     );
-  if (
-    !p.learning &&
-    p.skills.length < w.settings.maxSkills &&
-    p.cash >= (p.skills.length ? 16000 : 8000)
-  )
-    for (const skill of skills.filter((skill) => !p.skills.includes(skill)))
+  if (!p.learning)
+    for (const skill of skills.filter(
+      (skill) => !p.skills.includes(skill) && skillFits(w, p, skill),
+    )) {
+      const lesson = skillLesson(w, p, skill);
+      if (p.cash < lesson.price || !lesson.prerequisites.every((id) => p.skills.includes(id)))
+        continue;
       for (const b of buildings.filter((b) => b.kind === 'school').slice(0, 1))
         add(
-          `Learn ${skill} at ${b.name}; tuition ${p.skills.length ? 16000 : 8000}. Training takes ${p.skills.length ? 2400 : 60} seconds.`,
+          `Learn ${skill} at ${b.name}; tuition ${lesson.price}. Training takes ${lesson.seconds} seconds.`,
           visit(b, [
             action({ type: 'learn', building: b.id, skill }),
-            { kind: 'wait', seconds: 60 },
+            { kind: 'wait', seconds: Math.min(60, lesson.seconds) },
           ]),
         );
+    }
   economyChoices(w, p, buildings, add, visit);
   const farms = buildings
     .filter(
