@@ -261,6 +261,8 @@ implementation order rather than building paving before ford-aware persistence.
 
 ### G1 — motor-free HUD
 
+Done: committed and pushed as `74c79e4` after the checks below.
+
 Red evidence: `npm run test:e2e -- tests/browser/personal-controls.spec.ts`
 failed at the walking Fuel assertion: expected zero bars, received one, after
 the actual inventory Walk action successfully changed the player to slot 5.
@@ -299,12 +301,29 @@ are rendered, Fuel is absent, and their distinct controls remain visible.
 
 ### G2 — menu zoom
 
+Red evidence: `npm run test:e2e -- tests/browser/camera-zoom.spec.ts` failed
+after repeated actual menu clicks: expected scene zoom 5.6, received 2.8.
+
+- Concrete command: `npm run test:e2e -- tests/browser/camera-zoom.spec.ts`.
+  On a temporary local world, open phone Actions and repeatedly click Zoom out.
+  Read the real scene zoom (test-only observation, no changed camera behaviour):
+  expect 5.6 for the tractor, matching wheel and pinch; close the panel and check
+  the settled third-person horizontal distance is 21 × 5.6 metres. Zoom in stops
+  at 0.55. Walking still stops at 2.8. Capture the zoomed-out tractor view.
 - Before code, add a failing browser regression that clicks Zoom out repeatedly
   in a tractor and measures camera distance matching wheel/pinch maximum (5.6),
   twice other vehicles' 2.8. Exercise Zoom in at the lower bound and walking's
   unchanged upper bound. Reuse one camera limit, not another literal copy.
 - Run the browser regression, `npm test` for touched camera tests, TypeScript and
   Prettier. Update the player guide, README and Unreleased changelog.
+
+Validation: `npm test` passed all 1,313 tests and `npx tsc --noEmit` is clean.
+The first green browser attempt passed tractor menu/wheel/pinch and camera
+distance checks, then timed out because Walk correctly closes Actions. The test
+now reopens Actions before checking the walking limit; no criterion changed.
+`test-results/camera-zoom-tractor.png` was visually inspected at phone size.
+Final browser rerun passed in 37.6 seconds, including walking's unchanged 2.8
+limit. Prettier and a final TypeScript/diff check passed.
 
 ### G3 — charter tuning
 

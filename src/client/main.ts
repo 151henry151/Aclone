@@ -2790,7 +2790,7 @@ app.addEventListener('click', async (e) => {
         closePanel();
         break;
       case 'camera-zoom':
-        scene.zoom = Math.max(0.55, Math.min(2.8, scene.zoom + (id === 'in' ? -0.25 : 0.25)));
+        scene.setZoom(scene.zoom + (id === 'in' ? -0.25 : 0.25));
         break;
       case 'camera':
         scene.cameraMode = (scene.cameraMode + 1) % 3;

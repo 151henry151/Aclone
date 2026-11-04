@@ -13,6 +13,7 @@ All notable changes to Aclone are documented here. This project follows
 ### Fixed
 
 - Hide the Fuel bar while walking or rowing the emergency raft, and restore it when boarding a motor vehicle.
+- Apply the doubled tractor camera range to menu zoom buttons as well as wheel and pinch input through one shared limit.
 
 ### Changed
 

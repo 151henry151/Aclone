@@ -241,6 +241,10 @@ export class GameScene {
   private software = false;
   private labelsHidden = false;
   zoom = 1;
+  setZoom(zoom: number) {
+    const maximum = 2.8 * (this.me && isTractor(this.me.vehicle) ? 2 : 1);
+    this.zoom = Math.min(maximum, Math.max(0.55, zoom));
+  }
   cameraMode = 0;
   orbit = 0;
   private lookPitch = 0;
@@ -410,11 +414,7 @@ export class GameScene {
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.size > 1) {
         const after = span();
-        if (before > 0 && after > 0)
-          this.zoom = Math.min(
-            this.me && isTractor(this.me.vehicle) ? 5.6 : 2.8,
-            Math.max(0.55, (this.zoom * before) / after),
-          );
+        if (before > 0 && after > 0) this.setZoom((this.zoom * before) / after);
       } else {
         this.orbit += (e.clientX - previous.x) * 0.007;
         this.lookPitch = lookPitchFromDrag(this.lookPitch, previous.y - e.clientY, this.cameraMode);
@@ -442,10 +442,7 @@ export class GameScene {
     this.renderer.domElement.addEventListener(
       'wheel',
       (e) => {
-        this.zoom = Math.min(
-          this.me && isTractor(this.me.vehicle) ? 5.6 : 2.8,
-          Math.max(0.55, this.zoom + e.deltaY * 0.001),
-        );
+        this.setZoom(this.zoom + e.deltaY * 0.001);
         e.preventDefault();
       },
       { passive: false },
