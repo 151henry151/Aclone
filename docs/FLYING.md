@@ -19,9 +19,12 @@ Use two hands:
   There is no reverse thrust. Going from idle to full power takes about four seconds.
 - **A / D:** rudder left / right, also steering the wheels while taxiing.
 - **Down arrow:** pull back to raise the nose. **Up arrow:** push forward to lower it.
-- **Left / Right arrows:** bank left / right. Release to stop rolling; use the opposite
-  arrow to return the wings to level. Banking turns the aircraft.
-- **B:** wheel brakes. Reduce power before braking after landing.
+- **Left / Right arrows:** bank left / right. A short tap changes the attitude by a
+  few degrees; releasing the arrows gradually steadies the nose and levels the
+  wings. Analog sticks retain more authority. Banking turns the aircraft.
+- **B:** airbrake in flight, wheel brakes on the ground. Reduce power with S and
+  hold B to slow a fast arrival and descend near approach speed. World owners can
+  disable airborne braking; the wheel brake still works.
 - **F4:** engine on/off. Turning it off in flight means gliding, not stopping.
 - **C:** change camera. Drag the cockpit view to look around; its horizon moves with
   the aircraft. The chase camera stays upright.
@@ -53,7 +56,8 @@ There is no automatic runway alignment or instant vertical takeoff.
    the aircraft from level ground. Holding Down continuously can cause a stall.
 4. Keep a modest nose-up attitude. Level off by easing the nose down as needed.
 5. Use small banks to turn. Watch altitude: a steep bank leaves less lift supporting
-   your weight. Counter-bank to level the wings before returning to the airfield.
+   your weight. Release the bank keys early to let the wings settle; counter-bank
+   when a quicker correction is needed.
 
 These are practice targets, not exact guarantees: slope, ground grip, engine
 condition and the aircraft's attitude affect the ground run and flight path.
@@ -85,13 +89,21 @@ It cannot hover or stop in mid-air.
 
 ## Landing and damage
 
-Approach a clear strip at roughly **55 mph**, reduce power with S, and keep the
-wings level. Control the descent with pitch and power. Just above the surface,
-raise the nose gently to reduce the sink rate, then close the throttle and brake.
+Approach a clear strip at roughly **54 mph (24 m/s by default)**, reduce power
+with S, and hold B to slow and descend. Release the arrows between small corrections
+so the attitude settles. Just above the surface, tap Down gently for a late flare,
+then keep B held for the ground roll. B tapers its extra drag at low speed, so it
+does not by itself stall a level slow approach.
 Avoid landing across a steep hillside or trying to stop immediately upon touchdown.
 
-The current game checks terrain-relative sink rate (over **3.5 m/s** is a hard
-landing), bank over **12°**, nose/tail attitude, sideways drift and excessive speed.
+Default contacts allow up to **8 m/s** of sink, **25°** of bank, pitch between
+**−15° and +25°**, **40°** of slip and **44.7 m/s (100 mph)**. These are survival
+limits, not approach targets. A ten-metre-per-second dive or a 45° bank still
+destroys the aircraft. Speed and sideways arrivals have separate notices.
+Smooth slopes under the wheelbase count as rolling terrain; sudden rises still
+count as impacts. An 18-metre blend softens the runway shoulders by default.
+The owner can tune these rules or select **Strict landing contacts** to restore
+the old 3.5 m/s, 12° bank, −0.1-radian/+20° pitch, 0.35-radian slip and 36 m/s limits.
 An aircraft hitting buildings, water or the world edge at speed is also destroyed.
 Slow ground bumps stop it instead. These are gameplay thresholds, not real flying
 advice.
@@ -118,9 +130,12 @@ The coefficients and forgiving impact thresholds are tuned for this game.
 
 ## Airfield and replacement aircraft
 
-Puddlewick’s public airfield has a level, marked 240-metre north/south runway
-inside the current town boundary (220 metres in a new parish with the smaller
-default boundary). The hangar is east of the strip. Use the map’s building marker
+Puddlewick’s public airfield targets a level, marked **400 × 30 metre** north/south
+runway. It uses the longest safe surveyed site when the full length cannot fit;
+the ordinary 300/310-metre town fixtures currently fit 250/260-metre strips.
+The pavement and level clearance stay within town; the gentle blend can extend
+into adjoining clear countryside. An existing hangar and private property stay
+in place when a legacy strip is upgraded. The hangar is east of the strip. Use the map’s building marker
 to find it; taxi slowly west from the apron, then line up at either end. There is
 no automatic alignment. Garages continue to handle ground vehicles; biplanes
 require the hangar in Puddlewick (worlds without a hangar retain their garage desk). Stop before boarding and wait if another pilot occupies the

@@ -232,6 +232,33 @@ Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness map
 
 Rules include **Vehicle maintenance** (distance wear on/off), **Vehicle licences** (driver, pilot or captain required for advanced slots according to their configured movement mode), **Require the captain skill for boats longer than the motorboat** (`requireCaptainSkill`, on for new worlds; public Puddlewick adopts it once and qualifies existing owners) and **Require map item** (hide visitor maps unless carrying a Parish map). Defaults enable gentle wear but leave the general licences and map ownership optional. Basic tractor, walking, ostrich and disposable robocrow controls are exempt from licences. The motorboat and lifeboat stay open when only the captain rule is on. In the vehicle editor, **Requires captain** forces or waives the rule for that slot; otherwise length above the motorboat's 4.3 m decides. Creator maps remain available for editing. Garage map printing and steel-part servicing are ordinary paid services, also available on existing saves.
 
+## Flight and public runway
+
+**Rules → Flight and public runway** controls landing sink, bank, minimum/maximum
+pitch, slip and speed. Defaults are 8 m/s, 25°, −15°/+25°, 40° and 44.7 m/s.
+**Strict landing contacts** selects the legacy 3.5 m/s, 12°, −0.1-radian/+20°,
+0.35-radian slip and 36 m/s limits instead. Untick it to use the individual limits.
+The airbrake toggle and drag coefficient (0.08), approach speed (24 m/s), keyboard
+and touch authority (0.5), released-stick stability (1.6), throttle rate (0.24 per
+second) and wheel braking (5.5 m/s²) apply immediately and also govern prediction.
+Zero stability disables the return toward a steady attitude. Analog sticks retain
+their full input range.
+
+Ground contact also exposes the slope-sampling wheelbase (4 m), wing half-span
+(4 m), wing terrain clearance (1.2 m), minimum speed for a ground wing strike
+(8 m/s), and abrupt-drop threshold before wheels unstick (0.15 m). Public strip
+placement uses a 10 m level clearance beyond the paint and allows at most 2 m of
+grading relief by default. These values share the same validated settings and
+portable-design flow as the other flight rules.
+
+Public runway targets default to 400 m long and 30 m wide. Placement and safe legacy
+upgrades are checked on server startup, use a shorter level site when needed, and
+never move existing hangars or private property. The level clearance stays inside
+town; a blend may extend onto clear neighbouring countryside. The shoulder blend
+defaults to 18 m and changes live, so check neighbouring terrain before editing it.
+These settings are available during world creation and travel with saved worlds
+and portable designs. Missing flight settings use the new defaults.
+
 ## Economy and survival presets
 
 Creation offers the existing active-work village, **Relaxed owner economy**, **Harsh survival village**, **Civilization frontier**, arenas and a blank canvas. These are starting rules, not claims of exact historical balance. Relaxed disables needs and jobs, lets qualified owners operate supplied businesses without wages, and keeps skills/property on death. Harsh doubles needs, disables unattended production and grants one real hour of needs grace after death. Frontier enables combat, owner operation and larger ownership limits; safe zones still apply.

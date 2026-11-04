@@ -14,6 +14,7 @@ import { terrainHeight } from '../src/shared/terrain';
 import { constructionSiteReason } from '../src/shared/construction-site';
 import { worldResources } from '../src/shared/resources';
 import { Store } from '../src/server/store';
+import { landscapeSchema } from '../src/shared/landscape';
 
 function airfield() {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
@@ -21,6 +22,77 @@ function airfield() {
   assert.equal(ensurePuddlewickAirfield(w), true);
   return w;
 }
+test('public runway targets world dimensions and upgrades a legacy strip without moving its hangar', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.towns[0].radius = 310;
+  Object.assign(w.settings, { runwayLength: 400, runwayWidth: 30, runwayShoulder: 18 });
+  assert.ok(ensurePuddlewickAirfield(w));
+  assert.equal(w.airfield!.width, 30);
+  assert.ok(w.airfield!.length >= 240 && w.airfield!.length <= 400);
+  const hangar = structuredClone(w.buildings.find((b) => b.aircraftHangar)!);
+  w.airfield!.width = 18;
+  w.airfield!.length = 240;
+  delete (w as any).airfieldLandingVersion;
+  assert.ok(ensurePuddlewickAirfield(w));
+  assert.equal(w.airfield!.width, 30);
+  assert.deepEqual(
+    w.buildings.find((b) => b.aircraftHangar),
+    hangar,
+  );
+  assert.equal(ensurePuddlewickAirfield(w), false);
+});
+test('a clear level site accepts the full target and an actual legacy western strip keeps its hangar and property', () => {
+  const clear = createWorld('puddlewick', 'Puddlewick', 'server');
+  clear.towns[0].radius = 1000;
+  clear.buildings = [];
+  clear.landscape = landscapeSchema.parse({ heightmap: Array(1089).fill(10) });
+  clear.settings.runwayWidth = 34;
+  assert.ok(ensurePuddlewickAirfield(clear));
+  assert.equal(clear.airfield!.length, clear.settings.runwayLength);
+  assert.equal(clear.airfield!.width, 34);
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.towns[0].radius = 310;
+  const hangar = makeBuilding('parish-airfield-hangar', 'garage', -155, -85);
+  Object.assign(hangar, {
+    aircraftHangar: true,
+    foundationY: 0.19,
+    owner: 'treasury',
+    investment: 1234,
+  });
+  w.buildings.push(hangar);
+  w.airfieldFuelDeskVersion = 1;
+  w.airfield = {
+    x: -195,
+    z: -85,
+    length: 240,
+    width: 18,
+    height: 0.15,
+    hangar: hangar.id,
+    apronX: -168,
+    apronZ: -85,
+  };
+  const before = structuredClone(w.buildings);
+  const elevations = w.buildings.map((b) => terrainHeight(w, b.x, b.z));
+  assert.ok(ensurePuddlewickAirfield(w));
+  assert.equal(w.airfield.width, 30);
+  assert.ok(w.airfield.length >= 240);
+  assert.deepEqual(w.buildings, before);
+  assert.deepEqual(
+    w.buildings.map((b) => terrainHeight(w, b.x, b.z)),
+    elevations,
+  );
+});
+test('runway clearance and maximum grading relief use validated world rules', () => {
+  const w = createWorld('puddlewick', 'Puddlewick', 'server');
+  w.towns[0].radius = 1000;
+  w.buildings = [];
+  w.landscape = landscapeSchema.parse({ heightmap: Array(1089).fill(10) });
+  const owner = addPlayer(w, 'server', 'Builder');
+  act(w, owner.id, { type: 'settings', patch: { runwayClearance: 16, runwayMaxGrade: 1 } });
+  assert.ok(ensurePuddlewickAirfield(w));
+  assert.equal(airfieldAreas(w.airfield!)[0].hx, w.airfield!.width / 2 + 16);
+  assert.throws(() => act(w, owner.id, { type: 'settings', patch: { runwayMaxGrade: -1 } }));
+});
 test('public airstrip fits town, preserves private property and gathering IDs, and survives restart once', () => {
   const w = createWorld('puddlewick', 'Puddlewick', 'server');
   w.towns[0].radius = 310;
@@ -28,7 +100,8 @@ test('public airstrip fits town, preserves private property and gathering IDs, a
     sites = worldResources(w);
   assert.ok(ensurePuddlewickAirfield(w));
   const a = w.airfield!;
-  assert.equal(a.length, 240);
+  assert.ok(a.length >= 240 && a.length <= w.settings.runwayLength!);
+  assert.equal(a.width, w.settings.runwayWidth);
   assert.deepEqual(w.buildings.slice(0, -1), before);
   for (const r of airfieldAreas(a))
     for (const dx of [-r.hx, r.hx])

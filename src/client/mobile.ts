@@ -187,7 +187,7 @@ export class MobileUI {
       ['right', value ? 'Rudder right' : 'Steer right', '▶'],
       ['up', value ? 'Pitch nose up' : 'Climb', value ? 'Nose ↑' : 'Climb'],
       ['down', value ? 'Pitch nose down' : 'Descend', value ? 'Nose ↓' : 'Descend'],
-      ['boost', value ? 'Wheel brakes' : 'Hold to boost', value ? 'Brakes' : 'Boost'],
+      ['boost', value ? 'Airbrake and wheel brakes' : 'Hold to boost', value ? 'Brakes' : 'Boost'],
     ]) {
       const b = document.querySelector<HTMLButtonElement>(`[data-hold="${key}"]`)!;
       b.textContent = text;

@@ -77,6 +77,7 @@ import {
 } from './boathouse';
 import { commissionBiplane, hasAircraftHangar } from './airfield';
 import { fly } from './flight.ts';
+import { flightRuleFields } from './flight-rules';
 import {
   fuelCapacity,
   refuelRequiresReboarding,
@@ -1868,15 +1869,25 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(patch && typeof patch === 'object' && !Array.isArray(patch), 'Invalid settings');
       const clean: Partial<Settings> = {};
       for (const [key, v] of Object.entries(patch)) {
-        requireThat(Object.hasOwn(w.settings, key), 'Unknown setting');
-        const old = w.settings[key as keyof Settings];
+        requireThat(
+          Object.hasOwn(w.settings, key) || Object.hasOwn(flightRuleFields, key),
+          'Unknown setting',
+        );
+        const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
         else if (key === 'weaponMode')
           requireThat(
             typeof v === 'string' && ['energy', 'ammo'].includes(v),
             'Choose energy or ammo',
           );
-        else num(v, key === 'seaLevel' ? -50 : 0, key === 'startingCash' ? 1e8 : 1e6);
+        else
+          num(
+            v,
+            key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
+            key === 'startingCash' ? 1e8 : 1e6,
+          );
+        const flightField = flightRuleFields[key as keyof typeof flightRuleFields];
+        if (flightField && 'min' in flightField) num(v, flightField.min, flightField.max);
         if (
           [
             'salesTax',
@@ -2321,6 +2332,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (v.mode === 2) {
     const previous = { x: p.x, z: p.z };
     const accident = fly(p, input, dt, {
+      settings: w.settings,
       ground: (x, z) => travelHeight(w, x, z),
       seaLevel: waterLevel(w),
       half: mapHalf(w),

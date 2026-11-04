@@ -1,5 +1,6 @@
 import { vehicleEditor } from './vehicle-editor';
 import { vehicleDef } from '../shared/vehicle-config';
+import { flightRuleFields, flightRules, type FlightRuleKey } from '../shared/flight-rules';
 import { coursesPanel } from './courses';
 import { bookSchema, townEventSchema } from '../shared/world-stories';
 import { booksEditor, eventsEditor } from './story-editor';
@@ -77,6 +78,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...Object.keys(flightRuleFields),
     'resourceRecoveryMultiplier',
     'tidalRange',
     'oceanWaves',
@@ -92,6 +94,24 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const flying = flightRules(settings);
+  const flightFields = `<fieldset class="boat-death-settings"><legend>Flight and public runway</legend>${Object.entries(
+    flightRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            flying[key as FlightRuleKey],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="any"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${flying[key as FlightRuleKey] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Strict contacts select the legacy landing limits. Untick to use the individual limits above. Runway length and width are safe placement targets, checked on server startup; a shorter level site is used where necessary. Private property is never moved. Shoulder width changes the terrain blend live. Stability eases a released stick toward the flight path; it does not land the aircraft for you.</p></fieldset>`;
   const provisions = `<fieldset class="boat-death-settings"><legend>Automatic food and drink</legend><label class="check"><input name="autoConsumeInventory" type="checkbox" ${settings.autoConsumeInventory ? 'checked' : ''}>Automatically eat and drink from inventory while signed off</label><label class="check"><input name="autoConsumeInventoryOnline" type="checkbox" ${(settings.autoConsumeInventoryOnline ?? settings.autoConsumeInventory) ? 'checked' : ''}>Also while signed in</label><label class="check"><input name="autoConsumeAlcohol" type="checkbox" ${settings.autoConsumeAlcohol ? 'checked' : ''}>Automatic meals may include beer and wine</label><label class="check"><input name="autoConsumeHomeStock" type="checkbox" ${settings.autoConsumeHomeStock ? 'checked' : ''}>Use selected home stores while away</label><p>Applies to carried food and drink, including while travelling. Beer and wine are only included when ticked; drinking them by hand always works. Only your selected owned home or unexpired private guest-room pantry is used; business stock and other players’ supplies are excluded. At home, stored supplies are always eaten automatically.</p>${field('Home needs multiplier (0 = no drain; 1 = normal drain)', 'homeNeedsMultiplier', settings.homeNeedsMultiplier ?? 0.8, 'number', 'min="0" max="1" step="0.05"')}<p>0.8 means 20% slower hunger and thirst while inside a home. Boat crew still eat from their captain’s stores first; online captains use their inventory when enabled but must eat boat-store provisions manually.</p></fieldset>`;
   const labour = `<fieldset class="boat-death-settings"><legend>Odd Jobs</legend>${field('Ordinary shift pay (hundredths; 1200 = 12d)', 'labourShiftPay', settings.labourShiftPay ?? 1200, 'number', 'min="0" max="1000000" step="1"')}${field('Ordinary labour cap per game day (hundredths; 20000 = 200d)', 'labourDailyCap', settings.labourDailyCap ?? 20000, 'number', 'min="0" max="1000000" step="1"')}<p>The first eight shifts in a row pay the full rate. Later shifts pay two thirds, one half, one third, then one quarter. A ten-minute break or other work restores full pay. Meal relief is separate and does not count toward the cap.</p></fieldset>`;
   const boatRules = `<fieldset class="boat-death-settings"><legend>Boats and death</legend><label class="check"><input name="requireCaptainSkill" type="checkbox" ${settings.requireCaptainSkill ? 'checked' : ''}>Require the captain skill for boats longer than the motorboat</label><p>Learned at school and counted against the skill limit. The motorboat and lifeboat stay open. Passengers and deckhands are not asked. People who already own a larger boat in public Puddlewick are qualified once.</p><label class="check"><input name="loseBoatsOnDeath" type="checkbox" ${settings.loseBoatsOnDeath ? 'checked' : ''}>Lose all owned boats on death</label><p>Includes stored and moored boats, their cargo, provisions and tank fuel. Untick to leave an offshore boat recoverable after its captain dies.</p>${field('Recoverable cargo lifetime (game days; 0 = never expires)', 'boatCargoSpoilageDays', settings.boatCargoSpoilageDays ?? 5, 'number', 'min="0" max="365" step="0.1"')}<label class="check"><input name="retainBoatFuelOnDeath" type="checkbox" ${settings.retainBoatFuelOnDeath !== false ? 'checked' : ''}>Keep tank fuel in recoverable boats</label><p>Cargo lifetime and fuel retention apply only when boats survive death. Existing abandoned cargo keeps the deadline assigned at death. Running out of fuel still allows recovery under either rule.</p></fieldset>`;
@@ -100,6 +120,7 @@ export function settingsFields(settings: Settings = defaults) {
     provisions +
     labour +
     boatRules +
+    flightFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

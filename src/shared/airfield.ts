@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types';
+import defaults from '../../data/settings.json';
 
 /** Public airfield reservation, in metres. The runway runs north/south. */
 export interface Airfield {
@@ -7,23 +8,26 @@ export interface Airfield {
   z: number;
   length: number;
   width: number;
+  clearance?: number;
   height: number;
   hangar: string;
   apronX: number;
   apronZ: number;
 }
 export function airfieldAreas(a: Airfield) {
+  const clearance = a.clearance ?? defaults.runwayClearance;
   return [
-    { x: a.x, z: a.z, hx: a.width / 2 + 10, hz: a.length / 2 + 10 },
+    { x: a.x, z: a.z, hx: a.width / 2 + clearance, hz: a.length / 2 + clearance },
     { x: a.apronX, z: a.apronZ, hx: 28, hz: 25 },
   ];
 }
 export function onAirfield(w: Pick<World, 'airfield'>, x: number, z: number, margin = 0) {
   const a = w.airfield;
+  const clearance = a?.clearance ?? defaults.runwayClearance;
   return (
     !!a &&
-    ((Math.abs(x - a.x) < a.width / 2 + 10 + margin &&
-      Math.abs(z - a.z) < a.length / 2 + 10 + margin) ||
+    ((Math.abs(x - a.x) < a.width / 2 + clearance + margin &&
+      Math.abs(z - a.z) < a.length / 2 + clearance + margin) ||
       (Math.abs(x - a.apronX) < 28 + margin && Math.abs(z - a.apronZ) < 25 + margin))
   );
 }
@@ -46,25 +50,33 @@ export function runwayRoad(
 }
 export function onRunway(w: Pick<World, 'airfield'>, x: number, z: number, margin = 0) {
   const a = w.airfield;
+  const clearance = a?.clearance ?? defaults.runwayClearance;
   return (
     !!a &&
-    Math.abs(x - a.x) < a.width / 2 + 10 + margin &&
-    Math.abs(z - a.z) < a.length / 2 + 10 + margin
+    Math.abs(x - a.x) < a.width / 2 + clearance + margin &&
+    Math.abs(z - a.z) < a.length / 2 + clearance + margin
   );
 }
-/** Three metre shoulder blends the graded strip into undisturbed terrain. */
-export function airfieldHeight(a: Airfield | undefined, x: number, z: number, height: number) {
+/** A broad shoulder blends the graded strip into undisturbed terrain. */
+export function airfieldHeight(
+  a: Airfield | undefined,
+  x: number,
+  z: number,
+  height: number,
+  shoulderWidth = defaults.runwayShoulder,
+) {
   if (!a) return height;
+  const clearance = a.clearance ?? defaults.runwayClearance;
   const shoulder = (cx: number, cz: number, hx: number, hz: number) => {
     const d = Math.hypot(Math.max(0, Math.abs(x - cx) - hx), Math.max(0, Math.abs(z - cz) - hz));
-    const t = Math.max(0, 1 - d / 3);
+    const t = Math.max(0, 1 - d / shoulderWidth);
     return t * t * (3 - 2 * t);
   };
   const weight = Math.max(
-    shoulder(a.x, a.z, a.width / 2 + 10, a.length / 2 + 10),
+    shoulder(a.x, a.z, a.width / 2 + clearance, a.length / 2 + clearance),
     shoulder(a.apronX, a.apronZ, 28, 25),
   );
-  return height * (1 - weight) + a.height * weight;
+  return height + (a.height - height) * weight;
 }
 /** One ready aircraft retains its normal fuel/paint/service record. Spares are fresh,
  * empty airframes, commissioned only after destruction; they cannot duplicate fuel. */

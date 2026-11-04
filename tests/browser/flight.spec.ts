@@ -54,7 +54,7 @@ test('two-handed flight reaches the server, latches throttle, banks the aircraft
       'Pitch nose down',
       'Bank left',
       'Bank right',
-      'Wheel brakes',
+      'Airbrake and wheel brakes',
     ])
       await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
     for (const key of ['forward', 'reverse']) {

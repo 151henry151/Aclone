@@ -329,6 +329,8 @@ limit. Prettier and a final TypeScript/diff check passed.
 
 ### G3 — charter tuning
 
+Done: committed and pushed as `730ff74` after the checks below.
+
 Red evidence: the new Store-backed unit regression failed with “Missing expected
 exception” when a zero-seat charter accepted and charged a guest. The browser
 successfully saved zero seats and a 300-unit tank via the editor, then failed:
@@ -368,3 +370,68 @@ cancellation. Visually inspected `test-results/charter-tuning-empty.png`,
 places, 300-unit tank capacity, empty waiting area and the correct refusal are
 visible. TypeScript and Prettier pass. `npm test` passed all 1,314 tests, zero
 failed (`/tmp/aclone-g3-unit.log`).
+
+### Make a landing possible
+
+Completion criteria, before production changes:
+
+- `node_modules/.bin/tsx --test tests/landing.test.ts tests/flight.test.ts tests/airfield.test.ts`:
+  a fixed schedule of full keyboard presses (S/B, then a late short flare; no
+  continuously calculated target pitch) reaches the real graded public runway,
+  survives a modest bank and nose-down arrival, and brakes to rest on its paint.
+  Cover ordinary and delayed key release. Rolling over a gentle shoulder at
+  approach speed must survive; an abrupt rise must still count as an impact.
+- At contact, defaults permit sink below 8 m/s, nose from −15° to +25°, bank
+  below 25°, slip below 40°, and speed below 100 mph. A 10 m/s dive, 45° bank,
+  water and a building still destroy the aircraft. Excess speed and slip get
+  distinct reasons. A strict option retains the old 3.5 m/s, −0.1 rad/+20°,
+  12° bank, 0.35 rad slip and 36 m/s limits.
+- B in flight increases descent and slows a fast approach; near 24 m/s it
+  permits a roughly 2–4 m/s descent without requiring nose-down input. It cannot
+  cause a stall at an already slow, level approach. Ground B remains a brake.
+  Released pitch and roll settle gradually, and a short keyboard tap changes
+  attitude by a few degrees; analog input retains greater authority.
+- Put new limits, airbrake toggle/strength, approach speed, keyboard authority,
+  stability, throttle/brake rates and runway target length/width/shoulder in
+  validated per-world settings with shared defaults. Test changed values,
+  missing-key fallback, creation, editor, summary, save/load and design export.
+  Target 400 × 30 m with an 18 m blend; use the longest safe level site where
+  400 m cannot fit. Existing public strips must receive a safe, idempotent
+  upgrade without moving/deleting property or resetting player changes.
+- `npm run test:e2e -- tests/browser/landing.spec.ts`: in a disposable local
+  public-parish fixture, use actual keyboard controls to land on the real
+  graded runway and stop. Inspect third-person/cockpit runway views, B's touch
+  label, rules editor and crash notice. Include airbrake-disabled and strict
+  failure states. Do not replace this with the old infinite-plane controller.
+- Finish with `npm test`, `npx tsc --noEmit`, Prettier on all changed files,
+  player/world-builder flight instructions, README and an Unreleased entry.
+
+Red evidence (`/tmp/aclone-landing-red.log`): firm arrival returned “hard landing”;
+B did not increase descent; the fixed key schedule stopped outside the narrow
+paint; strict settings were unknown; neutral bank did not settle; six metres
+past the level grade was already outside the old blend. The runway regression
+also failed with width 18 rather than 30. A further rule test rejected the
+ground-wing/drop settings as unknown before those were exposed.
+
+Progress: the first 32 flight/landing/airfield checks passed after tuning. The
+new browser flow passed in 1.1 minutes: actual keys landed and stopped on the
+graded strip, mobile B was visible, and editor-selected strict contacts produced
+the hard-landing notice with airbraking disabled. Screenshots of the stopped
+runway, cockpit, rules and crash were visually inspected. The rules fieldset was
+then widened to avoid cramped labels. Full browser and unit verification remain.
+
+The initial extended site survey rejected the whole feathered bounding rectangle.
+It now requires the pavement/level clearance inside town, permits a gentle blend
+onto clear countryside, and protects existing property wherever grading changes
+elevation. Already level fringe points need no earthwork. Current ordinary
+300/310-metre-radius fixtures fit 250/260 × 30 m; a wholly clear, level fixture
+fits the full 400 m target. Legacy strips retain their existing hangar.
+
+Final verification: `npm test` passed all 1,325 tests, zero failed
+(`/tmp/aclone-landing-full.log`). TypeScript is clean, Prettier ran on every changed
+path, and the diff check passed. The existing takeoff browser test and the new
+landing flow passed together (2.8 minutes); after adding the remaining world-rule
+fields, the final landing browser rerun also passed (1.1 minutes). Portable
+designs, creation overrides, missing-key defaults, ground wing/drop rules and
+the original western hangar/property preservation are covered. Stable terrain
+interpolation preserves already-equal ground heights exactly.

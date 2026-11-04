@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import type { FlightRules } from './flight-rules';
 export type Stock = Record<string, number>;
 export type Input = {
   throttle: number;
@@ -279,7 +280,7 @@ export interface Zone {
   z: number;
   radius: number;
 }
-export interface Settings {
+export interface Settings extends Partial<FlightRules> {
   crowAbilities: boolean;
   lotteryEnabled: boolean;
   lotteryTicketPrice: number;
@@ -358,6 +359,8 @@ export interface Settings {
   exchangeCap: number;
 }
 export interface World {
+  /** Last safely surveyed public runway targets; never overwrites private property. */
+  airfieldLandingVersion?: string;
   automaticProvisionsVersion?: 1 | 2;
   labourRulesVersion?: 1;
   captainRulesVersion?: 1;

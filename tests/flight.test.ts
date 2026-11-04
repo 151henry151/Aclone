@@ -10,6 +10,7 @@ import { prepareFrame } from '../src/server/snapshots.ts';
 import { MotionTrack } from '../src/client/motion.ts';
 import { aircraftControllerInput } from '../src/client/controller.ts';
 import type { Input, Player } from '../src/shared/types.ts';
+import { flightRules } from '../src/shared/flight-rules';
 const idle: Input = { throttle: 0, steer: 0, boost: false };
 const env: FlightEnvironment = {
   ground: () => 0,
@@ -69,17 +70,18 @@ const holdPitch = (p: Player, angle: number): Input => ({
   pitch: (angle - p.flight!.pitch) * 3,
 });
 test('two-handed inputs keep throttle, rudder, pitch and bank independent', () => {
+  const digital = flightRules().flightKeyboardAuthority;
   assert.deepEqual(aircraftInput(new Set(['w', 'a', 'ArrowDown', 'ArrowRight']), idle, idle), {
     ...idle,
     throttle: 1,
     steer: 1,
-    pitch: 1,
-    roll: -1,
+    pitch: digital,
+    roll: -digital,
     brake: false,
   });
   assert.equal(aircraftInput(new Set(['ArrowDown']), idle, idle).throttle, 0);
-  assert.equal(aircraftInput(new Set(['ArrowUp']), idle, idle).pitch, -1);
-  assert.equal(aircraftInput(new Set(['ArrowDown']), idle, idle).pitch, 1);
+  assert.equal(aircraftInput(new Set(['ArrowUp']), idle, idle).pitch, -digital);
+  assert.equal(aircraftInput(new Set(['ArrowDown']), idle, idle).pitch, digital);
   assert.deepEqual(aircraftInput(new Set(['w', 'ArrowUp']), idle, idle, true), {
     ...idle,
     pitch: 0,
@@ -116,13 +118,13 @@ test('full throttle alone does not auto-climb; deliberate rotation follows a sub
   assert.ok(liftOffDistance > 60 && liftOffDistance < 200, String(liftOffDistance));
   assert.ok(q.y > 5);
 });
-test('banking turns the aircraft and neutral ailerons retain bank instead of snapping level', () => {
+test('banking turns the aircraft and released ailerons ease back toward level', () => {
   const p = airborne();
   run(p, 2, { ...idle, roll: 0.6 });
   const bank = p.flight!.bank;
   assert.ok(bank > 0.4);
   run(p, 4, () => holdPitch(p, 0.08));
-  assert.ok(p.flight!.bank >= bank);
+  assert.ok(Math.abs(p.flight!.bank) < bank / 4);
   assert.ok(p.heading > 0.3);
 });
 test('excess angle of attack stalls; lowering the nose recovers with a loss of height', () => {

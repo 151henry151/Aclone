@@ -86,7 +86,13 @@ export function terrainHeight(w: World, x: number, z: number) {
     w.spaceportSite,
     x,
     z,
-    airfieldHeight(w.airfield, x, z, bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel)),
+    airfieldHeight(
+      w.airfield,
+      x,
+      z,
+      bluffHeight(w.coastalBluffs, x, z, h, w.settings.seaLevel),
+      w.settings.runwayShoulder,
+    ),
   );
   if (w.landscape?.heightmap) return surface;
   const blend = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));

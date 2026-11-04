@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Input, Player } from './types';
+import { flightRules, landingLimits, type FlightRules } from './flight-rules';
 
 /** Lightweight light-aircraft dynamics. Metres, seconds and radians; +pitch is nose up,
  * +bank/+rudder turn left (the game's +heading direction). Never writes world state. */
@@ -32,6 +33,7 @@ export interface FlightEnvironment {
   acceleration?: number;
   turn?: number;
   condition: number;
+  settings?: Partial<FlightRules>;
 }
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const wrap = (v: number) => Math.atan2(Math.sin(v), Math.cos(v));
@@ -39,10 +41,6 @@ const axis = (v: number | undefined) => (Number.isFinite(v) ? clamp(v!, -1, 1) :
 export const FLIGHT = {
   pushbackSpeed: 1.5,
   rotationSpeed: 19,
-  approachSpeed: 24,
-  maxLandingSink: 3.5,
-  maxLandingBank: (12 * Math.PI) / 180,
-  maxLandingPitch: (20 * Math.PI) / 180,
   stallAngle: (16 * Math.PI) / 180,
   gravity: 9.81,
 };
@@ -73,12 +71,15 @@ export function fly(
   env: FlightEnvironment,
 ): string | undefined {
   if (!Number.isFinite(seconds) || seconds <= 0) return;
+  const rules = flightRules(env.settings),
+    limits = landingLimits(rules);
+  const halfWheelbase = rules.flightWheelbase / 2;
   const f = flightState(p, env.ground(p.x, p.z));
   const steps = Math.ceil(Math.min(seconds, 0.25) * 120),
     dt = Math.min(seconds, 0.25) / steps;
   for (let step = 0; step < steps; step++) {
     const ground = env.ground(p.x, p.z);
-    f.throttle = clamp(f.throttle + axis(input.throttle) * 0.24 * dt, 0, 1);
+    f.throttle = clamp(f.throttle + axis(input.throttle) * rules.flightThrottleRate * dt, 0, 1);
     const powered = p.engine && (p.fuel > 0 || env.fuelRate === 0);
     const power = powered ? f.throttle * (0.7 + env.condition * 0.003) : 0;
     const speed = Math.hypot(f.vx, f.vy, f.vz),
@@ -103,11 +104,25 @@ export function fly(
         rudder * rollingDirection * clamp(horizontal / 5, 0, 1) * (0.75 / (1 + speed / 18)) * dt;
     } else {
       const path = Math.atan2(f.vy, Math.max(0.1, horizontal));
-      // Aerodynamic damping stops rotation; it does not snap the attitude back to level.
+      // Trim gradually toward the flight path at the approach angle of attack.
+      // Active stick input retains full control; neutral is stable, not altitude hold.
+      const braked = input.brake && rules.flightAirbrake;
+      const trimSpeed = Math.max(
+        speed,
+        rules.flightApproachSpeed * (braked ? 1 - Math.min(0.1, rules.flightAirbrakeDrag) : 1),
+      );
+      const trim = clamp((FLIGHT.gravity / (0.0217 * trimSpeed ** 2) - 0.28) / 4.5, 0.02, 0.2);
       f.pitchRate +=
-        (pitchInput * 0.9 * authority - f.pitchRate * 2.5 - (f.pitch - path - 0.05) * 0.35) * dt;
+        (pitchInput * 0.9 * authority -
+          f.pitchRate * 2.5 -
+          (f.pitch - path - trim) * (pitchInput ? 0.35 : rules.flightStability)) *
+        dt;
       if (f.stalled) f.pitchRate -= 0.35 * dt;
-      f.rollRate += (bankInput * 1.8 * authority - f.rollRate * 3.2) * dt;
+      f.rollRate +=
+        (bankInput * 1.8 * authority -
+          f.rollRate * 3.2 -
+          (bankInput ? 0 : f.bank * rules.flightStability * 2)) *
+        dt;
       f.pitch = clamp(f.pitch + f.pitchRate * dt, -1.4, 1.4);
       f.bank = wrap(f.bank + f.rollRate * dt);
       const track = Math.atan2(f.vx, f.vz),
@@ -137,7 +152,18 @@ export function fly(
     let cl = clamp(0.28 + 4.5 * f.aoa, -1.15, 1.45);
     if (stall) cl *= Math.max(0.15, 1 - (absAlpha - FLIGHT.stallAngle) * 3.2);
     const q = 0.0217 * speed * speed; // rho*S/(2*m): 23 m² wing, roughly 650 kg loaded.
-    const drag = q * (40 / (env.speed ?? 40)) ** 2 * (0.035 + 0.065 * cl * cl + (stall ? 0.22 : 0));
+    const airbrake =
+      !f.grounded && input.brake && rules.flightAirbrake
+        ? rules.flightAirbrakeDrag *
+          clamp(
+            (speed - FLIGHT.rotationSpeed) / (rules.flightApproachSpeed - FLIGHT.rotationSpeed),
+            0,
+            4,
+          )
+        : 0;
+    const drag =
+      q *
+      ((40 / (env.speed ?? 40)) ** 2 * (0.035 + 0.065 * cl * cl + (stall ? 0.22 : 0)) + airbrake);
     const lift = q * cl;
     const inv = 1 / Math.max(0.1, speed),
       direction = [f.vx * inv, f.vy * inv, f.vz * inv];
@@ -159,9 +185,11 @@ export function fly(
     const from = { x: p.x, y: p.y, z: p.z };
     if (f.grounded) {
       const slope =
-        (env.ground(p.x + sh * 2, p.z + ch * 2) - env.ground(p.x - sh * 2, p.z - ch * 2)) / 4;
+        (env.ground(p.x + sh * halfWheelbase, p.z + ch * halfWheelbase) -
+          env.ground(p.x - sh * halfWheelbase, p.z - ch * halfWheelbase)) /
+        rules.flightWheelbase;
       const rolling = 0.18 + (1 - env.grip) * 1.4;
-      const brake = input.brake ? 5.5 * env.grip : 0;
+      const brake = input.brake ? rules.flightWheelBrake * env.grip : 0;
       const signedSpeed = f.vx * sh + f.vz * ch;
       // Holding throttle-down at idle acts as ground-handling pushback, not
       // reverse propeller thrust. It also works with the engine off or no fuel.
@@ -197,6 +225,15 @@ export function fly(
       continue;
     }
     const support = env.ground(next.x, next.z);
+    const travel = Math.hypot(next.x - p.x, next.z - p.z);
+    const dx = travel ? (next.x - p.x) / travel : sh;
+    const dz = travel ? (next.z - p.z) / travel : ch;
+    // A wheelbase-length slope is rollable; only the excess rise is an impact.
+    const wheelSlope =
+      (env.ground(p.x + dx * halfWheelbase, p.z + dz * halfWheelbase) -
+        env.ground(p.x - dx * halfWheelbase, p.z - dz * halfWheelbase)) /
+      rules.flightWheelbase;
+    const stepHeight = support - ground - wheelSlope * travel;
     if (env.blocked(from, next)) {
       if (speed > 7 || !f.grounded) return 'collision with an obstacle';
       f.vx = f.vy = f.vz = 0;
@@ -206,19 +243,20 @@ export function fly(
       continue;
     }
     // Wheels cannot glue the aircraft to a sudden drop at a cliff/runway edge.
-    if (f.grounded && support < ground - 0.15) {
+    if (f.grounded && stepHeight > limits.sink * dt) return 'hard landing';
+    if (f.grounded && stepHeight < -rules.flightGroundDrop) {
       f.grounded = false;
       f.vy = 0;
     }
     if (support < env.seaLevel - 0.12 && next.y <= env.seaLevel) return 'water impact';
     if (!f.grounded && next.y <= support) {
-      const terrainRise = (support - ground) / dt;
-      const sink = Math.max(0, terrainRise - f.vy);
+      const sink = Math.max(0, Math.max(0, stepHeight / dt) - f.vy);
       const course = Math.atan2(f.vx, f.vz);
-      if (sink > FLIGHT.maxLandingSink) return 'hard landing';
-      if (Math.abs(f.bank) > FLIGHT.maxLandingBank) return 'wing strike';
-      if (f.pitch < -0.1 || f.pitch > FLIGHT.maxLandingPitch) return 'nose or tail strike';
-      if (speed > 36 || Math.abs(wrap(course - p.heading)) > 0.35) return 'uncontrolled landing';
+      if (sink > limits.sink) return 'hard landing';
+      if (Math.abs(f.bank) > limits.bank) return 'wing strike';
+      if (f.pitch < limits.pitchMin || f.pitch > limits.pitchMax) return 'nose or tail strike';
+      if (speed > limits.speed) return 'too fast';
+      if (Math.abs(wrap(course - p.heading)) > limits.slip) return 'sideways';
       f.grounded = true;
       f.vy = 0;
       f.pitchRate = 0;
@@ -230,13 +268,19 @@ export function fly(
       next.y = support;
       // Banked/uphill terrain can strike a wing even with a level fuselage.
       if (
-        speed > 8 &&
+        speed > rules.flightGroundWingSpeed &&
         Math.max(
-          env.ground(next.x + ch * 4, next.z - sh * 4),
-          env.ground(next.x - ch * 4, next.z + sh * 4),
+          env.ground(
+            next.x + ch * rules.flightWingHalfSpan,
+            next.z - sh * rules.flightWingHalfSpan,
+          ),
+          env.ground(
+            next.x - ch * rules.flightWingHalfSpan,
+            next.z + sh * rules.flightWingHalfSpan,
+          ),
         ) -
           support >
-          1.2
+          rules.flightWingClearance
       )
         return 'wing strike on terrain';
     }

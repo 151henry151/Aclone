@@ -15,6 +15,7 @@ All notable changes to Aclone are documented here. This project follows
 - Hide the Fuel bar while walking or rowing the emergency raft, and restore it when boarding a motor vehicle.
 - Apply the doubled tractor camera range to menu zoom buttons as well as wheel and pinch input through one shared limit.
 - Honour per-world charter passenger limits when boarding, and show the configured passenger and fuel capacities in the charter panel.
+- Make keyboard runway arrivals survivable with configurable contact limits, an airborne B brake, released-stick stability, wider safe public strips and gentle shoulders; retain strict contacts and destructive dives, steep banks, water and obstacle impacts.
 
 ### Changed
 
