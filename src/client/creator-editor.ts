@@ -160,7 +160,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock. Payroll and startup reserves do not change actual wages, construction prices or investor claims.</p></fieldset>`;
+    )}<p>Input targets follow observed sales and actual storage room. Minimum batches cannot exceed maximum. Zero target or zero output threshold stops automatic input buying; these forecasts grant no money or stock. Payroll and startup reserves do not change actual wages, construction prices or investor claims. Financing minimum cannot exceed maximum; zero maximum or profit batches stops new loan plans. Actual bank approval and transfer limits still apply.</p></fieldset>`;
   const reserves = npcReserveRules(settings);
   const reserveFields = `<fieldset class="boat-death-settings"><legend>Resident cash and portable reserves</legend>${Object.entries(
     npcReserveRuleFields,
@@ -256,7 +256,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below ${credit.creditScoreMaximum} divided by the score span, times the spread. Signed loans retain their rate, term and payment.</p></fieldset>`;
+    )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below ${credit.creditScoreMaximum} divided by the score span, times the spread. Amount minimum cannot exceed maximum. Payment capacity uses the income share plus available liquidity divided by term and divisor, less current payments. Zero unsecured ceiling closes personal lending. Signed loans retain their rate, term and payment.</p></fieldset>`;
   const economy = economyRules(settings);
   const economyFields = `<fieldset class="boat-death-settings"><legend>Economy and trade</legend>${Object.entries(
     economyRuleFields,

@@ -2386,3 +2386,60 @@ and output settings and the inverted-bound warning. Quote changes 200 → 150 an
 zero ceiling suppresses a new quote without changing posted bids, cash or stock.
 No browser errors. Finish clean TypeScript, changed-file Prettier and diff checks
 before committing this slice. No full test suite is run.
+
+Pushed and verified `1693c6f` on `backlog-implementation`. **Resident pricing
+rules are done.** TypeScript, changed-file Prettier and diff checks pass.
+
+### Gameplay rules — loan affordability budgets
+
+Before production, finish the loan budget policies found by the resident-finance
+audit. Add eight Loan offers rules with current defaults: `loanLiquidityReserve`
+20,000 hundredths (integer 0–100,000,000), `loanIncomePaymentShare` 0.35 (0–1),
+`loanLiquidPaymentDivisor` 2 (1–1,000), `loanPersonalLimit` 100,000 hundredths
+(integer 0–10,000,000), `loanIncomeBorrowingMonths` 6 (0–120),
+`loanLiquidBorrowingShare` 0.5 (0–1), `loanMinimumAmount` 1,000 and
+`loanMaximumAmount` 10,000,000 hundredths (integers 1–10,000,000, minimum ≤ maximum).
+Loan limits and payment capacity use these rules, ordinary bank capital/credit/
+existing-debt checks remain, zero unsecured limit closes new personal borrowing,
+and signed loans/repayment are unchanged. The bank amount input, initial value
+clamped into its bounds, and refusal text read the same local bounds.
+
+Add four resident business rules: `npcLoanMinimumShortfall` 1,000 and
+`npcLoanMaximumShortfall` 10,000 hundredths (integers 0–10,000,000, minimum ≤ maximum),
+`npcLoanPaymentBuffer` 3 (1–1,000), and `npcLoanProfitBatches` 20 (0–1,000).
+Only positive shortfalls in range qualify; maximum zero or profit batches zero
+suppresses new financing plans. Require payment × buffer strictly below estimated
+batch margin × profit batches, plus actual loan approval and no unpaid loan.
+Existing cash-transfer limits must bound the planned capital deposit. No edit
+transfers funds or rewrites an accepted loan.
+
+Write failing `tests/loan-affordability-rules.test.ts` before production. Assert
+exact default/missing-key capacity and limits, independent changed-value formulas,
+valid approved borrowing and atomic refusals, zero policies, strict resident
+profit boundary, existing debt/bank funding/transaction bounds, all twelve fields'
+validation, summaries, editor, observations, portable designs and save/reload.
+Run this file plus loan-rules, loans, npc-business-policy, npc-prosperity,
+npc-working-capital-rules and npc-guide using the npm-test tsx runner. TypeScript
+must be clean; run changed-file Prettier. Browser: save/reopen all fields, inspect
+local bank input bounds and an approved quote, set zero personal limit and verify
+a readable refusal without a transfer, reject inverted amount/shortfall bounds,
+and preserve an existing loan through an edit and repayment. Keep the existing
+loan browser empty-bank-capital test. Inspect screenshots and page errors.
+Update WORLD_BUILDING, NPCS, README and imperative Unreleased; leave loan lifecycle
+and the remaining NPC household/farm budgets for their own subsequent audit.
+
+Affordability red: all six unit tests fail for missing fields/unchanged policies;
+the transfer-limit regression independently produces a financing plan above the
+permitted deposit. The browser fails waiting for the absent liquidity field.
+After implementation, all six new tests pass, including exact default capacity
+7,500 and unsecured limit 90,000, changed independent formulas and strict profit
+equality. Run the relevant regressions and browser gates next.
+
+Affordability gates pass: six new tests plus 58 relevant regressions (64 in 20.3
+seconds); clean TypeScript and changed-file Prettier/diff checks. Both loan
+browser flows pass (23.6 and 16.5 seconds), including approved borrowing, closed
+personal lending, repayment, empty bank capital, both inverted-bound refusals and
+reload. The final new-flow rerun passes in 21.0 seconds after waiting for the
+warning's color transition before capture. Inspect saved bank/resident settings,
+the quote, closed-lending notice and readable warning; no page errors. No full
+suite is run. Ready to commit and push.

@@ -92,6 +92,7 @@ export function businessEstimate(w: World, b: Building) {
 }
 /** Complete, costed operating errands precede speculative one-step purchases. */
 export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
+  const budgets = npcBusinessRules(w.settings);
   const list: FarmerChoice[] = [
     ...pricingChoices(w, p),
     ...constructionChoices(w, p),
@@ -262,8 +263,10 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     const shortfall = Math.max(0, reserve - b.investment - Math.max(0, p.cash - living));
     if (
       bank &&
-      shortfall >= 1000 &&
-      shortfall <= 10000 &&
+      shortfall > 0 &&
+      shortfall >= budgets.npcLoanMinimumShortfall &&
+      shortfall <= budgets.npcLoanMaximumShortfall &&
+      shortfall <= economyRules(w.settings).cashTransferLimit &&
       estimate &&
       estimate.margin > 0 &&
       (!operating || operating.margin >= 0) &&
@@ -271,7 +274,10 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
     ) {
       const months = preferredLoanTerm(w.settings),
         q = loanQuote(w, p, bank, shortfall, months);
-      if (q.approved && q.payment * 3 < estimate.margin * 20)
+      if (
+        q.approved &&
+        q.payment * budgets.npcLoanPaymentBuffer < estimate.margin * budgets.npcLoanProfitBatches
+      )
         add(
           `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} per bank month for ${months} months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
           [

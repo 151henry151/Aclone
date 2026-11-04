@@ -658,7 +658,7 @@ checks still apply.
 These settings affect new offers only. Signed loans keep their APR, monthly
 payment, duration and collateral; repayment remains available when lending is
 closed. Missing keys use named defaults. Creation, rules summaries, portable
-designs and reloads retain all ten fields. The Credit score fieldset controls the score calculation.
+designs and reloads retain all loan fields. The Credit score fieldset controls the score calculation.
 
 ## Credit score rules (unreleased)
 
@@ -901,3 +901,26 @@ rate cannot yield a sustainable positive-cost ask. These are forecasts followed
 by ordinary paid/authorized actions, not guarantees of demand or income. All
 fields validate atomically, appear in summaries and resident observations, and
 survive portable design transfer and reload. Missing keys retain named defaults.
+
+## Loan affordability budgets (unreleased)
+
+**F10 → Rules → Loan offers** also controls new-loan affordability:
+
+- `loanLiquidityReserve`: 20,000 hundredths (200d), integer 0–100,000,000. Available liquidity is cash plus savings minus existing debt and this protected reserve, floored at zero.
+- `loanIncomePaymentShare`: 0.35, range 0–1; `loanLiquidPaymentDivisor`: 2, range 1–1,000. Monthly payment capacity is the income share plus available liquidity divided by the selected term and this divisor, less current payments, floored at zero.
+- `loanPersonalLimit`: 100,000 hundredths (1,000d), integer 0–10,000,000. The unsecured limit is the lesser of this ceiling and income times `loanIncomeBorrowingMonths` (6, range 0–120) plus available liquidity times `loanLiquidBorrowingShare` (0.5, range 0–1). Zero ceiling closes new personal loans. Mortgages retain their separate structural-value limit.
+- `loanMinimumAmount`: 1,000 hundredths (10d); `loanMaximumAmount`: 10,000,000 hundredths (100,000d). Both accept integer 1–10,000,000, with minimum ≤ maximum. Bank inputs and refusals show local bounds; all credit, payment-capacity and bank-capital checks still apply.
+
+**Resident business budgets** adds `npcLoanMinimumShortfall` 1,000 and
+`npcLoanMaximumShortfall` 10,000 hundredths (10d–100d). Both accept integers
+0–10,000,000, with minimum ≤ maximum. Residents consider only positive shortfalls
+within these bounds and the cash-transfer limit. Setting both to zero stops new
+financing plans. `npcLoanPaymentBuffer` is 3 (range 1–1,000) and
+`npcLoanProfitBatches` is 20 (range 0–1,000): payment times the buffer must be
+strictly below estimated batch margin times those batches. Zero profit batches
+stops financing. Approval, a funded bank and no outstanding resident loan remain
+required. Estimates do not guarantee sales or repayment.
+
+Edits affect future offers/plans; existing debt, APR, instalments, liens and
+repayments remain intact. Missing fields use the defaults; all fields survive
+creation, summaries, portable designs and save/reload.

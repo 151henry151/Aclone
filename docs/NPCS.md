@@ -157,6 +157,14 @@ batch count). Procurement, input cash budgets and ordinary bid pause/reopen plan
 use these values. Zero targets stop automatic input buying; real storage and
 breeding requirements remain. Payroll reserves (six cycles), minimum funding (three payrolls), cash floors (20d), construction startup estimates (three batches and 1.1× materials) and hay reserves/customer thresholds are also world rules. These defaults guide forecasts; actual prices, wages, claims and storage checks still apply. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules-unreleased).
 
+Resident financing uses local shortfall bounds (10d–100d by default) and requires
+three monthly payments to fit strictly below twenty estimated profitable batches.
+The world owner can change these budgets in **Resident business budgets**; zero
+maximum or profit batches stops financing plans. Banks still approve the actual
+quote using local income/liquidity rules; deposits must fit the cash-transfer
+limit and an unpaid loan prevents another financing plan. These forecasts grant
+no funds and do not alter signed debts. See [loan budgets](WORLD_BUILDING.md#loan-affordability-budgets-unreleased).
+
 Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
 
 ### How the providers cooperate

@@ -172,21 +172,33 @@ export function loanQuote(
   const value = property
     ? ((buildings[property.kind]?.price ?? 0) * Math.max(0, property.condition)) / 100
     : 0;
-  const liquid = Math.max(0, p.cash + p.bank - profile.debt - 20000);
+  const liquid = Math.max(0, p.cash + p.bank - profile.debt - rules.loanLiquidityReserve);
   const capacity = Math.max(
     0,
-    Math.floor(profile.monthlyIncome * 0.35 + liquid / (Math.max(1, months) * 2)) -
-      profile.payments,
+    Math.floor(
+      profile.monthlyIncome * rules.loanIncomePaymentShare +
+        liquid / (Math.max(1, months) * rules.loanLiquidPaymentDivisor),
+    ) - profile.payments,
   );
   const limit = secured
     ? Math.floor(value * rules.loanMortgageLtv)
-    : Math.min(100000, Math.floor(profile.monthlyIncome * 6 + liquid * 0.5));
+    : Math.min(
+        rules.loanPersonalLimit,
+        Math.floor(
+          profile.monthlyIncome * rules.loanIncomeBorrowingMonths +
+            liquid * rules.loanLiquidBorrowingShare,
+        ),
+      );
   const reasons: string[] = [];
   if (property?.operatingLease || property?.auction)
     reasons.push('Settle the property contract before mortgaging.');
   if (b.kind !== 'bank' || b.construction) reasons.push('Visit an operating bank.');
-  if (!Number.isSafeInteger(amount) || amount < 1000 || amount > 10000000)
-    reasons.push('Borrow 10d–100,000d.');
+  if (
+    !Number.isSafeInteger(amount) ||
+    amount < rules.loanMinimumAmount ||
+    amount > rules.loanMaximumAmount
+  )
+    reasons.push(`Borrow ${rules.loanMinimumAmount / 100}d–${rules.loanMaximumAmount / 100}d.`);
   if (!loanTerms(w.settings).includes(months))
     reasons.push(`Choose ${loanTerms(w.settings).join(', ')} payments.`);
   if (profile.score < (secured ? rules.loanMortgageMinimumScore : rules.loanPersonalMinimumScore))

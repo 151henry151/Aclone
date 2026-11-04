@@ -21,7 +21,7 @@ export function bankLoans(w: World, p: Player, b: Building) {
   <p class="note">${Math.round(c.employment * 100)}% of observed life employed · ${c.onTime} on-time repayments · ${c.late} late episodes · ${c.defaults} defaults. Local score weights determine the effect of history, employment, buildings and debt. History starts when recorded, not retroactively.</p>
   <p>Fixed annual rates, equal monthly instalments, no origination or early-repayment fees. One bank month is ${(LOAN_MONTH / 3600).toFixed(2)} real hours (30.42 game days). Rates are fictional game terms. Automatic payments use your selected source, including offline. Existing loans keep savings-only payments until you change them. Business capital is never taken. A half-month grace period precedes a late report; three months in arrears leads to default and foreclosure of pledged property. Debt survives death.</p>
   <p>Up to ${rules.loanMaximumActive} active loans; mortgages cover up to ${rules.loanMortgageLtv * 100}% of structural value. Minimum scores: personal ${rules.loanPersonalMinimumScore}, mortgage ${rules.loanMortgageMinimumScore}.</p>
-  <form id="loan-quote-form">${hidden('building', b.id)}<label>Loan amount in denarii<input name="denarii" type="number" min="10" max="100000" step="0.01" value="100" required></label>
+  <form id="loan-quote-form">${hidden('building', b.id)}<label>Loan amount in denarii<input name="denarii" type="number" min="${rules.loanMinimumAmount / 100}" max="${rules.loanMaximumAmount / 100}" step="0.01" value="${Math.min(rules.loanMaximumAmount, Math.max(rules.loanMinimumAmount, 10000)) / 100}" required></label>
   <label>Number of monthly payments<select name="months">${loanTerms(w.settings)
     .map(
       (n) =>

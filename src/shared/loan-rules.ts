@@ -1,6 +1,44 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const loanRuleFields = {
+  loanLiquidityReserve: {
+    label: 'Protected liquidity before loan assessment (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  loanIncomePaymentShare: {
+    label: 'Income available for payments (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  loanLiquidPaymentDivisor: {
+    label: 'Liquid payment capacity divisor',
+    min: 1,
+    max: 1000,
+    step: 0.1,
+  },
+  loanPersonalLimit: {
+    label: 'Unsecured borrowing ceiling (hundredths; 0 closes personal lending)',
+    min: 0,
+    max: 10000000,
+    step: 1,
+  },
+  loanIncomeBorrowingMonths: {
+    label: 'Income months counted toward borrowing limit',
+    min: 0,
+    max: 120,
+    step: 0.1,
+  },
+  loanLiquidBorrowingShare: {
+    label: 'Liquid funds counted toward borrowing limit (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  loanMinimumAmount: { label: 'Minimum loan amount (hundredths)', min: 1, max: 10000000, step: 1 },
+  loanMaximumAmount: { label: 'Maximum loan amount (hundredths)', min: 1, max: 10000000, step: 1 },
   loanPersonalBaseApr: { label: 'Personal loan base APR (%)', min: 0, max: 100, step: 0.01 },
   loanPersonalAprSpread: {
     label: 'Personal loan score spread (percentage points)',
@@ -56,4 +94,10 @@ export function preferredLoanTerm(settings: Partial<LoanRules> = {}) {
   return loanTerms(settings).reduce((best, n) =>
     Math.abs(n - 12) < Math.abs(best - 12) ? n : best,
   );
+}
+
+export function loanRulesError(settings: Partial<LoanRules>) {
+  const r = loanRules(settings);
+  if (r.loanMinimumAmount > r.loanMaximumAmount)
+    return 'Minimum loan amount must not exceed its maximum';
 }

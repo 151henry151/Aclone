@@ -5,7 +5,7 @@ import { npcHouseholdRuleFields } from './npc-household-rules';
 import { towingRuleFields, towingRulesError } from './towing-rules';
 import { charterRuleFields, charterRulesError } from './charter-rules';
 import { creditRuleFields, creditRulesError } from './credit-rules';
-import { loanRuleFields, validLoanTerms } from './loan-rules';
+import { loanRuleFields, validLoanTerms, loanRulesError } from './loan-rules';
 import {
   economyRules,
   economyRuleFields,
@@ -1973,6 +1973,7 @@ export function act(w: World, id: string, a: Action): string {
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
+        const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
         const creditField = creditRuleFields[key as keyof typeof creditRuleFields];
         const npcPricingField = npcPricingRuleFields[key as keyof typeof npcPricingRuleFields];
         const npcBusinessField = npcBusinessRuleFields[key as keyof typeof npcBusinessRuleFields];
@@ -2009,6 +2010,7 @@ export function act(w: World, id: string, a: Action): string {
               charterField?.max ??
               creditField?.max ??
               economyField?.max ??
+              loanField?.max ??
               (key === 'startingCash' ? 1e8 : 1e6),
           );
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
@@ -2023,7 +2025,6 @@ export function act(w: World, id: string, a: Action): string {
           num(v, npcReserveField.min, npcReserveField.max, npcReserveField.step === 1);
         if (npcHouseholdField)
           num(v, npcHouseholdField.min, npcHouseholdField.max, npcHouseholdField.step === 1);
-        const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
         if (loanField) num(v, loanField.min, loanField.max, loanField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
         if (survivalField && 'min' in survivalField)
@@ -2089,6 +2090,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const loanError = loanRulesError({ ...w.settings, ...clean });
+      requireThat(!loanError, loanError ?? 'Invalid loan rules');
       const npcPricingError = npcPricingRulesError({ ...w.settings, ...clean });
       requireThat(!npcPricingError, npcPricingError ?? 'Invalid resident pricing');
       const npcBusinessError = npcBusinessRulesError({ ...w.settings, ...clean });

@@ -259,5 +259,17 @@
   "npcPortableEquipment": 1,
   "npcFishingSurplus": 3,
   "npcTradeFoodReserve": 1,
-  "npcTradeDrinkReserve": 2
+  "npcTradeDrinkReserve": 2,
+  "loanLiquidityReserve": 20000,
+  "loanIncomePaymentShare": 0.35,
+  "loanLiquidPaymentDivisor": 2,
+  "loanPersonalLimit": 100000,
+  "loanIncomeBorrowingMonths": 6,
+  "loanLiquidBorrowingShare": 0.5,
+  "loanMinimumAmount": 1000,
+  "loanMaximumAmount": 10000000,
+  "npcLoanMinimumShortfall": 1000,
+  "npcLoanMaximumShortfall": 10000,
+  "npcLoanPaymentBuffer": 3,
+  "npcLoanProfitBatches": 20
 }

@@ -1,6 +1,30 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcBusinessRuleFields = {
+  npcLoanMinimumShortfall: {
+    label: 'Minimum financing shortfall (hundredths)',
+    min: 0,
+    max: 10000000,
+    step: 1,
+  },
+  npcLoanMaximumShortfall: {
+    label: 'Maximum financing shortfall (hundredths; 0 disables plans)',
+    min: 0,
+    max: 10000000,
+    step: 1,
+  },
+  npcLoanPaymentBuffer: {
+    label: 'Loan payment affordability multiplier',
+    min: 1,
+    max: 1000,
+    step: 0.1,
+  },
+  npcLoanProfitBatches: {
+    label: 'Profitable batches counted toward loan affordability',
+    min: 0,
+    max: 1000,
+    step: 0.1,
+  },
   npcPayrollReserveBatches: {
     label: 'Production payroll reserve (cycles)',
     min: 0,
@@ -77,6 +101,8 @@ export function npcBusinessRules(settings: Partial<NpcBusinessRules> = {}): NpcB
 }
 export function npcBusinessRulesError(settings: Partial<NpcBusinessRules>) {
   const r = npcBusinessRules(settings);
+  if (r.npcLoanMinimumShortfall > r.npcLoanMaximumShortfall)
+    return 'Resident loan minimum shortfall must not exceed its maximum';
   if (r.npcInputReserveBatches > r.npcInputMaximumBatches)
     return 'Input reserve minimum must not exceed its maximum';
 }
