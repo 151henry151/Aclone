@@ -383,3 +383,10 @@ test('topic title lists reconstruct exact lookup IDs using the documented slug r
     'Outside investment terms (unreleased)',
   );
 });
+
+test('crop lookup retains thirst and frost defaults sourced from world rules', () => {
+  const entry = searchGuide('crop:coffee').find((e) => e.id === 'crop:coffee')!;
+  assert.match(entry.text, /"thirst":0\.7/);
+  assert.match(entry.text, /"frost":1\.3/);
+  assert.match(entry.text, /data\/settings\.json/);
+});

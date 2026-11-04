@@ -1,4 +1,4 @@
-import { farmYieldRules } from '../shared/farm-yield-rules';
+import { farmYieldRules, cropFrostKeys } from '../shared/farm-yield-rules';
 import { gatheringImplements } from '../shared/resources';
 import { constructionRefundPercentage, constructionRules } from '../shared/construction-rules';
 import { charterRules } from '../shared/charter-rules';
@@ -2338,7 +2338,7 @@ function buildingWindow(b: Building) {
                       ]),
                     )}<button>Plant seeds</button></form>`
                   : '<p class="note">Resting until planting season.</p>'
-          }${plot?.winterLoss ? `<p class="note">${esc(crops[plot.winterLoss]?.name ?? plot.winterLoss)} lost to winter.</p>` : ''}${!plot?.crop && plot ? button('Drain · 6 stocked/carried gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · stocked/carried dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)}${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
+          }${plot?.winterLoss ? `<p class="note">${esc(crops[plot.winterLoss]?.name ?? plot.winterLoss)} lost to winter.</p>` : ''}${!plot?.crop && plot ? button('Drain · 6 stocked/carried gravel', 'farm', attrs + ' data-id="drain"') + button('Restore soil · stocked/carried dirt + compost', 'farm', attrs + ' data-id="improve"') : ''}${plot?.crop ? `<p>${esc(crops[plot.crop].description)} Frost sensitivity ${farmYieldRules(world!.settings)[cropFrostKeys[plot.crop as keyof typeof cropFrostKeys]]}; maximum frost yield loss ${farmYieldRules(world!.settings).farmFrostMaximumLoss.toLocaleString('en', { style: 'percent', maximumFractionDigits: 10 })}. Zero sensitivity or cap removes frost yield loss.${plot.drainage ? ' Gravel drainage installed.' : ''}</p>` : ''}</article>`;
         },
       ).join(
         '',

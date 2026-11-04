@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose crop frost sensitivities and maximum frost yield loss as world rules; retain existing default yields, winter expiry and reserved harvest quantities.
+
 - Expose the ripe-quality window, late-harvest loss rate and loss cap as world rules; preserve existing default yields, winter expiry and reserved harvest amounts.
 
 - Expose the existing irrigation formula, crop thirst, water cost and treatment limit as world rules; share them with farm controls and resident planners while preserving default yields and started harvests.

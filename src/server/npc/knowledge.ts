@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { items, buildings, recipes, vehicles, weapons } from '../../shared/catalog.ts';
 import crops from '../../../data/crops.json';
+import { farmYieldRules, cropThirstKeys, cropFrostKeys } from '../../shared/farm-yield-rules';
 import { VERSION } from '../../shared/version.ts';
 interface Entry {
   id: string;
@@ -59,11 +60,19 @@ function corpus() {
       // Farms use seasonal plots, not the retained legacy automatic recipe.
       if (kind === 'recipe' && id === 'farm') continue;
       const name = 'name' in value ? value.name : id;
+      const cropRules = kind === 'crop' ? farmYieldRules() : undefined;
+      const catalogueValue = cropRules
+        ? {
+            ...value,
+            thirst: cropRules[cropThirstKeys[id as keyof typeof cropThirstKeys]],
+            frost: cropRules[cropFrostKeys[id as keyof typeof cropFrostKeys]],
+          }
+        : value;
       all.push({
         id: `${kind}:${id}`,
         title: `${kind} ${name} ${id}`,
         source: `data/${file}.json`,
-        text: `Default ${kind} ${name} (${id}). Currency is internal hundredths of a denarius; 100=1d. Durations are real seconds except crop days (game days). Live world values override defaults. ${JSON.stringify(value)}`,
+        text: `Default ${kind} ${name} (${id}). Currency is internal hundredths of a denarius; 100=1d. Durations are real seconds except crop days (game days). Live world values override defaults. ${cropRules ? 'Thirst and frost defaults come from data/settings.json. ' : ''}${JSON.stringify(catalogueValue)}`,
       });
     }
   }

@@ -1313,3 +1313,23 @@ farm panel shows local values. Changes affect estimates and new reservations;
 started harvests retain reserved amounts. Winter expiry remains unchanged.
 These values persist in saves/designs and appear in summaries and NPC observations;
 older worlds fall back to the same JSON defaults.
+
+### Crop frost sensitivity (unreleased)
+
+**F10 → Rules → Crop yield rules** preserves the shipped frost-day calculation:
+`yieldFactor = max(1 - maximumLoss, 1 - frostDays / cropDays × sensitivity)`.
+Frost days have temperatures below zero during the crop’s full growth period.
+
+- `farmFrostMaximumLoss`: 0.65, range 0–1. Caps frost yield loss at 65% by default.
+- `farmWheatFrostSensitivity` 0.25, `farmPotatoesFrostSensitivity` 0.7,
+  `farmHopsFrostSensitivity` 0.5, `farmGrapesFrostSensitivity` 1,
+  `farmTeaFrostSensitivity` 0.4, `farmCoffeeFrostSensitivity` 1.3 and
+  `farmHayFrostSensitivity` 0.2: each ranges from 0 to 5.
+
+Zero sensitivity disables frost yield loss for that crop; zero maximum loss
+removes it for all crops. Ordinary final floor rounding and the minimum one-unit
+harvest remain. The farm panel shows local sensitivity and cap. Current settings
+affect estimates and new harvest reservations, while started harvests retain
+their reserved quantities. Winter still kills every field crop, including with
+frost loss disabled. Settings persist in saves/designs, summaries and resident
+observations, with the same JSON defaults for older worlds.

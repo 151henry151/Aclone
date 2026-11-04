@@ -377,5 +377,13 @@
   "farmHayThirst": 0.35,
   "farmRipeQualitySeconds": 21600,
   "farmLateMaximumLoss": 0.35,
-  "farmLateLossPerDay": 0.005
+  "farmLateLossPerDay": 0.005,
+  "farmFrostMaximumLoss": 0.65,
+  "farmWheatFrostSensitivity": 0.25,
+  "farmPotatoesFrostSensitivity": 0.7,
+  "farmHopsFrostSensitivity": 0.5,
+  "farmGrapesFrostSensitivity": 1,
+  "farmTeaFrostSensitivity": 0.4,
+  "farmCoffeeFrostSensitivity": 1.3,
+  "farmHayFrostSensitivity": 0.2
 }

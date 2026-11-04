@@ -1,4 +1,4 @@
-import { farmYieldRules, cropThirstKeys } from './farm-yield-rules';
+import { farmYieldRules, cropThirstKeys, cropFrostKeys } from './farm-yield-rules';
 import { validateFarmPolicy, farmStaffBlocker, recordFarmStaffSpending } from './farm-policy';
 import { recordGathered } from './player-statistics.ts';
 import { farmPlotCount, farmExpansionCost, farmExpansionBlocker } from './farm-land.ts';
@@ -17,7 +17,6 @@ export const crops: Record<
     seed: number;
     seasons: string[];
     family: string;
-    frost: number;
     rot: number;
     description: string;
   }
@@ -107,7 +106,10 @@ export function cropStatus(w: World, b: Building, index: number) {
           (rules.farmIrrigationDryYield + rules.farmIrrigationMoistureYield * moisture) *
           (p.fertilized ? 1 + rules.farmCompostYieldBonus : 1) *
           rotation *
-          Math.max(0.35, 1 - (frost / c.days) * c.frost) *
+          Math.max(
+            1 - rules.farmFrostMaximumLoss,
+            1 - (frost / c.days) * rules[cropFrostKeys[p.crop as keyof typeof cropFrostKeys]],
+          ) *
           (p.drainage ? 1 : 1 - Math.max(0, rain / c.days - 0.35) * c.rot) *
           late,
       ),

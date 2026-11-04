@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const farmYieldRuleFields = {
+  farmFrostMaximumLoss: {
+    label: 'Maximum frost yield loss (fraction)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  farmWheatFrostSensitivity: { label: 'Wheat frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmPotatoesFrostSensitivity: { label: 'Potatoes frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmHopsFrostSensitivity: { label: 'Hops frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmGrapesFrostSensitivity: { label: 'Grapes frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmTeaFrostSensitivity: { label: 'Tea frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmCoffeeFrostSensitivity: { label: 'Coffee frost sensitivity', min: 0, max: 5, step: 0.01 },
+  farmHayFrostSensitivity: { label: 'Hay frost sensitivity', min: 0, max: 5, step: 0.01 },
+
   farmRipeQualitySeconds: {
     label: 'Full ripe-quality window (real seconds)',
     min: 0,
@@ -76,4 +90,14 @@ export const cropThirstKeys = {
   tea: 'farmTeaThirst',
   coffee: 'farmCoffeeThirst',
   hay: 'farmHayThirst',
+} as const;
+
+export const cropFrostKeys = {
+  wheat: 'farmWheatFrostSensitivity',
+  potatoes: 'farmPotatoesFrostSensitivity',
+  hops: 'farmHopsFrostSensitivity',
+  grapes: 'farmGrapesFrostSensitivity',
+  tea: 'farmTeaFrostSensitivity',
+  coffee: 'farmCoffeeFrostSensitivity',
+  hay: 'farmHayFrostSensitivity',
 } as const;

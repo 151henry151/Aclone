@@ -82,7 +82,22 @@ test('irrigation defaults and legacy worlds retain every crop formula across wea
             Math.max(
               1,
               Math.floor(
-                c.yield * (0.6 + 0.4 * moisture) * Math.max(0.35, 1 - (frost / c.days) * c.frost),
+                c.yield *
+                  (0.6 + 0.4 * moisture) *
+                  Math.max(
+                    0.35,
+                    1 -
+                      (frost / c.days) *
+                        {
+                          wheat: 0.25,
+                          potatoes: 0.7,
+                          hops: 0.5,
+                          grapes: 1,
+                          tea: 0.4,
+                          coffee: 1.3,
+                          hay: 0.2,
+                        }[crop as keyof typeof thirst],
+                  ),
               ),
             ),
           );

@@ -3753,3 +3753,49 @@ retained. The second fixture correction acknowledged that choosing Harvest alrea
 closes its dialog before the stockroom refusal; the test now asserts that state
 instead of trying to close an absent dialog. Production criteria are unchanged.
 Final TypeScript and formatting checks pass; no unrelated test suite was rerun.
+
+**Ripe-quality slice done and pushed:** `1a35ad2edb07fea16f92f93fddd862308ca4783a`.
+Remote SHA verified. Continue with the entry's frost sensitivity scaling.
+
+### Crop frost rules — completion criteria before production
+
+Preserve the current frost factor `max(0.35, 1 - frostDays / cropDays × sensitivity)`.
+Expose maximum frost loss (0.65) and each existing crop sensitivity (wheat 0.25,
+potatoes 0.7, hops 0.5, grapes 1, tea 0.4, coffee 1.3, hay 0.2) as world rules.
+Move the sensitivity defaults from crop JSON into settings JSON without a second
+production copy. Keep the existing below-zero frost-day test and winter expiry.
+
+- Default and legacy yields match for all seven crops in clear and frozen weather;
+  custom sensitivities change their own crops, cap losses, and preserve the minimum
+  one-unit yield. Zero sensitivity or maximum loss disables frost yield loss.
+  New harvests use current estimates; started harvests retain reserved amounts.
+- Validate sensitivities 0–5 and maximum loss 0–1; reject nonfinite/out-of-range
+  mixed patches atomically. New worlds, editor fields, summaries, NPC observations,
+  saves and portable designs agree, with JSON defaults for absent fields.
+- Add `tests/farm-frost-rules.test.ts`, run failing before production, then run the
+  new test and affected irrigation, farming, winter, harvest-all and guide tests.
+  TypeScript and changed-file Prettier/diff checks must pass.
+- Browser `TEST_GPU=1 npm run test:e2e -- tests/browser/farm-frost-rules.spec.ts`:
+  save/reload F10 sensitivities and cap, inspect the resulting crop estimate and
+  displayed frost rules in an isolated snowy spring, inspect a fallow plot, reject
+  an invalid loss cap and retain saved values. Inspect screenshots. Document
+  rules in player/world-builder docs, README and Unreleased changelog.
+
+Failing-first frost result: the all-crop default/legacy comparison passes; three
+new-rule tests fail on absent `farmFrostMaximumLoss` and `Unknown setting`, before
+production edits.
+
+The crop catalogue is also read by resident guide lookup. Preserve its default
+thirst and frost information after moving those values into world settings: a
+`crop:coffee` lookup must still include 0.7 thirst and 1.3 frost sensitivity and
+identify the settings source. Add a failing guide regression before updating
+that consumer; do not duplicate the defaults or remove guide information.
+
+Frost validation complete: all 41 affected tests pass (14.4 s). The guide consumer
+regression first failed because `crop:coffee` lacked `"thirst":0.7`; its lookup now
+resolves thirst and frost from the shared settings defaults and cites that source.
+All 16 guide tests then pass (1.2 s), including the unchanged request-size ceiling.
+The browser passes (31.0 s); inspected all four screenshots: saved sensitivities,
+30-unit snowy wheat estimate with local 0.5 sensitivity/80% cap, fallow plots and
+invalid cap with reload preservation. Final TypeScript, Prettier and diff checks
+pass. No whole-suite rerun, version bump or deployment.
