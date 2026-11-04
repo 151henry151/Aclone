@@ -177,5 +177,15 @@
   "governmentWaterFloor": 1000,
   "governmentBreadFloor": 10000,
   "governmentFuelFloor": 4500,
-  "governmentImportBidMargin": 100
+  "governmentImportBidMargin": 100,
+  "loanPersonalBaseApr": 10,
+  "loanPersonalAprSpread": 18,
+  "loanMortgageBaseApr": 6,
+  "loanMortgageAprSpread": 8,
+  "loanRateScoreSpan": 350,
+  "loanPersonalMinimumScore": 540,
+  "loanMortgageMinimumScore": 500,
+  "loanTerms": "6,12,24,36,60",
+  "loanMaximumActive": 3,
+  "loanMortgageLtv": 0.75
 }

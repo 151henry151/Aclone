@@ -1,3 +1,4 @@
+import { loanRuleFields, loanRules } from '../shared/loan-rules';
 import { economyRules, economyRuleFields } from '../shared/economy-rules';
 import { survivalRules, survivalRuleFields, type SurvivalRules } from '../shared/survival-rules';
 import { radioRules, radioRuleFields, type RadioRules } from '../shared/radio-rules';
@@ -90,6 +91,8 @@ const friendly = (key: string) =>
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(economyRuleFields),
+    ...Object.keys(loanRuleFields),
+    'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
     ...Object.keys(canoeRuleFields),
@@ -112,6 +115,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const loans = loanRules(settings);
+  const loanFields = `<fieldset class="boat-death-settings"><legend>Loan offers</legend>${Object.entries(
+    loanRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        loans[key as keyof typeof loanRuleFields],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}${field('Offered loan terms (comma-separated months)', 'loanTerms', loans.loanTerms, 'text')}<p>Use ascending unique months from 1 to 120. APR is base plus the score distance below 850 divided by the score span, times the spread. Signed loans retain their rate, term and payment.</p></fieldset>`;
   const economy = economyRules(settings);
   const economyFields = `<fieldset class="boat-death-settings"><legend>Economy and trade</legend>${Object.entries(
     economyRuleFields,
@@ -256,6 +275,7 @@ export function settingsFields(settings: Settings = defaults) {
     radioFields +
     survivalFields +
     economyFields +
+    loanFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

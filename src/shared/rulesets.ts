@@ -1,3 +1,4 @@
+import { loanRules } from './loan-rules';
 import { economyRules } from './economy-rules';
 import { survivalRules } from './survival-rules';
 import { radioRules } from './radio-rules';
@@ -52,12 +53,14 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings;
   const survival = survivalRules(s);
   const fuel = fuelRules(s);
-  const radio = radioRules(s);
+  const radio = radioRules(s),
+    loans = loanRules(s);
   const walking = walkingRules(s);
   const gathering = gatheringSceneryRules(s);
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `Loans: ${loans.loanTerms} months; ${loans.loanMaximumActive} active; ${loans.loanMortgageLtv * 100}% structural LTV. Personal/mortgage base APR ${loans.loanPersonalBaseApr}/${loans.loanMortgageBaseApr}%, spreads ${loans.loanPersonalAprSpread}/${loans.loanMortgageAprSpread} points per ${loans.loanRateScoreSpan} score points below 850; minimum scores ${loans.loanPersonalMinimumScore}/${loans.loanMortgageMinimumScore}. Existing loans keep signed terms.`,
     `Economy: minimum purchase bid ${economyRules(s).minimumBuyPrice} hundredths; up to ${economyRules(s).transactionItemLimit} items per transaction. New outside deposits earn up to ${economyRules(s).outsideReturnPercent}% above principal; operating reserve floor ${economyRules(s).outsideOperatingReserve} hundredths.`,
     `Government imports: ${economyRules(s).governmentImportPremium}% premium; water/bread/fuel floors ${economyRules(s).governmentWaterFloor}/${economyRules(s).governmentBreadFloor}/${economyRules(s).governmentFuelFloor}; public bid margin ${economyRules(s).governmentImportBidMargin} hundredths.`,
     `Public export interval: ${economyRules(s).exportShipmentInterval} seconds (Puddlewick economy terminals only).`,

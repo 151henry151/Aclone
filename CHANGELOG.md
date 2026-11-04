@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose loan rates, offered terms, eligibility, active-loan count and collateral limits as world rules; use local offers in bank controls and resident plans while preserving signed loans and repayment access.
+
 - Expose government import premiums, necessity price floors and the margin above public bids as world rules; republish government necessity prices on explicit pricing-rule changes while preserving other shops and unchanged food quotes.
 
 - Make the public export interval a world rule; persist processed departure times across interval edits and reloads without replaying cargo sales, while retaining terminal scope, reserves and settlement limits.

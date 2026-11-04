@@ -1667,3 +1667,57 @@ guide tests pass. Full `npm test` passes 1,459 tests in 201.0s. TypeScript and
 changed-file Prettier are clean. Browser and screenshots satisfy the prices,
 empty-shelf purchase and insufficient-cash criteria. Economy/world-builder docs,
 README and imperative Unreleased entry are updated. Ready to commit and push.
+
+Pushed and verified `9a299d1` on `backlog-implementation`. **Government import
+premiums are done.** Continue with loan rates/terms/count/collateral, then credit
+score weights.
+
+### Gameplay rules — loan offers
+
+Before production, turn the loan-table claim into these criteria. Keep default
+personal APR exactly `10 + (850-score)/350*18` percent and mortgage APR exactly
+`6 + (850-score)/350*8`, rounded as today; the quoted 10–26% personal band is
+rounded at its 540-score eligibility threshold. Expose the four base/spread
+percentages, 350 score span, minimum scores 540/500, offered terms
+`6,12,24,36,60`, active-loan maximum 3 and mortgage LTV 0.75. Percentages accept
+0–100, score span 1–1000, eligibility scores 300–850, count integer 0–100 and
+LTV 0–1. Terms are a nonempty comma-separated ascending unique list of integer
+months 1–120 (at most 120 entries). Zero active loans closes new lending without
+affecting repayments. Missing saved fields use named defaults. Score weights
+remain the next separate batch.
+
+Verify exact default quotes; custom zero-interest quotes and amortization;
+changed eligibility, count, LTV and terms; atomic malformed settings and stale
+quote rejection; existing signed APR/payment/term and collateral persistence;
+new-world/editor/summary/design/reload parity; and resident plans using an offered
+term if 12 is removed. Run `node_modules/.bin/tsx --test tests/loan-rules.test.ts
+ tests/loans.test.ts tests/npc-guide.test.ts`, `TEST_GPU=1 npm run test:e2e --
+ tests/browser/loan-rules.spec.ts tests/browser/bank.spec.ts`, full `npm test`,
+`npx tsc --noEmit` and changed-file Prettier. Browser: edit and reopen all offer
+rules in F10, view custom terms, accept a zero-interest loan, see a second loan
+refused by the one-loan limit, repay, see an empty-capital rejection, and see
+zero-count lending disabled while existing loans remain repayable. Inspect
+screenshots and page errors. Update ECONOMY, WORLD_BUILDING, README and Unreleased.
+
+Loan-offer red run: all six tests fail for absent defaults, Unknown setting or
+missing editor controls (`/tmp/aclone-loan-rules-red.log`), before production.
+
+The resident regression fails specifically when 12 months is removed; choose the
+nearest offered term (9 from 9/18) and carry that term into the actual operation.
+The persistence assertion now compares the serialized loan representation:
+JSON omits an undefined optional collateral property; every stored value remains
+asserted. The planner assertion checks its typed `operation` step rather than an
+`act` step; it still requires the actual borrowed term to be 9.
+
+Loan browser verification: both the existing bank flow and new loan-rules flow
+pass (38.3 seconds total). All ten editor controls persist; a 90d, three-month
+loan at zero APR pays 30d monthly; one-loan/zero-loan limits reject new offers;
+repayment succeeds while lending is closed; empty capital rejects. Inspect all
+four screenshots; no page errors. Updated Economy/world-builder docs, README
+and imperative Unreleased entry.
+
+Loan-offer final verification: all seven new tests, nine guide tests and existing
+loan tests pass. Full `npm test` passes 1,466 tests in 204.1 seconds. TypeScript
+and changed-file Prettier are clean. Both bank browser flows and inspected
+screenshots pass the criteria. Signed mortgage terms and liens also survive
+settings changes and a Store reload. Ready to commit and push.

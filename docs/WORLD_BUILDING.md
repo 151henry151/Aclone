@@ -624,3 +624,28 @@ repricing continues as before. Private shops, other worlds, stock, ownership and
 cash are unaffected by publishing prices. Initial shop pricing uses the same
 formula. Import-cost accounting and catalogue prices remain separate. Missing
 keys use named defaults; portable designs carry all five rules.
+
+## Loan offer rules (unreleased)
+
+**F10 → Rules → Loan offers** controls new quotes. `loanPersonalBaseApr` defaults
+to 10 and `loanPersonalAprSpread` to 18; `loanMortgageBaseApr` to 6 and
+`loanMortgageAprSpread` to 8. Each accepts 0–100 percentage points. APR is base
+plus `(850-score) / loanRateScoreSpan × spread`, rounded to two decimal places.
+`loanRateScoreSpan` defaults to 350 and accepts integer 1–1,000. Zero base and
+spread offer interest-free loans. Minimum eligibility scores are
+`loanPersonalMinimumScore` 540 and `loanMortgageMinimumScore` 500; each accepts
+integer 300–850. Altering thresholds can extend the default approximate rate
+bands; preview a quote at the bank.
+
+`loanTerms` defaults to `6,12,24,36,60`. Enter a nonempty comma-separated,
+ascending list of distinct whole months from 1 to 120, without spaces. The bank
+selector and resident plans use that list. `loanMaximumActive` defaults to 3 and
+accepts integer 0–100; zero closes new lending. `loanMortgageLtv` defaults to
+0.75 and accepts 0–1 of the building's structural value, excluding stock and
+operating capital. Existing ownership, lien, affordability and bank-capital
+checks still apply.
+
+These settings affect new offers only. Signed loans keep their APR, monthly
+payment, duration and collateral; repayment remains available when lending is
+closed. Missing keys use named defaults. Creation, rules summaries, portable
+designs and reloads retain all ten fields. Credit-score weights remain separate.

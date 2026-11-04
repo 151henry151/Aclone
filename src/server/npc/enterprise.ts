@@ -1,3 +1,4 @@
+import { preferredLoanTerm } from '../../shared/loan-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { survivalRules } from '../../shared/survival-rules';
 import { pastureCapacity } from '../../shared/pasture-land';
@@ -262,17 +263,18 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       (!operating || operating.margin >= 0) &&
       !p.loans?.some((l) => l.status !== 'paid')
     ) {
-      const q = loanQuote(w, p, bank, shortfall, 12);
+      const months = preferredLoanTerm(w.settings),
+        q = loanQuote(w, p, bank, shortfall, months);
       if (q.approved && q.payment * 3 < estimate.margin * 20)
         add(
-          `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} per bank month for 12 months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
+          `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} per bank month for ${months} months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
           [
             ...visitBuilding(p, bank, [
               operation('loan', {
                 building: bank.id,
                 operation: 'borrow',
                 amount: shortfall,
-                months: 12,
+                months,
                 apr: q.apr,
                 payment: q.payment,
                 accepted: true,

@@ -1,3 +1,4 @@
+import { loanRules, loanTerms } from './loan-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildings } from './catalog.ts';
 import { PROPERTY_YEAR, releaseEstate } from './property.ts';
@@ -129,15 +130,19 @@ export function loanQuote(
   months: number,
   collateral?: string,
 ) {
-  const profile = creditProfile(w, p);
+  const profile = creditProfile(w, p),
+    rules = loanRules(w.settings);
   const property = collateral ? w.buildings.find((v) => v.id === collateral) : undefined;
 
   const secured = !!collateral;
   const apr =
     Math.round(
       (secured
-        ? 0.06 + ((850 - profile.score) / 350) * 0.08
-        : 0.1 + ((850 - profile.score) / 350) * 0.18) * 10000,
+        ? rules.loanMortgageBaseApr / 100 +
+          ((850 - profile.score) / rules.loanRateScoreSpan) * (rules.loanMortgageAprSpread / 100)
+        : rules.loanPersonalBaseApr / 100 +
+          ((850 - profile.score) / rules.loanRateScoreSpan) * (rules.loanPersonalAprSpread / 100)) *
+        10000,
     ) / 10000;
   const payment = amortizedPayment(amount, apr, months);
   const value = property
@@ -150,7 +155,7 @@ export function loanQuote(
       profile.payments,
   );
   const limit = secured
-    ? Math.floor(value * 0.75)
+    ? Math.floor(value * rules.loanMortgageLtv)
     : Math.min(100000, Math.floor(profile.monthlyIncome * 6 + liquid * 0.5));
   const reasons: string[] = [];
   if (property?.operatingLease || property?.auction)
@@ -158,13 +163,14 @@ export function loanQuote(
   if (b.kind !== 'bank' || b.construction) reasons.push('Visit an operating bank.');
   if (!Number.isSafeInteger(amount) || amount < 1000 || amount > 10000000)
     reasons.push('Borrow 10d–100,000d.');
-  if (![6, 12, 24, 36, 60].includes(months)) reasons.push('Choose 6, 12, 24, 36 or 60 payments.');
-  if (profile.score < (secured ? 500 : 540))
+  if (!loanTerms(w.settings).includes(months))
+    reasons.push(`Choose ${loanTerms(w.settings).join(', ')} payments.`);
+  if (profile.score < (secured ? rules.loanMortgageMinimumScore : rules.loanPersonalMinimumScore))
     reasons.push('Improve repayment history and reduce debts first.');
   if ((p.loans ?? []).some((l) => l.status === 'default' || l.status === 'foreclosed' || l.due > 0))
     reasons.push('Bring existing debt current before borrowing.');
-  if ((p.loans ?? []).filter((l) => l.status === 'active').length >= 3)
-    reasons.push('At most three active loans.');
+  if ((p.loans ?? []).filter((l) => l.status === 'active').length >= rules.loanMaximumActive)
+    reasons.push(`At most ${rules.loanMaximumActive} active loans.`);
   if (
     secured &&
     (!property ||

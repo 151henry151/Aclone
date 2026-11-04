@@ -260,15 +260,32 @@ This safety net buys time for waterworks, farms and processors to operate. It do
 
 ## Loans and credit
 
-Banks offer fixed-rate, amortizing personal loans and property-backed loans. Quotes show principal, annual rate, equal instalment, scheduled total and collateral before acceptance. Terms are 6/12/24/36/60 bank months; a month is 1/12 of the fixed game year (~5.07 real hours). Rates are fictional game tuning: eligible personal borrowers pay roughly 10–26% APR; mortgages roughly 6–14%. There are no arrangement or early-payment fees.
+Banks offer fixed-rate, amortizing personal loans and property-backed loans. Quotes show principal, annual rate, equal instalment, scheduled total and collateral before acceptance. Default terms are 6/12/24/36/60 bank months; a month is 1/12 of the fixed game year (~5.07 real hours). Rates are fictional game tuning: eligible personal borrowers pay roughly 10–26% APR; mortgages roughly 6–14%. There are no arrangement or early-payment fees.
 
-The 300–850 game score weighs recorded employment, buildings owned, debt burden and repayment history. Only verified wages/labour earnings count as income; gifts and borrowed cash do not. Affordability also considers liquid reserves after existing debt and a living allowance. Histories start at upgrade; past employment is not invented. Banks lend from actual investment, with at most three active loans per borrower and 75% structural loan-to-value for collateral. Stock/capital inside a building cannot inflate its collateral valuation.
+The 300–850 game score weighs recorded employment, buildings owned, debt burden and repayment history. Only verified wages/labour earnings count as income; gifts and borrowed cash do not. Affordability also considers liquid reserves after existing debt and a living allowance. Histories start at upgrade; past employment is not invented. Banks lend from actual investment, with defaults of at most three active loans per borrower and 75% structural loan-to-value for collateral. Stock/capital inside a building cannot inflate its collateral valuation.
 
 Interest accrues on outstanding principal. Payments settle interest first, then principal. Automatic payments use the explicitly selected source: **bank savings**, **cash in hand**, or **savings first, then cash**. They work offline and require enough combined funds to clear the amount due. Existing loans default to savings only until the borrower changes this at the bank. Manual repayments default to cash, with an option to use savings. Business working capital is never drawn for a personal loan. A half-month grace period precedes a late mark. After three bank months in arrears the loan defaults; pledged property becomes an unclaimed estate. Sale receipts repay the lender, surplus returns to the former owner, and any shortfall remains debt. Repaying early releases the lien; listed/mortgaged properties cannot be pledged twice or sold/demolished to evade it. Death does not erase debt.
 
 **F9 → Loans & repayments** and the status-panel loan button show persistent loan information even after the bank chat messages disappear. The page identifies the lending bank and collateral, current arrears, selected funding source, grace period and countdown to default/foreclosure in real minutes. It is read-only away from the bank.
 
 The design uses ordinary amortization and ability-to-repay concepts ([CFPB explanation](https://www.consumerfinance.gov/rules-policy/regulations/1026/interp-43/)), with accelerated game time and original thresholds; it is not a real credit-reporting system. Loans do not yet support refinancing, bankruptcy or executable chat agreements.
+
+## Configurable loan offers (unreleased)
+
+World owners can change loan terms in **F10 → Rules → Loan offers**. Banks show
+local offered months, active-loan limit, mortgage loan-to-value and minimum
+scores. Their quotes use local base rates and score spreads. The default formula
+is personal `10 + (850-score)/350 × 18` percent and mortgage
+`6 + (850-score)/350 × 8` percent, rounded to two APR decimals. The personal
+10–26% band is approximate: the minimum eligible score of 540 yields 25.94%.
+Defaults retain the original quotes. Resident finance plans choose an offered
+term nearest 12 months when a year is unavailable.
+
+A zero active-loan limit closes new lending. Existing loans keep their signed
+rate, term, payment and collateral, and can still be repaid. An offer whose rate
+or payment changed must be quoted and accepted again. Banks still require
+available lending capital and affordability; changing these rules creates no
+money. See [world-builder controls](WORLD_BUILDING.md#loan-offer-rules-unreleased).
 
 ## Business statements
 

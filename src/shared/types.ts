@@ -1,3 +1,4 @@
+import type { LoanRules } from './loan-rules';
 import type { EconomyRules } from './economy-rules';
 import type { SurvivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -295,6 +296,7 @@ export interface Zone {
 export interface Settings
   extends
     Partial<EconomyRules>,
+    Partial<LoanRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

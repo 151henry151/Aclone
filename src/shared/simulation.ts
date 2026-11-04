@@ -1,3 +1,4 @@
+import { loanRuleFields, validLoanTerms } from './loan-rules';
 import { economyRules, economyRuleFields, governmentImportRuleKeys } from './economy-rules';
 import {
   survivalRules,
@@ -1947,12 +1948,19 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(canoeRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
-            Object.hasOwn(economyRuleFields, key),
+            Object.hasOwn(economyRuleFields, key) ||
+            Object.hasOwn(loanRuleFields, key) ||
+            key === 'loanTerms',
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (key === 'loanTerms')
+          requireThat(
+            validLoanTerms(v),
+            'Choose ascending unique loan terms from 1 to 120 months, separated by commas',
+          );
         else if (key === 'gatheringScenery')
           requireThat(
             gatheringSceneryModes.includes(v as (typeof gatheringSceneryModes)[number]),
@@ -1970,6 +1978,8 @@ export function act(w: World, id: string, a: Action): string {
             economyField?.max ?? (key === 'startingCash' ? 1e8 : 1e6),
           );
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
+        const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
+        if (loanField) num(v, loanField.min, loanField.max, loanField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
         if (survivalField && 'min' in survivalField)
           num(v, survivalField.min, survivalField.max, survivalField.step === 1);
