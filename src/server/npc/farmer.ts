@@ -1,3 +1,5 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
+import { economyRules } from '../../shared/economy-rules';
 import { survivalRules, skillFits } from '../../shared/survival-rules';
 import { farmStaffBlocker } from '../../shared/farm-policy';
 import { jobVacancy } from '../../shared/staffing.ts';
@@ -42,6 +44,7 @@ export function gameplayChoices(
   vocation: 'general' | 'baker' | 'farmer' | 'independent',
 ): FarmerChoice[] {
   const items = worldItems(w);
+  const reserves = npcReserveRules(w.settings);
   const choices: FarmerChoice[] = [];
   const add = (description: string, plan: Step[], reconsiderSeconds?: number) => {
     if (choices.length < 100 && !plan.some((s) => blockedStep(state.recovery, s, w.time)))
@@ -185,19 +188,34 @@ export function gameplayChoices(
       !own &&
       !b.government &&
       (!b.owner || b.forSale) &&
-      p.cash >= propertyQuote(w, b).total + 20000 &&
+      p.cash >= propertyQuote(w, b).total + reserves.npcPropertyCashReserve &&
       w.buildings.filter((v) => v.owner === p.id && !['home', 'warehouse'].includes(v.kind))
         .length < w.settings.maxBuildings
     )
       add(
-        `Buy ${b.name} for ${propertyQuote(w, b).total}; retain at least 20000 for living and seed costs.`,
+        `Buy ${b.name} for ${propertyQuote(w, b).total}; retain at least ${reserves.npcPropertyCashReserve} for living and seed costs.`,
         visit(b, [action({ type: 'buyBuilding', building: b.id })]),
       );
-    if (own && b.investment < 10000 && p.cash > 15000)
+    const fundingAmount = Math.min(
+      reserves.npcFarmFundingAmount,
+      p.cash,
+      economyRules(w.settings).cashTransferLimit,
+    );
+    if (
+      own &&
+      b.investment < reserves.npcFarmFundingTillThreshold &&
+      p.cash > reserves.npcFarmFundingCashThreshold &&
+      fundingAmount > 0
+    )
       add(
-        `Fund seeds and fertilizer at my farm ${b.name}: deposit 5000 cash units.`,
+        `Fund seeds and fertilizer at my farm ${b.name}: deposit ${fundingAmount} cash units.`,
         visit(b, [
-          action({ type: 'investment', building: b.id, direction: 'deposit', amount: 5000 }),
+          action({
+            type: 'investment',
+            building: b.id,
+            direction: 'deposit',
+            amount: fundingAmount,
+          }),
         ]),
       );
     if (p.skills.includes('farmer') && !own && p.job !== b.id && jobVacancy(w, b, p.id))

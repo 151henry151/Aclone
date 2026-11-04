@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose resident property, painting and farm-funding thresholds as world rules; share purchase reserves and bound farm deposits by cash and transfer limits.
+
 - Expose resident experiment funding, restock and load budgets as world rules; fit trade and output-sale plans within transaction limits and actual buyer storage.
 
 - Expose resident farm harvest, input-cost and expansion-demand forecasts as world rules; reject zero-yield forecasts and describe the actual plot count when planning funding.

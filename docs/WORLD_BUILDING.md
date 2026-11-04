@@ -980,3 +980,19 @@ summaries, portable designs and save/reload.
 These choices use ordinary paid actions. Household and operating reserves,
 investor claims and cash-transfer limits remain protected. Edits grant no money
 or goods; defaults apply to missing keys and all values survive designs/reloads.
+
+## Resident property and optional spending budgets (unreleased)
+
+**F10 → Rules → Resident cash and portable reserves** exposes five cash policies.
+All values are integer hundredths, from 0 to 100,000,000:
+
+- `npcPropertyCashReserve`: 20,000 (200d). Both general property and farmer purchase choices retain this amount after the quoted price; startup budgets remain separate.
+- `npcPaintCashThreshold`: 20,000 (200d). Optional tractor painting is considered strictly above this cash balance, and still requires enough cash for the actual paint price.
+- `npcFarmFundingTillThreshold`: 10,000 (100d). Suggest seed/fertilizer funding only when the farm till is below this balance. Zero disables this suggestion.
+- `npcFarmFundingCashThreshold`: 15,000 (150d). Consider that funding only strictly above this personal cash balance. This is an eligibility threshold, not a post-deposit reserve.
+- `npcFarmFundingAmount`: 5,000 (50d). Proposed deposits cannot exceed actual cash or the world transfer limit. Zero disables this suggestion.
+
+Zero property/painting/cash thresholds remove only their eligibility cushion.
+Changing a rule grants nothing and executes no purchases or transfers. Existing
+ownership, accounts and stock remain intact; plans still use ordinary actions.
+Rules persist in saves and portable designs and are included in resident observations.

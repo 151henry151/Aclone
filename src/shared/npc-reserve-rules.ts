@@ -1,6 +1,37 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const npcReserveRuleFields = {
+  npcPropertyCashReserve: {
+    label: 'Property purchase cash reserve (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcPaintCashThreshold: {
+    label: 'Optional painting cash threshold (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcFarmFundingTillThreshold: {
+    label: 'Farm funding till threshold (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcFarmFundingCashThreshold: {
+    label: 'Farm funding cash threshold (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+  npcFarmFundingAmount: {
+    label: 'Farm funding deposit (hundredths)',
+    min: 0,
+    max: 100000000,
+    step: 1,
+  },
+
   npcOwnerCashFloor: {
     label: 'Owner withdrawal cash target (hundredths)',
     min: 0,

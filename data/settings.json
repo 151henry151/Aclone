@@ -289,5 +289,10 @@
   "npcExperimentCashFloor": 2000,
   "npcExperimentOwnerFundingUnits": 4,
   "npcExperimentRestockBatches": 2,
-  "npcExperimentLoadLimit": 8
+  "npcExperimentLoadLimit": 8,
+  "npcPropertyCashReserve": 20000,
+  "npcPaintCashThreshold": 20000,
+  "npcFarmFundingTillThreshold": 10000,
+  "npcFarmFundingCashThreshold": 15000,
+  "npcFarmFundingAmount": 5000
 }

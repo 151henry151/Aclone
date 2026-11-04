@@ -2658,3 +2658,42 @@ persist, owned-shop funding changes 2,000 → 600 without a transfer, native
 validation rejects a multiplier below one and saved values survive reload.
 Inspect both screenshots; no page errors. No full suite is run. Ready to commit
 and push.
+
+Pushed and verified `b2127b4` on `backlog-implementation`. **Resident experiment
+budgets are done.**
+
+### Gameplay rules — resident property, paint and farm funding thresholds
+
+Before production, expose five Resident cash and portable reserves rules, each an
+integer in 0–100,000,000 hundredths: `npcPropertyCashReserve` 20,000,
+`npcPaintCashThreshold` 20,000, `npcFarmFundingTillThreshold` 10,000,
+`npcFarmFundingCashThreshold` 15,000 and `npcFarmFundingAmount` 5,000.
+Both ordinary property and farmer purchase choices must retain the same local
+property reserve. Paint remains optional only strictly above its cash threshold;
+actual paint cost and ordinary eligibility still apply. Farm funding is considered
+only below the till threshold and strictly above the cash threshold, with the
+amount bounded by actual cash and the existing transfer limit. Zero amount/till
+threshold disables this farm-funding suggestion; zero cash/property thresholds
+remove only that eligibility cushion. Keep startup/household reserves separate.
+Describe local amounts accurately, and never move cash merely by changing rules.
+
+Write failing `tests/npc-discretionary-budget-rules.test.ts` for defaults and absent
+fields, exact purchase and paint boundaries, shared farmer/general property
+rules, funding thresholds/zero/transfer cap and a conserved executed deposit.
+Cover atomic validation, editor, summary, observation, portable designs and reload.
+Run it with npc-adaptive, npc-farmer, npc-reserve-rules and npc-guide (verify paths).
+Browser: save/reopen five fields, observe changed farm-funding suggestion, zero
+amount gives no suggestion, native invalid input is refused and saved values
+survive reload. Inspect screenshots and page errors. Finish clean TypeScript,
+changed-file Prettier, WORLD_BUILDING/NPCS/README and imperative Unreleased.
+
+Discretionary-budget red: five checks fail for missing settings, and an independent
+existing-transfer-limit regression proposes 5,000 where only 50 is allowed.
+After implementation all six pass, including exact purchase/paint boundaries,
+zero controls, actual-cash caps and a conserved farm deposit.
+
+Discretionary-budget gates pass: 51 relevant tests in 5.3 seconds, clean TypeScript,
+changed-file Prettier and diff checks. Browser passes in 20.2 seconds: five settings
+persist; the planned farm deposit changes 5,000 → 200 without moving money; zero
+suppresses it; native validation refuses a negative amount and reload preserves
+zero. Both screenshots inspected; no page errors. No full suite is run.

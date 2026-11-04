@@ -1,3 +1,4 @@
+import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { economyRules } from '../../shared/economy-rules';
 import { boatLanding } from '../../shared/boathouse';
 import { travelHeight } from '../../shared/dock';
@@ -132,6 +133,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
         reconsiderSeconds: 60,
       },
     ];
+  const reserves = npcReserveRules(w.settings);
   const base = gameplayChoices(w, p, state, 'independent');
   if (p.task) return base;
   const groups = new Map<string, FarmerChoice[]>();
@@ -330,11 +332,11 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
       !b.government &&
       (b.kind !== 'home' || !ownsHome(w, p)) &&
       (!b.owner || b.forSale) &&
-      p.cash >= propertyQuote(w, b).total + 20000
+      p.cash >= propertyQuote(w, b).total + reserves.npcPropertyCashReserve
     )
       add(
         'property',
-        `Buy ${b.name} (${b.kind}) for ${propertyQuote(w, b).total}; keep a reserve. Ownership alone does not fund or staff a business.`,
+        `Buy ${b.name} (${b.kind}) for ${propertyQuote(w, b).total}; keep ${reserves.npcPropertyCashReserve} for a reserve. Ownership alone does not fund or staff a business.`,
         visit(b, [action({ type: 'buyBuilding', building: b.id })]),
       );
     if (b.owner === p.id) {
@@ -531,7 +533,7 @@ export function adaptiveChoices(w: World, p: Player, state: ResidentState): Farm
           `Buy a Parish map at ${b.name} for ${rules.mapPrintPrice}.`,
           visit(b, [operation('buyMap', { building: b.id })]),
         );
-      if (p.cash > 20000)
+      if (p.cash > reserves.npcPaintCashThreshold)
         for (const paint of appearance.paints)
           if (p.tractorPaint !== paint.id)
             add(
