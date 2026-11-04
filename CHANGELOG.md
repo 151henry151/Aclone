@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose shore, anywhere-mode, coastal and deep-water bite-wait means as world rules; retain depth adjustment, random waits and already scheduled bites.
+
 - Expose crop frost sensitivities and maximum frost yield loss as world rules; retain existing default yields, winter expiry and reserved harvest quantities.
 
 - Expose the ripe-quality window, late-harvest loss rate and loss cap as world rules; preserve existing default yields, winter expiry and reserved harvest amounts.

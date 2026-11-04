@@ -1,3 +1,4 @@
+import { fishingRules } from './fishing-rules';
 import { depthFishingMultiplier } from './seabed';
 import { charterCaptain } from './charter';
 import { poweredBoat } from './boats';
@@ -26,13 +27,14 @@ export function fishingCatch(w: World, p: Player, roll = Math.random()) {
 }
 /** Mean real seconds while the line is waiting; bite/reeling time is additional. */
 export function meanBiteWait(w: World, p: Player) {
+  const rules = fishingRules(w.settings);
   return deepBoatFishing(w, p)
-    ? 225
+    ? rules.fishingDeepWaitSeconds
     : fishingVessel(w, p)
-      ? 65
+      ? rules.fishingCoastalWaitSeconds
       : w.settings.fishingMode === 5
-        ? 20
-        : 75;
+        ? rules.fishingAnywhereWaitSeconds
+        : rules.fishingShoreWaitSeconds;
 }
 /** Exponential waiting time: constant bite chance, independent of how long one has waited.
  * Sample once per cast on the server, rather than rolling once per simulation tick. */

@@ -80,7 +80,7 @@ waypoints and building markers remain visible above the terrain overlay.
 
 ## Fishing at the dock
 
-Buy Fishing tackle at a boathouse or Harbour stores and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. Stop fishing to move again. Controls float separately from chat on desktop and phones. While fishing, press **H** for scenery view: a compact bottom button stops fishing while waiting and becomes **Reel in** during a bite. **F3** also reels; **H/Escape** restores the HUD.
+Buy Fishing tackle at a boathouse or Harbour stores and visit the dock in a fishing-enabled world. Its deck supports vehicles. Click it or press **E/Ctrl** for the fishing panel; centered **Cast a line**, **Reel in** and **Stop fishing** also work without Activities. Wait for a bite and reel within eight seconds (button or **F3**); cargo space is required. Missing the window returns to waiting. World rules set base mean waits (ordinary shore 75s, anywhere-mode shore 20s, coastal boat 65s, deep boat 225s by default); boat depth adjusts them. Scheduled bites keep their deadlines after rule edits. Stop fishing to move again. Controls float separately from chat on desktop and phones. While fishing, press **H** for scenery view: a compact bottom button stops fishing while waiting and becomes **Reel in** during a bite. **F3** also reels; **H/Escape** restores the HUD.
 
 ## Finding your way
 

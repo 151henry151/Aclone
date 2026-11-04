@@ -1,3 +1,4 @@
+import { meanBiteWait } from '../shared/boat-fishing';
 import { farmYieldRules, cropFrostKeys } from '../shared/farm-yield-rules';
 import { gatheringImplements } from '../shared/resources';
 import { constructionRefundPercentage, constructionRules } from '../shared/construction-rules';
@@ -1878,7 +1879,7 @@ function renderPanel() {
   if (panel === 'fishing-dock') {
     modal(
       'Fishing dock',
-      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from a boathouse or Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}${boatControls(fishingDock.id)}`,
+      `<p>Drive up the boardwalk or walk onto the dock. Bring Fishing tackle from a boathouse or Harbour stores, then cast a line. When a fish bites, use the on-screen Reel in button or F3.</p><p>Cast, reel and stop fishing directly on screen beside the dock. Base mean wait here: ${meanBiteWait(world, me)} seconds; boat depth can adjust it. Bites are random.</p>${me.game === 'fishing' ? button('Stop fishing', 'leaveGame') : button('Cast a line', 'joinGame', 'data-id="fishing"')}${boatControls(fishingDock.id)}`,
     );
     return;
   }
@@ -2057,7 +2058,7 @@ function renderPanel() {
         .map(([n, t]) => `${esc(n)} ${t.toFixed(1)}s`)
         .join(
           ' · ',
-        )}</small></article><article><span>03 / MOSTLY WAITING</span><h3>Fishing</h3><p>Bring tackle. Cast from the dock. Reel when the “Fish!” prompt appears. The fish has eight seconds of patience.</p>${button('Cast a line', 'joinGame', 'data-id="fishing"')}${button('Reel in', 'reel')}</article><article><span>04 / QUESTIONABLE REGULATIONS</span><h3>Ultrakricket</h3><p>Two players: the first bowls, the second bats. Strike three seconds after the delivery. Miss, and the grenade objects.</p>${button('Join the pitch', 'joinGame', 'data-id="kricket"')}${button('Bowl / swing', 'kricket')}</article></div>${button('Leave current activity', 'leaveGame')}`,
+        )}</small></article><article><span>03 / MOSTLY WAITING</span><h3>Fishing</h3><p>Bring tackle. Cast from the dock. Reel when the “Fish!” prompt appears. The fish has eight seconds of patience. Base mean wait here: ${meanBiteWait(world, me)} seconds; boat depth can adjust it. Bites are random, not a countdown.</p>${button('Cast a line', 'joinGame', 'data-id="fishing"')}${button('Reel in', 'reel')}</article><article><span>04 / QUESTIONABLE REGULATIONS</span><h3>Ultrakricket</h3><p>Two players: the first bowls, the second bats. Strike three seconds after the delivery. Miss, and the grenade objects.</p>${button('Join the pitch', 'joinGame', 'data-id="kricket"')}${button('Bowl / swing', 'kricket')}</article></div>${button('Leave current activity', 'leaveGame')}`,
       true,
     );
     return;

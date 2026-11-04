@@ -1,3 +1,4 @@
+import { fishingRules } from '../../shared/fishing-rules';
 import { farmYieldRules } from '../../shared/farm-yield-rules';
 import { gatheringRules, gatheringImplementRules } from '../../shared/gathering-rules';
 import { constructionRules } from '../../shared/construction-rules';
@@ -210,6 +211,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...constructionRules(w.settings),
       ...gatheringRules(w.settings),
       ...farmYieldRules(w.settings),
+      ...fishingRules(w.settings),
       ...gatheringImplementRules(w.settings),
       ...npcJourneyRules(w.settings),
       ...npcBusinessLoadRules(w.settings),

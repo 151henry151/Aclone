@@ -1,3 +1,4 @@
+import type { FishingRules } from './fishing-rules';
 import type { FarmYieldRules } from './farm-yield-rules';
 import type { GatheringRules, GatheringImplementRules } from './gathering-rules';
 import type { ConstructionRules } from './construction-rules';
@@ -323,6 +324,7 @@ export interface Settings
     Partial<ConstructionRules>,
     Partial<GatheringRules>,
     Partial<FarmYieldRules>,
+    Partial<FishingRules>,
     Partial<GatheringImplementRules>,
     Partial<NpcJourneyRules>,
     Partial<NpcBusinessLoadRules>,

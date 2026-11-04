@@ -54,7 +54,7 @@ bow/stern deck lighting, warm or dim-red cabin lighting, and the searchlight.
 Navigation lights operate automatically; the canal boat does not display trawling signals.
 
 Buy Fishing tackle from a boathouse or Harbour stores. Stop the boat before casting.
-Bites are unpredictable: coastal waits average 65 real seconds and deep-water waits average 225 seconds, with larger
+Bites are unpredictable: world rules set base means of 65 real seconds for coastal boats and 225 for deep-water boats by default (before depth adjustment), with larger
 species possible. Reel within eight seconds using the button or F3; a missed bite
 starts a new wait. Press H to hide the HUD while retaining one small stop/reel
 button along the bottom. H or Escape restores the normal controls.

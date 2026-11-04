@@ -3799,3 +3799,41 @@ The browser passes (31.0 s); inspected all four screenshots: saved sensitivities
 30-unit snowy wheat estimate with local 0.5 sensitivity/80% cap, fallow plots and
 invalid cap with reload preservation. Final TypeScript, Prettier and diff checks
 pass. No whole-suite rerun, version bump or deployment.
+
+**Frost slice done and pushed:** `738cede8e8b9fa5e2583b482f15723ceb53d4f4d`.
+Remote SHA verified. The remaining fishing rules are independent of one another;
+handle the smaller bite-wait means before offshore boundaries and trawl constants.
+
+### Fishing bite-wait means — completion criteria before production
+
+Expose the four existing mean waits: shore/ordinary 75 seconds, anywhere-mode
+shore 20, coastal boat 65, deep-water boat 225. Keep exponential sampling, depth
+multipliers, species selection and the eight-second bite window unchanged. Rules
+are finite numbers 1–3,600 seconds. Changes affect newly scheduled bites only;
+a waiting cast retains its recorded catch and deadlines. Mode zero still disables
+fishing; world rules do not grant tackle or catches.
+
+- New tests in `tests/fishing-wait-rules.test.ts` must first fail on missing rules,
+  then pass default/legacy/custom context selection, preserved scheduled casts,
+  shared settings validation/editor/summary/observation/save/design round-trips.
+- Run those tests with fishing timing, fishing-water, charter boat fishing and
+  guide tests where present. Run TypeScript and changed-file Prettier/diff checks.
+- Browser `tests/browser/fishing-wait-rules.spec.ts`: configure F10 Fishing rules,
+  save/reload, cast a real line with tackle, inspect waiting/empty-catch state,
+  see local mean help, reject invalid zero mean and retain saved values. Preserve
+  fishing-disabled refusal. Inspect screenshots; update player/boating/world-builder
+  docs, README and Unreleased changelog. No whole-suite test run.
+
+Failing-first bite-wait result: all three tests fail at the custom patch or absent
+settings (`Unknown setting`). Correct the disabled-fishing test's action name to
+the existing `joinGame` API before production edits.
+
+Bite-wait validation complete: 26 wait/timing/offshore/guide tests pass (3.0 s),
+and all 11 tests in the actual `tests/charter.test.ts` pass (1.4 s), including
+passenger fishing. The initially listed `charter-boat.test.ts` path does not exist;
+run the discovered charter suite separately rather than count that missing path.
+TypeScript, changed-file Prettier and diff checks pass. Browser passes (27.1 s);
+all five screenshots inspected: saved rules, local seven-second base mean help,
+real cast with disabled reel and no caught fish, rejected zero mean, and disabled
+fishing with no cast action. The server test confirms the disabled-mode refusal;
+reload/editor activity preserves the recorded catch and bite deadlines.

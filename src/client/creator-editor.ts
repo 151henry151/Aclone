@@ -1,3 +1,4 @@
+import { fishingRules, fishingRuleFields } from '../shared/fishing-rules';
 import { farmYieldRules, farmYieldRuleFields } from '../shared/farm-yield-rules';
 import {
   gatheringRules,
@@ -124,6 +125,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(constructionRuleFields),
     ...Object.keys(gatheringRuleFields),
     ...Object.keys(farmYieldRuleFields),
+    ...Object.keys(fishingRuleFields),
     ...Object.keys(gatheringImplementFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
@@ -200,6 +202,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const fishing = fishingRules(settings);
+  const fishingFields = `<fieldset class="boat-death-settings"><legend>Fishing rules</legend>${Object.entries(
+    fishingRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        fishing[key as keyof typeof fishing],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>These are base mean waits, not countdowns. Boats retain the depth multiplier; catches and the eight-second bite window are unchanged. New casts and waits use current means; already scheduled bites retain their catch and deadlines. Fishing mode still controls whether and where fishing is allowed.</p></fieldset>`;
   const farmYields = farmYieldRules(settings);
   const farmYieldFields = `<fieldset class="boat-death-settings"><legend>Crop yield rules</legend>${Object.entries(
     farmYieldRuleFields,
@@ -565,6 +583,7 @@ export function settingsFields(settings: Settings = defaults) {
     constructionFields +
     gatheringRateFields +
     farmYieldFields +
+    fishingFields +
     implementFields +
     journeyFields +
     businessLoadFields +

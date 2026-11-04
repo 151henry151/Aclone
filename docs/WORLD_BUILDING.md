@@ -1333,3 +1333,18 @@ affect estimates and new harvest reservations, while started harvests retain
 their reserved quantities. Winter still kills every field crop, including with
 frost loss disabled. Settings persist in saves/designs, summaries and resident
 observations, with the same JSON defaults for older worlds.
+
+## Fishing wait rules (unreleased)
+
+**F10 → Rules → Fishing rules** exposes base mean bite waits in real seconds:
+`fishingShoreWaitSeconds` 75, `fishingAnywhereWaitSeconds` 20 (shore in mode 5),
+`fishingCoastalWaitSeconds` 65 and `fishingDeepWaitSeconds` 225. Each accepts finite
+values from 1 to 3,600. Boat context takes precedence over anywhere mode.
+
+The exponential distribution permits quick bites and long quiet spells. Boat
+waits retain the existing seabed-depth multiplier. Rules change new schedules,
+including waits after a missed bite; existing casts retain recorded catch and
+bite deadlines. Species selection and the eight-second response window remain
+unchanged. Fishing mode still controls availability and tackle is still required.
+Activities/dock help shows the current base mean. Rules persist in saves/designs,
+summaries and resident observations, with JSON defaults for older worlds.
