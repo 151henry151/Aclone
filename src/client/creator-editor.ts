@@ -1,3 +1,4 @@
+import { towingRuleFields, towingRules } from '../shared/towing-rules';
 import { charterRuleFields, charterRules } from '../shared/charter-rules';
 import { creditRuleFields, creditRules } from '../shared/credit-rules';
 import { loanRuleFields, loanRules } from '../shared/loan-rules';
@@ -96,6 +97,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
     ...Object.keys(charterRuleFields),
+    ...Object.keys(towingRuleFields),
     'loanTerms',
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
@@ -119,6 +121,22 @@ export function settingsFields(settings: Settings = defaults) {
     'labourDailyCap',
     'requireCaptainSkill',
   ];
+  const towing = towingRules(settings);
+  const towingFields = `<fieldset class="boat-death-settings"><legend>Tug rescue offers</legend>${Object.entries(
+    towingRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        towing[key as keyof typeof towing],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Default fee cannot exceed its ceiling. Posted offers retain their fee and expiry. Acceptance holds the full fee, cancellation refunds it, and dock delivery pays once. Accepted jobs do not expire; self recovery is free.</p></fieldset>`;
   const charter = charterRules(settings);
   const charterFields = `<fieldset class="boat-death-settings"><legend>Charter offers</legend>${Object.entries(
     charterRuleFields,
@@ -314,6 +332,7 @@ export function settingsFields(settings: Settings = defaults) {
     loanFields +
     creditFields +
     charterFields +
+    towingFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +
     Object.entries(settings)
       .filter(([key]) => !boatKeys.includes(key))

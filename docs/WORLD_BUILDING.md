@@ -711,3 +711,20 @@ trip time. Full fare escrow, proportional early-return settlement, full
 cancellation refunds and one-time settlement remain unchanged. Passenger places
 and tank capacity stay in Vehicles. Missing saved fields use defaults; rules
 summaries, resident observations, portable designs and reloads preserve all seven.
+
+## Tug rescue rules (unreleased)
+
+**F10 → Rules → Tug rescue offers** provides `towDefaultFee` 20,000 hundredths
+(200d), `towMaximumFee` 10,000,000 (100,000d), and `towOfferSeconds` 600 real
+seconds. Both fees accept integer 0–100,000,000 with default ≤ maximum; lifetime
+accepts integer 1–86,400. Inventory uses the local suggestion and ceiling. Zero
+fees permit free services without altering self recovery's always-free policy.
+
+New offers record their expiry; editing rules does not reprice or shorten posted
+offers. Legacy offers without an explicit expiry keep the original 600-second
+lifetime. Acceptance is allowed at the expiry instant, refused afterward, and
+maintenance removes expired offers. Accepted jobs do not expire. Acceptance
+holds the full agreed fee, delivery pays it once, and cancellation refunds it in
+full; those conservation rules cannot be disabled. Rules summaries, resident
+observations, portable designs and saves retain the fields; missing settings
+use named defaults. Physical tow limits and boat-death recovery stay separate.

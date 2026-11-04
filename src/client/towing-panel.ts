@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { towingRules } from '../shared/towing-rules';
 import type { World, Player } from '../shared/types';
 import { TUGBOAT } from '../shared/boats';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -10,6 +11,7 @@ const esc = (s: string) =>
 const action = (owner: string, operation: string, label: string) =>
   `<form data-action="tow"><input type="hidden" name="owner" value="${esc(owner)}"><input type="hidden" name="operation" value="${operation}"><button>${label}</button></form>`;
 export function towingPanel(w: World, p: Player) {
+  const rules = towingRules(w.settings);
   let html =
     '<h3>Boat rescue &amp; towing</h3><p>Tug captains can agree a fee with a stranded captain. Acceptance holds the fee; delivery to a boatyard or pier pays it. Either captain may cancel for a full refund. Cargo stays aboard.</p>';
   const jobs = Object.values(w.towJobs ?? {}).filter((j) => j.owner === p.id || j.tug === p.id);
@@ -31,7 +33,7 @@ export function towingPanel(w: World, p: Player) {
       (q) => q.id !== p.id && q.canBeTowed && !w.towJobs?.[q.id],
     );
     if (candidates.length)
-      html += `<form data-action="tow"><input type="hidden" name="operation" value="offer"><label>Stranded captain<select name="owner">${candidates.map((q) => `<option value="${esc(q.id)}">${esc(q.name)}</option>`).join('')}</select></label><label>Rescue fee in denarii<input name="feeDenarii" type="number" min="0" max="100000" step="0.01" value="200" required></label><button>Offer tow</button></form>`;
+      html += `<form data-action="tow"><input type="hidden" name="operation" value="offer"><label>Stranded captain<select name="owner">${candidates.map((q) => `<option value="${esc(q.id)}">${esc(q.name)}</option>`).join('')}</select></label><label>Rescue fee in denarii<input name="feeDenarii" type="number" min="0" max="${rules.towMaximumFee / 100}" step="0.01" value="${rules.towDefaultFee / 100}" required></label><button>Offer tow</button></form>`;
     else html += '<p>No other stranded captains are currently available.</p>';
   }
   if (p.vehicle === TUGBOAT)

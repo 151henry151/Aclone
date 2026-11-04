@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { towingRules, towOfferExpires } from './towing-rules';
 import type { Action, Player, World } from './types';
 import { TUGBOAT, poweredBoat } from './boats';
 import { vehicleDef } from './vehicle-config';
@@ -16,6 +17,7 @@ export interface TowJob {
   fee: number;
   state: 'offered' | 'accepted' | 'towing';
   created: number;
+  expires?: number;
   rescue: boolean;
   rope?: number;
 }
@@ -88,7 +90,7 @@ export function maintainTows(w: World) {
           tug.atHome ||
           tug.hitch ||
           Math.hypot(tug.x - target.x, tug.z - target.z) > (j.rope ?? 0) + 50)) ||
-      (j.state === 'offered' && w.time - j.created > 600)
+      (j.state === 'offered' && w.time > towOfferExpires(j))
     )
       cancelTow(w, j.owner);
   }
@@ -110,7 +112,10 @@ export function towAction(w: World, p: Player, a: Action) {
       'Finish or cancel the existing towing agreement first',
     );
     const fee = owner === p.id ? 0 : Number(a.fee);
-    need(Number.isSafeInteger(fee) && fee >= 0 && fee <= 10000000, 'Choose a valid rescue fee');
+    need(
+      Number.isSafeInteger(fee) && fee >= 0 && fee <= towingRules(w.settings).towMaximumFee,
+      'Choose a valid rescue fee',
+    );
     w.towJobs ??= {};
     w.towJobs[owner] = {
       owner,
@@ -120,6 +125,7 @@ export function towAction(w: World, p: Player, a: Action) {
       fee,
       state: owner === p.id ? 'accepted' : 'offered',
       created: w.time,
+      expires: w.time + towingRules(w.settings).towOfferSeconds,
     };
     say(
       w,
@@ -143,6 +149,7 @@ export function towAction(w: World, p: Player, a: Action) {
       p.id === owner && j.state === 'offered',
       'Only the stranded captain can accept this offer',
     );
+    need(w.time <= towOfferExpires(j), 'This rescue offer has expired; request a new offer');
     const target = strandedVessel(w, owner);
     need(
       target && target.rescue === j.rescue && target.slot === j.slot,

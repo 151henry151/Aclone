@@ -211,5 +211,8 @@
   "charterMinimumMinutes": 15,
   "charterMaximumMinutes": 180,
   "charterMaximumOffers": 16,
-  "charterReturnCooldown": 60
+  "charterReturnCooldown": 60,
+  "towDefaultFee": 20000,
+  "towMaximumFee": 10000000,
+  "towOfferSeconds": 600
 }

@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose tug-rescue fee defaults, ceilings and offer lifetimes as world rules; preserve posted terms and full escrow through edits and reloads, and reject expired acceptance before taking payment.
+
 - Expose charter fare, duration, invitation and return-request limits as world rules; quote local terms in Inventory while preserving issued offers, held fares, elapsed time and cancellation refunds across edits and reloads.
 
 - Make the lighthouse keeper wage cap a world rule shared by daily payments, wage editing, player panels and resident quotes; preserve posted wages, taxes and quarters, and keep supported owner-hiring and shift-renewal buttons visible.

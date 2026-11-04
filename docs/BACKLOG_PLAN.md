@@ -1907,3 +1907,63 @@ Charter final gates: all 27 focused tests pass. The entire npm test suite passes
 Prettier has been run on all changed files. Both browser flows and inspected
 screenshots meet the criteria. The extra elapsed-time regression passes without
 changing settlement or weakening any test. Ready to commit and push.
+
+Pushed and verified `0816091` on `backlog-implementation`. **Charter offer rules
+are done.** Continue with tug rescue offer/escrow limits.
+
+### Gameplay rules — tug rescue offers
+
+Before production, expose `towDefaultFee` 20,000 hundredths (200d),
+`towMaximumFee` 10,000,000 hundredths (100,000d) and `towOfferSeconds` 600 real
+seconds. Fees accept integer 0–100,000,000 with default ≤ maximum; expiry accepts
+integer 1–86,400 seconds. Missing keys preserve defaults. Use these for the
+Inventory fee form and authoritative new offers. Preserve full fee escrow on
+acceptance, full cancellation refunds, one-time delivery payment, free self
+recovery, and existing physical tow/refuelling/death mechanics. Escrow fractions
+are conservation invariants, not tunable money-loss or duplication switches.
+
+Capture expiry in each new offer so rule edits do not change posted terms.
+Legacy offers without expiry retain the old 600-second lifetime, independent of
+new world limits. Preserve the old boundary: valid at the exact expiry, expired
+afterward. Reject expired acceptance even between maintenance ticks, without
+charging cash. Maintenance removes expired unaccepted offers; accepted jobs never
+expire. Fee/expiry edits and Store reloads preserve issued terms and held money.
+
+Tests: default/missing-key parity, local fees/ceiling/expiry, zero-fee offers,
+atomic invalid patches and unaffordable acceptance, exact/late expiry, legacy
+fallback, agreed terms after lower limits and reload, no accepted-job expiry,
+repeat cancellation/delivery conservation, free self recovery, creation/editor/
+summary/portable-design parity. Commands: `node_modules/.bin/tsx --test
+ tests/towing-rules.test.ts tests/towing.test.ts tests/npc-guide.test.ts`,
+`TEST_GPU=1 npm run test:e2e -- tests/browser/towing-rules.spec.ts`, entire npm
+test suite with documented two-file scheduling, TypeScript and changed-file
+Prettier. Browser: edit/reopen three rules; see no stranded candidates; add a
+local stranded test captain, see custom fee/default maximum, reject insufficient
+cash, accept with exact held funds, cancel/refund, then expire another offer and
+show the empty agreement state. Inspect screenshots/errors. Update HAULAGE,
+PLAYING, WORLD_BUILDING, README and imperative Unreleased before committing.
+
+Tow red run: all six new tests fail before production. Five report missing
+rules/defaults/editor fields; the separate default-expiry regression reports
+“Missing expected exception” because acceptance currently permits an offer older
+than 600 seconds before maintenance runs (`/tmp/aclone-tow-rules-red.log`).
+
+The first tug browser flow passes in 29.8 seconds. Screenshot review finds the
+empty-list explanation below the viewport, so require it to be scrolled into
+view and capture notices at full opacity. The rerun catches a DOM replacement
+during scrolling, not a state mismatch. Retry that same scroll-and-viewport
+assertion across the live snapshot redraw; keep every original economic and
+expiry assertion unchanged.
+
+The stronger browser flow now passes in 34.0 seconds. Inspect all five states:
+three saved editor fields, visible empty-candidate explanation, visible cash
+refusal without charge, exact 10d held with no tug payment, and expired offer
+removed with cash intact. Cancellation refunds once and its button disappears.
+No page errors. All 22 focused tests pass after documentation updates; update
+HAULAGE, PLAYING, WORLD_BUILDING, README and imperative Unreleased.
+
+Tug final gates: the entire npm test suite passes all 1,490 tests in 315.7
+seconds with two concurrent files; all 22 focused tests pass. TypeScript is clean,
+changed-file Prettier is complete, and the browser plus inspected screenshots
+meet the criteria. No economic assertions or deadlines were weakened. Ready to
+commit and push.

@@ -1,3 +1,4 @@
+import { towingRules } from '../../shared/towing-rules';
 import { charterRules } from '../../shared/charter-rules';
 import { creditRules } from '../../shared/credit-rules';
 import { loanRules } from '../../shared/loan-rules';
@@ -188,6 +189,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...loanRules(w.settings),
       ...creditRules(w.settings),
       ...charterRules(w.settings),
+      ...towingRules(w.settings),
       allowMoneyGifts: w.settings.allowMoneyGifts !== false,
       allowPlayerRefuelling: w.settings.allowPlayerRefuelling !== false,
       fighting: w.settings.fighting,

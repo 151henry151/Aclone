@@ -1,3 +1,4 @@
+import { towingRuleFields, towingRulesError } from './towing-rules';
 import { charterRuleFields, charterRulesError } from './charter-rules';
 import { creditRuleFields, creditRulesError } from './credit-rules';
 import { loanRuleFields, validLoanTerms } from './loan-rules';
@@ -1959,11 +1960,13 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(loanRuleFields, key) ||
             Object.hasOwn(creditRuleFields, key) ||
             Object.hasOwn(charterRuleFields, key) ||
+            Object.hasOwn(towingRuleFields, key) ||
             key === 'loanTerms',
           'Unknown setting',
         );
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
         const creditField = creditRuleFields[key as keyof typeof creditRuleFields];
+        const towingField = towingRuleFields[key as keyof typeof towingRuleFields];
         const charterField = charterRuleFields[key as keyof typeof charterRuleFields];
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
@@ -1986,7 +1989,8 @@ export function act(w: World, id: string, a: Action): string {
           num(
             v,
             key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
-            charterField?.max ??
+            towingField?.max ??
+              charterField?.max ??
               creditField?.max ??
               economyField?.max ??
               (key === 'startingCash' ? 1e8 : 1e6),
@@ -1994,6 +1998,7 @@ export function act(w: World, id: string, a: Action): string {
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);
         if (creditField) num(v, creditField.min, creditField.max, true);
         if (charterField) num(v, charterField.min, charterField.max, true);
+        if (towingField) num(v, towingField.min, towingField.max, true);
         const loanField = loanRuleFields[key as keyof typeof loanRuleFields];
         if (loanField) num(v, loanField.min, loanField.max, loanField.step === 1);
         const survivalField = survivalRuleFields[key as keyof typeof survivalRuleFields];
@@ -2060,6 +2065,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const towingError = towingRulesError({ ...w.settings, ...clean });
+      requireThat(!towingError, towingError ?? 'Invalid towing rules');
       const charterError = charterRulesError({ ...w.settings, ...clean });
       requireThat(!charterError, charterError ?? 'Invalid charter rules');
       const creditError = creditRulesError({ ...w.settings, ...clean });

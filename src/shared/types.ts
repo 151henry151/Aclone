@@ -1,3 +1,4 @@
+import type { TowingRules } from './towing-rules';
 import type { CharterRules } from './charter-rules';
 import type { CreditRules } from './credit-rules';
 import type { LoanRules } from './loan-rules';
@@ -301,6 +302,7 @@ export interface Settings
     Partial<LoanRules>,
     Partial<CreditRules>,
     Partial<CharterRules>,
+    Partial<TowingRules>,
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,

@@ -487,6 +487,10 @@ Buy eight specialist trailers at the tractor garage. Use **Inventory → Your tr
 
 The 24s outboard motorboat carries 50 weight and can be rowed after running out of fuel. The canal boat now costs 60s. A 140s tug can rescue another captain's boat for an agreed fee, or tow its owner's stranded boat home. **Activities → Towing** handles offers, acceptance, hookup and dock delivery. Fuel deliveries in a motorboat can end by towing it home behind your larger boat as a tender. See [the full haulage guide](HAULAGE.md) for controls and cargo restrictions.
 
+Unreleased tug rules set the suggested rescue fee, fee ceiling and offer lifetime.
+Posted terms persist after edits; accepted jobs hold the full fare until delivery
+or cancellation refund and do not expire.
+
 Walking uses a hand-held **Flashlight**. Walking and the 10-weight emergency raft have no engine controls or Fuel bar; the Fuel bar returns when you board a motor vehicle. Reboard stranded boats only within transfer range. Tractors can zoom out twice as far in third-person view, using the mouse wheel, pinch or **Actions → Zoom out**. There is no free town-centre teleport; allow fuel for your return journey.
 
 ## Portable canoes (unreleased)

@@ -1,3 +1,4 @@
+import { towingRules } from './towing-rules';
 import { charterRules } from './charter-rules';
 import { creditRules } from './credit-rules';
 import { loanRules } from './loan-rules';
@@ -53,7 +54,8 @@ export const rulesets: Record<
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const s = w.settings,
-    charter = charterRules(s);
+    charter = charterRules(s),
+    towing = towingRules(s);
   const survival = survivalRules(s),
     credit = creditRules(s);
   const fuel = fuelRules(s);
@@ -64,6 +66,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const flight = flightRules(s),
     limits = landingLimits(s);
   return [
+    `Tug rescue: default fee ${towing.towDefaultFee}, maximum ${towing.towMaximumFee} hundredths; offers last ${towing.towOfferSeconds} seconds. Posted terms persist; acceptance holds the full fee, cancellation refunds it, delivery pays once. Self recovery is free.`,
     `Charters: default fare ${charter.charterDefaultFare}, maximum ${charter.charterMaximumFare} hundredths; default ${charter.charterDefaultMinutes} minutes, range ${charter.charterMinimumMinutes}–${charter.charterMaximumMinutes}; ${charter.charterMaximumOffers} outstanding invitations; return requests every ${charter.charterReturnCooldown} seconds. Existing offers/tickets keep agreed fares and durations.`,
     `Credit score: ${credit.creditScoreMinimum}–${credit.creditScoreMaximum}, starting ${credit.creditScoreInitial}; history ${credit.creditHistoryMonthlyPoints}/month up to ${credit.creditHistoryMaximum}, on-time ${credit.creditOnTimePoints} each up to ${credit.creditOnTimeMaximum}, employment up to ${credit.creditEmploymentPoints}, assets per point ${credit.creditAssetUnit} hundredths up to ${credit.creditAssetMaximum}; late/default ${credit.creditLatePoints}/${credit.creditDefaultPoints} capped at ${credit.creditPenaltyMaximum}; debt ratio ×${credit.creditDebtPoints} capped at ${credit.creditDebtMaximum}, denominator floor ${credit.creditDebtDenominatorMinimum} hundredths.`,
     `Loans: ${loans.loanTerms} months; ${loans.loanMaximumActive} active; ${loans.loanMortgageLtv * 100}% structural LTV. Personal/mortgage base APR ${loans.loanPersonalBaseApr}/${loans.loanMortgageBaseApr}%, spreads ${loans.loanPersonalAprSpread}/${loans.loanMortgageAprSpread} points per ${loans.loanRateScoreSpan} score points below ${credit.creditScoreMaximum}; minimum scores ${loans.loanPersonalMinimumScore}/${loans.loanMortgageMinimumScore}. Existing loans keep signed terms.`,

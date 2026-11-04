@@ -19,6 +19,15 @@ A tow preserves the disabled boat's ownership, fuel and goods. It does not remov
 
 Since 0.112.1, docking measures arrival from the vessel's oriented hull, allowing a large boat's bow, stern or side to enter the approach before its centre does. Delivery checks the disabled boat itself and still requires a clear water path to the berth. It does not move the boat, change its cargo or let a tug deliver from offshore.
 
+Unreleased **F10 → Rules → Tug rescue offers** sets the suggested fee (200d by
+default), maximum fee (100,000d) and unaccepted offer lifetime (600 real seconds).
+Inventory quotes the local default and ceiling. Posted fees and expiry survive
+rule edits and reloads; accepted jobs do not expire. An expired offer cannot take
+payment, and an unaffordable acceptance leaves cash unchanged. The whole accepted
+fee stays held until delivery or full cancellation refund. Zero-fee rescues and
+free recovery with your own tug remain available. See the
+[world rules](WORLD_BUILDING.md#tug-rescue-rules-unreleased).
+
 ### Bringing fuel in the motorboat
 
 Buy fuel cans and drive the motorboat to your stranded vessel. Reboarding appears only when close enough for transfer. Reboard, use the carried fuel, then move your larger boat a hull length ahead of the motorboat and stop. **Attach motorboat tender** secures it astern. Tow both back; bring the tender itself into the landing approach, then secure it. A boathouse stores it inside; a fishing pier leaves it afloat at the berth. The motorboat keeps its own tank contents. Cargo moves with you when reboarding, subject to hold capacity. An offshore tender cannot be summoned to shore through the vehicle menu.
