@@ -1,3 +1,4 @@
+import { constructionRules, constructionRuleFields } from './construction-rules';
 import { npcAccountRuleFields } from './npc-account-rules';
 import { npcJourneyRuleFields } from './npc-journey-rules';
 import { npcBusinessLoadRuleFields } from './npc-business-load-rules';
@@ -1797,7 +1798,11 @@ export function act(w: World, id: string, a: Action): string {
         ['waterworks', 'boathouse'].includes(kind) && (a.x !== undefined || a.z !== undefined)
           ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
           : p;
-      requireThat(distance(p, site) <= 4, 'Move within four metres of the construction site');
+      const construction = constructionRules(w.settings);
+      requireThat(
+        distance(p, site) <= construction.constructionPlacementReach,
+        `Move within ${construction.constructionPlacementReach} metres of the construction site`,
+      );
       const architecture = a.architecture === undefined ? undefined : str(a.architecture);
       const style = a.style === undefined ? undefined : str(a.style);
       const size = a.size === undefined ? undefined : str(a.size);
@@ -1817,7 +1822,7 @@ export function act(w: World, id: string, a: Action): string {
         'Construction prohibited in this zone',
       );
       requireThat(
-        w.buildings.every((b) => distance(site, b) > 12),
+        w.buildings.every((b) => distance(site, b) > construction.constructionMinimumSpacing),
         'Too close to another building',
       );
       const model = customModel ? w.creator?.models.find((m) => m.id === customModel) : undefined;
@@ -1975,6 +1980,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(npcPricingRuleFields, key) ||
             Object.hasOwn(npcCargoRuleFields, key) ||
             Object.hasOwn(npcAccountRuleFields, key) ||
+            Object.hasOwn(constructionRuleFields, key) ||
             Object.hasOwn(npcJourneyRuleFields, key) ||
             Object.hasOwn(npcBusinessLoadRuleFields, key) ||
             key === 'loanTerms',
@@ -1983,6 +1989,8 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const constructionField =
+          constructionRuleFields[key as keyof typeof constructionRuleFields];
         const npcAccountField = npcAccountRuleFields[key as keyof typeof npcAccountRuleFields];
         const npcCargoField = npcCargoRuleFields[key as keyof typeof npcCargoRuleFields];
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
@@ -2019,6 +2027,7 @@ export function act(w: World, id: string, a: Action): string {
             npcBusinessLoadField?.max ??
               npcJourneyField?.max ??
               npcAccountField?.max ??
+              constructionField?.max ??
               npcCargoField?.max ??
               npcPricingField?.max ??
               npcBusinessField?.max ??
@@ -2034,6 +2043,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcBusinessLoadField) num(v, npcBusinessLoadField.min, npcBusinessLoadField.max, true);
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
+        if (constructionField) num(v, constructionField.min, constructionField.max);
         if (npcAccountField) num(v, npcAccountField.min, npcAccountField.max, true);
         if (npcCargoField) num(v, npcCargoField.min, npcCargoField.max, true);
         if (economyField) num(v, economyField.min, economyField.max, economyField.step === 1);

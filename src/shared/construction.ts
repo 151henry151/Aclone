@@ -1,3 +1,4 @@
+import { constructionRules } from './construction-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World } from './types.ts';
 import { worldBuildings } from './world-catalogue.ts';
@@ -8,5 +9,7 @@ export function constructionRefund(w: World, b: Building): number {
   const base =
     b.constructionCost ??
     Math.min(b.price, worldBuildings(w)[b.templateId ?? b.kind]?.price ?? b.price);
-  return Number.isSafeInteger(base) && base > 0 ? Math.floor(base * 0.75) : 0;
+  return Number.isSafeInteger(base) && base > 0
+    ? Math.floor(base * constructionRules(w.settings).constructionRefundShare)
+    : 0;
 }

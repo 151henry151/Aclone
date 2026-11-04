@@ -1,3 +1,4 @@
+import { constructionRules } from './construction-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { constructionSiteReason } from './construction-site.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
@@ -59,7 +60,11 @@ export function nearestWaterworksSite(w: World, p: Point) {
   return entry.sites
     .filter(
       (s) =>
-        w.buildings.every((b) => Math.hypot(b.x - s.x, b.z - s.z) > 20) &&
+        w.buildings.every(
+          (b) =>
+            Math.hypot(b.x - s.x, b.z - s.z) >
+            Math.max(20, constructionRules(w.settings).constructionMinimumSpacing),
+        ) &&
         !w.zones.some((z) => z.kind === 'noBuild' && Math.hypot(z.x - s.x, z.z - s.z) < z.radius) &&
         !constructionSiteReason(w, {
           id: 'construction',

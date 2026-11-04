@@ -1,3 +1,8 @@
+import {
+  constructionRefundPercentage,
+  constructionRules,
+  type ConstructionRules,
+} from '../shared/construction-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingArchitectures } from '../shared/building-architecture';
 import {
@@ -29,8 +34,8 @@ interface Draft {
   rotation: number;
 }
 const drafts = new Map<string, Draft>();
-export function buildMenuHtml() {
-  return `<p>Choose a design, review its materials and turn it before placing the foundation at your current position. Deliver materials afterwards; cancel an unfinished site for 75% of its base cash cost.</p>
+export function buildMenuHtml(settings: Partial<ConstructionRules> = {}) {
+  return `<p>Choose a design, review its materials and turn it before placing the foundation at your current position. Deliver materials afterwards; cancel an unfinished site for ${constructionRefundPercentage(settings)} of its base cash cost.</p>
   <div class="build-designer" data-build-designer>
     <div class="build-controls"><label>Building<select data-design="kind" aria-label="Building type"></select></label>
     <label>Architectural model<select data-design="architecture" aria-label="Architectural model"></select></label>
@@ -150,7 +155,13 @@ export function mountBuildMenu(
     }
     refusal ||= constructionSiteReason(w, b) ?? '';
     b.foundationY = foundationProfile(w, b).level;
-    if (w.buildings.some((o) => Math.hypot(o.x - p.x, o.z - p.z) <= 12))
+    if (
+      w.buildings.some(
+        (o) =>
+          Math.hypot(o.x - p.x, o.z - p.z) <=
+          constructionRules(w.settings).constructionMinimumSpacing,
+      )
+    )
       refusal ||= 'Too close to another building';
     if (onFarmLand(w, p.x, p.z, Math.max(bounds.width, bounds.depth) / 2))
       refusal ||= 'Construction would cover farmland';

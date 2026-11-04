@@ -8,6 +8,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Added
 
+- Expose construction spacing, shoreline placement reach, respawn/town clearances and cancellation refunds as world rules; show the current refund share and keep resident site searches within the same spacing constraints.
+
 - Expose existing resident currency-conversion and account-trade budgets as world rules; use the saved last local world for off-world planning and retain ordinary transaction and cargo limits.
 
 - Expose resident living-cash advice and suggested lodging rates as world rules; preserve observed prices, actual owner permissions, posted rates and paid stays.

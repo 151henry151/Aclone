@@ -1,28 +1,28 @@
+import { constructionRules } from './construction-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World } from './types';
 import { buildingPlan } from './building-shapes';
 
 /** Shared arrival/death-recovery point. Keep enough room to turn a tractor. */
 export const PARISH_SPAWN = { x: 0, z: 17 } as const;
-export const SPAWN_CLEARANCE = 12;
-export function spawnReservations(w: Pick<World, 'towns' | 'zones'>) {
+type ReservationWorld = Pick<World, 'towns' | 'zones'> & Partial<Pick<World, 'settings'>>;
+export function spawnReservations(w: ReservationWorld) {
   return [
-    { ...PARISH_SPAWN, radius: SPAWN_CLEARANCE },
-    ...(w.towns ?? []).map((t) => ({ x: t.x, z: t.z, radius: 8 })),
+    { ...PARISH_SPAWN, radius: constructionRules(w.settings).spawnClearance },
+    ...(w.towns ?? []).map((t) => ({
+      x: t.x,
+      z: t.z,
+      radius: constructionRules(w.settings).townCentreClearance,
+    })),
     ...w.zones.filter((z) => z.kind === 'spawn'),
   ];
 }
-export function spawnReserved(
-  w: Pick<World, 'towns' | 'zones'>,
-  x: number,
-  z: number,
-  padding = 0,
-) {
+export function spawnReserved(w: ReservationWorld, x: number, z: number, padding = 0) {
   return spawnReservations(w).some((s) => Math.hypot(x - s.x, z - s.z) < s.radius + padding);
 }
 /** Check rotated walls, fittings and aprons, not merely the building's centre. */
 export function buildingSpawnReason(
-  w: Pick<World, 'towns' | 'zones'>,
+  w: ReservationWorld,
   b: Parameters<typeof buildingPlan>[0] & Pick<Building, 'x' | 'z' | 'rotation'>,
 ) {
   const plan = buildingPlan(b),

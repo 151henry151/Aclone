@@ -1,3 +1,4 @@
+import { constructionRules } from '../../shared/construction-rules';
 import { fundProject } from './project-funding.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { inputStockTarget, productionBudget, ownerBidRoutine } from './business-policy.ts';
@@ -137,7 +138,11 @@ export function pickBuildSite(w: World, p: Player, kind: string, style?: string)
         )
           continue;
         if (
-          !w.buildings.every((b) => distance(v, b) > radius + 20) ||
+          !w.buildings.every(
+            (b) =>
+              distance(v, b) >
+              Math.max(radius + 20, constructionRules(w.settings).constructionMinimumSpacing),
+          ) ||
           w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
         )
           continue;

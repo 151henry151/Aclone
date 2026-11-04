@@ -336,5 +336,10 @@
   "npcExchangeCreditLoad": 10,
   "npcAccountTradeCreditReserve": 10,
   "npcAccountTradeBuyLoad": 5,
-  "npcAccountTradeSellLoad": 100
+  "npcAccountTradeSellLoad": 100,
+  "constructionMinimumSpacing": 12,
+  "constructionPlacementReach": 4,
+  "spawnClearance": 12,
+  "townCentreClearance": 8,
+  "constructionRefundShare": 0.75
 }

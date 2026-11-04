@@ -66,10 +66,7 @@ test('editable terrain, water level and no-build zones govern siting; nearby pla
   const { w, p } = setup();
   const site = nearestWaterworksSite(w, p)!;
   assert.ok(site && waterworksSite(w, site));
-  assert.throws(
-    () => act(w, p.id, { type: 'construct', kind: 'waterworks', ...site }),
-    /four metres/,
-  );
+  assert.throws(() => act(w, p.id, { type: 'construct', kind: 'waterworks', ...site }), /4 metres/);
   p.x = site.x;
   p.z = site.z;
   w.zones.push({ id: 'protected', kind: 'noBuild', ...site, radius: 1000 });

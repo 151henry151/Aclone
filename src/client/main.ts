@@ -1,3 +1,4 @@
+import { constructionRefundPercentage } from '../shared/construction-rules';
 import { charterRules } from '../shared/charter-rules';
 import { economyRules, lighthouseWage } from '../shared/economy-rules';
 import { survivalRules, skillFits, skillSlotsUsed } from '../shared/survival-rules';
@@ -2066,7 +2067,7 @@ function renderPanel() {
   if (panel === 'construction') {
     modal(
       'Build something useful.',
-      buildMenuHtml() +
+      buildMenuHtml(world.settings) +
         `<h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world, me)}${foundTownForm(world, me)}`,
       true,
     );
@@ -2175,7 +2176,7 @@ function buildingWindow(b: Building) {
       .map(([i, n]) => `${n} ${esc(items[i]?.name ?? i)}`)
       .join(
         ', ',
-      )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}${selfOwned && !b.government && !b.lien ? `<details class="notice"><summary>Cancel construction</summary><p>Receive ${money(constructionRefund(world, b))} back (75% of the base cash cost). Construction tax and any materials already delivered are not returned. This removes the site.</p>${button('Cancel building and receive refund', 'cancelConstruction', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</details>` : ''}`;
+      )}</p>${button('Deliver construction materials', 'supply', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}${selfOwned && !b.government && !b.lien ? `<details class="notice"><summary>Cancel construction</summary><p>Receive ${money(constructionRefund(world, b))} back (${constructionRefundPercentage(world.settings)} of the base cash cost). Construction tax and any materials already delivered are not returned. This removes the site.</p>${button('Cancel building and receive refund', 'cancelConstruction', `data-building="${b.id}" ${!near ? 'disabled' : ''}`)}</details>` : ''}`;
     modal(b.name, html);
     refreshTradingPrices();
     return;

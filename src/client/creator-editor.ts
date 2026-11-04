@@ -1,3 +1,4 @@
+import { constructionRules, constructionRuleFields } from '../shared/construction-rules';
 import { npcAccountRules, npcAccountRuleFields } from '../shared/npc-account-rules';
 import { npcJourneyRules, npcJourneyRuleFields } from '../shared/npc-journey-rules';
 import { npcBusinessLoadRules, npcBusinessLoadRuleFields } from '../shared/npc-business-load-rules';
@@ -112,6 +113,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(npcPricingRuleFields),
     ...Object.keys(npcCargoRuleFields),
     ...Object.keys(npcAccountRuleFields),
+    ...Object.keys(constructionRuleFields),
     ...Object.keys(npcJourneyRuleFields),
     ...Object.keys(npcBusinessLoadRuleFields),
     'loanTerms',
@@ -169,6 +171,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Estimates use actual vehicle tuning and stocked Fuel quotes; walking costs no fuel. Zero unquoted allowance removes that fallback. Zero payback rejects paid new implements, retaining owned tools. Zero refuel threshold suppresses optional shopping; an empty tank can still walk or use carried fuel. Rules change plans, not actual travel costs or supplies.</p></fieldset>`;
+  const construction = constructionRules(settings);
+  const constructionFields = `<fieldset class="boat-death-settings"><legend>Construction rules</legend>${Object.entries(
+    constructionRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        construction[key as keyof typeof construction],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Spacing measures building centres; rotated footprints must also remain clear. Reach applies to shoreline placement. Spawn and town clearances protect buildings, fields and pastures. Refunds use the recorded base cash cost, excluding tax and materials. Zero removes only that buffer, reach or refund.</p></fieldset>`;
   const account = npcAccountRules(settings);
   const accountFields = `<fieldset class="boat-death-settings"><legend>Resident account trade budgets</legend>${Object.entries(
     npcAccountRuleFields,
@@ -483,6 +501,7 @@ export function settingsFields(settings: Settings = defaults) {
     pricingFields +
     cargoFields +
     accountFields +
+    constructionFields +
     journeyFields +
     businessLoadFields +
     `<fieldset><legend>Gathering grounds</legend>${field('Deposit recovery time multiplier', 'resourceRecoveryMultiplier', settings.resourceRecoveryMultiplier ?? 4, 'number', 'min="0.25" max="24" step="0.25"')}<p>Higher values replenish deposits more slowly. Default 4: three mineral/topsoil units every 40 real minutes; three logs every two real hours. Set 1 for the previous pace. Deposit sizes and gathering speed stay the same.</p></fieldset>` +

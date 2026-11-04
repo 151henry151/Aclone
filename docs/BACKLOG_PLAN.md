@@ -3142,3 +3142,71 @@ all three screenshots, with no browser errors. TypeScript catches three test-onl
 filter predicates that need explicit operation narrowing; annotate those types
 and rerun TypeScript cleanly without repeating unaffected runtime/browser gates.
 Changed-file Prettier and diff checks are clean. No full suite runs.
+
+Pushed and verified `1f2893a` on `backlog-implementation`. **Existing resident
+account trade budgets are done.**
+
+The NPC reserve/budget audit is complete for the listed scope. Remaining numeric
+menu-ranking weights, candidate tax/price adjustments and scheduling/API limits
+are not spending reserves or budgets. Existing action constraints (room capacity,
+rescue eligibility, service ranges and actual biological/vehicle costs) remain
+shared gameplay constraints; the listed gathering/production and vehicle rules
+below still need their own implementation. Valid ordinary producer budgets make
+the legacy 20,000 fallback branches unreachable; no new rule is added for dead
+fallback behavior. Loan tables, limits and credit weights have been exposed;
+loan delinquency lifecycle changes are not among this entry's named loan tables.
+
+### Gameplay rules — construction clearances, placement reach and refunds
+
+Before production, add Construction rules: `constructionMinimumSpacing` 12 m,
+`constructionPlacementReach` 4 m, `spawnClearance` 12 m and
+`townCentreClearance` 8 m (each 0–1,000 m), plus `constructionRefundShare` 0.75
+(range 0–1). Missing fields use shared JSON defaults. Spacing retains the existing
+strict greater-than centre-distance comparison and separate oriented footprint
+checks. Placement reach retains its inclusive boundary for remote shoreline sites.
+Spawn and town clearances protect rotated footprints/fields/pastures through the
+shared reservation helper; explicit spawn-zone radii remain their own settings.
+The one spawnClearance field also covers the later duplicate 12 m spawn-clearance
+bullet. Refunds remain floored shares of the recorded base cash cost, never tax,
+delivered materials or an edited asking price; old receipt-less saves retain the
+conservative base-value rule. Zero removes only that buffer/reach/refund; footprint
+collisions, terrain, reservations, permissions and funds remain enforced.
+
+Write failing construction-rules tests for exact default/missing/custom/zero and
+boundary behavior, server construction/shoreline reach, shared spawn/town geometry,
+NPC site selection, recorded/legacy refunds and atomic invalid settings, summary,
+editor, observations, designs and reload. Browser: save/reopen fields, see changed
+spacing refusal in the build preview and server acceptance after moving clear,
+see the configured refund percentage and amount, cancel once and verify cash,
+see zero refund and invalid input/reload; inspect screenshots and browser errors.
+Run new tests and affected construction-site/spawn-reserve/construction-cancel,
+civics-construction, npc-construction, farm/pasture reservation tests and guide
+request-size regression. Require TypeScript, Prettier, player/world-builder docs,
+README and imperative Unreleased entry before push. Expansion multipliers and
+farm/pasture sizes follow as separate slices.
+
+Construction red: all seven initial checks fail for absent defaults/validation,
+fixed spacing/reach/reservations/refunds and NPC site selection. Add an eighth
+check for shoreline site search and confirm the same spacing gap there before
+changing it. All eight now pass; refund tests include original receipts, edited
+prices, delivered materials, conservative legacy bases, zero and duplicate
+cancellation. Run the focused regressions and browser placement/refund flow next.
+
+Construction regression gates pass: 55 relevant checks in 6.0 seconds, clean
+TypeScript and changed-file Prettier. Default desktop/phone cancellation passes
+in 17.1/13.9 seconds; the custom placement/refund/invalid-input flow passes in
+32.3 seconds. Adjust screenshot scrolling to expose the refusal and invalid field;
+that flow passes again in 33.9 seconds. Inspection shows all fields, the refusal,
+custom refund and zero-refund panel clearly, with no browser errors.
+
+A final percentage-formatting regression reproduces 28.999999999999996% for a
+0.29 share. Use a shared display formatter without changing calculation precision.
+All 24 construction/guide checks and TypeScript pass after that fix. The browser
+rerun terminates with exit 143 before a test result; retry the affected flow using
+29% and zero. Do not repeat the unrelated gates.
+
+The final browser retry passes in 33.8 seconds: 29% is displayed cleanly and the
+ordinary refund matches the recorded cost; zero refunds, walking clear to build,
+settings persistence and invalid-input refusal all pass without browser errors.
+Inspect the updated refund screenshot. All slice criteria are met; no full suite
+was run and no live state was touched.

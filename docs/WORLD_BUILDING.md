@@ -1150,3 +1150,22 @@ eligibility or existing journeys. Local conversion uses the current world;
 off-world planning uses the resident's saved last local world until landing in
 another. Defaults apply when world context or fields are absent. Saves, portable
 designs, observations and summaries preserve these policies.
+
+## Construction rules (unreleased)
+
+**F10 → Rules → Construction rules** configures `constructionMinimumSpacing`
+(default 12 m), `constructionPlacementReach` (4 m), `spawnClearance` (12 m),
+`townCentreClearance` (8 m) and `constructionRefundShare` (0.75). Distance rules
+accept 0–1,000 m; the refund share accepts 0–1. Values persist in saves and designs.
+
+Building centres must be strictly farther apart than the minimum spacing;
+rotated footprints must also remain clear. Remote shoreline placement accepts
+the reach boundary. Respawn/town clearances protect buildings, fields and
+pastures; explicit spawn zones retain their own radii. Zero removes only the
+corresponding buffer or reach, retaining terrain, property and footprint checks.
+
+Unfinished-site cancellation floors the configured share of its recorded base
+cash cost, excluding taxes and delivered materials. Editing the asking price
+cannot inflate a recorded refund. Older receipt-less sites use the lower saved
+price/catalogue base. Zero means no cash refund. The build menu and cancellation
+panel display the current share; a rule change affects subsequent cancellations.
