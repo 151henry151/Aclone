@@ -3,7 +3,7 @@
 import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { createWorld } from '../src/shared/simulation';
+import { createWorld, makeBuilding } from '../src/shared/simulation';
 import { expandPuddlewickIsland } from '../src/server/puddlewick-island';
 const out = process.env.PROFILE_OUT ?? 'output/island-performance';
 mkdirSync(out, { recursive: true });
@@ -11,6 +11,20 @@ const original = createWorld('puddlewick', 'Puddlewick', 'server');
 original.settings.mapSize = 18500;
 original.terrainMapSize = 12500;
 original.townLayout = 2;
+const population = Number(process.env.PROFILE_POPULATION ?? 0);
+if (!Number.isInteger(population) || population < 0 || population > 200)
+  throw Error('PROFILE_POPULATION must be 0–200');
+if (population)
+  for (let i = 0; i < 24; i++) {
+    const b = makeBuilding(
+      'profile-home-' + i,
+      'home',
+      300 + (i % 8) * 35,
+      -300 + Math.floor(i / 8) * 35,
+    );
+    b.owner = 'resident-' + i;
+    original.buildings.push(b);
+  }
 const expanded = structuredClone(original),
   started = performance.now();
 expandPuddlewickIsland(expanded);
@@ -57,9 +71,10 @@ try {
   import {addPlayer} from '/src/shared/simulation.ts';import {terrainHeight} from '/src/shared/terrain.ts';import {defaultCreator} from '/src/shared/creator.ts';
   const w=${JSON.stringify(world)};w.settings.time=40000;w.settings.dayLength=0;w.climate={snow:0,wetness:0};w.creator=defaultCreator();w.creator.weather='clear';
   const p=addPlayer(w,'profile','Surveyor');p.online=true;p.engine=false;p.x=0;p.z=0;p.y=terrainHeight(w,0,0);
+  for(let i=0;i<${population};i++){const q=addPlayer(w,'resident-'+i,'Resident '+i);Object.assign(q,{online:true,vehicle:i%3?0:5,engine:false,x:45+(i%8)*9,z:30+Math.floor(i/8)*12});q.y=terrainHeight(w,q.x,q.z);}
   const stats={renders:[],cpu:[],longTasks:[]};new PerformanceObserver(list=>stats.longTasks.push(...list.getEntries().map(e=>({at:e.startTime,ms:e.duration})))).observe({type:'longtask',buffered:true});
   const game=new GameScene(document.getElementById('view'));const draw=game.renderer.render.bind(game.renderer);
-  game.renderer.render=(...args)=>{const at=performance.now();draw(...args);stats.renders.push(at);stats.cpu.push(performance.now()-at);};
+  game.renderer.render=(...args)=>{const visible=game.renderer.getRenderTarget()===null;const at=performance.now();draw(...args);if(visible){stats.renders.push(at);stats.cpu.push(performance.now()-at);}};
   const begin=performance.now();game.setWorld(w,p.id);window.fixture={w,p,game,stats,begin,terrainHeight};
   window.locate=(point)=>{Object.assign(p,point);p.y=terrainHeight(w,p.x,p.z);w.creator.weather=point.storm?'rainstorm':'clear';game.setWorld(w,p.id);};
   window.mapOpen=()=>{const h=document.getElementById('map');h.style.display='block';const map=new ParishMap(h,w,p);map.zoom=.016/map.unitScale();map.bounds=map.frame({x:0,z:-14500});map.draw();map.panTo(0,-14500);window.map=map;};
@@ -92,8 +107,30 @@ try {
         !process.env.PROFILE_CASES.split(',').includes(location.name)
       )
         continue;
-      await page.evaluate((p) => (window as any).locate(p), location);
+      const from = await page.evaluate((p) => {
+        const f = (window as any).fixture;
+        const from = { x: f.p.x, z: f.p.z };
+        f.stats.renders = [];
+        f.stats.cpu = [];
+        f.stats.longTasks = [];
+        (window as any).locate(p);
+        return from;
+      }, location);
       await page.waitForTimeout(Number(process.env.PROFILE_WARM_SECONDS ?? 10) * 1000);
+      const transition = await page.evaluate(() => {
+        const f = (window as any).fixture;
+        const spans = f.stats.renders
+          .slice(1)
+          .map((t: number, i: number) => t - f.stats.renders[i])
+          .sort((a: number, b: number) => a - b);
+        return {
+          p95: spans[Math.floor((spans.length - 1) * 0.95)],
+          max: spans.at(-1),
+          over100ms: spans.filter((t: number) => t > 100).length,
+          longTasks: f.stats.longTasks,
+          streaming: !!f.game.ground.pending || !!f.game.woods.pending,
+        };
+      });
       await cdp.send('HeapProfiler.collectGarbage');
       await page.evaluate(() => {
         const s = (window as any).fixture.stats;
@@ -150,6 +187,14 @@ try {
           debug = gl.getExtension('WEBGL_debug_renderer_info');
         return {
           ...stats,
+          position: { x: (window as any).fixture.p.x, z: (window as any).fixture.p.z },
+          population: Object.keys((window as any).fixture.w.players).length,
+          buildings: (window as any).fixture.w.buildings.length,
+          groundKeys: game.ground.group.children
+            .map((t: any) => [t.userData.cx, t.userData.cz].join(':'))
+            .sort(),
+          pixelRatio: game.renderer.getPixelRatio(),
+          quality: game.qualityLabel,
           renderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : 'unknown',
           gpu: game.renderer.info.memory,
           draws: game.renderer.info.render.calls,
@@ -170,6 +215,13 @@ try {
         world: name,
         location: location.name,
         coldMs,
+        from,
+        transition,
+        viewport: page.viewportSize(),
+        cpuThrottle: Number(process.env.PROFILE_THROTTLE ?? 1),
+        renderCpuP95: [...data.cpu].sort((a: number, b: number) => a - b)[
+          Math.floor((data.cpu.length - 1) * 0.95)
+        ],
         frames: data.renders.length,
         p50: pct(0.5),
         p95: pct(0.95),
@@ -224,7 +276,43 @@ try {
           pending: !!m.pendingTerrain,
         };
       });
-      writeFileSync(out + '/map.json', JSON.stringify(map, null, 2));
+      const interactions = [];
+      for (const operation of ['zoom-in', 'pan-right', 'zoom-out']) {
+        const start = performance.now();
+        await page.evaluate(() => {
+          (window as any).fixture.stats.longTasks = [];
+        });
+        if (operation === 'pan-right')
+          await page
+            .getByRole('region', {
+              name: 'Parish map; drag, scroll or use arrow keys to pan',
+              exact: true,
+            })
+            .press('ArrowRight');
+        else
+          await page
+            .getByRole('button', {
+              name: operation === 'zoom-in' ? 'Zoom in' : 'Zoom out',
+              exact: true,
+            })
+            .click();
+        await page.waitForFunction(
+          () =>
+            document.querySelector('.map-terrain')?.getAttribute('data-rendered-job') ===
+            String((window as any).map.terrainSerial),
+          undefined,
+          { timeout: 120000 },
+        );
+        interactions.push({
+          operation,
+          ms: performance.now() - start,
+          ...(await page.evaluate(() => ({
+            zoom: (window as any).map.zoom,
+            longTasks: (window as any).fixture.stats.longTasks,
+          }))),
+        });
+      }
+      writeFileSync(out + '/map.json', JSON.stringify({ open: map, interactions }, null, 2));
     }
     if (errors.length) throw Error(errors.join('\n'));
     await page.close();

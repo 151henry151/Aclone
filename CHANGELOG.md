@@ -153,6 +153,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Changed
 
+- Extend island verification tools with populated travel and return routes, phone/CPU measurements, map navigation and summer summit views; verify alpine weather and umbrellas in the real browser.
+
 - Raise default base maximum health to 65,000 while retaining ordinary recovery for existing characters.
 - Render untouched gathering grounds as natural features without abandoned tools or worked debris; add configurable settlement/use wear, retain an explicit legacy scenery mode, and update loaded sites when their state changes.
 - Keep a building that stands outside every town on the parish map below 25% zoom. Buildings inside a town still fold into that town's name.

@@ -8,7 +8,7 @@ import { expandPuddlewickIsland } from '../src/server/puddlewick-island';
 import { riverBanks } from '../src/shared/inland-water';
 import { RIVER_DOCK, riverDockSite } from '../src/shared/river-dock';
 import { constructionSiteReason, foundationProfile } from '../src/shared/construction-site';
-const dir = 'output/northern-island';
+const dir = process.env.PREVIEW_OUT ?? 'output/northern-island';
 mkdirSync(dir, { recursive: true });
 const w = createWorld('puddlewick', 'Puddlewick', 'server');
 w.settings.mapSize = 18500;
@@ -78,7 +78,7 @@ try {
  globalThis.__ACLONE_BASE__='/';
  import * as T from '/node_modules/three/build/three.module.js';import {GameScene} from '/src/client/scene.ts';import {ParishMap} from '/src/client/parish-map.ts';
  import {defaultCreator} from '/src/shared/creator.ts';import {addPlayer} from '/src/shared/simulation.ts';import {terrainHeight} from '/src/shared/terrain.ts';import {riverBanks} from '/src/shared/inland-water.ts';
- const w=${JSON.stringify(w)};w.settings.time=40000;w.settings.dayLength=0;w.time=90*600;w.climate={snow:0,wetness:0};w.creator=defaultCreator();w.creator.weather='clear';
+ const w=${JSON.stringify(w)};w.settings.time=40000;w.settings.dayLength=0;w.time=130*600;w.climate={snow:0,wetness:0};w.creator=defaultCreator();w.creator.weather='clear';
  const r=w.northernIsland.rivers[0];const p=addPlayer(w,'preview','Explorer');Object.assign(p,{x:r.points[60].x+20,z:r.points[60].z,vehicle:0,online:true,engine:false,lights:false});p.y=terrainHeight(w,p.x,p.z);
  const original=${JSON.stringify(original)};const savedBuildings=w.buildings;w.buildings=[];const game=${process.env.MAP_ONLY ? 'null' : "new GameScene(document.getElementById('view'))"};if(game){game.onLoading=(message)=>console.log('LOAD '+message);game.setWorld(w,p.id);}window.ready=()=>game?.ready??true;window.game=game;
  window.show=async(kind)=>{game.renderer.setAnimationLoop(null);document.getElementById('map').style.display='none';
@@ -86,6 +86,7 @@ try {
  if(kind==='headwaters'){point=r.points[20];cam=[point.x+105,point.level+45,point.z+90];target=[point.x-15,point.level+4,point.z-40];caption='Mountain headwaters · tractor-fordable shallows';}
  if(kind==='river'){point=r.points[Math.floor(r.points.length*.57)];cam=[point.x+130,point.level+90,point.z+160];target=[point.x-70,point.level,point.z-100];caption='Alder River · a widening valley through the northern forests';}
  if(kind==='bank'){point=r.points[Math.floor(r.points.length*.57)];cam=[point.x+35,point.level+8,point.z+30];target=[point.x-15,point.level+1,point.z-25];caption='Alder River · riverbank and moving water';}
+ if(kind==='summit'){const m=w.northernIsland.mountain;const h=terrainHeight(w,m.x,m.z);point={x:m.x,z:m.z,level:h};cam=[m.x+100,h+45,m.z+100];target=[m.x,h-5,m.z];caption='Northern summit · permanent snow in summer';}
  if(kind==='mountain'){point=r.points[30];cam=[point.x+230,point.level+180,point.z+100];target=[w.northernIsland.mountain.x,w.northernIsland.mountain.height-100,w.northernIsland.mountain.z];caption='The northern mountain · headwaters begin below the summit';}
  if(kind==='pond'){point=w.northernIsland.ponds[3];cam=[point.x+180,point.level+100,point.z+160];target=[point.x,point.level,point.z];caption='Northern pond country · woodland and sheltered water';}
  if(kind==='coast'){const b=w.coastalBluffs.find(b=>b.width>600);point={x:b.x,z:b.z,level:0};cam=[b.x+Math.sin(b.angle)*250,b.height+120,b.z+Math.cos(b.angle)*250];target=[b.x,b.height*.4,b.z];caption='Rocky headlands · long cliff coasts and sea stacks';}
@@ -93,9 +94,10 @@ try {
  else w.buildings=[];
  const ri=r.points.indexOf(point);const bank=ri>=0?riverBanks(r.points)[ri].left:null;const reach=bank?Math.hypot(bank.x-point.x,bank.z-point.z):1;p.x=bank?bank.x+(bank.x-point.x)/reach*5:point.x+15;p.z=bank?bank.z+(bank.z-point.z)/reach*5:point.z;p.y=terrainHeight(w,p.x,p.z);p.heading=Math.atan2(target[0]-p.x,target[2]-p.z);
  game.setWorld(w,p.id);
+ const buildStart=performance.now();while(game.worldBuild||game.snowJob){if(performance.now()-buildStart>90000)throw Error('Scenery failed to settle');await new Promise(r=>setTimeout(r,0));}
  for(let i=0;i<6000;i++){const ground=game.ground.update(point.x,point.z,12),woods=game.woods.update(point.x,point.z,12),horizon=game.horizon.prepare(12);if(!ground&&!woods&&!horizon)break;await new Promise(r=>setTimeout(r,0));if(i===5999)throw Error('Terrain failed to settle');}
  game.lastTime=performance.now()-34;game.renderTime=-Infinity;game.frame(true);game.camera.position.set(...cam);game.camera.lookAt(...target);game.sky.position.copy(game.camera.position);game.horizon.update(w,game.camera,game.ground,game.ocean.level.value,1);game.renderer.render(game.scene,game.camera);
- document.getElementById('caption').innerHTML=caption+'<small>Aclone · northern island expansion · unreleased game preview</small>';
+ document.getElementById('caption').innerHTML=caption+'<small>Aclone · northern island expansion · current branch verification</small>';
  const ray=new T.Raycaster(new T.Vector3(point.x,point.level+2000,point.z),new T.Vector3(0,-1,0));game.scene.updateMatrixWorld(true);const hits=ray.intersectObjects([game.ground.group,game.inland.group,game.horizon.group],true).slice(0,8).map(h=>({y:h.point.y,type:h.object.parent===game.inland.group?'water/bank':h.object.parent===game.horizon.group?'horizon':'ground'}));
  if(Math.hypot(game.inland.centre.value.x-p.x,game.inland.centre.value.y-p.z)>1)throw Error('Water visibility has not caught up to camera');
  if(ri>=0){const ground=hits.find(h=>h.type==='ground'),water=hits.find(h=>h.type==='water/bank');if(!ground||!water||ground.y>=water.y)throw Error('River is below rendered terrain');}

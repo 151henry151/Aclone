@@ -4413,3 +4413,157 @@ browser network flow passes again after the change (normal entry, two neighbours
 changed-file Prettier and diff checks pass. Alpine verification remains a separate
 pending harness check: enable normal server ticks/broadcasts after relocating the
 current player object; disabling ticks prevented the relocation from being sent.
+
+**Initial snapshot gate slice done and pushed:** `1d19a0c` (remote SHA verified).
+Alpine browser verification passes in 23.4 seconds after correcting the local
+fixture's disabled broadcasts: summer lowland rain opens the walker umbrella,
+summit snow closes it, and clear weather hides precipitation. Production alpine
+weather/umbrella code matches the claim and is left unchanged.
+
+### River handoff requirement verdicts
+
+- **Matches — geography/preservation.** Current northern-island tests verify the
+  9.5–10.5 land-area ratio, exact sampled southern terrain/woodland and original
+  resource identities/depletion/buildings, idempotent migration and design
+  round-trips. Six provinces have tested strengths/scarcities without increased
+  overall deposit density. Keep the shipped generator.
+- **Matches — river topology and navigation.** Five descending channels, wet beds
+  between survey points, smooth banks, sediment, upper fords and impassable lower
+  crossings have direct terrain/travel tests. Current renderer/map views below
+  verify the claimed appearance. Both small boat slots also pass an actual
+  movement-physics approach to a generated berth.
+- **Matches — alpine climate/umbrellas.** Seasonal/permanent summit coverage and
+  gradual local precipitation pass unit tests; actual summer HUD, walking
+  umbrella and clear-weather browser checks pass. Keep shipped behavior.
+- **Fixed gaps — inland integration.** Recovery/towing/tender/lifeboat/death
+  elevation (`d8c8a20`), river rod fishing (`94e6e16`), recovery eligibility/names
+  (`c938691`), and the plain landing designer/construction bill (`72c84c9`) pass
+  their recorded unit/browser checks. The current dock rules preserve defaults
+  and configurable depth/vessel limits; motorboat and canal moorings both survive
+  reconnect with exact fuel and local elevation.
+- **Separate future work.** Cargo/quay mechanics, ford-aware road routing and
+  bridges remain their own Planned sections; this audit does not implement them.
+- **Verified with recorded limits.** Full map/watershed/matched southern views,
+  rendered bank/dock/summer summit, and populated travel/phone measurements below.
+  Network join/reconnect/privacy/flow control now pass, including the newly fixed
+  initial-snapshot queue (`1d19a0c`).
+
+**Populated desktop route verification:** run alone with
+`PROFILE_POPULATION=12 PROFILE_OUT=output/river-handoff-verification/performance-desktop tsx scripts/island-performance.ts`.
+Fixture: 13 visible players including the surveyor, 39 buildings (24 added homes),
+1280×800, Performance quality/pixel ratio 0.85, i7-7700HQ/Quadro M1200; generated
+worlds, no live population or server/NPC simulation. Each location has a 10-second
+transition plus 15-second sample. Original and expanded town both measure 33.8 ms
+p95. Expanded river/forest/summit/storm-coast/return-town p95 values are
+36.2/35.8/35.0/35.5/33.8 ms; no measured frame exceeds 100 ms (steady maximum
+57 ms). The river transition has one 90 ms long task; other transitions have none.
+Measured JS heap is 44.1 MiB in expanded town, peaks at 70.7 MiB at the river,
+and returns to 45.9 MiB. Render CPU p95 spans 3.6–9.8 ms on expanded routes.
+
+Positions prove travel away from town and a return from (120,4560) to (0,0);
+returned tile keys match the original town's 248 cells and 20 scenery chunks,
+with 239 draw calls in both town visits. These fixtures relocate between regions
+and then move locally; they do not simulate a continuous cross-island journey.
+River/forest streaming remains active during movement. Full-map opening and
+zoom-in/pan-right/zoom-out complete without long tasks or page errors; measured
+interaction/worker completion times are 229/13/159 ms. Do not interpret warm
+initialization timings as cold-load speedups or extrapolate to all hardware.
+
+**Constrained viewport verification:** run alone with
+`PROFILE_WORLD=expanded PROFILE_CASES=town,river,return-town PROFILE_POPULATION=12 PROFILE_PHONE=1 PROFILE_THROTTLE=4 PROFILE_OUT=output/river-handoff-verification/performance-phone tsx scripts/island-performance.ts`.
+At 390×844 and 4× CPU throttling, town/river/return-town p95 is 34.5/44.7/35.0 ms,
+with steady maxima 56.3/64.0/37.0 ms and no sampled steady frame over 100 ms.
+The initial fixture preparation takes 47 seconds. The river relocation records
+one **203 ms main-thread task**, plus four 50–60 ms tasks: constrained transition
+work still hitches, so this is not an all-device smoothness guarantee. The fixture
+jumps roughly 24 km before moving locally, rather than walking that journey.
+After returning, the camera is at town and 123 of its 248 ground cells are loaded
+at sample end; background streaming remains active. Desktop return is fully
+settled; do not claim the same for this throttled sample. Heap returns from
+61.9 MiB at the river to 42.5 MiB (initial town 42.7 MiB); map open/navigation
+completes with no long tasks/errors (zoom/pan/zoom completion 427/186/252 ms).
+These limitations are recorded, not hidden by a new performance threshold.
+
+**Actual renderer/map views:**
+`PREVIEW_GPU=1 SHOTS=bank,dock,summit PREVIEW_OUT=output/river-handoff-verification/views tsx scripts/northern-island-preview.ts`
+passes, including map overview/local-detail assertions and river raycasts.
+Inspect all eight PNGs: bank, dock, summer summit, full island, watershed, river
+valley, original south and expanded south. The bank sample has rendered water at
+70.025 m above its 68.116 m ground; the boat/dock render at the local 69.93 m
+reach, and the summer summit is covered at 1,423.84 m. River outlines are
+continuous, banks are smooth, and the southern land/coastline shapes match.
+Contour label placement differs with map sampling; exact sampled southern
+terrain/resource preservation is established by the unit tests, not screenshot
+pixel identity. Preview generation reports no page errors.
+
+The fully settled bank/dock previews submit 4.1/6.5 million triangles at their
+1600×1000 review camera angles. The short moving river benchmark still had
+streaming active, so run a focused desktop river sample with 90 seconds of
+preparation before its 15-second movement sample to assess the loaded view.
+This follow-up is justified by the newly observed geometry load; no broader
+suite rerun is needed.
+
+**Final navigation coverage check:** the construction browser exercises both boat
+slots at the berth, but does not sail an approach. Before declaring that handoff
+claim matched, add a focused generated-bank simulation check for both canal boat
+and motorboat: start eight metres along the berth axis, drive under normal hull
+collision physics into boarding range, remain at local river elevation, then
+mooring/disembark/reboard must preserve fuel and position. Run the river-dock unit
+file; if a real failure appears, fix it before closing this checkpoint.
+
+**Longer river measurement:** the isolated 90-second preparation plus 15-second
+movement run passes without page errors. It renders 4.93 million triangles,
+186 draw calls, 132 ground tiles and 23 tree chunks at sample end. Frame p95 is
+37.4 ms, maximum 46.2 ms, render CPU p95 6.4 ms, JS heap 55.9 MiB, with no long
+tasks or >100 ms frames during the movement sample. The preceding preparation
+records 99/74/76/73 ms tasks and a 94.9 ms maximum frame. Streaming is still active
+after 90 seconds and during movement: this is a substantially loaded view, not
+proof that every distant cell has settled. Keep this limitation and the fully
+settled visual previews separate. Evidence:
+`output/river-handoff-verification/performance-settled-river/` (directory name
+identifies the intended check, not a claim that streaming completed).
+
+**Navigation coverage result:** both boat slots sail the eight-metre approach
+under the existing hull physics, reach within 0.3 m of the berth at local river
+height, disembark and reboard with exact remaining fuel. All nine river-dock
+tests pass in 2.0 seconds. The first assertion incorrectly looked for fuel on
+`mooredBoats`; existing storage keeps it with the player's fuel-slot state.
+Correct the fixture's fuel-slot identity and assert that documented storage plus
+reboarded fuel. This was a test-fixture mistake, not a production gap. Existing
+navigation code matches and remains unchanged. The real browser construction,
+boarding, mooring, reconnect and larger-vessel refusal results above still apply.
+
+### Proposed release checkpoint — finished feature boundary
+
+Cut the next release from this branch after Henry authorizes deployment. Do not
+begin another Planned section before that decision. This is a usable boundary:
+all included features and rule batches have their own completed acceptance
+checks; the unfinished part of the rules section adds further independent
+settings, with existing behavior remaining in place meanwhile. No new cargo,
+parked-vehicle, forestry or aviation system is partly implemented in this cut.
+
+- Reviewed all 20 shipped claims; leave 17 matches intact and include the three
+  verified corrections (motor-free HUD, menu zoom, charter tuning).
+- Finish seven of 25 eligible Planned sections: landing, flight terrain/towns,
+  snow walking, natural gathering scenery, fuel tanker, canoes and CB radios.
+- Include the finished survival/needs, economy/trade, construction,
+  gathering/farming/fishing/trawling and vehicle/travel rule batches. Preserve
+  and expose the existing irrigation formula, with configurable defaults.
+- Include the Lightmun scene-freeze fix, inland recovery/fishing/eligibility and
+  landing-bill corrections, and initial-snapshot flow-control fix. Close the
+  river handoff with current code/tests/browser evidence and the measured
+  performance limitations above.
+- Resume later at world/weather/environment rules, then follow the remaining
+  dependency order. Piloted spaceflight remains excluded.
+
+Release verification uses the relevant tests and affected browser flows recorded
+above, not a new full-suite run. The final audit itself adds verification scripts,
+tests and documentation only; it changes no gameplay. The 21 northern-island,
+alpine-weather, umbrella and map-terrain-job tests pass in 7.0 seconds
+(`tsx --test --test-concurrency=2 tests/northern-island.test.ts tests/alpine-weather.test.ts tests/umbrella.test.ts tests/map-terrain-job.test.ts`).
+The nine river-dock tests and actual alpine browser check pass as recorded above.
+`npx tsc --noEmit`, changed-file `npx prettier --write` and `git diff --check`
+pass. `npx vite build` also succeeds (5.44 seconds); it reports dependency pure-
+annotation warnings and the large main-chunk advisory, with no build errors.
+Keep version 0.114.5 and all changes under Unreleased. No server is changed by
+this checkpoint.

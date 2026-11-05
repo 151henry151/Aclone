@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, addPlayer, act, makeBuilding } from '../src/shared/simulation';
+import { createWorld, addPlayer, act, makeBuilding, move } from '../src/shared/simulation';
 import { expandPuddlewickIsland } from '../src/server/puddlewick-island';
 import { riverBanks } from '../src/shared/inland-water';
 import { riverDepth } from '../src/shared/inland-travel';
@@ -248,3 +248,47 @@ test('river depth edits gate existing landings and preserve moored boats until a
   assert.equal(p.fuel, 23);
   assert.equal(copy.mooredBoats?.[mooringKey(p.id, 3)], undefined);
 });
+
+for (const slot of [CANAL_BOAT, MOTORBOAT])
+  test(`vessel ${slot} can approach a generated river berth under normal movement physics`, () => {
+    const copy = structuredClone(w),
+      dock = usableDock();
+    copy.buildings.push(dock);
+    const site = riverDockSite(copy, dock)!;
+    const p = addPlayer(copy, 'approaching-skipper', 'Approaching skipper');
+    Object.assign(p, {
+      vehicle: slot,
+      fuelVehicle: slot,
+      fleet: [0, 5, slot],
+      online: true,
+      engine: true,
+      fuel: 23,
+      x: site.berth.x - Math.sin(site.heading) * 8,
+      z: site.berth.z - Math.cos(site.heading) * 8,
+      heading: site.heading,
+      y: site.level,
+      speed: 0,
+    });
+    let closest = Infinity;
+    for (let i = 0; i < 900; i++) {
+      move(copy, p, { throttle: 0.25, steer: 0, boost: false }, 1 / 30);
+      const distance = Math.hypot(p.x - site.berth.x, p.z - site.berth.z);
+      closest = Math.min(closest, distance);
+      assert.ok(
+        Math.abs(p.y - surfaceWaterLevel(copy, p.x, p.z)) < 0.1,
+        'float at local river elevation',
+      );
+      if (distance < 0.3) break;
+    }
+    assert.ok(closest < 0.3, `approach reaches berth, closest ${closest} m`);
+    p.speed = 0;
+    p.boatThrottle = 0;
+    const fuel = p.fuel;
+    act(copy, p.id, { type: 'vehicle', slot: 5, building: dock.id });
+    assert.equal(p.vehicle, 5);
+    assert.equal(copy.mooredBoats?.[mooringKey(p.id, slot)]?.landing, dock.id);
+    assert.equal(p.fuel, fuel);
+    act(copy, p.id, { type: 'vehicle', slot, building: dock.id });
+    assert.equal(p.fuel, fuel);
+    assert.ok(Math.hypot(p.x - site.berth.x, p.z - site.berth.z) < 0.01);
+  });

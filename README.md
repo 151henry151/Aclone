@@ -242,6 +242,8 @@ Version 0.96.3 fixed small position pullbacks on server updates and unnecessary 
 
 Collision regression tests cover driving out of overlapping worksite walls and equipment yards, including rotated models, without passing through neighbouring buildings.
 
+For isolated island travel and populated/mobile rendering checks, see the [geography verification commands](docs/NORTHERN_ISLAND.md). They generate local fixtures and do not connect to production.
+
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 
 CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
