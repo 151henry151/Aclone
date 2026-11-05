@@ -32,6 +32,15 @@ historical results remain recorded accurately.
 
 ## Release checkpoint — Lightmun freeze takes priority
 
+**Checkpoint ready for Henry's deployment decision (2026-11-04).** The Lightmun
+fix (`f88efd6`), plain river landing bill (`72c84c9`), initial-snapshot gate
+(`1d19a0c`), and final river/populated-travel audit (`5fc18b8`) are committed,
+pushed and remote-SHA verified. All included slice gates pass; the current
+performance limits and completed/remaining scope are recorded at the end of this
+plan. Stop new backlog implementation here until Henry decides to deploy and
+resume. The branch remains unreleased at version 0.114.5; no deployment, live
+server change, player grant or pull request has occurred.
+
 Henry requested a stable deployment checkpoint on 2026-11-04. Pause new backlog
 features after the already finished rules slices. First fix the confirmed scene
 freeze in `output/performance-lightmun-2026-11-04/investigation.txt`, finish the
@@ -4567,3 +4576,9 @@ pass. `npx vite build` also succeeds (5.44 seconds); it reports dependency pure-
 annotation warnings and the large main-chunk advisory, with no build errors.
 Keep version 0.114.5 and all changes under Unreleased. No server is changed by
 this checkpoint.
+
+**River completion/populated-travel audit done and pushed:**
+`5fc18b820ba31b777b691ca93a552737d82d0d44` (remote SHA verified). This closes the
+river handoff at the release checkpoint, with the documented streaming/device
+limitations. Preserve local evidence under `output/`; do not commit it or private
+world captures. Pause here for Henry's explicit deployment authorization.
