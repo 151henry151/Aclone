@@ -49,11 +49,39 @@ remains independent of the decorative clock. In **Layout**, switch generated
 vegetation and roads/streetlights on or off, or choose natural weather, clear
 skies, rain, snow or a storm. Weather overrides affect crops, accumulated snow
 and traction as well as visuals. Snow adds
-12 cm per game day and snowstorm adds 48 cm; leaving either override enabled
+12 cm per game day by default and snowstorm adds 48 cm; leaving either override enabled
 keeps accumulating snow. Clear skies allow daytime thaw (12 cm per sunny day),
 while rain/overcast skies and night do not. Winter retains its first 4 cm until
 spring. A frozen night clock prevents thaw; a frozen sunny clock supplies
 continuous sunlight. Roads stay exposed at any depth.
+
+## Climate rules
+
+**F10 → Rules → Climate** controls seasonal precipitation, storm strength and
+snowfall. The same controls are available when creating a world, and travel with
+exported world designs. Missing settings use the defaults below; existing worlds
+retain their weather unless their owner changes a rule.
+
+Wet-event chances range from 0 to 1: spring and summer default to **0.64**, autumn
+to **0.9**. Each winter draws its chance between **0.25** and **0.75**; the minimum
+must not exceed the maximum. These are chances per two-day weather opportunity,
+not the fraction of time raining. Zero disables that season's natural wet events;
+one still retains the gaps before and after events. Date/world seeds, event
+onsets, duration and temperatures retain their existing formula.
+
+The storm-strength threshold defaults to **1.1**, range 0–10. Lower thresholds
+make more wet events storms; long snowy events also become storms. Blizzard chance
+defaults to **0.028**, range 0–1, and applies to snowy events in any season.
+Natural snowfall is **0.018 × event strength**, plus **0.15** during blizzards,
+in metres per game day. Forced snow and snowstorm default to **0.12** and **0.48**
+metres per day. Each snowfall rate accepts 0–10; zero stops its contribution.
+Layout weather overrides ignore natural wet-event chances and use the forced rates.
+
+Changes apply immediately to weather and future accumulation, preserving the
+snow already on the ground. They do not reset dates or reroll event timing.
+The local rules summary and resident observations report the effective values.
+Invalid bounds reject the whole edit or import. Snow lines, season lengths and
+calendar speed are separate from these precipitation controls.
 
 ## Make a tree, vehicle or building
 

@@ -363,6 +363,11 @@ export function exportDesign(w: World, includeMedia = false) {
   };
 }
 export function applyDesign(w: World, input: unknown) {
+  const imported = structuredClone(w);
+  applyValidatedDesign(imported, input);
+  Object.assign(w, imported);
+}
+function applyValidatedDesign(w: World, input: unknown) {
   if (Object.keys(w.players).length) throw Error('Import designs into a new, unoccupied world');
   const d = designSchema.parse(input);
   if (

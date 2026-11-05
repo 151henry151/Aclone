@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.116.0
+
+Deploy the approved backlog-implementation commit with DEPLOY_REF and the normal
+SQLite backup, prefixed build and service restart. Publish the matching website.
+Missing climate keys use the shipped defaults without a migration or snow reset.
+Verify health, client, website and prefixed script/map-worker assets at 0.116.0.
+Use the local climate browser evidence for the announcement; leave live player
+state untouched. Roll back using the matching pre-deployment backup if needed.
+
 ## Upgrade 0.115.1
 
 Deploy the approved backlog-implementation commit using DEPLOY_REF, with the

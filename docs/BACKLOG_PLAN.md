@@ -4718,3 +4718,68 @@ environment batches, with concrete criteria recorded before each implementation.
 `BASE_PATH=/aclone/ npm run build`, successful prefixed production assets,
 changed-file Prettier and `git diff --check`. The wire’s previously completed
 rendering/unit checks apply unchanged; do not repeat the full suite for metadata.
+
+0.115.1 is done and live: release commit `2ab2ddb` is pushed, matches the server,
+and health/client/website all report 0.115.1. The prefixed client and map worker
+load without browser errors. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261104-224840.sqlite`; website rollback:
+`/var/backups/aclone-website/site-20261104-224944.tar.gz`.
+[Bot announcement with reviewed night screenshot](https://discord.com/channels/1562183434254680175/1565527790785404968/1567748026955604050)
+is published; exact text, image dimensions and PNG availability are verified.
+Evidence: `output/release-0.115.1/`. No player state was manually edited.
+
+### Climate rules — precipitation, storms and snowfall
+
+Before production edits, preserve the old deterministic weather output as a
+SHA-256 fingerprint across three world seeds, three fractions per day and three
+years. Expose spring/summer/autumn wet-event chances (0.64/0.64/0.9), winter
+minimum/maximum wet-event chance (0.25/0.75), wet-event storm strength threshold
+(1.1), winter blizzard chance (0.028), natural snowfall per strength (0.018 m/day),
+blizzard extra snowfall (0.15 m/day), and forced snow/snowstorm rates
+(0.12/0.48 m/day). Preserve event timing, random streams, duration, temperatures,
+existing snow and crop reservations. Keep alpine snow-line/permanent coverage and
+calendar/lunar/lottery changes pending as the next independent batches.
+
+Completion criteria: a new `tests/climate-rules.test.ts` must fail for missing
+rules before implementation. Explicit defaults and missing-key worlds must match
+the captured weather fingerprint. Zero chances produce clear natural weather;
+changed seasons affect only their season, and higher probabilities increase wet
+opportunities without rerolling timing. Threshold/blizzard edits affect storms;
+snowfall edits change accumulation, including creator-forced weather. Split live
+steps and offline catch-up agree. Invalid/non-finite/range and inverted winter
+bounds reject atomically. World creation, F10 fields, rules summary, resident
+observations, SQLite reload and portable designs retain effective settings.
+
+Browser criteria: in a disposable winter world, open F10 → Rules → Climate,
+inspect defaults, change wet chances to zero and see clear weather, restore wet
+chances and see snowfall, save/reload and inspect retained values, then submit
+inverted winter bounds and prove rejection preserves the saved settings. Capture
+the visible weather and settings for the release announcement. Run relevant
+climate/environment/snow/farming/ocean/alpine consumers and guide tests, clean
+TypeScript and explicit-file Prettier. Release, deploy and announce only after
+all criteria pass; otherwise stop at the failing criterion.
+
+Red verification: all five climate unit cases fail on missing defaults/unknown
+settings, and the browser case fails because the Climate input is absent.
+Evidence: `output/climate-rules/red.log` and `browser-red.log`. The frozen
+weather fingerprint is `bb12b70eccd747f3ac869c3935b03fa72ffa8b2176294f11e9f20e90d1ae210a`.
+Blizzard probability applies to snowy events, including cold shoulder seasons,
+matching the existing formula; it is not restricted to winter.
+
+The first green run found a pre-existing import atomicity gap (destination
+revision changed before rule rejection). Apply designs on a disposable copy and
+assign only after validation. All five climate cases then pass. The 69 relevant
+checks pass except the resident request budget: new world-rule fields put it
+196 bytes over its unchanged 96,000-byte ceiling. Compact the existing guide-use
+instructions without removing requirements; keep all climate values observable.
+The real-browser climate flow passes, including saved values and invalid edits.
+
+Climate verification now passes: all 69 relevant checks are green after rerunning
+the 16 guide cases affected by instruction compaction. The unchanged 96,000-byte
+request ceiling passes. The browser clear/snowfall/reload/rejected-bounds flow
+passes (2.4 minutes). Evidence is in `output/climate-rules/`. Prepare 0.116.0
+with TypeScript/production-prefix build and formatting before commit/deployment.
+
+0.116.0 release gates: clean TypeScript and successful `/aclone/` production
+build; changed-file Prettier and whitespace checks pass. The new rule module
+uses only `data/settings.json` defaults. No manual live world/player edits.

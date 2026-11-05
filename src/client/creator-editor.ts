@@ -1,3 +1,4 @@
+import { climateRules, climateRuleFields } from '../shared/climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules, vehicleRunningRuleFields } from '../shared/vehicle-running-rules';
 import { fishingRules, fishingRuleFields } from '../shared/fishing-rules';
@@ -113,6 +114,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...Object.keys(climateRuleFields),
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
@@ -206,6 +208,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const climate = climateRules(settings);
+  const climateFields = `<fieldset class="boat-death-settings"><legend>Climate</legend>${Object.entries(
+    climateRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        climate[key as keyof typeof climate],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Chances apply to two-day weather opportunities; 1 retains gaps between events. Winter draws a chance between its minimum and maximum. Lower storm thresholds create more storms; long snowy events also become storms. Blizzard chance applies to snowy events in any season.</p><p>Snow rates are metres per game day. Natural snowfall = strength × rate + blizzard extra. Forced weather uses its own rates and ignores natural chances. Zero snowfall stops accumulation; edits preserve existing snow. Changes apply immediately.</p></fieldset>`;
   const navigation = boatNavigationRules(settings);
   const navigationFields = `<fieldset class="boat-death-settings"><legend>Boat navigation</legend>${Object.entries(
     boatNavigationRuleFields,
@@ -620,6 +638,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     farmYieldFields +
     fishingFields +
+    climateFields +
     runningFields +
     navigationFields +
     implementFields +

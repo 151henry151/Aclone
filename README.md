@@ -4,7 +4,11 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.115.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.116.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.116.0 adds world-builder controls for seasonal wet-weather
+chances, storm thresholds and snowfall rates. Default worlds retain their exact
+weather sequence, and edits preserve existing snow. See [Climate rules](docs/WORLD_BUILDING.md#climate-rules).
 
 Version 0.115.1’s spaceport fence correction makes razor wire darken with the chainlink at night and shrink naturally with distance, instead of appearing as a row of lights.
 

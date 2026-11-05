@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.116.0] - 2026-11-04
+
+### Added
+
+- Configure seasonal precipitation chances, storm thresholds and snowfall rates per world; preserve default weather, event timing and existing snow, and include local values in the editor, rules summary, resident observations and portable designs.
+
+### Fixed
+
+- Validate imported world designs on a disposable copy so rejected settings leave the destination unchanged.
+
 ## [0.115.1] - 2026-11-04
 
 ### Fixed

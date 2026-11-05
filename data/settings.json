@@ -407,5 +407,16 @@
   "boatLandingShoreRadius": 5,
   "riverDockDraft": 1.2,
   "riverDockMaxLength": 14,
-  "riverDockMaxBeam": 3.6
+  "riverDockMaxBeam": 3.6,
+  "climateSpringWetChance": 0.64,
+  "climateSummerWetChance": 0.64,
+  "climateAutumnWetChance": 0.9,
+  "climateWinterWetMin": 0.25,
+  "climateWinterWetMax": 0.75,
+  "climateStormThreshold": 1.1,
+  "climateBlizzardChance": 0.028,
+  "climateSnowPerStrength": 0.018,
+  "climateBlizzardSnow": 0.15,
+  "climateForcedSnow": 0.12,
+  "climateForcedSnowstorm": 0.48
 }

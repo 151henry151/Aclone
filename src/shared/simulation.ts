@@ -1,3 +1,4 @@
+import { climateRuleFields, climateRulesError } from './climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from './boat-navigation-rules';
 import { vehicleRunningRuleFields } from './vehicle-running-rules';
 import { fishingRuleFields } from './fishing-rules';
@@ -1973,6 +1974,7 @@ export function act(w: World, id: string, a: Action): string {
       for (const [key, v] of Object.entries(patch)) {
         requireThat(
           Object.hasOwn(w.settings, key) ||
+            Object.hasOwn(climateRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
@@ -2006,6 +2008,7 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const climateField = climateRuleFields[key as keyof typeof climateRuleFields];
         const vehicleRunningField =
           vehicleRunningRuleFields[key as keyof typeof vehicleRunningRuleFields];
         const boatNavigationField =
@@ -2076,6 +2079,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (climateField) num(v, climateField.min, climateField.max);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
         if (boatNavigationField) num(v, boatNavigationField.min, boatNavigationField.max);
         if (fishingField) num(v, fishingField.min, fishingField.max, fishingField.step === 1);
@@ -2164,6 +2168,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const climateError = climateRulesError({ ...w.settings, ...clean });
+      requireThat(!climateError, climateError ?? 'Invalid climate rules');
       const loanError = loanRulesError({ ...w.settings, ...clean });
       requireThat(!loanError, loanError ?? 'Invalid loan rules');
       const npcPricingError = npcPricingRulesError({ ...w.settings, ...clean });

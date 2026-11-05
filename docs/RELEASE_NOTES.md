@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.116.0 — Choose your world's weather
+
+World owners can adjust seasonal precipitation chances, storm thresholds and
+snowfall rates in F10 → Rules → Climate. Make summers drier, winters wetter or
+forced snowstorms gentler. Default worlds retain their exact existing weather;
+saved snow stays in place. Controls also travel with exported designs and appear
+in local rules and resident observations.
+
+Invalid winter bounds reject the whole edit. Design imports now validate on a
+copy before changing the destination. No migration or manual world edit is needed.
+Validation covers default weather fingerprints, custom rates, live/offline snow,
+persistence/imports, relevant weather/farming/ocean/guide regressions, browser
+clear/snow/reload/failure flows, TypeScript and formatting.
+
 ## 0.115.1 — Spaceport wire follows the night lighting
 
 The razor wire around the spaceport now darkens with the chainlink fence instead

@@ -1,3 +1,4 @@
+import { climateRules } from './climate-rules';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { vehicleRunningRules } from './vehicle-running-rules';
 import { fishingRules } from './fishing-rules';
@@ -89,12 +90,14 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const construction = constructionRules(s);
   const fishing = fishingRules(s);
   const running = vehicleRunningRules(s);
+  const climate = climateRules(s);
   const navigation = boatNavigationRules(s);
   const farmYields = farmYieldRules(s);
   const gatheringRates = gatheringRules(s);
   const implementsRules = gatheringImplementRules(s);
   const cargo = npcCargoRules(s);
   return [
+    `Climate: wet-event chances spring ${climate.climateSpringWetChance}, summer ${climate.climateSummerWetChance}, autumn ${climate.climateAutumnWetChance}, winter ${climate.climateWinterWetMin}–${climate.climateWinterWetMax}; storm strength threshold ${climate.climateStormThreshold}, snowy-event blizzard chance ${climate.climateBlizzardChance}. Natural snow ${climate.climateSnowPerStrength} × strength + ${climate.climateBlizzardSnow} during blizzards, forced snow/snowstorm ${climate.climateForcedSnow}/${climate.climateForcedSnowstorm} m/day. Event gaps and saved snow persist.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,
     `Boat navigation: shore impact ${navigation.boatShoreImpactLoss} condition; afloat arrival radii ${navigation.boatHouseArrivalRadius} m at boathouses / ${navigation.boatLandingArrivalRadius} m at pier/river landings; shore boarding ${navigation.boatLandingShoreRadius} m at landings. Hull orientation, water path and collision blocking remain required.`,
     `Vehicle running costs: wear ${running.vehicleWearPerMetre} condition/metre when maintenance is enabled; trailer speed 1/(${running.trailerSpeedBase} + load × ${running.trailerLoadSpeedPenalty}), fuel ${running.trailerFuelBase} + load × ${running.trailerLoadFuelPenalty}. Load is cargo/capacity; no trailer is neutral. Existing condition and cargo remain.`,
