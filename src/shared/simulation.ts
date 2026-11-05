@@ -1495,7 +1495,7 @@ export function act(w: World, id: string, a: Action): string {
         const candidates = reachable.filter((d) => !d.river || riverDockAccepts(w, hull));
         requireThat(
           candidates.length || !reachable.length,
-          'River docks take canal boats and motorboats only; larger vessels use a boathouse or the fishing pier',
+          `River docks take vessels up to ${boatNavigationRules(w.settings).riverDockMaxLength} m long × ${boatNavigationRules(w.settings).riverDockMaxBeam} m beam; larger vessels use a boathouse or the fishing pier`,
         );
         landing = candidates.find((d) => !landingBlocked(w, d, p, poweredBoat(slot, w), slot));
         requireThat(

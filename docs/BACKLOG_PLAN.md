@@ -4057,3 +4057,51 @@ screenshot scroll when a live snapshot replaces its DOM node. Inspect both
 screenshots: custom twelve-unit help after a real 8 → 20 refill, and carried
 Fuel still visible on the lifeboat with its tank and inventory unchanged.
 Changed-file Prettier and diff checks pass; no consumption logic changed.
+
+**Boating fuel-help slice done and pushed:** `c0e304d1aa47531a9749e0812a5295520f11a956`.
+Remote SHA verified.
+
+### River dock limits — completion criteria before production
+
+Expose required river depth 1.2 m (range 0.1–20), maximum vessel length 14 m
+(range 0.1–50) and beam 3.6 m (range 0.1–20) in Boat navigation. These are
+eligibility limits, not jetty geometry. Retain dry-bank, whole-berth river/depth,
+rotation, bounds and obstacle checks. Changed limits affect current access but
+never remove existing docks, moored vessels, fuel or cargo; restoring a limit
+restores access. Ponds and the sea still do not qualify.
+
+- Extend `tests/river-dock.test.ts` with default/legacy/custom vessel acceptance,
+  depth rejection and dynamic placement/refusal messages, retained moorings and
+  restored access. Extend `boat-navigation-rules.test.ts` for range validation
+  and editor/summary/observation/save/design round-trips. Run red before code.
+- Run both tests plus boating, construction-site and guide tests, TypeScript
+  and changed-file Prettier. Verify actual discovered test paths before invoking.
+- Browser `tests/browser/river-dock-rules.spec.ts`: at a real generated river dock,
+  save/reload F10 limits, show local depth/size help, refuse boarding a canal
+  boat under a 5 m length cap, restore the cap and board; set excessive draft
+  and verify no usable landing without losing vessel state; reject zero draft.
+  Inspect screenshots, update BOATING/WORLD_BUILDING, README and Unreleased.
+
+Failing-first river limits: four new/extended tests fail on absent or unknown
+settings; six existing/default behavior tests pass. The placement suite is
+`tests/civics-construction.test.ts` (there is no construction-site test file).
+
+All 27 river/navigation/boating/construction tests pass. The guide request is
+42 bytes over its unchanged ceiling; compact the delivery-stock guidance while
+retaining its carried/owned-stockroom boundary, building ownership of job stock
+and requirement to buy that stock normally before promising delivery.
+
+Browser first run reaches the final reload after all eligibility, mooring,
+restoration and invalid-input assertions pass. Trace shows first/second terrain
+startup at 34.95/36.45 seconds; the two-minute overall harness deadline interrupts
+the third readiness wait after 30 seconds. Allow 180 seconds for the three loads
+and interactions, retaining every assertion and each existing 60-second startup
+limit. This is not a rendering-performance change or a relaxed behavior criterion.
+
+River-limit validation complete: all 27 relevant behavior tests and 16 guide
+tests pass (3.1 s initial run; 1.2 s guide recheck), with TypeScript and changed-file
+Prettier/diff checks clean. Browser passes in 2.1 minutes with all three terrain
+loads and unchanged readiness limits. Inspect all four screenshots: saved limits,
+size-based unavailable boarding, excessive-draft unavailable landing, invalid
+zero draft. Restoring depth/length permits boarding and disembarking while
+retaining the exact mooring and 23 fuel units. No live-world work occurred.

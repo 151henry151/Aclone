@@ -404,5 +404,8 @@
   "boatShoreImpactLoss": 1,
   "boatHouseArrivalRadius": 30,
   "boatLandingArrivalRadius": 14,
-  "boatLandingShoreRadius": 5
+  "boatLandingShoreRadius": 5,
+  "riverDockDraft": 1.2,
+  "riverDockMaxLength": 14,
+  "riverDockMaxBeam": 3.6
 }

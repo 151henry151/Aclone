@@ -1424,3 +1424,19 @@ water-path check still rejects dry obstructions. These radii do not resize docks
 or move boats. Boathouse shore menus retain their independent 40 m range.
 Inventory shows the local values; saves/designs, summaries and resident
 observations carry them, with defaults for missing keys in old worlds.
+
+### River dock eligibility
+
+Boat navigation also includes `riverDockDraft` (default 1.2 m, range 0.1–20),
+`riverDockMaxLength` (14 m, 0.1–50) and `riverDockMaxBeam` (3.6 m, 0.1–20).
+The dock requires river water at the configured depth across its sampled berth,
+a dry landing, correct orientation and unobstructed space. Sea and pond sites
+remain ineligible. Size limits apply to configured boat hull dimensions, while
+land vehicles remain ineligible regardless of size. These limits do not resize
+the jetty or guarantee a larger hull can navigate the surrounding river.
+
+Live edits recheck access. Raising required draft or lowering size limits can
+close an existing dock to a vessel; no dock, mooring, cargo or fuel is deleted.
+Restore the limits to regain access. Placement and boarding refusals quote local
+limits, and Inventory shows them. Save/design and summary/observation support
+and missing-field defaults follow the other navigation rules.

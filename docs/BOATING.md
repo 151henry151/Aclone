@@ -23,11 +23,14 @@ Passengers board and disembark at the dock too.
 
 A player-built river dock works like the pier for small craft: it boards boats
 you already own from the landing behind its log crib and leaves them moored at
-the jetty end on the river. Canal boats, motorboats and the lifeboat fit; the
-fishing boat, charter boat and tug are refused and must use a boathouse or the
-pier. River docks sell no fuel and trade no fish. They can only be built where
-the river is at least 1.2 m deep along the whole berth, so headwaters and fords
-are refused; rotate the jetty toward the deep channel. There is no offshore switch to
+the jetty end on the river. World size limits default to 14 m length and 3.6 m
+beam: canal boats, motorboats and the lifeboat fit; the fishing boat, charter boat
+and tug must use a boathouse or pier under those defaults. River docks sell no
+fuel and trade no fish. Required river depth defaults to 1.2 m along the whole
+berth, excluding shallow headwaters and fords; rotate toward the deep channel.
+F10 Boat navigation configures depth and size limits; Inventory quotes them.
+Stricter rules can close access, but keep existing docks and moored boats intact.
+Restore the limits to reopen access. There is no offshore switch to
 walking, tractors, robocrows or another world.
 
 A boathouse has a dry workshop and stores, plus a covered lifting hall extending

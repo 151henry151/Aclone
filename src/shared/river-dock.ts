@@ -1,3 +1,4 @@
+import { boatNavigationRules } from './boat-navigation-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { inlandWaterAt } from './inland-water';
 import { riverDepth } from './inland-travel';
@@ -7,10 +8,10 @@ import type { Building, World } from './types';
 
 export const RIVER_DOCK = 'riverDock';
 /** River water required alongside the berth: canal boats and motorboats, not sea-going hulls. */
-export const RIVER_DOCK_DRAFT = 1.2;
+export const RIVER_DOCK_DRAFT = boatNavigationRules().riverDockDraft;
 /** Small-craft limits in metres; the trawler, tug and charter boat exceed them. */
-export const RIVER_DOCK_MAX_LENGTH = 14;
-export const RIVER_DOCK_MAX_BEAM = 3.6;
+export const RIVER_DOCK_MAX_LENGTH = boatNavigationRules().riverDockMaxLength;
+export const RIVER_DOCK_MAX_BEAM = boatNavigationRules().riverDockMaxBeam;
 /** Jetty geometry in dock-local metres: the landing crib at the origin, the
  * jetty running toward -z, and the berth lying along the bank beyond its end. */
 export const RIVER_JETTY = { width: 2.2, start: 1.2, end: 11 } as const;
@@ -24,10 +25,16 @@ export function riverDockPoint(b: Pick<Site, 'x' | 'z' | 'rotation'>, x: number,
     s = Math.sin(b.rotation);
   return { x: b.x + x * c + z * s, z: b.z - x * s + z * c };
 }
-export function riverDockAccepts(w: Pick<World, 'vehicleTuning'>, slot: number) {
-  const v = vehicleDef(w, slot);
+export function riverDockAccepts(
+  w: Pick<World, 'vehicleTuning'> & Partial<Pick<World, 'settings'>>,
+  slot: number,
+) {
+  const v = vehicleDef(w, slot),
+    rules = boatNavigationRules(w.settings);
   return (
-    v.mode === 3 && (v.length ?? 0) <= RIVER_DOCK_MAX_LENGTH && (v.beam ?? 0) <= RIVER_DOCK_MAX_BEAM
+    v.mode === 3 &&
+    (v.length ?? 0) <= rules.riverDockMaxLength &&
+    (v.beam ?? 0) <= rules.riverDockMaxBeam
   );
 }
 /** A dry landing on the bank, a jetty that clears the ground, and a berth with
@@ -60,7 +67,8 @@ export function riverDockSite(w: World, b: Site) {
       const p = at(x, -RIVER_BERTH.z + dz);
       if (!p) return undefined;
       const here = inlandWaterAt(w, p.x, p.z);
-      if (!here?.river || riverDepth(w, p) < RIVER_DOCK_DRAFT) return undefined;
+      if (!here?.river || riverDepth(w, p) < boatNavigationRules(w.settings).riverDockDraft)
+        return undefined;
     }
   return {
     berth: berthCentre,

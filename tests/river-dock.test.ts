@@ -130,7 +130,7 @@ test('a completed dock is a boat landing that moors canal boats and motorboats, 
   Object.assign(p, { vehicle: FISHING_BOAT, ...landing.berth, heading: landing.heading });
   assert.throws(
     () => act(copy, p.id, { type: 'vehicle', slot: 5, building: dock.id }),
-    /canal boats and motorboats/i,
+    /14 m long.*3\.6 m beam/i,
   );
 });
 
@@ -179,4 +179,72 @@ test('a river dock launches, moors and reboards the same canoe with no passenger
   assert.equal(copy.smallCraft![id].landing, dock.id);
   act(copy, p.id, { type: 'canoe', operation: 'board', id });
   assert.equal(p.smallCraft, id);
+});
+
+test('river size limits preserve defaults and legacy rules while custom eligibility uses length and beam', () => {
+  for (const mode of ['default', 'missing', 'custom']) {
+    const copy = structuredClone(w),
+      owner = addPlayer(copy, 'server', 'Owner');
+    if (mode === 'missing')
+      for (const key of ['riverDockMaxLength', 'riverDockMaxBeam', 'riverDockDraft'])
+        delete (copy.settings as any)[key];
+    assert.equal(riverDockAccepts(copy, 3), true);
+    assert.equal(riverDockAccepts(copy, 33), true);
+    assert.equal(riverDockAccepts(copy, 30), false);
+    assert.equal(riverDockAccepts(copy, 0), false);
+    if (mode === 'custom') {
+      act(copy, owner.id, {
+        type: 'settings',
+        patch: { riverDockMaxLength: 30, riverDockMaxBeam: 8 },
+      });
+      assert.equal(riverDockAccepts(copy, 30), true);
+      act(copy, owner.id, { type: 'settings', patch: { riverDockMaxBeam: 3.6 } });
+      assert.equal(riverDockAccepts(copy, 30), false);
+      act(copy, owner.id, { type: 'settings', patch: { riverDockMaxLength: 5 } });
+      assert.equal(riverDockAccepts(copy, 3), false);
+      assert.equal(riverDockAccepts(copy, 33), true);
+    }
+  }
+});
+test('river depth edits gate existing landings and preserve moored boats until access returns', () => {
+  const copy = structuredClone(w),
+    dock = usableDock();
+  copy.buildings = [dock];
+  const site = riverDockSite(copy, dock)!;
+  const p = addPlayer(copy, 'server', 'Owner');
+  Object.assign(p, {
+    vehicle: 3,
+    fleet: [0, 5, 3],
+    ...site.berth,
+    heading: site.heading,
+    y: site.level,
+    speed: 0,
+    engine: false,
+    inventory: {},
+    fuel: 23,
+    fuelVehicle: 3,
+  });
+  act(copy, p.id, { type: 'vehicle', slot: 5, building: dock.id });
+  const moored = structuredClone(copy.mooredBoats);
+  act(copy, p.id, { type: 'settings', patch: { riverDockDraft: 20 } });
+  assert.equal(riverDockSite(copy, dock), undefined);
+  assert.equal(
+    boatLandings(copy).some((d) => d.id === dock.id),
+    false,
+  );
+  assert.match(constructionSiteReason(copy, dock) ?? '', /20 m/);
+  assert.throws(
+    () => act(copy, p.id, { type: 'vehicle', slot: 3, building: dock.id }),
+    /moored boat/,
+  );
+  assert.deepEqual(copy.mooredBoats, moored);
+  act(copy, p.id, { type: 'settings', patch: { riverDockDraft: 1.2, riverDockMaxLength: 5 } });
+  assert.ok(riverDockSite(copy, dock));
+  assert.throws(() => act(copy, p.id, { type: 'vehicle', slot: 3, building: dock.id }), /5.*3\.6/);
+  assert.deepEqual(copy.mooredBoats, moored);
+  act(copy, p.id, { type: 'settings', patch: { riverDockMaxLength: 14 } });
+  act(copy, p.id, { type: 'vehicle', slot: 3, building: dock.id });
+  assert.equal(p.vehicle, 3);
+  assert.equal(p.fuel, 23);
+  assert.equal(copy.mooredBoats?.[mooringKey(p.id, 3)], undefined);
 });

@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const boatNavigationRuleFields = {
+  riverDockDraft: { label: 'River dock required depth (metres)', min: 0.1, max: 20, step: 0.1 },
+  riverDockMaxLength: {
+    label: 'River dock maximum vessel length (metres)',
+    min: 0.1,
+    max: 50,
+    step: 0.1,
+  },
+  riverDockMaxBeam: {
+    label: 'River dock maximum vessel beam (metres)',
+    min: 0.1,
+    max: 20,
+    step: 0.1,
+  },
   boatShoreImpactLoss: {
     label: 'Shore-impact condition loss (0 = no damage)',
     min: 0,

@@ -284,7 +284,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ownedStockrooms: w.buildings
         .filter((b) => b.owner === p.id && !b.construction)
         .map((b) => ({ id: b.id, name: b.name, stock: b.stock })),
-      rule: 'Only carried goods and your own stockrooms are available to promise. Job stock belongs to the building; purchase it normally before offering delivery.',
+      rule: "Promise carried goods/own stockrooms only. Buy the building's job stock normally before promising delivery.",
     },
     neighbours: Object.values(w.players)
       .filter((q) => q.online && q.id !== p.id)

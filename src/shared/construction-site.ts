@@ -1,10 +1,11 @@
+import { boatNavigationRules } from './boat-navigation-rules';
 import { inlandLevel } from './inland-water';
 import { buildingSpawnReason, spawnReserved } from './spawn-reserve';
 import { spaceportReserved } from './spaceport-site';
 import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
-import { RIVER_DOCK, RIVER_DOCK_DRAFT, riverDockSite } from './river-dock';
+import { RIVER_DOCK, riverDockSite } from './river-dock';
 import { farmPlotPosition } from './farm-land';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -99,7 +100,7 @@ export function constructionSiteReason(w: World, b: Site) {
     if (blocked) return blocked;
   }
   if (b.kind === RIVER_DOCK && !riverDockSite(w, b))
-    return `River docks need a dry bank with at least ${RIVER_DOCK_DRAFT} m of river alongside the berth; rotate the jetty toward a deep reach`;
+    return `River docks need a dry bank with at least ${boatNavigationRules(w.settings).riverDockDraft} m of river alongside the berth; rotate the jetty toward a deep reach`;
   if (
     b.kind === 'farm' &&
     Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>

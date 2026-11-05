@@ -6,6 +6,9 @@ import { withinBoatLanding, type BoatLanding } from '../src/shared/boathouse';
 import { vehicleCondition } from '../src/shared/vehicle-services';
 import { Store } from '../src/server/store';
 const patch = {
+  riverDockDraft: 2,
+  riverDockMaxLength: 30,
+  riverDockMaxBeam: 8,
   boatShoreImpactLoss: 3,
   boatHouseArrivalRadius: 12,
   boatLandingArrivalRadius: 4,
@@ -115,6 +118,9 @@ test('arrival rules retain hull geometry water checks and independent shore boat
 test('boat navigation rules validate atomically and round trip through settings surfaces', async () => {
   const { w, p } = setup();
   for (const [k, min, max] of [
+    ['riverDockDraft', 0.1, 20],
+    ['riverDockMaxLength', 0.1, 50],
+    ['riverDockMaxBeam', 0.1, 20],
     ['boatShoreImpactLoss', 0, 100],
     ['boatHouseArrivalRadius', 0.1, 100],
     ['boatLandingArrivalRadius', 0.1, 100],
