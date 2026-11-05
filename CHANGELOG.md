@@ -119,6 +119,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Wait for acknowledgement of a new world’s full snapshot before queuing live updates, preventing stale deltas from piling up behind large geography transfers.
+
 - Quote and build the plain river landing at its world catalogue price and log/gravel bill, without adding an enclosed house shell for the selected finish.
 
 - Prepare scenery revisions and snow geometry incrementally; keep existing terrain visible, cancel obsolete builds, and warm replacement shaders and bounded geometry uploads before swapping the view. Batch mature road networks on the map to reduce opening stalls.

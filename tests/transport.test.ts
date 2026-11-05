@@ -52,3 +52,23 @@ test('unchanged input costs 1 Hz parked or 10 Hz driving; changes and release st
   assert.equal(input.encode({ ...idle, throttle: 1 }, 4150, 20), undefined);
   assert.deepEqual(JSON.parse(input.encode(idle, 4200, 0)!).input, idle);
 });
+
+test('large world entry and switching wait for the full snapshot ACK before queuing live deltas', () => {
+  const flow = new SnapshotWindow();
+  assert.equal(flow.ready, true);
+  const initial = flow.next();
+  assert.equal(flow.ready, false, 'do not queue stale deltas behind initial geography');
+  flow.ack(initial);
+  assert.equal(flow.ready, true);
+  flow.next();
+  flow.next();
+  flow.next();
+  assert.equal(flow.ready, false, 'normal play retains the three-frame window');
+  flow.reset();
+  const switched = flow.next();
+  assert.equal(flow.ready, false, 'a new world has a new full snapshot');
+  flow.ack(initial);
+  assert.equal(flow.ready, false, 'old-world ACKs cannot unlock the new world');
+  flow.ack(switched);
+  assert.equal(flow.ready, true);
+});

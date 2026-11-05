@@ -4367,3 +4367,49 @@ local elevation, disembark/reconnect/reboard with unchanged fuel/mooring, and
 larger-vessel refusal. Inspect preview/refusal/reconnected screenshots; retain
 six under `output/river-handoff-verification/construction/`. TypeScript,
 changed-file Prettier and diff checks pass.
+
+**Plain river landing bill slice done and pushed:** `72c84c9` (remote SHA verified).
+
+**Remaining audit method:** observe the real app's GameScene from a browser-only
+module wrapper; do not change gameplay to expose test state. At summer lowland
+rain, the HUD reports rain and the walking umbrella fully opens; relocate the
+local fixture to the generated summit, require snow in the same HUD and a closed
+umbrella, then clear weather with no precipitation. Keep the normal readiness
+timeout. Preview harnesses now wait for staged scenery revisions and count only
+visible-frame renders, excluding offscreen geometry warmup. These are verification
+harness updates, not new island features.
+
+**Audit gate failure — slow-link freshness:** 13 of 14 network/snapshot tests
+pass, and the actual browser slow-link join/reconnect/driving/chat check passes
+(1.6 minutes, two parked neighbours, 613 ms displayed ping). The existing
+`slow-network.test.ts` fails its unchanged `<2 s` state-age criterion both during
+concurrent browser work and alone (32.1 seconds). Do not dismiss this as contention
+or weaken the threshold. Record packet age/transport metrics, identify the stale
+queue, and fix the confirmed cause before completing this audit/checkpoint.
+No server production changes precede this failing test.
+
+Diagnostic red records 17.5/18.6/19.0-second ages for the first three states,
+then 2.12 seconds for the first post-entry state. The current three-state window
+queues two already-obsolete deltas behind the large geography transfer. Require
+entry/world-switch flow control to wait for the full snapshot ACK, then retain
+the ordinary three-state window. Add a transport regression for initial, normal,
+switch and stale-ACK states; rerun the unchanged slow-link age/driving/chat gates,
+transport/snapshot/network tests and actual browser slow-link reconnect.
+
+The new initial/world-switch transport assertion fails red (`ready` is true
+while the full snapshot is unacknowledged). Gate that first snapshot, retaining
+the three-frame window after its ACK. The isolated slow-link test now passes in
+36.6 seconds: initial download remains 17.5 seconds at 64 kbit/s, subsequent
+recorded state ages are 1.00–1.95 seconds; ACK pause/resume, driving, chat and fast
+peer independence all pass. Temporary diagnostic logging is removed; the
+original test and all thresholds remain unchanged. Browser reconnect and focused
+transport/snapshot/network checks are being reverified before commit.
+
+**Initial snapshot gate verification complete:** all 17 transport/snapshot/network
+tests pass (28.9 seconds), plus the isolated slow-link test above. The actual
+browser network flow passes again after the change (normal entry, two neighbours,
+64 kbit/s reconnect, driving/release and chat; no page errors). Inspect and retain
+`output/river-handoff-verification/network/slow-network-fixed.png`. TypeScript,
+changed-file Prettier and diff checks pass. Alpine verification remains a separate
+pending harness check: enable normal server ticks/broadcasts after relocating the
+current player object; disabling ticks prevented the relocation from being sent.

@@ -4,8 +4,11 @@
 export class SnapshotWindow {
   private sequence = 0;
   private acknowledged = 0;
+  private baseline = 0;
   get ready() {
-    return this.sequence - this.acknowledged < 3;
+    // Do not queue obsolete deltas behind a potentially large world transfer.
+    const limit = this.acknowledged > this.baseline ? 3 : 1;
+    return this.sequence - this.acknowledged < limit;
   }
   next() {
     return ++this.sequence;
@@ -15,6 +18,6 @@ export class SnapshotWindow {
       this.acknowledged = sequence;
   }
   reset() {
-    this.acknowledged = this.sequence;
+    this.acknowledged = this.baseline = this.sequence;
   }
 }

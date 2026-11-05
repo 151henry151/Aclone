@@ -16,6 +16,8 @@ The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres o
 
 Unreleased river-dock construction keeps the plain landing at its world catalogue bill (30 logs, 10 gravel and 3s before tax by default) for every finish. Enclosed dock variants retain their additional construction costs.
 
+Unreleased network entry waits for receipt of the full world snapshot before sending live deltas, keeping slow-link updates fresh after large island downloads.
+
 Unreleased rendering prepares road and building revisions in small batches while keeping the previous view visible. Detailed snow banks are prepared when snow appears, with bounded geometry uploads to avoid a parish-wide freeze.
 
 Unreleased haulage adds a separate amber fuel tanker with hazard placards and a rear dispensing hose. It carries 700 Fuel for 57.5s at defaults, supports refinery loading, direct pumping and roadside sales with town tax and offline bank payments. Owners set their sale price; zero closes sales. F10 exposes per-world purchase price/capacity and fuel-service rules, and world designs preserve parked tankers with their load. See the [haulage guide](docs/HAULAGE.md) for capacity and handling details.

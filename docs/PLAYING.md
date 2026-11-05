@@ -203,6 +203,8 @@ The speed display separates **ms ping** (sampled every five seconds) and **FPS**
 - High/variable ping: compare wired/Wi-Fi, stop large transfers, check hotspot signal and other players' readings. All-player spikes may mean server overload.
 - Report device/browser, graphics mode, ping/FPS and nearby player count. [Host checks](HOSTING.md#connection-and-multiplayer-checks) distinguish server load.
 
+Unreleased network entry waits for the full world snapshot before queuing live updates, including when switching worlds. A slow first island download can still take time; the following updates start from current state.
+
 Unreleased rendering prepares road growth and building changes in small batches while the existing view stays visible. Detailed banks are prepared when snow first appears, so driving and controls continue during preparation.
 
 Adaptive graphics reduce sustained slow rendering. Dynamic shadows default off and can be enabled outside Performance mode; models/textures/contact shading/local lights remain. Motion buffering smooths jitter but cannot remove round-trip latency/outages. Reconnect gets current state without replaying purchases; first-visit textures (~2.7 MiB) are separate traffic.
