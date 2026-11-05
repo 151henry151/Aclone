@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import defaults from '../../data/settings.json';
+import defaults from '../../data/settings.json' with { type: 'json' };
 export const communicationRuleFields = {
   chatMaxLength: { label: 'Chat character limit', min: 1, max: 12000, step: 1 },
   npcGroupReplyCooldown: {

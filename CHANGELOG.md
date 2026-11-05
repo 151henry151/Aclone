@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.121.1] - 2026-11-05
+
+### Fixed
+
+- Restore native Lua worker startup and scripted world-design imports by loading shared chat settings with Node-compatible module imports.
+
 ## [0.121.0] - 2026-11-05
 
 ### Added

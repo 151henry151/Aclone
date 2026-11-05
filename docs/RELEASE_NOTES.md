@@ -2,6 +2,12 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.121.1 — Restore scripted worlds
+
+Repair native Lua worker startup after the shared chat settings gained JSON
+imports. Scripted design imports and world events work again without changing
+script permissions, execution budgets or isolation.
+
 ## 0.121.0 — Choose where neighbours arrive
 
 World owners can set arrival and respawn coordinates in Construction rules.

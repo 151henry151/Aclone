@@ -1,5 +1,5 @@
-import defaults from '../../data/settings.json';
-import { communicationRules } from './communication-rules';
+import defaults from '../../data/settings.json' with { type: 'json' };
+import { communicationRules } from './communication-rules.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types.ts';
 export const MAX_CHAT_LENGTH = defaults.chatMaxLength;

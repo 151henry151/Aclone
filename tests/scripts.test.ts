@@ -125,3 +125,31 @@ test('pooled runtimes bound concurrency, isolate each Lua invocation and recover
   }
   await assert.rejects(pool.run(world, '', 'TaskStart', {}), /closed/);
 });
+
+test('native workers load shared chat defaults and honour custom validation without a TS loader', async () => {
+  const worker = new Worker(
+    `
+    const {parentPort,workerData}=require('node:worker_threads');
+    (async()=>{
+      const {chatText,MAX_CHAT_LENGTH}=await import(workerData);
+      const w={settings:{chatMaxLength:8}},p={};
+      let overflow=false;try{chatText(w,p,'123456789')}catch{overflow=true}
+      parentPort.postMessage({defaultLimit:MAX_CHAT_LENGTH,accepted:chatText(w,p,'12345678'),overflow});
+    })().catch(error=>{throw error});
+  `,
+    {
+      eval: true,
+      execArgv: [],
+      workerData: new URL('../src/shared/messages.ts', import.meta.url).href,
+    },
+  );
+  try {
+    const result = await new Promise((resolve, reject) => {
+      worker.once('message', resolve);
+      worker.once('error', reject);
+    });
+    assert.deepEqual(result, { defaultLimit: 1200, accepted: '12345678', overflow: true });
+  } finally {
+    await worker.terminate();
+  }
+});

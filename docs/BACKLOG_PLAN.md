@@ -5111,3 +5111,37 @@ controls and arrival screenshots show the configured site and a usable player.
 TypeScript is clean; changed files are formatted. Prepare 0.121.0, run the final
 production build and publish only after those release checks pass. Evidence:
 `output/respawn-rules/`.
+
+### Repair native Lua worker imports before the landscape release
+
+The landscape import check uncovered a communication-slice regression: native
+Node workers cannot load `messages.ts` because its settings JSON lacks an import
+attribute, and its rule-module import needs an explicit extension. Preserve the
+small native worker graph and existing isolation/resource budgets.
+
+Completion criteria, before production edits: extend `tests/scripts.test.ts` with
+an actual native worker loading chat validation, proving default and custom caps;
+run it red. Existing pooled-worker isolation/recovery and actual HTTP design-import
+checks must also pass. Run communication/chat/Lua checks, TypeScript and production
+build. Browser: import a script-bearing world design into a disposable local
+account, enter it, verify its scripted welcome appears, capture/review the view
+and check for browser errors. Release a separate patch, deploy exact pushed code,
+verify read-only live health/assets and announce with the local-world screenshot.
+Do not change live scripts or create live test players.
+
+Initial evidence: the existing HTTP import returned 400 with
+`ERR_IMPORT_ATTRIBUTE_MISSING`; the pooled-runtime test fails on the same missing
+JSON attribute. Logs: `output/landscape-rules/http.log` and `scripts-red.log`.
+Landscape work is preserved separately until this blocking regression is repaired.
+
+The new native-worker regression test fails before the import corrections and
+passes afterwards. All 23 relevant script, HTTP import, communication and civic
+Lua checks pass; pooled invocation isolation and budget recovery remain tested.
+TypeScript is clean. Evidence: `output/release-0.121.1/`. Browser verification
+continues using the editor's actual Transfer tab (the initial test used an
+incorrect tab label and was stopped before retrying).
+
+The browser import/entry/welcome flow passes (2.2 minutes). The captured welcome
+is correct, but a transient software-rendering notice overlaps the screenshot;
+wait for the notice to finish before recapturing the announcement image. The
+unchanged guide budget and published-guide checks also pass (17 checks).

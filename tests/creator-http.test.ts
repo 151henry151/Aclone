@@ -44,7 +44,7 @@ test('HTTP creator import, owner exports and ordered live Lua events survive act
     assert.equal(good.status, 200);
     const design = await good.json();
     const imported = await post('/api/worlds', { name: 'Flag copy', template: 'blank', design });
-    assert.equal(imported.status, 201);
+    assert.equal(imported.status, 201, JSON.stringify(imported.data));
     const count = app.worlds.size;
     const bad = await post('/api/worlds', {
       name: 'Bad design',
