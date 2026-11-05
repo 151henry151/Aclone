@@ -31,7 +31,7 @@ test('remote spaceport fence and phase-correct exhaust render without shader err
  import {terrainHeight} from '/src/shared/terrain.ts';
  import {spaceportFlight} from '/src/shared/spaceport-flight.ts';
  const w=${JSON.stringify(w)},s=w.spaceportSite,b=w.buildings.find(b=>b.id===s.building);
- const scene=new T.Scene();scene.background=new T.Color('#8daec3');scene.add(new T.HemisphereLight('#edf4ff','#626950',2));
+ const scene=new T.Scene();scene.background=new T.Color('#8daec3');const ambient=new T.HemisphereLight('#edf4ff','#626950',2);scene.add(ambient);
  const sun=new T.DirectionalLight('#fff2da',3);sun.position.set(-200,500,180);scene.add(sun);
  const ground=new T.PlaneGeometry(1800,1800,160,160);ground.rotateX(-Math.PI/2);const a=ground.getAttribute('position');
  for(let i=0;i<a.count;i++){a.setXYZ(i,a.getX(i)+s.x,terrainHeight(w,a.getX(i)+s.x,a.getZ(i)+s.z),a.getZ(i)+s.z);}ground.computeVertexNormals();
@@ -40,8 +40,9 @@ test('remote spaceport fence and phase-correct exhaust render without shader err
  const camera=new T.PerspectiveCamera(45,1400/900,.2,20000),r=new T.WebGLRenderer({antialias:true});r.setSize(1400,900);r.toneMapping=T.ACESFilmicToneMapping;document.body.append(r.domElement);
  const launch=spaceportFlight(w.id,0).next;
  window.show=(name,t=340)=>{port.userData.flight.update(w.id,launch+t);
- if(name==='gate'){const x=s.x+s.fence/Math.sqrt(2),z=s.z+s.fence/Math.sqrt(2);camera.position.set(x+25,terrainHeight(w,x,z)+7,z+25);camera.lookAt(x-13,terrainHeight(w,x,z)+2,z+4);}
- else if(name==='compound'){camera.position.set(s.x+1100,s.height+1000,s.z+1350);camera.lookAt(s.x,s.height,s.z);}
+ const night=name.startsWith('night-');ambient.intensity=night?.06:2;sun.intensity=night?0:3;scene.background.set(night?'#090f17':'#8daec3');
+ if(name==='gate'||name==='night-ground'){const x=s.x+s.fence/Math.sqrt(2),z=s.z+s.fence/Math.sqrt(2);camera.position.set(x+25,terrainHeight(w,x,z)+7,z+25);camera.lookAt(x-13,terrainHeight(w,x,z)+2,z+4);}
+ else if(name==='compound'||name==='night-air'){camera.position.set(s.x+1100,s.height+1000,s.z+1350);camera.lookAt(s.x,s.height,s.z);}
  else{camera.position.set(s.x+220,s.height+170,s.z+360);camera.lookAt(s.x,s.height+110,s.z);}
  document.querySelector('#label').textContent='Puddlewick spaceport — '+name+' (local preview)';r.render(scene,camera);
  return {clouds:port.userData.flight.group.userData.groundPuffs??0,contact:port.userData.flight.group.userData.groundContact??0,calls:r.info.render.calls};};window.ready=true;
@@ -58,6 +59,8 @@ test('remote spaceport fence and phase-correct exhaust render without shader err
       ['launch', 23],
       ['compound', 340],
       ['gate', 340],
+      ['night-ground', 340],
+      ['night-air', 340],
     ] as const) {
       const result = await page.evaluate(([name, t]) => (window as any).show(name, t), [
         name,

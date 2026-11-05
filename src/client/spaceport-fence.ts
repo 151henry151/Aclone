@@ -17,7 +17,8 @@ export function* spaceportFenceSteps(w: World, root = new T.Group()): Generator<
   canvas.width = 64;
   canvas.height = 64;
   const ctx = canvas.getContext('2d')!;
-  ctx.strokeStyle = '#afbab6';
+  const wireColor = '#afbab6';
+  ctx.strokeStyle = wireColor;
   ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(32, 0);
@@ -39,8 +40,35 @@ export function* spaceportFenceSteps(w: World, root = new T.Group()): Generator<
   const steel = new T.MeshStandardMaterial({ color: '#7c8988', roughness: 0.6, metalness: 0.45 });
   let panels: T.BufferGeometry[] = [],
     rails: T.BufferGeometry[] = [];
-  let wire: number[] = [];
-  const razor = new T.LineBasicMaterial({ color: '#8e9899' });
+  let wire: number[] = [],
+    wireIndices: number[] = [];
+  const razor = fabric.clone();
+  razor.map = null;
+  razor.alphaTest = 0;
+  razor.color.set(wireColor);
+  const direction = new T.Vector3(),
+    across = new T.Vector3(),
+    cross = new T.Vector3();
+  // Crossed narrow strips have physical thickness and receive the same light as
+  // the chainlink. Screen-space lines stay a bright pixel wide at any distance.
+  const wireSegment = (a: T.Vector3, b: T.Vector3) => {
+    direction.subVectors(b, a).normalize();
+    across.set(-direction.z, 0, direction.x);
+    if (across.lengthSq() < 1e-8) across.set(1, 0, 0);
+    across.normalize().multiplyScalar(0.008);
+    cross.crossVectors(direction, across);
+    for (const offset of [across, cross]) {
+      const base = wire.length / 3;
+      for (const [point, sign] of [
+        [a, -1],
+        [a, 1],
+        [b, 1],
+        [b, -1],
+      ] as const)
+        wire.push(point.x + offset.x * sign, point.y + offset.y * sign, point.z + offset.z * sign);
+      wireIndices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+  };
   const rod = (a: T.Vector3, b: T.Vector3, r = 0.055) => {
     const g = new T.CylinderGeometry(r, r, a.distanceTo(b), 6);
     const m = new T.Matrix4();
@@ -66,8 +94,14 @@ export function* spaceportFenceSteps(w: World, root = new T.Group()): Generator<
     if (wire.length) {
       const g = new T.BufferGeometry();
       g.setAttribute('position', new T.Float32BufferAttribute(wire, 3));
-      root.add(new T.LineSegments(g, razor));
+      g.setIndex(wireIndices);
+      g.computeVertexNormals();
+      const mesh = new T.Mesh(g, razor);
+      mesh.name = 'Concertina razor wire';
+      mesh.userData.preserveBatch = true;
+      root.add(mesh);
       wire = [];
+      wireIndices = [];
     }
     panels = [];
     rails = [];
@@ -116,20 +150,18 @@ export function* spaceportFenceSteps(w: World, root = new T.Group()): Generator<
       for (let i = 0; i < steps; i++) {
         const p = coil(i),
           q = coil(i + 1);
-        wire.push(...p.toArray(), ...q.toArray());
+        wireSegment(p, q);
         if (i % 6 === 0) {
           const d = normal.clone().multiplyScalar(0.09);
-          wire.push(
-            ...p
+          wireSegment(
+            p
               .clone()
               .sub(d)
-              .add(new T.Vector3(0, -0.07, 0))
-              .toArray(),
-            ...p
+              .add(new T.Vector3(0, -0.07, 0)),
+            p
               .clone()
               .add(d)
-              .add(new T.Vector3(0, 0.07, 0))
-              .toArray(),
+              .add(new T.Vector3(0, 0.07, 0)),
           );
         }
       }

@@ -35,6 +35,7 @@ export function* batchStaticScenerySteps(root: T.Group, excluded?: T.Object3D) {
     if (!(o instanceof T.Mesh) || o === excluded || Array.isArray(o.material)) continue;
     const mat = o.material as T.MeshStandardMaterial;
     if (
+      o.userData.preserveBatch ||
       o.userData.lightSource ||
       o.userData.hayStack ||
       mat.transparent ||

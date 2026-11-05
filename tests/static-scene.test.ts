@@ -60,3 +60,17 @@ test('gate arms remain attached and visibly lift after the production batching a
   world.updateMatrixWorld();
   assert.ok(new Box3().setFromObject(hinge).getSize(new Vector3()).distanceTo(closed) < 1e-8);
 });
+
+test('explicitly bounded scenery batches remain separate through static batching', () => {
+  const root = new Group();
+  const material = new MeshStandardMaterial();
+  const wire = new Mesh(new BoxGeometry(1, 1, 1), material);
+  wire.userData.preserveBatch = true;
+  const ordinary = new Mesh(new BoxGeometry(2, 2, 2), material.clone());
+  root.add(wire, ordinary);
+  const geometry = wire.geometry;
+  batchStaticScenery(root);
+  assert.equal(wire.parent, root, 'keep the bounded upload and culling unit');
+  assert.equal(wire.geometry, geometry);
+  assert.equal(ordinary.parent, null, 'continue batching ordinary scenery');
+});

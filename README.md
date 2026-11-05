@@ -6,6 +6,8 @@
 
 **Version 0.115.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
+The unreleased spaceport fence correction makes razor wire darken with the chainlink at night and shrink naturally with distance, instead of appearing as a row of lights.
+
 Version 0.115.0 releases the tested backlog checkpoint: responsive scenery updates, safer landings, improved flight terrain, snow walking, natural gathering grounds, fuel tankers, canoes, CB radios and configurable world rules. River recovery, dock construction and slow-link entry fixes are included. Reload the game after deployment; see the [checkpoint release notes](docs/RELEASE_NOTES.md#01150--backlog-checkpoint-and-responsive-scenery).
 
 Version 0.114.0 expands public Puddlewick northward to roughly ten times its land area while preserving the southern peninsula exactly. The new mainland adds a snow-capped mountain watershed with winding rivers, sediment bars and upstream fords, deep lower channels, ponds, large forests, rocky coastal stretches and six regions with distinct resource strengths and shortages. The map gains a town-level overview and readable river outlines at island scale, and configurable deposit recovery defaults to four times slower. Players can build small log river docks on deep reaches to moor canal boats and motorboats. See the [geography notes](docs/NORTHERN_ISLAND.md). The NPC project follow-through from 0.113.1 and the rain umbrellas from 0.113.0 remain included.

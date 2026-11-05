@@ -4623,3 +4623,39 @@ the host. A clean tracked-source archive and SHA-256 checksum are retained under
 live verification JSON/screenshots. Generated output and untracked NPC status
 notes remain unstaged. Disposable smoke processes have been stopped. This
 record-only follow-up does not change the deployed code or require a restart.
+
+## Post-checkpoint fix — spaceport razor wire at night
+
+Henry reports a bright wire outline around the spaceport at night, including
+from aircraft. Inspecting `spaceport-fence.ts` confirms an unlit LineBasicMaterial
+above lit MeshStandardMaterial chainlink. Before production edits, add an actual
+browser-render regression: render the generated fence close up by day, with no
+lights, and under dim night lighting from ground and aircraft viewpoints. Wire
+must remain visible in daylight, render black with no incident light, share the
+chainlink's roughness/metalness and non-emissive response, and have physical
+thickness that shrinks with distance. Exercise production static batching and an
+empty world; keep bounded batches and the existing fence/collision geometry.
+Run the new browser test red, then relevant spaceport rendering/static-scene
+checks, TypeScript and changed-file formatting. Update Unreleased and README.
+This correction does not authorize another deployment or start another backlog
+feature; keep it separate from the released checkpoint.
+
+Red verification: the browser renders wire at brightness 168/255 even with all
+lights off (required <=2), reproducing the unlit glow. The initial harness had
+omitted the empty animated-branch list to freezeScenery; correct that harness
+call before obtaining this pixel failure. A separate static-scene regression
+fails because bounded meshes are merged away. Preserve explicitly marked wire
+batches so converting lines to lit mesh does not create one giant GPU upload.
+
+Wire verification passes: 12 static-scene/fog/GPU-warmup tests, the new lighting
+browser regression and existing spaceport effects browser flow. Full compound
+night-ground and night-air views also pass without shader errors and were
+visually inspected. Daylight wire peaks at 212/255; unlit darkness is 0, dim
+night ground is 3 and aerial night is 1, with zero pixels above 100 in either
+night view. Visible wire uses 8–12 draw calls and up to 344,344 triangles in these
+views. The material matches chainlink roughness/metalness with no emissive term;
+physical 16 mm crossed strips replace constant-screen-width lines. Empty-world
+fence generation remains empty, and marked batches survive static batching.
+TypeScript and changed-file Prettier/diff checks pass. Updated player-guide
+lookup/content tests pass as well. Evidence: `output/spaceport-wire-fix/`.
+Keep this fix unreleased; the announcement requested next covers live 0.115.0.
