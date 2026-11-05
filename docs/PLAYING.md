@@ -646,3 +646,12 @@ World owners choose the interval (365 game days by default). Changing it keeps
 the current round's deadline and paid tickets; later rounds use the new interval.
 Disabling new entries still honours existing tickets, including offline winners.
 Empty draws carry the pot forward. Ticket price changes apply next round.
+
+## Arrivals and new lives
+
+Each world can choose its arrival and ordinary respawn point. New arrivals and
+new lives appear on the ground at that site; a world-owner edit does not move
+people already playing, and reconnecting keeps your current position. Boat
+recovery and arena respawns still use their specific destinations. Death costs
+follow the world's existing rules. Returning to town normally requires travel
+or assistance; there is no free respawn shortcut.

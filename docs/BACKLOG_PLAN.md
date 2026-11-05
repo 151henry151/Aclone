@@ -5039,3 +5039,75 @@ then deploy the pushed commit and verify before announcing.
 guide checks after release metadata, changed-file formatting and clean diff
 checks. Deployment and public announcement follow; live player state remains
 untouched apart from normal game simulation.
+
+0.120.0 is done and live: pushed commit `d95c763` matches the server; game health,
+client and website report 0.120.0, and prefixed assets/read-only browser checks
+pass. The deploy script's first request caught a transient startup 502; the
+follow-up service/health check and full browser verification passed without a
+second deployment. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261105-001714.sqlite`; website rollback:
+`/var/backups/aclone-website/site-20261105-001838.tar.gz`.
+[Verified lottery screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567770328636072017).
+Evidence: `output/release-0.120.0/`.
+
+### Arrival and respawn location
+
+Before production edits: the duplicate spawn-clearance claim already matches
+`spawnClearance` (default 12 m) from the construction slice; reuse it. Expose
+`respawnX`/`respawnZ` under Construction rules, defaults 0/17 m, finite coordinates
+within the world's map bounds (global supported range ±50,000 m, fractions
+allowed). The shared arrival point, ordinary death recovery and submerged-land-
+vehicle fallback use this point at the actual ground height. Keep the named
+PARISH_SPAWN default alias. Preserve existing players on settings edits/rejoins,
+all death penalties and boat recovery/arena overrides, and the rejection of a
+free respawn/teleport action. Reservations follow the new point; existing town
+centres and explicit spawn zones remain protected.
+
+Changing coordinates must reject submerged/high-tide ground and existing
+building/solid-object/barrier obstructions before changing settings. Use the
+existing spawn-clearance rule for the buffer, with a point collision check even
+when that buffer is zero. Do not relocate or delete existing world objects.
+Unchanged legacy coordinates remain editable with unrelated settings; future
+terrain edits still require the builder to keep the selected site usable.
+Missing fields retain the original arrival point. Creation, summaries, resident
+observations, editor, saves and design export/import carry the coordinates.
+
+Completion criteria: failing-first `tests/respawn-rules.test.ts` verifies default/
+legacy positions, custom new arrivals and ordinary death at terrain height,
+unchanged current players, relocated construction/farm reservations, finite/map/
+water/occupied-site rejection with atomic settings/imports, and all round trips.
+Run relevant spawn-reserve, construction, survival/life, boat-death and arena
+checks, TypeScript, production build and changed-file formatting.
+
+Browser: in a disposable flat world with a nearby house, F10 → Construction
+rules shows 0/17 and existing clearance 12. Set 80/−80 and confirm the current
+player stays put. Trigger death only in that local fixture; see the player arrive
+at the configured clear site and ground height. Reload retains the position and
+settings. Reject an out-of-map value, a flooded point and the occupied house
+without changing the saved location; verify the player remains usable. Capture
+and review the controls and actual arrival view, with no browser errors. Release,
+deploy, verify and announce only after these criteria pass.
+
+Respawn red verification: all six unit cases fail on missing coordinates or
+unknown settings. The browser flow is written before production code; the red
+unit run is the failing-first gate for this slice. Evidence:
+`output/respawn-rules/red.log`. Use ordinary old-age death in the disposable
+fixture, preserving survival mechanics rather than relying on a zero-health
+fixture that can regenerate before the death check.
+
+The first relevant run passes 94/95 checks. The remaining barrier fixture had
+mutated the landscape array in place after its geometry cache was built; use
+the actual landscape action to publish an immutable edit. The high-tide fixture
+also needs sea datum zero to put its one-metre bank below the two-metre tide.
+Keep all obstruction assertions. Add the required neutral boost input to the
+submerged-vehicle fixture for TypeScript. Broaden only to flight/spaceport
+movement checks because initial ground height now follows custom terrain.
+
+Arrival/respawn completion gates pass: 116 unique relevant unit/guide checks,
+including the corrected obstruction fixtures and flight/spaceport movement.
+The browser flow passes in 1.5 minutes, including the actual rendered ground
+position, reload, driving away and all three rejected-location states. Reviewed
+controls and arrival screenshots show the configured site and a usable player.
+TypeScript is clean; changed files are formatted. Prepare 0.121.0, run the final
+production build and publish only after those release checks pass. Evidence:
+`output/respawn-rules/`.

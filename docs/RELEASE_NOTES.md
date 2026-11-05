@@ -2,6 +2,15 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.121.0 — Choose where neighbours arrive
+
+World owners can set arrival and respawn coordinates in Construction rules.
+Defaults keep the original site. New arrivals and ordinary deaths use the
+selected ground, while current players stay put. Coordinate edits reject wet,
+blocked and out-of-map sites; the existing construction-clearance reserve moves
+with the point. Boat recovery, arenas and death penalties retain their rules.
+See [Arrival and respawn](WORLD_BUILDING.md#arrival-and-respawn).
+
 ## 0.120.0 — Choose when the parish lottery draws
 
 The Calendar fieldset now offers a lottery interval in whole game days. The

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
+import { maxCoordinate } from './world-limits';
 export const constructionRuleFields = {
   pastureParcelSize: { label: 'New pasture parcel side (m)', min: 8, max: 64, step: 1 },
   maximumFarmPlots: { label: 'Maximum farm plots', min: 4, max: 64, step: 4 },
@@ -25,6 +26,18 @@ export const constructionRuleFields = {
     label: 'Shoreline placement reach (m)',
     min: 0,
     max: 1000,
+    step: 0.1,
+  },
+  respawnX: {
+    label: 'Arrival / respawn X (m)',
+    min: -maxCoordinate,
+    max: maxCoordinate,
+    step: 0.1,
+  },
+  respawnZ: {
+    label: 'Arrival / respawn Z (m)',
+    min: -maxCoordinate,
+    max: maxCoordinate,
     step: 0.1,
   },
   spawnClearance: {

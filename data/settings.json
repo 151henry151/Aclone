@@ -427,5 +427,7 @@
   "calendarLunarDays": 28,
   "chatMaxLength": 1200,
   "npcGroupReplyCooldown": 30,
-  "lotteryDrawDays": 365
+  "lotteryDrawDays": 365,
+  "respawnX": 0,
+  "respawnZ": 17
 }

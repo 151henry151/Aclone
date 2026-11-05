@@ -1,14 +1,19 @@
-import { constructionRules } from './construction-rules';
+import defaults from '../../data/settings.json';
+import { constructionRules, type ConstructionRules } from './construction-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Building, World } from './types';
 import { buildingPlan } from './building-shapes';
 
 /** Shared arrival/death-recovery point. Keep enough room to turn a tractor. */
-export const PARISH_SPAWN = { x: 0, z: 17 } as const;
+export const PARISH_SPAWN = { x: defaults.respawnX, z: defaults.respawnZ } as const;
+export function parishSpawn(settings: Partial<ConstructionRules> = {}) {
+  const rules = constructionRules(settings);
+  return { x: rules.respawnX, z: rules.respawnZ };
+}
 type ReservationWorld = Pick<World, 'towns' | 'zones'> & Partial<Pick<World, 'settings'>>;
 export function spawnReservations(w: ReservationWorld) {
   return [
-    { ...PARISH_SPAWN, radius: constructionRules(w.settings).spawnClearance },
+    { ...parishSpawn(w.settings), radius: constructionRules(w.settings).spawnClearance },
     ...(w.towns ?? []).map((t) => ({
       x: t.x,
       z: t.z,

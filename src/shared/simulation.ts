@@ -49,7 +49,7 @@ import { inlandBlocksGround, riverDepth } from './inland-travel';
 import { riverDockAccepts } from './river-dock';
 import { surfaceWaterLevel } from './ocean';
 import { inlandWaterAt } from './inland-water';
-import { PARISH_SPAWN, buildingSpawnReason } from './spawn-reserve';
+import { parishSpawn, buildingSpawnReason } from './spawn-reserve';
 import { towingTender, tenderAction, moveTender } from './boat-tender';
 import { trailerAccepts, trailerBlocks } from './trailers';
 import {
@@ -94,7 +94,7 @@ import { bulkPurchaseQuote, validateBulkDiscounts } from './bulk-discounts';
 import { cliffBlocks } from './coastal-bluffs';
 import { isLighthouseKeeper } from './lodging';
 import { boatShoreCollision } from './boat-shore';
-import { waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
+import { highWater, waterLevel, oceanWeather, boatSeaPose, waveImpact } from './ocean';
 import { automaticPantries, homeNeedsMultiplier } from './automatic-provisions';
 import { changeBoatLighting } from './boat-lighting';
 import {
@@ -419,6 +419,10 @@ export function createWorld(
   say(w, 'Parish notice', 'Welcome to ' + name + '. A small world. Plenty to get on with.');
   return w;
 }
+function parishSpawnPosition(w: World) {
+  const point = parishSpawn(w.settings);
+  return { x: point.x, y: travelHeight(w, point.x, point.z), z: point.z };
+}
 export function addPlayer(w: World, id: string, name: string): Player {
   if (w.players[id]) return w.players[id];
   const p: Player = {
@@ -429,9 +433,7 @@ export function addPlayer(w: World, id: string, name: string): Player {
     bank: 0,
     kudos: 0,
     level: 1,
-    x: PARISH_SPAWN.x,
-    y: 0.15,
-    z: PARISH_SPAWN.z,
+    ...parishSpawnPosition(w),
     heading: Math.PI,
     speed: 0,
     fuel: 64,
@@ -2065,7 +2067,9 @@ export function act(w: World, id: string, a: Action): string {
         else
           num(
             v,
-            key === 'seaLevel' || key === 'flightLandingPitchMin' ? -50 : 0,
+            key === 'seaLevel' || key === 'flightLandingPitchMin'
+              ? -50
+              : (constructionField?.min ?? 0),
             npcBusinessLoadField?.max ??
               npcJourneyField?.max ??
               npcAccountField?.max ??
@@ -2181,6 +2185,45 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'oceanWaves') num(v, 0, 2);
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
+      }
+      const nextSettings = { ...w.settings, ...clean },
+        previousSpawn = parishSpawn(w.settings),
+        nextSpawn = parishSpawn(nextSettings);
+      if (previousSpawn.x !== nextSpawn.x || previousSpawn.z !== nextSpawn.z) {
+        const candidate = { ...w, settings: nextSettings };
+        requireThat(
+          Math.abs(nextSpawn.x) <= mapHalf(candidate) &&
+            Math.abs(nextSpawn.z) <= mapHalf(candidate),
+          'Keep arrival coordinates within this world’s map bounds',
+        );
+        const ground = terrainHeight(candidate, nextSpawn.x, nextSpawn.z);
+        requireThat(
+          ground >
+            Math.max(highWater(candidate), surfaceWaterLevel(candidate, nextSpawn.x, nextSpawn.z)),
+          'Choose dry arrival ground above high tide',
+        );
+        const reserve = { settings: nextSettings, towns: [], zones: [] };
+        requireThat(
+          !candidate.buildings.some(
+            (b) =>
+              buildingSpawnReason(reserve, b) ||
+              buildingBlocksMovement(
+                b,
+                nextSpawn,
+                nextSpawn,
+                ground - terrainHeight(candidate, b.x, b.z),
+                0,
+              ),
+          ) &&
+            !creatorBlocks(
+              candidate,
+              nextSpawn.x,
+              nextSpawn.z,
+              ground,
+              constructionRules(nextSettings).spawnClearance,
+            ),
+          'Choose a clear arrival site away from buildings and solid obstacles',
+        );
       }
       const alpineError = alpineRulesError({ ...w.settings, ...clean });
       requireThat(!alpineError, alpineError ?? 'Invalid alpine climate');
@@ -2876,9 +2919,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     }
   } else p.speed *= -0.2;
   if (water && ![2, 3, 5, 6].includes(v.mode) && p.y < waterLevel(w) - 1) {
-    p.x = PARISH_SPAWN.x;
-    p.z = PARISH_SPAWN.z;
-    p.speed = 0;
+    Object.assign(p, parishSpawnPosition(w), { speed: 0 });
   }
   if (trawling)
     advanceTrawl(
@@ -2940,9 +2981,7 @@ function kill(w: World, p: Player, comic = false, cause = 'injury', at = w.time)
   p.hunger = 5000;
   p.thirst = 5000;
   p.speed = 0;
-  p.x = PARISH_SPAWN.x;
-  p.z = PARISH_SPAWN.z;
-  p.y = 0.15;
+  Object.assign(p, parishSpawnPosition(w));
   p.atHome = false;
   delete p.hitch;
   delete p.task;

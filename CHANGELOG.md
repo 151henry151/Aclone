@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.121.0] - 2026-11-05
+
+### Added
+
+- Configure per-world arrival and respawn coordinates; place new arrivals and ordinary recoveries on the selected ground, reject unsafe locations and move the construction reserve without teleporting current players.
+
 ## [0.120.0] - 2026-11-05
 
 ### Added

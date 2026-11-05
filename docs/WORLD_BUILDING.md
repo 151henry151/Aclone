@@ -1540,3 +1540,28 @@ it before publication. Their independent generation budgets remain ceilings;
 a higher chat limit does not promise longer AI replies. Old worlds with missing
 keys use defaults. Creation, summaries, resident observations, saves and portable
 world designs include both settings. Edits neither erase history nor reset time.
+
+## Arrival and respawn
+
+**F10 → Rules → Construction rules** includes `respawnX` and `respawnZ`, default
+**0 / 17 metres** from the world origin. Fractional coordinates are allowed,
+within the world's configured map bounds (the global coordinate range is
+±50,000 m). Positive X is east; positive Z is south. Use the editor's layout to
+choose a clear land site. These coordinates serve new arrivals, ordinary deaths
+and the existing submerged-land-vehicle fallback. Characters arrive at the
+actual ground height. Rejoining and editing rules leave current players in place.
+Boat recovery docks and arena respawns keep their existing overrides; death
+penalties and the prohibition on a free town-teleport action remain unchanged.
+
+The existing `spawnClearance` rule (default 12 m) moves the construction reserve
+with the point. Town-centre reservations and explicit spawn zones remain.
+Changing coordinates rejects points outside the map, below high tide/inland
+water, or obstructed by buildings, solid props or barriers. The clearance rule
+provides the obstruction buffer; zero removes that buffer but still rejects an
+occupied point. Nothing is demolished or relocated to make room.
+
+Keep the site usable when editing terrain or objects afterward. Unchanged legacy
+coordinates do not prevent unrelated rules edits. Old saves missing these fields
+use the original 0/17 point. Creation, local summaries, resident observations,
+saves and portable designs carry both coordinates; rejected imports leave the
+destination unchanged.
