@@ -97,7 +97,7 @@ test('guide is bounded, cites bundled sources and never treats a query as a path
   assert.ok(Object.keys(topicIndex(gameGuide(''))).some((id) => id.includes('farming')));
 });
 
-test('long memory excerpts and help fit the resident request budget together', async () => {
+test('long memory excerpts and help fit the resident request budget together', async (t) => {
   const { Store } = await import('../src/server/store.ts');
   const { Universe } = await import('../src/server/universe.ts');
   const { Residents } = await import('../src/server/npc/residents.ts');
@@ -133,6 +133,7 @@ test('long memory excerpts and help fit the resident request budget together', a
     const request = { instructions: instructions + 'P'.repeat(3000), observation };
     const requestBytes =
       Buffer.byteLength(JSON.stringify(request)) + Buffer.byteLength(JSON.stringify(turnTool));
+    t.diagnostic(`Resident request: ${requestBytes} / 96000 bytes`);
     assert.ok(
       requestBytes < 96000,
       `Request bytes: ${requestBytes}; ` +

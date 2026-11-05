@@ -498,11 +498,21 @@ async function connect() {
     }
     if (msg.type === 'radio') radioConsole.receive(msg);
     if (msg.type === 'state') {
+      const previousWorld = world;
       world = mergeState(world, msg);
       me = world!.players[msg.me];
       items = worldItems(world!);
       skills = worldSkills(world!);
       if (msg.account) account = msg.account;
+      // A landscape form replaces the full layout. Bind the next edit to the
+      // accepted snapshot, preserving draft fields through PanelMemory.
+      if (
+        panel === 'editor' &&
+        tab === 'Landscape' &&
+        previousWorld?.id === world.id &&
+        (previousWorld.landscape !== world.landscape || previousWorld.terrain !== world.terrain)
+      )
+        renderPanel();
       stateInbox.push({
         world: world!.id,
         me: msg.me,
@@ -560,6 +570,7 @@ async function connect() {
       if (
         !radioResult &&
         (msg.ok || visit !== undefined) &&
+        !(panel === 'editor' && tab === 'Landscape') &&
         panel &&
         view === $('modal-host').dataset.viewKey
       )

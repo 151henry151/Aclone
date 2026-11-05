@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.122.0] - 2026-11-05
+
+### Added
+
+- Configure bounded terrain and landscape capacities per world; share limits across editor, server and portable designs, and reject reductions that would invalidate saved work or undo history.
+
+### Fixed
+
+- Refresh landscape forms from accepted snapshots while preserving draft fields, so consecutive edits retain the preceding layout.
+
 ## [0.121.1] - 2026-11-05
 
 ### Fixed

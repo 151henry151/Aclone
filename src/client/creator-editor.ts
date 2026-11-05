@@ -1,3 +1,4 @@
+import { landscapeRules, landscapeRuleFields } from '../shared/landscape-rules';
 import { communicationRules, communicationRuleFields } from '../shared/communication-rules';
 import { calendarRules, calendarRuleFields } from '../shared/calendar-rules';
 import { alpineRules, alpineRuleFields } from '../shared/alpine-rules';
@@ -120,6 +121,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(climateRuleFields),
     ...Object.keys(alpineRuleFields),
     ...Object.keys(calendarRuleFields),
+    ...Object.keys(landscapeRuleFields),
     ...Object.keys(communicationRuleFields),
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
@@ -230,6 +232,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Chat includes public, private, family and resident replies. CB uses the smaller of its own limit and this limit. Existing messages and drafts are preserved. Group invitations select one interested resident; zero removes only the shared reply delay. AI generation budgets remain separate ceilings.</p></fieldset>`;
+  const landscape = landscapeRules(settings);
+  const landscapeFields = `<fieldset class="boat-death-settings"><legend>Landscape limits</legend>${Object.entries(
+    landscapeRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        landscape[key as keyof typeof landscape],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Capacities govern new terrain and landscape edits. Zero disables that category. Per-line/group and world totals both apply. Lowering below saved content or retained undo history is rejected; remove unwanted edits first. Existing terrain, models, heightmap dimensions and map bounds are unchanged. Larger layouts cost more to render.</p></fieldset>`;
   const calendar = calendarRules(settings);
   const calendarFields = `<fieldset class="boat-death-settings"><legend>Calendar</legend>${Object.entries(
     calendarRuleFields,
@@ -696,6 +714,7 @@ export function settingsFields(settings: Settings = defaults) {
     fishingFields +
     communicationFields +
     calendarFields +
+    landscapeFields +
     alpineFields +
     climateFields +
     runningFields +

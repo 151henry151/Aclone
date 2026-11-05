@@ -2,6 +2,15 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.122.0 — More room for custom landscapes
+
+World builders can raise or lower terrain and landscape capacities within bounded
+supported ranges. The editor, server and design importer share each world's
+limits. The open editor refreshes from accepted snapshots while preserving draft
+fields, so consecutive edits retain previous work. Capacity edits protect saved
+content and undo history, while empty-world
+and default-world behavior is preserved. See [Landscape limits](WORLD_BUILDING.md#landscape-limits).
+
 ## 0.121.1 — Restore scripted worlds
 
 Repair native Lua worker startup after the shared chat settings gained JSON

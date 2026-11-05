@@ -5145,3 +5145,98 @@ The browser import/entry/welcome flow passes (2.2 minutes). The captured welcome
 is correct, but a transient software-rendering notice overlaps the screenshot;
 wait for the notice to finish before recapturing the announcement image. The
 unchanged guide budget and published-guide checks also pass (17 checks).
+
+0.121.1 is done and live: commit `4a31148` is pushed and matches the server.
+The recaptured browser flow passes and its welcome screenshot is reviewed; all
+40 relevant unit/guide checks, TypeScript, formatting and production build pass.
+Read-only health, client, website and map-worker checks pass without page errors.
+SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261105-005022.sqlite`;
+website rollback: `/var/backups/aclone-website/site-20261105-005156.tar.gz`.
+[Verified scripted-world announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567778615591051354).
+Resume the preserved landscape capacity work below.
+
+0.121.0 is done and live: pushed commit `ba00d08` matches the server. Health,
+client, website and prefixed map-worker assets pass read-only browser checks with
+no page errors. SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261105-003400.sqlite`;
+website rollback: `/var/backups/aclone-website/site-20261105-003520.tar.gz`.
+[Verified arrival screenshots announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567774357734953000).
+Evidence: `output/release-0.121.0/`.
+
+### Terrain and landscape capacity
+
+Before production edits: expose the existing terrain and landscape count/length
+limits in a Landscape limits fieldset, retaining current defaults: terrain stamps
+256; paths 16; barriers 16; surface brushes 64; scatter groups 16; instances per
+scatter group 64 and per world 128; points per line 16 and total 128; barrier length
+1,200 m. Zero count/length capacity disables new content in that category; each
+line still needs at least two points. Keep brush dimensions, map bounds, the fixed
+33 × 33 heightmap format, model validation and four-entry undo history unchanged.
+Do not expose structural persistence identifiers or change their limits.
+
+Bounded supported ceilings: 512 terrain stamps; 64 paths/barriers/scatter groups;
+256 surfaces; 128 instances/group and 512 total; 32 points/line and 512 total;
+4,800 m barriers. These are safety bounds, not additional default values. Verify
+maximum-size geometry, payload size below the existing 512 KiB action envelope,
+and a browser world above the former capacities before calling increases safe.
+
+Completion criteria: first run `npx tsx --test tests/landscape-rules.test.ts` red.
+Assert defaults and missing-key fallback; each custom limit accepts beyond its
+former default and rejects overflow atomically; finite/integer/range validation;
+creation, editor, summary, resident observations, saves and design round trips.
+Reject lowering below current content or any retained undo state without changing
+settings/content/history. Undo remains valid after a permitted limit edit. Design
+imports validate their own settings before enforcing capacities, without weakening
+ordinary default imports or changing the destination on failure. Preserve model,
+point spacing, duplicate-ID, coordinate and heightmap checks.
+
+Browser: disposable flat world, empty landscape and disabled scatter without a
+model; change Rules → Landscape limits; add an extra visible path/surface above
+the old cap, observe it in the landscape preview and world, reject an overflow,
+undo, reload and verify saved content/settings. Reject lowering below saved work
+with a clear message. Test terrain brushing at a raised stamp cap and its failure
+state. Capture/review a screenshot and record responsiveness at supported bounds.
+Run affected landscape/creator/design/terrain tests, guide checks, TypeScript,
+production build and Prettier. Release/deploy/announce only if these pass.
+
+Landscape red gate: all six cases failed on missing defaults/unknown settings
+before production edits (`output/landscape-rules/red.log`). The first green run
+passes all six, including every independent increased capacity, atomic overflows,
+undo-history protection, portable raised layouts and transport/geometry bounds.
+TypeScript passes. The browser stress fixture exercises supported combined bounds
+in a disposable world; relevant existing checks are running.
+
+After the native-worker repair, resume the same landscape criteria. The first
+browser attempt reached the maximum saved surface count, but submitted the next
+edit before that snapshot refreshed the form; wait for the visible capacity and
+reset coordinates before asserting overflow. Keep the overflow assertion. The
+resident request-size check also exceeded its unchanged 96 KB ceiling by 234
+bytes; compact redundant instruction wording while preserving every constraint,
+then rerun that gate. No next backlog item starts until this slice passes.
+
+The second browser run confirms a real editor gap: after an accepted surface
+edit the server has 256 surfaces, while the open form still reports 255 and
+holds the previous snapshot. A second full-layout submission can overwrite the
+prior edit. Refresh Landscape on accepted landscape/terrain snapshots, preserving
+form drafts with PanelMemory, instead of the result timer that can precede the
+snapshot. The existing failing browser assertion now guards this behavior; keep
+its capacity/overflow/undo checks and assert the edited coordinate stays at zero
+(the established draft-preservation behavior), not that it resets to 17.
+
+The revised snapshot-driven browser flow passes accepted-count, draft retention,
+overflow, undo and reduced-cap rejection steps and proceeds to reload/timing.
+All 17 guide checks now pass with the unchanged 96 KB budget, explicit AI-identity
+and operator-impersonation checks intact (`guides-final.log`). The HTTP design
+import passes with the separately released native-worker repair.
+
+Landscape completion gates pass: all 50 unique relevant unit/guide checks are
+green after the worker fix and request-size corrections. The final resident
+request is 95,938/96,000 bytes with full rule values and guide coverage retained.
+TypeScript is clean. Both browser flows pass: raised-capacity desktop (2.3 min)
+and existing mobile paths, fences, surface painting, heightmap preview and undo
+(1.3 min). Reviewed preview/failure and rendered-world screenshots. The supported
+combined-bound fixture fits the existing transport envelope and generates finite
+geometry. Its software-rendered median frame interval is 533 ms versus 483 ms
+for the baseline; this is local regression evidence, not a hardware FPS promise.
+The final world screenshot shows the accepted surface and scattered test models.
+Prepare 0.122.0 and run the final production build before deployment. Evidence:
+`output/landscape-rules/`.

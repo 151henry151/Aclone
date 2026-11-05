@@ -4,7 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.121.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.122.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.122.0 adds bounded terrain and landscape capacities in Rules → Landscape limits. Consecutive edits use the accepted layout, while typed drafts, saved work and undo history are protected. See [Landscape limits](docs/WORLD_BUILDING.md#landscape-limits).
 
 Version 0.121.1 restores scripted world imports and scripted events after the communication-settings update.
 

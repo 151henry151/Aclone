@@ -1,3 +1,4 @@
+import { landscapeRules, landscapeRuleCeilings } from '../shared/landscape-rules';
 import { constructionRuleFields } from '../shared/construction-rules';
 import { validFarmPlotCount } from '../shared/farm-land';
 import {
@@ -23,7 +24,11 @@ import { buildingArchitecture } from '../shared/building-architecture.ts';
 import { buildingDesignQuote } from '../shared/building-designs.ts';
 import { worldBuildings } from '../shared/world-catalogue.ts';
 import { rulesets } from '../shared/rulesets.ts';
-import { landscapeSchema, validateLandscape } from '../shared/landscape.ts';
+import {
+  landscapeSchema,
+  landscapeSchemaForRules,
+  validateLandscape,
+} from '../shared/landscape.ts';
 import {
   catalogueSchema,
   catalogueItemId,
@@ -113,7 +118,9 @@ const designSchema = z.object({
     )
     .max(64)
     .default([]),
-  landscape: landscapeSchema.default(() => landscapeSchema.parse({})),
+  landscape: landscapeSchemaForRules(landscapeRuleCeilings).default(() =>
+    landscapeSchema.parse({}),
+  ),
   catalogue: catalogueSchema.default(() => catalogueSchema.parse({})),
   courses: z.array(courseSchema).max(16).default([]),
   roundCycle: roundCycleSchema.optional(),
@@ -133,7 +140,7 @@ const designSchema = z.object({
         height: z.number().min(-30).max(30),
       }),
     )
-    .max(256),
+    .max(landscapeRuleCeilings.terrainStampLimit),
   zones: z
     .array(
       z.object({
@@ -406,7 +413,8 @@ function applyValidatedDesign(w: World, input: unknown) {
     for (const id of [...Object.keys(b.buy ?? {}), ...Object.keys(b.sell ?? {})])
       if (!Object.hasOwn(worldItems(w), id)) throw Error('Unknown world item: ' + id);
   }
-  w.landscape = validateLandscape(w, d.landscape);
+  w.landscape = d.landscape;
+  w.landscapeHistory = [];
   w.terrain = d.terrain;
   w.coastalBluffs = d.coastalBluffs;
   w.spaceportSite = d.spaceportSite;
@@ -445,6 +453,9 @@ function applyValidatedDesign(w: World, input: unknown) {
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };
   }
   configureRules(w, d.settings, d.townCharter);
+  w.landscape = validateLandscape(w, d.landscape);
+  if (w.terrain.length > landscapeRules(w.settings).terrainStampLimit)
+    throw Error('Terrain stamp limit exceeded');
   const placements: Record<string, Trailer> = {};
   for (const input of d.parkedFuelTankers) {
     if (placements[input.id]) throw Error('Duplicate tanker IDs');

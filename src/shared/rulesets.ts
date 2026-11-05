@@ -1,3 +1,4 @@
+import { landscapeRules } from './landscape-rules';
 import { communicationRules } from './communication-rules';
 import { calendarRules } from './calendar-rules';
 import { alpineRules } from './alpine-rules';
@@ -95,6 +96,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const running = vehicleRunningRules(s);
   const communication = communicationRules(s);
   const calendar = calendarRules(s);
+  const landscape = landscapeRules(s);
   const alpine = alpineRules(s);
   const climate = climateRules(s);
   const navigation = boatNavigationRules(s);
@@ -104,6 +106,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const cargo = npcCargoRules(s);
   return [
     `Communication: chat limit ${communication.chatMaxLength} characters; group reply cooldown ${communication.npcGroupReplyCooldown} real seconds. CB retains its smaller radio limit.`,
+    `Landscape: ${landscape.terrainStampLimit} terrain stamps; path/barrier/surface caps ${landscape.landscapePathLimit}/${landscape.landscapeBarrierLimit}/${landscape.landscapeSurfaceLimit}; scatter groups/per-group/total ${landscape.landscapeScatterGroupLimit}/${landscape.landscapeScatterPerGroupLimit}/${landscape.landscapeScatterLimit}; points/line ${landscape.landscapeLinePointLimit}, total ${landscape.landscapePointLimit}; barriers ${landscape.landscapeBarrierLengthLimit} m.`,
     `Calendar: lottery interval ${calendar.lotteryDrawDays} game days (existing draw deadlines persist); lunar phase period ${calendar.calendarLunarDays} game days, shared by moon phases and tides. Edits preserve saved time and tidal range.`,
     `Alpine climate: permanent summit snow ${alpine.alpinePermanentSnow ? 'on' : 'off'}, transition ${alpine.alpineSnowStart}–${alpine.alpineSnowFull} m above sea datum. Converted rain snowfall ${alpine.alpineSnowBase} + intensity × ${alpine.alpineSnowIntensity} m/day. Applies only to the northern-island biome; seasonal snow and terrain persist.`,
     `Climate: wet-event chances spring ${climate.climateSpringWetChance}, summer ${climate.climateSummerWetChance}, autumn ${climate.climateAutumnWetChance}, winter ${climate.climateWinterWetMin}–${climate.climateWinterWetMax}; storm strength threshold ${climate.climateStormThreshold}, snowy-event blizzard chance ${climate.climateBlizzardChance}. Natural snow ${climate.climateSnowPerStrength} × strength + ${climate.climateBlizzardSnow} during blizzards, forced snow/snowstorm ${climate.climateForcedSnow}/${climate.climateForcedSnowstorm} m/day. Event gaps and saved snow persist.`,

@@ -1,3 +1,4 @@
+import { landscapeRules, type LandscapeRules } from './landscape-rules';
 import { maxCoordinate } from './world-limits';
 import { inlandLevel } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
@@ -10,99 +11,112 @@ import { townRoads, roadDistance, type Point, type Road } from './town.ts';
 const coordinate = z.number().finite().min(-maxCoordinate).max(maxCoordinate);
 const point = z.object({ x: coordinate, z: coordinate });
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/);
-const polyline = z
-  .array(point)
-  .min(2)
-  .max(16)
-  .refine(
-    (points) =>
-      points.slice(1).every((p, i) => Math.hypot(p.x - points[i].x, p.z - points[i].z) >= 1),
-    'Separate adjacent points by at least one metre',
-  );
-export const landscapeSchema = z
-  .object({
-    paths: z
-      .array(
-        z.object({
-          id,
-          points: polyline,
-          width: z.number().min(1).max(20).default(5),
-          curved: z.boolean().default(true),
-        }),
+export function landscapeSchemaForRules(settings: Partial<LandscapeRules> = {}) {
+  const limits = landscapeRules(settings);
+  const polyline = z
+    .array(point)
+    .min(2)
+    .max(limits.landscapeLinePointLimit)
+    .refine(
+      (points) =>
+        points.slice(1).every((p, i) => Math.hypot(p.x - points[i].x, p.z - points[i].z) >= 1),
+      'Separate adjacent points by at least one metre',
+    );
+  return z
+    .object({
+      paths: z
+        .array(
+          z.object({
+            id,
+            points: polyline,
+            width: z.number().min(1).max(20).default(5),
+            curved: z.boolean().default(true),
+          }),
+        )
+        .max(limits.landscapePathLimit)
+        .default([]),
+      surfaces: z
+        .array(
+          z.object({
+            id,
+            x: coordinate,
+            z: coordinate,
+            radius: z.number().min(1).max(100),
+            material: z.enum(['grass', 'gravel', 'soil', 'sand']),
+          }),
+        )
+        .max(limits.landscapeSurfaceLimit)
+        .default([]),
+      barriers: z
+        .array(
+          z.object({
+            id,
+            points: polyline,
+            kind: z.enum(['fence', 'wall']).default('fence'),
+            height: z.number().min(0.5).max(8).default(1.5),
+            width: z.number().min(0.2).max(3).default(0.3),
+          }),
+        )
+        .max(limits.landscapeBarrierLimit)
+        .default([]),
+      scatter: z
+        .array(
+          z.object({
+            id,
+            model: id,
+            x: coordinate,
+            z: coordinate,
+            radius: z.number().min(2).max(100),
+            count: z.number().int().min(1).max(limits.landscapeScatterPerGroupLimit),
+            seed: z.number().int().min(0).max(1e9),
+            scale: z.number().min(0.2).max(3).default(1),
+            solid: z.boolean().default(false),
+          }),
+        )
+        .max(limits.landscapeScatterGroupLimit)
+        .default([]),
+      heightmap: z
+        .array(z.number().finite().min(-40).max(40))
+        .length(33 * 33)
+        .optional(),
+    })
+    .superRefine((v, ctx) => {
+      const all = [...v.paths, ...v.surfaces, ...v.barriers, ...v.scatter];
+      if (new Set(all.map((x) => x.id)).size !== all.length)
+        ctx.addIssue({ code: 'custom', message: 'Duplicate landscape IDs' });
+      if (v.scatter.reduce((n, s) => n + s.count, 0) > limits.landscapeScatterLimit)
+        ctx.addIssue({
+          code: 'custom',
+          message: `Scatter limit: ${limits.landscapeScatterLimit} instances per world`,
+        });
+      if (
+        [...v.paths, ...v.barriers].reduce((n, p) => n + p.points.length, 0) >
+        limits.landscapePointLimit
       )
-      .max(16)
-      .default([]),
-    surfaces: z
-      .array(
-        z.object({
-          id,
-          x: coordinate,
-          z: coordinate,
-          radius: z.number().min(1).max(100),
-          material: z.enum(['grass', 'gravel', 'soil', 'sand']),
-        }),
+        ctx.addIssue({
+          code: 'custom',
+          message: `Limit paths and barriers to ${limits.landscapePointLimit} control points in total`,
+        });
+      if (
+        v.barriers.reduce(
+          (n, b) =>
+            n +
+            b.points
+              .slice(1)
+              .reduce((m, p, i) => m + Math.hypot(p.x - b.points[i].x, p.z - b.points[i].z), 0),
+          0,
+        ) > limits.landscapeBarrierLengthLimit
       )
-      .max(64)
-      .default([]),
-    barriers: z
-      .array(
-        z.object({
-          id,
-          points: polyline,
-          kind: z.enum(['fence', 'wall']).default('fence'),
-          height: z.number().min(0.5).max(8).default(1.5),
-          width: z.number().min(0.2).max(3).default(0.3),
-        }),
-      )
-      .max(16)
-      .default([]),
-    scatter: z
-      .array(
-        z.object({
-          id,
-          model: id,
-          x: coordinate,
-          z: coordinate,
-          radius: z.number().min(2).max(100),
-          count: z.number().int().min(1).max(64),
-          seed: z.number().int().min(0).max(1e9),
-          scale: z.number().min(0.2).max(3).default(1),
-          solid: z.boolean().default(false),
-        }),
-      )
-      .max(16)
-      .default([]),
-    heightmap: z
-      .array(z.number().finite().min(-40).max(40))
-      .length(33 * 33)
-      .optional(),
-  })
-  .superRefine((v, ctx) => {
-    const all = [...v.paths, ...v.surfaces, ...v.barriers, ...v.scatter];
-    if (new Set(all.map((x) => x.id)).size !== all.length)
-      ctx.addIssue({ code: 'custom', message: 'Duplicate landscape IDs' });
-    if (v.scatter.reduce((n, s) => n + s.count, 0) > 128)
-      ctx.addIssue({ code: 'custom', message: 'Scatter limit: 128 instances per world' });
-    if ([...v.paths, ...v.barriers].reduce((n, p) => n + p.points.length, 0) > 128)
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Limit paths and barriers to 128 control points in total',
-      });
-    if (
-      v.barriers.reduce(
-        (n, b) =>
-          n +
-          b.points
-            .slice(1)
-            .reduce((m, p, i) => m + Math.hypot(p.x - b.points[i].x, p.z - b.points[i].z), 0),
-        0,
-      ) > 1200
-    )
-      ctx.addIssue({ code: 'custom', message: 'Barrier length limit: 1200 metres' });
-  });
+        ctx.addIssue({
+          code: 'custom',
+          message: `Barrier length limit: ${limits.landscapeBarrierLengthLimit} metres`,
+        });
+    });
+}
+export const landscapeSchema = landscapeSchemaForRules();
 export type Landscape = z.infer<typeof landscapeSchema>;
 export function validateLandscape(w: World, input: unknown) {
-  const l = landscapeSchema.parse(input);
+  const l = landscapeSchemaForRules(w.settings).parse(input);
   for (const s of l.scatter)
     if (!w.creator?.models.some((m) => m.id === s.model))
       throw Error('Choose an existing Workshop model for scatter');

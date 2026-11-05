@@ -429,5 +429,15 @@
   "npcGroupReplyCooldown": 30,
   "lotteryDrawDays": 365,
   "respawnX": 0,
-  "respawnZ": 17
+  "respawnZ": 17,
+  "terrainStampLimit": 256,
+  "landscapePathLimit": 16,
+  "landscapeBarrierLimit": 16,
+  "landscapeSurfaceLimit": 64,
+  "landscapeScatterGroupLimit": 16,
+  "landscapeScatterPerGroupLimit": 64,
+  "landscapeScatterLimit": 128,
+  "landscapeLinePointLimit": 16,
+  "landscapePointLimit": 128,
+  "landscapeBarrierLengthLimit": 1200
 }

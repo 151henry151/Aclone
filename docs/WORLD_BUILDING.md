@@ -217,7 +217,7 @@ reserves and NPC errands survive restarts. Creator objects, heightmap imports
 (33 × 33 across the whole map) and the shoreline survey still work at village
 scale. Limits per world:
 64 models, 32 parts per model, 128 placed objects, 64 behavior rules, 128 zones,
-256 terrain stamps and 500 buildings. Uploads allow 32 assets, 2 MiB each, with
+a default 256 terrain stamps (configurable in Landscape limits) and 500 buildings. Uploads allow 32 assets, 2 MiB each, with
 images no larger than 2048 × 2048. GLB supports embedded geometry/textures,
 up to 256 nodes, 128 primitives, 32 materials and eight textures, with a combined
 300,000 accessor-element budget. No external URLs, compression/extensions,
@@ -295,7 +295,7 @@ Paint circular grass, gravel, soil or sand patches; the first map point sets the
 
 Preview a PNG/JPEG heightmap (2 MiB, 2048 × 2048 maximum). Image brightness maps between your low/high heights; the server stores a 33 × 33 grid across the playable square. Blue preview cells are below sea level. **Apply previewed heightmap** replaces the procedural base; existing height brushes remain additive. Terrain, buildings and water checks use the same heights. Review shoreline businesses before applying.
 
-**Undo last landscape edit** restores one of the last four saved path/surface/barrier/scatter/heightmap states, including after a restart. Remove individual features below the editor; remove older height brushes in Layout. Edits are free and caretaker-only. Limits: 16 paths, 16 barriers, 128 control points total, 1,200 metres of barriers, 64 surface brushes and 128 scattered instances. Exported designs include the current layout, not undo history.
+**Undo last landscape edit** restores one of the last four saved path/surface/barrier/scatter/heightmap states, including after a restart. Remove individual features below the editor; remove older height brushes in Layout. Edits are free and caretaker-only. Default limits: 16 paths, 16 barriers, 128 control points total, 1,200 metres of barriers, 64 surface brushes and 128 scattered instances. Configure these in Rules → Landscape limits; the editor shows local capacities. Exported designs include the current layout, not undo history.
 
 ## Vehicle rules
 
@@ -1565,3 +1565,38 @@ coordinates do not prevent unrelated rules edits. Old saves missing these fields
 use the original 0/17 point. Creation, local summaries, resident observations,
 saves and portable designs carry both coordinates; rejected imports leave the
 destination unchanged.
+
+## Landscape limits
+
+In **F10 → Rules → Landscape limits**, choose capacities for owner-authored terrain
+and landscape edits. Defaults reproduce existing worlds: `terrainStampLimit` 256,
+`landscapePathLimit` 16, `landscapeBarrierLimit` 16, `landscapeSurfaceLimit` 64,
+`landscapeScatterGroupLimit` 16, `landscapeScatterPerGroupLimit` 64,
+`landscapeScatterLimit` 128, `landscapeLinePointLimit` 16,
+`landscapePointLimit` 128 and `landscapeBarrierLengthLimit` 1,200 metres.
+
+Supported ceilings are 512 terrain stamps; 64 paths, barriers or scatter groups;
+256 surfaces; 128 instances per group and 512 total; 32 points per line and 512
+points total; and 4,800 metres of barriers. Counts and length limits are whole
+numbers. Zero disables new content in that category; a line always requires at
+least two points. Per-line/per-group and overall capacities both apply. Larger
+layouts require more rendering and terrain sampling work, so increase only what
+your world needs. Crowded scatter may still place fewer objects than requested.
+
+Lowering a limit never deletes existing work. Changes that would put the current
+layout or any of its four retained undo states above a limit are rejected. Remove
+unwanted features first; if an older, larger layout remains in undo history, keep
+the higher limit until that state has left the four-change history. Removing
+individual terrain stamps in Layout remains available. Undo itself continues to
+validate the restored landscape normally.
+
+After an accepted edit, the Landscape tab refreshes its layout and usage from the
+server while preserving your typed fields. Consecutive edits therefore build on
+the accepted layout. The Landscape editor uses local limits for mouse/touch
+points, typed coordinates, scatter counts, surfaces and terrain brushes. Without
+a Workshop model, scatter remains unavailable. Geometry bounds, brush dimensions,
+model references, duplicate-ID protection and the 33 × 33 heightmap format stay
+unchanged. World creation, summaries, resident observations, saved worlds and
+portable designs carry these settings; missing keys use the defaults. Imports
+validate both settings and contents atomically, including layouts above the old
+limits; undo history is not part of a portable design.

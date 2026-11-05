@@ -1,3 +1,4 @@
+import { landscapeRules, landscapeRuleFields } from './landscape-rules';
 import { communicationRuleFields } from './communication-rules';
 import { calendarRuleFields } from './calendar-rules';
 import { alpineRuleFields, alpineRulesError } from './alpine-rules';
@@ -176,7 +177,7 @@ import {
 } from './vehicle-services.ts';
 import { herdSpec, tendHerd, breedHerd, birthHerd, livestockOutputs } from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
-import { landscapeAction } from './landscape.ts';
+import { landscapeAction, landscapeSchemaForRules } from './landscape.ts';
 import {
   worldItems,
   worldSkills,
@@ -1982,6 +1983,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(climateRuleFields, key) ||
             Object.hasOwn(alpineRuleFields, key) ||
             Object.hasOwn(calendarRuleFields, key) ||
+            Object.hasOwn(landscapeRuleFields, key) ||
             Object.hasOwn(communicationRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
@@ -2019,6 +2021,7 @@ export function act(w: World, id: string, a: Action): string {
         const communicationField =
           communicationRuleFields[key as keyof typeof communicationRuleFields];
         const calendarField = calendarRuleFields[key as keyof typeof calendarRuleFields];
+        const landscapeField = landscapeRuleFields[key as keyof typeof landscapeRuleFields];
         const alpineField = alpineRuleFields[key as keyof typeof alpineRuleFields];
         const climateField = climateRuleFields[key as keyof typeof climateRuleFields];
         const vehicleRunningField =
@@ -2096,6 +2099,7 @@ export function act(w: World, id: string, a: Action): string {
         if (communicationField)
           num(v, communicationField.min, communicationField.max, communicationField.step === 1);
         if (calendarField) num(v, calendarField.min, calendarField.max, calendarField.step === 1);
+        if (landscapeField) num(v, landscapeField.min, landscapeField.max, true);
         if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
@@ -2225,6 +2229,22 @@ export function act(w: World, id: string, a: Action): string {
           'Choose a clear arrival site away from buildings and solid obstacles',
         );
       }
+      if (Object.keys(landscapeRuleFields).some((key) => Object.hasOwn(clean, key))) {
+        const limits = landscapeRules(nextSettings),
+          schema = landscapeSchemaForRules(nextSettings);
+        requireThat(
+          w.terrain.length <= limits.terrainStampLimit,
+          `Keep the terrain stamp limit at or above the ${w.terrain.length} existing stamps`,
+        );
+        requireThat(
+          schema.safeParse(w.landscape ?? {}).success,
+          'Keep landscape limits at or above existing saved content',
+        );
+        requireThat(
+          (w.landscapeHistory ?? []).every((previous) => schema.safeParse(previous).success),
+          'Keep landscape limits at or above retained undo history',
+        );
+      }
       const alpineError = alpineRulesError({ ...w.settings, ...clean });
       requireThat(!alpineError, alpineError ?? 'Invalid alpine climate');
       const climateError = climateRulesError({ ...w.settings, ...clean });
@@ -2267,7 +2287,8 @@ export function act(w: World, id: string, a: Action): string {
         z = num(a.z, -mapHalf(w), mapHalf(w)),
         radius = num(a.radius, 1, 100),
         height = num(a.height, -30, 30);
-      requireThat(w.terrain.length < 256, 'Terrain stamp limit reached');
+      const limit = landscapeRules(w.settings).terrainStampLimit;
+      requireThat(w.terrain.length < limit, `Terrain stamp limit reached (${limit})`);
       w.terrain.push({ x, z, radius, height });
       w.revision++;
       break;
