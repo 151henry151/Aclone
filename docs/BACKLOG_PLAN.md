@@ -4605,4 +4605,21 @@ world entry, map, movement, saved position and reconnect browser flow passes on
 a disposable local server through the prefix proxy. Review the mobile website
 and game screenshots; keep evidence under `output/release-0.115.0/`. No full
 suite was repeated for these metadata/documentation changes.
-Deployment status: verified locally; ready to push and deploy the release.
+Deployment status: **live**, verified 2026-11-04 at 21:57 America/New_York.
+Release commit `545a89b8b8dbdd88424f838458b03f0a2a62e714` is pushed on
+backlog-implementation and matches the clean server checkout. Main was not
+pushed. `aclone.service` is active; public health reports 0.115.0 and five worlds.
+The live browser shows ALPHA 0.115.0, loads the prefixed client and map-worker
+JavaScript, and records no page errors. The matching public website is live on
+0.115.0. Production checks are read-only; no live test pilots/worlds or manual
+player grants were created.
+
+Pre-upgrade SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261104-215503.sqlite` (424,550,400 bytes).
+No uploaded-assets directory existed to archive. Website rollback archive:
+`/var/backups/aclone-website/site-20261104-215641.tar.gz`. Keep these private on
+the host. A clean tracked-source archive and SHA-256 checksum are retained under
+`output/release-0.115.0/`, alongside deploy logs, local browser evidence and the
+live verification JSON/screenshots. Generated output and untracked NPC status
+notes remain unstaged. Disposable smoke processes have been stopped. This
+record-only follow-up does not change the deployed code or require a restart.
