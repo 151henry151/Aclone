@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.115.1] - 2026-11-04
+
 ### Fixed
 
 - Light spaceport razor wire with the same material response as the chainlink fence, replacing the bright night-time outline with thin physical wire; retain bounded scenery batches.

@@ -5,7 +5,7 @@ Source: [BACKLOG.md](BACKLOG.md), read in full before changes. Base: `main` at
 The implementation phase kept changes unreleased, with no version bump, pull
 request, deployment, live server edits or player grants. Henry authorized release
 and deployment of this checkpoint on 2026-11-04; the release record below
-supersedes those restrictions for this cut only. No manual player grants. Piloted spaceflight is excluded and remains pending.
+supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
 ## Completion protocol
 
@@ -4693,3 +4693,28 @@ successful PNG responses. The post prominently states that all 24 recipients
 receive an additional airframe even when they already own one. Consolidate the
 new world-builder settings into one short paragraph. Screenshots use local
 in-game demonstration scenes; omit the unreleased wire fix from the announcement.
+
+## Resume with a release after each finished item — authorized 2026-11-04
+
+Henry explicitly authorizes continuing the dependency order and, after every
+finished item, committing, pushing, deploying and posting a Discord announcement
+with a screenshot. This supersedes the checkpoint pause and unreleased-only
+restriction for completed work. Keep the failing-first/relevant-test/browser/
+TypeScript/format gates. Release independently usable rule batches as specified
+by the existing plan; bump SemVer, retain an empty Unreleased section, refresh
+README/player/world-builder/release docs, back up and deploy the exact pushed
+branch commit, verify live health/assets, then publish through aclone-bot to the
+existing announcements channel. Do not push main or open a PR. No further player
+grants are authorized. Piloted spaceflight remains excluded.
+
+First publish the already verified wire correction as 0.115.1. Its original red
+and green evidence remains above; metadata changes require the affected NPC
+guide tests, TypeScript, formatting and production-prefix build, followed by
+read-only live client/website/asset checks. Use the reviewed local night-fence
+screenshot in the announcement. Then resume item 11 at climate/calendar and
+environment batches, with concrete criteria recorded before each implementation.
+
+0.115.1 release gates pass: all 16 affected guide tests, clean TypeScript via
+`BASE_PATH=/aclone/ npm run build`, successful prefixed production assets,
+changed-file Prettier and `git diff --check`. The wire’s previously completed
+rendering/unit checks apply unchanged; do not repeat the full suite for metadata.

@@ -4,9 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.115.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.115.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
-The unreleased spaceport fence correction makes razor wire darken with the chainlink at night and shrink naturally with distance, instead of appearing as a row of lights.
+Version 0.115.1’s spaceport fence correction makes razor wire darken with the chainlink at night and shrink naturally with distance, instead of appearing as a row of lights.
 
 Version 0.115.0 releases the tested backlog checkpoint: responsive scenery updates, safer landings, improved flight terrain, snow walking, natural gathering grounds, fuel tankers, canoes, CB radios and configurable world rules. River recovery, dock construction and slow-link entry fixes are included. Reload the game after deployment; see the [checkpoint release notes](docs/RELEASE_NOTES.md#01150--backlog-checkpoint-and-responsive-scenery).
 
@@ -202,7 +202,7 @@ BASE_PATH=/aclone npm run build
 PUBLIC_ORIGIN=https://hromp.com/aclone/ npm start
 ```
 
-The proxy must strip `/aclone` before forwarding, including WebSocket requests, and redirect `/aclone` to `/aclone/`. See [hosting](docs/HOSTING.md) for proxy examples, environment variables, SMTP, backups and restore; [releasing](docs/RELEASING.md) covers upgrades. Production deployment is operator-managed; the nogits.com instance deploys with `scripts/deploy-nogits.sh` after `main` is pushed.
+The proxy must strip `/aclone` before forwarding, including WebSocket requests, and redirect `/aclone` to `/aclone/`. See [hosting](docs/HOSTING.md) for proxy examples, environment variables, SMTP, backups and restore; [releasing](docs/RELEASING.md) covers upgrades. Production deployment is operator-managed; the nogits.com instance deploys with `scripts/deploy-nogits.sh` after the approved release branch is pushed, using `DEPLOY_REF=<commit>` for the exact release.
 
 ## Start playing
 

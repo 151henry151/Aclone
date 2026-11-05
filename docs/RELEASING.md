@@ -2,6 +2,14 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.115.1
+
+Deploy the approved backlog-implementation commit using DEPLOY_REF, with the
+normal SQLite backup, production-prefix build and service restart. Publish the
+matching website and reload clients. No data migration is required. Verify
+health/client/website version 0.115.1 and the prefixed script/map-worker assets.
+The wire’s daylight and night rendering checks are recorded in BACKLOG_PLAN.md.
+
 ## Upgrade 0.115.0
 
 Deploy client and server together from the approved `backlog-implementation`

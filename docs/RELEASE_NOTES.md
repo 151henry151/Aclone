@@ -2,6 +2,17 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.115.1 — Spaceport wire follows the night lighting
+
+The razor wire around the spaceport now darkens with the chainlink fence instead
+of glowing like a row of lights. Physical thin wire also shrinks with distance,
+so it no longer forms a bright outline from an aircraft. Reload to receive it.
+
+Validation: daylight, unlit, dim ground/air and empty-world browser renders,
+static batching and GPU-warmup regressions, guide checks and TypeScript pass.
+The material and measured brightness results are recorded in the backlog plan.
+No save migration or world-rule change is required.
+
 ## 0.115.0 — Backlog checkpoint and responsive scenery
 
 Road growth and construction now prepare replacement scenery in small batches
