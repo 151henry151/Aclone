@@ -6,7 +6,12 @@ import { terrainHeight } from '../shared/terrain';
 import type { World } from '../shared/types';
 /** Batched diamond mesh fabric and posts, following the actual ground at each panel. */
 export function spaceportFence(w: World) {
-  const root = new T.Group();
+  const job = spaceportFenceSteps(w);
+  let step = job.next();
+  while (!step.done) step = job.next();
+  return step.value;
+}
+export function* spaceportFenceSteps(w: World, root = new T.Group()): Generator<void, T.Group> {
   root.name = 'Tall chain-link perimeter with concertina razor wire';
   const canvas = document.createElement('canvas');
   canvas.width = 64;
@@ -67,9 +72,10 @@ export function spaceportFence(w: World) {
     panels = [];
     rails = [];
   };
-  spaceportFences(w).forEach((edge, index) => {
+  for (const [index, edge] of spaceportFences(w).entries()) {
     const n = Math.ceil(Math.hypot(edge.b.x - edge.a.x, edge.b.z - edge.a.z) / 6);
     for (let j = 0; j < n; j++) {
+      yield;
       const point = (t: number) => {
         const x = edge.a.x + (edge.b.x - edge.a.x) * t,
           z = edge.a.z + (edge.b.z - edge.a.z) * t;
@@ -140,7 +146,7 @@ export function spaceportFence(w: World) {
       );
     }
     if (index % 16 === 15) flush();
-  });
+  }
   flush();
   return root;
 }

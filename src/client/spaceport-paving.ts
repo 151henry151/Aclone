@@ -11,8 +11,16 @@ import type { World } from '../shared/types';
 
 /** One clipped, terrain-following surface: no overlapping apron edges or flickering seams. */
 export function spaceportPavingModel(w: World) {
-  const s = w.spaceportSite!,
-    root = new T.Group();
+  const job = spaceportPavingModelSteps(w);
+  let step = job.next();
+  while (!step.done) step = job.next();
+  return step.value;
+}
+export function* spaceportPavingModelSteps(
+  w: World,
+  root = new T.Group(),
+): Generator<void, T.Group> {
+  const s = w.spaceportSite!;
   root.name = 'Connected concrete yard and visitor parking';
   const positions: number[] = [],
     colors: number[] = [],
@@ -68,6 +76,7 @@ export function spaceportPavingModel(w: World) {
       triangle([c, b, d]);
     }
     z += step;
+    yield;
   }
   const geometry = new T.BufferGeometry();
   geometry.setAttribute('position', new T.Float32BufferAttribute(positions, 3));

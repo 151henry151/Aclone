@@ -586,13 +586,24 @@ export class ParishMap {
       drawing.append(border, label);
     }
     const roads = townRoads(this.world).filter((r) => onSheet(r.a) || onSheet(r.b));
+    // One opaque path per width/layer preserves round segment caps and overlaps
+    // without thousands of SVG nodes forcing layout during map opening/panning.
+    const roadBatches = new Map<number, string[]>();
+    for (const road of roads) {
+      const width = Math.max(2, road.width * this.scale);
+      const paths = roadBatches.get(width) ?? [];
+      paths.push(
+        `M${this.x(road.a.x)} ${this.y(road.a.z)}L${this.x(road.b.x)} ${this.y(road.b.z)}`,
+      );
+      roadBatches.set(width, paths);
+    }
     for (const outline of [true, false])
-      for (const road of roads)
+      for (const [width, paths] of roadBatches)
         drawing.append(
           svg('path', {
-            d: `M${this.x(road.a.x)} ${this.y(road.a.z)}L${this.x(road.b.x)} ${this.y(road.b.z)}`,
+            d: paths.join(''),
             stroke: outline ? '#344b39' : '#c5b88e',
-            'stroke-width': Math.max(2, road.width * this.scale) + (outline ? 3 : 0),
+            'stroke-width': width + (outline ? 3 : 0),
             'stroke-linecap': 'round',
           }),
         );

@@ -84,6 +84,7 @@ export class CountrysideChunks {
   private world?: World;
   private pending?: { key: string; cx: number; cz: number; job: Generator<void, T.Group> };
   private low = false;
+  private dirty = new Set<string>();
   private half = 0;
   reset(w: World, low: boolean) {
     this.clear();
@@ -91,7 +92,14 @@ export class CountrysideChunks {
     this.low = low;
     this.half = mapHalf(w);
   }
+  refresh(w: World) {
+    this.pending?.job.return(undefined as never);
+    this.pending = undefined;
+    this.world = w;
+    this.dirty = new Set(this.chunks.keys());
+  }
   clear() {
+    this.dirty.clear();
     this.pending?.job.return(undefined as never);
     this.pending = undefined;
     for (const chunk of this.chunks.values()) this.drop(chunk);
@@ -145,7 +153,7 @@ export class CountrysideChunks {
       if ((j + 0.5) * chunkSize > z + loadRadius + chunkSize) break;
       for (let i = Math.max(lo, Math.floor((x - loadRadius) / chunkSize)); i < hi; i++) {
         if ((i + 0.5) * chunkSize > x + loadRadius + chunkSize) break;
-        if (this.chunks.has(`${i}:${j}`)) continue;
+        if (this.chunks.has(`${i}:${j}`) && !this.dirty.has(`${i}:${j}`)) continue;
         const d = Math.hypot((i + 0.5) * chunkSize - x, (j + 0.5) * chunkSize - z);
         if (d <= loadRadius + chunkSize * 0.71) wanted.push({ i, j, d });
       }
@@ -154,7 +162,9 @@ export class CountrysideChunks {
     let completed = 0;
     while (completed < budget) {
       if (!this.pending) {
-        const next = wanted.find(({ i, j }) => !this.chunks.has(`${i}:${j}`));
+        const next = wanted.find(
+          ({ i, j }) => !this.chunks.has(`${i}:${j}`) || this.dirty.has(`${i}:${j}`),
+        );
         if (!next) break;
         const { i, j } = next;
         this.pending = {
@@ -167,13 +177,19 @@ export class CountrysideChunks {
       const step = this.pending.job.next();
       if (step.done) {
         updateResourceScenery(step.value, this.world!);
+        const old = this.chunks.get(this.pending.key);
+        if (old) this.drop(old);
         this.chunks.set(this.pending.key, step.value);
+        this.dirty.delete(this.pending.key);
         this.pending = undefined;
         completed++;
       }
       if (performance.now() >= deadline) break;
     }
-    return !!this.pending || wanted.some(({ i, j }) => !this.chunks.has(`${i}:${j}`));
+    return (
+      !!this.pending ||
+      wanted.some(({ i, j }) => !this.chunks.has(`${i}:${j}`) || this.dirty.has(`${i}:${j}`))
+    );
   }
   snowHeight(x: number, z: number, depth: number, base: number) {
     if (!this.world || Math.max(Math.abs(x), Math.abs(z)) < 240) return base;

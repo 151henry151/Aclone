@@ -65,3 +65,65 @@ export async function finishGpuWork(
     gl.deleteSync(fence);
   }
 }
+
+/** Upload one geometry per yield into a private pixel, leaving the visible scene intact.
+ * Three uploads all attributes when a mesh is submitted, even with this simple material. */
+export function* uploadGeometrySteps(
+  renderer: Pick<T.WebGLRenderer, 'getRenderTarget' | 'setRenderTarget' | 'render'>,
+  root: T.Object3D,
+  camera: T.Camera,
+): Generator<void> {
+  const scene = new T.Scene(),
+    target = new T.WebGLRenderTarget(1, 1);
+  const material = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+  const meshes: T.Mesh[] = [];
+  root.traverse((o) => {
+    if (o instanceof T.Mesh && o.visible) meshes.push(o);
+  });
+  const seen = new Set<T.BufferGeometry>();
+  try {
+    for (const source of meshes) {
+      if (seen.has(source.geometry)) continue;
+      seen.add(source.geometry);
+      if (!source.geometry.boundingSphere) source.geometry.computeBoundingSphere();
+      const proxy = new T.Mesh(source.geometry, material);
+      proxy.frustumCulled = false;
+      scene.add(proxy);
+      const previous = renderer.getRenderTarget();
+      try {
+        renderer.setRenderTarget(target);
+        renderer.render(scene, camera);
+      } finally {
+        renderer.setRenderTarget(previous);
+        scene.remove(proxy);
+      }
+      yield;
+    }
+  } finally {
+    target.dispose();
+    material.dispose();
+  }
+}
+
+/** compileAsync still visits/initializes every material synchronously before its
+ * promise. Yield between objects while retaining the real object/shader variant. */
+export function* compileSceneSteps(
+  renderer: {
+    compileAsync: (object: T.Object3D, camera: T.Camera, target: T.Scene) => Promise<unknown>;
+  },
+  root: T.Object3D,
+  camera: T.Camera,
+  target: T.Scene,
+): Generator<Promise<unknown>> {
+  const objects: T.Object3D[] = [];
+  root.traverse((object) => {
+    if (
+      object instanceof T.Mesh ||
+      object instanceof T.Line ||
+      object instanceof T.Points ||
+      object instanceof T.Sprite
+    )
+      objects.push(object);
+  });
+  for (const object of objects) yield renderer.compileAsync(object, camera, target);
+}

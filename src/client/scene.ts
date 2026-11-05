@@ -2,7 +2,7 @@ import { CANOE } from '../shared/canoe-rules';
 import { createCanoe, carriedCanoe, createPaddledCanoe, floatCanoe } from './canoe-model';
 import { updateResourceScenery } from './resource-scenery';
 import { alpineWeather } from '../shared/alpine-weather';
-import { spaceportComplex } from './spaceport-complex';
+import { spaceportComplexSteps } from './spaceport-complex';
 import { createMotorboat } from './motorboat';
 import { TrailerScene } from './trailer-scene';
 import { TowLines } from './tow-lines';
@@ -10,7 +10,7 @@ import { createTugboat } from './tugboat';
 import { TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { createFlashlight } from './flashlight';
 import { createRainUmbrella, needsRainUmbrella } from './umbrella';
-import { spaceportFence } from './spaceport-fence';
+import { spaceportFenceSteps } from './spaceport-fence';
 import { waterDepth } from '../shared/fishing-water';
 import { publicPath } from '../shared/public-path';
 declare const __ACLONE_BASE__: string;
@@ -58,7 +58,14 @@ import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
 import type { RocketFlight } from './rocket-flight';
 import { LivestockScene } from './livestock-scene';
-import { sceneTextures, uploadTextures, yieldFrame, finishGpuWork } from './renderer-warmup';
+import {
+  sceneTextures,
+  uploadTextures,
+  uploadGeometrySteps,
+  compileSceneSteps,
+  yieldFrame,
+  finishGpuWork,
+} from './renderer-warmup';
 import { soundBank } from './sound-bank';
 import { waitForTextures, failedTextures } from './materials';
 import { addLandscape } from './landscape-scene';
@@ -83,8 +90,8 @@ import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surf
 import { cabView, chaseOffset, lookPitchFromDrag, cameraSurfaceFloor } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
 import * as T from 'three';
-import { batchStaticScenery, freezeScenery } from './static-scene';
-import { countryside } from './scenery';
+import { batchStaticScenerySteps, freezeScenery } from './static-scene';
+import { countrysideSteps } from './scenery';
 import { groundMaterial, surface } from './materials';
 import { GroundTiles } from './ground';
 import { CountrysideChunks } from './countryside';
@@ -182,6 +189,11 @@ export class GameScene {
   );
   private lastWorld = '';
   private revision = '';
+  private terrainRevision = '';
+  private worldBuild?: Generator<void | Promise<unknown>>;
+  private worldBuildError?: unknown;
+  private snowJob?: Generator<void | Promise<unknown>>;
+  private snowPrepared = false;
   private target = new T.Vector3();
   private elapsed = 0;
   private chase = 0;
@@ -550,7 +562,7 @@ export class GameScene {
     const rebuilt = this.revision !== rev;
     if (rebuilt) {
       this.revision = rev;
-      this.buildWorld(world);
+      this.queueWorldBuild(world);
     }
     if (this.lastWorld !== world.id) {
       this.motionClock = new MotionClock();
@@ -679,6 +691,9 @@ export class GameScene {
     try {
       await yieldFrame();
       if (!current()) return;
+      while (current() && (this.worldBuild || this.snowJob)) await yieldFrame();
+      if (!current()) return;
+      if (this.worldBuildError) throw this.worldBuildError;
       this.onLoading?.('Preparing nearby terrain…');
       // Generate nearest tiles first, yielding between small batches rather than
       // baking the entire horizon in the first state-message handler.
@@ -759,6 +774,11 @@ export class GameScene {
     }
   }
   setSpace() {
+    this.worldBuild?.return(undefined as never);
+    this.worldBuild = undefined;
+    this.snowJob?.return(undefined as never);
+    this.snowJob = undefined;
+    this.revision = '';
     ++this.warmGeneration;
     this.ready = true;
     this.settling = undefined;
@@ -789,294 +809,443 @@ export class GameScene {
     this.camera.position.set(0, 32, 80);
     this.camera.lookAt(0, 0, -10);
   }
-  private buildWorld(w: World) {
-    dispose(this.land);
-    this.land.clear();
-    this.fields.reset();
-    this.livestock.reset();
-    this.buildingMeshes = [];
-    this.flights = [];
-    this.labelsHidden = false;
-    this.renderer.shadowMap.needsUpdate = true;
-    // Compact parishes keep the single hand-sized plane; larger maps stream tiles.
-    const streamed = mapHalf(w) > legacyHalf + 50;
-    this.ground.clear();
-    this.horizon.reset(w);
-    this.inland.reset(w);
-    this.horizon.group.visible = streamed;
-    if (streamed) {
-      this.ground.reset(w);
-      this.ground.update(this.me?.x ?? 0, this.me?.z ?? 0, 4, this.groundView());
-      this.terrain = undefined;
-    } else {
-      const geometry = new T.PlaneGeometry(540, 540, 128, 128);
-      geometry.rotateX(-Math.PI / 2);
-      const pos = geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
-      geometry.computeVertexNormals();
-      prepareSnowSurface(geometry, w);
-      this.terrain = new T.Mesh(geometry, groundMaterial(w));
-      this.terrain.receiveShadow = true;
-      this.land.add(this.terrain);
-    }
-    if (w.airfield) this.land.add(airfieldModel(w.airfield));
-    this.launchComplex = undefined;
-    if (w.spaceportSite) {
-      this.land.add(spaceportFence(w));
-      if ((w.spaceportSite.layout ?? 0) >= 3) {
-        this.launchComplex = spaceportComplex(w);
-        this.land.add(this.launchComplex);
-      }
-    }
-    if (w.coastalBluffs?.length) this.land.add(coastalRocks(w));
-    const sea = this.ocean.create(w, this.low);
-    this.water = sea;
-    this.land.add(sea);
-    if (!this.ocean.sprayObject.parent) this.scene.add(this.ocean.sprayObject);
-    for (const b of w.buildings) {
-      const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
-      const g = custom ? creatorModel(custom, w) : this.building(b, w);
-      g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;
-      if (b.kind !== 'town' || b.style || custom) addFoundation(g, b, w);
-      g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
-      g.rotation.y = b.rotation;
-      g.userData.building = b.id;
-      g.traverse((object) => {
-        if (object instanceof T.Mesh)
-          for (const material of Array.isArray(object.material)
-            ? object.material
-            : [object.material])
-            fadeSceneryIntoFog(material);
-      });
-      this.buildingMeshes.push(g);
-      this.land.add(g);
-    }
-    for (const { x, z } of streetLights(w)) {
-      const lamp = new T.Group();
-      cylinder(lamp, 0.1, 5.5, '#353e38', 0, 2.75, 0, 10);
-      cylinder(lamp, 0.21, 0.3, '#353e38', 0, 0.15, 0, 10);
-      cylinder(lamp, 0.16, 0.15, '#353e38', 0, 5.35, 0, 10);
-      box(lamp, 0.7, 0.1, 0.7, '#353e38', 0, 5.55, 0);
-      const glass = box(lamp, 0.55, 0.8, 0.55, '#c9bf95', 0, 6, 0);
-      glass.material.roughness = 0.25;
-      glass.userData.lightSource = 'street';
-      glass.material.emissive.set('#956925');
-      glass.material.emissiveIntensity = 0.25;
-      for (const x of [-0.3, 0.3])
-        for (const z of [-0.3, 0.3]) box(lamp, 0.06, 0.9, 0.06, '#353e38', x, 6, z);
-      const cap = new T.Mesh(new T.ConeGeometry(0.56, 0.32, 4), material('#353e38'));
-      cap.position.y = 6.58;
-      cap.rotation.y = Math.PI / 4;
-      lamp.add(cap);
-      lamp.scale.setScalar(0.6);
-      lamp.position.set(x, terrainHeight(w, x, z), z);
-      this.land.add(lamp);
-    }
-    const pitch = new T.Mesh(new T.PlaneGeometry(60, 50), material('#69894f'));
-    surface(pitch, 'meadow', 5, '#a8ba83');
-    pitch.rotation.x = -Math.PI / 2;
-    pitch.position.set(90, 0.3, 45);
-    pitch.receiveShadow = true;
-    this.land.add(pitch);
-    const line = (pts: T.Vector3[]) => {
-      const l = new T.Line(
-        new T.BufferGeometry().setFromPoints(pts),
-        new T.LineBasicMaterial({ color: '#e1d9b2' }),
-      );
-      this.land.add(l);
-    };
-    line(
-      [
-        [60, 20],
-        [120, 20],
-        [120, 70],
-        [60, 70],
-        [60, 20],
-      ].map(([x, z]) => new T.Vector3(x, 0.4, z)),
-    );
-    line([new T.Vector3(90, 0.4, 20), new T.Vector3(90, 0.4, 70)]);
-    for (const x of [60, 120]) {
-      const goal = new T.Group();
-      box(goal, 0.4, 7, 0.4, '#efe4c5', 0, 3.5, -9);
-      box(goal, 0.4, 7, 0.4, '#efe4c5', 0, 3.5, 9);
-      box(goal, 0.4, 0.4, 18, '#efe4c5', 0, 7, 0);
-      goal.position.set(x, 0.3, 45);
-      this.land.add(goal);
-    }
-    const hornSign = label('HORN BALL · RUST / MOSS');
-    hornSign.position.set(90, 7, 15);
-    this.land.add(hornSign);
-    for (let i = 0; i < checkpoints.length; i++) {
-      const cp = checkpoints[i],
-        g = new T.Group();
-      for (const x of [-5, 5]) box(g, 0.35, 7, 0.35, i % 2 ? '#b9533c' : '#eadbaa', x, 3.5, 0);
-      box(g, 10, 0.4, 0.4, '#d2bb7a', 0, 7, 0);
-      const sign = label(i === 0 ? 'PUDDLEWICK CIRCUIT' : 'CHECKPOINT ' + i, '#fff1c8', 0.8);
-      sign.position.y = 9;
-      g.add(sign);
-      g.position.set(cp.x, 0.2, cp.z);
-      this.land.add(g);
-    }
-    for (const x of [60, 80]) {
-      const g = new T.Group();
-      cylinder(g, 0.6, 20, '#d4cdb5', 0, 10, 0);
-      const blades = new T.Group();
-      for (let i = 0; i < 3; i++) {
-        const b = new T.Group();
-        box(b, 0.6, 10, 0.2, '#e9dfc6', 0, 5, 0);
-        b.rotation.z = (i * Math.PI * 2) / 3;
-        blades.add(b);
-      }
-      blades.position.set(0, 20, 1);
-      g.add(blades);
-      g.position.set(x, terrainHeight(w, x, -100), -100);
-      g.userData.blades = blades;
-      this.land.add(g);
-    }
-    const dock = new T.Group();
-    const deck = dockHeight(w);
-    dock.position.set(fishingDock.x, deck, fishingDock.z);
-    dock.userData.building = fishingDock.id;
-    box(dock, fishingDock.width, 0.3, fishingDock.depth, '#705b43', 0, -0.18, 0);
-    for (let z = -10.75; z < 11; z += 0.5)
-      box(dock, fishingDock.width, 0.06, 0.47, '#938060', 0, -0.03, z);
-    for (const x of [-7, 7])
-      for (const z of [-9, 0, 10]) {
-        const bottom = Math.min(terrainHeight(w, fishingDock.x + x, fishingDock.z + z), deck - 1);
-        box(dock, 0.4, deck - bottom + 0.75, 0.4, '#705b43', x, (bottom - deck + 0.75) / 2, z);
-      }
-    // A sloped boardwalk joins the dry shore to exactly the same support surface as physics.
-    const positions: number[] = [];
-    for (let z = fishingDock.rampStart; z < fishingDock.shore; z += 0.5) {
-      const a = [-8, travelHeight(w, fishingDock.x - 8, z) - deck, z - fishingDock.z];
-      const b = [8, travelHeight(w, fishingDock.x + 8, z) - deck, z - fishingDock.z];
-      const c = [-8, travelHeight(w, fishingDock.x - 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
-      const d = [8, travelHeight(w, fishingDock.x + 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
-      positions.push(...a, ...c, ...b, ...b, ...c, ...d);
-    }
-    const ramp = new T.BufferGeometry();
-    ramp.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
-    ramp.computeVertexNormals();
-    // Supply UVs so the ramp can join the ordinary static geometry batches.
-    ramp.setAttribute(
-      'uv',
-      new T.Float32BufferAttribute(new Float32Array((positions.length / 3) * 2), 2),
-    );
-    dock.add(new T.Mesh(ramp, material('#938060')));
-    const fishing = label('FISHING DOCK · ANGLING');
-    fishing.position.y = 6;
-    dock.add(fishing);
-    this.land.add(dock);
-    const kricket = label('ULTRAKRICKET · MIND THE FUSE');
-    kricket.position.set(70, 6, -70);
-    this.land.add(kricket);
-    for (let i = 0; i < 3; i++) {
-      const g = new T.Group();
-      box(g, 0.2, 2, 0.2, '#f0dcb1', i * 0.5, 1, 0);
-      g.position.set(70, 0.2, -73);
-      this.land.add(g);
-    }
-    // Bake static geometry by material: dozens of draw calls instead of hundreds.
-    this.land.updateMatrixWorld(true);
-    addLandscape(this.land, w);
-    this.land.updateMatrixWorld(true);
-    const snowDetails = new SnowAccumulation(w);
-    snowDetails.collect(this.land);
-    batchStaticScenery(this.land, this.terrain);
-    this.townLighting.reset(this.land, (x, z) => terrainHeight(w, x, z));
-    if (w.creator?.scenery !== false) countryside(this.land, w, this.low);
-    this.woods.clear();
-    if (streamed && w.creator?.scenery !== false) {
-      this.woods.reset(w, this.low);
-      this.woods.update(this.me?.x ?? 0, this.me?.z ?? 0, 1);
-    }
-    const seasonal = new Set<T.Material>();
-    this.land.traverse((o) => {
-      if (o instanceof T.Mesh && o !== this.terrain && o !== this.water)
-        for (const m of Array.isArray(o.material) ? o.material : [o.material])
-          if (
-            (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
-            !m.transparent &&
-            !seasonal.has(m) &&
-            !m.userData.seasonal
-          ) {
-            seasonal.add(m);
-            seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
+  private queueWorldBuild(w: World) {
+    this.worldBuildError = undefined;
+    this.worldBuild?.return(undefined as never);
+    // Snapshot the build inputs: later network updates must not alter a suspended job.
+    const snapshot = structuredClone({ ...w, players: {} });
+    const job = this.buildWorld(snapshot);
+    this.worldBuild = job;
+    void this.advanceWorldBuild(job);
+  }
+  private async advanceWorldBuild(job: Generator<void | Promise<unknown>>) {
+    try {
+      while (this.worldBuild === job) {
+        await yieldFrame();
+        if (this.worldBuild !== job) return;
+        const deadline = performance.now() + 4;
+        do {
+          const step = job.next();
+          if (step.done) {
+            this.worldBuild = undefined;
+            return;
           }
-    });
-    snowDetails.collect(this.land);
-    snowDetails.foundations();
-    snowDetails.verges();
-    this.land.add(snowDetails.finish());
-    this.snowDetails = snowDetails;
-    this.snowVisible = snowDepth(w.climate) > 0.001;
-    showSnowAccumulation(this.land, this.snowVisible);
-    showSnowAccumulation(this.woods.group, this.snowVisible);
-    if (!this.livestock.group.parent) this.actors.add(this.livestock.group);
-    if (!this.fields.group.parent) this.actors.add(this.fields.group);
-    if (!this.combatMarkers.parent) this.actors.add(this.combatMarkers);
-
-    for (const g of this.buildingMeshes) {
-      const b = w.buildings.find((b) => b.id === g.userData.building)!;
-      const plan = buildingPlan(b);
-      for (const v of [...plan.volumes, ...(plan.fixtures ?? [])]) {
-        const height = v.eaves + v.rise;
-        const picker = new T.Mesh(new T.BoxGeometry(v.width, height, v.depth), material('#ffffff'));
-        picker.position.set(v.x, height / 2, v.z);
-        // Town geometry is scaled as a group; plans already contain final metres.
-        picker.position.divide(g.scale);
-        picker.scale.set(1 / g.scale.x, 1 / g.scale.y, 1 / g.scale.z);
-        picker.visible = false;
-        g.add(picker);
+          if (step.value) {
+            await step.value;
+            if (this.worldBuild !== job) return;
+          }
+        } while (performance.now() < deadline);
       }
+    } catch (error) {
+      if (this.worldBuild !== job) return;
+      this.worldBuild = undefined;
+      this.worldBuildError = error;
+      console.error('Unable to prepare the world', error);
+      this.onLoading?.(undefined, 'Unable to prepare the world. Please reconnect.');
     }
-    // Add picking after static batching so the clickable surface survives merging.
-    const dockPicker = new T.Mesh(
-      new T.BoxGeometry(fishingDock.width, 0.5, fishingDock.depth),
-      material('#ffffff'),
-    );
-    dockPicker.position.y = -0.1;
-    dockPicker.visible = false;
-    dock.add(dockPicker);
-    this.buildingMeshes.push(dock);
-    for (const o of w.creator?.objects ?? []) {
-      if (!o.visible) continue;
-      const model = w.creator!.models.find((m) => m.id === o.model);
-      if (!model) continue;
-      const g = creatorModel(model, w);
-      g.position.set(o.x, terrainHeight(w, o.x, o.z) + o.y, o.z);
-      g.rotation.y = (o.yaw * Math.PI) / 180;
-      g.scale.setScalar(o.scale);
-      g.userData.building = 'object:' + o.id;
-      this.land.add(g);
-      this.buildingMeshes.push(g);
-      const picker = new T.Mesh(
-        new T.BoxGeometry(model.width, model.height, model.depth),
+  }
+  private prepareSnow() {
+    if (!this.snowDetails || this.snowPrepared || this.snowJob) return;
+    const snow = this.snowDetails,
+      land = this.land;
+    const job = this.buildSnow(snow, land);
+    this.snowJob = job;
+    void (async () => {
+      try {
+        while (this.snowJob === job) {
+          await yieldFrame();
+          if (this.snowJob !== job) return;
+          const deadline = performance.now() + 4;
+          do {
+            const step = job.next();
+            if (step.done) {
+              this.snowPrepared = true;
+              this.snowJob = undefined;
+              this.ocean.absorb(snow.group);
+              snow.group.visible = this.snowVisible;
+              return;
+            }
+            if (step.value) {
+              await step.value;
+              if (this.snowJob !== job) return;
+            }
+          } while (performance.now() < deadline);
+        }
+      } catch (error) {
+        if (this.snowJob !== job) return;
+        this.snowJob = undefined;
+        console.error('Unable to prepare snow', error);
+      }
+    })();
+  }
+  private *buildSnow(snow: SnowAccumulation, land: T.Group): Generator<void | Promise<unknown>> {
+    let installed = false;
+    try {
+      yield* snow.foundationsSteps();
+      yield* snow.vergesSteps();
+      yield* snow.finishSteps();
+      this.ocean.absorb(snow.group);
+      yield* compileSceneSteps(this.renderer, snow.group, this.camera, this.scene);
+      yield* uploadGeometrySteps(this.renderer, snow.group, this.camera);
+      land.add(snow.group);
+      installed = true;
+    } finally {
+      if (!installed) dispose(snow.group);
+    }
+  }
+  private *buildWorld(w: World): Generator<void | Promise<unknown>> {
+    const land = new T.Group();
+    let terrain: T.Mesh | undefined, water: T.Mesh | undefined, launchComplex: T.Group | undefined;
+    const buildingMeshes: T.Group[] = [],
+      flights: RocketFlight[] = [];
+    let installed = false;
+    try {
+      const streamed = mapHalf(w) > legacyHalf + 50;
+      const terrainRevision = JSON.stringify([
+        w.id,
+        w.terrain,
+        w.coastalBluffs,
+        w.northernIsland ? { ...w.northernIsland, resources: undefined } : null,
+        w.airfield,
+        w.spaceportSite,
+        w.landscape?.heightmap,
+        w.settings.seaLevel,
+        w.settings.mapSize,
+        w.terrainMapSize,
+        w.townLayout,
+        w.settings.runwayShoulder,
+      ]);
+      const terrainChanged = terrainRevision !== this.terrainRevision;
+      if (!streamed) {
+        const geometry = new T.PlaneGeometry(540, 540, 128, 128);
+        geometry.rotateX(-Math.PI / 2);
+        terrain = new T.Mesh(geometry, groundMaterial(w));
+        land.add(terrain);
+        const pos = geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          pos.setY(i, terrainHeight(w, pos.getX(i), pos.getZ(i)));
+          if (i % 64 === 63) yield;
+        }
+        geometry.computeVertexNormals();
+        prepareSnowSurface(geometry, w);
+        terrain.receiveShadow = true;
+      }
+      if (w.airfield) land.add(airfieldModel(w.airfield));
+      launchComplex = undefined;
+      if (w.spaceportSite) {
+        const fence = new T.Group();
+        land.add(fence);
+        yield* spaceportFenceSteps(w, fence);
+        if ((w.spaceportSite.layout ?? 0) >= 3) {
+          launchComplex = new T.Group();
+          land.add(launchComplex);
+          yield* spaceportComplexSteps(w, launchComplex);
+        }
+      }
+      if (w.coastalBluffs?.length) land.add(coastalRocks(w));
+      water = !terrainChanged && this.water ? this.water : this.ocean.create(w, this.low);
+      if (water !== this.water) land.add(water);
+      yield;
+      if (!this.ocean.sprayObject.parent) this.scene.add(this.ocean.sprayObject);
+      for (const b of w.buildings) {
+        const custom = w.creator?.models.find((m) => m.id === b.creatorModel);
+        const g = custom ? creatorModel(custom, w) : this.building(b, w);
+        g.userData.signY ??= new T.Box3().setFromObject(g).max.y + 1.1;
+        if (b.kind !== 'town' || b.style || custom) addFoundation(g, b, w);
+        g.position.set(b.x, b.foundationY ?? terrainHeight(w, b.x, b.z), b.z);
+        g.rotation.y = b.rotation;
+        g.userData.building = b.id;
+        g.traverse((object) => {
+          if (object instanceof T.Mesh)
+            for (const material of Array.isArray(object.material)
+              ? object.material
+              : [object.material])
+              fadeSceneryIntoFog(material);
+        });
+        buildingMeshes.push(g);
+        land.add(g);
+        yield;
+      }
+      for (const { x, z } of streetLights(w)) {
+        const lamp = new T.Group();
+        cylinder(lamp, 0.1, 5.5, '#353e38', 0, 2.75, 0, 10);
+        cylinder(lamp, 0.21, 0.3, '#353e38', 0, 0.15, 0, 10);
+        cylinder(lamp, 0.16, 0.15, '#353e38', 0, 5.35, 0, 10);
+        box(lamp, 0.7, 0.1, 0.7, '#353e38', 0, 5.55, 0);
+        const glass = box(lamp, 0.55, 0.8, 0.55, '#c9bf95', 0, 6, 0);
+        glass.material.roughness = 0.25;
+        glass.userData.lightSource = 'street';
+        glass.material.emissive.set('#956925');
+        glass.material.emissiveIntensity = 0.25;
+        for (const x of [-0.3, 0.3])
+          for (const z of [-0.3, 0.3]) box(lamp, 0.06, 0.9, 0.06, '#353e38', x, 6, z);
+        const cap = new T.Mesh(new T.ConeGeometry(0.56, 0.32, 4), material('#353e38'));
+        cap.position.y = 6.58;
+        cap.rotation.y = Math.PI / 4;
+        lamp.add(cap);
+        lamp.scale.setScalar(0.6);
+        lamp.position.set(x, terrainHeight(w, x, z), z);
+        land.add(lamp);
+        yield;
+      }
+      const pitch = new T.Mesh(new T.PlaneGeometry(60, 50), material('#69894f'));
+      surface(pitch, 'meadow', 5, '#a8ba83');
+      pitch.rotation.x = -Math.PI / 2;
+      pitch.position.set(90, 0.3, 45);
+      pitch.receiveShadow = true;
+      land.add(pitch);
+      const line = (pts: T.Vector3[]) => {
+        const l = new T.Line(
+          new T.BufferGeometry().setFromPoints(pts),
+          new T.LineBasicMaterial({ color: '#e1d9b2' }),
+        );
+        land.add(l);
+      };
+      line(
+        [
+          [60, 20],
+          [120, 20],
+          [120, 70],
+          [60, 70],
+          [60, 20],
+        ].map(([x, z]) => new T.Vector3(x, 0.4, z)),
+      );
+      line([new T.Vector3(90, 0.4, 20), new T.Vector3(90, 0.4, 70)]);
+      for (const x of [60, 120]) {
+        const goal = new T.Group();
+        box(goal, 0.4, 7, 0.4, '#efe4c5', 0, 3.5, -9);
+        box(goal, 0.4, 7, 0.4, '#efe4c5', 0, 3.5, 9);
+        box(goal, 0.4, 0.4, 18, '#efe4c5', 0, 7, 0);
+        goal.position.set(x, 0.3, 45);
+        land.add(goal);
+      }
+      const hornSign = label('HORN BALL · RUST / MOSS');
+      hornSign.position.set(90, 7, 15);
+      land.add(hornSign);
+      for (let i = 0; i < checkpoints.length; i++) {
+        const cp = checkpoints[i],
+          g = new T.Group();
+        for (const x of [-5, 5]) box(g, 0.35, 7, 0.35, i % 2 ? '#b9533c' : '#eadbaa', x, 3.5, 0);
+        box(g, 10, 0.4, 0.4, '#d2bb7a', 0, 7, 0);
+        const sign = label(i === 0 ? 'PUDDLEWICK CIRCUIT' : 'CHECKPOINT ' + i, '#fff1c8', 0.8);
+        sign.position.y = 9;
+        g.add(sign);
+        g.position.set(cp.x, 0.2, cp.z);
+        land.add(g);
+      }
+      for (const x of [60, 80]) {
+        const g = new T.Group();
+        cylinder(g, 0.6, 20, '#d4cdb5', 0, 10, 0);
+        const blades = new T.Group();
+        for (let i = 0; i < 3; i++) {
+          const b = new T.Group();
+          box(b, 0.6, 10, 0.2, '#e9dfc6', 0, 5, 0);
+          b.rotation.z = (i * Math.PI * 2) / 3;
+          blades.add(b);
+        }
+        blades.position.set(0, 20, 1);
+        g.add(blades);
+        g.position.set(x, terrainHeight(w, x, -100), -100);
+        g.userData.blades = blades;
+        land.add(g);
+      }
+      const dock = new T.Group();
+      const deck = dockHeight(w);
+      dock.position.set(fishingDock.x, deck, fishingDock.z);
+      dock.userData.building = fishingDock.id;
+      box(dock, fishingDock.width, 0.3, fishingDock.depth, '#705b43', 0, -0.18, 0);
+      for (let z = -10.75; z < 11; z += 0.5)
+        box(dock, fishingDock.width, 0.06, 0.47, '#938060', 0, -0.03, z);
+      for (const x of [-7, 7])
+        for (const z of [-9, 0, 10]) {
+          const bottom = Math.min(terrainHeight(w, fishingDock.x + x, fishingDock.z + z), deck - 1);
+          box(dock, 0.4, deck - bottom + 0.75, 0.4, '#705b43', x, (bottom - deck + 0.75) / 2, z);
+        }
+      // A sloped boardwalk joins the dry shore to exactly the same support surface as physics.
+      const positions: number[] = [];
+      for (let z = fishingDock.rampStart; z < fishingDock.shore; z += 0.5) {
+        const a = [-8, travelHeight(w, fishingDock.x - 8, z) - deck, z - fishingDock.z];
+        const b = [8, travelHeight(w, fishingDock.x + 8, z) - deck, z - fishingDock.z];
+        const c = [-8, travelHeight(w, fishingDock.x - 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
+        const d = [8, travelHeight(w, fishingDock.x + 8, z + 0.5) - deck, z + 0.5 - fishingDock.z];
+        positions.push(...a, ...c, ...b, ...b, ...c, ...d);
+      }
+      const ramp = new T.BufferGeometry();
+      ramp.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+      ramp.computeVertexNormals();
+      // Supply UVs so the ramp can join the ordinary static geometry batches.
+      ramp.setAttribute(
+        'uv',
+        new T.Float32BufferAttribute(new Float32Array((positions.length / 3) * 2), 2),
+      );
+      dock.add(new T.Mesh(ramp, material('#938060')));
+      const fishing = label('FISHING DOCK · ANGLING');
+      fishing.position.y = 6;
+      dock.add(fishing);
+      land.add(dock);
+      const kricket = label('ULTRAKRICKET · MIND THE FUSE');
+      kricket.position.set(70, 6, -70);
+      land.add(kricket);
+      for (let i = 0; i < 3; i++) {
+        const g = new T.Group();
+        box(g, 0.2, 2, 0.2, '#f0dcb1', i * 0.5, 1, 0);
+        g.position.set(70, 0.2, -73);
+        land.add(g);
+      }
+      // Bake static geometry by material: dozens of draw calls instead of hundreds.
+      land.updateMatrixWorld(true);
+      addLandscape(land, w);
+      land.updateMatrixWorld(true);
+      const snowDetails = new SnowAccumulation(w);
+      yield* snowDetails.collectSteps(land);
+      yield;
+      yield* batchStaticScenerySteps(land, terrain);
+      yield;
+      if (w.creator?.scenery !== false) yield* countrysideSteps(land, w, this.low);
+      const seasonal = new Set<T.Material>();
+      land.traverse((o) => {
+        if (o instanceof T.Mesh && o !== terrain && o !== water)
+          for (const m of Array.isArray(o.material) ? o.material : [o.material])
+            if (
+              (m instanceof T.MeshStandardMaterial || m instanceof T.MeshLambertMaterial) &&
+              !m.transparent &&
+              !seasonal.has(m) &&
+              !m.userData.seasonal
+            ) {
+              seasonal.add(m);
+              seasonalMaterial(m, m.alphaTest > 0 && !m.userData.evergreen);
+            }
+      });
+      yield* snowDetails.collectSteps(land);
+      if (!this.livestock.group.parent) this.actors.add(this.livestock.group);
+      if (!this.fields.group.parent) this.actors.add(this.fields.group);
+      if (!this.combatMarkers.parent) this.actors.add(this.combatMarkers);
+
+      for (const g of buildingMeshes) {
+        const b = w.buildings.find((b) => b.id === g.userData.building)!;
+        const plan = buildingPlan(b);
+        for (const v of [...plan.volumes, ...(plan.fixtures ?? [])]) {
+          const height = v.eaves + v.rise;
+          const picker = new T.Mesh(
+            new T.BoxGeometry(v.width, height, v.depth),
+            material('#ffffff'),
+          );
+          picker.position.set(v.x, height / 2, v.z);
+          // Town geometry is scaled as a group; plans already contain final metres.
+          picker.position.divide(g.scale);
+          picker.scale.set(1 / g.scale.x, 1 / g.scale.y, 1 / g.scale.z);
+          picker.visible = false;
+          g.add(picker);
+        }
+      }
+      // Add picking after static batching so the clickable surface survives merging.
+      const dockPicker = new T.Mesh(
+        new T.BoxGeometry(fishingDock.width, 0.5, fishingDock.depth),
         material('#ffffff'),
       );
-      picker.position.y = model.height / 2;
-      picker.visible = false;
-      g.add(picker);
-      const sign = label(o.name);
-      sign.position.y = model.height + 1;
-      g.add(sign);
-    }
+      dockPicker.position.y = -0.1;
+      dockPicker.visible = false;
+      dock.add(dockPicker);
+      buildingMeshes.push(dock);
+      for (const o of w.creator?.objects ?? []) {
+        if (!o.visible) continue;
+        const model = w.creator!.models.find((m) => m.id === o.model);
+        if (!model) continue;
+        const g = creatorModel(model, w);
+        g.position.set(o.x, terrainHeight(w, o.x, o.z) + o.y, o.z);
+        g.rotation.y = (o.yaw * Math.PI) / 180;
+        g.scale.setScalar(o.scale);
+        g.userData.building = 'object:' + o.id;
+        land.add(g);
+        buildingMeshes.push(g);
+        const picker = new T.Mesh(
+          new T.BoxGeometry(model.width, model.height, model.depth),
+          material('#ffffff'),
+        );
+        picker.position.y = model.height / 2;
+        picker.visible = false;
+        g.add(picker);
+        const sign = label(o.name);
+        sign.position.y = model.height + 1;
+        g.add(sign);
+      }
 
-    // The sea follows the camera on large worlds; freezing its matrix would
-    // leave the visible water behind when boats sail beyond the starter town.
-    const animated: T.Object3D[] = this.water ? [this.water] : [];
-    for (const o of this.land.children) {
-      if (o.userData.blades) animated.push(o.userData.blades);
-      if (o.userData.clouds) animated.push(o);
+      // The sea follows the camera on large worlds; freezing its matrix would
+      // leave the visible water behind when boats sail beyond the starter town.
+      const animated: T.Object3D[] = water ? [water] : [];
+      for (const o of land.children) {
+        if (o.userData.blades) animated.push(o.userData.blades);
+        if (o.userData.clouds) animated.push(o);
+      }
+      land.traverse((o) => {
+        if (o.userData.lighthouseRotor === true) animated.push(o);
+        if (o.userData.animatedFlight || o.userData.spaceportGate) animated.push(o);
+        if (o.name === 'floating-jetty' || o.parent?.name === 'boatyard-gangway') animated.push(o);
+        if (o.userData.flight) flights.push(o.userData.flight);
+      });
+      this.ocean.absorb(land);
+      freezeScenery(land, animated);
+      let snowPrepared = false;
+      if (snowDepth(this.world?.climate) > 0.001) {
+        yield* snowDetails.foundationsSteps();
+        yield* snowDetails.vergesSteps();
+        land.add(yield* snowDetails.finishSteps());
+        this.ocean.absorb(snowDetails.group);
+        snowPrepared = true;
+      }
+      // Keep the old program references alive while compiling the replacement.
+      // Disposing them first forced synchronous shader compilation on the next draw.
+      for (const texture of sceneTextures(land)) {
+        this.renderer.initTexture(texture);
+        yield;
+      }
+      yield* compileSceneSteps(this.renderer, land, this.camera, this.scene);
+      yield* uploadGeometrySteps(this.renderer, land, this.camera);
+      yield;
+      // Publish one complete scene. Until this point the previous revision remains visible.
+      const previous = this.land;
+      land.add(water!); // Reuse the sea when only roads/buildings changed.
+      this.scene.add(land);
+      this.scene.remove(previous);
+      this.land = land;
+      this.terrain = terrain;
+      this.water = water;
+      this.buildingMeshes = buildingMeshes;
+      this.flights = flights;
+      this.launchComplex = launchComplex;
+      this.labelsHidden = false;
+      this.snowJob?.return(undefined as never);
+      this.snowJob = undefined;
+      this.snowDetails = snowDetails;
+      this.snowPrepared = snowPrepared;
+      this.snowVisible = snowDepth(this.world?.climate) > 0.001;
+      showSnowAccumulation(land, this.snowVisible);
+      this.townLighting.reset(land, (x, z) => terrainHeight(w, x, z));
+      this.fields.reset();
+      this.livestock.reset();
+      if (terrainChanged) {
+        this.horizon.reset(w);
+        this.inland.reset(w);
+      }
+      this.horizon.group.visible = streamed;
+      if (streamed) {
+        if (this.ground.active && !terrainChanged) this.ground.refresh(w);
+        else this.ground.reset(w);
+      } else this.ground.clear();
+      if (streamed && w.creator?.scenery !== false) {
+        if (this.woods.active && !terrainChanged) this.woods.refresh(w);
+        else this.woods.reset(w, this.low);
+      } else this.woods.clear();
+      this.terrainRevision = terrainRevision;
+      updateResourceScenery(land, this.world ?? w);
+      this.renderer.shadowMap.needsUpdate = true;
+      installed = true;
+      dispose(previous);
+      previous.clear();
+      if (this.snowVisible) this.prepareSnow();
+    } finally {
+      if (!installed) dispose(land);
     }
-    this.land.traverse((o) => {
-      if (o.userData.lighthouseRotor === true) animated.push(o);
-      if (o.userData.animatedFlight || o.userData.spaceportGate) animated.push(o);
-      if (o.name === 'floating-jetty' || o.parent?.name === 'boatyard-gangway') animated.push(o);
-      if (o.userData.flight) this.flights.push(o.userData.flight);
-    });
-    this.ocean.absorb(this.land);
-    freezeScenery(this.land, animated);
   }
   private building(b: Building, w: World) {
     const g = new T.Group();
@@ -1368,7 +1537,12 @@ export class GameScene {
           x,
           z,
           depth,
-          this.snowDetails?.heightAt(x, z, depth, snowSurface(x, z)) ?? snowSurface(x, z),
+          (this.snowPrepared ? this.snowDetails : undefined)?.heightAt(
+            x,
+            z,
+            depth,
+            snowSurface(x, z),
+          ) ?? snowSurface(x, z),
         );
       for (const mesh of this.meshes.values()) {
         const pose =
@@ -1802,6 +1976,7 @@ export class GameScene {
       if (this.snowVisible !== snowDepthVisual.value > 0.001) {
         this.snowVisible = snowDepthVisual.value > 0.001;
         showSnowAccumulation(this.scene, this.snowVisible);
+        if (this.snowVisible) this.prepareSnow();
       }
       if (this.terrain)
         (this.terrain.material as T.MeshStandardMaterial).roughness =

@@ -119,6 +119,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Prepare scenery revisions and snow geometry incrementally; keep existing terrain visible, cancel obsolete builds, and warm replacement shaders and bounded geometry uploads before swapping the view. Batch mature road networks on the map to reduce opening stalls.
+
 - Enforce river-dock vessel limits when boarding recovery lifeboats or securing tenders, and identify river landings correctly in recovery help.
 
 - Allow stopped boats to cast a rod on navigable river water at their actual position and elevation; retain dry-bank refusal and offshore catch rules.

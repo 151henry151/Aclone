@@ -30,6 +30,85 @@ flows. Broaden testing when shared behavior, a failure or an unresolved concern
 justifies it. This policy supersedes the whole-suite gates in older slice records;
 historical results remain recorded accurately.
 
+## Release checkpoint — Lightmun freeze takes priority
+
+Henry requested a stable deployment checkpoint on 2026-11-04. Pause new backlog
+features after the already finished rules slices. First fix the confirmed scene
+freeze in `output/performance-lightmun-2026-11-04/investigation.txt`, finish the
+confirmed river construction bill gap, and finish focused river/render checks.
+Do not deploy until Henry approves the concrete verified checkpoint. Remaining
+climate/calendar and later Planned sections stay pending; no partial new system
+will be included. The 20 shipped claims have been assessed (three gaps fixed);
+seven of 25 eligible Planned sections are complete, plus the finished rules
+subsections. Section counts are not an estimate of remaining engineering effort.
+
+**Freeze completion criteria (before production changes):** reproduce a mature
+world road addition in the actual browser renderer, using a generated 77-building,
+1,479-road fixture and optionally the private diagnostic snapshot locally. Keep
+private world/player data out of commits and published evidence. A single road
+addition and a building/construction change must return from `setWorld` in under
+50 ms, keep existing visible terrain until replacements are complete, and finish
+rendering the new revision. Exercise successive revisions (cancel obsolete work),
+movement, map open, bare ground, snowfall and thaw. Scene preparation must yield
+between bounded pieces instead of draining snow generators synchronously. Record
+main-thread durations, frame tails and screenshots; investigate any update-related
+long task above 100 ms. Run `tsx scripts/world-revision-performance.ts`, relevant
+terrain/snow/static-scene tests, TypeScript and changed-file Prettier. The captured
+released baseline was 8,286–8,948 ms per road-triggered rebuild. No production
+edits preceded the new regression below. The new browser regression failed at
+8,522.2 ms for the snapshot and `retained: false` (existing terrain cleared).
+The snow-yield parity test also failed because the foundation/verge generators
+were missing; after adding yielding wrappers, all six snow accumulation tests
+passed with byte-for-byte mesh attribute parity. The first staged rebuild reduced
+the snapshot to 30.1 ms and retained terrain, but still exposed 397/166/146 ms
+preparation tasks. Those stalls remain part of this fix, not an accepted result.
+The follow-up CPU profile identified spaceport generation, gathering sites and
+shader initialization; yielding those steps removed the bare-road stalls over
+100 ms. Snowy rebuilds still exposed 162–204 ms tasks: duplicated full-world snow
+attribute buffers and their first GPU upload. Added failing criteria: keep each
+snow upload within a 16-bit vertex batch while preserving all roof triangles;
+warm geometry incrementally without reparenting/disposal, restoring the renderer
+on cancellation/failure. Both new tests failed for the intended missing behavior. The complete mature-world
+run then found a separate map-opening task of 104 ms, repeated at 153 ms with
+profiling. Layout was processing one SVG element per road per outline layer.
+A new browser test preserves every visible road segment and width but requires
+one path per effective stroke width; it fails before the map change. Keep map
+opening, zooming and navigation checks in the release gate. A cold-winter-entry
+unit test also fails with the old world's zero-depth GPU uniform; use the arriving
+world's climate for initial snow visibility. Subsequent dense-winter
+runs exposed GC pauses after successive revisions (heap grew to 1,060 MiB).
+Replace retained snow triangle objects and normal-vector maps with compact
+numeric storage, preserving exact height queries and byte-for-byte mesh
+attributes against the pre-change fixture. The same run then used 87 MiB but
+exposed a 113 ms shader setup batch: `compileAsync` does its material traversal
+synchronously. Add a failing incremental shader/cancellation test and compile
+individual objects before the atomic swap. Keep all original performance gates.
+
+**Freeze verification:** `PROFILE_START_SNOW=1 PROFILE_CASES=road,building,supersede,thaw,snow,snow-road,move,map PROFILE_OUT=output/world-revision-release-check tsx scripts/world-revision-performance.ts`
+passes all eight scenarios on the isolated generated mature-world fixture. Road,
+building, superseded and snowy-road snapshot handling takes 2.8–5.8 ms; existing
+terrain stays visible and only the latest revision is published. Across these
+scenarios, frame p95 is 35.8–47.2 ms, maximum frame is 92.7 ms, and the only recorded
+long tasks are 50/54 ms. Heap ranges from 64–239 MiB across the run. Full dense
+winter replacements still take 18–21 seconds in the background; this removes the
+blocking freeze, not all scenery regeneration work. The private captured-world
+run also passes road/building/cancellation/snow/thaw/movement checks, with the map
+rechecked after SVG batching (77 ms longest task). Keep those private inputs local.
+
+Relevant unit coverage: 55 tests pass for terrain, snow, lighting, static scenery,
+gathering sites, textures/building finishes and map layout/worker jobs. After the
+last numeric-storage and shader-batching changes, all 13 snow/warmup tests pass;
+exact pre-change snow mesh attributes and contact-height parity also pass. The
+affected browser run passes nine checks (flight streaming, map batching/worker,
+desktop/mobile map controls, snow rendering and live winter, startup missing
+texture/input neutrality, graphics switch and terrain refresh). The thaw check
+initially captures the previous climate snapshot: its generic “Snow” label wait
+is already true at all three depths. Require the exact rendered depth before
+capture, retaining every pixel threshold; the recheck passes in 30.1 seconds.
+All ten flows now pass. Inspect mobile map, winter tracks and 1 cm thaw screenshots;
+retain evidence under `output/world-revision-evidence/browser/`. TypeScript,
+changed-file Prettier and `git diff --check` pass. No release/deployment performed.
+
 ## Shipped-claim review
 
 Verdicts below compare each of the **20** shipped bullets with the implementation
@@ -4230,3 +4309,46 @@ Eligibility/label verification complete: browser passes in 1.5 minutes, includin
 reconnect and the named River dock recovery label. Inspect updated moored view;
 retain four current recovery screenshots in the handoff verification directory.
 All 36 relevant tests, TypeScript and changed-file Prettier/diff checks pass.
+
+**River recovery eligibility/label slice done and pushed:** `c938691` (remote SHA
+verified).
+
+### River handoff verification — current evidence criteria
+
+Run current northern-island, alpine-weather, umbrella, map-terrain-job and
+slow-network/network/snapshot tests after reviewing their corresponding code.
+Do not change shipped terrain merely to duplicate existing features. Add a
+browser construction audit using an actual generated bank and the UI's 15-degree
+rotation increments: invalid orientation disables placement with a depth/bank
+reason; correct preview quotes 30 Logs/10 Gravel and 3s base cash; place and supply
+the foundation; board/disembark/reboard a canal boat and motorboat in independent
+fixtures, retain exact mooring/fuel across reconnect, and refuse larger vessels.
+Existing tests only exercise actual river mooring with canal boats, so extend the
+same behavior check to motorboats rather than relying on the eligibility boolean.
+
+Use the actual renderer preview script with a distinct output directory for full
+map, watershed, matched original/expanded southern maps, riverbanks, dock/boat
+and summer summit. Add summit view and explicit output selection to the harness,
+not gameplay. Verify local rain/snow readout and umbrella behavior in browser.
+
+Performance harness criteria: retain original/expanded comparison, run all six
+routes in order (town, river, forest, summit, storm coast, return town), record
+actual start/end position and tile identities to prove leave/return streaming.
+Add optional generated population and CPU/viewport metadata, CPU render-time
+percentiles and map open/pan/zoom measurements. Run alone on i7-7700HQ/Quadro
+M1200, low quality, 1280x800; repeat a populated subset at 390x844 with 4x CPU
+throttling. Record tails, >100 ms frames, long tasks, heap, geometry and CPU time;
+no invented universal frame budget or warm-cache load-speedup claim. Run current
+large-geography network join/reconnect/browser checks separately from benchmarks.
+
+**Confirmed construction gap:** current browser preview of the default Log landing
+adds a generic house shell: 13 gravel, 5 stone blocks, 2 wood and 3s 24.01d,
+instead of the documented 30 logs/10 gravel/3s catalogue bill. The browser audit
+fails at the material assertion; interrupt the duplicate motorboat scenario.
+Before production, extend building-design tests for the plain river landing in
+each supported finish, using catalogue price/materials including world overrides.
+A bare platform has no enclosed wall/roof shell. Preserve all finishes and the
+existing additional-building variants; only the plain landing's bill uses the
+catalogue directly. The existing browser criteria remain unchanged and must
+verify both actual construction and supply at that bill. Run building-design,
+construction-expansion, civics-construction and river-dock tests plus TypeScript.

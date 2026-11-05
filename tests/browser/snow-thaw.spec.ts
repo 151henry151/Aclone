@@ -68,6 +68,17 @@ test('roadside snow fades with the surrounding pack during the last centimetre o
       climate();
       if (value) await expect(page.locator('#clock')).toContainText('Snow');
       else await expect(page.locator('#clock')).not.toContainText('Snow');
+      // Several depths share the same rounded HUD label. Wait for this exact
+      // climate snapshot to reach the renderer before comparing its pixels.
+      await expect
+        .poll(() =>
+          page.evaluate(async () => {
+            const modulePath = '/src/client/materials.ts';
+            const { snowDepthVisual } = await import(modulePath);
+            return snowDepthVisual.value;
+          }),
+        )
+        .toBeCloseTo(value, 4);
       await page.evaluate(
         () =>
           new Promise<void>((resolve) => {

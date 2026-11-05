@@ -4,7 +4,7 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.113.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.114.5 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.114.0 expands public Puddlewick northward to roughly ten times its land area while preserving the southern peninsula exactly. The new mainland adds a snow-capped mountain watershed with winding rivers, sediment bars and upstream fords, deep lower channels, ponds, large forests, rocky coastal stretches and six regions with distinct resource strengths and shortages. The map gains a town-level overview and readable river outlines at island scale, and configurable deposit recovery defaults to four times slower. Players can build small log river docks on deep reaches to moor canal boats and motorboats. See the [geography notes](docs/NORTHERN_ISLAND.md). The NPC project follow-through from 0.113.1 and the rain umbrellas from 0.113.0 remain included.
 
@@ -13,6 +13,8 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 ![Countryside and tractor in detailed graphics mode](docs/screenshots/scenery.png)
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
+
+Unreleased rendering prepares road and building revisions in small batches while keeping the previous view visible. Detailed snow banks are prepared when snow appears, with bounded geometry uploads to avoid a parish-wide freeze.
 
 Unreleased haulage adds a separate amber fuel tanker with hazard placards and a rear dispensing hose. It carries 700 Fuel for 57.5s at defaults, supports refinery loading, direct pumping and roadside sales with town tax and offline bank payments. Owners set their sale price; zero closes sales. F10 exposes per-world purchase price/capacity and fuel-service rules, and world designs preserve parked tankers with their load. See the [haulage guide](docs/HAULAGE.md) for capacity and handling details.
 

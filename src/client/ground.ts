@@ -38,6 +38,7 @@ export class GroundTiles {
     coarseFeatures: boolean;
     job: Generator<void, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>;
   };
+  private dirty = new Set<string>();
   private half = 0;
   private roughness = 1;
   reset(w: World) {
@@ -45,7 +46,14 @@ export class GroundTiles {
     this.world = w;
     this.half = mapHalf(w);
   }
+  refresh(w: World) {
+    this.pending?.job.return(undefined as never);
+    this.pending = undefined;
+    this.world = w;
+    this.dirty = new Set(this.tiles.keys());
+  }
   clear() {
+    this.dirty.clear();
     this.revision++;
     this.pending?.job.return(undefined as never);
     this.pending = undefined;
@@ -130,7 +138,8 @@ export class GroundTiles {
         if (
           existing &&
           existing.userData.detail === detailed &&
-          existing.userData.coarseFeatures === coarseFeatures
+          existing.userData.coarseFeatures === coarseFeatures &&
+          !this.dirty.has(`${i}:${j}`)
         )
           continue;
         if (d <= loadRadius + groundTileSize * 0.71) {
@@ -151,7 +160,9 @@ export class GroundTiles {
         const next = wanted.find(({ i, j, detailed }) => {
           const tile = this.tiles.get(`${i}:${j}`);
           return (
-            tile?.userData.detail !== detailed || tile?.userData.coarseFeatures !== coarseFeatures
+            this.dirty.has(`${i}:${j}`) ||
+            tile?.userData.detail !== detailed ||
+            tile?.userData.coarseFeatures !== coarseFeatures
           );
         });
         if (!next) break;
@@ -169,6 +180,7 @@ export class GroundTiles {
       if (step.done) {
         const old = this.tiles.get(this.pending.key);
         this.tiles.set(this.pending.key, step.value);
+        this.dirty.delete(this.pending.key);
         this.revision++;
         this.pending = undefined;
         if (old) {
@@ -185,7 +197,9 @@ export class GroundTiles {
       wanted.some(({ i, j, detailed }) => {
         const tile = this.tiles.get(`${i}:${j}`);
         return (
-          tile?.userData.detail !== detailed || tile?.userData.coarseFeatures !== coarseFeatures
+          this.dirty.has(`${i}:${j}`) ||
+          tile?.userData.detail !== detailed ||
+          tile?.userData.coarseFeatures !== coarseFeatures
         );
       })
     );

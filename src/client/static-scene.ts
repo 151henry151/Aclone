@@ -20,11 +20,19 @@ export function freezeScenery(root: Object3D, animated: Object3D[]) {
 
 /** Batch static scenery at the world origin; animated parts retain their hierarchy. */
 export function batchStaticScenery(root: T.Group, excluded?: T.Object3D) {
+  for (const _ of batchStaticScenerySteps(root, excluded)) {
+    /* synchronous callers */
+  }
+}
+export function* batchStaticScenerySteps(root: T.Group, excluded?: T.Object3D) {
   root.updateMatrixWorld(true);
   const batches = new Map<string, { geometries: T.BufferGeometry[]; material: T.Material }>();
   const originals: T.Mesh[] = [];
-  root.traverse((o) => {
-    if (!(o instanceof T.Mesh) || o === excluded || Array.isArray(o.material)) return;
+  const objects: T.Object3D[] = [];
+  root.traverse((o) => objects.push(o));
+  for (const o of objects) {
+    yield;
+    if (!(o instanceof T.Mesh) || o === excluded || Array.isArray(o.material)) continue;
     const mat = o.material as T.MeshStandardMaterial;
     if (
       o.userData.lightSource ||
@@ -33,7 +41,7 @@ export function batchStaticScenery(root: T.Group, excluded?: T.Object3D) {
       mat.vertexColors ||
       !(mat instanceof T.MeshStandardMaterial)
     )
-      return;
+      continue;
     let parent: T.Object3D | null = o;
     while (parent) {
       if (
@@ -42,9 +50,10 @@ export function batchStaticScenery(root: T.Group, excluded?: T.Object3D) {
         parent.userData.animatedFlight ||
         parent.userData.spaceportGate
       )
-        return;
+        break;
       parent = parent.parent;
     }
+    if (parent) continue;
     const key = [
       mat.color.getHexString(),
       mat.map?.uuid,
@@ -69,13 +78,14 @@ export function batchStaticScenery(root: T.Group, excluded?: T.Object3D) {
     );
     batches.set(key, batch);
     originals.push(o);
-  });
+  }
   for (const o of originals) {
     o.removeFromParent();
     o.geometry.dispose();
     (o.material as T.Material).dispose();
   }
   for (const batch of batches.values()) {
+    yield;
     const merged = mergeGeometries(batch.geometries);
     for (const g of batch.geometries) g.dispose();
     if (merged) {

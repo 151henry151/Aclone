@@ -47,9 +47,43 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         const tile = ground.group.children[0],
           grove = woods.group.children[0];
         const complete = !!tile.geometry.attributes.snowLift && !!grove.userData.snowDetails;
+        // A road revision retains each complete cell until a complete replacement exists.
+        w.roads = [...(w.roads ?? []), { a: { x: 560, z: 560 }, b: { x: 590, z: 590 }, width: 6 }];
+        ground.refresh(w);
+        woods.refresh(w);
+        ground.update(576, 576);
+        woods.update(576, 576);
+        const retainedOnRefresh =
+          ground.group.children.includes(tile) && woods.group.children.includes(grove);
+        let refreshCalls = 0;
+        while (
+          (ground.group.children.includes(tile) || woods.group.children.includes(grove)) &&
+          refreshCalls++ < 10000
+        ) {
+          ground.update(576, 576);
+          woods.update(576, 576);
+        }
+        const replacedOnRefresh =
+          !ground.group.children.includes(tile) &&
+          !woods.group.children.includes(grove) &&
+          ground.group.children.some(
+            (o: any) =>
+              o.userData.cx === tile.userData.cx &&
+              o.userData.cz === tile.userData.cz &&
+              o.geometry.attributes.snowLift,
+          ) &&
+          woods.group.children.some(
+            (o: any) =>
+              o.userData.cx === grove.userData.cx &&
+              o.userData.cz === grove.userData.cz &&
+              o.userData.snowDetails,
+          );
         // Begin more work, then cancel it. No stale generator may repopulate either group.
+        const refreshedTile = ground.group.children.find(
+          (o: any) => o.userData.cx === tile.userData.cx && o.userData.cz === tile.userData.cz,
+        );
         ground.update(1300, 576);
-        const oldTileRetained = ground.group.children.includes(tile);
+        const oldTileRetained = ground.group.children.includes(refreshedTile);
         woods.update(576, 576);
         ground.clear();
         woods.clear();
@@ -61,6 +95,8 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         const newPending = ground.group.children.length === 0;
         ground.clear();
         return {
+          retainedOnRefresh,
+          replacedOnRefresh,
           groundPending,
           woodsPending,
           partial,
@@ -75,6 +111,8 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         performance.now = now;
       }
     });
+    expect(result.retainedOnRefresh).toBe(true);
+    expect(result.replacedOnRefresh).toBe(true);
     expect(result.groundPending).toBe(true);
     expect(result.woodsPending).toBe(true);
     expect(result.partial).toEqual([0, 0]);

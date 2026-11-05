@@ -126,3 +126,65 @@ test('ground drifts conform to terrain triangles without intersecting the snowpa
     }
   }
 });
+
+test('incremental foundation and verge preparation yields and preserves the synchronous mesh', () => {
+  const w = world();
+  const sync = new SnowAccumulation(w);
+  sync.foundations();
+  sync.verges();
+  const expected = sync.finish();
+  const asyncSnow = new SnowAccumulation(w);
+  let steps = 0;
+  for (const _ of asyncSnow.foundationsSteps()) steps++;
+  for (const _ of asyncSnow.vergesSteps()) steps++;
+  assert.ok(
+    steps > 10,
+    'snow preparation yields within a road instead of blocking for the network',
+  );
+  const actual = asyncSnow.finish();
+  assert.equal(actual.children.length, expected.children.length);
+  actual.children.forEach((o, i) => {
+    const a = (o as T.Mesh).geometry,
+      b = (expected.children[i] as T.Mesh).geometry;
+    for (const key of ['position', 'snowLift', 'normal', 'snowNormal'])
+      assert.deepEqual(a.getAttribute(key).array, b.getAttribute(key).array, key);
+  });
+});
+
+test('mature-world snow uses bounded geometry uploads without dropping roof triangles', () => {
+  const snow = new SnowAccumulation(world());
+  const roof = new T.Mesh(new T.BoxGeometry(8, 0.2, 6), new T.MeshStandardMaterial());
+  roof.position.set(20, 4, 10);
+  roof.updateMatrixWorld();
+  for (let i = 0; i < 2600; i++) snow.cap(roof);
+  const group = snow.finish();
+  let vertices = 0;
+  for (const child of group.children) {
+    const geometry = (child as T.Mesh).geometry;
+    assert.ok(
+      geometry.getAttribute('position').count <= 65535,
+      'one upload fits a 16-bit vertex batch',
+    );
+    vertices += geometry.index!.count;
+  }
+  assert.equal(vertices, 2600 * 30, 'batching preserves every roof face and skirt');
+});
+
+test('a cold winter entry shows new snow even before the previous world uniform updates', () => {
+  const w = world();
+  w.climate = { snow: 1, snowDepth: 0.2, wetness: 0 };
+  snowDepthVisual.value = 0;
+  assert.equal(new SnowAccumulation(w).group.visible, true);
+});
+
+test('finishing snow preserves exact contact heights through snowfall and thaw', () => {
+  const snow = new SnowAccumulation(world());
+  snow.verges();
+  const sample = () =>
+    Array.from({ length: 40 }, (_, i) =>
+      [0, 0.04, 0.2, 1].map((depth) => snow.heightAt(3 + i * 0.04, i * 0.2 - 4, depth, 0)),
+    );
+  const before = sample();
+  snow.finish();
+  assert.deepEqual(sample(), before);
+});

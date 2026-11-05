@@ -512,6 +512,17 @@ export function resourceScenery(
   include: (node: { x: number; z: number }) => boolean = () => true,
   fadeRange?: number,
 ) {
+  for (const _ of resourceScenerySteps(root, world, low, include, fadeRange)) {
+    /* synchronous callers */
+  }
+}
+export function* resourceScenerySteps(
+  root: T.Group,
+  world: World,
+  low: boolean,
+  include: (node: { x: number; z: number }) => boolean = () => true,
+  fadeRange?: number,
+) {
   const materials: Record<Surface, T.Material> = {
     rock: new T.MeshStandardMaterial({ map: resourceTexture('rock'), roughness: 1 }),
     cutStone: new T.MeshStandardMaterial({
@@ -544,6 +555,7 @@ export function resourceScenery(
   const updates: { group: T.Group; update: (world: World) => void }[] = [];
   siteUpdates.set(root, updates);
   for (const node of worldResources(world)) {
+    yield;
     if (
       !include(node) ||
       world.buildings.some((b) => Math.hypot(b.x - node.x, b.z - node.z) < 12) ||

@@ -9,14 +9,19 @@ import {
   SPACEPORT_PARKING,
 } from '../shared/spaceport-site';
 import type { FacilityLight } from './lighting';
-import { spaceportPavingModel } from './spaceport-paving';
+import { spaceportPavingModelSteps } from './spaceport-paving';
 import { terrainHeight } from '../shared/terrain';
 import type { World } from '../shared/types';
 
 /** Static scenery is batched per installation, so distant buildings cull independently. */
 export function spaceportComplex(w: World) {
-  const site = w.spaceportSite!,
-    root = new T.Group();
+  const job = spaceportComplexSteps(w);
+  let step = job.next();
+  while (!step.done) step = job.next();
+  return step.value;
+}
+export function* spaceportComplexSteps(w: World, root = new T.Group()): Generator<void, T.Group> {
+  const site = w.spaceportSite!;
   root.name = 'Launch facility';
   const palette = {
     wall: '#c0c6c3',
@@ -176,6 +181,7 @@ export function spaceportComplex(w: World) {
     parent.add(m);
   }
   for (const b of spaceportStructures(site)) {
+    yield;
     const g = installation(b.name, b.x, b.z, b.width, b.depth),
       h = b.height;
     g.userData.dimensions = { width: b.width, depth: b.depth, height: h };
@@ -326,7 +332,9 @@ export function spaceportComplex(w: World) {
     for (const side of [-1, 1]) downlight(side, height, 0, 'Exterior yard lamps', !!warm);
     batch(g);
   }
-  root.add(spaceportPavingModel(w));
+  const paving = new T.Group();
+  root.add(paving);
+  yield* spaceportPavingModelSteps(w, paving);
   const parking = SPACEPORT_PARKING;
   const parkingSign = installation(
     'Visitor parking sign',
@@ -350,6 +358,7 @@ export function spaceportComplex(w: World) {
   downlight(-3, 5, 0.7, 'Entrance sign lamps', true);
   downlight(3, 5, 0.7, 'Entrance sign lamps', true);
   batch(monument);
+  yield;
 
   // Prime mover + modular multi-axle rocket trailer; dimensions match the large launcher.
   function truck(name: string, x: number, z: number, length: number, heavy: boolean) {
@@ -462,9 +471,11 @@ export function spaceportComplex(w: World) {
   rod(tip, new T.Vector3(0, 12, 31), 0.05, 'dark');
   mesh(new T.TorusGeometry(0.7, 0.18, 8, 16, Math.PI * 1.5), 'metal', 0, 11.5, 31);
   batch(crane);
+  yield;
 
   // Freight and maintenance dressing, in small batches that cull with each work area.
   for (const prop of spaceportYardProps(site)) {
+    yield;
     const g = installation(prop.id, prop.x, prop.z, prop.width, prop.depth);
     if (prop.kind === 'containers') {
       const finishes: Finish[] = ['rust', 'blue', 'green'];

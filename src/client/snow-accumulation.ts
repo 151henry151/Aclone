@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
+import { snowDepth } from '../shared/environment';
 import { buildingPlan } from '../shared/building-shapes';
 import { townRoads } from '../shared/town';
 import { nearbyRoadSurface } from './road-sampling';
@@ -9,7 +10,6 @@ import { snowTrackHeight, snowSurfaceGrid } from './snow-surface';
 import { snowDepthVisual, snowCover } from './materials';
 
 type Vertex = { x: number; y: number; z: number; lift: number; opacity?: number; extra?: number };
-type Triangle = [Vertex, Vertex, Vertex];
 const cellSize = 4;
 
 /** Static, low-poly snow shells. Only the depth uniform changes during snowfall/thaw.
@@ -21,7 +21,9 @@ export class SnowAccumulation {
   private lifts: number[] = [];
   private opacity: number[] = [];
   private smooth: boolean[] = [];
-  private ground = new Map<string, Triangle[]>();
+  private ground = new Map<string, number[]>();
+  private groundPositions?: Float64Array;
+  private groundLifts?: Float64Array;
   private seen = new WeakSet<T.Object3D>();
   private bare: (x: number, z: number) => number;
   private snowy: (x: number, z: number) => number;
@@ -30,7 +32,7 @@ export class SnowAccumulation {
   constructor(private world: World) {
     this.group.name = 'Accumulated snow';
     this.group.userData.snowAccumulation = true;
-    this.group.visible = snowDepthVisual.value > 0.001;
+    this.group.visible = snowDepth(world.climate) > 0.001;
     this.bare = snowTrackHeight({ ...world, climate: { snow: 0, snowDepth: 0, wetness: 0 } });
     this.snowy = snowTrackHeight({ ...world, climate: { snow: 1, snowDepth: 1, wetness: 0 } });
     this.roads = townRoads(world);
@@ -96,6 +98,7 @@ export class SnowAccumulation {
     if (ground && Math.abs((b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z)) < 1e-9) return;
     // Consistent upward winding for ground; closed roof skirts supply their own.
     if (ground && (b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z) < 0) [b, c] = [c, b];
+    const start = this.lifts.length;
     for (const p of [a, b, c]) {
       this.positions.push(p.x, p.y, p.z);
       this.lifts.push(p.lift);
@@ -103,7 +106,6 @@ export class SnowAccumulation {
       this.smooth.push(ground);
     }
     if (!ground) return;
-    const tri: Triangle = [a, b, c];
     for (
       let x = Math.floor(Math.min(a.x, b.x, c.x) / cellSize);
       x <= Math.floor(Math.max(a.x, b.x, c.x) / cellSize);
@@ -116,7 +118,7 @@ export class SnowAccumulation {
       ) {
         const key = `${x}:${z}`,
           list = this.ground.get(key) ?? [];
-        list.push(tri);
+        list.push(start);
         this.ground.set(key, list);
       }
   }
@@ -141,19 +143,29 @@ export class SnowAccumulation {
   heightAt(x: number, z: number, depth: number, base: number) {
     if (depth <= 0.001) return base;
     let height = base;
-    for (const [a, b, c] of this.ground.get(
-      `${Math.floor(x / cellSize)}:${Math.floor(z / cellSize)}`,
-    ) ?? []) {
-      const det = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+    const positions = this.groundPositions ?? this.positions,
+      lifts = this.groundLifts ?? this.lifts;
+    for (const i of this.ground.get(`${Math.floor(x / cellSize)}:${Math.floor(z / cellSize)}`) ??
+      []) {
+      const ax = positions[i * 3]!,
+        ay = positions[i * 3 + 1]!,
+        az = positions[i * 3 + 2]!;
+      const bx = positions[(i + 1) * 3]!,
+        by = positions[(i + 1) * 3 + 1]!,
+        bz = positions[(i + 1) * 3 + 2]!;
+      const cx = positions[(i + 2) * 3]!,
+        cy = positions[(i + 2) * 3 + 1]!,
+        cz = positions[(i + 2) * 3 + 2]!;
+      const det = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
       if (Math.abs(det) < 1e-8) continue;
-      const u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / det;
-      const v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / det;
+      const u = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / det;
+      const v = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / det;
       if (u < 0 || v < 0 || u + v > 1) continue;
       height = Math.max(
         height,
-        u * (a.y + a.lift * depth) +
-          v * (b.y + b.lift * depth) +
-          (1 - u - v) * (c.y + c.lift * depth),
+        u * (ay + lifts[i]! * depth) +
+          v * (by + lifts[i + 1]! * depth) +
+          (1 - u - v) * (cy + lifts[i + 2]! * depth),
       );
     }
     return height;
@@ -258,6 +270,11 @@ export class SnowAccumulation {
     }
   }
   foundations() {
+    for (const _ of this.foundationsSteps()) {
+      /* synchronous callers */
+    }
+  }
+  *foundationsSteps() {
     for (const b of this.world.buildings) {
       if (b.construction || b.creatorModel) continue;
       const volumes = buildingPlan(b).volumes;
@@ -277,6 +294,7 @@ export class SnowAccumulation {
               return { ...world(x, z), localX: x, localZ: z };
             };
             for (let i = 0; i < steps; i++) {
+              yield;
               const lo = -length / 2 + (i * length) / steps,
                 hi = -length / 2 + ((i + 1) * length) / steps,
                 mid = point((lo + hi) / 2, 0.2);
@@ -311,6 +329,11 @@ export class SnowAccumulation {
     }
   }
   verges() {
+    for (const _ of this.vergesSteps()) {
+      /* synchronous callers */
+    }
+  }
+  *vergesSteps() {
     for (const road of this.roads) {
       const dx = road.b.x - road.a.x,
         dz = road.b.z - road.a.z,
@@ -321,6 +344,7 @@ export class SnowAccumulation {
       for (const side of [-1, 1])
         for (let i = 0; i < steps; i++)
           for (let j = 0; j < offsets.length - 1; j++) {
+            yield;
             const at = (t: number, out: number) => {
               const d = side * (road.width / 2 + out);
               const x = road.a.x + dx * t + (dz / length) * d,
@@ -357,39 +381,58 @@ export class SnowAccumulation {
       const count = this.lifts.length,
         baseNormals = new Float32Array(count * 3),
         deltaNormals = new Float32Array(count * 3);
-      const sums = new Map<string, { base: T.Vector3; delta: T.Vector3 }>(),
-        keys: string[] = [];
-      const point = (i: number, depth: number) =>
-        new T.Vector3(
-          this.positions[i * 3],
+      // Store accumulated normals in numeric buffers. A mature parish used to
+      // allocate two vectors and a retained key string for every snow vertex,
+      // causing major garbage-collection pauses after successive revisions.
+      const sums = new Map<string, number>();
+      const accumulated = new Float64Array(count * 6),
+        shared = new Uint32Array(count);
+      const a = new T.Vector3(),
+        b = new T.Vector3(),
+        c = new T.Vector3();
+      const base = new T.Vector3(),
+        delta = new T.Vector3();
+      const point = (out: T.Vector3, i: number, depth: number) =>
+        out.set(
+          this.positions[i * 3]!,
           this.positions[i * 3 + 1]! + this.lifts[i]! * depth,
-          this.positions[i * 3 + 2],
+          this.positions[i * 3 + 2]!,
         );
+      const normal = (out: T.Vector3, i: number, depth: number) => {
+        point(a, i, depth);
+        point(b, i + 1, depth).sub(a);
+        point(c, i + 2, depth).sub(a);
+        return out.crossVectors(b, c);
+      };
       for (let i = 0; i < count; i += 3) {
         if (i % 192 === 0) yield;
-        const normal = (depth: number) =>
-          new T.Vector3().crossVectors(
-            point(i + 1, depth).sub(point(i, depth)),
-            point(i + 2, depth).sub(point(i, depth)),
-          );
-        const base = normal(0),
-          delta = normal(1).sub(base);
+        normal(base, i, 0);
+        normal(delta, i, 1).sub(base);
         for (let j = i; j < i + 3; j++) {
-          const key = this.smooth[j]
-            ? `${this.positions[j * 3]!.toFixed(4)}:${this.positions[j * 3 + 1]!.toFixed(4)}:${this.positions[j * 3 + 2]!.toFixed(4)}:${this.lifts[j]!.toFixed(4)}`
-            : `face:${j}`;
-          keys.push(key);
-          const sum = sums.get(key) ?? { base: new T.Vector3(), delta: new T.Vector3() };
-          sum.base.add(base);
-          sum.delta.add(delta);
-          sums.set(key, sum);
+          let index = j;
+          if (this.smooth[j]) {
+            const key = `${this.positions[j * 3]!.toFixed(4)}:${this.positions[j * 3 + 1]!.toFixed(4)}:${this.positions[j * 3 + 2]!.toFixed(4)}:${this.lifts[j]!.toFixed(4)}`;
+            const existing = sums.get(key);
+            if (existing === undefined) sums.set(key, j);
+            else index = existing;
+          }
+          shared[j] = index;
+          const at = index * 6;
+          accumulated[at] += base.x;
+          accumulated[at + 1] += base.y;
+          accumulated[at + 2] += base.z;
+          accumulated[at + 3] += delta.x;
+          accumulated[at + 4] += delta.y;
+          accumulated[at + 5] += delta.z;
         }
       }
       for (let i = 0; i < count; i++) {
         if (i % 192 === 0) yield;
-        const n = sums.get(keys[i]!)!;
-        n.base.toArray(baseNormals, i * 3);
-        n.delta.toArray(deltaNormals, i * 3);
+        const at = shared[i]! * 6;
+        for (let axis = 0; axis < 3; axis++) {
+          baseNormals[i * 3 + axis] = accumulated[at + axis]!;
+          deltaNormals[i * 3 + axis] = accumulated[at + 3 + axis]!;
+        }
       }
       geometry.setAttribute('normal', new T.BufferAttribute(baseNormals, 3));
       geometry.setAttribute('snowNormal', new T.BufferAttribute(deltaNormals, 3));
@@ -434,30 +477,52 @@ export class SnowAccumulation {
       material.customProgramCacheKey = () => 'accumulated-snow-v2';
       // Roof shells retain depth testing. Ground skirts fade into the
       // existing snow surface instead of leaving rectangular, differently lit tiles.
-      for (const ground of [false, true]) {
-        const indices: number[] = [];
-        for (let i = 0; i < count; i++) if (this.smooth[i] === ground) indices.push(i);
-        if (!indices.length) continue;
-        const g = geometry.clone();
-        g.setIndex(indices);
-        const m = material.clone();
-        m.onBeforeCompile = (shader, renderer) => {
-          material.onBeforeCompile(shader, renderer);
-          if (ground) shader.fragmentShader = '#define SNOW_GROUND\n' + shader.fragmentShader;
-        };
-        m.customProgramCacheKey = () =>
-          `${material.customProgramCacheKey()}-${ground ? 'ground' : 'cap'}`;
-        // Smooth thaw without stippled white pixels or two transparent face passes.
-        m.transparent = true;
-        m.forceSinglePass = true;
-        m.depthWrite = !ground;
-        const mesh = new T.Mesh(g, m);
-        mesh.receiveShadow = true;
-        mesh.frustumCulled = false;
-        this.group.add(mesh);
+      // Bound CPU copies and first-use GPU uploads; roof and ground draws
+      // share each batch's attributes rather than duplicating the whole parish.
+      for (let start = 0; start < count; start += 65535) {
+        yield;
+        const end = Math.min(count, start + 65535);
+        const attributes: Record<string, T.BufferAttribute> = {};
+        for (const [name, value] of Object.entries(geometry.attributes)) {
+          const attribute = value as T.BufferAttribute;
+          attributes[name] = new T.BufferAttribute(
+            attribute.array.slice(start * attribute.itemSize, end * attribute.itemSize),
+            attribute.itemSize,
+          );
+        }
+        for (const ground of [false, true]) {
+          const indices: number[] = [];
+          for (let i = start; i < end; i++) if (this.smooth[i] === ground) indices.push(i - start);
+          if (!indices.length) continue;
+          const g = new T.BufferGeometry();
+          for (const [name, attribute] of Object.entries(attributes))
+            g.setAttribute(name, attribute);
+          g.setIndex(indices);
+          const m = material.clone();
+          m.onBeforeCompile = (shader, renderer) => {
+            material.onBeforeCompile(shader, renderer);
+            if (ground) shader.fragmentShader = '#define SNOW_GROUND\n' + shader.fragmentShader;
+          };
+          m.customProgramCacheKey = () =>
+            `${material.customProgramCacheKey()}-${ground ? 'ground' : 'cap'}`;
+          // Smooth thaw without stippled white pixels or two transparent face passes.
+          m.transparent = true;
+          m.forceSinglePass = true;
+          m.depthWrite = !ground;
+          const mesh = new T.Mesh(g, m);
+          mesh.receiveShadow = true;
+          mesh.frustumCulled = false;
+          this.group.add(mesh);
+        }
       }
       geometry.dispose();
       material.dispose();
+      // Retain compact contact data, not millions of vertex/triangle objects.
+      // Double precision preserves the existing height queries exactly.
+      if (this.ground.size) {
+        this.groundPositions = new Float64Array(this.positions);
+        this.groundLifts = new Float64Array(this.lifts);
+      }
       this.positions = [];
       this.lifts = [];
       this.opacity = [];

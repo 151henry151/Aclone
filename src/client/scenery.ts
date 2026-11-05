@@ -2,7 +2,7 @@ import { onAirfield } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { evergreens, type EvergreenSite } from './evergreen';
 import { worldResources } from '../shared/resources';
-import { resourceScenery } from './resource-scenery';
+import { resourceScenerySteps } from './resource-scenery';
 import { fadeSceneryIntoFog } from './scenery-fog';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -72,6 +72,11 @@ export function foliage(grass: boolean) {
 }
 /** Seeded, instanced countryside. Roads, pitches and building entrances stay unobstructed. */
 export function countryside(root: T.Group, world: World, low: boolean) {
+  for (const _ of countrysideSteps(root, world, low)) {
+    /* synchronous callers */
+  }
+}
+export function* countrysideSteps(root: T.Group, world: World, low: boolean) {
   const rand = random(1853),
     matrix = new T.Object3D();
   const shades: T.Mesh[] = [];
@@ -128,6 +133,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     birches: number[][] = [],
     rocks: number[][] = [];
   for (let i = 0; i < (low ? 2600 : 10000); i++) {
+    if (i % 32 === 0) yield;
     const x = (rand() - 0.5) * 480,
       z = (rand() - 0.5) * 480,
       h = terrainHeight(world, x, z);
@@ -203,6 +209,7 @@ export function countryside(root: T.Group, world: World, low: boolean) {
   }
   for (let x = -235; x < 235; x += 3.4)
     for (let z = -235; z < 140; z += 3.4) {
+      yield;
       const px = x + rand(),
         pz = z + rand(),
         d = roadDistance(px, pz),
@@ -245,11 +252,17 @@ export function countryside(root: T.Group, world: World, low: boolean) {
     true,
   );
   // On large maps the countryside's own patches are streamed with their chunks.
-  resourceScenery(root, world, low, (n) => Math.max(Math.abs(n.x), Math.abs(n.z)) < 300);
+  yield* resourceScenerySteps(
+    root,
+    world,
+    low,
+    (n) => Math.max(Math.abs(n.x), Math.abs(n.z)) < 300,
+  );
   const hedges: number[][] = [],
     fence: number[][] = [],
     rails: number[][] = [];
   for (const b of world.buildings) {
+    yield;
     if (!['home', 'pub', 'school', 'bank', 'workhouse', 'bakery'].includes(b.kind)) continue;
     const bounds = buildingBounds(buildingPlan(b));
     const half = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 1.7;
