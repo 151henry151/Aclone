@@ -2,6 +2,17 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.123.0 — Choose the length of your seasons
+
+World builders can set year length, spring's starting day and the lengths of
+spring, summer and autumn; winter is the remainder. Planting, winter losses,
+weather and daylight follow local seasons. Future ageing, building wear and
+estate discounts use the local year. New loan offers use its bank-month length,
+while signed loans and recorded credit history retain their existing timing.
+Defaults preserve the original calendar. Editing a populated world's calendar
+can immediately change seasons and kill unharvested crops; see
+[Calendar rules](WORLD_BUILDING.md#calendar-rules).
+
 ## 0.122.0 — More room for custom landscapes
 
 World builders can raise or lower terrain and landscape capacities within bounded

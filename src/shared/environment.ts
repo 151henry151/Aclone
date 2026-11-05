@@ -1,29 +1,49 @@
+import { calendarRules, winterStart, seasonalDate, type CalendarRules } from './calendar-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { climateRules, type ClimateRules } from './climate-rules';
-import { defaults } from './catalog.ts';
+import defaults from '../../data/settings.json';
 import { solarDirectionAt } from './astronomy';
 import type { World } from './types.ts';
 export const DAY_SECONDS = 600;
 export type Season = 'Winter' | 'Spring' | 'Summer' | 'Autumn';
-export function seasonAt(day: number): Season {
-  day = ((day % 365) + 365) % 365;
-  return day < 59 || day >= 334 ? 'Winter' : day < 151 ? 'Spring' : day < 243 ? 'Summer' : 'Autumn';
+export function seasonAt(day: number, settings: Partial<CalendarRules> = {}): Season {
+  const r = calendarRules(settings);
+  day = ((day % r.calendarYearDays) + r.calendarYearDays) % r.calendarYearDays;
+  return day < r.calendarSpringDay || day >= winterStart(r)
+    ? 'Winter'
+    : day < r.calendarSpringDay + r.calendarSpringDays
+      ? 'Spring'
+      : day < r.calendarSpringDay + r.calendarSpringDays + r.calendarSummerDays
+        ? 'Summer'
+        : 'Autumn';
+}
+export function calendarYearSeconds(settings: Partial<CalendarRules> = {}) {
+  return DAY_SECONDS * (settings.calendarYearDays ?? defaults.calendarYearDays);
+}
+export function calendarDate(time: number, settings: Partial<CalendarRules> = {}) {
+  return (
+    time / DAY_SECONDS +
+    (settings.calendarSpringDay ?? defaults.calendarSpringDay) +
+    defaults.time / 86400
+  );
 }
 /** Economic calendar is independent of the owner's decorative clock controls. */
-export function calendar(w: Pick<World, 'time'>) {
-  const absoluteDay = Math.floor(w.time / DAY_SECONDS + 59 + defaults.time / 86400 + 1e-10);
-  const dayOfYear = absoluteDay % 365;
+export function calendar(w: Pick<World, 'time'> & { settings?: Partial<CalendarRules> }) {
+  const absoluteDay = Math.floor(calendarDate(w.time, w.settings) + 1e-10);
+  const yearDays = calendarRules(w.settings).calendarYearDays;
+  const dayOfYear = ((absoluteDay % yearDays) + yearDays) % yearDays;
   return {
     absoluteDay,
     dayOfYear,
-    year: Math.floor(absoluteDay / 365) + 1,
-    season: seasonAt(dayOfYear),
+    year: Math.floor(absoluteDay / yearDays) + 1,
+    season: seasonAt(dayOfYear, w.settings),
   };
 }
 /** Metres of settled snow. Six centimetres of excess thaw per full sunny day. */
 export const WINTER_BASE_SNOW = 0.04;
 export const NORMAL_STORM_SNOW = 0.06;
-const calendarOffset = 59 + defaults.time / 86400;
+const calendarOffset = (settings: Partial<CalendarRules> = {}) =>
+  calendarRules(settings).calendarSpringDay + defaults.time / 86400;
 const clamp = (x: number, low = 0, high = 1) => Math.max(low, Math.min(high, x));
 const mod = (x: number, period: number) => ((x % period) + period) % period;
 
@@ -38,15 +58,21 @@ function weatherRoll(world: string, period: number, stream: string) {
 }
 /** Two-day opportunities, with variable onset and duration; long storms cross midnight.
  * A winter spans December and the following January/February, sharing one wetness bias. */
-function weatherEvent(world: string, date: number, rules: ClimateRules) {
+function weatherEvent(
+  world: string,
+  date: number,
+  rules: ClimateRules,
+  settings: Partial<CalendarRules> = {},
+) {
   const slot = Math.floor(date / 2);
   const start = slot * 2 + 0.03 + weatherRoll(world, slot, 'onset') * 0.25;
-  const season = seasonAt(Math.floor(date));
+  const season = seasonAt(Math.floor(date), settings);
   const durationRoll = weatherRoll(world, slot, 'duration');
   // Retain roughly the old wet-weather share for crops outside winter. Snow
   // instead favours brief showers, with much rarer prolonged accumulation.
   const duration = season === 'Winter' ? 0.2 + 1.5 * durationRoll ** 2 : 0.7 + durationRoll;
-  const winter = Math.floor((Math.floor(date) + 31) / 365);
+  const yearDays = calendarRules(settings).calendarYearDays;
+  const winter = Math.floor((Math.floor(date) + yearDays - winterStart(settings)) / yearDays);
   const chance =
     season === 'Winter'
       ? rules.climateWinterWetMin +
@@ -75,19 +101,21 @@ export function weatherAt(
   world: string,
   absoluteDay: number,
   fraction = 0.5,
-  settings: Partial<ClimateRules> = {},
+  settings: Partial<ClimateRules & CalendarRules> = {},
 ) {
   const date = absoluteDay + fraction,
-    day = mod(Math.floor(date), 365);
+    day = mod(Math.floor(date), calendarRules(settings).calendarYearDays);
   const rules = climateRules(settings);
-  const event = weatherEvent(world, date, rules);
-  const warmth = Math.cos(((day - 190) / 365) * Math.PI * 2);
+  const event = weatherEvent(world, date, rules, settings);
+  const warmth = Math.cos(
+    ((seasonalDate(day, settings) - 190) / defaults.calendarYearDays) * Math.PI * 2,
+  );
   const temperature = Math.round(
     10 + 14 * warmth + (weatherRoll(world, Math.floor(date), 'temperature') - 0.5) * 6,
   );
   const wet = event.active;
   const precipitation = wet
-    ? seasonAt(day) === 'Winter' || temperature < 2
+    ? seasonAt(day, settings) === 'Winter' || temperature < 2
       ? 'snow'
       : 'rain'
     : 'clear';
@@ -97,7 +125,7 @@ export function weatherAt(
       (precipitation === 'snow' && (event.duration >= 1 || event.blizzard)));
   const cloudRoll = weatherRoll(world, Math.floor(date), 'clouds');
   return {
-    season: seasonAt(day),
+    season: seasonAt(day, settings),
     temperature,
     precipitation,
     storm,
@@ -121,11 +149,11 @@ export function worldWeather(
 ) {
   const at =
     fraction ??
-    (w.time !== undefined && calendar({ time: w.time }).absoluteDay === day
-      ? Math.max(0, w.time / DAY_SECONDS + calendarOffset - day)
+    (w.time !== undefined && calendar({ time: w.time, settings: w.settings }).absoluteDay === day
+      ? Math.max(0, w.time / DAY_SECONDS + calendarOffset(w.settings) - day)
       : 0.5);
   const rules = climateRules(w.settings);
-  const natural = weatherAt(w.id, day, at, rules),
+  const natural = weatherAt(w.id, day, at, w.settings),
     mode = w.creator?.weather ?? 'natural';
   if (mode === 'natural') return natural;
   const snow = mode === 'snow' || mode === 'snowstorm',
@@ -153,8 +181,8 @@ export function snowDescription(climate: World['climate']) {
   const amount = depth < 1 ? `${Math.max(1, Math.round(depth * 100))} cm` : `${depth.toFixed(1)} m`;
   return `${depth > 0.1524 ? 'Deep snow' : 'Snow'} ${amount} · roads clear`;
 }
-export function sunAt(seconds: number, day: number) {
-  const direction = solarDirectionAt(day, seconds),
+export function sunAt(seconds: number, day: number, settings: Partial<CalendarRules> = {}) {
+  const direction = solarDirectionAt(day, seconds, settings),
     height = direction[1];
   return {
     direction,
@@ -166,8 +194,8 @@ export function sunAt(seconds: number, day: number) {
 /** Integral of positive solar elevation, using a fixed declination per calendar day.
  * This analytic primitive is additive across ticks, restarts and offline catch-up. */
 function solarExposure(w: World, day: number, start: number, end: number) {
-  const noon = solarDirectionAt(day, 43200)[1],
-    midnight = solarDirectionAt(day, 0)[1];
+  const noon = solarDirectionAt(day, 43200, w.settings)[1],
+    midnight = solarDirectionAt(day, 0, w.settings)[1];
   const a = (noon - midnight) / 2,
     b = (noon + midnight) / 2;
   const halfDay = Math.acos(clamp(-b / a, -1, 1)) / (2 * Math.PI);
@@ -208,21 +236,25 @@ export function advanceClimate(w: World, start: number, end: number) {
     climate.snowModel = 1;
   }
   climate.winterBase ??=
-    seasonAt(calendar({ time: start }).dayOfYear) === 'Winter'
+    calendar({ time: start, settings: w.settings }).season === 'Winter'
       ? Math.min(WINTER_BASE_SNOW, climate.snowDepth)
       : 0;
   const rules = climateRules(w.settings);
   let at = start;
   while (at < end) {
-    const date = at / DAY_SECONDS + calendarOffset;
+    const date = at / DAY_SECONDS + calendarOffset(w.settings);
     const day = Math.floor(date + 1e-10);
-    const event = weatherEvent(w.id, date + 1e-10, rules);
+    const event = weatherEvent(w.id, date + 1e-10, rules, w.settings);
     const boundaries = [day + 1, event.start, event.end, event.next]
-      .map((d) => (d - calendarOffset) * DAY_SECONDS)
+      .map((d) => (d - calendarOffset(w.settings)) * DAY_SECONDS)
       .filter((t) => t > at + 1e-7);
     const next = Math.min(end, ...boundaries);
     const dt = next - at;
-    const weather = worldWeather(w, day, (at + next) / 2 / DAY_SECONDS + calendarOffset - day);
+    const weather = worldWeather(
+      w,
+      day,
+      (at + next) / 2 / DAY_SECONDS + calendarOffset(w.settings) - day,
+    );
     const beforeDepth = climate.snowDepth;
     let wetSeconds = weather.precipitation !== 'clear' || beforeDepth > 0 ? dt : 0;
     if (weather.season !== 'Winter') climate.winterBase = 0;
@@ -259,8 +291,13 @@ export function roadConditions(w: World) {
   const wet = Math.max(clamp(w.climate?.wetness ?? 0), snowDepth(w.climate) > 0 ? 0.7 : 0);
   return { speed: 1 - wet * 0.15, grip: 1 - wet * 0.2 };
 }
-export function eveningLights(b: { id: string; smoking?: boolean }, seconds: number, day: number) {
-  if (!b.smoking || sunAt(seconds, day).daylight > 0.1) return false;
+export function eveningLights(
+  b: { id: string; smoking?: boolean },
+  seconds: number,
+  day: number,
+  settings: Partial<CalendarRules> = {},
+) {
+  if (!b.smoking || sunAt(seconds, day, settings).daylight > 0.1) return false;
   let seed = day;
   for (const c of b.id) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
   const bedtime = 21 + ((seed >>> 0) % 350) / 100;

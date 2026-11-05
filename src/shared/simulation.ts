@@ -1,6 +1,6 @@
 import { landscapeRules, landscapeRuleFields } from './landscape-rules';
 import { communicationRuleFields } from './communication-rules';
-import { calendarRuleFields } from './calendar-rules';
+import { calendarRuleFields, calendarRulesError } from './calendar-rules';
 import { alpineRuleFields, alpineRulesError } from './alpine-rules';
 import { climateRuleFields, climateRulesError } from './climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from './boat-navigation-rules';
@@ -246,7 +246,7 @@ import {
 } from './civics.ts';
 import { gather, finishGather, changeResourceRules } from './resources.ts';
 import { moneyGiftReason, refuellingStatus } from './player-aid.ts';
-import { advanceClimate, roadConditions } from './environment.ts';
+import { advanceClimate, roadConditions, calendarYearSeconds } from './environment.ts';
 import { drivingGrade, drivingSurface, walkingSurface, slopeSpeed } from './driving-surface.ts';
 import { shelter, lodgingAction, roomCount } from './lodging.ts';
 import { fireWeapon, tickCombat, joinCombat, leaveCombat, ammunition } from './combat.ts';
@@ -2245,6 +2245,8 @@ export function act(w: World, id: string, a: Action): string {
           'Keep landscape limits at or above retained undo history',
         );
       }
+      const calendarError = calendarRulesError(nextSettings);
+      requireThat(!calendarError, calendarError ?? 'Invalid calendar');
       const alpineError = alpineRulesError({ ...w.settings, ...clean });
       requireThat(!alpineError, alpineError ?? 'Invalid alpine climate');
       const climateError = climateRulesError({ ...w.settings, ...clean });
@@ -3256,7 +3258,7 @@ export function advance(w: World, seconds: number) {
   for (const p of Object.values(w.players)) {
     if (p.crowClass && (!w.settings.crowAbilities || !w.settings.fighting)) returnCrow(w, p);
     if (p.online) {
-      p.age += seconds / (600 * 365);
+      p.age += seconds / calendarYearSeconds(w.settings);
       p.lastSeen = end;
       delete p.inactivityProcessed;
     }
@@ -3407,7 +3409,7 @@ export function advance(w: World, seconds: number) {
       const factor = !owner ? 100 : skill && !owner.skills.includes(skill) ? 10 : 1;
       b.condition = Math.max(
         b.lodging ? 1 : 0,
-        b.condition - (seconds * 100 * factor) / (160 * 365 * 600),
+        b.condition - (seconds * 100 * factor) / (160 * calendarYearSeconds(w.settings)),
       );
     }
   }

@@ -2,9 +2,9 @@ import { worldItems, worldBuildings } from './world-catalogue.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recordLife } from './reports.ts';
 import { buildings, items } from './catalog.ts';
-import { DAY_SECONDS } from './environment.ts';
+import { calendarYearSeconds } from './environment.ts';
 import type { Building, World } from './types.ts';
-export const PROPERTY_YEAR = DAY_SECONDS * 365;
+export const PROPERTY_YEAR = calendarYearSeconds();
 /** Catalogue valuation cannot be inflated by editing the building's own shop quotes. */
 export function propertyQuote(w: World, b: Building) {
   const goods = Object.entries(b.stock).reduce(
@@ -13,7 +13,9 @@ export function propertyQuote(w: World, b: Building) {
   );
   const equity = goods + Math.max(0, b.investment);
   const years =
-    b.estate && !b.owner ? Math.floor(Math.max(0, w.time - b.estate.since) / PROPERTY_YEAR) : 0;
+    b.estate && !b.owner
+      ? Math.floor(Math.max(0, w.time - b.estate.since) / calendarYearSeconds(w.settings))
+      : 0;
   const discount = Math.pow(1 - (w.settings.estateAnnualDiscount ?? 0), years);
   const base = b.estate && !b.owner ? b.estate.base : b.price;
   const premium =

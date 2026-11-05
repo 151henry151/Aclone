@@ -285,7 +285,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
         q.payment * budgets.npcLoanPaymentBuffer < estimate.margin * budgets.npcLoanProfitBatches
       )
         add(
-          `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} per bank month for ${months} months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
+          `Finance my ${b.name}: borrow ${shortfall}, ${(q.apr * 100).toFixed(2)}% APR, ${q.payment} every ${q.periodSeconds} seconds for ${months} months. Fund production; earnings are uncertain, keep savings ready for repayments.`,
           [
             ...visitBuilding(p, bank, [
               operation('loan', {
@@ -295,6 +295,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
                 months,
                 apr: q.apr,
                 payment: q.payment,
+                periodSeconds: q.periodSeconds,
                 accepted: true,
                 autoPay: true,
               }),

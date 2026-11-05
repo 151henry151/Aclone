@@ -1,8 +1,9 @@
+import { DAY_SECONDS } from '../shared/environment';
 import { creditRules } from '../shared/credit-rules';
 import { loanRules, loanTerms, preferredLoanTerm } from '../shared/loan-rules';
 import { paymentSourceSelect, loanStatusHtml } from './debt-status';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { creditProfile, loanQuote, LOAN_MONTH } from '../shared/loans';
+import { creditProfile, loanQuote, bankMonth } from '../shared/loans';
 import { money } from '../shared/simulation';
 import type { World, Player, Building } from '../shared/types';
 const esc = (s: unknown) =>
@@ -13,13 +14,14 @@ const esc = (s: unknown) =>
 const hidden = (n: string, v: unknown) => `<input type="hidden" name="${n}" value="${esc(v)}">`;
 export function bankLoans(w: World, p: Player, b: Building) {
   const c = creditProfile(w, p),
-    rules = loanRules(w.settings);
+    rules = loanRules(w.settings),
+    period = bankMonth(w);
   const collateral = w.buildings.filter(
     (v) => v.owner === p.id && !v.government && !v.construction && !v.lien && !v.forSale,
   );
   return `<hr><h3>Loans & credit</h3><p data-credit-score>Credit score: <b>${c.score} / ${creditRules(w.settings).creditScoreMaximum}</b> · debt ${money(c.debt)} · verified income ${money(c.monthlyIncome)} per bank month.</p>
   <p class="note">${Math.round(c.employment * 100)}% of observed life employed · ${c.onTime} on-time repayments · ${c.late} late episodes · ${c.defaults} defaults. Local score weights determine the effect of history, employment, buildings and debt. History starts when recorded, not retroactively.</p>
-  <p>Fixed annual rates, equal monthly instalments, no origination or early-repayment fees. One bank month is ${(LOAN_MONTH / 3600).toFixed(2)} real hours (30.42 game days). Rates are fictional game terms. Automatic payments use your selected source, including offline. Existing loans keep savings-only payments until you change them. Business capital is never taken. A half-month grace period precedes a late report; three months in arrears leads to default and foreclosure of pledged property. Debt survives death.</p>
+  <p>Fixed annual rates, equal monthly instalments, no origination or early-repayment fees. One bank month is ${(period / 3600).toFixed(2)} real hours (${(period / DAY_SECONDS).toFixed(2)} game days) for new loans. Signed loans retain their agreed period even if the world year changes. Rates are fictional game terms. Automatic payments use your selected source, including offline. Existing loans keep savings-only payments until you change them. Business capital is never taken. A half-month grace period precedes a late report; three months in arrears leads to default and foreclosure of pledged property. Debt survives death.</p>
   <p>Up to ${rules.loanMaximumActive} active loans; mortgages cover up to ${rules.loanMortgageLtv * 100}% of structural value. Minimum scores: personal ${rules.loanPersonalMinimumScore}, mortgage ${rules.loanMortgageMinimumScore}.</p>
   <form id="loan-quote-form">${hidden('building', b.id)}<label>Loan amount in denarii<input name="denarii" type="number" min="${rules.loanMinimumAmount / 100}" max="${rules.loanMaximumAmount / 100}" step="0.01" value="${Math.min(rules.loanMaximumAmount, Math.max(rules.loanMinimumAmount, 10000)) / 100}" required></label>
   <label>Number of monthly payments<select name="months">${loanTerms(w.settings)
@@ -48,9 +50,9 @@ export function bankQuote(
 ) {
   const q = loanQuote(w, p, b, amount, months, collateral);
   if (!q.approved) return `<p class="notice">Loan unavailable: ${q.reasons.map(esc).join(' ')}</p>`;
-  return `<div class="notice"><h4>Your loan offer</h4><p>Borrow ${money(amount)} at <b>${(q.apr * 100).toFixed(2)}% APR</b> for ${months} bank months. Pay <b>${money(q.payment)}</b> each month. Scheduled total ${money(q.total)} including ${money(q.interest)} interest; final payment may be slightly lower after rounding. First payment in ${(LOAN_MONTH / 3600).toFixed(2)} real hours.</p>
+  return `<div class="notice"><h4>Your loan offer</h4><p>Borrow ${money(amount)} at <b>${(q.apr * 100).toFixed(2)}% APR</b> for ${months} bank months. Pay <b>${money(q.payment)}</b> each month. Scheduled total ${money(q.total)} including ${money(q.interest)} interest; final payment may be slightly lower after rounding. First payment in ${(q.periodSeconds / 3600).toFixed(2)} real hours.</p>
   <p>${collateral ? 'The selected property is pledged and cannot be sold or demolished until repaid. Default can cost you this property.' : 'Unsecured debt still affects your credit and future borrowing.'}</p>
-  <form data-action="loan">${hidden('building', b.id)}${hidden('operation', 'borrow')}${hidden('amount', amount)}${hidden('months', months)}${hidden('collateral', collateral ?? '')}${hidden('apr', q.apr)}${hidden('payment', q.payment)}
+  <form data-action="loan">${hidden('building', b.id)}${hidden('operation', 'borrow')}${hidden('amount', amount)}${hidden('months', months)}${hidden('collateral', collateral ?? '')}${hidden('apr', q.apr)}${hidden('payment', q.payment)}${hidden('periodSeconds', q.periodSeconds)}
   <label class="check"><input type="checkbox" name="autoPay" value="true" checked>Pay automatically</label>${paymentSourceSelect()}
   <label class="check"><input type="checkbox" name="accepted" value="true" required>I accept this payment schedule and default terms</label><button>Accept loan</button></form></div>`;
 }

@@ -172,6 +172,7 @@ const operationParameter = z
       'months',
       'apr',
       'payment',
+      'periodSeconds',
       'accepted',
       'autoPay',
       'collateral',

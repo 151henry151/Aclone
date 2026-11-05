@@ -1,6 +1,6 @@
 import { landscapeRules, landscapeRuleFields } from '../shared/landscape-rules';
 import { communicationRules, communicationRuleFields } from '../shared/communication-rules';
-import { calendarRules, calendarRuleFields } from '../shared/calendar-rules';
+import { calendarRules, calendarRuleFields, winterDays } from '../shared/calendar-rules';
 import { alpineRules, alpineRuleFields } from '../shared/alpine-rules';
 import { climateRules, climateRuleFields } from '../shared/climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from '../shared/boat-navigation-rules';
@@ -263,7 +263,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>The lottery interval uses economic game days. Existing paid rounds keep their deadline, tickets and price; later draws use the new interval. The lunar period controls both moon phases and lunar tides. Edits can change the current phase and water level immediately, without resetting time or changing tidal range. The decorative clock still rotates the sky independently; solar motion, crop days and existing deadlines are unchanged.</p></fieldset>`;
+    )}<p>Winter length: ${winterDays(settings)} days, derived from the year and other seasons. Spring start counts from day zero and must fit within winter. Days remain 600 real seconds. Calendar edits can change the current season, weather, daylight, estate prices and winter crop losses immediately. Existing time, ages, snowpack and signed loan periods are preserved; future ageing, wear and new loan periods follow year length.</p><p>The lottery interval uses economic game days. Existing paid rounds keep their deadline, tickets and price; later draws use the new interval. The lunar period controls both moon phases and lunar tides. Edits can change the current phase and water level immediately, without resetting time or changing tidal range. The decorative clock still rotates the sky independently; crop growth days and existing signed deadlines are unchanged.</p></fieldset>`;
   const alpine = alpineRules(settings);
   const alpineFields = `<fieldset class="boat-death-settings"><legend>Alpine climate</legend>${Object.entries(
     alpineRuleFields,

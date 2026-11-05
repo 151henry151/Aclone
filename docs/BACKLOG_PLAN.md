@@ -5240,3 +5240,108 @@ for the baseline; this is local regression evidence, not a hardware FPS promise.
 The final world screenshot shows the accepted surface and scattered test models.
 Prepare 0.122.0 and run the final production build before deployment. Evidence:
 `output/landscape-rules/`.
+
+0.122.0 is done and live: pushed commit `3da4b69` matches the server. Health,
+public client, website and prefixed map worker pass read-only checks without page
+errors. SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261105-010547.sqlite`;
+website rollback: `/var/backups/aclone-website/site-20261105-010753.tar.gz`.
+[Verified landscape screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567782725631344640).
+Evidence: `output/release-0.122.0/`.
+
+### Year length and seasons — finish the remaining world rules
+
+Before production edits: add Calendar fields `calendarYearDays` 365,
+`calendarSpringDay` 59 (zero-based), `calendarSpringDays` 92,
+`calendarSummerDays` 92 and `calendarAutumnDays` 91. Derive the remaining winter
+length (90 by default), rather than storing a second conflicting year total.
+Use whole days: year 4–3,650, each named season 1–3,650, spring start 0–3,650;
+validate at least one winter day and spring start no later than the winter
+length, so the seasonal cycle fits the year. A new world's calendar starts at
+its spring boundary with the existing time-of-day offset. Missing keys preserve
+the exact current calendar, weather, sky and snow behavior.
+
+Proceed with the previously offered broad calendar interpretation: future ageing
+and building wear, current estate annual discounts and new loan payment periods
+follow year length. Existing ages and saved simulation time do not change on an
+edit. Loan records capture their agreed period; old records without it retain
+the original bank month. Interest, billing, grace/default deadlines, UI and NPC
+borrowing must use the signed period. Quote acceptance rejects a changed period.
+Credit records retain their recorded bucket cadence (legacy records use the old
+month); normalize income and outstanding payment rates to the current quoted
+month for affordability, without reinterpreting old income buckets or history.
+
+Season boundaries drive planting, winter crop loss, NPC planting decisions,
+weather, temperature, solar motion, daylight, lights and snow melt. Map the
+seasonal solar/temperature cycle to the configured season lengths while keeping
+the default calculations exact. Lunar elapsed time/period, tides, lottery
+intervals, crop growth days, event intervals and already signed deadlines keep
+their independent rules. Calendar edits can immediately change season/weather
+and estate prices or expire crops; explain this clearly in the editor/docs.
+Do not reset snowpack, ageing history, world time, loans or purchased land.
+Invalidate ocean weather caching for same-time calendar/climate edits.
+
+Completion criteria: record a pre-change deterministic default fingerprint of
+calendar, weather and astronomy. Write and run failing tests in
+`tests/calendar-year-rules.test.ts` and `tests/calendar-finance-rules.test.ts`
+before production edits. Verify all season transitions/year wrapping, validation
+and atomic invalid imports, defaults/legacy fingerprints, editor/summary/NPC/save/
+design round trips, winter crop deadlines/catch-up, climate catch-up equivalence,
+same-time weather-cache changes, unchanged lunar timing, future ageing/wear and
+estate discounts. Verify new signed loan periods, stale quotes, legacy and
+existing loan preservation, interest/billing/grace/defaults, mixed-period credit
+rates and save/reload. Run affected existing calendar/climate/farming/astronomy,
+property/loan/NPC-finance checks, TypeScript, production build and formatting.
+
+Browser: a disposable owner world shows defaults and derived winter length in
+Calendar; apply a valid short year and custom seasons, see its HUD date/season
+and ground/sky, and verify reload. Reject impossible season totals and spring
+boundaries without mutating settings. Show empty and planted farm behavior across
+its custom winter. At a local bank, show the current month length, accept a new
+quote with its period, change the year, and verify the existing loan retains its
+schedule while a new quote uses the new period; stale quotes must fail safely.
+Capture/review screenshots, check browser errors, then release/deploy/announce.
+No next Planned section begins before these criteria pass.
+
+Calendar red gate: all 11 new cases fail on missing fields/unknown settings before
+production edits. Ten pass on the first implementation, including exact default
+fingerprints and all finance cases. The remaining lunar assertion exposes an
+inclination term tied to the solar longitude: keep that term on the existing
+elapsed lunar orbit while allowing the configured seasons to move the sun. Do
+not weaken the lunar phase assertion. Correct the partial-calendar argument types
+and remaining debt-status period references reported by TypeScript. Evidence:
+`output/calendar-year-rules/red.log` and `green.log`.
+
+Browser follow-up: the bank flow passes (signed 6,000-second period retained;
+new 12,000-second offer; stale acceptance rejected). The first farm assertion
+held a pre-rollback building reference after an intentionally invalid settings
+edit; the actual browser showed the planted wheat. Change the fixture to read
+current server objects after rollback. Inspection also finds farm/help prose
+still claiming a fixed ~61-hour year. Before fixing that prose, extend the farm
+browser check to require `Four seasons span 20.00 real hours` for the 120-day
+year; use the shared calendar conversion in both farm and general help.
+
+Calendar verification: all 138 relevant unit/guide cases pass across the initial
+run and targeted repairs. The five initial failures were four NPC-finance cases
+(the operation schema needed the quoted period, and one description retained its
+existing wording contract) and the 96 KB resident-request budget. Compact only
+redundant instruction prose without removing behavior; the budget now measures
+95,982 / 96,000 bytes. All 11 new checks pass on the final implementation, including
+the exact pre-change calendar/weather/astronomy fingerprints. TypeScript is clean.
+The farm-duration browser regression fails on the old fixed `~61 hours` text,
+then both browser flows pass in 3.3 minutes after the fix. They cover invalid
+settings, empty/ planted farms, winter loss, spring reopening, reload, new and
+signed bank periods, stale offers and no browser errors. Review the editor,
+farm/ground/sky and bank screenshots in `output/calendar-year-rules/browser/`.
+Software-renderer warnings in test evidence are not a hardware performance claim;
+the announcement uses the unobscured Calendar editor screenshot.
+
+Commands/evidence: the 138-case affected suite in `relevant.log`, targeted repairs
+in `repaired-final.log`, final new cases in `final-new.log`,
+`npm run test:e2e -- tests/browser/calendar-year-rules.spec.ts` in
+`browser-green.log`, `npx tsc --noEmit` in `tsc-final.log`, and changed-file
+Prettier in `prettier.log`. Use the package's `test:e2e` runner (which loads tsx),
+rather than bare Playwright CLI, for server-backed TypeScript fixtures.
+Prepare release 0.123.0; push and verify before deploying the exact commit.
+
+Release gates pass: the `/aclone/` production build completes with TypeScript
+clean; the final 17 guide/budget checks pass after release documentation updates.

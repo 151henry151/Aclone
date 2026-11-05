@@ -1,3 +1,4 @@
+import { calendarDate } from '../shared/environment';
 import { CANOE } from '../shared/canoe-rules';
 import { createCanoe, carriedCanoe, createPaddledCanoe, floatCanoe } from './canoe-model';
 import { updateResourceScenery } from './resource-scenery';
@@ -1970,10 +1971,9 @@ export class GameScene {
         skySeconds = ((clock % 86400) + 86400) % 86400,
         // Orbital seasons/phases follow the continuous saved calendar even if
         // an owner freezes or changes the decorative clock's day length.
-        skyDay =
-          (w.time + skyOffset) / DAY_SECONDS + 59 + defaults.time / 86400 - skySeconds / 86400,
+        skyDay = calendarDate(w.time + skyOffset, w.settings) - skySeconds / 86400,
         astronomy = celestialAt(skyDay, skySeconds, w.settings),
-        solar = sunAt(skySeconds, skyDay),
+        solar = sunAt(skySeconds, skyDay, w.settings),
         daylight = solar.daylight;
       const drift = (w.time + skyOffset) * 0.001 * climate.wind;
       const night = nightIllumination(astronomy, climate.clouds, drift);

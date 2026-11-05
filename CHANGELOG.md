@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.123.0] - 2026-11-05
+
+### Added
+
+- Configure year length and seasons per world; align planting, winter crop loss, weather, daylight, future ageing, building wear and estate discounts with the local calendar while preserving default behavior.
+- Quote new loans using the local year and preserve signed repayment periods, legacy loans and credit-history timing across calendar edits.
+
 ## [0.122.0] - 2026-11-05
 
 ### Added

@@ -1,9 +1,11 @@
+import { calendarRuleFields } from './calendar-rules';
+import { climateRuleFields } from './climate-rules';
 import type { CalendarRules } from './calendar-rules';
 import { inlandLevel, inlandWaterAt } from './inland-water';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
 import { calendar, worldWeather, DAY_SECONDS } from './environment';
-import { defaults } from './catalog';
+import defaults from '../../data/settings.json';
 import { terrainHeight } from './terrain';
 import { lunarElongation, LUNAR_SYNODIC_DAYS } from './astronomy';
 export const LUNAR_DAYS = LUNAR_SYNODIC_DAYS;
@@ -11,7 +13,7 @@ const TAU = Math.PI * 2;
 const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 /** Continuous economic/lunar date, including across midnight and year boundaries. */
 export function oceanDate(time: number) {
-  return time / DAY_SECONDS + 59 + defaults.time / 86400;
+  return time / DAY_SECONDS + defaults.calendarSpringDay + defaults.time / 86400;
 }
 /** Semidiurnal lunar + solar constituents: spring range is the configured maximum. */
 export function tideOffset(date: number, range: number, settings: Partial<CalendarRules> = {}) {
@@ -44,16 +46,27 @@ export function waveAmplitude(wind: number, storm: boolean, strength = 1) {
     (storm ? 1.35 + clamp(wind - 2, 0, 3) * 0.25 : 0.006 + Math.max(0, wind - 0.6) ** 2 * 0.28)
   );
 }
+const weatherRuleKeys = [
+  ...Object.keys(calendarRuleFields),
+  ...Object.keys(climateRuleFields),
+] as (keyof World['settings'])[];
 const weatherCache = new WeakMap<
   World,
-  { time: number; mode: unknown; strength: unknown; value: { amplitude: number; storm: boolean } }
+  {
+    time: number;
+    mode: unknown;
+    strength: unknown;
+    rules: unknown[];
+    value: { amplitude: number; storm: boolean };
+  }
 >();
 export function oceanWeather(w: World) {
   const cached = weatherCache.get(w);
   if (
     cached?.time === w.time &&
     cached.mode === w.creator?.weather &&
-    cached.strength === w.settings.oceanWaves
+    cached.strength === w.settings.oceanWaves &&
+    cached.rules.every((v, i) => v === w.settings[weatherRuleKeys[i]])
   )
     return cached.value;
   const c = worldWeather(w, calendar(w).absoluteDay);
@@ -76,6 +89,7 @@ export function oceanWeather(w: World) {
     time: w.time,
     mode: w.creator?.weather,
     strength: w.settings.oceanWaves,
+    rules: weatherRuleKeys.map((key) => w.settings[key]),
     value,
   });
   return value;

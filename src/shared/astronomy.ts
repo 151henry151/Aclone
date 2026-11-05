@@ -1,5 +1,5 @@
 import defaults from '../../data/settings.json';
-import type { CalendarRules } from './calendar-rules';
+import { calendarRules, seasonalDate, type CalendarRules } from './calendar-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Fictional sky at 45° north, with a tilted axis and a nearby binary moon pair.
  * Absolute dates are never wrapped at year end: lunar phases keep advancing.
@@ -12,9 +12,9 @@ const TAU = Math.PI * 2,
   tilt = (23.4 * Math.PI) / 180,
   latitude = Math.PI / 4;
 const dot = (a: Direction, b: Direction) => a.reduce((sum, x, i) => sum + x * b[i], 0);
-function frame(day: number, seconds: number) {
+function frame(day: number, seconds: number, settings: Partial<CalendarRules> = {}) {
   const date = day + seconds / 86400;
-  const longitude = (TAU * (date - 80)) / 365;
+  const longitude = (TAU * (seasonalDate(date, settings) - 80)) / defaults.calendarYearDays;
   const sunRA = Math.atan2(Math.sin(longitude) * Math.cos(tilt), Math.cos(longitude));
   const sidereal = sunRA + TAU * (seconds / 86400 - 0.5);
   const s = Math.sin(sidereal),
@@ -35,17 +35,26 @@ function frame(day: number, seconds: number) {
   };
   return { date, longitude, skyRotation, project };
 }
-export function solarDirectionAt(day: number, seconds: number): Direction {
-  const f = frame(day, seconds);
+export function solarDirectionAt(
+  day: number,
+  seconds: number,
+  settings: Partial<CalendarRules> = {},
+): Direction {
+  const f = frame(day, seconds, settings);
   return f.project(f.longitude);
 }
 export function celestialAt(day: number, seconds: number, settings: Partial<CalendarRules> = {}) {
-  const f = frame(day, seconds),
+  const f = frame(day, seconds, settings),
     sun = f.project(f.longitude);
-  const elongation = lunarElongation(f.date, settings);
+  const lunarDate =
+    f.date - (calendarRules(settings).calendarSpringDay - defaults.calendarSpringDay);
+  const elongation = lunarElongation(lunarDate, settings);
   const longitude = f.longitude + elongation;
-  const latitude = Math.sin(longitude + 0.7) * 0.065;
-  const binary = (TAU * f.date) / 5;
+  // Keep the lunar inclination cycle on elapsed lunar time, independently of
+  // edits to the seasonal solar orbit.
+  const lunarReferenceLongitude = (TAU * (lunarDate - 80)) / defaults.calendarYearDays + elongation;
+  const latitude = Math.sin(lunarReferenceLongitude + 0.7) * 0.065;
+  const binary = (TAU * lunarDate) / 5;
   const moons = [-0.012, 0.065].map((offset, i) => {
     const direction = f.project(
       longitude + Math.cos(binary) * offset,

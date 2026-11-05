@@ -1,6 +1,6 @@
 import { landscapeRules } from './landscape-rules';
 import { communicationRules } from './communication-rules';
-import { calendarRules } from './calendar-rules';
+import { calendarRules, winterDays } from './calendar-rules';
 import { alpineRules } from './alpine-rules';
 import { climateRules } from './climate-rules';
 import { boatNavigationRules } from './boat-navigation-rules';
@@ -107,7 +107,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   return [
     `Communication: chat limit ${communication.chatMaxLength} characters; group reply cooldown ${communication.npcGroupReplyCooldown} real seconds. CB retains its smaller radio limit.`,
     `Landscape: ${landscape.terrainStampLimit} terrain stamps; path/barrier/surface caps ${landscape.landscapePathLimit}/${landscape.landscapeBarrierLimit}/${landscape.landscapeSurfaceLimit}; scatter groups/per-group/total ${landscape.landscapeScatterGroupLimit}/${landscape.landscapeScatterPerGroupLimit}/${landscape.landscapeScatterLimit}; points/line ${landscape.landscapeLinePointLimit}, total ${landscape.landscapePointLimit}; barriers ${landscape.landscapeBarrierLengthLimit} m.`,
-    `Calendar: lottery interval ${calendar.lotteryDrawDays} game days (existing draw deadlines persist); lunar phase period ${calendar.calendarLunarDays} game days, shared by moon phases and tides. Edits preserve saved time and tidal range.`,
+    `Calendar: ${calendar.calendarYearDays}-day year; spring/summer/autumn/winter ${calendar.calendarSpringDays}/${calendar.calendarSummerDays}/${calendar.calendarAutumnDays}/${winterDays(s)} days, spring starts at day ${calendar.calendarSpringDay}. Ageing, wear, estate discounts and new loans follow the year; existing loans keep signed periods. Lottery interval ${calendar.lotteryDrawDays} game days (existing draw deadlines persist); lunar phase period ${calendar.calendarLunarDays} game days, shared by moon phases and tides. Edits preserve saved time and tidal range.`,
     `Alpine climate: permanent summit snow ${alpine.alpinePermanentSnow ? 'on' : 'off'}, transition ${alpine.alpineSnowStart}–${alpine.alpineSnowFull} m above sea datum. Converted rain snowfall ${alpine.alpineSnowBase} + intensity × ${alpine.alpineSnowIntensity} m/day. Applies only to the northern-island biome; seasonal snow and terrain persist.`,
     `Climate: wet-event chances spring ${climate.climateSpringWetChance}, summer ${climate.climateSummerWetChance}, autumn ${climate.climateAutumnWetChance}, winter ${climate.climateWinterWetMin}–${climate.climateWinterWetMax}; storm strength threshold ${climate.climateStormThreshold}, snowy-event blizzard chance ${climate.climateBlizzardChance}. Natural snow ${climate.climateSnowPerStrength} × strength + ${climate.climateBlizzardSnow} during blizzards, forced snow/snowstorm ${climate.climateForcedSnow}/${climate.climateForcedSnowstorm} m/day. Event gaps and saved snow persist.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,

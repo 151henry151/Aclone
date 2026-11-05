@@ -249,7 +249,7 @@ export function gameplayChoices(
             if (
               !farmStaffBlocker(w, p, b, def.seed, crop) &&
               def.seasons.includes(calendar(w).season) &&
-              w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
+              w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time, w.settings) &&
               b.investment >= def.seed + (own ? 0 : b.wage) &&
               (b.stock[crop] ?? 0) +
                 (b.plots ?? []).filter((p) => p.crop === crop).length * def.yield +
@@ -440,7 +440,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
         ([item, def]) =>
           !farmStaffBlocker(w, p, b, def.seed, item) &&
           def.seasons.includes(season) &&
-          w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
+          w.time + def.days * DAY_SECONDS + 15 < winterDeadline(w.time, w.settings) &&
           b.investment >= def.seed + harvestWages + (own ? 0 : b.wage) &&
           (b.stock[item] ?? 0) + def.yield <= b.capacity,
       )

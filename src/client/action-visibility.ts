@@ -177,7 +177,8 @@ export function actionVisible(
         return false;
       if (id === 'harvestAll') return harvestOffer(w, b, p).ripe > 0;
       const plot = b.plots?.[plotIndex ?? -1];
-      if (plot?.harvest || (plot?.crop && w.time >= winterDeadline(plot.planted))) return false;
+      if (plot?.harvest || (plot?.crop && w.time >= winterDeadline(plot.planted, w.settings)))
+        return false;
       switch (id) {
         case 'plant':
           return !plot?.crop;

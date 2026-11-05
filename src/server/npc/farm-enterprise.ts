@@ -32,7 +32,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
     const growing = Object.entries(crops).filter(
       ([item, crop]) =>
         crop.seasons.includes(calendar(w).season) &&
-        w.time + crop.days * DAY_SECONDS + 15 < winterDeadline(w.time) &&
+        w.time + crop.days * DAY_SECONDS + 15 < winterDeadline(w.time, w.settings) &&
         (b.stock[item] ?? 0) + crop.yield <= b.capacity &&
         Math.floor(crop.yield * budgets.npcFarmYieldShare) * (b.sell[item] ?? 0) * (1 - tax) >
           crop.seed + b.wage,

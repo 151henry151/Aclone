@@ -1,3 +1,4 @@
+import { calendarYearSeconds } from './environment';
 import { creditRules } from './credit-rules';
 import { loanRules, loanTerms } from './loan-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -7,6 +8,10 @@ import { log } from './simulation.ts';
 import { say } from './messages.ts';
 import type { World, Player, Building, Action } from './types.ts';
 export const LOAN_MONTH = PROPERTY_YEAR / 12;
+export const bankMonth = (w: Pick<World, 'settings'>) => calendarYearSeconds(w.settings) / 12;
+/** Missing periods are legacy signed terms, never the world's current year. */
+export const loanPeriod = (loan: Loan) => loan.periodSeconds ?? LOAN_MONTH;
+const creditPeriod = (record: CreditRecord | undefined) => record?.periodSeconds ?? LOAN_MONTH;
 export type PaymentSource = 'savings' | 'cash' | 'savingsThenCash';
 export function paymentSource(value: unknown): PaymentSource {
   if (value === undefined) return 'savings';
@@ -27,6 +32,7 @@ function payAutomatically(w: World, p: Player, l: Loan, at: number) {
   return true;
 }
 export interface CreditRecord {
+  periodSeconds?: number;
   since: number;
   observedSeconds: number;
   employedSeconds: number;
@@ -36,6 +42,7 @@ export interface CreditRecord {
   income: { month: number; amount: number }[];
 }
 export interface Loan {
+  periodSeconds?: number;
   id: string;
   bank: string;
   original: number;
@@ -63,6 +70,7 @@ const check = (ok: unknown, message: string) => {
 export function creditRecord(w: World, p: Player): CreditRecord {
   return (p.credit ??= {
     since: w.time,
+    periodSeconds: bankMonth(w),
     observedSeconds: 0,
     employedSeconds: 0,
     onTime: 0,
@@ -75,7 +83,7 @@ export function recordCreditIncome(w: World, id: string, amount: number, reason:
   const p = w.players[id];
   if (!p || !(reason === 'wage' || reason === 'labour task' || reason === 'harvest wage')) return;
   const c = creditRecord(w, p),
-    month = Math.floor(w.time / LOAN_MONTH);
+    month = Math.floor(w.time / creditPeriod(c));
   c.income = c.income.filter((v) => v.month >= month - 2);
   const entry = c.income.find((v) => v.month === month);
   if (entry) entry.amount += amount;
@@ -98,7 +106,7 @@ export function creditProfile(w: World, p: Player) {
   const history = c
     ? Math.min(
         r.creditHistoryMaximum,
-        Math.floor((w.time - c.since) / LOAN_MONTH) * r.creditHistoryMonthlyPoints,
+        Math.floor((w.time - c.since) / creditPeriod(c)) * r.creditHistoryMonthlyPoints,
       )
     : 0;
   const punctual = Math.min(r.creditOnTimeMaximum, (c?.onTime ?? 0) * r.creditOnTimePoints);
@@ -124,16 +132,21 @@ export function creditProfile(w: World, p: Player) {
       r.creditScoreInitial + history + punctual + stability - penalties,
     ),
   );
-  const month = Math.floor(w.time / LOAN_MONTH);
+  const period = bankMonth(w),
+    month = Math.floor(w.time / creditPeriod(c));
   const income =
     (c?.income ?? []).filter((i) => i.month >= month - 1).reduce((n, i) => n + i.amount, 0) / 2;
-  const payments = loans.filter((l) => l.status === 'active').reduce((n, l) => n + l.payment, 0);
+  const payments = Math.ceil(
+    loans
+      .filter((l) => l.status === 'active')
+      .reduce((n, l) => n + l.payment * (period / loanPeriod(l)), 0),
+  );
   return {
     score,
     employment,
     assets,
     debt,
-    monthlyIncome: Math.floor(income),
+    monthlyIncome: Math.floor(income * (period / creditPeriod(c))),
     payments,
     onTime: c?.onTime ?? 0,
     late: c?.late ?? 0,
@@ -222,6 +235,7 @@ export function loanQuote(
   if (amount > b.investment) reasons.push('The bank lacks lending capital.');
   return {
     ...profile,
+    periodSeconds: bankMonth(w),
     apr,
     payment,
     months,
@@ -237,7 +251,7 @@ export function loanQuote(
 }
 function accrue(l: Loan, at: number) {
   if (l.status !== 'active' || at <= l.lastInterest) return;
-  const n = l.fraction + (l.principal * l.apr * (at - l.lastInterest)) / PROPERTY_YEAR;
+  const n = l.fraction + (l.principal * l.apr * (at - l.lastInterest)) / (loanPeriod(l) * 12);
   const whole = Math.floor(n + 1e-9);
   l.interest += whole;
   l.fraction = Math.max(0, n - whole);
@@ -347,7 +361,12 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
     check(q.approved, q.reasons.join(' '));
     check(a.accepted === true, 'Review and accept the repayment terms first');
     // A stale quote must not silently authorize a changed rate or payment.
-    check(a.apr === q.apr && a.payment === q.payment, 'Loan terms changed; request a fresh quote');
+    check(
+      a.apr === q.apr &&
+        a.payment === q.payment &&
+        (a.periodSeconds ?? LOAN_MONTH) === q.periodSeconds,
+      'Loan terms changed; request a fresh quote',
+    );
     const id = `loan-${p.id}-${(p.loanSequence ?? 0) + 1}`;
     p.loanSequence = (p.loanSequence ?? 0) + 1;
     const l: Loan = {
@@ -362,7 +381,8 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
       months,
       issued: w.time,
       lastInterest: w.time,
-      nextDue: w.time + LOAN_MONTH,
+      periodSeconds: q.periodSeconds,
+      nextDue: w.time + q.periodSeconds,
       billed: 0,
       due: 0,
       autoPay: a.autoPay === true,
@@ -383,7 +403,7 @@ export function loanAction(w: World, p: Player, b: Building, a: Action) {
     p.cash += amount;
     creditRecord(w, p);
     log(w, 'transfer', amount, b.id, p.id, 'loan disbursement');
-    return `Loan opened. ${(q.payment / 100).toFixed(2)}d due every ${(LOAN_MONTH / 3600).toFixed(2)} real hours; automatic payments ${l.autoPay ? `use ${source === 'savingsThenCash' ? 'savings first, then cash in hand' : source === 'cash' ? 'cash in hand only' : 'bank savings only'}` : 'are off'}.`;
+    return `Loan opened. ${(q.payment / 100).toFixed(2)}d due every ${(loanPeriod(l) / 3600).toFixed(2)} real hours; automatic payments ${l.autoPay ? `use ${source === 'savingsThenCash' ? 'savings first, then cash in hand' : source === 'cash' ? 'cash in hand only' : 'bank savings only'}` : 'are off'}.`;
   }
   const l = p.loans?.find((l) => l.id === a.loan && l.bank === b.id);
   check(l, 'Loan not found at this bank');
@@ -424,7 +444,7 @@ export function advanceLoans(w: World, p: Player, start: number, end: number) {
         l.principal + l.interest,
         l.due + (l.billed >= l.months ? l.principal + l.interest : l.payment),
       );
-      l.nextDue += LOAN_MONTH;
+      l.nextDue += loanPeriod(l);
       if (l.due > 0) l.lateSince ??= at;
       if (!payAutomatically(w, p, l, at) && l.due > 0)
         say(
@@ -444,7 +464,7 @@ export function advanceLoans(w: World, p: Player, start: number, end: number) {
 }
 function checkLate(w: World, p: Player, l: Loan, at: number) {
   if (l.lateSince === undefined || l.due <= 0 || l.status !== 'active') return;
-  if (at >= l.lateSince + LOAN_MONTH / 2 && !l.lateReported) {
+  if (at >= l.lateSince + loanPeriod(l) / 2 && !l.lateReported) {
     l.lateReported = true;
     creditRecord(w, p).late++;
     say(
@@ -455,5 +475,5 @@ function checkLate(w: World, p: Player, l: Loan, at: number) {
       p.id,
     );
   }
-  if (at >= l.lateSince + LOAN_MONTH * 3) foreclose(w, p, l, at);
+  if (at >= l.lateSince + loanPeriod(l) * 3) foreclose(w, p, l, at);
 }

@@ -171,7 +171,7 @@ export class TownLighting {
     this.lastTime = w.time;
     this.lastFocus.copy(focus);
     const day = calendar(w).dayOfYear,
-      night = 1 - sunAt(w.settings.time, day).daylight;
+      night = 1 - sunAt(w.settings.time, day, w.settings).daylight;
     const byId = new Map(w.buildings.map((b) => [b.id, b]));
     const lit = new Set<Source>();
     const active = this.sources
@@ -183,7 +183,7 @@ export class TownLighting {
           ? night > (f.exterior ? 0.8 : 0.35) &&
             (f.closes === undefined || (hour >= 12 && hour < f.closes))
           : s.building
-            ? !!b && eveningLights(b, w.settings.time, day)
+            ? !!b && eveningLights(b, w.settings.time, day, w.settings)
             : night > 0.8;
         s.pane.material.emissive.set(f?.color ?? '#ffca72');
         s.pane.material.emissiveIntensity = on ? 2 : 0;

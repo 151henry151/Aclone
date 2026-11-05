@@ -106,6 +106,25 @@ whole edit/import.
 
 ## Calendar rules
 
+**F10 → Rules → Calendar** controls the year and seasons. `calendarYearDays`
+defaults to 365; `calendarSpringDay` to zero-based day 59; and
+`calendarSpringDays`, `calendarSummerDays`, `calendarAutumnDays` to 92, 92, 91.
+Winter is the remaining 90 days, split across the year boundary. Use whole days:
+a year is 4–3,650 days, each named season 1–3,650 days, and spring start 0–3,650.
+Leave at least one winter day; spring start cannot exceed winter's length.
+For example, a 120-day year with spring starting on day 10 and seasons of
+30/40/30 days leaves 20 winter days. Invalid combinations reject the whole edit
+or import. New worlds start at their spring boundary.
+
+A game day stays 600 real seconds. Seasons govern planting, winter crop losses,
+weather and daylight; year length also governs future ageing, building wear,
+estate discounts and new loan periods. **Editing the calendar can immediately
+change the season, weather, daylight and estate prices, or kill unharvested crops.**
+It preserves saved time, existing ages, snowpack, land and signed loan timing.
+Crop growth days, lottery intervals, lunar timing and existing deadlines remain
+independent. Defaults and old saves retain the original behavior. These fields
+persist in saves/designs and appear in local rules and resident observations.
+
 **F10 → Rules → Calendar** sets the lunar phase period, default **28 game days**.
 Acceptable periods are 1–3,650 days, including fractions. The same value drives
 the two visible moons and lunar tides; solar motion and wave strength retain
@@ -116,7 +135,7 @@ Changing the period can immediately change the current phase and tide, without
 resetting saved time. Moon phases follow the economic date, including across
 year boundaries; freezing or moving the decorative clock rotates the sky without
 resetting those phases. Existing five-day phase offset and binary-moon motion
-remain unchanged. Year length and season boundaries remain separate pending rule batches.
+remain unchanged. Year and season edits do not retime the lunar cycle.
 `lotteryDrawDays` in the same Calendar fieldset independently controls the lottery
 interval; see [Parish lottery](#optional-parish-lottery).
 
