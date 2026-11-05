@@ -1,3 +1,4 @@
+import { riverDockAccepts } from './river-dock';
 import { CANOE } from './canoe-rules';
 import { cancelTow } from './towing';
 import { vehicleDef } from './vehicle-config';
@@ -214,6 +215,10 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     need(
       d && (!savedDockExists || Math.hypot(d.berth.x - r.dinghy.x, d.berth.z - r.dinghy.z) < 1),
       'Return to the dock where you moored your lifeboat',
+    );
+    need(
+      !d.river || riverDockAccepts(w, LIFEBOAT),
+      'The lifeboat exceeds this river dock’s vessel size limits',
     );
     const blocked = landingBlocked(w, d, p, true);
     need(!blocked, blocked ?? 'Berth blocked');

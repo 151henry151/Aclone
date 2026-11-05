@@ -34,6 +34,8 @@ Unreleased boating fuel help quotes the world’s effective tank units per Fuel,
 
 Unreleased river rod fishing uses local depth and elevation while retaining offshore-only catches.
 
+Unreleased river recovery identifies the actual dock and enforces its vessel limits for lifeboats and tenders.
+
 Unreleased river recovery keeps lifeboats and towed vessels at local water height and checks obstacles at that height, preserving stranded cargo and fuel.
 
 Unreleased F10 Boat navigation rules configure river-dock depth/size limits, shore-impact damage and docking radii while preserving hull-aware arrival and clear-water checks. Inventory shows local values.

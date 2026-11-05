@@ -41,7 +41,7 @@ export function tenderAction(w: World, p: Player, operation: unknown) {
     return 'Motorboat attached astern. Tow it into a dock approach to secure it.';
   }
   need(operation === 'dock' && t.towedBy === p.vehicle, 'Attach the tender first');
-  const dock = boatLanding(w, t, true);
+  const dock = boatLanding(w, { ...t, vehicle: MOTORBOAT }, true);
   need(
     dock && Math.hypot(t.x - p.x, t.z - p.z) <= (t.rope ?? 0) + 2,
     'Bring the motorboat into the dock approach',
@@ -54,7 +54,9 @@ export function tenderAction(w: World, p: Player, operation: unknown) {
   }
   return dock.building
     ? 'Motorboat stored inside the boatyard.'
-    : 'Motorboat secured at the fishing pier.';
+    : dock.river
+      ? 'Motorboat secured at the river dock.'
+      : 'Motorboat secured at the fishing pier.';
 }
 export function moveTender(
   w: World,

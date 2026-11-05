@@ -3837,7 +3837,7 @@ function boatControls(building?: string) {
     const recoveryDock = boatLandings(world).find((d) => d.id === rescue.dinghy.landing);
     if (recoveryDock)
       html +=
-        `<p>Recovery lifeboat: ${esc(recoveryDock.building?.name ?? 'Fishing pier')}.</p>` +
+        `<p>Recovery lifeboat: ${esc(world.buildings.find((b) => b.id === recoveryDock.id)?.name ?? 'Fishing pier')}.</p>` +
         button('Show route to recovery lifeboat', 'boat-recovery-dock');
   }
   if (dock && !boatSlot(me.vehicle, world)) {

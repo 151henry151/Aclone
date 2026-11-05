@@ -229,3 +229,51 @@ test('river rod fishing casts and stops at the boat position while dry banks ref
   assert.throws(() => act(w, p.id, { type: 'joinGame', game: 'fishing' }), /into water/);
   assert.notEqual(p.game, 'fishing');
 });
+
+test('river tender docking respects vessel limits and identifies its river landing', () => {
+  const { w, p } = setup(),
+    { b, site } = dock(w);
+  w.buildings = [b];
+  Object.assign(p, site.berth);
+  w.mooredBoats = {
+    [mooringKey(p.id, MOTORBOAT)]: {
+      owner: p.id,
+      slot: MOTORBOAT,
+      ...site.berth,
+      heading: site.heading,
+      paint: 'blue',
+      landing: '',
+      towedBy: 3,
+      rope: 20,
+    },
+  };
+  const saved = structuredClone(tenderOf(w, p));
+  w.settings.riverDockMaxLength = 1;
+  assert.throws(() => tenderAction(w, p, 'dock'), /dock approach/);
+  assert.deepEqual(tenderOf(w, p), saved);
+  w.settings.riverDockMaxLength = 14;
+  assert.match(tenderAction(w, p, 'dock'), /river dock/);
+  assert.equal(tenderOf(w, p)!.landing, b.id);
+});
+test('river lifeboat boarding enforces local size limits without losing the recovery state', () => {
+  const { w, p } = setup(),
+    { b, site } = dock(w);
+  w.buildings = [b];
+  Object.assign(p, site.land, { vehicle: 5, inventory: { fuel: 1 } });
+  w.boatRescues = {
+    p: {
+      boat: { ...site.berth, heading: 0, slot: 3, paint: 'blue' },
+      cargo: { cod: 7 },
+      dinghy: { ...site.berth, heading: site.heading, landing: b.id, moored: true },
+    },
+  };
+  w.settings.riverDockMaxLength = 1;
+  const before = structuredClone(p),
+    saved = structuredClone(w.boatRescues);
+  assert.throws(() => rescueAction(w, p, 'board'), /size limits/);
+  assert.deepEqual(p, before);
+  assert.deepEqual(w.boatRescues, saved);
+  w.settings.riverDockMaxLength = 14;
+  rescueAction(w, p, 'board');
+  assert.equal(p.vehicle, LIFEBOAT);
+});

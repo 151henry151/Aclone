@@ -83,7 +83,9 @@ stranded boat and the moored inflatable remain where they were left, across
 reconnects and server restarts.
 
 On rivers, launch and boarding use the local water surface. A dry or obstructed
-launch is still refused. Lifeboats, including passenger escape after a captain’s
+launch is still refused. Dock size limits also apply to boarding a recovery
+lifeboat or securing a motorboat tender; lowering a limit preserves the vessel
+and cargo, and restoring it restores access. Recovery help identifies the dock. Lifeboats, including passenger escape after a captain’s
 death, stay at river height; towing and tender movement check obstacles there.
 
 Buy Fuel, reboard the inflatable at the same dock, and row back. The inventory

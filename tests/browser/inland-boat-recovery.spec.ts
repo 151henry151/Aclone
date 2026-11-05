@@ -119,9 +119,11 @@ test('river lifeboat launch, mooring and recovery preserve local elevation and c
     await page.getByRole('button', { name: 'Disembark on foot', exact: true }).click();
     await expect.poll(() => p().vehicle).toBe(5);
     expect(w().boatRescues![account.id].dinghy.moored).toBe(true);
+    w().boatRescues![account.id].spoilage = { daysLeft: 5, checkedAt: w().time };
     await page.reload();
     await waitForWorld(page);
     await inventory();
+    await expect(page.getByRole('dialog')).toContainText('Recovery lifeboat: River dock.');
     await shot('moored', 'Board your moored lifeboat');
     await page.getByRole('button', { name: 'Board your moored lifeboat', exact: true }).click();
     await expect.poll(() => p().vehicle).toBe(29);

@@ -4197,3 +4197,36 @@ between HUD and dialog Cast buttons; scope to the Activities dialog. Rerun passe
 (49.2 s): waiting at unchanged river x/z/y, ordinary fish, stop in place, dry-bank
 refusal without lost tackle. Inspect both screenshots, retained under
 `output/river-handoff-verification/fishing/`. Changed-file Prettier is clean.
+
+**River rod-fishing slice done and pushed:** `94e6e16` (remote SHA verified).
+
+### River dock recovery eligibility and labels — criteria before production
+
+Audit finds tender docking omits the known motorboat slot when resolving a river
+landing, bypassing configured vessel dimensions, and moored lifeboat boarding
+also lacks a size check. Both recovery/docking labels call river docks “Fishing
+pier”. Add failing tests: default tender secured at a river dock identifies it;
+length cap below motorboat length refuses without moving/deleting the tender;
+cap below lifeboat length refuses boarding without changing recovery/cargo; restore
+cap to recover access. Browser recovery panel must identify the named river dock.
+Keep existing coastal labels and offshore refusal. Run relevant inland recovery,
+motorboat, boating and river-dock tests, affected browser, TypeScript/Prettier.
+
+Eligibility red: both new unit cases fail with missing expected exceptions.
+Browser red explicitly shows “Recovery lifeboat: Fishing pier.” where the actual
+landing is River dock (1.9 minutes). Correct the known vessel lookup, add the
+lifeboat size preflight before mutation, and use the saved building name in help.
+All 36 relevant tests pass (4.5 s); TypeScript is clean. Browser recheck pending.
+
+Travel-rule audit outside the handoff: runway dimensions already match the
+per-world requirement (`flight-rules`, `puddlewick-airfield`, airfield/landing
+tests for changed width and target length). Cargo capacity already resolves
+per-world vehicle tuning (`vehicle-config`, `canCarry`, vehicle-config and
+tractor-fleet tests including capacity boundaries and save/design round-trips).
+Puddle tractor defaults to 150; On foot defaults to 60. Keep both existing slot
+controls and defaults; do not create duplicate global capacity controls.
+
+Eligibility/label verification complete: browser passes in 1.5 minutes, including
+reconnect and the named River dock recovery label. Inspect updated moored view;
+retain four current recovery screenshots in the handoff verification directory.
+All 36 relevant tests, TypeScript and changed-file Prettier/diff checks pass.

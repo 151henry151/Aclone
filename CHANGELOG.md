@@ -119,6 +119,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Enforce river-dock vessel limits when boarding recovery lifeboats or securing tenders, and identify river landings correctly in recovery help.
+
 - Allow stopped boats to cast a rod on navigable river water at their actual position and elevation; retain dry-bank refusal and offshore catch rules.
 
 - Use local river water height for lifeboat launch, boarding and passenger escape, and for occupied towing and tender obstacle checks; preserve stranded cargo and fuel.
