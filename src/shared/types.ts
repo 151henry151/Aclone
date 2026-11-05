@@ -1,3 +1,4 @@
+import type { AlpineRules } from './alpine-rules';
 import type { ClimateRules } from './climate-rules';
 import type { BoatNavigationRules } from './boat-navigation-rules';
 import type { VehicleRunningRules } from './vehicle-running-rules';
@@ -313,6 +314,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<AlpineRules>,
     Partial<ClimateRules>,
     Partial<EconomyRules>,
     Partial<LoanRules>,

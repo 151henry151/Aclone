@@ -1,3 +1,4 @@
+import { alpineRuleFields, alpineRulesError } from './alpine-rules';
 import { climateRuleFields, climateRulesError } from './climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from './boat-navigation-rules';
 import { vehicleRunningRuleFields } from './vehicle-running-rules';
@@ -1975,6 +1976,7 @@ export function act(w: World, id: string, a: Action): string {
         requireThat(
           Object.hasOwn(w.settings, key) ||
             Object.hasOwn(climateRuleFields, key) ||
+            Object.hasOwn(alpineRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
@@ -2008,6 +2010,7 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const alpineField = alpineRuleFields[key as keyof typeof alpineRuleFields];
         const climateField = climateRuleFields[key as keyof typeof climateRuleFields];
         const vehicleRunningField =
           vehicleRunningRuleFields[key as keyof typeof vehicleRunningRuleFields];
@@ -2079,6 +2082,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
         if (boatNavigationField) num(v, boatNavigationField.min, boatNavigationField.max);
@@ -2168,6 +2172,8 @@ export function act(w: World, id: string, a: Action): string {
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const alpineError = alpineRulesError({ ...w.settings, ...clean });
+      requireThat(!alpineError, alpineError ?? 'Invalid alpine climate');
       const climateError = climateRulesError({ ...w.settings, ...clean });
       requireThat(!climateError, climateError ?? 'Invalid climate rules');
       const loanError = loanRulesError({ ...w.settings, ...clean });

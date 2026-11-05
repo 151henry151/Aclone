@@ -25,7 +25,10 @@ const detailRadius = 560,
  * Each tile carries its own baked lane/surface mask addressed in world metres, so
  * the look matches the compact village plane exactly where they would overlap. */
 export class GroundTiles {
-  constructor(private decorate: (mesh: T.Mesh) => void = () => {}) {}
+  constructor(
+    private decorate: (mesh: T.Mesh) => void = () => {},
+    private currentWorld?: () => World,
+  ) {}
   readonly group = new T.Group();
   revision = 0;
   private tiles = new Map<string, T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>>();
@@ -214,12 +217,16 @@ export class GroundTiles {
     try {
       yield* prepareSnowSurfaceSteps(geometry, w, cx, cz);
       yield;
-      const material = groundMaterial(w, {
-        x: x0,
-        z: z0,
-        size: groundTileSize,
-        pixels: 256,
-      });
+      const material = groundMaterial(
+        w,
+        {
+          x: x0,
+          z: z0,
+          size: groundTileSize,
+          pixels: 256,
+        },
+        this.currentWorld,
+      );
       material.roughness = this.roughness;
       const tile = new T.Mesh(geometry, material);
       tile.position.set(cx, 0, cz);

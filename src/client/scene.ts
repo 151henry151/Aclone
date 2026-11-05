@@ -249,7 +249,10 @@ export class GameScene {
   private horizon = new HorizonLand();
   private ocean = new Ocean();
   private inland = new InlandWater();
-  private ground = new GroundTiles((mesh) => this.ocean.absorb(mesh));
+  private ground = new GroundTiles(
+    (mesh) => this.ocean.absorb(mesh),
+    () => this.world!,
+  );
   private woods = new CountrysideChunks();
   private snowDetails?: SnowAccumulation;
   private snowVisible = false;
@@ -919,7 +922,10 @@ export class GameScene {
       if (!streamed) {
         const geometry = new T.PlaneGeometry(540, 540, 128, 128);
         geometry.rotateX(-Math.PI / 2);
-        terrain = new T.Mesh(geometry, groundMaterial(w));
+        terrain = new T.Mesh(
+          geometry,
+          groundMaterial(w, undefined, () => this.world ?? w),
+        );
         land.add(terrain);
         const pos = geometry.attributes.position;
         for (let i = 0; i < pos.count; i++) {

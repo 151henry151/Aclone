@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.117.0] - 2026-11-04
+
+### Added
+
+- Configure the alpine snow line, permanent summit cover and rain-to-snow rates per world; update nearby terrain and distant mountains immediately while preserving seasonal snow, terrain heights and default weather.
+
 ## [0.116.0] - 2026-11-04
 
 ### Added

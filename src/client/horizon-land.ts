@@ -1,4 +1,4 @@
-import { ALPINE_SNOW_START, ALPINE_SNOW_FULL } from '../shared/alpine-weather';
+import { alpineSnowUniforms, updateAlpineSnow } from './alpine-snow';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -101,6 +101,7 @@ export class HorizonLand {
   private sea?: T.Mesh<T.BufferGeometry, T.MeshBasicMaterial>;
   private level = { value: 0 };
   private snow = { value: 0 };
+  private alpine?: ReturnType<typeof alpineSnowUniforms>;
   reset(w: World) {
     this.job?.return(undefined as never);
     this.group.traverse((o) => {
@@ -124,6 +125,7 @@ export class HorizonLand {
     this.revision = -1;
     this.level.value = w.settings.seaLevel;
     const material = (this.material = new T.MeshLambertMaterial({ color: '#687350' }));
+    const alpine = (this.alpine = alpineSnowUniforms(w));
     material.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, {
         terrainCoverage: { value: this.coverage },
@@ -131,7 +133,7 @@ export class HorizonLand {
         coverageExtent: { value: this.cells * 128 },
         seaLevel: this.level,
         snowCover: this.snow,
-        alpineEnabled: { value: w.northernIsland ? 1 : 0 },
+        ...alpine,
       });
       shader.vertexShader =
         'varying vec3 originalPosition;\n' +
@@ -143,7 +145,7 @@ export class HorizonLand {
         transformed.y-=d*d/${(2 * refractedEarthRadius).toFixed(1)};`,
         );
       shader.fragmentShader =
-        'varying vec3 originalPosition;uniform sampler2D terrainCoverage;uniform float coverageOrigin;uniform float coverageExtent;uniform float seaLevel;uniform float snowCover;uniform float alpineEnabled;\n' +
+        'varying vec3 originalPosition;uniform sampler2D terrainCoverage;uniform float coverageOrigin;uniform float coverageExtent;uniform float seaLevel;uniform float snowCover;uniform float alpineEnabled;uniform float alpineSnowStart;uniform float alpineSnowFull;\n' +
         shader.fragmentShader.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
@@ -151,10 +153,10 @@ export class HorizonLand {
         vec2 uv=(originalPosition.xz-coverageOrigin)/coverageExtent;
         if(all(greaterThanEqual(uv,vec2(0.)))&&all(lessThan(uv,vec2(1.)))&&texture2D(terrainCoverage,uv).r>.5) discard;
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.48,.50,.49),smoothstep(750.,1120.,originalPosition.y));
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.86,.81),max(snowCover,alpineEnabled*smoothstep(${ALPINE_SNOW_START.toFixed(1)},${ALPINE_SNOW_FULL.toFixed(1)},originalPosition.y-seaLevel)));`,
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.86,.81),max(snowCover,alpineEnabled*smoothstep(alpineSnowStart,alpineSnowFull,originalPosition.y-seaLevel)));`,
         );
     };
-    material.customProgramCacheKey = () => 'island-horizon-v2';
+    material.customProgramCacheKey = () => 'island-horizon-v3';
     // Curved distant sea hides the bottoms of hills first as they go over the
     // horizon. It adds no wave simulation, depth sampling or transparent pass.
     const vertices: number[] = [],
@@ -209,6 +211,7 @@ export class HorizonLand {
     this.prepare();
     this.level.value = level;
     this.snow.value = w.climate?.snow ?? 0;
+    if (this.alpine) updateAlpineSnow(this.alpine, w);
     if (this.sea) {
       this.sea.position.set(camera.position.x, level, camera.position.z);
       this.sea.material.color.set('#32727c').multiplyScalar(0.12 + 0.88 * daylight);

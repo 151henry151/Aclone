@@ -1,4 +1,4 @@
-import { ALPINE_SNOW_START, ALPINE_SNOW_FULL } from '../shared/alpine-weather';
+import { alpineSnowUniforms, updateAlpineSnow } from './alpine-snow';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { townRoads, townSquare } from '../shared/town';
@@ -208,7 +208,11 @@ function surfaceTexture(w: World, region: GroundRegion) {
 }
 export const snowCover = { value: 0 };
 export const snowDepthVisual = { value: 0 };
-export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
+export function groundMaterial(
+  w: World,
+  region: GroundRegion = villageRegion,
+  currentWorld: () => World = () => w,
+) {
   const custom = (kind: 'grass' | 'gravel' | 'soil' | 'sand', fallback: string) => {
     const a = w.assets.find((a) => a.id === w.creator?.terrainTextures?.[kind]);
     return a ? texture(a.id, a.url) : texture(fallback);
@@ -221,6 +225,8 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     sand = custom('sand', 'gravel'),
     noise = noiseTexture();
   const mat = new T.MeshStandardMaterial({ roughness: 1 });
+  const alpine = alpineSnowUniforms(w);
+  mat.onBeforeRender = () => updateAlpineSnow(alpine, currentWorld());
   mat.userData.warmTextures = [mask, surface, meadow, gravel, soil, sand, noise];
   mat.addEventListener('dispose', () => {
     if (!mask.userData.shared) mask.dispose();
@@ -239,7 +245,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
         ? new T.Color('white')
         : new T.Color().setRGB(1.12, 1.02, 0.72),
     };
-    shader.uniforms.alpineEnabled = { value: w.northernIsland ? 1 : 0 };
+    Object.assign(shader.uniforms, alpine);
     shader.uniforms.snowCover = snowCover;
     shader.uniforms.snowDepthVisual = snowDepthVisual;
     shader.uniforms.groundNoise = { value: noise };
@@ -266,7 +272,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
     );
     shader.fragmentShader =
       `
-      uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform float snowDepthVisual; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore; uniform float alpineEnabled;
+      uniform sampler2D soilMap; uniform sampler2D sandMap; uniform vec3 soilTint; uniform vec3 sandTint; uniform sampler2D surfaceMask; uniform sampler2D roadMask; uniform float snowCover; uniform float snowDepthVisual; uniform sampler2D meadow; uniform sampler2D gravel; uniform float shore; uniform float alpineEnabled; uniform float alpineSnowStart; uniform float alpineSnowFull;
       uniform vec2 maskOrigin; uniform float maskSize;
       varying vec3 groundPosition; varying float groundSlope; varying float groundRock; varying float groundSediment;
       uniform sampler2D groundNoise;
@@ -304,7 +310,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       // Road surfaces shed snow; soft snowy verges remain visible outside the lane.
       // Shallow cover is broken by grass, deeper cover smooths into broad drifts.
       float depth=clamp(snowDepthVisual/.15,0.,1.);
-      float cover=max(clamp(snowCover,0.,1.)*(1.-road)*(1.-rock),alpineEnabled*smoothstep(${ALPINE_SNOW_START.toFixed(1)},${ALPINE_SNOW_FULL.toFixed(1)},groundPosition.y-shore+noise(p*.025)*60.)*(1.-smoothstep(.3,.6,1.-abs(cliffNormal.y))));
+      float cover=max(clamp(snowCover,0.,1.)*(1.-road)*(1.-rock),alpineEnabled*smoothstep(alpineSnowStart,alpineSnowFull,groundPosition.y-shore+noise(p*.025)*60.)*(1.-smoothstep(.3,.6,1.-abs(cliffNormal.y))));
       vec3 snow=vec3(.85,.91,.94)*mix(.87+noise(p*2.)*.13,.94+noise(p*.12)*.06,depth);
       snow*=1.-(1.-depth)*.10*(1.-noise(p*.8));
       diffuseColor.rgb*=mix(base,snow,cover);
@@ -327,7 +333,7 @@ export function groundMaterial(w: World, region: GroundRegion = villageRegion) {
       }`,
     );
   };
-  mat.customProgramCacheKey = () => 'countryside-ground-v12';
+  mat.customProgramCacheKey = () => 'countryside-ground-v13';
   return mat;
 }
 

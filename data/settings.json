@@ -418,5 +418,10 @@
   "climateSnowPerStrength": 0.018,
   "climateBlizzardSnow": 0.15,
   "climateForcedSnow": 0.12,
-  "climateForcedSnowstorm": 0.48
+  "climateForcedSnowstorm": 0.48,
+  "alpineSnowStart": 1180,
+  "alpineSnowFull": 1390,
+  "alpinePermanentSnow": true,
+  "alpineSnowBase": 0.018,
+  "alpineSnowIntensity": 0.06
 }

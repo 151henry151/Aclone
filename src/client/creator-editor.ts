@@ -1,3 +1,4 @@
+import { alpineRules, alpineRuleFields } from '../shared/alpine-rules';
 import { climateRules, climateRuleFields } from '../shared/climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules, vehicleRunningRuleFields } from '../shared/vehicle-running-rules';
@@ -115,6 +116,7 @@ const friendly = (key: string) =>
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(climateRuleFields),
+    ...Object.keys(alpineRuleFields),
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
@@ -208,6 +210,24 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const alpine = alpineRules(settings);
+  const alpineFields = `<fieldset class="boat-death-settings"><legend>Alpine climate</legend>${Object.entries(
+    alpineRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            alpine[key as keyof typeof alpine],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${alpine[key as keyof typeof alpine] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Applies to worlds with the northern-island alpine biome. Heights are above sea datum; full coverage must be above the start. Disabling permanent snow preserves seasonal snow and snowfall. Near terrain and distant mountains follow edits immediately.</p><p>Converted rain adds base + intensity × rate metres of snow per day. The altitude/temperature formula is unchanged; clear weather creates no snowfall. Edits preserve terrain and existing snowpack.</p></fieldset>`;
   const climate = climateRules(settings);
   const climateFields = `<fieldset class="boat-death-settings"><legend>Climate</legend>${Object.entries(
     climateRuleFields,
@@ -638,6 +658,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     farmYieldFields +
     fishingFields +
+    alpineFields +
     climateFields +
     runningFields +
     navigationFields +

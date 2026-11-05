@@ -2,6 +2,17 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.117.0 — Set the mountain snow line
+
+World owners can move the permanent snow line, turn permanent summit snow off,
+and tune alpine rain-to-snow rates in F10 → Rules → Alpine climate. Nearby
+slopes and distant mountains update immediately without rebuilding terrain.
+Seasonal snow and existing snowpack remain; defaults preserve the old appearance
+and weather. The rules apply to worlds with the northern-island alpine biome.
+
+Settings persist through creation, reload and portable designs. Equal/inverted
+snow-line bounds reject atomically. No migration or manual world edit is needed.
+
 ## 0.116.0 — Choose your world's weather
 
 World owners can adjust seasonal precipitation chances, storm thresholds and

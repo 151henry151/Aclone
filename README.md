@@ -4,7 +4,11 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.116.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.117.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.117.0 lets world owners move the permanent mountain snow line,
+disable permanent summit cover and tune rain-to-snow rates. Near and distant
+terrain update together. See [Alpine climate](docs/WORLD_BUILDING.md#alpine-climate).
 
 Version 0.116.0 adds world-builder controls for seasonal wet-weather
 chances, storm thresholds and snowfall rates. Default worlds retain their exact

@@ -83,6 +83,27 @@ The local rules summary and resident observations report the effective values.
 Invalid bounds reject the whole edit or import. Snow lines, season lengths and
 calendar speed are separate from these precipitation controls.
 
+## Alpine climate
+
+**F10 → Rules → Alpine climate** applies to worlds with the northern-island
+alpine biome. Permanent snow begins at **1,180 m** above sea datum and reaches
+full coverage at **1,390 m** by default. Both heights accept 0–10,000 m; full
+coverage must be strictly above the start. The **Permanent summit snow** switch
+is on by default. Disable it for bare summer summits without removing seasonal
+snow, changing mountain heights or stopping snowfall. Near terrain and distant
+mountains follow edits immediately, without rebuilding their geometry.
+
+When lowland rain becomes alpine snow, its rate is **0.018 + intensity × 0.06**
+metres per game day. Both rate coefficients accept 0–10; set both to zero to stop
+that accumulation. Already-snowy weather keeps the general Climate rates. Clear
+weather creates no snowfall, and the existing altitude/temperature formula is
+unchanged. Worlds without this biome remain unaffected.
+
+Controls are available at creation, persist in saved worlds and exported designs,
+and appear in local summaries and resident observations. Existing snowpack is
+preserved. Missing keys use the defaults; invalid or inverted limits reject the
+whole edit/import.
+
 ## Make a tree, vehicle or building
 
 **Workshop** starts with a tree, building or rover template. Edit the name and

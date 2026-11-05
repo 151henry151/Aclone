@@ -4783,3 +4783,62 @@ with TypeScript/production-prefix build and formatting before commit/deployment.
 0.116.0 release gates: clean TypeScript and successful `/aclone/` production
 build; changed-file Prettier and whitespace checks pass. The new rule module
 uses only `data/settings.json` defaults. No manual live world/player edits.
+
+0.116.0 is done and live: pushed commit `60220c2` matches the server; health,
+client and website report 0.116.0, prefixed client/map-worker assets load and
+read-only live browser checks report no errors. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261104-230708.sqlite`; website rollback:
+`/var/backups/aclone-website/site-20261104-230820.tar.gz`.
+[Verified screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567752685808128081).
+Release evidence: `output/release-0.116.0/`.
+
+### Alpine climate rules — snow line and permanent summit snow
+
+Completion criteria before production edits: expose the existing 1,180–1,390 m
+snow-line transition above sea datum, permanent summit coverage (default on),
+and alpine rain-to-snow rate (0.018 + intensity × 0.06 m/day). Preserve the
+existing altitude/temperature formula and the northern-island scope. Numeric
+snow-line values accept 0–10,000 m with full coverage strictly above the start;
+rates accept 0–10 m/day. Disabling permanent coverage leaves seasonal snow and
+snowfall intact. No terrain heights, existing snowpack or weather timing change.
+
+Capture the old alpine output over four seasons, five weather modes, two sea
+levels and 181 elevations. New `tests/alpine-rules.test.ts` must first fail on
+missing rules, then prove default/missing-key equivalence, custom transitions,
+disabled and absent-island states, rate changes, atomic rejection of equal or
+inverted bounds/non-finite values, and creation/editor/summary/resident/save/design
+round trips. Commands: `npx tsx --test tests/alpine-rules.test.ts` plus affected
+alpine/climate/environment/import/guide consumers; `npx tsc --noEmit`; explicit
+changed-file Prettier.
+
+Browser criteria: use a disposable northern-island world, F10 → Rules → Alpine
+climate, change the snow line and disable permanent snow, then reload and confirm
+saved controls. Reject inverted bounds without changing saved settings. Observe
+actual near-ground and distant-horizon materials following edits without a
+reload/rebuild, and capture the snowy and disabled mountain views. Preserve
+seasonal coverage in both shaders and absent-island behavior. Run the existing
+alpine rain/snow/umbrella flow if the changed rendering path can affect it.
+Release, deploy, verify and announce only after these criteria pass.
+
+Alpine red verification: all four unit cases fail on undefined defaults or
+unknown settings; the browser fails at the absent Alpine climate input after
+loading the real mountain world. Evidence: `output/alpine-rules/red.log` and
+`browser-red.log`. Frozen default fingerprint:
+`cde3152d3924b338617c40a12259cd1d73876360092cbab4a0841657f726e57d`.
+
+All five alpine unit cases and three existing alpine cases pass, including the
+unchanged default fingerprint. An extra failing checkbox test caught a missing
+checked attribute before browser verification; the editor now preserves both
+default-on and saved-off states. The relevant 33-check run passes except the
+resident budget (110 bytes over); compact its plan-use guidance without changing
+requirements or the request limit, then rerun affected guide tests.
+
+Alpine completion criteria pass: 33 relevant checks, including the corrected
+16-case guide run with its unchanged request budget; clean TypeScript; default
+fingerprint equality. Both browser flows pass (2.8 minutes total): local and
+horizon shader values change live while material identities remain stable,
+snow-covered slopes become bare when disabled, reload retains settings, inverted
+bounds reject, and existing summer rain/summit snow/umbrella behavior remains.
+Screenshots are reviewed in `output/alpine-rules/browser/`. Prepare 0.117.0 with
+production-prefix build, changed-file formatting, exact-commit deployment and
+read-only live checks before the screenshot announcement.

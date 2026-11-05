@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.117.0
+
+Deploy the approved backlog-implementation commit with DEPLOY_REF, taking the
+normal SQLite backup and prefixed build before restart. Publish the matching
+website and reload clients for the updated terrain shaders. Missing alpine rules
+use existing defaults; no terrain or snow migration is required. Verify health,
+client, website and prefixed script/map-worker assets at 0.117.0. Use disposable
+local worlds for climate changes and screenshot evidence; leave live worlds alone.
+
 ## Upgrade 0.116.0
 
 Deploy the approved backlog-implementation commit with DEPLOY_REF and the normal
