@@ -155,7 +155,7 @@ the shop is a last resort, not a cheap pump. The shop belongs to the reserved
 public parish (world id `puddlewick`, economy template), including when a
 player holds world-owner rights. Purchases pay for the imports; nothing is
 free. Local producers are normally cheaper. The harbour keeps finite stock once
-the dedicated shop is present. In unreleased worlds, Economy and trade exposes the
+the dedicated shop is present. Since 0.115.0, Economy and trade exposes the
 government import premium, its three price floors and the margin over public
 purchase bids. Changing those rules republishes the government shop's bread,
 water and fuel prices; other shops retain their own quotes. Unchanged/unrelated
@@ -273,7 +273,7 @@ Interest accrues on outstanding principal. Payments settle interest first, then 
 
 The design uses ordinary amortization and ability-to-repay concepts ([CFPB explanation](https://www.consumerfinance.gov/rules-policy/regulations/1026/interp-43/)), with accelerated game time and original thresholds; it is not a real credit-reporting system. Loans do not yet support refinancing, bankruptcy or executable chat agreements.
 
-## Configurable loan offers (unreleased)
+## Configurable loan offers
 
 World owners can change loan terms in **F10 → Rules → Loan offers**. Banks show
 local offered months, active-loan limit, mortgage loan-to-value and minimum
@@ -288,7 +288,7 @@ A zero active-loan limit closes new lending. Existing loans keep their signed
 rate, term, payment and collateral, and can still be repaid. An offer whose rate
 or payment changed must be quoted and accepted again. Banks still require
 available lending capital and affordability; changing these rules creates no
-money. See [world-builder controls](WORLD_BUILDING.md#loan-offer-rules-unreleased).
+money. See [world-builder controls](WORLD_BUILDING.md#loan-offer-rules).
 
 The **Credit score** fieldset exposes the starting score, bounds and each
 history, on-time, employment, asset, late/default and debt-ratio contribution and
@@ -304,7 +304,7 @@ rules can change eligibility and the price of a new offer.
 
 ## Parish maintenance orders
 
-Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. By default, each supplier can fill at most half an order during the first half-hour of a one-hour round; the remaining demand then opens to everyone. Unreleased Economy and trade rules let owners change round length, early share and its window. Funded rounds retain their posted terms until expiry, including after reload. Orders share a fixed per-round budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.
+Public Harbour stores and **World / F9 → Parish supply orders** show three rotating maintenance projects. Deliver carried materials at the Harbour for the displayed bid (110% of catalogue value); delivered goods are consumed by the project. By default, each supplier can fill at most half an order during the first half-hour of a one-hour round; the remaining demand then opens to everyone. Version 0.115.0 Economy and trade rules let owners change round length, early share and its window. Funded rounds retain their posted terms until expiry, including after reload. Orders share a fixed per-round budget (up to 1,200d in Puddlewick). Explicit treasury grants fund escrow; unused funds expire. Downtime creates only the current round, never a backlog of grants. NPCs can deliver carried goods, withdraw their own output, or buy profitable local supplies.
 
 ## Business health (0.78.0)
 
@@ -378,7 +378,7 @@ At a farm, the owner can select approved staff crops, a cash spending limit per 
 
 The limit is shared by every employee, including NPCs, and covers purchased seeds and fallback fertilizer. Stored/carried compost, irrigation, soil improvement, wages and automatic business purchases are outside this budget. Staff must also respect the protected reserve when buying seeds/fertilizer. Owners tending plots personally bypass these staff limits. Spending already incurred that day remains counted when rules change; saving a policy cannot reset the budget. Policies and daily expenditure survive restart; exported world designs carry the policy but not runtime spending.
 
-## Configurable export timing (unreleased)
+## Configurable export timing
 
 F10 → Rules → Economy and trade sets the public export shipment interval. Changing
 it starts a fresh interval at the edit time; saving the same value leaves the

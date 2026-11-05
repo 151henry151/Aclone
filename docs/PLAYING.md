@@ -203,9 +203,9 @@ The speed display separates **ms ping** (sampled every five seconds) and **FPS**
 - High/variable ping: compare wired/Wi-Fi, stop large transfers, check hotspot signal and other players' readings. All-player spikes may mean server overload.
 - Report device/browser, graphics mode, ping/FPS and nearby player count. [Host checks](HOSTING.md#connection-and-multiplayer-checks) distinguish server load.
 
-Unreleased network entry waits for the full world snapshot before queuing live updates, including when switching worlds. A slow first island download can still take time; the following updates start from current state.
+Version 0.115.0 network entry waits for the full world snapshot before queuing live updates, including when switching worlds. A slow first island download can still take time; the following updates start from current state.
 
-Unreleased rendering prepares road growth and building changes in small batches while the existing view stays visible. Detailed banks are prepared when snow first appears, so driving and controls continue during preparation.
+Version 0.115.0 rendering prepares road growth and building changes in small batches while the existing view stays visible. Detailed banks are prepared when snow first appears, so driving and controls continue during preparation.
 
 Adaptive graphics reduce sustained slow rendering. Dynamic shadows default off and can be enabled outside Performance mode; models/textures/contact shading/local lights remain. Motion buffering smooths jitter but cannot remove round-trip latency/outages. Reconnect gets current state without replaying purchases; first-visit textures (~2.7 MiB) are separate traffic.
 
@@ -257,7 +257,7 @@ A building’s **Statement** tab shows current production blockers. Owners and w
 
 ## Parish supply orders
 
-At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. By default each order limits each supplier to half its quantity during its first half-hour and expires after one real hour. Unreleased world rules can change the round length, early share and share-window fraction. The panel quotes the funded round’s terms; rule edits apply to the next round.
+At public Harbour stores, open **Parish supply orders** to see funded maintenance jobs, payment and remaining demand. The same list is in **World / F9**. Carry the goods to the collection point and choose a quantity to deliver. By default each order limits each supplier to half its quantity during its first half-hour and expires after one real hour. Version 0.115.0 world rules can change the round length, early share and share-window fraction. The panel quotes the funded round’s terms; rule edits apply to the next round.
 
 ## Creator quests
 
@@ -302,11 +302,11 @@ lights to illuminate the instruments.
 
 Garage **Vehicle service** shows current condition, recorded kilometres and elapsed hours since first recorded use (old vehicles start with no invented history). Ordinary powered travel loses 0.2 condition points per kilometre by default; F10 Vehicle running costs sets the rate (zero stops distance wear). Parking, offline time and minigames cause no wear. At zero condition, top speed is 70% and fuel use is 30% higher; you can still reach help. Other damage/armour rules are separate.
 
-Bring **Steel** spare parts from a steelworks or shop. By default each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. In unreleased worlds, F10 → Rules → Economy and trade sets the Steel quantity and garage labour fee; both repair methods use the same parts quantity, including zero. The panels quote local terms. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
+Bring **Steel** spare parts from a steelworks or shop. By default each garage service consumes one Steel, restores up to 25 points and pays 10d labour into the garage's investment. Owners pay no labour on their own premises. Stop outside, free of activities. A neighbour qualified as **mechanic** can provide the same repair within 15m using their carried Steel and Tools; Tools remain reusable. Since 0.115.0, F10 → Rules → Economy and trade sets the Steel quantity and garage labour fee; both repair methods use the same parts quantity, including zero. The panels quote local terms. Select their name to see refuelling, repair and passenger buttons; **Leave passenger ride** disembarks. Boarding requires a stopped, available driver within 10m at the same height.
 
 World owners may require **driver**, **pilot**, or **captain** qualifications for advanced vehicles, learned at school and counted against the usual skill limit. All six tractors and walking remain unrestricted. A lost qualification prevents driving the affected vehicle until relearned. Puddlewick leaves those licences off. Boats longer than the motorboat also need **captain**; the motorboat and lifeboat do not.
 
-Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d by default (the unreleased map print rule can change this), and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.
+Maps are free to view in Puddlewick. A creator may instead require a carried **Parish map**: garages print one for 10d by default (the map print rule can change this), and stocked public outlets may sell it at an import premium. It has no cargo weight. The requirement covers both the minimap and full map; the owner editor remains available.
 
 ## Choosing a spacecraft
 
@@ -423,7 +423,7 @@ The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is exp
 
 The North Star (300s) has a larger hold and tank for long expeditions; the canal boat costs 60s. Nets catch continuously; hauling reveals fish. World defaults set trawl speed/capacity/fuel and new shoal intervals; vessels can override the first three. Recruit up to two consenting deckhands for shared profit and stock shared provisions. Disembark beside the boatyard within its waterfront arrival area; Inventory quotes the world’s docking radii and shore-impact damage. [Boating](BOATING.md) covers controls and crew agreements.
 
-The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating. Unreleased charter rules set local fare/duration defaults and limits, invitation counts and return-request cooldown; existing offers and bookings keep their agreed terms.
+The [Coastal Belle charter boat](CHARTER_BOAT.md) adds paid passenger rod-fishing trips, an enclosed helm and six fishing stations. Invitations and fare settlement are under Inventory → Boating. Version 0.115.0 charter rules set local fare/duration defaults and limits, invitation counts and return-request cooldown; existing offers and bookings keep their agreed terms.
 
 See [Boats, fishing and the coastal economy](BOATING.md) for docking, rescue, controls, fish menus and the full cost breakdown.
 
@@ -447,7 +447,7 @@ At sea, watch for a white flash when a lighthouse’s rotating light sweeps towa
 
 Find a lighthouse in the parish directory and approach it to take its single keeper job. No skill, property purchase or deposit is needed. Enter the keeper quarters from its building panel and stock your private pantry with food and water. The normal indoor consumption reduction applies; provisions still run out. Leaving the job or being dismissed ends housing access immediately, but you can collect your remaining pantry supplies.
 
-Keeper wages are funded by the navigation service, up to 8d per game day before taxes by default. In unreleased worlds, **F10 → Rules → Economy and trade** can change this cap; the lighthouse panel and jobs command show the effective wage. Raising the cap does not raise a building’s posted wage; its owner sets that in Building Admin. A zero cap pays no keeper wage but keeps the job and quarters available. In worlds requiring active shifts, renew them to keep earning; Puddlewick allows unattended employment. Private owners receive 4d per game day into Working capital. Ownership alone gives no right to live there; an owner may apply for the vacant keeper job. Larger designs still employ only one keeper and earn the same allowance. Lights continue navigating boats even when the job is vacant.
+Keeper wages are funded by the navigation service, up to 8d per game day before taxes by default. Since 0.115.0, **F10 → Rules → Economy and trade** can change this cap; the lighthouse panel and jobs command show the effective wage. Raising the cap does not raise a building’s posted wage; its owner sets that in Building Admin. A zero cap pays no keeper wage but keeps the job and quarters available. In worlds requiring active shifts, renew them to keep earning; Puddlewick allows unattended employment. Private owners receive 4d per game day into Working capital. Ownership alone gives no right to live there; an owner may apply for the vacant keeper job. Larger designs still employ only one keeper and earn the same allowance. Lights continue navigating boats even when the job is vacant.
 
 ## Loan reminders and payment sources
 
@@ -491,13 +491,13 @@ Buy eight specialist trailers at the tractor garage. Use **Inventory → Your tr
 
 The 24s outboard motorboat carries 50 weight and can be rowed after running out of fuel. The canal boat now costs 60s. A 140s tug can rescue another captain's boat for an agreed fee, or tow its owner's stranded boat home. **Activities → Towing** handles offers, acceptance, hookup and dock delivery. Fuel deliveries in a motorboat can end by towing it home behind your larger boat as a tender. See [the full haulage guide](HAULAGE.md) for controls and cargo restrictions.
 
-Unreleased tug rules set the suggested rescue fee, fee ceiling and offer lifetime.
+Version 0.115.0 tug rules set the suggested rescue fee, fee ceiling and offer lifetime.
 Posted terms persist after edits; accepted jobs hold the full fare until delivery
 or cancellation refund and do not expire.
 
 Walking uses a hand-held **Flashlight**. Walking and the 10-weight emergency raft have no engine controls or Fuel bar; the Fuel bar returns when you board a motor vehicle. Reboard stranded boats only within transfer range. Tractors can zoom out twice as far in third-person view, using the mouse wheel, pinch or **Actions → Zoom out**. There is no free town-centre teleport; allow fuel for your return journey.
 
-## Portable canoes (unreleased)
+## Portable canoes
 
 Walk to a carpenter or boathouse, stop, and open **Inventory (I / Bag)**. Buy a
 canoe for 150d, or at a carpenter craft one from 8 carried Wood. It appears upside
@@ -535,7 +535,7 @@ recovery leaves the same hull offshore with the usual cargo-spoilage deadline.
 Use the ordinary recovery lifeboat or a ride from another boat to recover it.
 A canoe cannot launch an emergency lifeboat merely because it has no fuel tank.
 
-## CB radio (unreleased)
+## CB radio
 
 In a tractor, boat or aircraft, open **CB radio** in the vehicle HUD, press **V**,
 or choose **Actions → CB radio** on a phone. Choose a channel and a call sign;
@@ -570,7 +570,7 @@ choose **Open rescue options**. This opens the existing player aid panel: fuel,
 towing and rescue still require the usual proximity, equipment and manual actions.
 A radio call never grants supplies or automatically sends a rescuer.
 
-## Local school and relief terms (unreleased)
+## Local school and relief terms
 
 School tuition, lesson time, public labour shift length and relief terms can now
 vary by world. The school and Odd Jobs panels show the current amounts and times;
@@ -585,16 +585,16 @@ most once per 30 minutes, with 15-second public labour shifts. The ordinary wage
 daily cap and diminishing returns are unchanged. Changing world rules does not
 alter a course or shift already underway.
 
-## Local trading limits (unreleased)
+## Local trading limits
 
-Unreleased economy rules let the world owner change the minimum price buildings
+Version 0.115.0 economy rules let the world owner change the minimum price buildings
 pay suppliers (normally 1d) and the quantity per transaction. Building Admin
 shows the current minimum; shop quantity controls and Sell max show the current
 limit. If the owner raises the minimum above a saved bid, that building cannot
 buy at the old price until it is repriced. Existing private offers retain their
 agreed quantity. Cash, cargo and storage limits still apply.
 
-## Outside investment terms (unreleased)
+## Outside investment terms
 
 Outside investments default to a maximum return of principal plus 8%, paid only
 from later earnings. World owners can change the return for new deposits and the
@@ -604,13 +604,13 @@ current rate and reserve; Main shows your principal, paid amount, claim and what
 you can collect now. Depositing cash is not an immediate profit or a withdrawable
 bank balance.
 
-## Ammunition refit price (unreleased)
+## Ammunition refit price
 
 The garage ammunition refit button quotes the local price, normally 25d. World
 owners can change it in Economy and trade, including free refits. The existing
 ten-second wait after firing and full ammunition/energy refill remain in place.
 
-## Local cash transfer limits (unreleased)
+## Local cash transfer limits
 
 The world owner can limit each cash gift and each bank/investment transfer in
 F10 → Rules → Economy and trade. Defaults remain 1,000,000d per gift and 100,000d

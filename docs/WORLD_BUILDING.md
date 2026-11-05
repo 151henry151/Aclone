@@ -435,7 +435,7 @@ Dairy barns, sheepfolds, piggeries and henhouses receive a fenced 16 × 16 metre
 
 **Pasture capacity multiplier** and **Pasture price multiplier** in Rules customize stocking density and expansion cost. More healthy, supplied animals increase production and staffing needs; feed and water use scales with the herd. Animal purchases and breeding respect the same capacity. Existing animals are never deleted during migration: if an old farm has no suitable pasture site, its original production remains available, but it cannot add animals until suitable grazing land is provided.
 
-### Portable canoe rules (unreleased)
+### Portable canoe rules
 
 F10 → Rules → **Portable canoes** controls purchase price (15000 hundredths =
 150d), carried weight (8), carpenter wood cost (8), walking multiplier (0.4), home
@@ -457,7 +457,7 @@ vehicle editor. Established docks support boarding and mooring in deeper water.
 Raising the minimum depth can leave a moored canoe needing to be lifted or eased
 back into nearby clear water. Personal hulls remain save state, not design objects.
 
-## CB radio rules (unreleased)
+## CB radio rules
 
 F10 → Rules → CB radios configures local vehicle transmissions. Defaults enable
 40 channels, road channel 19, emergency channel 9, a 3km ground range and 1.5×
@@ -483,7 +483,7 @@ Keyboard, touch and configurable controller push-to-talk use the same authority.
 Disabled worlds show an explanatory dashboard state. Radio volume controls the
 received-message tone and respects master mute; squelch changes server reception.
 
-## Survival and needs rules (unreleased)
+## Survival and needs rules
 
 F10 → Rules → **Survival and needs** exposes needs, health, nutrition, standard
 school and public labour terms. Missing keys in older worlds use the same defaults; no save migration is
@@ -517,7 +517,7 @@ rules as players.
 - `needsDamageThreshold`: 50,000, integer 10,000–1,000,000. Hunger/thirst cap here
   and either need at this threshold causes damage, online or offline. Set it
   strictly above the automatic meal threshold; change both together if needed.
-- `baseMaximumHealth`: **65,000**, integer 10,000–1,000,000. This unreleased change
+- `baseMaximumHealth`: **65,000**, integer 10,000–1,000,000. This 0.115.0 change
   raises the former 60,000 default. New lives start here; existing health recovers
   normally to the configured maximum, rather than receiving an immediate heal.
 - `nutritionAdjustmentLimit`: 6,000, integer 0–999,999, strictly below base health.
@@ -536,7 +536,7 @@ HUD and caretaker meters, pantry forecasts, resident need deadlines, and the
 live rules summary use these values. Empty stores provide no protection. Invalid
 threshold/health pairs are rejected together without changing other rules.
 
-## Economy and trade rules (unreleased)
+## Economy and trade rules
 
 Creation and F10 → Rules → **Economy and trade** include:
 
@@ -635,7 +635,7 @@ the separate 4d private-owner allowance and other buildings' wages stay the same
 The player panel, jobs command, resident observations and payout use one rule;
 missing keys use the default, and portable designs/reloads retain the cap.
 
-## Loan offer rules (unreleased)
+## Loan offer rules
 
 **F10 → Rules → Loan offers** controls new quotes. `loanPersonalBaseApr` defaults
 to 10 and `loanPersonalAprSpread` to 18; `loanMortgageBaseApr` to 6 and
@@ -660,7 +660,7 @@ payment, duration and collateral; repayment remains available when lending is
 closed. Missing keys use named defaults. Creation, rules summaries, portable
 designs and reloads retain all loan fields. The Credit score fieldset controls the score calculation.
 
-## Credit score rules (unreleased)
+## Credit score rules
 
 **F10 → Rules → Credit score** provides the existing score table as 16 rules.
 Point values accept integers 0–1,000. Currency divisors accept integer
@@ -693,7 +693,7 @@ employment or payments, moving money, or rewriting signed loans. Missing fields
 retain defaults; new worlds, portable designs, summaries, resident observations
 and reloads use the same rules.
 
-## Charter offer rules (unreleased)
+## Charter offer rules
 
 **F10 → Rules → Charter offers** controls new invitations and return requests.
 `charterDefaultFare` defaults to 7,500 hundredths (75d), with
@@ -712,7 +712,7 @@ cancellation refunds and one-time settlement remain unchanged. Passenger places
 and tank capacity stay in Vehicles. Missing saved fields use defaults; rules
 summaries, resident observations, portable designs and reloads preserve all seven.
 
-## Tug rescue rules (unreleased)
+## Tug rescue rules
 
 **F10 → Rules → Tug rescue offers** provides `towDefaultFee` 20,000 hundredths
 (200d), `towMaximumFee` 10,000,000 (100,000d), and `towOfferSeconds` 600 real
@@ -729,7 +729,7 @@ full; those conservation rules cannot be disabled. Rules summaries, resident
 observations, portable designs and saves retain the fields; missing settings
 use named defaults. Physical tow limits and boat-death recovery stay separate.
 
-## Resident household forecast rules (unreleased)
+## Resident household forecast rules
 
 **F10 → Rules → Resident household budget** controls estimated living reserves:
 
@@ -763,7 +763,7 @@ exclude fuel, independently of the ordinary forecast horizon and fuel threshold.
 All six fields are validated, summarized, included in resident observations and
 portable designs, and retained on reload. Missing keys use named defaults.
 
-## Resident cash and portable reserve rules (unreleased)
+## Resident cash and portable reserve rules
 
 **F10 → Rules → Resident cash and portable reserves** exposes thirteen policy
 values. These guide residents' ordinary actions; they never grant money, waive
@@ -799,7 +799,7 @@ supplies. Carried fuel still takes priority over discarding cargo when stranded.
 Missing keys retain defaults; creation, summaries, resident observations, portable
 designs and reloads preserve all fields. Invalid joint bounds reject atomically.
 
-## Resident business budget rules (unreleased)
+## Resident business budget rules
 
 **F10 → Rules → Resident business budgets** exposes input-stock policy:
 
@@ -862,7 +862,7 @@ Farm seed/harvest costs and initial breeding-herd requirements remain catalogue
 costs. These eight fields use the same validation, summary, observation, portable
 export/import and persistence paths as the input buffers, with missing-key defaults.
 
-## Resident pricing rules (unreleased)
+## Resident pricing rules
 
 **F10 → Rules → Resident pricing** controls optional resident price plans:
 
@@ -902,7 +902,7 @@ by ordinary paid/authorized actions, not guarantees of demand or income. All
 fields validate atomically, appear in summaries and resident observations, and
 survive portable design transfer and reload. Missing keys retain named defaults.
 
-## Loan affordability budgets (unreleased)
+## Loan affordability budgets
 
 **F10 → Rules → Loan offers** also controls new-loan affordability:
 
@@ -925,7 +925,7 @@ Edits affect future offers/plans; existing debt, APR, instalments, liens and
 repayments remain intact. Missing fields use the defaults; all fields survive
 creation, summaries, portable designs and save/reload.
 
-## Resident owner withdrawal reserves (unreleased)
+## Resident owner withdrawal reserves
 
 **F10 → Rules → Resident cash and portable reserves** includes the separate
 small owner-withdrawal forecast. `npcOwnerCashFloor` defaults to 4,000 hundredths
@@ -941,7 +941,7 @@ ordinary withdrawal can take no more than needed, transferable surplus after
 investor claims and operating reserves. Changing rules moves no money. Missing
 keys retain defaults, and all fields survive designs and saves.
 
-## Resident pantry and lodging budgets (unreleased)
+## Resident pantry and lodging budgets
 
 **F10 → Rules → Resident household budget** includes:
 
@@ -956,7 +956,7 @@ These are ordinary forecasts and actions, not cash or supply grants. Existing
 room bookings and personal pantry ownership are unchanged. Missing values use
 the defaults; creation, summaries, designs and reloads retain every field.
 
-## Resident farm forecast budgets (unreleased)
+## Resident farm forecast budgets
 
 **F10 → Rules → Resident business budgets** includes these forecast assumptions:
 
@@ -968,7 +968,7 @@ Edits grant no goods or cash. Existing plots, land costs, bids, wages and harves
 are unchanged. Defaults apply to missing fields, and settings survive creation,
 summaries, portable designs and save/reload.
 
-## Resident experiment budgets (unreleased)
+## Resident experiment budgets
 
 **F10 → Rules → Resident business budgets** includes small trading experiments:
 
@@ -981,7 +981,7 @@ These choices use ordinary paid actions. Household and operating reserves,
 investor claims and cash-transfer limits remain protected. Edits grant no money
 or goods; defaults apply to missing keys and all values survive designs/reloads.
 
-## Resident property and optional spending budgets (unreleased)
+## Resident property and optional spending budgets
 
 **F10 → Rules → Resident cash and portable reserves** exposes five cash policies.
 All values are integer hundredths, from 0 to 100,000,000:
@@ -997,7 +997,7 @@ Changing a rule grants nothing and executes no purchases or transfers. Existing
 ownership, accounts and stock remain intact; plans still use ordinary actions.
 Rules persist in saves and portable designs and are included in resident observations.
 
-## Resident training and town ambition budgets (unreleased)
+## Resident training and town ambition budgets
 
 **F10 → Rules → Resident cash and portable reserves** includes:
 
@@ -1007,7 +1007,7 @@ Rules persist in saves and portable designs and are included in resident observa
 These rules persist in saves/designs, appear in resident observations, and change
 only future choices. They grant no money, qualifications, property or employment.
 
-## Resident breeding reserves (unreleased)
+## Resident breeding reserves
 
 **F10 → Rules → Resident business budgets** exposes four replacement-herd policies:
 
@@ -1022,7 +1022,7 @@ apply through the same refusal check used by ordinary breeding. Settings edits
 start no pregnancy and grant no animals, money or supplies. Values persist in
 saves/designs and appear in resident observations.
 
-## Resident portable shopping targets (unreleased)
+## Resident portable shopping targets
 
 **F10 → Rules → Resident household budget** exposes `npcShoppingFuelTarget` 2,
 `npcShoppingDrinkTarget` 6 and `npcShoppingFoodTarget` 3 items. Each accepts an
@@ -1045,7 +1045,7 @@ actual gathering yield: excess stays in inventory for later sales. Service parts
 can be bought in smaller instalments before arranging service. These policies
 change future plans, not inventories, money or posted agreement terms.
 
-## Resident trade and storage loads (unreleased)
+## Resident trade and storage loads
 
 **F10 → Rules → Resident trade and storage loads** exposes eight integer item
 counts, each from 0 to 10,000:
@@ -1064,7 +1064,7 @@ stock, funds, reserves, cargo and storage still apply. Edits make no transfer an
 rewrite no order or agreement. Values survive saves/designs and are visible to
 resident planning. Separate business and farm delivery policies remain separate.
 
-## Resident business cargo (unreleased)
+## Resident business cargo
 
 **F10 → Rules → Resident business cargo** exposes integer budgets from 0 to
 10,000, stored in saves and portable designs and included in the rules summary:
@@ -1099,7 +1099,7 @@ replenishment retains its half-minimum-herd quantity basis. Enterprise supply
 uses the existing `npcInputReserveBatches` for fallback feed/water targets, while
 replacement breeding animals retain their actual minimum target.
 
-## Resident journey budgets (unreleased)
+## Resident journey budgets
 
 **F10 → Rules → Resident journey budgets** exposes these planning rules, saved
 in worlds and portable designs and included in the rules summary:
@@ -1119,7 +1119,7 @@ Resident refuelling experiments also use `npcDriveFuelThreshold`: equality stops
 optional purchases, and zero disables them. An empty tank can still use carried
 fuel through the ordinary action.
 
-## Resident living advice and lodging suggestions (unreleased)
+## Resident living advice and lodging suggestions
 
 **F10 → Rules → Resident household budget** includes `npcAdviceCashFloor`
 (default 12,000 hundredths, integer 0–100,000,000), `npcAdviceMealItems` (3) and
@@ -1135,7 +1135,7 @@ does not change any posted rate, paid booking or balance. Rental costs still use
 the actual posted rate. Saves, rules summaries, observations and portable designs
 carry these fields; missing fields retain the defaults above.
 
-## Resident account trade budgets (unreleased)
+## Resident account trade budgets
 
 **F10 → Rules → Resident account trade budgets** exposes five integer policies
 for existing resident currency conversion and account-based station trading:
@@ -1155,7 +1155,7 @@ off-world planning uses the resident's saved last local world until landing in
 another. Defaults apply when world context or fields are absent. Saves, portable
 designs, observations and summaries preserve these policies.
 
-## Construction rules (unreleased)
+## Construction rules
 
 **F10 → Rules → Construction rules** configures `constructionMinimumSpacing`
 (default 12 m), `constructionPlacementReach` (4 m), `spawnClearance` (12 m),
@@ -1195,7 +1195,7 @@ price policies remain separate. Clearance checks, road reservations, fences,
 grazing routes and displayed areas all use the saved dimension, including after
 save/design reload. A barn without clear grazing land keeps its empty-state panel.
 
-## Gathering rate rules (unreleased)
+## Gathering rate rules
 
 **F10 → Rules → Gathering rules** exposes `gatheringBaseYield` (3),
 `gatheringSkilledYield` (6), `gatheringBaseSeconds` (20) and
@@ -1209,7 +1209,7 @@ sale to experiment/transaction allowances, buyer funds and storage.
 Implements, shared stock, permissions and cargo limits remain enforced. Values
 persist in saves/designs; missing fields retain the shipped defaults.
 
-## Deposit rules (unreleased)
+## Deposit rules
 
 **F10 → Rules → Gathering rules** also exposes `resourceLogsCapacity` (18),
 `resourceOtherCapacity` (30), `resourceLogsRegrowthSeconds` (1,800) and
@@ -1228,7 +1228,7 @@ to current capacity. HUD/Resources show effective capacity and shared stock.
 A capacity below the selected gathering load leaves that ground unavailable until
 rules allow a complete load. Offline recovery remains capped at local capacity.
 
-## Gathering implement rules (unreleased)
+## Gathering implement rules
 
 **F10 → Rules → Gathering implements** selects one requirement per material:
 `gatheringLogsImplement` defaults to `chainsaw`, `gatheringStoneImplement` to
@@ -1243,7 +1243,7 @@ Resident career, experiment, ordinary and construction plans share the requireme
 including tool procurement and no-tool routes. Values persist in saves/designs,
 summaries and observations; omitted fields retain the defaults.
 
-## Crop yield rules (unreleased)
+## Crop yield rules
 
 **F10 → Rules → Crop yield rules** exposes `farmCompostYieldBonus` (0.33, range
 0–5) and `farmRotationYieldPenalty` (0.2, range 0–1). These are fractions: compost
@@ -1261,7 +1261,7 @@ retaining demand and seed-cost priorities. Permissions, staff budgets and the
 ordinary import price remain enforced. Values survive saves, portable designs,
 observations and summaries; omitted fields retain the defaults above.
 
-### Irrigation formula (unreleased)
+### Irrigation formula
 
 In **F10 → Rules → Crop yield rules**, configure the existing moisture formula:
 
@@ -1296,7 +1296,7 @@ the cost and limit. These rules persist in saves and portable world designs, app
 in rules summaries and resident observations, and fall back to the same JSON
 defaults in older worlds. Editing a rule grants no water or harvested stock.
 
-### Ripe quality (unreleased)
+### Ripe quality
 
 **F10 → Rules → Crop yield rules** also exposes:
 
@@ -1314,7 +1314,7 @@ started harvests retain reserved amounts. Winter expiry remains unchanged.
 These values persist in saves/designs and appear in summaries and NPC observations;
 older worlds fall back to the same JSON defaults.
 
-### Crop frost sensitivity (unreleased)
+### Crop frost sensitivity
 
 **F10 → Rules → Crop yield rules** preserves the shipped frost-day calculation:
 `yieldFactor = max(1 - maximumLoss, 1 - frostDays / cropDays × sensitivity)`.
@@ -1334,7 +1334,7 @@ their reserved quantities. Winter still kills every field crop, including with
 frost loss disabled. Settings persist in saves/designs, summaries and resident
 observations, with the same JSON defaults for older worlds.
 
-## Fishing wait rules (unreleased)
+## Fishing wait rules
 
 **F10 → Rules → Fishing rules** exposes base mean bite waits in real seconds:
 `fishingShoreWaitSeconds` 75, `fishingAnywhereWaitSeconds` 20 (shore in mode 5),
@@ -1349,7 +1349,7 @@ unchanged. Fishing mode still controls availability and tackle is still required
 Activities/dock help shows the current base mean. Rules persist in saves/designs,
 summaries and resident observations, with JSON defaults for older worlds.
 
-### Offshore fishing limits (unreleased)
+### Offshore fishing limits
 
 **F10 → Rules → Fishing rules** exposes `fishingDeepDepth` (8 m, range 0.1–1,000)
 and `fishingShoreDistance` (150 m, range 0–1,000). Rod deep-species eligibility and
@@ -1365,7 +1365,7 @@ shows local limits. These rules use the same save/design, summary, observation
 and legacy-default paths as fishing wait rules. Larger clearance searches scan
 more terrain on cache misses; unchanged locations reuse cached results.
 
-### Trawl defaults (unreleased)
+### Trawl defaults
 
 **F10 → Rules → Fishing rules** also exposes:
 
@@ -1384,7 +1384,7 @@ next fish cannot fit; hauling remains available. Raising the capacity can resume
 formerly full net. Rules persist in saves/designs, summaries and observations with
 shared JSON legacy defaults. They grant no fish, supplies or free towing time.
 
-## Vehicle running costs (Unreleased)
+## Vehicle running costs
 
 F10 → Rules → **Vehicle running costs** controls maintenance wear and trailer
 penalties. `vehicleWearPerMetre` defaults to 0.0002 condition points per metre
@@ -1408,7 +1408,7 @@ Refuelling distance and tank units per Fuel already belong to **Roadside fuel**
 (default 15 m and 8 units). Keep those existing rules for tanker sales, roadside
 help and inventory refuelling.
 
-## Boat navigation rules (Unreleased)
+## Boat navigation rules
 
 F10 → Rules → **Boat navigation** exposes `boatShoreImpactLoss` (default 1
 condition point, range 0–100). This applies to powered-hull shore collisions,

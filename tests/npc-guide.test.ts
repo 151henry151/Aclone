@@ -245,7 +245,7 @@ test('selected manual headings occur once in the topic index without repeating t
 
 test('outside investment help has its own topic instead of expanding school guidance', () => {
   const topic = Object.entries(topicIndex(gameGuide(''))).find(
-    ([, title]) => title === 'Outside investment terms (unreleased)',
+    ([, title]) => title === 'Outside investment terms',
   );
   assert.ok(topic, 'Investment terms need their own searchable player-guide section');
   const entries = searchGuide('outside investments operating reserve');
@@ -378,10 +378,7 @@ test('topic title lists reconstruct exact lookup IDs using the documented slug r
     'Lowercase title, replace runs outside [a-z0-9] with hyphens, trim edge hyphens. Search exact title or ID.',
   );
   assert.equal(topicIndex(guide)['faq:controls'], 'Controls');
-  assert.equal(
-    topicIndex(guide)['playing:outside-investment-terms-unreleased'],
-    'Outside investment terms (unreleased)',
-  );
+  assert.equal(topicIndex(guide)['playing:outside-investment-terms'], 'Outside investment terms');
 });
 
 test('crop lookup retains thirst and frost defaults sourced from world rules', () => {

@@ -121,7 +121,7 @@ Needs crossing 25,000 or danger within ten minutes wakes planning once; stocked 
 
 ### Household, earnings and investment reviews
 
-Unreleased **F10 → Rules → Resident household budget** exposes the ordinary
+Version 0.115.0 **F10 → Rules → Resident household budget** exposes the ordinary
 forecast horizon (six real hours), need allowance (15,000), carried-nutrition
 credit (50%) and low-fuel reserve threshold (8 tank units). Explicit trip horizons
 still take precedence. Strategic property/business reserves and home provisioning
@@ -131,13 +131,13 @@ allowance and credit affect forecasts only; no funds
 or supplies are granted. A zero fuel threshold omits that purchase reserve.
 Forecasts and pantry errands use the world's existing shelter-consumption
 multiplier, including zero. Daily replacement comparisons still cover one real
-day and exclude fuel purchases. See [world rules](WORLD_BUILDING.md#resident-household-forecast-rules-unreleased).
+day and exclude fuel purchases. See [world rules](WORLD_BUILDING.md#resident-household-forecast-rules).
 
-Unreleased pantry budgets expose the 20,000 need allowance, two-item unhoused provision target, 15d protected drink cash and twenty-item shopping batch. Lodging plans add twenty minutes before rounding to booking hours and retain 20d cash by default; both are configurable. Shopping, owned-stock withdrawals and carried deposits honor the world transaction limit. Zero shopping batch stops source errands, while urgent care and carried deposits remain available. See [pantry and lodging budgets](WORLD_BUILDING.md#resident-pantry-and-lodging-budgets-unreleased).
+Version 0.115.0 pantry budgets expose the 20,000 need allowance, two-item unhoused provision target, 15d protected drink cash and twenty-item shopping batch. Lodging plans add twenty minutes before rounding to booking hours and retain 20d cash by default; both are configurable. Shopping, owned-stock withdrawals and carried deposits honor the world transaction limit. Zero shopping batch stops source errands, while urgent care and carried deposits remain available. See [pantry and lodging budgets](WORLD_BUILDING.md#resident-pantry-and-lodging-budgets).
 
 During play, pantry errands stop when the planned absence is covered; going inside is a separate departure/rest action. Departure preparation can buy or build an affordable cottage, finish its materials, and stock it with purchases or owned output. Building budgets include completion and food/water reserves. Expired rooms do not count as shelter; one resident's cottage plan never blocks another household. Both general property choices and queued purchases check for an existing owned cottage or foundation before acquiring another; a stale home reference or a rented room does not hide owned housing. Human property permissions are unchanged.
 
-Unreleased **Resident cash and portable reserves** rules set emergency cash
+Version 0.115.0 **Resident cash and portable reserves** rules set emergency cash
 floors (120d), banking cash floors (400d), the saved share of surplus (50%) and
 minimum deposit (10d). Computed household costs still take priority. A zero
 saving share stops new deposits; normal withdrawals remain available. Portable
@@ -146,24 +146,24 @@ nutrition, and one of each listed tool/tackle/Fuel by default; fishing stops at
 three fish above that reserve. Ordinary opportunistic trades retain their
 separate one-food/two-drink reserve. All counts are world rules. Recovery and
 surplus unloading obey the local transaction limit through ordinary actions;
-settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#resident-cash-and-portable-reserve-rules-unreleased).
+settings do not grant cash or supplies. See [reserve rules](WORLD_BUILDING.md#resident-cash-and-portable-reserve-rules).
 
 Earning routines prefer complete, costed trips to funded buyers. Owned tools remain usable with little cash; gatherers can complete three ordinary tasks per trip, and traders carry up to thirty goods subject to stock, capital and cargo capacity. Job choices check the target's inputs, output space, staffing and wages. A changed vacancy is rechecked before quitting the current job.
 
-Unreleased training/town ambition budgets let world owners change the 50d cushion above tuition when considering a group invitation to train, and the four-times-charter-cost cash gate for founding a town. Zero removes the extra cushion without waiving actual tuition, settlement or household costs. Interest alone accepts no job; founding still requires funded proven businesses, a home, permissions and a clear site.
+Version 0.115.0 training/town ambition budgets let world owners change the 50d cushion above tuition when considering a group invitation to train, and the four-times-charter-cost cash gate for founding a town. Zero removes the extra cushion without waiving actual tuition, settlement or household costs. Interest alone accepts no job; founding still requires funded proven businesses, a home, permissions and a clear site.
 
-Unreleased property and optional spending budgets share a 200d purchase reserve across general and farmer choices, consider painting above 200d cash, and suggest a 50d farm deposit below 100d in its till when personal cash exceeds 150d. F10 exposes each threshold independently; the deposit fits actual cash and the world transfer limit. Zero deposit or till threshold suppresses that funding suggestion. These eligibility policies do not replace household or startup budgets and never execute a transfer by themselves.
+Version 0.115.0 property and optional spending budgets share a 200d purchase reserve across general and farmer choices, consider painting above 200d cash, and suggest a 50d farm deposit below 100d in its till when personal cash exceeds 150d. F10 exposes each threshold independently; the deposit fits actual cash and the world transfer limit. Zero deposit or till threshold suppresses that funding suggestion. These eligibility policies do not replace household or startup budgets and never execute a transfer by themselves.
 
 A separate discretionary owner draw targets 40d cash and adds a fuel purchase below 10 tank units when none is carried, using a stocked quote or an 8d fallback. These are configurable **Resident cash and portable reserves** rules. Investor claims, operating reserves and transfer limits still bound any ordinary withdrawal.
 
 Owners can withdraw the exact input-purchasing cost for a supply trip, protecting configured input/payroll reserves and investor claims. This uses ordinary withdrawals, purchases and stock deposits. Reviews show daily replacement costs even when the pantry is full, trip earnings, affordable growth choices and estimated sold-batch payback. These are forecasts, not guaranteed profits. `liquidCapitalChange` consolidates personal/bank/business cash less claims and debt; buying an asset can reduce it without being a loss. `netAssetChange` also includes catalogue-valued inventory.
 
-Unreleased **Resident business budgets** rules set input stock buffers (6–24
+Version 0.115.0 **Resident business budgets** rules set input stock buffers (6–24
 batches by default, covering two hours of observed sales) and output-backlog
 thresholds (the lesser of 75% capacity and the larger of 12 or twice the planned
 batch count). Procurement, input cash budgets and ordinary bid pause/reopen plans
 use these values. Zero targets stop automatic input buying; real storage and
-breeding requirements remain. Payroll reserves (six cycles), minimum funding (three payrolls), cash floors (20d), construction startup estimates (three batches and 1.1× materials) and hay reserves/customer thresholds are also world rules. These defaults guide forecasts; actual prices, wages, claims and storage checks still apply. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules-unreleased).
+breeding requirements remain. Payroll reserves (six cycles), minimum funding (three payrolls), cash floors (20d), construction startup estimates (three batches and 1.1× materials) and hay reserves/customer thresholds are also world rules. These defaults guide forecasts; actual prices, wages, claims and storage checks still apply. See [business rules](WORLD_BUILDING.md#resident-business-budget-rules).
 
 Resident financing uses local shortfall bounds (10d–100d by default) and requires
 three monthly payments to fit strictly below twenty estimated profitable batches.
@@ -171,11 +171,11 @@ The world owner can change these budgets in **Resident business budgets**; zero
 maximum or profit batches stops financing plans. Banks still approve the actual
 quote using local income/liquidity rules; deposits must fit the cash-transfer
 limit and an unpaid loan prevents another financing plan. These forecasts grant
-no funds and do not alter signed debts. See [loan budgets](WORLD_BUILDING.md#loan-affordability-budgets-unreleased).
+no funds and do not alter signed debts. See [loan budgets](WORLD_BUILDING.md#loan-affordability-budgets).
 
-Unreleased farm forecasts use a configurable half-yield assumption and price six Water plus one Compost alongside seed and wages. Expansion demand checks a buyer funded for twenty items with fewer than twenty in stock by default. These **Resident business budgets** change estimates, not actual farming. A zero whole-unit harvest forecast refuses pricing/acquisition; zero buyer stock cutoff stops that expansion signal. Funding advice uses the farm’s actual plot count. See [farm forecasts](WORLD_BUILDING.md#resident-farm-forecast-budgets-unreleased).
+Version 0.115.0 farm forecasts use a configurable half-yield assumption and price six Water plus one Compost alongside seed and wages. Expansion demand checks a buyer funded for twenty items with fewer than twenty in stock by default. These **Resident business budgets** change estimates, not actual farming. A zero whole-unit harvest forecast refuses pricing/acquisition; zero buyer stock cutoff stops that expansion signal. Funding advice uses the farm’s actual plot count. See [farm forecasts](WORLD_BUILDING.md#resident-farm-forecast-budgets).
 
-Unreleased small-experiment budgets default to a 20d funding floor, four funding units for owned/acquired shops, two input batches and eight-item loads. The world owner can change them under **Resident business budgets**. Trade, output and fish quantities fit actual buyer room and the world transaction limit; zero restock/load settings stop the corresponding experiments. Household reserves and investor claims remain protected. See [experiment budgets](WORLD_BUILDING.md#resident-experiment-budgets-unreleased).
+Version 0.115.0 small-experiment budgets default to a 20d funding floor, four funding units for owned/acquired shops, two input batches and eight-item loads. The world owner can change them under **Resident business budgets**. Trade, output and fish quantities fit actual buyer room and the world transaction limit; zero restock/load settings stop the corresponding experiments. Household reserves and investor claims remain protected. See [experiment budgets](WORLD_BUILDING.md#resident-experiment-budgets).
 
 Decision journal `available` counts distinguish offered earning, housing, construction, acquisition, expansion and civic choices from actions actually completed. No extra model call is made for these reviews. Deployment and a matched live observation period are still needed to verify autonomous prosperity.
 
@@ -404,14 +404,14 @@ Remembered positive bids remain available when no stocked supplier is currently
 known. An explicit agreed buying pause survives restarts and all automatic bid
 planners. Quoted stock/price can still change before delivery.
 
-Unreleased **Resident pricing** rules configure those allowances, bid ceiling,
+Version 0.115.0 **Resident pricing** rules configure those allowances, bid ceiling,
 reopening fraction, wage revenue share, sustainable output markup/minimum ask
 and surplus/load thresholds. Input quotes honor the local minimum purchase bid;
 remembered prices outside the current bounds are refused. Delivery estimates obey
 the transaction limit as well as actual capacity/funding. Zero input ceiling
 suppresses new quotes; zero reopening fraction stops automatic reopening. Financial briefings quote the local percentage or the disabled policy; zero
 wage share stops raises without cutting existing wages. See
-[pricing rules](WORLD_BUILDING.md#resident-pricing-rules-unreleased).
+[pricing rules](WORLD_BUILDING.md#resident-pricing-rules).
 
 Before posting a bid, maintenance checks cash for a useful delivery and payroll;
 when necessary it deposits available personal funds while preserving living money.
@@ -677,14 +677,14 @@ algorithm reconstructs every exact lookup ID; direct title or ID searches still
 work. This avoids repeating derived slugs while keeping all headings, help text,
 citations and memory within the existing request-size limit.
 
-Resident business cargo budgets (unreleased) distinguish collecting output from
+Resident business cargo budgets distinguish collecting output from
 selling it, farm crop loads, carried surplus sales and optional small input
 purchases. F10 configures their load limits and the batch threshold that triggers
 small restocking. Owned suppliers retain their configured production-input buffer
 and actual breeding minima. Zero load suppresses an optional transfer; required
 gathering implements remain separate one-item purchases. Plans still use actual
 stock, affordable cash, storage and transaction limits, and transfers create no
-money or goods. See [business cargo rules](WORLD_BUILDING.md#resident-business-cargo-unreleased).
+money or goods. See [business cargo rules](WORLD_BUILDING.md#resident-business-cargo).
 
 Routine input purchases and carried deposits use separate configurable fallback
 batch budgets when a producer has no calculated stock target. Enterprise feed
@@ -693,20 +693,20 @@ reserves; breeding-minimum replacement remains separate. Farm crop choice uses
 configured downstream forecast batches while retaining urgent funded demand,
 rotation, seed costs and staff crop policies.
 
-Resident journey budgets (unreleased) configure distance/speed allowances, the
+Resident journey budgets configure distance/speed allowances, the
 unquoted Fuel price, equipment payback loads and optional refuelling threshold.
 Plans use tuned vehicle speeds and observed stocked Fuel quotes; walking budgets
 no fuel. Disabling optional fuel shopping still permits empty-tank walking or
-normal use of carried fuel. See [journey budgets](WORLD_BUILDING.md#resident-journey-budgets-unreleased).
+normal use of carried fuel. See [journey budgets](WORLD_BUILDING.md#resident-journey-budgets).
 
 Living-cash advice has configurable floor, meal and drink allowances. It uses
 observed nutrition-value quotes and still identifies missing supplies. Resident
 innkeepers use the local suggested lodging rate when considering configuration;
 only an ordinary authorized configuration action changes a posted rate, while
-paid stays remain intact. See [living advice and lodging suggestions](WORLD_BUILDING.md#resident-living-advice-and-lodging-suggestions-unreleased).
+paid stays remain intact. See [living advice and lodging suggestions](WORLD_BUILDING.md#resident-living-advice-and-lodging-suggestions).
 
 Existing account-based trading uses configurable conversion cash/credit budgets
 and station purchase/sale loads. The resident's current local world governs
 conversion; its saved last local world governs off-world plans until it lands
 elsewhere. Normal exchange caps, fees, station stock, the account transaction
-ceiling, hold space and courier cargo still apply. See [account trade budgets](WORLD_BUILDING.md#resident-account-trade-budgets-unreleased).
+ceiling, hold space and courier cargo still apply. See [account trade budgets](WORLD_BUILDING.md#resident-account-trade-budgets).

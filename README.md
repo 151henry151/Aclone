@@ -4,7 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.114.5 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.115.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.115.0 releases the tested backlog checkpoint: responsive scenery updates, safer landings, improved flight terrain, snow walking, natural gathering grounds, fuel tankers, canoes, CB radios and configurable world rules. River recovery, dock construction and slow-link entry fixes are included. Reload the game after deployment; see the [checkpoint release notes](docs/RELEASE_NOTES.md#01150--backlog-checkpoint-and-responsive-scenery).
 
 Version 0.114.0 expands public Puddlewick northward to roughly ten times its land area while preserving the southern peninsula exactly. The new mainland adds a snow-capped mountain watershed with winding rivers, sediment bars and upstream fords, deep lower channels, ponds, large forests, rocky coastal stretches and six regions with distinct resource strengths and shortages. The map gains a town-level overview and readable river outlines at island scale, and configurable deposit recovery defaults to four times slower. Players can build small log river docks on deep reaches to moor canal boats and motorboats. See the [geography notes](docs/NORTHERN_ISLAND.md). The NPC project follow-through from 0.113.1 and the rain umbrellas from 0.113.0 remain included.
 
@@ -14,51 +16,51 @@ Aclone is an independent, open-source browser game inspired by _A tractor / The 
 
 The 0.101.0 coastal update moves Puddlewick’s harbour light about 780 metres out of town and places all three public lighthouses on rocky bluffs. Twelve more headlands punctuate the island’s shore. Cliff edges stop walkers and tractors safely, and new lighthouses require a suitable cliff-top site. Rotating lights flash toward observers offshore, with height- and weather-limited visibility up to about 30 km. Navigation lights are visible points with a brief brighter flash, without shafts or broad illumination. Beach breakers roll and collapse, while cliff impacts throw up falling spray. Each lighthouse still offers one unskilled keeper job with private provisions and free quarters while employed; ownership alone does not provide housing. [Playing guide](docs/PLAYING.md#lighthouse-keeping).
 
-Unreleased river-dock construction keeps the plain landing at its world catalogue bill (30 logs, 10 gravel and 3s before tax by default) for every finish. Enclosed dock variants retain their additional construction costs.
+Version 0.115.0 river-dock construction keeps the plain landing at its world catalogue bill (30 logs, 10 gravel and 3s before tax by default) for every finish. Enclosed dock variants retain their additional construction costs.
 
-Unreleased network entry waits for receipt of the full world snapshot before sending live deltas, keeping slow-link updates fresh after large island downloads.
+Version 0.115.0 network entry waits for receipt of the full world snapshot before sending live deltas, keeping slow-link updates fresh after large island downloads.
 
-Unreleased rendering prepares road and building revisions in small batches while keeping the previous view visible. Detailed snow banks are prepared when snow appears, with bounded geometry uploads to avoid a parish-wide freeze.
+Version 0.115.0 rendering prepares road and building revisions in small batches while keeping the previous view visible. Detailed snow banks are prepared when snow appears, with bounded geometry uploads to avoid a parish-wide freeze.
 
-Unreleased haulage adds a separate amber fuel tanker with hazard placards and a rear dispensing hose. It carries 700 Fuel for 57.5s at defaults, supports refinery loading, direct pumping and roadside sales with town tax and offline bank payments. Owners set their sale price; zero closes sales. F10 exposes per-world purchase price/capacity and fuel-service rules, and world designs preserve parked tankers with their load. See the [haulage guide](docs/HAULAGE.md) for capacity and handling details.
+Version 0.115.0 haulage adds a separate amber fuel tanker with hazard placards and a rear dispensing hose. It carries 700 Fuel for 57.5s at defaults, supports refinery loading, direct pumping and roadside sales with town tax and offline bank payments. Owners set their sale price; zero closes sales. F10 exposes per-world purchase price/capacity and fuel-service rules, and world designs preserve parked tankers with their load. See the [haulage guide](docs/HAULAGE.md) for capacity and handling details.
 
-Unreleased portable canoes add carpenter/boathouse purchase, wood crafting, slow overhead carrying, owned set-down hulls and home storage. Launch at any clear shore or riverbank, paddle without fuel, and beach or reboard the saved hull without a dock. Inventory provides the controls; F10 provides the rules. See [Playing Aclone](docs/PLAYING.md#portable-canoes-unreleased).
+Version 0.115.0 portable canoes add carpenter/boathouse purchase, wood crafting, slow overhead carrying, owned set-down hulls and home storage. Launch at any clear shore or riverbank, paddle without fuel, and beach or reboard the saved hull without a dock. Inventory provides the controls; F10 provides the rules. See [Playing Aclone](docs/PLAYING.md#portable-canoes).
 
-Unreleased CB radios add a vehicle dashboard with keyboard, touch and configurable controller push-to-talk, local terrain-aware reception, per-vehicle channel/call sign settings and manual rescue cues. Open CB radio or press V. See [Playing Aclone](docs/PLAYING.md#cb-radio-unreleased) and the [world rules](docs/WORLD_BUILDING.md#cb-radio-rules-unreleased).
+Version 0.115.0 CB radios add a vehicle dashboard with keyboard, touch and configurable controller push-to-talk, local terrain-aware reception, per-vehicle channel/call sign settings and manual rescue cues. Open CB radio or press V. See [Playing Aclone](docs/PLAYING.md#cb-radio) and the [world rules](docs/WORLD_BUILDING.md#cb-radio-rules).
 
-Unreleased pantry budgets make resident provision quantities, shopping limits, protected cash and room-booking padding configurable while preserving paid transfers and actual storage limits. See [pantry and lodging budgets](docs/WORLD_BUILDING.md#resident-pantry-and-lodging-budgets-unreleased).
+Version 0.115.0 pantry budgets make resident provision quantities, shopping limits, protected cash and room-booking padding configurable while preserving paid transfers and actual storage limits. See [pantry and lodging budgets](docs/WORLD_BUILDING.md#resident-pantry-and-lodging-budgets).
 
-Unreleased owner reserve rules expose the resident cash target and fuel allowance used for small till withdrawals, preserving investor claims and operating capital. See [owner withdrawal reserves](docs/WORLD_BUILDING.md#resident-owner-withdrawal-reserves-unreleased).
+Version 0.115.0 owner reserve rules expose the resident cash target and fuel allowance used for small till withdrawals, preserving investor claims and operating capital. See [owner withdrawal reserves](docs/WORLD_BUILDING.md#resident-owner-withdrawal-reserves).
 
-Unreleased loan budgets make bank income/liquidity limits, borrowing bounds and resident financing thresholds configurable. Bank inputs show local terms; existing loans retain their agreements. See [loan affordability rules](docs/WORLD_BUILDING.md#loan-affordability-budgets-unreleased).
+Version 0.115.0 loan budgets make bank income/liquidity limits, borrowing bounds and resident financing thresholds configurable. Bank inputs show local terms; existing loans retain their agreements. See [loan affordability rules](docs/WORLD_BUILDING.md#loan-affordability-budgets).
 
-Unreleased economy rules make minimum building purchase bids, transaction quantities, outside-investment returns, operating reserves, garage labour/parts, map printing, ammunition refit prices, cash gifts, bank/investment transfer limits parish supply-order timing/shares, public export intervals, government import premiums and the lighthouse keeper wage cap configurable, including live shop limits, bulk-sale hints and portable designs. See [economy rules](docs/WORLD_BUILDING.md#economy-and-trade-rules-unreleased).
+Version 0.115.0 economy rules make minimum building purchase bids, transaction quantities, outside-investment returns, operating reserves, garage labour/parts, map printing, ammunition refit prices, cash gifts, bank/investment transfer limits parish supply-order timing/shares, public export intervals, government import premiums and the lighthouse keeper wage cap configurable, including live shop limits, bulk-sale hints and portable designs. See [economy rules](docs/WORLD_BUILDING.md#economy-and-trade-rules).
 
-Unreleased tug rules expose the suggested rescue fee, fee ceiling and offer lifetime in F10. Posted terms and accepted escrow survive edits and reloads; expired offers cannot take payment. See [rescue and haulage](docs/HAULAGE.md#hiring-a-tug).
+Version 0.115.0 tug rules expose the suggested rescue fee, fee ceiling and offer lifetime in F10. Posted terms and accepted escrow survive edits and reloads; expired offers cannot take payment. See [rescue and haulage](docs/HAULAGE.md#hiring-a-tug).
 
-Unreleased boating fuel help quotes the world’s effective tank units per Fuel, matching inventory refills.
+Version 0.115.0 boating fuel help quotes the world’s effective tank units per Fuel, matching inventory refills.
 
-Unreleased river rod fishing uses local depth and elevation while retaining offshore-only catches.
+Version 0.115.0 river rod fishing uses local depth and elevation while retaining offshore-only catches.
 
-Unreleased river recovery identifies the actual dock and enforces its vessel limits for lifeboats and tenders.
+Version 0.115.0 river recovery identifies the actual dock and enforces its vessel limits for lifeboats and tenders.
 
-Unreleased river recovery keeps lifeboats and towed vessels at local water height and checks obstacles at that height, preserving stranded cargo and fuel.
+Version 0.115.0 river recovery keeps lifeboats and towed vessels at local water height and checks obstacles at that height, preserving stranded cargo and fuel.
 
-Unreleased F10 Boat navigation rules configure river-dock depth/size limits, shore-impact damage and docking radii while preserving hull-aware arrival and clear-water checks. Inventory shows local values.
+Version 0.115.0 F10 Boat navigation rules configure river-dock depth/size limits, shore-impact damage and docking radii while preserving hull-aware arrival and clear-water checks. Inventory shows local values.
 
-Unreleased F10 Vehicle running costs configure distance wear and trailer speed/fuel penalties, preserving recorded condition, mileage and cargo. Garage service shows the local wear rate.
+Version 0.115.0 F10 Vehicle running costs configure distance wear and trailer speed/fuel penalties, preserving recorded condition, mileage and cargo. Garage service shows the local wear rate.
 
-Unreleased F10 Fishing rules configure trawl defaults, shared offshore depth/clearance and the four base bite-wait means while preserving scheduled catches and deadlines.
+Version 0.115.0 F10 Fishing rules configure trawl defaults, shared offshore depth/clearance and the four base bite-wait means while preserving scheduled catches and deadlines.
 
-Unreleased crop yield rules in F10 configure the irrigation formula, each crop’s thirst, watering costs/limits, ripe-quality window and loss, crop frost sensitivities/loss cap, compost bonus and repeated-family penalty; farm estimates and resident decisions use them while preserving started harvests.
+Version 0.115.0 crop yield rules in F10 configure the irrigation formula, each crop’s thirst, watering costs/limits, ripe-quality window and loss, crop frost sensitivities/loss cap, compost bonus and repeated-family penalty; farm estimates and resident decisions use them while preserving started harvests.
 
-Unreleased gathering rules in F10 configure untrained/skilled loads and durations, plus deposit capacities, recovery intervals and per-material reusable implement requirements (including none); the HUD, Resources menu and resident plans, including gathering experiments, use the local rates.
+Version 0.115.0 gathering rules in F10 configure untrained/skilled loads and durations, plus deposit capacities, recovery intervals and per-material reusable implement requirements (including none); the HUD, Resources menu and resident plans, including gathering experiments, use the local rates.
 
-Unreleased resident household rules expose ordinary and strategic forecast horizons, pantry buffers, need allowance, carried-nutrition credit, low-fuel reserves, emergency/banking cash targets, portable-supply reserves and aggregate shopping targets in F10. Resident trade, delivery and career plans respect local transaction limits, including smaller construction loads and partial service-parts purchases. F10 also exposes separate general-trade, construction, parish-supply, storage and career load targets, plus business/farm collection, small input purchases, source reserves and output-sale loads, with separate fallback input budgets and crop-demand horizons. Resident journey estimates, equipment payback and optional refuelling budgets, including resident experiments, are configurable too, as are living-cash advice, suggested innkeeper rates and existing account-trade/conversion budgets. Cash forecasts and pantry errands follow the local shelter-consumption multiplier. Business input, payroll, startup, hay, farm forecast, small-experiment, property, optional-spending, training/town ambition, breeding reserves and pricing policies are also configurable in F10; resident financial advice uses the local bid-reopening policy. See [resident household rules](docs/WORLD_BUILDING.md#resident-household-forecast-rules-unreleased).
+Version 0.115.0 resident household rules expose ordinary and strategic forecast horizons, pantry buffers, need allowance, carried-nutrition credit, low-fuel reserves, emergency/banking cash targets, portable-supply reserves and aggregate shopping targets in F10. Resident trade, delivery and career plans respect local transaction limits, including smaller construction loads and partial service-parts purchases. F10 also exposes separate general-trade, construction, parish-supply, storage and career load targets, plus business/farm collection, small input purchases, source reserves and output-sale loads, with separate fallback input budgets and crop-demand horizons. Resident journey estimates, equipment payback and optional refuelling budgets, including resident experiments, are configurable too, as are living-cash advice, suggested innkeeper rates and existing account-trade/conversion budgets. Cash forecasts and pantry errands follow the local shelter-consumption multiplier. Business input, payroll, startup, hay, farm forecast, small-experiment, property, optional-spending, training/town ambition, breeding reserves and pricing policies are also configurable in F10; resident financial advice uses the local bid-reopening policy. See [resident household rules](docs/WORLD_BUILDING.md#resident-household-forecast-rules).
 
-Unreleased loan rules expose rates, offered months, eligibility, active-loan count, structural collateral limits and credit-score weights in F10. Banks and resident plans use local terms; existing signed loans retain their agreements. See [loan rules](docs/WORLD_BUILDING.md#loan-offer-rules-unreleased).
+Version 0.115.0 loan rules expose rates, offered months, eligibility, active-loan count, structural collateral limits and credit-score weights in F10. Banks and resident plans use local terms; existing signed loans retain their agreements. See [loan rules](docs/WORLD_BUILDING.md#loan-offer-rules).
 
-Unreleased survival rules let world owners set feeding and damage thresholds, maximum health and nutrition limits, repeated-serving benefits, energy regeneration, school tuition/time, licence skill-limit exemptions and Odd Jobs relief terms. Base maximum health now defaults to 65,000; other defaults and active work are preserved. Player panels and resident forecasts use the same rules. See [world-building rules](docs/WORLD_BUILDING.md#survival-and-needs-rules-unreleased).
+Version 0.115.0 survival rules let world owners set feeding and damage thresholds, maximum health and nutrition limits, repeated-serving benefits, energy regeneration, school tuition/time, licence skill-limit exemptions and Odd Jobs relief terms. Base maximum health now defaults to 65,000; other defaults and active work are preserved. Player panels and resident forecasts use the same rules. See [world-building rules](docs/WORLD_BUILDING.md#survival-and-needs-rules).
 
 Version 0.109.0 adds a coastal tug with paid rescue contracts, a rowable outboard motorboat and tender recovery, seven specialist cargo trailers, revised boat scale, a walking flashlight and twice the tractor camera zoom range. Roads favour gentler terrain and can finally reach the cape lighthouses; runways no longer count as road connections. The fenced spaceport moves to about 1.25 km from town. See [boats, rescue and haulage](docs/HAULAGE.md) and [spaceport details](docs/SPACEPORT.md). Shore collisions idle the throttle; they do not switch off the engine. To back away, the engine must be running with fuel available. To complete a tow, stop with the disabled vessel alongside a boatyard or fishing pier and choose **Deliver at dock** in the towing panel.
 
@@ -82,7 +84,7 @@ Version 0.111.0 adds evening windows and overnight security, yard and parking li
 
 ## What you can do
 
-- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs and chickens in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Unreleased F10 construction rules configure spacing, shoreline reach, spawn/town clearances, the refund share, expansion cost multipliers, the farm plot limit and new pasture parcel dimensions. Puddlewick reserves its respawn point and town centres against new construction. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
+- Build an economy: gather materials, grow seven crops, raise cows, sheep, pigs and chickens in expandable fenced pastures, process feed/milk/cheese/meals/wool/eggs/compost, set prices/wages and run shops or guesthouses. Farm care uses stockroom supplies before personal materials. Puddlewick jobs persist offline and qualified owners can operate factories unpaid. Cancel unfinished construction for a partial cash refund. Version 0.115.0 F10 construction rules configure spacing, shoreline reach, spawn/town clearances, the refund share, expansion cost multipliers, the farm plot limit and new pasture parcel dimensions. Puddlewick reserves its respawn point and town centres against new construction. Supply rotating parish maintenance orders and read business statements and return reports; banks offer loans, mortgages and persistent credit histories.
 - Find natural timber, stone, gravel and topsoil grounds across the island, with light wear near towns or recent workings. World builders can adjust wear thresholds, keep sites entirely natural or restore legacy worked-site scenery.
 - Live in a persistent world with seasons, storms, colourful dawns and sunsets, day/night lighting, survival and configurable automatic meals from inventory and home stores, online and offline. Puddlewick enables both, with 20% slower needs while indoors. An at-home indicator estimates when food or drink will run out, without counting starvation time. World owners can configure death penalties and inactivity limits. Configurable estates retain goods/capital and reprice unclaimed properties as equity and age change.
 - Oceans have depth-faded underwater visibility, weather-driven swells and breaking surf. Boats rise and tilt with waves, and fast wave encounters produce spray and slow the hull. World owners can configure wave strength and moon-linked tidal ranges; Puddlewick uses a modest 0.6-metre spring range.
@@ -108,14 +110,14 @@ Version 0.101.1 reduces scenery-loading pauses while driving by spreading terrai
 This is a playable alpha, not complete historical feature parity. See [status and limitations](docs/STATUS.md).
 
 The [backlog implementation plan](docs/BACKLOG_PLAN.md) records the shipped-feature
-audit, dependency order and acceptance evidence for ongoing unreleased work.
-The unreleased HUD correction hides the Fuel bar while walking or rowing the
+audit, dependency order and acceptance evidence for the 0.115.0 checkpoint and remaining work.
+The HUD correction hides the Fuel bar while walking or rowing the
 emergency raft; boarding a motor vehicle restores its fuel readout.
 The Actions menu's zoom buttons now reach the same extended tractor camera range
 as the mouse wheel and pinch gesture.
 Charter boarding and its Inventory panel now honour the world's configured
 passenger and tank limits, including zero passenger places.
-Unreleased flight changes add forgiving landing contacts, an airborne B brake,
+Version 0.115.0 flight changes add forgiving landing contacts, an airborne B brake,
 steadier keyboard handling and wider public strips with gentle shoulders. World
 owners can tune them or select strict contacts. Flight rendering now uses shorter
 haze, height-aware terrain detail and forward preparation; distant towns share
@@ -341,7 +343,7 @@ Stop before they cast; moving reels in their lines. Fare is held in saved escrow
 until return: early return pays proportionally, cancellation or return to a different
 dock refunds all. Death cancels affected bookings; existing world boat-death rules
 still apply. No overtime charge or offshore disembarking. Lighting switches remain
-under Lights. Unreleased F10 charter rules set fare/duration defaults and limits,
+under Lights. Version 0.115.0 F10 charter rules set fare/duration defaults and limits,
 invitation counts and return-request cooldown; agreed bookings retain their terms.
 See [charter design and balance](docs/CHARTER_BOAT.md).
 

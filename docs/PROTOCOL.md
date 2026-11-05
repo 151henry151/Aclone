@@ -108,7 +108,7 @@ Use the ordinary `{type: "chat", text, to: playerId}` action for private NPC cha
 
 ## Compact delivery: protocol 3 (0.11.0)
 
-Protocol 3 remains supported alongside protocols 1 and 2. The current unreleased browser requests protocol 4, described below. Initial state and every world/reconnection baseline remain complete, including `self`, `account`, `world.players` and `world.buildings`. Each protocol 3 state also contains a socket-wide monotonic integer `sequence`. After merging and handling it, the browser sends `{ "type": "ack", "sequence": 123 }`. Acknowledgements are cumulative; stale or unsent sequence numbers are ignored.
+Protocol 3 remains supported alongside protocols 1 and 2. The 0.115.0 browser requests protocol 4, described below. Initial state and every world/reconnection baseline remain complete, including `self`, `account`, `world.players` and `world.buildings`. Each protocol 3 state also contains a socket-wide monotonic integer `sequence`. After merging and handling it, the browser sends `{ "type": "ack", "sequence": 123 }`. Acknowledgements are cumulative; stale or unsent sequence numbers are ignored.
 
 Later states use `partial: true` with these changes:
 
@@ -169,7 +169,7 @@ OBJ uploads use `Content-Type: model/obj`. Blueprint `texture` optionally refere
 
 `bank` and `investment` actions accept integer `amount` values from 1 to 10,000,000 hundredths (100,000d), independently of item-quantity limits. Balances, proximity, ownership and outside-investor claims are rechecked server-side.
 
-## Charter fishing boat (unreleased)
+## Charter fishing boat
 
 Vehicle slot 31 is the charter boat. Existing vehicle, boat lighting, idle,
 boat rescue, death-policy and dock actions apply. `charter` actions use:
@@ -206,7 +206,7 @@ Owner action `vehicleTuning` accepts `slot` (0–33), `tuning` (the partial defi
 
 All transfers validate ownership, distance, capacity and stationary state server-side. Repeated delivery/transfer actions cannot duplicate goods or payments.
 
-## Settings patches: protocol 4 (unreleased)
+## Settings patches: protocol 4
 
 Protocol 4 retains protocol 3 delivery, acknowledgement and entity patches. Initial
 and reconnect states still include complete world settings. Later states replace
@@ -218,7 +218,7 @@ settings are unchanged. Protocols 1–3 retain their previous complete-settings
 behaviour. Negotiate protocol 4 in the hello message; a fresh baseline is required
 on reconnect or world change.
 
-## Private CB radio events (unreleased)
+## Private CB radio events
 
 A landed socket receives `{type:"radio", world, vehicle, view}` when its radio
 view changes. `view` contains availability, that vehicle's channel/handle/volume/

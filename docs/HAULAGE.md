@@ -19,14 +19,14 @@ A tow preserves the disabled boat's ownership, fuel and goods. It does not remov
 
 Since 0.112.1, docking measures arrival from the vessel's oriented hull, allowing a large boat's bow, stern or side to enter the approach before its centre does. Delivery checks the disabled boat itself and still requires a clear water path to the berth. It does not move the boat, change its cargo or let a tug deliver from offshore.
 
-Unreleased **F10 → Rules → Tug rescue offers** sets the suggested fee (200d by
+Version 0.115.0 **F10 → Rules → Tug rescue offers** sets the suggested fee (200d by
 default), maximum fee (100,000d) and unaccepted offer lifetime (600 real seconds).
 Inventory quotes the local default and ceiling. Posted fees and expiry survive
 rule edits and reloads; accepted jobs do not expire. An expired offer cannot take
 payment, and an unaffordable acceptance leaves cash unchanged. The whole accepted
 fee stays held until delivery or full cancellation refund. Zero-fee rescues and
 free recovery with your own tug remain available. See the
-[world rules](WORLD_BUILDING.md#tug-rescue-rules-unreleased).
+[world rules](WORLD_BUILDING.md#tug-rescue-rules).
 
 ### Bringing fuel in the motorboat
 
@@ -114,7 +114,7 @@ Growth remains **12 metres per game day**, shared between projects; long lightho
 
 For visual QA run `TEST_GPU=1 node --import tsx scripts/rescue-fleet-preview.ts` and `node --import tsx scripts/backlog-walkthrough.ts`. Both operate locally; the walkthrough creates and removes its own temporary world and records actual UI interactions.
 
-## Canoes (unreleased)
+## Canoes
 
 The portable canoe carries one paddler and 12 weight at 1.2m/s by default, with no
 fuel or engine. Buy one at a carpenter or boathouse, craft from Wood at a carpenter,
@@ -130,5 +130,5 @@ home limit, pickup ownership, paddling/hold limits and shore access. Death afloa
 uses the ordinary boat loss/recovery and cargo-spoilage rules. Set-down land
 property instead survives boat-loss deaths unless separate land-hull loss is on;
 carried and home-stored hulls follow inventory and property rules respectively.
-See [Playing Aclone](PLAYING.md#portable-canoes-unreleased) for the controls and
+See [Playing Aclone](PLAYING.md#portable-canoes) for the controls and
 shore limits.

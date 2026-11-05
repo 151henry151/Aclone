@@ -2,6 +2,37 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.115.0 — Backlog checkpoint and responsive scenery
+
+Road growth and construction now prepare replacement scenery in small batches
+while keeping the existing landscape visible. Snow geometry is prepared and
+uploaded incrementally. This fixes the multi-second Lightmun rebuild freeze;
+large winter replacements can still take time in the background.
+
+This checkpoint adds forgiving, configurable landings and an airborne brake,
+smoother flight terrain, snow-dependent walking, natural gathering scenery,
+fuel tanker trailers, portable canoes and CB radios. F10 exposes completed
+survival, economy, resident-budget, construction, gathering, crop, fishing and
+vehicle rule batches. Irrigation retains its existing formula with configurable
+inputs; base maximum health defaults to 65,000 without instantly healing players.
+
+River fixes preserve local water height through recovery and fishing, enforce
+small-vessel limits and charge the plain landing's catalogue bill. Both canal
+boats and motorboats can approach, moor and reboard. Slow connections wait for
+the initial world snapshot before live deltas are queued. Walking HUD, menu zoom
+and charter tuning corrections complete the shipped-claim review.
+
+Validation uses focused unit tests, affected real browser flows and visual
+inspection, TypeScript, formatting and production builds. The populated desktop
+route checks had no sampled frames over 100 ms; a constrained phone relocation
+still produced a 203 ms task, and river scenery can continue streaming after
+90 seconds. These are measured limits, not a universal performance guarantee.
+See the [checkpoint audit](BACKLOG_PLAN.md) for commands and detailed results.
+
+Reload the game after deployment. World/weather/calendar rules and the larger
+remaining backlog features are deferred to later releases. No world reset or
+manual player grants are required. See [upgrade instructions](RELEASING.md#upgrade-01150).
+
 ## 0.114.5 — Harvest all
 
 A farm's Main panel offers **Harvest all** once any plot is ripe. It cuts every ripe plot that fits in the stockroom, in field order, and takes half again as long as harvesting those plots one by one (22.5 seconds each instead of 15). When the stockroom cannot hold the whole harvest, the button reads **Harvest all · N%** and a note states that clicking it takes only that share. Nothing is cut when none of it fits. A paid hand is limited to the plots the till can pay for. Each plot's own Harvest button is unchanged.

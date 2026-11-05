@@ -2,6 +2,31 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.115.0
+
+Deploy client and server together from the approved `backlog-implementation`
+release commit, using `DEPLOY_REF=<commit>` with `scripts/deploy-nogits.sh`.
+The branch can be deployed without pushing to main. Back up SQLite and uploaded
+assets first; keep both for rollback. Publish the website and reload clients.
+Existing settings use named defaults when new keys are absent; signed loans,
+started work, stock, money and owned vehicles retain their saved state.
+
+Public Puddlewick upgrades its runway/shoulders when a safe unoccupied site is
+available; blocked placement defers without moving private property. The existing
+fuel-desk migration sets the public hangar's 50d Fuel bid and credits its till
+500s once if its marker is absent. This is public infrastructure funding, not a
+player grant. Do not run manual grants or edit live world records. The 65,000
+base maximum health changes the ceiling; existing players recover normally.
+Older code does not understand all new canoe/tanker/rule state, so retain the
+matching pre-upgrade backups rather than relying on a code-only rollback.
+
+Verify `/aclone/api/health` reports 0.115.0, the client and map worker load under
+`/aclone/`, and the website reports the same version. Use disposable local worlds
+for login/movement/chat and feature regressions; do not create test pilots or
+worlds on production. The current checkpoint's focused tests and browser audit
+are recorded in [the plan](BACKLOG_PLAN.md); retain Henry's targeted-test policy
+instead of repeating the whole suite for release metadata changes.
+
 ## Upgrade 0.114.5
 
 Deploy the client and server normally, then reload clients. No save migration. Verify the health endpoint reports 0.114.5, and that a farm with two ripe plots shows Harvest all at half again the single-plot time, or Harvest all · N% when the stockroom cannot hold both.

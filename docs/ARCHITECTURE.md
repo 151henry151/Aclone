@@ -76,4 +76,4 @@ NPC actions/cursors/progress save atomically; paid calls reserve shared budgets 
 
 Unit, transaction, real-socket, browser and configurable 100-client movement probes cover critical behavior. They do not certify heavy production trading, hostile public scale or long-term AI/economic balance. See [Status](STATUS.md) and [capacity checks](HOSTING.md#connection-and-multiplayer-checks).
 
-Unreleased protocol 4 adds settings field patches so clock updates do not resend all world rules; older protocols retain complete settings objects.
+Version 0.115.0 protocol 4 adds settings field patches so clock updates do not resend all world rules; older protocols retain complete settings objects.

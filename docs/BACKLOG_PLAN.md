@@ -2,8 +2,10 @@
 
 Source: [BACKLOG.md](BACKLOG.md), read in full before changes. Base: `main` at
 `1423116eae06134ebbc2b90dc3fd72cd3a216b0c`. Work branch: `backlog-implementation`.
-All changes remain unreleased. No version bump, pull request, deployment, live
-server edits or player grants. Piloted spaceflight is excluded and remains pending.
+The implementation phase kept changes unreleased, with no version bump, pull
+request, deployment, live server edits or player grants. Henry authorized release
+and deployment of this checkpoint on 2026-11-04; the release record below
+supersedes those restrictions for this cut only. No manual player grants. Piloted spaceflight is excluded and remains pending.
 
 ## Completion protocol
 
@@ -4582,3 +4584,25 @@ this checkpoint.
 river handoff at the release checkpoint, with the documented streaming/device
 limitations. Preserve local evidence under `output/`; do not commit it or private
 world captures. Pause here for Henry's explicit deployment authorization.
+
+## Release 0.115.0 — authorized 2026-11-04
+
+Henry explicitly authorized releasing this checkpoint and asked to be told when
+it is live. Prepare 0.115.0 (compatible features), move the existing Unreleased
+entries into its dated changelog section, refresh current guides and README, and
+commit/push on backlog-implementation. Keep main untouched and deploy the exact
+pushed commit with DEPLOY_REF. Preserve SQLite/upload backups and the private
+environment. Run focused documentation/guide tests, website checks and the
+production-prefix browser smoke against disposable data; retain the completed
+feature verification above. Verify the live health/version and public assets
+after deployment; do not create live test pilots or grant player resources.
+Release metadata verification: all 16 NPC guide tests pass after updating the two
+expected heading/lookup assertions to their released titles; content and budget
+assertions remain intact. TypeScript and the `/aclone/` production build pass.
+Website checks pass at four widths, including all 51 building previews, touch,
+keyboard, empty search and fallback states. The built-client registration,
+world entry, map, movement, saved position and reconnect browser flow passes on
+a disposable local server through the prefix proxy. Review the mobile website
+and game screenshots; keep evidence under `output/release-0.115.0/`. No full
+suite was repeated for these metadata/documentation changes.
+Deployment status: verified locally; ready to push and deploy the release.

@@ -34,11 +34,11 @@ For map-only review, run `MAP_ONLY=1 node --import tsx scripts/northern-island-p
 
 The **river dock** (`riverDock`, tier 0; 30 logs, 10 gravel and 3s before tax) is a 3 × 2.4 m log crib on the bank with a 2.2 m wide plank jetty on driven piles running about 10 m out over the water. Its geometry is defined in `src/shared/river-dock.ts`: the jetty points along the building's local −z axis, the berth centre lies 13.2 m out, and a moored boat lies parallel to the bank with heading `rotation + π/2`. Siting (`riverDockSite`) requires a river reach at the berth, dry terrain within 0.2–2.5 m above the river surface at the landing and crib, a bank that falls to within 0.6 m of the surface along the jetty, and `riverDepth` of at least 1.2 m at fifteen samples across the 14 × 3.6 m berth. Headwaters, fords and the sea are refused by `constructionSiteReason` with a message that explains the depth requirement, and the preview rotation matters because the jetty must point toward the deep channel. The jetty and berth are reserved against other construction through `riverDockReserved`.
 
-Unreleased designer quotes preserve the plain Log landing’s catalogue price and materials for every finish, including world overrides. A plain jetty has no house wall/roof shell; enclosed variants still include their additional building cost.
+Version 0.115.0 designer quotes preserve the plain Log landing’s catalogue price and materials for every finish, including world overrides. A plain jetty has no house wall/roof shell; enclosed variants still include their additional building cost.
 
 Boat landings treat a completed river dock like the fishing pier: boarding and disembarking use the landing point 3 m behind the crib, an empty boat stays moored at the berth in view, and the scene floats both the jetty deck and the moored hull on the local river surface rather than the sea datum. `riverDockAccepts` limits docking to mode 3 vessels no longer than 14 m with a beam under 3.6 m, so canal boats, motorboats and the rowing lifeboat qualify while the trawler, charter boat and tug are refused with a message that points to the boathouse or pier. Fuel, fish trading and provisioning remain at the boatyard. `tests/river-dock.test.ts` covers the catalogue entry and map icon, usable and refused sites on the actual northern rivers, the landing, mooring and re-boarding flow with water-level placement, trawler rejection, and the jetty reservation.
 
-Unreleased recovery fixes use the local river surface for lifeboat launch and
+Version 0.115.0 recovery fixes use the local river surface for lifeboat launch and
 dock boarding, passenger escape after captain death, occupied tows and tender
 obstacle sweeps. These preserve cargo and fuel and do not create an offshore
 exit or summon a stranded vessel.
@@ -49,7 +49,7 @@ For current isolated verification, set `PROFILE_POPULATION=12` to add twelve vis
 
 Use `PREVIEW_GPU=1 SHOTS=bank,dock,summit PREVIEW_OUT=output/island-review npx tsx scripts/northern-island-preview.ts` for current game-renderer views plus full-island, watershed and matched southern maps. The summit view uses summer and clear weather. `tests/browser/alpine-weather.spec.ts` checks the real app's summer rain/summit snow readout and walking umbrella.
 
-Unreleased network entry also waits for acknowledgement of the first full world snapshot before sending live deltas, including after a world switch. Once acknowledged, ordinary play retains the three-state delivery window.
+Version 0.115.0 network entry also waits for acknowledgement of the first full world snapshot before sending live deltas, including after a world switch. Once acknowledged, ordinary play retains the three-state delivery window.
 
 Large initial geography snapshots can briefly buffer while compression completes. The server pauses subsequent deltas until the queue drains, retaining the last delivered delta baseline. A continuously blocked queue still disconnects after fifteen seconds; account revocation and durable saves remain covered by their existing tests.
 

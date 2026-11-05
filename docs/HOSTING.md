@@ -144,4 +144,4 @@ replay the paused interval, including after a server restart. Ordinary offline
 survival still applies outside maintenance. Back up before maintenance involving
 manual data edits; pause is not a database backup or a global server shutdown.
 
-Unreleased clients negotiate protocol 4 for compact settings patches. Protocols 1–3 remain supported with their existing settings representation.
+Version 0.115.0 clients negotiate protocol 4 for compact settings patches. Protocols 1–3 remain supported with their existing settings representation.

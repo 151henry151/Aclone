@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.115.0] - 2026-11-04
+
 ### Added
 
 - Configure river-dock depth and vessel size limits per world; quote local eligibility and preserve moored boats when access changes.
