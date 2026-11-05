@@ -1675,7 +1675,7 @@ export function act(w: World, id: string, a: Action): string {
         );
         if (fishingVessel(w, p))
           requireThat(
-            terrainHeight(w, p.x, p.z) < waterLevel(w) - 0.65,
+            terrainHeight(w, p.x, p.z) < surfaceWaterLevel(w, p.x, p.z) - 0.65,
             'Take the boat into water before fishing',
           );
       }
@@ -1707,7 +1707,7 @@ export function act(w: World, id: string, a: Action): string {
           p.x = fishingDock.x;
           p.z = fishingDock.z + 2;
           p.y = travelHeight(w, p.x, p.z);
-        } else p.y = waterLevel(w);
+        } else p.y = surfaceWaterLevel(w, p.x, p.z);
         p.engine = false;
         scheduleBite(w, p);
       }

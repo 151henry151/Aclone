@@ -95,7 +95,9 @@ the skipper during rescue and can disembark once the inflatable reaches a dock.
 ## Rod fishing
 
 Carry Fishing tackle, stop the powered boat and cast a line. The boat stays at
-its actual position. In water at least eight metres deep and about 150 metres
+its actual position and local river or sea elevation. A boat on a dry bank cannot
+cast. River fishing yields ordinary fish; offshore species still require the
+deep-sea conditions below. In water at least eight metres deep and about 150 metres
 from land (including islands), it can catch Atlantic
 cod, Atlantic halibut and bluefin tuna, in addition to existing fish. These
 species have heavier carrying weights and higher prices. Deep-water rod bites take 2½–5 minutes; a rod does not match a net’s catch volume. Shallow water and the

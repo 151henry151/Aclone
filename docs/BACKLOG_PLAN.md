@@ -4173,3 +4173,27 @@ Inspect all four screenshots, copied to `output/river-handoff-verification/recov
 TypeScript and changed-file Prettier pass. No ocean exit constraints or numeric
 thresholds changed. Tests and screenshot evidence do not yet complete the wider
 river construction/rendering/performance audit above.
+
+**River recovery slice done and pushed:** `d8c8a208c39f5c2754ff7b8951aeaa327bb7a6b5`.
+Remote SHA verified.
+
+### River rod fishing — completion criteria before production
+
+Existing boat rod fishing promises to fish at the vessel's position, but the
+start-depth gate and assigned height use ocean datum. Extend the inland regression
+with a stopped canal boat, tackle and navigable elevated water: cast successfully,
+keep x/z and local y, schedule ordinary fish (not deep-sea fish), and stop in place.
+A boat on a dry bank must still fail without entering fishing. Confirm red at the
+water gate, then change only those two surface-height lookups. Relevant tests:
+inland boat recovery, fishing timing/wait/depth/water and boating. Browser on the
+same generated river: cast, see waiting state, stop, reject dry-bank cast, inspect
+screenshots. Keep deepFishingWater offshore-only. TypeScript, Prettier and player
+docs/README/Unreleased before commit/push.
+
+Rod-fishing red fails at “Take the boat into water before fishing” on a 100 m
+river. After two local-surface substitutions, all 34 relevant tests pass (4.9 s)
+and TypeScript is clean. Browser initially hits a strict-selector ambiguity
+between HUD and dialog Cast buttons; scope to the Activities dialog. Rerun passes
+(49.2 s): waiting at unchanged river x/z/y, ordinary fish, stop in place, dry-bank
+refusal without lost tackle. Inspect both screenshots, retained under
+`output/river-handoff-verification/fishing/`. Changed-file Prettier is clean.

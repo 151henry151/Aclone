@@ -213,3 +213,19 @@ test('river launch refuses blocked alongside water and dry land atomically', () 
   assert.equal(w.boatRescues, undefined);
   assert.deepEqual(p.inventory, { cod: 7 });
 });
+
+test('river rod fishing casts and stops at the boat position while dry banks refuse it', () => {
+  const { w, p } = straight();
+  p.inventory = { tackle: 1 };
+  const pos = { x: p.x, z: p.z, y: p.y };
+  act(w, p.id, { type: 'joinGame', game: 'fishing' });
+  assert.equal(p.game, 'fishing');
+  assert.deepEqual({ x: p.x, z: p.z, y: p.y }, pos);
+  assert.equal(p.fishCatch, 'fish');
+  assert.ok(p.fishAt! > w.time);
+  act(w, p.id, { type: 'leaveGame' });
+  assert.deepEqual({ x: p.x, z: p.z, y: p.y }, pos);
+  p.x = 150;
+  assert.throws(() => act(w, p.id, { type: 'joinGame', game: 'fishing' }), /into water/);
+  assert.notEqual(p.game, 'fishing');
+});
