@@ -1,3 +1,4 @@
+import { calendarRules, calendarRuleFields } from '../shared/calendar-rules';
 import { alpineRules, alpineRuleFields } from '../shared/alpine-rules';
 import { climateRules, climateRuleFields } from '../shared/climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from '../shared/boat-navigation-rules';
@@ -117,6 +118,7 @@ export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
     ...Object.keys(climateRuleFields),
     ...Object.keys(alpineRuleFields),
+    ...Object.keys(calendarRuleFields),
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
@@ -210,6 +212,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const calendar = calendarRules(settings);
+  const calendarFields = `<fieldset class="boat-death-settings"><legend>Calendar</legend>${Object.entries(
+    calendarRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        calendar[key as keyof typeof calendar],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>The lunar period controls both moon phases and lunar tides. Edits can change the current phase and water level immediately, without resetting time or changing tidal range. The decorative clock still rotates the sky independently; solar motion, crop days and existing deadlines are unchanged.</p></fieldset>`;
   const alpine = alpineRules(settings);
   const alpineFields = `<fieldset class="boat-death-settings"><legend>Alpine climate</legend>${Object.entries(
     alpineRuleFields,
@@ -658,6 +676,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     farmYieldFields +
     fishingFields +
+    calendarFields +
     alpineFields +
     climateFields +
     runningFields +

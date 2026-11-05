@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.118.0 — Choose the moon-and-tide cycle
+
+World owners can set the lunar phase period in F10 → Rules → Calendar. Visible
+moon phases, moonlight and lunar tides share the same local value. The default
+28-day cycle reproduces the existing sky and tides exactly. Changing the period
+can immediately change the current phase and tide; saved time, solar motion,
+wave strength and tidal range remain unchanged.
+
+The value persists through world creation, saves and portable designs. Invalid
+periods reject atomically. Year and season lengths remain unchanged in this batch.
+Validation covers a two-year default fingerprint, custom sky/tides, midnight and
+year continuity, zero tidal range, persistence, relevant regressions and a real
+browser full-moon/dark-night/reload/invalid-input flow.
+
 ## 0.117.0 — Set the mountain snow line
 
 World owners can move the permanent snow line, turn permanent summit snow off,

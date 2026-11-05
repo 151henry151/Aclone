@@ -336,6 +336,10 @@ render-budget checks.
 
 ### Ocean weather and tides
 
+World owners set the shared moon/tide cycle in **F10 → Rules → Calendar**
+(default 28 game days). A period edit can change the current tide immediately;
+tidal range remains separate, and zero range keeps sea level fixed.
+
 Calm, low-wind days can be almost still. Wind seas build and decay over roughly
 90 seconds as weather changes; thunderstorms produce larger crossing swells,
 whitecaps, shoreline surf and bow spray. Boats follow the water with heave, pitch

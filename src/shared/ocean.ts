@@ -1,3 +1,4 @@
+import type { CalendarRules } from './calendar-rules';
 import { inlandLevel, inlandWaterAt } from './inland-water';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
@@ -13,10 +14,10 @@ export function oceanDate(time: number) {
   return time / DAY_SECONDS + 59 + defaults.time / 86400;
 }
 /** Semidiurnal lunar + solar constituents: spring range is the configured maximum. */
-export function tideOffset(date: number, range: number) {
+export function tideOffset(date: number, range: number, settings: Partial<CalendarRules> = {}) {
   if (range <= 0) return 0;
   const solar = TAU * (date - 0.5);
-  const elongation = lunarElongation(date);
+  const elongation = lunarElongation(date, settings);
   return (
     Math.max(0, range) *
     0.5 *
@@ -24,7 +25,7 @@ export function tideOffset(date: number, range: number) {
   );
 }
 export function waterLevel(w: Pick<World, 'time' | 'settings'>, time = w.time) {
-  return w.settings.seaLevel + tideOffset(oceanDate(time), w.settings.tidalRange ?? 0);
+  return w.settings.seaLevel + tideOffset(oceanDate(time), w.settings.tidalRange ?? 0, w.settings);
 }
 /** Sea tide or the local elevated river/lake surface. */
 export function surfaceWaterLevel(w: World, x: number, z: number, time = w.time) {

@@ -2,6 +2,15 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.118.0
+
+Deploy the approved backlog-implementation commit using DEPLOY_REF, with the
+normal SQLite backup, prefixed build and service restart. Publish the matching
+website and reload clients. Missing lunar rules use 28 days; no migration or
+manual world edit is required. Verify health/client/website version 0.118.0 and
+prefixed script/map-worker assets. Local screenshots demonstrate a custom period;
+production worlds keep their default cycle unless their owner changes it.
+
 ## Upgrade 0.117.0
 
 Deploy the approved backlog-implementation commit with DEPLOY_REF, taking the

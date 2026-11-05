@@ -423,5 +423,6 @@
   "alpineSnowFull": 1390,
   "alpinePermanentSnow": true,
   "alpineSnowBase": 0.018,
-  "alpineSnowIntensity": 0.06
+  "alpineSnowIntensity": 0.06,
+  "calendarLunarDays": 28
 }

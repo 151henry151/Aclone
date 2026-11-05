@@ -1,3 +1,4 @@
+import type { CalendarRules } from './calendar-rules';
 import type { AlpineRules } from './alpine-rules';
 import type { ClimateRules } from './climate-rules';
 import type { BoatNavigationRules } from './boat-navigation-rules';
@@ -314,6 +315,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<CalendarRules>,
     Partial<AlpineRules>,
     Partial<ClimateRules>,
     Partial<EconomyRules>,

@@ -1,3 +1,4 @@
+import { calendarRules } from '../../shared/calendar-rules';
 import { alpineRules } from '../../shared/alpine-rules';
 import { climateRules } from '../../shared/climate-rules';
 import { boatNavigationRules } from '../../shared/boat-navigation-rules';
@@ -220,6 +221,7 @@ export function observe(w: World, p: Player, state: ResidentState, memory: NpcMe
       ...boatNavigationRules(w.settings),
       ...climateRules(w.settings),
       ...alpineRules(w.settings),
+      ...calendarRules(w.settings),
       vehicleMaintenance: w.settings.vehicleMaintenance,
       ...gatheringImplementRules(w.settings),
       ...npcJourneyRules(w.settings),

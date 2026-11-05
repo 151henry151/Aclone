@@ -1972,7 +1972,7 @@ export class GameScene {
         // an owner freezes or changes the decorative clock's day length.
         skyDay =
           (w.time + skyOffset) / DAY_SECONDS + 59 + defaults.time / 86400 - skySeconds / 86400,
-        astronomy = celestialAt(skyDay, skySeconds),
+        astronomy = celestialAt(skyDay, skySeconds, w.settings),
         solar = sunAt(skySeconds, skyDay),
         daylight = solar.daylight;
       const drift = (w.time + skyOffset) * 0.001 * climate.wind;

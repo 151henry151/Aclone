@@ -102,6 +102,11 @@ Default day: **10 real minutes**; 365-day year: **60h 50m**. New worlds start in
 
 Sunrise/sunset vary by season. Clear moonless nights have faint starlight; full moons reveal terrain. Clouds/horizon reduce natural light; overcast moonless countryside is very dark. Use **L/headlights**. Streetlights run all night; occupied-house windows shine until varied bedtimes. Occupants left inside keep chimney smoke even offline; workplace chimneys smoke when an employed player is online, within 18m and on an active shift.
 
+Moon phases and lunar tides share the world's **F10 → Rules → Calendar** lunar
+period (default 28 game days). Changing it can change the current phase and tide;
+zero tidal range still keeps sea level fixed. The decorative clock does not
+reset moon phases.
+
 **Snow and storms:** Weather has variable storm starts, lengths and strengths. Lighter snowfall is common; heavy, long storms are rarer. Each winter has its own random storm frequency, so mild and severe winters emerge without a fixed schedule. Weather is seeded by world and date and survives restarts without rerolling.
 
 World owners can tune seasonal rain/snow chances, storm thresholds and snowfall

@@ -1,9 +1,12 @@
+import defaults from '../../data/settings.json';
+import type { CalendarRules } from './calendar-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Fictional sky at 45° north, with a tilted axis and a nearby binary moon pair.
  * Absolute dates are never wrapped at year end: lunar phases keep advancing.
  * Local axes match driving: +X east, +Y up, +Z south. Angles are radians. */
-export const LUNAR_SYNODIC_DAYS = 28;
-export const lunarElongation = (date: number) => (Math.PI * 2 * (date + 5)) / LUNAR_SYNODIC_DAYS;
+export const LUNAR_SYNODIC_DAYS = defaults.calendarLunarDays;
+export const lunarElongation = (date: number, settings: Partial<CalendarRules> = {}) =>
+  (Math.PI * 2 * (date + 5)) / (settings.calendarLunarDays ?? LUNAR_SYNODIC_DAYS);
 export type Direction = [number, number, number];
 const TAU = Math.PI * 2,
   tilt = (23.4 * Math.PI) / 180,
@@ -36,10 +39,10 @@ export function solarDirectionAt(day: number, seconds: number): Direction {
   const f = frame(day, seconds);
   return f.project(f.longitude);
 }
-export function celestialAt(day: number, seconds: number) {
+export function celestialAt(day: number, seconds: number, settings: Partial<CalendarRules> = {}) {
   const f = frame(day, seconds),
     sun = f.project(f.longitude);
-  const elongation = lunarElongation(f.date);
+  const elongation = lunarElongation(f.date, settings);
   const longitude = f.longitude + elongation;
   const latitude = Math.sin(longitude + 0.7) * 0.065;
   const binary = (TAU * f.date) / 5;

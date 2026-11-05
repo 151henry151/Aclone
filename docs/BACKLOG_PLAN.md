@@ -4842,3 +4842,55 @@ bounds reject, and existing summer rain/summit snow/umbrella behavior remains.
 Screenshots are reviewed in `output/alpine-rules/browser/`. Prepare 0.117.0 with
 production-prefix build, changed-file formatting, exact-commit deployment and
 read-only live checks before the screenshot announcement.
+
+0.117.0 is done and live: pushed commit `97e6cfd` matches the server; client,
+health and website report 0.117.0; prefixed client/map-worker assets and read-only
+browser checks pass without errors. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261104-231917.sqlite`; website rollback:
+`/var/backups/aclone-website/site-20261104-232120.tar.gz`.
+[Verified before/after screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567756187389268009).
+Evidence: `output/release-0.117.0/`.
+
+### Calendar rules — lunar period
+
+Before production edits, capture two years of existing sky/phase/tide output.
+Expose `calendarLunarDays` in Calendar, default 28 game days, range 1–3,650
+(fractional periods allowed). Visible moon phases and lunar tides must use the
+same local period. Preserve solar motion, decorative-clock independence, wave
+strength, saved economic time and the existing five-day phase offset. Missing
+keys preserve old behavior. A changed period can change the current moon phase
+and tide immediately; it does not reset time or change tidal range.
+
+Completion criteria: failing-first `tests/lunar-rules.test.ts` for default and
+legacy fingerprint equivalence, phase periodicity/custom moon positions and
+actual water level, year/midnight continuity, zero tidal range, invalid/non-finite
+period rejection and creation/editor/summary/resident/save/design round trips.
+Run affected astronomy, ocean, sky-weather and guide tests, TypeScript and
+changed-file Prettier.
+
+Browser: a disposable clear-night world opens F10 → Rules → Calendar with 28
+shown; change to 14 and verify the rendered moon directions/illumination and sea
+level use the new period at the same saved date. Capture full-moon and dark-night
+views, reload to confirm retention, and submit zero to prove rejection retains 14. No render errors. Year/season/lottery changes remain pending; their crop,
+ageing, property and signed-loan dependencies are assessed separately. Release,
+deploy, verify and announce after all criteria pass.
+
+Lunar red verification: all three unit cases fail on absent defaults/unknown
+settings. The real-browser case fails at the missing Calendar input. Evidence:
+`output/lunar-rules/red.log` and `browser-red.log`. Frozen sky/tide fingerprint:
+`c3fe86c73bea19161f51f7be6fe213ae582f1f514bd2a725cc11919e20c9b477`.
+
+All 35 relevant lunar checks pass; TypeScript is clean and the 16 guide checks
+pass again after documentation edits. The first green browser run verifies the
+full-moon shader and tide, then catches a screenshot-harness assumption: fading
+toasts retain their text after becoming transparent. Wait for CSS opacity zero
+instead of empty text, preserving the clean-screenshot criterion and every
+moon/tide/reload/invalid-value assertion; rerun the browser flow.
+
+Lunar completion criteria pass: 35 relevant checks, the final 16 guide checks
+after docs, clean TypeScript, and the complete browser flow (2.0 minutes) with
+rendered moon direction/illumination and sea level matching the local rule. The
+invalid zero period is blocked by the browser and rejected by server/unit import
+validation; saved 14-day settings survive reload. Reviewed screenshots show the
+same night changing from moonlit to dark. Prepare 0.118.0 with prefixed build and
+formatting, then deploy the exact pushed commit and verify before announcing.

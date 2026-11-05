@@ -1,3 +1,4 @@
+import { calendarRuleFields } from './calendar-rules';
 import { alpineRuleFields, alpineRulesError } from './alpine-rules';
 import { climateRuleFields, climateRulesError } from './climate-rules';
 import { boatNavigationRules, boatNavigationRuleFields } from './boat-navigation-rules';
@@ -1977,6 +1978,7 @@ export function act(w: World, id: string, a: Action): string {
           Object.hasOwn(w.settings, key) ||
             Object.hasOwn(climateRuleFields, key) ||
             Object.hasOwn(alpineRuleFields, key) ||
+            Object.hasOwn(calendarRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
@@ -2010,6 +2012,7 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const calendarField = calendarRuleFields[key as keyof typeof calendarRuleFields];
         const alpineField = alpineRuleFields[key as keyof typeof alpineRuleFields];
         const climateField = climateRuleFields[key as keyof typeof climateRuleFields];
         const vehicleRunningField =
@@ -2082,6 +2085,7 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (calendarField) num(v, calendarField.min, calendarField.max);
         if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);

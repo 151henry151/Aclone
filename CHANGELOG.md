@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.118.0] - 2026-11-04
+
+### Added
+
+- Configure the lunar phase period per world and share it between visible moons and tides; preserve default sky motion, saved time, wave strength and tidal range.
+
 ## [0.117.0] - 2026-11-04
 
 ### Added

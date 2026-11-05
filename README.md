@@ -4,7 +4,10 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.117.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.118.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.118.0 lets world owners choose a lunar period shared by moon
+phases and tides. Defaults retain the existing 28-day cycle. See [Calendar rules](docs/WORLD_BUILDING.md#calendar-rules).
 
 Version 0.117.0 lets world owners move the permanent mountain snow line,
 disable permanent summit cover and tune rain-to-snow rates. Near and distant

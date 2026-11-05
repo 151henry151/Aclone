@@ -104,6 +104,25 @@ and appear in local summaries and resident observations. Existing snowpack is
 preserved. Missing keys use the defaults; invalid or inverted limits reject the
 whole edit/import.
 
+## Calendar rules
+
+**F10 → Rules → Calendar** sets the lunar phase period, default **28 game days**.
+Acceptable periods are 1–3,650 days, including fractions. The same value drives
+the two visible moons and lunar tides; solar motion and wave strength retain
+their existing behavior. Tidal range remains a separate rule; zero range keeps
+sea level fixed regardless of the lunar period.
+
+Changing the period can immediately change the current phase and tide, without
+resetting saved time. Moon phases follow the economic date, including across
+year boundaries; freezing or moving the decorative clock rotates the sky without
+resetting those phases. Existing five-day phase offset and binary-moon motion
+remain unchanged. Year length, season boundaries and lottery scheduling are
+separate pending rule batches.
+
+The period is available at world creation, appears in local rules and resident
+observations, and persists in saves and portable designs. Missing keys use 28;
+invalid/non-finite values reject the whole edit or import.
+
 ## Make a tree, vehicle or building
 
 **Workshop** starts with a tree, building or rover template. Edit the name and
