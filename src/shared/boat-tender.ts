@@ -5,7 +5,7 @@ import { vehicleDef } from './vehicle-config';
 import { boatLanding } from './boathouse';
 import { boatShoreCollision } from './boat-shore';
 import { terrainHeight } from './terrain';
-import { waterLevel } from './ocean';
+import { surfaceWaterLevel } from './ocean';
 import { buildingBlocksMovement } from './building-shapes';
 import { creatorBlocksSegment } from './creator';
 export const tenderOf = (w: World, p: Player) => w.mooredBoats?.[mooringKey(p.id, MOTORBOAT)];
@@ -81,9 +81,21 @@ export function moveTender(
   if (
     boatShoreCollision(w, t, next, 0.9, heading, 2.15) ||
     w.buildings.some((b) =>
-      buildingBlocksMovement(b, t, next, waterLevel(w) - terrainHeight(w, b.x, b.z), 0.9),
+      buildingBlocksMovement(
+        b,
+        t,
+        next,
+        surfaceWaterLevel(w, b.x, b.z) - terrainHeight(w, b.x, b.z),
+        0.9,
+      ),
     ) ||
-    creatorBlocksSegment(w, { ...t, y: waterLevel(w) }, { ...next, y: waterLevel(w) }, 0.9, true)
+    creatorBlocksSegment(
+      w,
+      { ...t, y: surfaceWaterLevel(w, t.x, t.z) },
+      { ...next, y: surfaceWaterLevel(w, next.x, next.z) },
+      0.9,
+      true,
+    )
   ) {
     Object.assign(p, before);
     p.speed = 0;

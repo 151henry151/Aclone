@@ -32,6 +32,8 @@ Unreleased tug rules expose the suggested rescue fee, fee ceiling and offer life
 
 Unreleased boating fuel help quotes the world’s effective tank units per Fuel, matching inventory refills.
 
+Unreleased river recovery keeps lifeboats and towed vessels at local water height and checks obstacles at that height, preserving stranded cargo and fuel.
+
 Unreleased F10 Boat navigation rules configure river-dock depth/size limits, shore-impact damage and docking radii while preserving hull-aware arrival and clear-water checks. Inventory shows local values.
 
 Unreleased F10 Vehicle running costs configure distance wear and trailer speed/fuel penalties, preserving recorded condition, mileage and cargo. Garage service shows the local wear rate.

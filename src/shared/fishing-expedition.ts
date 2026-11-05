@@ -2,7 +2,7 @@ import { economyRules } from './economy-rules';
 import { hasProvisions, crewBerths } from './vehicle-config';
 import { vehicleDef } from './vehicle-config';
 import { isTrawler } from './vehicle-config';
-import { waterLevel } from './ocean';
+import { surfaceWaterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, Stock, World } from './types';
 import { FISHING_BOAT, boatSlot } from './boats';
@@ -325,7 +325,13 @@ export function endVoyageOnDeath(w: World, p: Player) {
   )) {
     delete q.hitch;
     switchVehicle(q, 29, false, w);
-    Object.assign(q, { x: p.x, z: p.z, y: waterLevel(w), speed: 0, engine: false });
+    Object.assign(q, {
+      x: p.x,
+      z: p.z,
+      y: surfaceWaterLevel(w, p.x, p.z),
+      speed: 0,
+      engine: false,
+    });
   }
   delete p.fishingVoyage;
 }

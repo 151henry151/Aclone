@@ -119,6 +119,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ### Fixed
 
+- Use local river water height for lifeboat launch, boarding and passenger escape, and for occupied towing and tender obstacle checks; preserve stranded cargo and fuel.
+
 - Quote the effective world Fuel conversion in boating help instead of always showing eight tank units.
 
 - Apply the world refuelling threshold to resident experiments while retaining carried-fuel recovery for an empty tank.

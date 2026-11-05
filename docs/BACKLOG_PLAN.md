@@ -4105,3 +4105,71 @@ loads and unchanged readiness limits. Inspect all four screenshots: saved limits
 size-based unavailable boarding, excessive-draft unavailable landing, invalid
 zero draft. Restoring depth/length permits boarding and disembarking while
 retaining the exact mooring and 23 fuel units. No live-world work occurred.
+
+**River-limit slice done and pushed:** `38727644249a6f8c1df818580e87368f808a1114`.
+Remote SHA verified.
+
+### River completion handoff — audit and completion criteria
+
+Read Henry's `output/river-handoff/README.md` on 2026-11-04. Incorporate this
+interrupted-work audit before continuing climate/calendar rules. The handoff
+and its generated output remain unstaged. No deployment or excluded spaceflight.
+
+- Tenfold northern land, preserved south/property/resources, six provinces,
+  forests/ponds/mountain/five downhill rivers: implementation and explicit
+  regression coverage exist in northern-island and migration code/tests;
+  verification pending the targeted run and current screenshots.
+- Winding slope-sensitive channels, sparse stones, smooth shoulders and visible
+  intermediate water surfaces, ford/deep-water movement: existing code/tests
+  cover these claims; current renderer verification pending.
+- Permanent summit cover, alpine rain-to-snow, readout and walking umbrellas:
+  shared alpine weather exists; audit its client consumers and browser evidence.
+- River docks: catalogue/siting/orientation/reservation and small-boat eligibility
+  exist. Current rule slice verified dynamic depth/size and preserved moorings.
+  Still verify actual construction preview/build, both canal/motorboat access,
+  persistent visible local-elevation mooring and large-vessel refusal.
+- **Confirmed code gap:** lifeboat launch depth/clearance, launch position and
+  dock boarding use ocean height. Tow/tender obstacle sweeps and occupied tow
+  placement also use ocean height. Add failing elevated-river regressions before
+  production; distinguish real river defects from coastal-only boathouse logic.
+- Map decluttering/outlines and CPU water culling exist. Produce and inspect
+  current full-map, watershed, matched southern views, bank, dock/boat and summit
+  screenshots. Do not treat old screenshots/changelog prose as current evidence.
+- Performance remains unverified: run isolated current river/forest/summit/storm
+  and genuine leave/return streaming, populated fixture, map pan/zoom, constrained
+  CPU/mobile and large-snapshot join/reconnect. Record frame tails/long tasks,
+  CPU/heap/geometry with hardware and fixture limitations; run benchmarks alone.
+- Cargo/quay mechanics, forestry and unrelated future backlog sections stay in
+  their existing order. They are deliberately separate, not river-completion gaps.
+
+Recovery completion criteria: new `tests/inland-boat-recovery.test.ts` must fail
+before code because elevated navigable river water is mistaken for land/ocean
+height. Cover real river launch and dock boarding, unchanged main vessel/cargo,
+local water height on recovery and occupied towing, raised solid obstacles
+blocking tender/tow movement, save/reload and unchanged offshore refusal. Use
+`surfaceWaterLevel` at each sampled position without changing numeric thresholds.
+Run this test plus boat abandonment, motorboat, towing, river dock and relevant
+lifeboat tests; confirm paths first. Browser: empty-fuel launch on a river,
+moored lifeboat boarding, restored main vessel, no-launch/blocked states, current
+local-height screenshot. TypeScript, changed-file Prettier and Unreleased/player
+and world docs are required before commit/push. Record actual results below.
+
+Recovery red result: all four new tests fail for the intended reasons: river
+launch rejected as dry land; dock boarding returns -2 m instead of 69.93 m;
+occupied tow returns -2 m instead of 100 m; tender crosses a raised solid object.
+The local-water substitutions pass all four. Audit also finds captain-death
+passenger escape uses ocean height; add a failing case before correcting it.
+A separate rod-fishing gate still assumes sea level; record and verify that gap
+in a follow-up slice after this recovery slice is complete.
+
+Recovery verification: 66 relevant tests pass in 6.5 seconds (inland recovery,
+boat abandonment, motorboat, towing, boating, charter, river dock); added dry/
+blocked launch atomicity test passes separately (1.3 seconds). The captain-death
+regression first fails at -2 versus 100 m, then passes. Browser
+`TEST_GPU=1 npm run test:e2e -- tests/browser/inland-boat-recovery.spec.ts` passes
+in 1.5 minutes: launch at a generated river dock, disembark, reconnect, reboard
+lifeboat/main boat, retain seven cod and zero fuel, refuse dry-bank launch.
+Inspect all four screenshots, copied to `output/river-handoff-verification/recovery/`.
+TypeScript and changed-file Prettier pass. No ocean exit constraints or numeric
+thresholds changed. Tests and screenshot evidence do not yet complete the wider
+river construction/rendering/performance audit above.

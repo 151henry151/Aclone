@@ -82,6 +82,10 @@ uses no fuel and carries 10 weight. Return to a dock to step ashore. Both the
 stranded boat and the moored inflatable remain where they were left, across
 reconnects and server restarts.
 
+On rivers, launch and boarding use the local water surface. A dry or obstructed
+launch is still refused. Lifeboats, including passenger escape after a captain’s
+death, stay at river height; towing and tender movement check obstacles there.
+
 Buy Fuel, reboard the inflatable at the same dock, and row back. The inventory
 panel offers a waypoint to the stranded boat. Within five metres, reboard it and
 use the carried fuel. The inflatable is then stowed. If the main hold is full, reboarding pours carried Fuel into its tank first to make room. Fuel cannot remotely refill

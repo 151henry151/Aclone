@@ -7,7 +7,7 @@ import { boatLanding } from './boathouse';
 import { boatShoreCollision } from './boat-shore';
 import { buildingBlocksMovement } from './building-shapes';
 import { creatorBlocksSegment } from './creator';
-import { waterLevel } from './ocean';
+import { surfaceWaterLevel } from './ocean';
 import { terrainHeight } from './terrain';
 import { log, say } from './simulation';
 export interface TowJob {
@@ -239,13 +239,19 @@ function towBlocked(
     !!boatShoreCollision(w, from, to, radius, heading, (v.length ?? 14) / 2) ||
     creatorBlocksSegment(
       w,
-      { ...from, y: waterLevel(w) },
-      { ...to, y: waterLevel(w) },
+      { ...from, y: surfaceWaterLevel(w, from.x, from.z) },
+      { ...to, y: surfaceWaterLevel(w, to.x, to.z) },
       radius,
       true,
     ) ||
     w.buildings.some((b) =>
-      buildingBlocksMovement(b, from, to, waterLevel(w) - terrainHeight(w, b.x, b.z), radius),
+      buildingBlocksMovement(
+        b,
+        from,
+        to,
+        surfaceWaterLevel(w, b.x, b.z) - terrainHeight(w, b.x, b.z),
+        radius,
+      ),
     )
   );
 }
@@ -285,7 +291,7 @@ export function moveTow(
     Object.assign(target, next, { heading });
     if (!j.rescue) {
       const owner = w.players[j.owner];
-      owner.y = waterLevel(w);
+      owner.y = surfaceWaterLevel(w, owner.x, owner.z);
       owner.speed = 0;
     }
   }

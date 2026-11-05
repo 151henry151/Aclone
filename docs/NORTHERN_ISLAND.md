@@ -36,6 +36,11 @@ The **river dock** (`riverDock`, tier 0; 30 logs, 10 gravel and 3s before tax) i
 
 Boat landings treat a completed river dock like the fishing pier: boarding and disembarking use the landing point 3 m behind the crib, an empty boat stays moored at the berth in view, and the scene floats both the jetty deck and the moored hull on the local river surface rather than the sea datum. `riverDockAccepts` limits docking to mode 3 vessels no longer than 14 m with a beam under 3.6 m, so canal boats, motorboats and the rowing lifeboat qualify while the trawler, charter boat and tug are refused with a message that points to the boathouse or pier. Fuel, fish trading and provisioning remain at the boatyard. `tests/river-dock.test.ts` covers the catalogue entry and map icon, usable and refused sites on the actual northern rivers, the landing, mooring and re-boarding flow with water-level placement, trawler rejection, and the jetty reservation.
 
+Unreleased recovery fixes use the local river surface for lifeboat launch and
+dock boarding, passenger escape after captain death, occupied tows and tender
+obstacle sweeps. These preserve cargo and fuel and do not create an offshore
+exit or summon a stranded vessel.
+
 Performance: `npx tsx scripts/island-performance.ts` loads the original and expanded landscapes in the same headless renderer and records frame-time percentiles, long tasks, heap, draw calls and streaming state at town, river, forest, summit and storm-coast locations, plus a map open. Distant river reaches beyond their 1 km fade are culled on the CPU rather than only faded in the shader; before that change the expanded town view showed 13 frames over 100 ms in a 15-second sample, afterwards none, with p95 at 34 ms in both worlds.
 
 Large initial geography snapshots can briefly buffer while compression completes. The server pauses subsequent deltas until the queue drains, retaining the last delivered delta baseline. A continuously blocked queue still disconnects after fifteen seconds; account revocation and durable saves remain covered by their existing tests.
