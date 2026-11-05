@@ -209,3 +209,26 @@ test('lodging entrances remain outside the enlarged lobby instead of behind its 
     );
   }
 });
+
+test('the plain river landing keeps its catalogue jetty bill through the designer and world overrides', () => {
+  for (const def of [
+    buildings.riverDock,
+    { ...buildings.riverDock, price: 41000, materials: { logs: 41, gravel: 12 } },
+  ])
+    for (const style of buildingStyles('riverDock')) {
+      const quote = buildingDesignQuote('riverDock', def, style.id, 'standard', 'model-1');
+      assert.equal(quote.price, def.price);
+      assert.deepEqual(quote.materials, def.materials);
+      assert.equal(quote.capacity, def.capacity);
+      assert.equal(quote.style?.id, style.id);
+    }
+  const store = buildingDesignQuote(
+    'riverDock',
+    buildings.riverDock,
+    'stone-gable',
+    'standard',
+    'model-2',
+  );
+  assert.ok(store.price > buildings.riverDock.price);
+  assert.ok(store.materials.blocks > 0, 'an enclosed tackle store retains its shell');
+});

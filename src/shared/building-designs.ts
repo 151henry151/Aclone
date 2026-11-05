@@ -167,13 +167,14 @@ export function buildingDesignQuote(
   if (style !== undefined && !selected) throw Error('Choose a valid building style');
   if (!scale) throw Error('Choose a size available for this building');
   if (!selected && scale.id !== 'standard') throw Error('Choose a style for this size');
-  if (!selected)
+  // The plain river jetty has no enclosed wall/roof shell to restyle.
+  if (!selected || (kind === 'riverDock' && (!model || model.index === 0)))
     return {
       price: def.price,
       capacity: def.capacity,
       materials: { ...def.materials },
       size: scale,
-      style: undefined,
+      style: selected,
     };
   const shell = Math.max(
     6,

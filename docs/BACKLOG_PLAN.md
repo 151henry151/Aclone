@@ -109,6 +109,8 @@ All ten flows now pass. Inspect mobile map, winter tracks and 1 cm thaw screensh
 retain evidence under `output/world-revision-evidence/browser/`. TypeScript,
 changed-file Prettier and `git diff --check` pass. No release/deployment performed.
 
+**Lightmun freeze slice done and pushed:** `f88efd6` (remote SHA verified).
+
 ## Shipped-claim review
 
 Verdicts below compare each of the **20** shipped bullets with the implementation
@@ -4352,3 +4354,16 @@ existing additional-building variants; only the plain landing's bill uses the
 catalogue directly. The existing browser criteria remain unchanged and must
 verify both actual construction and supply at that bill. Run building-design,
 construction-expansion, civics-construction and river-dock tests plus TypeScript.
+
+**Plain river landing bill verification:** the new unit regression first fails
+at 32,401 versus the catalogue 30,000; the earlier actual browser preview fails
+with the generic masonry shell. Bypass that shell only for the plain river
+landing, preserving the selected finish and catalogue overrides. All 23 relevant
+tests pass (building designs, construction expansion, civics construction, river
+docks; 3.8 seconds). Both real browser construction/mooring scenarios pass in
+3.1 minutes: refusal at the wrong orientation, exact 30 logs/10 gravel/3s quote,
+actual cash/material deduction and completion, canal boat and motorboat boarding,
+local elevation, disembark/reconnect/reboard with unchanged fuel/mooring, and
+larger-vessel refusal. Inspect preview/refusal/reconnected screenshots; retain
+six under `output/river-handoff-verification/construction/`. TypeScript,
+changed-file Prettier and diff checks pass.

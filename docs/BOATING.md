@@ -21,6 +21,10 @@ actual empty boat moored there; retrieve that particular boat from that berth. T
 boathouse puts it away inside. Different owned boats have independent moorings.
 Passengers board and disembark at the dock too.
 
+The plain Log landing costs 30 logs, 10 gravel and 3s before tax at world defaults.
+Unreleased construction preserves that catalogue bill for every finish; variants
+with an enclosed building retain their extra materials and cost.
+
 A player-built river dock works like the pier for small craft: it boards boats
 you already own from the landing behind its log crib and leaves them moored at
 the jetty end on the river. World size limits default to 14 m length and 3.6 m
