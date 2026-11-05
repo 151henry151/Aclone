@@ -1,9 +1,9 @@
+import { communicationRules } from '../shared/communication-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, World } from '../shared/types';
 import type { radioView } from '../shared/radio';
 import { radioRules } from '../shared/radio-rules';
 import { vehicleDef } from '../shared/vehicle-config';
-import { MAX_CHAT_LENGTH } from '../shared/messages';
 type View = ReturnType<typeof radioView>;
 export interface RadioMessage {
   world: string;
@@ -178,7 +178,10 @@ export class RadioConsole {
       if (view && document.activeElement !== el) el.value = String(view.config[key]);
     }
     this.input('handle').maxLength = r.radioHandleLength;
-    this.input('text').maxLength = Math.min(r.radioMaxLength, MAX_CHAT_LENGTH);
+    this.input('text').maxLength = Math.min(
+      r.radioMaxLength,
+      communicationRules(w.settings).chatMaxLength,
+    );
     this.input('text').disabled = !enabled;
     root.querySelector('[data-radio-keyed]')!.textContent = view?.keyed.length
       ? view.keyed

@@ -1,6 +1,8 @@
+import defaults from '../../data/settings.json';
+import { communicationRules } from './communication-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types.ts';
-export const MAX_CHAT_LENGTH = 1200;
+export const MAX_CHAT_LENGTH = defaults.chatMaxLength;
 type Message = World['messages'][number];
 // Opt-in server buffer: preserve bursts between durable saves without growing
 // the shared world snapshot or browser chat history.
@@ -28,7 +30,7 @@ export function chatText(
   w: World,
   p: Player,
   value: unknown,
-  max = MAX_CHAT_LENGTH,
+  max = communicationRules(w.settings).chatMaxLength,
   moderated = true,
 ) {
   if (moderated && (p.muted || w.settings.chatLocked)) throw Error('Chat is currently muted');

@@ -1,3 +1,4 @@
+import type { CommunicationRules } from './communication-rules';
 import type { CalendarRules } from './calendar-rules';
 import type { AlpineRules } from './alpine-rules';
 import type { ClimateRules } from './climate-rules';
@@ -316,6 +317,7 @@ export interface Zone {
 export interface Settings
   extends
     Partial<CalendarRules>,
+    Partial<CommunicationRules>,
     Partial<AlpineRules>,
     Partial<ClimateRules>,
     Partial<EconomyRules>,

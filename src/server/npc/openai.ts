@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
+import {
+  decisionSchemaForRules,
+  requestCommunicationRules,
+  type Brain,
+  type BrainRequest,
+  type BrainResult,
+} from './decision.ts';
 import {
   conversationTool,
   conversationOutputLimit,
@@ -7,7 +13,7 @@ import {
   conversationRequest,
   conversationPreferences,
 } from './conversation.ts';
-import { outputLimit, turnTool } from './turn-tool.ts';
+import { outputLimit, turnTool, toolWithChatRules } from './turn-tool.ts';
 export { outputLimit, turnTool } from './turn-tool.ts';
 export class OpenAIBrain implements Brain {
   constructor(
@@ -17,7 +23,11 @@ export class OpenAIBrain implements Brain {
     private mode: 'plan' | 'conversation' = 'plan',
   ) {}
   async decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult> {
-    const tool = this.mode === 'conversation' ? conversationTool : turnTool;
+    const rules = requestCommunicationRules(request);
+    const tool = toolWithChatRules(
+      this.mode === 'conversation' ? conversationTool : turnTool,
+      rules,
+    );
     const response = await this.transport('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${this.apiKey}` },
@@ -47,8 +57,8 @@ export class OpenAIBrain implements Brain {
       throw Error('AI response did not contain one valid turn');
     const decision =
       this.mode === 'conversation'
-        ? conversationDecision(JSON.parse(calls[0].arguments))
-        : decisionSchema.parse(JSON.parse(calls[0].arguments));
+        ? conversationDecision(JSON.parse(calls[0].arguments), rules)
+        : decisionSchemaForRules(rules).parse(JSON.parse(calls[0].arguments));
     if (
       !body.usage ||
       !Number.isSafeInteger(body.usage.input_tokens) ||
@@ -61,11 +71,11 @@ export class OpenAIBrain implements Brain {
       decision,
       preferences:
         this.mode === 'conversation'
-          ? conversationPreferences(JSON.parse(calls[0].arguments))
+          ? conversationPreferences(JSON.parse(calls[0].arguments), rules)
           : undefined,
       gameplayRequest:
         this.mode === 'conversation'
-          ? conversationRequest(JSON.parse(calls[0].arguments))
+          ? conversationRequest(JSON.parse(calls[0].arguments), rules)
           : undefined,
       inputTokens: body.usage.input_tokens,
       outputTokens: body.usage.output_tokens,

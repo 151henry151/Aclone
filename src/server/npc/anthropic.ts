@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { decisionSchema, type Brain, type BrainRequest, type BrainResult } from './decision.ts';
+import {
+  decisionSchemaForRules,
+  requestCommunicationRules,
+  type Brain,
+  type BrainRequest,
+  type BrainResult,
+} from './decision.ts';
 import {
   conversationTool,
   conversationOutputLimit,
@@ -7,7 +13,7 @@ import {
   conversationRequest,
   conversationPreferences,
 } from './conversation.ts';
-import { outputLimit, turnTool } from './turn-tool.ts';
+import { outputLimit, turnTool, toolWithChatRules } from './turn-tool.ts';
 
 // Explain numeric/string limits as well as specifying them in the schema.
 // The full action union exceeds Claude strict grammar limits, so the original
@@ -43,14 +49,16 @@ export class AnthropicBrain implements Brain {
     private mode: 'plan' | 'conversation' = 'plan',
   ) {}
   async decide(request: BrainRequest, signal: AbortSignal): Promise<BrainResult> {
-    const tool =
-      this.mode === 'conversation'
-        ? {
-            name: conversationTool.name,
-            description: conversationTool.description,
-            input_schema: claudeSchema(conversationTool.parameters),
-          }
-        : claudeTurnTool;
+    const rules = requestCommunicationRules(request);
+    const base = toolWithChatRules(
+      this.mode === 'conversation' ? conversationTool : turnTool,
+      rules,
+    );
+    const tool = {
+      name: base.name,
+      description: base.description,
+      input_schema: claudeSchema(base.parameters),
+    };
     const response = await this.transport('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -101,14 +109,14 @@ export class AnthropicBrain implements Brain {
     let preferences;
     if (this.mode === 'conversation') {
       try {
-        gameplayRequest = conversationRequest(value);
-        preferences = conversationPreferences(value);
-        value = conversationDecision(value);
+        gameplayRequest = conversationRequest(value, rules);
+        preferences = conversationPreferences(value, rules);
+        value = conversationDecision(value, rules);
       } catch {
         throw Error('AI response did not contain one valid turn');
       }
     }
-    const parsed = decisionSchema.safeParse(value);
+    const parsed = decisionSchemaForRules(rules).safeParse(value);
     if (!parsed.success) throw Error('AI response did not contain one valid turn');
     const inputTokens = body.usage?.input_tokens;
     const outputTokens = body.usage?.output_tokens;

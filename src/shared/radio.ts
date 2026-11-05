@@ -1,10 +1,11 @@
+import { communicationRules } from './communication-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from './types';
 import { radioRules } from './radio-rules';
 import { vehicleDef } from './vehicle-config';
 import { terrainHeight } from './terrain';
 import { surfaceWaterLevel } from './ocean';
-import { chatText, MAX_CHAT_LENGTH } from './messages';
+import { chatText } from './messages';
 export interface RadioConfig {
   channel: number;
   handle: string;
@@ -209,7 +210,7 @@ export function radioAction(w: World, p: Player, a: Action) {
       w,
       p,
       a.text,
-      Math.min(r.radioMaxLength, MAX_CHAT_LENGTH),
+      Math.min(r.radioMaxLength, communicationRules(w.settings).chatMaxLength),
       r.radioModeration,
     );
     need(!s.transmitters.has(p.id), 'Your microphone is already keyed');

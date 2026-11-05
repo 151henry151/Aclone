@@ -1,3 +1,4 @@
+import { communicationRules, communicationRuleFields } from '../shared/communication-rules';
 import { calendarRules, calendarRuleFields } from '../shared/calendar-rules';
 import { alpineRules, alpineRuleFields } from '../shared/alpine-rules';
 import { climateRules, climateRuleFields } from '../shared/climate-rules';
@@ -119,6 +120,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(climateRuleFields),
     ...Object.keys(alpineRuleFields),
     ...Object.keys(calendarRuleFields),
+    ...Object.keys(communicationRuleFields),
     ...Object.keys(economyRuleFields),
     ...Object.keys(loanRuleFields),
     ...Object.keys(creditRuleFields),
@@ -212,6 +214,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Choose one reusable implement per material, or no implement. Workshop tools remain production inputs. New tasks use current requirements; started loads retain their reservation and finish time. These rules grant no items.</p></fieldset>`;
+  const communication = communicationRules(settings);
+  const communicationFields = `<fieldset class="boat-death-settings"><legend>Communication</legend>${Object.entries(
+    communicationRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        communication[key as keyof typeof communication],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Chat includes public, private, family and resident replies. CB uses the smaller of its own limit and this limit. Existing messages and drafts are preserved. Group invitations select one interested resident; zero removes only the shared reply delay. AI generation budgets remain separate ceilings.</p></fieldset>`;
   const calendar = calendarRules(settings);
   const calendarFields = `<fieldset class="boat-death-settings"><legend>Calendar</legend>${Object.entries(
     calendarRuleFields,
@@ -676,6 +694,7 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringRateFields +
     farmYieldFields +
     fishingFields +
+    communicationFields +
     calendarFields +
     alpineFields +
     climateFields +

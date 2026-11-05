@@ -1,3 +1,4 @@
+import { communicationRules } from '../../shared/communication-rules';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { skillFits } from '../../shared/survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -96,7 +97,9 @@ export function groupResponder<T extends GroupCandidate>(
   now: number,
 ): T | undefined {
   // Shared cooldown survives restart and prevents repeated group pings fanning out.
-  if (candidates.some((c) => now - (c.state.groupReplyAt ?? -Infinity) < 30000)) return;
+  const delay = communicationRules(w.settings).npcGroupReplyCooldown * 1000;
+  if (delay > 0 && candidates.some((c) => now - (c.state.groupReplyAt ?? -Infinity) < delay))
+    return;
   return candidates
     .flatMap((c) => {
       const p = w.players[c.state.playerId];

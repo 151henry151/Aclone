@@ -1,9 +1,10 @@
+import type { CommunicationRules } from '../../shared/communication-rules';
 import { businessRequestSchema } from './business-requests.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { preferencesSchema } from './agenda.ts';
 import { gameplayRequestSchema, employmentRequestSchema } from './commitments.ts';
-import { decisionSchema, type Decision } from './decision.ts';
+import { decisionSchema, decisionSchemaForRules, type Decision } from './decision.ts';
 export const conversationSchema = decisionSchema.pick({ notebook: true, speech: true }).extend({
   notebook: decisionSchema.shape.notebook.describe(
     'Update only this speaker/channel relationship summary: their requests, preferences and social context. Attribute advice to its speaker rather than saving it as a verified economic rule. Use currentConversation.speakerName for identity. Do not store your current skills, job, cash or inventory as remembered facts; those come from characterFacts. Correct prior mistakes and never summarize other private conversations.',
@@ -11,6 +12,9 @@ export const conversationSchema = decisionSchema.pick({ notebook: true, speech: 
   gameplayRequest: gameplayRequestSchema.nullable(),
   preferences: preferencesSchema.nullable().optional(),
 });
+function conversationSchemaForRules(settings: Partial<CommunicationRules>) {
+  return conversationSchema.extend({ speech: decisionSchemaForRules(settings).shape.speech });
+}
 // Providers require all strict-tool properties, while old saved requests remain readable.
 const toolSchema = conversationSchema.extend({
   preferences: preferencesSchema.nullable(),
@@ -32,8 +36,14 @@ export const conversationTool = {
   parameters,
 };
 export const conversationOutputLimit = 2200;
-export function conversationDecision(value: unknown): Decision {
-  const c = conversationSchema.parse({ gameplayRequest: null, ...(value as object) });
+export function conversationDecision(
+  value: unknown,
+  settings: Partial<CommunicationRules> = {},
+): Decision {
+  const c = conversationSchemaForRules(settings).parse({
+    gameplayRequest: null,
+    ...(value as object),
+  });
   return {
     notebook: c.notebook,
     speech: c.speech,
@@ -44,8 +54,9 @@ export function conversationDecision(value: unknown): Decision {
   };
 }
 
-export function conversationRequest(value: unknown) {
-  return conversationSchema.parse({ gameplayRequest: null, ...(value as object) }).gameplayRequest;
+export function conversationRequest(value: unknown, settings: Partial<CommunicationRules> = {}) {
+  return conversationSchemaForRules(settings).parse({ gameplayRequest: null, ...(value as object) })
+    .gameplayRequest;
 }
 
 /** Catch common first-person action promises when the model omitted the request.
@@ -63,6 +74,10 @@ export function unqueuedPromise(text: string) {
   );
 }
 
-export function conversationPreferences(value: unknown) {
-  return conversationSchema.parse({ gameplayRequest: null, ...(value as object) }).preferences;
+export function conversationPreferences(
+  value: unknown,
+  settings: Partial<CommunicationRules> = {},
+) {
+  return conversationSchemaForRules(settings).parse({ gameplayRequest: null, ...(value as object) })
+    .preferences;
 }

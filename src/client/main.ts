@@ -1,3 +1,4 @@
+import { communicationRules } from '../shared/communication-rules';
 import { boatNavigationRules } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules } from '../shared/vehicle-running-rules';
 import { fishingRules } from '../shared/fishing-rules';
@@ -707,6 +708,9 @@ function updateHud() {
     } catch {}
   }
   const goal = waypoints.point;
+  ($('chat-input') as HTMLInputElement).maxLength = communicationRules(
+    world.settings,
+  ).chatMaxLength;
   $('waypoint-hud').hidden = !goal || !mapAvailable(world, me);
   if (goal) $('waypoint-name').textContent = goal.name;
   $('location').textContent = mobile.active

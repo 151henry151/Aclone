@@ -424,5 +424,7 @@
   "alpinePermanentSnow": true,
   "alpineSnowBase": 0.018,
   "alpineSnowIntensity": 0.06,
-  "calendarLunarDays": 28
+  "calendarLunarDays": 28,
+  "chatMaxLength": 1200,
+  "npcGroupReplyCooldown": 30
 }

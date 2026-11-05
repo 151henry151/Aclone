@@ -1,3 +1,4 @@
+import { communicationRuleFields } from './communication-rules';
 import { calendarRuleFields } from './calendar-rules';
 import { alpineRuleFields, alpineRulesError } from './alpine-rules';
 import { climateRuleFields, climateRulesError } from './climate-rules';
@@ -1979,6 +1980,7 @@ export function act(w: World, id: string, a: Action): string {
             Object.hasOwn(climateRuleFields, key) ||
             Object.hasOwn(alpineRuleFields, key) ||
             Object.hasOwn(calendarRuleFields, key) ||
+            Object.hasOwn(communicationRuleFields, key) ||
             Object.hasOwn(flightRuleFields, key) ||
             Object.hasOwn(walkingRuleFields, key) ||
             Object.hasOwn(gatheringSceneryFields, key) ||
@@ -2012,6 +2014,8 @@ export function act(w: World, id: string, a: Action): string {
         const npcBusinessLoadField =
           npcBusinessLoadRuleFields[key as keyof typeof npcBusinessLoadRuleFields];
         const npcJourneyField = npcJourneyRuleFields[key as keyof typeof npcJourneyRuleFields];
+        const communicationField =
+          communicationRuleFields[key as keyof typeof communicationRuleFields];
         const calendarField = calendarRuleFields[key as keyof typeof calendarRuleFields];
         const alpineField = alpineRuleFields[key as keyof typeof alpineRuleFields];
         const climateField = climateRuleFields[key as keyof typeof climateRuleFields];
@@ -2085,6 +2089,8 @@ export function act(w: World, id: string, a: Action): string {
         if (npcJourneyField)
           num(v, npcJourneyField.min, npcJourneyField.max, npcJourneyField.step === 1);
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
+        if (communicationField)
+          num(v, communicationField.min, communicationField.max, communicationField.step === 1);
         if (calendarField) num(v, calendarField.min, calendarField.max);
         if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);

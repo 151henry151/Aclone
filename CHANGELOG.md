@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.119.0] - 2026-11-04
+
+### Added
+
+- Configure chat length and group-reply cooldown per world; apply local limits consistently to public, private, family, CB and resident messages while preserving moderation, drafts and history.
+
 ## [0.118.0] - 2026-11-04
 
 ### Added

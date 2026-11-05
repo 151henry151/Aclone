@@ -1,3 +1,4 @@
+import { communicationRules } from './communication-rules';
 import { economyRules } from './economy-rules';
 import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -191,7 +192,7 @@ export function socialAction(w: World, p: Player, a: Action) {
     } else if (op === 'message') {
       check(!p.muted && !w.settings.chatLocked, 'Chat is currently muted');
       check(current, 'Join a family first');
-      const body = text(1200).parse(a.text);
+      const body = text(communicationRules(w.settings).chatMaxLength).parse(a.text);
       for (const id of current.members) say(w, `${p.name} · ${current.name}`, body, 'chat', id);
     } else throw Error('Unknown family action');
     w.families = all;

@@ -1,3 +1,4 @@
+import { communicationRules, type CommunicationRules } from '../../shared/communication-rules';
 import { economyRuleFields } from '../../shared/economy-rules';
 import { maxCoordinate } from '../../shared/world-limits';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -296,6 +297,24 @@ export const decisionSchema = z
       ),
   })
   .strict();
+/** Bind only speech to the world's limit; the default schema stays compatible. */
+export function decisionSchemaForRules(settings: Partial<CommunicationRules> = {}) {
+  const max = communicationRules(settings).chatMaxLength;
+  if (max === MAX_CHAT_LENGTH) return decisionSchema;
+  return decisionSchema.extend({
+    speech: decisionSchema.shape.speech
+      .unwrap()
+      .extend({
+        text: z.string().min(1).max(max),
+      })
+      .nullable(),
+  });
+}
+export function requestCommunicationRules(request: BrainRequest) {
+  return communicationRules(
+    (request.observation as { worldRules?: Partial<CommunicationRules> } | null)?.worldRules,
+  );
+}
 export type Decision = z.infer<typeof decisionSchema>;
 export interface BrainRequest {
   instructions: string;

@@ -4894,3 +4894,76 @@ invalid zero period is blocked by the browser and rejected by server/unit import
 validation; saved 14-day settings survive reload. Reviewed screenshots show the
 same night changing from moonlit to dark. Prepare 0.118.0 with prefixed build and
 formatting, then deploy the exact pushed commit and verify before announcing.
+
+0.118.0 is done and live: pushed commit `c611299` matches the server; health,
+client and website report 0.118.0, prefixed assets and the read-only browser pass.
+SQLite backup: `/var/lib/aclone/backups/pre-deploy-20261104-233534.sqlite`;
+website rollback: `/var/backups/aclone-website/site-20261104-233655.tar.gz`.
+[Verified moonlight screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567760016243560479).
+Evidence: `output/release-0.118.0/`.
+
+### Communication rules
+
+Before production edits: expose `chatMaxLength` (default 1,200 UTF-16 characters,
+integer range 1–12,000) and `npcGroupReplyCooldown` (default 30 real seconds,
+range 0–86,400) in Communication. Apply the chat limit to public/private player
+and resident speech, provider schemas and validation, and both chat/CB inputs.
+CB retains the smaller of its radio limit and the local chat limit. Preserve
+blank-text rejection, moderation, command restrictions, history, drafts and
+complete text; never silently truncate. Provider token/transport budgets remain
+independent ceilings, not a promise to generate the maximum permitted text.
+Group replies retain one interested respondent and existing qualification/needs/
+preference filters; zero disables only the shared delay, and saved reply times
+survive edits/restarts. Missing keys retain shipped defaults.
+
+Completion criteria: `npx tsx --test tests/communication-rules.test.ts` starts
+red on missing settings and proves default/custom boundaries, public/private/NPC
+speech, muted/locked/blank refusals, CB limits, cooldown boundaries and saved
+state, validation and creation/editor/summary/observation/save/design round trips.
+Mock both provider transports in plan and conversation mode to prove their
+advertised and accepted limits agree, including limits above 1,200 and default
+rejection of 1,201. Run affected messages/radio/group/conversation/provider/guide
+checks, `npx tsc --noEmit`, production build and changed-file Prettier.
+
+Browser: disposable world, F10 → Rules → Communication displays 1,200/30;
+edit to 80/5, verify live chat and CB maxlength, preserved drafts/history, an
+80-character sent message and blank/muted refusals. Raise to 1,600 and send a
+complete message longer than 1,200; reload retains settings and history. Zero
+chat length is rejected without changing the saved value. Capture the controls
+and visible chat flow, inspect screenshots and require no browser errors. Release,
+deploy, verify and post a screenshot announcement only after criteria pass.
+
+Communication audit also finds family chat's independent 1,200-character copy.
+Include that chat surface in the same local rule, preserving its private copies
+and existing trimming/moderation. Durable letters keep their separate limit.
+Add a failing family boundary/UI test before changing it. CB's independent
+maximum remains 1,200, so a larger parish limit does not raise its radio cap.
+
+Communication red verification: all nine unit/provider cases fail for the missing
+settings, fixed provider ceiling or unchanged family boundary; the browser fails
+on the absent Communication input. Logs: `output/communication-rules/red.log`
+and `browser-red.log`. Proceed with production changes.
+
+The first relevant run passes 86/87 checks; the added observed fields put the
+unchanged 96 KB NPC request test 35 bytes over budget. Compact equivalent
+reliability guidance rather than enlarge the budget. TypeScript catches an
+over-specific Zod generic shared by two different tool shapes; use the common
+JSON-schema property shape. The browser proves the live settings update, then
+hits an editor-refresh race while scrolling for its screenshot. Capture the
+filled controls before Apply and rerun all remaining assertions. A CB fixture
+also needed its pilot online to test transmission limits rather than boarding.
+
+Communication completion criteria pass: all 89 relevant checks, including live
+controller publication of complete >1,200-character replies through planning and
+dialogue; TypeScript is clean. The final browser run passes (1.8 minutes): local
+chat/CB caps, draft/history preservation, blank and muted states, longer public
+and private family messages, reload and invalid-zero rejection. Reviewed
+screenshots now show the controls unobscured and the complete chat ending.
+Fixture corrections preserve the established whitespace trimming and exact
+80-character boundary. Prepare 0.119.0, run the prefixed build and formatting,
+then deploy the pushed commit and verify before its screenshot announcement.
+
+0.119.0 release gates pass: the prefixed production build includes a clean
+TypeScript check; all 17 guide checks pass after release documentation changes.
+Changed files are formatted and `git diff --check` is clean. No production
+player state has been manually changed.

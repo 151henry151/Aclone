@@ -1508,3 +1508,26 @@ close an existing dock to a vessel; no dock, mooring, cargo or fuel is deleted.
 Restore the limits to regain access. Placement and boarding refusals quote local
 limits, and Inventory shows them. Save/design and summary/observation support
 and missing-field defaults follow the other navigation rules.
+
+## Communication rules
+
+F10 → Rules → **Communication** sets `chatMaxLength` (default 1,200 UTF-16
+characters, integer range 1–12,000) for public, private, family and resident
+messages. Most ordinary characters count once; some emoji count twice. Blank
+messages are rejected. Existing moderation and family privacy remain in force.
+CB uses the smaller of this value and `radioMaxLength`; durable letters retain
+their separate limit. Inputs update to the local cap, while existing messages
+and drafts remain intact. If a draft exceeds a newly lowered limit, shorten it
+before sending; the server rejects oversized submissions without truncation.
+
+`npcGroupReplyCooldown` defaults to 30 real seconds (range 0–86,400). Group
+salutations still select at most one interested, available resident. Zero removes
+only the shared delay; it does not make uninterested/offline residents answer.
+Changing the setting keeps saved reply times, so the new delay is measured from
+the same last reply, including after restart.
+
+NPC providers receive the local chat limit in their response schema and validate
+it before publication. Their independent generation budgets remain ceilings;
+a higher chat limit does not promise longer AI replies. Old worlds with missing
+keys use defaults. Creation, summaries, resident observations, saves and portable
+world designs include both settings. Edits neither erase history nor reset time.

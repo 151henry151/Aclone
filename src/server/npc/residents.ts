@@ -74,7 +74,7 @@ import { travelPrep, drivePlan } from './travel.ts';
 import { leaveCombat } from '../../shared/combat.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
-import { decisionSchema, type Brain, type BrainResult, type Step } from './decision.ts';
+import { decisionSchemaForRules, type Brain, type BrainResult, type Step } from './decision.ts';
 import type { NpcConfig } from './config.ts';
 import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
@@ -107,7 +107,7 @@ import {
   recordDelivery,
 } from './commitments.ts';
 import { homecomingPlan, offlineReadiness, returnDelay } from './homecoming.ts';
-import { outputLimit, turnTool } from './turn-tool.ts';
+import { outputLimit, turnTool, toolWithChatRules } from './turn-tool.ts';
 export interface ResidentOptions {
   config: NpcConfig;
   brain: Brain;
@@ -1711,7 +1711,10 @@ export class Residents {
         ('preparedBody' in decisionRequest
           ? (decisionRequest.preparedBody as string)
           : undefined) ?? JSON.stringify(decisionRequest),
-      ) + (r.config.provider === 'jev' ? 0 : Buffer.byteLength(JSON.stringify(turnTool)));
+      ) +
+      (r.config.provider === 'jev'
+        ? 0
+        : Buffer.byteLength(JSON.stringify(toolWithChatRules(turnTool, w.settings))));
     if (!chatOnly && bytes > 96000) {
       // Model availability is not a logout. Preserve visible presence and back off.
       p.online = !r.state.inSpace;
@@ -1877,7 +1880,7 @@ export class Residents {
           };
           const chatBytes =
             Buffer.byteLength(JSON.stringify(dialogueRequest)) +
-            Buffer.byteLength(JSON.stringify(conversationTool));
+            Buffer.byteLength(JSON.stringify(toolWithChatRules(conversationTool, w.settings)));
           const chatReservation =
             chatBytes <= 96000
               ? this.budget.reserve(
@@ -1910,7 +1913,9 @@ export class Residents {
                 chat.cacheReadTokens,
               );
               if (discardDismissedChat()) return;
-              const d = decisionSchema.parse(chat.decision);
+              const d = decisionSchemaForRules(
+                (this.worlds.get(r.state.world) ?? current).settings,
+              ).parse(chat.decision);
               if (d.speech?.text.trim().startsWith('*')) throw Error('Invalid conversation');
               r.state.dialogueAttempt.done = true;
               conversationCompleted = true;
@@ -2252,7 +2257,7 @@ export class Residents {
     };
     const bytes =
       Buffer.byteLength(JSON.stringify(request)) +
-      Buffer.byteLength(JSON.stringify(conversationTool));
+      Buffer.byteLength(JSON.stringify(toolWithChatRules(conversationTool, w.settings)));
     if (bytes > 96000) return;
     const reservation = this.budget.reserve(
       r.config.id,
@@ -2273,7 +2278,7 @@ export class Residents {
         answer.cacheReadTokens,
       );
       if (this.closed || signal.aborted || this.memory.paused(r.config.id)) return;
-      const speech = decisionSchema.parse(answer.decision).speech;
+      const speech = decisionSchemaForRules(w.settings).parse(answer.decision).speech;
       if (answer.gameplayRequest || !speech || speech.text.trim().startsWith('*')) return;
       return { text: speech.text, to: replyTo ?? null };
     } catch {
@@ -2291,7 +2296,7 @@ export class Residents {
     chatOnly = false,
     available?: ReturnType<typeof opportunityCounts>,
   ) {
-    const d = decisionSchema.parse(result.decision);
+    const d = decisionSchemaForRules(w.settings).parse(result.decision);
     if (d.speech?.text.trim().startsWith('*')) throw Error('NPC speech cannot run chat commands');
     r.state.pending = false;
     const addressed = !!r.state.helpQuestion;
