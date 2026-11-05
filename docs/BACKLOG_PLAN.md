@@ -4659,3 +4659,37 @@ fence generation remains empty, and marked batches survive static batching.
 TypeScript and changed-file Prettier/diff checks pass. Updated player-guide
 lookup/content tests pass as well. Evidence: `output/spaceport-wire-fix/`.
 Keep this fix unreleased; the announcement requested next covers live 0.115.0.
+
+Done: commit `f45e817568a54b1ebd3b881369e2cfb4608d0abe` is pushed to
+`backlog-implementation`. The wire correction remains unreleased.
+
+## Checkpoint announcement and additional airplane gift
+
+Henry explicitly requests a bot announcement in Discord's announcements channel,
+with screenshots of the playable 0.115.0 features, and one additional airplane for
+every existing human player, including players who already own one.
+
+Apply the gift once per eligible human account with an existing world character,
+prefer its Puddlewick character, and exclude NPCs and the known automated test
+account. Add one spare airframe without replacing existing aircraft, fuel, paint
+or other player state. Test selection and existing/new-aircraft cases before the
+live operation. Stop the service, back up SQLite, apply an atomic transaction
+with a persistent idempotency receipt, restart, and verify the saved counts.
+
+Verified: all 24 recipients have exactly one additional airframe after restart;
+the service is active. The script's state-preservation assertions and selection
+self-tests pass. Backup:
+`/var/lib/aclone/backups/pre-01150-airframes-20261105-031532.sqlite`.
+The private audit and idempotency receipt remain on the server; operational
+scripts and public announcement evidence are in `output/announcement-0.115.0/`
+and are not staged. Existing planes retain their fuel; spare airframes start
+empty under the existing hangar rules. This operation does not deploy the wire
+fix or resume an unfinished backlog feature.
+
+Done: publish the seven illustrated feature cards through `aclone-bot` to
+[Discord announcements](https://discord.com/channels/1562183434254680175/1565527790785404968/1567745710449754212).
+Verify the saved bot identity, channel, exact text, seven image dimensions and
+successful PNG responses. The post prominently states that all 24 recipients
+receive an additional airframe even when they already own one. Consolidate the
+new world-builder settings into one short paragraph. Screenshots use local
+in-game demonstration scenes; omit the unreleased wire fix from the announcement.
