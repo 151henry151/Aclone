@@ -245,7 +245,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>The lunar period controls both moon phases and lunar tides. Edits can change the current phase and water level immediately, without resetting time or changing tidal range. The decorative clock still rotates the sky independently; solar motion, crop days and existing deadlines are unchanged.</p></fieldset>`;
+    )}<p>The lottery interval uses economic game days. Existing paid rounds keep their deadline, tickets and price; later draws use the new interval. The lunar period controls both moon phases and lunar tides. Edits can change the current phase and water level immediately, without resetting time or changing tidal range. The decorative clock still rotates the sky independently; solar motion, crop days and existing deadlines are unchanged.</p></fieldset>`;
   const alpine = alpineRules(settings);
   const alpineFields = `<fieldset class="boat-death-settings"><legend>Alpine climate</legend>${Object.entries(
     alpineRuleFields,

@@ -4967,3 +4967,75 @@ then deploy the pushed commit and verify before its screenshot announcement.
 TypeScript check; all 17 guide checks pass after release documentation changes.
 Changed files are formatted and `git diff --check` is clean. No production
 player state has been manually changed.
+
+0.119.0 is done and live: pushed commit `fad879f` matches the server; game health,
+client and website report 0.119.0; prefixed assets and read-only browser checks
+pass without errors. SQLite backup:
+`/var/lib/aclone/backups/pre-deploy-20261104-235855.sqlite`; website rollback:
+`/var/backups/aclone-website/site-20261105-000011.tar.gz`.
+[Verified Communication screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1567765596593201222).
+Evidence: `output/release-0.119.0/`.
+
+### Calendar rules — lottery schedule
+
+Before production edits: expose `lotteryDrawDays` in Calendar, default 365 game
+days, integer range 1–3,650. Keep lottery timing explicitly in economic game
+days (600 real seconds), independent of decorative clock, lunar cycle and the
+pending year/season controls. This makes the lottery schedule independently
+configurable without rewriting a paid round's deadline. First activation uses
+the next interval boundary after world creation; existing rounds retain drawAt,
+tickets, pot and ticket price. After that draw, use the current interval from
+its saved deadline, skipping empty elapsed intervals as before. Never pay twice.
+Disabling entries still honours paid tickets; no-ticket pots still carry forward.
+Use accurate local schedule/countdown text, including before the first draw,
+and call the UI Parish lottery instead of claiming every custom cycle is annual.
+Retain recognition of historical annual-prize ledger records in statistics.
+
+Completion criteria: add/run red `tests/lottery-rules.test.ts` proving default
+and missing-field 365-day timing, custom first/next draws, unchanged pending
+rounds, downtime bounds, cash conservation/offline payouts/exactly-once reload,
+empty/disabled cases, invalid values and creation/editor/summary/observation/
+save/design round trips. Run affected lottery/statistics/guide/lunar tests,
+TypeScript and changed-file formatting; do not run the full suite.
+
+Browser: disposable world, edit Calendar from 365 to 7; open Parish lottery and
+verify local seven-day cadence/countdown and empty history. Buy tickets, change
+the setting to 3 and verify the paid round's countdown stays at seven days.
+Show an insufficient-cash refusal and disabled-entry state; advance only the
+local fixture to its due time, check the winner and next three-day round, then
+reload to verify no duplicate payout. Reject zero without changing the saved
+rule. Capture/review the live controls and lottery panel. Release, deploy,
+verify and announce with a screenshot only after all gates pass.
+
+Lottery red verification: all five cases fail on the missing rule, fixed
+schedule or unrecognized new prize label. The browser fails on the missing
+Calendar interval field. Evidence: `output/lottery-rules/red.log` and
+`browser-red.log`. Proceed with the smallest schedule change.
+
+Lottery unit gates pass: 35 relevant checks, clean TypeScript and all 17 guide
+checks after docs. The existing browser purchase/contribution flow passes. The
+new flow reaches the disabled-state check with the remembered contribution
+input still focused; normal panel refresh intentionally waits for a draft to
+lose focus. Use the settings action and click the heading to finish editing,
+then verify the same disabled-state and payout criteria. No criterion is removed.
+
+The second browser run shows that focus was not the root cause: `tick:false`
+also disables periodic snapshots. Direct fixture mutations cannot reach the
+client until another network action. Run the normal disposable server loop,
+start with the lottery disabled, then enable it through F10 alongside the
+seven-day interval. Retain the focus-safe refresh check and all original payout,
+reload and refusal assertions; this exercises actual live delivery.
+
+Lottery completion criteria pass: 35 relevant tests plus the published-guide
+check (36 unique checks), clean TypeScript, both browser flows (existing entry/
+contribution and the 1.7-minute custom-schedule flow), and a short separate
+Calendar screenshot capture. Reviewed controls, pending-round and winner
+screenshots show the local interval, protected deadline, disabled entries,
+paid winner and next interval. Zero rejects; reload retains the result without
+another payout. Prepare 0.120.0 with release docs, prefixed build and formatting;
+then deploy the pushed commit and verify before announcing.
+
+0.120.0 release gates pass: prefixed production build and TypeScript, all 17
+guide checks after release metadata, changed-file formatting and clean diff
+checks. Deployment and public announcement follow; live player state remains
+untouched apart from normal game simulation.

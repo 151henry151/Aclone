@@ -63,6 +63,7 @@ export function recordPlayerMoney(w: World, e: Ledger) {
     'course prize',
     'combat reward',
     'Annual lottery prize',
+    'Lottery prize',
   ].includes(e.reason);
   const participant = (id: string) =>
     w.players[id] ?? (id.endsWith(':bank') ? w.players[id.slice(0, -5)] : undefined);

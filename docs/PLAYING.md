@@ -634,3 +634,15 @@ gift readiness updates without erasing your draft. A smaller limit leaves your
 balances and agreed investment claims intact. Gifts still need an online
 recipient and available cash; investments still require earned, collectable
 returns. These are per-transfer caps, not taxes or total-balance limits.
+
+## Parish lottery
+
+If enabled, open **F9 → Parish lottery** to buy tickets or contribute your own
+cash to the jackpot. This uses in-game money only. The panel shows your tickets,
+odds, the saved draw countdown and recent winners. Every contribution goes to
+the pot; no money is generated. Insufficient cash rejects the purchase.
+
+World owners choose the interval (365 game days by default). Changing it keeps
+the current round's deadline and paid tickets; later rounds use the new interval.
+Disabling new entries still honours existing tickets, including offline winners.
+Empty draws carry the pot forward. Ticket price changes apply next round.

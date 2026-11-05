@@ -31,14 +31,14 @@ test('players can fund and enter the optional lottery with clear cash units', as
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
     await page.keyboard.press('F9');
-    await page.getByRole('button', { name: 'Annual lottery', exact: true }).click();
+    await page.getByRole('button', { name: 'Parish lottery', exact: true }).click();
     await page.getByLabel('Tickets to buy').fill('2');
     await page.getByRole('button', { name: /Buy tickets/ }).click();
     await expect.poll(() => w.lottery?.tickets[p.id]).toBe(2);
     await page.getByLabel('Jackpot contribution in denarii').fill('3.50');
     await page.getByRole('button', { name: 'Contribute own cash' }).click();
     await expect.poll(() => w.lottery?.pot).toBe(550);
-    await expect(page.getByRole('dialog', { name: 'Annual lottery' })).toContainText('5.5d');
+    await expect(page.getByRole('dialog', { name: 'Parish lottery' })).toContainText('5.5d');
   } finally {
     await page.close();
     await app.close();

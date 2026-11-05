@@ -4,7 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.119.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.120.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.120.0 lets world builders set the lottery interval in Calendar; pending rounds keep their deadlines and paid tickets. See [Lottery rules](docs/WORLD_BUILDING.md#optional-parish-lottery).
 
 Version 0.119.0 lets world owners set chat length and the delay between group replies in F10 → Rules → Communication. See [Communication rules](docs/WORLD_BUILDING.md#communication-rules).
 

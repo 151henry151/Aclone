@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import defaults from '../../data/settings.json';
+import { calendarRules } from './calendar-rules';
+import { DAY_SECONDS } from './environment';
 import type { World, Player, Action } from './types.ts';
 import { log } from './simulation.ts';
 import { say } from './messages.ts';
-export const LOTTERY_YEAR = 600 * 365;
+/** Named default retained for old callers; active rounds use local rules. */
+export const LOTTERY_YEAR = DAY_SECONDS * defaults.lotteryDrawDays;
+export function lotteryPeriod(w: Pick<World, 'settings'>) {
+  return DAY_SECONDS * calendarRules(w.settings).lotteryDrawDays;
+}
+export function nextLotteryDraw(w: Pick<World, 'time' | 'settings' | 'lottery'>) {
+  return w.lottery?.drawAt ?? (Math.floor(w.time / lotteryPeriod(w)) + 1) * lotteryPeriod(w);
+}
 export interface Lottery {
   pot: number;
   price: number;
@@ -15,7 +25,7 @@ function state(w: World): Lottery {
   return (w.lottery ??= {
     pot: 0,
     price: w.settings.lotteryTicketPrice,
-    drawAt: (Math.floor(w.time / LOTTERY_YEAR) + 1) * LOTTERY_YEAR,
+    drawAt: nextLotteryDraw(w),
     round: 1,
     tickets: {},
     history: [],
@@ -44,7 +54,7 @@ export function tickLottery(
   const amount = winner ? l.pot : 0;
   if (winner) {
     w.players[winner].cash += amount;
-    log(w, 'transfer', amount, 'lottery', winner, 'Annual lottery prize');
+    log(w, 'transfer', amount, 'lottery', winner, 'Lottery prize');
     l.pot = 0;
     say(
       w,
@@ -62,7 +72,8 @@ export function tickLottery(
   l.tickets = {};
   l.round++;
   l.price = w.settings.lotteryTicketPrice;
-  l.drawAt += (Math.floor((w.time - l.drawAt) / LOTTERY_YEAR) + 1) * LOTTERY_YEAR;
+  const period = lotteryPeriod(w);
+  l.drawAt += (Math.floor((w.time - l.drawAt) / period) + 1) * period;
 }
 export function lotteryAction(w: World, p: Player, a: Action) {
   if (!w.settings.lotteryEnabled) throw Error('This world has no lottery');

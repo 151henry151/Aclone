@@ -116,8 +116,9 @@ Changing the period can immediately change the current phase and tide, without
 resetting saved time. Moon phases follow the economic date, including across
 year boundaries; freezing or moving the decorative clock rotates the sky without
 resetting those phases. Existing five-day phase offset and binary-moon motion
-remain unchanged. Year length, season boundaries and lottery scheduling are
-separate pending rule batches.
+remain unchanged. Year length and season boundaries remain separate pending rule batches.
+`lotteryDrawDays` in the same Calendar fieldset independently controls the lottery
+interval; see [Parish lottery](#optional-parish-lottery).
 
 The period is available at world creation, appears in local rules and resident
 observations, and persists in saves and portable designs. Missing keys use 28;
@@ -382,9 +383,17 @@ Players can separately adjust **Engines**, **Effects & machinery**, **Ambience**
 
 Use **Quests** for ordered tutorials (read, gather, buy, study, take a job), including explicit rewards and reset-on-death policy. **Town events** announces recurring festivals/markets and links an existing quest. First day is measured from world creation; one game day is 600 real seconds. Repeat 0 means once. Events create no money and never replay a backlog of missed notices after downtime. Players find current events from the World menu. Both definitions travel with exported designs.
 
-## Optional annual lottery
+## Optional parish lottery
 
-Enable `lotteryEnabled` in Rules; `lotteryTicketPrice` is a positive integer in hundredths of a denarius and changes at the next round. It defaults off. The World menu exposes entry, jackpot contributions, odds and recent results. Draws use 365 game days from world creation (about 61 hours), independent of decorative clock speed. Each round admits at most 100 tickets per player, 10,000 total.
+Enable `lotteryEnabled` in Rules; `lotteryTicketPrice` is a positive integer in hundredths of a denarius and changes at the next round. It defaults off. The World menu exposes entry, jackpot contributions, odds and recent results. Set `lotteryDrawDays` in Calendar to choose an interval of 1–3,650 whole game days
+(default 365, about 61 real hours). A game day remains 600 real seconds,
+independent of decorative clock speed and lunar period. First activation uses
+the next interval boundary measured from world creation. Existing rounds retain
+their deadline, pot, tickets and ticket price when the interval changes; later
+draws use the new interval, measured from that deadline. The panel shows the
+saved countdown separately from the current interval. Missing fields use 365;
+creation, summaries, resident observations, saves and portable designs include
+the setting. Invalid values reject the edit/import atomically. Each round admits at most 100 tickets per player, 10,000 total.
 
 Every coin comes from a player's cash: no treasury faucet or house cut. Empty draws carry their jackpot; downtime resolves the existing draw once, without simulating fictional entries. Paid tickets remain valid if the owner disables new entries. Offline winners receive local cash, including after character death. Jackpot, entries, deadline and result history persist across restarts; exported designs omit those balances. This is in-game money only.
 

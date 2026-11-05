@@ -2091,7 +2091,7 @@ export function act(w: World, id: string, a: Action): string {
         if (gatheringRateField) num(v, gatheringRateField.min, gatheringRateField.max, true);
         if (communicationField)
           num(v, communicationField.min, communicationField.max, communicationField.step === 1);
-        if (calendarField) num(v, calendarField.min, calendarField.max);
+        if (calendarField) num(v, calendarField.min, calendarField.max, calendarField.step === 1);
         if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);
         if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);

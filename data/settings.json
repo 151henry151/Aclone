@@ -426,5 +426,6 @@
   "alpineSnowIntensity": 0.06,
   "calendarLunarDays": 28,
   "chatMaxLength": 1200,
-  "npcGroupReplyCooldown": 30
+  "npcGroupReplyCooldown": 30,
+  "lotteryDrawDays": 365
 }

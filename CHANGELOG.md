@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.120.0] - 2026-11-05
+
+### Added
+
+- Configure lottery draw intervals per world; preserve pending deadlines, tickets and prizes, and show the local schedule in the parish lottery panel.
+
 ## [0.119.0] - 2026-11-04
 
 ### Added

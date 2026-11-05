@@ -1522,6 +1522,13 @@ function refreshTradingPrices() {
       world.creator?.books,
       world.creator?.townEvents,
       world.lottery,
+      panel === 'lottery'
+        ? [
+            world.settings.lotteryEnabled,
+            world.settings.lotteryDrawDays,
+            world.settings.lotteryTicketPrice,
+          ]
+        : null,
       world.towJobs,
       reboardReason(world, me) === undefined,
       tenderOf(world, me)?.towedBy,
@@ -2001,7 +2008,7 @@ function renderPanel() {
     return;
   }
   if (panel === 'lottery') {
-    modal('Annual lottery', lotteryPanel(world, me));
+    modal('Parish lottery', lotteryPanel(world, me));
     return;
   }
   if (panel === 'townEvents') {
@@ -2130,7 +2137,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Annual lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('HUD & layout', 'hud')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Parish lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('HUD & layout', 'hud')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }

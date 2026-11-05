@@ -2,6 +2,15 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.120.0 — Choose when the parish lottery draws
+
+The Calendar fieldset now offers a lottery interval in whole game days. The
+default remains 365 days, independent of the decorative clock. Existing rounds
+keep their deadlines and paid tickets; the following rounds use the new interval.
+The Parish lottery panel explains both the pending countdown and the configured
+schedule. Empty pots, disabled entries, offline prizes and saved history retain
+their existing behavior. See [Lottery rules](WORLD_BUILDING.md#optional-parish-lottery).
+
 ## 0.119.0 — Set the pace of conversations
 
 World owners can choose chat length and the shared delay between group replies
