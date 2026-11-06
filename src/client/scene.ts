@@ -1,3 +1,5 @@
+import { createRowboat } from './rowboat';
+import { ROWBOAT } from '../shared/rowboat-rules';
 import { fitQuayToWater } from './quay';
 import { stockWeight } from '../shared/fishing-expedition';
 import { calendarDate } from '../shared/environment';
@@ -1371,6 +1373,11 @@ export class GameScene {
       g.add(boat.group);
       g.userData.canoe = boat;
       for (const key of ['driver', 'eye', 'viewPitch']) g.userData[key] = boat.group.userData[key];
+    } else if (slot === ROWBOAT) {
+      const boat = createRowboat(tractorPaint(paint)?.color ?? v.color, v);
+      g.add(boat.group);
+      g.userData.rowboat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch']) g.userData[key] = boat.group.userData[key];
     } else if (slot === CARGO_BOAT) {
       const boat = createCargoBoat(tractorPaint(paint)?.color ?? v.color, v);
       g.add(boat.group);
@@ -1674,6 +1681,14 @@ export class GameScene {
         );
         if (mesh.userData.fishingBoat || mesh.userData.customTrawl) this.ocean.stabilizeRig(mesh);
         const captain = skipper?.hitch ? w.players[skipper.hitch] : undefined;
+        if (captain?.vehicle === ROWBOAT) {
+          mesh.position.set(
+            captain.x - Math.sin(captain.heading) * vehicleDef(w, ROWBOAT).length! * 0.3,
+            captain.y + 0.57,
+            captain.z - Math.cos(captain.heading) * vehicleDef(w, ROWBOAT).length! * 0.3,
+          );
+          mesh.rotation.set(0, captain.heading, 0);
+        }
         if (captain && isTrawler(captain.vehicle, this.world)) {
           const crew = Object.values(w.players)
             .filter((q) => q.hitch === captain.id)
@@ -1688,6 +1703,7 @@ export class GameScene {
         }
         mesh.userData.lifeboat?.userData.row(now / 1000, pose.speed);
         mesh.userData.canoe?.animate(now / 1000, pose.speed);
+        mesh.userData.rowboat?.animate(dt, pose.speed);
         mesh.userData.charterBoat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.motorboat?.animate(
           dt,
@@ -2304,17 +2320,19 @@ export class GameScene {
       if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
       for (const { id, b, raft } of entries) {
         const factory =
-          b.slot === CARGO_BOAT
-            ? (color: string) => createCargoBoat(color, vehicleDef(w, b.slot))
-            : b.slot === MOTORBOAT
-              ? createMotorboat
-              : b.slot === TUGBOAT
-                ? createTugboat
-                : isTrawler(b.slot, w)
-                  ? createFishingBoat
-                  : b.slot === CHARTER_BOAT
-                    ? createCharterBoat
-                    : createCanalBoat;
+          b.slot === ROWBOAT
+            ? (color: string) => createRowboat(color, vehicleDef(w, b.slot))
+            : b.slot === CARGO_BOAT
+              ? (color: string) => createCargoBoat(color, vehicleDef(w, b.slot))
+              : b.slot === MOTORBOAT
+                ? createMotorboat
+                : b.slot === TUGBOAT
+                  ? createTugboat
+                  : isTrawler(b.slot, w)
+                    ? createFishingBoat
+                    : b.slot === CHARTER_BOAT
+                      ? createCharterBoat
+                      : createCanalBoat;
         const model =
           b.slot === CANOE
             ? createCanoe(b.paint)

@@ -1,3 +1,5 @@
+import { stormRules, stormRuleFields, type StormRules } from '../shared/storm-rules';
+import { rowboatRules, rowboatRuleFields, type RowboatRules } from '../shared/rowboat-rules';
 import {
   obstacleRules,
   obstacleRuleFields,
@@ -155,6 +157,8 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(survivalRuleFields),
     ...Object.keys(fuelRuleFields),
     ...Object.keys(canoeRuleFields),
+    ...Object.keys(rowboatRuleFields),
+    ...Object.keys(stormRuleFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -658,6 +662,42 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Owner-only pickup by default. Taking a hull transfers ownership when enabled. Stored canoes follow property rules; carried hulls follow inventory loss. Set-down hulls survive boat-loss deaths unless land loss is enabled.</p></fieldset>`;
+  const rowboat = rowboatRules(settings);
+  const rowboatFields = `<fieldset class="boat-death-settings"><legend>Rowboats</legend>${Object.entries(
+    rowboatRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            rowboat[key as keyof RowboatRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${rowboat[key as keyof RowboatRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Capacity, price, speed, dimensions and passenger seats use the vehicle editor. Disabling purchases preserves existing boats. Beached boats stay owner-only unless public pickup is enabled; taking one transfers it, and requires no existing rowboat. Rowboats cannot be carried or towed as motorboat tenders.</p></fieldset>`;
+  const storm = stormRules(settings);
+  const stormFields = `<fieldset class="boat-death-settings"><legend>Storm capsizing</legend>${Object.entries(
+    stormRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            storm[key as keyof StormRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${storm[key as keyof StormRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Only storms threaten exposed boats; calm seas, rivers and ponds are immune. Small craft use the shore shelter band; coastal craft also require ocean depth, shore clearance and large waves. Set a class rate to zero to disable its risk. Choose susceptibility for each hull in the vehicle editor; seaworthy hulls are exempt.</p><p>Warnings precede storms. Escape time is the larger of the minimum or shore-return time × safety multiplier + turning allowance; then risk ramps up. Entering farther offshore does not extend an active allowance. Reaching shelter resets it. Coastal capsizes destroy the boat and cargo even when ordinary death permits recovery; small craft follow death rules. All occupants die.</p></fieldset>`;
   const fuel = fuelRules(settings);
   const fuelFields = `<fieldset class="boat-death-settings"><legend>Roadside fuel</legend>${Object.entries(
     fuelRuleFields,
@@ -729,6 +769,8 @@ export function settingsFields(settings: Settings = defaults) {
     gatheringFields +
     fuelFields +
     canoeFields +
+    rowboatFields +
+    stormFields +
     radioFields +
     survivalFields +
     economyFields +

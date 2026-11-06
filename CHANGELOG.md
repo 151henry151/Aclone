@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.126.0] - 2026-11-05
+
+### Added
+
+- Row around the bay with a passenger in a fuel-free rowboat; buy at a boatyard or pier, leave it visibly moored at a clear shore or riverbank, and return to the same saved hull.
+- Warn vulnerable boats about approaching storms, allow time to reach shelter, and capsize exposed craft with shared weather, passenger death and vessel recovery rules.
+- Configure rowboat access and ownership, storm probabilities, ocean thresholds, warning and escape times, and each editable vessel's susceptibility in World Builder.
+
+### Fixed
+
+- Check the local water height at a river landing so stepping out leaves the rower on a dry bank.
+
 ## [0.125.1] - 2026-11-05
 
 ### Fixed

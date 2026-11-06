@@ -290,7 +290,7 @@ implementation order rather than building paving before ford-aware persistence.
     spatial queries, static collision/escape, pedestrian sliding, moving-vehicle
     contacts and offline policy; integrate road/navigation/build/snow users and
     measure tick/frame cost before proceeding.
-13. **Cargo boat for dock-to-dock freight**: definition/model/tuning; persistent
+13. **Cargo boat for dock-to-dock freight — done, live in 0.125.1**: definition/model/tuning; persistent
     hold; quay and existing landing transfers; decide optional barge; route
     economics. Follow the entry's internal order.
 14. **Rowboats**, together with **Storm capsizing** (15): rowboat shore access,
@@ -5831,3 +5831,187 @@ screen widths, 52 image cards, search/empty search, every interactive model,
 touch controls, fixed scale, focus restoration and WebGL/no-JavaScript failure
 fallbacks (`output/release-0.125.1/website-final.log`). `npx tsc --noEmit` is clean.
 The five-model assertion remains intact for all 51 pre-existing building kinds.
+
+Gallery correction complete and pushed as
+`ea7ebfe5e0d5f933836f6fc2edda7d2ca48aa64d` (0.125.1). Its website/browser checks,
+TypeScript, production build and changed-file formatting pass. Deploy this exact
+commit before the combined freight announcement; the core 183 freight tests
+remain applicable because this correction changes only gallery integration.
+
+Item 13 is **done and live**, including the gallery follow-through, at
+`ea7ebfe5e0d5f933836f6fc2edda7d2ca48aa64d` / **0.125.1**. Public health, game bundle,
+map worker, website version and the actual public quay preview pass with no
+browser errors (`output/release-0.125.1/live-verification.json`). Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261105-210847.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261105-211008.tar.gz`. The bot announcement and
+both 1440 × 900 screenshots are verified:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568085177941622886.
+No player property or balances were granted or edited on the live server.
+
+Current progress: **10 of 29 eligible Planned sections complete**; all 20 shipped
+claims assessed (17 matches, 3 gaps fixed). Next is item 14, the linked rowboat
+and storm-capsizing work. Keep both incomplete until their combined acceptance
+criteria pass; piloted spaceflight remains excluded.
+
+### Rowboats and storm capsizing — combined completion criteria before code
+
+Item 14 stays unreleased until both entries pass. Append rowboat slot 36, preserving
+all existing IDs. Use a 3.8 × 1.5 m flat-bottomed clinker hull, 30-weight carried
+inventory, one passenger in addition to the rower, 1.6 m/s rowing speed, no fuel
+or tank, and a 4s price. Source these once in the editable vehicle catalogue.
+The passenger rides only; rowboats cannot be carried or used as motorboat tenders.
+Do not add the optional carpenter recipe. Inventory follows the existing canoe/
+small-boat carrying rules; no separate freight hold is claimed.
+
+Per-world rowboat rules: enabled by default (disable new purchases without
+stranding existing property), minimum hull depth 0.08 m, maximum step-out depth
+0.8 m, bank access range 4 m, bank rise 1.2 m, gentle-contact speed 2 m/s,
+public beached-boat pickup off. Existing vehicle tuning owns speed, acceleration,
+capacity, dimensions, price and passenger count. Beached landings persist their
+actual shore/berth geometry with the existing moored boat, not a new ownership
+system. Public pickup transfers ownership and its saved vehicle state atomically;
+refuse if the recipient already owns that class. Require clear dry bank access
+and the entire hull afloat, including after terrain edits. At ordinary docks use
+the same boarding, obstruction and river-dimension rules as other boats. Sell at
+boathouses and the fishing pier, not arbitrary banks or freight quays.
+
+First red gate: `npx tsx --test tests/rowboat.test.ts` must fail because slot 36
+and beached boarding do not exist. Cover catalogue defaults and changed tuning,
+sand/rock/riverbank exits and reboarding, overweight refusal, whole-hull depth,
+blocked/remote/moving access, no carrying, two occupants and third refusal,
+passenger disembark before captain, gentle contact without recoil/damage,
+SQLite restart, ownership/default theft refusal/public transfer, disabled new
+purchases and both death policies. Keep existing canoe/boating/recovery tests green.
+
+Storm survey (`output/storm-survey.ts`): the pier is 3.65 m deep; bay samples
+at z=300/1000/3000 are 28.91/22.38/30.91 m deep, approximately 150/600/1500 m
+from land. Expanded outer-coast samples reach roughly 980–1093 m deep. Therefore
+use **50 m depth and 1500 m shore clearance** for motor/canal ocean danger,
+not the example 25 m which includes the bay. Survey distances use 64 rays at
+25 m steps and are evidence, not the runtime safety classifier. Large storm
+amplitude starts at **1.8 m**; the ordinary forced storm is 1.6 m, strong natural
+storms reach 2.1 m. The storm flag is mandatory even if rough-sea amplitude is high.
+
+Before storm production, add `tests/storm-capsizing.test.ts` and record its red
+result. World rules: enabled true, evaluation cadence 5 seconds, small-craft
+base risk 0.08/minute, motor/canal risk 0.04/minute, distance scale 1000 m,
+wave reference 1.6 m, maximum distance multiplier 3, small-craft sheltered shore
+band 15 m, ocean depth 50 m/shore clearance 1500 m, large-storm amplitude 1.8 m,
+warning look-ahead 300 seconds, guaranteed initial escape period 300 seconds,
+then a 300-second linear risk ramp. All are editable with validation and help;
+zero rates disable the respective class. Seaworthy hulls are exempt by default,
+with a per-vessel susceptibility classification available in vehicle tuning.
+Do not copy these defaults into simulation or UI. Seed rolls by world, captain,
+vessel and absolute evaluation boundary; persist exposure timing through saves.
+Sheltered inland water and calm/merely rough weather have zero risk. Warn once
+on entering danger ahead of/during a storm, with vessel/position/sea state. Reset
+exposure on reaching shelter; changing captains must not reset an occupied boat's
+exposure. Existing visible waves, forecast, marine visibility and spray must be
+verified in browser. All actual passengers/paid crew die through ordinary death
+handling. Small craft follow existing recovery/loss settings; motor/canal hulls
+and their cargo are destroyed even under recovery policy. Log a clear loss notice.
+
+Storm tests: deterministic rolls and cadence partitioning, restart continuity,
+calm/rough/river/pond immunity, small-craft bay risk, default motor/canal bay
+immunity and true-ocean large-storm risk, seaworthy exemption, changed rules,
+warning before risk, timed safe return at each vulnerable hull's speed, ordinary
+small-craft death/recovery, forced motor/canal loss, all occupants dying exactly
+once and no duplicate cargo/reward. Add performance evidence for coastal queries.
+If a selected default fails the escape test, revise the default, not the criterion.
+
+Browser gate: buy at yard and pier, row to a real bank, stop/disembark/reboard,
+inspect visible moored/stowed-oar and occupied/rowing states, view from another
+player, inspect empty/no-nearby/disabled/overweight/ownership refusals, edit rules
+and verify their effect. Enter approaching and active storm zones, observe the
+warning and weather, turn back safely, and verify a seeded capsize/respawn with
+passengers. Capture successful actual gameplay screenshots. Use
+`TEST_GPU=1 npm run test:e2e -- tests/browser/rowboat.spec.ts tests/browser/storm-capsizing.spec.ts`.
+Run relevant Node tests, `npx tsc --noEmit`, changed-file Prettier and production
+build. Update PLAYING.md, WORLD_BUILDING.md, README, CHANGELOG and release notes.
+Commit/push/deploy the completed pair, verify the live SHA and announce through
+the bot with reviewed screenshots; then mark item 14 done.
+
+Rowboat first-red evidence: `output/rowboats/first-red.log` rejects nonexistent
+slot 36. After the definition and beached-landing integration, eight core tests
+pass (`access-green.log`); the original 25 canoe tests also pass. The first
+restart check exposed the ordinary pier's +0.15 m dry-deck requirement rejecting
+a valid low sandy bank. Beached boarding now uses its verified dry-bank surface
+without changing ordinary dock checks. Public transfer remains explicit and
+owner-only by default. Model red evidence is `model-red.log`; finite geometry,
+human-scale seat and stowed/moving oars now pass in `model-green.log`.
+
+Escape-time review before storm code: a 1.6 m/s rowboat needs over 6 minutes to
+return from the surveyed 600 m bay point, before loading/condition penalties.
+A fixed 300-second grace alone cannot meet the stated safety criterion. Retain
+300 seconds as the minimum, and compute an entry-time escape allowance from
+nearest safe shore distance / that vessel's loaded, condition-adjusted available
+speed, multiplied by a configurable **1.5**, plus **30 seconds** for turning.
+Use the larger allowance, then the configured 300-second ramp. Freeze the
+allowance on entry: continuing farther offshore does not earn more time. Expose
+the multiplier/turn allowance and quote remaining safe time in warnings. Empty-
+tank motorboats use their actual rowing speed. Existing motorboat rowing speed
+1.6 m/s and acceleration 0.65 m/s² become shared rowed-navigation settings, so
+escape estimates and movement use one authoritative value. Verify escape using
+actual movement, not only the formula. Inland and sheltered-shore immunity
+continues to reset exposure. This change makes existing default storms dangerous
+to lingering craft while giving a prompt return a measured chance to finish.
+
+Shutdown recovery: the working tree and logs survived. The last pushed release
+remains 0.125.1; item 14 is local and incomplete. `shore-green.log` confirms
+48 targeted tests (rowboats, storm behavior and existing canoes) passed before
+the shutdown. `browser-first.log` has no completed result and is not evidence of
+success. Re-run the browser gate, finish remaining review and documentation, and
+deploy/announce only after the combined acceptance criteria pass.
+
+Review adds regressions before fixes: public pickup must retain an authored
+rowboat freight hold and acquisition basis as well as condition; a zero escape
+travel multiplier must still honor the configured turning allowance; canoes
+must expose the same forecast and remaining escape time as other vulnerable
+craft. Evidence: `output/rowboats/restart-review-red.log`.
+
+The restarted rowboat browser test reached the real purchase menu, which correctly
+kept its overweight button disabled and explained the 32/30-weight refusal.
+The test had incorrectly tried clicking that disabled button; assert its disabled
+state and explanation, then verify purchase after unloading. This preserves the
+capacity criterion. The three review regressions above are confirmed red before
+fixing them; resume the browser with production source frozen for the run.
+
+Post-resume browser and review gates: the temporary-bank summon and tiny-island
+escape-distance regressions both failed before their fixes. Keep clearance
+conservative, but derive return time from actual sampled dry ground. Require an
+existing matching mooring for bank boarding. The coastal-return fixture lacked
+the required captain skill; supply that skill without altering movement rules.
+The rowboat browser wrongly tried to close an already-dismissed disembark dialog;
+assert its dismissal instead. The storm browser exposed a real stale inventory
+forecast: refresh marine status/countdown while the boat inventory stays open.
+The existing browser assertion must show the weather transition and escape time
+without closing/reopening the panel.
+
+Browser review passed the purchase/beach/reboard and forecast/retreat/capsize
+flows. Screenshot inspection found the legacy mooring fallback repainting the
+new unpainted wooden hull blue. A new rowboat regression fails (`'blue' !== ''`);
+retain the catalogue finish for unpainted rowboats and verify it in the second
+player's view. SQLite close/reopen retains the same escape deadline (no new grace).
+
+The second-player browser confirms a persistent visible wooden hull and private
+ownership refusal. Browser inspection also exposed generic powered-boat help
+in the rowboat inventory (fuel/engine and shore recoil instructions). Require
+the rowboat flow to reject that text and show its actual fuel-free gentle-bank
+rules before release; keep the powered-vessel help unchanged.
+
+The rowboat help regression fails on the generic refuelling instructions before
+its correction. Storm browser gates pass with sea/rain and warning screenshots.
+The new moving-oar capture exposed a fixture race: the next pier setup must wait
+for rowing input to settle before relocating the local player; retain the real
+dry-shore boarding check. Recovery appearance has the same legacy blue fallback
+as mooring; a focused death regression is red before preserving the rowboat's
+catalogue finish there too.
+
+**Item 14 verification before release:**
+
+- Relevant Node gates: `npx tsx --test tests/rowboat.test.ts tests/storm-capsizing.test.ts tests/canoe.test.ts` plus `tests/boating.test.ts`, `tests/boat-abandonment.test.ts`, `tests/boat-navigation-rules.test.ts`, `tests/inland-boat-recovery.test.ts`, `tests/fishing-expedition.test.ts`, `tests/towing.test.ts`, `tests/vehicle-config.test.ts`, `tests/river-dock.test.ts` and `tests/snapshots.test.ts`: **143 distinct tests pass** across the targeted runs. Final recovery-finish change reruns rowboat, abandonment and inland recovery: **42/42**. Separate deep-ocean recovery-override test confirms the sunk hull and separate hold are removed while another owned hull remains.
+- Browser: `TEST_GPU=1 npm run test:e2e -- tests/browser/rowboat.spec.ts` passes the full extended two-client flow in 2.0 minutes. `tests/browser/storm-capsizing.spec.ts` passes forecast/live countdown, actual rowing into shelter, all-occupant capsize and recovery UI. No browser page errors. Logs: `output/rowboats/browser-final-rowboat.log`, `output/rowboats/browser-final.log` (the latter retains the corrected fixture failure alongside the successful storm run).
+- Reviewed actual gameplay captures: `beached-rowboat.png`, `rowboat-from-another-player.png`, `rowing-on-the-bay.png`, `storm-warning.png`, `storm-at-sea.png` under `output/rowboats/`. The hull retains its wooden finish, empty oars stow and moving oars extend. The storm view shows rain and whitecaps; the inventory displays the forecast and escape countdown live. Publish only the reviewed successful-run images.
+- Coastal-query evidence: approximately 7 ms for a cold bay query and 1.7 ms total for 1,000 cached queries. Absolute boundary rolls and persisted exposure remain deterministic; real SQLite close/reopen grants no extra escape time.
+- TypeScript is clean in the production-build gate. Prettier runs on all 35 explicit changed/new paths. The full test suite is intentionally not repeated under Henry's relevant-tests policy.
+- Prepare release **0.126.0**, with player, boating, world-builder, README and release-note updates. Push and live verification/announcement still pending; neither linked section is marked done yet.

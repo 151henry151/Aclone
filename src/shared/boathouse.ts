@@ -1,3 +1,5 @@
+import { rowboatBeach, beachedLanding } from './rowboat-shore';
+import { ROWBOAT, rowboatRules } from './rowboat-rules';
 import { quaySite, quayReserved, QUAY } from './quay';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { waterLevel, highWater, lowWater, surfaceWaterLevel } from './ocean';
@@ -119,6 +121,7 @@ export interface BoatLanding {
   /** Small-craft river berth: canal boats and motorboats only. */
   river?: true;
   quay?: true;
+  beached?: true;
 }
 export function boatLandings(w: World): BoatLanding[] {
   const docks: BoatLanding[] = w.buildings.flatMap((b): BoatLanding[] => {
@@ -152,6 +155,15 @@ export function boatLandings(w: World): BoatLanding[] {
           heading: 0,
         });
     }
+  for (const b of Object.values(w.mooredBoats ?? {})) {
+    const d = beachedLanding(w, b);
+    if (d) docks.push(d);
+  }
+  for (const p of Object.values(w.players)) {
+    if (p.hitch) continue;
+    const d = rowboatBeach(w, p);
+    if (d) docks.push(d);
+  }
   return docks;
 }
 const boathouseRange = 40;
@@ -181,13 +193,15 @@ export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, 
   const rules = boatNavigationRules(w.settings);
   if (
     hullDistance >
-    (afloat
-      ? d.building
-        ? rules.boatHouseArrivalRadius
-        : rules.boatLandingArrivalRadius
-      : d.building
-        ? boathouseRange
-        : rules.boatLandingShoreRadius)
+    (d.beached
+      ? rowboatRules(w.settings).rowboatBankRange
+      : afloat
+        ? d.building
+          ? rules.boatHouseArrivalRadius
+          : rules.boatLandingArrivalRadius
+        : d.building
+          ? boathouseRange
+          : rules.boatLandingShoreRadius)
   )
     return false;
   if (afloat) {
@@ -203,9 +217,11 @@ export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, 
 }
 export function landingAccepts(w: World, d: BoatLanding, slot: number) {
   const v = vehicleDef(w, slot);
-  return d.river
-    ? riverDockAccepts(w, slot)
-    : !d.quay || ((v.length ?? 0) <= QUAY.berthLength && (v.beam ?? 0) <= QUAY.berthBeam);
+  return d.beached
+    ? slot === ROWBOAT
+    : d.river
+      ? riverDockAccepts(w, slot)
+      : !d.quay || ((v.length ?? 0) <= QUAY.berthLength && (v.beam ?? 0) <= QUAY.berthBeam);
 }
 export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: unknown) {
   return boatLandings(w)
@@ -213,7 +229,7 @@ export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: 
       (d) =>
         (id === undefined ||
           d.id === id ||
-          (id === fishingDock.id && !d.building && !d.river && !d.quay)) &&
+          (id === fishingDock.id && !d.building && !d.river && !d.quay && !d.beached)) &&
         (!afloat || p.vehicle === undefined || landingAccepts(w, d, p.vehicle)) &&
         withinBoatLanding(w, p, d, afloat),
     )
@@ -234,6 +250,7 @@ export function landingBlocked(
   p: Player,
   board: boolean,
   slot = p.vehicle,
+  mooredOwner = p.id,
 ) {
   const quay = w.buildings.find((b) => b.id === d.id && b.kind === 'quay');
   if (d.building || quay) {
@@ -270,7 +287,7 @@ export function landingBlocked(
   if (
     Object.entries(w.mooredBoats ?? {}).some(
       ([id, b]) =>
-        id !== mooringKey(p.id, slot) && Math.hypot(b.x - d.berth.x, b.z - d.berth.z) < 5,
+        id !== mooringKey(mooredOwner, slot) && Math.hypot(b.x - d.berth.x, b.z - d.berth.z) < 5,
     )
   )
     return 'This berth has a moored boat; use another berth';

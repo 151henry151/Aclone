@@ -450,7 +450,7 @@ Construction counts finished buildings owned at completion, including a helper's
 
 Boats cannot motor onto the shoreline. A shore impact removes one percentage point of powered-boat hull condition, cuts throttle to zero and pushes the vessel a short distance back into water where clear. Release the throttle key (or reverse it) before accelerating again; holding the same key through the impact cannot keep ramming the shore. Boat service repairs condition. The collision boundary follows the tide; waves do not let you climb the beach.
 
-Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored, as does a player-built river dock on a deep river reach (canal boats, motorboats and the lifeboat only). Return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel, Fishing tackle and fish trading.
+Board the Parish Carrier canal boat or North Star fishing boat at a shoreline boathouse. The fishing pier also boards boats you already own and keeps them visibly moored, as does a player-built river dock on a deep river reach (small hulls including canal boats, motorboats, rowboats and the lifeboat at default size limits). Rowboats can also stop and leave at a clear bank; powered hulls return to a dock to disembark; an empty tank offshore requires a rowing lifeboat rescue. Puddlewick has a public boatyard with fuel, Fishing tackle and fish trading.
 
 The North Star uses persistent throttle (W/S, A/D steering, B idle). Fuel is expensive and catches vary: keep reserves for bad trips. Smaller boats can use fishing tackle to catch deep-water species. Fish can be landed at the boatyard or hauled inland to harbour stores, spaceports, kitchens and inns.
 
@@ -699,3 +699,48 @@ Crew shares use realized freight margin after sold-goods cost and consumed fuel
 and provisions. Settle at the dock before spending the cash owed to your crew.
 See [Coastal freight](HAULAGE.md#coastal-freight) for prices, cargo restrictions,
 construction materials, recovery and a measured profitable example route.
+
+## Rowboats and storm shelter
+
+Buy a **Rowboat** at a boathouse or the fishing pier for **4s** at default prices.
+It carries **30 weight**, a rower and one passenger, and needs no fuel. Hold W/S
+or the arrows to row at up to **1.6 m/s**; Shift adds no rowing power. The passenger
+rides without steering or rowing. Rowboats cannot be carried or used as motorboat
+tenders. Your ordinary inventory is the small boat's load, rather than a separate
+freight hold.
+
+Stop beside a clear dry shore or riverbank, then use **Inventory → Boating →
+Disembark on foot**. The entire hull must stay afloat in at least **8 cm** of water;
+the boat's centre must be no deeper than **80 cm**, with a dry bank within **4 m**
+and no more than **1.2 m** above the water. Gentle contact at rowing speed stops the
+hull without powered-boat damage or recoil. Steep cliffs, obstacles and deep water
+are not landing places. Have your passenger disembark first. The boat stays
+visible with its oars stowed and persists through restarts. Return to its shore
+landing to board it again. Boathouses, the pier and compatible river docks also
+work. By default only its owner can board a beached rowboat; worlds that allow
+public pickup transfer the existing boat to someone who does not already own one.
+
+**Storms can capsize small craft.** Canoes, rowboats and lifeboats are vulnerable
+in exposed bay or sea water. Rivers, ponds, sheltered shore water and calm or
+merely rough weather are safe from capsizing. Motorboats and canal boats are
+vulnerable only in a large storm, beyond the world's true-ocean thresholds:
+by default more than **50 m deep**, at least **1.5 km clear of land**, and wave
+amplitude at least **1.8 m**. Trawlers, charter boats, tugs and cargo boats are
+exempt by default. Shore clearance is sampled conservatively; it is not a
+precise charted line.
+
+Read **Sea and shelter** in Inventory before departure. It shows the current
+sea state and the next **five minutes** of storm forecast. A private warning
+appears when you enter dangerous water ahead of or during a storm. Turn back
+promptly: at default rules you receive at least five minutes without capsize
+risk, or longer when the estimated return at your boat's available speed needs
+it. The allowance is calculated once on entry and does not grow if you continue
+farther out. Afterward, risk rises over five minutes. Reaching shelter resets
+exposure; reconnecting does not. The allowance estimates distance and speed,
+not a navigable route around every obstruction. Keep an accessible refuge in view.
+
+A capsize kills everyone aboard, including passengers and paid crew, through the
+ordinary respawn rules. Small craft follow the world's boat loss/recovery policy.
+A capsized motorboat or canal boat and its cargo are destroyed even in a world
+that normally allows recovery. A public loss notice names the boat, position and
+sea state. All these defaults can be changed by the world builder.

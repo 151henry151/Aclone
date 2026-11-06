@@ -1,3 +1,4 @@
+import { ROWBOAT } from '../shared/rowboat-rules';
 import { stockWeight } from '../shared/fishing-expedition';
 import { vehicleDef } from '../shared/vehicle-config';
 import { CANOE } from '../shared/canoe-rules';
@@ -263,7 +264,7 @@ export function prepareFrame(w: World): Frame {
         lights: p.lights,
         boatLighting: p.boatLighting,
         engineRunning: motorRunning(w, p),
-        rowing: p.vehicle === CANOE || (p.vehicle === 33 && p.fuel <= 0),
+        rowing: p.vehicle === CANOE || p.vehicle === ROWBOAT || (p.vehicle === 33 && p.fuel <= 0),
         team: p.team,
         game: p.game,
         health: p.health,

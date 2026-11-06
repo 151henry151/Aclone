@@ -1,3 +1,4 @@
+import { stormClass } from '../shared/storm-capsizing';
 import { trawlParameters } from '../shared/commercial-fishing';
 import { CANOE } from '../shared/canoe-rules';
 import { trailerDef, trailerDefs } from '../shared/trailers';
@@ -109,14 +110,23 @@ export function vehicleEditor(w: World, slot: number) {
   }${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + bool('requiresCaptain', v.requiresCaptain ?? ((v.mode === 3 || v.mode === 5) && (v.length ?? 0) > (vehicles[33].length ?? 4.3))) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for trawling, provisions and crew. Requires captain overrides the length rule for this slot. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
     'Death and recovery',
     select(
-      'deathPolicy',
+      'stormClass',
       [
-        ['world', 'Use world rules'],
-        ['lose', 'Lose owned vessel and cargo'],
-        ['recover', 'Leave offshore for recovery'],
+        ['small', 'Small craft: storm risk at sea'],
+        ['coastal', 'Coastal: large storms in true ocean'],
+        ['seaworthy', 'Seaworthy: storm capsize exemption'],
       ],
-      v.deathPolicy ?? 'world',
+      stormClass(w, slot),
     ) +
+      select(
+        'deathPolicy',
+        [
+          ['world', 'Use world rules'],
+          ['lose', 'Lose owned vessel and cargo'],
+          ['recover', 'Leave offshore for recovery'],
+        ],
+        v.deathPolicy ?? 'world',
+      ) +
       input('spoilageDays', v.spoilageDays ?? w.settings.boatCargoSpoilageDays ?? 5) +
       bool('retainFuel', v.retainFuel ?? w.settings.retainBoatFuelOnDeath !== false) +
       '<p>Recovery is for boats. Spoilage is measured in game days; zero means no expiry. Death overrides apply to this vehicle only.</p>',
@@ -155,6 +165,7 @@ export function vehicleForm(form: HTMLFormElement) {
       'name',
       'color',
       'deathPolicy',
+      'stormClass',
       'dashboard',
       'trackTexture',
       'cargoKind',

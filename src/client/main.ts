@@ -1,3 +1,5 @@
+import { marineSafetyPanel } from './marine-safety-panel';
+import { ROWBOAT, rowboatRules } from '../shared/rowboat-rules';
 import { freightPanel } from './freight-panel';
 import { communicationRules } from '../shared/communication-rules';
 import { boatNavigationRules } from '../shared/boat-navigation-rules';
@@ -1574,6 +1576,8 @@ function refreshTradingPrices() {
       world.boatRescues?.[me.id]?.spoilage?.spoiled,
       world.boatRescues?.[me.id]?.dinghy.moored,
       me.boatLighting,
+      panel === 'inventory' && boatSlot(me.vehicle, world) ? Math.floor(world.time) : null,
+      me.stormExposure,
       me.lights,
       me.crowBody,
       me.crowClass,
@@ -3865,8 +3869,12 @@ function boatControls(building?: string) {
   const navigation = boatNavigationRules(world.settings);
   const attrs = building ? `data-building="${esc(building)}"` : '';
   let html =
-    `<section><h3>Boating</h3><p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to ${worldItems(world).fuel.fuel} tank units. Start the engine with F4 or the Engine button.</p>` +
-    `<p>River docks require ${navigation.riverDockDraft} m depth and admit vessels up to ${navigation.riverDockMaxLength} m long × ${navigation.riverDockMaxBeam} m beam.</p><p>Arrival: hull within ${navigation.boatHouseArrivalRadius} m of a boathouse berth or ${navigation.boatLandingArrivalRadius} m of a pier/river berth, with a clear water path. Shore boarding at those landings: ${navigation.boatLandingShoreRadius} m. Shore impacts cost ${navigation.boatShoreImpactLoss} condition points; the boat still stops and recoils when damage is zero.</p>` +
+    '<section><h3>Boating</h3>' +
+    (me.vehicle === ROWBOAT
+      ? `<p>This rowboat needs no fuel. Hold W/S or the arrows to row. Gentle shore contact up to ${rowboatRules(world.settings).rowboatShoreSpeed} m/s stops without recoil or impact damage. Stop beside a clear dry bank in water no deeper than ${rowboatRules(world.settings).rowboatStepOutDepth} m to step out; the whole hull must stay afloat.</p>`
+      : `<p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to ${worldItems(world).fuel.fuel} tank units. Start the engine with F4 or the Engine button.</p>`) +
+    `<p>River docks require ${navigation.riverDockDraft} m depth and admit vessels up to ${navigation.riverDockMaxLength} m long × ${navigation.riverDockMaxBeam} m beam.</p><p>Arrival: hull within ${navigation.boatHouseArrivalRadius} m of a boathouse berth or ${navigation.boatLandingArrivalRadius} m of a pier/river berth, with a clear water path. Shore boarding at those landings: ${navigation.boatLandingShoreRadius} m. ${me.vehicle === ROWBOAT ? '' : `Shore impacts cost ${navigation.boatShoreImpactLoss} condition points; the boat still stops and recoils when damage is zero.`}</p>` +
+    marineSafetyPanel(world, me) +
     freightPanel(world, me) +
     expeditionPanel(world, me) +
     charterPanel(world, me) +
@@ -3874,6 +3882,9 @@ function boatControls(building?: string) {
   const tender = tenderOf(world, me);
   if (tender && !tender.landing && poweredBoat(me.vehicle, world) && me.vehicle !== MOTORBOAT)
     html += `<form data-action="tender"><input type="hidden" name="operation" value="${tender.towedBy ? 'dock' : 'hook'}"><button>${tender.towedBy ? 'Secure motorboat tender at dock' : 'Attach motorboat as tender'}</button></form>`;
+  if (me.vehicle === ROWBOAT)
+    html +=
+      '<p>Hold W/S or the arrows to row. Your passenger rides without adding rowing power. Stop beside a dry bank in shallow water to disembark; the hull stays moored there. Rowboats cannot be carried or towed as tenders.</p>';
   if (me.vehicle === MOTORBOAT && me.fuel <= 0)
     html += '<p>Tank empty. Hold W/S or the arrow keys to row; your oars need no fuel.</p>';
   if (rescue?.spoilage) {
@@ -3897,7 +3908,18 @@ function boatControls(building?: string) {
           poweredBoat(slot, world) &&
           (!rescue || ([TUGBOAT, MOTORBOAT].includes(slot) && rescue.boat.slot !== slot)),
       )) {
-      if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
+      if (
+        !(me.fleet ?? []).includes(slot) &&
+        !dock.building &&
+        !(slot === ROWBOAT && !dock.river && !dock.quay && !dock.beached)
+      )
+        continue;
+      if (
+        slot === ROWBOAT &&
+        !rowboatRules(world.settings).rowboatsEnabled &&
+        !(me.fleet ?? []).includes(slot)
+      )
+        continue;
       if (!landingAccepts(world, dock, slot)) continue;
       html += button(
         (me.fleet ?? []).includes(slot)
@@ -3908,12 +3930,21 @@ function boatControls(building?: string) {
       );
     }
   }
+  if (dock?.beached && !boatSlot(me.vehicle, world)) {
+    for (const b of Object.values(world.mooredBoats ?? {}))
+      if (b.slot === ROWBOAT && b.beached && b.landing === dock.id && b.owner !== me.id) {
+        html +=
+          rowboatRules(world.settings).rowboatPublicPickup && !(me.fleet ?? []).includes(ROWBOAT)
+            ? `<form data-action="vehicle"><input type="hidden" name="slot" value="${ROWBOAT}"><input type="hidden" name="owner" value="${esc(b.owner)}"><button>Take beached rowboat</button></form>`
+            : '<p>This beached rowboat belongs to another player.</p>';
+      }
+  }
   if (isTrawler(me.vehicle, world)) html += trawlControls();
   if (boatSlot(me.vehicle, world)) {
     html += dock
       ? button('Disembark on foot', 'walk') + button('Disembark into tractor', 'tractor')
       : '<p>Return to a boathouse berth, the side of the fishing pier or a river dock to disembark.</p>';
-    if (poweredBoat(me.vehicle, world) && me.fuel <= 0)
+    if (poweredBoat(me.vehicle, world) && hasMotor(world, me.vehicle) && me.fuel <= 0)
       html += button('Launch emergency lifeboat', 'lifeboat', 'data-id="launch"');
   }
   if (rescue) {
@@ -3925,7 +3956,7 @@ function boatControls(building?: string) {
   }
   return (
     html +
-    '<p>Fishing piers, river docks and quays leave boats moored outside. Freight holds always stay with their boat, including at boathouses. Other boats store inside a boathouse. Lifeboats remain moored until you return.</p></section>'
+    '<p>Fishing piers, river docks and quays leave boats moored outside. Freight holds always stay with their boat, including at boathouses. Rowboats also stay at the bank where you leave them. Other boats store inside a boathouse. Lifeboats remain moored until you return.</p></section>'
   );
 }
 

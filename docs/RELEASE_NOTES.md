@@ -2,6 +2,33 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.126.0 — Row ashore, watch the weather
+
+Take a wooden rowboat out with a passenger: no fuel, 30 weight of supplies and
+steady rowing at 1.6 m/s. Buy one for 4s at a boathouse or fishing pier. Stop in
+shallow water beside a dry bank to step ashore; the boat stays visibly moored
+where you left it, with its oars stowed. Return to that hull to board again.
+Rowboats also use ordinary docks, but cannot be carried or towed as tenders.
+
+Storms now matter at sea. Canoes, rowboats and lifeboats can capsize outside
+sheltered shore water; rivers and ponds are safe. Motorboats and canal boats
+are threatened only by large storms in deep ocean, beyond the bay. Trawlers,
+charter boats, tugs and cargo boats are exempt by default.
+
+Check **Inventory → Sea and shelter** for the forecast. Warnings grant time to
+turn back based on distance and boat speed, then risk rises gradually. Capsizing
+kills everyone aboard under ordinary death rules. Small craft follow the world's
+recovery policy; a coastal motor/canal hull lost in a deep-ocean storm is destroyed
+with its cargo. World builders can disable or tune the risks, warning periods,
+boat susceptibility, rowboat ownership and access, and vessel specifications.
+
+Validation includes 143 relevant tests, a real SQLite close/reopen of storm
+deadlines, portable world rules, all-occupant death and recovery, timed shelter
+returns for vulnerable hulls, and real browser purchase, rowing, beaching,
+reboarding, second-player visibility and ownership, rule editing, forecast,
+retreat and capsize flows. See [Rowboats and storm shelter](PLAYING.md#rowboats-and-storm-shelter)
+and [World Builder](WORLD_BUILDING.md#rowboats-and-storm-capsizing).
+
 ## 0.125.1 — Complete the quay gallery
 
 Publish the Freight quay's real model image and support its fixed design in the

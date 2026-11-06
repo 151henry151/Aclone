@@ -4,7 +4,14 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.125.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.126.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.126.0 adds two-person wooden rowboats that need no fuel and stay
+moored at the shore or riverbank where you leave them. Storm forecasts and
+warnings give vulnerable boats time to reach shelter before capsize risk rises;
+seaworthy working hulls remain exempt by default. World Builder controls vessel
+properties, bank access, ownership and the complete storm-risk rules. See
+[Rowboats and storm shelter](docs/PLAYING.md#rowboats-and-storm-shelter).
 
 Version 0.125.1 completes the freight quay’s public gallery image and interactive preview.
 

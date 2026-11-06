@@ -13,10 +13,15 @@ export interface CanoeLanding {
   heading: number;
   id?: string;
 }
-export function canoeWater(w: World, x: number, z: number, heading: number) {
-  const r = canoeRules(w.settings),
-    v = canoeVehicle(w.settings),
-    s = Math.sin(heading),
+export function rowedWater(
+  w: World,
+  x: number,
+  z: number,
+  heading: number,
+  v: import('./types').VehicleDef,
+  minDepth: number,
+) {
+  const s = Math.sin(heading),
     c = Math.cos(heading);
   return (
     [-1, 0, 1].every((side) =>
@@ -25,7 +30,7 @@ export function canoeWater(w: World, x: number, z: number, heading: number) {
           pz = z - ((side * v.beam!) / 2) * s + ((end * v.length!) / 2) * c;
         return (
           Math.max(Math.abs(px), Math.abs(pz)) < mapHalf(w) &&
-          surfaceWaterLevel(w, px, pz) - terrainHeight(w, px, pz) >= r.canoeMinDepth
+          surfaceWaterLevel(w, px, pz) - terrainHeight(w, px, pz) >= minDepth
         );
       }),
     ) &&
@@ -41,14 +46,19 @@ export function canoeWater(w: World, x: number, z: number, heading: number) {
     !creatorBlocks(w, x, z, surfaceWaterLevel(w, x, z), v.collisionRadius!)
   );
 }
-function clearBank(w: World, land: { x: number; z: number }, berth: { x: number; z: number }) {
+export function clearRowedBank(
+  w: World,
+  land: { x: number; z: number },
+  berth: { x: number; z: number },
+  bankRise: number,
+) {
   const h = travelHeight(w, land.x, land.z),
-    level = surfaceWaterLevel(w, berth.x, berth.z),
-    r = canoeRules(w.settings);
+    level = surfaceWaterLevel(w, berth.x, berth.z);
   return (
     Math.max(Math.abs(land.x), Math.abs(land.z)) < mapHalf(w) &&
     h > level &&
-    h - level <= r.canoeBankRise &&
+    h > surfaceWaterLevel(w, land.x, land.z) &&
+    h - level <= bankRise &&
     !w.buildings.some(
       (b) =>
         blocksBuilding(b, land.x, land.z, 0, 0.35) ||
@@ -61,6 +71,16 @@ function clearBank(w: World, land: { x: number; z: number }, berth: { x: number;
       0.35,
       true,
     )
+  );
+}
+export function canoeWater(w: World, x: number, z: number, heading: number) {
+  return rowedWater(
+    w,
+    x,
+    z,
+    heading,
+    canoeVehicle(w.settings),
+    canoeRules(w.settings).canoeMinDepth,
   );
 }
 /** A bounded deterministic search shared by server and controls. Prefer established docks. */
@@ -82,7 +102,10 @@ export function canoeLanding(w: World, p: Player, afloat: boolean): CanoeLanding
         other = { x: p.x + Math.sin(angle) * distance, z: p.z + Math.cos(angle) * distance };
       const land = afloat ? other : { x: p.x, z: p.z },
         berth = afloat ? { x: p.x, z: p.z } : other;
-      if (clearBank(w, land, berth) && (afloat || canoeWater(w, berth.x, berth.z, p.heading)))
+      if (
+        clearRowedBank(w, land, berth, r.canoeBankRise) &&
+        (afloat || canoeWater(w, berth.x, berth.z, p.heading))
+      )
         return { land, berth, heading: p.heading };
     }
 }

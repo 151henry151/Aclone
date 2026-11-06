@@ -2,6 +2,7 @@ import { canoeVehicle } from './canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import itemData from '../../data/items.json';
 import vehicleData from '../../data/vehicles.json';
+import rowboatData from '../../data/rowboats.json';
 import freightVesselData from '../../data/freight-vessels.json';
 import buildingData from '../../data/buildings.json';
 import recipeData from '../../data/recipes.json';
@@ -18,6 +19,7 @@ export const vehicles: VehicleDef[] = [
   ...vehicleData,
   canoeVehicle(),
   ...(freightVesselData as VehicleDef[]),
+  ...(rowboatData as VehicleDef[]),
 ];
 export const buildings: Record<string, BuildingDef> = Object.fromEntries(
   Object.entries(buildingData).map(([kind, def]) => [

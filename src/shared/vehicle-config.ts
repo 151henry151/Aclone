@@ -53,6 +53,7 @@ export const vehicleTuningSchema = z
     netCapacity: number(10, 5000),
     trawlFuel: number(0.001, 1),
     trawlSpeed: number(1, 8),
+    stormClass: z.enum(['small', 'coastal', 'seaworthy']),
     deathPolicy: z.enum(['world', 'lose', 'recover']),
     spoilageDays: number(0, 365),
     retainFuel: z.boolean(),

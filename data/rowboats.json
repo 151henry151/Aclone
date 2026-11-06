@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Rowboat",
+    "mode": 3,
+    "speed": 1.6,
+    "acceleration": 0.65,
+    "turn": 1.2,
+    "fuel": 0,
+    "capacity": 30,
+    "armour": 100,
+    "price": 40000,
+    "color": "#986b47",
+    "hitch": 1,
+    "collisionRadius": 0.75,
+    "length": 3.8,
+    "beam": 1.5
+  }
+]

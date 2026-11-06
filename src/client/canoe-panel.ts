@@ -1,3 +1,4 @@
+import { marineSafetyPanel } from './marine-safety-panel';
 import { canoeLanding, canoeWater } from '../shared/canoe-shore';
 import { cargoFitReason } from '../shared/cargo-fit';
 import { boatLandings, withinBoatLanding } from '../shared/boathouse';
@@ -25,6 +26,7 @@ export function canoePanel(w: World, p: Player) {
       ready = !p.task && !p.hitch && !p.game && Math.abs(p.speed) <= r.canoeStoppedSpeed;
     return (
       html +
+      marineSafetyPanel(w, p) +
       `<p>Paddle with W/S or the arrows. One occupant · ${r.canoeCapacity} weight hold · no fuel. Maximum paddling speed ${r.canoeSpeed}m/s; Shift does not run.</p>` +
       form('beach', 'Beach canoe', !ready || !landing) +
       (!ready

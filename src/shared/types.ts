@@ -1,3 +1,4 @@
+import type { StormRules } from './storm-rules';
 import type { ObstacleRules } from './obstacle-rules';
 import type { LandscapeRules } from './landscape-rules';
 import type { CommunicationRules } from './communication-rules';
@@ -26,6 +27,7 @@ import type { EconomyRules } from './economy-rules';
 import type { SurvivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { RadioRules } from './radio-rules';
+import type { RowboatRules } from './rowboat-rules';
 import type { CanoeRules } from './canoe-rules';
 import type { FuelRules } from './fuel-rules';
 import type { FlightRules } from './flight-rules';
@@ -58,6 +60,7 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  stormExposure?: { slot: number; warningAt: number; since?: number; safeUntil?: number };
   radios?: Record<number, import('./radio').RadioConfig>;
   /** Owned portable hull lifted overhead; its weight is additional to inventory. */
   carrying?: string;
@@ -357,6 +360,8 @@ export interface Settings
     Partial<SurvivalRules>,
     Partial<RadioRules>,
     Partial<CanoeRules>,
+    Partial<RowboatRules>,
+    Partial<StormRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -565,6 +570,8 @@ export interface World {
       heading: number;
       paint: string;
       landing: string;
+      /** Saved bank access for a beached rowboat. */
+      beached?: { x: number; z: number };
       cargo?: Stock;
       cargoBasis?: Stock;
       load?: number;
@@ -659,6 +666,7 @@ export interface ItemDef {
   fuel?: number;
 }
 export interface VehicleDef {
+  stormClass?: 'small' | 'coastal' | 'seaworthy';
   holdCapacity?: number;
   cargoKind?: import('./trailers').TrailerKind;
   persistentThrottle?: boolean;

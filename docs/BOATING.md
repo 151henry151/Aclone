@@ -1,6 +1,6 @@
 # Boats, fishing and the coastal economy
 
-This guide describes the expedition system in Aclone 0.104.0. Prices below are defaults;
+This guide describes boating, expeditions and storm safety. Prices below are defaults;
 worlds and business owners can change them.
 
 ## Boarding and mooring
@@ -28,7 +28,7 @@ with an enclosed building retain their extra materials and cost.
 A player-built river dock works like the pier for small craft: it boards boats
 you already own from the landing behind its log crib and leaves them moored at
 the jetty end on the river. World size limits default to 14 m length and 3.6 m
-beam: canal boats, motorboats and the lifeboat fit; the fishing boat, charter boat
+beam: canal boats, motorboats, rowboats and the lifeboat fit; the fishing boat, charter boat
 and tug must use a boathouse or pier under those defaults. River docks sell no
 fuel and trade no fish. Required river depth defaults to 1.2 m along the whole
 berth, excluding shallow headwaters and fords; rotate toward the deep channel.
@@ -53,6 +53,29 @@ Parish Carrier is 13.5 metres long; the North Star is about 20.4 metres. Skipper
 remain at normal human scale. Buildings and farm expansions must leave the berth clear. On deployment,
 Puddlewick receives a public boatyard only if a safe site is available; existing
 property and coastline are preserved.
+
+## Rowboats and storm shelter
+
+Buy a two-person wooden rowboat at a boathouse or fishing pier for 4s. It carries
+30 weight at 1.6 m/s and needs no fuel. Hold W/S or the arrows to row; a passenger
+rides without adding power. Stop in shallow water beside a clear dry bank to
+step out, then board the same saved hull when you return. It stays visible to
+others and cannot be carried or towed as a tender. Gentle beach contact causes
+no powered-boat recoil or condition loss. See the [rowboat guide](PLAYING.md#rowboats-and-storm-shelter).
+
+Check Inventory’s **Sea and shelter** forecast before departure. Storms threaten
+canoes, rowboats and lifeboats outside sheltered shore water; rivers and ponds
+are exempt. Motorboats and canal boats are threatened only in large storms in
+very deep ocean far from shore. Trawlers, charter boats, tugs and cargo boats
+are exempt at defaults. Warnings provide an initial escape period based on the
+hull’s return speed and distance, followed by a gradual risk ramp. Turn back
+when warned; sailing farther out does not extend that deadline.
+
+A capsize kills everyone aboard through ordinary death handling. Small craft
+follow the world’s loss/recovery setting. A motorboat or canal boat capsized in
+the deep ocean loses its hull and cargo even in a recovery world. World builders
+can tune or disable storm risk and change vessel susceptibility; see
+[storm rules](WORLD_BUILDING.md#rowboats-and-storm-capsizing).
 
 ## Canal boat lights and rod fishing
 

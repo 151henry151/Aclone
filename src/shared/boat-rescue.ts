@@ -1,3 +1,4 @@
+import { ROWBOAT } from './rowboat-rules';
 import { riverDockAccepts } from './river-dock';
 import { CANOE } from './canoe-rules';
 import { cancelTow } from './towing';
@@ -48,10 +49,11 @@ export function expireAbandonedCargo(w: World, at = w.time) {
 }
 
 /** Capture the vessel before death resets the character. Never move the boat to the respawn. */
-export function abandonBoatOnDeath(w: World, p: Player, at: number) {
+export function abandonBoatOnDeath(w: World, p: Player, at: number, destroyedBoat = false) {
   const aboard = aboardBoat(w, p);
   let r = w.boatRescues?.[p.id];
   const loses = (slot: number) => {
+    if (destroyedBoat && !p.hitch && slot === p.vehicle) return true;
     const policy = vehicleDef(w, slot).deathPolicy ?? 'world';
     return policy === 'lose' || (policy === 'world' && w.settings.loseBoatsOnDeath);
   };
@@ -108,7 +110,7 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
           heading: p.heading,
           paint: p.smallCraft
             ? (w.smallCraft?.[p.smallCraft]?.paint ?? vehicleDef(w, p.vehicle).color)
-            : (vehiclePaint(p) ?? 'blue'),
+            : (vehiclePaint(p) ?? (p.vehicle === ROWBOAT ? '' : 'blue')),
           slot: p.vehicle,
           smallCraft: p.smallCraft,
         },
@@ -321,8 +323,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
     if (c) Object.assign(c, { x: p.x, z: p.z, heading: p.heading, state: 'launched' });
   }
   delete w.boatRescues![p.id];
-  if (p.vehicle === CANOE)
-    return 'Canoe recovered with its remaining cargo. Paddle to a bank or dock; no fuel is needed.';
+  if ([CANOE, ROWBOAT].includes(p.vehicle))
+    return `${vehicleDef(w, p.vehicle).name} recovered with its remaining cargo. Row or paddle to a bank or dock; no fuel is needed.`;
   if (usedMotorboat)
     return 'Main boat reboarded. Your motorboat remains alongside; move ahead and attach it as a tender to tow home. Use carried Fuel to fill the main tank.';
   if (poured)

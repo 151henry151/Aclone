@@ -1693,3 +1693,55 @@ They exclude other players' private freight, active inventories, acquisition-cos
 history and account data. Imported stock uses catalogue replacement cost for
 future crew accounting. Ordinary database saves/backups preserve all freight
 and its recorded cost basis. Invalid cargo or incompatible berths reject import.
+
+## Rowboats and storm capsizing
+
+**F10 → Vehicles → Rowboat** controls its name, capacity, speed, acceleration,
+price, dimensions and passenger count (`hitch`, excluding the rower). Defaults
+are a 3.8 × 1.5 m hull, 30 weight, 1.6 m/s, one passenger and 4s, with no fuel or
+tank. Its bank access is under **Rules → Rowboats**: `rowboatMinDepth` 0.08 m,
+`rowboatStepOutDepth` 0.8 m, `rowboatBankRange` 4 m, `rowboatBankRise` 1.2 m and
+`rowboatShoreSpeed` 2 m/s. `rowboatsEnabled` permits new purchases by default;
+disabling it preserves existing boats. `rowboatPublicPickup` defaults off.
+Enabling it permits an explicit ownership transfer at a beached boat, preserving
+its state and any authored freight hold; the recipient cannot already own a
+rowboat. Rule edits do not relocate property. The same section exposes existing
+empty-tank motorboat rowing speed (1.6 m/s) and acceleration (0.65 m/s²).
+
+**Rules → Storm capsizing** controls the shared server risk calculation:
+
+- `capsizeEnabled`: true. `capsizeCadence`: 5 seconds.
+- `capsizeSmallRate`: 0.08; `capsizeCoastalRate`: 0.04. These are base probabilities
+  per minute, not per evaluation. Zero disables that class.
+- `capsizeDistanceScale`: 1,000 m; `capsizeDistanceMultiplier`: 3;
+  `capsizeWaveReference`: 1.6 m. The base probability is multiplied by the lesser
+  of the maximum distance multiplier and `1 + shore clearance / distance scale`,
+  and by amplitude / reference amplitude, then capped at 1.
+- `capsizeShoreShelter`: 15 m of conservatively measured shore clearance for small
+  craft. Sampled coast geometry may provide a wider protected margin.
+- `capsizeOceanDepth`: 50 m; `capsizeOceanShore`: 1,500 m;
+  `capsizeLargeWave`: 1.8 m. Coastal craft require all three thresholds and a storm.
+- `capsizeForecastSeconds`: 300. `capsizeGraceSeconds`: 300.
+  `capsizeEscapeMultiplier`: 1.5; `capsizeTurnSeconds`: 30.
+  Guaranteed escape time is the greater of the minimum or estimated return time
+  × multiplier + turning allowance. It is fixed at entry and saved with the player.
+- `capsizeRampSeconds`: 300. After the safe period, the probability exponent
+  ramps linearly from zero to one. Each interval uses
+  `1 − (1 − adjusted minute probability)^(interval / 60 × ramp)`.
+
+The **Death and recovery** section of each editable vehicle exposes `stormClass`:
+small craft, coastal or seaworthy. Seaworthy is a complete capsize exemption.
+Built-in canoe/lifeboat/rowboat defaults are small; motorboat/canal defaults are
+coastal; the trawler, charter boat, tug and coaster default seaworthy. Canoes use
+the shared small-craft world rules and their separate canoe catalogue controls.
+The storm flag is mandatory: a large non-storm wave amplitude alone cannot capsize
+anything. Inland rivers and ponds are immune. Turning off waves also removes risk.
+
+Capsize checks and warnings share the rendered ocean's gradual sea state and
+weather forecast. Deterministic rolls depend on world, captain, vessel and absolute
+simulation boundary. Exposure persists through saves and reconnects; reaching
+shelter resets it. Small-craft losses use ordinary boat death settings, while
+coastal capsizes force loss of the affected hull and cargo. Occupants all die;
+other property continues to follow the world's ordinary death policy. Settings
+and vehicle tuning travel in portable designs; player exposure and personal
+rowboats remain saved-world state, not design templates.
