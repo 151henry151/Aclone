@@ -1,3 +1,4 @@
+import { CARGO_BOAT } from '../shared/boats';
 import { stormClass } from '../shared/storm-capsizing';
 import { trawlParameters } from '../shared/commercial-fishing';
 import { CANOE } from '../shared/canoe-rules';
@@ -39,6 +40,7 @@ export function vehicleEditor(w: World, slot: number) {
     length: v.length ?? (v.mode === 3 ? 12 : 3.7),
     width: v.width ?? (v.collisionRadius ?? 1.3) * 2,
     beam: v.beam ?? (v.mode === 3 ? 3 : 2.3),
+    draft: v.draft ?? 0.05,
     netCapacity: trawl.netCapacity,
     trawlFuel: trawl.fuelPerSecond,
     trawlSpeed: trawl.speed,
@@ -94,7 +96,7 @@ export function vehicleEditor(w: World, slot: number) {
       ['8', 'Walking'],
     ],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (v.mode === 3 ? numberFields('draft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
     v.mode === 3
       ? group(
           'Freight hold',

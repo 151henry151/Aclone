@@ -392,3 +392,10 @@ References inspected for this design:
 - [IALA G1094](https://www.iala.int/product/g1094/?download=true) — geographic visibility calculation using observer/signal height and atmospheric refraction. Daymark geometry supplies the horizon model, not a claim about lamp brightness.
 - [National Park Service: coastal waves](https://www.nps.gov/articles/coastal-processes-waves.htm) — spilling, plunging and surging breakers as shore slope changes.
 - [National Park Service: coastal erosion](https://home.nps.gov/articles/coastal-processes-erosion.htm) — wave impact and reflection against steep coasts.
+
+`npx tsx scripts/cargo-boat-scale-preview.ts` captures the real coastal freighter
+at its former 20 m scale and its new 60 m scale, beside the same quay and person
+with a fixed camera. It checks normal and low graphics in a disposable local
+world and saves to `output/cargo-boat-scale/scenery/` (override with
+`SCREENSHOT_OUTPUT_DIR`). Geometry, open-hold visibility and human-size fittings
+are checked by `tests/browser/cargo-boat-model.spec.ts`.

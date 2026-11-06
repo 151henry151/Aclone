@@ -131,7 +131,7 @@ import {
   sameCharterDock,
 } from './charter';
 import { fishingVessel } from './boat-fishing';
-import { CHARTER_BOAT, throttleBoat } from './boats';
+import { CHARTER_BOAT, throttleBoat, cargoCrewPosition } from './boats';
 import { bulkPurchaseQuote, validateBulkDiscounts } from './bulk-discounts';
 import { cliffBlocks } from './coastal-bluffs';
 import { isLighthouseKeeper } from './lodging';
@@ -1682,7 +1682,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         );
         const moored = w.mooredBoats?.[mooringKey(mooredOwner, slot)];
         const hull = poweredBoat(slot, w) ? slot : p.vehicle;
-        const reachable = boatLandings(w).filter(
+        const reachable = boatLandings(w, hull).filter(
           (d) =>
             (a.building === undefined ||
               d.id === a.building ||
@@ -3215,7 +3215,9 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           w,
           p,
           { x: nx, z: nz },
-          v.collisionRadius ?? 1.3,
+          v.draft !== undefined
+            ? (v.beam ?? 2 * (v.collisionRadius ?? 1.3)) / 2
+            : (v.collisionRadius ?? 1.3),
           p.heading,
           v.length !== undefined
             ? v.length / 2
@@ -3232,7 +3234,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
             ? canoeRules(w.settings).canoeMinDepth
             : p.vehicle === ROWBOAT
               ? rowboatRules(w.settings).rowboatMinDepth
-              : undefined,
+              : v.draft,
           gentleCanoe,
         )
       : undefined;
@@ -3836,9 +3838,16 @@ export function advance(w: World, seconds: number) {
     if (p.hitch) {
       const driver = w.players[p.hitch];
       if (driver) {
-        p.x = driver.x;
-        p.z = driver.z;
-        p.y = driver.y + 2;
+        Object.assign(
+          p,
+          cargoCrewPosition(
+            w,
+            driver,
+            Object.values(w.players)
+              .filter((q) => q.hitch === driver.id)
+              .findIndex((q) => q.id === p.id),
+          ) ?? { x: driver.x, z: driver.z, y: driver.y + 2 },
+        );
       } else delete p.hitch;
     }
     if (p.race && end >= p.race.start) {

@@ -27,7 +27,9 @@ export function freightAccess(w: World, p: Player, slot: unknown) {
     moored = w.mooredBoats?.[mooringKey(p.id, slot)];
   const landing = active
     ? boatLanding(w, p, true)
-    : boatLandings(w).find((d) => d.id === moored?.landing && withinBoatLanding(w, p, d, false));
+    : boatLandings(w, slot).find(
+        (d) => d.id === moored?.landing && withinBoatLanding(w, p, d, false),
+      );
   need(landing && (active || moored?.owner === p.id), 'Return to this boat at its dock or landing');
   need(landingAccepts(w, landing, slot), 'The boat does not fit this berth');
   const cargo = active ? (p.boatHold ??= {}) : (moored!.cargo ??= {});

@@ -97,3 +97,9 @@ test('camera orbit stays above deep water at every heading, zoom and sea level',
         assert.equal(cameraSurfaceFloor(sea + 20, sea, 0.6), sea + 20 + 0.6);
       }
 });
+
+test('large hull chase camera stays outside the stern at ordinary zoom', () => {
+  const offset = chaseOffset(0, 1, false, 0, 60);
+  assert.ok(-offset.z > 30, '60m hull must not enclose the chase camera');
+  assert.ok(offset.y > 10, 'large hull needs a view over its deck');
+});

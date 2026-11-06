@@ -562,3 +562,12 @@ intakes. See the [full settings](WORLD_BUILDING.md#springs-and-water-production)
 Use Rules → Livestock life cycle to set how young animals grow, how much care and space they need, and whether farms can breed continuously. Place a dairy, sheepfold, pig farm or henhouse with usable pasture. Young are smaller in the world and grow only with healthy farm care; their progress survives hauling and saved designs.
 
 Add a butcher from its five architectural models, leave room at the loading ramp and fund qualified staff. Its owner can set service fees and a counter menu. Add a kitchen or restaurant to turn raw meat into meals, or enable slower private cooking inside homes and booked inn rooms. Rules → Butcher and cooking controls fees, yields, service and home times, spoilage, raw-edibility and feature switches. Existing catalogue and recipe tools set prices, ingredients and wages. See the detailed [rule reference](WORLD_BUILDING.md#livestock-life-cycle-butchers-and-cooking) and [player flow](PLAYING.md#from-pasture-to-plate).
+
+## Size ships and choose safe berths
+
+The coastal freighter's **Vehicles** controls include length, beam, draft and
+freeboard. Its built-in size is 60 × 16.8 m; changing the hull does not enlarge
+people or individual pallets. In **Rules → Boat navigation**, set quay vessel
+limits and the extra seaward berth search. A search of zero keeps the first
+outside position. Every part of the ship must still clear the seabed and obstacles;
+raising a size limit cannot make shallow water safe.

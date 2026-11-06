@@ -22,8 +22,10 @@ test('coaster appends a configurable freight vessel without moving the canoe or 
   assert.equal(vehicles[slot]?.name, 'Coastal cargo boat');
   const v = vehicleDef(w, slot);
   assert.equal(v.mode, 3);
-  assert.equal(v.length, 20);
-  assert.equal(v.beam, 5.6);
+  assert.equal(v.length, 60);
+  assert.equal(v.beam, 16.8);
+  assert.equal(v.draft, 3.75);
+  assert.equal(v.freeboard, 3.6);
   assert.equal(v.capacity, 60);
   assert.equal((v as any).holdCapacity, 2000);
   assert.equal((v as any).cargoKind, 'box');
@@ -45,6 +47,10 @@ test('freight hold tuning is validated, exposed and portable with the existing v
   act(w, 'owner', {
     type: 'vehicleTuning',
     slot,
+    length: 48,
+    beam: 12,
+    draft: 2.5,
+    freeboard: 2.8,
     holdCapacity: 1250,
     cargoKind: 'logs',
     speed: 4,
@@ -55,13 +61,21 @@ test('freight hold tuning is validated, exposed and portable with the existing v
   assert.equal((v as any).holdCapacity, 1250);
   assert.equal((v as any).cargoKind, 'logs');
   assert.equal(v.speed, 4);
+  assert.equal(v.length, 48);
+  assert.equal(v.beam, 12);
+  assert.equal(v.draft, 2.5);
+  assert.equal(v.freeboard, 2.8);
   const before = structuredClone(w.vehicleTuning);
   assert.throws(() => act(w, 'owner', { type: 'vehicleTuning', slot, holdCapacity: -1 }));
   assert.throws(() => act(w, 'owner', { type: 'vehicleTuning', slot, cargoKind: 'anything' }));
+  assert.throws(() => act(w, 'owner', { type: 'vehicleTuning', slot, draft: -1 }));
+  assert.throws(() => act(w, 'owner', { type: 'vehicleTuning', slot, freeboard: 0 }));
   assert.deepEqual(w.vehicleTuning, before);
   const html = vehicleEditor(w, slot);
   assert.match(html, /name="holdCapacity"/);
   assert.match(html, /name="cargoKind"/);
+  assert.match(html, /name="draft"/);
+  assert.match(html, /name="freeboard"/);
   const fresh = createWorld('freight-import', 'Imported', 'new-owner');
   applyDesign(fresh, exportDesign(w));
   assert.deepEqual(fresh.vehicleTuning, w.vehicleTuning);

@@ -4,7 +4,7 @@ import { quaySite, quayReserved, QUAY } from './quay';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { waterLevel, highWater, lowWater, surfaceWaterLevel } from './ocean';
 import { RIVER_DOCK, riverDockAccepts, riverDockReserved, riverDockSite } from './river-dock';
-import { boatSlot, mooringKey } from './boats';
+import { boatSlot, mooringKey, CARGO_BOAT } from './boats';
 import { vehicleDef } from './vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { blocksBuilding, buildingPlan } from './building-shapes';
@@ -123,7 +123,7 @@ export interface BoatLanding {
   quay?: true;
   beached?: true;
 }
-export function boatLandings(w: World): BoatLanding[] {
+export function boatLandings(w: World, slot?: number): BoatLanding[] {
   const docks: BoatLanding[] = w.buildings.flatMap((b): BoatLanding[] => {
     if (b.construction) return [];
     if (b.kind === RIVER_DOCK) {
@@ -164,7 +164,73 @@ export function boatLandings(w: World): BoatLanding[] {
     const d = rowboatBeach(w, p);
     if (d) docks.push(d);
   }
-  return docks;
+  return slot === undefined ? docks : docks.map((d) => vesselLanding(w, d, slot));
+}
+
+/** Keep the shore entrance and structure fixed; larger hulls lie outside the old berth. */
+function vesselLanding(w: World, d: BoatLanding, slot: number): BoatLanding {
+  if (d.river || d.beached) return d;
+  const v = vehicleDef(w, slot);
+  if (v.draft === undefined) return d;
+  const halfLength = (v.length ?? 0) / 2,
+    halfBeam = (v.beam ?? 0) / 2;
+  const s = Math.sin(d.heading),
+    c = Math.cos(d.heading);
+  let forward = 0,
+    side = 0;
+  if (d.quay) side = Math.max(0, halfBeam - QUAY.berthBeam / 2);
+  else if (d.building) {
+    forward = Math.max(0, halfLength - 11);
+    side = -Math.max(0, halfBeam - 4.1);
+  } else {
+    forward = Math.max(0, halfLength - 10.5);
+    side = Math.sign(d.berth.x - fishingDock.x) * Math.max(0, halfBeam - 4.1);
+  }
+  const berth = { x: d.berth.x + s * forward + c * side, z: d.berth.z + c * forward - s * side };
+  const direction = d.quay ? { x: c, z: -s } : { x: s, z: c };
+  const depthFits = (point: { x: number; z: number }) =>
+    [-halfBeam, 0, halfBeam].every((x) =>
+      [-halfLength, 0, halfLength].every((z) => {
+        const px = point.x + x * c + z * s,
+          pz = point.z - x * s + z * c;
+        return terrainHeight(w, px, pz) < surfaceWaterLevel(w, px, pz) - v.draft!;
+      }),
+    );
+  for (
+    let offset = 0;
+    offset <= boatNavigationRules(w.settings).boatBerthSearchDistance;
+    offset++
+  ) {
+    const candidate = { x: berth.x + direction.x * offset, z: berth.z + direction.z * offset };
+    if (depthFits(candidate)) return { ...d, berth: candidate };
+  }
+  // Retain the candidate so the existing action can explain the failed clearance.
+  return { ...d, berth };
+}
+
+/** Reberth only an old standard-position coaster, and only when the larger berth is clear. */
+export function alignLegacyCargoMoorings(w: World) {
+  if (!Object.values(w.mooredBoats ?? {}).some((b) => b.slot === CARGO_BOAT)) return;
+  const old = boatLandings(w),
+    fitted = boatLandings(w, CARGO_BOAT);
+  for (const boat of Object.values(w.mooredBoats ?? {})) {
+    if (boat.slot !== CARGO_BOAT) continue;
+    const previous = old.find((d) => d.id === boat.landing),
+      next = fitted.find((d) => d.id === boat.landing),
+      owner = w.players[boat.owner];
+    if (
+      !previous ||
+      !next ||
+      !owner ||
+      Math.hypot(boat.x - previous.berth.x, boat.z - previous.berth.z) > 0.01 ||
+      Math.hypot(boat.x - next.berth.x, boat.z - next.berth.z) < 0.01 ||
+      // This is not boarding: the owner's current boat must also count as occupied water.
+      landingBlocked(w, next, { ...owner, id: '' }, true, boat.slot, boat.owner)
+    )
+      continue;
+    Object.assign(boat, next.berth, { heading: next.heading });
+    w.revision++;
+  }
 }
 const boathouseRange = 40;
 type LandingPosition = Pick<Player, 'x' | 'z'> & Partial<Pick<Player, 'vehicle' | 'heading'>>;
@@ -221,10 +287,12 @@ export function landingAccepts(w: World, d: BoatLanding, slot: number) {
     ? slot === ROWBOAT
     : d.river
       ? riverDockAccepts(w, slot)
-      : !d.quay || ((v.length ?? 0) <= QUAY.berthLength && (v.beam ?? 0) <= QUAY.berthBeam);
+      : !d.quay ||
+        ((v.length ?? 0) <= boatNavigationRules(w.settings).quayMaxLength &&
+          (v.beam ?? 0) <= boatNavigationRules(w.settings).quayMaxBeam);
 }
 export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: unknown) {
-  return boatLandings(w)
+  return boatLandings(w, afloat ? p.vehicle : undefined)
     .filter(
       (d) =>
         (id === undefined ||
@@ -256,6 +324,61 @@ export function landingBlocked(
   if (d.building || quay) {
     const reason = dockObstruction(w, (d.building ?? quay)!);
     if (reason) return reason;
+  }
+  const hullSlot = board ? slot : p.vehicle,
+    v = vehicleDef(w, hullSlot);
+  if (v.draft !== undefined && (board || v.holdCapacity)) {
+    const s = Math.sin(d.heading),
+      c = Math.cos(d.heading);
+    const length = v.length ?? 0,
+      beam = v.beam ?? 0;
+    const occupied = (
+      x: number,
+      z: number,
+      q: { x: number; z: number; heading: number },
+      otherSlot: number,
+    ) => {
+      const other = vehicleDef(w, otherSlot),
+        dx = x - q.x,
+        dz = z - q.z;
+      const sine = Math.sin(q.heading),
+        cosine = Math.cos(q.heading);
+      return (
+        Math.abs(dx * cosine - dz * sine) < (other.beam ?? 1) / 2 + 0.5 &&
+        Math.abs(dx * sine + dz * cosine) < (other.length ?? 1) / 2 + 0.5
+      );
+    };
+    for (let i = 0; i <= Math.ceil(beam); i++)
+      for (let j = 0; j <= Math.ceil(length); j++) {
+        const x0 = -beam / 2 + (i * beam) / Math.max(1, Math.ceil(beam)),
+          z0 = -length / 2 + (j * length) / Math.max(1, Math.ceil(length));
+        const x = d.berth.x + x0 * c + z0 * s,
+          z = d.berth.z - x0 * s + z0 * c;
+        const water = surfaceWaterLevel(w, x, z);
+        if (
+          Math.max(Math.abs(x), Math.abs(z)) >= mapHalf(w) ||
+          terrainHeight(w, x, z) >= water - v.draft
+        )
+          return 'The full hull needs deeper clear water at this berth';
+        if (
+          w.buildings.some((b) => blocksBuilding(b, x, z, 0, 0.5)) ||
+          creatorBlocks(w, x, z, water, 0.5)
+        )
+          return 'The enlarged boat berth is blocked';
+        if (
+          Object.values(w.players).some(
+            (q) =>
+              q.id !== p.id && q.online && !q.atHome && !q.hitch && occupied(x, z, q, q.vehicle),
+          )
+        )
+          return 'The full boat berth is occupied; wait for it to clear';
+        if (
+          Object.entries(w.mooredBoats ?? {}).some(
+            ([id, q]) => id !== mooringKey(mooredOwner, hullSlot) && occupied(x, z, q, q.slot),
+          )
+        )
+          return 'This berth has a moored boat; use another berth';
+      }
   }
   const point = board ? d.berth : d.land;
   const height = board ? surfaceWaterLevel(w, point.x, point.z) : travelHeight(w, point.x, point.z);

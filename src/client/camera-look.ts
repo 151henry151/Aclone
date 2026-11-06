@@ -11,9 +11,16 @@ export function lookPitchFromDrag(pitch: number, dy: number, cameraMode: number)
 }
 
 /** Behind-the-tractor offset. lookPitch 0 matches the historical seat; looking up lowers the camera. */
-export function chaseOffset(heading: number, zoom: number, walking: boolean, lookPitch: number) {
-  const dist = (walking ? 6 : 21) * zoom,
-    height = (walking ? 3 : 8.5) * zoom,
+export function chaseOffset(
+  heading: number,
+  zoom: number,
+  walking: boolean,
+  lookPitch: number,
+  hullLength = 0,
+) {
+  const hullScale = Math.max(1, (hullLength * 1.05) / 21),
+    dist = (walking ? 6 : 21 * hullScale) * zoom,
+    height = (walking ? 3 : 8.5 * hullScale) * zoom,
     radius = Math.hypot(dist, height),
     base = Math.atan2(height, dist),
     pitch = Math.max(-0.2, Math.min(1.35, base - lookPitch)),

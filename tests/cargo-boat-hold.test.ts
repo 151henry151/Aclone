@@ -12,7 +12,7 @@ export function freightSetup() {
   const p = addPlayer(w, 'owner', 'Captain');
   w.settings.requireCaptainSkill = false;
   w.settings.vehicleLicences = false;
-  const d = boatLandings(w).find((d) => d.building)!;
+  const d = boatLandings(w, 35).find((d) => d.building)!;
   Object.assign(p, d.land, {
     y: travelHeight(w, d.land.x, d.land.z),
     cash: 10000000,

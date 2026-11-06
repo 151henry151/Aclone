@@ -2,6 +2,25 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.129.0 — A proper coastal freighter
+
+The Coastal cargo boat now measures 60 × 16.8 metres, with a 3.75 m draft and
+3.6 m freeboard. Its hull is three times its former dimensions; people, fittings
+and individual pallets keep their normal size. Crew stand on the side decks,
+the helm follows the raised deck, and chase view backs out to frame the ship.
+The 2,000-weight hold, 320-unit tank and 240s price remain unchanged.
+
+Boatyards, fishing piers and suitable freight quays choose an outside berth with
+room for the larger hull. Boarding and mooring check the full footprint for
+water depth and obstacles. Existing standard-position moorings move outward only
+when clear, preserving the owner and freight. A blocked berth refuses the action
+without spending money or losing cargo. River docks still refuse the coaster.
+
+World Builder exposes draft and cargo-boat freeboard alongside length and beam,
+plus quay vessel limits and the extra seaward berth search. Defaults preserve
+small-craft access. See the [freight guide](HAULAGE.md#coastal-freight) and
+[hull and berth settings](WORLD_BUILDING.md#cargo-boat-hull-and-berth-clearance).
+
 ## 0.128.0 — From pasture to plate
 
 Meet calves, lambs, piglets and chicks in your pastures. Feed and water them while

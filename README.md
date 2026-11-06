@@ -4,7 +4,14 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.128.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.129.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.129.0 gives the Coastal cargo boat a 60 × 16.8 m hull—three times
+its former dimensions—with people, fittings and individual pallets kept at their
+normal size. Crew stand on the deck and chase view frames the ship. Larger boats
+use clear, deep outside berths; World Builder controls hull dimensions, draft,
+freeboard and quay limits. Hold capacity, price and fuel tank stay the same. See
+[Coastal cargo boats](docs/PLAYING.md#coastal-cargo-boats-and-freight-quays).
 
 Version 0.128.0 adds a pasture-to-plate food chain: young animals grow
 under farm care, butchers process adults from your wagon, and restaurants and

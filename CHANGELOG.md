@@ -6,6 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.129.0] - 2026-11-06
+
+### Fixed
+
+- Enlarge the Coastal cargo boat to a 60 × 16.8 m hull while keeping people, fittings and individual cargo at human scale; place crew on deck and frame the full ship in chase view.
+- Fit larger boats outside existing docks, check full-hull depth and obstacles, and preserve freight when moving clear legacy moorings to the new berth.
+
+### Added
+
+- Configure vessel draft, cargo-boat freeboard, quay vessel limits and the seaward berth search in World Builder.
+
 ## [0.128.0] - 2026-11-06
 
 ### Added

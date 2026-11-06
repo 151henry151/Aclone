@@ -1677,12 +1677,13 @@ hull updates with its dimensions even while moored.
   shore entrance. Completed nearby shops trade directly with a hold; their
   ownership, prices, stock and investment remain authoritative.
 - `quayDraft`: 2 m minimum low-water depth, range 0.1–20, checked across the
-  entire quay berth. Terrain or rule edits can close access without deleting
-  moored property; restore safe access to retrieve it.
+  engineered base water survey. Each vessel also needs its own draft across
+  its full hull. Terrain or rule edits can close access without deleting moored
+  property; restore safe access to retrieve it.
 
 The existing building catalogue/template controls set the Freight quay's cost,
 materials and storage: defaults 24s, 80 Wood + 100 Stone + 20 Steel and 4,000
-storage per good. The engineered 28 × 8 m berth and open wharf share geometry
+storage per good. The engineered 28 × 8 m base water survey and open wharf share geometry
 between siting, walking and rendering; the Workshop remains the model-editing
 route. River hull limits remain in Boat navigation. Boat death/recovery and
 crew/provision rules remain shared with the existing boats.
@@ -1799,3 +1800,15 @@ plants recheck water availability before producing, and explain blocked intakes.
 Disabling butchers blocks new construction, paid slaughter and counter production while preserving existing buildings, goods and fees. Disabling home cooking blocks new/completing tasks and leaves ingredients untouched. Changing a quoted service fee or yield cancels it before payment or animal consumption. Invalid rule patches are rejected atomically.
 
 The building catalogue includes five butcher models with loading ramps. Owners set per-species slaughter fees and choose counter menus; kitchens choose meat dishes or their existing standard/seafood menu. Portable designs retain rules, catalogue settings, selected menus, fees and young growth cohorts. Existing saved adults and cooked Steak are preserved. The meat-listing migration adds only missing listings and respects explicit and paused prices; it does not seed animals, raw meat, meals or cash.
+
+## Cargo boat hull and berth clearance
+
+Vehicles exposes length, beam, draft and freeboard for the
+Coastal cargo boat (defaults 60, 16.8, 3.75 and 3.6 metres). Draft also governs
+its shoreline and towing clearance; the rendering keeps people, railings and
+individual pallets at human scale. The Boat navigation rules add
+`quayMaxLength` (60 m), `quayMaxBeam` (20 m) and `boatBerthSearchDistance` (30 m;
+zero disables the extra search). These select water outside existing structures,
+with full-hull depth and obstacle checks at boarding/mooring. They do not rebuild
+quays or move buildings. Stricter settings may block a landing; cargo and ownership
+remain intact. Settings and vehicle overrides survive saves and portable designs.

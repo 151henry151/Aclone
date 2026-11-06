@@ -6,7 +6,7 @@ import { isTrawler } from './vehicle-config';
 import { surfaceWaterLevel } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Player, Stock, World } from './types';
-import { FISHING_BOAT, boatSlot } from './boats';
+import { FISHING_BOAT, boatSlot, cargoCrewPosition } from './boats';
 import { accounts, addQuantities, recordLife } from './reports';
 import { questEvent } from './quests';
 import { queueCreatorScript } from './creator';
@@ -162,7 +162,15 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     v.members[p.id] = v.offers[p.id];
     delete v.offers[p.id];
     p.hitch = captain.id;
-    Object.assign(p, { x: captain.x, z: captain.z, y: captain.y + 2, speed: 0 });
+    Object.assign(
+      p,
+      cargoCrewPosition(w, captain, Object.keys(v.members).length - 1) ?? {
+        x: captain.x,
+        z: captain.z,
+        y: captain.y + 2,
+      },
+      { speed: 0 },
+    );
     return `Joined ${captain.name}: ${v.members[p.id]}% of realised expedition profit after fuel and consumed provisions. No pay on a loss. Remain aboard until return.`;
   }
   need(

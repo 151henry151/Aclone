@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { vehicleDef } from './vehicle-config';
-import type { World } from './types';
+import type { World, Player } from './types';
 /** Appended slots preserve existing vehicles and creator slots 8–23. */
 export const FISHING_BOAT = 30;
 export const CHARTER_BOAT = 31;
@@ -15,3 +15,18 @@ export const poweredBoat = (slot: number, w?: Pick<World, 'vehicleTuning'>) =>
 export const boatSlot = (slot: number, w?: Pick<World, 'vehicleTuning'>) =>
   vehicleDef(w, slot).mode === 3;
 export const mooringKey = (owner: string, slot: number) => `${owner}:${slot}`;
+
+/** Cargo crew stand on the side walkways, clear of the open hold. */
+export function cargoCrewPosition(w: World, captain: Player, index = 0) {
+  if (captain.vehicle !== CARGO_BOAT) return undefined;
+  const v = vehicleDef(w, captain.vehicle),
+    x = (index % 2 ? -1 : 1) * v.beam! * 0.42,
+    z = -v.length! * 0.03,
+    s = Math.sin(captain.heading),
+    c = Math.cos(captain.heading);
+  return {
+    x: captain.x + x * c + z * s,
+    z: captain.z - x * s + z * c,
+    y: captain.y + v.freeboard! + 0.1,
+  };
+}

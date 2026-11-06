@@ -136,11 +136,14 @@ shore limits.
 ## Coastal freight
 
 Buy the **Coastal cargo boat** at a boathouse. Its default price is **240s**:
-a 20 × 5.6 m coaster with a **2,000-weight freight hold**, **320-unit tank**,
+a 60 × 16.8 m coaster with a **2,000-weight freight hold**, **320-unit tank**,
 **6 m/s** maximum speed and **0.008 fuel units/s** full-throttle burn. It requires
 the Captain skill where that rule is enabled. The wheelhouse has working
 instruments, and pallet loads appear as the hold fills. W/S adjust persistent
 throttle; B sets it to idle, F4 switches the engine, and C changes camera.
+Its hull has 3.6 m freeboard and a 3.75 m draft. The chase camera frames the
+whole ship; crew stand on its side decks. People, fittings and individual pallets
+remain human scale. Length, beam, draft and freeboard are editable per world.
 
 The captain's **60-weight personal allowance**, including shared provisions,
 is separate from freight. Store meals and drinks through Boat provisions & crew;
@@ -154,7 +157,10 @@ At a stopped, compatible berth, open **Inventory → freight hold** to load or
 unload personal cargo, transfer an owned nearby stockroom, or buy/sell directly
 with a nearby shop. Shop reach is measured from the **shore entrance**, default
 30 m. Both boathouses and the fishing pier work; freight quays provide dedicated
-alongside berths. The coaster exceeds the default river dock's 14 × 3.6 m limit.
+alongside berths. Large hulls use water outside the existing structure; the berth
+may search up to 30 m farther seaward for sufficient depth. Boarding or mooring
+is refused if any part of the hull is shallow, obstructed or occupied. A deeper
+ship may need a different landing even when a small boat fits. The coaster exceeds the default river dock's 14 × 3.6 m limit.
 A world builder can give the existing canal boat a separate hold for river freight;
 there is no new river-barge class in this release.
 
@@ -181,7 +187,11 @@ Choose **Build → Freight quay** on a dry, gently sloping coast and rotate the
 wharf toward deep water. Defaults are **24s plus town construction tax**, then
 **80 Wood, 100 Stone and 20 Steel** delivered as construction materials. The
 28 m open wharf has a timber access gangway, bollards and fenders, with a 28 × 8 m
-alongside berth requiring **2 m depth at low water**. There is no lifting hall.
+base survey area requiring **2 m depth at low water**. Larger vessels lie outside
+that area and must pass their own full-hull depth and obstacle checks. The default
+vessel limits are **60 m long × 20 m beam**; World Builder can change both limits
+and the maximum extra seaward search (zero disables it). The 3.75 m-draft coaster
+needs deeper water than the basic survey minimum. There is no lifting hall.
 The preview refuses shallow, obstructed or inland-facing sites. Quays board
 already-owned compatible boats; buy a new boat at a boathouse.
 

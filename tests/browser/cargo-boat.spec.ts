@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
-import { createWorld, addPlayer } from '../../src/shared/simulation';
+import { createWorld, addPlayer, makeBuilding } from '../../src/shared/simulation';
 import { ensurePuddlewickBoatyard } from '../../src/server/puddlewick-boatyard';
 import { boatLandings } from '../../src/shared/boathouse';
 import { travelHeight } from '../../src/shared/dock';
@@ -13,6 +13,7 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
   page,
 }) => {
   test.setTimeout(240000);
+  page.setDefaultTimeout(15000);
   const dir = mkdtempSync(join(tmpdir(), 'aclone-freight-')),
     app = await createApp({ dataDir: dir, port: 0, dev: true });
   const { account, token } = app.universe.register('Coaster captain');
@@ -28,7 +29,7 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
     vehicleLicences: false,
     parishOrders: false,
   });
-  const d = boatLandings(w).find((d) => d.building)!;
+  const d = boatLandings(w, 35).find((d) => d.building)!;
   const p = addPlayer(w, account.id, account.name);
   Object.assign(p, d.land, {
     y: travelHeight(w, d.land.x, d.land.z),
@@ -61,6 +62,20 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
     await page.goto(`http://127.0.0.1:${port}`);
     await waitForWorld(page);
     await page.keyboard.press('i');
+    const blocker = makeBuilding(
+      'berth-blocker',
+      'home',
+      d.berth.x + Math.sin(d.heading) * 25,
+      d.berth.z + Math.cos(d.heading) * 25,
+    );
+    current().buildings.push(blocker);
+    const originalCash = me().cash;
+    await page.getByRole('button', { name: /Buy and board Coastal cargo boat/ }).click();
+    await expect(page.locator('#toast')).toContainText(/blocked|clear|occupied/i);
+    expect(me().vehicle).toBe(5);
+    expect(me().cash).toBe(originalCash);
+    await page.screenshot({ path: 'output/cargo-boat-scale/blocked-berth.png' });
+    current().buildings = current().buildings.filter((b) => b.id !== blocker.id);
     await page.getByRole('button', { name: /Buy and board Coastal cargo boat/ }).click();
     await expect.poll(() => me().vehicle).toBe(35);
     const panel = page.locator('[data-freight-slot="35"]');
@@ -102,9 +117,9 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Rules', exact: true }).click();
-    const navigation = page.getByRole('group', { name: 'Boat navigation', exact: true });
-    await expect(navigation.locator('[name="freightTransferRate"]')).toHaveValue('10');
-    await navigation.locator('[name="freightTransferRate"]').fill('10000');
+    const navigationRulesPanel = page.getByRole('group', { name: 'Boat navigation', exact: true });
+    await expect(navigationRulesPanel.locator('[name="freightTransferRate"]')).toHaveValue('10');
+    await navigationRulesPanel.locator('[name="freightTransferRate"]').fill('10000');
     await page.getByRole('button', { name: 'Apply changes to server', exact: true }).click();
     await expect.poll(() => current().settings.freightTransferRate).toBe(10000);
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
@@ -186,7 +201,54 @@ test('captain buys a coaster and loads, cancels, trades, moors and reboards with
     await page.mouse.move(920, 400, { steps: 20 });
     await page.mouse.up();
     await expect(page.locator('#toast')).toHaveCSS('opacity', '0');
-    await page.screenshot({ path: 'output/cargo-boat/coaster-coastal-full.png' });
+    await page.screenshot({ path: 'output/cargo-boat-scale/coastal-after.png' });
+    await page.keyboard.press('h');
+    await page.keyboard.press('F10');
+    await page.getByRole('button', { name: 'Vehicles', exact: true }).click();
+    const editor = page.locator('[data-vehicle-editor]');
+    await editor.locator('[name="slot"]').selectOption('35');
+    await editor.getByText('Performance, fuel and economy', { exact: true }).click();
+    for (const [name, value] of Object.entries({
+      length: '48',
+      beam: '12',
+      draft: '2.5',
+      freeboard: '2.8',
+    }))
+      await editor.locator(`[name="${name}"]`).fill(value);
+    await editor.getByRole('button', { name: 'Save vehicle configuration', exact: true }).click();
+    await expect.poll(() => current().vehicleTuning?.[35]?.draft).toBe(2.5);
+    await page.getByRole('button', { name: 'Rules', exact: true }).click();
+    const navigation = page.getByRole('group', { name: 'Boat navigation', exact: true });
+    for (const [name, value] of Object.entries({
+      boatBerthSearchDistance: '12',
+      quayMaxLength: '50',
+      quayMaxBeam: '14',
+    }))
+      await navigationRulesPanel.locator(`[name="${name}"]`).fill(value);
+    await page.getByRole('button', { name: 'Apply changes to server', exact: true }).click();
+    await expect.poll(() => current().settings.boatBerthSearchDistance).toBe(12);
+    await page.screenshot({ path: 'output/cargo-boat-scale/creator-rules.png' });
+    const invalid = navigationRulesPanel.locator('[name="boatBerthSearchDistance"]');
+    await invalid.fill('-1');
+    await page.getByRole('button', { name: 'Apply changes to server', exact: true }).click();
+    expect(await invalid.evaluate((input: HTMLInputElement) => input.validity.rangeUnderflow)).toBe(
+      true,
+    );
+    expect(current().settings.boatBerthSearchDistance).toBe(12);
+    await page.reload();
+    await waitForWorld(page);
+    await page.keyboard.press('F10');
+    await page.getByRole('button', { name: 'Vehicles', exact: true }).click();
+    await editor.locator('[name="slot"]').selectOption('35');
+    for (const [name, value] of Object.entries({
+      length: '48',
+      beam: '12',
+      draft: '2.5',
+      freeboard: '2.8',
+    }))
+      await expect(editor.locator(`[name="${name}"]`)).toHaveValue(value);
+    await page.getByRole('button', { name: 'Rules', exact: true }).click();
+    await expect(invalid).toHaveValue('12');
     expect(errors).toEqual([]);
   } finally {
     await page.close();

@@ -22,7 +22,7 @@ export function quaySetup() {
     barriers: [],
     scatter: [],
     heightmap: Array.from({ length: 1089 }, (_, i) =>
-      Math.floor(i / 33) < 16 ? 2 : Math.floor(i / 33) === 16 ? 1 : -5,
+      Math.floor(i / 33) < 16 ? 2 : Math.floor(i / 33) === 16 ? 1 : -10,
     ),
   };
   const b = makeBuilding('quay', 'quay', -100, 0);
@@ -71,7 +71,7 @@ test('quay refuses an authored hull larger than its physical berth', () => {
   w.settings.vehicleLicences = false;
   const p = addPlayer(w, 'owner', 'Captain');
   Object.assign(p, d.land, { vehicle: 5, fleet: [0, 5, 35], y: 1.5, inventory: {} });
-  w.vehicleTuning = { 35: { length: 29 } };
+  w.vehicleTuning = { 35: { length: 61 } };
   assert.throws(
     () => act(w, p.id, { type: 'vehicle', slot: 35, building: b.id }),
     /fit|berth|length/i,

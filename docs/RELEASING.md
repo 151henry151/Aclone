@@ -2,6 +2,22 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.129.0
+
+Deploy the approved backlog-implementation SHA with the normal online SQLite
+backup, prefixed build and service restart, then publish the matching website.
+Reload clients for the larger hull and camera. Missing vessel and navigation
+settings use catalogue defaults; authored length and beam overrides remain intact.
+On saved-world load, standard-position coastal moorings move to a larger outside
+berth only if depth and obstacles permit. Ownership, hold contents and freight
+metadata are retained. Blocked or nonstandard moorings are left in place.
+
+Verify public health/client/website version 0.129.0, the deployed commit and
+prefixed script/map-worker assets. Compare saved coastal freight with the backup
+using read-only checks. Use local browser evidence for purchases and sailing;
+make no live grants or test-player changes. Keep database and website backups
+for rollback with the matching code, since old code uses the smaller berths.
+
 ## Upgrade 0.128.0
 
 Deploy the approved backlog-implementation SHA with the normal online SQLite

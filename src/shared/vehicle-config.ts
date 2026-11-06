@@ -45,6 +45,8 @@ export const vehicleTuningSchema = z
     length: number(1, 60),
     width: number(0.2, 30),
     beam: number(0.5, 20),
+    draft: number(0.05, 20),
+    freeboard: number(0.1, 20),
     requiresCaptain: z.boolean(),
     persistentThrottle: z.boolean(),
     trawling: z.boolean(),

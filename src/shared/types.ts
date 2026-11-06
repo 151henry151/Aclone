@@ -724,6 +724,8 @@ export interface VehicleDef {
   hitch: number;
   length?: number;
   beam?: number;
+  draft?: number;
+  freeboard?: number;
   width?: number;
 }
 export interface Recipe {

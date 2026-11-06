@@ -15,7 +15,10 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
   group.add(fixed, cargo);
   const length = vessel.length!,
     beam = vessel.beam!,
-    aft = -length / 2 + 3;
+    aft = -length / 2 + 3,
+    freeboard = vessel.freeboard!,
+    draft = vessel.draft!,
+    deckRise = freeboard - 1.2;
   const mat = (color: string, metalness = 0) =>
     new T.MeshStandardMaterial({ color, metalness, roughness: 0.75 });
   const paint = mat(color, 0.3),
@@ -35,14 +38,14 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
     parent = fixed,
   ) {
     const o = new T.Mesh(new T.BoxGeometry(w, h, d), m);
-    o.position.set(x, y, z);
+    o.position.set(x, y + deckRise, z);
     o.castShadow = o.receiveShadow = true;
     parent.add(o);
     return o;
   }
   function rod(a: number[], b: number[], r = 0.035, m: T.Material = cream) {
-    const A = new T.Vector3(...a),
-      B = new T.Vector3(...b),
+    const A = new T.Vector3(a[0], a[1] + deckRise, a[2]),
+      B = new T.Vector3(b[0], b[1] + deckRise, b[2]),
       v = B.clone().sub(A);
     const o = new T.Mesh(new T.CylinderGeometry(r, r, v.length(), 6), m);
     o.position.copy(A.add(B).multiplyScalar(0.5));
@@ -62,12 +65,12 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
     indices: number[] = [];
   for (const [z, w] of sections)
     for (const [x, y] of [
-      [-w, 1.2],
-      [-w * 0.93, -0.1],
-      [-w * 0.7, -1.25],
-      [w * 0.7, -1.25],
-      [w * 0.93, -0.1],
-      [w, 1.2],
+      [-w, freeboard],
+      [-w * 0.93, -draft * 0.08],
+      [-w * 0.7, -draft],
+      [w * 0.7, -draft],
+      [w * 0.93, -draft * 0.08],
+      [w, freeboard],
     ])
       vertices.push(x, y, z);
   for (let i = 0; i < sections.length - 1; i++)
@@ -95,7 +98,7 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
     rod([side * beam * 0.47, 2.15, -length * 0.38], [side * beam * 0.47, 2.15, length * 0.35]);
     for (const z of [-length * 0.35, 0, length * 0.28]) {
       const tire = new T.Mesh(new T.TorusGeometry(0.31, 0.1, 6, 12), rubber);
-      tire.position.set(side * beam * 0.5, 0.75, z);
+      tire.position.set(side * beam * 0.5, 0.75 + deckRise, z);
       tire.rotation.y = Math.PI / 2;
       fixed.add(tire);
       rod([side * beam * 0.46, 1.35, z], [side * beam * 0.51, 1, z], 0.025, steel);
@@ -106,8 +109,62 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
     }
   }
   for (const z of [-length * 0.25, length * 0.25]) box(beam * 0.7, 0.9, 0.14, paint, 0, 0.83, z);
-  box(beam * 0.8, 0.15, 4, deck, 0, 1.22, aft);
-  box(beam * 0.55, 0.15, length * 0.13, deck, 0, 1.22, length * 0.33);
+  // Close both ends along the hull contour, leaving only the intended central hold open.
+  const widthAt = (z: number) => {
+    const i = Math.max(
+      1,
+      sections.findIndex(([end]) => end >= z),
+    );
+    const [a, aw] = sections[i - 1],
+      [b, bw] = sections[i];
+    return aw + ((bw - aw) * (z - a)) / (b - a);
+  };
+  for (const [start, end] of [
+    [-length / 2, -length / 4],
+    [length / 4, length / 2],
+  ]) {
+    const ends = [start, ...sections.map(([z]) => z).filter((z) => z > start && z < end), end];
+    const positions: number[] = [],
+      triangles: number[] = [];
+    for (let i = 1; i < ends.length; i++) {
+      const a = ends[i - 1],
+        b = ends[i],
+        aw = widthAt(a),
+        bw = widthAt(b),
+        n = positions.length / 3;
+      positions.push(
+        -aw,
+        freeboard + 0.02,
+        a,
+        aw,
+        freeboard + 0.02,
+        a,
+        -bw,
+        freeboard + 0.02,
+        b,
+        bw,
+        freeboard + 0.02,
+        b,
+      );
+      triangles.push(n, n + 2, n + 1, n + 1, n + 2, n + 3);
+    }
+    const geometry = new T.BufferGeometry();
+    geometry.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute(
+      'uv',
+      new T.Float32BufferAttribute(
+        positions.flatMap((_, i) =>
+          i % 3 === 0 ? [positions[i] / beam, positions[i + 2] / length] : [],
+        ),
+        2,
+      ),
+    );
+    geometry.setIndex(triangles);
+    geometry.computeVertexNormals();
+    const cap = new T.Mesh(geometry, deck);
+    cap.castShadow = cap.receiveShadow = true;
+    fixed.add(cap);
+  }
   // Aft wheelhouse has open window framing, clear sight over the hold and a real-sized door.
   const glass = new T.MeshStandardMaterial({
     color: '#aac8ce',
@@ -133,15 +190,15 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
   rod([-0.6, 5.2, aft], [0.6, 5.2, aft]);
   box(1.15, 0.1, 0.18, cream, 0, 5.6, aft);
   const cockpit = createCharterWheelhouse('COASTER / COASTAL FREIGHT', vessel.tank);
-  cockpit.group.position.set(0, 0.4, aft - 3.4);
+  cockpit.group.position.set(0, 0.4 + deckRise, aft - 3.4);
   group.add(cockpit.group);
   const driver = createHuman('seated').group;
-  driver.position.set(0.48, 1.45, aft - 0.9);
+  driver.position.set(0.48, 1.45 + deckRise, aft - 0.9);
   group.add(driver);
   group.userData.driver = driver;
-  group.userData.eye = new T.Vector3(0.48, 2.83, aft - 0.9);
+  group.userData.eye = new T.Vector3(0.48, 2.83 + deckRise, aft - 0.9);
   group.userData.viewPitch = -0.08;
-  group.userData.lamp = new T.Vector3(0, 3.5, aft + 1.4);
+  group.userData.lamp = new T.Vector3(0, 3.5 + deckRise, aft + 1.4);
   // Individual pallet loads appear progressively; empty holds remain visibly empty.
   for (let row = 0; row < 5; row++)
     for (const side of [-1, 1]) {
@@ -149,10 +206,9 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
       cargo.add(load);
       const z = (row - 2) * length * 0.085,
         x = side * beam * 0.17;
-      box(beam * 0.29, 0.12, length * 0.075, timber, x, 0.49, z, load);
-      box(beam * 0.27, 0.75, length * 0.07, timber, x, 0.93, z, load);
-      for (const dx of [-beam * 0.09, beam * 0.09])
-        box(0.055, 0.78, length * 0.072, steel, x + dx, 0.93, z, load);
+      box(1.6, 0.12, 1.5, timber, x, 0.49, z, load);
+      box(1.5, 0.75, 1.4, timber, x, 0.93, z, load);
+      for (const dx of [-0.5, 0.5]) box(0.055, 0.78, 1.44, steel, x + dx, 0.93, z, load);
     }
   const layout: MarineLightLayout = {
     deck: [new T.Vector3(-1.1, 3.35, aft + 1.4), new T.Vector3(1.1, 3.35, aft + 1.4)],
@@ -169,6 +225,9 @@ export function createCargoBoat(color: string, vessel: VehicleDef) {
       ['trawlWhite', '#fff4d2', 0, 5.2, aft],
     ],
   };
+  for (const point of [...layout.deck, ...layout.targets, layout.cabin, layout.cabinTarget])
+    point.y += deckRise;
+  for (const spec of layout.specs) spec[3] += deckRise;
   const lighting = createFishingLights(cream, cockpit.cabinLightMaterial, layout);
   group.add(lighting.group);
   group.userData.marineLighting = lighting;

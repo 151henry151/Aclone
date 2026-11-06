@@ -631,7 +631,7 @@ function applyValidatedDesign(w: World, input: unknown) {
   const freight: NonNullable<World['mooredBoats']> = {};
   for (const input of d.mooredFreight) {
     const v = vehicleDef(w, input.slot),
-      dock = boatLandings(w).find((dock) => dock.id === input.landing);
+      dock = boatLandings(w, input.slot).find((dock) => dock.id === input.landing);
     const key = mooringKey(w.owner, input.slot);
     if (freight[key])
       throw Error('A world design can place only one freight vessel of each class for its owner');

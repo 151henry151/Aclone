@@ -6,6 +6,9 @@ import { withinBoatLanding, type BoatLanding } from '../src/shared/boathouse';
 import { vehicleCondition } from '../src/shared/vehicle-services';
 import { Store } from '../src/server/store';
 const patch = {
+  quayMaxLength: 48,
+  quayMaxBeam: 12,
+  boatBerthSearchDistance: 18,
   riverDockDraft: 2,
   riverDockMaxLength: 30,
   riverDockMaxBeam: 8,
@@ -118,6 +121,9 @@ test('arrival rules retain hull geometry water checks and independent shore boat
 test('boat navigation rules validate atomically and round trip through settings surfaces', async () => {
   const { w, p } = setup();
   for (const [k, min, max] of [
+    ['quayMaxLength', 1, 60],
+    ['quayMaxBeam', 0.5, 20],
+    ['boatBerthSearchDistance', 0, 100],
     ['riverDockDraft', 0.1, 20],
     ['riverDockMaxLength', 0.1, 50],
     ['riverDockMaxBeam', 0.1, 20],

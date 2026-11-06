@@ -366,7 +366,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>River limits control depth and vessel eligibility, not jetty geometry. Dry banks and river water are still required. Existing moorings survive stricter limits; restoring limits restores access.</p><p>Zero impact damage still blocks shore crossing, recoils and idles the boat. Gentle canoe landings retain their exemption. Arrival uses the oriented hull and requires a clear water path. Shore access to boathouse menus retains its separate 40 m range. Rule edits do not move boats or change existing condition.</p></fieldset>`;
+    )}<p>Quay limits govern vessel eligibility. Larger hulls lie outside the existing structure; the seaward search looks for sufficient draft within the configured distance. Zero disables that extra search. The entire hull must clear water, buildings and other boats. Tune vessel length, beam and draft in Vehicles.</p><p>River limits control depth and vessel eligibility, not jetty geometry. Dry banks and river water are still required. Existing moorings survive stricter limits; restoring limits restores access.</p><p>Zero impact damage still blocks shore crossing, recoils and idles the boat. Gentle canoe landings retain their exemption. Arrival uses the oriented hull and requires a clear water path. Shore access to boathouse menus retains its separate 40 m range. Rule edits do not move boats or change existing condition.</p></fieldset>`;
   const running = vehicleRunningRules(settings);
   const runningFields = `<fieldset class="boat-death-settings"><legend>Vehicle running costs</legend>${Object.entries(
     vehicleRunningRuleFields,

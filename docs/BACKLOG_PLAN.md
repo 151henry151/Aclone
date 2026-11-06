@@ -301,7 +301,7 @@ implementation order rather than building paving before ford-aware persistence.
 15. **Springs, pump-houses and desalination plants — done, live in 0.127.0**: deterministic frozen
     springs/headwaters; scenery/drinking; grandfathered desalination; fresh-water
     siting/recipes/models; northern NPC founding, migration and catalogue/docs.
-16. **Butcher, meat and livestock life cycle**: young/cohorts/rations/breeding;
+16. **Butcher, meat and livestock life cycle — done, live in 0.128.0**: young/cohorts/rations/breeding;
     adult slaughter service/shop; raw meat/spoilage; business and home cooking;
     NPCs, migration, portable catalogues and taxed chain margins.
     **Then revisit item 13: coastal cargo boat scale (Henry, 2026-11-06).**
@@ -6465,3 +6465,110 @@ errors; desktop and mobile screenshots are reviewed. Both builds and the clean
 TypeScript check pass, with existing bundler warnings only. Changed files are
 Prettier-formatted and `git diff --check` is clean. Release 0.128.0 is ready for
 commit/push and deployment. The full test suite was not rerun.
+
+**Item 16 post-push record:** implementation committed and pushed as
+`0f675e4dfa747ac65b7ba5684f0c64b764fbe955`; GitHub's branch SHA matches local HEAD.
+Mark the implementation slice done after that push. The separate cargo-boat
+follow-up plan is committed as `3fc27e8`. Exact-SHA deployment, live migration
+verification and the reviewed-image announcement follow before the next item.
+
+**Item 16 release complete (2026-11-06):** live SHA is
+`0f675e4dfa747ac65b7ba5684f0c64b764fbe955`; public health and the website report
+**0.128.0**. The deploy script's first health request saw startup 502; the service
+then became ready and read-only health, client JavaScript, prefixed map-worker,
+website and all five live butcher gallery models passed without browser errors.
+No second restart was needed. All five saved worlds have `meatVersion: 1` and
+the new market listings. No live player grants or manual world edits were made.
+
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261106-011033.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261106-011206.tar.gz`.
+The bot announcement and both reviewed screenshots pass read-back and image-fetch
+verification: https://discord.com/channels/1562183434254680175/1565527790785404968/1568146105202507807.
+Evidence is in `output/release-0.128.0/`. Progress: **14 of 29 eligible Planned
+sections complete**, plus all 20 shipped claims assessed and the three confirmed
+gaps fixed. Next: the requested item 13 coastal cargo boat scale follow-up, then
+item 17. Piloted spaceflight remains excluded.
+
+### Coastal cargo boat scale follow-up — completion criteria before code
+
+Measured shipped definition/model: hull **20 × 5.6 m**, top 1.2 m above the
+waterline and keel 1.25 m below it. Target **60 × 16.8 m**, freeboard 3.6 m,
+draft 3.75 m. Store defaults only in the existing freight vehicle catalogue;
+expose draft/freeboard with length/beam in the per-world vehicle editor, validate
+and preserve them in saves and portable designs. Keep human, wheelhouse fittings,
+rails and individual crates at human scale. The hold remains 2,000 weight, tank
+320, price 240s and speed/fuel settings unchanged; rerun the existing route margin
+and full-circuit tests rather than silently scaling the economy.
+
+The current quay permits only 28 × 8 m. Use vessel-sized water clearances outside
+the existing landing structure, not an enlarged structure that overwrites nearby
+property. Configure quay vessel limits per world (60 m length, 20 m beam defaults)
+and check actual depth/obstructions across the enlarged hull at boarding/mooring.
+Keep river-dock limits and small-craft berths unchanged. The boathouse and fishing
+pier need the same vessel-aware outside clearance. Preserve saved ownership,
+hold/basis/freshness, and ensure existing moored cargo vessels can be retrieved.
+
+Red tests before production changes:
+
+- `npx tsx --test tests/cargo-boat.test.ts tests/cargo-boat-scale.test.ts`: assert
+  the new default dimensions, configurable/portable draft and freeboard, unchanged
+  economics, real enlarged-hull grounding and blocked-berth refusal without stock,
+  money or ownership changes. Verify successful boarding, disembarking and freight
+  retrieval at a clear quay, boathouse and pier; oversized river refusal remains.
+- `TEST_GPU=1 npm run test:e2e -- tests/browser/cargo-boat-model.spec.ts`: assert
+  60 m hull, 16.8 m beam, finite bounded geometry, human-scale helm and individual
+  loads, empty/full hold visibility, and world-tuned geometry rebuilds. Capture a
+  true-scale before/after view using the actual models, person and dock.
+- Browser journeys: purchase/board, load/trade/cancel, sail and return, moor/reboard,
+  cockpit and chase views, empty hold, blocked berth, river refusal, normal/low
+  graphics, and editor dimension changes persisted after reload. Reuse affected
+  cargo-boat, freight-quay and cargo-river flows; add missing scale-specific steps.
+- Relevant freight, navigation, shore, recovery, world-design and route-economy
+  suites pass; clean TypeScript, changed-file Prettier, game/website builds, updated
+  HAULAGE/player/world-builder docs and release metadata. Commit/push/deploy the
+  complete change, verify read-only live assets and announce reviewed screenshots.
+
+Scale follow-up findings: the first enlarged model passes browser geometry and
+human-size checks (60 m long, 17.15 m including fenders, 15,458 triangles). The
+initial clearance implementation correctly refuses the public boatyard's former
+berth: its shallowest full-hull point has only 1.45 m of water. Moving the berth
+12 m farther seaward supplies the required draft. Add a per-world
+`boatBerthSearchDistance` default of 30 m (zero disables the extra search), sampling
+only farther outside the structure; retain full-hull validation so obstacles and
+shallow patches cannot be bypassed. Test both ordinary launch and zero-search
+refusal without altering the boatyard or flattening terrain. Deep-quay fixtures
+now use an actual deep seabed for the 3.75 m keel; add an explicit shallow-water
+refusal. The broader freight tests remain red until real existing docks work.
+
+Scale follow-up verification so far: all 94 focused freight, navigation,
+configuration, camera, abandonment and inland-recovery tests pass. Model browser
+check passes at 60 m length with human-scale driver. Full coast circuit retains
+89.33 of 320 fuel; the funded freight route remains profitable at about 11.46s
+net after fuel, maintenance and a 20% crew share. The first broader run's 23
+failures shared the old shallow public-berth setup; the seaward search resolves
+those failures in the focused rerun. Camera, crew and actual SQLite legacy-mooring
+regressions were red before their fixes, then pass. Browser player/editor journeys
+and final release gates are still in progress; this follow-up is not deployed.
+
+Visual review caught a real scaling defect before release: enlarging the hull
+left a gap between the original short aft deck and the hold. Add a browser
+raycast regression requiring a solid deck between wheelhouse and hold and at the
+forepeak, while retaining the intended open cargo hold and human-sized pallets.
+Fix and recheck the actual model before publishing screenshots. Move the local
+comparison fixture away from race checkpoints so its unchanged dock/person scale
+is unobscured. No production scenery is removed for the screenshots.
+
+Scale follow-up release gates pass: 94 focused freight/navigation/camera/recovery
+checks and 26 final scale/towing/vehicle-config checks are green (overlapping
+coverage, not 120 distinct tests). The purchase/trade/editor, river refusal and
+freight-quay browser journeys pass; the quay journey was rerun after the deck fix
+and passes again. The model browser regression now proves both deck caps exist,
+empty/full load visibility and tuned geometry rebuilds. Final geometry is 60 m
+long, 17.15 m including fenders and 15,444 triangles, with a 1.43 m seated driver
+and 1.6 × 1.5 m pallets. Actual normal/low scenery and helm screenshots are reviewed;
+no browser errors. TypeScript (`npm run build`, including `tsc --noEmit`), game and
+website builds pass; changed files are formatted and `git diff --check` is clean.
+Existing bundler chunk-size and dependency-comment warnings remain non-fatal.
+Evidence: `output/cargo-boat-scale/`; release preparation: `output/release-0.129.0/`.
+Cut 0.129.0 with player/freight/world-builder docs and README refreshed. Push,
+exact-commit deployment, saved-freight verification and announcement remain next.

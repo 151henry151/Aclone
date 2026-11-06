@@ -236,7 +236,7 @@ function towBlocked(
   const v = vehicleDef(w, j.slot),
     radius = v.beam ? v.beam / 2 : (v.collisionRadius ?? 2);
   return (
-    !!boatShoreCollision(w, from, to, radius, heading, (v.length ?? 14) / 2) ||
+    !!boatShoreCollision(w, from, to, radius, heading, (v.length ?? 14) / 2, v.draft) ||
     creatorBlocksSegment(
       w,
       { ...from, y: surfaceWaterLevel(w, from.x, from.z) },

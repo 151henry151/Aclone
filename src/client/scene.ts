@@ -1858,7 +1858,13 @@ export class GameScene {
         this.chase += diff * (1 - Math.exp(-dt * 3));
         if (local.userData.snapCamera) this.chase = facing;
         const heading = this.chase + this.orbit;
-        const chase = chaseOffset(heading, this.zoom, walking, this.lookPitch);
+        const chase = chaseOffset(
+          heading,
+          this.zoom,
+          walking,
+          this.lookPitch,
+          p.vehicle === CARGO_BOAT ? vehicleDef(w, p.vehicle).length : undefined,
+        );
         const cam =
           this.cameraMode === 1
             ? new T.Vector3(

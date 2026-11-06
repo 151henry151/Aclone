@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const boatNavigationRuleFields = {
+  boatBerthSearchDistance: {
+    label: 'Extra seaward berth search (metres; 0 disables)',
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+  quayMaxLength: {
+    label: 'Freight quay maximum vessel length (metres)',
+    min: 1,
+    max: 60,
+    step: 0.1,
+  },
+  quayMaxBeam: { label: 'Freight quay maximum vessel beam (metres)', min: 0.5, max: 20, step: 0.1 },
   quayDraft: { label: 'Freight quay minimum berth depth (metres)', min: 0.1, max: 20, step: 0.1 },
   freightTransferRate: {
     label: 'Freight transfer rate (weight per second)',

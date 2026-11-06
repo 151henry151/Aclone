@@ -41,7 +41,7 @@ test('builder previews an invalid and valid quay, builds it, and uses its freigh
     barriers: [],
     scatter: [],
     heightmap: Array.from({ length: 1089 }, (_, i) =>
-      Math.floor(i / 33) < 16 ? 2 : Math.floor(i / 33) === 16 ? 1 : -5,
+      Math.floor(i / 33) < 16 ? 2 : Math.floor(i / 33) === 16 ? 1 : -10,
     ),
   };
   const p = addPlayer(w, account.id, account.name);
@@ -104,7 +104,7 @@ test('builder previews an invalid and valid quay, builds it, and uses its freigh
       await expect.poll(() => Object.values(me().inventory).reduce((s, n) => s + n, 0)).toBe(0);
     }
     await expect.poll(() => current().buildings[0].construction).toBeUndefined();
-    const d = boatLandings(current()).find((d) => d.id === current().buildings[0].id)!;
+    const d = boatLandings(current(), 35).find((d) => d.id === current().buildings[0].id)!;
     expect(d).toBeTruthy();
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
     Object.assign(me(), d.land, {
@@ -143,7 +143,7 @@ test('builder previews an invalid and valid quay, builds it, and uses its freigh
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
     await page.keyboard.press('c');
     await page.keyboard.press('h');
-    await page.screenshot({ path: 'output/cargo-boat/coaster-helm-low.png' });
+    await page.screenshot({ path: 'output/cargo-boat/../cargo-boat-scale/helm-low.png' });
     await page.keyboard.press('h');
     await page.keyboard.press('c');
     await page.keyboard.press('c');
@@ -172,7 +172,7 @@ test('builder previews an invalid and valid quay, builds it, and uses its freigh
     await page.mouse.move(920, 500, { steps: 20 });
     await page.mouse.up();
     await expect(page.locator('#toast')).toHaveCSS('opacity', '0');
-    await page.screenshot({ path: 'output/cargo-boat/coaster-quay-normal.png' });
+    await page.screenshot({ path: 'output/cargo-boat/../cargo-boat-scale/quay-after.png' });
     await page.keyboard.press('h');
 
     expect(errors).toEqual([]);

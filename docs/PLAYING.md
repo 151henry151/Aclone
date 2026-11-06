@@ -698,6 +698,13 @@ or assistance; there is no free respawn shortcut.
 
 ## Coastal cargo boats and freight quays
 
+The Coastal cargo boat is now 60 m long and 16.8 m wide, with a 3.75 m draft.
+Its 2,000-weight hold, 320-unit tank and 240s price remain the same. People and
+pallets keep their normal size. Use the outside berth at a boathouse, fishing
+pier or suitable freight quay; the full hull needs clear, deep water. River docks
+still refuse this ship. Crew stand on the side decks, and the chase camera backs
+out to show the hull. Existing ownership and cargo survive the change.
+
 Buy a Coastal cargo boat at a boathouse, with the Captain skill if required.
 Its default 2,000-weight hold is separate from your 60-weight bag and shared
 provisions. Load meals for the crew through **Boat provisions & crew**; goods

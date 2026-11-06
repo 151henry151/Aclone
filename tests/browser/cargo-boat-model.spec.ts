@@ -21,7 +21,7 @@ test('coaster has finite bounded geometry, human-scale helm and a visible changi
    const v=vehicleDef(undefined,35),boat=createCargoBoat(v.color,v);
    const renderer=new T.WebGLRenderer();renderer.setSize(1000,700);document.body.append(renderer.domElement);
    const scene=new T.Scene();scene.background=new T.Color('#8badbc');scene.add(boat.group,new T.HemisphereLight(0xffffff,0x606060,3));
-   const camera=new T.PerspectiveCamera(45,1000/700,.1,200);camera.position.set(18,14,23);camera.lookAt(0,1,0);
+   const camera=new T.PerspectiveCamera(45,1000/700,.1,300);camera.position.set(48,38,65);camera.lookAt(0,1,0);
    boat.setLoad(0);renderer.render(scene,camera);
    const empty=boat.cargo.visible;
    const w=createWorld('moored-model','Moored model','owner');w.mooredBoats={'owner:35':{owner:'owner',slot:35,x:0,z:1000,heading:0,paint:'',landing:'pier',load:.5}};
@@ -35,7 +35,9 @@ test('coaster has finite bounded geometry, human-scale helm and a visible changi
    let triangles=0,finite=true;
    boat.group.traverse(o=>{if(o.isMesh){const g=o.geometry;triangles+=(g.index?.count??g.attributes.position.count)/3;finite&&=Array.from(g.attributes.position.array).every(Number.isFinite);}});
    const driver=boat.group.userData.driver,person=new T.Box3().setFromObject(driver).getSize(new T.Vector3());
-   window.result={reused,tuned,empty,loaded:boat.cargo.visible,finite,triangles,size:size.toArray(),person:person.toArray(),eye:boat.group.userData.eye.toArray(),error:null};
+   const deckHeights=[-v.length/3,v.length*.45].map(z=>new T.Raycaster(new T.Vector3(0,20,z),new T.Vector3(0,-1,0)).intersectObject(boat.group,true)[0]?.point.y);
+   const pallet=new T.Box3().setFromObject(boat.cargo.children[0]).getSize(new T.Vector3()).toArray();
+   window.result={deckHeights,pallet,reused,tuned,empty,loaded:boat.cargo.visible,finite,triangles,size:size.toArray(),person:person.toArray(),eye:boat.group.userData.eye.toArray(),error:null};
   }catch(e){window.result={error:String(e)}}
   </script>`,
       }),
@@ -43,6 +45,8 @@ test('coaster has finite bounded geometry, human-scale helm and a visible changi
     await page.goto(server.resolvedUrls!.local[0] + '__cargo-model');
     await page.waitForFunction(() => !!(window as any).result);
     const r = await page.evaluate(() => (window as any).result);
+    await page.screenshot({ path: 'output/cargo-boat-scale/model-current.png' });
+    console.log('CARGO_GEOMETRY', JSON.stringify(r));
     expect(r.error).toBeNull();
     expect(r.empty).toBe(false);
     expect(r.loaded).toBe(true);
@@ -50,13 +54,16 @@ test('coaster has finite bounded geometry, human-scale helm and a visible changi
     expect(r.reused).toBe(true);
     expect(r.tuned).toBe(true);
     expect(r.triangles).toBeLessThan(40000);
-    expect(r.size[2]).toBeGreaterThanOrEqual(20);
-    expect(r.size[2]).toBeLessThan(23);
-    expect(r.size[0]).toBeGreaterThanOrEqual(5.6);
-    expect(r.size[0]).toBeLessThan(7);
+    expect(r.size[2]).toBeGreaterThanOrEqual(60);
+    expect(r.size[2]).toBeLessThan(63);
+    expect(r.size[0]).toBeGreaterThanOrEqual(16.8);
+    expect(r.size[0]).toBeLessThan(18);
     expect(r.person[1]).toBeGreaterThan(1);
     expect(r.person[1]).toBeLessThan(2);
     expect(r.eye.every(Number.isFinite)).toBe(true);
+    expect(r.deckHeights.every((y: number) => y >= 3.6)).toBe(true);
+    expect(r.pallet[0]).toBeLessThan(2);
+    expect(r.pallet[2]).toBeLessThan(2);
     await page.screenshot({ path: 'output/cargo-boat/model-loaded.png' });
   } finally {
     await page.close();
