@@ -311,7 +311,7 @@ implementation order rather than building paving before ford-aware persistence.
     berth clearance, boarding, cargo placement, handling and recovery in browser,
     with before/after screenshots. This is a follow-up to item 13, not unfinished
     work in its recorded release. Finish item 16 first.
-17. **Open bay doors and modelled interiors**: derived hours/staff state and
+17. **Open bay doors and modelled interiors — done, live in 0.130.0**: derived hours/staff state and
     real apertures; motion/visibility; shells and every listed trade's props;
     stock/architecture variants, reduced detail, preview mode and bounds/budget.
 18. **Tractors stay where you leave them; walking, doors and arrival
@@ -6853,3 +6853,22 @@ with no browser errors. Six furnished interiors are visible when open and zero
 when closed. Fixture: expanded town, 32 other players, Quadro M1200, 1280×800,
 10-second warmup and 15-second sampling. No other render/compile jobs run during
 these measurements. All item 17 local completion gates now pass.
+
+Item 17 is done and pushed as `022dc7b1f6cbd61384f2313f27e9eb303f6284a3`;
+GitHub branch SHA matches. All local gates pass, changed files are formatted and
+TypeScript is clean. Deploy that exact 0.130.0 SHA with normal backups, then verify
+live health/client/website/assets and publish the reviewed screenshot announcement.
+Eligible Planned sections complete: **15 of 29**. Piloted spaceflight stays excluded.
+
+0.130.0 is done and live: pushed/deployed commit
+`022dc7b1f6cbd61384f2313f27e9eb303f6284a3` matches exactly. Health, client and
+website report 0.130.0; prefixed JavaScript and map worker load correctly. The
+public garage, brewery and boathouse gallery files match the local SHA-256 hashes.
+Read-only browser verification reports no errors. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261106-150707.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261106-150853.tar.gz`.
+
+The bot announcement is posted and verified with three readable image embeds:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568356762556440576
+Evidence: `output/release-0.130.0/`. No live player grants or manual world edits.
+Continue with item 18; helicopters remain dependent on persistent parked vehicles.
