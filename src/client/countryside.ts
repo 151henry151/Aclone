@@ -1,27 +1,18 @@
-import { inlandWaterAt, nearInlandWater } from '../shared/inland-water';
-import { onAirfield } from '../shared/airfield';
+import { sceneryChunk, sceneryChunkSize } from '../shared/scenery-obstacles';
+import { sceneryInstances } from './scenery-instances';
 import { SnowAccumulation } from './snow-accumulation';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { World } from '../shared/types';
-import { terrainHeight, mapHalf, woodland } from '../shared/terrain';
-import { worldResources } from '../shared/resources';
-import { townRoads, roadDistance } from '../shared/town';
-import { buildingPlan, buildingBounds } from '../shared/building-shapes';
-import { hash2 } from '../shared/noise';
-import {
-  evergreens,
-  evergreenMaterials,
-  sharedEvergreenGeometry,
-  type EvergreenSite,
-} from './evergreen';
+import { mapHalf } from '../shared/terrain';
+import { evergreens, evergreenMaterials, sharedEvergreenGeometry } from './evergreen';
 import { foliage, random } from './scenery';
 import { resourceScenery, updateResourceScenery } from './resource-scenery';
 import { fadeSceneryIntoFog } from './scenery-fog';
 import { contactShadow, seasonalMaterial, texture } from './materials';
 
-export const chunkSize = 256;
+export const chunkSize = sceneryChunkSize;
 const loadRadius = 480,
   unloadRadius = 640;
 
@@ -212,99 +203,22 @@ export class CountrysideChunks {
     chunk.name = `Countryside ${i},${j}`;
     chunk.userData.cx = x0 + chunkSize / 2;
     chunk.userData.cz = z0 + chunkSize / 2;
-    const rand = random(Math.floor(hash2(i, j, 4201) * 4294967295));
-    const roads = townRoads(w).filter(
-      ({ a, b }) =>
-        Math.max(a.x, b.x) >= x0 - 8 &&
-        Math.min(a.x, b.x) <= x0 + chunkSize + 8 &&
-        Math.max(a.z, b.z) >= z0 - 8 &&
-        Math.min(a.z, b.z) <= z0 + chunkSize + 8,
-    );
-    const footprints = w.buildings
-      .filter(
-        (b) => Math.abs(b.x - chunk.userData.cx) < 300 && Math.abs(b.z - chunk.userData.cz) < 300,
-      )
-      .map((b) => {
-        const bounds = buildingBounds(buildingPlan(b));
-        return { b, radius: Math.max(bounds.width, bounds.depth) / 2 };
-      });
-    const grounds = worldResources(w).filter(
-      (n) =>
-        n.x >= x0 - 12 && n.x < x0 + chunkSize + 12 && n.z >= z0 - 12 && n.z < z0 + chunkSize + 12,
-    );
-    const clear = (x: number, z: number, margin: number) =>
-      !onAirfield(w, x, z, margin + 3) &&
-      Math.max(Math.abs(x), Math.abs(z)) >= 250 &&
-      (roads.length === 0 || roadDistance(roads, x, z) > margin) &&
-      grounds.every((n) => Math.hypot(n.x - x, n.z - z) > 8 + margin) &&
-      footprints.every(({ b, radius }) => Math.hypot(b.x - x, b.z - z) > radius + 2 + margin);
-    const trunks: number[][] = [],
-      crowns: number[][] = [],
-      birches: number[][] = [],
-      pines: EvergreenSite[] = [],
-      rocks: number[][] = [],
-      shades: T.Mesh[] = [];
+    const objects = sceneryChunk(w, i, j).filter((o) => o.source === 'woodland');
+    const {
+      trunks,
+      crowns,
+      birches,
+      pines,
+      rocks,
+      shades: shadowSites,
+    } = sceneryInstances(objects, low);
+    const shades: T.Mesh[] = [];
     let installed = false;
     try {
-      for (let n = 0; n < (low ? 230 : 540); n++) {
+      for (const [n, site] of shadowSites.entries()) {
         if (n % 16 === 0) yield;
-        const x = x0 + rand() * chunkSize,
-          z = z0 + rand() * chunkSize,
-          cover =
-            w.spaceportSite &&
-            Math.hypot(x - w.spaceportSite.x, z - w.spaceportSite.z) < w.spaceportSite.fence + 10
-              ? 0
-              : woodland(w, x, z),
-          roll = rand();
-        const h = terrainHeight(w, x, z);
-        if (h < w.settings.seaLevel + 0.9 || inlandWaterAt(w, x, z)) continue;
-        if (roll >= cover) {
-          // Bare uplands show their bones.
-          if (
-            n % 9 === 0 &&
-            h > 14 &&
-            cover < 0.2 &&
-            !nearInlandWater(w, x, z, 12) &&
-            clear(x, z, 1)
-          )
-            rocks.push([x, h + 0.2, z, 0.5 + rand() * 1.1, rand() * 6]);
-          continue;
-        }
-        if (!clear(x, z, 4)) continue;
-        const scale = 0.7 + rand() * 0.9,
-          species = hash2(Math.floor(x / 60), Math.floor(z / 50), 91) * 3;
-        if (species < 1.25) {
-          pines.push({
-            x,
-            y: h,
-            z,
-            scale,
-            rotation: rand() * 6,
-            variant: Math.floor(rand() * 3),
-            width: 0.88 + rand() * 0.24,
-            leanX: (rand() - 0.5) * 0.055,
-            leanZ: (rand() - 0.5) * 0.055,
-          });
-          const shade = contactShadow(8 * scale, 8 * scale, 0.23);
-          shade.position.set(x, h + 0.1, z);
-          shades.push(shade);
-          continue;
-        }
-        if (species < 2) birches.push([x, h, z, scale, 0]);
-        else trunks.push([x, h, z, scale, rand() * 6]);
-        for (let k = 0; k < 13; k++) {
-          const a = k * 2.399,
-            r = k < 4 ? 0.7 : species < 2 ? 1.4 : 2.4;
-          crowns.push([
-            x + Math.sin(a) * r * scale,
-            h + (3.7 + rand() * 2.5) * scale,
-            z + Math.cos(a) * r * scale,
-            (2.7 + rand() * 1.3) * scale,
-            a,
-          ]);
-        }
-        const shade = contactShadow(12 * scale, 11 * scale, 0.25);
-        shade.position.set(x, h + 0.1, z);
+        const shade = contactShadow(site.size, site.size, site.opacity);
+        shade.position.set(site.x, site.y, site.z);
         shades.push(shade);
       }
       const matrix = new T.Object3D();

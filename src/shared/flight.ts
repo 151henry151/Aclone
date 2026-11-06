@@ -25,6 +25,10 @@ export interface FlightEnvironment {
     from: { x: number; y: number; z: number },
     to: { x: number; y: number; z: number },
   ): boolean;
+  groundContact?(
+    from: { x: number; y: number; z: number },
+    to: { x: number; y: number; z: number },
+  ): boolean;
   seaLevel: number;
   half: number;
   grip: number;
@@ -234,6 +238,10 @@ export function fly(
         env.ground(p.x - dx * halfWheelbase, p.z - dz * halfWheelbase)) /
       rules.flightWheelbase;
     const stepHeight = support - ground - wheelSlope * travel;
+    if (f.grounded && env.groundContact?.(from, next)) {
+      f.vx = f.vy = f.vz = f.airspeed = p.speed = 0;
+      continue;
+    }
     if (env.blocked(from, next)) {
       if (speed > 7 || !f.grounded) return 'collision with an obstacle';
       f.vx = f.vy = f.vz = 0;

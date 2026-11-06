@@ -336,6 +336,44 @@ and travel with saved worlds and exported designs. Custom Resource visuals take
 precedence. These rules affect scenery only, not gathering, inventory tools or
 business buildings.
 
+## Solid scenery and vehicle contacts
+
+**F10 → Rules → Solid scenery and vehicle contacts** configures land contacts.
+`solidScenery` defaults to `trunks-and-boulders`; choose `trunks` or `off` to
+remove rock contacts or all procedural scenery contacts. This does not remove
+visible scenery. Turning creator scenery off removes its procedural obstacles as
+well as its meshes. Roads, farm plots, pastures, building sites, airfields, water
+and reserved arrival areas remain clear of generated trees. Coastal outcrops and
+stone gathering-ground boulders share their positions with their visible models.
+
+`vehicleCollision` defaults to `glancing`; `stop-only` stops entrants at every
+contact, while `off` permits players to pass through one another.
+`pedestrianBlocking` defaults true and can be disabled separately.
+`vehicleGlancingDegrees` defaults **15°** (0–45); `vehicleGlancingSpeed` defaults
+**0.7** (0–1). Shallow side contacts slide at that speed multiplier. Rear-end
+contacts stop the entrant; opposing moving vehicles stop both drivers. Contacts
+never push the other player and cause no damage. Trunks and rocks stop vehicles
+without fuel or condition penalties; walkers slide round trunks. Crowns do not
+block. The same collision rules run on the server and in local prediction.
+
+`offlineVehicleObstacleSeconds` defaults **60 seconds** (0–86,400); zero ignores
+an offline driver immediately. Signed-off vehicles remain visible until their
+blocking timeout expires. Home occupants, passengers, boats and airborne
+players do not block land travel. Grounded aircraft do. `clearRouteParking`
+defaults true: engine-off parking is refused in arrival/town-centre reservations,
+the spaceport gate and jetties. Existing arrival/town clearance settings determine
+those buffers. Turning this rule off permits parking there; it does not move any
+vehicle. The later bridge feature must register its narrow passages with this
+same policy.
+
+In **F10 → Vehicles**, `length` and `width` set each land vehicle's oriented
+footprint; the walking slot uses `collisionRadius`. All these rules and catalogue
+edits persist in saves and portable designs. Rule changes preserve vehicle
+ownership, position, fuel, cargo and condition. Someone inside a newly solid
+object can move outward. New road surveys, NPC routes and construction previews
+consult the shared obstacle placements. Graphics quality changes only visual
+detail, never the location of solid trunks.
+
 ## Walking in snow
 
 **F10 → Rules → Walking in snow** controls `walkingSnow` (default **on**) and

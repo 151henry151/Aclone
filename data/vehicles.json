@@ -15,7 +15,9 @@
     "headlight": 150,
     "lightRange": 110,
     "traction": 0,
-    "collisionRadius": 1.24
+    "collisionRadius": 1.24,
+    "length": 4.0,
+    "width": 2.48
   },
   {
     "name": "Runabout",
@@ -28,7 +30,9 @@
     "armour": 90,
     "price": 90000,
     "color": "#c9ab57",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.5,
+    "width": 2
   },
   {
     "name": "Biplane",
@@ -41,7 +45,9 @@
     "armour": 75,
     "price": 1350000,
     "color": "#e5c979",
-    "hitch": 3
+    "hitch": 3,
+    "length": 7.3,
+    "width": 9
   },
   {
     "name": "Canal boat",
@@ -70,7 +76,10 @@
     "armour": 100,
     "price": 260000,
     "color": "#759782",
-    "hitch": 3
+    "hitch": 3,
+    "length": 6.1,
+    "width": 3.68,
+    "requiresCaptain": false
   },
   {
     "name": "On foot",
@@ -83,7 +92,8 @@
     "armour": 100,
     "price": 0,
     "color": "#dccaa8",
-    "hitch": 3
+    "hitch": 3,
+    "collisionRadius": 0.25
   },
   {
     "name": "Ostrich",
@@ -96,7 +106,9 @@
     "armour": 60,
     "price": 0,
     "color": "#e2d1b0",
-    "hitch": 3
+    "hitch": 3,
+    "length": 2.4,
+    "width": 2.4
   },
   {
     "name": "Robocrow",
@@ -109,7 +121,9 @@
     "armour": 50,
     "price": 0,
     "color": "#6a7482",
-    "hitch": 3
+    "hitch": 3,
+    "length": 1,
+    "width": 0.6
   },
   {
     "name": "Custom slot 9",
@@ -122,7 +136,9 @@
     "armour": 100,
     "price": 0,
     "color": "#ba4934",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.0,
+    "width": 2.48
   },
   {
     "name": "Custom slot 10",
@@ -135,7 +151,9 @@
     "armour": 90,
     "price": 90000,
     "color": "#c9ab57",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.5,
+    "width": 2
   },
   {
     "name": "Custom slot 11",
@@ -148,7 +166,9 @@
     "armour": 75,
     "price": 1350000,
     "color": "#e5c979",
-    "hitch": 3
+    "hitch": 3,
+    "length": 7.3,
+    "width": 9
   },
   {
     "name": "Custom slot 12",
@@ -174,7 +194,10 @@
     "armour": 100,
     "price": 260000,
     "color": "#759782",
-    "hitch": 3
+    "hitch": 3,
+    "length": 6.1,
+    "width": 3.68,
+    "requiresCaptain": false
   },
   {
     "name": "Custom slot 14",
@@ -187,7 +210,9 @@
     "armour": 100,
     "price": 0,
     "color": "#ba4934",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.0,
+    "width": 2.48
   },
   {
     "name": "Custom slot 15",
@@ -200,7 +225,9 @@
     "armour": 90,
     "price": 90000,
     "color": "#c9ab57",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.5,
+    "width": 2
   },
   {
     "name": "Custom slot 16",
@@ -213,7 +240,9 @@
     "armour": 75,
     "price": 1350000,
     "color": "#e5c979",
-    "hitch": 3
+    "hitch": 3,
+    "length": 7.3,
+    "width": 9
   },
   {
     "name": "Custom slot 17",
@@ -239,7 +268,10 @@
     "armour": 100,
     "price": 260000,
     "color": "#759782",
-    "hitch": 3
+    "hitch": 3,
+    "length": 6.1,
+    "width": 3.68,
+    "requiresCaptain": false
   },
   {
     "name": "Custom slot 19",
@@ -252,7 +284,9 @@
     "armour": 100,
     "price": 0,
     "color": "#ba4934",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.0,
+    "width": 2.48
   },
   {
     "name": "Custom slot 20",
@@ -265,7 +299,9 @@
     "armour": 90,
     "price": 90000,
     "color": "#c9ab57",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.5,
+    "width": 2
   },
   {
     "name": "Custom slot 21",
@@ -278,7 +314,9 @@
     "armour": 75,
     "price": 1350000,
     "color": "#e5c979",
-    "hitch": 3
+    "hitch": 3,
+    "length": 7.3,
+    "width": 9
   },
   {
     "name": "Custom slot 22",
@@ -304,7 +342,10 @@
     "armour": 100,
     "price": 260000,
     "color": "#759782",
-    "hitch": 3
+    "hitch": 3,
+    "length": 6.1,
+    "width": 3.68,
+    "requiresCaptain": false
   },
   {
     "name": "Custom slot 24",
@@ -317,7 +358,9 @@
     "armour": 100,
     "price": 0,
     "color": "#ba4934",
-    "hitch": 3
+    "hitch": 3,
+    "length": 4.0,
+    "width": 2.48
   },
   {
     "name": "Orchard Wren",
@@ -335,7 +378,9 @@
     "traction": 0.08,
     "headlight": 110,
     "lightRange": 85,
-    "collisionRadius": 1.03
+    "collisionRadius": 1.03,
+    "length": 3.3,
+    "width": 2.06
   },
   {
     "name": "Swift Kestrel",
@@ -353,7 +398,9 @@
     "traction": 0,
     "headlight": 170,
     "lightRange": 120,
-    "collisionRadius": 1.195
+    "collisionRadius": 1.195,
+    "length": 4.4,
+    "width": 2.39
   },
   {
     "name": "Barley Dray",
@@ -371,7 +418,9 @@
     "traction": 0.1,
     "headlight": 145,
     "lightRange": 100,
-    "collisionRadius": 1.43
+    "collisionRadius": 1.43,
+    "length": 5.1,
+    "width": 2.86
   },
   {
     "name": "Fenlander",
@@ -389,7 +438,9 @@
     "traction": 0.38,
     "headlight": 135,
     "lightRange": 95,
-    "collisionRadius": 1.46
+    "collisionRadius": 1.46,
+    "length": 4.4,
+    "width": 2.92
   },
   {
     "name": "Lamplighter",
@@ -407,7 +458,9 @@
     "traction": 0.04,
     "headlight": 240,
     "lightRange": 150,
-    "collisionRadius": 1.24
+    "collisionRadius": 1.24,
+    "length": 4.5,
+    "width": 2.5
   },
   {
     "name": "Emergency lifeboat",

@@ -2,6 +2,23 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.124.0 — Mind the trees and your neighbours
+
+Tree trunks and boulders now stop land vehicles without damage, condition loss or
+collision fuel penalties. Walkers slide around trunks, and anyone loading inside
+a newly solid object can move outward. Low and normal graphics use the same
+obstacle locations; roads, resident navigation and building previews consult them.
+
+Vehicle contacts stop the arriving driver at a rear-end impact, stop both drivers
+in a head-on impact, and slide shallow side contacts at reduced speed. Nobody is
+pushed. World builders can disable or tune these rules in **F10 → Rules → Solid
+scenery and vehicle contacts**, with footprint dimensions in **Vehicles**.
+Signed-off vehicles stay visible and solid until the local timeout expires
+(default 60 seconds); home occupants, passengers, boats and airborne players do
+not block land travel. Protected-route parking refuses explicit engine-off parking
+in arrival areas, town centres, gates and jetties. See the
+[world-builder settings](WORLD_BUILDING.md#solid-scenery-and-vehicle-contacts).
+
 ## 0.123.0 — Choose the length of your seasons
 
 World builders can set year length, spring's starting day and the lengths of

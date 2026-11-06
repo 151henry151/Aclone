@@ -37,6 +37,7 @@ export const vehicleTuningSchema = z
     lightRange: number(0, 500),
     collisionRadius: number(0.2, 12),
     length: number(1, 60),
+    width: number(0.2, 30),
     beam: number(0.5, 20),
     requiresCaptain: z.boolean(),
     persistentThrottle: z.boolean(),

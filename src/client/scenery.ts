@@ -1,6 +1,8 @@
+import { sceneryChunk } from '../shared/scenery-obstacles';
+import { sceneryInstances } from './scenery-instances';
 import { onAirfield } from '../shared/airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { evergreens, type EvergreenSite } from './evergreen';
+import { evergreens } from './evergreen';
 import { worldResources } from '../shared/resources';
 import { resourceScenerySteps } from './resource-scenery';
 import { fadeSceneryIntoFog } from './scenery-fog';
@@ -125,13 +127,24 @@ export function* countrysideSteps(root: T.Group, world: World, low: boolean) {
     !(x > 56 && x < 124 && z > 16 && z < 74) &&
     !(x > 45 && x < 105 && z < -55 && z > -92) &&
     footprints.every(({ b, radius }) => Math.hypot(b.x - x, b.z - z) > radius + 1 + margin);
+  const objects = [-1, 0]
+    .flatMap((i) => [-1, 0].flatMap((j) => sceneryChunk(world, i, j)))
+    .filter((o) => o.source === 'village');
+  const {
+    trunks,
+    crowns,
+    birches,
+    pines,
+    rocks,
+    shades: shadowSites,
+  } = sceneryInstances(objects, low);
+  for (const site of shadowSites) {
+    const shade = contactShadow(site.size, site.size, site.opacity);
+    shade.position.set(site.x, site.y, site.z);
+    shades.push(shade);
+  }
   const grass: number[][] = [],
-    flowers: number[][] = [],
-    trunks: number[][] = [],
-    crowns: number[][] = [],
-    pines: EvergreenSite[] = [],
-    birches: number[][] = [],
-    rocks: number[][] = [];
+    flowers: number[][] = [];
   for (let i = 0; i < (low ? 2600 : 10000); i++) {
     if (i % 32 === 0) yield;
     const x = (rand() - 0.5) * 480,
@@ -145,67 +158,6 @@ export function* countrysideSteps(root: T.Group, world: World, low: boolean) {
       for (let j = 0; j < 4; j++)
         grass.push([x + rand() * 1.5, h, z + rand() * 1.5, s, rand() * 6.28]);
     if (i % 7 === 0) flowers.push([x, h + 0.24, z, 0.6 + rand() * 0.5]);
-    if (i % 42 === 0 && clear(x, z, 5)) {
-      const scale = 0.55 + rand() * 1.1;
-      const species = Math.abs(Math.floor(x / 55) + Math.floor(z / 45)) % 3;
-      if (species === 0) {
-        // Keep five random draws here so existing grove and grass locations stay stable.
-        pines.push({
-          x,
-          y: h,
-          z,
-          scale,
-          rotation: rand() * 6,
-          variant: Math.floor(rand() * 3),
-          width: 0.88 + rand() * 0.24,
-          leanX: (rand() - 0.5) * 0.055,
-          leanZ: (rand() - 0.5) * 0.055,
-        });
-        const shade = contactShadow(8 * scale, 8 * scale, 0.23);
-        shade.position.set(x, h + 0.1, z);
-        shades.push(shade);
-        continue;
-      }
-      if (species === 1) birches.push([x, h, z, scale, 0]);
-      else trunks.push([x, h, z, scale, rand() * 6]);
-      for (let j = 0; j < 13; j++) {
-        const a = j * 2.399,
-          r = j < 4 ? 0.7 : species === 1 ? 1.4 : 2.4;
-        crowns.push([
-          x + Math.sin(a) * r * scale,
-          h + (3.7 + rand() * 2.5) * scale,
-          z + Math.cos(a) * r * scale,
-          (2.7 + rand() * 1.3) * scale,
-          a,
-        ]);
-      }
-      const shade = contactShadow(12 * scale, 11 * scale, 0.25);
-      shade.position.set(x, h + 0.1, z);
-      shades.push(shade);
-    }
-    if (i % 97 === 0) rocks.push([x, h + 0.2, z, 0.5 + rand() * 0.9, rand() * 6]);
-  }
-  // Deliberate shade trees frame the village approach, alongside the scattered woodland.
-  for (const [x, z] of [
-    [-18, -4],
-    [18, -4],
-    [-45, -12],
-    [43, -11],
-    [-18, 68],
-  ]) {
-    if (!clear(x, z, 3)) continue;
-    const h = terrainHeight(world, x, z),
-      scale = 1.35;
-    if (h < world.settings.seaLevel + 0.9) continue;
-    trunks.push([x, h, z, scale, 0]);
-    for (let j = 0; j < 22; j++) {
-      const a = j * 2.399,
-        r = 2.5 * Math.sqrt((j + 1) / 22);
-      crowns.push([x + Math.sin(a) * r, h + 5 + rand() * 3, z + Math.cos(a) * r, 3.4 + rand(), a]);
-    }
-    const shade = contactShadow(15, 14, 0.25);
-    shade.position.set(x, h + 0.1, z);
-    shades.push(shade);
   }
   for (let x = -235; x < 235; x += 3.4)
     for (let z = -235; z < 140; z += 3.4) {

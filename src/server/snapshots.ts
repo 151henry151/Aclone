@@ -9,6 +9,7 @@ import { families, personalOffers, familyInvites } from '../shared/social.ts';
 import { repairRecipientReady } from '../shared/vehicle-services.ts';
 import { productionReport } from '../shared/reports.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { offlineGroundObstacle } from '../shared/ground-contacts';
 import { refuelRecipientReady } from '../shared/player-aid.ts';
 import {
   motorRunning,
@@ -193,6 +194,7 @@ export function prepareFrame(w: World): Frame {
   for (const p of Object.values(players))
     if (
       p.online ||
+      offlineGroundObstacle(w, p) ||
       !!w.boatRescues?.[p.id] ||
       !!w.towJobs?.[p.id] ||
       p.charterPassage ||
@@ -230,6 +232,7 @@ export function prepareFrame(w: World): Frame {
         health: p.health,
         kudos: p.kudos,
         online: p.online,
+        lastSeen: p.lastSeen,
         kills: p.kills,
         age: Math.floor(p.age),
         lastHorn: p.lastHorn,

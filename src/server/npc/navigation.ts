@@ -1,3 +1,5 @@
+import { sceneryBlocksSegment } from '../../shared/ground-contacts';
+import { sceneryObstaclesNear } from '../../shared/scenery-obstacles';
 import { inlandLevel } from '../../shared/inland-water';
 import { roadSite, roadSamples } from '../../shared/road-routing';
 import { highWater } from '../../shared/ocean';
@@ -71,6 +73,21 @@ function grid(w: World, win: Window): Grid {
     win,
     highWater(w),
     w.townLayout,
+    w.settings.solidScenery,
+    w.settings.respawnX,
+    w.settings.respawnZ,
+    w.settings.spawnClearance,
+    w.settings.townCentreClearance,
+    w.creator?.scenery,
+    w.creator?.roads,
+    w.creator?.resourceModels,
+    w.roads,
+    w.retiredRoads,
+    w.zones,
+    w.towns.map((t) => [t.x, t.z, t.radius]),
+    w.additionalResources,
+    w.coastalBluffs,
+    w.airfield,
     w.northernIsland?.version,
     w.terrain,
     w.landscape,
@@ -113,6 +130,24 @@ function grid(w: World, win: Window): Grid {
           clear[i] = 0;
       }
   }
+  // Continuous edge checks below catch trunks between otherwise clear grid cells.
+  const padding = 2.2;
+  for (const o of sceneryObstaclesNear(
+    w,
+    { x: originX, z: originZ },
+    { x: originX + sizeX * step, z: originZ + sizeZ * step },
+    padding,
+  )) {
+    const radius = o.radius + padding;
+    const minX = Math.max(0, Math.ceil((o.x - radius - originX) / step));
+    const maxX = Math.min(sizeX - 1, Math.floor((o.x + radius - originX) / step));
+    const minZ = Math.max(0, Math.ceil((o.z - radius - originZ) / step));
+    const maxZ = Math.min(sizeZ - 1, Math.floor((o.z + radius - originZ) / step));
+    for (let z = minZ; z <= maxZ; z++)
+      for (let x = minX; x <= maxX; x++)
+        if (Math.hypot(originX + x * step - o.x, originZ + z * step - o.z) < radius)
+          clear[z * sizeX + x] = 0;
+  }
   const value = { ...win, key, clear, heights };
   // A handful of recent windows per world: residents mostly repeat the same trips.
   if (grids.size >= 6) grids.delete(grids.keys().next().value!);
@@ -153,7 +188,11 @@ class Queue {
 /** Construction places the site around its builder. Shared physics lets a trapped
  * pilot move outward; the route grid must permit the same strictly outward escape. */
 function canEscape(w: World, from: Point, to: Point) {
-  if (!w.buildings.some((b) => blocksBuilding(b, from.x, from.z, 0, 2.2))) return false;
+  if (
+    !w.buildings.some((b) => blocksBuilding(b, from.x, from.z, 0, 2.2)) &&
+    !sceneryBlocksSegment(w, from, from, 2.2 + (step * Math.SQRT2) / 2)
+  )
+    return false;
   const steps = Math.ceil(distance(from, to));
   let previous = from;
   for (let i = 1; i <= steps; i++) {
@@ -165,6 +204,7 @@ function canEscape(w: World, from: Point, to: Point) {
     if (
       h < inlandLevel(w, next.x, next.z, highWater(w)) + 0.05 ||
       creatorBlocks(w, next.x, next.z, h, 2.2) ||
+      sceneryBlocksSegment(w, previous, next, 2.2, true) ||
       w.buildings.some((b) => buildingBlocksMovement(b, previous, next, 0, 2.2))
     )
       return false;
@@ -253,6 +293,8 @@ function route(w: World, from: Point, target: Point, radius: number, usePort = t
         continue;
       const escaping = !clear[i] && canEscape(w, i === start ? from : point(g, i), point(g, j));
       if (!clear[j] && !escaping) continue;
+      if (!escaping && sceneryBlocksSegment(w, i === start ? from : point(g, i), point(g, j), 2.2))
+        continue;
       if (dx && dz && (!clear[z * size + nx] || !clear[nz * size + x]) && !escaping) continue;
       const value = cost[i] + Math.hypot(dx, dz);
       if (value >= cost[j]) continue;

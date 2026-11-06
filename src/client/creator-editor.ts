@@ -1,3 +1,10 @@
+import {
+  obstacleRules,
+  obstacleRuleFields,
+  obstacleRuleKeys,
+  solidSceneryModes,
+  vehicleCollisionModes,
+} from '../shared/obstacle-rules';
 import { landscapeRules, landscapeRuleFields } from '../shared/landscape-rules';
 import { communicationRules, communicationRuleFields } from '../shared/communication-rules';
 import { calendarRules, calendarRuleFields, winterDays } from '../shared/calendar-rules';
@@ -118,6 +125,7 @@ const friendly = (key: string) =>
   key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
 export function settingsFields(settings: Settings = defaults) {
   const boatKeys = [
+    ...obstacleRuleKeys,
     ...Object.keys(climateRuleFields),
     ...Object.keys(alpineRuleFields),
     ...Object.keys(calendarRuleFields),
@@ -248,6 +256,32 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Capacities govern new terrain and landscape edits. Zero disables that category. Per-line/group and world totals both apply. Lowering below saved content or retained undo history is rejected; remove unwanted edits first. Existing terrain, models, heightmap dimensions and map bounds are unchanged. Larger layouts cost more to render.</p></fieldset>`;
+  const obstacles = obstacleRules(settings);
+  const obstacleFields = `<fieldset class="boat-death-settings"><legend>Solid scenery and vehicle contacts</legend>${select(
+    'Solid scenery',
+    'solidScenery',
+    solidSceneryModes.map((m) => [m, m.replaceAll('-', ' ')]),
+    obstacles.solidScenery,
+  )}${select(
+    'Vehicle contacts',
+    'vehicleCollision',
+    vehicleCollisionModes.map((m) => [m, m.replaceAll('-', ' ')]),
+    obstacles.vehicleCollision,
+  )}${(['pedestrianBlocking', 'clearRouteParking'] as const).map((key) => `<label class="check"><input name="${key}" type="checkbox" ${obstacles[key] ? 'checked' : ''}>${key === 'pedestrianBlocking' ? 'Pedestrians block vehicles and other pedestrians' : 'Keep arrival areas, town centres, gates and jetties clear of parking'}</label>`).join('')}${Object.entries(
+    obstacleRuleFields,
+  )
+    .map(([key, spec]) =>
+      field(
+        spec.label,
+        key,
+        obstacles[key as keyof typeof obstacles],
+        'number',
+        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+      ),
+    )
+    .join(
+      '',
+    )}<p>Trunks and boulders stop vehicles without damage; walking slides around trunks. Crowns do not block. Off removes the selected contacts without removing scenery. Pedestrian blocking can be disabled separately. Home occupants, passengers, boats and airborne players do not block land travel. Zero offline timeout ignores signed-off drivers immediately.</p><p>Glancing contacts slide along the other hull at the chosen speed multiplier; zero angle permits only parallel travel. Head-on contacts stop both drivers, and rear-end impacts stop the entrant. Nobody is pushed. Parking protection refuses engine-off parking in reserved passages; offline expiry prevents abandoned drivers blocking them permanently. Vehicle length, width and walking radius are editable in Vehicles.</p></fieldset>`;
   const calendar = calendarRules(settings);
   const calendarFields = `<fieldset class="boat-death-settings"><legend>Calendar</legend>${Object.entries(
     calendarRuleFields,
@@ -713,6 +747,7 @@ export function settingsFields(settings: Settings = defaults) {
     farmYieldFields +
     fishingFields +
     communicationFields +
+    obstacleFields +
     calendarFields +
     landscapeFields +
     alpineFields +

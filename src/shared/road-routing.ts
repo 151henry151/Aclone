@@ -1,3 +1,4 @@
+import { sceneryBlocksSegment } from './ground-contacts';
 import { pastureParcelSize } from './pasture-land';
 import { inlandLevel } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
@@ -138,7 +139,8 @@ export function roadSite(w: World, width = 5) {
     return true;
   };
   const allSolids = [...solids, ...fences];
-  const occupied = (p: Point) => solids.some((r) => intersects(r, p, p));
+  const occupied = (p: Point) =>
+    solids.some((r) => intersects(r, p, p)) || sceneryBlocksSegment(w, p, p, pad);
   const dry = (p: Point) =>
     Math.abs(p.x) < half && Math.abs(p.z) < half && height(p) > inlandLevel(w, p.x, p.z, sea);
   const allowed = (p: Point) => {
@@ -149,8 +151,12 @@ export function roadSite(w: World, width = 5) {
     !occupied(p) && !fences.some((r) => intersects(r, p, p)) && dry(p) && allowed(p);
   // Cost includes actual intermediate rises, not just endpoint elevations. That
   // prevents a straight shortcut over a hill whose two ends are equally low.
-  const cost = (a: Point, b: Point, spacing = 2) => {
-    if (allSolids.some((r) => intersects(r, a, b))) return Infinity;
+  const cost = (a: Point, b: Point, spacing = 2, scenery = true) => {
+    if (
+      allSolids.some((r) => intersects(r, a, b)) ||
+      (scenery && sceneryBlocksSegment(w, a, b, pad))
+    )
+      return Infinity;
     const length = pointDistance(a, b),
       n = Math.max(1, Math.ceil(length / spacing));
     if (!dry(a) || !allowed(a)) return Infinity;
@@ -292,8 +298,16 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
     const n = pop();
     if (n.g !== costs.get(`${n.i}:${n.j}`) || settled.has(`${n.i}:${n.j}`)) continue;
     settled.add(`${n.i}:${n.j}`);
-    if (pointDistance(n.p, goal) <= cell * 2 && site.segment(n.p, goal)) {
-      const path = [goal];
+    const finish =
+      pointDistance(n.p, goal) <= cell * 2
+        ? site.segment(n.p, goal)
+          ? [n.p, goal]
+          : cell > 8
+            ? roadRoute(w, n.p, goal, width)
+            : undefined
+        : undefined;
+    if (finish) {
+      const path = finish.slice(1).reverse();
       let at: Node | undefined = n;
       while (at) {
         path.push(at.p);
@@ -318,7 +332,18 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
       const simple = [path[0]];
       for (let i = 0; i < path.length - 1;) {
         let j = path.length - 1;
-        while (j > i + 1 && site.cost(path[i], path[j]) > (totals[j] - totals[i]) * 1.015) j--;
+        if (distance > 800) {
+          // Grow long-road shortcuts locally rather than repeatedly querying
+          // the whole island for every small forest detour.
+          j = i + 1;
+          while (
+            j + 1 < path.length &&
+            site.cost(path[i], path[j + 1]) <= (totals[j + 1] - totals[i]) * 1.015
+          )
+            j++;
+        } else {
+          while (j > i + 1 && site.cost(path[i], path[j]) > (totals[j] - totals[i]) * 1.015) j--;
+        }
         simple.push(path[j]);
         i = j;
       }
@@ -347,7 +372,7 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
         cached.set(key, valid);
       }
       if (!valid) continue;
-      const g = n.g + site.cost(n.p, p, cell > 24 ? 16 : cell > 8 ? 8 : 2);
+      const g = n.g + site.cost(n.p, p, cell > 24 ? 16 : cell > 8 ? 8 : 2, cell <= 8);
       if (g >= (costs.get(key) ?? Infinity)) continue;
       costs.set(key, g);
       push({ i, j, p, g, f: g + pointDistance(p, goal), parent: n });

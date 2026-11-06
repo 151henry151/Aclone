@@ -6,8 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.124.0] - 2026-11-05
+
+### Added
+
+- Make tree trunks and boulders solid, and stop or slide land vehicles and pedestrians around one another without collision damage or pushing parked players.
+- Configure scenery contacts, vehicle collision modes, pedestrian blocking, glancing response, offline blocking and protected-route parking per world; tune individual vehicle footprints in the vehicle editor.
+
 ### Changed
 
+- Share deterministic scenery between both graphics qualities, movement, road surveys, resident navigation and construction previews; preserve escape from newly solid objects.
 - Plan optional land-use districts, regional freight and desert terrain, oil extraction, and dedicated petrol stations after their existing backlog dependencies.
 
 ## [0.123.0] - 2026-11-05

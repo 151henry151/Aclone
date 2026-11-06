@@ -4,7 +4,14 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.123.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.124.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.124.0 makes tree trunks, boulders, land vehicles and pedestrians solid.
+Vehicles stop without collision damage; shallow vehicle contacts can slide, and
+walkers can step around trunks. Roads, resident navigation and construction
+previews use the same scenery as both graphics qualities. F10 exposes collision
+modes, glancing response, offline timeout and parking protection; vehicle sizes
+remain editable. See [contact rules](docs/WORLD_BUILDING.md#solid-scenery-and-vehicle-contacts).
 
 The development [backlog](docs/BACKLOG.md) and [implementation order](docs/BACKLOG_PLAN.md)
 include later, optional land-use districts, regional freight and desert terrain,

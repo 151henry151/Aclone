@@ -5378,3 +5378,194 @@ Prepare release 0.123.0; push and verify before deploying the exact commit.
 
 Release gates pass: the `/aclone/` production build completes with TypeScript
 clean; the final 17 guide/budget checks pass after release documentation updates.
+
+**Done and live — 0.123.0 / remaining world rules complete.** Commit
+`ce74be3d7cb2b0afbce5659ef2073f9cf1a23656` is pushed to
+`backlog-implementation` and verified through GitHub and the live checkout.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261105-014130.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261105-014249.tar.gz`.
+The deploy script's first health request met a transient restart 502; subsequent
+read-only checks confirm active service, 0.123.0 health, matching commit, loaded
+browser assets/map worker, updated website and no browser errors. No redeployment
+or live gameplay mutation was needed. The bot announcement and its 1440×900 image
+are verified: <https://discord.com/channels/1562183434254680175/1565527790785404968/1567791375934685284>.
+Evidence: `output/release-0.123.0/`. Eight of 25 eligible Planned sections are now
+complete. Continue item 12, solid trees/boulders/vehicles; piloted spaceflight
+remains excluded.
+
+### Solid trees, boulders and vehicles — completion criteria before code
+
+Implement item 12 as one complete feature before its release. The claim is a
+shared, deterministic set of solid trunks and boulders, swept movement responses
+without damage, vehicle/pedestrian contacts with server authority, configurable
+modes and offline behavior, and shared road/navigation/construction/snow inputs.
+Do not begin cargo boats until all these gates pass.
+
+Use a shared 256-m chunk generator and spatial buckets, independent of graphics
+quality. Preserve the existing tree/rock models and approximate normal-quality
+placement density; decouple candidate seeds from exclusion decisions so adding a
+building or road does not move unrelated trees. Exclude roads, existing buildings
+and construction, farm plots/pastures, gathering grounds, airfields, the spaceport
+reservation, water and spawn/town-centre reserves. Include village trees/rocks,
+streamed woodland/upland rocks, coastal outcrops and the three large stone-ground
+boulders. Their authored dimensions/positions must have one shared source used
+by rendering and collision. Keep creator-solid scatter's existing path. Draw
+solid trunks at both qualities; quality can simplify crowns. Reuse those same
+instances for snow obstacles. Cache geometry by terrain/layout changes, not each
+movement tick; query only spatial buckets overlapping the swept segment.
+
+No explicit defaults are specified in the entry. Choose `solidScenery` =
+`trunks-and-boulders` (also `off`, `trunks`), `vehicleCollision` = `glancing`
+(also `off`, `stop-only`), `pedestrianBlocking` = true,
+`offlineVehicleObstacleSeconds` = 60 (0–86,400), `vehicleGlancingDegrees` = 15
+(0–45), and `vehicleGlancingSpeed` = 0.7 (0–1). Source defaults once from
+settings; show/validate them at creation, editor, summary, saves/designs and NPC
+observations. Exclude at-home/riding and airborne players, and offline drivers
+after the configured timeout; zero ignores them immediately. Vehicle collision
+`off` disables player contacts; pedestrian blocking can be independently disabled
+while vehicle contacts remain enabled. Vehicle footprint dimensions belong to
+the existing per-vehicle tuning catalogue. Refuse explicit engine-off parking in
+arrival/town-centre reserves and narrow gate/bridge/jetty passages; never move a
+stationary player in response to another player's input. Offline expiry prevents
+an abandoned vehicle from becoming a permanent route obstruction.
+
+Write/run red tests in `tests/solid-obstacles.test.ts` and
+`tests/vehicle-contacts.test.ts` before production edits. Concrete assertions:
+
+- Same chunk/seed and saved/reloaded world produce identical `{id,x,z,kind,radius,
+height}` objects for server and both render qualities. Road/building/terrain
+  edits invalidate affected placements. Assert all exclusions and stone/coastal
+  model transforms; empty/scenery-disabled worlds and each rule mode behave as
+  documented.
+- A swept tractor hits a trunk/boulder even across a long step, stops with exactly
+  unchanged fuel, health and condition, and can drive strictly outward after
+  loading inside an obstacle. Walking slides round a trunk; boats and airborne
+  players retain their existing movement. No crown collision.
+- Rear-end contact stops only the moving/faster entrant; head-on closing stops
+  both; shallow glancing contact slides along the other hull at reduced speed.
+  Neither impact pushes the struck party or causes damage. Test rotated hulls,
+  reverse motion, stationary targets, pedestrians against tractors, offline
+  expiry, at-home exclusion, disabled modes and prediction never mutating another
+  player's snapshot. Exercise grounded aircraft without changing aerial crash
+  rules.
+- New construction and its preview reject overlapping solid scenery; road
+  growth routes round it; NPC ground routes and escape checks use the same data.
+  Existing creator solids, river fords/deep reaches and road growth remain valid.
+- Browser: low and normal quality show the same trunk locations; drive into a
+  visible tree and boulder, walk around one, escape an initially overlapping
+  trunk, encounter another local player, change/offline/disable rules, and check
+  the rules editor and an obstructed construction preview. Show clear empty
+  ground with scenery disabled. Verify real controls/server corrections, no
+  browser errors, and review screenshots suitable for the announcement.
+
+Run relevant existing scenery, movement, prediction, navigation, construction,
+road-growth and northern-island tests plus TypeScript, changed-file Prettier and
+the production build. Establish the pre-change renderer baseline with
+`PROFILE_OUT=output/solid-obstacles/baseline PROFILE_WORLD=expanded
+PROFILE_POPULATION=32 npx tsx scripts/island-performance.ts`; repeat the same
+hardware/settings after implementation. Also add measured cached obstacle-query
+and 32-player movement tick checks to that script: keep a 50 ms tick budget and
+bounded spatial candidate counts. Compare steady frame p95 and transition tails;
+investigate any material regression (over 10% beyond timing noise), do not claim
+software-rendered timings as hardware performance. Baseline uses the available
+NVIDIA Quadro M1200. Use `TEST_GPU=1` for this item's browser checks on this host.
+
+Red gate: all 16 new cases fail before production changes (`output/solid-obstacles/red.log`):
+missing rule defaults/shared placement module, pass-through contacts and accepted
+parking in the arrival reserve. Baseline hardware survey completes all six
+expanded-island scenarios with 33 rendered players: steady frame p95 is
+35.5/41.8/37.5/36.4/37.0/35.6 ms (town/river/forest/summit/storm coast/return).
+No steady frame exceeds 100 ms. Evidence: `output/solid-obstacles/baseline/`.
+
+Solid-obstacle progress (unreleased): the initial 16 tests now pass, with added
+coverage for NPC detours/escape, same-tick terrain/road replacement, grounded
+planes, rule controls, reserved-route parking and unchanged hovercraft helm
+eligibility (26 checks including the existing captain tests). Add
+`clearRouteParking`, default true, to the configurable policy: false disables the
+engine-off parking refusal. No bridges exist yet; the future crossing item must
+register its reserved passage with this shared policy before bridge release.
+The renderer regression first failed with 215 missing shared trunks in low
+quality, then passed in both qualities after village/streamed renderers consumed
+the same objects. Evidence: `output/solid-obstacles/render-red.log` and
+`render-first.log`. The actual owner-editor browser flow first failed on the
+missing named collision fieldset before that UI was added.
+
+The broader relevant run passed 73/75 checks. The two failures are NPC approach
+to stone grounds and long cape road surveys. Continuous NPC edge checks with
+smaller grid inflation restore all gathering-site journeys; the cape survey is
+still under investigation. Its eastern fixed endpoint now lies inside a solid
+trunk, and coarse search steps also miss clear ways around scenery. Do not mark
+this item done or release it until the routing criteria and browser/performance
+gates pass. First 32-player warmed movement survey: p95 37.9 ms, maximum spatial
+candidate count 12; cold generation 214 ms, reported separately. Cache tuning is
+in progress; these are preliminary results, not release verification.
+
+Solid-obstacle verification update: the affected 154-test run passes, including
+navigation, road growth, northern rivers, flight, prediction, construction,
+vehicle tuning, resource scenery, snow and resident-guide budgets. TypeScript is
+clean. Long road surveys refine obstructed coarse edges on the existing fine
+grid; all accepted segments still pass the shared solid-obstacle check. The old
+eastern-cape endpoint is now inside a generated trunk: the regression explicitly
+requires refusal there, then verifies a clear destination within six metres with
+the original traversability and route-length checks. Short town-road routing
+retains its previous simplification behavior.
+
+A new red test demonstrated that a shallow vehicle contact could redirect an
+otherwise clear trajectory into a trunk. Recheck the redirected sweep before
+accepting movement; all 25 solid/contact checks pass after that correction.
+The expanded browser flow verifies walking slide, overlap escape, blocked
+construction, scenery removal, vehicle contact and offline timeout. Its final
+mode-change step initially remained blocked by the deliberately invalid 46-degree
+draft retained by the editor. Restore that draft to 15 after verifying native
+validation, then rerun the flow without changing the acceptance assertions.
+The first full performance comparison overlapped compilation/tests; its late
+frame tails are not an isolated result. Repeat without concurrent workloads
+before releasing. Keep the same performance gates and baseline.
+
+Held-throttle browser verification exposed another real gap: after the first
+blocked sweep, shorter subsequent ticks could advance the tractor toward the
+trunk and charge fuel. `held-contact-red.log` reproduces this with variable tick
+lengths. Preserve the original stop position and remember only the blocked
+scenery reach; recheck against current geometry and the new direction, clearing
+it when the driver turns away, changes vehicle/position or the obstacle is gone.
+All original position/fuel/condition assertions remain intact. The 66 affected
+movement/flight/navigation checks pass after this repair.
+
+Offline snapshot regression: a recently signed-off vehicle remained solid for
+60 seconds on the server but vanished from the client. The new test first fails
+on the missing public obstacle (`offline-snapshot-red.log`). Retain its visible
+public projection for exactly the configured collision lifetime, include its
+sign-off time for prediction, and keep private inventory/finances excluded.
+Existing snapshot privacy/deletion tests now additionally check the signed-off
+projection and deletion at expiry. All 52 contact/snapshot/prediction checks pass.
+
+**Solid-obstacle release gates passed (0.124.0).** All 176 relevant tests pass
+(`output/solid-obstacles/release-tests.log`), covering contacts, snapshots/privacy,
+prediction, roads, NPC navigation/construction, northern movement, flight, vehicle
+configuration, creator/design import/export, resource scenery, snow and guide
+budgets. The final owner browser flow passes in 47.3 seconds (`browser-clean.log`),
+with both-quality rendered trunk parity also passing (`browser-held-contact.log`).
+Review tree, boulder, walking, blocked-building, empty-ground, rules and vehicle
+screenshots under `output/solid-obstacles/browser/`. Retrying a detached editor
+fieldset and correcting the toast selector repaired test synchronization only;
+all behavior assertions remain. Announcement images are the successful tree and
+vehicle contacts, explicitly labelled as local verification-world captures.
+
+The isolated `/aclone/` production build passes, including `tsc --noEmit`
+(`build-isolated.log`); an earlier concurrent build received SIGTERM without a
+compiler diagnostic, so it was rerun alone. Changed files are Prettier-formatted.
+The isolated matched Quadro M1200 / 33-rendered-player performance run passes:
+steady frame p95 **34.6/37.2/35.9/36.8/35.0/34.0 ms** versus baseline
+35.5/41.8/37.5/36.4/37.0/35.6. No steady frame exceeds 100 ms; maximum is 85.2 ms,
+with transition maxima 36.6–72.1 ms. Map open/pan/zoom record no long tasks.
+The 32-player movement survey reports p95 **12.4 ms**, max **31.7 ms**, cached
+queries p95 **0.18 ms**, and at most **12** spatial candidates. Cold placement
+is **53.7 ms**, reported separately. Evidence: `output/solid-obstacles/isolated/`;
+command: `PROFILE_OUT=output/solid-obstacles/isolated PROFILE_WORLD=expanded
+PROFILE_POPULATION=32 npx tsx scripts/island-performance.ts`.
+
+Prepare the 0.124.0 release on `backlog-implementation`; retain the separate
+planning commit for later regional-industry work. Verify the pushed SHA before
+deployment, back up through the deploy scripts, verify live assets/health and
+website read-only, then publish the bot announcement. No player grants or live
+world edits are part of this release.

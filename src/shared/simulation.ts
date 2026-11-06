@@ -1,3 +1,17 @@
+import {
+  onSolidGround,
+  sceneryContact,
+  sceneryBlocksSegment,
+  playerContact,
+  stopGroundVehicle,
+} from './ground-contacts';
+import { parkingBlocker } from './ground-parking';
+import {
+  obstacleRuleFields,
+  obstacleRuleKeys,
+  solidSceneryModes,
+  vehicleCollisionModes,
+} from './obstacle-rules';
 import { landscapeRules, landscapeRuleFields } from './landscape-rules';
 import { communicationRuleFields } from './communication-rules';
 import { calendarRuleFields, calendarRulesError } from './calendar-rules';
@@ -1627,6 +1641,10 @@ export function act(w: World, id: string, a: Action): string {
     }
     case 'engine':
       requireThat(hasMotor(w, p.vehicle), 'This vehicle has no motor');
+      if (p.engine && onSolidGround(w, p)) {
+        const reason = parkingBlocker(w, p);
+        requireThat(!reason, reason ?? 'Keep this route clear');
+      }
       p.engine = !p.engine;
       break;
     case 'boatLights':
@@ -1980,6 +1998,7 @@ export function act(w: World, id: string, a: Action): string {
       for (const [key, v] of Object.entries(patch)) {
         requireThat(
           Object.hasOwn(w.settings, key) ||
+            obstacleRuleKeys.includes(key) ||
             Object.hasOwn(climateRuleFields, key) ||
             Object.hasOwn(alpineRuleFields, key) ||
             Object.hasOwn(calendarRuleFields, key) ||
@@ -2045,8 +2064,23 @@ export function act(w: World, id: string, a: Action): string {
           npcHouseholdRuleFields[key as keyof typeof npcHouseholdRuleFields];
         const towingField = towingRuleFields[key as keyof typeof towingRuleFields];
         const charterField = charterRuleFields[key as keyof typeof charterRuleFields];
+        const obstacleField = obstacleRuleFields[key as keyof typeof obstacleRuleFields];
+        if (obstacleField) {
+          num(v, obstacleField.min, obstacleField.max);
+          if (obstacleField.step === 1) requireThat(Number.isInteger(v), 'Use a whole number');
+        }
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (key === 'solidScenery')
+          requireThat(
+            solidSceneryModes.includes(v as any),
+            'Choose off, trunks, or trunks-and-boulders',
+          );
+        else if (key === 'vehicleCollision')
+          requireThat(
+            vehicleCollisionModes.includes(v as any),
+            'Choose off, stop-only, or glancing',
+          );
         else if (key === 'loanTerms')
           requireThat(
             validLoanTerms(v),
@@ -2675,7 +2709,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     ground = v.mode === 3 ? terrainHeight(w, p.x, p.z) : travelHeight(w, p.x, p.z),
     water = ground < surfaceWaterLevel(w, p.x, p.z);
   if (v.mode === 2) {
-    const previous = { x: p.x, z: p.z };
+    const previous = { x: p.x, z: p.z, y: p.y, fuel: p.fuel };
+    let solidFlightContact = false;
     const accident = fly(p, input, dt, {
       settings: w.settings,
       ground: (x, z) => travelHeight(w, x, z),
@@ -2687,6 +2722,16 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       acceleration: v.acceleration,
       turn: v.turn,
       condition,
+      groundContact: (from, to) => {
+        const self = { ...p, ...from };
+        const scenery = sceneryContact(w, self, to);
+        const contact = scenery.stopped
+          ? scenery
+          : playerContact(w, self, scenery.point, prediction);
+        solidFlightContact ||=
+          contact.stopped || contact.point.x !== to.x || contact.point.z !== to.z;
+        return solidFlightContact;
+      },
       blocked: (from, to) =>
         creatorBlocksSegment(w, from, to, 2.0, true) ||
         w.buildings.some((b) =>
@@ -2699,7 +2744,10 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           ),
         ),
     });
-    recordTravel(w, p, Math.hypot(p.x - previous.x, p.z - previous.z));
+    if (solidFlightContact && !accident) {
+      Object.assign(p, previous);
+      stopGroundVehicle(p);
+    } else recordTravel(w, p, Math.hypot(p.x - previous.x, p.z - previous.z));
     if (accident) {
       const slot = p.vehicle;
       p.lastFlightCrash = { at: w.time, cause: accident, slot, x: p.x, y: p.y, z: p.z };
@@ -2824,8 +2872,26 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   if (v.mode === 5) p.y = Math.max(ground, surfaceWaterLevel(w, p.x, p.z)) + 0.5;
   const half = mapHalf(w);
   const previousPosition = { x: p.x, z: p.z };
-  const nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
+  let nx = clamp(p.x + Math.sin(p.heading) * p.speed * dt, -half, half),
     nz = clamp(p.z + Math.cos(p.heading) * p.speed * dt, -half, half);
+  let solidStopped = false;
+  if (onSolidGround(w, p)) {
+    const scenery = sceneryContact(w, p, { x: nx, z: nz });
+    const contact = scenery.stopped ? scenery : playerContact(w, p, scenery.point, prediction);
+    // A hull slide changes the path; never redirect into scenery already cleared by the original sweep.
+    const redirectedBlocked =
+      (contact.point.x !== scenery.point.x || contact.point.z !== scenery.point.z) &&
+      sceneryBlocksSegment(
+        w,
+        p,
+        contact.point,
+        v.collisionRadius ?? (v.mode === 8 ? 0.25 : 1.3),
+        true,
+      );
+    solidStopped = contact.stopped || redirectedBlocked;
+    nx = redirectedBlocked ? p.x : contact.point.x;
+    nz = redirectedBlocked ? p.z : contact.point.z;
+  }
   const gentleCanoe =
     p.vehicle === CANOE && Math.abs(p.speed) <= canoeRules(w.settings).canoeShoreSpeed;
   const shore =
@@ -2851,7 +2917,9 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           gentleCanoe,
         )
       : undefined;
-  if (
+  if (solidStopped) {
+    stopGroundVehicle(p);
+  } else if (
     [0, 1, 4, 5, 8].includes(v.mode) &&
     p.y <= ground + 2 &&
     (cliffBlocks(w, p, { x: nx, z: nz }, p.vehicle === 5 ? 0.35 : (v.collisionRadius ?? 1.3)) ||

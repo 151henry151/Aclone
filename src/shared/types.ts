@@ -1,3 +1,4 @@
+import type { ObstacleRules } from './obstacle-rules';
 import type { LandscapeRules } from './landscape-rules';
 import type { CommunicationRules } from './communication-rules';
 import type { CalendarRules } from './calendar-rules';
@@ -103,6 +104,8 @@ export interface Player {
   z: number;
   heading: number;
   speed: number;
+  /** Last blocked scenery sweep; clear when position, direction, vehicle or layout permits travel. */
+  sceneryStop?: { id: string; x: number; z: number; vehicle: number; reach: number };
   flight?: import('./flight').FlightState;
   lastFlightCrash?: { at: number; cause: string; slot: number; x?: number; y?: number; z?: number };
   fuel: number;
@@ -317,6 +320,7 @@ export interface Zone {
 }
 export interface Settings
   extends
+    Partial<ObstacleRules>,
     Partial<CalendarRules>,
     Partial<LandscapeRules>,
     Partial<CommunicationRules>,
@@ -660,6 +664,7 @@ export interface VehicleDef {
   hitch: number;
   length?: number;
   beam?: number;
+  width?: number;
 }
 export interface Recipe {
   inputs: Stock;

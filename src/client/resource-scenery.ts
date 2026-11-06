@@ -1,3 +1,4 @@
+import { stoneBoulderShapes } from '../shared/scenery-obstacles';
 import { creatorModel } from './creator-model';
 import { fadeSceneryIntoFog } from './scenery-fog';
 import { seasonalMaterial } from './materials';
@@ -270,9 +271,8 @@ export function resourceGeometry(
     }
   } else if (item === 'stone') {
     patch('gravel', 5.7, 0.12);
-    stone(-1.25, -0.6, 2.15, 1.9, 1.7, legacy);
-    stone(2, -1.2, 1.45, 1.4, 1.2);
-    stone(0.2, 2.4, 0.7, 0.43, 0.55);
+    for (const [i, s] of stoneBoulderShapes.entries())
+      stone(s.x, s.z, s.sx, s.sy, s.sz, legacy && i === 0);
     // Naturally fractured stones share the weathered exterior; legacy workings expose fresh spalls.
     for (let i = 0; i < (low ? 14 : 32); i++) {
       const a = rand() * Math.PI * 2,

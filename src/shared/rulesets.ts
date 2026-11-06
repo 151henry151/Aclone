@@ -1,3 +1,4 @@
+import { obstacleRules } from './obstacle-rules';
 import { landscapeRules } from './landscape-rules';
 import { communicationRules } from './communication-rules';
 import { calendarRules, winterDays } from './calendar-rules';
@@ -72,6 +73,7 @@ export const rulesets: Record<
   },
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
+  const obstacles = obstacleRules(w.settings);
   const s = w.settings,
     charter = charterRules(s),
     towing = towingRules(s),
@@ -105,6 +107,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const implementsRules = gatheringImplementRules(s);
   const cargo = npcCargoRules(s);
   return [
+    `Solid scenery: ${obstacles.solidScenery}; vehicle contacts ${obstacles.vehicleCollision}, pedestrians ${obstacles.pedestrianBlocking ? 'block' : 'pass through'}. Offline vehicles stop blocking after ${obstacles.offlineVehicleObstacleSeconds} seconds. Glancing threshold ${obstacles.vehicleGlancingDegrees} degrees, speed multiplier ${obstacles.vehicleGlancingSpeed}. Contacts cause no damage. Reserved-route parking protection ${obstacles.clearRouteParking ? 'on' : 'off'}.`,
     `Communication: chat limit ${communication.chatMaxLength} characters; group reply cooldown ${communication.npcGroupReplyCooldown} real seconds. CB retains its smaller radio limit.`,
     `Landscape: ${landscape.terrainStampLimit} terrain stamps; path/barrier/surface caps ${landscape.landscapePathLimit}/${landscape.landscapeBarrierLimit}/${landscape.landscapeSurfaceLimit}; scatter groups/per-group/total ${landscape.landscapeScatterGroupLimit}/${landscape.landscapeScatterPerGroupLimit}/${landscape.landscapeScatterLimit}; points/line ${landscape.landscapeLinePointLimit}, total ${landscape.landscapePointLimit}; barriers ${landscape.landscapeBarrierLengthLimit} m.`,
     `Calendar: ${calendar.calendarYearDays}-day year; spring/summer/autumn/winter ${calendar.calendarSpringDays}/${calendar.calendarSummerDays}/${calendar.calendarAutumnDays}/${winterDays(s)} days, spring starts at day ${calendar.calendarSpringDay}. Ageing, wear, estate discounts and new loans follow the year; existing loans keep signed periods. Lottery interval ${calendar.lotteryDrawDays} game days (existing draw deadlines persist); lunar phase period ${calendar.calendarLunarDays} game days, shared by moon phases and tides. Edits preserve saved time and tidal range.`,

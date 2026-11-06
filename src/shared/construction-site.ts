@@ -1,3 +1,4 @@
+import { sceneryObstaclesNear } from './scenery-obstacles';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { inlandLevel } from './inland-water';
 import { buildingSpawnReason, spawnReserved } from './spawn-reserve';
@@ -122,6 +123,14 @@ export function constructionSiteReason(w: World, b: Site) {
   const rects = rectangles(b),
     edge = mapHalf(w);
   for (const a of rects) {
+    for (const o of sceneryObstaclesNear(w, a, a, Math.hypot(a.hx, a.hz))) {
+      const dx = o.x - a.x,
+        dz = o.z - a.z;
+      const x = Math.max(0, Math.abs(dx * a.axes[0].x + dz * a.axes[0].z) - a.hx);
+      const z = Math.max(0, Math.abs(dx * a.axes[1].x + dz * a.axes[1].z) - a.hz);
+      if (Math.hypot(x, z) < o.radius)
+        return `Keep the footprint clear of the ${o.kind === 'tree' ? 'tree trunk' : 'boulder'}`;
+    }
     if (onAirfield(w, a.x, a.z, Math.hypot(a.hx, a.hz)))
       return 'Keep the airfield runway and apron clear';
     for (const sx of [-1, 0, 1])

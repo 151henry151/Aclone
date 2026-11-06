@@ -444,5 +444,12 @@
   "calendarSpringDay": 59,
   "calendarSpringDays": 92,
   "calendarSummerDays": 92,
-  "calendarAutumnDays": 91
+  "calendarAutumnDays": 91,
+  "solidScenery": "trunks-and-boulders",
+  "vehicleCollision": "glancing",
+  "pedestrianBlocking": true,
+  "offlineVehicleObstacleSeconds": 60,
+  "vehicleGlancingDegrees": 15,
+  "vehicleGlancingSpeed": 0.7,
+  "clearRouteParking": true
 }

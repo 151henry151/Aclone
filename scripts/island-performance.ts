@@ -1,3 +1,4 @@
+import { obstaclePerformance } from './obstacle-performance';
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Repeatable isolated renderer/streaming comparison. Never connects to production. */
 import { chromium } from '@playwright/test';
@@ -29,6 +30,9 @@ const expanded = structuredClone(original),
   started = performance.now();
 expandPuddlewickIsland(expanded);
 const generationMs = performance.now() - started;
+const movement = obstaclePerformance(expanded, population || 32);
+writeFileSync(out + '/movement.json', JSON.stringify(movement, null, 2));
+console.log('Movement budget', JSON.stringify(movement));
 const server = await createServer({
   server: { host: '127.0.0.1', port: 0, hmr: false, watch: { ignored: ['**/*'] } },
 });

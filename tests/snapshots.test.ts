@@ -10,6 +10,7 @@ test('building owner names survive offline filtering and follow transfers withou
   addPlayer(w, 'viewer', 'Viewer').online = true;
   const owner = addPlayer(w, 'owner', 'Offline owner');
   owner.online = false;
+  w.time = owner.lastSeen + w.settings.offlineVehicleObstacleSeconds!;
   owner.inventory.gold = 888;
   const building = w.buildings[0];
   building.government = false;
@@ -63,6 +64,11 @@ for (const compact of [false, true])
     assert.equal(bob.world.script, '');
     assert.ok(!bob.world.messages.some((m: any) => m.text === 'private message'));
     b.online = false;
+    b.lastSeen = w.time;
+    const signedOff = JSON.parse(prepareFrame(w).players.b);
+    assert.equal(signedOff.online, false);
+    assert.equal(signedOff.inventory, undefined);
+    w.time += w.settings.offlineVehicleObstacleSeconds!;
     const delta = JSON.parse(as.encode(w, account('a'), prepareFrame(w)));
     assert.equal(delta.partial, true);
     assert.equal(compact ? delta.entities.players.b : delta.world.players.b, null);

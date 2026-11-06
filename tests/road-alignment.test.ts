@@ -54,7 +54,28 @@ test('kilometre-scale surveys reach both cape approaches without crossing the ba
   w.buildings = [];
   w.towns = [];
   for (const side of [-1, 1]) {
-    const path = roadRoute(w, { x: side * 600, z: 600 }, { x: side * 3300, z: 5000 });
+    const start = { x: side * 600, z: 600 },
+      original = { x: side * 3300, z: 5000 };
+    const approach = roadSite(w);
+    // Newly solid scenery may occupy the old exact endpoint. Keep the cape
+    // approach, but require a genuinely clear terminus within six metres.
+    if (!approach.clear(original)) assert.equal(roadRoute(w, start, original), undefined);
+    const goal = [
+      [0, 0],
+      [0, -4],
+      [0, 4],
+      [-4, 0],
+      [4, 0],
+      [-4, -4],
+      [4, -4],
+      [-4, 4],
+      [4, 4],
+    ]
+      .map(([x, z]) => ({ x: original.x + x, z: original.z + z }))
+      .find(approach.clear);
+    assert.ok(goal, 'cape retains a clear nearby approach');
+    assert.ok(pointDistance(goal, original) < 6);
+    const path = roadRoute(w, start, goal);
     assert.ok(path, `cape ${side}`);
     assert.ok(length(path) < 7000);
     const site = roadSite(w);
