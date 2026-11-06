@@ -94,19 +94,7 @@ export function architecturalDetails(
     const entry = clear(v, v.x, 1, front, 0.2);
     if (entry) {
       entries.push({ x: v.x, z: front, v });
-      if (industrial && v.width >= 4) {
-        const h = bayHeight,
-          width = bayWidth;
-        for (const x of loadingBayXs(b.kind, v)) {
-          const panel = new T.Mesh(
-            new T.PlaneGeometry(width, h),
-            finishMaterial(look.bay, look.accent),
-          );
-          panel.position.set(x, h / 2, front + 0.04);
-          panel.userData.loadingDoor = true;
-          root.add(panel);
-        }
-      } else door(v.x, front);
+      if (!(industrial && v.width >= 4 && (b.kind !== 'starport' || hangar))) door(v.x, front);
     }
     const floors = hangar || controlTower ? 1 : Math.max(1, Math.round(v.eaves / 2.7));
     const storey = v.eaves / floors;
@@ -263,7 +251,7 @@ export function architecturalDetails(
       bales.setMatrixAt(
         i,
         new T.Matrix4().makeTranslation(
-          entry.x - 1.3 + (i % 3) * 1.3,
+          main.x - main.width / 2 + 0.7 + (i % 3) * 1.3,
           0.4 + Math.floor(i / 3) * 0.72,
           entry.z + 0.55,
         ),

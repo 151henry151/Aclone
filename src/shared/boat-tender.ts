@@ -8,6 +8,7 @@ import { terrainHeight } from './terrain';
 import { surfaceWaterLevel } from './ocean';
 import { buildingBlocksMovement } from './building-shapes';
 import { creatorBlocksSegment } from './creator';
+import { vehicleRecord } from './vehicle-services';
 export const tenderOf = (w: World, p: Player) => w.mooredBoats?.[mooringKey(p.id, MOTORBOAT)];
 export const towingTender = (w: World, p: Player) => {
   const t = tenderOf(w, p);
@@ -46,8 +47,10 @@ export function tenderAction(w: World, p: Player, operation: unknown) {
     dock && Math.hypot(t.x - p.x, t.z - p.z) <= (t.rope ?? 0) + 2,
     'Bring the motorboat into the dock approach',
   );
-  if (dock.building) delete w.mooredBoats![mooringKey(p.id, MOTORBOAT)];
-  else {
+  if (dock.building) {
+    vehicleRecord(w, p, MOTORBOAT).storedAt = dock.building.id;
+    delete w.mooredBoats![mooringKey(p.id, MOTORBOAT)];
+  } else {
     Object.assign(t, dock.berth, { heading: dock.heading, landing: dock.id });
     delete t.towedBy;
     delete t.rope;

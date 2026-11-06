@@ -69,19 +69,29 @@ test('all architectural types have five distinct structural models; finishes do 
             assert.ok(items[item] && Number.isSafeInteger(n) && n > 0);
         }
         const root = buildingModel(b, (m) => m);
-        let triangles = 0;
+        let triangles = 0,
+          interiorTriangles = 0;
         root.traverse((o) => {
           if (o instanceof T.Mesh) {
             assert.ok(
               [...o.geometry.attributes.position.array].every(Number.isFinite),
               `${kind} ${a.id}`,
             );
-            triangles += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3;
+            const count = (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3;
+            let interior = false;
+            for (let a: T.Object3D | null = o; a; a = a.parent)
+              if (a.userData.interior) interior = true;
+            if (interior) interiorTriangles += count;
+            else triangles += count;
           }
         });
         assert.ok(
           triangles < (kind === 'starport' ? 30000 : 3500),
           `${kind} ${a.id} ${size.id}: ${triangles} triangles`,
+        );
+        assert.ok(
+          interiorTriangles <= (kind === 'starport' ? 15000 : 6000),
+          `${kind} ${a.id} ${size.id}: ${interiorTriangles} interior triangles`,
         );
         release(root);
       }

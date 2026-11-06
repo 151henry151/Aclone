@@ -2,6 +2,24 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.130.0 — The workshop doors are open
+
+Look through working bay doors into furnished industrial buildings. Garages have
+tractors on lifts, the flying club has a parked biplane and another under repair,
+and breweries, sawmills, forges and boat workshops show their trade equipment.
+Warehouse shelves, hay stacks and livestock reflect stock; confirmed stored boats
+appear at their boathouse. The first hangar aircraft follows your selected paint.
+
+Doors open during staffed business hours, with rolling, sliding or swinging
+motion, and close at night. World Builder controls the schedule, staffing rule,
+stagger, motion duration and reach, sound reach and interior detail. Performance
+graphics keeps the principal equipment; closed interiors hide their contents.
+These are visual interiors; building interactions and collision rules remain as
+before. The public gallery now includes an interior view for each applicable kind.
+
+See [the player guide](PLAYING.md#working-workshops-and-hangars) and
+[world rules](WORLD_BUILDING.md#building-doors-and-interior-detail).
+
 ## 0.129.0 — A proper coastal freighter
 
 The Coastal cargo boat now measures 60 × 16.8 metres, with a 3.75 m draft and

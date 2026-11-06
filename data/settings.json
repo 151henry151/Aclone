@@ -580,5 +580,16 @@
   "homeCookingYield": 1,
   "meatMealYield": 4,
   "cookedSteakYield": 4,
-  "livestockYoungVisualScale": 0.55
+  "livestockYoungVisualScale": 0.55,
+  "buildingDoorMode": "hours",
+  "buildingDoorOpenHour": 7,
+  "buildingDoorCloseHour": 19,
+  "buildingDoorUnstaffedClosed": true,
+  "buildingDoorOffsetMinutes": 20,
+  "buildingDoorSeconds": 5,
+  "buildingDoorAnimateRange": 120,
+  "buildingDoorSoundRange": 40,
+  "buildingDoorSwingDegrees": 110,
+  "buildingInteriorThreshold": 0.02,
+  "buildingInteriorDetail": "full"
 }

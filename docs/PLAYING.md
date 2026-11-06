@@ -773,3 +773,19 @@ ordinary respawn rules. Small craft follow the world's boat loss/recovery policy
 A capsized motorboat or canal boat and its cargo are destroyed even in a world
 that normally allows recovery. A public loss notice names the boat, position and
 sea state. All these defaults can be changed by the world builder.
+
+## Working workshops and hangars
+
+Industrial bay doors open during the world's business hours and close for the
+night. Their rooms show the trade at work: tractors on garage lifts, brewery
+kettles, sawmill machinery, warehouse racks, forge hearths and boats undergoing
+repair. The flying-club hangar has two biplanes; the parked one uses your selected
+aircraft paint. Warehouse stock, hay stacks and livestock reflect the building's
+current contents. Confirmed boats stored at a boathouse appear in its workshop
+or lifting hall and disappear when boarded again.
+
+Doors roll, slide or swing over a few seconds, with nearby machinery sounds for
+rolling/sliding doors. World owners can change the hours or leave doors open or
+closed. These are visual interiors; normal building interaction and collision
+rules still apply. Performance graphics retains the large equipment with fewer
+details, and world owners can reduce or hide interiors in F10 → Rules.

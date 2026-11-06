@@ -39,7 +39,7 @@ export function quayDetails(root: T.Group) {
         box(0.65, 0.12, 0.5, '#3c4948', x, 0.08, z + dz);
         box(0.15, 0.6, 0.15, '#3c4948', x, 0.4, z + dz);
         box(0.65, 0.1, 0.15, '#3c4948', x, 0.7, z + dz);
-        box(0.35, 1, 0.22, '#4d4233', x, -0.45, z - QUAY.deckDepth / 2 - 0.1);
+        box(0.35, 1, 0.22, '#4d4233', x, -0.45, z - QUAY.deckDepth / 2 - 0.1).name = 'quay-fender';
       }
     }
   for (const side of [-1, 1])

@@ -2,6 +2,20 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.130.0
+
+Deploy the approved backlog-implementation SHA with the normal online SQLite
+backup, prefixed build and service restart, then publish the matching website.
+Reload clients for animated bay doors and furnished interiors. Missing door rules
+use the catalogue defaults. No world reset, ownership migration or grant runs.
+Newly confirmed boathouse storage records carry an optional building ID; older
+records remain valid without inventing a storage location.
+
+Verify public health/client/website version 0.130.0, the deployed commit and
+prefixed script/map-worker assets. Check the public gallery images and retain the
+database and website backups. Gameplay, editor and stock evidence comes from
+disposable local worlds; make no live test-player changes.
+
 ## Upgrade 0.129.0
 
 Deploy the approved backlog-implementation SHA with the normal online SQLite

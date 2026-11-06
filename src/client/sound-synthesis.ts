@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 export type SoundKind =
+  | 'door-roll'
+  | 'door-slide'
   | 'engine'
   | 'saw'
   | 'mill'
@@ -17,15 +19,17 @@ const TAU = Math.PI * 2;
 /** Original mono PCM. Integer-frequency oscillations and a short wrap crossfade keep loops seamless. */
 export function synthesize(kind: SoundKind, sampleRate: number): Float32Array<ArrayBuffer> {
   const duration =
-    kind === 'horn'
-      ? 0.48
-      : kind === 'weapon'
-        ? 0.08
-        : kind === 'chat'
-          ? 0.18
-          : ['woodland', 'shore', 'storm'].includes(kind)
-            ? 8
-            : 2;
+    kind === 'door-roll' || kind === 'door-slide'
+      ? 5
+      : kind === 'horn'
+        ? 0.48
+        : kind === 'weapon'
+          ? 0.08
+          : kind === 'chat'
+            ? 0.18
+            : ['woodland', 'shore', 'storm'].includes(kind)
+              ? 8
+              : 2;
   const data = new Float32Array(Math.round(sampleRate * duration));
   let seed = 73921,
     low = 0,
@@ -39,6 +43,16 @@ export function synthesize(kind: SoundKind, sampleRate: number): Float32Array<Ar
     rumble += 0.025 * (noise - rumble);
     const firing = Math.exp(-((t * 20) % 1) * 7);
     switch (kind) {
+      case 'door-roll':
+      case 'door-slide': {
+        const envelope = Math.sin((Math.PI * t) / duration) ** 2;
+        data[i] =
+          envelope *
+          (kind === 'door-roll'
+            ? rumble * 1.2 + low * 0.15 + sine(48, t) * 0.08
+            : low * 0.12 + sine(760 + 60 * Math.sin(t * 3), t) * 0.07);
+        break;
+      }
       case 'woodland': {
         const chirp = Math.max(0, Math.sin(t * 1.6)) ** 28;
         data[i] = rumble * 0.8 + low * 0.16 + chirp * 0.07 * sine(1700 + 220 * Math.sin(t * 18), t);

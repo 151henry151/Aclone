@@ -304,7 +304,7 @@ implementation order rather than building paving before ford-aware persistence.
 16. **Butcher, meat and livestock life cycle — done, live in 0.128.0**: young/cohorts/rations/breeding;
     adult slaughter service/shop; raw meat/spoilage; business and home cooking;
     NPCs, migration, portable catalogues and taxed chain margins.
-    **Then revisit item 13: coastal cargo boat scale (Henry, 2026-11-06).**
+    **Item 13 coastal cargo boat scale follow-up — done, live in 0.129.0.**
     Target about 3× the shipped physical hull size, with human-scale fittings and
     configurable dimensions/clearance. Read the deferred follow-up in BACKLOG.md;
     write concrete red scale/access tests before implementation. Verify enlarged
@@ -6572,3 +6572,284 @@ Existing bundler chunk-size and dependency-comment warnings remain non-fatal.
 Evidence: `output/cargo-boat-scale/`; release preparation: `output/release-0.129.0/`.
 Cut 0.129.0 with player/freight/world-builder docs and README refreshed. Push,
 exact-commit deployment, saved-freight verification and announcement remain next.
+
+Scale follow-up committed and pushed: `d31b83e`; the GitHub branch SHA matches.
+Implementation is done. Exact-commit deployment and announcement are in progress;
+this record is deliberately added after the push.
+
+0.129.0 is done and live: pushed/deployed commit `d31b83e` matches exactly;
+health, client and website report 0.129.0. Public client and prefixed map worker
+load without browser errors. Read-only comparison of all five saved worlds with
+the pre-deployment backup finds no existing owned/moored coastal freighters and
+no ownership differences; legacy reberthing/freight preservation is exercised by
+the local SQLite regressions rather than claimed as a live migration event.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261106-015619.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261106-015731.tar.gz`.
+The bot announcement and both actual before/after-scale screenshot embeds were
+read back and verified:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568157533158248538
+Evidence: `output/release-0.129.0/`. No live grants or test-player changes.
+The eligible-section count remains 14/29; this finishes the item 13 follow-up.
+Next in order: item 17, Open bay doors and modelled interiors.
+
+### Item 17 — Open bay doors and modelled interiors: criteria before code
+
+Implement the entry in its stated order: shared door state and real apertures;
+animated leaves and visibility; furnished shells for every named trade and
+architecture; stock/owner variants; reduced detail; creator controls and gallery;
+bounds, browser journeys and island performance. Do not start parked vehicles.
+
+Completion criteria and commands:
+
+- `npx tsx --test tests/building-doors.test.ts`: pure deterministic state is open
+  at 07:00–19:00 with a stable ±20-minute building offset, only for staffed or
+  public-service buildings. Construction, unstaffed and night cases shut; an
+  owner/worker currently inside overrides hours. Test midnight schedules, frozen
+  clock, old saves, public snapshots and unchanged collision. No persistent door
+  state or separate door network messages. If private work/inside information is
+  needed, project only the derived activity flags in the ordinary snapshot.
+- Every gameplay/render policy default lives once in `data/settings.json`:
+  mode (business hours / always open / always closed), opening/closing hours,
+  unstaffed closure, offset minutes (20), motion seconds (5 within specified 4–6),
+  animation reach (120 m), sound reach (40 m), swing (110 degrees), visibility
+  threshold (0.02), interior detail (full/reduced/none). Validate changes atomically,
+  expose labelled creator controls, and round-trip saves and portable designs.
+  Six roll-up panels and the 6,000/15,000 triangle budgets are model constraints.
+- `npx tsx --test tests/building-interiors.test.ts tests/scale.test.ts`: each
+  applicable legacy and five-model design has real front apertures, floor, inward
+  walls/back, ceiling with rafters/trusses and two/three keyed lamps. Door motion
+  is six-panel sectional roll-up, paired sliders or paired 110-degree barn hinges
+  as assigned in the entry; no change to collision. Closed interiors hide below
+  threshold. Reduced mode shows shell and only two/three principal props; none
+  draws no props. Custom creator models retain their own behaviour.
+- Furnish and visually inspect all listed sets: hangar's two biplanes (one under
+  repair), engine stand/propeller/tools/fuel/tyres/weather board; garage lifts and
+  hash-selected tractor, tools/compressor/bench/tyre equipment/parts store/pit;
+  sawmill carriage/saws/logs/lumber/ducts and through-open Lumber shed; brewery
+  kettles/mash tun/fermenters/grain/kegs/hoses/steam; warehouse racks/forklift/
+  packing/conveyor/loading edge and four actual-stock tiers; factory machines/
+  walkways/gantry/cabinet/office; boat cradle/slipway/rope/loft/paint/steam box and
+  real owned stored boats; forge hearth/anvil/bellows/tub/tools/power hammer/sand;
+  carpenter/workshop bench/saws/clamps/lumber/furniture/stove or machine-shop kit;
+  feed mill/hay barn/farm hopper/sacks/elevator/bales/cart/tractor; brickworks/
+  concrete/mason/quarry/mine production equipment; livestock pens/animals/
+  milking/churns/troughs/hay/hose; refinery pumps/pipes/valves/gauges/control desk;
+  starport freight train/transporter/bowser/gantry/shuttle where specified, with
+  glazed passenger-terminal doors. Assert prop bounds against each volume and
+  triangle budgets, stock changes without scenery reconstruction, and human scale.
+- `TEST_GPU=1 npm run test:e2e -- tests/browser/building-doors.spec.ts`: actual
+  scene clock crosses opening/closing with visible smooth motion; walk to workshop,
+  hangar and garage; verify near/far snapping and audible-range gating, staffed/
+  unstaffed/construction states, empty/full warehouse, full/reduced/none and low
+  quality, changed editor rules/reload and invalid-input refusal. Capture reviewed
+  actual screenshots and a short successful browser recording for the release.
+- Extend `scripts/building-architecture-preview.ts --open` with an open-interior
+  sixth tile; review all applicable kinds and architecture layouts in normal/low
+  quality. Publish matching website gallery assets. Compare town all-open versus
+  all-closed frame distributions under the existing island budget, checking no
+  synchronous full-scene rebuild on door/stock updates and bounded draw/triangle
+  work; record exact measured results rather than assuming npm tests prove it.
+- Relevant direct-consumer suites (building shapes/facades, snapshots, creator
+  settings/designs, lighting/audio and scenery updates), clean `npx tsc --noEmit`,
+  changed-file Prettier, game/website builds, player/world-builder/ART docs and
+  README/changelog/release metadata. Commit, push, deploy exact SHA with backups,
+  read-only live verification, then #announcements with reviewed screenshots.
+
+Item 17 recovery audit (2026-11-06): still in progress, not released. Browser
+state assertions initially passed while the actual screenshot showed shut doors:
+static scenery batching had detached the leaves and merged hidden interiors into
+the exterior. New regression tests first fail on missing retained meshes and
+incorrect fresh-preview poses. Preserve the two dynamic subtrees through batching
+and matrix freezing, initialize closed leaf poses, and verify raycasts against
+actual rendered geometry. All nine door/scenery/sound regressions then pass; the
+real clock/editor/reload browser flow passes in 50.7 seconds and its open-workshop
+screenshot visibly shows the open aperture and furnishings. The center-seam ray
+was moved 0.1 m into a leaf to avoid testing a floating-point crack at the seam.
+Further red tests require actual kettle steam, retained flickering coals, a
+modelled pattern-shop sand floor and the Band-saw mill's distinct saw. Remaining
+completion gates include the full furnishing/storage audit, gallery and measured
+all-open performance; do not treat geometry/state coverage as visual sign-off.
+
+### Item 17 — Validation stop, 2026-11-06
+
+**Incomplete; no commit, push, deployment or announcement. Live remains 0.129.0.**
+Do not begin item 18. Preserve the working changes on `backlog-implementation`.
+
+Further verified work:
+
+- Test and remove painted doors/windows obstructing open apertures across legacy
+  and all five applicable architectures, including the lumber shed's rear opening.
+  Test and align the garage lift with its actual tractor.
+- Test and add retained kettle steam and forge flicker, actual sand-floor geometry
+  and a band saw for the Band-saw mill. Effects stop when shut or reduced.
+- Preserve only a confirmed storage location in the existing vehicle record;
+  project public boat identity/paint separately from private fleet data. Clear
+  storage on boarding, retain it through saves, and record tender storage too.
+  Show the motorboat in the dry workshop and canal boat in the existing lifting
+  hall. Give that hall working doors without flooring over navigable water.
+- Test and add hangar repair trestles, current-paint refresh, an actual rear-window
+  aperture and an outdoor windsock. The final browser geometry survey passes
+  all applicable legacy/five-model interiors, stored motorboat/canal-boat bounds,
+  finite geometry and the 6,000/15,000-triangle budgets, including these hangar
+  checks (`output/building-interiors/final-geometry.log`). This is geometry
+  coverage, not a claim that all furnishings have received final visual review.
+- Add `--open` architecture previews, including a sixth tile at human eye height.
+  Review the initial workshop/garage screenshots; further final gallery review
+  and website publication remain unfinished.
+- First matched expanded-island town performance runs, low quality, 33 rendered
+  players, Quadro M1200, 1280×800: closed/open p95 **35.3/35.3 ms**, maximum
+  **37.7/37.0 ms**, zero frames over 100 ms, draws **248/262**. These measurements
+  precede the later storage/hangar additions and need repeating at final sign-off;
+  normal quality and the completed full-detail furnishing set remain unverified.
+  Evidence: `output/building-interiors/performance-{closed,open}/results.json`.
+- The boating suite initially exposed an existing rescue persistence failure:
+  `cargoLife: undefined` disappears on JSON round trip. Reproduce it in an archive
+  of released commit `d31b83e`, then omit absent optional metadata at creation.
+  Keep the original equality assertion. All 14 boating tests and nine current
+  interior unit tests pass across the focused runs.
+
+The broader relevant gate ran 100 tests: **93 passed, 7 failed**. One failure
+was a missing `loadingDoor` tag on the new freight-door group; restore that
+semantic tag and verify the existing freight-sized-door assertion separately.
+The other six known failures remain unresolved:
+
+1. `building-architecture.test.ts` counts the entire newly furnished brewery
+   against the older 3,500-triangle whole-building limit (expanded model-1: 3,886).
+2. `building-finishes.test.ts` requires a whole garage to fit its old 366-triangle
+   limit and then fewer than 100 triangles, including all hidden furnishings.
+3. The same suite treats every `lightSource` as a six-index window pane with a
+   window mask; the specified interior lamps are box fixtures (36 indices).
+4. The catalogue material-library count is outside its older 12–18 range.
+5. The scale suite's generic catalogue dimension limits fail on shipped geometry.
+6. Its below-ground check rejects the shipped freight quay's piles.
+
+An isolated archive of released commit `d31b83e` reproduces failures 4–6:
+24/27 building architecture/finish/scale tests pass, three fail. Evidence:
+`output/building-interiors/building-baseline.log`. Those old tests have not been
+weakened, deleted or skipped. Failures 1–3 encode assumptions from the empty-shell
+renderer that conflict with the new entry's furnished-interior budget and lamps.
+Stop here under Henry's instruction to stop when the completion criteria cannot
+be met; do not silently relax the old assertions to claim success.
+
+Remaining implementation/verification beyond that validation conflict: audit all
+named furnishings and architecture layouts (including hash-selected repair hulls,
+staging, fully supported repair/lift geometry, stock-height presentation and
+trade-specific detail); verify low-detail effects and the stored-boat update flow
+visually; inspect the final hangar and waterside hall; cover editor invalid-input
+and construction/far-distance player flows; finish gallery/website and player/
+world-builder/ART docs; rerun final relevant gates, normal/low performance and a
+successful recorded browser walkthrough. TypeScript is clean at the latest check;
+changed files are formatted. No release metadata/version bump is warranted yet.
+
+### Item 17 — Resume validation, 2026-11-06
+
+Henry requested continuation. Reconcile legacy empty-shell assertions with the
+entry's explicit furnished-interior contract: retain the original exterior
+material-pass budgets (366 garage / 574 farm) and architecture exterior limit,
+and measure the new interiors separately against 6,000 / 15,000 triangles.
+The old sub-100 optimization assertion cannot describe split aperture walls;
+the original exterior budgets remain enforced. Identify facade windows by
+`facadeWindow`, preserving their frame/mask and batching assertions; test interior
+lamps independently. Recognize the finite 20-member finish vocabulary, preserve
+the 11 MiB memory ceiling, and fix the measured 11.5 MiB allocation rather than
+raise it. Use the quay's canonical infrastructure dimensions and explicitly
+recognize underwater piles/fenders, preserving other ground/footprint checks.
+Run the reconciled tests red before fixing texture memory and fender identity;
+then run all affected geometry, finish, lighting and interior tests. These are
+validation repairs within item 17, not completion or permission to start item 18.
+
+Additional furnishing audit criteria: confirm stock-to-eaves hay stacks and empty
+stock, a tool chest per garage bay, full-size freight containers with gantry
+clearance, rear boathouse apertures, actual hash-selected repair craft with
+staging, supported lift platforms, wall-mounted tools, kettle manways and malt
+pallets. Run geometry/bounds across every architecture before visual review.
+Merge fixed furnishings across each principal/detail set by material, preserving
+triangle count and bounds, animated effect subtrees and independent stock/paint
+updates; verify reduced/closed visibility in the actual browser. Record red and
+green evidence in `output/building-interiors/`.
+
+Final performance command:
+`TEST_GPU=1 npm run test:e2e -- tests/browser/building-interior-performance.spec.ts`
+(run alone, no other browser/compiler load). Compare closed/open expanded-town
+samples on the same machine, 32 other players, 10-second warmup and 15-second
+sample, separately for low/normal quality. Retain the recorded frame-budget
+contract: median ≤50 ms, p95 ≤66.7 ms and no more than 10% p95 regression against
+the matched closed run; require zero steady frames above 100 ms and no page
+errors. Do not substitute a geometry/state test for this measured browser gate.
+
+Resume verification findings:
+
+- Retain original facade windows in their own light batch; interior lamps no
+  longer get detached from their visibility gate or replace the window mask.
+  Reconciled geometry/finish/lighting checks pass; separate lamp regression covers
+  open night, closed, daytime and no-detail states.
+- The actual player screenshots exposed floating hangar aircraft missed by broad
+  geometry boxes. A red precise-vertex check measured the lowest mesh at 1.193 m
+  instead of the 0.28 m floor. Use precise bounds for placement and fit repair
+  trestles to actual airframe contact points; the complete geometry survey passes.
+- Final performance verification initially failed at closed-room p95 134.1 ms
+  and 37 frames above 100 ms. A profiled retry also failed. The desktop app was
+  concurrently generating thousands of binary `git diff --no-index` jobs for
+  untracked `output/` archives/videos, many blocked on pipe output. Add local
+  `.git/info/exclude` entries for `output/`, `.codex-attachments/` and
+  `docs/NPC_STATUS*.md` (no tracked ignore change; preserve all evidence). Stop
+  only verified read-only output diff jobs; let queued jobs and zombies drain.
+  A retry during cleanup fails the unchanged 50 ms obstacle tick budget. Once
+  the queue clears, matched low-quality closed/open frame p95 returns to
+  35.5/35.6 ms, maxima 37.2/37.8 ms, zero steady frames above 100 ms, draws
+  248/265. Continue the remaining quality comparisons without relaxing budgets.
+- The expanded player journey reaches all requested buildings, stock and editor
+  cases; its final Low reload assertion exposed a test setup that overwrote
+  Low with Normal on every reload. Preserve the selected local quality in the
+  setup and rerun before treating its video as successful evidence.
+
+### Item 17 — Final local verification, 2026-11-06
+
+The expanded player journey passes: clock-driven opening/closing, actual rendered
+leaf positions, workshop/hangar/garage/warehouse views, all four shelf-stock tiers
+without scenery replacement, unstaffed closure, invalid opening hour refusal,
+Full/Reduced/None policies, saved settings and Low reload, construction and distant
+doors. Evidence: `output/building-interiors/browser-final.log` and its successful
+`browser/doors-rules-stock.webm`. A later precise-bounds survey exposed an
+asymmetrical factory tool touching a wall; clamp its actual local min/max bounds
+and rerun the complete geometry survey successfully (`geometry-final.log`).
+
+The furnishing audit adds a grounded repair aircraft with exposed engine bearers,
+a modelled radial engine on its stand, a contiguous garage workbench and lamps in
+the waterside lifting hall. The radial-engine regression first had an invalid
+Node fixture using the canvas-based hangar sign; correct the fixture to furnish
+the actual planned volume, confirm the missing-radial-engine failure against the
+previous box prop, then pass it with the new model. All 22 interior unit checks
+pass. The direct-consumer run passes **126/126** tests for doors/interiors/sound,
+static scenery, scale/architecture/finishes, lighting/audio, snapshots, boating,
+boat abandonment, vehicle services, creator settings and rule sets
+(`relevant-final.log`). TypeScript is clean (`types-final.log`).
+
+Review all 25 applicable kinds × five architectural layouts, full/reduced detail,
+in `gallery-compare/`; separately review the boathouse lifting hall in
+`gallery-water/`. The actual boat rests on its rack, rear openings remain clear,
+and reduced rooms retain their principal equipment. Regenerate the 25 public
+WebP sheets with open exteriors and a sixth interior tile (`gallery-publish.log`).
+Review the final garage/brewery public sheets and the actual hangar/garage/stock
+player screenshots. The walkthrough-artifacts video reviewer confirms visible
+floor contact, door motion and shelf-stock changes; retain the reviewed 26-second
+clip `video-review/doors_interiors_stock_rules.mp4` (original seconds 17–43).
+The clip excludes reload footage and is not evidence of persistence by itself.
+
+`npm run build` passes; `npm run check:website` builds the matching website and
+passes its four-width gallery/search/image/keyboard/touch checks, all 54 building
+previews, empty search, delayed-load cancellation, WebGL failure and no-JavaScript
+fallbacks. The normal biplane model/cockpit browser regression passes (1/1),
+confirming the maintenance variant leaves the flyable aircraft behavior intact.
+Prepare release 0.130.0 and reviewed screenshot announcement; the final isolated
+performance gate and push/deployment verification are still pending below.
+
+Final isolated performance gate passes on the completed implementation
+(`performance-release.log`, 3.1 minutes): low closed/open p95 **35.6/35.4 ms**,
+maxima **39.2/38.8 ms**, draws **248/265**; normal closed/open p95 **18.6/17.2 ms**,
+maxima **29.2/21.2 ms**, draws **248/272**. All four samples meet median ≤50 ms,
+p95 ≤66.7 ms, the 10% matched-regression limit and zero frames above 100 ms,
+with no browser errors. Six furnished interiors are visible when open and zero
+when closed. Fixture: expanded town, 32 other players, Quadro M1200, 1280×800,
+10-second warmup and 15-second sampling. No other render/compile jobs run during
+these measurements. All item 17 local completion gates now pass.

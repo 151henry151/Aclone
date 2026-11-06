@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.130.0] - 2026-11-06
+
+### Added
+
+- Open industrial bay doors during business hours and reveal furnished workshops, garages, breweries, barns and hangars, with rolling, sliding and swinging doors that close for the night.
+- Show tractors on lifts, biplanes under repair, trade machinery and stock-dependent warehouse shelves, hay stacks and livestock; publish open-interior building gallery views.
+- Configure door schedules, staffing, motion, sound and interior detail per world, with reduced furnishings in Performance graphics.
+- Retain confirmed boathouse storage locations for interior boat displays, and refresh stored boats and hangar paint without rebuilding scenery.
+
+### Fixed
+
+- Preserve moving doors and hidden interiors through scenery batching and matrix freezing; remove legacy facade details that obstruct open bays.
+- Keep interior lamps attached to their rooms while preserving batched facade window textures; keep the full shared finish library within its existing memory budget.
+- Omit absent cargo-age metadata from boat-rescue records so their saved and restored representations agree.
+
 ## [0.129.0] - 2026-11-06
 
 ### Fixed

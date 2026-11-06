@@ -5,6 +5,8 @@ import { synthesize, type SoundKind } from './sound-synthesis';
 export const SOUND_RATE = 48000;
 export const soundKinds: SoundKind[] = [
   'engine',
+  'door-roll',
+  'door-slide',
   'saw',
   'mill',
   'hammer',

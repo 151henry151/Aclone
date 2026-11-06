@@ -1,3 +1,5 @@
+import { buildingBays } from '../shared/building-bays';
+import { addBayInterior } from './building-interiors';
 import { quayDetails } from './quay';
 import { butcherDetails } from './butcher-model';
 import { lighthouseModel } from './lighthouse';
@@ -21,7 +23,13 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   if (b.kind === 'lighthouse') return lighthouseModel(b, finish);
   const root = new T.Group(),
     plan = buildingPlan(b),
-    look = buildingFinish(b.kind, plan);
+    look = buildingFinish(b.kind, plan),
+    bays = buildingBays(b, plan),
+    primaryBay = bays.reduce(
+      (best, bay) =>
+        !best || bay.volume.width * bay.volume.depth > best.width * best.depth ? bay.volume : best,
+      undefined as BuildingVolume | undefined,
+    );
   const mat = (color: string) => new T.MeshStandardMaterial({ color, roughness: 0.88 });
   function mesh(geometry: T.BufferGeometry, color: string, x: number, y: number, z: number) {
     const m = new T.Mesh(geometry, mat(color));
@@ -197,6 +205,16 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     for (const side of [-1, 1]) box(0.12, 0.15, 2 * d, '#d2c8af', v.x + side * w, v.eaves, v.z);
   }
   function window(x: number, y: number, z: number, width = 1.05, angle = 0) {
+    if (
+      Math.abs(Math.sin(angle)) < 0.01 &&
+      bays.some(
+        (bay) =>
+          Math.abs(z - bay.z) < 0.2 &&
+          y - 0.71 < bay.height &&
+          Math.abs(x - bay.x) < (bay.width + width + 0.22) / 2,
+      )
+    )
+      return;
     const m =
       look.window === 'cottage'
         ? detailMaterial('window')
@@ -230,15 +248,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   const main = plan.volumes[0],
     front = main.depth / 2 + 0.06;
   if (b.aircraftHangar) {
-    wallFinish(box(20, 6, 16, '#ffffff', 0, 3, 0));
+    addBayInterior(root, b, main, bays, look, wallFinish);
     roof(main);
     // A wide dark sliding door with corrugated leaves, lintel and rails. The
     // hangar is a service building; boarding takes place on its exterior apron.
-    box(14.5, 5.5, 0.08, '#172323', 0, 2.75, 8.05);
-    for (const x of [-8.1, 8.1]) {
-      const leaf = box(3.5, 5.5, 0.15, '#ffffff', x, 2.75, 8.12);
-      finishSurface(leaf, 'metal', '#6c8387');
-    }
     box(20.5, 0.18, 0.4, '#394b4e', 0, 5.85, 8.15);
     box(20, 0.15, 0.7, '#d9b457', 0, 0.08, 8.35);
     const canvas = document.createElement('canvas');
@@ -293,7 +306,9 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return root;
   }
   for (const v of plan.volumes) {
-    if (!b.architecture && b.kind === 'haybarn' && v.roof === 'shed') {
+    const openings = bays.filter((bay) => bay.volume === v);
+    if (openings.length) addBayInterior(root, b, v, openings, look, wallFinish, v === primaryBay);
+    else if (!b.architecture && b.kind === 'haybarn' && v.roof === 'shed') {
       for (const x of [-1, 1])
         for (const z of [-1, 1])
           box(
@@ -333,7 +348,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   if (b.construction) return root;
   if (b.kind === 'butcher') butcherDetails(root, b, plan);
   if (b.kind === 'boathouse') {
-    boatyardDetails(root, plan, finish, b.architecture);
+    boatyardDetails(root, plan, finish, b.architecture, b.id);
     return root;
   }
   if (b.kind === 'quay') {
@@ -388,19 +403,6 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     'piggery',
   ].includes(b.kind);
   if (shed) {
-    const bays = ['garage', 'warehouse', 'factory', 'shipyard', 'haybarn'].includes(b.kind)
-      ? [-2.7, 2.7]
-      : [0];
-    for (const x of bays) {
-      // Frame, planks, bracing and shutter ribs are baked into one two-triangle panel.
-      const height = Math.min(3.4, main.eaves - 0.25);
-      const bay = new T.Mesh(
-        new T.PlaneGeometry(3.6, height),
-        finishMaterial(look.bay, look.accent),
-      );
-      bay.position.set(x, height / 2, front + 0.18);
-      root.add(bay);
-    }
     for (const z of [-2, 1.4]) window(main.width / 2 + 0.035, 2, z, 1.1, Math.PI / 2);
     if (b.kind === 'farm' || b.kind === 'sawmill') {
       // The wall texture supplies siding; retain the existing hayloft silhouette.
@@ -409,12 +411,13 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       loft.material = finishMaterial('barn-door', look.accent);
     }
   } else {
-    door(
-      0,
-      ['school', 'hotel'].includes(b.kind)
-        ? plan.volumes[1].z + plan.volumes[1].depth / 2 + 0.06
-        : front,
-    );
+    if (!bays.length)
+      door(
+        0,
+        ['school', 'hotel'].includes(b.kind)
+          ? plan.volumes[1].z + plan.volumes[1].depth / 2 + 0.06
+          : front,
+      );
     const xs = main.width > 10 ? [-4, -2, 2, 4] : [-main.width * 0.3, main.width * 0.3];
     for (const x of xs) window(x, 1.6, front);
     for (const side of [-1, 1])
@@ -606,12 +609,6 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     // from village buildings. These static parts share its existing scenery batches.
     const hangar = plan.volumes[2],
       face = hangar.z + hangar.depth / 2 + 0.07;
-    for (const dx of [-7, 7]) {
-      box(10, 9.5, 0.18, '#293c42', hangar.x + dx, 4.75, face);
-      for (let y = 0.4; y < 9.4; y += 0.55)
-        box(9.7, 0.065, 0.12, '#637477', hangar.x + dx, y, face + 0.12);
-      box(10.5, 0.3, 0.5, '#bfa65c', hangar.x + dx, 9.8, face + 0.2);
-    }
     for (let x = -hangar.width / 2; x <= hangar.width / 2; x += 2)
       box(
         0.14,

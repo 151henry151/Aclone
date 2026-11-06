@@ -137,7 +137,9 @@ export function buildingTexture(kind: Finish): T.DataTexture {
   const cached = maps.get(kind);
   if (cached) return cached;
   const panel = kind.includes('door') || kind.startsWith('window-') || kind.startsWith('awning-');
-  const size = panel ? 256 : 512,
+  // Smooth plaster and sheet metal need no high-resolution joints or grain.
+  // Keep the complete shared vocabulary within its 11 MiB base-RGBA budget.
+  const size = panel || kind === 'limewash' || kind === 'metal' ? 256 : 512,
     data = new Uint8Array(size * size * 4);
   const baseWindow = kind.startsWith('window-')
     ? (detailTexture('window').image.data as Uint8Array)

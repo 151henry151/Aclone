@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, cpSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildings } from '../src/shared/catalog.ts';
+import { industrialKinds } from '../src/shared/building-facade';
 import { buildingArchitectures } from '../src/shared/building-architecture.ts';
 const escape = (s: string) =>
   s.replace(
@@ -16,7 +17,7 @@ export function buildBuildingGallery(source: string, output: string, version: st
       const architectures = buildingArchitectures(kind);
       const models = architectures.map((m) => m.name).join(' · ');
       const description = architectures.length
-        ? `${architectures.length} ${def.name} architectural models and a size or finish comparison`
+        ? `${architectures.length} ${def.name} architectural models and ${industrialKinds.has(kind) || kind === 'starport' ? 'an open interior view' : 'a size or finish comparison'}`
         : `${def.name} fixed design, rendered from the game model`;
       return `<article id="${kind}" data-search="${escape((kind + ' ' + def.name + ' ' + models).toLocaleLowerCase())}"><div class="card-heading"><h2>${escape(def.name)}</h2><a href="#${kind}" aria-label="Link to ${escape(def.name)}">#</a></div><p class="models">${escape(models || 'Fixed design')}</p><a class="image-link" href="${image}" data-preview="${kind}" data-name="${escape(def.name)}" aria-label="Explore ${escape(def.name)} in 3D"><img src="${image}" width="1500" height="1040" loading="lazy" alt="${escape(description)}" /></a></article>`;
     })

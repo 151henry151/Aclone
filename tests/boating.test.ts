@@ -105,6 +105,30 @@ test('boathouse boards in water, refuses every offshore exit, and stores boats w
   assert.deepEqual({ x: p.x, z: p.z }, d.land);
   assert.ok(!w.mooredBoats?.[`${p.id}:3`]);
 });
+test('stored boats retain only a visual yard location, survive saves and disappear when boarded', async () => {
+  const { publicBuildings } = await import('../src/server/snapshots');
+  const { w, p, yard, d } = setup();
+  vehicle(w, p, 3, yard.id);
+  Object.assign(p, d.berth);
+  vehicle(w, p, 5, yard.id);
+  assert.equal((p.fleetState?.[3] as any)?.storedAt, yard.id);
+  const display = (world: typeof w) => publicBuildings(world).find((b) => b.id === yard.id) as any;
+  assert.deepEqual(
+    display(w).storedBoats.map((b: any) => [b.owner, b.slot]),
+    [[p.id, 3]],
+  );
+  const store = new Store(':memory:');
+  try {
+    store.saveWorld(w);
+    const saved = store.loadWorlds()[0].world;
+    assert.deepEqual(display(saved).storedBoats, display(w).storedBoats);
+  } finally {
+    store.close();
+  }
+  vehicle(w, p, 3, yard.id);
+  assert.equal((p.fleetState?.[3] as any)?.storedAt, undefined);
+  assert.deepEqual(display(w).storedBoats, []);
+});
 test('boatyard purchases and owned boats board throughout the 40-metre menu range', () => {
   for (const slot of [3, 30, 31]) {
     for (const owned of [false, true]) {

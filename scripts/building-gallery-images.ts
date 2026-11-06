@@ -3,14 +3,25 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { industrialKinds } from '../src/shared/building-facade';
 import { buildings } from '../src/shared/catalog.ts';
 const output = 'output/building-architecture';
-execFileSync(process.execPath, ['--import', 'tsx', 'scripts/building-architecture-preview.ts'], {
-  stdio: 'inherit',
-  env: { ...process.env, SCREENSHOT_OUTPUT_DIR: output },
-});
+const openKinds = [...industrialKinds, 'starport'];
+const kinds = process.argv.includes('--open') ? openKinds : Object.keys(buildings);
+const closedKinds = kinds.filter((kind) => !openKinds.includes(kind));
+for (const args of [closedKinds, ['--open', ...openKinds]]) {
+  if (!args.length) continue;
+  execFileSync(
+    process.execPath,
+    ['--import', 'tsx', 'scripts/building-architecture-preview.ts', ...args],
+    {
+      stdio: 'inherit',
+      env: { ...process.env, SCREENSHOT_OUTPUT_DIR: output },
+    },
+  );
+}
 mkdirSync('website/assets/buildings', { recursive: true });
-for (const kind of Object.keys(buildings)) {
+for (const kind of kinds) {
   execFileSync('convert', [
     join(output, kind + '.png'),
     '-quality',
@@ -19,5 +30,5 @@ for (const kind of Object.keys(buildings)) {
   ]);
 }
 console.log(
-  `Refreshed ${Object.keys(buildings).length} public building contact sheets. Review and commit these assets before publishing.`,
+  `Refreshed ${kinds.length} public building contact sheets. Review and commit these assets before publishing.`,
 );

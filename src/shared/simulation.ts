@@ -1,3 +1,4 @@
+import { buildingDoorFields } from './building-doors';
 import { livestockRuleFields, livestockRules } from './livestock-rules';
 import { transferStock } from './stock-life';
 import { butcherAction } from './butcher';
@@ -1843,6 +1844,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         }
         delete w.mooredBoats[mooringKey(p.id, poweredBoat(slot, w) ? slot : p.vehicle)];
       }
+      if (landing?.building && poweredBoat(p.vehicle, w) && !vehicleDef(w, p.vehicle).holdCapacity)
+        vehicleRecord(w, p).storedAt = landing.building.id;
+      if (poweredBoat(slot, w)) delete vehicleRecord(w, p, slot).storedAt;
       p.fleet = fleet;
       switchVehicle(p, slot, true, w);
       vehicleRecord(w, p);
@@ -2274,6 +2278,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(waterSourceRuleFields, key) ||
             Object.hasOwn(livestockRuleFields, key) ||
             Object.hasOwn(meatRuleFields, key) ||
+            Object.hasOwn(buildingDoorFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2334,8 +2339,16 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           num(v, obstacleField.min, obstacleField.max);
           if (obstacleField.step === 1) requireThat(Number.isInteger(v), 'Use a whole number');
         }
+        const doorField = buildingDoorFields[key as keyof typeof buildingDoorFields];
+        if (doorField && 'min' in doorField)
+          num(v, doorField.min, doorField.max, doorField.step === 1);
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (doorField && 'choices' in doorField)
+          requireThat(
+            (doorField.choices as readonly unknown[]).includes(v),
+            'Choose a valid building door or interior policy',
+          );
         else if (key === 'solidScenery')
           requireThat(
             solidSceneryModes.includes(v as any),

@@ -123,7 +123,7 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number, destroyedBoa
           smallCraft: p.smallCraft,
         },
         cargo: { ...p.inventory },
-        cargoLife: p.inventoryLife,
+        ...(p.inventoryLife ? { cargoLife: p.inventoryLife } : {}),
         ...(p.boatHold
           ? { hold: p.boatHold, holdBasis: p.boatHoldBasis, holdLife: p.boatHoldLife }
           : {}),
@@ -219,7 +219,7 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
         slot: p.vehicle,
       },
       cargo: { ...p.inventory },
-      cargoLife: p.inventoryLife,
+      ...(p.inventoryLife ? { cargoLife: p.inventoryLife } : {}),
       ...(p.boatHold
         ? { hold: p.boatHold, holdBasis: p.boatHoldBasis, holdLife: p.boatHoldLife }
         : {}),

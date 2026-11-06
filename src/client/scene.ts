@@ -1,3 +1,11 @@
+import { batchInteriorProps } from './interior-batching';
+import { buildingDoorRules } from '../shared/building-doors';
+import { animateBuildingDoors, type InteriorRig } from './building-interiors';
+import {
+  populateInteriorModels,
+  updateInteriorStock,
+  refreshInteriorDisplay,
+} from './interior-props';
 import { createRowboat } from './rowboat';
 import { ROWBOAT } from '../shared/rowboat-rules';
 import { fitQuayToWater } from './quay';
@@ -678,6 +686,13 @@ export class GameScene {
     const byId = new Map(w.buildings.map((b) => [b.id, b]));
     for (const g of this.buildingMeshes) {
       const b = byId.get(g.userData.building);
+      if (b) {
+        for (const rig of (g.userData.interiors ?? []) as InteriorRig[]) {
+          updateInteriorStock(rig, b);
+          refreshInteriorDisplay(rig, b, w, this.me);
+        }
+        g.userData.doorBuilding = b;
+      }
       if (b?.kind === 'haybarn')
         g.traverse((o) => {
           if (o instanceof T.InstancedMesh && o.userData.hayStack)
@@ -1326,6 +1341,13 @@ export class GameScene {
       return g;
     }
     const model = buildingModel(b);
+    g.userData.interiors = model.userData.interiors;
+    g.userData.doorBuilding = b;
+    for (const rig of (model.userData.interiors ?? []) as InteriorRig[]) {
+      populateInteriorModels(rig, b, w, this.me);
+      batchInteriorProps(rig);
+    }
+    animateBuildingDoors(model, w, b, 0, Infinity, this.low);
     if (b.kind === 'boathouse') {
       fitBoatyardToWater(model, b, w);
       g.userData.boatyardBuilding = b;
@@ -1535,6 +1557,24 @@ export class GameScene {
         if (model.userData.boatyardBuilding)
           fitBoatyardToWater(model, model.userData.boatyardBuilding, w);
       for (const model of this.buildingMeshes) {
+        if (model.userData.interiors)
+          animateBuildingDoors(
+            model,
+            w,
+            model.userData.doorBuilding,
+            dt,
+            Math.hypot(p.x - model.position.x, p.z - model.position.z),
+            this.low,
+            (motion) => {
+              const rules = buildingDoorRules(w.settings);
+              this.audio.door(
+                motion,
+                model.position,
+                rules.buildingDoorSoundRange,
+                rules.buildingDoorSeconds,
+              );
+            },
+          );
         const rotor = model.userData.lighthouseRotor as T.Group | undefined;
         if (rotor) {
           rotor.rotation.y = (seaTime * Math.PI) / 8 + model.position.x * 0.01;

@@ -1812,3 +1812,27 @@ zero disables the extra search). These select water outside existing structures,
 with full-hull depth and obstacle checks at boarding/mooring. They do not rebuild
 quays or move buildings. Stricter settings may block a landing; cargo and ownership
 remain intact. Settings and vehicle overrides survive saves and portable designs.
+
+## Building doors and interior detail
+
+F10 → Rules → **Building doors** controls the appearance of workshops, hangars
+and other industrial buildings. Choose Business hours, Always open or Always
+closed. The defaults open staffed businesses and public garages/hangars/workshops
+from 07:00 to 19:00, staggered deterministically by up to 20 game minutes per
+building. An owner or worker inside keeps the doors open during business-hours
+mode. Construction and custom creator models do not get these generated doors.
+Door schedules affect presentation; they do not change production or collisions.
+
+Adjust opening/closing hours (including overnight schedules), whether unstaffed
+businesses close, the maximum stagger, motion duration (default 5 real seconds),
+animation reach (120 m), sound reach (40 m; zero disables), barn-door swing
+(110°), and interior visibility threshold (0.02). Equal opening/closing hours
+allow an all-day schedule, still subject to staffing. These rules travel with
+world designs and saves; older worlds inherit the defaults.
+
+Choose Full, Reduced or None for interior detail. Reduced keeps the shell and the
+largest equipment; the player's Performance graphics also selects reduced
+interiors. None hides interiors while retaining the selected door policy. Closed
+rooms hide their furniture and lamps. Warehouse racks show empty/low/half/full
+stock, hay stacks rise toward the eaves as storage fills, and livestock disappear
+when the building has no stock of that animal.

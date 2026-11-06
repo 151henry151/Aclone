@@ -10,6 +10,8 @@ export interface VehicleRecord {
   acquiredAt: number;
   metres: number;
   condition: number;
+  /** Last confirmed boathouse storage, for interior display; not a boarding restriction. */
+  storedAt?: string;
 }
 export const SERVICE_FEE = defaults.vehicleServiceFee;
 export const MAP_PRICE = defaults.mapPrintPrice;
@@ -19,9 +21,9 @@ export function maintainable(slot: number, w?: World) {
 export function vehicleCondition(p: Player) {
   return p.fleetState?.[p.vehicle]?.condition ?? 100;
 }
-export function vehicleRecord(w: World, p: Player): VehicleRecord {
+export function vehicleRecord(w: World, p: Player, slot = p.vehicle): VehicleRecord {
   p.fleetState ??= {};
-  return (p.fleetState[p.vehicle] ??= { acquiredAt: w.time, metres: 0, condition: 100 });
+  return (p.fleetState[slot] ??= { acquiredAt: w.time, metres: 0, condition: 100 });
 }
 /** Replace nested records so client prediction never mutates the authoritative snapshot. */
 export function recordTravel(w: World, p: Player, metres: number) {

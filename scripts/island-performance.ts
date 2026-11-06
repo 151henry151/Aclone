@@ -12,6 +12,12 @@ const original = createWorld('puddlewick', 'Puddlewick', 'server');
 original.settings.mapSize = 18500;
 original.terrainMapSize = 12500;
 original.townLayout = 2;
+const doorMode = process.env.PROFILE_DOORS;
+if (doorMode && !['open', 'closed'].includes(doorMode))
+  throw Error('PROFILE_DOORS must be open or closed');
+if (doorMode) original.settings.buildingDoorMode = doorMode;
+const quality = process.env.PROFILE_QUALITY ?? 'low';
+if (!['low', 'normal'].includes(quality)) throw Error('PROFILE_QUALITY must be low or normal');
 const population = Number(process.env.PROFILE_POPULATION ?? 0);
 if (!Number.isInteger(population) || population < 0 || population > 200)
   throw Error('PROFILE_POPULATION must be 0–200');
@@ -55,11 +61,11 @@ try {
     });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.addInitScript(() => {
+    await page.addInitScript((quality) => {
       (window as any).__name = (value: unknown) => value;
-      localStorage.setItem('aclone.quality', 'low');
+      localStorage.setItem('aclone.quality', quality);
       localStorage.setItem('aclone.sound', 'off');
-    });
+    }, quality);
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Performance.enable');
     if (process.env.PROFILE_THROTTLE)
@@ -207,6 +213,11 @@ try {
           treeChunks: game.woods.group.children.length,
           inlandMeshes: game.inland.group.children.length,
           streaming: !!game.ground.pending || !!game.woods.pending,
+          openInteriors: game.buildingMeshes
+            .flatMap((g: any) => g.userData.interiors ?? [])
+            .filter((r: any) => r.group.visible).length,
+          furnishedInteriors: game.buildingMeshes.flatMap((g: any) => g.userData.interiors ?? [])
+            .length,
         };
       });
       const spans = data.renders
@@ -217,6 +228,8 @@ try {
       const metric = (m: any, key: string) => m.metrics.find((v: any) => v.name === key)?.value;
       const row = {
         world: name,
+        doorMode: doorMode ?? 'hours',
+        quality,
         location: location.name,
         coldMs,
         from,
@@ -255,6 +268,8 @@ try {
           2,
         ),
       );
+      if (doorMode)
+        await page.screenshot({ path: out + '/' + location.name + '-' + doorMode + '.png' });
       if (location.name === 'summit') await page.screenshot({ path: out + '/summit.png' });
     }
     if (name === 'expanded' && !process.env.PROFILE_SKIP_MAP) {

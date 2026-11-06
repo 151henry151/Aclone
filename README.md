@@ -4,7 +4,15 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.129.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.130.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.130.0 opens the workshop doors. Industrial buildings reveal furnished
+rooms during business hours: tractors on garage lifts, biplanes under repair,
+brewery kettles, sawmill machinery and warehouse shelves that follow stock.
+Doors roll, slide or swing shut at night. World Builder controls hours, staffing,
+animation, sound and interior detail; Performance graphics keeps the main equipment.
+See [Working workshops and hangars](docs/PLAYING.md#working-workshops-and-hangars)
+and the refreshed [building gallery](https://nogits.com/buildings/).
 
 Version 0.129.0 gives the Coastal cargo boat a 60 × 16.8 m hull—three times
 its former dimensions—with people, fittings and individual pallets kept at their

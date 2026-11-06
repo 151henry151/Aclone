@@ -274,6 +274,23 @@ export class GameAudio {
     source.start(0, loop ? Math.random() * buffer.duration : 0);
     return voice;
   }
+  door(motion: string, position: Position, range: number, seconds: number) {
+    if (
+      motion === 'hinge' ||
+      range <= 0 ||
+      !this.listener ||
+      !this.audible() ||
+      this.shots.size >= MAX_HORNS
+    )
+      return;
+    const spatial = spatialSound(this.listener, position, range);
+    if (!spatial.gain) return;
+    const voice = this.voice(motion === 'roll' ? 'door-roll' : 'door-slide', false);
+    voice.source.playbackRate.value = 5 / seconds;
+    voice.gain.gain.value = spatial.gain * 0.22;
+    voice.pan.pan.value = spatial.pan;
+    this.shots.set(voice, undefined);
+  }
   weapon() {
     if (!this.me || !this.audible() || this.shots.size >= MAX_HORNS) return;
     const voice = this.voice('weapon', false);

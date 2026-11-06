@@ -1,3 +1,4 @@
+import { doorOpenness } from '../shared/building-doors';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -98,6 +99,9 @@ export class TownLighting {
     // One dynamic pane draw per building, rather than one per window.
     const batches = new Map<string, Source[]>();
     for (const source of this.sources) {
+      // Interior lamps must retain the room's visibility gate and their own
+      // untextured material; facade panes are still batched per building.
+      if (source.pane.userData.interiorLight) continue;
       const key = source.facility ? JSON.stringify(source.facility) : (source.building ?? 'street');
       const list = batches.get(key) ?? [];
       list.push(source);
@@ -179,12 +183,18 @@ export class TownLighting {
         const b = s.building && byId.get(s.building);
         const f = s.facility,
           hour = (((w.settings.time / 3600) % 24) + 24) % 24;
-        const on = f
-          ? night > (f.exterior ? 0.8 : 0.35) &&
-            (f.closes === undefined || (hour >= 12 && hour < f.closes))
-          : s.building
-            ? !!b && eveningLights(b, w.settings.time, day, w.settings)
-            : night > 0.8;
+        let interiorVisible = true;
+        if (s.pane.userData.interiorLight)
+          for (let parent = s.pane.parent; parent; parent = parent.parent)
+            if (!parent.visible) interiorVisible = false;
+        const on = s.pane.userData.interiorLight
+          ? !!b && interiorVisible && doorOpenness(w, b) > 0 && night > 0.05
+          : f
+            ? night > (f.exterior ? 0.8 : 0.35) &&
+              (f.closes === undefined || (hour >= 12 && hour < f.closes))
+            : s.building
+              ? !!b && eveningLights(b, w.settings.time, day, w.settings)
+              : night > 0.8;
         s.pane.material.emissive.set(f?.color ?? '#ffca72');
         s.pane.material.emissiveIntensity = on ? 2 : 0;
         if (on) lit.add(s);

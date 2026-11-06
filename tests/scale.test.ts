@@ -10,6 +10,7 @@ import {
   spaceportHardware,
 } from '../src/shared/building-shapes.ts';
 import { buildings } from '../src/shared/catalog.ts';
+import { QUAY } from '../src/shared/quay.ts';
 
 test('building catalogue uses human-sized entrances and varied bounded silhouettes', () => {
   const shapes = new Set<string>();
@@ -19,11 +20,26 @@ test('building catalogue uses human-sized entrances and varied bounded silhouett
     assert.ok(
       bounds.width > 0 &&
         bounds.width <=
-          (kind === 'starport' ? 220 : kind === 'boathouse' ? 36 : kind === 'haybarn' ? 20 : 15),
+          (kind === 'quay'
+            ? QUAY.frontage
+            : kind === 'starport'
+              ? 220
+              : kind === 'boathouse'
+                ? 36
+                : kind === 'haybarn'
+                  ? 20
+                  : 15),
     );
     assert.ok(
       bounds.depth > 0 &&
-        bounds.depth <= (kind === 'starport' ? 140 : kind === 'boathouse' ? 53 : 15),
+        bounds.depth <=
+          (kind === 'quay'
+            ? QUAY.gangwayEnd + QUAY.deckDepth + QUAY.gangwayStart
+            : kind === 'starport'
+              ? 140
+              : kind === 'boathouse'
+                ? 53
+                : 15),
     );
     assert.ok(
       bounds.height > 0 &&
@@ -97,7 +113,10 @@ test('every rendered building has finite geometry and fits its planned footprint
       const bounds = new T.Box3().setFromObject(model);
       const plan = buildingBounds(buildingPlan(b));
       const piled = kind === 'boathouse' || kind === 'riverDock';
-      assert.ok(bounds.min.y >= (piled ? -4 : -0.05), `${kind}: below ground`);
+      assert.ok(
+        bounds.min.y >= (kind === 'quay' ? -8 : piled ? -4 : -0.05),
+        `${kind}: below ground`,
+      );
       assert.ok(
         bounds.max.y < (kind === 'starport' ? 194 : kind === 'lighthouse' ? 30 : 12),
         `${kind}: height`,
@@ -112,6 +131,14 @@ test('every rendered building has finite geometry and fits its planned footprint
             kind === 'boathouse' ? 'water-pile' : 'river-pile',
             `${kind}: only underwater support piles extend below the site`,
           );
+        if (kind === 'quay' && new T.Box3().setFromObject(o).min.y < -0.5) {
+          assert.ok(
+            ['quay-pile', 'quay-fender'].includes(o.name),
+            'only quay piles and fenders extend underwater',
+          );
+          const bounds = new T.Box3().setFromObject(o);
+          assert.ok(bounds.min.y >= (o.name === 'quay-pile' ? -8 : -0.951));
+        }
         for (const attr of Object.values((o.geometry as import('three').BufferGeometry).attributes))
           assert.ok(Array.from(attr.array).every(Number.isFinite), `${kind}: non-finite geometry`);
       });

@@ -1,3 +1,4 @@
+import { buildingDoorRules } from './building-doors';
 import { obstacleRules } from './obstacle-rules';
 import { landscapeRules } from './landscape-rules';
 import { communicationRules } from './communication-rules';
@@ -102,6 +103,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const alpine = alpineRules(s);
   const climate = climateRules(s);
   const navigation = boatNavigationRules(s);
+  const doors = buildingDoorRules(s);
   const farmYields = farmYieldRules(s);
   const gatheringRates = gatheringRules(s);
   const implementsRules = gatheringImplementRules(s);
@@ -115,6 +117,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     `Climate: wet-event chances spring ${climate.climateSpringWetChance}, summer ${climate.climateSummerWetChance}, autumn ${climate.climateAutumnWetChance}, winter ${climate.climateWinterWetMin}–${climate.climateWinterWetMax}; storm strength threshold ${climate.climateStormThreshold}, snowy-event blizzard chance ${climate.climateBlizzardChance}. Natural snow ${climate.climateSnowPerStrength} × strength + ${climate.climateBlizzardSnow} during blizzards, forced snow/snowstorm ${climate.climateForcedSnow}/${climate.climateForcedSnowstorm} m/day. Event gaps and saved snow persist.`,
     `Freight quay vessel limits: ${navigation.quayMaxLength} × ${navigation.quayMaxBeam} m. Extra seaward berth search: ${navigation.boatBerthSearchDistance} m; full hull depth and clearance are required.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,
+    `Building doors: ${doors.buildingDoorMode}, ${doors.buildingDoorOpenHour}–${doors.buildingDoorCloseHour}h, stagger ±${doors.buildingDoorOffsetMinutes} minutes, unstaffed closure ${doors.buildingDoorUnstaffedClosed}; motion ${doors.buildingDoorSeconds}s, animation ${doors.buildingDoorAnimateRange}m, sound ${doors.buildingDoorSoundRange}m, swing ${doors.buildingDoorSwingDegrees}°, visibility above ${doors.buildingInteriorThreshold}; interiors ${doors.buildingInteriorDetail}.`,
     `Boat navigation: shore impact ${navigation.boatShoreImpactLoss} condition; afloat arrival radii ${navigation.boatHouseArrivalRadius} m at boathouses / ${navigation.boatLandingArrivalRadius} m at pier/river landings; shore boarding ${navigation.boatLandingShoreRadius} m at landings. Hull orientation, water path and collision blocking remain required.`,
     `Vehicle running costs: wear ${running.vehicleWearPerMetre} condition/metre when maintenance is enabled; trailer speed 1/(${running.trailerSpeedBase} + load × ${running.trailerLoadSpeedPenalty}), fuel ${running.trailerFuelBase} + load × ${running.trailerLoadFuelPenalty}. Load is cargo/capacity; no trailer is neutral. Existing condition and cargo remain.`,
     `Resident business cargo: fallback input purchase/deposit ${businessLoads.npcRoutineSupplyBatches}/${businessLoads.npcRoutineDepositBatches} batches, crop demand ${businessLoads.npcCropDemandBatches} buyer batches; collect ${businessLoads.npcBusinessCollectionLoad} output / ${businessLoads.npcFarmCollectionLoad} crops; small input purchase ${businessLoads.npcSmallInputPurchaseLoad} items below ${businessLoads.npcSmallInputPurchaseBatches} batches; carried surplus sale ${businessLoads.npcCarriedSurplusSaleLoad}; owned supplier reserve ${businessLoads.npcOwnedSourceReserveBatches} batches; business/farm output sale loads ${businessLoads.npcBusinessOutputSaleLoad}/${businessLoads.npcFarmOutputSaleLoad}. Zero suppresses the corresponding optional leg; source breeding minima and ordinary transfer limits apply.`,

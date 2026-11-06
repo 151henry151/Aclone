@@ -1,3 +1,4 @@
+import { buildingDoorFields, buildingDoorRules } from '../shared/building-doors';
 import { meatRuleFields, meatRules, type MeatRules } from '../shared/meat-rules';
 import {
   livestockRuleFields,
@@ -174,6 +175,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(waterSourceRuleFields),
     ...Object.keys(livestockRuleFields),
     ...Object.keys(meatRuleFields),
+    ...Object.keys(buildingDoorFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -713,6 +715,39 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Young animals mature only with healthy care. Existing adults remain adults. Growth is measured in game days; continuous breeding requires farm investment and space.</p></fieldset>`;
+  const doors = buildingDoorRules(settings);
+  const doorFields = `<fieldset><legend>Building doors</legend>${Object.entries(buildingDoorFields)
+    .map(([key, spec]) => {
+      const value = doors[key as keyof typeof doors];
+      return 'choices' in spec
+        ? select(
+            spec.label,
+            key,
+            spec.choices.map((v) => [
+              v,
+              v === 'hours'
+                ? 'Business hours'
+                : v === 'open'
+                  ? 'Always open'
+                  : v === 'closed'
+                    ? 'Always closed'
+                    : v,
+            ]),
+            String(value),
+          )
+        : 'min' in spec
+          ? field(
+              spec.label,
+              key,
+              value,
+              'number',
+              `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+            )
+          : `<label class="check"><input name="${key}" type="checkbox" ${value ? 'checked' : ''}>${esc(spec.label)}</label>`;
+    })
+    .join(
+      '',
+    )}<p>Hours use the sky clock, with a stable stagger per building. Public services open without staff; owners or workers inside keep their building open after hours. Construction stays closed. Equal opening and closing hours mean all day. Doors are visual and do not change collision. Low graphics uses reduced interiors; custom creator meshes keep their own behaviour.</p></fieldset>`;
   const meat = meatRules(settings);
   const meatFields = `<fieldset><legend>Butcher and cooking</legend>${Object.entries(meatRuleFields)
     .map(([key, spec]) =>
@@ -840,6 +875,7 @@ export function settingsFields(settings: Settings = defaults) {
     stormFields +
     waterFields +
     herdFields +
+    doorFields +
     meatFields +
     radioFields +
     survivalFields +

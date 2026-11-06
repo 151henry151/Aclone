@@ -399,3 +399,31 @@ with a fixed camera. It checks normal and low graphics in a disposable local
 world and saves to `output/cargo-boat-scale/scenery/` (override with
 `SCREENSHOT_OUTPUT_DIR`). Geometry, open-hold visibility and human-size fittings
 are checked by `tests/browser/cargo-boat-model.spec.ts`.
+
+### Industrial bay interiors
+
+`building-bays.ts` derives real facade apertures from the existing volumes.
+`building-interiors.ts` owns the visible shell and six-panel roll-up, sliding or
+hinged door rigs. Keep door leaves and interior subtrees outside global static
+scenery batching and retain their matrix updates. Interior lamps retain their
+room parent, separate from the facade-window light batch. Fixed furnishings
+merge per material within each principal/detail visibility gate; stock, vehicles,
+paint and effects retain their independent geometry.
+
+`interior-props.ts` uses original low-poly fixtures plus existing aircraft,
+tractor, livestock and boat models. Model bounds stay inside their room at human
+scale; budgets are 6,000 triangles per standard building's interiors and 15,000
+for the flying-club hangar or starport. Hash-selected repair boats use a smaller
+real craft if the full-sized canal boat cannot fit. Never shrink people to fit
+furniture. Hay stack height follows room eaves and the fraction of capacity in
+stock. Closed rooms stop effects and draw no interior furniture; reduced quality
+omits detail and steam.
+
+`PREVIEW_GPU=1 npx tsx scripts/building-architecture-preview.ts --open garage`
+creates a sheet of open models and a sixth tile at human eye height. Set
+`GALLERY_QUALITY=low` to inspect the reduced set, `GALLERY_COMPARE=1` for all
+five layouts with full/reduced interiors side by side, and `GALLERY_ROOM=water`
+for the boathouse lifting hall. Use `SCREENSHOT_OUTPUT_DIR` to
+keep review captures separate. Verify both actual scene journeys and the full
+geometry survey with the two `tests/browser/building-{doors,interiors}.spec.ts`
+tests; screenshots and performance measurements remain required release gates.

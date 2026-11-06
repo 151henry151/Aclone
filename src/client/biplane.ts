@@ -188,7 +188,7 @@ export interface BiplaneFigure {
   group: T.Group;
   animate(dt: number, running: boolean, heightAboveGround?: number, flight?: FlightState): void;
 }
-export function createBiplane(color = '#e5c979'): BiplaneFigure {
+export function createBiplane(color = '#e5c979', maintenance = false): BiplaneFigure {
   const group = new T.Group();
   group.name = 'Parish air mail biplane';
   const linen = new T.MeshStandardMaterial({ color, map: atlas('wing'), roughness: 0.86 });
@@ -224,13 +224,8 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   add(hull(), shell);
   add(wing(9, 1.65, true), linen, 0, 2.95, 0.62);
   add(wing(8.4, 1.6), linen, 0, 1.35, 0.28);
-  add(
-    wing(3, 1.12),
-    new T.MeshStandardMaterial({ color, map: atlas('tail'), roughness: 0.86 }),
-    0,
-    1.53,
-    -2.6,
-  );
+  const tailPaint = new T.MeshStandardMaterial({ color, map: atlas('tail'), roughness: 0.86 });
+  add(wing(3, 1.12), tailPaint, 0, 1.53, -2.6);
   // Rounded upright fin with a painted rudder seam; the same atlas provides fabric detail.
   const fin = new T.Shape()
     .moveTo(-3.18, 1.5)
@@ -263,16 +258,22 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   const tailWheel = add(new T.CylinderGeometry(0.17, 0.17, 0.13, 12), rubber, 0, 1.07, -3);
   tailWheel.rotation.z = Math.PI / 2;
   // Nose cowling, dark radiator face and short exhaust. Cooling detail uses a texture face.
-  const cowl = add(new T.CylinderGeometry(0.43, 0.51, 0.62, 16), navy, 0, 1.62, 2.25);
-  cowl.rotation.x = Math.PI / 2;
-  const face = add(
-    new T.CircleGeometry(0.39, 20),
-    new T.MeshStandardMaterial({ map: atlas('engine'), roughness: 0.65, metalness: 0.35 }),
-    0,
-    1.62,
-    2.565,
-  );
-  face.name = 'Engine face';
+  if (!maintenance) {
+    const cowl = add(new T.CylinderGeometry(0.43, 0.51, 0.62, 16), navy, 0, 1.62, 2.25);
+    cowl.rotation.x = Math.PI / 2;
+    const face = add(
+      new T.CircleGeometry(0.39, 20),
+      new T.MeshStandardMaterial({ map: atlas('engine'), roughness: 0.65, metalness: 0.35 }),
+      0,
+      1.62,
+      2.565,
+    );
+    face.name = 'Engine face';
+  } else {
+    // The removed radial engine is on the hangar stand; leave its bearers exposed.
+    for (const side of [-1, 1])
+      rod([side * 0.32, 1.35, 1.8], [side * 0.32, 1.35, 2.55], 0.035, steel);
+  }
   rod([0.4, 1.4, 2.05], [0.52, 1.21, 1.55], 0.045, steel);
   // Low tub, saddle seat and padded coaming surround a real opening in the fuselage.
   box(0.65, 0.12, 0.92, rubber, 0, 1.53, -0.3);
@@ -384,10 +385,19 @@ export function createBiplane(color = '#e5c979'): BiplaneFigure {
   boss.rotation.x = Math.PI / 2;
   batch(group);
   batch(prop);
+  if (maintenance) {
+    prop.visible = false;
+    prop.traverse((o) => {
+      if (o instanceof T.Mesh) o.geometry.dispose();
+    });
+    prop.clear();
+  }
   // Taildragger stance: short tail-wheel leg, nose up on the ground, level in flight.
   // Keep the axle at its tyre radius above the origin and transform the pilot's eye with it.
   const root = new T.Group();
   root.name = group.name;
+  root.userData.maintenance = maintenance;
+  root.userData.airframePaint = [linen, shell, tailPaint];
   group.name = 'Biplane airframe';
   root.add(group);
   root.userData.driver = pilot;

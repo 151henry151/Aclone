@@ -1,3 +1,4 @@
+import type { BuildingDoorRules } from './building-doors';
 import type { LivestockRules } from './livestock-rules';
 import type { MeatRules } from './meat-rules';
 import type { WaterSourceRules } from './water-source-rules';
@@ -282,6 +283,10 @@ export interface Building {
   /** Public snapshot projection, including owners who are currently offline. */
   ownerName?: string;
   employeeNames?: Record<string, string>;
+  /** Public activity projection; never a saved door animation state. */
+  doorActivity?: { staffed: boolean; inside: boolean };
+  /** Public visual projection; private fleet records remain on their owners. */
+  storedBoats?: import('./stored-boats').StoredBoatDisplay[];
   price: number;
   investment: number;
   /** Outside stakes. Neighbours can fund a till they do not own and later collect a capped return. */
@@ -388,6 +393,7 @@ export interface Settings
     Partial<WaterSourceRules>,
     Partial<LivestockRules>,
     Partial<MeatRules>,
+    Partial<BuildingDoorRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,

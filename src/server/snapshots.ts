@@ -1,3 +1,5 @@
+import { buildingDoorActivity } from '../shared/building-doors';
+import { storedBoatDisplay } from '../shared/stored-boats';
 import { ROWBOAT } from '../shared/rowboat-rules';
 import { stockWeight } from '../shared/fishing-expedition';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -36,6 +38,8 @@ export function publicBuildings(w: World) {
     const { accounts: _privateAccounts, ...publicBuilding } = building;
     const b = {
       ...publicBuilding,
+      doorActivity: buildingDoorActivity(w, building),
+      ...(building.kind === 'boathouse' ? { storedBoats: storedBoatDisplay(w, building) } : {}),
       productionStatus: productionReport(w, building),
       staffing:
         building.kind !== 'farm' && (building.production || building.recipe)

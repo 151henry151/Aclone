@@ -2,7 +2,8 @@ import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { yardBoat, yardFleets } from './yard-boats';
-import { finishMaterial, finishSurface } from './building-finishes';
+import { makeBayDoor, addInteriorLamp, type InteriorRig } from './building-interiors';
+import { buildingFinish, finishMaterial, finishSurface } from './building-finishes';
 import { surface } from './materials';
 import { terrainHeight } from '../shared/terrain';
 import { dockPoint } from '../shared/boathouse';
@@ -15,6 +16,7 @@ export function boatyardDetails(
   plan: BuildingPlan,
   finish: typeof surface = surface,
   architecture = 'model-1',
+  buildingId = '',
 ) {
   const box = (
     host: T.Group,
@@ -58,6 +60,36 @@ export function boatyardDetails(
   const shed = new T.Group();
   shed.name = 'over-water-lifting-hall';
   root.add(shed);
+  const interior = new T.Group(),
+    principal = new T.Group(),
+    detail = new T.Group();
+  interior.name = 'lifting-hall-interior';
+  interior.userData.interior = true;
+  interior.visible = false;
+  interior.add(principal, detail);
+  root.add(interior);
+  interior.userData.propNames = ['stored-boats'];
+  interior.userData.waterSideStorage = true;
+  const volume = {
+    x: 0,
+    z: -25,
+    width: 11.6,
+    depth: 35.6,
+    eaves: 7.8,
+    rise: 0,
+    roof: 'flat' as const,
+  };
+  const door = makeBayDoor(
+    root,
+    { x: 0, z: -43, width: 11.5, height: 6.7, motion: 'slide', rear: true, volume },
+    buildingFinish('boathouse', plan),
+    1.1,
+  );
+  for (const z of [-18, -36]) addInteriorLamp(interior, buildingId, 0, 7.45, z);
+  const rig: InteriorRig = { group: interior, principal, detail, volume, doors: [door] };
+  (root.userData.interiors ??= []).push(rig);
+  box(shed, 23.5, 0.12, 0.12, plan.trim, 0, 7.9, -43.1);
+
   for (const side of [-1, 1]) {
     const wall = box(shed, 0.18, 6.9, 36, plan.wall, side * 5.9, 4.55, -25);
     finishSurface(wall, plan.siding === 'wood' ? 'boards' : 'metal', plan.wall);
@@ -68,17 +100,15 @@ export function boatyardDetails(
     // Gabled roof sheets and a pair of doors parked open on the side walls.
     const roof = box(shed, 6.35, 0.18, 36.8, '#596c72', side * 2.98, 8.65, -25);
     roof.rotation.z = -side * 0.22;
-    const door = box(shed, 0.13, 6.9, 4.6, '#466569', side * 6.03, 4.55, -40.5);
-    finishSurface(door, 'boards', '#466569');
   }
   box(shed, 12, 0.45, 0.4, '#c4bc94', 0, 7.8, -43);
   // Travelling crane, hook and broad slings: this is a boat lifting bay, not a shed on a pier.
-  box(shed, 10.8, 0.3, 0.3, '#d6ad54', 0, 7.35, -33);
-  box(shed, 0.8, 0.5, 0.65, '#4c5553', 0, 7, -33);
+  box(principal, 10.8, 0.3, 0.3, '#d6ad54', 0, 7.35, -33);
+  box(principal, 0.8, 0.5, 0.65, '#4c5553', 0, 7, -33);
   for (const side of [-1, 1]) {
-    box(shed, 0.055, 3.2, 0.06, '#464d48', side * 3.8, 5.6, -33);
+    box(principal, 0.055, 3.2, 0.06, '#464d48', side * 3.8, 5.6, -33);
   }
-  box(shed, 7.6, 0.06, 0.18, '#c9a25a', 0, 4, -33);
+  box(principal, 7.6, 0.06, 0.18, '#c9a25a', 0, 4, -33);
   const dock = new T.Group();
   dock.name = 'floating-jetty';
   root.add(dock);
@@ -107,23 +137,33 @@ export function boatyardDetails(
   ring.position.set(5, 2, -7.08);
   root.add(ring);
   const main = plan.volumes[0];
-  const waterDoor = new T.Mesh(
-    new T.PlaneGeometry(5.5, 3.7),
-    finishMaterial('barn-door', '#557572'),
-  );
-  waterDoor.position.set(0, 1.95, -main.depth / 2 - 0.04);
-  waterDoor.rotation.y = Math.PI;
-  root.add(waterDoor);
-  // Broad textured workshop doors, away from the gangway.
-  for (const side of [-1, 1]) {
-    const door = new T.Mesh(new T.PlaneGeometry(4.3, 3.7), finishMaterial('barn-door', '#557572'));
-    door.position.set(side * 3.2, 1.95, main.depth / 2 + 0.04);
-    root.add(door);
+  const hasBay = (v: typeof main, rear = false) =>
+    (root.userData.interiors ?? []).some(
+      (r: any) => r.volume === v && r.doors.some((d: any) => !!d.bay.rear === rear),
+    );
+  if (!hasBay(main, true)) {
+    const waterDoor = new T.Mesh(
+      new T.PlaneGeometry(5.5, 3.7),
+      finishMaterial('barn-door', '#557572'),
+    );
+    waterDoor.position.set(0, 1.95, -main.depth / 2 - 0.04);
+    waterDoor.rotation.y = Math.PI;
+    root.add(waterDoor);
   }
+  // Broad textured workshop doors, away from the gangway.
+  if (!hasBay(main))
+    for (const side of [-1, 1]) {
+      const door = new T.Mesh(
+        new T.PlaneGeometry(4.3, 3.7),
+        finishMaterial('barn-door', '#557572'),
+      );
+      door.position.set(side * 3.2, 1.95, main.depth / 2 + 0.04);
+      root.add(door);
+    }
   for (const v of plan.volumes.slice(1)) {
     const door = new T.Mesh(new T.PlaneGeometry(1.1, 2.1), finishMaterial('barn-door', '#5c7169'));
     door.position.set(v.x, 1.05, v.z + v.depth / 2 + 0.04);
-    root.add(door);
+    if (!hasBay(v)) root.add(door);
     box(root, 1.1, 0.9, 0.05, '#335663', v.x - 1.7, 1.8, v.z + v.depth / 2 + 0.04);
   }
   if (typeof document !== 'undefined') {
