@@ -16,6 +16,18 @@ Use the existing world rule/catalogue as the single source for gameplay values;
 new gameplay defaults require validation, creation, summary, editor and portable
 design coverage. Flight graphics follow client graphics settings instead.
 
+Henry reaffirmed on 2026-11-05 that this applies to **the entire backlog**, not
+only the new regional-industry entries. Prefer world-builder control for every
+meaningful gameplay switch, limit, price, cost, rate, capacity, eligibility rule,
+permission and policy. Reuse existing catalogues and town/creator rules rather
+than adding duplicate settings. Record defaults and validation, expose clear
+editor help, preserve saved state, include design export/import and NPC use, and
+test both default and changed values before declaring an item done. Configure
+art/model choices through the existing creator/catalogue system where supported.
+Keep technical safety bounds and client graphics/performance preferences in their
+appropriate layer; do not turn implementation details into meaningless world
+sliders. Each upcoming slice's completion criteria must include this audit.
+
 Every finished slice requires its acceptance checks, relevant tests selected from
 the `npm test` suite with its `tsx --test` runner, clean `npx tsc --noEmit`, and
 `npx prettier --write <explicit changed paths>`. UI/rendering slices also require
@@ -348,6 +360,27 @@ implementation order rather than building paving before ford-aware persistence.
     bounded rewind/reload; bombs/rockets/turrets; arena round and dogfight;
     additional hull hardpoints/gunner; recorded replay, performance and inputs.
     Non-fighting worlds must retain civil behaviour throughout.
+
+27. **Land-use districts and building permissions**: extend existing town zoning,
+    map/preview permissions, grandfathering and NPC construction checks.
+28. **Regional industry, freight routes and a desert frontier**: survey existing
+    provinces and route economics; optional unoccupied desert extension; regional
+    producers/buyers, migration, map and performance checks. The prior transport,
+    water, forestry and zoning features must already be complete.
+29. **Oil deposits, extraction sites and refinery supply**: eligible inland/offshore
+    sites, conserved crude transport, balanced refining and staged legacy migration.
+30. **Petrol stations and dedicated fuel retail**: supplied forecourts and existing
+    paid-refuelling integration; prove coverage before retiring general-shop restocks;
+    retain tanker/rescue services, old stock and compact-world compatibility.
+
+The four later entries above incorporate Lightmun's Discord feature request,
+accepted by Henry on 2026-11-05. They are planned work only and do not expand the
+current collision slice or block releases of the original transport features.
+Existing item numbers and historical counts remain unchanged: the live planning
+scope is now **29 eligible Planned sections**, with **8 complete** at this update.
+The full dependency order remains the list above; piloted spaceflight is excluded.
+Before each new entry starts, record concrete commands/browser steps and measured
+numerical defaults, then run failing tests as required by the completion protocol.
 
 ## Execution record
 

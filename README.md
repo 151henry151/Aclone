@@ -6,6 +6,10 @@
 
 **Version 0.123.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
+The development [backlog](docs/BACKLOG.md) and [implementation order](docs/BACKLOG_PLAN.md)
+include later, optional land-use districts, regional freight and desert terrain,
+oil extraction and petrol stations. These remain planned features.
+
 Version 0.123.0’s Calendar rules let world builders choose year and season lengths. Planting,
 winter crop losses and daylight follow the local seasons; existing loan schedules
 stay agreed. See [Calendar rules](docs/WORLD_BUILDING.md#calendar-rules).

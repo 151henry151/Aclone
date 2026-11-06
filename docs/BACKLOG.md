@@ -1,5 +1,13 @@
 # Development backlog
 
+**World-builder configurability applies throughout this backlog.** Meaningful
+gameplay switches, limits, costs, rates, capacities, permissions and policies must
+use world settings or existing editable catalogues, with stated defaults,
+validation, editor help, persistence and portable world designs. Reuse one source
+of truth across simulation, UI and NPCs. Test changed values as well as defaults,
+and preserve existing saved state when policies change. Client graphics quality
+and technical performance controls remain in their appropriate layer.
+
 ## Planned — Seaplanes
 
 An amphibian: one aircraft that lands on the runway and on open water. The pilot has two passenger seats, and the hold is large for an aircraft without becoming a freighter.
@@ -667,6 +675,54 @@ Replace the static "logs" gathering grounds with real trees that are felled, buc
 ### Tests and acceptance
 
 - Deterministic tree IDs and stages across server/client and restarts; felling refusal on an occupied fall line; yield by stage, species and skill; pile ownership grace; log wagon and hand loading rates; construction refusal and clearing; allowance and stumpage per town; sapling production, planting, growth and woodlot ownership; regeneration and overlay pruning; NPC forestry plan; map density; performance of the overlay with thousands of felled trees in `scripts/island-performance.ts`; browser coverage of felling, bucking and loading animations.
+
+## Planned — Land-use districts and building permissions
+
+From Lightmun's 2026-11-05 Discord feature request, accepted by Henry. Make it possible to reserve residential neighbourhoods, farmland and industrial districts rather than allowing every building on every vacant plot.
+
+**Build on what exists.** Town charters already have residential/commercial/industrial/agricultural/advanced/civic categories, north/south zoning, resident/guest building permissions and an outside-town policy. Extend that system with mapped districts and clear placement feedback; do not introduce a competing permission system. District categories restrict the whole proposed footprint, including fields and pasture extensions. World-owner authority and delegated town governance still decide who may change the rules. Show the district, permitted uses and exact refusal on the map and construction preview before payment. NPC site selection must use the same decision as human construction.
+
+**Compatibility and per-world rules.** District zoning is opt-in by default; absent districts retain existing town and outside-town policies. Existing buildings, ownership, production and purchased land are grandfathered when boundaries change; new construction and land expansion use the current rules. Rules configure allowed categories, protected districts, outside-district policy and which governments may edit them. Explicitly resolve overlapping districts and boundary footprints; a client cannot bypass the authoritative check. Saved designs include districts and permissions without player ownership.
+
+**Depends on** solid scenery/construction checks and the city/road work. Keep roads, public access, water and airstrip reservations usable when zoning is drawn.
+
+**Acceptance.** A residential district accepts a house and refuses a refinery; farmland accepts a farm with its complete fields and refuses an industrial plant. Test boundary crossings, overlaps, absent districts, resident/guest permissions, unauthorized edits, grandfathered buildings, expansion, NPC siting, restart and design import/export. Browser steps show district overlays, permitted construction, refusal without payment and an empty/unzoned world. Update the world-builder and playing guides.
+
+## Planned — Regional industry, freight routes and a desert frontier
+
+Make regional differences worth travelling for, as requested by Lightmun: producers, processors and buyers separated far enough for road haulage, boats and cargo aviation to have useful roles. Include a desert frontier as an optional outer-map region; survey its location and scale against the existing northern island before implementing it. A desert is a new biome with terrain, materials, vegetation, water scarcity and deposits, not a recolour over occupied land.
+
+**Reuse and balance.** Build on existing resource provinces, town markets, springs/water production, forestry, highway haulage, cargo boats and commercial aviation. Author complementary production districts and real funded demand. Measure round trips including loading, fuel, wear, wages, tax, return loads and runway/dock access. Demonstrate a profitable long route and a short route where an ordinary tractor/trailer remains preferable; distance alone is not a reward or a forced teleport. Players should see the reason for a route in the map and market information. NPCs use those same prices, supplies and permissions.
+
+**Compatibility and per-world rules.** Regional industry and the desert extension are opt-in, off by default in saved and compact worlds. World designs configure biome extent, deposit availability and production permissions; catalogue prices, recipes and yields remain configurable through existing systems. Choose and record numerical defaults from the route/terrain survey before production code. Never move players' property, erase old roads/resources or enlarge a live map silently. Define a repeatable, explicit migration that adds only surveyed unoccupied territory, with a preview of conflicts. Existing compact-world production remains playable.
+
+**Depends on** land-use districts, water supply, completed road/highway and cargo-boat work, commercial aviation and forestry. This is a later extension, not an extra gate on those earlier releases.
+
+**Acceptance.** Deterministic new biome/deposit placement, clean terrain seams and water boundaries; property-preserving migration and repeated import/restart; legal/illegal district production; stocked and empty markets; measured profitable/unprofitable routes; NPC delivery; map/flight/ground browser journeys in low and normal graphics. Compare enlarged-world frame/tick budgets before release. Document region creation and freight economics in the world-builder guide and `docs/HAULAGE.md`.
+
+## Planned — Oil deposits, extraction sites and refinery supply
+
+Give oil extraction a geographical reason to exist. The current catalogue has a **Fuel refinery**, whose recipe consumes ore and produces fuel; it does not yet have an oil-rig building or crude-oil chain. Add surveyed oil deposits and extraction installations restricted to suitable designated areas, using the regional industry and zoning data. Support inland wells and offshore rigs as distinct site types when the region survey provides valid sites, with clear land/sea access and loading points. Do not allow an oil rig on arbitrary farmland or a dry offshore site.
+
+**Production and migration.** Extract a new crude-oil good, transport it through existing compatible holds/tankers, and refine it into the existing fuel good. Choose extraction rates, storage, staffing, construction costs and conversion yields in a chain-wide balance test before code. Account for loading and delivery, not free remote transfer. Persist deposit/reserve state; define depletion and recovery explicitly. Existing refineries and fuel stocks remain usable while supply is introduced. Enable the new recipe only after a world has accessible extraction and deliveries; preserve in-progress production and offer the existing ore recipe as a configurable legacy option.
+
+**Per-world.** Oil industry defaults off until the chain is explicitly enabled. World designs define eligible deposits, inland/offshore eligibility and reserve/recovery policy; catalogue tuning supplies costs, rates, capacities and recipes. No second copies of these values in the simulation or UI.
+
+**Depends on** regional industry and land-use districts; offshore freight also needs the cargo boat. Add suitable tanker cargo restrictions without changing unrelated trailer inventories.
+
+**Acceptance.** Valid and refused well/rig sites, empty/exhausted deposits, staffing and inventory limits, conservation through extraction/transport/refining, reserved-task migration, NPC supply, restart/design portability and profitable chain margins. Browser coverage includes inspecting a deposit, a refused site, an active rig/well, empty storage and a delivery to a refinery. Update economy, haulage, playing and world-builder documentation.
+
+## Planned — Petrol stations and dedicated fuel retail
+
+Replace the need to search unrelated shops for fuel with recognisable petrol stations: a forecourt, pumps, price/stock display, map icon and safe vehicle access. Stations buy real fuel deliveries from refineries and tanker operators, sell fuel cans and refill compatible vehicles through the existing paid-refuelling rules. Keep roadside tanker sales, rescue deliveries and suitable airfield/dock refuelling useful.
+
+**Transition safely.** Current fuel stocks, player goods and ordinary shop ownership must not disappear. Add stations and prove supply/coverage first, then stop automatic fuel restocking at unrelated shops and allow existing stock to sell through. Show where the nearest usable station is, including closed or empty stations. Never remove a region's only fuel source before a reachable alternative exists. An empty station makes no charge and transfers no fuel; prices and tax follow the same authoritative transaction as tanker sales. NPC refuelling finds eligible stocked sellers and handles unavailable supply.
+
+**Per-world.** Fuel retail policy has `legacy-shops`, `stations-and-shops`, and `stations` modes. Saved worlds default to `legacy-shops`; newly authored regional-industry worlds use `stations` only after validating coverage and supply. Station prices, stock capacity, costs and opening policy use catalogue/world rules with balance-tested defaults specified before implementation. Mobile tanker sales and emergency services have explicit permissions under each mode. World-builder previews expose coverage gaps; switching policy with a gap is refused with an actionable explanation.
+
+**Depends on** the completed tanker sales path, land-use districts, highway freight and regional fuel supply. Coordinate with oil/refinery conversion, but do not require replacing an existing working refinery recipe before stations can receive fuel.
+
+**Acceptance.** Taxed purchase/refill, full tank, empty stock, closed station, insufficient cash, unsupported vehicle, concurrent last-stock buyers, tanker delivery and offline-owner payment; no duplication or loss. Verify staged shop sell-through, gap refusal, legacy compact worlds, NPC replenishment/refuelling and restart/design portability. Browser-drive to a station, read price/stock, refill, and inspect empty/closed/coverage failure states. Update playing, world-builder and haulage guides.
 
 ## Planned — Piloted spaceflight
 

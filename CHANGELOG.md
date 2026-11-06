@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+
+- Plan optional land-use districts, regional freight and desert terrain, oil extraction, and dedicated petrol stations after their existing backlog dependencies.
+
 ## [0.123.0] - 2026-11-05
 
 ### Added
