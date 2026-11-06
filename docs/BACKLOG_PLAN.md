@@ -315,7 +315,7 @@ implementation order rather than building paving before ford-aware persistence.
     real apertures; motion/visibility; shells and every listed trade's props;
     stock/architecture variants, reduced detail, preview mode and bounds/budget.
 18. **Tractors stay where you leave them; walking, doors and arrival
-    animations**: parked records and migration; walk/return/refuel; home/lodging;
+    animations — done, live in 0.131.0**: parked records and migration; walk/return/refuel; home/lodging;
     sign-off/sign-in/towing/solid footprints and trailers; NPC return constraint;
     mount/dismount and approach/panel timing on desktop/mobile/controller.
 19. **Alternate road routes and gradual city paving** together with **River
@@ -7134,3 +7134,24 @@ and world-builder docs, README and release notes. Commit and push this complete
 slice, deploy the exact pushed SHA with the established backup scripts, verify
 public health/assets/website read-only, then publish the reviewed two-screenshot
 bot announcement. Mark done only after those operations succeed.
+
+### Item 18 — Done and live, 2026-11-06
+
+Commit `b1e4647a0a78e59b49b182636c6ebb7bc83b90a8` is pushed to
+`backlog-implementation` (GitHub SHA verified) and matches the running server.
+Game health, loaded client, map worker and website report 0.131.0; the read-only
+live browser has no errors and existing gallery images retain their expected
+hashes. The deploy script's initial public check received a startup 502; the
+service subsequently answered 200 and all independent public checks passed.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261106-171253.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261106-171407.tar.gz`.
+
+The bot announcement and both screenshot embeds were posted and re-read:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568388161174904922
+Evidence: `output/release-0.131.0/`. No player grants, main push or PR.
+
+Progress: all 20 shipped claims assessed (17 matches, three gaps fixed); **16 of
+29 eligible Planned sections complete**, plus the cargo scale follow-up. Next is
+item 19 in its recorded internal order: read-only settlement/economics survey,
+then persistent alternate dirt routes and ford routing before paving or bridges.
+Piloted spaceflight remains excluded.
