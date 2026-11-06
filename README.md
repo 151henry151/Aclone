@@ -4,7 +4,9 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.125.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.125.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.125.1 completes the freight quay’s public gallery image and interactive preview.
 
 Version 0.125.0 adds a coastal cargo boat with a separate 2,000-weight hold,
 visible pallet loads, a working wheelhouse and paid crew. Load or trade with

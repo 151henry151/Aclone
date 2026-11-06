@@ -2,6 +2,13 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.125.1 — Complete the quay gallery
+
+Publish the Freight quay's real model image and support its fixed design in the
+interactive building gallery. Rotation, zoom and close work; unavailable model
+and finish choices stay disabled. Gallery counts and descriptions follow the
+catalogue. Freight gameplay remains the 0.125.0 implementation below.
+
 ## 0.125.0 — Take the long way by sea
 
 The Coastal cargo boat carries 2,000 weight in its own persistent hold, with

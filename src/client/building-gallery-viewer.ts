@@ -19,8 +19,11 @@ export function mount(dialog: HTMLDialogElement, kind: string) {
   const status = dialog.querySelector<HTMLElement>('#preview-status')!;
   const options = (select: HTMLSelectElement, entries: readonly { id: string; name: string }[]) =>
     select.replaceChildren(...entries.map((entry) => new Option(entry.name, entry.id)));
-  options(model, buildingArchitectures(kind));
-  options(finish, buildingStyles(kind, model.value));
+  const architectures = buildingArchitectures(kind);
+  const fixed = architectures.length === 0;
+  options(model, fixed ? [{ id: '', name: 'Fixed design' }] : architectures);
+  options(finish, fixed ? [{ id: '', name: 'As modelled' }] : buildingStyles(kind, model.value));
+  model.disabled = finish.disabled = fixed;
   options(size, sizesForBuilding(kind));
   size.disabled = size.options.length < 2;
   dialog.querySelector('#preview-finish-label')!.textContent =
@@ -31,8 +34,8 @@ export function mount(dialog: HTMLDialogElement, kind: string) {
   let revision = 0;
   const show = () => {
     const b = makeBuilding('gallery', kind, 0, 0);
-    b.architecture = model.value;
-    b.style = finish.value;
+    b.architecture = model.value || undefined;
+    b.style = finish.value || undefined;
     b.size = sizesForBuilding(kind).find((entry) => entry.id === size.value)!.id;
     b.stock.hay = 450;
     const current = ++revision;

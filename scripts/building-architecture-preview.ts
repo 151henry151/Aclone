@@ -41,23 +41,29 @@ try {
  import {buildingArchitectures} from '/src/shared/building-architecture.ts';
  import {buildingStyles,buildingDesignQuote,sizesForBuilding} from '/src/shared/building-designs.ts';import {buildings} from '/src/shared/catalog.ts';import {waitForTextures} from '/src/client/materials.ts';
  const renderer=new T.WebGLRenderer({antialias:true});renderer.setPixelRatio(1);renderer.setSize(${columns * tileW},${rows * tileH});renderer.toneMapping=T.ACESFilmicToneMapping;document.body.prepend(renderer.domElement);renderer.setScissorTest(true);
+ const sheetDescription=document.querySelector('body>p').textContent;
  let groups=[];
  window.gallery=async(kind,sizes=false)=>{
   for(const group of groups)group.traverse(o=>{if(o.isMesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});groups=[];
   const styles=buildingStyles(kind,'model-1'),models=buildingArchitectures(kind);
+  const fixed=models.length===0;
   const options=${qc} ? models.flatMap(model=>styles.map(style=>({model,style,size:'standard'}))) : models.map(model=>({model,style:styles[0],size:'standard'}));
   if(${qc})options.push(...models.map(model=>({model,style:styles[4],size:'standard',rear:true})));
-  options.push({model:models[1],style:styles[sizesForBuilding(kind).length>1?0:5],size:sizesForBuilding(kind).at(-1).id});
-  document.querySelector('#title').textContent=buildings[kind].name+' · architectural models'+(kind==='starport'?' · terminal close-ups':'');
-  document.querySelector('#labels').innerHTML=options.map(({model,style,size,rear})=>{const q=buildingDesignQuote(kind,buildings[kind],style.id,size,model.id);return '<div class="label"><b>'+model.name+' · '+(rear?'rear':size)+'</b><small>'+style.name+' · '+q.capacity+' storage / good'+'</small></div>';}).join('');
+  if(fixed)options.push({model:{id:undefined,name:'Fixed design'},style:{id:undefined,name:'As modelled'},size:'standard'});
+  else options.push({model:models[1]??models[0],style:styles[sizesForBuilding(kind).length>1?0:5],size:sizesForBuilding(kind).at(-1).id});
+  const cols=fixed?1:${columns},countRows=fixed?1:${rows},width=fixed?${columns * tileW}:${tileW},height=fixed?${rows * tileH}:${tileH};
+  document.querySelector('#labels').style.gridTemplateColumns='repeat('+cols+','+width+'px)';
+  document.querySelector('body>p').textContent=fixed?'Fixed infrastructure design · actual game geometry and materials':sheetDescription;
+  document.querySelector('#title').textContent=buildings[kind].name+(fixed?' · fixed design':' · architectural models')+(kind==='starport'?' · terminal close-ups':'');
+  document.querySelector('#labels').innerHTML=options.map(({model,style,size,rear})=>{const q=buildingDesignQuote(kind,buildings[kind],style.id,size,model.id);return '<div class="label" style="height:'+height+'px;padding-top:'+(height-48)+'px"><b>'+model.name+' · '+(rear?'rear':size)+'</b><small>'+style.name+' · '+q.capacity+' storage / good'+'</small></div>';}).join('');
   for(const {model,style,size} of options){const b=makeBuilding('construction',kind,0,0);b.architecture=model.id;b.style=style.id;b.size=size;b.stock.hay=450;const group=buildingModel(b);if(kind==='starport') for(const child of [...group.children])if(child.userData.flight)group.remove(child);groups.push(group);}
   await waitForTextures();
   const radii=groups.map(g=>new T.Box3().setFromObject(g).getSize(new T.Vector3()).length()/2);
   for(let i=0;i<options.length;i++){
    const scene=new T.Scene();scene.background=new T.Color('#c3ccc3');scene.add(new T.HemisphereLight('#edf4ff','#686c4b',2));const sun=new T.DirectionalLight('#fff1d7',2.5);sun.position.set(-8,15,12);scene.add(sun);scene.add(groups[i]);
    const bounds=new T.Box3().setFromObject(groups[i]),center=bounds.getCenter(new T.Vector3()),radius=Math.max(...radii);
-   const camera=new T.PerspectiveCamera(38,${tileW}/${tileH},.1,5000);camera.position.copy(center).add(new T.Vector3(options[i].rear?-.68:.68,.42,options[i].rear?-1:1).normalize().multiplyScalar(radius/Math.sin(19*Math.PI/180)*1.12));camera.lookAt(center);
-   renderer.setViewport(i%${columns}*${tileW},(${rows}-1-Math.floor(i/${columns}))*${tileH},${tileW},${tileH});renderer.setScissor(i%${columns}*${tileW},(${rows}-1-Math.floor(i/${columns}))*${tileH},${tileW},${tileH});renderer.render(scene,camera);
+   const camera=new T.PerspectiveCamera(38,width/height,.1,5000);camera.position.copy(center).add(new T.Vector3(options[i].rear?-.68:.68,.42,options[i].rear?-1:1).normalize().multiplyScalar(radius/Math.sin(19*Math.PI/180)*1.12));camera.lookAt(center);
+   renderer.setViewport(i%cols*width,(countRows-1-Math.floor(i/cols))*height,width,height);renderer.setScissor(i%cols*width,(countRows-1-Math.floor(i/cols))*height,width,height);renderer.render(scene,camera);
   }
  };window.ready=true;
  </script></body></html>`,

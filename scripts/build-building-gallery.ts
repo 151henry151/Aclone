@@ -13,15 +13,18 @@ export function buildBuildingGallery(source: string, output: string, version: st
     .map(([kind, def]) => {
       const image = `/assets/buildings/${kind}.webp`;
       if (!existsSync(join(source, image))) throw Error(`Missing building gallery image: ${kind}`);
-      const models = buildingArchitectures(kind)
-        .map((m) => m.name)
-        .join(' · ');
-      return `<article id="${kind}" data-search="${escape((kind + ' ' + def.name + ' ' + models).toLocaleLowerCase())}"><div class="card-heading"><h2>${escape(def.name)}</h2><a href="#${kind}" aria-label="Link to ${escape(def.name)}">#</a></div><p class="models">${escape(models)}</p><a class="image-link" href="${image}" data-preview="${kind}" data-name="${escape(def.name)}" aria-label="Explore ${escape(def.name)} in 3D"><img src="${image}" width="1500" height="1040" loading="lazy" alt="Five ${escape(def.name)} architectural models and a size or finish comparison" /></a></article>`;
+      const architectures = buildingArchitectures(kind);
+      const models = architectures.map((m) => m.name).join(' · ');
+      const description = architectures.length
+        ? `${architectures.length} ${def.name} architectural models and a size or finish comparison`
+        : `${def.name} fixed design, rendered from the game model`;
+      return `<article id="${kind}" data-search="${escape((kind + ' ' + def.name + ' ' + models).toLocaleLowerCase())}"><div class="card-heading"><h2>${escape(def.name)}</h2><a href="#${kind}" aria-label="Link to ${escape(def.name)}">#</a></div><p class="models">${escape(models || 'Fixed design')}</p><a class="image-link" href="${image}" data-preview="${kind}" data-name="${escape(def.name)}" aria-label="Explore ${escape(def.name)} in 3D"><img src="${image}" width="1500" height="1040" loading="lazy" alt="${escape(description)}" /></a></article>`;
     })
     .join('\n');
   mkdirSync(join(output, 'buildings'), { recursive: true });
   const html = readFileSync(join(source, 'buildings/index.html'), 'utf8')
     .replace('__BUILDING_CARDS__', cards)
+    .replaceAll('__BUILDING_COUNT__', String(Object.keys(buildings).length))
     .replaceAll('__VERSION__', version);
   writeFileSync(join(output, 'buildings/index.html'), html);
   for (const name of ['gallery.css', 'gallery.js'])

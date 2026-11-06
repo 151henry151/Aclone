@@ -5797,3 +5797,37 @@ Release gate: `/aclone/` production build passes (`output/release-0.125.0/build.
 including its TypeScript check. Prettier verifies all 58 changed files; `git diff
 --check` is clean. Stage only the implementation, tests, version and guide/plan
 files; keep output evidence, NPC status notes and local attachments out of Git.
+
+Item 13 implementation is complete and pushed as
+`706f5ef4666d27fd56bce60a60f1347212db5bb5` (0.125.0), with all acceptance gates above
+passing. Exact-SHA deployment and announcement verification follow before the
+next item starts. This post-push status record travels with the next slice.
+
+Deployment follow-through found a website integration gap after the game went
+live: `npm run build:website` fails with **Missing building gallery image: quay**
+(`output/release-0.125.0/deploy-website.log`). Do not announce or start the next
+backlog item yet. Add the real rendered quay image, make the gallery's fixed-design
+controls and image description truthful, and verify static build plus the browser
+preview/rotation/close flow. The image-generation script must handle this single
+engineered model without inventing architectural variants. Preserve 0.125.0's
+released contents; ship this website integration correction as 0.125.1, then
+complete deployment and announce the freight feature with verified images.
+
+The gallery regression fails for the intended reason: the fixed quay presents an
+enabled empty architectural selector (`gallery-red.log`). Add a disabled Fixed
+design / As modelled choice, preserve working view controls, generate the actual
+quay model image with the existing renderer, and derive gallery counts/alt text
+from the catalogue rather than claiming five quay variants.
+
+The full website check exposed its pre-existing assumption that every catalogue
+entry has five architectural variants. Preserve that assertion for all existing
+buildings; add an explicit quay case requiring its one fixed design and disabled
+model/finish selectors. The cargo-boat entry requests an open wharf, not five new
+architectural variants. The dedicated quay browser test passes in 2.6 seconds.
+
+Website correction gates pass: the real quay preview opens, rotates, zooms and
+closes without errors (`gallery-green.log`); the public-site check passes all four
+screen widths, 52 image cards, search/empty search, every interactive model,
+touch controls, fixed scale, focus restoration and WebGL/no-JavaScript failure
+fallbacks (`output/release-0.125.1/website-final.log`). `npx tsc --noEmit` is clean.
+The five-model assertion remains intact for all 51 pre-existing building kinds.

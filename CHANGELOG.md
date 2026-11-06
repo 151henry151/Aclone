@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.125.1] - 2026-11-05
+
+### Fixed
+
+- Publish the freight quay in the building gallery with its actual rendered image and working fixed-design preview; keep gallery counts and descriptions accurate.
+
 ## [0.125.0] - 2026-11-05
 
 ### Added

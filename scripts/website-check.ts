@@ -170,9 +170,17 @@ try {
     await link.click();
     await expect(preview).toHaveAttribute('data-ready', 'true', { timeout: 60000 });
     await expect(page.locator('#preview-status')).not.toContainText('could not load');
+    const fixedQuay = (await link.getAttribute('data-preview')) === 'quay';
     await expect(
       page.getByLabel('Architectural model', { exact: true }).locator('option'),
-    ).toHaveCount(5);
+    ).toHaveCount(fixedQuay ? 1 : 5);
+    if (fixedQuay) {
+      await expect(page.getByLabel('Architectural model', { exact: true })).toBeDisabled();
+      await expect(page.getByLabel('Surface finish', { exact: true })).toBeDisabled();
+      await expect(page.getByLabel('Architectural model', { exact: true })).toContainText(
+        'Fixed design',
+      );
+    }
     if ((await link.getAttribute('data-preview')) === 'starport') {
       await page.screenshot({ path: `${output}/building-viewer-starport.png` });
       const terminalScale = await canvas.getAttribute('data-metres-per-pixel');
