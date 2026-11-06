@@ -304,6 +304,13 @@ implementation order rather than building paving before ford-aware persistence.
 16. **Butcher, meat and livestock life cycle**: young/cohorts/rations/breeding;
     adult slaughter service/shop; raw meat/spoilage; business and home cooking;
     NPCs, migration, portable catalogues and taxed chain margins.
+    **Then revisit item 13: coastal cargo boat scale (Henry, 2026-11-06).**
+    Target about 3× the shipped physical hull size, with human-scale fittings and
+    configurable dimensions/clearance. Read the deferred follow-up in BACKLOG.md;
+    write concrete red scale/access tests before implementation. Verify enlarged
+    berth clearance, boarding, cargo placement, handling and recovery in browser,
+    with before/after screenshots. This is a follow-up to item 13, not unfinished
+    work in its recorded release. Finish item 16 first.
 17. **Open bay doors and modelled interiors**: derived hours/staff state and
     real apertures; motion/visibility; shells and every listed trade's props;
     stock/architecture variants, reduced detail, preview mode and bounds/budget.
