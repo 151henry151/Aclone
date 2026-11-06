@@ -364,7 +364,7 @@ export function farmDuty(w: World, p: Player, b: Building, state: ResidentState)
         const r = shop.production ?? recipes[shop.recipe ?? ''];
         const needed =
           item === 'hay' && acceptsHay(shop)
-            ? Math.max(0, herdNeeds(shop).feed - (shop.stock.feed ?? 0))
+            ? Math.max(0, herdNeeds(shop, w.settings).feed - (shop.stock.feed ?? 0))
             : r?.inputs[item];
         const target = needed
           ? needed * npcBusinessLoadRules(w.settings).npcCropDemandBatches

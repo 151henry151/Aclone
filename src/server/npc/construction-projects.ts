@@ -103,7 +103,7 @@ export function constructionBudget(
     w.catalogue?.templates[kind]?.production ?? (def.recipe ? recipes[def.recipe] : undefined);
   // Empty sheds cannot produce: account for the initial breeding herd as well
   // as construction materials. Only observed, available animals are budgeted.
-  const herd = herdSpec({ kind });
+  const herd = herdSpec({ kind }, w.settings);
   let livestockCost = 0;
   if (herd) {
     let missing = Math.max(0, herd.minimum - (p.inventory[herd.animal] ?? 0));

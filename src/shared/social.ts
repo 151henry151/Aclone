@@ -1,3 +1,4 @@
+import { transferStock } from './stock-life';
 import { communicationRules } from './communication-rules';
 import { economyRules } from './economy-rules';
 import { vehicleDef } from './vehicle-config';
@@ -276,8 +277,7 @@ export function socialAction(w: World, p: Player, a: Action) {
     carry({ ...buyer, inventory: bag }, w) <= vehicleDef(w, buyer.vehicle).capacity,
     'Buyer cargo is full',
   );
-  seller.inventory[o.item] -= o.quantity;
-  buyer.inventory = bag;
+  transferStock(w, seller.inventory, buyer.inventory, o.item, o.quantity);
   seller.cash += total;
   buyer.cash -= total;
   log(w, 'transfer', total, buyer.id, seller.id, 'player trade', {

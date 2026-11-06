@@ -1,3 +1,4 @@
+import { rawMeats } from '../shared/meat-recipes';
 import { farmYieldRules } from '../shared/farm-yield-rules';
 import { hasMotor } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -115,7 +116,14 @@ export function actionVisible(
       return (
         !p.crowBody &&
         !!item &&
-        !!(item.food || item.drink || item.health || item.maxHealth || item.fuel) &&
+        !!(
+          item.food ||
+          item.drink ||
+          item.health ||
+          item.maxHealth ||
+          item.fuel ||
+          rawMeats.includes(id ?? '')
+        ) &&
         (!item.fuel || (!refuelRequiresReboarding(p, w) && p.fuel < fuelCapacity(p, w)))
       );
     }

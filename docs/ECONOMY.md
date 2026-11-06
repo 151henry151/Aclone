@@ -396,3 +396,15 @@ the boathouse's existing shipment service. Cargo limits, household reserves and
 settlement caps still apply. Reloads retain the time cursor, and older half-hour
 cursors convert without replay. Shorter intervals increase throughput; empty
 terminals still earn nothing.
+
+## Livestock, butcher counters and meat meals
+
+Breeding pays the existing species fee and consumes feed/water, then produces young stock. Include its half-ration care until maturity when pricing an adult. Healthy adult milk, wool, egg or compost income continues during that period; young animals add no primary output. Farmers reserve adult breeding stock and can sell surplus adults to the strongest funded buyer.
+
+Default butcher bids per adult are 291.20d cow, 232.96d pig, 203.84d sheep and 43.68d chicken. They exceed farm retail and public export bids while remaining below public import prices. Counter asks per raw portion are 35d beef, 42d pork, 50d mutton and 65d poultry. Restaurants bid 112% of those asks; public raw export/import quotes bound the route. The default counter uses one qualified butcher at a 6d wage per batch. Tests include suppliers, the full crew and sales tax at every step of the farm → butcher → kitchen → retailer chain.
+
+Paid slaughter is a separate service: the farmer keeps ownership and pays an owner-set fee, default 33% of the animal's world base value. Yield is 12/8/6/1 raw portions for cow/pig/sheep/chicken. The fee enters investment only on completion. Optional compost yield defaults to zero. Counter recipes buy and consume the butcher's own stock; service does not buy the farmer's animal.
+
+Business meat menus make four portions per normal production cycle, including cooked Steak. Beef stew, pork supper and mutton pie start at 90d wholesale; roast chicken at 100d; café breakfast and pub meat pie at 95d. Retail bids and asks leave room for taxed supplier and retailer margins. New meals relieve 30,000 hunger, 6,000 thirst and restore 1,000 health before ordinary nutrition modifiers. Steak retains its existing nutrition and public listings.
+
+Unchilled raw meat expires after two game days. Cold stockrooms and chilled freight preserve it, but purchase and transport time still matter. Home cooking uses the same dish ingredients for one serving in 180 seconds and has no wage. Per-world rules control growth, breeding, service fees/yields, raw-edibility and spoilage, and home/business cooking yields; catalogue and premises recipes control prices, ingredients and staff wages. Existing operator prices and disabled bids survive the one-time listing migration.

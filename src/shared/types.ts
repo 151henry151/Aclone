@@ -1,3 +1,5 @@
+import type { LivestockRules } from './livestock-rules';
+import type { MeatRules } from './meat-rules';
 import type { WaterSourceRules } from './water-source-rules';
 import type { StormRules } from './storm-rules';
 import type { ObstacleRules } from './obstacle-rules';
@@ -48,6 +50,8 @@ export type Task = {
   kind: string;
   end: number;
   freight?: { action: Action; landing: string };
+  slaughter?: { action: Action; fee: number; outputs: Stock };
+  cooking?: { home: string; menu: string; inputs: Stock; yield: number };
   building?: string;
   plot?: number;
   /** Ripe plots reserved by one Harvest all task, in field order. */
@@ -126,12 +130,14 @@ export interface Player {
   age: number;
   /** Separate freight hold of the currently occupied vessel. */
   boatHold?: Stock;
+  boatHoldLife?: import('./stock-life').StockLife;
   boatHoldBasis?: Stock;
   /** Recipient-only exact stocks of this owner's moored freight boats. */
   boatHolds?: Record<number, Stock>;
   /** Public approximate cargo fraction for vessel rendering. */
   freightLoad?: number;
   inventory: Stock;
+  inventoryLife?: import('./stock-life').StockLife;
   skills: string[];
   learning?: { skill: string; end: number };
   job?: string;
@@ -168,6 +174,7 @@ export interface Player {
   boatShoreThrottle?: number;
   boatLighting?: import('./boat-lighting').BoatLighting;
   boatStores?: Stock;
+  boatStoresLife?: import('./stock-life').StockLife;
   charter?: import('./charter').CharterTrip;
   charterPassage?: import('./charter').CharterPassage;
   charterOffers?: (import('./charter').CharterPassage & { name: string })[];
@@ -251,6 +258,12 @@ export interface Building {
   staffing?: { active: number; ideal: number; ownerOperating: boolean };
   ownerActiveUntil?: number;
   templateId?: string;
+  young?: import('./livestock').YoungCohort[];
+  meat?: import('./meat-freshness').MeatLot[];
+  youngCareAt?: number;
+  herdRationCredit?: { feed: number; water: number };
+  continuousBreeding?: boolean;
+  slaughterFees?: Stock;
   herdCondition?: number;
   breedingEnd?: number;
   productionStatus?: string[];
@@ -309,7 +322,10 @@ export interface Building {
   lodging?: {
     open: boolean;
     rate: number;
-    guests: Record<string, { until: number; stock: Stock }>;
+    guests: Record<
+      string,
+      { until: number; stock: Stock; life?: import('./stock-life').StockLife }
+    >;
   };
   plots?: import('./farming.ts').Plot[];
   /** Purchased field capacity; legacy farms have four plots. */
@@ -370,6 +386,8 @@ export interface Settings
     Partial<RowboatRules>,
     Partial<StormRules>,
     Partial<WaterSourceRules>,
+    Partial<LivestockRules>,
+    Partial<MeatRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -546,6 +564,7 @@ export interface World {
   terrainMapSize?: number;
   northernIsland?: import('./northern-island').NorthernIsland;
   seafoodVersion?: number;
+  meatVersion?: 1;
   trailers?: Record<string, import('./trailers').Trailer>;
   trailerSeq?: number;
   towJobs?: Record<string, import('./towing').TowJob>;
@@ -561,12 +580,15 @@ export interface World {
         smallCraft?: string;
       };
       cargo: Stock;
+      cargoLife?: import('./stock-life').StockLife;
       hold?: Stock;
+      holdLife?: import('./stock-life').StockLife;
       holdBasis?: Stock;
       /** A tow delivered this vessel to a shore-accessible landing. */
       landing?: string;
       /** Death-abandoned stores are separate from the respawned player's inventory. */
       provisions?: Stock;
+      provisionsLife?: import('./stock-life').StockLife;
       net?: Player['trawl'];
       spoilage?: { daysLeft: number; checkedAt: number; spoiled?: boolean; never?: boolean };
       dinghy: { x: number; z: number; heading: number; moored: boolean; landing?: string };
@@ -583,6 +605,7 @@ export interface World {
       /** Saved bank access for a beached rowboat. */
       beached?: { x: number; z: number };
       cargo?: Stock;
+      cargoLife?: import('./stock-life').StockLife;
       cargoBasis?: Stock;
       load?: number;
       /** Offshore motorboat tender; fuel remains in its owner’s per-vehicle tank. */

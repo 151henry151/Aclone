@@ -1,3 +1,4 @@
+import { transferStock } from './stock-life';
 import { economyRules } from './economy-rules';
 import { hasProvisions, crewBerths } from './vehicle-config';
 import { vehicleDef } from './vehicle-config';
@@ -192,13 +193,11 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     const stores = (p.boatStores ??= {});
     if (a.operation === 'store') {
       need((p.inventory[id] ?? 0) >= n, 'Not enough carried provisions');
-      stores[id] = (stores[id] ?? 0) + n;
-      p.inventory[id] -= n;
+      transferStock(w, p.inventory, stores, id, n);
     } else {
       need((stores[id] ?? 0) >= n, 'Not enough provisions in the boat stores');
       // Manual captain meals use the ordinary use action after withdrawing.
-      stores[id] -= n;
-      p.inventory[id] = (p.inventory[id] ?? 0) + n;
+      transferStock(w, stores, p.inventory, id, n);
     }
     return a.operation === 'store'
       ? 'Provisions stored aboard'

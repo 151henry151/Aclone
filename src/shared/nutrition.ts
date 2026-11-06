@@ -1,4 +1,5 @@
 import { survivalRules } from './survival-rules';
+import { expireMeatStock, consumeStock } from './meat-freshness';
 import { alcoholDose, drinkAlcohol } from './intoxication.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, ItemDef, Stock, World } from './types.ts';
@@ -30,6 +31,7 @@ export function nutritionDescription(d: ItemDef) {
 /** Threshold feeding is instantaneous; survival advances to the next threshold.
  * Bulk servings avoid unbounded loops for creator goods with tiny food effects. */
 export function feedShelterNow(w: World, p: Player, stock: Stock, at = w.time) {
+  expireMeatStock(w, stock, at);
   const items = worldItems(w);
   const threshold = survivalRules(w.settings).needsAutoFeedThreshold;
   for (const [need, nutrient] of [
@@ -54,7 +56,7 @@ export function feedShelterNow(w: World, p: Player, stock: Stock, at = w.time) {
         stock[key] ?? 0,
         Math.max(1, Math.ceil((p[need] - threshold / 2) / d[nutrient]!)),
       );
-      stock[key] -= count;
+      consumeStock(w, stock, key, count, at);
       p.hunger = Math.max(0, p.hunger - (d.food ?? 0) * count);
       p.thirst = Math.max(0, p.thirst - (d.drink ?? 0) * count);
       nutritionEffects(p, d, count, w);

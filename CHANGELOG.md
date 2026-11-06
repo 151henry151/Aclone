@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.128.0] - 2026-11-06
+
+### Added
+
+- Raise calves, lambs, piglets and chicks into adults with healthy farm care, visible young animals and optional continuous breeding.
+- Haul adults to five styles of butcher, pay for slaughter and bring home the meat, or run a staffed butcher counter.
+- Cook meat dishes in restaurants, homes and booked inn rooms; preserve raw-meat freshness through cold storage, hauling, saved worlds and boat recovery.
+- Configure the livestock life cycle, butcher services, meat freshness and cooking in World Builder; preserve fees, menus and growth in portable designs.
+
+### Changed
+
+- Let resident farmers breed within their care budgets and sell surplus adults to the best butcher bid; add profitable meat and meal listings while preserving existing prices, stock and paused bids.
+
 ## [0.127.0] - 2026-11-05
 
 ### Added

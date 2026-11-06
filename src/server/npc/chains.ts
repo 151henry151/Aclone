@@ -1,3 +1,7 @@
+import { productionRecipe } from '../../shared/production-recipe';
+import { meatRecipes, meatMenus } from '../../shared/meat-recipes';
+import { meatRules } from '../../shared/meat-rules';
+import { herdSpec } from '../../shared/livestock';
 import { constructionRules } from '../../shared/construction-rules';
 import { fundProject } from './project-funding.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -51,17 +55,22 @@ export type GoodLink = {
 
 export function kindRecipe(w: World, kind: string): Recipe | undefined {
   const template = w.catalogue?.templates[kind];
+  if (
+    (kind === 'butcher' || template?.base === 'butcher') &&
+    !meatRules(w.settings).butchersEnabled
+  )
+    return;
   if (template?.production) return template.production;
   const def = worldBuildings(w)[kind];
   return def?.recipe === 'pumpHouse'
     ? pumpHouseRecipe(w, {} as Building)
     : def?.recipe
-      ? recipes[def.recipe]
+      ? productionRecipe(w, { recipe: def.recipe } as Building)
       : undefined;
 }
 
-function buildingRecipe(b: Building): Recipe | undefined {
-  return b.production ?? recipes[b.recipe ?? ''];
+function buildingRecipe(w: World, b: Building): Recipe | undefined {
+  return productionRecipe(w, b);
 }
 
 function residentNeed(
@@ -90,8 +99,17 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
     });
   for (const item of Object.keys(items)) link(item);
   for (const [kind, def] of Object.entries(worldBuildings(w))) {
-    const recipe = kindRecipe(w, kind);
-    if (recipe) {
+    const baseRecipe = kindRecipe(w, kind);
+    const alternatives = !w.catalogue?.templates[kind]?.production
+      ? Object.entries(meatRecipes(w.settings))
+          .filter(([id]) =>
+            id.startsWith('butcher_')
+              ? kind === 'butcher' && meatRules(w.settings).butchersEnabled
+              : meatMenus[id.slice(5)]?.kitchens.includes(kind),
+          )
+          .map(([, r]) => r)
+      : [];
+    for (const recipe of [...(baseRecipe ? [baseRecipe] : []), ...alternatives]) {
       for (const item of Object.keys(recipe.outputs)) {
         const row = link(item);
         if (!row.producerKinds.includes(kind)) row.producerKinds.push(kind);
@@ -101,6 +119,12 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
         if (!row.consumerKinds.includes(kind)) row.consumerKinds.push(kind);
       }
     }
+    const herd = herdSpec({ kind }, w.settings);
+    if (herd)
+      for (const item of [herd.animal, herd.youngItem]) {
+        const row = link(item);
+        if (!row.producerKinds.includes(kind)) row.producerKinds.push(kind);
+      }
     for (const item of Object.keys(def.materials ?? {})) {
       link(item).construction = true;
     }
@@ -168,7 +192,7 @@ function localProducers(w: World, item: string, graph: Record<string, GoodLink>)
   return w.buildings.filter((b) => {
     if (b.construction) return false;
     if (b.kind === 'farm' && graph[item]?.farmCrop) return true;
-    const recipe = buildingRecipe(b);
+    const recipe = buildingRecipe(w, b);
     return !!(recipe && recipe.outputs[item]);
   });
 }
@@ -176,7 +200,7 @@ function localProducers(w: World, item: string, graph: Record<string, GoodLink>)
 function localConsumers(w: World, item: string) {
   return w.buildings.filter((b) => {
     if (b.construction) return false;
-    const recipe = buildingRecipe(b);
+    const recipe = buildingRecipe(w, b);
     return !!(recipe && recipe.inputs[item]);
   });
 }

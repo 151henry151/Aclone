@@ -1,3 +1,9 @@
+import { meatRuleFields, meatRules, type MeatRules } from '../shared/meat-rules';
+import {
+  livestockRuleFields,
+  livestockRules,
+  type LivestockRules,
+} from '../shared/livestock-rules';
 import {
   waterSourceRules,
   waterSourceRuleFields,
@@ -166,6 +172,8 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(rowboatRuleFields),
     ...Object.keys(stormRuleFields),
     ...Object.keys(waterSourceRuleFields),
+    ...Object.keys(livestockRuleFields),
+    ...Object.keys(meatRuleFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -687,6 +695,40 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Capacity, price, speed, dimensions and passenger seats use the vehicle editor. Disabling purchases preserves existing boats. Beached boats stay owner-only unless public pickup is enabled; taking one transfers it, and requires no existing rowboat. Rowboats cannot be carried or towed as motorboat tenders.</p></fieldset>`;
+  const herd = livestockRules(settings);
+  const herdFields = `<fieldset><legend>Livestock life cycle</legend>${Object.entries(
+    livestockRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            herd[key as keyof LivestockRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${herd[key as keyof LivestockRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Young animals mature only with healthy care. Existing adults remain adults. Growth is measured in game days; continuous breeding requires farm investment and space.</p></fieldset>`;
+  const meat = meatRules(settings);
+  const meatFields = `<fieldset><legend>Butcher and cooking</legend>${Object.entries(meatRuleFields)
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            meat[key as keyof MeatRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${meat[key as keyof MeatRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Service fees default to a fraction of the world animal price; owners can set their own fees. Recipes, goods and prices are also editable in the catalogue. Disabling butchers preserves saved stock and buildings.</p></fieldset>`;
   const water = waterSourceRules(settings);
   const waterFields = `<fieldset><legend>Springs and water production</legend>${Object.entries(
     waterSourceRuleFields,
@@ -797,6 +839,8 @@ export function settingsFields(settings: Settings = defaults) {
     rowboatFields +
     stormFields +
     waterFields +
+    herdFields +
+    meatFields +
     radioFields +
     survivalFields +
     economyFields +

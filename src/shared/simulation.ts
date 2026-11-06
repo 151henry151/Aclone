@@ -1,3 +1,10 @@
+import { livestockRuleFields, livestockRules } from './livestock-rules';
+import { transferStock } from './stock-life';
+import { butcherAction } from './butcher';
+import { homeCook, setMeatMenu } from './cooking';
+import { meatRuleFields, meatRules } from './meat-rules';
+import { worldMeatRecipe, rawMeats } from './meat-recipes';
+import { expireMeat, expireMeatStock, addFreshMeat, consumeStock } from './meat-freshness';
 import {
   pumpHouseSite,
   refreshPumpRecipes,
@@ -172,7 +179,7 @@ import {
   returnTractor,
 } from './tractors.ts';
 import { playerStatistics, recordGathered } from './player-statistics.ts';
-import { hiringLimit, jobVacancy } from './staffing.ts';
+import { hiringLimit, jobVacancy, ownerOperating } from './staffing.ts';
 import { salesReceipt } from './taxes.ts';
 import { setTradingOffer } from './trading.ts';
 import { maintenanceAction } from './maintenance.ts';
@@ -209,7 +216,17 @@ import {
   restoreVehicle,
   stoppedOutside,
 } from './vehicle-services.ts';
-import { herdSpec, tendHerd, breedHerd, birthHerd, livestockOutputs } from './livestock.ts';
+import {
+  herdSpec,
+  herdShares,
+  breedingBlocker,
+  tendHerd,
+  settleYoungGrowth,
+  npcBreedingBudgetAllows,
+  breedHerd,
+  birthHerd,
+  livestockOutputs,
+} from './livestock.ts';
 import { maximumHealth, nutritionEffects, feedShelterNow, nextShelterMeal } from './nutrition.ts';
 import { landscapeAction, landscapeSchemaForRules } from './landscape.ts';
 import {
@@ -569,8 +586,13 @@ function grant(w: World, p: Player, amount: number, reason: string) {
   log(w, 'faucet', amount, 'treasury', p.id, reason);
 }
 function usable(w: World, p: Player, item: string) {
+  expireMeatStock(w, p.inventory);
   const def = worldItems(w)[item];
   requireThat(def && (p.inventory[item] ?? 0) > 0, 'You do not carry that item');
+  requireThat(
+    !rawMeats.includes(item) || meatRules(w.settings).rawMeatEdible,
+    'Raw meat must be cooked',
+  );
   requireThat(
     def.food || def.drink || def.fuel || def.health || def.maxHealth,
     'That item is equipment or a trade good',
@@ -592,7 +614,7 @@ function usable(w: World, p: Player, item: string) {
   }
   nutritionEffects(p, def, 1, w);
   drinkAlcohol(p, item, w.time);
-  stockAdd(p.inventory, item, -1);
+  consumeStock(w, p.inventory, item, 1);
   if (
     (isTrawler(p.vehicle, w) || vehicleDef(w, p.vehicle).holdCapacity) &&
     p.fishingVoyage &&
@@ -793,6 +815,12 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     case 'seafoodMenu':
       result = setSeafoodMenu(w, p, nearby(w, p, a.building), a.menu);
       break;
+    case 'butcher':
+      return butcherAction(w, p, a);
+    case 'meatMenu':
+      return setMeatMenu(w, p, nearby(w, p, a.building), a.menu);
+    case 'cook':
+      return homeCook(w, p, a);
     case 'expedition':
       result = expeditionAction(w, p, a);
       break;
@@ -821,6 +849,20 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         b.pasture = next;
         log(w, 'sink', price, p.id, 'land-registry', 'pasture land purchase');
         result = `Pasture expanded to ${next.parcels * pastureParcelSize(next) ** 2} square metres.`;
+        break;
+      }
+      if (a.operation === 'continuous') {
+        owns(p, b);
+        requireThat(herdSpec(b) && !b.construction, 'Choose a completed livestock farm');
+        requireThat(typeof a.enabled === 'boolean', 'Choose whether to enable continuous breeding');
+        requireThat(
+          !a.enabled || livestockRules(w.settings).livestockContinuousAllowed,
+          'Continuous breeding is disabled in this world',
+        );
+        b.continuousBreeding = a.enabled;
+        result = a.enabled
+          ? 'Continuous breeding enabled; maintain healthy parents, rations, investment and pasture space.'
+          : 'Continuous breeding stopped; an existing pregnancy will finish.';
         break;
       }
       requireThat(a.operation === 'breed', 'Unknown livestock operation');
@@ -885,10 +927,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const day = Math.floor(w.time / 600);
       const imports = p.importDay === day ? p.imports : 0;
       if (buying) {
-        if (herdSpec(b)?.animal === item)
+        if (herdSpec(b, w.settings)?.animal === item)
           requireThat(
-            (b.stock[item] ?? 0) - n >= herdSpec(b)!.minimum,
-            `This herd keeps ${herdSpec(b)!.minimum} breeding ${item}; only surplus animals are for sale`,
+            (b.stock[item] ?? 0) - n >= herdSpec(b, w.settings)!.minimum,
+            `This herd keeps ${herdSpec(b, w.settings)!.minimum} breeding ${item}; only surplus animals are for sale`,
           );
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
@@ -922,8 +964,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         b.investment += total - tax - importCost;
         if (importCost)
           log(w, 'sink', importCost, b.id, 'imports', `emergency shipment: ${imported} ${item}`);
-        stockAdd(b.stock, item, -n);
-        stockAdd(cargo, item, n);
+        transferStock(w, b.stock, cargo, item, n);
         log(w, 'transfer', total - tax, id, b.id, 'purchase', {
           building: b.id,
           item,
@@ -942,8 +983,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       } else {
         p.cash += total;
         b.investment -= total;
-        stockAdd(b.stock, item, n);
-        stockAdd(cargo, item, -n);
+        transferStock(w, cargo, b.stock, item, n);
         log(w, 'transfer', total, b.id, id, 'sale', { building: b.id, item, quantity: n });
       }
       if (a.storage === 'hold') saveFreightCargo(w, p, Number(a.slot), cargo);
@@ -975,7 +1015,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         Object.hasOwn(items, item) && (p.inventory[item] ?? 0) >= n,
         'You do not carry that quantity',
       );
-      stockAdd(p.inventory, item, -n);
+      consumeStock(w, p.inventory, item, n);
       result = `Discarded ${n} ${items[item].name}.`;
       break;
     }
@@ -1232,8 +1272,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           'Home canoe limit is full',
         );
       if (put) requireHerdRoom(w, b, item, n);
-      stockAdd(source, item, -n);
-      stockAdd(put ? b.stock : p.inventory, item, n);
+      transferStock(w, source, put ? b.stock : p.inventory, item, n);
       break;
     }
     case 'buildingAdmin': {
@@ -1483,6 +1522,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
     }
     case 'outside':
       p.atHome = false;
+      if (p.task?.kind === 'homeCook') {
+        delete p.task;
+        result = 'Cooking cancelled because you left home. Ingredients remain in place.';
+      }
       break;
     case 'loan': {
       const b = nearby(w, p, a.building);
@@ -1786,14 +1829,16 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           landing: landing.id,
           ...(landing.beached ? { beached: landing.land } : {}),
           ...(vehicleDef(w, p.vehicle).holdCapacity
-            ? { cargo: p.boatHold ?? {}, cargoBasis: p.boatHoldBasis }
+            ? { cargo: p.boatHold ?? {}, cargoBasis: p.boatHoldBasis, cargoLife: p.boatHoldLife }
             : {}),
         };
         delete p.boatHold;
+        delete p.boatHoldLife;
         delete p.boatHoldBasis;
       } else if (landing && w.mooredBoats) {
         if (vehicleDef(w, slot).holdCapacity) {
           p.boatHold = w.mooredBoats[mooringKey(p.id, slot)]?.cargo ?? {};
+          p.boatHoldLife = w.mooredBoats[mooringKey(p.id, slot)]?.cargoLife;
           p.boatHoldBasis = w.mooredBoats[mooringKey(p.id, slot)]?.cargoBasis;
         }
         delete w.mooredBoats[mooringKey(p.id, poweredBoat(slot, w) ? slot : p.vehicle)];
@@ -2029,6 +2074,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const chosenRotation =
         a.rotation === undefined ? undefined : num(a.rotation, -Math.PI * 2, Math.PI * 2);
       requireThat(def, 'Unknown building type');
+      requireThat(
+        kind !== 'butcher' || meatRules(w.settings).butchersEnabled,
+        'Butchers are disabled in this world',
+      );
       const customModel = w.catalogue?.templates[requested]?.creatorModel;
       requireThat(
         !customModel ||
@@ -2223,6 +2272,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(rowboatRuleFields, key) ||
             Object.hasOwn(stormRuleFields, key) ||
             Object.hasOwn(waterSourceRuleFields, key) ||
+            Object.hasOwn(livestockRuleFields, key) ||
+            Object.hasOwn(meatRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2380,6 +2431,12 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const radioField = radioRuleFields[key as keyof typeof radioRuleFields];
         if (radioField && 'min' in radioField)
           num(v, radioField.min, radioField.max, radioField.step === 1);
+        const livestockField = livestockRuleFields[key as keyof typeof livestockRuleFields];
+        if (livestockField && 'min' in livestockField)
+          num(v, livestockField.min, livestockField.max, livestockField.step === 1);
+        const meatField = meatRuleFields[key as keyof typeof meatRuleFields];
+        if (meatField && 'min' in meatField)
+          num(v, meatField.min, meatField.max, meatField.step === 1);
         const waterField = waterSourceRuleFields[key as keyof typeof waterSourceRuleFields];
         if (waterField && 'min' in waterField)
           num(v, waterField.min, waterField.max, waterField.step === 1);
@@ -2524,6 +2581,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const survivalError = survivalRulesError({ ...w.settings, ...clean });
       requireThat(!survivalError, survivalError ?? 'Invalid survival rules');
       expireAbandonedCargo(w);
+      expireMeat(w);
       changeResourceRules(w, clean);
       if (
         clean.exportShipmentInterval !== undefined &&
@@ -2549,6 +2607,12 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           waterRules.desalinationIntakeMaxReach >= waterRules.desalinationIntakeMinReach,
         'Maximum intake reach must be at least its minimum',
       );
+      if (
+        Object.keys(clean).some(
+          (key) => key === 'dayLength' || Object.hasOwn(livestockRuleFields, key),
+        )
+      )
+        settleYoungGrowth(w);
       Object.assign(w.settings, clean);
       refreshPumpRecipes(w);
       if (importPricingChanged) repriceGovernmentStores(w);
@@ -3371,7 +3435,10 @@ function kill(
       p.skills = [];
       delete p.learning;
     }
-    if (w.settings.loseInventoryOnDeath) p.inventory = {};
+    if (w.settings.loseInventoryOnDeath) {
+      p.inventory = {};
+      delete p.inventoryLife;
+    }
     if (w.settings.loseJobOnDeath) {
       delete p.job;
       p.activeUntil = 0;
@@ -3414,6 +3481,7 @@ export function productionInterval(w: World, b: Building) {
   );
 }
 function cycle(w: World, b: Building, at: number) {
+  expireMeatStock(w, b.stock, at);
   if (b.kind === 'lighthouse') {
     if (b.construction) return;
     // Navigation is a public service: a small fixed grant, independent of size or capital.
@@ -3440,16 +3508,34 @@ function cycle(w: World, b: Building, at: number) {
     }
     return;
   }
-  const r = b.production ?? (b.recipe && recipes[b.recipe]);
+  const r = worldMeatRecipe(b, w.settings) ?? b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
+  if (b.kind === 'butcher' && !meatRules(w.settings).butchersEnabled) {
+    b.efficiency = 0;
+    return;
+  }
   if (waterProductionBlocker(w, b)) {
     b.efficiency = 0;
     return;
   }
   removeOwnerEmployment(w, b);
   const staff = productionStaff(w, b, at);
-  const healthyHerd = tendHerd(w, b, staff.length, at);
+  const workingOwner = ownerOperating(w, b, at) && b.owner ? w.players[b.owner] : undefined;
+  const carers = workingOwner ? [...staff, workingOwner] : staff;
+  const healthyHerd = tendHerd(w, b, carers.length, at);
   birthHerd(w, b, at);
+  if (
+    b.continuousBreeding &&
+    livestockRules(w.settings).livestockContinuousAllowed &&
+    (!(b.owner && w.players[b.owner]?.npc) || npcBreedingBudgetAllows(w, b)) &&
+    carers.length
+  ) {
+    const breeder = carers.find((p) => p.skills.includes('livestock farmer'));
+    if (breeder && !breedingBlocker(w, breeder, b)) {
+      const fee = breedHerd(w, breeder, b, at);
+      log(w, 'sink', fee, b.id, 'treasury', 'continuous livestock breeding');
+    }
+  }
   if (!healthyHerd) {
     b.efficiency = 0;
     return;
@@ -3466,9 +3552,14 @@ function cycle(w: World, b: Building, at: number) {
     const inputs = Object.fromEntries(
       Object.entries(r.inputs).filter(([id]) => !herdSpec(b) || !['feed', 'water'].includes(id)),
     );
-    for (const [item, n] of Object.entries(inputs)) stockAdd(b.stock, item, -n);
-    const outputs = livestockOutputs(b, r.outputs, w.settings.pastureCapacityMultiplier ?? 1);
-    for (const [item, n] of Object.entries(outputs)) stockAdd(b.stock, item, n);
+    for (const [item, n] of Object.entries(inputs)) consumeStock(w, b.stock, item, n, at);
+    const outputs = livestockOutputs(
+      b,
+      r.outputs,
+      w.settings.pastureCapacityMultiplier ?? 1,
+      w.settings,
+    );
+    for (const [item, n] of Object.entries(outputs)) addFreshMeat(w, b.stock, item, n, at);
     const statement = accounts(w, b);
     statement.batches++;
     addQuantities(statement.consumed, inputs);
@@ -3547,7 +3638,13 @@ export function advance(w: World, seconds: number) {
   refreshPumpRecipes(w);
   ensurePastures(w);
   if (!Number.isFinite(seconds) || seconds <= 0 || w.maintenance?.paused) return;
+  expireMeat(w);
   const boundary = Math.min(
+    ...Object.values(w.players).flatMap((p) =>
+      p.task && ['homeCook', 'slaughter'].includes(p.task.kind) && p.task.end > w.time
+        ? [p.task.end]
+        : [],
+    ),
     ...w.buildings.flatMap((b) =>
       [b.operatingLease?.ends, b.auction?.ends].filter(
         (v): v is number => v !== undefined && v > w.time,
@@ -3629,6 +3726,50 @@ export function advance(w: World, seconds: number) {
     if (p.task?.repeat && !p.online) cancelGather(w, p);
     if (p.task && p.task.end <= end) {
       const t = p.task;
+      if (t.kind === 'homeCook') {
+        delete p.task;
+        try {
+          if (!t.cooking) throw Error('The cooking recipe is missing');
+          say(
+            w,
+            'Kitchen',
+            homeCook(w, p, { type: 'cook', menu: t.cooking.menu }, t.cooking),
+            'system',
+            p.id,
+          );
+        } catch (error) {
+          say(
+            w,
+            'Kitchen',
+            `Cooking cancelled: ${error instanceof Error ? error.message : String(error)}`,
+            'system',
+            p.id,
+          );
+        }
+        continue;
+      }
+      if (t.kind === 'slaughter') {
+        delete p.task;
+        try {
+          if (!t.slaughter) throw Error('The slaughter quote is missing');
+          say(
+            w,
+            'Butcher',
+            butcherAction(w, p, t.slaughter.action, t.slaughter, t.end),
+            'system',
+            p.id,
+          );
+        } catch (error) {
+          say(
+            w,
+            'Butcher',
+            `Slaughter cancelled: ${error instanceof Error ? error.message : String(error)}`,
+            'system',
+            p.id,
+          );
+        }
+        continue;
+      }
       if (t.kind === 'freight') {
         delete p.task;
         try {
@@ -3726,6 +3867,7 @@ export function advance(w: World, seconds: number) {
     }
   }
   expireAbandonedCargo(w);
+  expireMeat(w);
   // Resolve residents once; avoid scanning every resident for every cottage each tick.
   const occupied = new Set(
     Object.values(w.players)
@@ -3801,10 +3943,14 @@ export function advance(w: World, seconds: number) {
 }
 
 export function requireHerdRoom(w: World, b: Building, item: string, n: number) {
-  if (herdSpec(b)?.animal !== item) return;
+  const spec = herdSpec(b, w.settings);
+  if (!spec || (item !== spec.animal && item !== spec.youngItem)) return;
   ensurePasture(w, b);
+  const share = livestockRules(w.settings).livestockYoungPastureShare;
   requireThat(
-    (b.stock[item] ?? 0) + n + Number(!!b.breedingEnd) <=
+    herdShares(b, w.settings) +
+      n * (item === spec.youngItem ? share : 1) +
+      Number(!!b.breedingEnd) * share <=
       pastureCapacity(b, w.settings.pastureCapacityMultiplier ?? 1),
     'Not enough grazing area; expand the pasture before adding livestock',
   );

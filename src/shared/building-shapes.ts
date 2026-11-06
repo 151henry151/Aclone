@@ -393,6 +393,27 @@ export function buildingPlan(b: {
       volume(QUAY.frontage, QUAY.deckDepth, 1, 0, 'flat', 0, -QUAY.gangwayEnd - QUAY.deckDepth / 2),
     ];
   if (b.kind === 'riverDock') plan.waterfront = [volume(2.2, 9.8, 1, 0, 'flat', 0, -6.1)];
+  if (b.kind === 'butcher') {
+    const front = Math.max(...plan.volumes.map((v) => v.z + v.depth / 2));
+    plan.waterfront = [volume(3, 6, 1.7, 0, 'flat', 0, front + 3)];
+    if (!b.style) {
+      plan.finish =
+        b.architecture === 'model-2'
+          ? 'boards'
+          : b.architecture === 'model-3'
+            ? 'brick'
+            : b.architecture === 'model-4'
+              ? 'limestone'
+              : 'rubble';
+      plan.siding = b.architecture === 'model-2' ? 'wood' : 'stone';
+      plan.wall =
+        b.architecture === 'model-3'
+          ? '#bc826a'
+          : b.architecture === 'model-2'
+            ? '#a48764'
+            : '#dedbd0';
+    }
+  }
   if (b.architecture || b.kind === 'boathouse') {
     plan.features = buildingFeatures(b.kind, plan.volumes);
     plan.fixtures = [

@@ -1,3 +1,4 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -44,7 +45,7 @@ export function sustainableAsk(w: World, b: Building, item: string) {
         budgets.npcFarmCompostBudget * cost('compost')) /
       harvest;
   } else {
-    const r = b.production ?? recipes[b.recipe ?? ''];
+    const r = productionRecipe(w, b);
     if (!r?.outputs[item]) return;
     const inputs = Object.entries(livestockSupplyInputs(w, b, r.inputs)).reduce(
       (n, [id, count]) => n + count * cost(id),

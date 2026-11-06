@@ -4,7 +4,13 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.127.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.128.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.128.0 adds a pasture-to-plate food chain: young animals grow
+under farm care, butchers process adults from your wagon, and restaurants and
+home cooks turn raw meat into meals. Farm owners can enable continuous breeding;
+World Builder controls the life cycle, services, freshness and cooking. See
+[From pasture to plate](docs/PLAYING.md#from-pasture-to-plate).
 
 Version 0.127.0 adds natural springs across the uplands and at river heads.
 Walk up for a free drink, follow their map symbols, or build a pump-house to

@@ -298,7 +298,7 @@ implementation order rather than building paving before ford-aware persistence.
     the storm sea survey/defaults, seeded/ramped risk, warnings, occupants/death/
     loss and shelter-time checks. Verify rowboat storm acceptance before marking
     either section done. Canoe and cargo hull classifications already exist.
-15. **Springs, pump-houses and desalination plants**: deterministic frozen
+15. **Springs, pump-houses and desalination plants — done, live in 0.127.0**: deterministic frozen
     springs/headwaters; scenery/drinking; grandfathered desalination; fresh-water
     siting/recipes/models; northern NPC founding, migration and catalogue/docs.
 16. **Butcher, meat and livestock life cycle**: young/cohorts/rations/breeding;
@@ -6211,3 +6211,257 @@ within this water-supply item, before release.
 - Prepare **0.127.0** as one complete water-supply release. Commit/push, exact-SHA
   deployment, live migration/assets/gallery verification and the reviewed-image
   bot announcement remain the final gates. Do not start item 16 before those pass.
+
+**Item 15 post-push record:** implementation committed and pushed as
+`11411ac320e051afc01ad88f983ee7c10c3d5914`; GitHub's branch SHA matches local HEAD.
+Mark the implementation slice done after that push. Deployment, live migration
+verification and #announcements follow before starting item 16.
+
+**Item 15 release complete (2026-11-05):** live SHA is
+`11411ac320e051afc01ad88f983ee7c10c3d5914`, public health is **0.127.0** with five
+worlds. The deploy script's first check received 502 while startup was still
+finishing; the service then reported ready and repeated public health, JavaScript,
+map-worker and browser checks passed. No second restart was needed. Read-only
+SQLite verification confirms every saved world has migration version 1;
+Puddlewick has **30 springs, five headwaters**. Its saved building list contains
+no old waterworks to grandfather; migration preservation is covered by tests.
+
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261105-233956.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261105-234116.tar.gz`.
+Both water-building images and interactive previews load on the live website
+without browser errors. The bot post and both screenshot embeds pass read-back
+and image-fetch verification:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568123251236798599.
+Evidence is in `output/release-0.127.0/` (live verification, migration, SHA,
+backups/deploy logs and announcement receipt).
+
+Progress: **13 of 29 eligible Planned sections complete**, plus all 20 shipped
+claims assessed and their three confirmed gaps fixed. Piloted spaceflight
+remains excluded. Next is item 16: butcher, meat and livestock life cycle.
+
+### Butcher, meat and livestock life cycle — completion criteria before code
+
+Item 16 remains one unreleased feature until the pasture-to-plate flow is complete.
+Develop and test the following dependent slices in order; do not deploy a partial
+life cycle without its butcher/cooking consumers. The 0.127.0 release above is
+complete and is the recoverable starting point.
+
+**Scope and implementation order.** (1) Young animals, saved cohorts, healthy
+maturation, pasture/rations, continuous breeding and physical transfers; (2)
+butcher catalogue/skill/recipes, adult-only paid service and stock handling;
+(3) raw-meat freshness and safe food consumption; (4) business and home cooking,
+wholesale balance and NPC supply; (5) visible young animals, five butcher models
+and ramp, all player/creator UI, browser journeys, gallery and documentation.
+Boat-galley cooking is explicitly a later optional slice in the entry and is
+not part of this completion. No tannery or new hide industry is introduced;
+use compost as the optional existing-economy by-product where balance supports it.
+
+**Rule ownership and starting defaults.** Use the established per-world field
+registry/default-settings/editor/validation pattern. Keep existing adult herds,
+base breeding costs/durations, herd minimums and primary outputs intact unless
+an explicit balance test requires a documented change. Default maturity targets
+are **6 days for chicks, 20 piglets, 25 lambs and 40 calves**; growth and breeding
+speed multipliers start at **1**. Young stock uses **half an adult's pasture share
+and ration**, has lower carried weight and catalogue price, produces no primary
+goods and never satisfies adult minimums. Track fractional ration use rather
+than repeatedly rounding a small young animal up to a full adult ration. Start
+growth at condition **40%**, pause without feed/water, and lose young first below
+a configurable **20%** condition floor. Expose care/breeding condition thresholds,
+rations and species durations/costs through the same source of world defaults.
+Continuous breeding is allowed by default but opt-in per farm; it is bounded by
+adult parents, condition, available feed/water, investment and pasture space.
+
+The butcher is a tier-0 business with one qualified butcher as ideal staff,
+owner-set per-animal fees and a configurable default **33% of world animal value**.
+Start with **30 seconds per service animal**. Default raw yields are **12 beef,
+8 pork, 6 mutton, 1 poultry** for cow/pig/sheep/chicken. Treat the animal as the
+farmer's property throughout the paid service: recheck the quoted fee, adult
+stock, access, staff and output room at completion before charging or consuming
+anything. Cancelling, leaving, losing access, or a changed quote must not duplicate
+meat or silently consume the animal. The farmer can use their livestock wagon;
+on foot allow one small adult, with a configurable maximum item weight initially
+**3**. Show young refusals with remaining maturity days. Business stock can buy
+adults and use ordinary staffed recipes to supply its meat counter.
+
+Raw meat has no default food value. Default spoilage is **2 game days** outside
+butcher/kitchen refrigeration or the chilled trailer. Preserve elapsed freshness
+through transfer, cold storage, save/reopen and recovery; adding a fresh item
+must not refresh an old batch. Expose spoilage duration, raw-edibility enable and
+its relief, butcher availability, home-cooking enable, durations and yields.
+Home cooking starts at **180 seconds for one meal** using the selected meat plus
+its recipe's staple(s), takes from the home's stock then the cook's inventory,
+needs no qualification and requires remaining inside the authorized home/inn
+room. Business meals use qualified cooks and higher batch yield, initially four
+servings per meat portion in the normal 600-second production cycle. Select final
+raw/meal prices and recipe quantities with the taxed margin tests before making
+them production defaults; catalogue/template controls own prices and recipes.
+
+**Life-cycle test gate.** Add `tests/livestock-life-cycle.test.ts`; update the
+existing breeding expectations in `tests/livestock.test.ts` to the new claim,
+without weakening care, upkeep, adult minimum or catch-up checks. Confirm a red
+birth assertion before code. Then prove each species produces its young item,
+healthy age reaches maturity at the configured boundary, bad care pauses it,
+young die before adults, young never boost milk/wool/eggs, pasture shares and
+half rations are exact, continuous breeding cannot overfill or overspend, and
+large catch-up equals small steps. Old saves still contain the same adult counts
+and existing Steak remains edible. Save/reopen and design export/import retain
+cohort progress. Transfers through inventory, farm shops and livestock wagons
+retain the same cohort age; time outside a cared-for herd does not create free
+maturation or reset an animal's progress. Exercise changed growth/calendar rules.
+
+**Butcher/service test gate.** Add `tests/butcher.test.ts`: authoritative skill,
+service access and stopped ramp checks; adult/young eligibility; owner fees;
+exact transfer to investment; correct yields/by-products; capacity and funding
+refusals; single-small-animal walking; wagon return; cancellations and completion
+revalidation. A disabled butcher rule must prevent new construction and slaughter
+without deleting saved buildings or stock. Counter production must consume owned
+adult stock through ordinary funded production and pay qualified staff. Include
+school qualification, world/template overrides and duplicate completion attempts.
+
+**Freshness and cooking test gate.** Add `tests/meat-cooking.test.ts`: manual raw
+consumption says “Raw meat must be cooked”; auto feeding ignores raw meat by
+default, while a changed raw-edibility rule is honored consistently. Spoilage
+uses persisted game-day progress, handles mixed ages, pauses in cold storage,
+and resumes without refreshing on withdrawal. Cover shops, inventory, homes,
+trailers and supported freight storage, as well as save/reopen. Home Cook is
+inside-only, uses the selected authorized pantry/inventory, rechecks output
+capacity and ingredients, and produces one cooked meal after the task. Leaving,
+cancellation, lost housing access and empty stores have explicit outcomes.
+Business menus cover beef stew, roast pork supper, mutton pie, roast chicken and
+cooked Steak; café/pub variants and inn kitchens use the same recipe machinery.
+New meals have better food/drink/health values than Hearty meals. Old stock keeps
+its identity and edible status.
+
+**Economy/NPC/portability gate.** Extend `tests/economy-balance.test.ts` with every
+new recipe and a complete taxed farm → butcher → kitchen → retailer example.
+Count ordinary milk/wool/egg/compost income and actual young care when assessing
+farm viability, rather than treating young care as free. Public export/import
+quotes bound intermediary bids/asks; the butcher's adult bid must beat the
+stores without creating a guaranteed import-and-resell loop. Test an NPC farmer
+opting into continuous breeding and physically selling only surplus adults to
+the better butcher bid, while keeping breeding stock. Kitchens, café/pub, hotel,
+B&B, Harbour stores and spaceport list the intended goods; NPC knowledge and
+chain reasoning include them. New-listing migration preserves all existing
+explicit prices, disabled bids, ownership and stock. Author settings validate
+atomically; portable designs retain the new catalogue/recipes/cohorts/rules.
+
+**Browser/rendering gate.** Add `tests/browser/meat-livestock.spec.ts` and run
+`TEST_GPU=1 npm run test:e2e -- tests/browser/meat-livestock.spec.ts`. In a local
+world using the actual app: see and distinguish young animals, enable continuous
+breeding, see growth/condition/pasture information, load a young animal into a
+wagon and see its slaughter refusal, deliver an adult at the butcher ramp, pay
+for a completed service, observe the meat, verify raw-eating refusal, select a
+business menu, and cook/eat at home. Exercise empty, outside, disabled, full,
+insufficient-funds and changed/cancelled-task states. Use small configured times
+for mechanics without changing the production defaults. Check normal/low-quality
+scenery, desktop/mobile UI, the five named butcher models and their complete
+ramp bounds. Produce and inspect actual game screenshots; publish and verify the
+new gallery card and all five interactive models.
+
+Before release, run only affected Node suites plus the browser flows, clean
+`npx tsc --noEmit`, changed-file Prettier and both builds. Update PLAYING, ECONOMY,
+HAULAGE/transport, WORLD_BUILDING, field guide, catalogue, README, CHANGELOG under
+Unreleased and release notes. Then cut the next minor version, commit/push this
+complete item on backlog-implementation, deploy the exact SHA, verify live
+migration/assets/gallery and post the bot announcement with reviewed screenshots.
+Stop on an unmet criterion; do not start item 17 while this item is incomplete.
+
+Initial inspection: ordinary landed fish currently has no general freshness
+clock; the existing persisted game-day spoilage timer covers death-abandoned boat
+cargo. Reuse the calendar/time semantics for meat, without adding unrequested
+changes to fish. Existing recipes, livestock upkeep and seafood menu machinery
+provide the integration points for the new consumers.
+
+**Item 16 development checkpoint (2026-11-06, unreleased):** life-cycle red
+tests caught immediate adult births, missing transfer ages, adult chicken ration
+rounding, ignored custom breeding reserves, owner-only care, calendar changes,
+design cohort loss and private freight-age leakage. Fixes pass 51 relevant
+livestock/pasture/trailer/freight/social tests plus the focused privacy regression.
+TypeScript is clean. Evidence: `output/livestock-meat/`. UI/models and the rest of
+this item remain unfinished; nothing from item 16 has been committed or deployed.
+
+Butcher balance criteria before catalogue changes: adult bids must beat farm
+retail and public export bids without exceeding public import prices. Initial
+test quotes are cows 29120, pigs 23296, sheep 20384 and chickens 4368 (internal
+currency); raw counter asks beef 3500, pork 4200, mutton 5000 and poultry 6500.
+Each adult batch must retain at least 20% on purchased inputs plus a 600-unit
+qualified wage after default sales tax. Restaurants bid 112% of raw counter
+asks; raw public export/import quotes use the established bounded multipliers.
+Default beef stew/pork supper/mutton pie/chicken dinner recipes yield four meals;
+the cooked Steak recipe yields four existing Steak items from one beef, retaining
+its old edible values and existing public quotes. Validate each recipe and the
+complete chain before choosing final meal counter prices. Default butcher service
+by-product is zero compost (configurable); the basic meat chain does not depend
+on an invented hide industry or free by-product income.
+
+Steak balance refinement: use four cooked portions per business batch so its
+150-second per-portion throughput remains faster than the 180-second home cook.
+This preserves existing Steak identity and nutrition while satisfying the same
+business-versus-home acceptance test as the new meals.
+
+**Item 16 complete-feature verification (2026-11-06, release being prepared):**
+The life cycle, paid slaughter, counter production, raw freshness, home/inn cooking,
+restaurant menus, NPC supply/pricing and player/creator controls are implemented.
+No slice of this item has been deployed separately.
+
+- Red-before-code evidence remains in `output/livestock-meat/`: young births,
+  ration/growth clocks, transfers, rules/designs, butcher service, freshness,
+  cooking, migration, NPC supply, models and actual browser controls. Follow-up
+  failures caught raw ingredients refused by room pantries, age loss on recovery
+  and design import, stale empty-store ledgers, private pantry/wagon projections,
+  hidden raw-use controls, default-only NPC meat knowledge and optional by-product
+  accounting. Each confirmed gap now has a passing regression.
+- Relevant Node suites collectively contain **239 distinct passing test names**.
+  The 101-test broader run found an empty-stock counter compatibility regression;
+  retain the established zero counters for trading/stockrooms/freight while
+  trailers retain their existing empty-key cleanup. The 58-test rerun and the
+  timed freight consumer tests pass. No assertions were weakened. Clock freeze,
+  changes, cold storage, mixed lots, actual ship-store transfers, private inn
+  pantries, recovery and portable freight retain age. Existing adult stock and
+  cooked Steak are preserved; migration keeps explicit and paused quotes.
+- `npx tsx --test` was run with explicit paths, never the entire suite: livestock,
+  pastures, models, butcher/cooking/migration/panels, economy balance, nutrition,
+  trailers, freight/recovery, social, home provisions, snapshots, relevant NPC
+  farmer/budget/business/chain/pricing/circulation and world-catalogue consumers.
+  Evidence includes `combined-meat-green.log`, `architecture-green.log`,
+  `stock-regression-green.log`, `storage-consumers-green.log` (the one freight
+  zero-counter failure is fixed in `final-config-green.log`), and
+  `chain-consumers-green.log` (47/47, including final NPC configuration coverage).
+- `TEST_GPU=1 npm run test:e2e -- tests/browser/meat-livestock.spec.ts` passes the
+  complete real-app journey: enable continuous breeding; load calf and adult cow
+  into a wagon; see remaining-age refusal; process a walked chicken and wagon cow;
+  pay exactly once; refuse eating raw meat; choose a kitchen menu; cook and eat at
+  home. Empty/full stores, outside access, missing cash, changed fee, cancellation,
+  leaving, disabled rules and mobile layout pass. The full-pantry fixture resets
+  hunger so ordinary automatic feeding does not consume the goods being tested.
+  Editor edits persist after reload; a zero maturity target is refused by the
+  browser without changing the saved rule. `browser-final-creator.log` passes.
+- Both pre-existing herd/nutrition browser flows pass unchanged (apart from the
+  implementation retaining their established Dairy herd/Livestock headings).
+  `npx tsx scripts/meat-livestock-preview.ts` verifies two visible adults and two
+  smaller young, plus actual butcher scenery, in normal and low graphics with no
+  browser errors. Reviewed real screenshots live under `scenery/`; model geometry
+  and all five ramp bounds pass. The butcher contact sheet is reviewed and its
+  WebP is added to the public gallery. No generated concept image is used.
+- README, player/economy/haulage guides, world-builder references and field guide,
+  art capture instructions, changelog and release/upgrade notes describe the final
+  behavior. Prepare **0.128.0**; final formatted builds, website browser verification,
+  commit/push, exact-SHA deployment and the reviewed-image bot announcement remain
+  the release gates. Do not start the coastal-boat follow-up before these pass.
+
+Final privacy criterion before release: a refrigerated trailer containing one
+raw-meat item must still publish the existing rounded count of ten, without its
+exact-count age ledger. Its owner retains an exact private count of one; other
+players receive no private cargo. Add a regression to `tests/snapshots.test.ts`,
+confirm it fails on the leaked `life` field, then run that suite and the affected
+trailer/freight tests. This changes only snapshot privacy, not the verified UI.
+
+Final release gates: the trailer-privacy regression failed on the exact-count
+ledger, then passed after hiding that server-only field. Its 40-test snapshot,
+trailer, freight and cooking rerun passes. The owner projection still contains
+exact cargo; the saved server ledger remains intact. Website browser verification
+passes the butcher image, all five models, mobile layout and empty search without
+errors; desktop and mobile screenshots are reviewed. Both builds and the clean
+TypeScript check pass, with existing bundler warnings only. Changed files are
+Prettier-formatted and `git diff --check` is clean. Release 0.128.0 is ready for
+commit/push and deployment. The full test suite was not rerun.

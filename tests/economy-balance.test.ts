@@ -1,5 +1,6 @@
 import { pumpHouseSite, refreshPumpRecipes } from '../src/shared/fresh-water';
 import { herdSpec } from '../src/shared/livestock.ts';
+import { meatMenus, meatAnimals } from '../src/shared/meat-recipes';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,9 +22,78 @@ const producers = (item: string) =>
   Object.entries(buildings).filter(
     ([kind, b]) =>
       !ports.has(kind) &&
-      ((kind === 'boathouse' && ['cod', 'halibut', 'tuna'].includes(item)) ||
+      (herdSpec({ kind })?.animal === item ||
+        (kind === 'butcher' && Object.values(meatAnimals).some((s) => s.raw === item)) ||
+        (meatMenus[item]?.kitchens.includes(kind) &&
+          ['kitchen', 'dairyKitchen', 'pub'].includes(kind)) ||
+        (kind === 'boathouse' && ['cod', 'halibut', 'tuna'].includes(item)) ||
         (kind === 'farm' ? !!crops[item] : !!recipes[b.recipe ?? '']?.outputs[item])),
   );
+
+test('the complete livestock-to-meal chain pays actual young care, farm wages, butcher, kitchen and retailer', () => {
+  for (const [animal, species] of Object.entries(meatAnimals)) {
+    const w = createWorld(`meat-chain-${animal}`, 'Meat chain', 'owner');
+    Object.assign(w.settings, { activeWork: false, hungerRate: 0, thirstRate: 0 });
+    const b = makeBuilding('farm', species.farm, 0, 0),
+      spec = herdSpec(b, w.settings)!;
+    b.owner = 'owner';
+    b.pasture = { x: 20, z: 0, parcels: 4 };
+    b.stock = { [animal]: spec.minimum, feed: 10000, water: 10000 };
+    b.investment = 100000000;
+    const owner = addPlayer(w, 'owner', 'Owner'),
+      worker = addPlayer(w, 'worker', 'Worker');
+    Object.assign(owner, { x: 0, z: 0, skills: ['livestock farmer'] });
+    Object.assign(worker, {
+      x: 0,
+      z: 0,
+      skills: ['livestock farmer'],
+      job: b.id,
+      activeUntil: 1000000,
+    });
+    b.employees = [worker.id];
+    w.buildings = [b];
+    act(w, owner.id, { type: 'livestock', building: b.id, operation: 'breed' });
+    advance(w, spec.seconds + spec.maturityDays * w.settings.dayLength);
+    assert.equal(b.stock[animal], spec.minimum + 1, `${animal}: healthy adult raised`);
+    const farmCost =
+      Object.entries(b.accounts!.consumed).reduce((sum, [id, n]) => sum + n * b.buy[id], 0) +
+      b.accounts!.wages +
+      spec.fee;
+    const ordinaryIncome = Object.entries(b.accounts!.produced)
+      .filter(([id]) => id !== spec.youngItem)
+      .reduce((sum, [id, n]) => sum + n * b.sell[id] * (1 - w.settings.salesTax), 0);
+    const butcher = buildings.butcher;
+    assert.ok(
+      ordinaryIncome + butcher.buy[animal] > farmCost,
+      `${animal}: full farm care remains viable`,
+    );
+    assert.ok(butcher.buy[animal] > buildings.market.buy[animal]);
+    const recipe = recipes[`butcher_${animal}`];
+    assert.ok(
+      butcher.sell[species.raw] * recipe.outputs[species.raw] * (1 - w.settings.salesTax) >
+        butcher.buy[animal] + butcher.wage,
+    );
+    const meal = {
+      cows: 'beefStew',
+      pigs: 'porkSupper',
+      sheep: 'muttonPie',
+      chickens: 'roastChicken',
+    }[animal]!;
+    const cooking = recipes[`meat_${meal}`],
+      kitchen = buildings.kitchen,
+      retailer = buildings.pub;
+    const kitchenCost =
+      Object.entries(cooking.inputs).reduce((sum, [id, n]) => sum + n * kitchen.buy[id], 0) +
+      kitchen.wage * kitchen.idealEmployees!;
+    assert.ok(kitchen.buy[species.raw] > butcher.sell[species.raw], 'raw haulage pays');
+    assert.ok(
+      kitchen.sell[meal] * cooking.outputs[meal] * (1 - w.settings.salesTax) >= kitchenCost * 1.2,
+    );
+    assert.ok(retailer.buy[meal] > kitchen.sell[meal], 'meal haulage pays');
+    assert.ok(retailer.sell[meal] * (1 - w.settings.salesTax) > retailer.buy[meal]);
+    assert.ok(retailer.sell[meal] < buildings.market.sell[meal]);
+  }
+});
 
 test('every processor input has a profitable supply route, and local delivery beats raw exports', () => {
   for (const [kind, b] of Object.entries(buildings)) {

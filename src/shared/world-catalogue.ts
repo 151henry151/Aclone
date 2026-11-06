@@ -1,8 +1,10 @@
+import { productionRecipe } from './production-recipe';
 import { survivalRules } from './survival-rules';
+import { rawMeats } from './meat-recipes';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
 import { idealEmployees } from './staffing.ts';
-import { items, skills, recipes, buildings } from './catalog.ts';
+import { items, skills, recipes, buildings, defaults } from './catalog.ts';
 import type { World, Player, ItemDef, Building, Recipe, BuildingDef } from './types.ts';
 import { taxTown } from './town-charter.ts';
 export const customId = /^custom:[a-z][a-z0-9_-]{0,31}$/;
@@ -88,9 +90,23 @@ export function worldItems(
   const units = w?.settings?.fuelUnitsPerItem ?? items.fuel.fuel!;
   const weight = w?.settings?.canoeWeight ?? items.canoe.weight,
     price = w?.settings?.canoePrice ?? items.canoe.price;
-  if (units === base.fuel.fuel && weight === base.canoe.weight && price === base.canoe.price)
+  const edible = w?.settings?.rawMeatEdible ?? defaults.rawMeatEdible,
+    meatFood = edible ? (w?.settings?.rawMeatFood ?? defaults.rawMeatFood!) : 0,
+    meatDrink = edible ? (w?.settings?.rawMeatDrink ?? defaults.rawMeatDrink!) : 0,
+    meatHealth = edible ? (w?.settings?.rawMeatHealth ?? defaults.rawMeatHealth!) : 0;
+  if (
+    units === base.fuel.fuel &&
+    weight === base.canoe.weight &&
+    price === base.canoe.price &&
+    rawMeats.every(
+      (item) =>
+        (base[item].food ?? 0) === meatFood &&
+        (base[item].drink ?? 0) === meatDrink &&
+        (base[item].health ?? 0) === meatHealth,
+    )
+  )
     return base;
-  const key = `${units}:${weight}:${price}`;
+  const key = `${units}:${weight}:${price}:${meatFood}:${meatDrink}:${meatHealth}`;
   let tuned = fuelCache.get(base);
   if (!tuned) {
     tuned = new Map();
@@ -102,6 +118,12 @@ export function worldItems(
       ...base,
       fuel: { ...base.fuel, fuel: units },
       canoe: { ...base.canoe, weight, price },
+      ...Object.fromEntries(
+        rawMeats.map((item) => [
+          item,
+          { ...base[item], food: meatFood, drink: meatDrink, health: meatHealth },
+        ]),
+      ),
     };
     tuned.set(key, result);
   }
@@ -192,7 +214,7 @@ export function setCatalogue(w: World, p: Player, input: unknown) {
 }
 /** Quotes are local and editable. Report cash flow per fully staffed batch, not guaranteed profit. */
 export function productionDiagnostics(w: World, b: Building) {
-  const r = b.production ?? (b.recipe ? recipes[b.recipe] : undefined);
+  const r = productionRecipe(w, b);
   if (!r) return { inputs: [], outputValue: 0, materials: 0, wages: 0, tax: 0, margin: 0 };
   const defs = worldItems(w),
     taxRate = Math.min(1, Math.max(0, w.settings.salesTax + (taxTown(w, b.x, b.z)?.salesTax ?? 0)));

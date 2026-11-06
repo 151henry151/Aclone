@@ -1,4 +1,5 @@
 import { canoeVehicle } from './canoe-rules';
+import { meatRecipes } from './meat-recipes';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import itemData from '../../data/items.json';
 import vehicleData from '../../data/vehicles.json';
@@ -35,6 +36,7 @@ export const buildings: Record<string, BuildingDef> = Object.fromEntries(
 );
 export const recipes: Record<string, Recipe> = {
   ...recipeData,
+  ...meatRecipes(),
   pumpHouse: {
     ...recipeData.waterworks,
     inputs: { fuel: settingsData.pumpFuelPerBatch },

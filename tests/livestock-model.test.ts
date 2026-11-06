@@ -32,6 +32,31 @@ test('animal rigs have natural metre scales, finite geometry and a bounded draw/
     assert.ok(parts.length <= 7);
   }
 });
+test('young share the existing instanced herd budget and remain visibly smaller beside adults', () => {
+  const w = createWorld('young-model', 'Young models', 'owner');
+  const p = addPlayer(w, 'owner', 'Owner');
+  Object.assign(p, { x: 0, z: 0 });
+  const b = makeBuilding('calf-barn', 'dairy', 0, 0);
+  b.pasture = { x: 20, z: 0, parcels: 4 };
+  b.stock = { cows: 20, calves: 20 };
+  w.buildings = [b];
+  const sites = livestockSites(w, p);
+  assert.ok(sites.some((s) => s.young));
+  assert.ok(sites.some((s) => !s.young));
+  assert.ok(sites.length <= 8);
+  assert.ok(sites.filter((s) => s.young).every((s) => s.scale < 0.7));
+  const scene = new LivestockScene();
+  scene.update(w, p);
+  const meshes = scene.group.children.length;
+  b.stock.calves = 0;
+  scene.update(w, p);
+  assert.equal(scene.group.children.length, meshes, 'maturation reuses meshes');
+  assert.equal(
+    livestockSites(w, p).some((s) => s.young),
+    false,
+  );
+  scene.reset();
+});
 test('visible herds follow stock, removal and world changes without rebuilding geometry', () => {
   const w = createWorld('animals', 'Animals', 'owner'),
     p = addPlayer(w, 'owner', 'Keeper');

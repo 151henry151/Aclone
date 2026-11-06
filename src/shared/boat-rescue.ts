@@ -1,3 +1,5 @@
+import { normalizeYoung } from './livestock';
+import { normalizeMeat } from './meat-freshness';
 import { ROWBOAT } from './rowboat-rules';
 import { riverDockAccepts } from './river-dock';
 import { CANOE } from './canoe-rules';
@@ -34,6 +36,9 @@ export function expireAbandonedCargo(w: World, at = w.time) {
     timer.daysLeft = 0;
     timer.spoiled = true;
     r.cargo = {};
+    delete r.cargoLife;
+    delete r.holdLife;
+    delete r.provisionsLife;
     delete r.hold;
     delete r.holdBasis;
     delete r.provisions;
@@ -81,9 +86,12 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number, destroyedBoa
       if (w.boatRescues) delete w.boatRescues[p.id];
       r = undefined;
       p.inventory = {};
+      delete p.inventoryLife;
       delete p.boatHold;
+      delete p.boatHoldLife;
       delete p.boatHoldBasis;
       delete p.boatStores;
+      delete p.boatStoresLife;
       delete p.boatLighting;
     }
     say(
@@ -115,16 +123,22 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number, destroyedBoa
           smallCraft: p.smallCraft,
         },
         cargo: { ...p.inventory },
-        ...(p.boatHold ? { hold: p.boatHold, holdBasis: p.boatHoldBasis } : {}),
+        cargoLife: p.inventoryLife,
+        ...(p.boatHold
+          ? { hold: p.boatHold, holdBasis: p.boatHoldBasis, holdLife: p.boatHoldLife }
+          : {}),
         dinghy: { x: p.x, z: p.z, heading: p.heading, moored: true },
       };
       // This cargo belongs to the vessel even in worlds that retain personal inventory on death.
       p.inventory = {};
+      delete p.inventoryLife;
       delete p.boatHold;
+      delete p.boatHoldLife;
       delete p.boatHoldBasis;
     }
     if (!r.spoilage) {
       r.provisions = { ...p.boatStores };
+      r.provisionsLife = p.boatStoresLife;
       r.net = p.trawl ? { ...structuredClone(p.trawl), deployed: false } : undefined;
       const days = vehicleDef(w, r.boat.slot).spoilageDays ?? w.settings.boatCargoSpoilageDays ?? 5;
       r.spoilage = { daysLeft: days, checkedAt: at, ...(days === 0 ? { never: true } : {}) };
@@ -138,6 +152,7 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number, destroyedBoa
       }
     }
     delete p.boatStores;
+    delete p.boatStoresLife;
     // Recover the tender ashore after a fatal rowing trip, without moving the main vessel
     // or restarting its existing spoilage deadline.
     r.dinghy = dock
@@ -204,13 +219,18 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
         slot: p.vehicle,
       },
       cargo: { ...p.inventory },
-      ...(p.boatHold ? { hold: p.boatHold, holdBasis: p.boatHoldBasis } : {}),
+      cargoLife: p.inventoryLife,
+      ...(p.boatHold
+        ? { hold: p.boatHold, holdBasis: p.boatHoldBasis, holdLife: p.boatHoldLife }
+        : {}),
       dinghy: { ...spot, heading: p.heading, moored: false },
     };
     if (p.trawl) p.trawl = { ...p.trawl, deployed: false };
     delete p.boatHold;
+    delete p.boatHoldLife;
     delete p.boatHoldBasis;
-    p.inventory = {}; // Main cargo stays on the stranded boat, never duplicated into the inflatable.
+    p.inventory = {};
+    delete p.inventoryLife; // Main cargo stays on the stranded boat, never duplicated into the inflatable.
     p.boatThrottle = 0;
     switchVehicle(p, LIFEBOAT, false, w);
     Object.assign(p, spot, { y: surfaceWaterLevel(w, spot.x, spot.z), speed: 0, engine: false });
@@ -301,11 +321,25 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   delete p.hitch;
   p.boatThrottle = 0;
   switchVehicle(p, r.boat.slot, false, w);
+  const returnedLife = r.cargoLife ?? {},
+    carriedLife = p.inventoryLife ?? {};
+  normalizeMeat(r.cargo, returnedLife, w.time);
+  normalizeMeat(p.inventory, carriedLife, w.time);
+  const returnedYoung = { stock: r.cargo, young: returnedLife.young },
+    carriedYoung = { stock: p.inventory, young: carriedLife.young };
+  normalizeYoung(returnedYoung, w.time);
+  normalizeYoung(carriedYoung, w.time);
+  p.inventoryLife = {
+    meat: [...returnedLife.meat!, ...carriedLife.meat!],
+    young: [...(returnedYoung.young ?? []), ...(carriedYoung.young ?? [])],
+  };
   p.inventory = cargo;
   p.boatHold = r.hold;
+  p.boatHoldLife = r.holdLife;
   p.boatHoldBasis = r.holdBasis;
   if (r.spoilage) {
     p.boatStores = r.provisions ? { ...r.provisions } : {};
+    p.boatStoresLife = r.provisionsLife;
     p.trawl = r.net ? structuredClone(r.net) : undefined;
   }
   p.fuel = fuel;

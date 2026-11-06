@@ -214,3 +214,9 @@ An actual movement-physics circuit around the expanded island covers about
 **28% reserve**. That approximately eight-hour circuit measures the hull's range;
 provisions and maintenance still require planning. Forty default Fuel cans fill
 the tank and fit the captain's personal allowance.
+
+## Livestock and meat deliveries
+
+The Meadow livestock wagon carries calves, lambs, piglets and chicks at half the corresponding adult pasture share by default. Age and healthy growth progress travel with them; growth resumes only under farm care. It also accepts the raw meat and optional compost returned by a butcher. Back alongside the loading ramp, stop, open the butcher and choose an adult from the wagon. Keep enough output room and cash until completion; cancel or leave without losing the animal or paying the fee. Young cannot be slaughtered.
+
+The ordinary wagon and personal inventory are unchilled: raw meat normally expires after two game days. A fish trailer or fish-policy freight hold keeps meat cold; butcher, kitchen, café, pub and inn stocks also refrigerate it. Load age survives transfers, mooring, recoverable rescues and save/reopen. A world design that includes its owner's moored freight preserves young growth and meat age on the recipient world's clock. General box holds do not accept live animals; configure a livestock hold for those deliveries. Cold storage pauses age without refreshing it. Finished meals follow the existing food-storage rules.

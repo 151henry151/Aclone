@@ -177,6 +177,14 @@ Actual renderer captures; many use staged disposable worlds. They demonstrate vi
 
 Original articulated cow, sheep, pig and chicken meshes use smooth anatomy, procedural coat/fleece/feather detail and shared instanced rendering. No downloaded animal assets. `CHROMIUM_PATH=/usr/bin/chromium npm run screenshots:livestock` captures close-ups of the actual meshes with preview lighting in `test-results/livestock/`; the browser livestock test captures the live game.
 
+Young livestock reuse the existing instanced rigs with a configurable body scale
+(default 0.55) and larger relative heads. Adults and young share the eight-per-herd,
+48-total visual cap; adding cohorts does not add draw calls. Run
+`npx tsx scripts/meat-livestock-preview.ts` to capture actual herd and butcher
+scenery in normal and low graphics. The five butcher layouts include bounded
+loading ramps, insulated cold-room doors and a tiled-front variant. Render their
+contact sheet with `PREVIEW_GPU=1 npx tsx scripts/building-architecture-preview.ts butcher`.
+
 ## Geometry and texture budgets
 
 Grilles, tread, wheel bolts, doors, siding and window frames use cached procedural textures. Window emissive masks keep frames dark and panes lit. Animal coats share one atlas; limbs remain separately animated. No per-frame texture generation or extra downloads.

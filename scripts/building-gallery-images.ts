@@ -19,5 +19,5 @@ for (const kind of Object.keys(buildings)) {
   ]);
 }
 console.log(
-  'Refreshed 51 public building contact sheets. Review and commit these assets before publishing.',
+  `Refreshed ${Object.keys(buildings).length} public building contact sheets. Review and commit these assets before publishing.`,
 );

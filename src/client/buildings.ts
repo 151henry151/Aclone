@@ -1,4 +1,5 @@
 import { quayDetails } from './quay';
+import { butcherDetails } from './butcher-model';
 import { lighthouseModel } from './lighthouse';
 import { boatyardDetails } from './boatyard';
 import { riverDockDetails } from './river-dock';
@@ -330,6 +331,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     } else roof(v);
   }
   if (b.construction) return root;
+  if (b.kind === 'butcher') butcherDetails(root, b, plan);
   if (b.kind === 'boathouse') {
     boatyardDetails(root, plan, finish, b.architecture);
     return root;

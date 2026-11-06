@@ -24,6 +24,25 @@ const hall = (
 });
 const p = (name: string, ...volumes: BuildingVolume[]) => ({ name, volumes });
 export const buildingRecipes: Record<string, ReturnType<typeof p>[]> = {
+  butcher: [
+    p('Stone slaughterhouse and cold room', hall(8, 7, 3.6), hall(4, 5, 3, 'flat', 0.2, 6, -1)),
+    p(
+      'Timber village butcher',
+      hall(6, 5, 3.1, 'gable', 1.6),
+      hall(3, 3.5, 2.6, 'shed', 0.6, -4.5, -0.75),
+    ),
+    p(
+      'Brick abattoir and loading ramp',
+      hall(11, 8, 4.3, 'barrel', 1.8),
+      hall(4, 4, 3.2, 'flat', 0.2, -7.5, -2),
+    ),
+    p(
+      'Whitewashed tiled butcher',
+      hall(7, 6, 3.4, 'hip', 1.3),
+      hall(3, 4, 2.8, 'flat', 0.2, 5, -1),
+    ),
+    p('Long low meat works', hall(16, 6, 3.2, 'shed', 0.8), hall(5, 4, 3, 'flat', 0.2, 4, -5)),
+  ],
   lighthouse: [
     p('Round headland tower', hall(6, 6, 19, 'flat'), hall(7, 5, 3, 'gable', 1.5, 7, 0)),
     p('Octagonal harbour light', hall(7, 7, 15, 'flat'), hall(6, 7, 3, 'gable', 1.6, -7, 1)),

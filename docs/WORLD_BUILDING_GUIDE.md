@@ -556,3 +556,9 @@ pump-house nearby to make Water for sale. Deleting a claimed spring pauses its
 pump. A desalination plant belongs on an ocean coast; a pump-house belongs on
 fresh water. Portable world designs preserve the sources and their claimed
 intakes. See the [full settings](WORLD_BUILDING.md#springs-and-water-production).
+
+## Raise livestock and cook local meals
+
+Use Rules → Livestock life cycle to set how young animals grow, how much care and space they need, and whether farms can breed continuously. Place a dairy, sheepfold, pig farm or henhouse with usable pasture. Young are smaller in the world and grow only with healthy farm care; their progress survives hauling and saved designs.
+
+Add a butcher from its five architectural models, leave room at the loading ramp and fund qualified staff. Its owner can set service fees and a counter menu. Add a kitchen or restaurant to turn raw meat into meals, or enable slower private cooking inside homes and booked inn rooms. Rules → Butcher and cooking controls fees, yields, service and home times, spoilage, raw-edibility and feature switches. Existing catalogue and recipe tools set prices, ingredients and wages. See the detailed [rule reference](WORLD_BUILDING.md#livestock-life-cycle-butchers-and-cooking) and [player flow](PLAYING.md#from-pasture-to-plate).

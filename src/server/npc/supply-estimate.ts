@@ -1,3 +1,4 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { skillFits } from '../../shared/survival-rules';
 import { jobVacancy } from '../../shared/staffing.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -58,13 +59,13 @@ export function estimateSupply(
     if (!Number.isSafeInteger(price) || price < 0) throw Error('No posted offer');
     if (availableSupply(w, source, key) < quantity) {
       visiting.add(source.id);
-      const recipe = source.production ?? recipes[source.recipe ?? ''];
+      const recipe = productionRecipe(w, source);
       if (
         !recipe ||
         !recipe.outputs[key] ||
         source.kind === 'farm' ||
         source.construction ||
-        !herdReady(source) ||
+        !herdReady(source, w.settings) ||
         waterProductionBlocker(w, source)
       )
         throw Error('No ready producer');
@@ -125,8 +126,7 @@ export function estimateSupply(
               !b.construction &&
               safe(b) &&
               (b.owner === p.id || (Number.isSafeInteger(b.sell[input]) && b.sell[input] >= 0)) &&
-              (availableSupply(w, b, input) >= needed ||
-                (b.production ?? recipes[b.recipe ?? ''])?.outputs[input]),
+              (availableSupply(w, b, input) >= needed || productionRecipe(w, b)?.outputs[input]),
           );
           sellers.sort(
             (a, b) =>

@@ -311,5 +311,93 @@
     "price": 26000,
     "food": 30000,
     "drink": 0
+  },
+  "calves": {
+    "name": "Calves",
+    "weight": 2.5,
+    "price": 10000
+  },
+  "lambs": {
+    "name": "Lambs",
+    "weight": 1.5,
+    "price": 7000
+  },
+  "piglets": {
+    "name": "Piglets",
+    "weight": 2.0,
+    "price": 8000
+  },
+  "chicks": {
+    "name": "Chicks",
+    "weight": 0.5,
+    "price": 1500
+  },
+  "beef": {
+    "name": "Raw beef",
+    "weight": 1,
+    "price": 3400
+  },
+  "pork": {
+    "name": "Raw pork",
+    "weight": 1,
+    "price": 4100
+  },
+  "mutton": {
+    "name": "Raw mutton",
+    "weight": 1,
+    "price": 4900
+  },
+  "poultry": {
+    "name": "Raw poultry",
+    "weight": 1,
+    "price": 6300
+  },
+  "beefStew": {
+    "name": "Beef stew",
+    "price": 9000,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "porkSupper": {
+    "name": "Roast pork supper",
+    "price": 9000,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "muttonPie": {
+    "name": "Mutton pie",
+    "price": 9000,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "roastChicken": {
+    "name": "Roast chicken dinner",
+    "price": 10000,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "meatBreakfast": {
+    "name": "Butcher’s breakfast",
+    "price": 9500,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
+  },
+  "pubMeatPie": {
+    "name": "Pub beef pie",
+    "price": 9500,
+    "weight": 2,
+    "food": 30000,
+    "drink": 6000,
+    "health": 1000
   }
 }

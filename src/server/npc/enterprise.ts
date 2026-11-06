@@ -1,4 +1,7 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { npcBusinessLoadRules } from '../../shared/npc-business-load-rules';
+import { livestockRules } from '../../shared/livestock-rules';
+import { npcBreedingBudgetAllows } from '../../shared/livestock';
 import { npcReserveRules } from '../../shared/npc-reserve-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { preferredLoanTerm } from '../../shared/loan-rules';
@@ -45,7 +48,7 @@ import { visitBuilding } from './care.ts';
 import { workplace, shiftBlocker } from './workplace.ts';
 const act = (action: Extract<Step, { kind: 'act' }>['action']): Step => ({ kind: 'act', action });
 export function businessEstimate(w: World, b: Building) {
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(w, b);
   if (!recipe || b.kind === 'farm') return;
   const catalogue = worldItems(w);
   let inputs = 0,
@@ -78,7 +81,7 @@ export function businessEstimate(w: World, b: Building) {
   const budget = productionBudget(w, b);
   if (budget) revenue = Math.min(revenue, budget.retailReceipts);
   let setup = 0;
-  const herd = herdSpec(b);
+  const herd = herdSpec(b, w.settings);
   if (herd && (b.stock[herd.animal] ?? 0) < herd.minimum) {
     const sellers = w.buildings.filter(
       (s) =>
@@ -166,13 +169,14 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
   for (const b of w.buildings.filter(
     (b) => !b.construction && (b.recipe || b.production) && b.kind !== 'farm',
   )) {
-    const recipe = b.production ?? recipes[b.recipe!];
+    const recipe = productionRecipe(w, b);
     if (!recipe) continue;
-    const herd = herdSpec(b);
+    const herd = herdSpec(b, w.settings);
     if (
       herd &&
       b.owner === p.id &&
-      (b.stock[herd.animal] ?? 0) < herd.minimum + budgets.npcBreedingSpareAnimals &&
+      !(b.continuousBreeding && livestockRules(w.settings).livestockContinuousAllowed) &&
+      npcBreedingBudgetAllows(w, b) &&
       !breedingBlocker(w, p, b) &&
       b.investment > budgets.npcBreedingCashThreshold &&
       (b.stock.feed ?? 0) + (acceptsHay(b) ? (b.stock.hay ?? 0) : 0) >=
@@ -180,14 +184,21 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       (b.stock.water ?? 0) >= budgets.npcBreedingWaterReserve
     )
       add(
-        `Breed a replacement ${herd.young} at my ${b.name}; invest ${(breedingRation(b).hay ?? 0) + (breedingRation(b).feed ?? 0)} ${acceptsHay(b) ? 'hay or feed' : 'feed'}, ${breedingRation(b).water} water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
-        visitBuilding(p, b, [operation('livestock', { building: b.id, operation: 'breed' })]),
+        `Breed a replacement ${herd.young} at my ${b.name}; invest ${(breedingRation(b, w.settings).hay ?? 0) + (breedingRation(b, w.settings).feed ?? 0)} ${acceptsHay(b) ? 'hay or feed' : 'feed'}, ${breedingRation(b, w.settings).water} water and ${herd.fee} and keep the herd healthy for ${herd.seconds / 60} minutes.`,
+        visitBuilding(p, b, [
+          operation('livestock', { building: b.id, operation: 'breed' }),
+          ...(livestockRules(w.settings).livestockContinuousAllowed
+            ? [operation('livestock', { building: b.id, operation: 'continuous', enabled: true })]
+            : []),
+        ]),
       );
     const estimate = businessEstimate(w, b);
     const job = workplace(w, p, b)!;
     const supplied =
-      herdReady(b) &&
-      Object.entries(livestockInputs(b, recipe.inputs)).every(([i, n]) => (b.stock[i] ?? 0) >= n) &&
+      herdReady(b, w.settings) &&
+      Object.entries(livestockInputs(b, recipe.inputs, w.settings)).every(
+        ([i, n]) => (b.stock[i] ?? 0) >= n,
+      ) &&
       Object.entries(recipe.outputs).every(([i, n]) => (b.stock[i] ?? 0) + n <= b.capacity) &&
       b.investment >= job.ifYouWork.wagesRequired;
     const shortage = Object.keys(recipe.outputs).some(
@@ -361,8 +372,8 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           if (s.id === b.id || s.construction || s.kind === 'home' || !!s.lodging) return [];
           const own = s.owner === p.id;
           if (!own && !(s.sell[item] >= 0)) return [];
-          const sourceRecipe = s.production ?? recipes[s.recipe ?? ''];
-          const sourceHerd = herdSpec(s);
+          const sourceRecipe = productionRecipe(w, s);
+          const sourceHerd = herdSpec(s, w.settings);
           const keep = own
             ? Math.max(
                 loads.npcOwnedSourceReserveBatches *
@@ -415,7 +426,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
           ],
         );
     }
-    for (const item of Object.keys(recipe.outputs)) {
+    for (const item of [...Object.keys(recipe.outputs), ...(herd ? [herd.animal] : [])]) {
       const buyer = w.buildings
         .filter(
           (s) =>
@@ -429,7 +440,7 @@ export function enterpriseChoices(w: World, p: Player): FarmerChoice[] {
       if (!buyer) continue;
       let n = Math.min(
         economyRules(w.settings).transactionItemLimit,
-        b.stock[item] ?? 0,
+        Math.max(0, (b.stock[item] ?? 0) - (herd?.animal === item ? herd.minimum : 0)),
         loads.npcBusinessOutputSaleLoad,
         Math.floor(buyer.investment / buyer.buy[item]),
         buyer.capacity - (buyer.stock[item] ?? 0),

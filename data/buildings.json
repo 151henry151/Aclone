@@ -58,7 +58,21 @@
       "hay": 927,
       "cod": 6400,
       "halibut": 12800,
-      "tuna": 20800
+      "tuna": 20800,
+      "beef": 3605,
+      "pork": 4326,
+      "mutton": 5150,
+      "poultry": 6695,
+      "beefStew": 9270,
+      "porkSupper": 9270,
+      "muttonPie": 9270,
+      "roastChicken": 10300,
+      "meatBreakfast": 9785,
+      "pubMeatPie": 9785,
+      "calves": 10300,
+      "lambs": 7210,
+      "piglets": 8240,
+      "chicks": 1545
     },
     "sell": {
       "wheat": 1575,
@@ -115,7 +129,21 @@
       "hay": 1350,
       "cod": 9200,
       "halibut": 18400,
-      "tuna": 29900
+      "tuna": 29900,
+      "beef": 5425,
+      "pork": 6510,
+      "mutton": 7750,
+      "poultry": 10075,
+      "beefStew": 13950,
+      "porkSupper": 13950,
+      "muttonPie": 13950,
+      "roastChicken": 15500,
+      "meatBreakfast": 14725,
+      "pubMeatPie": 14725,
+      "calves": 15500,
+      "lambs": 10850,
+      "piglets": 12400,
+      "chicks": 2325
     },
     "stock": {
       "wheat": 60,
@@ -243,7 +271,20 @@
       "halibut": 13600,
       "tuna": 22100,
       "potatoes": 1681,
-      "water": 1485
+      "water": 1485,
+      "beef": 3920,
+      "pork": 4704,
+      "mutton": 5600,
+      "poultry": 7280,
+      "flour": 5181,
+      "eggs": 2324,
+      "beefStew": 10080,
+      "porkSupper": 10080,
+      "muttonPie": 10080,
+      "roastChicken": 11200,
+      "meatBreakfast": 10640,
+      "pubMeatPie": 10640,
+      "steak": 4032
     },
     "sell": {
       "beer": 7875,
@@ -255,7 +296,14 @@
       "roastCoffee": 12350,
       "cod": 7600,
       "halibut": 15200,
-      "tuna": 24700
+      "tuna": 24700,
+      "beefStew": 12510,
+      "porkSupper": 12510,
+      "muttonPie": 12510,
+      "roastChicken": 13900,
+      "meatBreakfast": 13205,
+      "pubMeatPie": 13205,
+      "steak": 5000
     },
     "stock": {
       "beer": 60,
@@ -362,7 +410,21 @@
       "hay": 909,
       "cod": 6400,
       "halibut": 12800,
-      "tuna": 20800
+      "tuna": 20800,
+      "beef": 3535,
+      "pork": 4242,
+      "mutton": 5050,
+      "poultry": 6565,
+      "beefStew": 9090,
+      "porkSupper": 9090,
+      "muttonPie": 9090,
+      "roastChicken": 10100,
+      "meatBreakfast": 9595,
+      "pubMeatPie": 9595,
+      "calves": 10100,
+      "lambs": 7210,
+      "piglets": 8240,
+      "chicks": 1545
     },
     "sell": {
       "wheat": 1575,
@@ -419,7 +481,21 @@
       "hay": 1350,
       "cod": 9200,
       "halibut": 18400,
-      "tuna": 29900
+      "tuna": 29900,
+      "beef": 5775,
+      "pork": 6930,
+      "mutton": 8250,
+      "poultry": 10725,
+      "beefStew": 14850,
+      "porkSupper": 14850,
+      "muttonPie": 14850,
+      "roastChicken": 16500,
+      "meatBreakfast": 15675,
+      "pubMeatPie": 15675,
+      "calves": 16500,
+      "lambs": 11550,
+      "piglets": 13200,
+      "chicks": 2475
     },
     "stock": {
       "wheat": 60,
@@ -1038,7 +1114,7 @@
     "idealEmployees": 2
   },
   "winery": {
-    "name": "Vintner\u2019s press",
+    "name": "Vintner’s press",
     "price": 140000,
     "capacity": 500,
     "buy": {
@@ -1070,13 +1146,25 @@
       "water": 1485,
       "cod": 6800,
       "halibut": 13600,
-      "tuna": 22100
+      "tuna": 22100,
+      "beef": 3920,
+      "pork": 4704,
+      "mutton": 5600,
+      "poultry": 7280,
+      "eggs": 2324
     },
     "sell": {
       "meals": 5325,
       "cod": 7600,
       "halibut": 15200,
-      "tuna": 24700
+      "tuna": 24700,
+      "beefStew": 9000,
+      "porkSupper": 9000,
+      "muttonPie": 9000,
+      "roastChicken": 10000,
+      "meatBreakfast": 9500,
+      "pubMeatPie": 9500,
+      "steak": 3600
     },
     "stock": {},
     "recipe": "kitchen",
@@ -1148,7 +1236,20 @@
       "cod": 6800,
       "halibut": 13600,
       "tuna": 22100,
-      "potatoes": 1681
+      "potatoes": 1681,
+      "beef": 3920,
+      "pork": 4704,
+      "mutton": 5600,
+      "poultry": 7280,
+      "flour": 5181,
+      "eggs": 2324,
+      "beefStew": 10080,
+      "porkSupper": 10080,
+      "muttonPie": 10080,
+      "roastChicken": 11200,
+      "meatBreakfast": 10640,
+      "pubMeatPie": 10640,
+      "steak": 4032
     },
     "sell": {
       "meals": 7400,
@@ -1157,7 +1258,14 @@
       "roastCoffee": 12350,
       "cod": 7600,
       "halibut": 15200,
-      "tuna": 24700
+      "tuna": 24700,
+      "beefStew": 12510,
+      "porkSupper": 12510,
+      "muttonPie": 12510,
+      "roastChicken": 13900,
+      "meatBreakfast": 13205,
+      "pubMeatPie": 13205,
+      "steak": 5000
     },
     "stock": {
       "meals": 0,
@@ -1188,7 +1296,20 @@
       "cod": 6800,
       "halibut": 13600,
       "tuna": 22100,
-      "potatoes": 1681
+      "potatoes": 1681,
+      "beef": 3920,
+      "pork": 4704,
+      "mutton": 5600,
+      "poultry": 7280,
+      "flour": 5181,
+      "eggs": 2324,
+      "beefStew": 10080,
+      "porkSupper": 10080,
+      "muttonPie": 10080,
+      "roastChicken": 11200,
+      "meatBreakfast": 10640,
+      "pubMeatPie": 10640,
+      "steak": 4032
     },
     "sell": {
       "meals": 7400,
@@ -1197,7 +1318,14 @@
       "roastCoffee": 12350,
       "cod": 7600,
       "halibut": 15200,
-      "tuna": 24700
+      "tuna": 24700,
+      "beefStew": 12510,
+      "porkSupper": 12510,
+      "muttonPie": 12510,
+      "roastChicken": 13900,
+      "meatBreakfast": 13205,
+      "pubMeatPie": 13205,
+      "steak": 5000
     },
     "stock": {
       "meals": 0,
@@ -1271,11 +1399,13 @@
       "feed": 2017,
       "water": 1485,
       "cows": 22400,
-      "hay": 1401
+      "hay": 1401,
+      "calves": 11200
     },
     "sell": {
       "milk": 2075,
-      "cows": 26000
+      "cows": 26000,
+      "calves": 13000
     },
     "stock": {},
     "recipe": "dairy",
@@ -1315,7 +1445,7 @@
     "idealEmployees": 2
   },
   "dairyKitchen": {
-    "name": "Country caf\u00e9",
+    "name": "Country café",
     "price": 120000,
     "capacity": 500,
     "buy": {
@@ -1324,14 +1454,27 @@
       "water": 1485,
       "cod": 6800,
       "halibut": 13600,
-      "tuna": 22100
+      "tuna": 22100,
+      "beef": 3920,
+      "pork": 4704,
+      "mutton": 5600,
+      "poultry": 7280,
+      "flour": 5181,
+      "eggs": 2324
     },
     "sell": {
       "dairyMeals": 9000,
       "cod": 7600,
       "halibut": 15200,
       "tuna": 24700,
-      "meals": 5325
+      "meals": 5325,
+      "beefStew": 9000,
+      "porkSupper": 9000,
+      "muttonPie": 9000,
+      "roastChicken": 10000,
+      "meatBreakfast": 9500,
+      "pubMeatPie": 9500,
+      "steak": 3600
     },
     "stock": {},
     "recipe": "dairyKitchen",
@@ -1354,11 +1497,13 @@
       "feed": 2017,
       "water": 1485,
       "sheep": 15680,
-      "hay": 1401
+      "hay": 1401,
+      "lambs": 7840
     },
     "sell": {
       "wool": 3100,
-      "sheep": 18200
+      "sheep": 18200,
+      "lambs": 9100
     },
     "stock": {},
     "recipe": "sheepfold",
@@ -1380,11 +1525,13 @@
     "buy": {
       "feed": 2017,
       "water": 1485,
-      "pigs": 17920
+      "pigs": 17920,
+      "piglets": 8960
     },
     "sell": {
       "compost": 3575,
-      "pigs": 20800
+      "pigs": 20800,
+      "piglets": 10400
     },
     "stock": {},
     "recipe": "piggery",
@@ -1406,11 +1553,13 @@
     "buy": {
       "feed": 2017,
       "water": 1485,
-      "chickens": 3360
+      "chickens": 3360,
+      "chicks": 1680
     },
     "sell": {
       "eggs": 2075,
-      "chickens": 3900
+      "chickens": 3900,
+      "chicks": 1950
     },
     "stock": {},
     "recipe": "henhouse",
@@ -1554,5 +1703,34 @@
     "tier": 0,
     "color": "#87a9a8",
     "idealEmployees": 2
+  },
+  "butcher": {
+    "name": "Village butcher",
+    "price": 120000,
+    "capacity": 500,
+    "buy": {
+      "cows": 29120,
+      "pigs": 23296,
+      "sheep": 20384,
+      "chickens": 4368
+    },
+    "sell": {
+      "beef": 3500,
+      "pork": 4200,
+      "mutton": 5000,
+      "poultry": 6500
+    },
+    "stock": {},
+    "recipe": "butcher_cows",
+    "wage": 600,
+    "materials": {
+      "wood": 8,
+      "bricks": 12,
+      "concrete": 6,
+      "tools": 1
+    },
+    "tier": 0,
+    "color": "#d0c3b0",
+    "idealEmployees": 1
   }
 }

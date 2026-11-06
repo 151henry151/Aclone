@@ -7,6 +7,7 @@ import { vehicleDef } from './vehicle-config';
 import { riverDockAccepts } from './river-dock';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { cargoAccepts } from './cargo-policy';
+import { transferStock } from './stock-life';
 import { stockWeight } from './fishing-expedition';
 import { economyRules } from './economy-rules';
 import { worldItems } from './world-catalogue';
@@ -29,7 +30,7 @@ export function freightAccess(w: World, p: Player, slot: unknown) {
     : boatLandings(w).find((d) => d.id === moored?.landing && withinBoatLanding(w, p, d, false));
   need(landing && (active || moored?.owner === p.id), 'Return to this boat at its dock or landing');
   need(landingAccepts(w, landing, slot), 'The boat does not fit this berth');
-  const cargo = active ? (p.boatHold ?? {}) : (moored!.cargo ?? {});
+  const cargo = active ? (p.boatHold ??= {}) : (moored!.cargo ??= {});
   return { slot, v, landing, cargo };
 }
 export function saveFreightCargo(
@@ -105,8 +106,7 @@ export function boatHoldAction(w: World, p: Player, a: Action, complete = false)
   } else need(canCarry(p, item, n, w), 'Captain inventory is full or unsuitable');
   if (!complete) return queueFreight(w, p, a);
   freightStockCost(w, p, access.slot, cargo, item, n, loading);
-  source[item] -= n;
-  dest[item] = (dest[item] ?? 0) + n;
+  transferStock(w, source, dest, item, n);
   saveFreightCargo(w, p, access.slot, cargo);
   return `Transferred ${n} ${worldItems(w)[item].name} ${loading ? 'to' : 'from'} the freight hold.`;
 }

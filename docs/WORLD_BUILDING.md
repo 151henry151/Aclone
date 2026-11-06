@@ -1789,3 +1789,13 @@ Turn it off for creator worlds that deliberately use enclosed edited ponds as
 sea. Existing plants are grandfathered during the one-time migration; their
 saved identities, recipes, owner, cash and stock remain intact. New pumps and
 plants recheck water availability before producing, and explain blocked intakes.
+
+## Livestock life cycle, butchers and cooking
+
+**F10 → Rules → Livestock life cycle** exposes maturity days (calves 40, lambs 25, piglets 20, chicks 6), growth and breeding multipliers, young ration/pasture shares (0.5), visible young size (0.55), care and birth thresholds, continuous breeding permission, and species-specific adult minimums, rations, breeding fees and durations. Growth uses healthy game days; changing the calendar settles progress under the old clock first. A zero growth multiplier pauses growth. A frozen calendar pauses game-day ageing. Continuous breeding is allowed by default but each farm must opt in. NPC farms additionally respect the existing resident breeding budget rules.
+
+**Butcher and cooking** controls availability, default fee fraction (0.33), service seconds (30 per adult), walked-animal weight (3), ramp reach (6m), stopped speed (0.5m/s), yields (12 beef/8 pork/6 mutton/1 poultry), optional compost (0), raw spoilage (2 days, zero disables), raw-edibility (off) and its nutrition, home cooking permission (on), duration (180 seconds), home yield (1), business meat yield (4) and cooked Steak yield (4). The ordinary Production interval controls business batch time. Qualified staffing, catalogue prices, business bids/asks and custom premises recipes remain editable through their existing controls; a custom recipe takes precedence over the standard menu.
+
+Disabling butchers blocks new construction, paid slaughter and counter production while preserving existing buildings, goods and fees. Disabling home cooking blocks new/completing tasks and leaves ingredients untouched. Changing a quoted service fee or yield cancels it before payment or animal consumption. Invalid rule patches are rejected atomically.
+
+The building catalogue includes five butcher models with loading ramps. Owners set per-species slaughter fees and choose counter menus; kitchens choose meat dishes or their existing standard/seafood menu. Portable designs retain rules, catalogue settings, selected menus, fees and young growth cohorts. Existing saved adults and cooked Steak are preserved. The meat-listing migration adds only missing listings and respects explicit and paused prices; it does not seed animals, raw meat, meals or cash.

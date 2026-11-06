@@ -1,3 +1,4 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { jobVacancy } from '../../shared/staffing.ts';
 import {
   herdSpec,
@@ -23,8 +24,7 @@ import {
 /** Read-only diagnosis from the same recipe, staff and clock used by production.
  * No private details about other employees enter the model's observation. */
 export function workplace(w: World, p: Player, b: Building) {
-  const recipe =
-    b.kind === 'farm' ? recipes.farm : (b.production ?? (b.recipe && recipes[b.recipe]));
+  const recipe = b.kind === 'farm' ? recipes.farm : productionRecipe(w, b);
   if (!recipe) return;
   const interval = productionInterval(w, b);
   const next = (Math.floor(w.time / interval) + 1) * interval;
@@ -42,14 +42,14 @@ export function workplace(w: World, p: Player, b: Building) {
   if (!employedHere && !jobVacancy(w, b, p.id)) jobBlockers.push('All jobs filled');
   const blockers: string[] = [];
   const notes: string[] = [];
-  const herd = herdSpec(b);
+  const herd = herdSpec(b, w.settings);
   if (herd) {
-    if (!herdReady(b))
+    if (!herdReady(b, w.settings))
       blockers.push(
         `Production requires ${herd.minimum} ${herd.animal} and 40% herd condition; keep feed, water and qualified care available`,
       );
     notes.push(
-      `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} ${acceptsHay(b) ? 'hay or feed' : 'feed'} and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
+      `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b, w.settings).feed} ${acceptsHay(b) ? 'hay or feed' : 'feed'} and ${herdNeeds(b, w.settings).water} water even if output is full; reserves add upkeep without increasing output.`,
     );
   }
   if (waterProductionBlocker(w, b)) blockers.push(waterProductionBlocker(w, b)!);
@@ -59,7 +59,7 @@ export function workplace(w: World, p: Player, b: Building) {
       blockers.push(
         'No active employees at the next production check; only slow unattended production can run',
       );
-    for (const [item, n] of Object.entries(livestockInputs(b, recipe.inputs)))
+    for (const [item, n] of Object.entries(livestockInputs(b, recipe.inputs, w.settings)))
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item} in building stockroom`);
     for (const [item, n] of Object.entries(recipe.outputs))

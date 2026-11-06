@@ -2,6 +2,7 @@
 import * as T from 'three';
 import { animalMaterial, animalModel, type AnimalPart } from './animal-model';
 import { herdSpec, type AnimalKind } from '../shared/livestock';
+import { livestockRules } from '../shared/livestock-rules';
 import { pasturePoint, pastureFences, pastureParcelSize } from '../shared/pasture-land';
 import { grazingPose, type GrazingPoint } from './pasture-motion';
 import { terrainHeight } from '../shared/simulation';
@@ -11,6 +12,8 @@ export const MAX_VISIBLE_LIVESTOCK = 48,
   MAX_PER_HERD = 8;
 export interface AnimalSite {
   kind: AnimalKind;
+  young: boolean;
+  scale: number;
   x: number;
   y: number;
   z: number;
@@ -30,7 +33,12 @@ export function livestockSites(w: World, p: Pick<Player, 'x' | 'z'>): AnimalSite
     .slice(0, 12)) {
     const spec = herdSpec(b)!,
       pasture = b.pasture!;
-    const n = Math.min(MAX_PER_HERD, Math.max(0, Math.floor(b.stock[spec.animal] ?? 0)));
+    const youngCount = Math.max(0, Math.floor(b.stock[spec.youngItem] ?? 0)),
+      adults = Math.min(
+        MAX_PER_HERD - Number(youngCount > 0),
+        Math.max(0, Math.floor(b.stock[spec.animal] ?? 0)),
+      ),
+      n = adults + Math.min(MAX_PER_HERD - adults, youngCount);
     let seed = 0;
     for (const c of b.id) seed = (Math.imul(seed, 31) + c.charCodeAt(0)) >>> 0;
     for (let i = 0; i < n && sites.length < MAX_VISIBLE_LIVESTOCK; i++) {
@@ -54,6 +62,8 @@ export function livestockSites(w: World, p: Pick<Player, 'x' | 'z'>): AnimalSite
       });
       sites.push({
         kind: spec.animal,
+        young: i >= adults,
+        scale: i >= adults ? livestockRules(w.settings).livestockYoungVisualScale : 1,
         ...points[0],
         heading: 0,
         seed: (seed % 1000) + i * 1.71,
@@ -126,6 +136,7 @@ export class LivestockScene {
       Math.floor(p.z / 12),
       w.terrain,
       w.settings.seaLevel,
+      w.settings.livestockYoungVisualScale,
       w.landscape,
       w.buildings.map((b) => [
         b.id,
@@ -137,6 +148,7 @@ export class LivestockScene {
         b.creatorBounds,
         b.pasture,
         herdSpec(b) ? b.stock[herdSpec(b)!.animal] : 0,
+        herdSpec(b) ? b.stock[herdSpec(b)!.youngItem] : 0,
       ]),
     ]);
     if (revision === this.revision) return;
@@ -207,13 +219,14 @@ export class LivestockScene {
           walk = pose.walk;
         this.animal.position.set(pose.x, pose.y, pose.z);
         this.animal.rotation.set(0, pose.heading, 0);
-        this.animal.scale.setScalar(0.94 + (site.seed % 1) * 0.08);
+        this.animal.scale.setScalar(site.scale * (0.94 + (site.seed % 1) * 0.08));
         this.animal.updateMatrix();
         this.root.copy(this.animal.matrix);
         rig.parts.forEach((part, j) => {
           this.joint.position.copy(part.pivot);
           this.joint.rotation.set(0, 0, 0);
           this.joint.scale.set(1, 1, 1);
+          if (site.young && part.motion === 'head') this.joint.scale.setScalar(1.18);
           if (part.motion === 'body') this.joint.scale.x = 1 + Math.sin(t * 1.5) * 0.009;
           if (part.motion === 'head') {
             this.joint.rotation.x =

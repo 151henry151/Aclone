@@ -1,4 +1,5 @@
 import { cargoAccepts } from './cargo-policy';
+import { transferStock, type StockLife } from './stock-life';
 import { vehicleRunningRules } from './vehicle-running-rules';
 import { z } from 'zod';
 import { cliffBlocks } from './coastal-bluffs';
@@ -51,6 +52,7 @@ export interface Trailer {
   z: number;
   heading: number;
   cargo: Stock;
+  life?: StockLife;
   attached?: string;
   /** Whole internal currency units per Fuel. Zero or absent closes public sales. */
   sellPrice?: number;
@@ -234,9 +236,8 @@ export function trailerAction(w: World, p: Player, a: Action) {
     need((b.stock[item] ?? 0) + n <= b.capacity, 'Building storage is full');
     requireHerdRoom(w, b, item, n);
   } else need(canCarry(p, item, n, w), 'Vehicle inventory is full');
-  source[item] -= n;
+  transferStock(w, source, dest, item, n);
   if (!source[item]) delete source[item];
-  dest[item] = (dest[item] ?? 0) + n;
   return 'Cargo transferred.';
 }
 /** Articulated single drawbar. Reversing is signed, so the trailer can jackknife. */

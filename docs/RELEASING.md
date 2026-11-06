@@ -2,6 +2,22 @@
 
 Publish, commit, push or deploy only when explicitly requested. Builds and tests do not authorize publication. [Release notes](RELEASE_NOTES.md#upgrade-archive) retain older migrations and validation records; [CHANGELOG](../CHANGELOG.md) records dated changes.
 
+## Upgrade 0.128.0
+
+Deploy the approved backlog-implementation SHA with the normal online SQLite
+backup, prefixed build and service restart. Publish the matching website, including
+the butcher gallery sheet. Reload clients. On saved-world load, the one-time
+`meatVersion: 1` migration adds missing young, raw-meat, meal and ingredient quotes.
+Explicit and paused prices, stock, adult herds, ownership and money remain intact.
+New young cohorts and meat-age ledgers are optional fields; existing Steak remains
+cooked food. No new butcher or animal stock is seeded into production worlds.
+
+Verify public health/client/website version 0.128.0, prefixed script/map-worker
+assets, all five butcher gallery models and saved migration markers. Use only
+read-only live checks; the detailed gameplay evidence comes from disposable local
+worlds. Keep the pre-upgrade database and website backups for rollback, since old
+code cannot preserve the new cohorts, dated freight and cooking/service tasks.
+
 ## Upgrade 0.118.0
 
 Deploy the approved backlog-implementation commit using DEPLOY_REF, with the

@@ -2,6 +2,31 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.128.0 — From pasture to plate
+
+Meet calves, lambs, piglets and chicks in your pastures. Feed and water them while
+they grow into adults, and enable continuous breeding if you want a supplied,
+staffed farm to keep raising replacements. The barn shows growth days and care
+requirements. Young animals travel in livestock wagons with their age intact.
+
+Build one of five butcher designs and learn the butcher skill at school. Bring
+an adult to the loading ramp, pay for a short slaughter service and take the meat
+away in your wagon or inventory. Or fund the counter, buy animals and sell meat.
+Young animals are refused; cancelled or changed services keep your animal and cash.
+
+Choose beef stew, roast pork supper, mutton pie, roast chicken, cooked Steak,
+café breakfasts or pub pies in business kitchens. Private cooks need no skill:
+go inside your home or booked inn room and cook a smaller, slower batch from
+your own supplies. Raw meat normally spoils after two unchilled game days and
+must be cooked. Cold stores and chilled freight preserve its remaining freshness.
+
+World Builder controls growth, care, breeding, slaughter fees/yields, spoilage
+and cooking. Existing adults, cooked Steak, stock, ownership and explicit or
+paused prices survive the listing migration. No animals or money are granted.
+See [the player guide](PLAYING.md#from-pasture-to-plate),
+[meat economics](ECONOMY.md#livestock-butcher-counters-and-meat-meals) and
+[world rules](WORLD_BUILDING.md#livestock-life-cycle-butchers-and-cooking).
+
 ## 0.127.0 — Fresh water in the hills
 
 Discover 30 natural springs on public Puddlewick, including one at each river

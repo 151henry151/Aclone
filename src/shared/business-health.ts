@@ -1,3 +1,4 @@
+import { productionRecipe } from './production-recipe';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog';
 import { worldItems } from './world-catalogue';
@@ -10,7 +11,7 @@ import type { Building, World } from './types';
  * Reads only this building's stock/accounts and the world's public catalogue. */
 export function businessHealth(w: World, b: Building) {
   const catalogue = worldItems(w);
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(w, b);
   const crew = b.staffing ?? productionStaffing(w, b);
   const payroll = Math.max(0, crew.active - Number(crew.ownerOperating)) * b.wage;
   const inputs = Object.entries(recipe ? livestockSupplyInputs(w, b, recipe.inputs) : {});

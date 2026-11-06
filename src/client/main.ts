@@ -30,7 +30,9 @@ import { FrameInbox } from './frame-inbox';
 import { vehicleForm } from './vehicle-editor';
 import { isTrawler } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
-import { pastureCapacity, pastureCost, pastureParcelSize } from '../shared/pasture-land';
+import { livestockPanel, butcherPanel, meatMenuPanel, homeCookingPanel } from './meat-panels';
+import { rawMeats } from '../shared/meat-recipes';
+import { productionRecipe } from '../shared/production-recipe';
 import { charterPanel } from './charter-panel';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
 import { fishingVessel } from '../shared/boat-fishing';
@@ -79,7 +81,7 @@ import { texturePainterMarkup, mountTexturePainter } from './texture-painter';
 import { rulesSummary } from '../shared/rulesets';
 import { alcoholDose, intoxicationLabel } from '../shared/intoxication';
 import { spaceportFlight } from '../shared/spaceport-flight';
-import { herdSpec, herdNeeds, acceptsHay, herdRation } from '../shared/livestock';
+import { acceptsHay } from '../shared/livestock';
 import { Waypoints, waypointGuidance } from './waypoint';
 import { socialHtml, showSocialPane } from './social';
 import { adoptCarriedPilot } from './pilot-handoff';
@@ -904,6 +906,8 @@ function updateHud() {
               labour: 'Working a labour shift',
               craft: 'Crafting tools',
               harvest: 'Harvesting crops',
+              slaughter: 'Butcher service',
+              homeCook: 'Cooking a meal',
             } as Record<string, string>
           )[me.task.kind] ?? me.task.kind.replace(/_/g, ' '));
     if ($('task-name').textContent !== label) $('task-name').textContent = label;
@@ -1495,6 +1499,36 @@ function refreshTradingPrices() {
         panel.replaceWith(wrapper.firstElementChild!);
     }
 
+  if (world && me && panel === 'building') {
+    const b = world.buildings.find((b) => b.id === selected);
+    if (b)
+      for (const [selector, render] of [
+        ['[data-livestock-panel]', livestockPanel],
+        ['[data-butcher-panel]', butcherPanel],
+        ['[data-home-cooking]', homeCookingPanel],
+        ['[data-meat-menu]', meatMenuPanel],
+      ] as const) {
+        const root = app.querySelector<HTMLElement>(selector);
+        if (
+          !root ||
+          root.contains(
+            document.activeElement?.matches('input,select,textarea')
+              ? document.activeElement
+              : null,
+          )
+        )
+          continue;
+        const html = render(world, me, b);
+        if (root.dataset.rendered === html) continue;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        const next = wrapper.firstElementChild as HTMLElement | null;
+        if (next) {
+          next.dataset.rendered = html;
+          root.replaceWith(next);
+        }
+      }
+  }
   refreshTaxInfo();
   const fuelRoot = app.querySelector('.fuel-services');
   if (
@@ -2063,7 +2097,7 @@ function renderPanel() {
                   .map((b) => button('Read ' + esc(b.title), 'readBook', `data-id="${esc(b.id)}"`))
                   .join(
                     '',
-                  )}${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth ? 'disabled' : ''}`)}${button('Discard 1', 'discard', `data-id="${esc(id)}" title="Permanently discard one item; no refund"`)}</div>`,
+                  )}${button(items[id]?.fuel ? 'Refuel' : items[id]?.food || items[id]?.drink || items[id]?.health || items[id]?.maxHealth || rawMeats.includes(id) ? 'Use' : 'Equipment', 'use', `data-id="${id}" ${!items[id]?.food && !items[id]?.drink && !items[id]?.fuel && !items[id]?.health && !items[id]?.maxHealth && !rawMeats.includes(id) ? 'disabled' : ''}`)}${button('Discard 1', 'discard', `data-id="${esc(id)}" title="Permanently discard one item; no refund"`)}</div>`,
             )
             .join(
               '',
@@ -2179,7 +2213,7 @@ function staffingStatus(b: Building) {
   return `${c.active} active / ${c.ideal} ideal${c.ownerOperating ? ' (includes operating owner)' : ''}${!c.active && b.government ? ' · public operation' : ''}`;
 }
 function productionStatus(w: World, b: Building) {
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(world, b);
   if (!recipe || b.kind === 'farm') return '';
   if (waterProductionBlocker(w, b))
     return 'Production paused: ' + waterProductionBlocker(w, b) + '.';
@@ -2404,19 +2438,11 @@ function buildingWindow(b: Building) {
       const flight = spaceportFlight(world.id, world.time);
       html += `<h3>Cargo launcher</h3><p>${flight.phase === 'docked' ? `Next launch in ${Math.ceil((flight.next - world.time) / 60)} minutes.` : flight.phase === 'away' ? 'Cargo ship in flight; returning to the pad half a game day after departure.' : `Cargo ship: ${flight.phase}.`} The service departs every three or four game days. Keep clear of the reserved launch pad; this ambient flight does not change your own travel bookings.</p>`;
     }
-    const herd = herdSpec(b);
-    if (herd) {
-      const needs = herdNeeds(b);
-      const room = pastureCapacity(b, world.settings.pastureCapacityMultiplier ?? 1);
-      html += `<h3>Grazing pasture</h3><p>${b.pasture ? `${b.pasture.parcels} parcels · ${b.pasture.parcels * pastureParcelSize(b.pasture) ** 2} m² · capacity ${room} ${herd.animal}` : 'No clear grazing area available near this barn.'}. ${b.stock[herd.animal] ?? 0} animals present${b.breedingEnd ? ', one place reserved for offspring' : ''}.</p>${selfOwned && b.pasture && b.pasture.parcels < 4 ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'expand')}<button>Buy adjoining pasture · ${pastureParcelSize(b.pasture) ** 2} m² · ${money(pastureCost(b, world.settings.pasturePriceMultiplier ?? 1))}</button></form>` : ''}<p class="note">Buy livestock at a supplier and deposit them through the Stockroom, or fund this farm’s purchase bids. Animal deliveries and breeding require free pasture space. Pasture expansion uses personal cash and must clear roads, buildings, water and other plots.</p>`;
-      html += `<h3>${b.kind === 'dairy' ? 'Dairy herd' : 'Livestock'}</h3><p>${b.stock[herd.animal] ?? 0} ${herd.animal} · ${b.herdCondition ?? 100}% condition. Production needs ${herd.minimum} animals and at least 40% condition. The whole herd consumes ${needs.feed} ${acceptsHay(b) ? 'hay bales or feed (mixable, hay used first)' : 'feed'} and ${needs.water} water each production check, including when output is full. Qualified workers restore condition; neglect can kill animals.</p><p>Feed automatically comes from this building’s Stockroom, including offline. Owners deposit carried supplies there; other players sell into the building’s funded purchase bids. Current next-check ration: ${Object.entries(
-        herdRation(b),
-      )
-        .map(([item, n]) => `${n} ${esc(items[item]?.name ?? item)}`)
-        .join(
-          ', ',
-        )}. Hay does not replace water.</p><p>Animals roam within their fenced pasture. Larger herds produce more goods and consume more feed and water; large herds also need more staff. The stockroom is the full count; visible animals are capped to keep rendering light.</p>${b.breedingEnd ? `<p>${herd.young} due in ${Math.max(0, Math.ceil((b.breedingEnd - world.time) / 60))} minutes. Keep condition at least 60%.</p>` : selfOwned || me.job === b.id ? `<form data-action="livestock">${hidden('building', b.id)}${hidden('operation', 'breed')}<button>Arrange breeding · 4 ${acceptsHay(b) ? 'hay or feed' : 'feed'} + 4 water + ${herd.fee / 100}d · ${herd.seconds / 60} minutes</button></form>` : ''}`;
-    }
+    html +=
+      livestockPanel(world, me, b) +
+      butcherPanel(world, me, b) +
+      meatMenuPanel(world, me, b) +
+      homeCookingPanel(world, me, b);
     if (b.kind === 'lighthouse') {
       const keeper = me.job === b.id && b.employees.includes(me.id);
       const guest = b.lodging?.guests[me.id];
@@ -2440,7 +2466,7 @@ function buildingWindow(b: Building) {
         }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
           'item',
           Object.entries(items)
-            .filter(([, d]) => d.food || d.drink)
+            .filter(([id, d]) => d.food || d.drink || rawMeats.includes(id))
             .map(([k, d]) => [k, d.name]),
         )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
           ['deposit', 'Store provisions'],
@@ -2463,7 +2489,7 @@ function buildingWindow(b: Building) {
         }</p><form data-action="lodging">${hidden('building', b.id)}${hidden('operation', 'store')}${select(
           'item',
           Object.entries(items)
-            .filter(([, d]) => d.food || d.drink)
+            .filter(([id, d]) => d.food || d.drink || rawMeats.includes(id))
             .map(([k, d]) => [k, d.name]),
         )}${field('Quantity', 'quantity', 1, 'number', 'min="1" max="100"')}${select('direction', [
           ['deposit', 'Store provisions'],
@@ -2497,7 +2523,7 @@ function buildingWindow(b: Building) {
     if ((!b.owner || b.forSale) && b.owner !== me.id && !b.government)
       html += `<div class="purchase"><span data-property-quote="${b.id}"></span>${button('Buy this property', 'buyBuilding', `data-building="${b.id}"`, 'primary')}</div>`;
     if ((b.recipe || b.production) && b.kind !== 'farm') {
-      const r = b.production ?? recipes[b.recipe!];
+      const r = productionRecipe(world, b)!;
       const interval = productionInterval(world, b);
       html += `<h3>Production</h3><p>${
         Object.entries(r.inputs)
@@ -2522,7 +2548,7 @@ function buildingWindow(b: Building) {
     )
       html += shift
         ? button(shift.button, 'work', workAttributes)
-        : `<p class="note">Learn ${esc((b.production ?? recipes[b.recipe!]).skill)} to operate your business without wages.</p>`;
+        : `<p class="note">Learn ${esc(productionRecipe(world, b)!.skill)} to operate your business without wages.</p>`;
     if (!selfOwned && world.settings.jobsEnabled !== false && (b.recipe || b.production))
       html += `<div class="employment"><span>Employment · ${money(b.wage)} per ${b.kind === 'farm' ? 'harvested plot' : 'production cycle'} · ${b.employees.length}/${hiringLimit(world, b)} paid places</span>${button(me.job === b.id ? shift!.button : !jobVacancy(world, b, me.id) ? 'Hiring closed' : 'Take this job', me.job === b.id ? 'work' : 'job', me.job === b.id ? workAttributes : `data-building="${b.id}" ${!near || !jobVacancy(world, b, me.id) ? 'disabled' : ''}`)}</div>`;
     if (shift)

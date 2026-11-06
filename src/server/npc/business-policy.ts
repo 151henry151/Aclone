@@ -1,3 +1,4 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { npcPricingRules } from '../../shared/npc-pricing-rules';
 import { npcBusinessRules } from '../../shared/npc-business-rules';
 import { economyRules } from '../../shared/economy-rules';
@@ -35,8 +36,9 @@ import { operation } from './player-operations.ts';
  * genuinely backed-up joint outputs stop further purchases before storage fills. */
 export function inputStockTarget(b: Building, item: string, w?: World) {
   const rules = npcBusinessRules(w?.settings);
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
-  if (!recipe || b.kind === 'farm' || herdSpec(b) || !recipe.inputs[item]) return undefined;
+  const recipe = productionRecipe(w, b);
+  if (!recipe || b.kind === 'farm' || herdSpec(b, w?.settings) || !recipe.inputs[item])
+    return undefined;
   const outputs = Object.entries(recipe.outputs);
   if (!outputs.length) return undefined;
   const hours = w && b.accounts ? Math.max(1, (w.time - b.accounts.since) / 3600) : 1;
@@ -67,9 +69,9 @@ export function inputStockTarget(b: Building, item: string, w?: World) {
 /** Supplies may be bought directly as well as through a posted bid. Include
  * livestock feed and replacement breeding animals in that shared stock limit. */
 export function procurementTarget(w: World, b: Building, item: string) {
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(w, b);
   if (!recipe) return 0;
-  const herd = herdSpec(b);
+  const herd = herdSpec(b, w.settings);
   return Math.min(
     b.capacity,
     inputStockTarget(b, item, w) ??
@@ -166,7 +168,7 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
         ...new Set([
           ...Object.keys(b.buy),
           ...Object.keys(b.pausedPrices?.buy ?? {}),
-          ...Object.keys((b.production ?? recipes[b.recipe ?? ''])?.inputs ?? {}),
+          ...Object.keys(productionRecipe(w, b)?.inputs ?? {}),
         ]),
       ].map((item) => `${b.id}:${item}`),
     ),
@@ -176,7 +178,7 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
   for (const key of Object.keys(state.pausedInputBids.manual ?? {}))
     if (!validKeys.has(key)) delete state.pausedInputBids.manual![key];
   for (const b of owned) {
-    for (const item of Object.keys((b.production ?? recipes[b.recipe ?? ''])?.inputs ?? {})) {
+    for (const item of Object.keys(productionRecipe(w, b)?.inputs ?? {})) {
       const target = inputStockTarget(b, item, w);
       if (target === undefined) continue;
       const key = `${b.id}:${item}`,
@@ -243,7 +245,7 @@ export function ownerBidRoutine(w: World, p: Player, state: ResidentState): Step
 /** Separate shop retail receipts from direct wholesale export. Tax is withheld
  * from shop receipts, not added to a player's posted purchase price. */
 export function productionBudget(w: World, b: Building) {
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(w, b);
   if (!recipe || b.kind === 'farm') return;
   const inputs = Object.entries(livestockSupplyInputs(w, b, recipe.inputs)).reduce(
     (sum, [item, n]) =>
@@ -430,7 +432,7 @@ export function ownerStaffingRoutine(w: World, p: Player): Step[] {
     for (const b of w.buildings.filter(
       (b) => b.owner === p.id && !b.construction && !b.government && b.kind !== 'farm',
     )) {
-      const recipe = b.production ?? recipes[b.recipe ?? ''];
+      const recipe = productionRecipe(w, b);
       const next = (Math.floor(w.time / productionInterval(w, b)) + 1) * productionInterval(w, b);
       if (
         recipe &&
@@ -461,7 +463,7 @@ export function ownerStaffingRoutine(w: World, p: Player): Step[] {
     // upward on every review or assume staff will appear without a funded job.
     const budget = productionBudget(w, b);
     if (target > b.employees.length && budget && best.profitPerHour > 0) {
-      const recipe = b.production ?? recipes[b.recipe ?? ''];
+      const recipe = productionRecipe(w, b);
       const peers = w.buildings
         .filter(
           (other) =>

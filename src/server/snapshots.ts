@@ -161,7 +161,7 @@ export function prepareFrame(w: World): Frame {
   if (common.mooredBoats)
     common.mooredBoats = Object.fromEntries(
       Object.entries(common.mooredBoats).map(([key, b]) => {
-        const { cargo, cargoBasis: _privateBasis, ...publicBoat } = b;
+        const { cargo, cargoBasis: _privateBasis, cargoLife: _privateLife, ...publicBoat } = b;
         return [
           key,
           {
@@ -193,6 +193,7 @@ export function prepareFrame(w: World): Frame {
         id,
         {
           ...t,
+          life: undefined,
           fuelService:
             t.kind === 'fuel' && w.players[t.owner]
               ? {

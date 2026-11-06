@@ -1,3 +1,5 @@
+import { productionRecipe } from './production-recipe';
+import { livestockRules } from './livestock-rules';
 import { recordPlayerMoney } from './player-statistics.ts';
 import { herdSpec, herdRation, livestockInputs, livestockOutputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -135,30 +137,30 @@ export function addQuantities(target: Stock, stock: Stock) {
   for (const [item, n] of Object.entries(stock)) target[item] = (target[item] ?? 0) + n;
 }
 export function productionReport(w: World, b: Building) {
-  const r = b.production ?? recipes[b.recipe ?? ''];
+  const r = productionRecipe(w, b);
   if (b.construction) return ['Construction is unfinished'];
   if (b.kind === 'farm') return ['Seasonal plots need tending and manual harvest'];
   if (!r) return ['No automatic production recipe'];
   const blockers: string[] = [];
   if (herdSpec(b)) {
-    const spec = herdSpec(b)!;
+    const spec = herdSpec(b, w.settings)!;
     if ((b.stock[spec.animal] ?? 0) < spec.minimum)
       blockers.push(
-        spec.animal === 'cows'
+        spec.animal === 'cows' && spec.minimum === 2
           ? 'Two cows are required for the milking stalls'
           : `${spec.minimum} ${spec.animal} are required for production`,
       );
-    if ((b.herdCondition ?? 100) < 40)
+    if ((b.herdCondition ?? 100) < livestockRules(w.settings).livestockGrowthCondition)
       blockers.push('Herd condition is too low: fund feed, water and qualified care');
-    for (const [item, n] of Object.entries(herdRation(b)))
+    for (const [item, n] of Object.entries(herdRation(b, undefined, undefined, w.settings)))
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Herd maintenance needs ${n} ${item} each check, even when output is full`);
   }
   if (waterProductionBlocker(w, b)) blockers.push(waterProductionBlocker(w, b)!);
-  for (const [item, n] of Object.entries(livestockInputs(b, r.inputs)))
+  for (const [item, n] of Object.entries(livestockInputs(b, r.inputs, w.settings)))
     if ((b.stock[item] ?? 0) < n) blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item}`);
   for (const [item, n] of Object.entries(
-    livestockOutputs(b, r.outputs, w.settings.pastureCapacityMultiplier ?? 1),
+    livestockOutputs(b, r.outputs, w.settings.pastureCapacityMultiplier ?? 1, w.settings),
   ))
     if ((b.stock[item] ?? 0) + n > b.capacity) blockers.push(`No room for ${n} ${item}`);
   const staff = productionStaff(w, b, w.time);

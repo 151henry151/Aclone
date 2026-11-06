@@ -1,3 +1,4 @@
+import { productionRecipe } from './production-recipe';
 import { vehicleDef } from './vehicle-config';
 import {
   idealEmployees,
@@ -49,7 +50,7 @@ export function productionEfficiency(
   staff = productionStaff(w, b, w.time).length,
   at = w.time,
 ): number {
-  if (!herdReady(b)) return 0;
+  if (!herdReady(b, w.settings)) return 0;
   if (waterProductionBlocker(w, b)) return 0;
   const crew = productionStaffing(w, b, staff, at);
   // Preserve government operation without a player crew, but hired crews follow
@@ -67,14 +68,14 @@ export function productionSupplied(
   w?: World,
 ): boolean {
   return (
-    herdReady(b) &&
-    !Object.entries(livestockInputs(b, r.inputs)).some(
+    herdReady(b, w?.settings) &&
+    !Object.entries(livestockInputs(b, r.inputs, w?.settings)).some(
       ([item, n]) =>
         !(upkeepPaid && herdSpec(b) && ['hay', 'feed', 'water'].includes(item)) &&
         (b.stock[item] ?? 0) < n,
     ) &&
     !Object.entries(
-      livestockOutputs(b, r.outputs, w?.settings.pastureCapacityMultiplier ?? 1),
+      livestockOutputs(b, r.outputs, w?.settings.pastureCapacityMultiplier ?? 1, w?.settings),
     ).some(([item, n]) => (b.stock[item] ?? 0) + n > b.capacity) &&
     b.investment >= b.wage * staff
   );
@@ -84,7 +85,7 @@ export function productionActivity(w: World, b: Building, crafting = new Set<str
   if (b.construction || b.condition <= 0 || b.kind === 'farm') return 0;
   if (waterProductionBlocker(w, b)) return 0;
   if (crafting.has(b.id)) return 1;
-  const r = b.production ?? (b.recipe && recipes[b.recipe]);
+  const r = productionRecipe(w, b);
   if (!r) return 0;
   const staff = productionStaff(w, b, w.time);
   if (!productionSupplied(b, r, staff.length, false, w)) return 0;

@@ -5,6 +5,31 @@ import { createWorld, addPlayer } from '../src/shared/simulation.ts';
 import { DeltaStream, prepareFrame } from '../src/server/snapshots.ts';
 import type { Account } from '../src/server/universe.ts';
 
+test('public trailer freshness cannot reveal exact cargo counts', async () => {
+  const { privatePlayer } = await import('../src/server/snapshots.ts');
+  const w = createWorld('trailer-privacy', 'Trailer privacy', 'owner');
+  const owner = addPlayer(w, 'owner', 'Owner');
+  const viewer = addPlayer(w, 'viewer', 'Viewer');
+  w.trailers = {
+    chilled: {
+      id: 'chilled',
+      owner: owner.id,
+      kind: 'fish',
+      x: 0,
+      z: 0,
+      heading: 0,
+      cargo: { pork: 1 },
+      life: { meat: [{ item: 'pork', count: 1, agedDays: 0.5, checkedAt: w.time }] },
+    },
+  };
+  const trailer = JSON.parse(prepareFrame(w).fields.trailers).chilled;
+  assert.deepEqual(trailer.cargo, { pork: 10 });
+  assert.equal(trailer.life, undefined, 'freshness must not expose exact private cargo');
+  assert.deepEqual(privatePlayer(w, owner).trailerCargo, { chilled: { pork: 1 } });
+  assert.deepEqual(privatePlayer(w, viewer).trailerCargo, {});
+  assert.equal(w.trailers.chilled.life!.meat![0].count, 1, 'projection preserves server ages');
+});
+
 test('building owner names survive offline filtering and follow transfers without private data', () => {
   const w = createWorld('owners', 'Owners', 'viewer');
   addPlayer(w, 'viewer', 'Viewer').online = true;

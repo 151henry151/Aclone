@@ -1,4 +1,7 @@
 import { refreshPumpRecipes } from '../shared/fresh-water';
+import { normalizeMeat } from '../shared/meat-freshness';
+import { normalizeYoung } from '../shared/livestock';
+import { meatRecipes, meatMenus } from '../shared/meat-recipes';
 import { riverDockAccepts } from '../shared/river-dock';
 import { boatLandings, landingAccepts } from '../shared/boathouse';
 import { mooringKey } from '../shared/boats';
@@ -50,6 +53,29 @@ import { act, addPlayer, makeBuilding } from '../shared/simulation.ts';
 import { anchorTowns } from '../shared/civics.ts';
 import { buildings as catalog, items, skills } from '../shared/catalog.ts';
 import type { World, Player } from '../shared/types.ts';
+const freightLifeSchema = z.object({
+  young: z
+    .array(
+      z.object({
+        item: z.enum(['calves', 'lambs', 'piglets', 'chicks']),
+        count: z.number().int().min(1).max(1000000),
+        born: z.number().finite().min(-1e12).max(0),
+        grownDays: z.number().finite().min(0).max(1e9),
+      }),
+    )
+    .max(10000)
+    .optional(),
+  meat: z
+    .array(
+      z.object({
+        item: z.enum(['beef', 'pork', 'mutton', 'poultry']),
+        count: z.number().int().min(1).max(1000000),
+        agedDays: z.number().finite().min(0).max(1e9),
+      }),
+    )
+    .max(10000)
+    .optional(),
+});
 const coordinate = z.number().min(-maxCoordinate).max(maxCoordinate);
 const stock = z.record(catalogueItemId, z.number().int().min(0).max(100000000));
 const recipe = z
@@ -221,6 +247,28 @@ const designSchema = z.object({
           .number()
           .refine(validFarmPlotCount, 'Invalid purchased farm plot count')
           .optional(),
+        young: z
+          .array(
+            z.object({
+              item: z.enum(['calves', 'lambs', 'piglets', 'chicks']),
+              count: z.number().int().min(1).max(100000000),
+              born: z.number().finite().min(-1e12).max(0),
+              grownDays: z.number().finite().min(0).max(1e9),
+            }),
+          )
+          .max(10000)
+          .optional(),
+        continuousBreeding: z.boolean().optional(),
+        slaughterFees: z
+          .partialRecord(
+            z.enum(['cows', 'pigs', 'sheep', 'chickens']),
+            z.number().int().min(0).max(100000000),
+          )
+          .optional(),
+        menuRecipe: z
+          .string()
+          .refine((id) => Object.hasOwn(meatRecipes(), id), 'Unknown meat menu')
+          .optional(),
         pasture: z
           .object({
             x: z.number().min(-100).max(100),
@@ -274,6 +322,7 @@ const designSchema = z.object({
           landing: z.string().min(1).max(100),
           paint: z.string().max(64),
           cargo: z.record(z.string(), z.number().int().min(0).max(1000000)),
+          cargoLife: freightLifeSchema.optional(),
         })
         .strict(),
     )
@@ -348,6 +397,21 @@ export function exportDesign(w: World, includeMedia = false) {
         landing: b.landing,
         paint: b.paint,
         cargo: structuredClone(b.cargo!),
+        cargoLife: b.cargoLife
+          ? {
+              young: b.cargoLife.young?.map(({ item, count, born, grownDays }) => ({
+                item,
+                count,
+                born: Math.min(0, born - w.time),
+                grownDays,
+              })),
+              meat: b.cargoLife.meat?.map(({ item, count, agedDays }) => ({
+                item,
+                count,
+                agedDays,
+              })),
+            }
+          : undefined,
       })),
     parkedFuelTankers: Object.values(w.trailers ?? {})
       .filter((t) => t.kind === 'fuel' && !t.attached)
@@ -393,6 +457,11 @@ export function exportDesign(w: World, includeMedia = false) {
         bulkDiscounts,
         farmPolicy,
         farmPlots,
+        stock,
+        young,
+        continuousBreeding,
+        slaughterFees,
+        recipe,
         pasture,
         wage,
         price,
@@ -419,6 +488,17 @@ export function exportDesign(w: World, includeMedia = false) {
         bulkDiscounts,
         farmPolicy,
         farmPlots,
+        young: (() => {
+          const holder = { stock, young: structuredClone(young) };
+          normalizeYoung(holder, w.time);
+          return holder.young?.map(({ careSince: _careSince, ...c }) => ({
+            ...c,
+            born: Math.min(0, c.born - w.time),
+          }));
+        })(),
+        continuousBreeding,
+        slaughterFees,
+        menuRecipe: recipe && Object.hasOwn(meatRecipes(), recipe) ? recipe : undefined,
         pasture,
         wage,
         price,
@@ -495,6 +575,27 @@ function applyValidatedDesign(w: World, input: unknown) {
       if (b.farmPlots !== undefined && b.kind !== 'farm')
         throw Error('Only farms can have purchased plots');
       const result = Object.assign(makeBuilding(b.id, b.kind, b.x, b.z), b, { owner: w.owner });
+      if (b.slaughterFees && b.kind !== 'butcher')
+        throw Error('Only butchers can set slaughter fees');
+      if (b.menuRecipe) {
+        if (
+          b.production ||
+          (b.menuRecipe.startsWith('butcher_')
+            ? b.kind !== 'butcher'
+            : !meatMenus[b.menuRecipe.slice(5)]?.kitchens.includes(b.kind))
+        )
+          throw Error('That meat menu is not available at this building');
+        result.recipe = b.menuRecipe;
+        delete (result as typeof result & { menuRecipe?: string }).menuRecipe;
+      }
+      if (b.continuousBreeding !== undefined && !isLivestockFarm(result))
+        throw Error('Only livestock farms can enable continuous breeding');
+      if (b.young) {
+        result.young = b.young.map((c) => ({ ...c, born: w.time + c.born, careSince: w.time }));
+        result.youngCareAt = w.time;
+        for (const cohort of result.young)
+          result.stock[cohort.item] = (result.stock[cohort.item] ?? 0) + cohort.count;
+      }
       if (b.architecture || b.size) {
         const def = worldBuildings(w)[b.templateId ?? b.kind];
         result.capacity = buildingDesignQuote(
@@ -551,7 +652,23 @@ function applyValidatedDesign(w: World, input: unknown) {
       throw Error('Invalid freight hold cargo');
     if (Object.values(freight).some((b) => b.landing === dock.id))
       throw Error('Freight berth is occupied');
-    freight[key] = { ...input, owner: w.owner, ...dock.berth, heading: dock.heading };
+    const cargoLife = input.cargoLife
+      ? {
+          young: input.cargoLife.young?.map((c) => ({
+            ...c,
+            born: c.born + w.time,
+            careSince: w.time,
+          })),
+          meat: input.cargoLife.meat?.map((lot) => ({ ...lot, checkedAt: w.time })),
+        }
+      : undefined;
+    const holder = { stock: input.cargo, young: cargoLife?.young };
+    if (cargoLife) {
+      normalizeYoung(holder, w.time);
+      cargoLife.young = holder.young;
+      normalizeMeat(input.cargo, cargoLife, w.time);
+    }
+    freight[key] = { ...input, cargoLife, owner: w.owner, ...dock.berth, heading: dock.heading };
   }
   w.mooredBoats = freight;
   const placements: Record<string, Trailer> = {};

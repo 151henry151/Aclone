@@ -91,17 +91,22 @@ test('healthy herd breeding produces replacement cattle and reserves the breedin
   const { w, b, p, owner } = setup();
   owner.skills = ['livestock farmer'];
   owner.x = owner.z = 0;
-  b.stock.feed = b.stock.water = 100;
-  p.activeUntil = w.time + 7200;
+  b.stock.feed = b.stock.water = 400;
+  b.investment = 1000000;
+  p.activeUntil = w.time + 60000;
   act(w, owner.id, { type: 'livestock', operation: 'breed', building: b.id });
-  assert.equal(b.stock.feed, 96);
+  assert.equal(b.stock.feed, 396);
   assert.throws(
     () => act(w, owner.id, { type: 'livestock', operation: 'breed', building: b.id }),
     /already/,
   );
   advance(w, 3600);
-  assert.equal(b.stock.cows, 3);
+  assert.equal(b.stock.cows, 2);
+  assert.equal(b.stock.calves, 1);
   assert.equal(b.breedingEnd, undefined);
+  advance(w, w.settings.calfMaturityDays! * w.settings.dayLength);
+  assert.equal(b.stock.cows, 3);
+  assert.equal(b.stock.calves ?? 0, 0);
   p.cash = 100000;
   act(w, p.id, { type: 'trade', building: b.id, direction: 'buy', item: 'cows', quantity: 1 });
   assert.equal(b.stock.cows, 2);
@@ -168,7 +173,8 @@ test('sheep, pigs and chickens consume their own upkeep and produce useful goods
     const due = b.breedingEnd!;
     p.activeUntil = due + 600;
     advance(w, due - w.time);
-    assert.equal(b.stock[animal], count + 1);
+    assert.equal(b.stock[animal], count);
+    assert.equal(b.stock[{ sheep: 'lambs', pigs: 'piglets', chickens: 'chicks' }[animal]], 1);
     const loaded = structuredClone(w);
     advance(w, 6000);
     for (let i = 0; i < 10; i++) advance(loaded, 600);

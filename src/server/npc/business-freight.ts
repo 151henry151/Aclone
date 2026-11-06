@@ -1,3 +1,4 @@
+import { productionRecipe } from '../../shared/production-recipe';
 import { economyRules } from '../../shared/economy-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Action } from '../../shared/types.ts';
@@ -19,7 +20,7 @@ export function recordBusinessFreight(
   const prior = before.players[p.id];
   if (a.type === 'stock' && a.direction === 'withdraw' && typeof a.item === 'string') {
     const b = w.buildings.find((b) => b.id === a.building && b.owner === p.id);
-    const outputs = b && (b.production ?? recipes[b.recipe ?? ''])?.outputs;
+    const outputs = b && productionRecipe(w, b)?.outputs;
     if (b && (outputs?.[a.item] || (b.kind === 'farm' && b.sell[a.item] > 0))) {
       const n = (p.inventory[a.item] ?? 0) - (prior.inventory[a.item] ?? 0);
       if (n > 0) (state.businessCargo ??= []).push({ building: b.id, item: a.item, quantity: n });

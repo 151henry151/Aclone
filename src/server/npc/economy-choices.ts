@@ -83,7 +83,9 @@ export function economyChoices(
         );
       for (const [item, quantity] of Object.entries({
         ...livestockSupplyInputs(w, b, recipe.inputs),
-        ...(herdSpec(b) ? { [herdSpec(b)!.animal]: herdSpec(b)!.minimum / 2 } : {}),
+        ...(herdSpec(b, w.settings)
+          ? { [herdSpec(b, w.settings)!.animal]: herdSpec(b, w.settings)!.minimum / 2 }
+          : {}),
       })) {
         const missing = Math.min(
           (inputStockTarget(b, item, w) ?? quantity * loads.npcRoutineSupplyBatches) -

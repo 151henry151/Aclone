@@ -1,3 +1,5 @@
+import { rawMeats } from './meat-recipes';
+import { transferStock } from './stock-life';
 import { survivalRules } from './survival-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingSize } from './building-designs';
@@ -64,15 +66,16 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
     p.cash -= cost;
     b.investment += cost;
     log(w, 'transfer', cost, p.id, b.id, 'room booking');
-    l.guests[p.id] = { until: w.time + hours * 3600, stock: guest?.stock ?? {} };
+    l.guests[p.id] = { until: w.time + hours * 3600, stock: guest?.stock ?? {}, life: guest?.life };
   } else if (a.operation === 'store') {
     const guest = l.guests[p.id];
     check(guest, 'Book a room first; only your own supplies are accessible');
     const item = String(a.item),
       n = a.quantity as number;
     check(
-      Object.hasOwn(items, item) && (items[item].food || items[item].drink),
-      'Rooms store food and drink',
+      Object.hasOwn(items, item) &&
+        (items[item].food || items[item].drink || rawMeats.includes(item)),
+      'Rooms store food, drink and raw cooking ingredients',
     );
     check(Number.isInteger(n) && n > 0 && n <= 500, 'Choose a positive quantity');
     check(a.direction === 'deposit' || a.direction === 'withdraw', 'Choose a transfer direction');
@@ -86,8 +89,7 @@ export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
         b.kind === 'lighthouse' ? isLighthouseKeeper(b, p) : guest.until > w.time,
         'Renew your booking before storing more supplies',
       );
-    from[item] -= n;
-    to[item] = (to[item] ?? 0) + n;
+    transferStock(w, from, to, item, n);
   } else if (a.operation === 'checkout') {
     check(l.guests[p.id], 'No booking here');
     l.guests[p.id].until = w.time;

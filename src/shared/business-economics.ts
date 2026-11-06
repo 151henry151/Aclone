@@ -1,3 +1,4 @@
+import { productionRecipe } from './production-recipe';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog';
 import { worldItems } from './world-catalogue';
@@ -13,7 +14,7 @@ export const ECONOMICS_ASSUMPTIONS =
 
 /** Conditional replacement-cost estimate, NOT recorded profit or guaranteed sales. */
 export function businessEconomics(w: World, b: Building) {
-  const recipe = b.production ?? recipes[b.recipe ?? ''];
+  const recipe = productionRecipe(w, b);
   if (!recipe || b.kind === 'farm') return null;
   const crew = b.staffing ?? productionStaffing(w, b);
   const paid = Math.max(0, crew.active - Number(crew.ownerOperating));
