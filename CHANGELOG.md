@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.127.0] - 2026-11-05
+
+### Added
+
+- Discover natural springs across the uplands and at river heads; drink free on foot, follow their map symbols, and build five styles of pump-house to supply Water from springs, rivers and ponds.
+- Configure spring surveys, drinking, source flow, pump recipes and intake rules per world; place or edit saved springs and preserve them in portable designs.
+
+### Changed
+
+- Rename shoreline waterworks to Desalination plant, require true ocean for new sites, and preserve existing plants and their production.
+- Let residents survey the whole island for fresh-water and coastal supply sites.
+
 ## [0.126.0] - 2026-11-05
 
 ### Added

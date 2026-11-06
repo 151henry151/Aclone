@@ -91,9 +91,25 @@ const catalogue: Record<string, [Family, string[]]> = {
   roastery: ['shop', buildingRecipes.roastery.map((recipe) => recipe.name)],
   bnb: ['inn', buildingRecipes.bnb.map((recipe) => recipe.name)],
   hotel: ['inn', buildingRecipes.hotel.map((recipe) => recipe.name)],
+  pumpHouse: [
+    'works',
+    [
+      'Spring house',
+      'Well house and pump room',
+      'Riverside pump station',
+      'Stone spring chamber',
+      'Pump tower and header tank',
+    ],
+  ],
   waterworks: [
     'pump',
-    ['Intake house', 'Split pump house', 'Pump and valve house', 'Pump tower', 'Twin pump halls'],
+    [
+      'Desalination house',
+      'Split desalination plant',
+      'Desalination and valve house',
+      'Desalination tower',
+      'Twin desalination halls',
+    ],
   ],
   feedmill: ['mill', buildingRecipes.feedmill.map((recipe) => recipe.name)],
   dairy: ['barn', buildingRecipes.dairy.map((recipe) => recipe.name)],
@@ -166,7 +182,7 @@ export function architecturalVolumes(
   let out: BuildingVolume[];
   const domestic = ['house', 'inn', 'shop', 'civic'].includes(f);
   const roof: BuildingVolume['roof'] =
-    f === 'civic' || f === 'inn' ? 'hip' : f === 'works' ? 'shed' : 'gable';
+    f === 'civic' || f === 'inn' ? 'hip' : f === 'works' && kind !== 'pumpHouse' ? 'shed' : 'gable';
   if (buildingRecipes[kind]) {
     out = buildingRecipes[kind][i].volumes.map((v) => ({ ...v }));
     if (kind === 'scripted') {
@@ -185,6 +201,14 @@ export function architecturalVolumes(
         v(6.06, 2.44, 2.59, 0, -4.25, 'flat'),
       ],
     ][i].map((a) => ({ ...a, rise: 0 }));
+  } else if (kind === 'pumpHouse') {
+    out = [
+      [v(5, 4, 2.8, 0, 0, 'gable', 1.1)],
+      [v(4, 5, 3, -1.5, 0, 'hip', 1), v(3, 3, 2.5, 2, -1, 'shed', 0.5)],
+      [v(7, 4.5, 3.4, 0, 0, 'barrel', 0.8)],
+      [v(5, 5, 2.5, 0, 0, 'hip', 0.7)],
+      [v(3, 3, 6, -2, -1, 'flat', 0), v(4, 5, 2.8, 1.5, 0, 'shed', 0.6)],
+    ][i];
   } else if (f === 'pump') {
     // Every pump-house plan fits the dry shoreline footprint used by intake validation.
     out = [

@@ -1,3 +1,4 @@
+import { waterSourceRules } from '../shared/water-source-rules';
 import { mapIcon } from './map-icons';
 import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -78,7 +79,7 @@ export class ParishMap {
     this.world = w;
     this.me = me;
     this.home = this.bounds = this.sheetBounds();
-    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><p class="map-load-status" role="status" hidden></p><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i><span data-map-site-key>Buildings · hover for names, click for a waypoint</span></span><span data-map-resource-key><i class="map-symbol resource"></i>Gathering ground</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean · dashed border = travel limit</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
+    host.innerHTML = `<div class="parish-map-tools"><div class="button-row"><button type="button" data-map="out" aria-label="Zoom out">−</button><output class="parish-map-zoom" aria-label="Map zoom">100%</output><button type="button" data-map="in" aria-label="Zoom in">+</button><button type="button" data-map="fit">Fit parish</button><button type="button" data-map="you">Find me</button><button type="button" data-map="centre">Mark centre</button><button type="button" data-map="clear">Clear waypoint</button><button type="button" data-map="contours" aria-label="Show terrain contours" aria-pressed="${this.contours}">Contours: ${this.contours ? 'on' : 'off'}</button></div><button type="button" data-do="directory" aria-label="Parish directory">Parish directory ↗</button></div><div class="parish-map-viewport" tabindex="0" role="region" aria-label="Parish map; drag, scroll or use arrow keys to pan"><div class="parish-map-sheet"></div></div><div class="parish-map-distance" role="img" aria-label="Map distance scale"><div class="map-distance-labels" aria-hidden="true"><span>0</span><span data-distance-label></span></div><div class="map-distance-bar" aria-hidden="true"></div></div><p class="map-load-status" role="status" hidden></p><div class="parish-map-key"><span><i class="map-symbol you"></i>You</span><span><i class="map-symbol building"></i><span data-map-site-key>Buildings · hover for names, click for a waypoint</span></span><span data-map-resource-key><i class="map-symbol resource"></i>Gathering ground · spring</span><span><i class="map-symbol player"></i>Other players</span><span class="map-contour-key" ${this.contours ? '' : 'hidden'}>Contours: 10 m · bold 50 m above sea level</span><span>Water: light = bay / shelf · dark = deep ocean · dashed border = travel limit</span><strong>N ↑</strong></div><p class="parish-map-help">Click an icon or empty ground to mark a destination. Mark centre works with keyboard panning. The arrow shows straight-line direction, not a road route. Drag to explore · scroll, pinch or +/− to zoom for more detail · M or Esc to close. Travel to buildings to use them.</p>`;
     this.terrainWorker.onmessage = (event) => {
       this.terrainBusy = false;
       if (event.data.id === this.terrainSerial) {
@@ -338,6 +339,8 @@ export class ParishMap {
       w.coastalBluffs,
       w.additionalResources?.map((n) => [n.id, n.item, n.x, n.z]),
       w.resourceRelocations,
+      w.springs,
+      w.settings.springsEnabled,
       w.landscape?.heightmap,
       w.airfield,
       w.spaceportSite,
@@ -639,6 +642,21 @@ export class ParishMap {
           stroke: '#243b27',
         }),
       );
+    const springs =
+      this.zoom >= 0.5 && waterSourceRules(this.world.settings).springsEnabled
+        ? (this.world.springs ?? []).filter(onSheet)
+        : [];
+    for (const spring of springs)
+      drawing.append(
+        svg('path', {
+          class: 'map-spring-dot',
+          d: mapIcon('spring'),
+          transform: `translate(${this.x(spring.x) - 6} ${this.y(spring.z) - 6}) scale(.5)`,
+          fill: '#85b3a5',
+          stroke: '#d2e6c6',
+          'stroke-width': 2,
+        }),
+      );
     // Town overview folds a settlement into one label. Buildings outside every town stay on the sheet.
     const buildings = this.world.buildings.filter(
       (b) =>
@@ -656,6 +674,17 @@ export class ParishMap {
       icon: mapIcon(b.kind, b),
       category: 'building',
     }));
+    if (!outer)
+      for (const s of springs)
+        sites.push({
+          id: s.id,
+          name: s.river ? 'Headwater spring' : 'Natural spring',
+          x: s.x,
+          z: s.z,
+          kind: 'spring',
+          icon: mapIcon('spring'),
+          category: 'resource',
+        });
     // Gathering grounds are scattered, so a resource-type centroid may be
     // empty land. Anchor every name and leader line to an actual site.
     // Zoomed out, names would bury the map: resources lose theirs below 100%.

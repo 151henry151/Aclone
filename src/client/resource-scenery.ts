@@ -1,3 +1,6 @@
+import { springGeometry } from './spring-scenery';
+import { riverSurfaceMaterial } from './inland-water';
+import { waterSourceRules } from '../shared/water-source-rules';
 import { stoneBoulderShapes } from '../shared/scenery-obstacles';
 import { creatorModel } from './creator-model';
 import { fadeSceneryIntoFog } from './scenery-fog';
@@ -554,6 +557,55 @@ export function* resourceScenerySteps(
   }
   const updates: { group: T.Group; update: (world: World) => void }[] = [];
   siteUpdates.set(root, updates);
+  if (waterSourceRules(world.settings).springsEnabled)
+    for (const spring of world.springs ?? []) {
+      yield;
+      if (!include(spring)) continue;
+      const group = new T.Group();
+      group.name = 'Natural spring ' + spring.id;
+      group.userData.spring = spring.id;
+      const time = { value: world.time };
+      const water = riverSurfaceMaterial({
+        time,
+        tide: { value: 0 },
+        datum: { value: world.settings.seaLevel },
+        centre: { value: new T.Vector2(spring.x, spring.z) },
+      });
+      const materials = {
+        damp: new T.MeshStandardMaterial({
+          color: '#283724',
+          roughness: 1,
+          transparent: true,
+          vertexColors: true,
+          depthWrite: false,
+        }),
+        moss: new T.MeshStandardMaterial({
+          color: '#5b6b3b',
+          roughness: 1,
+          vertexColors: true,
+          transparent: true,
+          depthWrite: false,
+        }),
+        stone: new T.MeshStandardMaterial({ color: '#747866', roughness: 0.95 }),
+        reeds: new T.MeshLambertMaterial({ color: '#687445' }),
+        water,
+      };
+      const geometry = springGeometry(world, spring);
+      for (const key of Object.keys(geometry) as (keyof typeof geometry)[]) {
+        fadeSceneryIntoFog(materials[key], fadeRange);
+        const mesh = new T.Mesh(geometry[key], materials[key]);
+        mesh.name = spring.id + ' ' + key;
+        mesh.receiveShadow = true;
+        group.add(mesh);
+      }
+      root.add(group);
+      updates.push({
+        group,
+        update: (w) => {
+          time.value = w.time;
+        },
+      });
+    }
   for (const node of worldResources(world)) {
     yield;
     if (

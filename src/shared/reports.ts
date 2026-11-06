@@ -3,7 +3,7 @@ import { herdSpec, herdRation, livestockInputs, livestockOutputs } from './lives
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog.ts';
 import { productionStaff, productionEfficiency, productionStaffing } from './sound-state.ts';
-import { waterworksSite } from './shoreline.ts';
+import { waterProductionBlocker } from './fresh-water.ts';
 import type { World, Player, Building, Stock, Ledger } from './types.ts';
 export interface BusinessAccounts {
   since: number;
@@ -154,8 +154,7 @@ export function productionReport(w: World, b: Building) {
       if ((b.stock[item] ?? 0) < n)
         blockers.push(`Herd maintenance needs ${n} ${item} each check, even when output is full`);
   }
-  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
-    blockers.push('Water intake is dry or the pump house is flooded');
+  if (waterProductionBlocker(w, b)) blockers.push(waterProductionBlocker(w, b)!);
   for (const [item, n] of Object.entries(livestockInputs(b, r.inputs)))
     if ((b.stock[item] ?? 0) < n) blockers.push(`Missing ${n - (b.stock[item] ?? 0)} ${item}`);
   for (const [item, n] of Object.entries(

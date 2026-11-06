@@ -1218,7 +1218,7 @@
     "color": "#d5c5a2"
   },
   "waterworks": {
-    "name": "Shoreline waterworks",
+    "name": "Desalination plant",
     "price": 120000,
     "capacity": 500,
     "buy": {
@@ -1531,5 +1531,28 @@
     "wage": 0,
     "color": "#8c968b",
     "stock": {}
+  },
+  "pumpHouse": {
+    "name": "Pump-house",
+    "price": 90000,
+    "capacity": 500,
+    "buy": {
+      "fuel": 7400
+    },
+    "sell": {
+      "water": 1325
+    },
+    "stock": {},
+    "recipe": "pumpHouse",
+    "wage": 2200,
+    "materials": {
+      "wood": 6,
+      "blocks": 6,
+      "steel": 1,
+      "gravel": 4
+    },
+    "tier": 0,
+    "color": "#87a9a8",
+    "idealEmployees": 2
   }
 }

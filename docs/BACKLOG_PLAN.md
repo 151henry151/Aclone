@@ -293,7 +293,7 @@ implementation order rather than building paving before ford-aware persistence.
 13. **Cargo boat for dock-to-dock freight — done, live in 0.125.1**: definition/model/tuning; persistent
     hold; quay and existing landing transfers; decide optional barge; route
     economics. Follow the entry's internal order.
-14. **Rowboats**, together with **Storm capsizing** (15): rowboat shore access,
+14. **Rowboats and Storm capsizing — done, live in 0.126.0**: rowboat shore access,
     seats/hold, beached persistence, tender policy and no-carry enforcement; then
     the storm sea survey/defaults, seeded/ramped risk, warnings, occupants/death/
     loss and shelter-time checks. Verify rowboat storm acceptance before marking
@@ -6015,3 +6015,192 @@ catalogue finish there too.
 - Coastal-query evidence: approximately 7 ms for a cold bay query and 1.7 ms total for 1,000 cached queries. Absolute boundary rolls and persisted exposure remain deterministic; real SQLite close/reopen grants no extra escape time.
 - TypeScript is clean in the production-build gate. Prettier runs on all 35 explicit changed/new paths. The full test suite is intentionally not repeated under Henry's relevant-tests policy.
 - Prepare release **0.126.0**, with player, boating, world-builder, README and release-note updates. Push and live verification/announcement still pending; neither linked section is marked done yet.
+
+**Post-push record:** item 14 implementation committed and pushed as
+`0365b4c8cfad4a467a6ecbef190167678e2128a7`; GitHub branch SHA matches local HEAD.
+Production build passes (existing bundle-size and dependency-annotation warnings
+only). Deploy that exact SHA, verify live service/assets and website, then post
+the reviewed screenshots to #announcements before beginning item 15.
+
+**Item 14 release complete (2026-11-05):** live game SHA matches
+`0365b4c8cfad4a467a6ecbef190167678e2128a7`. Public health reports 0.126.0;
+the released feature code, map worker, welcome page, website and gallery load
+without browser errors. Game backup:
+`/var/lib/aclone/backups/pre-deploy-20261105-222821.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261105-222945.tar.gz`. Bot announcement and
+both PNG embeds verified by read-back and image fetch:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568105308591493183.
+Read-only live verification is in `output/release-0.126.0/live-verification.json`.
+Additional cold shore queries at 10–30 km offshore take 4.2–6.8 ms, adjacent
+cached ocean cell 2.0 ms (`output/rowboats/coast-benchmark.log`).
+
+Current progress: **12 of 29 eligible Planned sections complete**. All 20 shipped
+claims remain assessed, with their three gaps fixed. Piloted spaceflight remains
+excluded. Next: item 15, springs, pump-houses and desalination plants.
+
+### Springs, pump-houses and desalination plants — completion criteria before code
+
+Item 15 is one release: survey and drinking, both water buildings, authoritative
+siting/production, creator controls, NPC founding, models/map and documentation.
+Keep it unreleased until all these gates pass. No later item starts on a failure.
+
+**Defaults and rule ownership.** Add a Water sources fieldset backed by one shared
+rule registry and `data/settings.json`. Springs enabled; target **30 total** sites
+including guaranteed river heads; minimum elevation **15 m**, curve from **2% at
+20 m** to **40% at 300 m**, minimum spacing **250 m**, water exclusion **40 m**.
+Headwaters are the explicit exception to ordinary dry-site/water-distance rolls:
+keep each river's first point and record its river ID. Reject cliffs and sites
+whose prospective pump-house footprint exceeds the existing construction rise
+limit; reuse that limit rather than implementing the later earthmoving section.
+Expose that existing **2 m** limit once as a construction rule shared by this
+survey and the existing construction check. Keep normal construction defaults
+unchanged. Expose the cliff-normal cutoff and all survey/drinking/flow limits;
+use the current terrain cliff criterion as the initial cutoff after inspection.
+Headwater flow **1.2**, ordinary flow **0.6–1.1**, deterministic and frozen.
+Drinking enabled, on foot within **3 m**, **20 seconds** between drinks; apply
+exactly the configured Water item's thirst relief, without making an item.
+
+Pump-house: **900d**, 6 Wood, 6 Blocks, 1 Steel, 4 Gravel, two qualified workers,
+same 22d wage and 500 stock capacity as the existing plant. Default recipe
+**1 Fuel → 20 Water**; gravity-fed spring option off by default, **0 Fuel → 8
+Water** when enabled for a spring intake. Flow scaling off by default; when on,
+use the saved source flow with the stated 0.6–1.2 range, rounded to whole Water.
+Catalogue owns price/materials/wage/capacity; water rules own normal and gravity
+recipe inputs/outputs, flow toggle and bounds. Preserve deliberate catalogue or
+premises recipe overrides. Keep desalination at **1 Fuel → 12 Water** and the
+existing 13.25d water price unless the balance gate demonstrates a required
+change; do not reprice private shops. Fresh intake depth **0.4 m**, foundation
+freeboard **0.3 m**, intake reach **6–10 m**, spring snap reach **8 m**, same-river
+spacing **60 m**. Make these operational thresholds editable and portable too.
+True-ocean requirement on by default; off restores the old height-only siting.
+
+**Survey/migration gate.** `npx tsx --test tests/springs.test.ts` first fails for
+missing spring survey/types/rules. Then assert deterministic IDs/coordinates/flow,
+25–35 total public-island springs, all river heads, upland-biased ordinary sites,
+spacing and water/cliff/foundation exclusions. Test a private heightmap and a
+world with springs off. A versioned first-load migration freezes `w.springs` and
+marks pre-existing waterworks as grandfathered; subsequent loads, rule edits,
+terrain edits and restarts must not move or regenerate the survey. Existing
+buildings, ownership, stock and production stay intact. Real SQLite reopen and
+design export/import retain source IDs, hand edits, reservations and cooldowns
+where those belong (player cooldowns stay in saves, not portable designs).
+
+**Siting/production gate.** `npx tsx --test tests/fresh-water.test.ts tests/waterworks.test.ts tests/economy-balance.test.ts`.
+Extend the current edited-pond fixture before changing shoreline logic: a new
+true-ocean plant must be refused, a migrated old plant must continue its original
+recipe, and switching off the ocean requirement must admit the old site. A
+height-only or `inlandWaterAt`-only test is insufficient for an enclosed edited
+pond: verify actual connection to the sea. Check real coast acceptance at tidal
+extremes, local-river water levels, pump snapping to a spring, dry full footprint,
+occupied spring, insufficient depth, flooded/steep foundation and ocean refusal.
+Failed purchases/placements consume no money/materials. Two river pumps inside
+the configured spacing fail; river docks and fords remain usable. Deleting or
+drying a source stops a new pump's production and its report/preview/NPC estimate
+agree. Exercise normal, gravity and flow-scaled recipes with real staffing,
+funded wages, stock limits and changed rules; ordinary production remains green.
+
+**NPC and creator gate.** `npx tsx --test tests/water-source-npcs.test.ts` plus
+existing waterworks/construction/production consumers that the changes affect.
+The site finder searches actual world bounds with bounded coarse/refined work,
+can find northern river/spring/coast sites and filters occupied/protected lots.
+The water chain chooses a feasible nearby/economical kind and uses the same
+construction action. Thirst perception, briefings and knowledge name both kinds.
+Creator can place/delete springs with validation, configure every rule, save,
+reload and export/import a design. Disabling springs hides/disables their use
+without destroying the saved survey or resetting IDs when re-enabled.
+
+**Player-visible/browser gate.** Add `tests/browser/water-sources.spec.ts` and run
+with `TEST_GPU=1 npm run test:e2e -- tests/browser/water-sources.spec.ts`. Walk to a
+real surveyed spring, see its wet stone basin/trickle/damp ground/reeds, drink,
+observe cooldown and off-foot/out-of-range/disabled refusals. Verify droplet-ring
+map symbols at gathering zoom levels and absence below that threshold. Place
+and remove a creator spring; preview a valid spring and river pump (including
+snap), a reserved spring, a coastal refusal and an empty/no-spring world. Build
+both kinds and inspect their five named models, intake/source placement, stock
+and production feedback. Confirm a headwater visibly begins at its spring.
+Use the architecture and northern-island preview scripts for images, inspect
+bounds/finite geometry and scenery streaming in both quality modes. Add the
+pump-house's actual image and interactive model preview to the website gallery;
+verify the public gallery after deployment. Capture reviewed gameplay evidence.
+
+Update PLAYING's old waterworks/edited-pond wording, ECONOMY, NORTHERN_ISLAND,
+WORLD_BUILDING, field guide, catalogue, README, CHANGELOG and release notes.
+After relevant tests, clean TypeScript, changed-file Prettier and production
+build, commit/push the complete item, deploy its verified SHA, check live assets,
+and announce the feature through the bot with successful screenshots.
+
+Initial red evidence: `output/water-sources/survey-red.log` fails on missing
+`shared/springs`; `salt-red.log` confirms the current new-site survey wrongly
+accepts the enclosed edited pond. Cliff shader starts exposing rock at normal-y
+0.72; use **springMinimumNormalY = 0.72**, configurable. Ordinary springs must
+also fit the current 2 m foundation-rise rule, shared with construction. Headwater
+sources keep their explicit river-head exception.
+
+Additional item 15 pre-release regression criteria: moving a pump in the editor
+must invalidate a saved intake beyond its configured reach, and portable designs
+must reject duplicate claims on one spring atomically. The fixed-intake red test
+fails before those corrections; the targeted spring/production/catalogue run
+then passes 21 tests. A pump snapped onto a spring must also recheck farmland
+before charging: `tests/fresh-water.test.ts` adds an unchanged-world refusal
+case, confirmed red with “Missing expected exception” in
+`output/water-sources/farm-snap-red.log` before the correction.
+
+The off-foot browser extension initially expected the inventory to stay open
+when changing vehicles; the existing vehicle action deliberately closes it.
+Reopen inventory after the confirmed vehicle transition, then retain the actual
+“Stop on foot” disabled-button assertion and the subsequent successful drink.
+
+The final rule audit also covers the existing desalination intake dimensions:
+expose its 0.3 m depth, 0.2 m foundation clearance and 6–10 m rear reach through
+the same Water sources registry. Keep those defaults and the legacy mean-water
+survey unchanged; require invalid min/max edits to reject atomically, custom
+values to affect siting, and editor/design/save paths to retain them. The new
+`tests/water-salt.test.ts` case fails with “Unknown setting” before implementation
+(`output/water-sources/desalination-rules-red.log`). Extend the real Rules browser
+flow to edit and verify all four values. This closes the configuration gap
+within this water-supply item, before release.
+
+**Item 15 verification before release (2026-11-05):**
+
+- Initial survey, salty-pond, drinking, persistence, pump construction, NPC search,
+  UI and scenery regressions were red before implementation; logs remain under
+  `output/water-sources/`. Final review also reproduces and fixes stale moved
+  intakes, duplicate imported spring claims and snapping onto farmland. The moss
+  edge regression removes the opaque circular paving appearance from springs.
+- **163 distinct relevant Node tests pass** across the targeted runs, including
+  survey/migration, actual SQLite reopen, economy/staffing, construction, existing
+  waterworks, river docks, NPC founding/knowledge, portable catalogues, architecture
+  and terrain/map consumers. The final six-file water/NPC run passes **44/44**;
+  the final construction run passes **23/23**. The existing NPC request-size
+  limit remains intact after shortening the new briefing. No full-suite rerun.
+  Evidence: `relevant-tests.log`, `guide-green-check.log`, `fixed-intake-green.log`,
+  `farm-snap-green.log`, `moss-edge-green.log`, `desalination-rules-green.log` and
+  the deduplicated `passing-test-names.txt` in that output directory.
+- `TEST_GPU=1 npm run test:e2e -- tests/browser/water-sources.spec.ts` passes both
+  complete flows in **1.5 minutes** (`browser-release.log`): actual northern
+  spring hiking/drinking, cooldown/range/off-foot/disabled/empty states, map zoom
+  threshold, spring and river pump construction, coastal refusal, desalination
+  construction, creator sources and all four desalination limit edits. No page
+  errors. Vehicle switching correctly closes inventory; the fixture reopens it.
+- Real architecture contact sheets for both kinds pass and are visually reviewed;
+  publish their WebP conversions in the website gallery. Northern-island preview
+  runs pass in **normal and low** quality, including headwater/channel contact,
+  spring and pump scenery streaming, and existing map-detail checks. One original
+  spring camera was inside a tree; reject that image and recapture the unchanged
+  surveyed source `spring--15--60` in a clearing using `SPRING_ID`. Reviewed files:
+  `spring-normal/spring.png`, `north-normal/headwater-spring.png`,
+  `north-low/pump.png`, and both `models/*.png` under `output/water-sources/`.
+- The built website passes both water-building cards/images, all ten interactive
+  models, mobile dialog layout and empty search, without browser errors
+  (`gallery-check.log`). Actual gallery screenshots are reviewed too.
+- Measured public survey: **30 springs, about 489 ms once at migration**. Cold
+  site queries take 20–121 ms; warmed queries take 1.3–32 ms, and choosing between
+  water kinds takes about 27–29 ms in the measured southern/northern fixtures.
+  Geometry proposals are cached and live occupation is checked per caller.
+- `npx tsc --noEmit`, `npm run build` and `npm run build:website` pass. Prettier
+  runs on every changed/new text path. Build warnings are the existing large
+  bundle and dependency-annotation warnings. README, player/economy/island/world
+  builder guides, release notes, catalogue and field guide describe the change.
+- Prepare **0.127.0** as one complete water-supply release. Commit/push, exact-SHA
+  deployment, live migration/assets/gallery verification and the reviewed-image
+  bot announcement remain the final gates. Do not start item 16 before those pass.

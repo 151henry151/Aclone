@@ -42,7 +42,7 @@ export function buildingFinish(kind: string, plan: BuildingPlan): BuildingFinish
   if (['bakery', 'pub', 'winery', 'teaHouse', 'kitchen', 'creamery', 'dairyKitchen'].includes(kind))
     set({ wall: 'limewash', tint: '#eee1c5', roof: 'clay' });
   if (kind === 'bakery') set({ window: 'bakery', door: 'shop-door', accent: '#8d4937' });
-  if (['creamery', 'dairyKitchen', 'waterworks'].includes(kind))
+  if (['creamery', 'dairyKitchen', 'waterworks', 'pumpHouse'].includes(kind))
     set({
       wall: 'limewash',
       roof: 'zinc',

@@ -11,7 +11,8 @@ import { worldBuildings, worldItems } from '../../shared/world-catalogue.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { crops } from '../../shared/farming.ts';
 import { gatheringSites } from '../../shared/resources.ts';
-import { nearestWaterworksSite } from '../../shared/shoreline.ts';
+import { nearestWaterSite, preferredWaterProducer } from '../../shared/water-sites';
+import { pumpHouseRecipe } from '../../shared/fresh-water';
 import { distance } from '../../shared/simulation.ts';
 import type { Building, Player, Recipe, World } from '../../shared/types.ts';
 import type { ResidentState } from './memory.ts';
@@ -52,7 +53,11 @@ export function kindRecipe(w: World, kind: string): Recipe | undefined {
   const template = w.catalogue?.templates[kind];
   if (template?.production) return template.production;
   const def = worldBuildings(w)[kind];
-  return def?.recipe ? recipes[def.recipe] : undefined;
+  return def?.recipe === 'pumpHouse'
+    ? pumpHouseRecipe(w, {} as Building)
+    : def?.recipe
+      ? recipes[def.recipe]
+      : undefined;
 }
 
 function buildingRecipe(b: Building): Recipe | undefined {
@@ -111,7 +116,8 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
 
 export function pickBuildSite(w: World, p: Player, kind: string, style?: string) {
   const founded = w.towns.filter((t) => t.founder === p.id);
-  if (kind === 'waterworks') return nearestWaterworksSite(w, founded[0] ?? p);
+  if (kind === 'waterworks' || kind === 'pumpHouse')
+    return nearestWaterSite(w, founded[0] ?? p, kind);
   const half = mapHalf(w) - 24;
   const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
   const radius = Math.max(footprint.width, footprint.depth) / 2;
@@ -200,10 +206,10 @@ function foundingSteps(w: World, p: Player, kind: string): Step[] | undefined {
   if (owned >= w.settings.maxBuildings) return;
   return fundProject(w, p, budget.total, (funded) => [
     ...travelPrep(funded),
-    { kind: 'move', ...location },
+    { kind: 'move', x: location.x, z: location.z },
     operation('construct', {
       kind,
-      ...(kind === 'waterworks' ? location : {}),
+      ...(['waterworks', 'pumpHouse'].includes(kind) ? location : {}),
     }),
   ]);
 }
@@ -280,7 +286,12 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
     }
     found.sort((a, b) => b.score - a.score);
     const seen = new Set<string>();
+    const waterKind = found.some((c) => ['waterworks', 'pumpHouse'].includes(c.kind))
+      ? preferredWaterProducer(w, w.towns.find((t) => t.founder === p.id) ?? p)
+      : undefined;
     for (const c of found) {
+      if (['waterworks', 'pumpHouse'].includes(c.kind) && waterKind && c.kind !== waterKind)
+        continue;
       if (seen.has(c.kind) || seen.size >= 8) continue;
       const plan = foundingSteps(w, p, c.kind);
       if (!plan) continue;

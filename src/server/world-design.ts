@@ -1,3 +1,4 @@
+import { refreshPumpRecipes } from '../shared/fresh-water';
 import { riverDockAccepts } from '../shared/river-dock';
 import { boatLandings, landingAccepts } from '../shared/boathouse';
 import { mooringKey } from '../shared/boats';
@@ -85,6 +86,23 @@ const designSchema = z.object({
     })
     .refine((s) => s.fence <= s.exclusion)
     .optional(),
+  springs: z
+    .array(
+      z.object({
+        id: z
+          .string()
+          .regex(/^spring-[a-zA-Z0-9:_-]+$/)
+          .max(120),
+        x: coordinate,
+        z: coordinate,
+        flow: z.number().min(0.1).max(5),
+        river: z.string().max(120).optional(),
+      }),
+    )
+    .max(1000)
+    .refine((s) => new Set(s.map((p) => p.id)).size === s.length, 'Duplicate spring IDs')
+    .optional(),
+  waterSourcesVersion: z.literal(1).optional(),
   northernIsland: northernIslandSchema.optional(),
   terrainMapSize: z.number().min(500).max(20000).optional(),
   additionalResources: z
@@ -235,6 +253,15 @@ const designSchema = z.object({
         wage: z.number().int().min(0).max(100000000).optional(),
         price: z.number().int().min(0).max(100000000).optional(),
         production: recipe.optional(),
+        legacyWaterIntake: z.boolean().optional(),
+        waterSource: z
+          .object({
+            intake: z.object({ x: coordinate, z: coordinate }),
+            spring: z.string().max(100).optional(),
+            river: z.string().max(100).optional(),
+          })
+          .optional(),
+        pumpRecipeManaged: z.boolean().optional(),
       }),
     )
     .max(500),
@@ -338,6 +365,8 @@ export function exportDesign(w: World, includeMedia = false) {
     coastalBluffs: w.coastalBluffs,
     spaceportSite: w.spaceportSite,
     additionalResources: w.additionalResources,
+    springs: w.springs,
+    waterSourcesVersion: w.waterSourcesVersion,
     terrainMapSize: w.terrainMapSize,
     northernIsland: w.northernIsland,
     landscape: w.landscape,
@@ -368,6 +397,9 @@ export function exportDesign(w: World, includeMedia = false) {
         wage,
         price,
         production,
+        legacyWaterIntake,
+        waterSource,
+        pumpRecipeManaged,
       }) => ({
         id,
         kind,
@@ -391,6 +423,9 @@ export function exportDesign(w: World, includeMedia = false) {
         wage,
         price,
         production,
+        legacyWaterIntake,
+        waterSource,
+        pumpRecipeManaged,
       }),
     ),
   };
@@ -445,6 +480,8 @@ function applyValidatedDesign(w: World, input: unknown) {
   w.coastalBluffs = d.coastalBluffs;
   w.spaceportSite = d.spaceportSite;
   w.additionalResources = d.additionalResources;
+  w.springs = d.springs;
+  w.waterSourcesVersion = d.waterSourcesVersion;
   w.terrainMapSize = d.terrainMapSize;
   w.northernIsland = d.northernIsland;
   w.zones = d.zones;
@@ -471,6 +508,13 @@ function applyValidatedDesign(w: World, input: unknown) {
       return result;
     })(),
   );
+  const claimedSprings = new Set<string>();
+  for (const b of w.buildings)
+    if (b.kind === 'pumpHouse' && b.waterSource?.spring) {
+      if (claimedSprings.has(b.waterSource.spring))
+        throw Error('A spring can be claimed by only one pump-house');
+      claimedSprings.add(b.waterSource.spring);
+    }
   w.creator = validateCreator(w, d.creator);
   for (const [slot, tuning] of Object.entries(w.vehicleTuning ?? {}))
     validateVehicleTuning(w, Number(slot), tuning);
@@ -479,6 +523,7 @@ function applyValidatedDesign(w: World, input: unknown) {
     if (m) b.creatorBounds = { width: m.width, depth: m.depth, height: m.height };
   }
   configureRules(w, d.settings, d.townCharter);
+  refreshPumpRecipes(w);
   w.landscape = validateLandscape(w, d.landscape);
   if (w.terrain.length > landscapeRules(w.settings).terrainStampLimit)
     throw Error('Terrain stamp limit exceeded');

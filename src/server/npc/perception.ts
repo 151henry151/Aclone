@@ -166,10 +166,10 @@ export function inspectionChoices(w: World, p: Player, state: ResidentState): Fa
       const thirsty = p.thirst >= 15000;
       const hungry = p.hunger >= 15000;
       const priority = (v: Building) =>
-        (thirsty && ['waterworks', 'market', 'starport'].includes(v.kind) ? 420 : 0) +
+        (thirsty && ['waterworks', 'pumpHouse', 'market', 'starport'].includes(v.kind) ? 420 : 0) +
         (hungry && ['bakery', 'market', 'starport', 'pub'].includes(v.kind) ? 400 : 0) +
         (!thirsty && !hungry && ['mill', 'farm'].includes(v.kind) ? 240 : 0) +
-        (['bakery', 'waterworks', 'market', 'starport'].includes(v.kind) ? 200 : 0) +
+        (['bakery', 'waterworks', 'pumpHouse', 'market', 'starport'].includes(v.kind) ? 200 : 0) +
         (v.id === p.job ? 400 : 0) +
         ([state.career?.target, state.career?.source].includes(v.id) ? 380 : 0) +
         (p.fuel < 10 && ['market', 'starport', 'garage', 'refinery'].includes(v.kind) ? 350 : 0) +

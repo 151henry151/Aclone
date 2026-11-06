@@ -74,7 +74,7 @@ processors. Imports cost more than local supply. Retailers cover their purchase
 bids and sales tax. Hay barns buy seasonal hay from farms and sell to livestock
 businesses whose bids also leave a delivery margin.
 
-The waterworks pays **74d for fuel** and sells water at **13.25d**. A full batch
+The desalination plant pays **74d for fuel** and sells water at **13.25d**. A full batch
 uses one fuel and two 22d wages; twelve water return 147.87d after default tax,
 leaving 29.87d before other costs. Hauliers can initially import fuel from the
 spaceport for 57.75d; a local refinery sells it for 38.50d. Prices alone do not
@@ -166,9 +166,18 @@ pay the displayed price and use the same import-cost accounting.
 
 ## Connected industries
 
-- **Shoreline waterworks / pump operator:** 1 fuel → 12 water. Build on dry ground
-  directly beside water; a dry intake or flooded foundation stops production.
+- **Desalination plant / pump operator:** 1 fuel → 12 water. Build on a dry ocean
+  shore; a dry intake or flooded foundation stops production. Existing plants
+  retain their old intake survey; new enclosed pond sites are refused.
   Water supplies households, lodging, irrigation, kitchens, tea and concrete.
+- **Pump-house / pump operator:** 1 fuel → 20 water, with two ideal staff, 22d
+  wages, 500 storage per good, and the same 74d Fuel bid / 13.25d Water ask.
+  A default full batch nets 246.45d after sales tax against 118d inputs/wages.
+  Standard construction costs 900d plus 6 wood, 6 blocks, 1 steel and 4 gravel.
+  Reserve a spring or use a dry river/pond bank. Gravity-fed spring pumps are an
+  optional world rule: no fuel → 8 water. Optional flow scaling rounds output to
+  whole units; even the default minimum-flow gravity batch (5 Water) covers two
+  default wages. Explicit premises/template recipes retain their own settings.
 - **Sawmill / lumberjack:** 2 logs → 4 timber. Timber builds structures and feeds
   tool and furniture workshops. The existing tool workshop uses steel and timber.
 - **Stonemason / mason:** 3 stone → 2 blocks, used for foundations and larger buildings.

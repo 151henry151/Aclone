@@ -6,6 +6,65 @@ import { terrainHeight } from '../shared/terrain';
 import { hash2, smoothstep } from '../shared/noise';
 import { riverBanks, riverSurfacePoints } from '../shared/inland-water';
 
+/** Shared moving surface for rivers and spring trickles. */
+export function riverSurfaceMaterial(uniforms: {
+  time: { value: number };
+  tide: { value: number };
+  datum: { value: number };
+  centre: { value: T.Vector2 };
+}) {
+  const material = new T.MeshPhongMaterial({
+    color: 0x34514a,
+    specular: 0xc5e2db,
+    shininess: 110,
+    transparent: true,
+    opacity: 0.93,
+    side: T.DoubleSide,
+    depthWrite: false,
+  });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.riverTime = uniforms.time;
+    shader.uniforms.riverTide = uniforms.tide;
+    shader.uniforms.riverDatum = uniforms.datum;
+    shader.uniforms.riverCentre = uniforms.centre;
+    shader.vertexShader =
+      'varying vec2 riverUv;varying vec2 riverPosition;varying float riverFlow;varying float riverWaterDepth;attribute float riverDepth;attribute float riverSlope;uniform float riverTide;uniform float riverDatum;\n' +
+      shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\ntransformed.y+=riverTide*(1.-smoothstep(riverDatum,riverDatum+3.,position.y-.035));riverUv=uv;riverPosition=position.xz;riverFlow=smoothstep(.015,.16,riverSlope);riverWaterDepth=riverDepth;',
+      );
+    shader.fragmentShader =
+      'varying vec2 riverUv;varying vec2 riverPosition;varying float riverFlow;varying float riverWaterDepth;uniform float riverTime;uniform vec2 riverCentre;\n' +
+      shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        float across=abs(riverUv.x*2.-1.);
+        float depth=riverWaterDepth*(1.-across*across);
+        float current=riverTime*(.6+riverFlow*2.8);
+        float ripple=sin(riverUv.y*3.4-current*5.+sin(riverUv.x*33.))*.6+sin(riverUv.y*7.-current*8.+riverUv.x*51.)*.4;
+        float riffle=pow(.5+.5*sin(riverUv.y*.065),8.);
+        float broken=sin(riverUv.y*5.-current*8.+sin(riverUv.x*47.+riverUv.y*.4)*3.);
+        float foam=smoothstep(.72,.98,broken)*riverFlow*riffle*(1.-smoothstep(.65,1.,across));
+        diffuseColor.rgb=mix(vec3(.065,.115,.105),diffuseColor.rgb,smoothstep(0.,1.8,depth));
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.65,.72,.68),foam*.75);
+        diffuseColor.rgb+=vec3(.008,.012,.01)*ripple;
+        float fresnel=pow(1.-abs(dot(normalize(vNormal),normalize(vViewPosition))),3.);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.29,.30),.25+fresnel*.4);
+        diffuseColor.a*=(.93+.07*smoothstep(0.,.8,depth))*(1.-smoothstep(750.,1000.,distance(riverPosition,riverCentre)));
+        if(diffuseColor.a<.01) discard;`,
+      );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <normal_fragment_maps>',
+      `#include <normal_fragment_maps>
+        float ripples=(sin(riverUv.y*3.4-riverTime*3.+sin(riverUv.x*33.))*.012+sin(riverUv.y*7.-riverTime*5.+riverUv.x*51.)*.006)*(1.+riverFlow*2.);
+        vec3 rx=cross(dFdy(-vViewPosition),normal), ry=cross(normal,dFdx(-vViewPosition));
+        float det=dot(dFdx(-vViewPosition),rx);
+        normal=normalize(abs(det)*normal-sign(det)*(dFdx(ripples)*rx+dFdy(ripples)*ry));`,
+    );
+  };
+  return material;
+}
+
 /** Static, bank-aligned water ribbons; small shared shader supplies moving ripples.
  * Split rivers into bounded meshes so distant/offscreen reaches cost no draw work. */
 export class InlandWater {
@@ -28,55 +87,12 @@ export class InlandWater {
     this.reaches = [];
     if (!w.northernIsland) return;
     this.datum.value = w.settings.seaLevel;
-    const material = (this.material = new T.MeshPhongMaterial({
-      color: 0x34514a,
-      specular: 0xc5e2db,
-      shininess: 110,
-      transparent: true,
-      opacity: 0.93,
-      side: T.DoubleSide,
-      depthWrite: false,
+    const material = (this.material = riverSurfaceMaterial({
+      time: this.time,
+      tide: this.tide,
+      datum: this.datum,
+      centre: this.centre,
     }));
-    material.onBeforeCompile = (shader) => {
-      shader.uniforms.riverTime = this.time;
-      shader.uniforms.riverTide = this.tide;
-      shader.uniforms.riverDatum = this.datum;
-      shader.uniforms.riverCentre = this.centre;
-      shader.vertexShader =
-        'varying vec2 riverUv;varying vec2 riverPosition;varying float riverFlow;varying float riverWaterDepth;attribute float riverDepth;attribute float riverSlope;uniform float riverTide;uniform float riverDatum;\n' +
-        shader.vertexShader.replace(
-          '#include <begin_vertex>',
-          '#include <begin_vertex>\ntransformed.y+=riverTide*(1.-smoothstep(riverDatum,riverDatum+3.,position.y-.035));riverUv=uv;riverPosition=position.xz;riverFlow=smoothstep(.015,.16,riverSlope);riverWaterDepth=riverDepth;',
-        );
-      shader.fragmentShader =
-        'varying vec2 riverUv;varying vec2 riverPosition;varying float riverFlow;varying float riverWaterDepth;uniform float riverTime;uniform vec2 riverCentre;\n' +
-        shader.fragmentShader.replace(
-          '#include <color_fragment>',
-          `#include <color_fragment>
-        float across=abs(riverUv.x*2.-1.);
-        float depth=riverWaterDepth*(1.-across*across);
-        float current=riverTime*(.6+riverFlow*2.8);
-        float ripple=sin(riverUv.y*3.4-current*5.+sin(riverUv.x*33.))*.6+sin(riverUv.y*7.-current*8.+riverUv.x*51.)*.4;
-        float riffle=pow(.5+.5*sin(riverUv.y*.065),8.);
-        float broken=sin(riverUv.y*5.-current*8.+sin(riverUv.x*47.+riverUv.y*.4)*3.);
-        float foam=smoothstep(.72,.98,broken)*riverFlow*riffle*(1.-smoothstep(.65,1.,across));
-        diffuseColor.rgb=mix(vec3(.065,.115,.105),diffuseColor.rgb,smoothstep(0.,1.8,depth));
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.65,.72,.68),foam*.75);
-        diffuseColor.rgb+=vec3(.008,.012,.01)*ripple;
-        float fresnel=pow(1.-abs(dot(normalize(vNormal),normalize(vViewPosition))),3.);
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.29,.30),.25+fresnel*.4);
-        diffuseColor.a*=(.93+.07*smoothstep(0.,.8,depth))*(1.-smoothstep(750.,1000.,distance(riverPosition,riverCentre)));
-        if(diffuseColor.a<.01) discard;`,
-        );
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <normal_fragment_maps>',
-        `#include <normal_fragment_maps>
-        float ripples=(sin(riverUv.y*3.4-riverTime*3.+sin(riverUv.x*33.))*.012+sin(riverUv.y*7.-riverTime*5.+riverUv.x*51.)*.006)*(1.+riverFlow*2.);
-        vec3 rx=cross(dFdy(-vViewPosition),normal), ry=cross(normal,dFdx(-vViewPosition));
-        float det=dot(dFdx(-vViewPosition),rx);
-        normal=normalize(abs(det)*normal-sign(det)*(dFdx(ripples)*rx+dFdy(ripples)*ry));`,
-      );
-    };
     const stone = new T.MeshLambertMaterial({ color: 0xffffff });
     this.bankMaterials.push(stone);
     stone.onBeforeCompile = (shader) => {

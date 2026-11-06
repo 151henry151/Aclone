@@ -33,7 +33,14 @@ export const buildings: Record<string, BuildingDef> = Object.fromEntries(
       : def,
   ]),
 );
-export const recipes: Record<string, Recipe> = recipeData;
+export const recipes: Record<string, Recipe> = {
+  ...recipeData,
+  pumpHouse: {
+    ...recipeData.waterworks,
+    inputs: { fuel: settingsData.pumpFuelPerBatch },
+    outputs: { water: settingsData.pumpWaterPerBatch },
+  },
+};
 export const weapons: Record<string, WeaponDef> = weaponData;
 export const defaults: Settings = settingsData;
 export const galaxy = galaxyData;

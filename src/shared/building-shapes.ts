@@ -258,6 +258,7 @@ export function buildingPlan(b: {
       wall = '#8d7a5a';
       trim = '#5a4a33';
       break;
+    case 'pumpHouse':
     case 'waterworks':
       volumes = [volume(8, 6, 3.3, 0.7, 'shed')];
       wall = '#c8d2cf';

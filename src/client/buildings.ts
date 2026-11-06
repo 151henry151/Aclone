@@ -486,7 +486,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
       cylinder(0.24, 0.45, '#998350', 0, 5.6, -0.32);
     }
   }
-  if (b.kind === 'waterworks') {
+  if (b.kind === 'waterworks' || b.kind === 'pumpHouse') {
     // Original pump-house kit: insulated tank, pressure bands, pump and buried intake.
     cylinder(1.05, 1.7, '#759b9c', 1.65, 4.75, -0.8);
     for (const y of [4, 4.75, 5.5])

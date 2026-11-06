@@ -2,6 +2,34 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.127.0 — Fresh water in the hills
+
+Discover 30 natural springs on public Puddlewick, including one at each river
+head. Look for mossy basins, reeds, damp ground and flowing trickles, or their
+droplet symbols on the map at 50% zoom or closer. Walk within 3 m, open Inventory
+and drink free: one Water's thirst relief, a 20-second cooldown, and no bottled
+item. The survey saves stable positions and IDs; restarting never rerolls it.
+
+Build a Pump-house on an unused spring or suitable river/pond bank for 900d plus
+materials. Choose among five architectural models, hire pump operators and fund
+production: the default batch turns one Fuel into 20 Water. Spring intakes snap
+to their source; river pumps stay 60 m apart without reserving boat reaches.
+Moving or removing a source stops its old intake instead of silently moving it.
+
+Shoreline waterworks are now Desalination plants. New sites require actual ocean
+water; existing plants keep their original survey, identities and production.
+Residents can find water sites across the island. World Builder exposes spring
+surveys, drinking, flow, recipes, gravity-fed operation and both kinds of intake,
+and can place or edit individual springs. Custom premises recipes survive rule
+changes; source records and rules travel with portable designs.
+
+Validation covers 163 distinct relevant tests, saved-source persistence and
+migration, production and balance, configurable rules, NPC founding, real browser
+drinking/construction/creator/refusal flows, and normal/low-quality spring and
+building previews. The public gallery includes both water buildings. See
+[Springs and pump-houses](PLAYING.md#springs-and-pump-houses) and
+[Water-source rules](WORLD_BUILDING.md#springs-and-water-production).
+
 ## 0.126.0 — Row ashore, watch the weather
 
 Take a wooden rowboat out with a passenger: no fuel, 30 weight of supplies and

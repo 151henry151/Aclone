@@ -545,3 +545,14 @@ Portable world designs preserve additional surveyed gathering grounds in `additi
 ### Procedural seabeds
 
 Generated islands include a shallow southern bay, offshore shelves, basins and trenches. The original village, beaches and docking approaches retain their elevations. Custom heightmaps remain authoritative, and terrain brushes can still create islands or edit the seabed. Depth instruments and fishing use the same terrain and tide on the server and client; deeper water adds only a modest catch-rate advantage. Map water colours distinguish depths above and below 100 metres.
+
+## Add fresh water to the landscape
+
+In **Rules → Springs and water production**, tune the first survey, free drinking,
+source flow and pump-house recipes. Existing surveys stay fixed. In **Springs**,
+place a `spring-…` source at your current coordinates or edit a saved source's
+position and flow. Try a short hiking route between springs, then build a
+pump-house nearby to make Water for sale. Deleting a claimed spring pauses its
+pump. A desalination plant belongs on an ocean coast; a pump-house belongs on
+fresh water. Portable world designs preserve the sources and their claimed
+intakes. See the [full settings](WORLD_BUILDING.md#springs-and-water-production).

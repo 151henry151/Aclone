@@ -10,7 +10,7 @@ import {
 import { usefulShift } from './business-policy.ts';
 import { calendar } from '../../shared/environment.ts';
 import { crops } from '../../shared/farming.ts';
-import { waterworksSite } from '../../shared/shoreline.ts';
+import { waterProductionBlocker } from '../../shared/fresh-water.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import { recipes } from '../../shared/catalog.ts';
 import { productionInterval } from '../../shared/simulation.ts';
@@ -52,10 +52,7 @@ export function workplace(w: World, p: Player, b: Building) {
       `${b.stock[herd.animal] ?? 0} ${herd.animal}, condition ${b.herdCondition ?? 100}%. Every check consumes ${herdNeeds(b).feed} ${acceptsHay(b) ? 'hay or feed' : 'feed'} and ${herdNeeds(b).water} water even if output is full; reserves add upkeep without increasing output.`,
     );
   }
-  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation))
-    blockers.push(
-      'Water intake is dry or the pump house is flooded; restore a dry shoreline with water behind the building.',
-    );
+  if (waterProductionBlocker(w, b)) blockers.push(waterProductionBlocker(w, b)!);
   if (b.construction) blockers.push('Construction is unfinished');
   if (b.kind !== 'farm') {
     if (!b.government && !productionStaffing(w, b, staff.length, next).active)

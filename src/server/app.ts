@@ -1,3 +1,4 @@
+import { prepareWaterSources } from '../shared/springs';
 import { radioCheckpoint, restoreRadio, radioView, leaveRadio } from '../shared/radio';
 import { expandPuddlewickIsland } from './puddlewick-island';
 import { ensurePuddlewickSpaceport } from './puddlewick-spaceport';
@@ -195,7 +196,9 @@ export async function createApp(options: AppOptions) {
     const resources = ensurePuddlewickResources(world);
     const spaceport = ensurePuddlewickSpaceport(world);
     const island = expandPuddlewickIsland(world);
+    const waterSources = prepareWaterSources(world);
     if (
+      waterSources ||
       island ||
       spaceport ||
       services ||
@@ -658,6 +661,7 @@ export async function createApp(options: AppOptions) {
           for (const e of checked.effects ?? []) validateEffect(w, e.effect);
         }
         if (data.settings) configureRules(w, data.settings);
+        prepareWaterSources(w);
         if (media.length) {
           await mkdir(join(dataDir, 'assets'), { recursive: true });
           for (const m of media)

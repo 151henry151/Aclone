@@ -1,6 +1,7 @@
-import { constructionRules } from './construction-rules';
+import { nearestWaterSite } from './water-sites';
+import { oceanConnected } from './ocean-connection';
+import { waterSourceRules } from './water-source-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { constructionSiteReason } from './construction-site.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
 import type { World } from './types.ts';
 import type { Point } from './town.ts';
@@ -10,7 +11,8 @@ import { highWater, lowWater } from './ocean';
  * Check the real, editable terrain; new sites must work at both tidal extremes.
  * Existing installations retain their mean-water intake survey. */
 export function waterworksSite(w: World, p: Point, rotation?: number, newSite = false) {
-  const edge = mapHalf(w) - 10;
+  const rules = waterSourceRules(w.settings);
+  const edge = mapHalf(w) - rules.desalinationIntakeMaxReach;
   const dryLevel = newSite ? highWater(w) : w.settings.seaLevel;
   const wetLevel = newSite ? lowWater(w) : w.settings.seaLevel;
   if (
@@ -20,7 +22,7 @@ export function waterworksSite(w: World, p: Point, rotation?: number, newSite = 
     Math.abs(p.z) > edge
   )
     return undefined;
-  if (terrainHeight(w, p.x, p.z) < dryLevel + 0.2) return undefined;
+  if (terrainHeight(w, p.x, p.z) < dryLevel + rules.desalinationFreeboard) return undefined;
   const angles =
     rotation === undefined ? Array.from({ length: 16 }, (_, i) => (i * Math.PI) / 8) : [rotation];
   for (const angle of angles) {
@@ -30,48 +32,29 @@ export function waterworksSite(w: World, p: Point, rotation?: number, newSite = 
     let dry = true;
     for (const x of [-4.4, 0, 4.4])
       for (const z of [-3.4, 0, 3.4])
-        if (terrainHeight(w, p.x + x * cos + z * sin, p.z - x * sin + z * cos) < dryLevel + 0.2)
+        if (
+          terrainHeight(w, p.x + x * cos + z * sin, p.z - x * sin + z * cos) <
+          dryLevel + rules.desalinationFreeboard
+        )
           dry = false;
     if (!dry) continue;
-    for (const reach of [6, 8, 10]) {
+    for (const reach of [
+      rules.desalinationIntakeMinReach,
+      (rules.desalinationIntakeMinReach + rules.desalinationIntakeMaxReach) / 2,
+      rules.desalinationIntakeMaxReach,
+    ]) {
       const intake = { x: p.x - sin * reach, z: p.z - cos * reach };
-      if (terrainHeight(w, intake.x, intake.z) <= wetLevel - 0.3)
+      if (
+        terrainHeight(w, intake.x, intake.z) <= wetLevel - rules.desalinationIntakeDepth &&
+        (!newSite || !rules.desalinationRequiresOcean || oceanConnected(w, intake))
+      )
         return { rotation: angle, intake };
     }
   }
   return undefined;
 }
 
-// Only resurvey when terrain changes. Each resident then filters occupied/no-build
-// lots and chooses the nearest one, rather than rescanning the entire coast.
-const cache = new WeakMap<World, { key: string; sites: Point[] }>();
+/** Compatibility for callers using the original desalination finder. */
 export function nearestWaterworksSite(w: World, p: Point) {
-  const key = JSON.stringify([w.settings.seaLevel, w.settings.tidalRange, w.townLayout, w.terrain]);
-  let entry = cache.get(w);
-  if (!entry || entry.key !== key) {
-    const sites: Point[] = [];
-    for (let z = -224; z <= 224; z += 8)
-      for (let x = -224; x <= 224; x += 16) {
-        if (waterworksSite(w, { x, z }, undefined, true)) sites.push({ x, z });
-      }
-    entry = { key, sites };
-    cache.set(w, entry);
-  }
-  return entry.sites
-    .filter(
-      (s) =>
-        w.buildings.every(
-          (b) =>
-            Math.hypot(b.x - s.x, b.z - s.z) >
-            Math.max(20, constructionRules(w.settings).constructionMinimumSpacing),
-        ) &&
-        !w.zones.some((z) => z.kind === 'noBuild' && Math.hypot(z.x - s.x, z.z - s.z) < z.radius) &&
-        !constructionSiteReason(w, {
-          id: 'construction',
-          kind: 'waterworks',
-          ...s,
-          rotation: waterworksSite(w, s, undefined, true)!.rotation,
-        }),
-    )
-    .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0];
+  return nearestWaterSite(w, p, 'waterworks');
 }

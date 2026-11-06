@@ -1,3 +1,6 @@
+import { prepareWaterSources } from '../src/shared/springs';
+import { nearestWaterSite } from '../src/shared/water-sites';
+import { pumpHouseSite } from '../src/shared/fresh-water';
 // SPDX-License-Identifier: GPL-3.0-or-later
 /** Disposable preview of the actual generated world, map and game renderer. */
 import { chromium } from '@playwright/test';
@@ -16,6 +19,18 @@ w.terrainMapSize = 12500;
 w.townLayout = 2;
 const original = structuredClone(w);
 expandPuddlewickIsland(w);
+prepareWaterSources(w);
+const spring = w.springs!.find((s) =>
+  process.env.SPRING_ID ? s.id === process.env.SPRING_ID : !s.river && s.z < -1000,
+)!;
+if (!spring) throw Error('Requested spring is absent from the frozen survey');
+const pumpPoint = nearestWaterSite(w, spring, 'pumpHouse')!;
+const pump = makeBuilding('preview-pump', 'pumpHouse', pumpPoint.x, pumpPoint.z);
+pump.rotation = pumpPoint.rotation;
+pump.architecture = 'model-3';
+pump.style = 'stone-gable';
+Object.assign(pump, pumpHouseSite(w, pump));
+pump.foundationY = foundationProfile(w, pump).level;
 /** A completed river dock on the first usable lower reach of the Alder River. */
 const dock = (() => {
   const r = w.northernIsland!.rivers[0],
@@ -67,10 +82,10 @@ try {
       console.error(m.text().slice(0, 1500));
     }
   });
-  await page.addInitScript(() => {
-    localStorage.setItem('aclone.quality', 'low');
+  await page.addInitScript((quality) => {
+    localStorage.setItem('aclone.quality', quality);
     localStorage.setItem('aclone.sound', 'off');
-  });
+  }, process.env.PREVIEW_QUALITY ?? 'low');
   await page.route('**/__island', (r) =>
     r.fulfill({
       contentType: 'text/html',
@@ -83,6 +98,8 @@ try {
  const original=${JSON.stringify(original)};const savedBuildings=w.buildings;w.buildings=[];const game=${process.env.MAP_ONLY ? 'null' : "new GameScene(document.getElementById('view'))"};if(game){game.onLoading=(message)=>console.log('LOAD '+message);game.setWorld(w,p.id);}window.ready=()=>game?.ready??true;window.game=game;
  window.show=async(kind)=>{game.renderer.setAnimationLoop(null);document.getElementById('map').style.display='none';
  let point,cam,target,caption;
+ if(kind==='spring'||kind==='headwater-spring'){const s=kind==='spring'?${JSON.stringify(spring)}:w.springs.find(s=>s.river===r.id);point={...s,level:terrainHeight(w,s.x,s.z)};cam=[s.x+8,point.level+5,s.z+10];target=[s.x,point.level+.1,s.z];caption=kind==='spring'?'Fresh water in the uplands · stop for a drink':'Headwater spring · where the Alder River begins';}
+ if(kind==='pump'){const b=${JSON.stringify(pump)};w.buildings=[b];point={x:b.x,z:b.z,level:terrainHeight(w,b.x,b.z)};cam=[b.x+19,point.level+9,b.z+20];target=[b.x,point.level+1,b.z-3];caption='A spring-fed pump-house · Water for the northern settlements';}
  if(kind==='headwaters'){point=r.points[20];cam=[point.x+105,point.level+45,point.z+90];target=[point.x-15,point.level+4,point.z-40];caption='Mountain headwaters · tractor-fordable shallows';}
  if(kind==='river'){point=r.points[Math.floor(r.points.length*.57)];cam=[point.x+130,point.level+90,point.z+160];target=[point.x-70,point.level,point.z-100];caption='Alder River · a widening valley through the northern forests';}
  if(kind==='bank'){point=r.points[Math.floor(r.points.length*.57)];cam=[point.x+35,point.level+8,point.z+30];target=[point.x-15,point.level+1,point.z-25];caption='Alder River · riverbank and moving water';}
@@ -91,13 +108,13 @@ try {
  if(kind==='pond'){point=w.northernIsland.ponds[3];cam=[point.x+180,point.level+100,point.z+160];target=[point.x,point.level,point.z];caption='Northern pond country · woodland and sheltered water';}
  if(kind==='coast'){const b=w.coastalBluffs.find(b=>b.width>600);point={x:b.x,z:b.z,level:0};cam=[b.x+Math.sin(b.angle)*250,b.height+120,b.z+Math.cos(b.angle)*250];target=[b.x,b.height*.4,b.z];caption='Rocky headlands · long cliff coasts and sea stacks';}
  if(kind==='dock'){const d=${JSON.stringify(dock.b)},s=${JSON.stringify(dock.site)};w.buildings=[d];w.mooredBoats={'preview:3':{owner:'preview',slot:3,x:s.berth.x,z:s.berth.z,heading:s.heading,paint:'blue',landing:d.id}};point={x:d.x,z:d.z,level:s.level};const ux=(s.berth.x-d.x)/13.2,uz=(s.berth.z-d.z)/13.2;cam=[d.x+ux*30-uz*22,s.level+9,d.z+uz*30+ux*22];target=[d.x+ux*8,s.level+0.5,d.z+uz*8];caption='River dock · a log jetty with a moored canal boat on a navigable reach';}
- else w.buildings=[];
+ else if(kind!=='pump') w.buildings=[];
  const ri=r.points.indexOf(point);const bank=ri>=0?riverBanks(r.points)[ri].left:null;const reach=bank?Math.hypot(bank.x-point.x,bank.z-point.z):1;p.x=bank?bank.x+(bank.x-point.x)/reach*5:point.x+15;p.z=bank?bank.z+(bank.z-point.z)/reach*5:point.z;p.y=terrainHeight(w,p.x,p.z);p.heading=Math.atan2(target[0]-p.x,target[2]-p.z);
  game.setWorld(w,p.id);
  const buildStart=performance.now();while(game.worldBuild||game.snowJob){if(performance.now()-buildStart>90000)throw Error('Scenery failed to settle');await new Promise(r=>setTimeout(r,0));}
  for(let i=0;i<6000;i++){const ground=game.ground.update(point.x,point.z,12),woods=game.woods.update(point.x,point.z,12),horizon=game.horizon.prepare(12);if(!ground&&!woods&&!horizon)break;await new Promise(r=>setTimeout(r,0));if(i===5999)throw Error('Terrain failed to settle');}
  game.lastTime=performance.now()-34;game.renderTime=-Infinity;game.frame(true);game.camera.position.set(...cam);game.camera.lookAt(...target);game.sky.position.copy(game.camera.position);game.horizon.update(w,game.camera,game.ground,game.ocean.level.value,1);game.renderer.render(game.scene,game.camera);
- document.getElementById('caption').innerHTML=caption+'<small>Aclone · northern island expansion · current branch verification</small>';
+ document.getElementById('caption').innerHTML=caption+'<small>Aclone · northern island</small>';
  const ray=new T.Raycaster(new T.Vector3(point.x,point.level+2000,point.z),new T.Vector3(0,-1,0));game.scene.updateMatrixWorld(true);const hits=ray.intersectObjects([game.ground.group,game.inland.group,game.horizon.group],true).slice(0,8).map(h=>({y:h.point.y,type:h.object.parent===game.inland.group?'water/bank':h.object.parent===game.horizon.group?'horizon':'ground'}));
  if(Math.hypot(game.inland.centre.value.x-p.x,game.inland.centre.value.y-p.z)>1)throw Error('Water visibility has not caught up to camera');
  if(ri>=0){const ground=hits.find(h=>h.type==='ground'),water=hits.find(h=>h.type==='water/bank');if(!ground||!water||ground.y>=water.y)throw Error('River is below rendered terrain');}

@@ -20,9 +20,9 @@ const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH,
   args: [
     '--no-sandbox',
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
-    '--enable-unsafe-swiftshader',
+    ...(process.env.PREVIEW_GPU
+      ? ['--enable-gpu', '--use-angle=gl', '--ignore-gpu-blocklist']
+      : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']),
   ],
 });
 try {

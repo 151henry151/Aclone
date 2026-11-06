@@ -1,3 +1,4 @@
+import type { WaterSourceRules } from './water-source-rules';
 import type { StormRules } from './storm-rules';
 import type { ObstacleRules } from './obstacle-rules';
 import type { LandscapeRules } from './landscape-rules';
@@ -60,6 +61,7 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  lastSpringDrink?: number;
   stormExposure?: { slot: number; warningAt: number; since?: number; safeUntil?: number };
   radios?: Record<number, import('./radio').RadioConfig>;
   /** Owned portable hull lifted overhead; its weight is additional to inventory. */
@@ -232,6 +234,11 @@ export interface Player {
   imports: number;
 }
 export interface Building {
+  legacyWaterIntake?: boolean;
+  /** Fixed intake: terrain edits can stop it, but never silently move it. */
+  waterSource?: { intake: { x: number; z: number }; spring?: string; river?: string };
+  /** Default pump recipes follow world rules; explicit premises overrides do not. */
+  pumpRecipeManaged?: boolean;
   aircraftHangar?: boolean;
   /** Level selected by server for new foundations; absent on legacy buildings. */
   foundationY?: number;
@@ -362,6 +369,7 @@ export interface Settings
     Partial<CanoeRules>,
     Partial<RowboatRules>,
     Partial<StormRules>,
+    Partial<WaterSourceRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -444,6 +452,8 @@ export interface Settings
   exchangeCap: number;
 }
 export interface World {
+  springs?: import('./springs').Spring[];
+  waterSourcesVersion?: 1;
   smallCraft?: Record<string, import('./small-craft').SmallCraft>;
   smallCraftSeq?: number;
   /** Last safely surveyed public runway targets; never overwrites private property. */

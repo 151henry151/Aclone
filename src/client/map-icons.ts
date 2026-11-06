@@ -41,6 +41,7 @@ export const buildingMapIcons: Readonly<Record<string, string>> = {
   roastery: 'M18 3C8-3-2 13 6 20c8 7 19-10 12-17zM18 3C8 5 15 15 6 20',
   bnb: 'M2 12 12 3l10 9M4 11v11M20 11v11M4 17h16v4H4M6 17v-4h5v4M13 16h5',
   hotel: 'M5 22V2h14v20M2 22h20M9 5h1M14 5h1M9 9h1M14 9h1M9 13h1M14 13h1M10 22v-5h4v5',
+  pumpHouse: 'M3 22V10l9-7 9 7v12zM9 22V12h6v10M12 12V8h5M7 17h10',
   waterworks: 'M12 2C9 7 4 11 4 15a8 7 0 0 0 16 0C20 11 15 7 12 2zM8 15q0 4 4 4',
   feedmill: 'M6 3h12l-2 5 4 13H4L8 8zM8 8h8M12 18v-7M12 14l-3-2M12 17l3-2',
   dairy:
@@ -58,6 +59,7 @@ export const buildingMapIcons: Readonly<Record<string, string>> = {
 };
 export const aircraftHangarIcon = 'M12 2v20M2 12l10-5 10 5M7 21l5-4 5 4M6 5h12';
 const otherIcons: Readonly<Record<string, string>> = {
+  spring: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20M12 6c-2 3-4 5-4 8a4 4 0 0 0 8 0c0-3-2-5-4-8z',
   'Wood / logs': 'M12 2 3 15h6v7h6v-7h6z',
   stone: 'M2 20 7 7l8-3 7 16zM7 7l5 13 3-16',
   gravel: 'M2 21l3-6 5 6zM12 21l5-8 5 8zM6 11l4-7 4 7z',

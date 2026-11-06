@@ -532,6 +532,13 @@ export class GameScene {
       ':' +
       JSON.stringify(world.terrain) +
       JSON.stringify(world.coastalBluffs ?? []) +
+      JSON.stringify([
+        world.springs,
+        world.settings.springsEnabled,
+        world.settings.springBasinDiameter,
+        world.settings.springDampDiameter,
+        world.settings.springTrickleLength,
+      ]) +
       JSON.stringify(
         world.northernIsland ? { ...world.northernIsland, resources: undefined } : null,
       ) +

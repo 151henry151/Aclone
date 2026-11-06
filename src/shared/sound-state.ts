@@ -6,7 +6,7 @@ import {
 } from './staffing.ts';
 import { herdSpec, herdReady, livestockInputs, livestockOutputs } from './livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { waterworksSite } from './shoreline.ts';
+import { waterProductionBlocker } from './fresh-water.ts';
 import { recipes, vehicles } from './catalog';
 import type { Building, Player, Recipe, World } from './types';
 
@@ -50,7 +50,7 @@ export function productionEfficiency(
   at = w.time,
 ): number {
   if (!herdReady(b)) return 0;
-  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
+  if (waterProductionBlocker(w, b)) return 0;
   const crew = productionStaffing(w, b, staff, at);
   // Preserve government operation without a player crew, but hired crews follow
   // the same crowding rule as private production.
@@ -82,7 +82,7 @@ export function productionSupplied(
 
 export function productionActivity(w: World, b: Building, crafting = new Set<string>()): number {
   if (b.construction || b.condition <= 0 || b.kind === 'farm') return 0;
-  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) return 0;
+  if (waterProductionBlocker(w, b)) return 0;
   if (crafting.has(b.id)) return 1;
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r) return 0;

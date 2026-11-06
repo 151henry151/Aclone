@@ -6,7 +6,7 @@ import { worldItems, skillLesson } from '../../shared/world-catalogue.ts';
 import { availableSupply } from '../../shared/harbour-supply.ts';
 import { canCarry, distance, productionInterval } from '../../shared/simulation.ts';
 import { herdReady } from '../../shared/livestock.ts';
-import { waterworksSite } from '../../shared/shoreline.ts';
+import { waterProductionBlocker } from '../../shared/fresh-water.ts';
 import { productionStaff } from '../../shared/sound-state.ts';
 import type { Building, Player, World } from '../../shared/types.ts';
 import type { Step } from './decision.ts';
@@ -65,7 +65,7 @@ export function estimateSupply(
         source.kind === 'farm' ||
         source.construction ||
         !herdReady(source) ||
-        (source.kind === 'waterworks' && !waterworksSite(w, source, source.rotation))
+        waterProductionBlocker(w, source)
       )
         throw Error('No ready producer');
       const interval = productionInterval(w, source);

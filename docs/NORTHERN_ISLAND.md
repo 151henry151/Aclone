@@ -66,3 +66,21 @@ The setting applies to village, countryside and added deposits, including saved 
 The design follows [NC State's Natural Stream Processes](https://content.ces.ncsu.edu/natural-stream-processes): outside-bend pools, inner sediment bars, shallow riffles and steeper headwater reaches. A [University of Turku aerial river photograph](https://www.utu.fi/sites/default/files/images/AnthroCliMocs_meanderikaarre.jpg) informed the asymmetric banks and restrained stone coverage. This is a terrain-aware procedural game approximation, not a sediment-transport or fluid-dynamics solver.
 
 Saved surveys stay compact; smooth four-metre surface samples and the collision/riverbed queries use the same interpolated course. Bank cuts and fills blend continuously into the surrounding valley, including where the original ground falls below the river. There is no fixed-distance ledge. Regression checks cover submerged surfaces between survey points, asymmetric pools/bars and continuous downhill bank shoulders.
+
+## Natural springs and fresh-water supply
+
+The water-source upgrade surveys **30 springs** on public Puddlewick, including
+one at the saved head of each of its five rivers. Ordinary sources favour higher
+land, reject water, cliffs and steep building footprints, and stay at least
+250 m apart. The survey runs after island expansion and freezes stable IDs and
+positions; restarting or editing terrain never rerolls it. Private and heightmap
+worlds use their own seed, or save an empty survey when springs are disabled.
+
+Mossy basins, damp ground, reeds and short moving trickles stream with gathering
+scenery. Headwater basins meet the existing channels. At resource-detail map
+zoom, look for the droplet in a ring. Hikers can drink free on foot; pump-houses
+turn a reserved spring or suitable river/pond intake into stockroom Water. The
+NPC water-site survey now covers the actual island extent, including northern
+banks and coasts, and considers both fresh-water pumps and desalination plants.
+See [water supply](PLAYING.md#springs-and-pump-houses) and
+[creator rules](WORLD_BUILDING.md#springs-and-water-production).

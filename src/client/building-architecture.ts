@@ -218,7 +218,7 @@ export function architecturalDetails(
       spoke.rotation.x = a;
     }
   }
-  if (['waterworks'].includes(b.kind)) {
+  if (['waterworks', 'pumpHouse'].includes(b.kind)) {
     // Tanks sit on a supported roof deck (not suspended beside a changed roof).
     const deck = vs.find((v) => v.roof === 'flat') ?? main;
     const radius = Math.min(0.8, deck.width * 0.18, deck.depth * 0.18),
@@ -235,7 +235,7 @@ export function architecturalDetails(
         y + dy,
         deck.z,
       ).rotation.x = Math.PI / 2;
-    if (b.kind === 'waterworks') {
+    if (['waterworks', 'pumpHouse'].includes(b.kind)) {
       const pipe = cylinder(0.13, 1.7, '#627c7f', -2.4, 0.3, -3.8);
       pipe.rotation.x = Math.PI / 2;
       box(0.8, 0.5, 0.7, '#4a737a', -2.4, 0.25, -3.1);

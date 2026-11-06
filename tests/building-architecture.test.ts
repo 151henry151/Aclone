@@ -35,10 +35,14 @@ const release = (root: T.Object3D) =>
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) m.dispose();
     }
   });
-test('all 51 types have five distinct structural models; finishes do not change their geometry', () => {
-  assert.equal(Object.keys(buildings).length, 51);
+test('all architectural types have five distinct structural models; finishes do not change their geometry', () => {
+  assert.equal(Object.keys(buildings).length, 53);
   for (const [kind, def] of Object.entries(buildings)) {
     const models = buildingArchitectures(kind);
+    if (kind === 'quay') {
+      assert.equal(models.length, 0, 'quays retain their fixed infrastructure model');
+      continue;
+    }
     assert.equal(models.length, 5, kind);
     const signatures = new Set<string>();
     for (const a of models) {

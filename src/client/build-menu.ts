@@ -1,3 +1,4 @@
+import { pumpHouseSite, freshWaterReason } from '../shared/fresh-water';
 import {
   constructionRefundPercentage,
   constructionRules,
@@ -150,8 +151,17 @@ export function mountBuildMenu(
     let refusal = '',
       tax = 0,
       taxName = 'No town tax';
+    if (kind === 'pumpHouse') {
+      const site = pumpHouseSite(w, b);
+      if (site) Object.assign(b, { x: site.x, z: site.z, waterSource: site.waterSource });
+      else refusal = freshWaterReason;
+      if (
+        Math.hypot(b.x - p.x, b.z - p.z) > constructionRules(w.settings).constructionPlacementReach
+      )
+        refusal = `Move within ${constructionRules(w.settings).constructionPlacementReach} metres of the snapped construction site`;
+    }
     try {
-      const terms = constructionTerms(w, p, draft.kind, p, q.price);
+      const terms = constructionTerms(w, p, draft.kind, b, q.price);
       tax = terms.tax;
       taxName = terms.town ? `${terms.town.name} construction tax` : taxName;
     } catch (error) {
@@ -162,16 +172,16 @@ export function mountBuildMenu(
     if (
       w.buildings.some(
         (o) =>
-          Math.hypot(o.x - p.x, o.z - p.z) <=
+          Math.hypot(o.x - b.x, o.z - b.z) <=
           constructionRules(w.settings).constructionMinimumSpacing,
       )
     )
       refusal ||= 'Too close to another building';
-    if (onFarmLand(w, p.x, p.z, Math.max(bounds.width, bounds.depth) / 2))
+    if (onFarmLand(w, b.x, b.z, Math.max(bounds.width, bounds.depth) / 2))
       refusal ||= 'Construction would cover farmland';
     if (kind === 'waterworks' && !waterworksSite(w, p, b.rotation, true))
       refusal ||=
-        'Rotate the intake toward water; the pump house needs dry shoreline ground with water within 10 metres behind it.';
+        'Rotate the intake toward the sea; a desalination plant needs a dry shoreline foundation and an ocean-connected intake.';
     const home = ['home', 'warehouse'].includes(kind);
     const owned = w.buildings.filter(
       (o) => o.owner === p.id && ['home', 'warehouse'].includes(o.kind) === home,
@@ -182,7 +192,7 @@ export function mountBuildMenu(
     const currency = (n: number) => money(n, w.settings.denariiPerSheckle);
     host.querySelector('[data-build-estimate]')!.innerHTML =
       `<h3>${esc(def.name)}</h3><p>${bounds.width.toFixed(1)} × ${bounds.depth.toFixed(1)} m footprint · ${bounds.height.toFixed(1)} m high · <b>${q.capacity.toLocaleString()} storage per good</b>${roomCount(b) ? ` · ${roomCount(b)} guest rooms` : ''}</p>
-    <p>Ground variation ${foundationProfile(w, b).rise.toFixed(2)}m; level plinth and entrance steps shown. Maximum accepted variation 2m.</p><p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
+    <p>Ground variation ${foundationProfile(w, b).rise.toFixed(2)}m; level plinth and entrance steps shown. Maximum accepted variation ${constructionRules(w.settings).constructionMaximumRise}m.</p><p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
     <ul class="build-materials">${Object.entries(q.materials)
       .map(
         ([item, n]) =>
@@ -240,7 +250,7 @@ export function mountBuildMenu(
       ctx.restore();
     };
     for (const o of w.buildings)
-      if (Math.hypot(o.x - p.x, o.z - p.z) < range * 2) draw(o, '#a5b5a2');
+      if (Math.hypot(o.x - b.x, o.z - b.z) < range * 2) draw(o, '#a5b5a2');
     draw(b, refusal ? '#e49c78' : '#e5d088');
     ctx.strokeStyle = '#fff0ad';
     ctx.lineWidth = 2;
@@ -252,7 +262,7 @@ export function mountBuildMenu(
     ctx.font = '13px sans-serif';
     ctx.fillText('N ↑ · site plan', 12, 20);
     ctx.fillText(
-      `Foundation at ${Math.round(p.x)}, ${Math.round(p.z)} · ${draft.rotation}°`,
+      `Foundation at ${Math.round(b.x)}, ${Math.round(b.z)} · ${draft.rotation}°`,
       12,
       178,
     );

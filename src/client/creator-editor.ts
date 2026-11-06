@@ -1,3 +1,8 @@
+import {
+  waterSourceRules,
+  waterSourceRuleFields,
+  type WaterSourceRules,
+} from '../shared/water-source-rules';
 import { stormRules, stormRuleFields, type StormRules } from '../shared/storm-rules';
 import { rowboatRules, rowboatRuleFields, type RowboatRules } from '../shared/rowboat-rules';
 import {
@@ -87,6 +92,7 @@ export const creatorTabs = [
   'Arena',
   'Workshop',
   'Resource visuals',
+  'Springs',
   'Terrain textures',
   'Audio zones',
   'Objects',
@@ -159,6 +165,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(canoeRuleFields),
     ...Object.keys(rowboatRuleFields),
     ...Object.keys(stormRuleFields),
+    ...Object.keys(waterSourceRuleFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -680,6 +687,24 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Capacity, price, speed, dimensions and passenger seats use the vehicle editor. Disabling purchases preserves existing boats. Beached boats stay owner-only unless public pickup is enabled; taking one transfers it, and requires no existing rowboat. Rowboats cannot be carried or towed as motorboat tenders.</p></fieldset>`;
+  const water = waterSourceRules(settings);
+  const waterFields = `<fieldset><legend>Springs and water production</legend>${Object.entries(
+    waterSourceRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            water[key as keyof WaterSourceRules],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${water[key as keyof WaterSourceRules] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>The first survey is frozen. Density rules affect new surveys; change existing sources in the Springs tab. Turning springs off hides them and stops their pumps without deleting saved locations. Gravity applies only to spring intakes. Premises or template recipe overrides take precedence. Building templates configure price, materials, wages, staffing and storage.</p><p>New desalination plants require ocean-connected sea water unless disabled here; existing plants retain their original intake survey.</p></fieldset>`;
   const storm = stormRules(settings);
   const stormFields = `<fieldset class="boat-death-settings"><legend>Storm capsizing</legend>${Object.entries(
     stormRuleFields,
@@ -771,6 +796,7 @@ export function settingsFields(settings: Settings = defaults) {
     canoeFields +
     rowboatFields +
     stormFields +
+    waterFields +
     radioFields +
     survivalFields +
     economyFields +
@@ -926,6 +952,8 @@ export function refreshCreatorPreview(w: World) {
   }
 }
 export function creatorPanel(w: World, p: Player, tab: string) {
+  if (tab === 'Springs')
+    return `<h3>Frozen spring survey</h3><p>Place a source at your coordinates or edit a saved source below. Deleting or moving a spring stops a pump at its old intake. Survey rules do not regenerate saved springs.</p><form id="creator-spring-form">${field('Spring ID', 'id', 'spring-hand-' + (w.revision + 1))}${field('X', 'x', p.x, 'number', 'step="any"')}${field('Z', 'z', p.z, 'number', 'step="any"')}${field('Flow', 'flow', waterSourceRules(w.settings).springMinimumFlow, 'number', 'min=".1" max="5" step=".1"')}<button>Save spring</button></form>${(w.springs ?? []).map((s) => `<form id="creator-spring-${esc(s.id)}" data-spring-form><input type="hidden" name="id" value="${esc(s.id)}"><h4>${esc(s.id)}${s.river ? ' · headwater' : ''}</h4>${field('X', 'x', s.x, 'number', 'step="any"')}${field('Z', 'z', s.z, 'number', 'step="any"')}${field('Flow', 'flow', s.flow, 'number', 'min=".1" max="5" step=".1"')}<button>Save spring</button>${button('Delete spring', 'deleteSpring', s.id)}</form>`).join('') || '<p>No springs in this world.</p>'}`;
   if (tab === 'Courses') return coursesPanel(w, p, true);
   const items = worldItems(w),
     skills = worldSkills(w);
@@ -1122,6 +1150,10 @@ export function creatorPanel(w: World, p: Player, tab: string) {
   return '';
 }
 export function creatorClick(action: string, value: string, w: World, send: (a: Action) => void) {
+  if (action === 'deleteSpring') {
+    send({ type: 'spring', operation: 'delete', id: value });
+    return;
+  }
   const c = structuredClone({ ...defaultCreator(), ...w.creator });
   readDraft();
   if (action === 'starter') draft = starters(value);
@@ -1220,6 +1252,17 @@ export function creatorClick(action: string, value: string, w: World, send: (a: 
     send({ type: 'creatorRemove', kind: action === 'deleteZone' ? 'zone' : 'terrain', id: value });
 }
 export function creatorSubmit(form: HTMLFormElement, w: World): Action | undefined {
+  if (form.getAttribute('id') === 'creator-spring-form' || form.hasAttribute('data-spring-form')) {
+    const d = new FormData(form);
+    return {
+      type: 'spring',
+      operation: 'save',
+      id: String(d.get('id')),
+      x: Number(d.get('x')),
+      z: Number(d.get('z')),
+      flow: Number(d.get('flow')),
+    };
+  }
   if (form.id === 'creator-round-form') {
     const d = new FormData(form);
     return {

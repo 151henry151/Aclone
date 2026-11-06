@@ -1,3 +1,5 @@
+import { pumpHouseSite, freshWaterReason } from './fresh-water';
+import { constructionRules } from './construction-rules';
 import { quaySite } from './quay';
 import { sceneryObstaclesNear } from './scenery-obstacles';
 import { boatNavigationRules } from './boat-navigation-rules';
@@ -8,10 +10,10 @@ import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
 import { RIVER_DOCK, riverDockSite } from './river-dock';
-import { farmPlotPosition } from './farm-land';
+import { farmPlotPosition, onFarmLand } from './farm-land';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { buildingPlan, type BuildingVolume } from './building-shapes';
+import { buildingBounds, buildingPlan, type BuildingVolume } from './building-shapes';
 import { mapHalf, terrainHeight } from './terrain';
 import type { Building, World } from './types';
 type Site = Pick<
@@ -95,6 +97,12 @@ export function constructionSiteReason(w: World, b: Site) {
     return 'Keep buildings outside the spaceport launch reservation';
   if (b.kind === 'lighthouse' && !lighthouseCliffSite(w, b.x, b.z))
     return 'Lighthouses require a flat cliff-top site, 15–65 metres inland of a tall coastal cliff';
+  if (b.kind === 'pumpHouse') {
+    if (!pumpHouseSite(w, b)) return freshWaterReason;
+    const bounds = buildingBounds(buildingPlan(b));
+    if (onFarmLand(w, b.x, b.z, Math.max(bounds.width, bounds.depth) / 2))
+      return 'Construction would cover farmland';
+  }
   if (b.kind === 'quay') {
     if (!quaySite(w, b))
       return `Freight quays need dry shore access and ${boatNavigationRules(w.settings).quayDraft} m of clear water beneath the full berth; rotate the wharf toward the sea`;
@@ -125,8 +133,8 @@ export function constructionSiteReason(w: World, b: Site) {
     return 'Keep fields outside the spaceport launch reservation';
   const foundation = foundationProfile(w, b);
   if (foundation.wet) return 'The building foundation must stay on dry land';
-  if (foundation.rise > 2)
-    return 'Ground rises more than 2 metres across this footprint; choose a flatter site or smaller building';
+  if (foundation.rise > constructionRules(w.settings).constructionMaximumRise)
+    return `Ground rises more than ${constructionRules(w.settings).constructionMaximumRise} metres across this footprint; choose a flatter site or smaller building`;
   const rects = rectangles(b),
     edge = mapHalf(w);
   for (const a of rects) {

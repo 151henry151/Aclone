@@ -70,6 +70,12 @@ test('editable terrain, water level and no-build zones govern siting; nearby pla
   p.x = site.x;
   p.z = site.z;
   w.zones.push({ id: 'protected', kind: 'noBuild', ...site, radius: 1000 });
+  const outside = nearestWaterworksSite(w, p);
+  assert.ok(
+    outside && Math.hypot(outside.x - site.x, outside.z - site.z) >= 1000,
+    'the expanded finder can leave the protected village',
+  );
+  w.zones.find((z) => z.id === 'protected')!.radius = 20000;
   assert.equal(nearestWaterworksSite(w, p), undefined);
   assert.throws(() => act(w, p.id, { type: 'construct', kind: 'waterworks' }), /prohibited/);
   w.zones = [];
@@ -130,7 +136,7 @@ test('NPC construction choices survey a legal shoreline and use the same authori
   const choices = adaptiveChoices(w, p, { plan: [], index: 0 } as unknown as ResidentState);
   const choice = choices.find(
     (c) =>
-      c.description.includes('Shoreline waterworks') &&
+      c.description.includes('Desalination plant') &&
       c.plan.some(
         (s) =>
           s.kind === 'operation' &&

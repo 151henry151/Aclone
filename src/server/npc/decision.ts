@@ -151,6 +151,7 @@ const operationParameter = z
       'direction',
       'kind',
       'style',
+      'rotation',
       'slot',
       'game',
       'mode',

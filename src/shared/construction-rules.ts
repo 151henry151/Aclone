@@ -2,6 +2,7 @@
 import defaults from '../../data/settings.json';
 import { maxCoordinate } from './world-limits';
 export const constructionRuleFields = {
+  constructionMaximumRise: { label: 'Maximum foundation rise (m)', min: 0, max: 20, step: 0.1 },
   pastureParcelSize: { label: 'New pasture parcel side (m)', min: 8, max: 64, step: 1 },
   maximumFarmPlots: { label: 'Maximum farm plots', min: 4, max: 64, step: 4 },
   expandedConstructionCostMultiplier: {

@@ -1,3 +1,10 @@
+import {
+  pumpHouseSite,
+  refreshPumpRecipes,
+  waterProductionBlocker,
+  freshWaterReason,
+} from './fresh-water';
+import { waterSourceRuleFields, waterSourceRules } from './water-source-rules';
 import { advanceCapsizing } from './storm-capsizing';
 import { stormRuleFields } from './storm-rules';
 import { ROWBOAT, rowboatRules, rowboatRuleFields } from './rowboat-rules';
@@ -972,6 +979,74 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       result = `Discarded ${n} ${items[item].name}.`;
       break;
     }
+    case 'spring': {
+      owner(p);
+      const springId = str(a.id, 120);
+      requireThat(/^spring-[a-zA-Z0-9:_-]+$/.test(springId), 'Use a spring- identifier');
+      const list = w.springs ?? [];
+      if (a.operation === 'delete') {
+        requireThat(
+          list.some((s) => s.id === springId),
+          'Unknown spring',
+        );
+        w.springs = list.filter((s) => s.id !== springId);
+      } else {
+        requireThat(a.operation === 'save', 'Choose save or delete');
+        const spring = {
+          id: springId,
+          x: num(a.x, -mapHalf(w), mapHalf(w)),
+          z: num(a.z, -mapHalf(w), mapHalf(w)),
+          flow: num(
+            a.flow,
+            waterSourceRuleFields.springMinimumFlow.min,
+            waterSourceRuleFields.springMaximumFlow.max,
+          ),
+        };
+        requireThat(
+          list.length < 1000 || list.some((s) => s.id === springId),
+          'Spring limit reached',
+        );
+        const prior = list.find((s) => s.id === springId);
+        w.springs = [
+          ...list.filter((s) => s.id !== springId),
+          { ...spring, ...(prior?.river ? { river: prior.river } : {}) },
+        ];
+      }
+      w.waterSourcesVersion = 1;
+      refreshPumpRecipes(w);
+      w.revision++;
+      result = 'Spring survey updated. Existing intakes keep their saved position.';
+      break;
+    }
+    case 'drinkSpring': {
+      const r = waterSourceRules(w.settings);
+      requireThat(
+        r.springsEnabled && r.springDrinkingEnabled,
+        'Spring drinking is disabled in this world',
+      );
+      requireThat(
+        p.vehicle === 5 && !p.hitch && !p.atHome && !p.task && !p.game && Math.abs(p.speed) < 0.5,
+        'Stop on foot outside to drink from a spring',
+      );
+      const spring = w.springs?.find((s) => s.id === str(a.spring));
+      requireThat(
+        spring && distance(p, spring) <= r.springDrinkRange,
+        `Stand within ${r.springDrinkRange} m of the spring`,
+      );
+      requireThat(
+        w.time - (p.lastSpringDrink ?? -Infinity) >= r.springDrinkCooldown,
+        `Wait ${r.springDrinkCooldown} seconds between spring drinks`,
+      );
+      p.repeats = p.lastFood === 'water' ? p.repeats + 1 : 0;
+      p.lastFood = 'water';
+      p.thirst = Math.max(
+        0,
+        p.thirst - (items.water.drink ?? 0) * servingMultiplier(w.settings, p.repeats + 1),
+      );
+      p.lastSpringDrink = w.time;
+      result = 'Drank from the spring. No water was bottled.';
+      break;
+    }
     case 'use':
       usable(w, p, str(a.item));
       result = 'That should help.';
@@ -1064,6 +1139,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         'Choose a valid profession and output',
       );
       b.production = { inputs, outputs, seconds, skill, tier: 0 };
+      delete b.pumpRecipeManaged;
       b.progress = 0;
       break;
     }
@@ -1938,9 +2014,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         kind = w.catalogue?.templates[requested]?.base ?? requested,
         def = worldBuildings(w)[requested];
       const site =
-        ['waterworks', 'boathouse'].includes(kind) && (a.x !== undefined || a.z !== undefined)
+        ['waterworks', 'boathouse', 'pumpHouse'].includes(kind) &&
+        (a.x !== undefined || a.z !== undefined)
           ? { x: num(a.x, -mapHalf(w), mapHalf(w)), z: num(a.z, -mapHalf(w), mapHalf(w)) }
-          : p;
+          : { x: p.x, z: p.z };
       const construction = constructionRules(w.settings);
       requireThat(
         distance(p, site) <= construction.constructionPlacementReach,
@@ -1979,11 +2056,36 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         !onFarmLand(w, site.x, site.z, Math.max(footprint.width, footprint.depth) / 2),
         'Construction would cover farmland',
       );
+      const pump =
+        kind === 'pumpHouse'
+          ? pumpHouseSite(w, {
+              id: 'construction',
+              kind,
+              ...site,
+              rotation: chosenRotation ?? 0,
+              architecture,
+              style,
+              size: size as BuildingSize | undefined,
+              creatorBounds,
+            })
+          : undefined;
+      requireThat(kind !== 'pumpHouse' || pump, freshWaterReason);
+      if (pump) {
+        Object.assign(site, { x: pump.x, z: pump.z });
+        requireThat(
+          distance(p, site) <= construction.constructionPlacementReach,
+          `Move within ${construction.constructionPlacementReach} metres of the snapped construction site`,
+        );
+        requireThat(
+          w.buildings.every((b) => distance(site, b) > construction.constructionMinimumSpacing),
+          'Too close to another building',
+        );
+      }
       const shore =
         kind === 'waterworks' ? waterworksSite(w, site, chosenRotation, true) : undefined;
       requireThat(
         kind !== 'waterworks' || shore,
-        'Waterworks require dry ground directly on a shoreline with water within 10 metres',
+        'Desalination plants require dry ground on an ocean shoreline with a sea-water intake',
       );
       const rotation = chosenRotation ?? shore?.rotation ?? 0;
       const siteReason = constructionSiteReason(w, {
@@ -2020,6 +2122,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const b = makeBuilding('b' + ++w.revision + '-' + Math.floor(w.time), kind, site.x, site.z);
       applyBuildingTemplate(w, b, requested);
       b.owner = id;
+      if (pump) b.waterSource = pump.waterSource;
       b.rotation = rotation;
       if (size) b.size = size as BuildingSize;
       b.capacity = design.capacity;
@@ -2032,6 +2135,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       b.constructionCost = design.price;
       b.foundationY = foundationProfile(w, b).level;
       w.buildings.push(b);
+      refreshPumpRecipes(w);
       result = 'Construction site placed. Deliver the materials listed at the site.';
       break;
     }
@@ -2118,6 +2222,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(canoeRuleFields, key) ||
             Object.hasOwn(rowboatRuleFields, key) ||
             Object.hasOwn(stormRuleFields, key) ||
+            Object.hasOwn(waterSourceRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2275,6 +2380,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const radioField = radioRuleFields[key as keyof typeof radioRuleFields];
         if (radioField && 'min' in radioField)
           num(v, radioField.min, radioField.max, radioField.step === 1);
+        const waterField = waterSourceRuleFields[key as keyof typeof waterSourceRuleFields];
+        if (waterField && 'min' in waterField)
+          num(v, waterField.min, waterField.max, waterField.step === 1);
         const stormField = stormRuleFields[key as keyof typeof stormRuleFields];
         if (stormField && 'min' in stormField)
           num(v, stormField.min, stormField.max, stormField.step === 1);
@@ -2426,7 +2534,23 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const importPricingChanged = governmentImportRuleKeys.some(
         (key) => clean[key] !== undefined && clean[key] !== priorEconomy[key],
       );
+      const waterRules = waterSourceRules({ ...w.settings, ...clean });
+      requireThat(
+        waterRules.springHighElevation > waterRules.springLowElevation,
+        'Upper spring elevation must exceed lower elevation',
+      );
+      requireThat(
+        waterRules.springMaximumFlow >= waterRules.springMinimumFlow &&
+          waterRules.springHeadwaterFlow >= waterRules.springMaximumFlow,
+        'Headwater flow must be at least the ordinary flow range',
+      );
+      requireThat(
+        waterRules.pumpIntakeMaxReach >= waterRules.pumpIntakeMinReach &&
+          waterRules.desalinationIntakeMaxReach >= waterRules.desalinationIntakeMinReach,
+        'Maximum intake reach must be at least its minimum',
+      );
       Object.assign(w.settings, clean);
+      refreshPumpRecipes(w);
       if (importPricingChanged) repriceGovernmentStores(w);
       w.revision++;
       break;
@@ -2472,11 +2596,19 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       requireThat(w.buildings.length < 500, 'Building limit reached');
       const shore =
         kind === 'waterworks' ? waterworksSite(w, { x, z }, undefined, true) : undefined;
-      requireThat(kind !== 'waterworks' || shore, 'Waterworks require a dry shoreline site');
+      requireThat(
+        kind !== 'waterworks' || shore,
+        'Desalination plants require a dry ocean shoreline site',
+      );
       const b = makeBuilding('editor' + (w.revision + 1), kind, x, z);
       if (shore) b.rotation = shore.rotation;
-      if (kind === 'boathouse') {
+      if (kind === 'boathouse' || kind === 'pumpHouse') {
         b.rotation = a.rotation === undefined ? 0 : num(a.rotation, -Math.PI * 2, Math.PI * 2);
+        if (kind === 'pumpHouse') {
+          const pump = pumpHouseSite(w, b);
+          requireThat(pump, freshWaterReason);
+          Object.assign(b, { x: pump.x, z: pump.z, waterSource: pump.waterSource });
+        }
         const reason = constructionSiteReason(w, b);
         requireThat(!reason, reason!);
         b.foundationY = foundationProfile(w, b).level;
@@ -2486,6 +2618,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       b.owner = id;
       w.revision++;
       w.buildings.push(b);
+      refreshPumpRecipes(w);
       break;
     }
     case 'postMail':
@@ -3309,7 +3442,7 @@ function cycle(w: World, b: Building, at: number) {
   }
   const r = b.production ?? (b.recipe && recipes[b.recipe]);
   if (!r || b.construction || b.kind === 'farm') return;
-  if (b.kind === 'waterworks' && !waterworksSite(w, b, b.rotation)) {
+  if (waterProductionBlocker(w, b)) {
     b.efficiency = 0;
     return;
   }
@@ -3411,6 +3544,7 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
 }
 
 export function advance(w: World, seconds: number) {
+  refreshPumpRecipes(w);
   ensurePastures(w);
   if (!Number.isFinite(seconds) || seconds <= 0 || w.maintenance?.paused) return;
   const boundary = Math.min(

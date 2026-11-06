@@ -1,3 +1,4 @@
+import { pumpHouseSite, refreshPumpRecipes } from '../src/shared/fresh-water';
 import { herdSpec } from '../src/shared/livestock.ts';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
@@ -67,13 +68,28 @@ test('every actual production batch pays its input suppliers and ideal crew and 
       b.z = 144;
       b.rotation = waterworksSite(w, b)!.rotation;
     }
+    if (kind === 'pumpHouse') {
+      Object.assign(w.settings, { mapSize: 500, seaLevel: -2, tidalRange: 0 });
+      w.terrainMapSize = 500;
+      w.landscape = {
+        paths: [],
+        surfaces: [],
+        barriers: [],
+        scatter: [],
+        heightmap: Array(1089).fill(30),
+      };
+      w.springs = [{ id: 'spring-balance', x: 100, z: 100, flow: 1 }];
+      Object.assign(b, { x: 100, z: 108, rotation: 0 });
+      Object.assign(b, pumpHouseSite(w, b));
+    }
     const herd = herdSpec(b);
     b.stock = herd ? { [herd.animal]: herd.minimum } : {}; // Retained livestock is startup capital, not a batch input.
     b.investment = 10000000;
     w.buildings = [b];
+    refreshPumpRecipes(w);
     const supplier = addPlayer(w, 'supplier', 'Supplier'),
       worker = addPlayer(w, 'worker', 'Worker');
-    supplier.x = worker.x = 0;
+    supplier.x = worker.x = b.x;
     supplier.z = worker.z = b.z;
     supplier.cash = 10000000;
     worker.skills = [recipe.skill];

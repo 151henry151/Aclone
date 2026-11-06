@@ -1745,3 +1745,47 @@ coastal capsizes force loss of the affected hull and cargo. Occupants all die;
 other property continues to follow the world's ordinary death policy. Settings
 and vehicle tuning travel in portable designs; player exposure and personal
 rowboats remain saved-world state, not design templates.
+
+## Springs and water production
+
+**F10 → Rules → Springs and water production** exposes the complete water-source
+rules. **F10 → Springs** places, moves, changes flow or deletes individual saved
+sources by stable `spring-…` ID. Exports include the edited survey and building
+intakes. Moving/deleting a source pauses an existing pump; it does not redirect
+its intake. Reusing the same ID and position restores it. Ordinary players
+cannot edit the survey.
+
+Defaults: springs enabled; target 30 including guaranteed river heads; ordinary
+minimum elevation 15 m above sea, candidate chance 0.02 at 20 m increasing to
+0.4 at 300 m; minimum spacing 250 m; water clearance 40 m; slope normal Y at
+least 0.72. The separate construction foundation-rise limit defaults to 2 m
+and also governs candidate spring sites. Headwaters are exempt from ordinary
+geographic rejection. Ordinary flow ranges 0.6–1.1, headwater flow 1.2.
+The first survey is frozen, including an empty disabled survey. Density changes
+apply to first surveys in new worlds, not a reroll of saved sources.
+
+Spring basins default to 3 m diameter, damp patches 6 m and trickles 4 m.
+Drinking is enabled, within 3 m, once every 20 seconds. Turn springs off to hide
+all saved sources and stop spring pumps; turn them on to restore the same
+identities. The separate drinking toggle leaves scenery and pumps working.
+
+Pump recipe defaults are one fuel and 20 water per batch. Optional gravity-fed
+spring intake uses no fuel and eight water; optional flow scaling multiplies
+spring output and rounds to whole units (minimum one). Both switches default
+off. River/pond intakes require 0.4 m depth and a foundation 0.3 m above their
+local surface, reach 6–10 m behind the building, and spring intakes snap within
+8 m. One pump claims each spring; pumps sharing a river need 60 m separation.
+World rules refresh default pump recipes immediately. An explicit **Production**
+or **Building templates** recipe overrides them. Building templates also expose
+construction price/materials, wages, ideal staff, capacity and trade prices.
+
+Desalination defaults retain a 0.3 m submerged intake, 0.2 m foundation clearance
+and 6–10 m rear reach. All four limits are editable separately from fresh-water
+pumps. New sites check both tidal extremes; existing plants keep their original
+mean-water survey.
+
+The **Require true ocean for new desalination plants** switch defaults on.
+Turn it off for creator worlds that deliberately use enclosed edited ponds as
+sea. Existing plants are grandfathered during the one-time migration; their
+saved identities, recipes, owner, cash and stock remain intact. New pumps and
+plants recheck water availability before producing, and explain blocked intakes.

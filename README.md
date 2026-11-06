@@ -4,7 +4,15 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.126.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.127.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.127.0 adds natural springs across the uplands and at river heads.
+Walk up for a free drink, follow their map symbols, or build a pump-house to
+supply northern settlements with Water. Choose from five models; fresh-water
+pumps use less fuel than coastal desalination plants. World Builder controls
+sources, drinking, recipes and intake limits, including optional gravity-fed
+springs. Existing waterworks keep operating. See
+[Springs and pump-houses](docs/PLAYING.md#springs-and-pump-houses).
 
 Version 0.126.0 adds two-person wooden rowboats that need no fuel and stay
 moored at the shore or riverbank where you leave them. Storm forecasts and
