@@ -1,3 +1,7 @@
+import { parkingRules } from '../shared/parking-rules';
+import { fuelRules } from '../shared/fuel-rules';
+import { worldItems } from '../shared/world-catalogue';
+import { items } from '../shared/catalog';
 import { economyRules } from '../shared/economy-rules';
 import { repairStatus } from '../shared/vehicle-services';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -15,7 +19,7 @@ export function playerAidPanel(target: Player, w?: World) {
   return `<p id="aid-location"></p><button type="button" data-do="player-chat" data-id="${id}">Private chat with ${name}</button>
     <h3>Give money</h3><p>Send cash in hand directly to ${name}, anywhere in this parish. No fee or tax. This is a gift, not a loan.</p><p id="aid-cash"></p>
     <form id="money-gift-form" data-player="${id}"><label>Amount in denarii (d)<input name="denarii" type="number" min="0.01" max="${economyRules(w?.settings).maximumMoneyGift / 100}" step="0.01" inputmode="decimal" value="10" required></label><p id="gift-status" role="status"></p><button type="submit" class="primary" aria-describedby="gift-status">Give money to ${name}</button></form>
-    <h3>Roadside refuelling</h3><p>Stop within 15 metres of their vehicle. Uses 1 Fuel from your inventory and adds up to 8 tank units. Any excess is used up, as when refuelling your own vehicle.</p><p id="refuel-status" role="status"></p><button type="button" data-do="refuelPlayer" data-id="${id}" aria-describedby="refuel-status">Use 1 Fuel to refuel ${name}</button><h3>Roadside repairs</h3><p>A qualified mechanic carrying Tools can consume ${economyRules(w?.settings).vehicleServiceSteel} Steel to restore up to 25 condition points. Stop within 15 metres. Tools are retained.</p><p id="repair-status" role="status"></p><button type="button" data-do="repairVehicle" data-id="${id}" aria-describedby="repair-status">Repair ${name}'s vehicle</button><h3>Passenger ride</h3><p>Approach within 10 metres to board a driver with a spare seat. For boats, board at the same dock. If you have a stranded boat, you can hitch a recovery ride on a canal boat or fishing boat; use Inventory → Boating to transfer back when alongside. Otherwise leave the boat at a dock.</p><button type="button" data-do="hitch" data-id="${id}">Hitch a ride with ${name}</button><button type="button" data-do="detach">Leave passenger ride</button>`;
+    <h3>Roadside refuelling</h3><p>Stop within ${fuelRules(w?.settings).refuelRange} metres of their driven vehicle.${parkingRules(w?.settings).vehiclesPersist ? ` For a parked vehicle, stand within ${parkingRules(w?.settings).parkingReturnRange} metres of the vehicle; its owner may be elsewhere.` : ''} Uses 1 Fuel from your inventory and adds up to ${(w ? worldItems(w) : items).fuel.fuel} tank units. Any excess is used up, as when refuelling your own vehicle.</p><p id="refuel-status" role="status"></p><button type="button" data-do="refuelPlayer" data-id="${id}" aria-describedby="refuel-status">Use 1 Fuel to refuel ${name}</button><h3>Roadside repairs</h3><p>A qualified mechanic carrying Tools can consume ${economyRules(w?.settings).vehicleServiceSteel} Steel to restore up to 25 condition points. Stop within 15 metres. Tools are retained.</p><p id="repair-status" role="status"></p><button type="button" data-do="repairVehicle" data-id="${id}" aria-describedby="repair-status">Repair ${name}'s vehicle</button><h3>Passenger ride</h3><p>Approach within 10 metres to board a driver with a spare seat. For boats, board at the same dock. If you have a stranded boat, you can hitch a recovery ride on a canal boat or fishing boat; use Inventory → Boating to transfer back when alongside. Otherwise leave the boat at a dock.</p><button type="button" data-do="hitch" data-id="${id}">Hitch a ride with ${name}</button><button type="button" data-do="detach">Leave passenger ride</button>`;
 }
 export function refreshPlayerAid(host: HTMLElement, w: World, p: Player, id: string) {
   const form = host.querySelector<HTMLFormElement>('#money-gift-form');
@@ -44,6 +48,7 @@ export function refreshPlayerAid(host: HTMLElement, w: World, p: Player, id: str
   host.querySelector<HTMLButtonElement>('[data-do=repairVehicle]')!.disabled = !!repair.reason;
   const refuel = refuellingStatus(w, p, target, true);
   host.querySelector('#refuel-status')!.textContent =
-    refuel.reason ?? `Ready · You carry ${p.inventory.fuel} Fuel.`;
+    refuel.reason ??
+    `Ready${refuel.parked ? ' · Parked vehicle' : ''} · You carry ${p.inventory.fuel} Fuel.`;
   host.querySelector<HTMLButtonElement>('[data-do=refuelPlayer]')!.disabled = !!refuel.reason;
 }

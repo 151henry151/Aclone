@@ -49,7 +49,13 @@ const action = z.discriminatedUnion('type', [
     .strict(),
   z.object({ type: z.enum(['quit', 'outside', 'engine', 'lights', 'horn']) }).strict(),
   z.object({ type: z.literal('gather'), node: id }).strict(),
-  z.object({ type: z.literal('vehicle'), slot: z.union([z.literal(0), z.literal(5)]) }).strict(),
+  z
+    .object({
+      type: z.literal('vehicle'),
+      slot: z.union([z.literal(0), z.literal(5)]),
+      building: z.string().optional(),
+    })
+    .strict(),
   z.object({ type: z.literal('stock'), ...transfer, item: id, quantity }).strict(),
   z
     .object({

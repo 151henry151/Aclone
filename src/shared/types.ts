@@ -1,3 +1,4 @@
+import type { ParkingRules } from './parking-rules';
 import type { BuildingDoorRules } from './building-doors';
 import type { LivestockRules } from './livestock-rules';
 import type { MeatRules } from './meat-rules';
@@ -48,6 +49,8 @@ export type Input = {
   brake?: boolean;
 };
 export type Task = {
+  mount?: import('./vehicle-mount').VehicleMount;
+  arrival?: import('./arrival').Arrival;
   kind: string;
   end: number;
   freight?: { action: Action; landing: string };
@@ -66,6 +69,9 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  inside?: string;
+  parkedSeat?: number;
+  homeParking?: { building: string; slot: number };
   lastSpringDrink?: number;
   stormExposure?: { slot: number; warningAt: number; since?: number; safeUntil?: number };
   radios?: Record<number, import('./radio').RadioConfig>;
@@ -394,6 +400,7 @@ export interface Settings
     Partial<LivestockRules>,
     Partial<MeatRules>,
     Partial<BuildingDoorRules>,
+    Partial<ParkingRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -476,6 +483,8 @@ export interface Settings
   exchangeCap: number;
 }
 export interface World {
+  parkingRulesVersion?: 1;
+  parkedVehicles?: Record<string, import('./parked-vehicles').ParkedVehicle>;
   springs?: import('./springs').Spring[];
   waterSourcesVersion?: 1;
   smallCraft?: Record<string, import('./small-craft').SmallCraft>;

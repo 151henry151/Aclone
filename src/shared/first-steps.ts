@@ -1,3 +1,5 @@
+import { persistentVehicles } from './parked-vehicles';
+import { parkingRules } from './parking-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { recipes } from './catalog';
 import { onlineInventory } from './automatic-provisions';
@@ -51,6 +53,13 @@ export function firstSteps(w: World, p: Player) {
       : `Save for a cottage or inspect an inn for a room. ${w.settings.autoConsumeInventory ? 'Keep food and water in inventory: automatic meals work even without a home.' : 'Offline survival follows this world’s rules.'}`,
     destination: home?.id ?? (nearest('bnb') ?? nearest('hotel'))?.id,
   });
+  if (persistentVehicles(w, p)) {
+    const r = parkingRules(w.settings);
+    steps.push({
+      title: 'Park, walk and return',
+      detail: `Walking leaves your vehicle and its fuel where you parked. Use its map marker, return within ${r.parkingReturnRange} m to board, or carry fuel back from a seller to fill its tank. ${r.arrivalAnimation === 'off' ? 'Building entry is immediate in this world.' : 'Interacting walks you to the door before opening the building panel; closing it walks you back outside.'} Home departures offer walking or your parked tractor.`,
+    });
+  }
   steps.push({
     title: 'Explore this world',
     detail: w.settings.fighting

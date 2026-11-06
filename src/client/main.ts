@@ -1,3 +1,5 @@
+import { parkingStatus } from './parking-status';
+import { persistentVehicles } from '../shared/parked-vehicles';
 import { waterSourceRules } from '../shared/water-source-rules';
 import { springPanel, refreshSpringPanel } from './spring-panel';
 import { marineSafetyPanel } from './marine-safety-panel';
@@ -203,6 +205,12 @@ document
   .insertAdjacentHTML(
     'beforeend',
     '<section id="task-control" hidden aria-label="Task progress"><strong id="task-name" role="status"></strong><div id="task-countdown" role="timer" aria-atomic="true"></div><span id="task-caption">seconds remaining</span><button id="resource-stop" type="button" data-do="stopGather" hidden>Stop gathering</button></section>',
+  );
+document
+  .querySelector('.bottom-left')!
+  .insertAdjacentHTML(
+    'beforeend',
+    '<section id="parked-status" hidden aria-label="Parked vehicle"></section>',
   );
 const waypoints = new Waypoints(localStorage);
 document
@@ -449,6 +457,9 @@ async function api(path: string, options: RequestInit = {}) {
   if (!res.ok) throw Error(data.error ?? 'Request failed');
   return data;
 }
+let requestedArrival: string | undefined;
+let arrivalRequest: number | undefined;
+let garageDeparture: { world: string; slot: number; building: string } | undefined;
 type StatePresentation = { world: string; me: string; inputAck?: number; inputElapsed?: number };
 const stateInbox = new FrameInbox<StatePresentation>((state) => {
   if (!world || world.id !== state.world) return;
@@ -466,6 +477,17 @@ const stateInbox = new FrameInbox<StatePresentation>((state) => {
   );
   $('world-hud').hidden = !scene.ready;
   updateHud();
+  if (requestedArrival && me?.inside === requestedArrival) {
+    selected = requestedArrival;
+    requestedArrival = undefined;
+    openPanel('building');
+  }
+  if (garageDeparture && me && !me.inside && !me.task) {
+    const pending = garageDeparture;
+    garageDeparture = undefined;
+    if (world.id === pending.world)
+      send({ type: 'vehicle', slot: pending.slot, building: pending.building });
+  }
   if (me) {
     const alert = trawlCapacityAlerts.update(world!.id, me, world);
     if (alert) toast(alert, false, 12000);
@@ -563,6 +585,7 @@ async function connect() {
       if (panel === 'caretaker' && !editing && !readingChat) renderPanel();
     }
     if (msg.type === 'result') {
+      if (!msg.ok && msg.request === arrivalRequest) requestedArrival = undefined;
       const radioResult = radioRequests.delete(msg.request);
       if (radioResult) radioConsole.result(msg.ok, msg.message ?? '');
       const visit = tradeVisits.get(msg.request);
@@ -876,6 +899,13 @@ function updateHud() {
     info.textContent = `THROTTLE ${Math.round((f?.throttle ?? 0) * 100)}% · AGL ${Math.max(0, Math.round(me.y - terrainHeight(world, me.x, me.z)))} m · V/S ${(f?.vy ?? 0).toFixed(1)} m/s · ${f?.stalled ? 'STALL — LOWER NOSE' : f?.grounded ? (me.speed < -0.05 ? 'PUSHBACK · A/D steer · B stop' : 'GROUND · Hold S at idle to back up · B brakes') : 'AIRBORNE'}`;
     $('driving').append(info);
   }
+  const parking = parkingStatus(world, me);
+  $('parked-status').hidden = !parking;
+  if (parking)
+    setHudHtml(
+      'parked-status',
+      `<p>${esc(parking.text)}</p>${button('Mark parked vehicle', 'parked-waypoint')}${button('Board vehicle', 'vehicle', `data-id="${parking.slot}" ${parking.returnReason ? `disabled title="${esc(parking.returnReason)}"` : ''}`)}${button('Refuel parked vehicle', 'refuelParked', `data-id="${parking.slot}" ${parking.refuelReason ? `disabled title="${esc(parking.refuelReason)}"` : ''}`)}${parking.returnReason ? `<small>${esc(parking.returnReason)}</small>` : ''}${parking.refuelReason ? `<small>${esc(parking.refuelReason)}</small>` : ''}`,
+    );
   const drunk = intoxicationLabel(me, world.time);
   $('intoxication-status').hidden = !drunk;
   $('intoxication-status').textContent = drunk
@@ -883,7 +913,7 @@ function updateHud() {
     : '';
   const target = scene.nearest();
   let targetHtml = me.atHome
-    ? button('At home · Go outside', 'outside', '', 'wide') +
+    ? homeDepartureButtons() +
       `<p class="home-provisions" data-home-provisions title="Estimate from stored supplies and current automatic eating/drinking rules. Assumes you remain at home; no starvation or death time is included.">${esc(homeProvisionsStatus(world, me))}</p>`
     : target && !me.task
       ? button(
@@ -895,7 +925,9 @@ function updateHud() {
       : vehicleDef(world, me.vehicle).mode === 2
         ? '<span class="hint">W/S throttle · A/D rudder · ↓ pull up · ↑ nose down · ←/→ bank · B brakes · F7 guide</span>'
         : '<span class="hint">ARROWS / WASD to drive · SHIFT to give it a bit more</span>';
+  targetHtml += outdoorServiceButton(target?.id);
   $('task-control').hidden = !me.task || !!panel || !!mobile.drawer;
+  $('task-control').classList.toggle('arrival-progress', !!(me.task?.arrival || me.task?.mount));
   if (me.task) {
     const remaining = Math.max(0, Math.ceil(me.task.end - world.time));
     const label =
@@ -1133,6 +1165,14 @@ function updateHud() {
     previousTargetHtml = targetHtml;
   }
 }
+function homeDepartureButtons() {
+  if (!world || !me || !persistentVehicles(world, me))
+    return button('At home · Go outside', 'outside', '', 'wide');
+  return (
+    button('Depart on foot', 'outside', 'data-depart="foot"') +
+    button('Depart in tractor', 'outside', 'data-depart="tractor"')
+  );
+}
 function drawMap() {
   if (!world || !me) return;
   const c = $('minimap') as HTMLCanvasElement,
@@ -1220,6 +1260,12 @@ function drawMap() {
     ctx.beginPath();
     ctx.arc(sx(p.x), sz(p.z), p.id === me.id ? 4 : 2, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.fillStyle = '#ffe791';
+  for (const v of Object.values(world.parkedVehicles ?? {})) {
+    if (v.owner !== me.id) continue;
+    const garage = world.buildings.find((b) => b.id === v.inside);
+    ctx.fillRect(sx(garage?.x ?? v.x) - 3, sz(garage?.z ?? v.z) - 3, 6, 6);
   }
   const goal = waypoints.point;
   if (goal) {
@@ -1351,7 +1397,9 @@ function watchCaretaker(open: boolean) {
   }, 4000);
 }
 let closeTractorPreview: (() => void) | undefined;
-function closePanel() {
+function closePanel(exit = true) {
+  if (exit && (me?.inside || me?.task?.kind === 'entering')) send({ type: 'exitBuilding' });
+  requestedArrival = undefined;
   radioConsole.unmount();
   if (panel === 'building' && lastTradeVisit === tradeVisit && tradeFeedback.summary)
     toast(tradeFeedback.summary);
@@ -2001,7 +2049,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('CB radio', 'radio')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `${outdoorServiceButton(scene.nearest()?.id)}<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('CB radio', 'radio')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -2284,6 +2332,7 @@ function buildingWindow(b: Building) {
           : ''
       }</p>`;
     }
+    if (me.atHome && me.home === b.id) html += homeDepartureButtons();
     if (Object.keys(b.sell).length || Object.keys(b.buy).length)
       html += `<p class="note" data-shop-tax></p>${button('Taxes & rates', 'taxes')}<div class="trade-columns">${(
         ['sell', 'buy'] as const
@@ -2911,6 +2960,13 @@ app.addEventListener('click', async (e) => {
         tab = id!;
         renderPanel();
         break;
+      case 'building-outside':
+        if (outdoorServiceButton(id)) {
+          caretakerBuilding = '';
+          selected = id!;
+          openPanel('building');
+        }
+        break;
       case 'building':
         caretakerBuilding = '';
         openInteraction(id!);
@@ -3054,8 +3110,28 @@ app.addEventListener('click', async (e) => {
       case 'lifeboat':
         send({ type: 'lifeboat', operation: id });
         break;
+      case 'parked-waypoint': {
+        const status = world && me && parkingStatus(world, me);
+        if (status) waypoints.set(status.point);
+        break;
+      }
+      case 'refuelParked':
+        send({ type: 'refuelParked', slot: Number(id) });
+        break;
       case 'vehicle':
-        send({ type: 'vehicle', slot: Number(id), building });
+        if (
+          world &&
+          me?.inside &&
+          building === me.inside &&
+          world.buildings.find((b) => b.id === building)?.kind === 'garage'
+        ) {
+          garageDeparture = { world: world.id, slot: Number(id), building };
+          closePanel();
+        } else send({ type: 'vehicle', slot: Number(id), building });
+        break;
+      case 'outside':
+        send({ type: 'outside', depart: el.dataset.depart });
+        closePanel(false);
         break;
       case 'walk':
       case 'tractor':
@@ -3244,7 +3320,8 @@ app.addEventListener('click', async (e) => {
         break;
       default:
         send({ type: action, ...(building ? { building } : {}) });
-        if (['takeoff', 'home', 'outside'].includes(action)) closePanel();
+        if (['takeoff', 'home', 'outside'].includes(action))
+          closePanel(action !== 'home' && action !== 'outside');
     }
   } catch (e) {
     toast((e as Error).message, true);
@@ -3526,7 +3603,36 @@ function download(name: string, content: string) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 $('brand-button').addEventListener('click', () => openPanel(world ? 'menu' : 'options'));
+function outdoorServiceButton(id?: string) {
+  if (
+    !world ||
+    !me ||
+    !id ||
+    !persistentVehicles(world, me) ||
+    me.inside ||
+    me.atHome ||
+    me.task ||
+    !world.buildings.some((b) => b.id === id) ||
+    scene.nearest()?.id !== id
+  )
+    return '';
+  return button('Trade & services outside', 'building-outside', `data-id="${id}"`, 'wide');
+}
 function openInteraction(id: string) {
+  if (
+    world &&
+    me &&
+    persistentVehicles(world, me) &&
+    !boatSlot(me.vehicle, world) &&
+    !me.crowBody &&
+    world.buildings.some((b) => b.id === id) &&
+    me.inside !== id
+  ) {
+    requestedArrival = id;
+    send({ type: 'approach', building: id });
+    arrivalRequest = request;
+    return;
+  }
   selected = id;
   openPanel(
     id.startsWith('object:')

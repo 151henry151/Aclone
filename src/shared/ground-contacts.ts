@@ -1,3 +1,5 @@
+import { vehicleFootprint } from './vehicle-footprint';
+import { parkingRules } from './parking-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from './types';
 import type { Point } from './town';
@@ -94,6 +96,7 @@ export function onSolidGround(w: World, p: Player) {
   const mode = vehicleDef(w, p.vehicle).mode;
   return (
     !p.atHome &&
+    !p.inside &&
     !p.hitch &&
     mode !== 3 &&
     (mode === 2
@@ -103,6 +106,8 @@ export function onSolidGround(w: World, p: Player) {
 }
 /** Keep signed-off obstacles visible for exactly as long as the authority blocks them. */
 export function offlineGroundObstacle(w: World, p: Player) {
+  const parking = parkingRules(w.settings);
+  if (parking.vehiclesPersist && (!p.npc || parking.parkingNpcs)) return false;
   const rules = obstacleRules(w.settings);
   return (
     !p.online &&
@@ -113,21 +118,17 @@ export function offlineGroundObstacle(w: World, p: Player) {
     onSolidGround(w, p)
   );
 }
-function footprint(w: World, p: Player) {
+type ContactBody = Pick<Player, 'x' | 'z' | 'heading' | 'vehicle' | 'id' | 'speed' | 'flight'>;
+function footprint(w: World, p: ContactBody) {
   const v = vehicleDef(w, p.vehicle),
     radius = v.collisionRadius ?? (v.mode === 8 ? 0.25 : 1.3);
   return {
-    axes: [
-      { x: Math.cos(p.heading), z: -Math.sin(p.heading) },
-      { x: Math.sin(p.heading), z: Math.cos(p.heading) },
-    ],
-    hx: (v.width ?? radius * 2) / 2,
-    hz: (v.length ?? radius * 2) / 2,
+    ...vehicleFootprint(w, p.vehicle, p),
     circle: v.mode === 8 ? radius : 0,
   };
 }
 /** Swept separating axes: both oriented footprints contribute their full extent. */
-function hullContact(w: World, p: Player, q: Player, to: Point): Contact | undefined {
+function hullContact(w: World, p: ContactBody, q: ContactBody, to: Point): Contact | undefined {
   const a = footprint(w, p),
     b = footprint(w, q),
     delta = subtract(p, q),
@@ -170,7 +171,7 @@ function hullContact(w: World, p: Player, q: Player, to: Point): Contact | undef
   if (enter < 0 || enter > 1 || leave < 0) return;
   return { t: enter, normal };
 }
-export function stopGroundVehicle(p: Player) {
+export function stopGroundVehicle(p: Pick<Player, 'speed' | 'flight'>) {
   p.speed = 0;
   if (p.flight) p.flight = { ...p.flight, vx: 0, vz: 0, airspeed: 0 };
 }
@@ -187,7 +188,7 @@ export function playerContact(
   let point = to,
     reduced = false;
   for (let attempt = 0; attempt < 4; attempt++) {
-    let first: { hit: Contact; other: Player } | undefined;
+    let first: { hit: Contact; other: ContactBody } | undefined;
     for (const q of Object.values(w.players)) {
       if (
         q.id === p.id ||
@@ -199,6 +200,13 @@ export function playerContact(
       if (!q.online && !offlineGroundObstacle(w, q)) continue;
       const hit = hullContact(w, p, q, point);
       if (hit && (!first || hit.t < first.hit.t)) first = { hit, other: q };
+    }
+    for (const [key, v] of Object.entries(w.parkedVehicles ?? {})) {
+      const id = `parked:${key}`;
+      if (v.inside || slidingPast.has(id)) continue;
+      const body = { ...v, id, vehicle: v.slot, speed: 0 };
+      const hit = hullContact(w, p, body, point);
+      if (hit && (!first || hit.t < first.hit.t)) first = { hit, other: body };
     }
     if (!first) {
       if (reduced) p.speed *= rules.vehicleGlancingSpeed;

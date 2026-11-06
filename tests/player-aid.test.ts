@@ -201,3 +201,34 @@ test('public availability supports helpful UI without exposing fuel, inventory o
   assert.equal(visible().canReceiveFuel, false);
   assert.ok(refuellingStatus(w, a, visible(), true).reason);
 });
+
+test('roadside help fills the physical parked tank while its owner walks elsewhere', () => {
+  const { w, a, b } = setup();
+  Object.assign(w.settings, {
+    vehiclesPersist: true,
+    arrivalAnimation: 'off',
+    parkingReturnRange: 4,
+  });
+  act(w, b.id, { type: 'vehicle', slot: 5 });
+  const tank = w.parkedVehicles![`${b.id}:0`];
+  Object.assign(a, { x: tank.x - 3.5, z: tank.z, y: tank.y });
+  b.x += 100;
+  const status = refuellingStatus(w, a, b, true);
+  assert.equal(
+    status.reason,
+    undefined,
+    'public parked state determines readiness, not the walking owner',
+  );
+  act(w, a.id, { type: 'refuelPlayer', player: b.id });
+  assert.equal(tank.fuel, 8);
+  assert.equal(b.fuel, 0);
+  assert.equal(a.inventory.fuel, 1);
+  assert.match(w.messages.at(-1)!.text, /refuel.*Bo/);
+  a.x = tank.x - 5;
+  const before = JSON.stringify(w);
+  assert.throws(() => act(w, a.id, { type: 'refuelPlayer', player: b.id }), /4 metres/);
+  assert.equal(JSON.stringify(w), before);
+  a.x = tank.x;
+  w.settings.allowPlayerRefuelling = false;
+  assert.match(refuellingStatus(w, a, b).reason!, /disabled/);
+});

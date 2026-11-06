@@ -1,3 +1,4 @@
+import { parkedRefuelStatus, persistentVehicles } from './parked-vehicles';
 import defaults from '../../data/settings.json';
 import { economyRules } from './economy-rules';
 import { fuelRules } from './fuel-rules';
@@ -26,6 +27,22 @@ export function moneyGiftReason(w: World, p: Player, target?: Player) {
   if (!p.online) return 'Sign in to give money';
 }
 export function refuellingStatus(w: World, p: Player, target?: Player, publicSnapshot = false) {
+  if (
+    target &&
+    target.vehicle === 5 &&
+    target.id !== p.id &&
+    target.online &&
+    p.online &&
+    persistentVehicles(w, p)
+  ) {
+    const parked = Object.values(w.parkedVehicles ?? {})
+      .filter((v) => v.owner === target.id && !v.inside)
+      .sort((a, b) => Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z))[0];
+    if (parked) {
+      const status = parkedRefuelStatus(w, p, target.id, parked.slot);
+      return { ...status, parked };
+    }
+  }
   const rules = fuelRules(w.settings);
   const units = Math.max(
     0,
@@ -55,7 +72,7 @@ export function refuellingStatus(w: World, p: Player, target?: Player, publicSna
   else if (!(publicSnapshot ? target.canReceiveFuel : refuelRecipientReady(target, w)))
     reason = 'Their vehicle is unavailable for refuelling (full tank or another activity)';
   else if (!(p.inventory.fuel > 0)) reason = 'Carry Fuel from a stocked shop or garage';
-  return { units, reason };
+  return { units, reason, parked: undefined };
 }
 export function refuelRecipientReady(p: Player, w?: World) {
   return !!(

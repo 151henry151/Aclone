@@ -321,6 +321,7 @@ export class Navigator {
     p: Player,
     readonly target: Point,
     readonly radius: number,
+    private exactArrival = false,
   ) {
     // A service visit is already complete inside its range. Requiring a clear
     // grid endpoint here can fail beside an inflated building obstacle.
@@ -346,7 +347,10 @@ export class Navigator {
     this.sample += dt;
     if (this.elapsed > this.deadline)
       return { input: idle, error: 'Journey timed out; choose a different approach' };
-    if (distance(p, this.target) <= this.radius + 0.5 && this.next >= this.path.length - 1) {
+    if (
+      distance(p, this.target) <= this.radius + (this.exactArrival ? 0 : 0.5) &&
+      this.next >= this.path.length - 1
+    ) {
       return {
         input: {
           ...idle,

@@ -1,3 +1,4 @@
+import { vehicleDef } from '../shared/vehicle-config';
 import { waterSourceRules } from '../shared/water-source-rules';
 import { mapIcon } from './map-icons';
 import { waterLevel } from '../shared/ocean';
@@ -994,6 +995,7 @@ export class ParishMap {
     );
     const signature = JSON.stringify([
       goal,
+      this.world.parkedVehicles,
       this.me.id,
       this.me.x,
       this.me.z,
@@ -1029,6 +1031,51 @@ export class ParishMap {
         }),
         marker,
       );
+    }
+    for (const [key, v] of Object.entries(this.world.parkedVehicles ?? {})) {
+      if (v.owner !== this.me.id) continue;
+      const garage = this.world.buildings.find((b) => b.id === v.inside);
+      const point = {
+        x: garage?.x ?? v.x,
+        z: garage?.z ?? v.z,
+        name: vehicleDef(this.world, v.slot).name,
+      };
+      const marker = svg('g', {
+        'data-parked-vehicle': key,
+        role: 'button',
+        tabindex: '0',
+        'aria-label': `Mark ${point.name}`,
+        transform: `translate(${this.x(point.x)} ${this.y(point.z)})`,
+      });
+      const title = svg('title');
+      title.textContent = `${point.name}${garage ? ` · stored at ${garage.name}` : ' · parked'}`;
+      marker.append(
+        title,
+        svg('rect', {
+          x: -6,
+          y: -6,
+          width: 12,
+          height: 12,
+          fill: '#ffe791',
+          stroke: '#243c32',
+          'stroke-width': 2,
+        }),
+      );
+      const mark = () => {
+        this.navigation?.set(point);
+        this.updatePlayers();
+      };
+      marker.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mark();
+      });
+      marker.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+          e.preventDefault();
+          mark();
+        }
+      });
+      this.players.append(marker);
     }
     for (const p of Object.values(this.world.players)) {
       const self = p.id === this.me.id;

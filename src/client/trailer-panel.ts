@@ -2,7 +2,13 @@ import { economyRules } from '../shared/economy-rules';
 import { fuelPanel } from './fuel-panel';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player, Building } from '../shared/types';
-import { trailerDefs, trailerDef, trailerAccepts, type TrailerKind } from '../shared/trailers';
+import {
+  trailerHandlingReach,
+  trailerDefs,
+  trailerDef,
+  trailerAccepts,
+  type TrailerKind,
+} from '../shared/trailers';
 import { worldItems } from '../shared/world-catalogue';
 import { stockWeight } from '../shared/fishing-expedition';
 import { money } from '../shared/simulation';
@@ -36,7 +42,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
       d = trailerDef(w, t.kind),
       distance = Math.hypot(t.x - p.x, t.z - p.z);
     html += `<section class="notice"><h4>${d.name}</h4><p>${Math.round(distance)}m away · ${t.attached ? 'Hitched' : 'Parked'} · ${stockWeight(w, t.cargo).toFixed(0)} / ${d.capacity} weight</p>`;
-    if (distance > d.length / 2 + 9) {
+    if (distance > trailerHandlingReach(w, t)) {
       html += '</section>';
       continue;
     }
@@ -69,7 +75,7 @@ export function trailerPanel(w: World, p: Player, b?: Building) {
             (direction === 'buy' ? trailerAccepts(w, t, id, 1) : (t.cargo[id] ?? 0) > 0),
         );
         if (choices.length)
-          html += `<form data-action="trade">${hidden('storage', 'trailer')}${hidden('building', b.id)}${hidden('direction', direction)}<label>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer<select name="item">${choices.map(([id, price]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} · ${money(price, w.settings.denariiPerSheckle)} each${direction === 'sell' ? ` · ${t.cargo[id]} carried` : ''}</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1" required></label><button>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer</button></form>`;
+          html += `<form data-action="trade">${hidden('storage', 'trailer')}${hidden('trailer', t.id)}${hidden('building', b.id)}${hidden('direction', direction)}<label>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer<select name="item">${choices.map(([id, price]) => `<option value="${esc(id)}">${esc(items[id]?.name ?? id)} · ${money(price, w.settings.denariiPerSheckle)} each${direction === 'sell' ? ` · ${t.cargo[id]} carried` : ''}</option>`).join('')}</select></label><label>Quantity<input type="number" name="quantity" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1" required></label><button>${direction === 'buy' ? 'Buy into' : 'Sell from'} trailer</button></form>`;
       }
     }
     html += '</section>';

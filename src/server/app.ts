@@ -1,3 +1,10 @@
+import {
+  publicParkedVehicles,
+  parkOnSignOff,
+  restoreParkedSeat,
+  prepareParkingRules,
+  migrateParkedVehicles,
+} from '../shared/parked-vehicles';
 import { prepareWaterSources } from '../shared/springs';
 import { radioCheckpoint, restoreRadio, radioView, leaveRadio } from '../shared/radio';
 import { expandPuddlewickIsland } from './puddlewick-island';
@@ -154,7 +161,10 @@ export async function createApp(options: AppOptions) {
     restorePublicPuddlewick(world);
     governmentStores(world);
     prepareAutomaticProvisions(world);
+    prepareParkingRules(world);
+    migrateParkedVehicles(world);
     for (const p of Object.values(world.players)) {
+      if (p.online) parkOnSignOff(world, p);
       p.online = false;
       playerStatistics(world, p);
     }
@@ -191,6 +201,8 @@ export async function createApp(options: AppOptions) {
     const provisions = prepareAutomaticProvisions(world);
     const labour = prepareLabourRules(world);
     const captain = prepareCaptainRules(world);
+    const parking = prepareParkingRules(world);
+    const parked = migrateParkedVehicles(world);
     const ocean = preparePuddlewickOcean(world);
     const lighthouses = ensurePuddlewickLighthouses(world);
     const resources = ensurePuddlewickResources(world);
@@ -198,6 +210,8 @@ export async function createApp(options: AppOptions) {
     const island = expandPuddlewickIsland(world);
     const waterSources = prepareWaterSources(world);
     if (
+      parking ||
+      parked ||
       waterSources ||
       island ||
       spaceport ||
@@ -323,6 +337,8 @@ export async function createApp(options: AppOptions) {
                 vehicle: q.vehicle,
                 tractorPaint: vehiclePaint(q),
                 atHome: q.atHome,
+                inside: q.inside,
+                task: q.task?.arrival || q.task?.mount ? q.task : undefined,
                 lights: q.lights,
                 boatLighting: q.boatLighting,
                 engineRunning: motorRunning(w, q),
@@ -340,6 +356,7 @@ export async function createApp(options: AppOptions) {
     );
     const state = {
       ...w,
+      parkedVehicles: publicParkedVehicles(w),
       buildings: publicBuildings(w),
       players,
       ledger: me.authority >= 20 ? w.ledger.slice(-30) : [],
@@ -365,6 +382,7 @@ export async function createApp(options: AppOptions) {
         leaveCombat(w, me);
         me.speed = 0;
         if (me.task?.repeat) cancelGather(w, me);
+        parkOnSignOff(w, me);
         me.online = false;
         leaveRadio(w, me);
         me.lastSeen = w.time;
@@ -398,6 +416,7 @@ export async function createApp(options: AppOptions) {
         leave(other);
         other.socket.close(4001, 'Connected elsewhere');
       }
+    restoreParkedSeat(w, me);
     returnReport(w, me);
     me.online = true;
     say(w, 'Parish notice', me.name + ' arrived.');

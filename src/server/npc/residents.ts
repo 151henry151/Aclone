@@ -1,3 +1,4 @@
+import { parkOnSignOff, restoreParkedSeat } from '../../shared/parked-vehicles';
 import { npcAccountRules } from '../../shared/npc-account-rules';
 import { checkResidentFuelPurchase } from './fuel';
 import { fishingCrewCaptain } from '../../shared/fishing-expedition';
@@ -70,7 +71,7 @@ import type { Store } from '../store.ts';
 import type { Universe, Account } from '../universe.ts';
 import { spaceChoices, spaceOperations, spaceAction, exchange, systemFor } from './space.ts';
 import { operation } from './player-operations.ts';
-import { travelPrep, drivePlan } from './travel.ts';
+import { parkingActionPrep, parkingDestination, travelPrep, drivePlan } from './travel.ts';
 import { leaveCombat } from '../../shared/combat.ts';
 import { NpcMemory, type ResidentState } from './memory.ts';
 import { NpcBudget, budgetSchema, type TokenRates, type BudgetConfig } from './budget.ts';
@@ -245,7 +246,7 @@ export class Residents {
       if (p) {
         p.npc = true;
         p.authority = 0;
-        p.online = false;
+        residentOnline(w, p, false);
         p.speed = 0;
       }
       const r: Resident = {
@@ -728,7 +729,7 @@ export class Residents {
           )
             throw Error('Drive to the spaceport to take off');
           leaveCombat(w, p);
-          p.online = false;
+          residentOnline(w, p, false);
           p.speed = 0;
           p.lastSeen = w.time;
           r.state.inSpace = true;
@@ -844,7 +845,7 @@ export class Residents {
         p = addPlayer(w, r.state.playerId, r.state.name);
         p.npc = true;
         p.authority = 0;
-        p.online = false;
+        residentOnline(w, p, false);
       }
       if (!p) continue;
       rememberMarkets(w, p, r.state);
@@ -907,7 +908,7 @@ export class Residents {
         r.active = false;
         this.dequeueThink(r);
         if (p.online || r.busy) {
-          p.online = false;
+          residentOnline(w, p, false);
           p.speed = 0;
           r.nav = undefined;
           if (r.busy) {
@@ -964,7 +965,7 @@ export class Residents {
         now - r.lastCall >= r.config.intervalMs &&
         this.plannerBusy() < this.budget.config.concurrency
       ) {
-        p.online = !r.state.inSpace;
+        residentOnline(w, p, !r.state.inSpace);
         r.active = p.online;
         this.enqueueThink(r, now);
         continue;
@@ -1014,7 +1015,7 @@ export class Residents {
             r.wake = false;
             r.caring = true;
             r.state.routine = 'care';
-            p.online = true;
+            residentOnline(w, p, true);
             r.active = true;
             this.checkpoint(r, w, 'self-care', { hunger: p.hunger, thirst: p.thirst });
             this.runStep(r, w, p, now);
@@ -1206,7 +1207,7 @@ export class Residents {
         }
       }
       if (now < r.cooldown && !this.dialogueDue(r, now)) continue;
-      p.online = !r.state.inSpace;
+      residentOnline(w, p, !r.state.inSpace);
       r.active = true;
       const pendingReply = r.state.pendingAgreementReply;
       if (
@@ -1340,14 +1341,14 @@ export class Residents {
       r.state.replyTo = undefined;
       r.state.publicConversations = [];
       r.state.status = s.reason;
-      p.online = false;
+      residentOnline(w, p, false);
       p.speed = 0;
       p.lastSeen = w.time;
       leaveCombat(w, p);
       this.checkpoint(r, w, 'session', { event: 'Scheduled departure', readiness: ready, ...s });
       return true;
     }
-    p.online = !r.state.inSpace;
+    residentOnline(w, p, !r.state.inSpace);
     r.active = true;
     if (
       !r.busy &&
@@ -1428,6 +1429,12 @@ export class Residents {
       }
     }
     const step = r.state.plan[r.state.index];
+    const parkingPrep = parkingActionPrep(w, p, step);
+    if (parkingPrep.length) {
+      r.state.plan.splice(r.state.index, 0, ...parkingPrep);
+      this.checkpoint(r, w, 'parking-return', { destination: step });
+      return;
+    }
     const blocked = blockedStep(r.state.recovery, step, w.time);
     if (blocked) {
       r.state.waitUntil = now + Math.max(1, blocked.until - w.time) * 1000;
@@ -1439,7 +1446,7 @@ export class Residents {
       (step.kind === 'travel' || step.kind === 'move' || (step.kind === 'fish' && p.crowBody)) &&
       !r.state.inSpace
     ) {
-      const prep = travelPrep(p);
+      const prep = travelPrep(p, w, step);
       if (prep.length) {
         r.state.plan.splice(r.state.index, 0, ...prep);
         this.checkpoint(r, w, 'transport-recovery', { destination: step });
@@ -1529,7 +1536,8 @@ export class Residents {
         }
         if (!target) throw Error('Destination does not exist');
         const position = { x: target.x, z: target.z };
-        r.nav = new Navigator(w, p, position, radius);
+        const parkedTarget = parkingDestination(w, p, position);
+        r.nav = new Navigator(w, p, position, parkedTarget?.radius ?? radius, !!parkedTarget);
         r.navOrigin = { x: p.x, z: p.z };
         this.checkpoint(r, w, 'journey', {
           target: position,
@@ -1717,7 +1725,7 @@ export class Residents {
         : Buffer.byteLength(JSON.stringify(toolWithChatRules(turnTool, w.settings))));
     if (!chatOnly && bytes > 96000) {
       // Model availability is not a logout. Preserve visible presence and back off.
-      p.online = !r.state.inSpace;
+      residentOnline(w, p, !r.state.inSpace);
       p.speed = 0;
       r.active = p.online;
       this.failure(r, w, 'Observation too large; reduce custom world content');
@@ -1737,7 +1745,7 @@ export class Residents {
         ? undefined
         : this.budget.reserve(r.config.id, bytes, outputLimit, now, r.rates);
     if (!chatOnly && !localChoice && reservation === undefined) {
-      p.online = !r.state.inSpace;
+      residentOnline(w, p, !r.state.inSpace);
       r.active = p.online;
       p.speed = 0;
       r.nav = undefined;
@@ -2456,11 +2464,18 @@ export class Residents {
       if (w) {
         const p = w.players[r.state.playerId];
         if (p) {
-          p.online = false;
+          residentOnline(w, p, false);
           p.speed = 0;
         }
         this.checkpoint(r, w, 'session', { event: 'Server stopped' });
       }
     }
   }
+}
+
+/** NPC visits use the same physical parking transitions as human connections. */
+function residentOnline(w: World, p: Player, online: boolean) {
+  if (!online && p.online) parkOnSignOff(w, p);
+  if (online && !p.online) restoreParkedSeat(w, p);
+  p.online = online;
 }

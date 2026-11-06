@@ -348,7 +348,8 @@ Visit a completed garage to compare six tractor models at the same preview scale
 The [tractor guide](TRACTORS.md) explains each machine’s speed, carrying capacity,
 fuel use, tank, handling and lights. Buy with cash, and bring fuel: new purchases
 have empty tanks. Each machine retains its parked fuel and paint. You can select
-an owned tractor outside; returning from walking recalls your selected tractor.
+an owned tractor outside in worlds with instant switching. With persistent
+vehicles, retrieve it where you parked or drive a stored machine out of its garage.
 Unload excess cargo before switching to a smaller machine. In first-person view,
 the textured dashboard shows speed, fuel, condition and distance; switch on the
 lights to illuminate the instruments.
@@ -789,3 +790,50 @@ rolling/sliding doors. World owners can change the hours or leave doors open or
 closed. These are visual interiors; normal building interaction and collision
 rules still apply. Performance graphics retains the large equipment with fewer
 details, and world owners can reduce or hide interiors in F10 → Rules.
+
+## Parking and arriving
+
+In worlds with **Vehicles persist in the world** enabled, switching to walking
+leaves your tractor or grounded aircraft where you stopped, with its own fuel,
+paint and condition. The driver's body steps down beside it; an attached trailer
+stays with the machine. Return within the world's boarding reach (3 m by default)
+to board. The HUD shows its distance and direction, and **Mark parked vehicle**
+adds a waypoint. Your parked machines also appear as gold squares on the parish
+map and minimap. Stored machines are marked at their garage.
+
+An empty tank stays empty while you walk. Buy Fuel into your inventory, return to
+the machine and choose **Refuel parked vehicle**, or use Fuel from Inventory while
+beside it. The control explains missing fuel, a full tank or an out-of-range
+vehicle. The amount per Fuel follows the world's item definition. Other players
+can help when the world's roadside-refuelling policy allows it.
+
+At a garage, choosing another tractor stores the machine you arrived in and drives
+the selected stored or newly bought machine out to a clear point. The interior
+shows the actual stored tractor. A tractor parked elsewhere must be retrieved
+there; the garage cannot recall it remotely. Boats keep their existing mooring,
+crew, lifeboat and refuelling rules.
+
+Press **E/Ctrl**, click a building or use the touch/controller interaction to park
+at a clear kerb and walk to its entrance. The panel opens after you enter. For garage repairs, trailer purchases, bulk
+loading or butcher-ramp work, choose **Trade & services outside** beside the
+nearby-building control (also in the mobile actions menu) to keep your current
+vehicle and hitch. Existing range and cargo checks still apply; a nearby parked
+hitched trailer remains available to its owner for shop trades. Close
+the building panel or press Escape to walk back outside. Mounting and dismounting take 1.6 seconds
+at defaults, with movement held during the sequence. Full building arrivals take
+2–4 seconds; the owner can select quick or immediate arrivals. Home and booked
+lodging offer **Depart on foot** and **Depart in tractor**. If your tractor has
+been moved, walk to its current marker instead.
+
+Signing off while driving leaves an empty, unlit vehicle visible to others.
+Signing back in restores your seat; signing off on foot returns you on foot.
+Vehicles left on public roads beyond the parking grace can be towed to a clear
+home kerb or garage. The default grace is seven game days (70 real minutes of
+world simulation), including offline catch-up; the default fee is 20d, recorded
+in your journal. Own property, garage storage and hangars are protected. Without
+a safe destination or funds for the fee, towing is deferred. Absence-limit removal
+also clears the absent player's parked vehicles.
+
+Other worlds keep instant switching unless their owner enables persistence.
+Check **World rules & leaving safely** and the first-steps guidance for your
+world's choices.

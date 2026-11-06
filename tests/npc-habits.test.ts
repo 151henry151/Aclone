@@ -380,3 +380,60 @@ test('career guidance favours different actions without removing any alternative
     );
   }
 });
+
+test('resident shutdown leaves the same parked machine and the next visit restores its seat', async () => {
+  const store = new Store(':memory:'),
+    universe = new Universe(store);
+  const w = createWorld('puddlewick', 'Parking sessions', 'owner');
+  Object.assign(w.settings, { vehiclesPersist: true, arrivalAnimation: 'off' });
+  const worlds = new Map([[w.id, w]]);
+  const config = npcConfigSchema.parse({
+    id: 'parking-resident',
+    name: 'Parking resident',
+    presence: 'always',
+    activeAlone: true,
+  });
+  const brain = {
+    async decide() {
+      return {
+        decision: {
+          intent: 'Wait',
+          notebook: '',
+          speech: null,
+          plan: [{ kind: 'wait' as const, seconds: 600 }],
+          repeat: 1,
+          reconsiderSeconds: 600,
+        },
+        inputTokens: 1,
+        outputTokens: 1,
+      };
+    },
+  };
+  let residents = new Residents(store, universe, worlds, [{ config, brain }]);
+  try {
+    const p = w.players[residents.status()[0].playerId];
+    Object.assign(p, {
+      online: true,
+      vehicle: 0,
+      fuel: 23,
+      fuelVehicle: 0,
+      speed: 0,
+      atHome: false,
+      hunger: 0,
+      thirst: 0,
+    });
+    residents.close();
+    assert.equal(w.parkedVehicles?.[`${p.id}:0`]?.fuel, 23);
+    assert.equal(p.vehicle, 5);
+    residents = new Residents(store, universe, worlds, [{ config, brain }]);
+    residents.tick(0, Date.now());
+    await residents.settled();
+    assert.equal(p.online, true);
+    assert.equal(p.vehicle, 0);
+    assert.equal(p.fuel, 23);
+    assert.equal(w.parkedVehicles?.[`${p.id}:0`], undefined);
+  } finally {
+    residents.close();
+    store.close();
+  }
+});

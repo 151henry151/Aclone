@@ -54,13 +54,33 @@ export interface Trailer {
   cargo: Stock;
   life?: StockLife;
   attached?: string;
+  /** Vehicle key while its driver is walking or signed off; the hitch stays connected. */
+  parkedWith?: string;
   /** Whole internal currency units per Fuel. Zero or absent closes public sales. */
   sellPrice?: number;
   /** Snapshot-only service facts; never trusted by authoritative transactions. */
   fuelService?: { ownerName: string; ownerOnline: boolean; stopped: boolean };
 }
 export const attachedTrailer = (w: World, p: Pick<Player, 'id'>) =>
-  Object.values(w.trailers ?? {}).find((t) => t.attached === p.id);
+  Object.values(w.trailers ?? {}).find((t) => t.attached === p.id && !t.parkedWith);
+export const trailerHandlingReach = (w: World, t: Trailer) => trailerDef(w, t.kind).length / 2 + 9;
+/** A parked hitch remains available to its owner beside a shop, but never follows the walker. */
+export function tradingTrailer(w: World, p: Player, id?: string) {
+  const active = attachedTrailer(w, p);
+  if (active && (!id || active.id === id)) return active;
+  return Object.values(w.trailers ?? {}).find((t) => {
+    const parked = t.parkedWith && w.parkedVehicles?.[t.parkedWith];
+    return (
+      (!id || t.id === id) &&
+      t.owner === p.id &&
+      t.attached === p.id &&
+      parked &&
+      parked.owner === p.id &&
+      !parked.inside &&
+      Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t)
+    );
+  });
+}
 function need(v: unknown, message: string): asserts v {
   if (!v) throw Error(message);
 }
@@ -189,15 +209,17 @@ export function trailerAction(w: World, p: Player, a: Action) {
   }
   need(t && t.owner === p.id, 'Choose your own trailer');
   need(
-    Math.hypot(t.x - p.x, t.z - p.z) <= trailerDefs[t.kind].length / 2 + 9,
+    Math.hypot(t.x - p.x, t.z - p.z) <= trailerHandlingReach(w, t),
     'Move alongside your trailer',
   );
   if (a.operation === 'unhitch') {
     need(t.attached === p.id, 'This trailer is not hitched');
     delete t.attached;
+    delete t.parkedWith;
     return 'Trailer parked here with its cargo.';
   }
   if (a.operation === 'hitch') {
+    need(!t.attached, 'Unhitch this trailer from its current tractor first');
     need(isTractor(p.vehicle) && !attachedTrailer(w, p), 'Bring a tractor with a free hitch');
     const rear = { x: p.x - Math.sin(p.heading) * 2.7, z: p.z - Math.cos(p.heading) * 2.7 };
     const nose = {
@@ -288,7 +310,7 @@ export function trailerBlocks(
   except?: string,
 ) {
   return Object.values(w.trailers ?? {}).some((t) => {
-    if (t.id === except) return false;
+    if (t.id === except || (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside)) return false;
     const d = trailerDefs[t.kind],
       n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 0.5));
     for (let i = 0; i <= n; i++) {

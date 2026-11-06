@@ -4,7 +4,15 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.130.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.131.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.131.0 makes parked tractors and grounded aircraft stay where you leave
+them, with their fuel, paint and hitched trailers. Walk back using the map marker,
+buy fuel on foot, or ask a neighbour to help refuel. Doors, footsteps and mounting
+connect building visits to the world; homes offer departures on foot or in your
+tractor. Use **Trade & services outside** for garage and loading-ramp work.
+World Builder controls parking, towing and arrival animations. Puddlewick enables
+persistence; other worlds opt in. See [Parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 Version 0.130.0 opens the workshop doors. Industrial buildings reveal furnished
 rooms during business hours: tractors on garage lifts, biplanes under repair,

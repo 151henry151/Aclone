@@ -13,7 +13,7 @@ export function freezeScenery(root: Object3D, animated: Object3D[]) {
   // Door leaves and interior effects move independently inside their retained
   // hierarchy. Static building exteriors still keep their baked matrices.
   root.traverse((o) => {
-    if (o.userData.bayDoor || o.userData.interior) {
+    if (o.userData.bayDoor || o.userData.doorPivot || o.userData.interior) {
       o.traverse((part) => {
         part.matrixAutoUpdate = true;
         part.matrixWorldAutoUpdate = true;
@@ -61,6 +61,7 @@ export function* batchStaticScenerySteps(root: T.Group, excluded?: T.Object3D) {
         parent.userData.animatedFlight ||
         parent.userData.spaceportGate ||
         parent.userData.bayDoor ||
+        parent.userData.doorPivot ||
         parent.userData.interior
       )
         break;

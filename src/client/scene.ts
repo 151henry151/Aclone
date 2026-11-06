@@ -1,3 +1,8 @@
+import { withinBuildingRange } from '../shared/simulation';
+import { VehicleMountScene } from './vehicle-mount-animation';
+import { animateArrivalDoors } from './arrival-animation';
+import { arrivalPosition, arrivalVisible } from '../shared/arrival';
+import { ParkedVehicleScene } from './parked-vehicle-scene';
 import { batchInteriorProps } from './interior-batching';
 import { buildingDoorRules } from '../shared/building-doors';
 import { animateBuildingDoors, type InteriorRig } from './building-interiors';
@@ -66,7 +71,7 @@ import { fadeSceneryIntoFog } from './scenery-fog';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
-import { label, pilotLabel } from './labels';
+import { label, pilotLabel, capWorldLabel } from './labels';
 import { saleTag, saleTagText } from './sale-tag';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
@@ -279,6 +284,8 @@ export class GameScene {
     this.zoom = Math.min(maximum, Math.max(0.55, zoom));
   }
   cameraMode = 0;
+  private arrivalCamera?: T.Vector3;
+  private mounts = new VehicleMountScene();
   orbit = 0;
   private lookPitch = 0;
   onBuilding?: (id: string) => void;
@@ -340,6 +347,7 @@ export class GameScene {
       this.ground.group,
       this.woods.group,
       this.actors,
+      this.mounts.group,
       this.space,
       this.sun,
       this.ambient,
@@ -663,7 +671,7 @@ export class GameScene {
         if (p.carrying) mesh.add(carriedCanoe(world.smallCraft?.[p.carrying]?.paint));
         mesh.userData.carrying = p.carrying;
       }
-      mesh.visible = !p.atHome;
+      mesh.visible = !p.atHome && !p.inside && arrivalVisible(p, world.time);
       mesh.userData.engineRunning = p.engineRunning ?? (p.engine && p.fuel > 0);
       if (resetMotion || !mesh.userData.motion) mesh.userData.motion = new MotionTrack();
       const snapped = (mesh.userData.motion as MotionTrack).receive(world.time, p);
@@ -1342,6 +1350,7 @@ export class GameScene {
     }
     const model = buildingModel(b);
     g.userData.interiors = model.userData.interiors;
+    g.userData.pedestrianDoors = model.userData.pedestrianDoors;
     g.userData.doorBuilding = b;
     for (const rig of (model.userData.interiors ?? []) as InteriorRig[]) {
       populateInteriorModels(rig, b, w, this.me);
@@ -1362,6 +1371,7 @@ export class GameScene {
     // Keep the terminal name readable at the door, not above the tall spacecraft.
     sign.position.set(0, b.kind === 'starport' ? 8 : bounds.max.y + 1.1, 0);
     g.add(sign);
+    g.userData.buildingLabel = sign;
     g.userData.signY = sign.position.y;
     return g;
   }
@@ -1556,7 +1566,10 @@ export class GameScene {
       for (const model of this.buildingMeshes)
         if (model.userData.boatyardBuilding)
           fitBoatyardToWater(model, model.userData.boatyardBuilding, w);
+      const motionTime = this.motionClock.sample(now);
       for (const model of this.buildingMeshes) {
+        if (model.userData.doorBuilding)
+          animateArrivalDoors(model, w, model.userData.doorBuilding, motionTime);
         if (model.userData.interiors)
           animateBuildingDoors(
             model,
@@ -1581,6 +1594,9 @@ export class GameScene {
           rotor.updateMatrixWorld(true);
         }
       }
+      for (const building of this.buildingMeshes)
+        if (building.userData.buildingLabel)
+          capWorldLabel(building.userData.buildingLabel, this.camera);
       this.livestock.animate(this.elapsed);
       this.launchComplex?.userData.animateGate(
         [...Object.values(w.players).filter((p) => p.online), ...(this.me ? [this.me] : [])],
@@ -1595,7 +1611,6 @@ export class GameScene {
           w.time + Math.min(1, Math.max(0, (now - this.flightSnapshotAt) / 1000)),
           Math.max(0.04, this.sun.intensity / 3),
         );
-      const motionTime = this.motionClock.sample(now);
       const date = calendar(w),
         baseClimate = worldWeather(w, date.absoluteDay),
         climate = alpineWeather(w, baseClimate, p.y);
@@ -1619,6 +1634,16 @@ export class GameScene {
         const pose =
           (mesh === this.meshes.get(p.id) ? predicted : undefined) ??
           (mesh.userData.motion as MotionTrack).sample(motionTime)!;
+        const arriving = w.players[mesh.userData.playerId];
+        if (arriving)
+          mesh.visible =
+            !arriving.atHome && !arriving.inside && arrivalVisible(arriving, motionTime);
+        if (arriving?.task?.arrival) {
+          const a = arriving.task.arrival;
+          Object.assign(pose, arrivalPosition(arriving, motionTime), {
+            heading: Math.atan2(a.to.x - a.from.x, a.to.z - a.from.z),
+          });
+        }
         const travel =
           (pose.x - mesh.position.x) * Math.sin(pose.heading) +
           (pose.z - mesh.position.z) * Math.cos(pose.heading);
@@ -1828,6 +1853,9 @@ export class GameScene {
       this.towLines.update(w, this.meshes, this.mooredGroup);
       if (!this.trailers.group.parent) this.scene.add(this.trailers.group);
       this.trailers.update(w, this.meshes, bareSurface, dt);
+      if (!this.parkedVehicles.group.parent) this.scene.add(this.parkedVehicles.group);
+      this.parkedVehicles.update(w, p.x, p.z, this.camera.far, bareSurface);
+      this.mounts.update(w, motionTime, this.meshes, this.parkedVehicles.group, dt);
       this.otherVehicleLights.update(w, this.meshes, p.id, this.camera.position, now / 1000);
       this.headlights.visible = p.vehicle !== LIFEBOAT && p.lights && !p.atHome && !p.hitch;
       this.headlights.angle = p.vehicle === 5 ? Math.PI / 8 : Math.PI / 3.5;
@@ -1925,6 +1953,15 @@ export class GameScene {
             walking || tractorView ? 0.6 : 3,
           ),
         );
+        const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
+        if (walking && !arriving && this.cameraMode === 0)
+          this.parkedVehicles.clearCamera(this.target, { position: cam, near: this.camera.near });
+        if (arriving && !this.arrivalCamera) this.arrivalCamera = this.camera.position.clone();
+        if (arriving && this.arrivalCamera && this.cameraMode !== 1) cam.copy(this.arrivalCamera);
+        if (!arriving && this.arrivalCamera) {
+          this.camera.position.copy(this.arrivalCamera);
+          this.arrivalCamera = undefined;
+        }
         if (local.userData.snapCamera || this.cameraMode === 1) this.camera.position.copy(cam);
         else this.camera.position.lerp(cam, 1 - Math.exp(-dt * 4));
         // Interpolation can otherwise cross the water even when the destination is safe.
@@ -1939,6 +1976,8 @@ export class GameScene {
             0.6,
           ),
         );
+        if (walking && !arriving && this.cameraMode === 0)
+          this.parkedVehicles.clearCamera(this.target, this.camera);
         local.userData.snapCamera = false;
         const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
         if (this.cameraMode === 1)
@@ -2346,6 +2385,9 @@ export class GameScene {
   }
   private towLines = new TowLines();
   private trailers = new TrailerScene();
+  private parkedVehicles = new ParkedVehicleScene((slot, name, paint) =>
+    this.vehicle(slot, name, paint),
+  );
   private mooredGroup = new T.Group();
   private mooredKey = '';
   private updateMooredBoats(w: World) {
@@ -2427,8 +2469,8 @@ export class GameScene {
         : []),
     ]
       .filter((b) =>
-        'kind' in b && b.kind === 'boathouse'
-          ? nearBoathouse(this.world!, this.me!, b as Building)
+        'kind' in b && b.id !== fishingDock.id
+          ? withinBuildingRange(this.world!, this.me!, b as Building)
           : distance(b, this.me!) < (b.id === fishingDock.id ? 26 : 18),
       )
       .sort((a, b) => distance(a, this.me!) - distance(b, this.me!))[0];

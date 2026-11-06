@@ -1,3 +1,22 @@
+import { beginVehicleMount } from './vehicle-mount';
+import { kerbParking } from './parking-site';
+import { approachBuilding, exitBuilding, finishArrival, animatedArrival } from './arrival';
+import { towExpiredParking } from './parking-tow';
+import { parkedFootprintBlocked, vehicleFootprint } from './vehicle-footprint';
+import { parkingFields, parkingRules } from './parking-rules';
+import {
+  migrateParkedVehicles,
+  removeAbsentParking,
+  relocatedParkedTrailers,
+  clearParkedRig,
+  parkAtHome,
+  leaveParkedHome,
+  parkedVehicle,
+  parkedReturnReason,
+  persistentVehicles,
+  parkedRefuelStatus,
+  switchPersistentVehicle,
+} from './parked-vehicles';
 import { buildingDoorFields } from './building-doors';
 import { livestockRuleFields, livestockRules } from './livestock-rules';
 import { transferStock } from './stock-life';
@@ -94,7 +113,7 @@ import { surfaceWaterLevel } from './ocean';
 import { inlandWaterAt } from './inland-water';
 import { parishSpawn, buildingSpawnReason } from './spawn-reserve';
 import { towingTender, tenderAction, moveTender } from './boat-tender';
-import { trailerAccepts, trailerBlocks } from './trailers';
+import { tradingTrailer, trailerAccepts, trailerBlocks } from './trailers';
 import {
   trailerAction,
   tuneTrailer,
@@ -173,6 +192,7 @@ import { walkingRuleFields } from './walking-rules';
 import { gatheringSceneryFields, gatheringSceneryModes } from './gathering-scenery';
 import {
   fuelCapacity,
+  fuelVehicle,
   refuelRequiresReboarding,
   switchVehicle,
   isTractor,
@@ -417,6 +437,7 @@ export function createWorld(
     townLayout: 2,
     tradePricing: 4,
     livestockPricing: 1,
+    meatVersion: 1,
     animalPricing: 1,
     vehicleServicesPricing: 1,
     gatherToolsPricing: 1,
@@ -551,7 +572,12 @@ function owner(p: Player) {
   requireThat(p.authority >= 20, 'Owner authority required');
 }
 export function withinBuildingRange(w: World, p: Player, b: Building) {
-  return b.kind === 'boathouse' ? nearBoathouse(w, p, b) : distance(p, b) < 18;
+  if (p.inside === b.id) return true;
+  return b.kind === 'boathouse'
+    ? nearBoathouse(w, p, b)
+    : persistentVehicles(w, p)
+      ? distance(p, b) <= parkingRules(w.settings).arrivalRange
+      : distance(p, b) < 18;
 }
 export function nearby(w: World, p: Player, id: unknown) {
   const b = w.buildings.find((x) => x.id === id);
@@ -604,8 +630,14 @@ function usable(w: World, p: Player, item: string) {
       !refuelRequiresReboarding(p, w),
       'Carry the Fuel back to your main boat and reboard before refuelling it',
     );
-    requireThat(p.fuel < fuelCapacity(p, w), 'The tank is full');
-    p.fuel = Math.min(fuelCapacity(p, w), p.fuel + def.fuel);
+    if (persistentVehicles(w, p) && p.vehicle === 5 && !boatSlot(fuelVehicle(p, w), w)) {
+      const status = parkedRefuelStatus(w, p, p.id, fuelVehicle(p, w));
+      requireThat(!status.reason, status.reason ?? 'Cannot refuel');
+      status.vehicle!.fuel += status.units;
+    } else {
+      requireThat(p.fuel < fuelCapacity(p, w), 'The tank is full');
+      p.fuel = Math.min(fuelCapacity(p, w), p.fuel + def.fuel);
+    }
   } else {
     p.repeats = p.lastFood === item ? p.repeats + 1 : 0;
     p.lastFood = item;
@@ -774,6 +806,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
   );
   requireThat(
     !attachedTrailer(w, p) ||
+      (persistentVehicles(w, p) && ((type === 'vehicle' && a.slot === 5) || type === 'home')) ||
       !['vehicle', 'home', 'crow', 'hitch', 'takeoff', 'joinGame'].includes(type),
     'Unhitch your trailer before changing vehicles or activity',
   );
@@ -890,7 +923,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const n = qty(w, a.quantity);
       requireThat(a.direction === 'buy' || a.direction === 'sell', 'Invalid trade direction');
       const buying = a.direction === 'buy';
-      const trailer = a.storage === 'trailer' ? attachedTrailer(w, p) : undefined;
+      const trailer =
+        a.storage === 'trailer'
+          ? tradingTrailer(w, p, a.trailer === undefined ? undefined : str(a.trailer))
+          : undefined;
       requireThat(
         a.storage === undefined || a.storage === 'trailer' || a.storage === 'hold',
         'Unknown cargo storage',
@@ -1504,6 +1540,15 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       lodgingAction(w, p, nearby(w, p, a.building), a);
       break;
     }
+    case 'approach': {
+      const b = w.buildings.find((b) => b.id === a.building);
+      requireThat(b, 'Building not found');
+      approachBuilding(w, p, b);
+      break;
+    }
+    case 'exitBuilding':
+      exitBuilding(w, p);
+      break;
     case 'home': {
       requireThat(p.game !== 'combat', 'Leave combat before entering a home');
       const b = nearby(w, p, a.building);
@@ -1516,12 +1561,28 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         'You need your own home or a booked room',
       );
       requireThat(!p.task && !p.hitch && !p.crowBody, 'Finish your activity first');
+      if (p.inside === b.id) {
+        p.home = b.id;
+        p.atHome = true;
+        break;
+      }
+      if (animatedArrival(w, p)) {
+        approachBuilding(w, p, b, true);
+        break;
+      }
+      parkAtHome(w, p, b);
       p.home = b.id;
       p.atHome = true;
       p.speed = 0;
       break;
     }
     case 'outside':
+      if ((p.atHome || p.inside) && animatedArrival(w, p)) {
+        exitBuilding(w, p, a.depart === 'tractor');
+        break;
+      }
+      delete p.inside;
+      if (p.atHome) leaveParkedHome(w, p, a.depart === 'tractor');
       p.atHome = false;
       if (p.task?.kind === 'homeCook') {
         delete p.task;
@@ -1571,6 +1632,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       charge(w, p, appearance.paintPrice, 'tractor repaint');
       migrateVehiclePaint(p);
       p.vehiclePaints = { ...p.vehiclePaints, [slot]: color };
+      const parked = parkedVehicle(w, p, slot);
+      if (parked) parked.paint = color;
       result = `Fresh paint for your ${vehicleDef(w, slot).name}.`;
       break;
     }
@@ -1627,8 +1690,37 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       break;
     }
     case 'vehicle': {
+      const beforeVehicle = { vehicle: p.vehicle, x: p.x, y: p.y, z: p.z, heading: p.heading };
       requireThat(!p.hitch, 'Leave the passenger seat at the dock before changing vehicles');
       const slot = num(a.slot, 0, vehicles.length - 1, true);
+      const parkingBuilding = w.buildings.find((b) => b.id === a.building);
+      if (persistentVehicles(w, p)) {
+        requireThat(
+          !p.task && !p.atHome && !p.inside && !p.crowBody && Math.abs(p.speed) < 0.5,
+          'Stop outside and finish your activity before changing vehicles',
+        );
+        if (a.building !== undefined) nearby(w, p, a.building);
+      }
+      const parkingReason = parkedReturnReason(w, p, slot, parkingBuilding);
+      requireThat(!parkingReason, parkingReason ?? 'Cannot board');
+      const returningParked = persistentVehicles(w, p) && !!parkedVehicle(w, p, slot);
+      const garageDeparture =
+        persistentVehicles(w, p) &&
+        parkingBuilding?.kind === 'garage' &&
+        isTractor(slot) &&
+        (!parkedVehicle(w, p, slot) || parkedVehicle(w, p, slot)?.inside === parkingBuilding.id);
+      const garagePoint = garageDeparture
+        ? kerbParking(w, parkingBuilding!, slot, `${p.id}:${slot}`, (point) =>
+            clearParkedRig(w, `${p.id}:${slot}`, point),
+          )
+        : undefined;
+      requireThat(
+        !garageDeparture || garagePoint,
+        'No safe clear parking place outside this garage',
+      );
+      const garageTrailers = garagePoint
+        ? relocatedParkedTrailers(w, `${p.id}:${slot}`, garagePoint)
+        : [];
       requireThat(
         slot !== CANOE && p.vehicle !== CANOE,
         'Use the canoe launch, board or beach controls',
@@ -1733,7 +1825,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           requireThat(slot === 5 || (p.fleet ?? [0, 5]).includes(slot), 'Choose an owned tractor');
         }
       }
-      if (slot === 2 && hasAircraftHangar(w)) {
+      if (slot === 2 && hasAircraftHangar(w) && !returningParked) {
         const hangar = nearby(w, p, a.building);
         requireThat(hangar.aircraftHangar, 'Visit the airfield hangar to board a biplane');
         requireThat(
@@ -1742,6 +1834,13 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         );
         const x = hangar.x + Math.sin(hangar.rotation) * 17;
         const z = hangar.z + Math.cos(hangar.rotation) * 17;
+        requireThat(
+          !parkedFootprintBlocked(
+            w,
+            vehicleFootprint(w, slot, { x, z, heading: hangar.rotation + Math.PI / 2 }),
+          ),
+          'The aircraft apron is occupied by a parked vehicle',
+        );
         requireThat(
           !Object.values(w.players).some(
             (q) => q.id !== p.id && q.online && !q.atHome && Math.hypot(q.x - x, q.z - z) < 10,
@@ -1770,7 +1869,12 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         w.mooredBoats![mooringKey(p.id, slot)] = { ...transferred, owner: p.id };
         delete w.mooredBoats![mooringKey(mooredOwner, slot)];
       }
-      if (slot !== 5 && slot !== 0 && !(isTractor(slot) && fleet.includes(slot))) {
+      if (
+        !returningParked &&
+        slot !== 5 &&
+        slot !== 0 &&
+        !(isTractor(slot) && fleet.includes(slot))
+      ) {
         const b = poweredBoat(slot, w) ? landing!.building : nearby(w, p, a.building);
         requireThat(
           poweredBoat(slot, w)
@@ -1848,10 +1952,33 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         vehicleRecord(w, p).storedAt = landing.building.id;
       if (poweredBoat(slot, w)) delete vehicleRecord(w, p, slot).storedAt;
       p.fleet = fleet;
-      switchVehicle(p, slot, true, w);
+      if (
+        garageDeparture &&
+        p.homeParking?.building === parkingBuilding!.id &&
+        p.homeParking.slot !== slot
+      ) {
+        const previous = parkedVehicle(w, p, p.homeParking.slot);
+        if (
+          previous &&
+          !previous.inside &&
+          Math.hypot(previous.x - parkingBuilding!.x, previous.z - parkingBuilding!.z) <=
+            parkingRules(w.settings).parkingSearchRange + parkingRules(w.settings).arrivalRange
+        )
+          previous.inside = parkingBuilding!.id;
+      }
+      switchPersistentVehicle(w, p, slot, parkingBuilding);
       vehicleRecord(w, p);
+      if (garagePoint) Object.assign(p, garagePoint);
+      for (const t of garageTrailers) {
+        Object.assign(w.trailers![t.id], t);
+        delete w.trailers![t.id].parkedWith;
+      }
       p.speed = 0;
-      if (slot === 2 && w.buildings.find((b) => b.id === a.building)?.aircraftHangar) {
+      if (
+        slot === 2 &&
+        !returningParked &&
+        w.buildings.find((b) => b.id === a.building)?.aircraftHangar
+      ) {
         const b = w.buildings.find((b) => b.id === a.building)!;
         p.x = b.x + Math.sin(b.rotation) * 17;
         p.z = b.z + Math.cos(b.rotation) * 17;
@@ -1869,6 +1996,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         p.engine = false;
       }
       p.y = poweredBoat(slot, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
+      beginVehicleMount(w, p, beforeVehicle);
       break;
     }
     case 'engine':
@@ -2279,6 +2407,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(livestockRuleFields, key) ||
             Object.hasOwn(meatRuleFields, key) ||
             Object.hasOwn(buildingDoorFields, key) ||
+            Object.hasOwn(parkingFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2339,11 +2468,19 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           num(v, obstacleField.min, obstacleField.max);
           if (obstacleField.step === 1) requireThat(Number.isInteger(v), 'Use a whole number');
         }
+        const parkingField = parkingFields[key as keyof typeof parkingFields];
+        if (parkingField && 'min' in parkingField)
+          num(v, parkingField.min, parkingField.max, parkingField.step === 1);
         const doorField = buildingDoorFields[key as keyof typeof buildingDoorFields];
         if (doorField && 'min' in doorField)
           num(v, doorField.min, doorField.max, doorField.step === 1);
         const old = w.settings[key as keyof Settings] ?? defaults[key as keyof Settings];
         if (typeof old === 'boolean') requireThat(typeof v === 'boolean', 'Expected boolean');
+        else if (parkingField && 'choices' in parkingField)
+          requireThat(
+            (parkingField.choices as readonly unknown[]).includes(v),
+            'Choose a valid arrival animation policy',
+          );
         else if (doorField && 'choices' in doorField)
           requireThat(
             (doorField.choices as readonly unknown[]).includes(v),
@@ -2516,6 +2653,11 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const arrival = parkingRules({ ...w.settings, ...clean });
+      requireThat(
+        arrival.arrivalMinSeconds <= arrival.arrivalMaxSeconds,
+        'Shortest arrival must not exceed longest arrival',
+      );
       const nextSettings = { ...w.settings, ...clean },
         previousSpawn = parishSpawn(w.settings),
         nextSpawn = parishSpawn(nextSettings);
@@ -2627,6 +2769,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       )
         settleYoungGrowth(w);
       Object.assign(w.settings, clean);
+      if (clean.vehiclesPersist === true || clean.parkingNpcs === true) migrateParkedVehicles(w);
       refreshPumpRecipes(w);
       if (importPricingChanged) repriceGovernmentStores(w);
       w.revision++;
@@ -2801,12 +2944,25 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       );
       break;
     }
+    case 'refuelParked': {
+      const status = parkedRefuelStatus(
+        w,
+        p,
+        a.owner === undefined ? p.id : str(a.owner),
+        num(a.slot, 0, vehicles.length - 1, true),
+      );
+      requireThat(!status.reason, status.reason ?? 'Cannot refuel');
+      stockAdd(p.inventory, 'fuel', -1);
+      status.vehicle!.fuel += status.units;
+      break;
+    }
     case 'refuelPlayer': {
       const target = w.players[str(a.player)],
         status = refuellingStatus(w, p, target);
       requireThat(!status.reason, status.reason ?? 'Cannot refuel');
       stockAdd(p.inventory, 'fuel', -1);
-      target.fuel = Math.min(fuelCapacity(target, w), target.fuel + status.units);
+      if (status.parked) status.parked.fuel += status.units;
+      else target.fuel = Math.min(fuelCapacity(target, w), target.fuel + status.units);
       const amount = Number(status.units.toFixed(2));
       say(
         w,
@@ -3022,7 +3178,14 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
   const towBefore = { x: p.x, z: p.z, heading: p.heading };
   if (p.game === 'fishing')
     p.y = poweredBoat(p.vehicle, w) ? surfaceWaterLevel(w, p.x, p.z) : travelHeight(w, p.x, p.z);
-  if (p.task || p.atHome || p.hitch || (p.race && w.time < p.race.start) || p.game === 'fishing')
+  if (
+    p.task ||
+    p.atHome ||
+    p.inside ||
+    p.hitch ||
+    (p.race && w.time < p.race.start) ||
+    p.game === 'fishing'
+  )
     return;
   if (helmBlock(w, p.vehicle, p.skills)) {
     p.speed = 0;
@@ -3656,7 +3819,9 @@ export function advance(w: World, seconds: number) {
   expireMeat(w);
   const boundary = Math.min(
     ...Object.values(w.players).flatMap((p) =>
-      p.task && ['homeCook', 'slaughter'].includes(p.task.kind) && p.task.end > w.time
+      p.task &&
+      (p.task.arrival || p.task.mount || ['homeCook', 'slaughter'].includes(p.task.kind)) &&
+      p.task.end > w.time
         ? [p.task.end]
         : [],
     ),
@@ -3682,6 +3847,7 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  towExpiredParking(w);
   advanceCapsizing(w, start, end, (p, force, cause, at) => kill(w, p, false, cause, at, force));
   advanceCharters(w, seconds);
   maintainTows(w);
@@ -3721,6 +3887,7 @@ export function advance(w: World, seconds: number) {
     if (absenceDue) {
       p.inactivityProcessed = p.lastSeen;
       say(w, 'Parish notice', `${p.name} exceeded this world's offline absence limit.`);
+      removeAbsentParking(w, p);
       kill(w, p, false, 'offline absence limit', boundary);
       advanceLoans(w, p, boundary, end);
       advanceSurvival(w, p, boundary, end - boundary);
@@ -3741,6 +3908,14 @@ export function advance(w: World, seconds: number) {
     if (p.task?.repeat && !p.online) cancelGather(w, p);
     if (p.task && p.task.end <= end) {
       const t = p.task;
+      if (t.mount) {
+        delete p.task;
+        continue;
+      }
+      if (t.arrival) {
+        finishArrival(w, p, end);
+        continue;
+      }
       if (t.kind === 'homeCook') {
         delete p.task;
         try {

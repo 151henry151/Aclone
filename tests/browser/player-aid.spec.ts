@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app.ts';
-import { createWorld, addPlayer } from '../../src/shared/simulation.ts';
+import { createWorld, addPlayer, act } from '../../src/shared/simulation.ts';
 for (const mobile of [false, true])
   test(`${mobile ? 'phone' : 'desktop'} gives cash and refuels a neighbour without losing drafts`, async ({
     browser,
@@ -87,6 +87,26 @@ for (const mobile of [false, true])
       await expect(form.getByRole('button')).toBeDisabled();
       await expect(page.locator('#gift-status')).toContainText('disabled');
       w.settings.allowMoneyGifts = true;
+      Object.assign(w.settings, {
+        vehiclesPersist: true,
+        arrivalAnimation: 'off',
+        parkingReturnRange: 6,
+      });
+      b.x = p.x + 5;
+      b.z = p.z;
+      b.y = p.y;
+      act(w, b.id, { type: 'vehicle', slot: 5 });
+      b.x += 100;
+      const parked = w.parkedVehicles![`${b.id}:0`];
+      await expect(refuel).toBeEnabled();
+      await expect(page.locator('#refuel-status')).toContainText('Parked vehicle');
+      await refuel.click();
+      await expect.poll(() => parked.fuel).toBeGreaterThan(15.9);
+      expect(b.fuel).toBe(0);
+      expect(p.inventory.fuel).toBe(0);
+      await page.screenshot({
+        path: `output/parked-vehicles/browser/help-parked-${mobile ? 'phone' : 'desktop'}.png`,
+      });
       b.online = false;
       await expect(page.locator('#aid-location')).toContainText('left the parish');
       await expect(form.getByRole('button')).toBeDisabled();

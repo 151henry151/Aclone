@@ -6,6 +6,21 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.0] - 2026-11-06
+
+### Added
+
+- Leave tractors and grounded aircraft where their drivers park; retain each tank, paint, condition and hitched trailer through walking, sign-off and garage storage.
+- Mark parked vehicles on the map and show return distance, empty-tank direction and nearby refuelling controls.
+- Walk through building entrances before opening their panels, animate mounting and dismounting, and offer home departures on foot or in the parked tractor.
+- Configure vehicle persistence, parking, towing and arrival animations per world; preserve existing boat mooring and default-off worlds.
+
+### Fixed
+
+- Keep paid garage paint on parked machines, place legacy spare tanks when persistence is enabled, and preserve fresh-world state on its first save and reload.
+- Retain outdoor trade and service controls for loaded tractors, trailer purchases and loading-ramp work; allow nearby shop trades with a parked hitched trailer.
+- Keep entrance labels compact and lift the walking camera clear of parked vehicle roofs.
+
 ## [0.130.0] - 2026-11-06
 
 ### Added

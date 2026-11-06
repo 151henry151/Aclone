@@ -51,8 +51,10 @@ export function buildingDoorActivity(w: World, b: Building) {
   );
   return {
     staffed: ownerOperating(w, b) || b.employees.length > 0 || workers.some((p) => p.job === b.id),
-    inside: workers.some(
-      (p) => p.atHome && (p.home === b.id || Math.hypot(p.x - b.x, p.z - b.z) < 1),
+    inside: Object.values(w.players).some(
+      (p) =>
+        p.inside === b.id ||
+        (p.atHome && (p.home === b.id || Math.hypot(p.x - b.x, p.z - b.z) < 1)),
     ),
   };
 }

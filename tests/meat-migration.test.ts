@@ -6,6 +6,7 @@ import { Store } from '../src/server/store';
 import { items } from '../src/shared/catalog';
 test('the one-time meat migration adds missing listings but preserves operator prices, paused quotes, stock and adult herds', () => {
   const w = createWorld('meat-old-save', 'Old save', 'owner');
+  delete w.meatVersion; // Model a save made before the meat catalogue existed.
   const market = makeBuilding('market', 'market', 0, 0);
   market.owner = 'operator';
   market.buy = { beef: 17 };

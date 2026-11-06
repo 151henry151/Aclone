@@ -2978,3 +2978,37 @@ html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
   min-height: 80px;
   height: 90px;
 }
+
+#parked-status {
+  max-width: min(27rem, 85vw);
+  padding: 0.55rem;
+  background: #20372ee8;
+  border: 1px solid #718160;
+  border-radius: 0.35rem;
+}
+#parked-status p {
+  margin: 0 0 0.4rem;
+}
+#parked-status small {
+  display: block;
+  margin-top: 0.3rem;
+}
+
+#task-control.arrival-progress {
+  top: 120px;
+  transform: translateX(-50%);
+  width: auto;
+  padding: 8px 14px;
+}
+#task-control.arrival-progress #task-name {
+  display: inline;
+  font-size: 14px;
+}
+#task-control.arrival-progress #task-countdown {
+  display: inline;
+  margin: 0 0.4rem;
+  font-size: 16px;
+}
+#task-control.arrival-progress #task-caption {
+  font-size: 12px;
+}

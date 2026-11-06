@@ -19,6 +19,7 @@ export class TrailerScene {
   ) {
     const alive = new Set<string>();
     for (const t of Object.values(w.trailers ?? {})) {
+      if (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside) continue;
       alive.add(t.id);
       const def = trailerDefs[t.kind];
       const key = t.kind + JSON.stringify(t.cargo);
@@ -38,7 +39,7 @@ export class TrailerScene {
       }
       const e = entry,
         model = e.model,
-        tractor = t.attached ? players.get(t.attached) : undefined;
+        tractor = t.attached && !t.parkedWith ? players.get(t.attached) : undefined;
       const alpha = 1 - Math.exp(-Math.min(0.1, dt) * 12);
       e.heading +=
         Math.atan2(Math.sin(t.heading - e.heading), Math.cos(t.heading - e.heading)) * alpha;
@@ -64,7 +65,7 @@ export class TrailerScene {
       model.rotation.copy(ground.rotation);
       for (const wheel of model.userData.wheels as T.Group[]) wheel.rotation.x += distance / 0.5;
       (model.userData.tailLights as T.MeshStandardMaterial).emissiveIntensity =
-        t.attached && w.players[t.attached]?.lights ? 1.8 : 0.15;
+        t.attached && !t.parkedWith && w.players[t.attached]?.lights ? 1.8 : 0.15;
     }
     for (const [id, e] of this.models)
       if (!alive.has(id)) {

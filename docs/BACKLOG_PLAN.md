@@ -6872,3 +6872,265 @@ The bot announcement is posted and verified with three readable image embeds:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1568356762556440576
 Evidence: `output/release-0.130.0/`. No live player grants or manual world edits.
 Continue with item 18; helicopters remain dependent on persistent parked vehicles.
+
+### Item 18 — Persistent vehicles and arrivals: completion criteria
+
+Read the complete entry before production changes. Implement in its named order:
+parked records/migration and switching; fuel/home/lodging; sessions/towing/solid
+footprints/trailers/NPC return; then mount/dismount and building arrival animations.
+Do not release a partial parking or arrival system.
+
+- `npx tsx --test tests/parked-vehicles.test.ts`: walking from a motor vehicle
+  creates exactly one owner/slot record with position, heading, height, paint,
+  condition, fuel and parking time; no duplicate tank remains in parkedFuel.
+  Stand 1.4 m left of the driver axis. Reject a return beyond 3 m without any
+  mutation and show the distance. Returning restores the exact tank/condition;
+  default-off worlds retain instant switching. Exercise changed ranges and
+  disabled NPC parking separately. Grounded aircraft stay on their apron;
+  airborne dismount remains refused. Existing boat/crew/tender rules remain.
+- Store the current tractor inside a garage when changing to another owned
+  machine there. An outside parked machine must be retrieved where left, not
+  teleported to the garage. Only previously stored/migrated/new machines drive
+  out of the garage. Show the owner's actual stored tractor in its interior.
+- Refuel a nearby parked tank with carried Fuel using the canonical item rate;
+  refuse distant, full, unavailable and unowned targets without consuming items.
+  Preserve the existing optional help-refuel policy for another player's tank.
+  Prevent ordinary Use Fuel from remotely filling a parked tank while walking.
+- Home/booked lodging parks at a dry, clear door-side kerb, without blocking the
+  path or another parked vehicle. Leave on foot by default; both departure
+  controls work. If no safe parking exists, refuse before mutating fuel/state.
+- Session tests: sign-off leaves a public driverless record, lights/engine off;
+  reconnect restores the seat only for a driving departure. Walking departures
+  stay on foot. The opt-out hides the vehicle as before. Restart/catch-up keeps
+  records. Absence-limit processing removes the absent owner's parked records.
+- Tow only expired vehicles on a public road, after seven game days by default,
+  counting catch-up on the world clock. Protect owned property, garages/hangars
+  and non-road parking. Prefer a clear home kerb, then a garage; preserve every
+  tank, paint, condition and trailer load. Record the configurable fee and notice;
+  do not repeatedly charge after moving. No safe destination means defer intact.
+- Movement/construction/apron tests: use full configured footprints, shared with
+  prediction; parked vehicles stop/slide without damage according to collision
+  rules. Prevent construction and aircraft spawning over parked vehicles.
+  Hitched trailers remain with the parked tractor and do not follow its walker.
+- Migration tests: keep current drivers unchanged; place each legacy parkedFuel
+  tank once at a safe home kerb or garage, retain old inference and ownership,
+  never place machines in water. A blocked placement preserves pending fuel.
+  Enable persistence once for public Puddlewick, retain later owner overrides,
+  and keep other worlds on their existing behavior unless explicitly enabled.
+- Rules: canonical defaults in data/settings.json, shared validation/summary,
+  F10 controls and save/design round trips. Besides persistence, sign-off and NPC
+  switches, expose 7-day grace, towing fee (20d initial default, the entry gives
+  no amount), 3 m return/refuel reach, 1.4 m door offset, safe parking search reach,
+  1.6 s mount/dismount, full/quick/off arrival mode, 1 s quick arrival, 2–4 s full
+  arrival, 18 m approach reach and 90° pedestrian door swing. Reuse existing
+  vehicle dimensions, fuel-item rate, collision policy and clock settings.
+- `tests/arrival.test.ts` and actual browser flow: approach refuses out-of-range
+  or occupied/invalid targets before mutation; records a server entering task,
+  immobilises controls, parks/dismounts, walks to the shared facade doorway,
+  opens/closes the real door and hides the person only after entry. Panel opens
+  only on authoritative completion; Escape/cancel/close reverses the sequence.
+  Other clients observe the same state. Home departure mounts only when chosen.
+  Closed business bays allow their side entrance and occupancy lights.
+- Browser checks in disposable worlds on desktop, touch and controller input:
+  walk away, visible unmanned machine and attached trailer; map pin, distance and
+  out-of-fuel direction; distant return/refuel refusal; buy fuel, walk back and
+  drive; home/lodging departure; second-client sign-off/reconnect; garage storage;
+  mount steps/seat transition/camera hold; entry panel timing and door angle;
+  full/quick/off, persisted custom rules, invalid inputs and missing destination.
+  Review screenshots and a successful recording before publication.
+- NPC tests require routing back to a stranded/parked tractor before refuelling
+  or boarding it, without an infinite prep loop; short walking trips stay valid.
+  Run affected tractor, fuel, player-aid, boat, trailer, home/lodging, movement,
+  construction, snapshot, migration, NPC and UI suites only where affected.
+  Clean TypeScript, changed-file Prettier, game/website builds, focused browser
+  verification and performance checks on added parked scenery are required.
+  Update PLAYING, WORLD_BUILDING, README/changelog/release docs. Commit, push,
+  deploy exact SHA with backups, verify read-only and announce with reviewed
+  screenshots only when the entire item meets these criteria.
+
+Item 18 resumed on 2026-11-06 from `2bf2678`; release 0.130.0 remains live.
+The five initial core tests failed for the intended missing parking/return/refuel
+behaviour (`output/parked-vehicles/core-red.log`) and then passed. Subsequent
+red-before-green batches cover rule validation/editor/design portability, remote
+garage refusal, migration, home/lodging, sessions, trailer attachment, physical
+collision/construction/apron occupancy, calendar-based towing and NPC return
+routing. Evidence is under `output/parked-vehicles/` (`rules-*`, `home-migration-*`,
+`sessions-*`, `world-*`, `npc-*`). Existing focused core regressions: 35/35;
+home/trailer/snapshot/contact regression batch: 57/57. These are intermediate
+checks, not completion of item 18.
+
+Server arrival tests now cover pending/finished entry, movement locking,
+quick/off/custom duration, cancellation, invalid destinations and home departure.
+Rendering tests found and reproduce both a trailer following its walker and
+pedestrian hinges being consumed by static batching. Parked lamps must use
+independent materials; muting them must not darken another driver's headlights.
+The actual browser arrival flow is being added and run red before UI integration.
+No item 18 release, push, deployment or announcement has occurred. Remaining gates
+include full visible arrivals/mounting/panel timing, stored garage displays,
+map/HUD/refuel controls, real session and mobile/controller flows, performance,
+final regression/type/format checks and player/world-builder documentation.
+
+Item 18 continuation, 2026-11-06: the HUD/map regression first failed because the
+parked-vehicle control was missing, then passed in the real browser. The HUD now
+names the physical tank, distance and compass direction, explains return/refuel
+refusals, and marks the vehicle on both maps. Edge tests reproduced and fixed a
+hitched trailer being left behind by home parking, missing home departure targets,
+and walking boat-tank refuelling being incorrectly intercepted by land parking.
+The successful compact-arrival browser check also verifies the progress indicator
+stays clear of the central view; parked nameplates no longer grow with proximity.
+
+Mount/dismount tests now verify configured duration, movement locking, observer
+snapshots, actual model seat anchors, driver fading and material restoration.
+Garage tests verify outside-only switching, safe drive-out, storage of the arrival
+tractor and display of its actual model/paint. The home browser test exposed an
+unintended exit sent when the Go home panel closed; it now passes with both
+explicit departure controls. A subsequent industrial test caught approach targeting
+the solid wall between loading bays. Shared entrance placement now selects an
+actual pedestrian doorway or bay; crossing opens that bay and occupied rooms light
+after hours. Focused batch: 63/63; TypeScript clean before the latest browser run.
+Evidence: `hud-*`, `edge-*`, `boat-*`, `compact-browser-*`, `home-controls-*`,
+`mount-garage-*`, `mount-render-*`, and `bay-*` in `output/parked-vehicles/`.
+These are intermediate results. The extended mount/garage browser flow and the
+remaining session, mobile/controller, customized rules, trailer-storage and
+performance checks are still required. Item 18 remains unfinished and unreleased.
+
+Visual review of item 18's successful desktop recording found an upright mounting
+figure crossing the cab roof and continuous siding behind an open cottage door.
+New regression tests require the animated skeleton to settle into the driver's
+seated pose and a ray through the open doorway to reach a recessed entrance.
+Both failed before the fixes and now pass (`visual-review-red/green.log`). A
+separate boat compatibility test caught building approach bypassing disembark;
+the action now refuses atomically while the existing boat interaction UI remains.
+The next roadside-help check requires the existing player-help button to fill the
+nearby parked tank when its owner has walked away, honour the world's parked reach
+and help switch, preserve the owner's walking tank, and issue the existing receipts.
+Browser review must recheck the roof and doorway fixes before publication.
+
+Additional item 18 integration checks reproduce accepted NPC garage actions
+losing the storage location and NPC sign-off bypassing parking. Garage recovery
+now preserves that location and retrieves stored vehicles before using fuel;
+resident visits use the same sign-off/seat-restoration helpers as human sessions.
+The focused NPC/core batch and shutdown test pass after their recorded red runs.
+Safe parking must also reject loose trailers and reject any relocated trailer
+footprint overlapping another parked machine; the next regression covers both.
+
+World-builder compatibility check: a parked machine must retain its assigned
+creator vehicle model and tuning, rather than reverting to the stock tractor.
+The renderer regression uses a distinct custom model and verifies its dimensions.
+
+Performance gate for item 18: run the isolated expanded-town profile at low and
+normal quality with 32 resident actors, then the same population with its 21 motor
+vehicles parked and their drivers signed off. Require every parked model to be
+present, no browser errors, over 200 sampled frames, median <=50 ms, p95 <=66.7 ms,
+no >100 ms sampled frames, and parked p95 within 10% of the matched active case.
+Run `TEST_GPU=1 npm run test:e2e -- tests/browser/parked-performance.spec.ts` alone
+with production edits frozen. Record results before release.
+
+The final focused batch passed 330/332 tests. The new doorway recess exceeded
+existing geometry budgets; exposed planes and simpler small round fittings now
+keep every original budget unchanged. A fresh-world save/reload also acquired a
+meat migration marker and revision on first load; newly created worlds now mark
+their already-current catalogue. The legacy migration fixture explicitly omits
+that marker. The 40-test repair batch and 20 directly affected follow-up tests
+pass. A frozen-matrix label regression failed before its correction and now
+passes: near entrance labels must stay below 3.6% of viewport height after static
+scenery preparation, restoring their normal scale at distance.
+
+Successful browser checks cover desktop arrivals/mounting/garage storage,
+mobile/controller inputs and persisted/invalid/off rules, two-client sign-off
+and reconnect, empty-tank fuel shopping and driving, and helping another player's
+parked tank on desktop and phone. Video review confirms door timing and seated
+mounting. The fuel-rescue review additionally found the chase camera crossing the
+parked tractor roof. Before release, add a renderer regression requiring a camera
+behind a parked hull to move to the unobstructed player-side segment, while a
+clear camera stays unchanged. Re-run the actual fuel-rescue flow and inspect the
+return walk, including the previously obscured 35.5-second point. Keep mounting
+camera hold and first-person behaviour intact.
+
+Performance fixture audit: the first comparison counts all 21 parked meshes but
+its default camera faces away from the resident fleet (active and parked draw
+counts are identical). Do not accept that as visible-fleet evidence. Point the
+survey camera toward the fleet, save a profile screenshot, and assert each
+parked model actually submits a mesh during the sampled frames. Keep the same
+population, quality settings, frame count and timing thresholds in the corrected
+comparison; this strengthens coverage rather than changing the budget.
+
+Persistence integration audit: changing the world switch from off to on must
+place existing spare tanks immediately, retaining the current driver and tank;
+a restart must not be required for the advertised rule to apply. Repainting an
+owned parked vehicle at a garage must update its physical record, and boarding
+must retain that paid-for paint. Add direct action regressions for both existing
+flows before production changes, preserving invalid-action atomicity.
+
+The first camera correction cleared the roof by shortening the view, but video
+review showed the walker filling the screen and the next mount hidden by the
+vehicle. Strengthen the camera regression to retain chase distance as well as an
+unobstructed target-to-lens segment (red: lost chase distance). Lift over the near
+edge of the parked hull instead; the 16 renderer/mount tests pass. Recheck the
+successful fuel flow again before publication. The initial reviewed desktop
+retake already confirms compact labels and correct door/mount timing.
+
+World-switch migration and garage repaint both failed for the intended missing
+state update, then passed with the existing fleet, appearance and rules tests
+(43/43). The saved-rules touch/controller browser recheck also passes (34.8 s).
+
+The roof-lift retake exposed excessive height when the walker nearly touches the
+hull. Extend the camera test with near-zero clearance: keep a clear sightline and
+useful chase distance without launching overhead. It fails before the fix. The
+camera now uses the pedestrian's outward side when lifting would exceed chase
+distance, resolves the desired position before interpolation, and still holds
+through mounting. All 16 renderer/mount checks pass; final browser review pending.
+
+Pre-release compatibility audit: mandatory building approach now dismounts the
+player and parks the hitched rig. Existing trailer trades, garage buy-and-hitch
+and vehicle services require a driven/hitched vehicle; butcher service requires
+the loading ramp. They must remain usable without remotely moving the tractor or
+weakening cargo, ramp and ownership checks. Add an integration regression for
+approach followed by trailer trade and verify the actual outdoor service UI
+before release. This is a release gate, not a deferred follow-up.
+
+Compatibility criteria: retain default E/tap/controller building entry, but add
+an explicit “Trade & services outside” control for loading-ramp, garage and bulk
+cargo work while standing or driving outside. It must leave position, vehicle,
+hitch and task untouched and retain existing server-side range/ownership/cargo
+checks. Browser: open outside at a garage, service the tractor with carried Steel,
+buy and hitch a trailer, buy Fuel into it, then use normal E to enter and park the
+rig. The nearby parked rig must also remain usable by the trailer trade controls
+already shown in an entered shop; physics must not treat it as following the
+walker. Missing outdoor control and rejected post-entry trailer trade are recorded
+red before implementation. Keep remote trailer access refused.
+
+Corrected performance gate passes in 3.1 minutes: low active/parked p95
+37.4/36.8 ms, normal active/parked 18.9/19.3 ms. Both parked cases submit all 21
+models, contain over 200 sampled frames, have no browser errors or frames over
+100 ms, and stay within the matched 10% p95 limit. Visible-fleet screenshots and
+metrics are in `output/parked-vehicles/performance-{low,normal}-{active,parked}`.
+The final fuel rescue recording passes visual review with a full visible walker,
+empty cab and unobstructed mount. These gates pass; outdoor service compatibility
+is the remaining release blocker. Nothing has been released or announced.
+
+### Item 18 — Final local verification, 2026-11-06
+
+Outdoor compatibility now passes: 64 focused parked-vehicle, trailer, vehicle
+service and player-aid tests; the desktop browser services a tractor, buys and
+hitches a trailer, buys Fuel into it, enters normally and uses the butcher ramp.
+The mobile browser opens outdoor services without changing position, vehicle,
+inside state or task, then completes normal entry and controller controls. Both
+browser checks pass (22.6/33.7 seconds). Video review confirms the service and
+butcher results. Nearby parked-trailer trades pass and remote access is refused.
+
+All item criteria now pass, including the repaired 40-test regression batch,
+20 migration/simulation follow-ups, 43 persistence/paint/rules checks, 16
+renderer/mount checks, desktop/mobile arrivals, reconnect, fuel rescue and helper
+refuelling. The corrected visible-fleet performance comparison passes as recorded
+above. Evidence remains in `output/parked-vehicles/`; unsuccessful recordings are
+not used in the announcement. Final `npm run build` (including TypeScript),
+`npm run build:website` and `npm run check:website` pass. The website check covers
+four widths, navigation, gallery interactions and WebGL/no-JavaScript fallbacks.
+Prettier runs over all 65 changed files; `git diff --check` is clean.
+
+Prepare version 0.131.0 with an empty Unreleased section retained, updated player
+and world-builder docs, README and release notes. Commit and push this complete
+slice, deploy the exact pushed SHA with the established backup scripts, verify
+public health/assets/website read-only, then publish the reviewed two-screenshot
+bot announcement. Mark done only after those operations succeed.

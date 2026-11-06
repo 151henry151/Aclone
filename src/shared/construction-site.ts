@@ -1,3 +1,4 @@
+import { parkedFootprintBlocked } from './vehicle-footprint';
 import { pumpHouseSite, freshWaterReason } from './fresh-water';
 import { constructionRules } from './construction-rules';
 import { quaySite } from './quay';
@@ -138,6 +139,8 @@ export function constructionSiteReason(w: World, b: Site) {
   const rects = rectangles(b),
     edge = mapHalf(w);
   for (const a of rects) {
+    if (parkedFootprintBlocked(w, a))
+      return 'Move the parked vehicle clear of the building footprint';
     for (const o of sceneryObstaclesNear(w, a, a, Math.hypot(a.hx, a.hz))) {
       const dx = o.x - a.x,
         dz = o.z - a.z;

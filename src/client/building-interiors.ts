@@ -4,7 +4,7 @@ import * as T from 'three';
 import type { Building, World } from '../shared/types';
 import type { BuildingVolume } from '../shared/building-shapes';
 import type { BuildingBay } from '../shared/building-bays';
-import { buildingDoorRules, doorOpenness } from '../shared/building-doors';
+import { buildingDoorRules, doorOpenness, buildingDoorActivity } from '../shared/building-doors';
 import { finishMaterial, type BuildingFinish } from './building-finishes';
 export type DoorRig = {
   group: T.Group;
@@ -227,13 +227,19 @@ export function animateBuildingDoors(
               1,
             );
       d.initialized = true;
-      d.openness = d.phase * d.phase * (3 - 2 * d.phase);
+      const arrival = root.userData.arrivalBay;
+      const crossing =
+        arrival && !d.bay.rear && Math.hypot(d.bay.x - arrival.x, d.bay.z - arrival.z) < 0.25
+          ? arrival.openness
+          : 0;
+      d.openness = Math.max(crossing, d.phase * d.phase * (3 - 2 * d.phase));
       d.group.userData.openness = d.openness;
       poseDoor(d, r.buildingDoorSwingDegrees);
     }
     rig.group.visible =
       r.buildingInteriorDetail !== 'none' &&
-      rig.doors.some((d) => d.openness > r.buildingInteriorThreshold);
+      ((b.doorActivity ?? buildingDoorActivity(w, b)).inside ||
+        rig.doors.some((d) => d.openness > r.buildingInteriorThreshold));
     rig.detail.visible = !low && r.buildingInteriorDetail === 'full';
     for (const effect of (rig.group.userData.effects ?? []) as T.Object3D[])
       if (effect.name === 'kettle-steam') effect.visible = rig.detail.visible;

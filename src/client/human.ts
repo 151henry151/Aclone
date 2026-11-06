@@ -55,17 +55,7 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
   skin.boundingSphere = new T.Sphere(new T.Vector3(0, 0.9, 0), 1.35);
   skin.boundingBox = new T.Box3(new T.Vector3(-0.65, -0.1, -0.85), new T.Vector3(0.65, 1.9, 0.85));
   if (pose === 'seated') {
-    hips.position.y = 0;
-    torso.rotation.x = 0.1;
-    for (const arm of arms) {
-      arm.upper.rotation.set(-1.05, 0, 0);
-      arm.lower.rotation.x = -0.46;
-    }
-    for (const leg of legs) {
-      leg.upper.rotation.x = -1.38;
-      leg.lower.rotation.x = 1.43;
-      leg.foot.rotation.x = -0.05;
-    }
+    seatHuman(group, 1);
     group.updateMatrixWorld(true);
     skin.skeleton.update();
     const geometry = skin.geometry.clone(),
@@ -115,4 +105,23 @@ export function createHuman(pose: 'walking' | 'seated' = 'walking'): HumanFigure
 
 function figure(group: T.Group, pose: 'walking' | 'seated'): HumanFigure {
   return { group, animate: pose === 'walking' ? animateHuman(group) : () => {} };
+}
+
+/** Blend the animated skeleton into the same pose used by permanent drivers. */
+export function seatHuman(group: T.Group, amount: number) {
+  const blend = (name: string, x: number, z?: number) => {
+    const bone = group.getObjectByName(name)!;
+    bone.rotation.x = T.MathUtils.lerp(bone.rotation.x, x, amount);
+    if (z !== undefined) bone.rotation.z = T.MathUtils.lerp(bone.rotation.z, z, amount);
+  };
+  const hips = group.getObjectByName('hips')!;
+  hips.position.y = T.MathUtils.lerp(hips.position.y, 0, amount);
+  blend('torso', 0.1);
+  for (const side of [-1, 1]) {
+    blend(`arm-${side}`, -1.05, 0);
+    blend(`forearm-${side}`, -0.46);
+    blend(`thigh-${side}`, -1.38);
+    blend(`shin-${side}`, 1.43);
+    blend(`foot-${side}`, -0.05);
+  }
 }

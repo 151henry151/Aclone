@@ -1,4 +1,4 @@
-import { doorOpenness } from '../shared/building-doors';
+import { doorOpenness, buildingDoorActivity } from '../shared/building-doors';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -188,7 +188,10 @@ export class TownLighting {
           for (let parent = s.pane.parent; parent; parent = parent.parent)
             if (!parent.visible) interiorVisible = false;
         const on = s.pane.userData.interiorLight
-          ? !!b && interiorVisible && doorOpenness(w, b) > 0 && night > 0.05
+          ? !!b &&
+            interiorVisible &&
+            ((b.doorActivity ?? buildingDoorActivity(w, b)).inside ||
+              (doorOpenness(w, b) > 0 && night > 0.05))
           : f
             ? night > (f.exterior ? 0.8 : 0.35) &&
               (f.closes === undefined || (hour >= 12 && hour < f.closes))

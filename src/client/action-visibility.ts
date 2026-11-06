@@ -1,3 +1,6 @@
+import { withinBuildingRange } from '../shared/simulation';
+import { parkingRules } from '../shared/parking-rules';
+import { parkedReturnReason, parkedVehicle, persistentVehicles } from '../shared/parked-vehicles';
 import { rawMeats } from '../shared/meat-recipes';
 import { farmYieldRules } from '../shared/farm-yield-rules';
 import { hasMotor } from '../shared/vehicle-config';
@@ -245,14 +248,21 @@ export function actionBlocker(w: World, p: Player, action: string, id?: string, 
   if (
     b &&
     ['buyBuilding', 'vehicle', 'job', 'task', 'farm', 'learn', 'home'].includes(action) &&
-    !(b.kind === 'boathouse' ? nearBoathouse(w, p, b) : Math.hypot(p.x - b.x, p.z - b.z) < 18)
+    !withinBuildingRange(w, p, b)
   )
-    return 'Move within 18 metres of this building';
+    return `Move within ${persistentVehicles(w, p) ? parkingRules(w.settings).arrivalRange : 18} metres of this building`;
   if (action === 'buyBuilding' && b && p.cash < propertyQuote(w, b).total)
     return 'Not enough cash to buy this property';
   if (action === 'walk' || action === 'tractor' || action === 'vehicle') {
     const slot = action === 'walk' ? 5 : action === 'tractor' ? returnTractor(p) : Number(id);
-    if (slot === 2 && hasAircraftHangar(w) && !b?.aircraftHangar)
+    const parking = parkedReturnReason(w, p, slot, b);
+    if (parking) return parking;
+    if (
+      slot === 2 &&
+      hasAircraftHangar(w) &&
+      !b?.aircraftHangar &&
+      !(persistentVehicles(w, p) && parkedVehicle(w, p, slot))
+    )
       return 'Visit the airfield hangar';
     if (slot === 2 && Math.abs(p.speed) >= 0.5) return 'Stop before boarding';
     const cargo = cargoFitReason(w, p, slot);

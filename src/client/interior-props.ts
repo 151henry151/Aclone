@@ -1,3 +1,5 @@
+import { isTractor } from '../shared/tractors';
+import { configureVehicleVisual } from './vehicle-custom';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -1145,6 +1147,44 @@ export function animateInteriorEffects(rig: InteriorRig, dt: number) {
 
 /** Refresh only changing displays; the shell and its animation rigs stay intact. */
 export function refreshInteriorDisplay(rig: InteriorRig, b: Building, w: World, me?: Player) {
+  const oldTractor = rig.principal.getObjectByName('tractor');
+  if (b.kind === 'garage' && oldTractor) {
+    const records = Object.entries(w.parkedVehicles ?? {}).filter(
+      ([, v]) => v.inside === b.id && isTractor(v.slot),
+    );
+    const stored = records.find(([, v]) => v.owner === me?.id) ?? records[0];
+    const slot = stored?.[1].slot ?? [0, 24, 25, 26][Math.floor(buildingDoorHash(b.id) * 4)];
+    const key = JSON.stringify([stored?.[0], slot, stored?.[1].paint, w.vehicleTuning?.[slot]]);
+    if (rig.group.userData.storedTractorKey !== key) {
+      rig.group.userData.storedTractorKey = key;
+      const g = new T.Group();
+      fleetTractor(
+        g,
+        slot,
+        tractorPaint(stored?.[1].paint)?.color ?? (stored ? vehicleDef(w, slot).color : '#7b8a43'),
+        () => new T.Mesh(new T.PlaneGeometry(0, 0), new T.MeshBasicMaterial()),
+      );
+      configureVehicleVisual(g, w, slot);
+      g.userData.driver?.removeFromParent();
+      g.name = 'tractor';
+      g.userData.interiorProp = 'tractor';
+      g.userData.vehicleSlot = slot;
+      g.userData.parkedVehicle = stored?.[0];
+      g.position.copy(oldTractor.position);
+      const oldBox = new T.Box3().setFromObject(oldTractor, true),
+        newBox = new T.Box3().setFromObject(g, true);
+      g.position.y += oldBox.min.y - newBox.min.y;
+      oldTractor.traverse((o) => {
+        if (o instanceof T.Mesh) {
+          if (!o.geometry.userData.shared) o.geometry.dispose();
+          for (const m of Array.isArray(o.material) ? o.material : [o.material])
+            if (!m.userData.shared) m.dispose();
+        }
+      });
+      oldTractor.removeFromParent();
+      rig.principal.add(g);
+    }
+  }
   const parked = rig.principal.getObjectByName('parked-biplane');
   if (parked)
     for (const material of (parked.userData.airframePaint ?? []) as T.MeshStandardMaterial[])

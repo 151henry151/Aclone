@@ -16,6 +16,7 @@ const doorMode = process.env.PROFILE_DOORS;
 if (doorMode && !['open', 'closed'].includes(doorMode))
   throw Error('PROFILE_DOORS must be open or closed');
 if (doorMode) original.settings.buildingDoorMode = doorMode;
+const parkedPopulation = process.env.PROFILE_PARKED === '1';
 const quality = process.env.PROFILE_QUALITY ?? 'low';
 if (!['low', 'normal'].includes(quality)) throw Error('PROFILE_QUALITY must be low or normal');
 const population = Number(process.env.PROFILE_POPULATION ?? 0);
@@ -80,8 +81,8 @@ try {
   import {GameScene} from '/src/client/scene.ts';import {ParishMap} from '/src/client/parish-map.ts';
   import {addPlayer} from '/src/shared/simulation.ts';import {terrainHeight} from '/src/shared/terrain.ts';import {defaultCreator} from '/src/shared/creator.ts';
   const w=${JSON.stringify(world)};w.settings.time=40000;w.settings.dayLength=0;w.climate={snow:0,wetness:0};w.creator=defaultCreator();w.creator.weather='clear';
-  const p=addPlayer(w,'profile','Surveyor');p.online=true;p.engine=false;p.x=0;p.z=0;p.y=terrainHeight(w,0,0);
-  for(let i=0;i<${population};i++){const q=addPlayer(w,'resident-'+i,'Resident '+i);Object.assign(q,{online:true,vehicle:i%3?0:5,engine:false,x:45+(i%8)*9,z:30+Math.floor(i/8)*12});q.y=terrainHeight(w,q.x,q.z);}
+  const p=addPlayer(w,'profile','Surveyor');p.online=true;p.engine=false;p.x=0;p.z=0;p.y=terrainHeight(w,0,0);if(${population})p.heading=Math.atan2(76,48);
+  for(let i=0;i<${population};i++){const q=addPlayer(w,'resident-'+i,'Resident '+i);Object.assign(q,{online:true,vehicle:i%3?0:5,engine:false,x:45+(i%8)*9,z:30+Math.floor(i/8)*12});q.y=terrainHeight(w,q.x,q.z);if(${parkedPopulation}&&q.vehicle!==5){w.parkedVehicles??={};w.parkedVehicles[q.id+':'+q.vehicle]={owner:q.id,ownerName:q.name,slot:q.vehicle,x:q.x,z:q.z,y:q.y,heading:q.heading,fuel:q.fuel,condition:100,parkedAt:w.time};delete w.players[q.id];}}
   const stats={renders:[],cpu:[],longTasks:[]};new PerformanceObserver(list=>stats.longTasks.push(...list.getEntries().map(e=>({at:e.startTime,ms:e.duration})))).observe({type:'longtask',buffered:true});
   const game=new GameScene(document.getElementById('view'));const draw=game.renderer.render.bind(game.renderer);
   game.renderer.render=(...args)=>{const visible=game.renderer.getRenderTarget()===null;const at=performance.now();draw(...args);if(visible){stats.renders.push(at);stats.cpu.push(performance.now()-at);}};
@@ -141,6 +142,20 @@ try {
           streaming: !!f.game.ground.pending || !!f.game.woods.pending,
         };
       });
+      await page.evaluate(() => {
+        const f = (window as any).fixture;
+        f.drawnParked = new Set<string>();
+        for (const model of f.game.parkedVehicles.group.children)
+          model.traverse((o: any) => {
+            if (o.isMesh) {
+              const before = o.onBeforeRender;
+              o.onBeforeRender = function (...args: any[]) {
+                f.drawnParked.add(model.userData.parkedVehicle);
+                before.apply(this, args);
+              };
+            }
+          });
+      });
       await cdp.send('HeapProfiler.collectGarbage');
       await page.evaluate(() => {
         const s = (window as any).fixture.stats;
@@ -199,6 +214,8 @@ try {
           ...stats,
           position: { x: (window as any).fixture.p.x, z: (window as any).fixture.p.z },
           population: Object.keys((window as any).fixture.w.players).length,
+          parkedVehicles: game.parkedVehicles.group.children.length,
+          drawnParkedVehicles: (window as any).fixture.drawnParked.size,
           buildings: (window as any).fixture.w.buildings.length,
           groundKeys: game.ground.group.children
             .map((t: any) => [t.userData.cx, t.userData.cz].join(':'))
@@ -230,6 +247,7 @@ try {
         world: name,
         doorMode: doorMode ?? 'hours',
         quality,
+        parkedPopulation,
         location: location.name,
         coldMs,
         from,
@@ -268,6 +286,8 @@ try {
           2,
         ),
       );
+      if (population && location.name === 'town')
+        await page.screenshot({ path: out + '/fleet.png' });
       if (doorMode)
         await page.screenshot({ path: out + '/' + location.name + '-' + doorMode + '.png' });
       if (location.name === 'summit') await page.screenshot({ path: out + '/summit.png' });

@@ -1836,3 +1836,38 @@ interiors. None hides interiors while retaining the selected door policy. Closed
 rooms hide their furniture and lamps. Warehouse racks show empty/low/half/full
 stock, hay stacks rise toward the eaves as storage fills, and livestock disappear
 when the building has no stock of that animal.
+
+## Persistent vehicles and arrivals
+
+**F10 → Rules** exposes **Vehicles persist in the world** (`vehiclesPersist`).
+It defaults off for new and existing custom worlds. Public Puddlewick enables it
+once during migration; later owner overrides are respected. Turning it off
+restores instant switching, while returning to an existing parked machine
+recovers its saved tank once. Residents follow parking by default (`parkingNpcs`),
+and driving sign-off leaves a parked record unless `parkingSignOff` is disabled.
+
+Parking defaults are `parkingReturnRange: 3` metres for boarding/refuelling,
+`parkingDoorOffset: 1.4` metres to the driver's left, `parkingSearchRange: 30`
+metres for a dry clear kerb, `parkingGraceDays: 7` game days on public roads, and
+`parkingTowFee: 2000` hundredths of a denarius (20d). The grace uses the world
+clock, including catch-up, independently of sky speed. No safe destination or
+insufficient cash defers towing. Existing collision rules govern physical
+contacts; construction and aircraft aprons respect parked vehicle footprints.
+Fuel transfer uses the existing Fuel item value and helping others uses
+`allowPlayerRefuelling`.
+
+Arrival controls are `arrivalAnimation` (**full**, **quick**, **off**),
+`parkingMountSeconds: 1.6`, `arrivalQuickSeconds: 1`,
+`arrivalMinSeconds: 2`, `arrivalMaxSeconds: 4`, `arrivalRange: 18` metres and
+`arrivalDoorDegrees: 90`. Minimum duration cannot exceed maximum duration.
+Full arrivals scale with approach distance, quick mode uses its configured
+short duration, and off skips animation. Boarding and entry stay server checked.
+The same controls apply to keyboard, touch and controller input; NPC parking can
+be disabled independently. Existing door schedules and interior-detail settings
+still apply; an entrance opens for a crossing and occupied rooms light up.
+
+These rules are included in validation, world saves, rule summaries and portable
+designs. Migration retains current drivers, converts spare legacy fuel tanks
+once to safe home kerbs or compatible garages, and leaves a tank pending when no
+safe site is available. Enabling persistence or resident parking also attempts
+this migration immediately. It never creates a parked machine in water.

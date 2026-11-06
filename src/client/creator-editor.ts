@@ -1,3 +1,4 @@
+import { parkingFields, parkingRules } from '../shared/parking-rules';
 import { buildingDoorFields, buildingDoorRules } from '../shared/building-doors';
 import { meatRuleFields, meatRules, type MeatRules } from '../shared/meat-rules';
 import {
@@ -176,6 +177,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(livestockRuleFields),
     ...Object.keys(meatRuleFields),
     ...Object.keys(buildingDoorFields),
+    ...Object.keys(parkingFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -715,6 +717,32 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Young animals mature only with healthy care. Existing adults remain adults. Growth is measured in game days; continuous breeding requires farm investment and space.</p></fieldset>`;
+  const parking = parkingRules(settings);
+  const parkedFields = `<fieldset><legend>Parked vehicles and arrivals</legend>${Object.entries(
+    parkingFields,
+  )
+    .map(([key, spec]) => {
+      const value = parking[key as keyof typeof parking];
+      return 'choices' in spec
+        ? select(
+            spec.label,
+            key,
+            spec.choices.map((v) => [v, v]),
+            String(value),
+          )
+        : 'min' in spec
+          ? field(
+              spec.label,
+              key,
+              value,
+              'number',
+              `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+            )
+          : `<label class="check"><input name="${key}" type="checkbox" ${value ? 'checked' : ''}>${esc(spec.label)}</label>`;
+    })
+    .join(
+      '',
+    )}<p>Persistent vehicles stay where you leave them. Return and carry fuel to the actual machine. Road parking grace uses calendar game days, including catch-up. Stored vehicles and your own property are protected. Other worlds keep instant switching until enabled. Full arrivals walk through the doorway; quick and off shorten that sequence.</p></fieldset>`;
   const doors = buildingDoorRules(settings);
   const doorFields = `<fieldset><legend>Building doors</legend>${Object.entries(buildingDoorFields)
     .map(([key, spec]) => {
@@ -876,6 +904,7 @@ export function settingsFields(settings: Settings = defaults) {
     waterFields +
     herdFields +
     doorFields +
+    parkedFields +
     meatFields +
     radioFields +
     survivalFields +

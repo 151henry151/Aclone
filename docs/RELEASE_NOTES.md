@@ -2,6 +2,33 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.0 — Your tractor stays where you leave it
+
+Leave a tractor or grounded aircraft and it remains as an empty physical vehicle,
+including while you are signed off. Each machine retains its fuel, paint and
+condition, and hitched trailers stay with it. Find it with the map marker and
+HUD distance/direction, walk back within boarding reach, and climb in. If the
+tank is empty, buy Fuel on foot and refuel beside the machine; neighbours can help.
+
+Building visits now include dismounting, a walk to the entrance, an opening door
+and a visible return outside. The panel opens after entry. Homes and booked rooms
+offer departures on foot or in the parked tractor; garages store the machine you
+arrived in while you drive another out. Choose **Trade & services outside** for
+vehicle repair, trailer purchase, bulk cargo and loading-ramp work. Nearby parked
+hitched trailers remain available for shop trades without following the walker.
+
+Public-road parking can be towed after seven game days by default, with a 20d fee
+and a journal notice. Owned property and garage/hangar storage are protected;
+blocked or unfunded towing waits. World Builder controls persistence, resident
+parking, sign-off policy, reach, grace, fees and full/quick/off arrival timing.
+Puddlewick enables persistence once; other worlds retain instant switching until
+their owner enables it. Existing saved spare tanks move once to safe home kerbs
+or compatible garages, with unsafe placements left pending. Boats retain their
+existing mooring, crew and rescue flows.
+
+See [Parking and arriving](PLAYING.md#parking-and-arriving) and
+[Persistent vehicles and arrivals](WORLD_BUILDING.md#persistent-vehicles-and-arrivals).
+
 ## 0.130.0 — The workshop doors are open
 
 Look through working bay doors into furnished industrial buildings. Garages have

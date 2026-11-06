@@ -55,3 +55,20 @@ export function pilotLabel(name: string, canvas = document.createElement('canvas
   tag.renderOrder = labelOrder;
   return tag;
 }
+
+const labelPosition = new T.Vector3(),
+  labelDirection = new T.Vector3(),
+  cameraPosition = new T.Vector3();
+/** Preserve metre-scale signage at distance but keep it readable beside an entrance. */
+export function capWorldLabel(tag: T.Sprite, camera: T.PerspectiveCamera) {
+  const original = (tag.userData.labelScale ??= tag.scale.clone());
+  tag.getWorldPosition(labelPosition);
+  camera.getWorldPosition(cameraPosition);
+  camera.getWorldDirection(labelDirection);
+  const depth = Math.max(0.001, labelPosition.sub(cameraPosition).dot(labelDirection));
+  const height = 2 * depth * Math.tan(T.MathUtils.degToRad(camera.fov) / 2) * 0.035;
+  tag.scale.copy(original).multiplyScalar(Math.min(1, height / original.y));
+  // The building shell is frozen, but this camera-sized sprite must keep moving.
+  tag.matrixAutoUpdate = tag.matrixWorldAutoUpdate = true;
+  tag.updateMatrixWorld();
+}

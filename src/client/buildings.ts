@@ -42,7 +42,7 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     return mesh(new T.BoxGeometry(w, h, d), color, x, y, z);
   }
   function cylinder(r: number, h: number, color: string, x: number, y: number, z: number) {
-    return mesh(new T.CylinderGeometry(r, r, h, 16), color, x, y, z);
+    return mesh(new T.CylinderGeometry(r, r, h, 12), color, x, y, z);
   }
   function beam(a: T.Vector3, b: T.Vector3, thickness: number, color: string) {
     const m = box(thickness, a.distanceTo(b), thickness, color, 0, 0, 0);
@@ -228,15 +228,59 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
     pane.userData.facadeWindow = true;
     root.add(pane);
   }
+  const solidWalls: { mesh: T.Mesh; volume: BuildingVolume }[] = [];
   function door(x: number, z: number) {
+    // Cut a shallow entry recess into the shell. The opaque back keeps the
+    // unmodelled room hidden while the swinging panel reveals real depth.
+    const shell = solidWalls.find(
+      ({ volume: v }) => Math.abs(v.z + v.depth / 2 - z) < 0.15 && Math.abs(x - v.x) < v.width / 2,
+    );
+    if (shell) {
+      const v = shell.volume,
+        width = 1.17,
+        height = plan.doorHeight + 0.13,
+        front = v.z + v.depth / 2,
+        depth = Math.min(0.5, v.depth / 2);
+      shell.mesh.removeFromParent();
+      shell.mesh.geometry.dispose();
+      // Keep only exposed faces: full boxes would duplicate hidden internal walls.
+      const plane = (w: number, h: number, px: number, py: number, pz: number, ry = 0, rx = 0) => {
+        if (w <= 0 || h <= 0) return;
+        const face = wallFinish(mesh(new T.PlaneGeometry(w, h), '#ffffff', px, py, pz));
+        face.rotation.set(rx, ry, 0);
+      };
+      const leftEdge = v.x - v.width / 2,
+        rightEdge = v.x + v.width / 2,
+        leftDoor = x - width / 2,
+        rightDoor = x + width / 2;
+      plane(leftDoor - leftEdge, v.eaves, (leftDoor + leftEdge) / 2, v.eaves / 2, front);
+      plane(rightEdge - rightDoor, v.eaves, (rightEdge + rightDoor) / 2, v.eaves / 2, front);
+      plane(width, v.eaves - height, x, (v.eaves + height) / 2, front);
+      plane(v.depth, v.eaves, leftEdge, v.eaves / 2, v.z, -Math.PI / 2);
+      plane(v.depth, v.eaves, rightEdge, v.eaves / 2, v.z, Math.PI / 2);
+      plane(v.width, v.eaves, v.x, v.eaves / 2, v.z - v.depth / 2, Math.PI);
+      plane(v.width, v.depth, v.x, v.eaves, v.z, 0, -Math.PI / 2);
+      plane(v.width, v.depth, v.x, 0, v.z, 0, Math.PI / 2);
+      plane(depth, height, leftDoor, height / 2, front - depth / 2, Math.PI / 2);
+      plane(depth, height, rightDoor, height / 2, front - depth / 2, -Math.PI / 2);
+      plane(width, depth, x, height, front - depth / 2, 0, Math.PI / 2);
+      const back = new T.Mesh(new T.PlaneGeometry(width, height), mat('#171915'));
+      back.position.set(x, height / 2, front - depth + 0.01);
+      root.add(back);
+    }
     const panel = new T.Mesh(
       new T.PlaneGeometry(1.17, plan.doorHeight + 0.13),
       look.door === 'house'
         ? detailMaterial('door', look.accent)
         : finishMaterial(look.door, look.accent),
     );
-    panel.position.set(x, (plan.doorHeight + 0.13) / 2, z + 0.12);
-    root.add(panel);
+    const pivot = new T.Group();
+    pivot.position.set(x - 1.17 / 2, 0, z + 0.12);
+    pivot.userData.doorPivot = { x, z };
+    panel.position.set(1.17 / 2, (plan.doorHeight + 0.13) / 2, 0);
+    pivot.add(panel);
+    root.add(pivot);
+    (root.userData.pedestrianDoors ??= []).push(pivot);
     box(1.5, 0.12, 0.65, '#aaa58f', x, 0.06, z + 0.25);
   }
   function chimney(x: number, z: number, top: number) {
@@ -320,7 +364,11 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
             v.eaves / 2,
             v.z + (z * v.depth) / 2,
           );
-    } else wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z));
+    } else
+      solidWalls.push({
+        mesh: wallFinish(box(v.width, v.eaves, v.depth, '#ffffff', v.x, v.eaves / 2, v.z)),
+        volume: v,
+      });
     box(v.width + 0.15, 0.2, v.depth + 0.15, '#9d9f8e', v.x, 0.1, v.z);
     if (b.construction) {
       for (const side of [-1, 1])

@@ -1,3 +1,4 @@
+import { publicParkedVehicles } from '../shared/parked-vehicles';
 import { buildingDoorActivity } from '../shared/building-doors';
 import { storedBoatDisplay } from '../shared/stored-boats';
 import { ROWBOAT } from '../shared/rowboat-rules';
@@ -155,6 +156,7 @@ export function prepareFrame(w: World): Frame {
     Object.entries(families(w)).map(([id, f]) => [id, { ...f, invited: [] }]),
   );
   Object.assign(common, {
+    parkedVehicles: publicParkedVehicles(w),
     families: publicFamilies,
     familyNames: Object.fromEntries(
       Object.values(families(w)).flatMap((f) =>
@@ -264,6 +266,8 @@ export function prepareFrame(w: World): Frame {
         canReceiveRepair: repairRecipientReady(p, w),
         tractorPaint: vehiclePaint(p),
         atHome: p.atHome,
+        inside: p.inside,
+        task: p.task?.arrival || p.task?.mount ? p.task : undefined,
         carrying: p.carrying,
         smallCraft: p.smallCraft,
         lights: p.lights,
