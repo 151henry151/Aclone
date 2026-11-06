@@ -1,3 +1,13 @@
+import { landingAccepts } from './boathouse';
+import { freightTradeCost } from './freight-accounting';
+import {
+  boatHoldAction,
+  saveFreightCargo,
+  freightAccess,
+  freightShop,
+  freightAccepts,
+  queueFreight,
+} from './boat-hold';
 import {
   onSolidGround,
   sceneryContact,
@@ -476,6 +486,10 @@ export function addPlayer(w: World, id: string, name: string): Player {
     importDay: 0,
     imports: 0,
   };
+  const mooredFleet = Object.values(w.mooredBoats ?? {})
+    .filter((b) => b.owner === id)
+    .map((b) => b.slot);
+  if (mooredFleet.length) p.fleet = [0, 5, ...new Set(mooredFleet)];
   w.players[id] = p;
   playerStatistics(w, p, false);
   log(w, 'faucet', p.cash, 'treasury', id, 'starting cash');
@@ -569,11 +583,15 @@ function usable(w: World, p: Player, item: string) {
   nutritionEffects(p, def, 1, w);
   drinkAlcohol(p, item, w.time);
   stockAdd(p.inventory, item, -1);
-  if (isTrawler(p.vehicle, w) && p.fishingVoyage && (def.food || def.drink))
+  if (
+    (isTrawler(p.vehicle, w) || vehicleDef(w, p.vehicle).holdCapacity) &&
+    p.fishingVoyage &&
+    (def.food || def.drink)
+  )
     p.fishingVoyage.expenses += p.fishingVoyage.provisionPrices[item] ?? 0;
 }
 // All request validation precedes mutation. The server additionally wraps actions in a transaction.
-export function act(w: World, id: string, a: Action): string {
+export function act(w: World, id: string, a: Action, completedFreight = false): string {
   const items = worldItems(w),
     skills = worldSkills(w);
   const p = w.players[id];
@@ -749,6 +767,8 @@ export function act(w: World, id: string, a: Action): string {
   switch (type) {
     case 'tender':
       return tenderAction(w, p, a.operation);
+    case 'boatHold':
+      return boatHoldAction(w, p, a, completedFreight);
     case 'trailer':
       return trailerAction(w, p, a);
     case 'tow':
@@ -809,7 +829,8 @@ export function act(w: World, id: string, a: Action): string {
     case 'fuelTrailer':
       return fuelTrailerAction(w, p, a);
     case 'trade': {
-      const b = nearby(w, p, a.building),
+      const b =
+          a.storage === 'hold' ? freightShop(w, p, a.slot, a.building) : nearby(w, p, a.building),
         item = str(a.item);
       requireThat(b.owner !== id, 'Owners use the Stockroom, not trades with their own building');
       requireThat(items[item], 'Unknown item');
@@ -817,7 +838,10 @@ export function act(w: World, id: string, a: Action): string {
       requireThat(a.direction === 'buy' || a.direction === 'sell', 'Invalid trade direction');
       const buying = a.direction === 'buy';
       const trailer = a.storage === 'trailer' ? attachedTrailer(w, p) : undefined;
-      requireThat(a.storage === undefined || a.storage === 'trailer', 'Unknown cargo storage');
+      requireThat(
+        a.storage === undefined || a.storage === 'trailer' || a.storage === 'hold',
+        'Unknown cargo storage',
+      );
       if (a.storage === 'trailer')
         requireThat(
           trailer &&
@@ -826,7 +850,12 @@ export function act(w: World, id: string, a: Action): string {
             Math.hypot(trailer.x - b.x, trailer.z - b.z) <= 30,
           'Pull your hitched trailer alongside this shop and stop',
         );
-      const cargo = trailer ? trailer.cargo : p.inventory;
+      const cargo =
+        a.storage === 'hold'
+          ? freightAccess(w, p, a.slot).cargo
+          : trailer
+            ? trailer.cargo
+            : p.inventory;
       const price = (buying ? b.sell : b.buy)[item];
       requireThat(
         Number.isSafeInteger(price) &&
@@ -854,7 +883,11 @@ export function act(w: World, id: string, a: Action): string {
         requireThat((b.stock[item] ?? 0) >= n || emergencyImport(w, b, item), 'Not enough stock');
         requireThat(p.cash >= total, 'Not enough cash');
         requireThat(
-          trailer ? trailerAccepts(w, trailer, item, n) : canCarry(p, item, n, w),
+          a.storage === 'hold'
+            ? freightAccepts(w, p, a.slot, item, n)
+            : trailer
+              ? trailerAccepts(w, trailer, item, n)
+              : canCarry(p, item, n, w),
           'Cargo hold is full or unsuitable',
         );
         if (b.kind === 'starport')
@@ -865,6 +898,10 @@ export function act(w: World, id: string, a: Action): string {
         requireThat((b.stock[item] ?? 0) + n <= b.capacity, 'Building storage is full');
         requireHerdRoom(w, b, item, n);
       }
+      if (a.storage === 'hold' && !completedFreight)
+        return queueFreight(w, p, { ...a, expectedPrice: price, expectedTotal: total });
+      if (a.storage === 'hold')
+        freightTradeCost(w, p, Number(a.slot), cargo, item, n, buying, total);
       if (buying) {
         const town = taxTown(w, b.x, b.z);
         const { worldTax, townTax, tax } = salesReceipt(w, b, total);
@@ -899,6 +936,7 @@ export function act(w: World, id: string, a: Action): string {
         stockAdd(cargo, item, -n);
         log(w, 'transfer', total, b.id, id, 'sale', { building: b.id, item, quantity: n });
       }
+      if (a.storage === 'hold') saveFreightCargo(w, p, Number(a.slot), cargo);
       questEvent(w, p, buying ? 'buy' : 'sell', b.id, item, n);
       queueCreatorScript(w, 'TradeComplete', {
         id,
@@ -1509,14 +1547,16 @@ export function act(w: World, id: string, a: Action): string {
           (d) =>
             (a.building === undefined ||
               d.id === a.building ||
-              (!d.building && !d.river && a.building === fishingDock.id)) &&
+              (!d.building && !d.river && !d.quay && a.building === fishingDock.id)) &&
             withinBoatLanding(w, p, d, !poweredBoat(slot, w)) &&
             (!poweredBoat(slot, w) || !moored || d.id === moored.landing),
         );
-        const candidates = reachable.filter((d) => !d.river || riverDockAccepts(w, hull));
+        const candidates = reachable.filter((d) => landingAccepts(w, d, hull));
         requireThat(
           candidates.length || !reachable.length,
-          `River docks take vessels up to ${boatNavigationRules(w.settings).riverDockMaxLength} m long × ${boatNavigationRules(w.settings).riverDockMaxBeam} m beam; larger vessels use a boathouse or the fishing pier`,
+          reachable.some((d) => d.quay)
+            ? 'The vessel does not fit this quay berth; use a compatible dock'
+            : `River docks take vessels up to ${boatNavigationRules(w.settings).riverDockMaxLength} m long × ${boatNavigationRules(w.settings).riverDockMaxBeam} m beam; larger vessels use a boathouse or the fishing pier`,
         );
         landing = candidates.find((d) => !landingBlocked(w, d, p, poweredBoat(slot, w), slot));
         requireThat(
@@ -1603,7 +1643,11 @@ export function act(w: World, id: string, a: Action): string {
             moored: true,
             landing: landing.id,
           };
-      } else if (landing && poweredBoat(p.vehicle, w) && !landing.building) {
+      } else if (
+        landing &&
+        poweredBoat(p.vehicle, w) &&
+        (!landing.building || vehicleDef(w, p.vehicle).holdCapacity)
+      ) {
         w.mooredBoats ??= {};
         w.mooredBoats[mooringKey(p.id, p.vehicle)] = {
           owner: p.id,
@@ -1612,9 +1656,19 @@ export function act(w: World, id: string, a: Action): string {
           heading: landing.heading,
           paint: vehiclePaint(p) ?? 'blue',
           landing: landing.id,
+          ...(vehicleDef(w, p.vehicle).holdCapacity
+            ? { cargo: p.boatHold ?? {}, cargoBasis: p.boatHoldBasis }
+            : {}),
         };
-      } else if (landing && w.mooredBoats)
+        delete p.boatHold;
+        delete p.boatHoldBasis;
+      } else if (landing && w.mooredBoats) {
+        if (vehicleDef(w, slot).holdCapacity) {
+          p.boatHold = w.mooredBoats[mooringKey(p.id, slot)]?.cargo ?? {};
+          p.boatHoldBasis = w.mooredBoats[mooringKey(p.id, slot)]?.cargoBasis;
+        }
         delete w.mooredBoats[mooringKey(p.id, poweredBoat(slot, w) ? slot : p.vehicle)];
+      }
       p.fleet = fleet;
       switchVehicle(p, slot, true, w);
       vehicleRecord(w, p);
@@ -3364,6 +3418,27 @@ export function advance(w: World, seconds: number) {
     if (p.task?.repeat && !p.online) cancelGather(w, p);
     if (p.task && p.task.end <= end) {
       const t = p.task;
+      if (t.kind === 'freight') {
+        delete p.task;
+        try {
+          if (
+            !t.freight ||
+            freightAccess(w, p, t.freight.action.slot).landing.id !== t.freight.landing
+          )
+            throw Error('Return to the original freight landing');
+          const result = act(w, p.id, t.freight.action, true);
+          say(w, 'Freight', result, 'system', p.id);
+        } catch (error) {
+          say(
+            w,
+            'Freight',
+            `Transfer cancelled: ${error instanceof Error ? error.message : String(error)}`,
+            'system',
+            p.id,
+          );
+        }
+        continue;
+      }
       if (t.kind === 'gather') {
         if (finishGather(p, w)) {
           breakLabourStreak(p);

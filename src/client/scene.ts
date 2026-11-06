@@ -1,3 +1,5 @@
+import { fitQuayToWater } from './quay';
+import { stockWeight } from '../shared/fishing-expedition';
 import { calendarDate } from '../shared/environment';
 import { CANOE } from '../shared/canoe-rules';
 import { createCanoe, carriedCanoe, createPaddledCanoe, floatCanoe } from './canoe-model';
@@ -7,8 +9,9 @@ import { spaceportComplexSteps } from './spaceport-complex';
 import { createMotorboat } from './motorboat';
 import { TrailerScene } from './trailer-scene';
 import { TowLines } from './tow-lines';
+import { createCargoBoat } from './cargo-boat';
 import { createTugboat } from './tugboat';
-import { TUGBOAT, MOTORBOAT } from '../shared/boats';
+import { CARGO_BOAT, TUGBOAT, MOTORBOAT } from '../shared/boats';
 import { createFlashlight } from './flashlight';
 import { createRainUmbrella, needsRainUmbrella } from './umbrella';
 import { spaceportFenceSteps } from './spaceport-fence';
@@ -1318,6 +1321,7 @@ export class GameScene {
       fitBoatyardToWater(model, b, w);
       g.userData.boatyardBuilding = b;
     }
+    if (b.kind === 'quay') fitQuayToWater(model, b, w);
     if (b.kind === 'riverDock') fitRiverDockToWater(model, b, w);
     g.add(model);
     g.userData.chimneys = model.userData.chimneys ?? [];
@@ -1367,6 +1371,12 @@ export class GameScene {
       g.add(boat.group);
       g.userData.canoe = boat;
       for (const key of ['driver', 'eye', 'viewPitch']) g.userData[key] = boat.group.userData[key];
+    } else if (slot === CARGO_BOAT) {
+      const boat = createCargoBoat(tractorPaint(paint)?.color ?? v.color, v);
+      g.add(boat.group);
+      g.userData.cargoBoat = boat;
+      for (const key of ['driver', 'eye', 'viewPitch', 'lamp'])
+        g.userData[key] = boat.group.userData[key];
     } else if (slot === MOTORBOAT) {
       const boat = createMotorboat(tractorPaint(paint)?.color ?? v.color);
       g.add(boat.group);
@@ -1644,6 +1654,13 @@ export class GameScene {
           mesh.userData.engineRunning,
         );
         const skipper = w.players[mesh.userData.playerId];
+        if (mesh.userData.cargoBoat && skipper)
+          mesh.userData.cargoBoat.setLoad(
+            skipper.boatHold
+              ? stockWeight(w, skipper.boatHold) /
+                  (vehicleDef(w, skipper.vehicle).holdCapacity || 1)
+              : (skipper.freightLoad ?? 0),
+          );
         const t = skipper?.trawl;
         (mesh.userData.fishingBoat ?? mesh.userData.customTrawl)?.animate(
           !!t?.deployed,
@@ -1681,6 +1698,7 @@ export class GameScene {
           ),
           dt > 0 ? turn / dt : 0,
         );
+        mesh.userData.cargoBoat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.tugboat?.animate(dt > 0 ? turn / dt : 0);
         mesh.userData.canalBoat?.animate(dt > 0 ? turn / dt : 0);
         const plane = mesh.userData.biplane as BiplaneFigure | undefined;
@@ -1756,8 +1774,15 @@ export class GameScene {
         p.vehicle === 5 ? 28 : (vehicleDef(this.world, p.vehicle).lightRange ?? 110);
       const local = this.meshes.get(p.id);
       if (local) {
-        if (this.cameraMode === 1 && (local.userData.charterBoat || local.userData.tugboat))
-          (local.userData.charterBoat ?? local.userData.tugboat).cockpit.update(
+        if (
+          this.cameraMode === 1 &&
+          (local.userData.charterBoat || local.userData.tugboat || local.userData.cargoBoat)
+        )
+          (
+            local.userData.charterBoat ??
+            local.userData.tugboat ??
+            local.userData.cargoBoat
+          ).cockpit.update(
             {
               ...p,
               heading: local.rotation.y,
@@ -2005,7 +2030,8 @@ export class GameScene {
           model.userData.canalBoat ??
           model.userData.charterBoat ??
           model.userData.tugboat ??
-          model.userData.motorboat;
+          model.userData.motorboat ??
+          model.userData.cargoBoat;
         const captain = w.players[id];
         if (boat && captain && model.visible) {
           boat.lighting.update(
@@ -2268,7 +2294,9 @@ export class GameScene {
       ]),
     ];
     // Moving a tow changes its position, not its geometry. Retain expensive hulls/materials.
-    const key = w.id + JSON.stringify(entries.map(({ id, b }) => [id, b.slot, b.paint]));
+    const key =
+      w.id +
+      JSON.stringify(entries.map(({ id, b }) => [id, b.slot, b.paint, w.vehicleTuning?.[b.slot]]));
     if (key !== this.mooredKey) {
       this.mooredKey = key;
       dispose(this.mooredGroup);
@@ -2276,15 +2304,17 @@ export class GameScene {
       if (!this.mooredGroup.parent) this.scene.add(this.mooredGroup);
       for (const { id, b, raft } of entries) {
         const factory =
-          b.slot === MOTORBOAT
-            ? createMotorboat
-            : b.slot === TUGBOAT
-              ? createTugboat
-              : isTrawler(b.slot, w)
-                ? createFishingBoat
-                : b.slot === CHARTER_BOAT
-                  ? createCharterBoat
-                  : createCanalBoat;
+          b.slot === CARGO_BOAT
+            ? (color: string) => createCargoBoat(color, vehicleDef(w, b.slot))
+            : b.slot === MOTORBOAT
+              ? createMotorboat
+              : b.slot === TUGBOAT
+                ? createTugboat
+                : isTrawler(b.slot, w)
+                  ? createFishingBoat
+                  : b.slot === CHARTER_BOAT
+                    ? createCharterBoat
+                    : createCanalBoat;
         const model =
           b.slot === CANOE
             ? createCanoe(b.paint)
@@ -2307,6 +2337,7 @@ export class GameScene {
         inland && inland.level > w.settings.seaLevel + 0.01 ? inland.level : w.settings.seaLevel,
         b.z,
       );
+      model.userData.setCargoLoad?.('load' in b ? (b.load ?? 0) : 0);
       model.rotation.set(0, b.heading, 0, 'YXZ');
     }
   }

@@ -14,7 +14,8 @@ export function buildingPreviewFrame(kind: string, terminalOnly = false) {
   const sinElevation = previewDirection.y / length,
     cosElevation = Math.hypot(previewDirection.x, previewDirection.z) / length;
   const frame = { radius: 2, horizontal: 2, vertical: 2 };
-  for (const architecture of buildingArchitectures(kind))
+  const architectures = buildingArchitectures(kind);
+  for (const architecture of architectures.length ? architectures : [{ id: undefined }])
     for (const size of sizesForBuilding(kind)) {
       const plan = buildingPlan({
         id: 'preview',

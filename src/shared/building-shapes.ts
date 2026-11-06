@@ -1,3 +1,4 @@
+import { QUAY } from './quay';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingFeatures, type BuildingFeature } from './building-features';
 import { architecturalVolumes } from './building-architecture';
@@ -246,6 +247,11 @@ export function buildingPlan(b: {
       wall = '#b9c6ba';
       trim = '#365c63';
       break;
+    case 'quay':
+      volumes = [volume(3, 2.4, 0.5, 0, 'flat')];
+      wall = '#8c968b';
+      trim = '#4c5c56';
+      break;
     case 'riverDock':
       // The dry landing crib only; the jetty and berth lie over the river.
       volumes = [volume(3, 2.4, 0.5, 0, 'flat')];
@@ -372,6 +378,19 @@ export function buildingPlan(b: {
       depth: v.depth * factor,
     }));
   if (b.kind === 'boathouse') plan.waterfront = [volume(24, 38, 9.6, 0, 'flat', 5, -26)];
+  if (b.kind === 'quay')
+    plan.waterfront = [
+      volume(
+        QUAY.gangwayWidth,
+        QUAY.gangwayEnd - QUAY.gangwayStart,
+        1,
+        0,
+        'flat',
+        0,
+        -(QUAY.gangwayEnd + QUAY.gangwayStart) / 2,
+      ),
+      volume(QUAY.frontage, QUAY.deckDepth, 1, 0, 'flat', 0, -QUAY.gangwayEnd - QUAY.deckDepth / 2),
+    ];
   if (b.kind === 'riverDock') plan.waterfront = [volume(2.2, 9.8, 1, 0, 'flat', 0, -6.1)];
   if (b.architecture || b.kind === 'boathouse') {
     plan.features = buildingFeatures(b.kind, plan.volumes);

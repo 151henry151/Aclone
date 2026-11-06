@@ -132,3 +132,85 @@ property instead survives boat-loss deaths unless separate land-hull loss is on;
 carried and home-stored hulls follow inventory and property rules respectively.
 See [Playing Aclone](PLAYING.md#portable-canoes) for the controls and
 shore limits.
+
+## Coastal freight
+
+Buy the **Coastal cargo boat** at a boathouse. Its default price is **240s**:
+a 20 × 5.6 m coaster with a **2,000-weight freight hold**, **320-unit tank**,
+**6 m/s** maximum speed and **0.008 fuel units/s** full-throttle burn. It requires
+the Captain skill where that rule is enabled. The wheelhouse has working
+instruments, and pallet loads appear as the hold fills. W/S adjust persistent
+throttle; B sets it to idle, F4 switches the engine, and C changes camera.
+
+The captain's **60-weight personal allowance**, including shared provisions,
+is separate from freight. Store meals and drinks through Boat provisions & crew;
+food in the freight hold is merchandise and does not automatically feed anyone.
+The default dry hold follows the enclosed trailer's cargo policy: ordinary dry
+goods and packaged Fuel are accepted; livestock, loose water/milk and seafood
+need a suitable specialist policy. World builders can change the policy and
+capacity in Vehicles.
+
+At a stopped, compatible berth, open **Inventory → freight hold** to load or
+unload personal cargo, transfer an owned nearby stockroom, or buy/sell directly
+with a nearby shop. Shop reach is measured from the **shore entrance**, default
+30 m. Both boathouses and the fishing pier work; freight quays provide dedicated
+alongside berths. The coaster exceeds the default river dock's 14 × 3.6 m limit.
+A world builder can give the existing canal boat a separate hold for river freight;
+there is no new river-barge class in this release.
+
+Transfers take **10 weight per second** by default: a full hold takes 200 seconds.
+Cancel before completion to leave all stock and cash unchanged. Completion
+rechecks ownership, landing, range, cargo suitability, space, price, stock and
+payment. A changed quote cancels the trade. Shops still need actual goods to sell
+and investment to buy; ordinary discounts, tax and existing emergency-import
+rules apply. Parish supply orders and supply intents still use their existing
+inventory delivery path, not direct hold settlement.
+
+Freight stays aboard when you step ashore, including at boathouses, and survives
+save/restart. Boats left at quays remain visible. Ordinary death, stranded-vessel
+recovery and cargo-spoilage rules apply. At river docks, a compatible authored
+freight vessel uses the same transfers, carried-Fuel refuelling and existing
+upriver rescue/reboarding flows as other boats. World-design export includes
+only the world author's moored freight, remapped to the new world's owner;
+other players' cargo and active inventories remain private. Full database backups
+retain everyone's property.
+
+### Build a freight quay
+
+Choose **Build → Freight quay** on a dry, gently sloping coast and rotate the
+wharf toward deep water. Defaults are **24s plus town construction tax**, then
+**80 Wood, 100 Stone and 20 Steel** delivered as construction materials. The
+28 m open wharf has a timber access gangway, bollards and fenders, with a 28 × 8 m
+alongside berth requiring **2 m depth at low water**. There is no lifting hall.
+The preview refuses shallow, obstructed or inland-facing sites. Quays board
+already-owned compatible boats; buy a new boat at a boathouse.
+
+### Crew and a measured trade route
+
+Up to two consenting deckhands can join using the existing profit-share offers.
+Sales pay the captain immediately. **Settle freight shares & put crew ashore**
+pays agreed shares once from realized sale receipts minus the sold goods'
+acquisition cost and consumed fuel/provisions. Unsold goods retain their cost
+basis with the vessel. Personal or owned-stockroom loads use world-catalogue
+replacement prices; direct hold purchases record the actual discounted price.
+No shares are paid on a loss, and settlement refuses if the captain has spent
+the cash needed to pay them. Maintenance remains a separate operating cost.
+
+The reproducible authored example in `tests/cargo-boat-routes.test.ts` uses a
+funded quarry and mason at quays 4 km apart, with 1,000 Stone (2,000 weight).
+The purchase costs **97s** after the ordinary bulk discount; the buyer pays
+**112s**. The loaded outward trip and empty return use about **10.69 fuel units**
+(**60.14d** at the departure quote), incur **5.42d** maintenance, and pay a
+20% deckhand share of **287.97d**. Net is about **11.46s**, taking roughly
+29 minutes including loading/unloading. At those conditions the 240s hull pays
+back in about 21 trips, excluding the trader's working capital. This is an
+authored test route, not a promised live-world earning: prices, stock, funds,
+weather and local rules govern actual returns.
+
+At full loads the coaster uses less fuel per weight-distance than all six default
+tractors with tipping trailers; its advantage is bulk coastal work, not speed.
+An actual movement-physics circuit around the expanded island covers about
+**164.85 km**, uses **230.67** of the **320** tank units and leaves approximately
+**28% reserve**. That approximately eight-hour circuit measures the hull's range;
+provisions and maintenance still require planning. Forty default Fuel cans fill
+the tank and fit the captain's personal allowance.

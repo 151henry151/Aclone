@@ -22,6 +22,8 @@ export interface FishingVoyage {
   departed: boolean;
   caught: Stock;
   expenses: number;
+  freightReceipts?: number;
+  freightCost?: number;
   fuelPrice: number;
   provisionPrices: Record<string, number>;
 }
@@ -257,6 +259,17 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     !receipts || (b && b.investment >= receipts),
     'The buyer needs more working cash to pay for this landing',
   );
+  const freightReceipts = v.freightReceipts ?? 0,
+    freightCost = v.freightCost ?? 0;
+  const profit = Math.max(0, receipts + freightReceipts - freightCost - Math.ceil(v.expenses));
+  const shares = Object.entries(v.members).reduce(
+    (sum, [id, share]) => sum + (w.players[id] ? Math.floor((profit * share) / 100) : 0),
+    0,
+  );
+  need(
+    p.cash + receipts >= shares,
+    'Keep enough cash to pay the agreed crew shares before settling',
+  );
   for (const [id, n] of cargo) {
     p.inventory[id] -= n;
     b!.stock[id] = (b!.stock[id] ?? 0) + n;
@@ -290,7 +303,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
     }
   }
   p.cash += receipts;
-  const profit = Math.max(0, receipts - Math.ceil(v.expenses));
+
   for (const [id, share] of Object.entries(v.members)) {
     const q = w.players[id];
     if (!q) continue;
@@ -310,7 +323,7 @@ export function expeditionAction(w: World, p: Player, a: Action) {
       Object.assign(q, dock.land, { y: travelHeight(w, dock.land.x, dock.land.z), speed: 0 });
     }
   }
-  const result = `Expedition settled: receipts ${(receipts / 100).toFixed(2)}d; consumed fuel and provisions ${(v.expenses / 100).toFixed(2)}d; profit ${(profit / 100).toFixed(2)}d. Crew shares paid; crew ashore.`;
+  const result = `Expedition settled: receipts ${((receipts + freightReceipts) / 100).toFixed(2)}d; ${freightReceipts ? `freight acquisition cost ${(freightCost / 100).toFixed(2)}d; ` : ''}consumed fuel and provisions ${(v.expenses / 100).toFixed(2)}d; profit ${(profit / 100).toFixed(2)}d. Crew shares paid; crew ashore.`;
   p.lastFishingSettlement = result;
   delete p.fishingVoyage;
   return result;

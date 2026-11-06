@@ -1,3 +1,4 @@
+import { cargoAccepts } from './cargo-policy';
 import { vehicleRunningRules } from './vehicle-running-rules';
 import { z } from 'zod';
 import { cliffBlocks } from './coastal-bluffs';
@@ -14,86 +15,8 @@ import { landscapeBlocks } from './landscape';
 import { stockWeight } from './fishing-expedition';
 import { requireHerdRoom, canCarry } from './simulation';
 import { log } from './simulation';
-const tankAssembly = { length: 4.7, width: 2.35, axles: 2 } as const;
-export const trailerDefs = {
-  hay: {
-    name: 'Harvest hay wagon',
-    length: 6.6,
-    width: 2.5,
-    capacity: 600,
-    price: 450000,
-    color: '#ac6935',
-    axles: 2,
-    description: 'Open bale platform. Hay fills the rack; other dry goods use at most 60 weight.',
-  },
-  livestock: {
-    name: 'Meadow livestock wagon',
-    length: 7.2,
-    width: 2.5,
-    capacity: 240,
-    price: 360000,
-    color: '#738975',
-    axles: 2,
-    description: 'Ventilated stock box: up to 6 cattle or equivalent smaller animals.',
-  },
-  dump: {
-    name: 'Quarry tipping trailer',
-    length: 4.6,
-    width: 2.45,
-    capacity: 1000,
-    price: 420000,
-    color: '#c78a29',
-    axles: 2,
-    description: 'Deep steel body for stone, gravel, sand, ore and topsoil.',
-  },
-  logs: {
-    name: 'Forester log wagon',
-    length: 5.2,
-    width: 2.45,
-    capacity: 900,
-    price: 600000,
-    color: '#a54e35',
-    axles: 2,
-    description: 'Open bolsters and stakes for logs and sawn wood.',
-  },
-  tanker: {
-    ...tankAssembly,
-    name: 'Dales liquid tanker',
-    capacity: 700,
-    price: 550000,
-    color: '#a7b9b8',
-    description: 'Sealed tank for water or milk. Empty it before changing liquids.',
-  },
-  fuel: {
-    ...tankAssembly,
-    name: 'Dales fuel tanker',
-    capacity: 700,
-    price: 575000,
-    color: '#ce8635',
-    description: 'Sealed fuel-only tank with rear dispensing hose. No water or milk.',
-  },
-  box: {
-    name: 'Parish box trailer',
-    length: 4.4,
-    width: 2.35,
-    capacity: 400,
-    price: 900000,
-    color: '#65768f',
-    axles: 2,
-    description: 'Covered mixed dry goods. No loose liquids, livestock or fish.',
-  },
-  fish: {
-    name: 'Harbour chilled fish trailer',
-    length: 4.8,
-    width: 2.4,
-    capacity: 800,
-    price: 650000,
-    color: '#dce7df',
-    axles: 2,
-    description: 'Insulated seafood body with refrigeration housing and draining fish crates.',
-  },
-} as const;
-export type TrailerKind = keyof typeof trailerDefs;
+import { trailerDefs, type TrailerKind } from './trailer-definitions';
+export { trailerDefs, type TrailerKind } from './trailer-definitions';
 export const fuelTrailerTuningSchema = z
   .object({
     price: z.number().int().min(0).max(100000000).optional(),
@@ -139,33 +62,8 @@ export const attachedTrailer = (w: World, p: Pick<Player, 'id'>) =>
 function need(v: unknown, message: string): asserts v {
   if (!v) throw Error(message);
 }
-const animals: Record<string, number> = { cows: 1, sheep: 0.25, pigs: 0.35, chickens: 0.05 };
-const seafood = ['fish', 'largeFish', 'cod', 'halibut', 'tuna'];
 export function trailerAccepts(w: World, t: Trailer, item: string, n: number) {
-  const def = trailerDef(w, t.kind),
-    items = worldItems(w),
-    cargo = { ...t.cargo, [item]: (t.cargo[item] ?? 0) + n };
-  if (!items[item] || stockWeight(w, cargo) > def.capacity) return false;
-  if (t.kind === 'livestock')
-    return (
-      !!animals[item] &&
-      Object.entries(cargo).reduce((s, [id, q]) => s + q * (animals[id] ?? Infinity), 0) <= 6
-    );
-  if (t.kind === 'tanker')
-    return (
-      ['water', 'milk'].includes(item) &&
-      Object.entries(t.cargo).every(([id, q]) => !q || id === item)
-    );
-  if (t.kind === 'fuel') return item === 'fuel';
-  if (t.kind === 'fish') return seafood.includes(item);
-  if (t.kind === 'logs') return ['logs', 'wood'].includes(item);
-  if (t.kind === 'dump') return ['stone', 'gravel', 'sand', 'ore', 'topsoil'].includes(item);
-  if (animals[item] || ['water', 'milk'].includes(item) || seafood.includes(item)) return false;
-  if (t.kind === 'hay')
-    return (
-      stockWeight(w, Object.fromEntries(Object.entries(cargo).filter(([id]) => id !== 'hay'))) <= 60
-    );
-  return true;
+  return cargoAccepts(w, t, trailerDef(w, t.kind).capacity, item, n);
 }
 export function trailerLoad(w: World, p: Player) {
   const t = attachedTrailer(w, p);

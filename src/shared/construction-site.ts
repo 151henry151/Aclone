@@ -1,3 +1,4 @@
+import { quaySite } from './quay';
 import { sceneryObstaclesNear } from './scenery-obstacles';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { inlandLevel } from './inland-water';
@@ -94,6 +95,12 @@ export function constructionSiteReason(w: World, b: Site) {
     return 'Keep buildings outside the spaceport launch reservation';
   if (b.kind === 'lighthouse' && !lighthouseCliffSite(w, b.x, b.z))
     return 'Lighthouses require a flat cliff-top site, 15–65 metres inland of a tall coastal cliff';
+  if (b.kind === 'quay') {
+    if (!quaySite(w, b))
+      return `Freight quays need dry shore access and ${boatNavigationRules(w.settings).quayDraft} m of clear water beneath the full berth; rotate the wharf toward the sea`;
+    const blocked = dockObstruction(w, b);
+    if (blocked) return blocked;
+  }
   if (b.kind === 'boathouse') {
     if (!boathouseSite(w, b, true))
       return 'Boathouses need dry shoreline ground, with a deep, clear berth behind the building; rotate the jetty toward the water';

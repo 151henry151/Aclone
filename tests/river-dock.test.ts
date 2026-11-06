@@ -292,3 +292,31 @@ for (const slot of [CANAL_BOAT, MOTORBOAT])
     assert.equal(p.fuel, fuel);
     assert.ok(Math.hypot(p.x - site.berth.x, p.z - site.berth.z) < 0.01);
   });
+test('authored canal freight transfers at a river berth while the default coaster is refused', async () => {
+  const { advance } = await import('../src/shared/simulation');
+  const copy = structuredClone(w),
+    dock = usableDock();
+  copy.buildings.push(dock);
+  const d = boatLandings(copy).find((d) => d.id === dock.id)!;
+  const p = addPlayer(copy, 'freighter', 'Freighter');
+  copy.vehicleTuning = { 3: { holdCapacity: 400, cargoKind: 'box' } };
+  Object.assign(p, d.berth, {
+    vehicle: 35,
+    fleet: [0, 5, 3, 35],
+    heading: d.heading,
+    engine: false,
+    inventory: {},
+    boatHold: { stone: 10 },
+  });
+  assert.throws(
+    () => act(copy, p.id, { type: 'vehicle', slot: 5, building: d.id }),
+    /River docks take vessels/,
+  );
+  p.vehicle = 3;
+  act(copy, p.id, { type: 'vehicle', slot: 5, building: d.id });
+  assert.deepEqual(copy.mooredBoats!['freighter:3'].cargo, { stone: 10 });
+  act(copy, p.id, { type: 'boatHold', slot: 3, operation: 'unload', item: 'stone', quantity: 10 });
+  advance(copy, 2);
+  assert.equal(p.inventory.stone, 10);
+  assert.equal(copy.mooredBoats!['freighter:3'].cargo!.stone, 0);
+});

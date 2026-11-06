@@ -44,6 +44,7 @@ export type Input = {
 export type Task = {
   kind: string;
   end: number;
+  freight?: { action: Action; landing: string };
   building?: string;
   plot?: number;
   /** Ripe plots reserved by one Harvest all task, in field order. */
@@ -118,6 +119,13 @@ export interface Player {
   hunger: number;
   thirst: number;
   age: number;
+  /** Separate freight hold of the currently occupied vessel. */
+  boatHold?: Stock;
+  boatHoldBasis?: Stock;
+  /** Recipient-only exact stocks of this owner's moored freight boats. */
+  boatHolds?: Record<number, Stock>;
+  /** Public approximate cargo fraction for vessel rendering. */
+  freightLoad?: number;
   inventory: Stock;
   skills: string[];
   learning?: { skill: string; end: number };
@@ -538,6 +546,8 @@ export interface World {
         smallCraft?: string;
       };
       cargo: Stock;
+      hold?: Stock;
+      holdBasis?: Stock;
       /** A tow delivered this vessel to a shore-accessible landing. */
       landing?: string;
       /** Death-abandoned stores are separate from the respawned player's inventory. */
@@ -555,6 +565,9 @@ export interface World {
       heading: number;
       paint: string;
       landing: string;
+      cargo?: Stock;
+      cargoBasis?: Stock;
+      load?: number;
       /** Offshore motorboat tender; fuel remains in its owner’s per-vehicle tank. */
       towedBy?: number;
       rope?: number;
@@ -646,6 +659,12 @@ export interface ItemDef {
   fuel?: number;
 }
 export interface VehicleDef {
+  holdCapacity?: number;
+  cargoKind?: import('./trailers').TrailerKind;
+  persistentThrottle?: boolean;
+  provisions?: boolean;
+  crew?: number;
+  requiresCaptain?: boolean;
   tank?: number;
   traction?: number;
   headlight?: number;

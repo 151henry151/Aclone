@@ -1514,5 +1514,22 @@
     "color": "#eee4ce",
     "stock": {},
     "idealEmployees": 1
+  },
+  "quay": {
+    "name": "Freight quay",
+    "price": 240000,
+    "capacity": 4000,
+    "buy": {},
+    "sell": {},
+    "materials": {
+      "wood": 80,
+      "stone": 100,
+      "steel": 20
+    },
+    "tier": 0,
+    "recipe": null,
+    "wage": 0,
+    "color": "#8c968b",
+    "stock": {}
   }
 }

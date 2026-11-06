@@ -2,6 +2,7 @@ import { canoeVehicle } from './canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import itemData from '../../data/items.json';
 import vehicleData from '../../data/vehicles.json';
+import freightVesselData from '../../data/freight-vessels.json';
 import buildingData from '../../data/buildings.json';
 import recipeData from '../../data/recipes.json';
 import weaponData from '../../data/weapons.json';
@@ -13,7 +14,11 @@ export const items: Record<string, ItemDef> = {
   canoe: { name: 'Canoe', weight: settingsData.canoeWeight, price: settingsData.canoePrice },
   fuel: { ...itemData.fuel, fuel: settingsData.fuelUnitsPerItem },
 };
-export const vehicles: VehicleDef[] = [...vehicleData, canoeVehicle()];
+export const vehicles: VehicleDef[] = [
+  ...vehicleData,
+  canoeVehicle(),
+  ...(freightVesselData as VehicleDef[]),
+];
 export const buildings: Record<string, BuildingDef> = Object.fromEntries(
   Object.entries(buildingData).map(([kind, def]) => [
     kind,

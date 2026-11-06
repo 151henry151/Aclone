@@ -1,0 +1,25 @@
+[
+  {
+    "name": "Coastal cargo boat",
+    "mode": 3,
+    "speed": 6,
+    "acceleration": 1.1,
+    "turn": 0.42,
+    "fuel": 0.008,
+    "capacity": 60,
+    "holdCapacity": 2000,
+    "cargoKind": "box",
+    "armour": 160,
+    "price": 2400000,
+    "color": "#496f78",
+    "hitch": 2,
+    "tank": 320,
+    "collisionRadius": 2.8,
+    "length": 20,
+    "beam": 5.6,
+    "persistentThrottle": true,
+    "provisions": true,
+    "crew": 2,
+    "requiresCaptain": true
+  }
+]

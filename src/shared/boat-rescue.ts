@@ -33,6 +33,8 @@ export function expireAbandonedCargo(w: World, at = w.time) {
     timer.daysLeft = 0;
     timer.spoiled = true;
     r.cargo = {};
+    delete r.hold;
+    delete r.holdBasis;
     delete r.provisions;
     delete r.net;
     say(
@@ -77,6 +79,8 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
       if (w.boatRescues) delete w.boatRescues[p.id];
       r = undefined;
       p.inventory = {};
+      delete p.boatHold;
+      delete p.boatHoldBasis;
       delete p.boatStores;
       delete p.boatLighting;
     }
@@ -109,10 +113,13 @@ export function abandonBoatOnDeath(w: World, p: Player, at: number) {
           smallCraft: p.smallCraft,
         },
         cargo: { ...p.inventory },
+        ...(p.boatHold ? { hold: p.boatHold, holdBasis: p.boatHoldBasis } : {}),
         dinghy: { x: p.x, z: p.z, heading: p.heading, moored: true },
       };
       // This cargo belongs to the vessel even in worlds that retain personal inventory on death.
       p.inventory = {};
+      delete p.boatHold;
+      delete p.boatHoldBasis;
     }
     if (!r.spoilage) {
       r.provisions = { ...p.boatStores };
@@ -195,9 +202,12 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
         slot: p.vehicle,
       },
       cargo: { ...p.inventory },
+      ...(p.boatHold ? { hold: p.boatHold, holdBasis: p.boatHoldBasis } : {}),
       dinghy: { ...spot, heading: p.heading, moored: false },
     };
     if (p.trawl) p.trawl = { ...p.trawl, deployed: false };
+    delete p.boatHold;
+    delete p.boatHoldBasis;
     p.inventory = {}; // Main cargo stays on the stranded boat, never duplicated into the inflatable.
     p.boatThrottle = 0;
     switchVehicle(p, LIFEBOAT, false, w);
@@ -290,6 +300,8 @@ export function rescueAction(w: World, p: Player, operation: unknown) {
   p.boatThrottle = 0;
   switchVehicle(p, r.boat.slot, false, w);
   p.inventory = cargo;
+  p.boatHold = r.hold;
+  p.boatHoldBasis = r.holdBasis;
   if (r.spoilage) {
     p.boatStores = r.provisions ? { ...r.provisions } : {};
     p.trawl = r.net ? structuredClone(r.net) : undefined;

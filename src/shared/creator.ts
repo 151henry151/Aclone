@@ -1,6 +1,6 @@
 import { survivalRules } from './survival-rules';
 import { buildingSpawnReason } from './spawn-reserve';
-import { vehicleDef } from './vehicle-config';
+import { vehicleDef, vehicleSlotSchema } from './vehicle-config';
 import { bookSchema, townEventSchema } from './world-stories.ts';
 import { ambientSchema } from './ambient.ts';
 import { maximumHealth } from './nutrition.ts';
@@ -143,7 +143,12 @@ export const creatorSchema = z.object({
   ambience: z.array(ambientSchema).max(32).default([]),
   terrainTextures: z.partialRecord(z.enum(['grass', 'gravel', 'soil', 'sand']), id).default({}),
   resourceModels: z.partialRecord(z.enum(['logs', 'stone', 'gravel', 'dirt']), id).default({}),
-  vehicleModels: z.record(z.string().regex(/^([0-9]|[12][0-9]|3[0123])$/), id).default({}),
+  vehicleModels: z
+    .record(
+      z.lazy(() => vehicleSlotSchema),
+      id,
+    )
+    .default({}),
 });
 export type Creator = z.infer<typeof creatorSchema>;
 export type Blueprint = z.infer<typeof blueprintSchema>;

@@ -1,3 +1,5 @@
+import { stockWeight } from '../shared/fishing-expedition';
+import { vehicleDef } from '../shared/vehicle-config';
 import { CANOE } from '../shared/canoe-rules';
 import { fuelRules } from '../shared/fuel-rules';
 import { strandedVessel } from '../shared/towing';
@@ -68,6 +70,11 @@ export function privatePlayer(w: World, p: Player) {
   return {
     ...p,
     departure: undefined,
+    boatHolds: Object.fromEntries(
+      Object.values(w.mooredBoats ?? {})
+        .filter((b) => b.owner === p.id && b.cargo)
+        .map((b) => [b.slot, b.cargo]),
+    ),
     trailerCargo: Object.fromEntries(
       Object.values(w.trailers ?? {})
         .filter((t) => t.owner === p.id)
@@ -150,6 +157,28 @@ export function prepareFrame(w: World): Frame {
       ),
     ),
   });
+  if (common.mooredBoats)
+    common.mooredBoats = Object.fromEntries(
+      Object.entries(common.mooredBoats).map(([key, b]) => {
+        const { cargo, cargoBasis: _privateBasis, ...publicBoat } = b;
+        return [
+          key,
+          {
+            ...publicBoat,
+            ...(cargo
+              ? {
+                  load: Math.min(
+                    1,
+                    Math.ceil(
+                      (stockWeight(w, cargo) / (vehicleDef(w, b.slot).holdCapacity || 1)) * 10,
+                    ) / 10,
+                  ),
+                }
+              : {}),
+          },
+        ];
+      }),
+    );
   if (common.boatRescues)
     common.boatRescues = Object.fromEntries(
       Object.entries(common.boatRescues).map(([id, r]) => [
@@ -212,6 +241,14 @@ export function prepareFrame(w: World): Frame {
         heading: +p.heading.toFixed(3),
         speed: +p.speed.toFixed(2),
         flight: p.flight,
+        freightLoad: p.boatHold
+          ? Math.min(
+              1,
+              Math.ceil(
+                (stockWeight(w, p.boatHold) / (vehicleDef(w, p.vehicle).holdCapacity || 1)) * 10,
+              ) / 10,
+            )
+          : undefined,
         trawl: visibleTrawl(w, p),
         lastFlightCrash: p.lastFlightCrash,
         vehicle: p.vehicle,

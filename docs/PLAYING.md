@@ -673,3 +673,29 @@ people already playing, and reconnecting keeps your current position. Boat
 recovery and arena respawns still use their specific destinations. Death costs
 follow the world's existing rules. Returning to town normally requires travel
 or assistance; there is no free respawn shortcut.
+
+## Coastal cargo boats and freight quays
+
+Buy a Coastal cargo boat at a boathouse, with the Captain skill if required.
+Its default 2,000-weight hold is separate from your 60-weight bag and shared
+provisions. Load meals for the crew through **Boat provisions & crew**; goods
+in the freight hold remain merchandise. W/S set persistent throttle, B idles it,
+F4 switches the engine and C opens the wheelhouse view.
+
+Stop at a boathouse berth, fishing pier or compatible freight quay and open
+**Inventory → freight hold**. Load/unload your bag or an owned dockside stockroom,
+or buy and sell directly with shops within 30 m of the shore entrance by default.
+Transfers have a progress countdown; cancel before completion to move nothing.
+Full holds, unsuitable goods, empty sellers, unfunded buyers and changed quotes
+are refused. Stock and cash move only when the transfer finishes successfully.
+
+Step ashore to leave freight with the visible moored vessel; return to that
+landing to board it again. The default coaster is too large for river docks.
+World builders can give a canal boat its own freight hold for river use.
+Build an open **Freight quay** from the Build menu, facing deep water; its
+preview checks the whole berth. Quays board owned boats; boatyards sell them.
+
+Crew shares use realized freight margin after sold-goods cost and consumed fuel
+and provisions. Settle at the dock before spending the cash owed to your crew.
+See [Coastal freight](HAULAGE.md#coastal-freight) for prices, cargo restrictions,
+construction materials, recovery and a measured profitable example route.

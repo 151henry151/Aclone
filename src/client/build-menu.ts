@@ -101,10 +101,11 @@ export function mountBuildMenu(
       kind = template?.base ?? draft.kind;
     const custom = !!template?.creatorModel;
     const models = buildingArchitectures(kind);
+    const shell = !custom && models.length > 0;
     if (!models.some((m) => m.id === draft.architecture)) draft.architecture = models[0]?.id ?? '';
     options('architecture', models);
     control('architecture').value = draft.architecture;
-    control('architecture').disabled = custom;
+    control('architecture').disabled = !shell;
     const styles = buildingStyles(kind, draft.architecture),
       sizes = sizesForBuilding(kind);
     if (!styles.some((s) => s.id === draft.style)) draft.style = styles[0].id;
@@ -119,27 +120,29 @@ export function mountBuildMenu(
     options('size', [...sizes]);
     control('style').value = draft.style;
     control('size').value = draft.size;
-    control('style').disabled = custom;
+    control('style').disabled = !shell;
     control('size').disabled = custom || sizes.length === 1;
     control('rotation').value = String(draft.rotation);
     host.querySelector('[data-bearing]')!.textContent = `${draft.rotation}°`;
     host.querySelector('[data-design-description]')!.textContent = custom
       ? 'This world-created model uses its original design and material list.'
-      : models.find((m) => m.id === draft.architecture)!.description +
-        ' ' +
-        styles.find((s) => s.id === draft.style)!.description;
+      : !shell
+        ? def.name
+        : models.find((m) => m.id === draft.architecture)!.description +
+          ' ' +
+          styles.find((s) => s.id === draft.style)!.description;
     const q = buildingDesignQuote(
       kind,
       def,
-      custom ? undefined : draft.style,
+      shell ? draft.style : undefined,
       draft.size,
-      custom ? undefined : draft.architecture,
+      shell ? draft.architecture : undefined,
       w.settings,
     );
     const b = makeBuilding('construction', kind, p.x, p.z);
     applyBuildingTemplate(w, b, draft.kind);
-    b.architecture = custom ? undefined : draft.architecture;
-    b.style = custom ? undefined : draft.style;
+    b.architecture = shell ? draft.architecture : undefined;
+    b.style = shell ? draft.style : undefined;
     b.size = draft.size as BuildingSize;
     b.rotation = (draft.rotation * Math.PI) / 180;
     b.capacity = q.capacity;
@@ -193,9 +196,7 @@ export function mountBuildMenu(
       type: 'construct',
       kind: draft.kind,
       rotation: b.rotation,
-      ...(!custom
-        ? { style: draft.style, size: draft.size, architecture: draft.architecture }
-        : {}),
+      ...(shell ? { style: draft.style, size: draft.size, architecture: draft.architecture } : {}),
     };
     if (rebuild) preview?.show(b, w);
     const canvas = host.querySelector<HTMLCanvasElement>('[data-build-site]')!,

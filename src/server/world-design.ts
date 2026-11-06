@@ -1,3 +1,8 @@
+import { riverDockAccepts } from '../shared/river-dock';
+import { boatLandings, landingAccepts } from '../shared/boathouse';
+import { mooringKey } from '../shared/boats';
+import { cargoAccepts } from '../shared/cargo-policy';
+import { vehicleDef } from '../shared/vehicle-config';
 import { landscapeRules, landscapeRuleCeilings } from '../shared/landscape-rules';
 import { constructionRuleFields } from '../shared/construction-rules';
 import { validFarmPlotCount } from '../shared/farm-land';
@@ -234,6 +239,19 @@ const designSchema = z.object({
     )
     .max(500),
   tier: z.number().int().min(0).max(10).default(0),
+  mooredFreight: z
+    .array(
+      z
+        .object({
+          slot: z.number().int().min(0),
+          landing: z.string().min(1).max(100),
+          paint: z.string().max(64),
+          cargo: z.record(z.string(), z.number().int().min(0).max(1000000)),
+        })
+        .strict(),
+    )
+    .max(100)
+    .default([]),
   parkedFuelTankers: z
     .array(
       z
@@ -296,6 +314,14 @@ export function exportDesign(w: World, includeMedia = false) {
     tier: w.tier,
     vehicleTuning,
     trailerTuning: structuredClone(w.trailerTuning ?? {}),
+    mooredFreight: Object.values(w.mooredBoats ?? {})
+      .filter((b) => b.owner === w.owner && b.cargo && b.landing)
+      .map((b) => ({
+        slot: b.slot,
+        landing: b.landing,
+        paint: b.paint,
+        cargo: structuredClone(b.cargo!),
+      })),
     parkedFuelTankers: Object.values(w.trailers ?? {})
       .filter((t) => t.kind === 'fuel' && !t.attached)
       .map((t) => ({
@@ -456,6 +482,33 @@ function applyValidatedDesign(w: World, input: unknown) {
   w.landscape = validateLandscape(w, d.landscape);
   if (w.terrain.length > landscapeRules(w.settings).terrainStampLimit)
     throw Error('Terrain stamp limit exceeded');
+  const freight: NonNullable<World['mooredBoats']> = {};
+  for (const input of d.mooredFreight) {
+    const v = vehicleDef(w, input.slot),
+      dock = boatLandings(w).find((dock) => dock.id === input.landing);
+    const key = mooringKey(w.owner, input.slot);
+    if (freight[key])
+      throw Error('A world design can place only one freight vessel of each class for its owner');
+    if (!v?.holdCapacity || !dock || !landingAccepts(w, dock, input.slot))
+      throw Error('Freight vessel needs a compatible landing');
+    if (
+      Object.entries(input.cargo).some(
+        ([item, n]) =>
+          !cargoAccepts(
+            w,
+            { kind: v.cargoKind ?? 'box', cargo: input.cargo },
+            v.holdCapacity!,
+            item,
+            0,
+          ),
+      )
+    )
+      throw Error('Invalid freight hold cargo');
+    if (Object.values(freight).some((b) => b.landing === dock.id))
+      throw Error('Freight berth is occupied');
+    freight[key] = { ...input, owner: w.owner, ...dock.berth, heading: dock.heading };
+  }
+  w.mooredBoats = freight;
   const placements: Record<string, Trailer> = {};
   for (const input of d.parkedFuelTankers) {
     if (placements[input.id]) throw Error('Duplicate tanker IDs');

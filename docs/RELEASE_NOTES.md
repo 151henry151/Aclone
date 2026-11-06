@@ -2,6 +2,35 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.125.0 — Take the long way by sea
+
+The Coastal cargo boat carries 2,000 weight in its own persistent hold, with
+visible pallet loads and a small working wheelhouse. Buy it at a boathouse;
+load at compatible docks, trade directly with nearby shops, and return to your
+moored cargo after stepping ashore. A full hold takes 200 seconds to handle at
+defaults. Cancel freely before completion; changed prices, stock, funds and
+capacity are checked again before anything moves.
+
+Build an open Freight quay on a suitable coast, with dry shore access and a deep
+alongside berth. Its preview, material bill, walking deck and boat access share
+the same layout. Existing boatyards and the fishing pier also handle freight.
+The default coaster is too large for river docks; world builders can add a
+separate hold to the canal boat for river work.
+
+Up to two consenting deckhands share realized trading margin after cargo cost
+and consumed fuel/provisions. The captain's bag and shared provisions remain
+separate from merchandise. World builders can tune vessel and hold properties,
+cargo policies, quay costs, handling rates, shop reach and depth requirements.
+Only the author's moored freight is included in portable designs; normal saves
+retain everyone's cargo and its cost basis.
+
+Validation covers 183 relevant unit tests, actual SQLite reopen and design
+roundtrip, death/recovery, funded trade and crew settlement, a loaded 164.85 km
+island circuit with 28% fuel reserve, and real browser purchase, transfer,
+construction, sailing and river-refusal flows. Low/normal graphics and existing
+desktop/phone construction pass. See [Coastal freight](HAULAGE.md#coastal-freight)
+for defaults, construction requirements and the measured example economy.
+
 ## 0.124.0 — Mind the trees and your neighbours
 
 Tree trunks and boulders now stop land vehicles without damage, condition loss or

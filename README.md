@@ -4,7 +4,16 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.124.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.125.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.125.0 adds a coastal cargo boat with a separate 2,000-weight hold,
+visible pallet loads, a working wheelhouse and paid crew. Load or trade with
+nearby shops at compatible docks, and build open freight quays on suitable
+coasts. Transfers show progress and recheck stock, funding and the displayed
+price; cargo stays with the boat when you step ashore. World builders can tune
+holds, cargo policies, vessel performance, quay costs, berth depth and handling.
+See the [freight guide](docs/HAULAGE.md#coastal-freight) and
+[world-builder settings](docs/WORLD_BUILDING.md#freight-boats-and-quays).
 
 Version 0.124.0 makes tree trunks, boulders, land vehicles and pedestrians solid.
 Vehicles stop without collision damage; shallow vehicle contacts can slide, and

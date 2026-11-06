@@ -1,6 +1,6 @@
 import { trawlParameters } from '../shared/commercial-fishing';
 import { CANOE } from '../shared/canoe-rules';
-import { trailerDef } from '../shared/trailers';
+import { trailerDef, trailerDefs } from '../shared/trailers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import {
   vehicleDef,
@@ -27,6 +27,7 @@ export function vehicleEditor(w: World, slot: number) {
     trawl = trawlParameters(w, slot);
   const defaults = {
     tank: 64,
+    holdCapacity: 0,
     traction: 0,
     snowTraction: v.traction ?? 0,
     rainTraction: v.traction ?? 0,
@@ -92,7 +93,20 @@ export function vehicleEditor(w: World, slot: number) {
       ['8', 'Walking'],
     ],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + bool('requiresCaptain', v.requiresCaptain ?? ((v.mode === 3 || v.mode === 5) && (v.length ?? 0) > (vehicles[33].length ?? 4.3))) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for trawling, provisions and crew. Requires captain overrides the length rule for this slot. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
+    v.mode === 3
+      ? group(
+          'Freight hold',
+          numberFields('holdCapacity') +
+            select(
+              'cargoKind',
+              Object.entries(trailerDefs).map(([id, d]) => [id, d.name]),
+              v.cargoKind ?? 'box',
+            ) +
+            '<p>A separate persistent hold. Zero disables it. Cargo policies share the trailer restrictions; the captain inventory remains separate.</p>',
+        )
+      : ''
+  }${group('Fishing, provisions and paid crew', bool('trawling', isTrawler(slot, w)) + bool('provisions', hasProvisions(slot, w)) + bool('requiresCaptain', v.requiresCaptain ?? ((v.mode === 3 || v.mode === 5) && (v.length ?? 0) > (vehicles[33].length ?? 4.3))) + input('crew', crewBerths(slot, w)) + numberFields('netCapacity trawlFuel trawlSpeed') + '<p>Boat movement is required for trawling, provisions and crew. Requires captain overrides the length rule for this slot. Up to two paid deckhands share expedition profit; other berths use the passenger limit. Capacity includes cargo and provisions.</p>')}${group(
     'Death and recovery',
     select(
       'deathPolicy',
@@ -137,7 +151,14 @@ export function vehicleForm(form: HTMLFormElement) {
   for (const key of Object.keys(vehicleTuningSchema.shape)) {
     const value = d.get(key);
     if (value === null || value === '') continue;
-    values[key] = ['name', 'color', 'deathPolicy', 'dashboard', 'trackTexture'].includes(key)
+    values[key] = [
+      'name',
+      'color',
+      'deathPolicy',
+      'dashboard',
+      'trackTexture',
+      'cargoKind',
+    ].includes(key)
       ? String(value)
       : [
             'trawling',

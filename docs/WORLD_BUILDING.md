@@ -1657,3 +1657,39 @@ unchanged. World creation, summaries, resident observations, saved worlds and
 portable designs carry these settings; missing keys use the defaults. Imports
 validate both settings and contents atomically, including layouts above the old
 limits; undo history is not part of a portable design.
+
+## Freight boats and quays
+
+**F10 → Vehicles → Coastal cargo boat** exposes speed, fuel burn, tank, price,
+hull dimensions, personal capacity, provisions, crew and captain requirements.
+The **Freight hold** fields add `holdCapacity` (0–100,000 weight; zero disables
+it) and `cargoKind`, using the existing trailer policies. Defaults are 2,000
+weight and `box` dry cargo. Holds require boat movement. You can give the canal
+boat a separate hold for river freight. Capacity/policy edits refuse to invalidate
+cargo in active, moored or stranded vessels; unload it first. The visible coaster
+hull updates with its dimensions even while moored.
+
+**F10 → Rules → Boat navigation** adds:
+
+- `freightTransferRate`: 10 weight/second, range 0.1–10,000. It determines new
+  transfer durations; already-started tasks retain their quoted finish time.
+- `freightShopRange`: 30 m, range 1–200, measured from a compatible landing's
+  shore entrance. Completed nearby shops trade directly with a hold; their
+  ownership, prices, stock and investment remain authoritative.
+- `quayDraft`: 2 m minimum low-water depth, range 0.1–20, checked across the
+  entire quay berth. Terrain or rule edits can close access without deleting
+  moored property; restore safe access to retrieve it.
+
+The existing building catalogue/template controls set the Freight quay's cost,
+materials and storage: defaults 24s, 80 Wood + 100 Stone + 20 Steel and 4,000
+storage per good. The engineered 28 × 8 m berth and open wharf share geometry
+between siting, walking and rendering; the Workshop remains the model-editing
+route. River hull limits remain in Boat navigation. Boat death/recovery and
+crew/provision rules remain shared with the existing boats.
+
+Portable designs include the author's moored freight and stock at valid landings,
+remapped to the recipient owner, with at most one vessel per class and berth.
+They exclude other players' private freight, active inventories, acquisition-cost
+history and account data. Imported stock uses catalogue replacement cost for
+future crew accounting. Ordinary database saves/backups preserve all freight
+and its recorded cost basis. Invalid cargo or incompatible berths reject import.

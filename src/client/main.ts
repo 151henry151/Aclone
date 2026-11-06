@@ -1,3 +1,4 @@
+import { freightPanel } from './freight-panel';
 import { communicationRules } from '../shared/communication-rules';
 import { boatNavigationRules } from '../shared/boat-navigation-rules';
 import { vehicleRunningRules } from '../shared/vehicle-running-rules';
@@ -43,7 +44,7 @@ import { poweredBoat, boatSlot, FISHING_BOAT } from '../shared/boats';
 import { trawlParameters } from '../shared/commercial-fishing';
 import { trawlStatus as fishingTrawlStatus, TrawlCapacityAlerts } from './trawl-status';
 import { nauticalHeadingLabel } from './nautical-heading';
-import { boatLandings, boatLanding, nearBoathouse } from '../shared/boathouse';
+import { boatLandings, boatLanding, nearBoathouse, landingAccepts } from '../shared/boathouse';
 import { riverDockAccepts } from '../shared/river-dock';
 import { LIFEBOAT, reboardReason } from '../shared/boat-rescue';
 import { deepBoatFishing } from '../shared/boat-fishing';
@@ -1552,6 +1553,12 @@ function refreshTradingPrices() {
       Object.values(world.players).map((q) => [q.id, q.canBeTowed]),
       me.inventory,
       me.trailerCargo,
+      me.boatHold,
+      me.boatHolds,
+      me.task?.freight,
+      me.task?.kind === 'freight' ? Math.floor(world.time * 2) : null,
+      world.settings.freightTransferRate,
+      world.settings.freightShopRange,
       Object.values(world.trailers ?? {}).map((t) => [t.id, t.kind, t.attached]),
       me.vehicle,
       me.atHome,
@@ -2272,10 +2279,14 @@ function buildingWindow(b: Building) {
       html +=
         boatControls(b.id) +
         '<p>Buy Fuel here and use it after boarding your boat. Atlantic cod, halibut and bluefin tuna can be sold here when the till has funds. Boat fishing in water at least 8 metres deep can catch these species; shallow water yields small fish.</p>';
+    if (b.kind === 'quay')
+      html +=
+        boatControls(b.id) +
+        '<p>An open freight wharf. Board an owned vessel here, transfer freight and trade with shops near the shore entrance. Buy new vessels at a boathouse.</p>';
     if (b.kind === 'riverDock')
       html +=
         boatControls(b.id) +
-        '<p>A small log jetty on a navigable river reach. Canal boats and motorboats you already own board from the landing and return to the berth at the jetty end; the boat stays moored in view. Larger vessels, fuel and fish trading need a boathouse or the fishing pier.</p>';
+        '<p>A small log jetty on a navigable river reach. Owned vessels that fit the world’s river limits board here and remain moored in view. Freight holds use the same transfer rules as coastal docks. Nearby shops or fuel tankers can supply fuel; carry cans aboard and use Refuel. Recover stranded upriver boats at their saved position using the lifeboat, motorboat or towing controls.</p>';
     html += canoePanel(world, me) + trailerPanel(world, me, b);
     if (b.kind === 'garage' && !b.aircraftHangar) html += tractorShopHtml(world);
     if (b.aircraftHangar)
@@ -3457,6 +3468,12 @@ app.addEventListener('submit', async (e) => {
       }
       if (form.dataset.action === 'lottery' && values.operation === 'fund')
         values.amount = Math.round(Number(values.amount) * 100);
+      if (form.dataset.action === 'trade' && values.storage === 'hold') {
+        const quote =
+          form.querySelector<HTMLSelectElement>('select[name="item"]')?.selectedOptions[0]?.dataset
+            .price;
+        if (quote !== undefined) values.expectedPrice = Number(quote);
+      }
       send({ type: form.dataset.action, ...values });
       (document.activeElement as HTMLElement)?.blur();
     }
@@ -3850,6 +3867,7 @@ function boatControls(building?: string) {
   let html =
     `<section><h3>Boating</h3><p>To refuel, carry Fuel aboard, open Inventory (I / Bag), and choose Refuel beside Fuel. Each can adds up to ${worldItems(world).fuel.fuel} tank units. Start the engine with F4 or the Engine button.</p>` +
     `<p>River docks require ${navigation.riverDockDraft} m depth and admit vessels up to ${navigation.riverDockMaxLength} m long × ${navigation.riverDockMaxBeam} m beam.</p><p>Arrival: hull within ${navigation.boatHouseArrivalRadius} m of a boathouse berth or ${navigation.boatLandingArrivalRadius} m of a pier/river berth, with a clear water path. Shore boarding at those landings: ${navigation.boatLandingShoreRadius} m. Shore impacts cost ${navigation.boatShoreImpactLoss} condition points; the boat still stops and recoils when damage is zero.</p>` +
+    freightPanel(world, me) +
     expeditionPanel(world, me) +
     charterPanel(world, me) +
     towingPanel(world, me);
@@ -3880,7 +3898,7 @@ function boatControls(building?: string) {
           (!rescue || ([TUGBOAT, MOTORBOAT].includes(slot) && rescue.boat.slot !== slot)),
       )) {
       if (!(me.fleet ?? []).includes(slot) && !dock.building) continue;
-      if (dock.river && !riverDockAccepts(world, slot)) continue;
+      if (!landingAccepts(world, dock, slot)) continue;
       html += button(
         (me.fleet ?? []).includes(slot)
           ? `Board your ${esc(vehicleDef(world, slot).name)}`
@@ -3907,7 +3925,7 @@ function boatControls(building?: string) {
   }
   return (
     html +
-    '<p>The fishing pier and river docks leave your empty boat moored outside. A boathouse stores your boat inside. Lifeboats remain moored until you return.</p></section>'
+    '<p>Fishing piers, river docks and quays leave boats moored outside. Freight holds always stay with their boat, including at boathouses. Other boats store inside a boathouse. Lifeboats remain moored until you return.</p></section>'
   );
 }
 

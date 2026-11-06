@@ -91,7 +91,7 @@ test('construction observes zones and material completion', () => {
   assert.equal(p.inventory.wood, 0);
 });
 test('armour and five driving modes are finite and consume boosted fuel', () => {
-  assert.equal(vehicles.length, 35);
+  assert.equal(vehicles.length, 36);
   assert.deepEqual(
     vehicles.slice(0, 34),
     vehicleData,

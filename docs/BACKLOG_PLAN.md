@@ -286,7 +286,7 @@ implementation order rather than building paving before ford-aware persistence.
     separate fieldset batches in the spec's order: survival/needs; economy/trade;
     gathering/farming/production; vehicles/travel; climate/calendar/environment.
     Default-preserving tests plus changed-value, editor and export tests for each.
-12. **Solid trees, boulders and vehicles**: shared deterministic obstacle data,
+12. **Solid trees, boulders and vehicles — done, live in 0.124.0**: shared deterministic obstacle data,
     spatial queries, static collision/escape, pedestrian sliding, moving-vehicle
     contacts and offline policy; integrate road/navigation/build/snow users and
     measure tick/frame cost before proceeding.
@@ -5569,3 +5569,231 @@ planning commit for later regional-industry work. Verify the pushed SHA before
 deployment, back up through the deploy scripts, verify live assets/health and
 website read-only, then publish the bot announcement. No player grants or live
 world edits are part of this release.
+
+**Done and live — solid trees, boulders and vehicles, 0.124.0.** Commit
+`4acf3af25dbc22690bf2a42855cbbab720e2af78` is pushed to
+`backlog-implementation` and matches the clean live checkout. The separate
+regional-industry planning commit is `5319314`. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261105-194624.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261105-194732.tar.gz`. Read-only verification
+confirms 0.124.0 health, matching game and map-worker assets, website version and
+no browser errors. The bot post and both 1440×900 screenshot attachments are
+verified: <https://discord.com/channels/1562183434254680175/1565527790785404968/1568064462978683011>.
+Evidence: `output/release-0.124.0/`. **Nine of 29 eligible Planned sections are
+complete.** Continue item 13, cargo boat for dock-to-dock freight. Piloted
+spaceflight remains excluded.
+
+### Cargo boat for dock-to-dock freight — completion criteria before code
+
+Implement item 13 in the spec's five-step order. Do not release a partial vessel
+without its hold, landings, economy and browser checks. Preserve existing slot
+IDs, including the derived canoe slot 34; append the coaster at slot 35. No
+piloted-spaceflight work is included.
+
+1. Add the vessel/model and editor tuning first. Start with a **20 m × 5.6 m
+   coaster**, **2,000-weight dry general-cargo hold**, ordinary **60-weight
+   captain inventory**, **6 m/s** speed, **0.02 fuel units/second**, **1,200-unit
+   tank** and **240s** purchase price. These are balance candidates, not duplicate
+   code constants: source them in the editable vehicle definition. The tank must
+   complete the surveyed coast circuit with reserve under the measured loaded
+   operating conditions; revise it before release if that test fails. Reuse
+   existing captain qualification, two optional paid crew berths, provisions,
+   persistent throttle, maintenance and boat death/recovery policy. Build an
+   original human-scale wheelhouse, visible hold/load, hull, rails, fenders,
+   mooring gear and navigation lights; bound geometry and test finite coordinates.
+   Expose hold capacity/cargo policy with existing speed, burn, tank and price
+   tuning, including validation and design portability. Reject tuning changes
+   that strand saved cargo over capacity.
+2. Store the hold with the persistent per-owner/per-slot boat record. Boarding,
+   leaving at a boathouse, pier, river berth or quay, restart and owner transfers
+   must preserve each good exactly; the captain's walking bag remains separate.
+   Reuse trailer weight and per-good acceptance policies rather than copying
+   them. Default dry-general cargo rejects livestock, loose liquids and seafood;
+   configurable specialist policies retain their existing trailer restrictions.
+   Transfers require an owned, stopped/moored boat at a compatible landing, and
+   fail atomically for wrong owner, remote access, movement, missing berth,
+   unsuitable goods, insufficient source, full destination and invalid quantities.
+   Expose transfer rate and range as world rules, with actual timed transfer
+   progress, cancellation and no duplicate completion. Choose/record rate and
+   range defaults before their production code after inspecting the landing
+   geometry; the UI must quote the same authoritative values.
+3. Add a configurable quay building: a long open stone/timber wharf and a deeper
+   berth, with no lifting hall. Shared siting/footprint/deck/boarding geometry must
+   agree. Define dry land access, full hull depth/clearance, construction bill,
+   materials, public/owned permissions and refusal reasons before code. Shops
+   within the configured landing reach may buy/sell directly from the hold using
+   the ordinary taxed, funded trade and bulk-discount path. Owner-stock transfers
+   use normal ownership/storage checks. Existing compatible boathouses and piers
+   get the same panel. Define river-berth transfer, paid or carried refuelling,
+   delivery and stranded-vessel recovery through the existing flows; never summon
+   an upriver boat to another landing. Test default coaster rejection at river
+   docks even when its owner stands at the correct entrance.
+4. Decide the optional river barge after the first landing integration is working.
+   Prefer a distinct smaller freight hull if it supplies useful capacity within
+   the existing 14 × 3.6 m river-dock limits; record its dimensions and economy
+   before production code. Reuse the same hold/transfer model and preserve the
+   existing canal boat and motorboat. Do not add a third ownership system.
+5. Run an economics pass and document a reproducible funded coastal route with
+   acquisition, sale tax/discount, consumed fuel, maintenance and crew settlement.
+   Compare cost per delivered weight-distance with existing tractor/trailer
+   combinations. A crew share applies to realised net freight profit, counting
+   purchased cargo cost and avoiding repeated settlement or payments on losses;
+   existing fishing settlements retain their behavior. Consider parish supply
+   orders/intents explicitly and either integrate their existing settlement
+   path or document why ordinary dockside trade supplies this slice's scope.
+
+Tests first in `tests/cargo-boat.test.ts`, with separate hold/quay/economy tests
+as those steps start. Step 1 red criteria: slot 35 exists without moving canoe 34,
+resolves the stated defaults and changed tuning, requires captain appropriately,
+accepts configurable hold fields, and renders finite human-scale empty/loaded
+models with a bounded triangle count. Before each later step, extend these
+criteria with exact action names and chosen values, then record its failing test.
+Full gate: capacity boundaries, all compatible landing types, large-hull river
+refusal, authoritative ownership/range/stock checks, cargo conservation through
+save/reload and export/import, death/recovery and crew-profit settlement, plus
+one measured profitable route. Keep world-design export semantics explicit:
+configuration is portable; any exported moored property follows the existing
+parked-property ownership remapping and never copies active player inventories
+or account credentials. Test cargo-bearing export/import before claiming it.
+
+Browser gate: buy/board at a valid boatyard; inspect empty and loaded holds,
+wheelhouse and rendered cargo in low/normal quality; load, leave, sail, return,
+moor, disembark and reboard; trade at a stocked dockside shop; reject a full hold,
+empty seller, unfunded buyer, unsuitable cargo, remote boat and undersized river
+berth; preview/build a valid quay and reject an invalid site; verify transfer
+progress/cancellation and changed World Builder rules. Capture honest successful
+screenshots and inspect console errors. Run `TEST_GPU=1 npm run test:e2e --
+tests/browser/cargo-boat.spec.ts` plus relevant existing boating, crew, trade,
+trailer, river-dock/recovery, catalogue/design and snapshot tests. Finish with
+`npx tsc --noEmit`, changed-file Prettier and `/aclone/` production build. Update
+HAULAGE.md, PLAYING.md, WORLD_BUILDING.md, README, release notes and CHANGELOG;
+commit/push, deploy the verified SHA, then announce with screenshots.
+
+Step 1 verification: the definition/editor/portability tests and relevant vehicle
+and trailer tests pass (`output/cargo-boat/step1-tests.log`). The browser model
+check passes with finite geometry, bounded triangles, human-scale helm and visible
+empty/loaded states (`model-first.log`, `model-loaded.png`, visually inspected).
+Extract the unchanged trailer definition data from its simulation dependencies
+so vehicle tuning can reuse its cargo-policy keys without an initialization cycle.
+
+Step 2 concrete persistence checks, before production: `npx tsx --test
+ tests/cargo-boat-hold.test.ts` must conserve a 100-Stone hold across leaving at
+the boatyard, JSON save/reload and boarding, while leaving the captain's bag
+unchanged. Boarding consumes the moored cargo record; an active boat carries its
+hold separately from personal inventory. Red tests also cover the existing
+lifeboat launch/reboard and death/recovery flows, cargo loss under the loss rule,
+and rejection of capacity/policy tuning that would invalidate any active, moored
+or stranded hold. The default dry cargo policy must match trailer restrictions
+exactly, with the boat's own weight limit. Timed transfers follow in step 3; no
+new boat ownership or cargo transfer permission is introduced by this step.
+
+Step 3 transfer choices before code: use `boatHold` actions (`load`, `unload`,
+`cancel`; `slot`, `item`, `quantity`, optional owned `building`) and the existing
+`trade` action with `storage: 'hold'` and `slot`. All transfers take weight /
+**10 weight per second** (`freightTransferRate`), at a stopped compatible landing.
+The captain may be aboard or at that boat's saved shore entrance. A shop/owned
+stockroom must be within **30 m of the landing's shore entrance**
+(`freightShopRange`); this allows the existing boatyard whose water berth is
+farther from the shop than its land entrance. Neither rule teleports a ship or
+permits an offshore transfer. At completion recheck boat/landing, owner, quantity,
+capacity, inventory, price, funding and shop range; cancel with no stock/cash
+movement if any prerequisite changed. A transfer locks movement using the
+existing task system; cancellation moves nothing. Full 2,000-weight holds take
+200 seconds at default rate. Configured rates/ranges must change quotes and
+execution together. Ordinary trade tax, discounts, finite stock and funded
+investment remain authoritative.
+
+Step 3 quay choices before production: catalogue kind `quay`, default **24s**,
+**80 Wood + 100 Stone + 20 Steel**, **4,000** stock capacity. Cost, materials and
+stock capacity use the existing per-world building catalogue/template editor.
+The open wharf uses one shared geometry definition: 28 m frontage, 5 m deck,
+3 m gangway ending 14 m offshore, shore landing 3 m inland; an alongside berth
+has 28 × 8 m clearance and requires **2 m water depth** (`quayDraft`, world rule).
+Its fixed engineered footprint is shared by model, siting and deck collision;
+visual customization stays in the existing Workshop. The entrance must be dry
+at high water, its access gentle, and the full berth wet at low water with no
+building/creator obstacle. Quays are publicly boardable like existing docks;
+stockroom access stays owner-only and shop trades use the posted prices. Quays
+keep vessels moored in view rather than storing them inside. Buy new vessels at
+boathouses, not quays; a quay is freight infrastructure, not another boatyard.
+Test a valid coast site, rotated/inland/shallow rejection, real construction
+preview agreement, cargo transfers and full-hull dimensions at this new landing.
+
+Optional river-barge decision: do not add a second default freight vessel in this
+slice. The existing 13.5 × 3.42 m canal boat already carries 240 weight through
+river docks; its newly available hold tuning also supports authored river-freight
+worlds without adding another purchase/ownership class. Test that configurable
+hold through a river berth, and the default coaster's refusal. Revisit a distinct
+river barge with regional industry if actual route demand warrants it.
+
+Freight accounting criteria before code: hold purchases retain actual discounted
+acquisition cost per good with that vessel across mooring, recovery and restart.
+A sale realizes only its proportional acquisition cost; unsold goods retain their
+basis for the next voyage. Personal/owned-stockroom loads without purchase records
+use the world's catalogue replacement value, explicitly shown in the guide.
+Crew shares apply once to realized freight receipts less sold-goods basis and
+existing consumed fuel/provision expenses. No pay on a loss, no second receipt
+credit, and settlement refuses if the captain spent the money needed for shares.
+The fishing-catch settlement path stays unchanged. Economy comparisons include
+maintenance and vessel/trailer capital separately; acquiring the vessel is a
+capital expense, not a new charge on each voyage. Ordinary funded dockside trade
+is this slice's delivery settlement; parish supply orders/intents keep their
+existing inventory delivery path rather than claiming an unimplemented hold
+settlement integration.
+
+Economics red result (`routes-first.log`): 0.02 fuel/s gave a fuel/weight-distance
+coefficient of 1.6667e-6, worse than the Puddle tractor plus full tipping trailer
+(8.5485e-7, including the tractor's own cargo). Preserve that comparative test.
+Revise the editable vessel defaults to **0.008 fuel/s and a 320-unit tank**.
+The surveyed expanded-island circuit is 164.85 km; the old burn consumed 576.67
+units with maintenance enabled. The revised burn predicts about 230.67 units,
+leaving about 89.33 (28%) from 320. This sizes the tank for the measured circuit
+rather than several circuits; forty default Fuel cans fill it and fit in the
+captain's bag. Re-run the actual movement circuit and funded route before release.
+
+Cargo browser verification found a genuine quay construction-preview failure:
+`freight-quay.spec.ts` leaves Place foundation enabled at an invalid site because
+`mountBuildMenu` dereferences an absent architectural variant. Preserve the test:
+select Freight quay, reject the inland-facing orientation, rotate to the sea,
+check the quoted materials, construct it, and board/load at its berth with no
+browser errors. Fix the absent-variant description without inventing quay models.
+
+Quay preview/build/board/load now passes in the real browser (20.1 seconds,
+`quay-browser-fixed.log`). The menu now omits architectural shell choices for
+fixed infrastructure, preserving the catalogue material bill. A further rendering
+regression test (`refresh-red.log`) confirms moored coasters ignored edited hull
+dimensions; require a rebuilt hull after tuning, but reuse it when only position
+changes. The independent live-shop-stock refresh check passes without a code change.
+
+All three full browser flows pass (`browser-final.log`): normal-quality purchase
+and freight failures, a generated river berth with a configurable canal hold and
+coaster refusal, and quay construction/sailing/return in low and normal quality.
+Final quote review adds one explicit criterion: changing a shop's unit price
+while the captain edits quantity must refuse the stale displayed quote, before
+starting a transfer. The panel regression is red for the missing displayed-price
+binding (`quote-red.log`); retain the server's existing expected-price check.
+Also verify unloading at the fishing pier after an actual SQLite reopen.
+
+Cargo final verification: **183 relevant Node tests pass** in 31.9 seconds
+(`relevant-final.log`), including trailers, construction/designs, ordinary boats,
+crew, river recovery, towing, snapshots, private persistence and the measured
+trade/circuit. Use `npx tsx --test` with explicit files: this repository's
+`npm test -- files` still expands its full-suite glob. The final browser gate
+checks the stale displayed quote and existing desktop/phone construction menus.
+World-design policy is owner-only moored freight remapped to the recipient;
+full database saves preserve everyone, including acquisition basis. The optional
+barge remains deferred and parish-order delivery stays inventory-based, as
+explicitly decided above.
+
+Final stale-price browser check and the existing desktop/phone building designer
+pass (`quote-designer-browser.log`, three tests, 1.6 minutes). TypeScript is clean
+(`typecheck-final.log`). Screenshot review confirms the loaded coaster, clear helm
+and open quay; no browser errors occurred. Prepare release **0.125.0**, with the
+same shared defaults and no live player grants. Await the production build,
+push, exact-SHA deployment, read-only live checks and verified Discord post
+before marking item 13 done.
+
+Release gate: `/aclone/` production build passes (`output/release-0.125.0/build.log`),
+including its TypeScript check. Prettier verifies all 58 changed files; `git diff
+--check` is clean. Stage only the implementation, tests, version and guide/plan
+files; keep output evidence, NPC status notes and local attachments out of Git.

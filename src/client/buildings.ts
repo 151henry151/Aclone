@@ -1,3 +1,4 @@
+import { quayDetails } from './quay';
 import { lighthouseModel } from './lighthouse';
 import { boatyardDetails } from './boatyard';
 import { riverDockDetails } from './river-dock';
@@ -331,6 +332,10 @@ export function buildingModel(b: Building, finish: typeof surface = surface) {
   if (b.construction) return root;
   if (b.kind === 'boathouse') {
     boatyardDetails(root, plan, finish, b.architecture);
+    return root;
+  }
+  if (b.kind === 'quay') {
+    quayDetails(root);
     return root;
   }
   if (b.kind === 'riverDock') {

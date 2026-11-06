@@ -451,5 +451,8 @@
   "offlineVehicleObstacleSeconds": 60,
   "vehicleGlancingDegrees": 15,
   "vehicleGlancingSpeed": 0.7,
-  "clearRouteParking": true
+  "clearRouteParking": true,
+  "freightTransferRate": 10,
+  "freightShopRange": 30,
+  "quayDraft": 2
 }

@@ -1,3 +1,4 @@
+import { quaySite, quayReserved, QUAY } from './quay';
 import { boatNavigationRules } from './boat-navigation-rules';
 import { waterLevel, highWater, lowWater, surfaceWaterLevel } from './ocean';
 import { RIVER_DOCK, riverDockAccepts, riverDockReserved, riverDockSite } from './river-dock';
@@ -53,6 +54,7 @@ export function boathouseSite(w: World, b: Site, newSite = false) {
   };
 }
 export function dockReserved(b: Site, x: number, z: number, padding = 0) {
+  if (b.kind === 'quay') return quayReserved(b, x, z, padding);
   if (b.kind === RIVER_DOCK) return riverDockReserved(b, x, z, padding);
   if (b.kind !== 'boathouse') return false;
   const dx = x - b.x,
@@ -65,8 +67,16 @@ export function dockReserved(b: Site, x: number, z: number, padding = 0) {
 }
 /** Rechecked at boarding: later terrain edits or another parked vehicle can close a berth. */
 export function dockObstruction(w: World, b: Site, players = false, except?: string) {
-  for (let x = -7; x <= 17; x += 2)
-    for (let z = -44; z <= -7; z += 2) {
+  for (
+    let x = b.kind === 'quay' ? -QUAY.frontage / 2 : -7;
+    x <= (b.kind === 'quay' ? QUAY.frontage / 2 : 17);
+    x += 2
+  )
+    for (
+      let z = b.kind === 'quay' ? -QUAY.berthZ - QUAY.berthBeam / 2 : -44;
+      z <= (b.kind === 'quay' ? -QUAY.gangwayStart : -7);
+      z += 2
+    ) {
       const p = dockPoint(b, x, z);
       if (
         w.buildings.some(
@@ -108,6 +118,7 @@ export interface BoatLanding {
   building?: Building;
   /** Small-craft river berth: canal boats and motorboats only. */
   river?: true;
+  quay?: true;
 }
 export function boatLandings(w: World): BoatLanding[] {
   const docks: BoatLanding[] = w.buildings.flatMap((b): BoatLanding[] => {
@@ -117,6 +128,10 @@ export function boatLandings(w: World): BoatLanding[] {
       return site
         ? [{ id: b.id, berth: site.berth, land: site.land, heading: site.heading, river: true }]
         : [];
+    }
+    if (b.kind === 'quay') {
+      const site = quaySite(w, b);
+      return site ? [{ id: b.id, quay: true, ...site }] : [];
     }
     const site = b.kind === 'boathouse' && boathouseSite(w, b);
     return site ? [{ id: b.id, building: b, ...site }] : [];
@@ -186,12 +201,20 @@ export function withinBoatLanding(w: World, p: LandingPosition, d: BoatLanding, 
   }
   return true;
 }
+export function landingAccepts(w: World, d: BoatLanding, slot: number) {
+  const v = vehicleDef(w, slot);
+  return d.river
+    ? riverDockAccepts(w, slot)
+    : !d.quay || ((v.length ?? 0) <= QUAY.berthLength && (v.beam ?? 0) <= QUAY.berthBeam);
+}
 export function boatLanding(w: World, p: LandingPosition, afloat: boolean, id?: unknown) {
   return boatLandings(w)
     .filter(
       (d) =>
-        (id === undefined || d.id === id || (id === fishingDock.id && !d.building && !d.river)) &&
-        (!afloat || !d.river || p.vehicle === undefined || riverDockAccepts(w, p.vehicle)) &&
+        (id === undefined ||
+          d.id === id ||
+          (id === fishingDock.id && !d.building && !d.river && !d.quay)) &&
+        (!afloat || p.vehicle === undefined || landingAccepts(w, d, p.vehicle)) &&
         withinBoatLanding(w, p, d, afloat),
     )
     .sort(
@@ -212,8 +235,9 @@ export function landingBlocked(
   board: boolean,
   slot = p.vehicle,
 ) {
-  if (d.building) {
-    const reason = dockObstruction(w, d.building);
+  const quay = w.buildings.find((b) => b.id === d.id && b.kind === 'quay');
+  if (d.building || quay) {
+    const reason = dockObstruction(w, (d.building ?? quay)!);
     if (reason) return reason;
   }
   const point = board ? d.berth : d.land;

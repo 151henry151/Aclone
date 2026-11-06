@@ -1,3 +1,4 @@
+import { vehicleDef } from '../shared/vehicle-config';
 import { economyRules } from '../shared/economy-rules';
 import { hasProvisions, crewBerths } from '../shared/vehicle-config';
 import { isTrawler } from '../shared/vehicle-config';
@@ -41,7 +42,7 @@ function expeditionContent(w: World, p: Player) {
     v = p.fishingVoyage;
   if ((p.inventory.fuel ?? 0) > 0) html += button('Fill tank from carried Fuel', 'refuel');
   if (hasProvisions(p.vehicle, w)) {
-    html += `<h3>Boat provisions & crew</h3><p>Stores share the cargo hold. Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? (onlineInventory(w) ? 'this world consumes carried meals automatically' : 'this world consumes carried meals automatically while you are signed off') : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1"></label>`;
+    html += `<h3>Boat provisions & crew</h3><p>${vehicleDef(w, p.vehicle).holdCapacity ? 'Stores share the captain inventory allowance; the freight hold is separate.' : 'Stores share the cargo hold.'} Deckhands eat and drink automatically, online or offline. While online, take provisions into your inventory; ${w.settings.autoConsumeInventory ? (onlineInventory(w) ? 'this world consumes carried meals automatically' : 'this world consumes carried meals automatically while you are signed off') : 'use them yourself'}. You eat automatically from these boat stores only while offline.</p><label>Quantity <input id="boat-store-quantity" type="number" min="1" max="${economyRules(w.settings).transactionItemLimit}" value="1"></label>`;
     for (const [id, d] of Object.entries(defs).filter(([, d]) => d.food || d.drink)) {
       const held = p.inventory[id] ?? 0,
         stored = p.boatStores?.[id] ?? 0;
@@ -50,7 +51,7 @@ function expeditionContent(w: World, p: Player) {
     }
   }
   if (v)
-    html += `<p>Expedition expenses so far: ${(v.expenses / 100).toFixed(2)}d. Fuel is valued at the departure quote (${((v.fuelPrice * 8) / 100).toFixed(2)}d per Fuel); consumed provisions at departure prices, using catalogue prices when unavailable. Unused supplies are not charged. Profit shares are paid on settlement of landed expedition fish.</p><p>Crew: ${
+    html += `<p>Expedition expenses so far: ${(v.expenses / 100).toFixed(2)}d. Fuel is valued at the departure quote (${((v.fuelPrice * 8) / 100).toFixed(2)}d per Fuel); consumed provisions at departure prices, using catalogue prices when unavailable. Unused supplies are not charged. ${vehicleDef(w, p.vehicle).holdCapacity ? `Freight receipts ${((v.freightReceipts ?? 0) / 100).toFixed(2)}d, sold cargo cost ${((v.freightCost ?? 0) / 100).toFixed(2)}d. Shares apply to realized margin after consumed fuel and provisions.` : 'Profit shares are paid on settlement of landed expedition fish.'}</p><p>Crew: ${
       Object.entries(v.members)
         .map(([id, n]) => `${esc(w.players[id]?.name ?? id)} (${n}%)`)
         .join(', ') || 'none'
@@ -64,7 +65,13 @@ function expeditionContent(w: World, p: Player) {
       ))
         html += button(`Offer ${esc(q.name)} a berth`, 'offer', `data-player="${esc(q.id)}"`);
     }
-    if (v) html += button('Sell expedition catch, settle shares & put crew ashore', 'finish');
+    if (v)
+      html += button(
+        vehicleDef(w, p.vehicle).holdCapacity
+          ? 'Settle freight shares & put crew ashore'
+          : 'Sell expedition catch, settle shares & put crew ashore',
+        'finish',
+      );
   }
   if (p.lastFishingSettlement) html += `<p>${esc(p.lastFishingSettlement)}</p>`;
   return html;

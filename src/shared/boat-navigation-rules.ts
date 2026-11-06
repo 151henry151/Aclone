@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const boatNavigationRuleFields = {
+  quayDraft: { label: 'Freight quay minimum berth depth (metres)', min: 0.1, max: 20, step: 0.1 },
+  freightTransferRate: {
+    label: 'Freight transfer rate (weight per second)',
+    min: 0.1,
+    max: 10000,
+    step: 0.1,
+  },
+  freightShopRange: {
+    label: 'Freight shop reach from shore entrance (metres)',
+    min: 1,
+    max: 200,
+    step: 1,
+  },
   riverDockDraft: { label: 'River dock required depth (metres)', min: 0.1, max: 20, step: 0.1 },
   riverDockMaxLength: {
     label: 'River dock maximum vessel length (metres)',

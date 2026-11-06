@@ -1,3 +1,4 @@
+import { quayDeckContains, quayDeckHeight } from './quay';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { terrainHeight } from './terrain';
@@ -16,8 +17,32 @@ export const fishingDock = {
 export function dockHeight(w: World) {
   return Math.max(highWater(w) + 0.55, terrainHeight(w, fishingDock.x, fishingDock.shore) + 0.2);
 }
+const quayCache = new WeakMap<
+  World,
+  { buildings: World['buildings']; length: number; revision: number; quays: World['buildings'] }
+>();
+function walkingQuays(w: World) {
+  let entry = quayCache.get(w);
+  if (
+    !entry ||
+    entry.buildings !== w.buildings ||
+    entry.length !== w.buildings.length ||
+    entry.revision !== w.revision
+  ) {
+    entry = {
+      buildings: w.buildings,
+      length: w.buildings.length,
+      revision: w.revision,
+      quays: w.buildings.filter((b) => b.kind === 'quay'),
+    };
+    quayCache.set(w, entry);
+  }
+  return entry.quays;
+}
 export function travelHeight(w: World, x: number, z: number) {
   const ground = terrainHeight(w, x, z);
+  for (const b of walkingQuays(w))
+    if (!b.construction && quayDeckContains(b, x, z)) return Math.max(ground, quayDeckHeight(w, b));
   if (
     Math.abs(x - fishingDock.x) > fishingDock.width / 2 ||
     z < fishingDock.rampStart ||

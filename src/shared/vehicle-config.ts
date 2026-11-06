@@ -1,3 +1,5 @@
+import { cargoAccepts } from './cargo-policy';
+import { trailerDefs } from './trailer-definitions';
 import { CANOE, canoeVehicle } from './canoe-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { z } from 'zod';
@@ -26,6 +28,10 @@ export const vehicleTuningSchema = z
     fuel: number(0, 1),
     tank: number(1, 100000),
     capacity: number(1, 100000),
+    holdCapacity: number(0, 100000),
+    cargoKind: z.enum(
+      Object.keys(trailerDefs) as [keyof typeof trailerDefs, ...(keyof typeof trailerDefs)[]],
+    ),
     price: number(0, 100000000).int(),
     hitch: number(0, 12).int(),
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -88,7 +94,13 @@ export const vehicleTuningSchema = z
   .partial()
   .strict();
 export type VehicleTuning = z.infer<typeof vehicleTuningSchema>;
-export const vehicleSlotSchema = z.string().regex(/^(?:[0-9]|[12][0-9]|3[0123])$/);
+export const vehicleSlotSchema = z
+  .string()
+  .regex(/^(0|[1-9]\d*)$/)
+  .refine(
+    (s) => Number(s) < vehicles.length && Number(s) !== CANOE,
+    'Choose an editable vehicle slot',
+  );
 export function vehicleDef(
   w: (Pick<World, 'vehicleTuning'> & Partial<Pick<World, 'settings'>>) | undefined,
   slot: number,
@@ -100,10 +112,10 @@ export function isTrawler(slot: number, w?: Pick<World, 'vehicleTuning'>) {
   return vehicleDef(w, slot).mode === 3 && (w?.vehicleTuning?.[slot]?.trawling ?? slot === 30);
 }
 export function hasProvisions(slot: number, w?: Pick<World, 'vehicleTuning'>) {
-  return w?.vehicleTuning?.[slot]?.provisions ?? isTrawler(slot, w);
+  return vehicleDef(w, slot).provisions ?? isTrawler(slot, w);
 }
 export function crewBerths(slot: number, w?: Pick<World, 'vehicleTuning'>) {
-  return w?.vehicleTuning?.[slot]?.crew ?? (isTrawler(slot, w) ? 2 : 0);
+  return vehicleDef(w, slot).crew ?? (isTrawler(slot, w) ? 2 : 0);
 }
 export function validateVehicleTuning(w: World, slot: number, input: unknown, replace = false) {
   if (slot === CANOE) throw Error('Tune canoes in Portable canoes world rules');
@@ -115,6 +127,7 @@ export function validateVehicleTuning(w: World, slot: number, input: unknown, re
     tuning.mode !== vehicles[slot].mode
   )
     throw Error('Walking, creature, scout and lifeboat movement modes are reserved');
+  if (v.holdCapacity && v.mode !== 3) throw Error('Freight holds require boat movement');
   if ((v.trawling || v.crew || v.provisions || v.deathPolicy === 'recover') && v.mode !== 3)
     throw Error('Trawling, provisions, paid crew and recovery require boat movement');
   if (v.crew && !(v.provisions ?? v.trawling ?? slot === 30))
@@ -133,6 +146,27 @@ export function validateVehicleTuning(w: World, slot: number, input: unknown, re
   for (const c of v.components ?? [])
     if (!w.creator?.models.some((m) => m.id === c.model))
       throw Error('Choose a Workshop component model');
+  const holds = [
+    ...Object.values(w.players)
+      .filter((p) => p.vehicle === slot)
+      .map((p) => p.boatHold),
+    ...Object.values(w.mooredBoats ?? {})
+      .filter((b) => b.slot === slot)
+      .map((b) => b.cargo),
+    ...Object.values(w.boatRescues ?? {})
+      .filter((r) => r.boat.slot === slot)
+      .map((r) => r.hold),
+  ];
+  for (const cargo of holds)
+    if (
+      cargo &&
+      Object.entries(cargo).some(
+        ([item, n]) =>
+          n > 0 &&
+          !cargoAccepts(w, { kind: v.cargoKind ?? 'box', cargo }, v.holdCapacity ?? 0, item, 0),
+      )
+    )
+      throw Error('Unload freight cargo before changing hold capacity or cargo policy');
   for (const p of Object.values(w.players)) {
     const previous = vehicleDef(w, slot);
     const moored = Object.values(w.mooredBoats ?? {}).some(

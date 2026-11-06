@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.125.0] - 2026-11-05
+
+### Added
+
+- Haul bulk goods in a coastal cargo boat with a separate persistent hold, visible pallet loads, a human-scale wheelhouse, shared provisions and paid crew.
+- Build open freight quays and load, unload or trade directly with nearby shops at compatible docks; show transfer progress, allow cancellation and recheck stock, funding and capacity on completion.
+- Tune freight holds, cargo policies, vessel performance, quay construction costs, berth depth, shop reach and transfer rates per world; preserve owned moored freight in portable world designs.
+
 ## [0.124.0] - 2026-11-05
 
 ### Added
