@@ -547,6 +547,8 @@ export interface World {
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */
   roadGrowth?: number;
+  /** Last day owed while a disposable road survey is still running. */
+  roadGrowthDue?: number;
   /** Incremental public roadwork, resumed after saving/restarting. */
   roadProject?: import('./road-projects.ts').RoadProject;
   /** Original/generated lane segments replaced by completed bypasses. */

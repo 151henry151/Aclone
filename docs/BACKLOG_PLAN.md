@@ -7591,3 +7591,37 @@ Proceed with resumable planning, retaining the gate for every slice and preservi
 the eventual exact road/project/daily-allowance result. New red tests require
 unfinished work to persist through restart and invalidate on a flood edit before
 laying any road. Keep route generation behavior unchanged; only schedule its work.
+
+Scheduling regression evidence: the mature-world isolated replay returns in
+bounded slices and preserves the exact persisted result. The first full-game
+5/1/1/10-second browser replay nevertheless leaves the daily survey pending.
+A second instrumented replay shows no geometry changes, but 3.8 seconds in
+roadGeometryKey: serializing almost 1 MiB of geography consumes the planning
+budget before the generator can advance. Add a failing compact-key regression
+for 5,000 resources, retain in-place edit detection without revision bumps, and
+replace repeated resource coordinate formatting with checked scalar snapshots.
+Keep the failed replay evidence in output/release-0.131.6/failed-survey-replay.
+Do not call the browser criterion passed until construction finishes during the
+actual driving replay.
+
+Also noticed during this audit: the released NPC deferred-route key includes
+settings.time. Confirm with a regression using a moving game clock after the
+current road slice passes; unfinished NPC planning must survive ordinary clock
+updates while still invalidating actual terrain/policy edits. Treat this as a
+separate logical correction, not an unrelated backlog feature.
+
+The compact-resource regression now passes, including in-place location and kind
+changes. Mature-world growth completes with the exact old saved result in 102
+slices, maximum 57.85 ms (original uninterrupted call: 4,839.7 ms).
+The actual full-game driving replay now completes the road day after 8.48 seconds
+of background work while controls continue: 556 render intervals, p95 48.4 ms,
+maximum 78.3 ms, none above 100 ms, maximum local ping 44 ms and no browser errors.
+18 road/scheduler tests and 23 related alignment/cache/NPC/checkpoint tests pass.
+The restart regression saves and reloads through SQLite, not just a JSON clone.
+TypeScript caught a test fixture referencing a nonexistent building cash field;
+the fixture now changes actual stock and the clean typecheck is rerun.
+
+Both affected browser checks pass: distant hill-town roads/scenery and all
+mature-network map segments/widths. Final TypeScript is clean; the release build
+and formatting are verified before commit. Daily road work is ready as an
+independent 0.131.6 maintenance slice; unfinished item 19 remains excluded.

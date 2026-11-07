@@ -1,3 +1,4 @@
+import { finishRoadWork, type RoadWork } from './road-work';
 import { sceneryBlocksSegment } from './ground-contacts';
 import { pastureParcelSize } from './pasture-land';
 import { inlandLevel } from './inland-water';
@@ -151,12 +152,16 @@ export function roadSite(w: World, width = 5) {
     !occupied(p) && !fences.some((r) => intersects(r, p, p)) && dry(p) && allowed(p);
   // Cost includes actual intermediate rises, not just endpoint elevations. That
   // prevents a straight shortcut over a hill whose two ends are equally low.
-  const cost = (a: Point, b: Point, spacing = 2, scenery = true) => {
-    if (
-      allSolids.some((r) => intersects(r, a, b)) ||
-      (scenery && sceneryBlocksSegment(w, a, b, pad))
-    )
-      return Infinity;
+  function* costSteps(a: Point, b: Point, spacing = 2, scenery = true): RoadWork<number> {
+    if (allSolids.some((r) => intersects(r, a, b))) return Infinity;
+    if (scenery) {
+      const parts = Math.max(1, Math.ceil(pointDistance(a, b) / 32));
+      for (let i = 0; i < parts; i++) {
+        yield;
+        const point = (t: number) => ({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
+        if (sceneryBlocksSegment(w, point(i / parts), point((i + 1) / parts), pad)) return Infinity;
+      }
+    }
     const length = pointDistance(a, b),
       n = Math.max(1, Math.ceil(length / spacing));
     if (!dry(a) || !allowed(a)) return Infinity;
@@ -165,6 +170,7 @@ export function roadSite(w: World, width = 5) {
     const step = length / n;
 
     for (let i = 1; i <= n; i++) {
+      if (i % 8 === 1) yield;
       const t = i / n,
         p = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
       if (!dry(p) || !allowed(p)) return Infinity;
@@ -180,16 +186,29 @@ export function roadSite(w: World, width = 5) {
       previous = h;
     }
     return total;
-  };
-  const segment = (a: Point, b: Point) => Number.isFinite(cost(a, b));
-  return { occupied, clear, segment, cost };
+  }
+  function* segmentSteps(a: Point, b: Point): RoadWork<boolean> {
+    return Number.isFinite(yield* costSteps(a, b));
+  }
+  const cost = (a: Point, b: Point, spacing = 2, scenery = true) =>
+    finishRoadWork(costSteps(a, b, spacing, scenery));
+  const segment = (a: Point, b: Point) => finishRoadWork(segmentSteps(a, b));
+  return { occupied, clear, segment, cost, costSteps, segmentSteps };
 }
 
 /** Round corners and give long open stretches a little survey variation. Every
  * proposed bend uses the same clearance/grade/cost checks as the route search. */
-function naturalAlignment(w: World, path: Point[], site: ReturnType<typeof roadSite>) {
+function* naturalAlignment(
+  w: World,
+  path: Point[],
+  site: ReturnType<typeof roadSite>,
+): RoadWork<Point[]> {
   const seed = seedOf(w.id + ':lane-bends');
-  const cost = (ps: Point[]) => ps.slice(1).reduce((sum, p, i) => sum + site.cost(ps[i], p), 0);
+  function* cost(ps: Point[]): RoadWork<number> {
+    let sum = 0;
+    for (let i = 1; i < ps.length; i++) sum += yield* site.costSteps(ps[i - 1], ps[i]);
+    return sum;
+  }
   const rounded: Point[] = [path[0]];
   for (let i = 1; i < path.length - 1; i++) {
     const a = path[i - 1],
@@ -214,7 +233,7 @@ function naturalAlignment(w: World, path: Point[], site: ReturnType<typeof roadS
         z: u * u * enter.z + 2 * u * t * b.z + t * t * leave.z,
       };
     });
-    if (cost(curve) <= cost([enter, b, leave]) * 1.03) rounded.push(...curve);
+    if ((yield* cost(curve)) <= (yield* cost([enter, b, leave])) * 1.03) rounded.push(...curve);
     else rounded.push(b);
   }
   rounded.push(path.at(-1)!);
@@ -238,7 +257,8 @@ function naturalAlignment(w: World, path: Point[], site: ReturnType<typeof roadS
       const offset = amplitude * Math.sin(Math.PI * t) ** 2 * valueNoise(x / 170, z / 170, seed);
       return { x: x - ((b.z - a.z) / length) * offset, z: z + ((b.x - a.x) / length) * offset };
     });
-    if (cost(curve) <= site.cost(a, b) * 1.04) result.push(...curve.slice(1));
+    if ((yield* cost(curve)) <= (yield* site.costSteps(a, b)) * 1.04)
+      result.push(...curve.slice(1));
     else result.push(b);
   }
   return result;
@@ -248,11 +268,19 @@ function naturalAlignment(w: World, path: Point[], site: ReturnType<typeof roadS
  * roads, while every edge still checks terrain and obstacles every two metres.
  * Short urban connections retain the fine grid. Simplification preserves the
  * climb savings instead of replacing a contouring route with a straight climb. */
-export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point[] | undefined {
+export function roadRoute(w: World, start: Point, goal: Point, width = 5) {
+  return finishRoadWork(roadRouteSteps(w, start, goal, width));
+}
+export function* roadRouteSteps(
+  w: World,
+  start: Point,
+  goal: Point,
+  width = 5,
+): RoadWork<Point[] | undefined> {
   const site = roadSite(w, width),
     distance = pointDistance(start, goal);
   if (!site.clear(start) || !site.clear(goal)) return;
-  if (distance < 80 && site.segment(start, goal)) return [start, goal];
+  if (distance < 80 && (yield* site.segmentSteps(start, goal))) return [start, goal];
   const cell = distance > 2500 ? 96 : distance > 800 ? 24 : 8;
   const margin = Math.max(256, distance * 0.5),
     half = mapHalf(w);
@@ -295,15 +323,16 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
   const cached = new Map<string, boolean>(),
     settled = new Set<string>();
   for (let visits = 0; heap.length && visits < 16000; visits++) {
+    yield;
     const n = pop();
     if (n.g !== costs.get(`${n.i}:${n.j}`) || settled.has(`${n.i}:${n.j}`)) continue;
     settled.add(`${n.i}:${n.j}`);
     const finish =
       pointDistance(n.p, goal) <= cell * 2
-        ? site.segment(n.p, goal)
+        ? (yield* site.segmentSteps(n.p, goal))
           ? [n.p, goal]
           : cell > 8
-            ? roadRoute(w, n.p, goal, width)
+            ? yield* roadRouteSteps(w, n.p, goal, width)
             : undefined
         : undefined;
     if (finish) {
@@ -318,9 +347,10 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
       // using the fine urban grid before accepting or smoothing the result.
       const refined: Point[] = [path[0]];
       for (let i = 1; i < path.length; i++) {
-        if (site.segment(path[i - 1], path[i])) refined.push(path[i]);
+        if (yield* site.segmentSteps(path[i - 1], path[i])) refined.push(path[i]);
         else {
-          const local = cell > 8 ? roadRoute(w, path[i - 1], path[i], width) : undefined;
+          const local =
+            cell > 8 ? yield* roadRouteSteps(w, path[i - 1], path[i], width) : undefined;
           if (!local) return;
           refined.push(...local.slice(1));
         }
@@ -328,7 +358,7 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
       path.splice(0, path.length, ...refined);
       const totals = [0];
       for (let i = 1; i < path.length; i++)
-        totals.push(totals[i - 1] + site.cost(path[i - 1], path[i]));
+        totals.push(totals[i - 1] + (yield* site.costSteps(path[i - 1], path[i])));
       const simple = [path[0]];
       for (let i = 0; i < path.length - 1;) {
         let j = path.length - 1;
@@ -338,16 +368,20 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
           j = i + 1;
           while (
             j + 1 < path.length &&
-            site.cost(path[i], path[j + 1]) <= (totals[j + 1] - totals[i]) * 1.015
+            (yield* site.costSteps(path[i], path[j + 1])) <= (totals[j + 1] - totals[i]) * 1.015
           )
             j++;
         } else {
-          while (j > i + 1 && site.cost(path[i], path[j]) > (totals[j] - totals[i]) * 1.015) j--;
+          while (
+            j > i + 1 &&
+            (yield* site.costSteps(path[i], path[j])) > (totals[j] - totals[i]) * 1.015
+          )
+            j--;
         }
         simple.push(path[j]);
         i = j;
       }
-      return naturalAlignment(w, simple, site);
+      return yield* naturalAlignment(w, simple, site);
     }
     for (const [di, dj] of [
       [1, 0],
@@ -372,7 +406,7 @@ export function roadRoute(w: World, start: Point, goal: Point, width = 5): Point
         cached.set(key, valid);
       }
       if (!valid) continue;
-      const g = n.g + site.cost(n.p, p, cell > 24 ? 16 : cell > 8 ? 8 : 2, cell <= 8);
+      const g = n.g + (yield* site.costSteps(n.p, p, cell > 24 ? 16 : cell > 8 ? 8 : 2, cell <= 8));
       if (g >= (costs.get(key) ?? Infinity)) continue;
       costs.set(key, g);
       push({ i, j, p, g, f: g + pointDistance(p, goal), parent: n });
@@ -395,18 +429,74 @@ export function roadsTouch(a: Road, b: Road) {
   );
 }
 export function roadComponents(roads: readonly Road[]) {
-  const groups: Road[][] = [],
-    remaining = new Set(roads);
+  return finishRoadWork(roadComponentSteps(roads));
+}
+export function* roadComponentSteps(roads: readonly Road[]): RoadWork<Road[][]> {
+  const unique = [...new Set(roads)];
+  // Index conservative lane bounds before doing exact crossing/distance checks.
+  // Very long segments use a fallback list rather than filling an enormous grid.
+  const cell = 64;
+  const bounds = unique.map((r) => {
+    const padding = r.width / 2 + 0.05;
+    const minX = Math.min(r.a.x, r.b.x) - padding,
+      maxX = Math.max(r.a.x, r.b.x) + padding,
+      minZ = Math.min(r.a.z, r.b.z) - padding,
+      maxZ = Math.max(r.a.z, r.b.z) + padding;
+    return {
+      minX,
+      maxX,
+      minZ,
+      maxZ,
+      x0: Math.floor(minX / cell),
+      x1: Math.floor(maxX / cell),
+      z0: Math.floor(minZ / cell),
+      z1: Math.floor(maxZ / cell),
+    };
+  });
+  const buckets = new Map<string, number[]>(),
+    long = new Set<number>();
+  for (let i = 0; i < unique.length; i++) {
+    yield;
+    const b = bounds[i];
+    if ((b.x1 - b.x0 + 1) * (b.z1 - b.z0 + 1) > 256) {
+      long.add(i);
+      continue;
+    }
+    for (let x = b.x0; x <= b.x1; x++)
+      for (let z = b.z0; z <= b.z1; z++) {
+        const key = `${x}:${z}`;
+        let bucket = buckets.get(key);
+        if (!bucket) buckets.set(key, (bucket = []));
+        bucket.push(i);
+      }
+  }
+  const remaining = new Set(unique.map((_, i) => i)),
+    groups: Road[][] = [];
   while (remaining.size) {
     const group = [remaining.values().next().value!];
     remaining.delete(group[0]);
-    for (let i = 0; i < group.length; i++)
-      for (const r of remaining)
-        if (roadsTouch(group[i], r)) {
-          group.push(r);
-          remaining.delete(r);
+    for (let i = 0; i < group.length; i++) {
+      yield;
+      const id = group[i],
+        a = bounds[id];
+      const candidates = new Set(long.has(id) ? remaining : long);
+      if (!long.has(id))
+        for (let x = a.x0; x <= a.x1; x++)
+          for (let z = a.z0; z <= a.z1; z++)
+            for (const other of buckets.get(`${x}:${z}`) ?? []) candidates.add(other);
+      // Preserve the original breadth-first order; planners use its tie breaks.
+      for (const other of [...candidates].sort((a, b) => a - b)) {
+        yield;
+        if (!remaining.has(other)) continue;
+        const b = bounds[other];
+        if (a.maxX < b.minX || a.minX > b.maxX || a.maxZ < b.minZ || a.minZ > b.maxZ) continue;
+        if (roadsTouch(unique[id], unique[other])) {
+          group.push(other);
+          remaining.delete(other);
         }
-    groups.push(group);
+      }
+    }
+    groups.push(group.map((i) => unique[i]));
   }
   return groups;
 }

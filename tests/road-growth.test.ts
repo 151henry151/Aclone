@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createWorld, advance, makeBuilding, terrainHeight } from '../src/shared/simulation.ts';
+import {
+  createWorld,
+  advance as advanceSimulation,
+  makeBuilding,
+  terrainHeight,
+} from '../src/shared/simulation.ts';
 import { townRoads, roadDistance } from '../src/shared/town.ts';
 import { roadGrowthPerDay, roadConnected, grownRoads } from '../src/shared/roads.ts';
+import { finishPendingRoadWork } from './road-work-helpers';
 import { blocksBuilding } from '../src/shared/building-shapes.ts';
 
+function advance(w: ReturnType<typeof createWorld>, seconds: number) {
+  advanceSimulation(w, seconds);
+  finishPendingRoadWork(w);
+}
 function day(w: ReturnType<typeof createWorld>) {
   return w.settings.dayLength;
 }

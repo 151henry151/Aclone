@@ -266,6 +266,11 @@ splits that work across ticks so other players can keep moving. Checkpoint saves
 share disk commits without lowering save durability. If a save fails, pending
 public messages and ledger entries remain available for retry.
 
+Daily road surveying also runs in short steps. Crews can finish their survey
+shortly after the day boundary instead of freezing movement while planning.
+The construction allowance remains unchanged; unfinished days survive restarts,
+and world edits cause the survey to be checked again before roads are laid.
+
 Version 0.115.0 network entry waits for the full world snapshot before queuing live updates, including when switching worlds. A slow first island download can still take time; the following updates start from current state.
 
 Version 0.115.0 rendering prepares road growth and building changes in small batches while the existing view stays visible. Detailed banks are prepared when snow first appears, so driving and controls continue during preparation.

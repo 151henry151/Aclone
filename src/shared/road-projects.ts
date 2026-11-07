@@ -1,12 +1,13 @@
+import { finishRoadWork, type RoadWork } from './road-work';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
 import { townRoads, roadDistance, roadKey, type Point, type Road } from './town.ts';
 import {
   pointDistance,
-  roadComponents,
+  roadComponentSteps,
   roadSamples,
   roadSite,
-  roadRoute,
+  roadRouteSteps,
   roadsTouch,
 } from './road-routing.ts';
 
@@ -20,11 +21,11 @@ export interface RoadProject {
   branches?: Point[][];
   retire?: string[];
 }
-export function safeNearest(
+export function* safeNearestSteps(
   roads: readonly Road[],
   goal: Point,
   site: ReturnType<typeof roadSite>,
-) {
+): RoadWork<Point | undefined> {
   let best: Point | undefined,
     distance = Infinity;
   for (const r of roads) {
@@ -36,6 +37,7 @@ export function safeNearest(
       : 0;
     const projected = { x: r.a.x + t * dx, z: r.a.z + t * dz };
     for (const p of [projected, ...roadSamples(r, 4)]) {
+      yield;
       const d = pointDistance(p, goal);
       if (d < distance && site.clear(p)) {
         best = p;
@@ -47,11 +49,11 @@ export function safeNearest(
 }
 /** A private lane beside a remote town is not a connection to the original town.
  * Compare road components, then join the closest disconnected settlement. */
-export function planTownRoad(w: World): RoadProject | undefined {
+export function* planTownRoadSteps(w: World): RoadWork<RoadProject | undefined> {
   if (w.towns.length < 2) return;
   const roads = townRoads(w);
   if (!roads.length) return;
-  const groups = roadComponents(roads);
+  const groups = yield* roadComponentSteps(roads);
   const origin = w.towns[0];
   groups.sort((a, b) => roadDistance(a, origin.x, origin.z) - roadDistance(b, origin.x, origin.z));
   const main = groups[0],
@@ -63,11 +65,11 @@ export function planTownRoad(w: World): RoadProject | undefined {
   for (const town of towns) {
     if (!town.permissions.residents.roads && !town.permissions.guests.roads) continue;
     const local = groups.slice(1).find((g) => roadDistance(g, town.x, town.z) <= 24);
-    const near = safeNearest(main, town, site);
+    const near = yield* safeNearestSteps(main, town, site);
     if (!near) continue;
     const heading = Math.atan2(near.x - town.x, near.z - town.z);
     const entries = local
-      ? [safeNearest(local, near, site)].filter((p): p is Point => !!p)
+      ? [yield* safeNearestSteps(local, near, site)].filter((p): p is Point => !!p)
       : [12, 20].flatMap((radius) =>
           [0, 0.5, -0.5, 1, -1, Math.PI].map((turn) => ({
             x: town.x + Math.sin(heading + turn) * radius,
@@ -76,34 +78,32 @@ export function planTownRoad(w: World): RoadProject | undefined {
         );
     for (const goal of entries) {
       if (!site.clear(goal)) continue;
-      const start = safeNearest(main, goal, site);
+      const start = yield* safeNearestSteps(main, goal, site);
       if (!start) continue;
-      const path = roadRoute(w, start, goal);
+      const path = yield* roadRouteSteps(w, start, goal);
       if (path) return { kind: 'town', town: town.id, width: 5, path };
     }
   }
 }
 
 /** Join isolated public lanes without using runways as through roads. */
-export function planRoadConnection(w: World): RoadProject | undefined {
-  const groups = roadComponents(townRoads(w));
+export function* planRoadConnectionSteps(w: World): RoadWork<RoadProject | undefined> {
+  const groups = yield* roadComponentSteps(townRoads(w));
   if (groups.length < 2) return;
   const origin = w.towns[0] ?? { x: 0, z: 0 },
     site = roadSite(w);
   groups.sort((a, b) => roadDistance(a, origin.x, origin.z) - roadDistance(b, origin.x, origin.z));
   const main = groups[0];
-  const candidates = groups
-    .slice(1)
-    .flatMap((group) => {
-      const goal = safeNearest(group, origin, site);
-      if (!goal) return [];
-      const start = safeNearest(main, goal, site);
-      if (!start) return [];
-      return [{ start, goal, distance: pointDistance(start, goal) }];
-    })
-    .sort((a, b) => a.distance - b.distance);
+  const candidates: { start: Point; goal: Point; distance: number }[] = [];
+  for (const group of groups.slice(1)) {
+    const goal = yield* safeNearestSteps(group, origin, site);
+    if (!goal) continue;
+    const start = yield* safeNearestSteps(main, goal, site);
+    if (start) candidates.push({ start, goal, distance: pointDistance(start, goal) });
+  }
+  candidates.sort((a, b) => a.distance - b.distance);
   for (const { start, goal } of candidates) {
-    const path = roadRoute(w, start, goal);
+    const path = yield* roadRouteSteps(w, start, goal);
     if (path) return { kind: 'connection', width: 5, path };
   }
 }
@@ -111,15 +111,24 @@ export function planRoadConnection(w: World): RoadProject | undefined {
 /** A bypass replaces obstructed stretches only after every branch is complete.
  * Adjacent blocked segments are one job, so a building straddling several old
  * segments cannot leave tiny road fragments running through its walls. */
-export function planRoadDetour(w: World): RoadProject | undefined {
+export function* planRoadDetourSteps(w: World): RoadWork<RoadProject | undefined> {
   const roads = townRoads(w);
   const sites = new Map<number, ReturnType<typeof roadSite>>();
   const siteFor = (width: number) => {
     if (!sites.has(width)) sites.set(width, roadSite(w, width));
     return sites.get(width)!;
   };
-  const blocked = roads.filter((r) => roadSamples(r).some((p) => siteFor(r.width).occupied(p)));
-  for (const group of roadComponents(blocked)) {
+  const blocked: Road[] = [];
+  for (const r of roads) {
+    for (const p of roadSamples(r)) {
+      yield;
+      if (siteFor(r.width).occupied(p)) {
+        blocked.push(r);
+        break;
+      }
+    }
+  }
+  for (const group of yield* roadComponentSteps(blocked)) {
     const width = Math.max(5, ...group.map((r) => r.width));
     const site = siteFor(width);
     // Include short neighbouring pieces whose junction remains inside the wider
@@ -128,7 +137,8 @@ export function planRoadDetour(w: World): RoadProject | undefined {
     let changed = true;
     while (changed) {
       changed = false;
-      for (const r of roads)
+      for (const r of roads) {
+        yield;
         if (
           !removed.has(r) &&
           [...removed].some((o) => roadsTouch(o, r)) &&
@@ -137,6 +147,7 @@ export function planRoadDetour(w: World): RoadProject | undefined {
           removed.add(r);
           changed = true;
         }
+      }
     }
     const exits: Point[] = [];
     for (const r of removed)
@@ -154,7 +165,7 @@ export function planRoadDetour(w: World): RoadProject | undefined {
           if (!best || distance < best.distance) best = { i, from, distance };
         }
       const to = exits.splice(best!.i, 1)[0];
-      const path = roadRoute(w, best!.from, to, width);
+      const path = yield* roadRouteSteps(w, best!.from, to, width);
       if (!path) {
         paths.length = 0;
         break;
@@ -175,17 +186,18 @@ export function planRoadDetour(w: World): RoadProject | undefined {
 
 /** Spend at most the existing 12 m/day budget, with town crews working from
  * both ends. Remaining waypoints persist across saves and restarts. */
-export function advanceRoadProject(w: World, project: RoadProject, budget: number) {
+export function* advanceRoadProjectSteps(
+  w: World,
+  project: RoadProject,
+  budget: number,
+): RoadWork<boolean> {
   const site = roadSite(w, project.width);
   if (project.kind === 'town' && !w.towns.some((t) => t.id === project.town)) return false;
   // An edited building/field or changed permission invalidates the route. Keep
   // already laid roads, discard the plan and find a new safe route next day.
-  if (
-    [project.path, ...(project.branches ?? [])].some((path) =>
-      path.slice(1).some((b, i) => !site.segment(path[i], b)),
-    )
-  )
-    return false;
+  for (const path of [project.path, ...(project.branches ?? [])])
+    for (let i = 1; i < path.length; i++)
+      if (!(yield* site.segmentSteps(path[i - 1], path[i]))) return false;
   const lay = (allowance: number, reverse = false) => {
     if (reverse) project.path.reverse();
     while (allowance > 1e-6 && project.path.length > 1) {
@@ -243,4 +255,24 @@ export function advanceRoadProject(w: World, project: RoadProject, budget: numbe
     w.revision++;
   }
   return false;
+}
+
+export function safeNearest(
+  roads: readonly Road[],
+  goal: Point,
+  site: ReturnType<typeof roadSite>,
+) {
+  return finishRoadWork(safeNearestSteps(roads, goal, site));
+}
+export function planTownRoad(w: World) {
+  return finishRoadWork(planTownRoadSteps(w));
+}
+export function planRoadConnection(w: World) {
+  return finishRoadWork(planRoadConnectionSteps(w));
+}
+export function planRoadDetour(w: World) {
+  return finishRoadWork(planRoadDetourSteps(w));
+}
+export function advanceRoadProject(w: World, project: RoadProject, budget: number) {
+  return finishRoadWork(advanceRoadProjectSteps(w, project, budget));
 }

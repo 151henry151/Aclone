@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../../src/server/app';
 import { createWorld, addPlayer, makeBuilding, terrainHeight } from '../../src/shared/simulation';
+import { finishPendingRoadWork } from '../road-work-helpers';
 import { growRoads } from '../../src/shared/roads';
 import { roadComponents } from '../../src/shared/road-routing';
 import { townRoads, roadDistance } from '../../src/shared/town';
@@ -47,6 +48,7 @@ test('hill town furniture and distant village terrain render together', async ({
     });
     w.buildings.push(makeBuilding('road-obstacle', 'warehouse', 49, -2));
     growRoads(w, 0, 600 * 180);
+    finishPendingRoadWork(w);
     expect(w.retiredRoads?.length).toBeGreaterThan(0);
     expect(
       roadComponents(townRoads(w)).some(

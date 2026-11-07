@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.6] - 2026-11-06
+
+### Fixed
+
+- Keep daily road surveys from freezing player movement by spreading route searches across server ticks and skipping distant road pairs during connectivity checks.
+- Preserve unfinished daily road allowances through saves and restarts, and discard obsolete surveys after world edits before laying new roads.
+
 ## [0.131.5] - 2026-11-06
 
 ### Fixed

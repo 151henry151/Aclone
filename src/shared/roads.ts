@@ -1,11 +1,12 @@
+import { roadGeometryKey, type RoadWork } from './road-work';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { roadSite, roadRoute } from './road-routing.ts';
+import { roadSite, roadRouteSteps } from './road-routing.ts';
 import {
-  advanceRoadProject,
-  planRoadDetour,
-  planTownRoad,
-  planRoadConnection,
-  safeNearest,
+  advanceRoadProjectSteps,
+  planRoadDetourSteps,
+  planTownRoadSteps,
+  planRoadConnectionSteps,
+  safeNearestSteps,
   type RoadProject,
 } from './road-projects.ts';
 import type { World, Building } from './types.ts';
@@ -29,7 +30,7 @@ export function roadConnected(w: World, b: Building, roads: readonly Road[] = to
   return roadDistance(roads, b.x, b.z) <= Math.max(12, footprintRadius(b) + 4);
 }
 /** Building spurs use the same planner as public links, including reserved fields. */
-function planBuildingRoad(w: World): RoadProject | undefined {
+function* planBuildingRoad(w: World): RoadWork<RoadProject | undefined> {
   const roads = townRoads(w);
   if (!roads.length) return;
   const site = roadSite(w);
@@ -38,7 +39,7 @@ function planBuildingRoad(w: World): RoadProject | undefined {
     .filter((b) => b.government || !townRefusal(w, b.owner, b.x, b.z, 'roads'))
     .sort((a, b) => roadDistance(roads, a.x, a.z) - roadDistance(roads, b.x, b.z));
   for (const target of pending) {
-    const from = safeNearest(roads, target, site);
+    const from = yield* safeNearestSteps(roads, target, site);
     if (!from) continue;
     const heading = Math.atan2(from.x - target.x, from.z - target.z);
     const stop = Math.max(10, footprintRadius(target) + 3);
@@ -47,36 +48,70 @@ function planBuildingRoad(w: World): RoadProject | undefined {
         x: target.x + Math.sin(heading + turn) * stop,
         z: target.z + Math.cos(heading + turn) * stop,
       };
-      const path = roadRoute(w, from, to);
+      const path = yield* roadRouteSteps(w, from, to);
       if (path) return { kind: 'building', building: target.id, width: grownRoadWidth, path };
     }
   }
 }
-/** Each game-day boundary crossed since the last checkpoint lays one stretch, so an
- * outage catches up deterministically instead of racing or skipping work. */
+/** Runtime search state is disposable; unspent game days are persisted. */
+const jobs = new WeakMap<
+  World,
+  { key: string; project: World['roadProject']; work: RoadWork<boolean> }
+>();
+function* growRoadDay(w: World): RoadWork<boolean> {
+  w.roadProject ??=
+    (yield* planRoadDetourSteps(w)) ??
+    (yield* planTownRoadSteps(w)) ??
+    (yield* planRoadConnectionSteps(w)) ??
+    (yield* planBuildingRoad(w));
+  if (!w.roadProject) return false;
+  const target =
+    w.roadProject.building && w.buildings.find((b) => b.id === w.roadProject!.building);
+  if (
+    w.roadProject.kind === 'building' &&
+    (!target ||
+      roadConnected(w, target) ||
+      (!target.government && townRefusal(w, target.owner, target.x, target.z, 'roads')))
+  )
+    delete w.roadProject;
+  else if (!(yield* advanceRoadProjectSteps(w, w.roadProject, roadGrowthPerDay)))
+    delete w.roadProject;
+  return true;
+}
+/** Surveying gets a bounded slice even while the game clock remains within a day.
+ * Commit each day's allowance only after its validated construction step finishes. */
 export function growRoads(w: World, start: number, end: number) {
   const dayLength = w.settings.dayLength > 0 ? w.settings.dayLength : 600;
-  const last = w.roadGrowth ?? Math.floor(start / dayLength);
-  const due = Math.floor(end / dayLength);
-  if (due <= last) {
-    w.roadGrowth ??= last;
+  w.roadGrowth ??= Math.floor(start / dayLength);
+  const due = Math.max(w.roadGrowthDue ?? w.roadGrowth, Math.floor(end / dayLength));
+  if (due <= w.roadGrowth) {
+    delete w.roadGrowthDue;
+    jobs.delete(w);
     return;
   }
-  for (let d = last + 1; d <= due; d++) {
-    w.roadProject ??=
-      planRoadDetour(w) ?? planTownRoad(w) ?? planRoadConnection(w) ?? planBuildingRoad(w);
-    if (w.roadProject) {
-      const target =
-        w.roadProject.building && w.buildings.find((b) => b.id === w.roadProject!.building);
-      if (
-        w.roadProject.kind === 'building' &&
-        (!target ||
-          roadConnected(w, target) ||
-          (!target.government && townRefusal(w, target.owner, target.x, target.z, 'roads')))
-      )
-        delete w.roadProject;
-      else if (!advanceRoadProject(w, w.roadProject, roadGrowthPerDay)) delete w.roadProject;
-    }
+  w.roadGrowthDue = due;
+  const deadline = performance.now() + 8;
+  const key = roadGeometryKey(w);
+  let job = jobs.get(w);
+  if (job && (job.key !== key || job.project !== w.roadProject)) {
+    jobs.delete(w);
+    job = undefined;
   }
-  w.roadGrowth = due;
+  do {
+    if (!job) {
+      job = { key: roadGeometryKey(w), project: w.roadProject, work: growRoadDay(w) };
+      jobs.set(w, job);
+    }
+    const result = job.work.next();
+    job.project = w.roadProject;
+    if (result.done) {
+      w.roadGrowth = result.value ? w.roadGrowth + 1 : due;
+      jobs.delete(w);
+      job = undefined;
+      if (w.roadGrowth >= due) {
+        delete w.roadGrowthDue;
+        return;
+      }
+    }
+  } while (performance.now() < deadline);
 }
