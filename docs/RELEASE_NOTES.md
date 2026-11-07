@@ -2,6 +2,19 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.4 — More responsive movement
+
+Reuse the road network instead of rebuilding it repeatedly for player movement,
+AI driving, parking checks and rendering. Construction and World Builder edits
+still invalidate the cached geometry immediately. Dry-weather tyre tracks skip
+road lookups entirely.
+
+Limit slow recipients to one update in transit when acknowledgements take too
+long, allowing subsequent updates to reflect current state instead of building
+a queue of old snapshots. Fast recipients keep their normal window. Deliver the
+welcome message after large first downloads so a working connection shows
+**CONNECTED**. Refresh the game page to load the updated client.
+
 ## 0.131.3 — Quieter names in the world
 
 Human and AI pilot tags now use a smaller single-line name. They fade from 20 to

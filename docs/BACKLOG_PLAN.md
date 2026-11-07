@@ -7302,3 +7302,155 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15684268329
 Database backup: `/var/lib/aclone/backups/pre-deploy-20261106-194642.sqlite`.
 Website backup: `/var/backups/aclone-website/site-20261106-194757.tar.gz`.
 Evidence: `output/release-0.131.3/`. Item 19 road work remains unreleased.
+
+### Priority performance check — Walking/driving pauses, 2026-11-06
+
+Henry reports that a new player on a desktop gaming PC saw lag and loading that
+could not keep up while walking/driving. No flying was involved. Keep the road
+backlog changes unreleased while checking the deployed client separately.
+
+A read-only current world snapshot (86 buildings, 2,003 grown roads, 83 retired
+segments) was replayed locally against released 0.131.3, in performance mode on
+NVIDIA Quadro M1200 hardware. The rendering-only path uses scripted motion; it is
+not proof of the player's exact session, network conditions or collisions.
+Walking: 25 s, p95 frame interval 46.7 ms, maximum 85.3 ms. Driving: 45 s,
+p95 52.8 ms, maximum 245.4 ms, two intervals over 100 ms. Nearby terrain remained
+present throughout both paths, with no browser errors. CPU sampling identifies
+repeated road-key generation/filtering in the frame's tyre-track path as a major
+avoidable cost, including in dry weather. The full road list is only used there
+to suppress snow tracks on roads. Evidence: `output/player-travel-20261106/`;
+private world JSON must remain untracked and unpublished.
+
+Before production edits, add a real-browser regression with a mature road list:
+after loading settles, dry walking and driving must perform no road-network
+queries solely for tyre tracks; snowy driving must still query roads and retain
+existing snow-track behavior. Run it red on the released code. Then condition
+the lookup on snow, run affected track tests, TypeScript and Prettier, and repeat
+the same hardware/rendering path. Require no lost nearby terrain or browser
+errors and no material p95 regression. Do not claim all reported lag fixed.
+Commit/push/deploy this independent patch and announce measured results with a
+gameplay screenshot only after verification.
+
+### Recorded movement report — Captured, diagnosis still open, 2026-11-06
+
+Henry demonstrated forward/left/right walking on the live game. The requested
+60-second desktop recording is saved at
+`output/player-travel-20261106/henry-walking-input-demo.mp4` in the primary checkout
+(1920 × 1080, 30 FPS). Keep this private diagnostic recording out of Discord.
+Reviewed observations: the avatar pauses while the camera still turns; sampled
+HUD readings show 21–29 FPS and ping rising from 131 ms to 1,305 ms and then
+2,871 ms. CONNECTING remains visible despite state updates. The recording has
+no key overlay, so exact input-to-response timings and a definite teleport are
+not established. Recording overhead may affect FPS.
+
+Code inspection: LocalPrediction stops advancing after 500 ms without a fresh
+state and resets after a 1,500 ms receive gap. Delayed updates could therefore
+explain stop/catch-up behavior, but displayed ping alone cannot distinguish a
+busy client, server stall or network delay. The welcome response is sent after
+the initial snapshot through a buffered-send guard; investigate whether a large
+initial snapshot drops welcome before interpreting CONNECTING as reconnections.
+
+The local full-game keyboard replay is **invalid**, not a passing movement test:
+loading resumes after the readiness predicate, and the player does not move.
+An explicit movement assertion now rejects that run. Do not use its ping or
+correction figures to claim the live issue reproduced or passed. Next: make the
+local replay wait for stable usable controls, capture input send/ack and frame
+intervals, and reproduce the delayed-update behavior with deterministic tests
+before changing movement production code. No movement fix has been deployed.
+The separate dry-weather tyre-track microfix remains unverified and unreleased;
+its browser green run was interrupted for this recording.
+
+### Priority responsiveness repair — Completion criteria, 2026-11-06
+
+Keep the unfinished road backlog isolated. Capture a stable, fully loaded local
+copy of the mature world, replay forward 5 s / forward-left 1 s / forward-right
+1 s / forward 10 s, and record actual sent controls, authoritative positions,
+rendered positions, frame gaps and ping. A run without actual movement is invalid.
+Compare baseline and repaired runs on the same hardware, without concurrent tests.
+Require no browser errors, no missing nearby ground, prompt response to each
+control change and no unexplained stop/catch-up behavior on the local connection.
+Use delayed-link tests to distinguish normal latency from accumulating stale
+controls or movement corrections. Do not claim the entire live report resolved
+from a render-only benchmark or a successful health request.
+
+Handshake hypothesis criteria before production edits: a real compressed
+protocol-4 WebSocket entering a mature world must receive exactly one welcome,
+the correct world state, and a later pong. The state must arrive before welcome
+so the existing world/galaxy UI routing stays correct. Test with a first snapshot
+larger than 1 MiB; show that missing welcome (not a socket failure) fails the test.
+Browser: saved-world login reaches CONNECTED, stays in the world and accepts
+walking controls. Verify login without a saved world and an invalid saved world
+still reach the directory. Keep state backpressure/ACK behavior intact. Run
+relevant socket/input/slow-network tests, TypeScript and Prettier.
+
+Live 15 s CPU profile (2 ms sampling, inspector closed afterwards, no restart)
+confirms repeated townRoads filtering/key formatting/runway exclusions dominate
+NPC movement and parking checks. Service stays active. A complete local world
+advance profile spends 3.18 s in 300 Puddlewick ticks (p50 10.18 ms, p95 14.05 ms),
+mostly the same road work. This is unrelated to visual complexity.
+
+Road-query repair criteria before production edits: reuse the unchanged filtered
+network across simulation ticks and immutable client snapshots; avoid reformatting
+road keys on repeated reads. Preserve exact road objects/order, retired segments,
+runway exclusions, starter-layout switches and world isolation. In-place append,
+replacement, removal, endpoint/width edits, retired-list edits, airfield changes
+and landscape replacement must invalidate immediately. No world/save mutation
+or persisted cache. Add a failing mature-world regression, run road growth,
+road alignment, landscape, driving and parking tests after the fix, and repeat
+local CPU and full browser movement profiles. Re-profile live after deployment;
+do not infer improvements solely from unit timing.
+
+The unchanged released source also fails the existing 64 kbit/s protocol-3
+slow-link test: state age grows to 2.81 s. This is a confirmed pre-existing gap,
+not grounds to loosen its <2 s acceptance limit. A fixed three-frame window
+queues too much data for such clients. Before changing transport, add a
+clock-controlled regression: a delayed ACK reduces that recipient to one pending
+snapshot; fresh ACKs restore the existing fast-client window; invalid/old ACKs
+and world switches cannot release the wrong baseline. Retain the existing slow
+TCP test unchanged except for diagnostic failure text, and run it independently.
+Also exercise current protocol 4 under the same shaping. These are transport
+scheduling limits, not new world gameplay rules.
+
+### Responsiveness checkpoint — Verified locally, release 0.131.4 prepared
+
+The road-query regression failed on repeated preparation before the change;
+all four cache/edit tests now pass. Twenty related road/alignment/landscape tests,
+132 movement/parking/scenery/snapshot/prediction regressions, five transport tests,
+and the real-socket handshake/input tests pass. The isolated slow-link checks
+pass for protocols 3 and 4 with maximum checked state ages 1.15 s and 1.10 s;
+unchanged released code failed at 2.81 s. Tests retain their original <2 s limit.
+
+Browser snow/mud tracks and dry road-query checks pass on final code. Saved-world
+entry reaches CONNECTED and the keyboard replay moves the actual local/server
+player. No-saved-world and invalid-saved-world directory checks pass in a separate
+browser test. The first combined diagnostic incorrectly reapplied its saved-world
+fixture on every reload; that harness error is recorded, not an application failure.
+
+Actual 17 s keyboard sequence plus release: walking has p95 frame interval 38.6 ms,
+maximum 60.6 ms, ping at most 27 ms; driving (with video recording enabled) has
+p95 39.1 ms, maximum 52.2 ms, ping at most 11 ms. Neither has a >100 ms render gap
+or browser error. The driving video is reviewed separately. These are local
+network results; they do not promise the same ping over the internet.
+
+The identical render-only terrain path retains nearby ground with no errors:
+walking p95 46.7 -> 45.0 ms, max 85.3 -> 61.7 ms; driving p95 52.8 -> 50.0 ms,
+max 245.4 -> 135.3 ms, >100 ms gaps two -> one. Its full-world cloning costs
+roughly 10 s across the 70 s test, unlike actual compact network updates. Keep
+the remaining short hitch visible in evidence; do not claim perfect rendering.
+The separate simulation benchmark drops Puddlewick CPU time from 3.18 s to
+1.36 s per 300 ticks (57% less). Recheck live CPU after deployment.
+
+Evidence is under `output/player-travel-20261106/` and `output/release-0.131.4/`
+in the managed worktree. Private snapshots and Henry's desktop video stay local.
+Unfinished road-building backlog work remains in the primary checkout and is
+excluded from this maintenance release. Deploy only the verified release commit,
+check public assets and server health, then post the authorized bot announcement
+with a local gameplay screenshot and record the live measurements.
+
+The first driving route met the workshop wall late in the replay, so it could
+not demonstrate the entire requested final straight. A second full replay starts
+on the airfield with a clear route: actual controls 5 s forward, 1 s left,
+1 s right, 10 s forward, then release. It passes continuous movement throughout
+the final straight (no collision masking a stall), CONNECTED, zero browser errors,
+p95 frame interval 45.4 ms, maximum 78.6 ms, zero intervals above 100 ms.
+Recording and profiling are enabled; peak local ping is 184 ms, ending at 2 ms.

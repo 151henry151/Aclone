@@ -174,17 +174,83 @@ export function roadKey(r: Road) {
   const points = [r.a, r.b].map((p) => `${p.x.toFixed(4)},${p.z.toFixed(4)}`).sort();
   return `${points.join(':')}:${r.width}`;
 }
+type RoadState = { references: readonly Road[]; coordinates: Float64Array };
+function rememberRoads(roads: readonly Road[]): RoadState {
+  const coordinates = new Float64Array(roads.length * 5);
+  roads.forEach((r, i) => coordinates.set([r.a.x, r.a.z, r.b.x, r.b.z, r.width], i * 5));
+  return { references: roads.slice(), coordinates };
+}
+function unchangedRoads(roads: readonly Road[], saved: RoadState) {
+  if (roads.length !== saved.references.length) return false;
+  const values = saved.coordinates;
+  for (let i = 0; i < roads.length; i++) {
+    const r = roads[i],
+      n = i * 5;
+    if (
+      r !== saved.references[i] ||
+      r.a.x !== values[n] ||
+      r.a.z !== values[n + 1] ||
+      r.b.x !== values[n + 2] ||
+      r.b.z !== values[n + 3] ||
+      r.width !== values[n + 4]
+    )
+      return false;
+  }
+  return true;
+}
+const emptyRoads: readonly Road[] = [];
+const runwayFields = ['x', 'z', 'length', 'width', 'apronX', 'apronZ'] as const;
+const roadQueries = new WeakMap<
+  object,
+  {
+    starter: readonly Road[];
+    grown: RoadState;
+    landscape: RoadState;
+    retired: readonly string[];
+    airfield: World['airfield'];
+    result: readonly Road[];
+  }
+>();
 export function townRoads(
   w: Pick<
     World,
     'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads' | 'retiredRoads' | 'airfield'
   >,
 ): readonly Road[] {
-  return [
-    ...(w.creator?.roads === false ? [] : w.townLayout === 2 ? expandedRoads : legacyRoads),
-    ...landscapeRoads(w),
-    ...(w.roads ?? []),
-  ].filter((r) => !w.retiredRoads?.includes(roadKey(r)) && !runwayRoad(w, r));
+  const starter =
+    w.creator?.roads === false ? emptyRoads : w.townLayout === 2 ? expandedRoads : legacyRoads;
+  const landscape = w.landscape ? landscapeRoads(w) : emptyRoads;
+  const grown = w.roads ?? emptyRoads;
+  const retired = w.retiredRoads ?? [];
+  // Snapshots replace World/settings objects while retaining unchanged road arrays.
+  // Compare numeric geometry as well as references: server construction/editor
+  // code can mutate a segment or an array in place without a revision bump.
+  const key = w.roads ?? w.landscape ?? w.settings;
+  const previous = roadQueries.get(key);
+  if (
+    previous &&
+    previous.starter === starter &&
+    unchangedRoads(grown, previous.grown) &&
+    unchangedRoads(landscape, previous.landscape) &&
+    retired.length === previous.retired.length &&
+    retired.every((r, i) => r === previous.retired[i]) &&
+    !!w.airfield === !!previous.airfield &&
+    runwayFields.every((k) => w.airfield?.[k] === previous.airfield?.[k])
+  )
+    return previous.result;
+  const removed = new Set(retired);
+  const result = [...starter, ...landscape, ...grown].filter(
+    (r) => (!removed.size || !removed.has(roadKey(r))) && !runwayRoad(w, r),
+  );
+  roadQueries.set(key, {
+    starter,
+    grown: rememberRoads(grown),
+    landscape: rememberRoads(landscape),
+    retired: retired.slice(),
+    airfield: w.airfield ? { ...w.airfield } : undefined,
+    result,
+  });
+  return result;
 }
 export function roadDistance(roads: readonly Road[], x: number, z: number) {
   let closest = Infinity;

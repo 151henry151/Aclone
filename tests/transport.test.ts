@@ -72,3 +72,33 @@ test('large world entry and switching wait for the full snapshot ACK before queu
   flow.ack(switched);
   assert.equal(flow.ready, true);
 });
+
+test('slow acknowledgements reduce queued history per peer and recover on a fast connection', () => {
+  const slow = new SnapshotWindow(),
+    fast = new SnapshotWindow();
+  slow.ack(slow.next(0), 1200);
+  fast.ack(fast.next(0), 100);
+  slow.next(1200);
+  assert.equal(slow.ready, false, 'a slow peer must not queue a second obsolete update');
+  fast.next(100);
+  fast.next(100);
+  assert.equal(fast.ready, true, 'one slow peer must not restrict a fast peer');
+  slow.ack(999, 1300);
+  slow.ack(1, 1300);
+  assert.equal(slow.ready, false);
+  slow.ack(2, 1400);
+  assert.equal(slow.ready, true);
+  slow.next(1400);
+  slow.next(1400);
+  slow.next(1400);
+  assert.equal(slow.ready, false);
+  slow.ack(5, 2600);
+  slow.next(2600);
+  assert.equal(slow.ready, false, 'another delayed delivery narrows the window again');
+  slow.reset();
+  const switched = slow.next(2700);
+  slow.ack(6, 2750);
+  assert.equal(slow.ready, false);
+  slow.ack(switched, 2800);
+  assert.equal(slow.ready, true);
+});

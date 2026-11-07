@@ -2036,7 +2036,7 @@ export class GameScene {
             this.customTracks.delete(url);
           }
         const kind = trackKind(w.climate ?? {});
-        const roads = townRoads(w);
+        const roads = kind === 'snow' ? townRoads(w) : [];
         for (const [id, mesh] of this.meshes) {
           const q = w.players[id];
           if (!q || !(vehicleDef(w, q.vehicle).tracks ?? isTractor(q.vehicle)) || q.atHome)

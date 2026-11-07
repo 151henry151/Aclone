@@ -6,6 +6,15 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.4] - 2026-11-06
+
+### Fixed
+
+- Reuse unchanged road geometry for player and AI movement, parking enforcement and rendering; apply road construction and World Builder edits immediately without repeatedly rebuilding the whole network.
+- Skip road-network work for tyre tracks in dry weather while retaining snow and mud behavior.
+- Reduce queued world updates on slow connections so outdated snapshots do not accumulate behind player controls; keep the normal update window for fast connections.
+- Deliver the connection welcome after a large initial world transfer so a working session no longer remains labelled CONNECTING.
+
 ## [0.131.3] - 2026-11-06
 
 ### Fixed

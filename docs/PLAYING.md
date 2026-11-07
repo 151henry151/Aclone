@@ -255,6 +255,12 @@ The speed display separates **ms ping** (sampled every five seconds) and **FPS**
 - High/variable ping: compare wired/Wi-Fi, stop large transfers, check hotspot signal and other players' readings. All-player spikes may mean server overload.
 - Report device/browser, graphics mode, ping/FPS and nearby player count. [Host checks](HOSTING.md#connection-and-multiplayer-checks) distinguish server load.
 
+Slow connections limit the number of world updates in transit, so old snapshots
+have less opportunity to build up. Faster connections retain their normal update
+window. A large first download should finish with the **CONNECTED** badge; refresh
+the page after an update to load the latest client. Road construction and World
+Builder changes still take effect while unchanged road geometry is reused.
+
 Version 0.115.0 network entry waits for the full world snapshot before queuing live updates, including when switching worlds. A slow first island download can still take time; the following updates start from current state.
 
 Version 0.115.0 rendering prepares road growth and building changes in small batches while the existing view stays visible. Detailed banks are prepared when snow first appears, so driving and controls continue during preparation.

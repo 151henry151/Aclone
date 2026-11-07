@@ -257,8 +257,13 @@ export async function createApp(options: AppOptions) {
     if (!a) throw Error('Sign in with your pilot key');
     return a;
   };
-  const send = (p: Peer, data: unknown) => {
-    if (p.socket.readyState === WebSocket.OPEN && p.socket.bufferedAmount < 1024 * 1024)
+  const send = (p: Peer, data: unknown, handshake = false) => {
+    // The single welcome must follow the initial snapshot even while that large
+    // snapshot is compressing. Dropping it leaves a healthy socket CONNECTING.
+    if (
+      p.socket.readyState === WebSocket.OPEN &&
+      (handshake || p.socket.bufferedAmount < 1024 * 1024)
+    )
       p.socket.send(typeof data === 'string' ? data : JSON.stringify(data));
   };
   const registry = () =>
@@ -914,12 +919,16 @@ export async function createApp(options: AppOptions) {
               send(p, { type: 'result', ok: false, message: (e as Error).message });
             }
           }
-          send(p, {
-            type: 'welcome',
-            account: p.account,
-            market: universe.market(p.account!.system),
-            galaxy: { ...galaxy, worlds: registry() },
-          });
+          send(
+            p,
+            {
+              type: 'welcome',
+              account: p.account,
+              market: universe.market(p.account!.system),
+              galaxy: { ...galaxy, worlds: registry() },
+            },
+            true,
+          );
           return;
         }
         if (!p.account) throw Error('Authenticate first');
