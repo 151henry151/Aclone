@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.3 — Quieter names in the world
+
+Human and AI pilot tags now use a smaller single-line name. They fade from 20 to
+40 metres by default, disappear farther away, and stay compact even close to the
+camera. Custom models follow the same rules. World Builder controls visibility,
+range, fade start, scale, opacity and maximum screen height; scenery view hides
+the tags. Building signs keep their existing behavior.
+
 ## 0.131.2 — Find your tractor
 
 Choose **Find tractor** on the HUD, in Menu or Inventory, or in phone Actions.

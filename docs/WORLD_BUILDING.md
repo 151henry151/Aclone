@@ -1871,3 +1871,21 @@ designs. Migration retains current drivers, converts spare legacy fuel tanks
 once to safe home kerbs or compatible garages, and leaves a tank pending when no
 safe site is available. Enabling persistence or resident parking also attempts
 this migration immediately. It never creates a parked machine in water.
+
+## Pilot name tags
+
+In **F10 → Rules → Pilot name tags**, configure human and AI name tags, including
+custom character and vehicle models. The canonical defaults are:
+
+- **Show pilot name tags**: on.
+- **Name-tag visibility range**: 40 metres; choose 1–1,000.
+- **Name-tag fade starts**: 20 metres; choose 0–1,000, no greater than visibility range.
+- **Name-tag model scale**: 0.6; choose 0.1–2.
+- **Name-tag opacity**: 0.8; choose 0–1. Zero hides tags.
+- **Maximum name-tag height**: 24 CSS pixels; choose 8–64.
+
+Tags use distance from the player, independently of camera orbit, and respect
+scene depth. The height cap includes custom model scaling. Scenery view hides
+tags; building signs retain their existing behavior. Invalid combinations are
+rejected without partially applying changes. These rules are saved with the
+world and included in exported designs; older worlds use the defaults.

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
+import type { NameTagRules } from '../shared/name-tag-rules';
 /**
  * Labels write no depth, so any transparent mesh drawn after them (the sea, glows, smoke)
  * would paint over them. Ordering them last keeps them on top.
@@ -30,28 +31,20 @@ export function label(
 }
 export function pilotLabel(name: string, canvas = document.createElement('canvas')) {
   canvas.width = 384;
-  canvas.height = 128;
+  canvas.height = 80;
   const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = 'rgba(20,34,37,.9)';
+  ctx.fillStyle = 'rgba(20,34,37,.55)';
   ctx.beginPath();
-  ctx.roundRect(4, 4, 376, 104, 22);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(180, 108);
-  ctx.lineTo(192, 124);
-  ctx.lineTo(204, 108);
+  ctx.roundRect(4, 4, 376, 72, 10);
   ctx.fill();
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#a9dbcb';
-  ctx.font = '600 19px sans-serif';
-  ctx.fillText('● PILOT', 192, 36);
-  ctx.fillStyle = '#fff4d8';
-  ctx.font = '600 28px sans-serif';
-  ctx.fillText(name.slice(0, 30), 192, 78, 348);
+  ctx.fillStyle = '#e6dfc9';
+  ctx.font = '500 42px sans-serif';
+  ctx.fillText(name.slice(0, 30), 192, 54, 348);
   const tag = new T.Sprite(
     new T.SpriteMaterial({ map: new T.CanvasTexture(canvas), depthWrite: false }),
   );
-  tag.scale.set(6, 2, 1);
+  tag.scale.set(6, 1.25, 1);
   tag.renderOrder = labelOrder;
   return tag;
 }
@@ -70,5 +63,39 @@ export function capWorldLabel(tag: T.Sprite, camera: T.PerspectiveCamera) {
   tag.scale.copy(original).multiplyScalar(Math.min(1, height / original.y));
   // The building shell is frozen, but this camera-sized sprite must keep moving.
   tag.matrixAutoUpdate = tag.matrixWorldAutoUpdate = true;
+  tag.updateMatrixWorld();
+}
+
+const pilotWorldScale = new T.Vector3();
+/** Player proximity is independent of camera orbit; pixel caps include custom parent scaling. */
+export function updatePilotLabel(
+  tag: T.Sprite,
+  viewer: { x: number; y: number; z: number },
+  actor: { x: number; y: number; z: number },
+  camera: T.PerspectiveCamera,
+  rules: NameTagRules,
+  viewportHeight: number,
+) {
+  const distance = Math.hypot(viewer.x - actor.x, viewer.y - actor.y, viewer.z - actor.z);
+  tag.visible =
+    rules.pilotNameTags && rules.pilotNameTagOpacity > 0 && distance < rules.pilotNameTagRange;
+  if (!tag.visible) return;
+  const fade =
+    distance <= rules.pilotNameTagFadeStart
+      ? 1
+      : (rules.pilotNameTagRange - distance) /
+        (rules.pilotNameTagRange - rules.pilotNameTagFadeStart);
+  tag.material.opacity = rules.pilotNameTagOpacity * fade;
+  const original = (tag.userData.labelScale ??= tag.scale.clone());
+  tag.scale.copy(original).multiplyScalar(rules.pilotNameTagScale);
+  tag.getWorldPosition(labelPosition);
+  camera.getWorldPosition(cameraPosition);
+  camera.getWorldDirection(labelDirection);
+  const depth = Math.max(0.001, labelPosition.sub(cameraPosition).dot(labelDirection));
+  const cap =
+    (2 * depth * Math.tan(T.MathUtils.degToRad(camera.fov) / 2) * rules.pilotNameTagMaxPixels) /
+    Math.max(1, viewportHeight);
+  tag.getWorldScale(pilotWorldScale);
+  tag.scale.multiplyScalar(Math.min(1, cap / Math.max(0.001, pilotWorldScale.y)));
   tag.updateMatrixWorld();
 }

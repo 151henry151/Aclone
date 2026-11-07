@@ -606,5 +606,11 @@
   "buildingDoorSoundRange": 40,
   "buildingDoorSwingDegrees": 110,
   "buildingInteriorThreshold": 0.02,
-  "buildingInteriorDetail": "full"
+  "buildingInteriorDetail": "full",
+  "pilotNameTags": true,
+  "pilotNameTagRange": 40,
+  "pilotNameTagFadeStart": 20,
+  "pilotNameTagScale": 0.6,
+  "pilotNameTagOpacity": 0.8,
+  "pilotNameTagMaxPixels": 24
 }

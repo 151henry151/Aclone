@@ -1,3 +1,4 @@
+import { nameTagRules } from '../shared/name-tag-rules';
 import { withinBuildingRange } from '../shared/simulation';
 import { VehicleMountScene } from './vehicle-mount-animation';
 import { animateArrivalDoors } from './arrival-animation';
@@ -71,7 +72,7 @@ import { fadeSceneryIntoFog } from './scenery-fog';
 import { addFoundation } from './foundations';
 import { FrameSettle } from './frame-settle';
 import { GraphicsBudget, pacedRenderTime } from './graphics-budget';
-import { label, pilotLabel, capWorldLabel } from './labels';
+import { label, pilotLabel, capWorldLabel, updatePilotLabel } from './labels';
 import { saleTag, saleTagText } from './sale-tag';
 import { DrunkVision } from './drunk-vision';
 import { impairment } from '../shared/intoxication';
@@ -651,9 +652,10 @@ export class GameScene {
         configureVehicleVisual(mesh, world, displayVehicle);
         mesh.userData.creatorKey = visualKey;
         if (visual && p.id !== me) {
-          const tag = label(p.name + (p.npc ? ' · AI' : ''));
-          tag.position.y = visual.height + 1;
+          const tag = pilotLabel(p.name + (p.npc ? ' · AI' : ''));
+          tag.position.y = visual.height + 0.4;
           mesh.add(tag);
+          mesh.userData.pilotLabel = tag;
         }
         mesh.userData.paint = paint;
         mesh.userData.vehicle = displayVehicle;
@@ -1468,9 +1470,10 @@ export class GameScene {
     }
     if (name) {
       const tag = pilotLabel(name);
-      tag.position.y = slot === 5 ? 2.6 : 5;
-      if (slot === 5) tag.scale.set(3.5, 1.15, 1);
+      tag.position.y = slot === 5 ? 2.2 : 4;
+      if (slot === 5) tag.scale.multiplyScalar(3.5 / tag.scale.x);
       g.add(tag);
+      g.userData.pilotLabel = tag;
     }
     this.ocean?.absorb(g);
     return g;
@@ -2320,6 +2323,14 @@ export class GameScene {
         if (this.projectiles.instanceColor) this.projectiles.instanceColor.needsUpdate = true;
       }
       const scenic = document.documentElement.classList.contains('scenery-view');
+      const tags = nameTagRules(w.settings);
+      for (const mesh of this.meshes.values()) {
+        const tag = mesh.userData.pilotLabel as T.Sprite | undefined;
+        if (tag) {
+          updatePilotLabel(tag, p, mesh.position, this.camera, tags, this.container.clientHeight);
+          if (scenic) tag.visible = false;
+        }
+      }
       if (scenic !== this.labelsHidden) {
         this.land.traverse((o) => {
           if (o instanceof T.Sprite) o.visible = !scenic;

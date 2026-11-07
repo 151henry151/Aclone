@@ -1,3 +1,4 @@
+import { nameTagFields, nameTagRules } from '../shared/name-tag-rules';
 import { parkingFields, parkingRules } from '../shared/parking-rules';
 import { buildingDoorFields, buildingDoorRules } from '../shared/building-doors';
 import { meatRuleFields, meatRules, type MeatRules } from '../shared/meat-rules';
@@ -178,6 +179,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(meatRuleFields),
     ...Object.keys(buildingDoorFields),
     ...Object.keys(parkingFields),
+    ...Object.keys(nameTagFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -717,6 +719,22 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Young animals mature only with healthy care. Existing adults remain adults. Growth is measured in game days; continuous breeding requires farm investment and space.</p></fieldset>`;
+  const tags = nameTagRules(settings);
+  const nameTagControls = `<fieldset><legend>Pilot name tags</legend>${Object.entries(nameTagFields)
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            tags[key as keyof typeof tags],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${tags[key as keyof typeof tags] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Human and AI names fade with distance from your character. Fade start must not exceed visibility range. Screen height caps keep nearby names compact; scenery view hides them. Building signs keep their own visibility.</p></fieldset>`;
   const parking = parkingRules(settings);
   const parkedFields = `<fieldset><legend>Parked vehicles and arrivals</legend>${Object.entries(
     parkingFields,
@@ -904,6 +922,7 @@ export function settingsFields(settings: Settings = defaults) {
     waterFields +
     herdFields +
     doorFields +
+    nameTagControls +
     parkedFields +
     meatFields +
     radioFields +

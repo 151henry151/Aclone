@@ -1,3 +1,4 @@
+import type { NameTagRules } from './name-tag-rules';
 import type { ParkingRules } from './parking-rules';
 import type { BuildingDoorRules } from './building-doors';
 import type { LivestockRules } from './livestock-rules';
@@ -401,6 +402,7 @@ export interface Settings
     Partial<MeatRules>,
     Partial<BuildingDoorRules>,
     Partial<ParkingRules>,
+    Partial<NameTagRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,

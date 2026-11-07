@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.3] - 2026-11-06
+
+### Fixed
+
+- Keep human and AI pilot name tags small and single-line, fade them between 20 and 40 metres by default, and hide them at greater distances or in scenery view.
+- Apply the same quiet tags to custom models, preserve depth occlusion, and cap nearby tag height on screen.
+- Configure tag visibility, proximity, scale, opacity and screen height per world, with validated settings and portable world designs.
+
 ## [0.131.2] - 2026-11-06
 
 ### Fixed

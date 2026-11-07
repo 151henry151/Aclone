@@ -8,6 +8,11 @@ the full rules and galaxy map. Expand **World rules & settings** to inspect a
 world's rules; player-created worlds are labelled separately. Other systems
 also have server-hosted worlds, and you can still create your own parish.
 
+Pilot name tags are compact single-line labels. By default they fade between
+20 and 40 metres from you and disappear beyond that; AI neighbours keep their
+**AI** suffix. Scenery view (**H**) hides them. Each world can set its own name-tag
+visibility, distance, size and opacity.
+
 ## Your first day
 
 1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 12d for the first eight in a row, then less until a ten-minute break or some other work, and at most 200d of ordinary pay per game day. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes and does not count toward that cap. The button shows your current payment.

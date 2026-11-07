@@ -1,3 +1,4 @@
+import { nameTagRules } from './name-tag-rules';
 import { parkingRules } from './parking-rules';
 import { buildingDoorRules } from './building-doors';
 import { obstacleRules } from './obstacle-rules';
@@ -105,6 +106,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
   const climate = climateRules(s);
   const navigation = boatNavigationRules(s);
   const doors = buildingDoorRules(s);
+  const tags = nameTagRules(s);
   const parking = parkingRules(s);
   const farmYields = farmYieldRules(s);
   const gatheringRates = gatheringRules(s);
@@ -119,6 +121,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     `Climate: wet-event chances spring ${climate.climateSpringWetChance}, summer ${climate.climateSummerWetChance}, autumn ${climate.climateAutumnWetChance}, winter ${climate.climateWinterWetMin}–${climate.climateWinterWetMax}; storm strength threshold ${climate.climateStormThreshold}, snowy-event blizzard chance ${climate.climateBlizzardChance}. Natural snow ${climate.climateSnowPerStrength} × strength + ${climate.climateBlizzardSnow} during blizzards, forced snow/snowstorm ${climate.climateForcedSnow}/${climate.climateForcedSnowstorm} m/day. Event gaps and saved snow persist.`,
     `Freight quay vessel limits: ${navigation.quayMaxLength} × ${navigation.quayMaxBeam} m. Extra seaward berth search: ${navigation.boatBerthSearchDistance} m; full hull depth and clearance are required.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,
+    `Pilot name tags: ${tags.pilotNameTags}, fade ${tags.pilotNameTagFadeStart}–${tags.pilotNameTagRange} m, scale ${tags.pilotNameTagScale}, opacity ${tags.pilotNameTagOpacity}, maximum ${tags.pilotNameTagMaxPixels} pixels.`,
     `Parking: persistent ${parking.vehiclesPersist}, residents ${parking.parkingNpcs}, sign-off ${parking.parkingSignOff}; grace ${parking.parkingGraceDays} game days, tow fee ${parking.parkingTowFee} hundredths; return/refuel ${parking.parkingReturnRange} m, door offset ${parking.parkingDoorOffset} m, kerb search ${parking.parkingSearchRange} m. Mount ${parking.parkingMountSeconds}s; arrivals ${parking.arrivalAnimation}, quick ${parking.arrivalQuickSeconds}s, full ${parking.arrivalMinSeconds}–${parking.arrivalMaxSeconds}s, approach ${parking.arrivalRange} m, door ${parking.arrivalDoorDegrees}°.`,
     `Building doors: ${doors.buildingDoorMode}, ${doors.buildingDoorOpenHour}–${doors.buildingDoorCloseHour}h, stagger ±${doors.buildingDoorOffsetMinutes} minutes, unstaffed closure ${doors.buildingDoorUnstaffedClosed}; motion ${doors.buildingDoorSeconds}s, animation ${doors.buildingDoorAnimateRange}m, sound ${doors.buildingDoorSoundRange}m, swing ${doors.buildingDoorSwingDegrees}°, visibility above ${doors.buildingInteriorThreshold}; interiors ${doors.buildingInteriorDetail}.`,
     `Boat navigation: shore impact ${navigation.boatShoreImpactLoss} condition; afloat arrival radii ${navigation.boatHouseArrivalRadius} m at boathouses / ${navigation.boatLandingArrivalRadius} m at pier/river landings; shore boarding ${navigation.boatLandingShoreRadius} m at landings. Hull orientation, water path and collision blocking remain required.`,

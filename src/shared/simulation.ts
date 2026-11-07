@@ -1,3 +1,4 @@
+import { nameTagFields, nameTagRules } from './name-tag-rules';
 import { beginVehicleMount } from './vehicle-mount';
 import { kerbParking } from './parking-site';
 import { approachBuilding, exitBuilding, finishArrival, animatedArrival } from './arrival';
@@ -2408,6 +2409,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(meatRuleFields, key) ||
             Object.hasOwn(buildingDoorFields, key) ||
             Object.hasOwn(parkingFields, key) ||
+            Object.hasOwn(nameTagFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2468,6 +2470,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           num(v, obstacleField.min, obstacleField.max);
           if (obstacleField.step === 1) requireThat(Number.isInteger(v), 'Use a whole number');
         }
+        const nameTagField = nameTagFields[key as keyof typeof nameTagFields];
+        if (nameTagField && 'min' in nameTagField)
+          num(v, nameTagField.min, nameTagField.max, nameTagField.step === 1);
         const parkingField = parkingFields[key as keyof typeof parkingFields];
         if (parkingField && 'min' in parkingField)
           num(v, parkingField.min, parkingField.max, parkingField.step === 1);
@@ -2653,6 +2658,11 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         if (key === 'mapSize') num(v, minMapSize, maxMapSize, true);
         (clean as Record<string, unknown>)[key] = v;
       }
+      const tags = nameTagRules({ ...w.settings, ...clean });
+      requireThat(
+        tags.pilotNameTagFadeStart <= tags.pilotNameTagRange,
+        'Fade start must not exceed name-tag visibility range',
+      );
       const arrival = parkingRules({ ...w.settings, ...clean });
       requireThat(
         arrival.arrivalMinSeconds <= arrival.arrivalMaxSeconds,

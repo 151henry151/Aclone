@@ -7255,3 +7255,35 @@ The bot announcement and screenshot were posted and re-read:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1568423446700884100
 Website backup: `/var/backups/aclone-website/site-20261106-193438.tar.gz`.
 Full backup and verification records: `output/release-0.131.2/`.
+
+### Priority fix — Quieter proximity-based pilot name tags (2026-11-06)
+
+Before production edits, require human and AI pilot tags (including custom models)
+to use a smaller single-line name, with no large PILOT heading or pointer. Preserve
+AI identification and depth occlusion. Fade by distance from the player, not the
+camera; default to full opacity through 20 m, fade out by 40 m, 60% model scale,
+80% opacity and a maximum 24 CSS-pixel height. Hide tags in scenery view.
+
+Keep those defaults only in `data/settings.json`. Expose enabled, range, fade
+start, scale, opacity and maximum height in World Builder; validate finite bounds
+and fade-start ≤ range atomically, preserve old-save defaults, and round-trip the
+rules through saved worlds and exported designs. Building signs remain unchanged.
+
+Commands: `npx tsx --test tests/labels.test.ts tests/pilot-labels.test.ts` and
+`TEST_GPU=1 node --import tsx node_modules/@playwright/test/cli.js test tests/browser/pilot-labels.spec.ts`.
+Browser steps: view nearby human/AI/custom-model pilots, compare fading at 30 m
+and hidden tags at 40 m or farther, change the range/opacity/switch in F10 Rules,
+verify the all-hidden state and rejected invalid settings, and inspect desktop
+and phone screenshots. Require clean TypeScript/Prettier and relevant regressions;
+then commit, push, deploy and announce independently of unfinished item 19.
+
+Name-tag verification: the pre-change test failed on the oversized two-line badge.
+All 22 relevant label, parked-render and ruleset tests now pass. They cover fade
+boundaries, disable/zero-opacity/reappearance, custom parent scaling in the pixel
+cap, unchanged sign depth behavior, atomic validation, old-save defaults and
+save/export/import round trips. The final browser flow passes nearby human/AI
+and custom-model tags, 30 m fading, distant hiding, scenery view, desktop/phone
+layouts, live F10 changes, invalid-range rejection and the all-hidden state.
+TypeScript is clean and changed files pass Prettier. Screenshots were inspected;
+labels sit closer to heads/vehicles and keep the AI suffix. Evidence:
+`output/release-0.131.3/`. Prepare patch release 0.131.3.

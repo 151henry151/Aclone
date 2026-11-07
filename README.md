@@ -4,7 +4,10 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.131.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.131.3 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.131.3 makes pilot names smaller and proximity-based. Nearby human and
+AI names fade with distance; World Builder controls their range, size and opacity.
 
 Version 0.131.2 adds **Find tractor** to the HUD and menus. Follow the navigation
 arrow to your nearest parked tractor or its storage garage, including from phone
