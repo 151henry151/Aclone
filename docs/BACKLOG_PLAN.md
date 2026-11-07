@@ -7548,3 +7548,46 @@ p95 51.9 ms, maximum 83.9 ms, no interval over 100 ms, maximum ping 60 ms.
 This is a local connection; live-server latency needs its own post-deploy check.
 No rendering behavior changed in this follow-up. Evidence is under
 `output/responsiveness-followup/` and `output/release-0.131.5/`.
+
+### Responsiveness follow-up — 0.131.5 deployed; daily road stall confirmed
+
+Release 77a649423749f0ffb9fb922409a952f487d4a718 is pushed and live with matching
+public assets (`index-vekHwjLB.js`), website, health and clean browser entry.
+The final local video review confirms continuous driving and release deceleration,
+with no visible collision, rubber-banding or missing terrain. A 45-second live
+profile leaves PID 361105 and restart count 0 unchanged and closes its inspector.
+378 health samples: median 1.47 ms, p95 24.06 ms, maximum 4,934.98 ms.
+The worst event is now directly attributed to daily growRoads: 4.78 seconds inside
+advance, including 3.87 seconds in roadComponents. NPC planning and disk batching
+repairs are live, but overall responsiveness remains open because of this stall.
+
+Next repair criteria, before production edits: road component discovery must skip
+far-away pairs, preserve exact connectivity (crossings, width-based touches,
+degenerate segments, duplicate references), and preserve deterministic group and
+road order used by planners. Add a failing mature-network work-count regression,
+compare against the existing exhaustive algorithm on mixed geometry, and run
+road growth/project/alignment/navigation tests. Replay the copied mature world at
+its next game-day boundary: require the growth call to return within 100 ms
+without changing generated roads, project or daily allowance. If eliminating
+quadratic comparisons is insufficient, retain that gate and make planning yield;
+do not claim the periodic freeze resolved based only on a component microtest.
+No ford behavior, road gameplay settings or unfinished item-19 content belongs
+in this independent repair.
+
+0.131.5 checkpoint slice: **Done and announced**, with the broader performance
+investigation continuing. Verified bot post and screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568471928954556558
+The announcement explicitly identifies daily road growth as the next unresolved
+stall rather than claiming every hitch is fixed.
+
+The component regression fails at 8,020,012 exact distance calls on 2,003 separated
+segments. A counter-only harness replaces the initial call-recording mock, which
+exhausted its heap by retaining millions of call records; that harness failure is
+not application evidence. Spatial candidates pass the exact-connectivity/order
+comparison and cut the microtest to 10.5 ms. However mature-world daily growth
+still takes 809.5 ms (down from 4,839.7 ms), above the unchanged 100 ms gate.
+Its persisted result matches after normalizing omitted undefined JSON fields.
+Proceed with resumable planning, retaining the gate for every slice and preserving
+the eventual exact road/project/daily-allowance result. New red tests require
+unfinished work to persist through restart and invalidate on a flood edit before
+laying any road. Keep route generation behavior unchanged; only schedule its work.
