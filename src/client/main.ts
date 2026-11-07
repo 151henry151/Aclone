@@ -676,18 +676,28 @@ async function showGalaxy() {
   inSpace = true;
   scene.setSpace();
   $('world-hud').hidden = true;
-  try {
-    const [directory, connections] = await Promise.all([
-      api('/api/galaxy'),
-      api('/api/federation'),
-    ]);
-    registry = directory.worlds;
-    connectedGalaxies = connections;
-  } catch {}
+  const [directory, connections] = await Promise.allSettled([
+    api('/api/galaxy'),
+    api('/api/federation'),
+  ]);
+  if (directory.status === 'fulfilled') registry = directory.value.worlds;
+  if (connections.status === 'fulfilled') connectedGalaxies = connections.value;
   if (!account) return;
+  // The built-in world's identity survives ownership changes; names are not unique.
+  const isMainWorld = (r: (typeof registry)[number]) => r.id === 'puddlewick';
+  const localWorlds = registry
+    .filter((r) => r.system === account!.system)
+    .sort((a, b) => Number(isMainWorld(b)) - Number(isMainWorld(a)));
   const system = galaxy.systems.find((s) => s.id === account!.system)!;
   $('overlay').innerHTML =
-    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">${esc(connectedGalaxies.name ?? 'GALACTIC DIRECTORY')} / ${esc(system.name.toUpperCase())} SYSTEM · HAZARD ${system.hazard}/4</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.traveler?.name ?? account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div>${account.transit ? `<div class="notice">Jumping to ${esc(galaxy.systems.find((s) => s.id === account!.transit!.destination)?.name)}. <span id="jump-countdown">${Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000))}</span>s until arrival. Your flight is saved if you disconnect.</div>` : ''}<div class="star-map"><svg viewBox="0 0 700 260" role="img" aria-label="Galaxy map; bright routes are within your current jump range">${galaxy.systems
+    `<div class="galaxy-view"><div class="galaxy-heading"><div><span class="eyebrow">${esc(connectedGalaxies.name ?? 'GALACTIC DIRECTORY')} / ${esc(system.name.toUpperCase())} SYSTEM · HAZARD ${system.hazard}/4</span><h1>Somewhere to call home.</h1><p>A handful of worlds. A pleasantly unreasonable number of possibilities.</p></div><div class="pilot-card">${esc(account.traveler?.name ?? account.name)}<b>${account.credits} <small>cr</small></b><span>${esc(galaxy.ships.find((s) => s.id === account!.ship)!.name)}</span></div></div>${account.transit ? `<div class="notice">Jumping to ${esc(galaxy.systems.find((s) => s.id === account!.transit!.destination)?.name)}. <span id="jump-countdown">${Math.max(0, Math.ceil(account.transit.arrives - Date.now() / 1000))}</span>s until arrival. Your flight is saved if you disconnect.</div>` : ''}${directory.status === 'rejected' ? '<p class="notice" role="status">The world directory could not be refreshed. Showing the last available worlds.</p>' : ''}${localWorlds.length ? '' : '<p class="notice">No worlds in this system yet.</p>'}<div class="world-cards">${localWorlds
+      .map(
+        (r, i) =>
+          `<article class="world-card${isMainWorld(r) ? ' main-world' : ''}"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><div class="world-origin">${isMainWorld(r) ? 'Main world <span>Recommended for new pilots</span>' : r.owner === 'server' ? 'Server-hosted world' : 'Player-created world'}</div><h2>${esc(r.name)}</h2>${recentlyVisited(r.id) ? '<small>Recently visited</small>' : ''}<p>${isMainWorld(r) ? 'Start here for village life, jobs, farming and adventures with the community.' : r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p>${button('Land on this world <span>↗</span>', 'land', `data-id="${esc(r.id)}" ${account!.transit ? 'disabled' : ''}`, 'primary wide')}<div class="world-facts"><span>PERSISTENT WORLD</span>${r.owner === account!.id ? '<span>YOUR WORLD</span>' : ''}</div><details class="world-rules"><summary>World rules & settings</summary><p>${esc(r.rules ?? 'Inspect world rules after landing.')}</p></details></div></article>`,
+      )
+      .join(
+        '',
+      )}<article class="create-card"><div class="create-mark">+</div><h2>Make your own parish.</h2><p>Your terrain. Your economy.<br>Your deeply questionable rules.</p>${button('Create a world', 'create', '', 'wide')}</article></div><div class="star-map"><svg viewBox="0 0 700 260" role="img" aria-label="Galaxy map; bright routes are within your current jump range">${galaxy.systems
       .flatMap((s, i) =>
         galaxy.systems
           .slice(i + 1)
@@ -699,15 +709,7 @@ async function showGalaxy() {
       )
       .join(
         '',
-      )}${galaxy.systems.map((s) => `<circle cx="${80 + (s.x + 3) * 28}" cy="${220 - s.y * 23}" r="${s.id === account!.system ? 8 : 5}" fill="${s.id === account!.system ? '#ffd889' : '#c7dbd8'}"/><text x="${90 + (s.x + 3) * 28}" y="${215 - s.y * 23}" fill="#ece8cc" font-size="13">${esc(s.name)}</text>`).join('')}</svg><p>${esc(shipStats(account).name)} · ${shipStats(account).range} pc jump range. Routes below show intermediate stops and fuel costs.</p></div><div class="world-cards">${registry
-      .filter((r) => r.system === account!.system)
-      .map(
-        (r, i) =>
-          `<article class="world-card"><div class="world-art art-${i % 3}"><div class="planet"></div><span class="world-type">${esc(r.template.toUpperCase())}</span><span class="world-online">● ${r.players} ONLINE</span></div><div class="world-detail"><h2>${esc(r.name)}</h2>${recentlyVisited(r.id) ? '<small>Recently visited</small>' : ''}<p>${r.template === 'economy' ? 'An honest living, a village green, and the occasional tractor-related incident.' : r.template === 'combat' ? 'Settle differences with wildly disproportionate farm machinery.' : 'Boats, biplanes, and a conspicuous lack of responsibility.'}</p><p>${esc(r.rules ?? 'Inspect world rules after landing.')}</p><div class="world-facts"><span>PERSISTENT WORLD</span><span>${r.owner === account!.id ? 'YOUR WORLD' : 'COMMUNITY PARISH'}</span></div>${button('Land on this world <span>↗</span>', 'land', `data-id="${r.id}" ${account!.transit ? 'disabled' : ''}`, 'primary wide')}</div></article>`,
-      )
-      .join(
-        '',
-      )}<article class="create-card"><div class="create-mark">+</div><h2>Make your own parish.</h2><p>Your terrain. Your economy.<br>Your deeply questionable rules.</p>${button('Create a world', 'create', '', 'wide')}</article></div><div class="galaxy-bottom"><div><span class="eyebrow">FURTHER AFIELD</span><div class="button-row">${galaxy.systems
+      )}${galaxy.systems.map((s) => `<circle cx="${80 + (s.x + 3) * 28}" cy="${220 - s.y * 23}" r="${s.id === account!.system ? 8 : 5}" fill="${s.id === account!.system ? '#ffd889' : '#c7dbd8'}"/><text x="${90 + (s.x + 3) * 28}" y="${215 - s.y * 23}" fill="#ece8cc" font-size="13">${esc(s.name)}</text>`).join('')}</svg><p>${esc(shipStats(account).name)} · ${shipStats(account).range} pc jump range. Routes below show intermediate stops and fuel costs.</p></div><div class="galaxy-bottom"><div><span class="eyebrow">FURTHER AFIELD</span><div class="button-row">${galaxy.systems
       .filter((s) => s.id !== account!.system)
       .map((s) =>
         button(

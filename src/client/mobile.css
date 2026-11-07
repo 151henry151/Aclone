@@ -602,8 +602,7 @@
   font-size: 30px;
 }
 .mobile-ui .pilot-card {
-  display: block;
-  margin-bottom: 16px;
+  display: none;
 }
 .mobile-ui .world-cards {
   grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));

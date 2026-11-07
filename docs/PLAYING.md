@@ -2,6 +2,12 @@
 
 Start with a pilot name; keep its private recovery key and set a password in **Pilot & preferences**. Verified email recovery requires host mail setup. See [controls/FAQ](FAQ.md) and [touch controls](MOBILE.md).
 
+After choosing your pilot name, select **Puddlewick — Main world**, recommended
+for new pilots, then **Land on this world**. The landing button appears before
+the full rules and galaxy map. Expand **World rules & settings** to inspect a
+world's rules; player-created worlds are labelled separately. Other systems
+also have server-hosted worlds, and you can still create your own parish.
+
 ## Your first day
 
 1. Drive to the Odd Jobs Office; E/Ctrl opens it. A 15-second labour shift pays 12d for the first eight in a row, then less until a ten-minute break or some other work, and at most 200d of ordinary pay per game day. Below 50d combined cash and bank, meal relief pays 150d at most once per 30 minutes and does not count toward that cap. The button shows your current payment.

@@ -409,7 +409,7 @@ kbd {
 }
 .world-detail p {
   font-size: 12px;
-  min-height: 60px;
+  min-height: 0;
 }
 .world-facts {
   display: flex;
@@ -3011,4 +3011,70 @@ html:not(.mobile-ui).hud-hide-chat #target:has(.hint) {
 }
 #task-control.arrival-progress #task-caption {
   font-size: 12px;
+}
+
+/* Put a new pilot's first landing ahead of maps and the complete rules reference. */
+.main-world {
+  grid-column: 1 / -1;
+  max-width: none;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  border-color: #d8c788;
+}
+.main-world .world-art {
+  height: 100%;
+  min-height: 165px;
+}
+.main-world .primary {
+  width: auto;
+  min-width: 220px;
+}
+.world-origin {
+  color: #e7d498;
+  font-size: 12px;
+  font-weight: 600;
+}
+.world-origin span {
+  display: inline-block;
+  margin-left: 12px;
+  color: #c1cfb6;
+  font-weight: 400;
+}
+.world-rules {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.world-rules summary {
+  cursor: pointer;
+  color: #c1cfb6;
+  font-size: 12px;
+}
+.world-detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .galaxy-heading {
+    margin-bottom: 20px;
+  }
+  .galaxy-heading h1 {
+    font-size: 28px;
+  }
+  .galaxy-heading p {
+    display: none;
+  }
+  .main-world {
+    display: block;
+  }
+  .main-world .world-art {
+    display: none;
+  }
+  .world-origin span {
+    display: block;
+    margin: 4px 0 0;
+  }
+  .main-world .primary {
+    width: 100%;
+    min-width: 0;
+  }
 }

@@ -7155,3 +7155,41 @@ Progress: all 20 shipped claims assessed (17 matches, three gaps fixed); **16 of
 item 19 in its recorded internal order: read-only settlement/economics survey,
 then persistent alternate dirt routes and ford routing before paving or bridges.
 Piloted spaceflight remains excluded.
+
+### Priority fix — New-pilot world selection (2026-11-06)
+
+Pause item 19 without including its unfinished road changes in this release.
+Completion criteria, recorded before production edits:
+
+- Run `TEST_GPU=1 node --import tsx node_modules/@playwright/test/cli.js test tests/browser/pilot-entry.spec.ts`.
+- Register a new pilot at 1440 × 900, 390 × 844 and 320 × 568. Without scrolling,
+  the full Puddlewick landing button must fit in the viewport and land in the world.
+- Put the built-in Puddlewick first (including after ownership changes) even when the directory is reordered;
+  label it **Main world — Recommended for new pilots**. Label player-created
+  worlds distinctly, including one also named Puddlewick. Preserve other worlds.
+- Keep the complete existing rules available behind an initially closed disclosure;
+  keep landing above the disclosure and galaxy navigation after world choices.
+- Show an explicit empty-directory message with world creation still available;
+  explain refresh failures while retaining the last known world list.
+- Check browser errors, horizontal overflow and the real landing flow. Inspect
+  desktop/phone screenshots. Run relevant galaxy/server tests, `npx tsc --noEmit`,
+  and Prettier on changed files. Commit, push, deploy and announce the verified fix.
+
+Red test confirmed before production edits: the 1440 × 900 browser measured the
+landing button bottom at 4,989 px. The live directory confirms Puddlewick has an
+assigned owner, so identify the built-in main world by its permanent ID, not by
+owner or display name.
+
+Verification: all five browser checks pass, including actual new-pilot registration
+and landings at all three sizes, name-collision/ownership/reordered-directory
+coverage, full rules disclosure, and empty/503 directory states. Screenshots
+`output/pilot-entry/welcome-desktop.png` and `welcome-phone.png` were inspected;
+the phone layout omits the cramped credits/ship box. The 17 targeted galaxy,
+account and server tests pass (`npx tsx --test tests/galaxy.test.ts tests/server.test.ts tests/accounts.test.ts`).
+Release evidence is under `output/release-0.131.1/`; deployment and announcement
+must be verified before marking this fix done.
+
+`npx tsc --noEmit` is clean, changed files pass Prettier, and
+`npm run check:website` passes its four-width navigation/gallery checks. The
+recorded first-flight walkthrough was reviewed and confirms both directory
+layouts followed by arrival in Puddlewick. Prepare patch release 0.131.1.

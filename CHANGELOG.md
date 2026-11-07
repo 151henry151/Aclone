@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.1] - 2026-11-06
+
+### Fixed
+
+- Put Puddlewick first in the world picker and label it as the main world recommended for new pilots; distinguish player-created worlds.
+- Keep the landing button in view on desktop and phones, move the galaxy map below world choices, and fold the complete rules into an expandable reference.
+- Explain empty directories and refresh failures while retaining available world choices.
+
 ## [0.131.0] - 2026-11-06
 
 ### Added

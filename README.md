@@ -4,7 +4,11 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.131.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.131.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.131.1 makes your first landing easier: Puddlewick appears first as the
+recommended main world, with its landing button visible on desktop and phones.
+Player-created worlds are labelled separately; full rules expand when wanted.
 
 Version 0.131.0 makes parked tractors and grounded aircraft stay where you leave
 them, with their fuel, paint and hitched trailers. Walk back using the map marker,

@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.1 — A clearer first landing
+
+Puddlewick now leads the directory with a **Main world** recommendation. New
+pilots can reach its landing button without scrolling on desktop or phones.
+Player-created worlds are clearly labelled, the galaxy map follows the world
+choices, and the full rules remain available in an expandable reference. Empty
+directories and failed refreshes now explain what happened.
+
 ## 0.131.0 — Your tractor stays where you leave it
 
 Leave a tractor or grounded aircraft and it remains as an empty physical vehicle,
