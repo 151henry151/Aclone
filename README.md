@@ -4,7 +4,11 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.131.4 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.131.5 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.131.5 spreads NPC route planning across short server turns and batches
+checkpoint writes to reduce movement stalls. Saves retain full disk durability;
+failed saves keep their pending chat and ledger history for retry.
 
 Version 0.131.4 removes repeated road-network preparation from movement
 and parking checks, reduces queued updates on slow connections, and fixes the

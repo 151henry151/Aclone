@@ -19,6 +19,7 @@ import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
   private transactionDepth = 0;
+  private commitActions: (() => void)[][] = [];
   constructor(public path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
@@ -123,12 +124,14 @@ export class Store {
   transaction<T>(fn: () => T): T {
     const level = this.transactionDepth++,
       savepoint = `nested_${level}`;
+    const committed: (() => void)[] = [];
+    this.commitActions.push(committed);
     try {
       this.db.exec(level ? `SAVEPOINT ${savepoint}` : 'BEGIN IMMEDIATE');
+      let out: T;
       try {
-        const out = fn();
+        out = fn();
         this.db.exec(level ? `RELEASE ${savepoint}` : 'COMMIT');
-        return out;
       } catch (e) {
         if (level) {
           this.db.exec(`ROLLBACK TO ${savepoint}`);
@@ -136,7 +139,11 @@ export class Store {
         } else this.db.exec('ROLLBACK');
         throw e;
       }
+      if (level) this.commitActions[level - 1].push(...committed);
+      else for (const cleanup of committed) cleanup();
+      return out;
     } finally {
+      this.commitActions.pop();
       this.transactionDepth--;
     }
   }
@@ -173,11 +180,18 @@ export class Store {
       this.db
         .prepare('INSERT OR REPLACE INTO worlds VALUES (?,?,?)')
         .run(w.id, JSON.stringify({ ...w, ledger: w.ledger.slice(-100) }), now);
+      const savedMessages = new Set(pending);
+      const savedLedger = new Set(w.ledger.map((l) => l.id));
+      const retainedLedger = new Set(w.ledger.slice(-100).map((l) => l.id));
+      // Only release durable entries after the outermost transaction commits.
+      // Later events in the same batch remain queued for the next checkpoint.
+      this.commitActions.at(-1)!.push(() => {
+        const remaining = pending.filter((m) => !savedMessages.has(m));
+        pending.length = 0;
+        pending.push(...remaining);
+        w.ledger = w.ledger.filter((l) => !savedLedger.has(l.id) || retainedLedger.has(l.id));
+      });
     });
-    // An enclosing transaction may still roll back this save. Keep the buffer
-    // until a top-level save commits; duplicate rows are skipped on retry.
-    if (this.transactionDepth === 0) pending.length = 0;
-    w.ledger = w.ledger.slice(-100);
   }
   publicMessages(
     world: string,

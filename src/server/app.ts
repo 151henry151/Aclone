@@ -1182,10 +1182,16 @@ export async function createApp(options: AppOptions) {
             )
               void scriptEvent(w, 'Timer', { time: w.time }).catch(() => {});
           }
-          try {
-            residents?.tick(dt);
-          } catch (err) {
-            console.error('NPC tick failed:', err);
+          if (residents) {
+            // Resident actions in this turn share one durable commit. Catch a
+            // controller error inside the batch to retain earlier checkpoints.
+            store.transaction(() => {
+              try {
+                residents.tick(dt);
+              } catch (err) {
+                console.error('NPC tick failed:', err);
+              }
+            });
           }
           counter++;
           if (counter % 4 === 0) {
@@ -1193,8 +1199,10 @@ export async function createApp(options: AppOptions) {
             for (const p of peers) snapshot(p, frames);
           }
           if (counter % 100 === 0) {
-            for (const w of worlds.values()) store.saveWorld(w);
-            playtime.save();
+            store.transaction(() => {
+              for (const w of worlds.values()) store.saveWorld(w);
+              playtime.save();
+            });
           }
           if (counter % 600 === 0) {
             for (const [key, entry] of rate)

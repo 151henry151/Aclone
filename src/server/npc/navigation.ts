@@ -16,6 +16,11 @@ import {
 import type { Point } from '../../shared/town.ts';
 import { mapHalf, legacyHalf } from '../../shared/terrain.ts';
 const step = 4;
+/** Runtime scheduling budget, shared across resident planners in one server tick. */
+export const navigationWorkBudgetMs = 8;
+export interface PlanningBudget {
+  remainingMs: number;
+}
 /** The compact village grid; large maps use a window around each journey instead. */
 const villageWindow = { originX: -248, originZ: -248, sizeX: 125, sizeZ: 125 };
 /** Longest side of a journey window, in cells: about 1.6 km of countryside. */
@@ -67,10 +72,11 @@ function windowFor(w: World, from: Point, target: Point): Window {
     throw Error('Destination too far for a ground route; break the journey into stages');
   return { originX, originZ, sizeX, sizeZ };
 }
+type Planning<T> = Generator<void, T, void>;
 const cache = new WeakMap<World, Map<string, Grid>>();
-function grid(w: World, win: Window): Grid {
-  const key = JSON.stringify([
-    win,
+function geometryKey(w: World) {
+  return JSON.stringify([
+    w.settings,
     highWater(w),
     w.townLayout,
     w.settings.solidScenery,
@@ -94,8 +100,22 @@ function grid(w: World, win: Window): Grid {
     w.spaceportSite,
     w.creator?.objects,
     w.creator?.models.map((m) => [m.id, m.width, m.height, m.depth]),
-    w.buildings.map((b) => [b.id, b.kind, b.architecture, b.size, b.style, b.x, b.z, b.rotation]),
+    w.buildings.map((b) => [
+      b.id,
+      b.kind,
+      b.architecture,
+      b.size,
+      b.style,
+      b.x,
+      b.z,
+      b.rotation,
+      b.pasture,
+      !!b.construction,
+    ]),
   ]);
+}
+function* grid(w: World, win: Window): Planning<Grid> {
+  const key = JSON.stringify(win) + geometryKey(w);
   let grids = cache.get(w);
   if (!grids) cache.set(w, (grids = new Map()));
   const previous = grids.get(key);
@@ -104,6 +124,7 @@ function grid(w: World, win: Window): Grid {
   const clear = new Uint8Array(sizeX * sizeZ),
     heights = new Float32Array(sizeX * sizeZ);
   for (let i = 0; i < clear.length; i++) {
+    if (i % 64 === 0) yield;
     const p = point(win, i),
       h = terrainHeight(w, p.x, p.z);
     heights[i] = h;
@@ -114,6 +135,7 @@ function grid(w: World, win: Window): Grid {
   // Rasterize only a building's conservative bounding square, then use the
   // same exact rotated-volume collision test. Avoid cells × every building.
   for (const b of w.buildings) {
+    yield;
     const bounds = buildingBounds(buildingPlan(b));
     const radius = Math.hypot(
       Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 2.2,
@@ -123,12 +145,14 @@ function grid(w: World, win: Window): Grid {
     const maxX = Math.min(sizeX - 1, Math.floor((b.x + radius - originX) / step));
     const minZ = Math.max(0, Math.ceil((b.z - radius - originZ) / step));
     const maxZ = Math.min(sizeZ - 1, Math.floor((b.z + radius - originZ) / step));
-    for (let z = minZ; z <= maxZ; z++)
+    for (let z = minZ; z <= maxZ; z++) {
+      yield;
       for (let x = minX; x <= maxX; x++) {
         const i = z * sizeX + x;
         if (clear[i] && blocksBuilding(b, originX + x * step, originZ + z * step, 0, 2.2))
           clear[i] = 0;
       }
+    }
   }
   // Continuous edge checks below catch trunks between otherwise clear grid cells.
   const padding = 2.2;
@@ -138,15 +162,18 @@ function grid(w: World, win: Window): Grid {
     { x: originX + sizeX * step, z: originZ + sizeZ * step },
     padding,
   )) {
+    yield;
     const radius = o.radius + padding;
     const minX = Math.max(0, Math.ceil((o.x - radius - originX) / step));
     const maxX = Math.min(sizeX - 1, Math.floor((o.x + radius - originX) / step));
     const minZ = Math.max(0, Math.ceil((o.z - radius - originZ) / step));
     const maxZ = Math.min(sizeZ - 1, Math.floor((o.z + radius - originZ) / step));
-    for (let z = minZ; z <= maxZ; z++)
+    for (let z = minZ; z <= maxZ; z++) {
+      yield;
       for (let x = minX; x <= maxX; x++)
         if (Math.hypot(originX + x * step - o.x, originZ + z * step - o.z) < radius)
           clear[z * sizeX + x] = 0;
+    }
   }
   const value = { ...win, key, clear, heights };
   // A handful of recent windows per world: residents mostly repeat the same trips.
@@ -214,7 +241,12 @@ function canEscape(w: World, from: Point, to: Point) {
 }
 /** Use the saved, checked access road for long port journeys. Local A* still
  * handles both ends, and current obstacles are checked before starting. */
-function portJourney(w: World, from: Point, target: Point, radius: number): Point[] | undefined {
+function* portJourney(
+  w: World,
+  from: Point,
+  target: Point,
+  radius: number,
+): Planning<Point[] | undefined> {
   const road = w.spaceportSite?.access;
   if (!road?.length) return;
   const path =
@@ -223,29 +255,37 @@ function portJourney(w: World, from: Point, target: Point, radius: number): Poin
       : [...road].reverse();
   if (distance(from, path[0]) > 1000 || distance(target, path[path.length - 1]) > 1000) return;
   const site = roadSite(w, 4);
-  if (path.slice(1).some((p, i) => !site.segment(path[i], p)))
-    throw Error('Spaceport access road is obstructed');
-  const start = route(w, from, path[0], 3, false),
-    end = route(w, path[path.length - 1], target, radius, false);
+  for (let i = 1; i < path.length; i++) {
+    yield;
+    if (!site.segment(path[i - 1], path[i])) throw Error('Spaceport access road is obstructed');
+  }
+  const start = yield* routeSteps(w, from, path[0], 3, false);
+  const end = yield* routeSteps(w, path[path.length - 1], target, radius, false);
   return [
     ...start,
     ...path.slice(1).flatMap((p, i) => roadSamples({ a: path[i], b: p, width: 4 }, 4).slice(1)),
     ...end,
   ];
 }
-function route(w: World, from: Point, target: Point, radius: number, usePort = true) {
+function* routeSteps(
+  w: World,
+  from: Point,
+  target: Point,
+  radius: number,
+  usePort = true,
+): Planning<Point[]> {
   if (
     usePort &&
     w.spaceportSite?.access &&
     (Math.max(Math.abs(from.x - target.x), Math.abs(from.z - target.z)) > 1300 ||
       distance(from, w.spaceportSite) < 200 !== distance(target, w.spaceportSite) < 200)
   ) {
-    const staged = portJourney(w, from, target, radius);
+    const staged = yield* portJourney(w, from, target, radius);
     if (staged) return staged;
   }
 
-  const g = grid(w, windowFor(w, from, target)),
-    { clear, heights, sizeX, sizeZ } = g,
+  const g = yield* grid(w, windowFor(w, from, target));
+  const { clear, heights, sizeX, sizeZ } = g,
     size = sizeX,
     start = index(g, from),
     queue = new Queue(),
@@ -255,6 +295,7 @@ function route(w: World, from: Point, target: Point, radius: number, usePort = t
   cost[start] = 0;
   queue.push(start, 0);
   while (queue.a.length) {
+    yield;
     const i = queue.pop().id;
     if (closed[i]) continue;
     closed[i] = 1;
@@ -305,28 +346,43 @@ function route(w: World, from: Point, target: Point, radius: number, usePort = t
   }
   throw Error('No safe ground route to that destination');
 }
+function route(w: World, from: Point, target: Point, radius: number) {
+  const work = routeSteps(w, from, target, radius);
+  let result = work.next();
+  while (!result.done) result = work.next();
+  return result.value;
+}
 const idle: Input = { throttle: 0, steer: 0, boost: false };
 /** Only steering/throttle: the shared move() remains authoritative for collision,
  * fuel, snow/rain grip, speed and heading. No teleport or strategy decisions. */
 export class Navigator {
-  private path: Point[];
+  private path: Point[] = [];
+  private planning?: { work?: Planning<Point[]>; key?: string; from?: Point };
+  private planningError?: string;
   private next = 0;
   private elapsed = 0;
   private stuck = 0;
   private last: Point;
   private sample = 0;
-  private deadline: number;
+  private deadline = 240;
   constructor(
     w: World,
     p: Player,
     readonly target: Point,
     readonly radius: number,
     private exactArrival = false,
+    deferred = false,
   ) {
     // A service visit is already complete inside its range. Requiring a clear
     // grid endpoint here can fail beside an inflated building obstacle.
-    this.path = distance(p, target) <= radius ? [] : route(w, p, target, radius);
     this.last = { x: p.x, z: p.z };
+    if (distance(p, target) > radius) {
+      if (deferred) this.planning = {};
+      else this.path = route(w, p, target, radius);
+    }
+    this.setDeadline(p);
+  }
+  private setDeadline(p: Player) {
     let length = 0,
       from: Point = p;
     for (const point of this.path) {
@@ -341,8 +397,47 @@ export class Navigator {
   waypoints(): readonly Point[] {
     return this.path;
   }
-  step(w: World, p: Player, dt: number): { input: Input; arrived?: boolean; error?: string } {
+  step(
+    w: World,
+    p: Player,
+    dt: number,
+    budget: PlanningBudget = { remainingMs: navigationWorkBudgetMs },
+  ): { input: Input; arrived?: boolean; error?: string } {
     if (p.atHome || p.task) return { input: idle, error: 'Cannot travel while indoors or busy' };
+    if (this.planningError) return { input: idle, error: this.planningError };
+    if (this.planning) {
+      if (budget.remainingMs <= 0) return { input: idle };
+      const started = performance.now(),
+        planningUntil = started + budget.remainingMs;
+      try {
+        const key = geometryKey(w);
+        const job = this.planning;
+        // A partial grid must never survive edits or a drifting start position.
+        if (!job.work || job.key !== key || !job.from || distance(job.from, p) > 1) {
+          job.key = key;
+          job.from = { x: p.x, z: p.z };
+          job.work = routeSteps(w, job.from, this.target, this.radius);
+        }
+        while (performance.now() < planningUntil) {
+          const result = job.work.next();
+          if (result.done) {
+            this.path = result.value;
+            this.planning = undefined;
+            this.last = { x: p.x, z: p.z };
+            this.setDeadline(p);
+            break;
+          }
+        }
+      } catch (error) {
+        this.planning = undefined;
+        this.planningError =
+          error instanceof Error ? error.message : 'Ground route planning failed';
+        return { input: idle, error: this.planningError };
+      } finally {
+        budget.remainingMs = Math.max(0, budget.remainingMs - (performance.now() - started));
+      }
+      if (this.planning) return { input: idle };
+    }
     this.elapsed += dt;
     this.sample += dt;
     if (this.elapsed > this.deadline)

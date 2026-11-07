@@ -6,6 +6,14 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.5] - 2026-11-06
+
+### Fixed
+
+- Spread NPC ground-route planning across server ticks so cold route searches give player controls and network traffic time to run; share the planning budget across residents and discard unfinished routes after terrain edits.
+- Batch resident checkpoints and periodic world saves into fewer durable disk commits while retaining full SQLite durability.
+- Keep public messages and ledger entries available after failed saves, and release their in-memory buffers only when the outer transaction commits.
+
 ## [0.131.4] - 2026-11-06
 
 ### Fixed

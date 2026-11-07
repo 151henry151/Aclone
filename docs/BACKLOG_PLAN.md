@@ -7494,3 +7494,57 @@ so its exact cause remains unproven.
 The 0.131.4 bot announcement and screenshot are posted and read back successfully:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1568467499702292511
 It explicitly states that occasional longer delays remain under investigation.
+
+### Responsiveness follow-up — NPC planning and checkpoint stalls
+
+Before production edits, require deferred NPC ground-route construction to return
+without building a grid, then advance in bounded slices shared by all NPCs in a
+server tick. Player movement/network processing must get control between slices.
+A route still uses the exact existing collision/water/grade/arrival behavior;
+compare deferred and synchronous waypoint results, exercise blocked and already
+arrived destinations, and invalidate unfinished work when geometry changes.
+No motion may use a partial path. Run an initially failing regression proving
+construction does no terrain sweep, actual slice timings remain below 100 ms on
+a mature-sized fixture, and waiting/failed routes return idle controls safely.
+Run relevant NPC navigation, solid scenery, walking, parking and spaceport tests,
+then the actual browser control replay with no errors or missing terrain.
+
+For persistence, first prove the existing periodic batch performs redundant durable
+commits. Preserve transaction rollback, pending public messages, ledger rows and
+playtime on save failure and retry. Never reduce SQLite synchronous durability or
+acknowledge player actions before their required save. Design the smallest safe
+change only after reviewing those invariants; do not trade data loss for speed.
+
+Follow-up red/green evidence: deferred construction initially performs 20,897
+terrain reads before returning; the blocked route throws synchronously and a
+flood edit retains an obsolete path. New regressions now pass for deferred work,
+shared budget, exact waypoint parity, ordinary-physics arrival and edit failure.
+On the private mature-world copy (2,003 roads, 86 buildings), the unchanged cold
+route takes 247.7 ms. Deferred constructors take at most 0.21 ms; five routes
+share slices with a measured maximum 15.12 ms and identical waypoint/error results.
+
+Checkpoint regression initially observes five write-bearing commits for five
+worlds (six COMMIT calls including empty playtime), ledger trimming before an
+outer rollback and unreleased chat buffers after a nested commit. Tests now prove
+one write-bearing periodic commit, one for multiple resident checkpoints, retained
+FULL durability, successful retry after failed COMMIT/outer rollback, isolation
+of rolled-back inner savepoints, and preservation of events added after a save.
+61 related persistence/NPC/chat/playtime/federation tests pass; 61 navigation,
+collision, snow and parking tests pass. TypeScript is clean.
+
+The first concurrent navigation suite exceeded the 100 ms slice gate under
+competing test processes. The unchanged gate passes with relevant suites run
+serially and in the mature-world timing run; keep both logs. A separate existing
+spaceport design-export test fails because its generated access path exceeds the
+schema's 128-point limit. It reproduces using released navigation source; this
+patch changes neither the exporter nor that schema. The actual spaceport
+navigation test passes in both directions. Record that export gap for a separate
+repair; do not hide it or call the complete spaceport suite green.
+
+The final full-game local driving replay for 0.131.5 passes the uninterrupted
+5/1/1/10-second input sequence and release, CONNECTED, actual player movement and
+zero browser errors. With video/profile capture enabled: 552 frame intervals,
+p95 51.9 ms, maximum 83.9 ms, no interval over 100 ms, maximum ping 60 ms.
+This is a local connection; live-server latency needs its own post-deploy check.
+No rendering behavior changed in this follow-up. Evidence is under
+`output/responsiveness-followup/` and `output/release-0.131.5/`.

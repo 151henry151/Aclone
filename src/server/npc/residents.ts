@@ -79,7 +79,7 @@ import { decisionSchemaForRules, type Brain, type BrainResult, type Step } from 
 import type { NpcConfig } from './config.ts';
 import { failStep, blockedStep, madeProgress, allowSpeech } from './recovery.ts';
 import { distance } from '../../shared/simulation.ts';
-import { Navigator, serviceRadius } from './navigation.ts';
+import { Navigator, serviceRadius, navigationWorkBudgetMs } from './navigation.ts';
 import { instructions, conversationInstructions, observe } from './observation.ts';
 import { careNeeded, secondsToDamage } from './strategy.ts';
 import { characterRevision } from './character-facts.ts';
@@ -803,6 +803,7 @@ export class Residents {
   }
   tick(dt: number, now = Date.now()) {
     if (this.closed) return;
+    const planningBudget = { remainingMs: navigationWorkBudgetMs };
     for (const r of this.residents) {
       const w = this.worlds.get(r.state.world),
         p = w?.players[r.state.playerId];
@@ -812,7 +813,7 @@ export class Residents {
         continue;
       }
       if (r.nav) {
-        const result = r.nav.step(w, p, dt);
+        const result = r.nav.step(w, p, dt, planningBudget);
         move(w, p, result.input, dt);
         if (result.error) this.failure(r, w, result.error);
         else if (result.arrived) {
@@ -1537,7 +1538,7 @@ export class Residents {
         if (!target) throw Error('Destination does not exist');
         const position = { x: target.x, z: target.z };
         const parkedTarget = parkingDestination(w, p, position);
-        r.nav = new Navigator(w, p, position, parkedTarget?.radius ?? radius, !!parkedTarget);
+        r.nav = new Navigator(w, p, position, parkedTarget?.radius ?? radius, !!parkedTarget, true);
         r.navOrigin = { x: p.x, z: p.z };
         this.checkpoint(r, w, 'journey', {
           target: position,

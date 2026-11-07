@@ -2,6 +2,17 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.5 — Shorter server stalls
+
+Give player movement and network traffic time to run while AI residents calculate
+ground routes. Residents wait for a fully checked route; edits invalidate unfinished
+work, and normal collision, water and arrival rules remain authoritative.
+
+Group checkpoint writes into fewer durable commits. Keep SQLite full durability
+and retain pending messages and ledger history if an enclosing save fails, so a
+retry can preserve all events. These are server scheduling changes, with no new
+world gameplay settings.
+
 ## 0.131.4 — More responsive movement
 
 Reuse the road network instead of rebuilding it repeatedly for player movement,
