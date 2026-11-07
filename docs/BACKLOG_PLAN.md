@@ -7242,3 +7242,16 @@ when navigation cannot be set. The initial distance assertion used a space befor
 `m`; it was corrected to the existing HUD format (`212m`), retaining the exact
 expected distance. Desktop and phone screenshots were inspected. Evidence is in
 `output/release-0.131.2/`; name-tag work remains next, before item 19.
+
+### Find tractor — Done and live, 2026-11-06
+
+Release `729abaa023e56f1062f7661ab8203fba5ad27cfa` is pushed and deployed as
+0.131.2. TypeScript is clean, changed files pass Prettier, and public health,
+client/map-worker assets and website were verified with no browser errors.
+The reviewed desktop/phone screenshots show the actual arrow and 212 m distance;
+empty-state and waypoint-preservation evidence comes from the passing tests.
+
+The bot announcement and screenshot were posted and re-read:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568423446700884100
+Website backup: `/var/backups/aclone-website/site-20261106-193438.tar.gz`.
+Full backup and verification records: `output/release-0.131.2/`.
