@@ -7193,3 +7193,20 @@ must be verified before marking this fix done.
 `npm run check:website` passes its four-width navigation/gallery checks. The
 recorded first-flight walkthrough was reviewed and confirms both directory
 layouts followed by arrival in Puddlewick. Prepare patch release 0.131.1.
+
+### New-pilot world selection — Done and live, 2026-11-06
+
+Release commit `7ba3451acca945fbc6fddd86147ba7b56e7e2230` is pushed to
+`backlog-implementation` and deployed. The public game, client/map-worker assets
+and website report 0.131.1, with no browser errors. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261106-192331.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261106-192446.tar.gz`.
+
+The bot announcement and phone screenshot were posted and re-read:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568421114177134808
+
+Follow-up priorities requested during release: add an obvious **Find tractor**
+control that sets the navigation arrow, then make human/AI pilot name tags smaller
+and proximity-based, with world-builder controls. Preserve the pending item 19
+road work and resume it after these fixes. No player grants or manual live-world
+edits were made.
