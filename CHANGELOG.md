@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.7] - 2026-11-06
+
+### Fixed
+
+- Let AI residents finish multi-tick route searches as the game clock advances, while still discarding routes after terrain or policy edits.
+
 ## [0.131.6] - 2026-11-06
 
 ### Fixed

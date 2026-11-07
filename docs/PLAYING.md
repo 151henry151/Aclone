@@ -262,7 +262,8 @@ the page after an update to load the latest client. Road construction and World
 Builder changes still take effect while unchanged road geometry is reused.
 
 AI residents may briefly wait while calculating a safe ground route. The server
-splits that work across ticks so other players can keep moving. Checkpoint saves
+splits that work across ticks so other players can keep moving. Ordinary clock
+updates retain the work already done; terrain and policy edits trigger replanning. Checkpoint saves
 share disk commits without lowering save durability. If a save fails, pending
 public messages and ledger entries remain available for retry.
 

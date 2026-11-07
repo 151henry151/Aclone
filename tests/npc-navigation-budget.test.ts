@@ -123,3 +123,19 @@ test('multiple residents share the remaining planning budget rather than multipl
   assert.equal(second.step(b.w, b.p, 0.05, budget).input.throttle, 0);
   assert.equal(reads, 0, 'the second resident cannot start another expensive slice');
 });
+
+test('deferred planning completes across ordinary game-clock updates', (t) => {
+  const { w, p, target } = fixture('advancing-clock');
+  const nav = new Navigator(w, p, target, 3, false, true);
+  let clock = 0;
+  t.mock.method(performance, 'now', () => ++clock);
+  for (let i = 0; i < 1000 && !nav.waypoints().length; i++) {
+    w.time += 0.05;
+    w.settings.time = (w.settings.time + (0.05 * 86400) / w.settings.dayLength) % 86400;
+    const r = nav.step(w, p, 0.05);
+    assert.equal(r.error, undefined);
+    if (!nav.waypoints().length) assert.equal(r.input.throttle, 0);
+  }
+  assert.ok(nav.waypoints().length, 'ordinary clock ticks must not restart the partial route');
+  assert.deepEqual(nav.waypoints(), new Navigator(w, p, target, 3).waypoints());
+});

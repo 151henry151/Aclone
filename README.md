@@ -4,7 +4,10 @@
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.131.6 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.131.7 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+
+Version 0.131.7 lets AI residents retain unfinished route calculations through ordinary clock ticks;
+terrain and policy edits still trigger a new survey.
 
 Version 0.131.6 makes daily road surveys share server time with player movement, with pending
 construction retained through restarts and recalculated after world edits.

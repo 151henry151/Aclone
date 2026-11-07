@@ -75,8 +75,10 @@ function windowFor(w: World, from: Point, target: Point): Window {
 type Planning<T> = Generator<void, T, void>;
 const cache = new WeakMap<World, Map<string, Grid>>();
 function geometryKey(w: World) {
+  // The simulation clock advances every tick; it is not a route geometry edit.
+  const { time: _time, ...settings } = w.settings;
   return JSON.stringify([
-    w.settings,
+    settings,
     highWater(w),
     w.townLayout,
     w.settings.solidScenery,

@@ -7625,3 +7625,35 @@ Both affected browser checks pass: distant hill-town roads/scenery and all
 mature-network map segments/widths. Final TypeScript is clean; the release build
 and formatting are verified before commit. Daily road work is ready as an
 independent 0.131.6 maintenance slice; unfinished item 19 remains excluded.
+
+0.131.6 road slice: **Done, pushed, deployed and announced**. Release 0220400
+serves index-DZ0vHT4x.js; public game, map worker, website and gallery checks pass.
+The reviewed video shows continuous motion, both turns and release deceleration,
+with no visible rubber-banding or terrain gaps. Post-release 45-second live health
+capture: 415 requests, median 1.58 ms, p95 40.04 ms, maximum 134.22 ms.
+PID 361934 and restart count 0 are unchanged; inspector closes. This interval
+does not include a daily boundary; do not present it as that proof.
+Verified announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568477106361602078
+
+NPC clock follow-up criteria: under bounded planning slices, increment both game
+time and displayed time each tick; planning must complete with the exact same
+waypoints as synchronous planning. Keep the existing blocked, already-arrived,
+edit-invalidated and shared-budget tests green, and confirm arrival through real
+physics while the server clock advances in the browser replay. The first timing-
+dependent test eventually squeezed the short warmed route into one tick; use a
+deterministic work clock to ensure the route actually spans ticks. That regression
+fails with no path after 1,000 slices and passes after excluding settings.time
+from the geometry key. Other settings and water/terrain geometry remain in the key.
+12 navigation tests pass. Run the actual-clock browser flow, typecheck and format
+before releasing this independent correction.
+
+The combined tractor/NPC replay proves the NPC arrives with the real clock
+advancing, but the tractor then hits scenery after its turns, so it is not proof
+of the final straight. The final on-foot replay preserves the full requested
+5/1/1/10-second sequence and release: CONNECTED, no errors, 546 render intervals,
+p95 54.3 ms, maximum 85.0 ms, none above 100 ms. Maximum local ping is 142 ms;
+retain that outlier rather than promising zero latency. The NPC waits across 42
+planning ticks, then arrives in 5.90 seconds using ordinary physics; road day
+5503 completes to 5504 during the same replay. Evidence:
+output/release-0.131.7/. Final build/typecheck/format precede release.
