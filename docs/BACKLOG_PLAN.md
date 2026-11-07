@@ -7,6 +7,16 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
+## Current priority — movement responsiveness, 2026-11-06
+
+Versions 0.131.4–0.131.7 are pushed, deployed and announced. Keep ordinary
+backlog work paused. The road/network/NPC fixes pass their recorded criteria;
+the remaining persistence-latency criterion does not. Do not describe overall
+responsiveness as finished. The next work is isolating durable database I/O
+from the movement loop without losing transaction ordering or saved events.
+The detailed measurements and unsuccessful experiments are at the end of this
+plan. Unfinished item 19 remains local work and must not be deployed.
+
 ## Completion protocol
 
 Before each implementation slice, transcribe its acceptance criteria here as
@@ -7657,3 +7667,60 @@ retain that outlier rather than promising zero latency. The NPC waits across 42
 planning ticks, then arrives in 5.90 seconds using ordinary physics; road day
 5503 completes to 5504 during the same replay. Evidence:
 output/release-0.131.7/. Final build/typecheck/format precede release.
+
+0.131.7 is pushed and deployed (9a63c28), with public index-B6y8EUcB.js,
+website, worker, gallery and clean browser checks. The final reviewed walking
+video shows continuous travel and both turns; NPC arrival is established by
+server data, not inferred from the distant pedestrian. Verified announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568479104913637457
+
+Live daily-boundary verification completes road day 5512 to 5513, retaining the
+same PID 362416 and zero restarts. 238 health requests over 52.09 s: median
+1.76 ms, p95 54.29 ms. The first request takes 1,942.82 ms; all subsequent requests
+are at most 201.52 ms. Keep the first outlier visible; its cause is not established.
+A further 45-second CPU capture confirms recurring 200–313 ms delays in SQLite
+saveWorld writes/commits. The five-second road stall is repaired, but persistence
+latency needs another measured pass.
+
+Before changing persistence: use a file-backed WAL regression with a mature-sized
+world record to detect dirty-page writes before the outer transaction commits.
+Prove the current page cache spills within the transaction, then test a bounded
+larger cache without reducing FULL synchronous durability. Preserve rollback,
+messages, ledger retry, save/load and online backup behavior. Measure commit
+latency on a disposable database; if the cache change does not address the
+confirmed cause, do not claim it fixes live stalls. Do not change the live DB
+manually or disable durability to satisfy performance thresholds.
+
+The page-cache experiment passes the spill/rollback/FULL tests plus 22 server/NPC
+persistence tests, but does not establish a responsiveness improvement. The first
+shadow database was under /tmp (tmpfs on the server); it cannot measure disk-sync
+latency. Repeat against an online backup of the full live database, in a private
+/var/tmp directory on the database's disk, removing only that disposable directory.
+That faithful run shows default/larger-cache medians 71/65 ms, p95 155/358 ms,
+and cold outliers 1361/1119 ms. Do not release the cache increase by itself.
+Measure background PASSIVE WAL checkpointing separately, preserving FULL commit
+synchronization and existing transaction ordering. Evidence remains private in
+output/checkpoint-cache; no live DB pragma or game-state edits are used.
+
+The second full-database experiment compares 40 saves per configuration on the
+actual disk. Default cache/automatic checkpoints: median 70.92 ms, p95 107.56 ms,
+max 168.32 ms. Larger cache alone: median 65.30 ms, p95 166.96 ms, max 697.76 ms.
+Larger cache plus a separate PASSIVE checkpoint worker: median 56.36 ms,
+p95 126.07 ms, max 1255.03 ms. Preserve all cold outliers; these experiments do
+not demonstrate a reliable reduction in worst-case input blocking. A first
+worker harness failed because it inherited --input-type=module while using
+CommonJS require; the corrected harness clears execArgv. Both harnesses touched
+only disposable copies, which were removed. No worker or pragma experiment is
+live. Server PID 362416 and restart count 0 remain unchanged.
+
+**Persistence slice stopped at the unmet latency criterion.** The 16 MiB cache
+change and its passing spill/rollback regression remain uncommitted in the
+managed worktree for investigation, not in the deployable branch. Do not delete
+or weaken that regression, and do not publish the cache change as a lag fix.
+FULL commits themselves can block; moving only WAL checkpointing is insufficient.
+A future asynchronous writer must address all writers and preserve atomic account,
+world, NPC, ledger and public-chat changes, bounded queues, error/retry handling,
+shutdown and backup consistency. Simply starting a second writer is unsafe as a
+performance solution: the main thread's BEGIN IMMEDIATE can still wait for its
+write lock, and a stale background snapshot must never overwrite a newer action.
+No further backlog item starts while this acceptance failure remains unresolved.
