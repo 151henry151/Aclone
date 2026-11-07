@@ -7287,3 +7287,18 @@ layouts, live F10 changes, invalid-range rejection and the all-hidden state.
 TypeScript is clean and changed files pass Prettier. Screenshots were inspected;
 labels sit closer to heads/vehicles and keep the AI suffix. Evidence:
 `output/release-0.131.3/`. Prepare patch release 0.131.3.
+
+### Quieter pilot name tags — Done and live, 2026-11-06
+
+Release `9a2f8216947b80279b799bdebb55f81932699d3b` is pushed and deployed as
+0.131.3. All 22 relevant tests and the desktop/phone browser flow pass; TypeScript,
+Prettier and the production build pass. Public health, released client/map-worker
+assets and website were verified with no browser errors. The reviewed screenshots
+show compact human/AI labels and a fainter distant tag. Exact range, opacity,
+custom-model and persistence claims are supported by tests.
+
+The bot announcement and screenshot were posted and re-read:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568426832901181460
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261106-194642.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261106-194757.tar.gz`.
+Evidence: `output/release-0.131.3/`. Item 19 road work remains unreleased.
