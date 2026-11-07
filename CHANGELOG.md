@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.2] - 2026-11-06
+
+### Fixed
+
+- Add an obvious Find tractor shortcut that points the navigation arrow to your nearest parked tractor or its storage garage, even when your last-used vehicle was an aircraft.
+- Keep tractor navigation available in Menu, Inventory and phone Actions; explain missing tractors and map requirements without moving the player or vehicle.
+
 ## [0.131.1] - 2026-11-06
 
 ### Fixed

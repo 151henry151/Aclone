@@ -799,6 +799,13 @@ details, and world owners can reduce or hide interiors in F10 → Rules.
 
 ## Parking and arriving
 
+Use **Find tractor** on the HUD, in **Menu** or **Inventory**, or in **Actions** on
+phones. The navigation arrow and distance point to your nearest owned parked
+tractor, including its garage if stored. This also works while using another
+vehicle; it does not choose an aircraft or another player's tractor. Worlds that
+require a printed Parish map still require one for navigation. If there is no
+parked tractor, the menu button explains that instead of changing your destination.
+
 In worlds with **Vehicles persist in the world** enabled, switching to walking
 leaves your tractor or grounded aircraft where you stopped, with its own fuel,
 paint and condition. The driver's body steps down beside it; an attached trailer

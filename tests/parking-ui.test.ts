@@ -78,3 +78,54 @@ test('the configured arrival reach includes its boundary in both actions and int
   p.x = 18.01;
   assert.equal(withinBuildingRange(w, p, b), false);
 });
+
+test('find tractor selects owned parked tractors from any activity and resolves garage coordinates', async () => {
+  const ui = await import('../src/client/parking-status');
+  const w = createWorld('find', 'Find', 'owner'),
+    p = addPlayer(w, 'owner', 'Owner');
+  w.settings.vehiclesPersist = true;
+  w.buildings = [];
+  const record = (owner: string, slot: number, x: number) => ({
+    owner,
+    slot,
+    x,
+    y: 0,
+    z: 0,
+    heading: 0,
+    fuel: 10,
+    condition: 100,
+    parkedAt: 0,
+  });
+  w.parkedVehicles = {
+    'other:0': record('other', 0, 1),
+    'owner:2': record(p.id, 2, 2),
+    'owner:0': record(p.id, 0, 40),
+    'owner:24': record(p.id, 24, 80),
+  } as any;
+  Object.assign(p, { x: 0, z: 0, fuelVehicle: 2 });
+  for (const state of [
+    { vehicle: 5 },
+    { vehicle: 2 },
+    { inside: 'home', atHome: true },
+    { task: { kind: 'working', end: 100 } },
+  ]) {
+    Object.assign(p, state);
+    const point = (ui as any).tractorWaypoint(w, p);
+    assert.deepEqual(point, { x: 40, z: 0, name: 'Your Puddle tractor' });
+  }
+  const { makeBuilding } = await import('../src/shared/simulation');
+  const garage = makeBuilding('garage', 'garage', 5, 8);
+  garage.name = 'Village garage';
+  w.buildings.push(garage);
+  w.parkedVehicles!['owner:24'].inside = garage.id;
+  const point = (ui as any).tractorWaypoint(w, p);
+  assert.equal(point.x, garage.x);
+  assert.equal(point.z, garage.z);
+  assert.match(point.name, /Village garage/);
+  delete w.parkedVehicles!['owner:0'];
+  delete w.parkedVehicles!['owner:24'];
+  assert.equal((ui as any).tractorWaypoint(w, p), undefined);
+  w.settings.vehiclesPersist = false;
+  w.parkedVehicles!['owner:0'] = record(p.id, 0, 40) as any;
+  assert.equal((ui as any).tractorWaypoint(w, p), undefined);
+});

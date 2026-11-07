@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Player, World } from '../shared/types';
-import { fuelVehicle } from '../shared/tractors';
+import { fuelVehicle, isTractor } from '../shared/tractors';
 import {
   parkedRefuelStatus,
   parkedReturnReason,
@@ -36,4 +36,20 @@ export function parkingStatus(w: World, p: Player) {
     returnReason: parkedReturnReason(w, p, v.slot),
     refuelReason: parkedRefuelStatus(w, p, p.id, v.slot).reason,
   };
+}
+
+/** Find a physical owned tractor independently of the currently selected fuel tank. */
+export function tractorWaypoint(w: World, p: Player) {
+  if (!persistentVehicles(w, p)) return;
+  return Object.values(w.parkedVehicles ?? {})
+    .filter((v) => v.owner === p.id && isTractor(v.slot))
+    .map((v) => {
+      const garage = w.buildings.find((b) => b.id === v.inside);
+      return {
+        x: garage?.x ?? v.x,
+        z: garage?.z ?? v.z,
+        name: `Your ${vehicleDef(w, v.slot).name}${garage ? ` · ${garage.name}` : ''}`,
+      };
+    })
+    .sort((a, b) => Math.hypot(p.x - a.x, p.z - a.z) - Math.hypot(p.x - b.x, p.z - b.z))[0];
 }

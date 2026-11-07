@@ -2,6 +2,14 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.2 — Find your tractor
+
+Choose **Find tractor** on the HUD, in Menu or Inventory, or in phone Actions.
+The existing navigation arrow points to your nearest parked tractor or its
+storage garage. It remains available when the old walking-only parking panel
+is absent, and does not confuse a last-used aircraft with your tractor. Map
+requirements still apply; empty states explain why no destination was set.
+
 ## 0.131.1 — A clearer first landing
 
 Puddlewick now leads the directory with a **Main world** recommendation. New

@@ -7210,3 +7210,35 @@ control that sets the navigation arrow, then make human/AI pilot name tags small
 and proximity-based, with world-builder controls. Preserve the pending item 19
 road work and resume it after these fixes. No player grants or manual live-world
 edits were made.
+
+### Priority fix — Find tractor (2026-11-06)
+
+Before production edits, require a visible **Find tractor** shortcut on the desktop
+HUD and in Menu, Inventory and phone Actions. It sets the existing navigation
+arrow and distance to the nearest owned parked tractor, including its garage
+when stored. It must work while walking, using another vehicle, indoors or busy;
+it must never choose someone else's tractor or the last-used aircraft. Preserve
+world map-access and vehicle-persistence rules. Explain no tractor/currently
+driving/map-required states without replacing an existing waypoint or moving a
+vehicle/player. No new gameplay limits or duplicate rule defaults are needed.
+
+Run `npx tsx --test tests/parking-ui.test.ts tests/waypoint.test.ts` and
+`TEST_GPU=1 node --import tsx node_modules/@playwright/test/cli.js test tests/browser/find-tractor.spec.ts`.
+Browser steps: find a distant tractor from the desktop shortcut; check the visible
+arrow/distance and unchanged player/tractor coordinates; repeat through phone
+Actions, test map-required and empty states, and inspect screenshots. Keep the
+existing parked-vehicle/refuelling flow green. Require clean TypeScript and
+Prettier, then commit, push, deploy and announce this separate patch.
+
+Red browser test confirmed the missing desktop Find tractor button after the real
+world finished loading; the click timed out on the absent shortcut.
+
+Find tractor verification: ten relevant parking/waypoint tests pass, including
+owned-versus-foreign records, aircraft exclusion, multiple tractors, stored
+positions, busy/indoor/other-vehicle access and persistence-disabled behavior.
+The browser flow passes desktop and phone navigation at 212 m, unchanged physical
+positions, map-required and empty states, and preservation of an existing waypoint
+when navigation cannot be set. The initial distance assertion used a space before
+`m`; it was corrected to the existing HUD format (`212m`), retaining the exact
+expected distance. Desktop and phone screenshots were inspected. Evidence is in
+`output/release-0.131.2/`; name-tag work remains next, before item 19.
