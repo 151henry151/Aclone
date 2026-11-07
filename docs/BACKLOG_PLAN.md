@@ -7411,7 +7411,7 @@ TCP test unchanged except for diagnostic failure text, and run it independently.
 Also exercise current protocol 4 under the same shaping. These are transport
 scheduling limits, not new world gameplay rules.
 
-### Responsiveness checkpoint — Verified locally, release 0.131.4 prepared
+### Responsiveness checkpoint — Deployed 0.131.4; remaining tail-latency investigation open
 
 The road-query regression failed on repeated preparation before the change;
 all four cache/edit tests now pass. Twenty related road/alignment/landscape tests,
@@ -7454,3 +7454,43 @@ on the airfield with a clear route: actual controls 5 s forward, 1 s left,
 the final straight (no collision masking a stall), CONNECTED, zero browser errors,
 p95 frame interval 45.4 ms, maximum 78.6 ms, zero intervals above 100 ms.
 Recording and profiling are enabled; peak local ping is 184 ms, ending at 2 ms.
+
+Release `998cb496e03fcff1f6bbd204475aa600fc628805` is pushed to
+`backlog-implementation` and deployed. Public health, version, matching built
+client (`index-5Qr0FV-u.js`), map worker, website and building gallery pass;
+read-only public browser verification has no errors. Database backup:
+`pre-deploy-20261106-222342.sqlite`; website backup: `site-20261106-222427.tar.gz`.
+The completed runway video review finds steady movement through both turns and
+the full final straight, continuous ground, no visible rubber-banding, and
+release deceleration to 1 MPH at the end. Exact input timing comes from the
+instrumentation, not inference from the video.
+
+Live 15 s profiles: idle samples increase from 0.14% to 54.47%; repeated road
+formatting/filtering no longer dominates. A separate 30.6 s stability check keeps
+the same PID and restart counter, uses 49.1% of one CPU core, and returns all
+60 health requests successfully (median 1.96 ms). However p95 is 128.8 ms and
+maximum 1,088.3 ms. This confirms a major sustained-CPU improvement but leaves
+long-tail latency unresolved. Continue that investigation before claiming the
+reported responsiveness problem fully fixed.
+
+Operational diagnostic incident: closing the first post-deploy inspector through
+a dynamic import in Runtime.evaluate raised ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING
+and caused one automatic service restart. The service recovered; inspector port
+9229 closed. This is the diagnostic cleanup command, not a production-code error.
+Replace the diagnostic with synchronous process.getBuiltinModule('node:inspector')
+and prove in a separate local child process that cleanup closes only the inspector
+and leaves the process alive before another live capture. That local check passes.
+Keep the failed command and incident in evidence; do not claim a restart-free audit.
+
+The 45 s follow-up profile uses the verified cleanup method: PID 360550 remains
+active, restart count stays 1 and inspector port closes. Correlated health/CPU
+samples identify further main-thread stalls in NPC ground-route construction
+(about 163 ms in the longest sampled request) and synchronous checkpoint commits
+(about 184 ms in that same NPC tick; periodic saves also block roughly 100–180 ms).
+These are confirmed separate causes to address; do not assume the CPU cache repair
+eliminates them. The one-second request in the earlier interval was not profiled,
+so its exact cause remains unproven.
+
+The 0.131.4 bot announcement and screenshot are posted and read back successfully:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568467499702292511
+It explicitly states that occasional longer delays remain under investigation.
