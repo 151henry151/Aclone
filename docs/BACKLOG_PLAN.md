@@ -8480,3 +8480,22 @@ measured 14 FPS limitation and narrow heartbeat headroom. Formatting and diff
 checks pass; no full-suite rerun is required for unrelated code. Commit/push the
 complete alternate-route slice; verify deployment and screenshot post before
 marking it done. City paving remains the next dependent stage.
+
+### Item 19 — Alternate-route checkpoint released, 2026-11-08
+
+**Done: useful alternate dirt routes and configurable benefit/parallel policy.**
+Push/deploy `cc3dcf89c116565b07f402c859b17569afbfe444` as 0.134.0.
+Read-only browser checks verify game health, released client settings, map worker,
+website and gallery with no errors. Server PID 385663, restart count zero; exact
+commit matches. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-142252.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-142411.tar.gz`.
+Reviewed and verified the bot's two-screenshot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569070308554575877
+Evidence: `output/road-alternates/`. **Item 19 remains in progress.**
+
+Next dependent stage remains city paving, preceded by a fresh read-only settlement
+survey. First inspect the captured client profile for the remaining 14 FPS dips,
+following Henry's standing performance priority. Do not claim the passing server
+heartbeat alone proves responsive rendering; turn any confirmed client bottleneck
+into concrete failing-first criteria before changing production code.
