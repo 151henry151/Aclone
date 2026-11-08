@@ -7925,7 +7925,7 @@ tests/npc-trailer-navigation.test.ts`. A walking resident and a tractor driver
    costs bounded. Run relevant lighting/tractor/settings tests, TypeScript,
    Prettier and build; update player/world-builder documentation.
 
-Status: navigation implementation verified; release 0.131.10 pending. Lighting follows.
+Status: navigation **done — released as 0.131.10**; reversing lights in progress.
 
 - Confirmed failing tests for missing planned detours, changed obstacles and
   overlap escape before production changes; retained all assertions.
@@ -7937,3 +7937,25 @@ Status: navigation implementation verified; release 0.131.10 pending. Lighting f
   cached terrain grids and consume the existing shared planning budget.
 - Preserve the separate road and NPC-performance WIP. The performance candidate
   also edits navigation.ts and will require deliberate integration.
+
+Reverse-light implementation criteria: defaults in data/settings.json are enabled,
+intensity 90 and range 18 m; editor intensity range 0–1000 (0 disables output),
+reach 1–100 m. A single local shadow-free rear spotlight illuminates the hitch;
+nearby reversing tractors reuse the existing two remote beam slots, prioritising
+rear illumination while reversing. No light allocation or shadow-map changes on
+switching. Test `tests/tractor-reverse-lights.test.ts` covers all six tractors,
+forward/stopped/engine-off/walking/aircraft/indoors/passenger states, independent
+headlight switching, disabled/custom rules and editor/save/design round trips.
+The real low-graphics browser flow must reverse toward a trailer at midnight,
+show illuminated hitch/ground, stop and drive forward with the beam off, and
+save/reload custom World Builder controls.
+
+Navigation release receipt: pushed and deployed
+`fcfd9e78e71b2462fedf17f3eab5880de001c609` on backlog-implementation. Backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-092127.sqlite`. Public browser
+verification confirms game/website 0.131.10, working client/map-worker assets and
+no browser errors; service active, PID 380915, zero automatic restarts. Both
+walkthrough clips were reviewed; the initial overlap recording had a development
+reload and was replaced with a clean passing rerun. Verified bot
+[screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1568994516780843119).
+No live player data edits or grants.
