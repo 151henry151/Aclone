@@ -15,6 +15,10 @@ const cache = new WeakMap<
   NorthernIsland,
   { rivers: NorthernIsland['rivers']; ponds: number; cells: Map<string, Feature[]> }
 >();
+/** Discard cached spatial bounds/curves before surveying edited water geometry. */
+export function invalidateInlandWater(w: World) {
+  if (w.northernIsland) cache.delete(w.northernIsland);
+}
 const cell = 256;
 function candidates(w: World, x: number, z: number) {
   const n = w.northernIsland;

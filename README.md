@@ -2,6 +2,12 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.133.0 lets growing dirt roads find usable shallow river crossings,
+including routes to distant settlements. World builders control growth, width,
+ford routing, grade and ground-vehicle water depth. Existing roads and unfinished
+construction survive saves; alternate loops, city paving and bridges remain planned.
+Scenery queries also reuse spawn reservations and avoid repeated farm-plot allocations.
+
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly
 serializing unchanged road/river networks. The populated-world walking checks
@@ -21,7 +27,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.132.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.133.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait

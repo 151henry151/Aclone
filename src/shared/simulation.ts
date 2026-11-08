@@ -1,4 +1,5 @@
 import { nameTagFields, nameTagRules } from './name-tag-rules';
+import { roadRuleFields } from './road-rules';
 import { beginVehicleMount } from './vehicle-mount';
 import { kerbParking } from './parking-site';
 import { approachBuilding, exitBuilding, finishArrival, animatedArrival } from './arrival';
@@ -2414,6 +2415,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(buildingDoorFields, key) ||
             Object.hasOwn(parkingFields, key) ||
             Object.hasOwn(nameTagFields, key) ||
+            Object.hasOwn(roadRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2477,6 +2479,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const nameTagField = nameTagFields[key as keyof typeof nameTagFields];
         if (nameTagField && 'min' in nameTagField)
           num(v, nameTagField.min, nameTagField.max, nameTagField.step === 1);
+        const roadField = roadRuleFields[key as keyof typeof roadRuleFields];
+        if (roadField && 'min' in roadField) num(v, roadField.min, roadField.max);
         const parkingField = parkingFields[key as keyof typeof parkingFields];
         if (parkingField && 'min' in parkingField)
           num(v, parkingField.min, parkingField.max, parkingField.step === 1);

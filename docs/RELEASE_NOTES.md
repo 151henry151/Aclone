@@ -2,6 +2,20 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.133.0 — Dirt roads find river crossings
+
+Let growing road connections use shallow fords with validated lane widths and
+approaches. Keep deep water, steep banks and obstructions blocked, preserve older
+roads, and retain unfinished work through restarts. Surveying shares time with
+player movement. Recheck the actual geography after edits, and keep the original
+safe alignment when smoothing a bend would make it impassable.
+
+World Builder controls road growth and width, ford routing, grade and the water
+depth allowed for ground movement. Defaults retain 12 m/day, 5 m width, 35% grade
+and 0.8 m depth. Growth can pause at zero; resuming does not spend paused days.
+These settings travel with world designs. Alternate routes, paving and bridges
+remain later work; this release adds usable dirt connections only.
+
 ## 0.131.8 — Keep moving during periodic saves
 
 Move periodic world, history and playtime writes off the movement thread. Keep

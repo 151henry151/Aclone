@@ -1,3 +1,5 @@
+import defaults from '../../data/settings.json';
+import { roadRules } from './road-rules';
 import { roadGeometryKey, type RoadWork } from './road-work';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { roadSite, roadRouteSteps } from './road-routing.ts';
@@ -15,8 +17,8 @@ import { buildingPlan, buildingBounds } from './building-shapes.ts';
 import { townRefusal } from './town-charter.ts';
 
 /** A tractor is about 4.6 m long; the parish lays a little under three a day. */
-export const roadGrowthPerDay = 12;
-export const grownRoadWidth = 5;
+export const roadGrowthPerDay = defaults.roadGrowthPerDay;
+export const grownRoadWidth = defaults.roadWidth;
 
 export function grownRoads(w: Pick<World, 'roads'>): readonly Road[] {
   return w.roads ?? [];
@@ -49,7 +51,13 @@ function* planBuildingRoad(w: World): RoadWork<RoadProject | undefined> {
         z: target.z + Math.cos(heading + turn) * stop,
       };
       const path = yield* roadRouteSteps(w, from, to);
-      if (path) return { kind: 'building', building: target.id, width: grownRoadWidth, path };
+      if (path)
+        return {
+          kind: 'building',
+          building: target.id,
+          width: roadRules(w.settings).roadWidth,
+          path,
+        };
     }
   }
 }
@@ -74,7 +82,9 @@ function* growRoadDay(w: World): RoadWork<boolean> {
       (!target.government && townRefusal(w, target.owner, target.x, target.z, 'roads')))
   )
     delete w.roadProject;
-  else if (!(yield* advanceRoadProjectSteps(w, w.roadProject, roadGrowthPerDay)))
+  else if (
+    !(yield* advanceRoadProjectSteps(w, w.roadProject, roadRules(w.settings).roadGrowthPerDay))
+  )
     delete w.roadProject;
   return true;
 }
@@ -85,6 +95,12 @@ export function growRoads(w: World, start: number, end: number) {
   w.roadGrowth ??= Math.floor(start / dayLength);
   const due = Math.max(w.roadGrowthDue ?? w.roadGrowth, Math.floor(end / dayLength));
   if (due <= w.roadGrowth) {
+    delete w.roadGrowthDue;
+    jobs.delete(w);
+    return;
+  }
+  if (roadRules(w.settings).roadGrowthPerDay === 0) {
+    w.roadGrowth = due;
     delete w.roadGrowthDue;
     jobs.delete(w);
     return;

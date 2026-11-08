@@ -1894,6 +1894,21 @@ once to safe home kerbs or compatible garages, staying pending when no safe site
 exists. Enabling persistence, resident parking or spare storage attempts migration
 immediately. It never creates an outdoor parked machine in water.
 
+### Road and ford rules
+
+Editor → Rules → Roads and river crossings configures whether new dirt roads
+may use physically traversable fords (on), maximum ground-vehicle water depth
+(0.8 m), and maximum road grade (0.35 rise/run). Depth applies to ground movement
+as well as road planning. Lowering it may make an old ford impassable; it does not
+erase the existing road. Disabling ford routing prevents new ford roads without
+preventing otherwise shallow vehicle crossings. Deep water, steep banks and
+blocked approaches still refuse a new road. These settings travel with exported
+world designs. Dirt-road growth defaults to 12 metres per game day (0 pauses new
+construction); new road width defaults to 5 metres. Pausing keeps the project and
+resuming adds only new days, not the paused allowance. A width change affects new
+projects; unfinished projects keep their surveyed width. Pending construction
+survives a save/restart. Alternate loops, city paving and bridges remain planned.
+
 ## Pilot name tags
 
 In **F10 → Rules → Pilot name tags**, configure human and AI name tags, including

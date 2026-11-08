@@ -156,6 +156,16 @@ Tractors tilt with the terrain under their tyres, including when parked on a hil
 
 Stars move nightly/seasonally. Two nearby moons (one about half-size) share a 28-day phase cycle (4h 40m), with a five-day mutual orbit; neither resets at year boundaries. First-person and chase camera drag look up and down. The calendar follows supplied historical information; climate, crop durations and balance are original tuning.
 
+## River roads
+
+Growing dirt roads can search for shallow fords and safe approaches when connecting
+settlements across rivers. Crews build gradually; unfinished roads and construction
+progress survive a restart. Deep water, steep banks and blocked lanes still stop a
+route. A new crossing does not remove an older usable road. World builders can
+change growth, width, grade and water-depth limits in **F10 → Rules → Roads and
+river crossings**. Lowering the depth limit can make an existing ford impassable;
+the road itself remains. This does not add bridges or paved river crossings.
+
 ## Water supply
 
 Build a **Desalination plant** on a dry ocean shore, with its submerged intake behind it. New plants require water connected to the sea, so an enclosed edited pond does not qualify. Existing plants keep their original height-only intake survey; their stock, ownership and recipe stay intact. World owners can disable the ocean requirement for custom geography.

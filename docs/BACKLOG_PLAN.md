@@ -8073,3 +8073,299 @@ The bot announcement and anonymous screenshot were posted and re-read:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569043825287241902
 Evidence: `output/npc-performance-resume/`. No main push, PR or player edits.
 Mark this priority slice done; resume item 19 next, leaving piloted spaceflight out.
+
+## Preserved item 19 criteria and initial evidence
+
+### Item 19 — Survey and completion criteria before production
+
+Re-read both complete entries, **Alternate road routes and gradual city paving**
+and **River crossings, bridges and highway haulage**. Preserve their six-stage
+order. This combined item is not complete until all stages pass. Keep new work
+unreleased until a complete player-facing slice satisfies its recorded gates;
+never announce unfinished bridges, paving or manufactured trucks.
+
+Read-only survey (2026-11-06): query the public world's saved JSON with SQLite
+`mode=ro`, then run `npx tsx output/roads-cities/survey.ts` locally. Keep private
+world/player data out of commits and announcements. Puddlewick has 62 buildings,
+59 completed occupied/public buildings, 33 businesses and 26 distinct housed or
+registered residents. Other settlements have at most four occupied buildings,
+three businesses and one resident. There are 2,076 effective road segments.
+Counts use actual occupied buildings, not acreage or town membership alone.
+City starting thresholds: 80 occupied buildings, 40 businesses and 35 residents,
+all sustained for 30 game days; demote only after 30 days below 80% of the entry
+thresholds. These defaults exceed present development without requiring a huge
+population jump; existing pavement remains after demotion.
+
+The five rivers contain 164–176 surveyed shallow crossings each that ground
+movement accepts, but the existing road planner accepts **zero** because it
+requires dry land throughout. This is a confirmed first gap. Ford selection must
+still verify full lane width, bank slopes, obstacles and the whole route; shallow
+centre points alone are insufficient. No live state was changed by this survey.
+
+Current freight evidence is supply-limited: no stocked steel or fish sellers;
+one wood seller holds 18 units, with best quoted spread 10.04d over 947 m. Fuel's
+best quoted spread is 4.28d over 360 m before tax/fuel; wheat's best seller holds
+one unit. These are quotes, not proven sustainable earnings. Before manufacturing,
+run production/trade simulations including stock replenishment, buyer capital,
+taxes, wear, return fuel and loading time; do not claim profitability from an
+unlimited-stock arithmetic example. Ordinary steel mills and shipyards cost
+1,200d before construction materials, a useful lower-capital comparison.
+
+Policies to implement in their dependent stages: completed player-funded bridges
+are public and toll-free by default; world owners can configure access and toll
+policy. Crossing refusal must be known before entering a span, with no mid-span
+stranding or repeated charge while reversing. Construction uses existing town
+permissions, reserves the full span/approaches, and accepts multiple contributors
+without granting control of their accounts. Refrigeration uses a separate paid
+Fuel supply and slows existing age accumulation only while powered; exhaustion
+resumes ordinary spoilage without resetting cargo age. Refrigeration rate,
+consumption and applicable goods are world/catalogue controls. Final bridge and
+factory bills must be calculated and recorded before their production changes.
+
+1. **Shared records/rules and first dirt routes.** Add backward-compatible optional
+   road-surface/crossing metadata, persisted city qualification/progress and
+   bridge project records only as their consuming stages land. Existing roads
+   default to dirt and remain present when a shortcut opens. Canonical new
+   defaults belong in `data/settings.json`, validated F10 fields/help, rules
+   summary and portable designs. Start with road growth 12 m/day, width 5 m,
+   maximum road grade 35%, shared ground/ford depth 0.8 m, ford search enabled,
+   alternate-route saving at least 20% and 100 m, and a configurable parallel
+   redundancy limit. Technical survey/caching bounds are not gameplay sliders.
+2. **Failing-first dirt-routing tests:** `npx tsx --test tests/road-fords.test.ts
+tests/road-projects.test.ts tests/road-alignment.test.ts tests/road-growth.test.ts`.
+   Verify actual shallow fords and approaches, deep/absent/blocked fords, multiple
+   rivers and distant-town connection, deterministic restart, changed depth/width/
+   grade/water rules, obstruction/terrain edits and survey invalidation. Compare
+   shortest existing graph journeys with complete terrain-aware proposals. Grow
+   useful triangle loops incrementally, reject redundant parallel links and
+   pointless detours, retain old road geometry. Validate whole-rig passage with
+   real ground movement; no crossing accepted from endpoint proximity alone.
+3. **City/paving tests:** sustained entry/demotion and changed rules; centre-out
+   connected growth prioritises compact occupied clusters. Default paving 1 m
+   per game day, density samples within 60 m requiring four occupied buildings,
+   with 30-day eligibility persistence. No farm-lane paving based only on radius,
+   no leapfrogging, one suitable boundary exit suffices, destination must also be
+   a city. Persist progress and pavement through restart and shrinkage. Paved
+   projects stop on safe banks; dirt fords never satisfy paved connectivity or
+   become paved. Dirt feeders preserve interim access. Browser map and driving
+   show progressive surfaces, no-city/low-density and bridge-waiting states.
+4. **Bridge tests:** survey real stable banks, navigable clearance, dry approaches,
+   whole-span reservations, price/material conservation near the entry's 800s
+   target for a reference span, concurrent contributions and overlap refusal.
+   Unfinished projects remain impassable; completed decks support vehicles and
+   boats can pass below. Existing fords survive. Restart/design, maintenance,
+   removal and changed water/terrain/permissions remain safe. Browser preview,
+   insufficient money/materials, contributed completion, loaded crossing and
+   under-bridge passage must agree with shared collision.
+5. **Factory then highway haulage:** first test construction investment, upstream
+   metal/gravel/wood chain, staffing/working capital, timed orders and conserved
+   manufactured inventory/delivery. Then test detailed tractor units and useful
+   refrigerated/box/stake trailers, cargo restrictions, owned coupling/parking,
+   death/recovery, restart/design, load/braking/turning and swept whole-rig
+   collision. Target 45 mph dirt and 65 mph paved, extremely slow off-road, without
+   gaining paved speed from tiny or disconnected patches. Prove sustained net
+   earnings with actual production/trade actions; retain ordinary transport roles.
+   Browser cab, lights, mirrors, articulation/reversing, loading and bridge/gate
+   clearance, empty/unpowered/refused states, desktop/mobile/controller inputs.
+6. **Release gate:** run only tests reasonably affected by each change, all named
+   acceptance tests at the completed boundary, clean TypeScript, changed-file
+   Prettier and production builds. Browser-check changed world rendering and
+   populated-world update/frame timings before release. Record every red/green
+   result and measured limits. Commit/push/deploy/announce with successful
+   screenshots only after those criteria pass. Piloted spaceflight stays excluded.
+
+First red run: `npx tsx --test tests/road-fords.test.ts` fails on dry-only
+road eligibility, ignored configurable ground depth and unknown world settings.
+Before production edits, correct the fixture to a surveyed slanted approach that
+meets the existing 35% grade limit (33.7% maximum across the lane); perpendicular
+banks are too steep and must remain refused. The corrected test retains a grade
+precondition and still fails for dry-only eligibility. Raw red evidence is in
+`output/roads-cities/ford-red.log`. No acceptance limits were relaxed.
+
+The first three ford tests pass, and all 29 existing road/alignment/growth/island
+regressions pass. The distant-settlement regression fails correctly: the 2.4 km
+journey has dry endpoints and a deep direct crossing, but grid routing returns no
+route (3.2 seconds). Next replace grid-only river discovery with validated ford
+portals in the staged search, retaining grade/width/depth checks and deterministic
+cache invalidation. Do not proceed to city paving until distant routes pass.
+
+README reviewed for this unreleased substep: its 0.131.0 feature description still
+matches the live release, so retain it until the road item is ready. The initial
+three ford checks and 29 road/island regressions pass; TypeScript is clean before
+the portal-search addition. The first portal attempt still fails the distant-town
+criterion (14 seconds including an uncached 10-second survey). It is not ready to
+release. Inspect complete approach paths and cache/search costs before proceeding.
+
+The staged route now passes all four ford tests, including every segment of the
+2.4 km distant-town journey checked against road grade/width and actual vehicle
+water collision. Diagnostic landward approaches also pass independently. However,
+the full uncached route takes 17.5 seconds and the ford survey alone takes 10.3
+seconds. `growRoads` runs synchronously inside `advance`, so these timings would
+freeze an active server. Add a regression before further production changes:
+`npx tsx --test --test-name-pattern='road growth yields' tests/road-fords.test.ts`
+must return control within 100 ms on the distant-town fixture, retaining pending
+work for later ticks. This applies the existing no-long-stall safety bar to road
+planning, not a gameplay setting. Do not release or begin paving while it fails.
+
+### Item 19 — Validation stop, 2026-11-06
+
+**Blocked on server responsiveness; do not release this item or start paving.**
+The new `road growth yields` test fails for the intended reason: a single
+`growRoads` call blocks for **16,999.1 ms**, against the 100 ms return-control gate.
+The full distant route is physically valid, but its synchronous survey/search
+cannot be used on an active server. Evidence: `output/roads-cities/road-tick-red.log`.
+
+Tried: accept only physically shallow/graded lane-width crossings, add cached
+explicit ford portals to the existing grid, diagnose each landward approach,
+and join separately validated approach stages. The first three regressions pass;
+the staged distant-route regression passes, including actual vehicle water
+collision on every segment. The first portal-only version failed to connect
+otherwise valid approaches; the staged fallback fixes that reachability gap but
+retains an unacceptable cold survey/search delay. Do not weaken or remove either
+reachability or responsiveness criteria.
+
+Resume by making ford surveying and road planning incremental/resumable under a
+bounded server work budget, with pending growth preserved across ticks/restarts.
+Cache only validated geometry and invalidate on relevant edits. Then complete
+alternate-route persistence/benefit, blocked/multiple-river cases, rule/browser
+checks and the remaining stages in their original order. No city paving, bridge,
+factory or highway-truck production code has begun. The current road edits and
+failing regression remain uncommitted; they are not part of the live 0.131.0.
+
+Stop-state checks: all 29 existing road/alignment/growth/island tests still pass
+with the staged planner. `npx tsc --noEmit`, Prettier on all 13 changed/new paths,
+and `git diff --check` pass. Four new functional checks pass; the server tick
+responsiveness test remains red. Road editor/browser release checks remain
+pending and are not claimed. Leave this working tree intact for resumption.
+
+### Item 19 — Resume bounded planning, 2026-11-06
+
+Retain the failing 100 ms tick test. Strengthen it before production changes:
+repeated ticks must eventually lay exactly the accrued 12 m/day allowance, save
+and reload while the survey is pending must retain the unpaid days, and ordinary
+clock advancement must not restart geometry work. A newly added obstruction must
+invalidate a pending route before any unsafe segment is laid. Keep synchronous
+survey helpers for deterministic diagnostics, but make authoritative growth use
+the same algorithms as resumable generators. Yield inside ford surveys, route
+expansion/refinement and whole-route validation; do not merely defer a 17-second
+operation to the next tick. Existing growth assertions retain their game-day
+budgets and geometry expectations, with pending work drained at the same game
+clock when testing the completed result.
+
+### Item 19 — Resume after performance release, 2026-11-08
+
+Integrate the primary checkout's preserved candidate against released 0.132.1;
+retain original failing-first logs and all reachability/100 ms tick assertions.
+The original 19 road paths remain untouched in /home/henry/dev/Aclone. Recheck
+ford, policy, growth, project, alignment, cache and navigation consumers before
+new production changes. Add missing multiple-river/blocked/alternate-route
+regressions before implementing those gaps. Validate editor and real crossing
+in a local browser, including refusal states, before any road release. Preserve
+all newer garage/trailer/reverse-light/performance behavior during integration.
+
+Integrated baseline: all 33 ford/policy/growth/project/alignment/cache/budget
+checks pass (`output/roads-resume/integrated-baseline.log`). Read-only inspection
+finds a remaining full-lane gap: a road centreline just outside a deep bank is
+accepted although the vehicle footprint enters impassable water. Add a concrete
+regression at the generated first river's point 340: centreline outside the water,
+actual 2.5 m-radius movement blocked, road segment refused. Run it red before
+changing production; retain all successful ford and distant-route/tick checks.
+
+The dry-centreline regression fails as expected (road accepted, vehicle blocked).
+Checking the lane whenever either endpoint is within its half-width plus verge of
+inland water fixes it. The shallow-ford, changed-depth and new bank-edge checks
+all pass. Continue the full distant-route/tick gate after remaining river cases.
+
+The nine river checks expose a second confirmed gap: a route across two physically
+separate river channels is returned, but one smoothed segment fails the same
+full-lane safety check. Eight checks pass, including the 2.4 km route, 25.2 ms
+maximum growth tick, exact 24 m allowance after reload, and absent/deep/steep
+crossing refusal. Preserve the failing multiple-river assertion and inspect the
+alignment stage; no alternate-road or paving work starts while this is red.
+
+World-rule coverage additionally requires residents to observe current road/ford
+settings (not assume the old fixed depth). Add a regression for all five changed
+values before adding them to observation. Retain the 96,000-byte request budget,
+selected guide content and memory limits if the extra rule fields need space.
+
+Alignment fix: reject non-finite curve costs, validate joins between all rounded
+corners, and fall back to the already surveyed safe path if any bend fails. The
+previously failing two-river test now passes both lane and real movement checks.
+The resident-rule regression initially fails on missing groundWaterDepth. After
+adding the five canonical road values, the full request reaches 96,073 bytes;
+shortening repeated voice wording (not facts, examples, selected guide sections
+or memory counts) restores 95,973/96,000 bytes. Identity/privacy assertions pass.
+
+Strengthen the distant-settlement acceptance: after reload and default 24 m over
+two days, change the world growth rule to 1,000 m/day and finish the same route.
+Require one connected road network, no unfinished project, physically traversable
+laid segments, JSON persistence, and every construction tick <=100 ms. Keep the
+original 90-second planning/completion bounds. Browser steps will show actual
+road growth and driving through the shallow crossing, deep-water refusal and
+World Builder rules/reload; this remains an unreleased dirt-routing substep.
+
+Release boundary for this substep: usable ford-aware dirt connections and their
+configurable rules only. Item 19 as a whole remains unfinished; alternate useful
+loops are next, followed by city paving, bridges and manufactured haulage in the
+existing order. The real browser flow passes grown-road driving, stricter-depth
+refusal, retained road geometry, and persisted editor changes. Complete relevant
+regressions, typecheck/build, formatting, populated-world responsiveness replay
+and video review before releasing this independently usable substep.
+
+All 103 relevant checks pass, as does the populated-world input/NPC/daily-growth
+replay with unchanged assertions. Before release, add the final river-cache
+invalidation check: move an already-surveyed river's coordinates in place and
+require the resulting ford survey to equal a fresh save/reload survey. A new ford
+list must not reuse the old underlying water spatial index.
+
+The moved-river regression fails before invalidation and passes afterward. Road
+surveys now invalidate cached water bounds/curves when the existing river geometry
+stamp or pond geometry changes. Clock-stable reuse remains intact; no new gameplay
+values are introduced. The four targeted crossing/cache checks pass. Rerun the
+affected river/alignment/cache regressions and populated-world responsiveness
+after this final cache fix before releasing.
+
+Final cache rerun: all 42 affected river, ford, alignment, geometry-budget and
+island tests pass, including the newly red-then-green moved-river regression.
+There are 104 unique passing relevant tests across the main 103-test run and
+this added regression. The guide request remains 95,987/96,000 bytes after the
+player documentation update. The reviewed crossing clip shows an approach,
+river crossing and exit without an obvious freeze/teleport; stricter-depth
+refusal is visible after reload. Prepare candidate 0.133.0, then run the production
+build and final populated-world replay before publishing.
+
+Final release gate failed: the unchanged populated-world replay recorded a
+102.117 ms heartbeat (limit strictly below 100 ms), despite successful movement,
+NPC choices, navigation and daily road growth. Keep 0.132.1 live. The captured CPU
+profile identifies repeated farm-plot allocation and spawn-reservation rebuilding
+in scenery generation during road surveys/navigation. Before optimization, require
+a cold scenery chunk to resolve spawn clearances fewer than 20 times, preserve
+exact farm/pasture coverage including rotations, padding, exclusions and first-plot
+slices, and retain all scenery edit/determinism checks. Run the focused tests,
+TypeScript/build, Prettier and the same real-browser input replay after changes;
+do not relax the 100 ms gate or publish the failed recording. Evidence:
+`output/roads-resume/final-populated-replay/`.
+
+Scenery regression: cold generation read spawn-clearance rules 164 times and
+failed the new <20 operation-count assertion. Resolve reservations once per chunk
+and query farm plots directly, retaining JavaScript slice semantics. All 40
+affected exclusion, farm, spawn, collision, navigation and road-budget tests pass.
+The unchanged populated-world replay now passes: maximum heartbeat 76.563 ms,
+zero gaps at least 100 ms, five real preparations/decisions, completed daily road
+work and NPC arrival, continuous final walking, no browser errors. Minimum client
+FPS remains 19; maximum ping 416 ms is one initial round trip retained by the HUD until the
+next five-second probe (later probes: 1, 71 and 2 ms), so this
+is not a claim that all client latency is resolved. Evidence:
+`output/roads-resume/exclusions-red.log`, `exclusions-green.log`,
+`exclusions-replay/result.json`. Complete the final build and video review before
+committing/pushing/deploying the ford checkpoint.
+
+The final production build (including `tsc --noEmit`) passes after the exclusion
+optimization. Prettier and `git diff --check` pass. Release only this independently
+usable ford substep; retain item 19 as in progress for alternate loops and paving.
+
+Video review passes: `exclusions-replay/video-review/walking_during_road_candidates.mp4`
+shows the full forward/left/right/forward sequence and stop, with no obvious long
+freeze, teleport or terrain gap. Generic resident labels only; no private chat.
+Retain the measured client FPS/ping limitations. Proceed with the verified ford
+checkpoint and separate scenery optimization commits; no later item is complete.

@@ -1,4 +1,5 @@
 import { nameTagFields, nameTagRules } from '../shared/name-tag-rules';
+import { roadRuleFields, roadRules } from '../shared/road-rules';
 import { parkingFields, parkingRules } from '../shared/parking-rules';
 import { buildingDoorFields, buildingDoorRules } from '../shared/building-doors';
 import { meatRuleFields, meatRules, type MeatRules } from '../shared/meat-rules';
@@ -180,6 +181,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(buildingDoorFields),
     ...Object.keys(parkingFields),
     ...Object.keys(nameTagFields),
+    ...Object.keys(roadRuleFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -737,6 +739,24 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Human and AI names fade with distance from your character. Fade start must not exceed visibility range. Screen height caps keep nearby names compact; scenery view hides them. Building signs keep their own visibility.</p></fieldset>`;
+  const roads = roadRules(settings);
+  const roadFields = `<fieldset><legend>Roads and river crossings</legend>${Object.entries(
+    roadRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            roads[key as keyof typeof roads],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${roads[key as keyof typeof roads] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>New dirt roads may cross physically usable fords. Depth also controls ground vehicles; lowering it can make an existing crossing impassable. Grade is rise divided by horizontal distance. Existing road geometry is retained when these rules change.</p></fieldset>`;
   const parking = parkingRules(settings);
   const parkedFields = `<fieldset><legend>Parked vehicles and arrivals</legend>${Object.entries(
     parkingFields,
@@ -925,6 +945,7 @@ export function settingsFields(settings: Settings = defaults) {
     herdFields +
     doorFields +
     nameTagControls +
+    roadFields +
     parkedFields +
     meatFields +
     radioFields +

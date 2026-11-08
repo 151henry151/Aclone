@@ -6,9 +6,17 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.133.0] - 2026-11-08
+
+### Added
+
+- Grow dirt-road connections through usable river fords, including distant settlements and routes across multiple rivers, while preserving existing roads and construction progress across restarts.
+- Configure dirt-road growth and width, ford routing, maximum road grade and shared ground-vehicle water depth in World Builder and portable designs; expose the live values to residents.
+
 ### Fixed
 
 - Reuse spawn reservations while generating scenery and avoid allocating farm-plot lists for every candidate, reducing work shared by road surveys and resident navigation.
+- Validate the entire river lane and smoothed approaches so a dry centreline cannot conceal impassable water beside it; retain a safe surveyed route when decorative bends would make it unsafe.
 
 ## [0.132.1] - 2026-11-08
 

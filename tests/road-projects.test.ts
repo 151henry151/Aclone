@@ -1,10 +1,10 @@
+import { finishRoadGrowth } from './road-work-helpers';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, makeBuilding } from '../src/shared/simulation.ts';
 import { creatorSchema } from '../src/shared/creator.ts';
 import { landscapeSchema } from '../src/shared/landscape.ts';
-import { finishPendingRoadWork } from './road-work-helpers';
 import { growRoads } from '../src/shared/roads.ts';
 import { townRoads, roadDistance, type Road } from '../src/shared/town.ts';
 import {
@@ -28,7 +28,7 @@ function day(w: ReturnType<typeof world>) {
   const from = (w.roadGrowth ?? 0) * w.settings.dayLength;
   const before = (w.roads ?? []).reduce((n, r) => n + pointDistance(r.a, r.b), 0);
   growRoads(w, from, from + w.settings.dayLength);
-  finishPendingRoadWork(w);
+  finishRoadGrowth(w, from + w.settings.dayLength);
   const after = (w.roads ?? []).reduce((n, r) => n + pointDistance(r.a, r.b), 0);
   assert.ok(after - before <= 12.000001, 'all crews share the 12 m daily budget');
 }

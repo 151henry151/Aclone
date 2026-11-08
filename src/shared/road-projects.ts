@@ -1,3 +1,4 @@
+import { roadRules } from './road-rules';
 import { finishRoadWork, type RoadWork } from './road-work';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -81,7 +82,8 @@ export function* planTownRoadSteps(w: World): RoadWork<RoadProject | undefined> 
       const start = yield* safeNearestSteps(main, goal, site);
       if (!start) continue;
       const path = yield* roadRouteSteps(w, start, goal);
-      if (path) return { kind: 'town', town: town.id, width: 5, path };
+      if (path)
+        return { kind: 'town', town: town.id, width: roadRules(w.settings).roadWidth, path };
     }
   }
 }
@@ -104,7 +106,7 @@ export function* planRoadConnectionSteps(w: World): RoadWork<RoadProject | undef
   candidates.sort((a, b) => a.distance - b.distance);
   for (const { start, goal } of candidates) {
     const path = yield* roadRouteSteps(w, start, goal);
-    if (path) return { kind: 'connection', width: 5, path };
+    if (path) return { kind: 'connection', width: roadRules(w.settings).roadWidth, path };
   }
 }
 
@@ -129,7 +131,7 @@ export function* planRoadDetourSteps(w: World): RoadWork<RoadProject | undefined
     }
   }
   for (const group of yield* roadComponentSteps(blocked)) {
-    const width = Math.max(5, ...group.map((r) => r.width));
+    const width = Math.max(roadRules(w.settings).roadWidth, ...group.map((r) => r.width));
     const site = siteFor(width);
     // Include short neighbouring pieces whose junction remains inside the wider
     // bypass clearance, until the two ends really are clear of the obstacle.

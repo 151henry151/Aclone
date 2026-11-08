@@ -1,3 +1,4 @@
+import { roadRules } from './road-rules';
 import { nameTagRules } from './name-tag-rules';
 import { parkingRules } from './parking-rules';
 import { buildingDoorRules } from './building-doors';
@@ -76,6 +77,7 @@ export const rulesets: Record<
   },
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
+  const roads = roadRules(w.settings);
   const obstacles = obstacleRules(w.settings);
   const s = w.settings,
     charter = charterRules(s),
@@ -122,6 +124,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     `Freight quay vessel limits: ${navigation.quayMaxLength} × ${navigation.quayMaxBeam} m. Extra seaward berth search: ${navigation.boatBerthSearchDistance} m; full hull depth and clearance are required.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,
     `Pilot name tags: ${tags.pilotNameTags}, fade ${tags.pilotNameTagFadeStart}–${tags.pilotNameTagRange} m, scale ${tags.pilotNameTagScale}, opacity ${tags.pilotNameTagOpacity}, maximum ${tags.pilotNameTagMaxPixels} pixels.`,
+    `Roads: growth ${roads.roadGrowthPerDay} m/game day, new width ${roads.roadWidth} m; ford routing ${roads.roadFords ? 'on' : 'off'}, ground-water depth limit ${roads.groundWaterDepth} m, maximum road grade ${roads.roadMaxGrade * 100}%.`,
     `Parking: persistent ${parking.vehiclesPersist}, residents ${parking.parkingNpcs}, sign-off ${parking.parkingSignOff}, garage stores spare tractors ${parking.garageStoresSpareTractors}; grace ${parking.parkingGraceDays} game days, tow fee ${parking.parkingTowFee} hundredths; return/refuel ${parking.parkingReturnRange} m, door offset ${parking.parkingDoorOffset} m, kerb search ${parking.parkingSearchRange} m. Mount ${parking.parkingMountSeconds}s; arrivals ${parking.arrivalAnimation}, quick ${parking.arrivalQuickSeconds}s, full ${parking.arrivalMinSeconds}–${parking.arrivalMaxSeconds}s, approach ${parking.arrivalRange} m, door ${parking.arrivalDoorDegrees}°.`,
     `Building doors: ${doors.buildingDoorMode}, ${doors.buildingDoorOpenHour}–${doors.buildingDoorCloseHour}h, stagger ±${doors.buildingDoorOffsetMinutes} minutes, unstaffed closure ${doors.buildingDoorUnstaffedClosed}; motion ${doors.buildingDoorSeconds}s, animation ${doors.buildingDoorAnimateRange}m, sound ${doors.buildingDoorSoundRange}m, swing ${doors.buildingDoorSwingDegrees}°, visibility above ${doors.buildingInteriorThreshold}; interiors ${doors.buildingInteriorDetail}.`,
     `Boat navigation: shore impact ${navigation.boatShoreImpactLoss} condition; afloat arrival radii ${navigation.boatHouseArrivalRadius} m at boathouses / ${navigation.boatLandingArrivalRadius} m at pier/river landings; shore boarding ${navigation.boatLandingShoreRadius} m at landings. Hull orientation, water path and collision blocking remain required.`,

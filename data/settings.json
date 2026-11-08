@@ -1,4 +1,9 @@
 {
+  "roadGrowthPerDay": 12,
+  "roadWidth": 5,
+  "roadFords": true,
+  "groundWaterDepth": 0.8,
+  "roadMaxGrade": 0.35,
   "dayLength": 600,
   "time": 42200,
   "denariiPerSheckle": 100,

@@ -219,7 +219,7 @@ World owners already control 64 settings (`data/settings.json`, Editor → Rules
 5. Add the automotive factory's construction, supply chain and manufactured vehicle inventory; then detailed trucks and specialised semitrailers, articulated driving and cargo integration.
 6. Test blocked/absent fords, multiple rivers and bridges, tides/water configuration, terrain edits, new obstacles, bridge removal, town growth/shrinkage, concurrent builders, server restarts and world import/export. Test loaded truck speeds on each surface, bridge clearance, reversing, trailer persistence and long-run profitability.
 
-The island already has rivers with physical shallow fords and impassable deep reaches; none of the ford-aware routing, paving, bridges, highway trucks or automotive manufacturing above exists yet.
+The island has rivers with physical shallow fords and impassable deep reaches. Ford-aware dirt routing and its world rules are delivered in 0.133.0; useful alternate loops, city paving, bridges, highway trucks and automotive manufacturing remain planned. Track the complete section in BACKLOG_PLAN.md.
 
 ## Planned — Earthmoving machines and a building slope limit
 

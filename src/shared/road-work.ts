@@ -67,7 +67,7 @@ export function roadGeometryStamp(roads: readonly Road[] | undefined) {
   return stamp;
 }
 const riverStamps = new WeakMap<IslandRiver[], { stamp: number; rivers: IslandRiver[] }>();
-function riverGeometryStamp(rivers: IslandRiver[]) {
+export function riverGeometryStamp(rivers: IslandRiver[]) {
   const old = riverStamps.get(rivers);
   if (
     old &&

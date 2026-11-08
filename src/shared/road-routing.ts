@@ -1,7 +1,9 @@
-import { finishRoadWork, type RoadWork } from './road-work';
+import { finishRoadWork, riverGeometryStamp, type RoadWork } from './road-work';
+import { roadFordSteps } from './road-fords';
+import { roadRules } from './road-rules';
 import { sceneryBlocksSegment } from './ground-contacts';
 import { pastureParcelSize } from './pasture-land';
-import { inlandLevel } from './inland-water';
+import { inlandLevel, inlandWaterAt, nearInlandWater, invalidateInlandWater } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -24,9 +26,21 @@ export function roadSamples(r: Road, spacing = 2): Point[] {
     z: r.a.z + ((r.b.z - r.a.z) * i) / n,
   }));
 }
+const surveyedWater = new WeakMap<NonNullable<World['northernIsland']>, string>();
 /** One clearance policy for new connections, detours and ordinary extensions.
  * Reserve the whole lane width, all farm plots and a small verge. */
-export function roadSite(w: World, width = 5) {
+export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
+  if (w.northernIsland) {
+    const key = JSON.stringify([
+      riverGeometryStamp(w.northernIsland.rivers),
+      w.northernIsland.ponds,
+    ]);
+    if (surveyedWater.get(w.northernIsland) !== key) {
+      invalidateInlandWater(w);
+      surveyedWater.set(w.northernIsland, key);
+    }
+  }
+  const rules = roadRules(w.settings);
   const pad = width / 2 + 1,
     half = mapHalf(w) - pad,
     sea = highWater(w) + 0.5,
@@ -142,8 +156,15 @@ export function roadSite(w: World, width = 5) {
   const allSolids = [...solids, ...fences];
   const occupied = (p: Point) =>
     solids.some((r) => intersects(r, p, p)) || sceneryBlocksSegment(w, p, p, pad);
-  const dry = (p: Point) =>
-    Math.abs(p.x) < half && Math.abs(p.z) < half && height(p) > inlandLevel(w, p.x, p.z, sea);
+  const dry = (p: Point) => {
+    if (Math.abs(p.x) >= half || Math.abs(p.z) >= half) return false;
+    const water = inlandWaterAt(w, p.x, p.z),
+      level = inlandLevel(w, p.x, p.z, sea);
+    return (
+      height(p) > level ||
+      !!(rules.roadFords && water?.river && level - height(p) <= rules.groundWaterDepth)
+    );
+  };
   const allowed = (p: Point) => {
     const town = townAt(w, p.x, p.z);
     return !town || town.permissions.residents.roads || town.permissions.guests.roads;
@@ -165,6 +186,12 @@ export function roadSite(w: World, width = 5) {
     const length = pointDistance(a, b),
       n = Math.max(1, Math.ceil(length / spacing));
     if (!dry(a) || !allowed(a)) return Infinity;
+    // Check the full lane on river approaches, not just a shallow centreline.
+    const sidePoint = (p: Point, side: number) => ({
+      x: p.x + ((b.z - a.z) * side) / (length || 1),
+      z: p.z - ((b.x - a.x) * side) / (length || 1),
+    });
+    let prior = a;
     let previous = height(a),
       total = 0;
     const step = length / n;
@@ -174,10 +201,25 @@ export function roadSite(w: World, width = 5) {
       const t = i / n,
         p = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
       if (!dry(p) || !allowed(p)) return Infinity;
+      if (nearInlandWater(w, p.x, p.z, pad) || nearInlandWater(w, prior.x, prior.z, pad)) {
+        for (const side of [-pad, pad]) {
+          const q = sidePoint(p, side),
+            before = sidePoint(prior, side);
+          if (
+            !dry(q) ||
+            !dry(before) ||
+            !allowed(q) ||
+            !allowed(before) ||
+            Math.abs(height(q) - height(before)) / Math.max(step, 1e-6) > rules.roadMaxGrade
+          )
+            return Infinity;
+        }
+      }
+      prior = p;
       const h = height(p),
         rise = Math.abs(h - previous),
         grade = rise / Math.max(step, 1e-6);
-      if (grade > 0.35) return Infinity;
+      if (grade > rules.roadMaxGrade) return Infinity;
       // Rolling terrain is affordable; repeated climbs and steep grades are dear.
       // Broad seeded variation is stable across planning, saves and restarts.
       total +=
@@ -233,7 +275,9 @@ function* naturalAlignment(
         z: u * u * enter.z + 2 * u * t * b.z + t * t * leave.z,
       };
     });
-    if ((yield* cost(curve)) <= (yield* cost([enter, b, leave])) * 1.03) rounded.push(...curve);
+    const curveCost = yield* cost(curve);
+    if (Number.isFinite(curveCost) && curveCost <= (yield* cost([enter, b, leave])) * 1.03)
+      rounded.push(...curve);
     else rounded.push(b);
   }
   rounded.push(path.at(-1)!);
@@ -257,10 +301,15 @@ function* naturalAlignment(
       const offset = amplitude * Math.sin(Math.PI * t) ** 2 * valueNoise(x / 170, z / 170, seed);
       return { x: x - ((b.z - a.z) / length) * offset, z: z + ((b.x - a.x) / length) * offset };
     });
-    if ((yield* cost(curve)) <= (yield* site.costSteps(a, b)) * 1.04)
+    const curveCost = yield* cost(curve);
+    if (Number.isFinite(curveCost) && curveCost <= (yield* site.costSteps(a, b)) * 1.04)
       result.push(...curve.slice(1));
     else result.push(b);
   }
+  // Adjacent rounded corners also change their joining segment. Validate the
+  // complete result and retain the surveyed path if cosmetic bends are unsafe.
+  for (let i = 1; i < result.length; i++)
+    if (!(yield* site.segmentSteps(result[i - 1], result[i]))) return path;
   return result;
 }
 
@@ -268,14 +317,49 @@ function* naturalAlignment(
  * roads, while every edge still checks terrain and obstacles every two metres.
  * Short urban connections retain the fine grid. Simplification preserves the
  * climb savings instead of replacing a contouring route with a straight climb. */
-export function roadRoute(w: World, start: Point, goal: Point, width = 5) {
+export function roadRoute(
+  w: World,
+  start: Point,
+  goal: Point,
+  width = roadRules(w.settings).roadWidth,
+) {
   return finishRoadWork(roadRouteSteps(w, start, goal, width));
 }
 export function* roadRouteSteps(
   w: World,
   start: Point,
   goal: Point,
-  width = 5,
+  width = roadRules(w.settings).roadWidth,
+): RoadWork<Point[] | undefined> {
+  const direct = yield* roadGridRoute(w, start, goal, width);
+  if (direct || pointDistance(start, goal) <= 800) return direct;
+  const site = roadSite(w, width);
+  if (!site.clear(start) || !site.clear(goal)) return;
+  const candidates = (yield* roadFordSteps(w, site, width))
+    .flatMap((f) => [
+      { a: f.a, b: f.b },
+      { a: f.b, b: f.a },
+    ])
+    .sort(
+      (a, b) =>
+        pointDistance(start, a.a) +
+        pointDistance(a.b, goal) -
+        (pointDistance(start, b.a) + pointDistance(b.b, goal)),
+    );
+  // A single start-anchored grid may miss the turn onto a narrow bank. Re-anchor
+  // each landward stage at the surveyed approach; retain every validated point.
+  for (const ford of candidates) {
+    const before = yield* roadGridRoute(w, start, ford.a, width);
+    if (!before) continue;
+    const after = yield* roadGridRoute(w, ford.b, goal, width);
+    if (after) return [...before, ford.b, ...after.slice(1)];
+  }
+}
+function* roadGridRoute(
+  w: World,
+  start: Point,
+  goal: Point,
+  width: number,
 ): RoadWork<Point[] | undefined> {
   const site = roadSite(w, width),
     distance = pointDistance(start, goal);
@@ -288,7 +372,19 @@ export function* roadRouteSteps(
     maxX = Math.min(half, Math.max(start.x, goal.x) + margin),
     minZ = Math.max(-half, Math.min(start.z, goal.z) - margin),
     maxZ = Math.min(half, Math.max(start.z, goal.z) + margin);
-  type Node = { i: number; j: number; p: Point; g: number; f: number; parent?: Node };
+  // Fine local paths handle streets; coarse searches explicitly visit surveyed
+  // ford approaches instead of hoping a grid vertex falls on a narrow crossing.
+  const portals =
+    distance > 800
+      ? (yield* roadFordSteps(w, site, width))
+          .flatMap((f) => [
+            { id: f.id + ':a', p: f.a, other: f.b, otherId: f.id + ':b' },
+            { id: f.id + ':b', p: f.b, other: f.a, otherId: f.id + ':a' },
+          ])
+          .filter((f) => f.p.x >= minX && f.p.x <= maxX && f.p.z >= minZ && f.p.z <= maxZ)
+      : [];
+  type Node = { i: number; j: number; id?: string; p: Point; g: number; f: number; parent?: Node };
+  const nodeKey = (n: Node) => n.id ?? `${n.i}:${n.j}`;
   const heap: Node[] = [],
     costs = new Map<string, number>();
   const push = (n: Node) => {
@@ -325,14 +421,31 @@ export function* roadRouteSteps(
   for (let visits = 0; heap.length && visits < 16000; visits++) {
     yield;
     const n = pop();
-    if (n.g !== costs.get(`${n.i}:${n.j}`) || settled.has(`${n.i}:${n.j}`)) continue;
-    settled.add(`${n.i}:${n.j}`);
+    if (n.g !== costs.get(nodeKey(n)) || settled.has(nodeKey(n))) continue;
+    settled.add(nodeKey(n));
+    for (const portal of portals) {
+      if (settled.has(portal.id) || portal.id === n.id) continue;
+      const linked = n.id && portals.find((p) => p.id === n.id)?.otherId === portal.id;
+      if (!linked && pointDistance(n.p, portal.p) > cell * 2) continue;
+      const g = n.g + (yield* site.costSteps(n.p, portal.p));
+      if (g >= (costs.get(portal.id) ?? Infinity)) continue;
+      costs.set(portal.id, g);
+      push({
+        id: portal.id,
+        i: Math.round((portal.p.x - start.x) / cell),
+        j: Math.round((portal.p.z - start.z) / cell),
+        p: portal.p,
+        g,
+        f: g + pointDistance(portal.p, goal),
+        parent: n,
+      });
+    }
     const finish =
       pointDistance(n.p, goal) <= cell * 2
         ? (yield* site.segmentSteps(n.p, goal))
           ? [n.p, goal]
           : cell > 8
-            ? yield* roadRouteSteps(w, n.p, goal, width)
+            ? yield* roadGridRoute(w, n.p, goal, width)
             : undefined
         : undefined;
     if (finish) {
@@ -349,8 +462,7 @@ export function* roadRouteSteps(
       for (let i = 1; i < path.length; i++) {
         if (yield* site.segmentSteps(path[i - 1], path[i])) refined.push(path[i]);
         else {
-          const local =
-            cell > 8 ? yield* roadRouteSteps(w, path[i - 1], path[i], width) : undefined;
+          const local = cell > 8 ? yield* roadGridRoute(w, path[i - 1], path[i], width) : undefined;
           if (!local) return;
           refined.push(...local.slice(1));
         }
@@ -384,6 +496,7 @@ export function* roadRouteSteps(
       return yield* naturalAlignment(w, simple, site);
     }
     for (const [di, dj] of [
+      [0, 0],
       [1, 0],
       [0, 1],
       [-1, 0],

@@ -1,4 +1,5 @@
 import type { NameTagRules } from './name-tag-rules';
+import type { RoadRules } from './road-rules';
 import type { ParkingRules } from './parking-rules';
 import type { BuildingDoorRules } from './building-doors';
 import type { LivestockRules } from './livestock-rules';
@@ -403,6 +404,7 @@ export interface Settings
     Partial<BuildingDoorRules>,
     Partial<ParkingRules>,
     Partial<NameTagRules>,
+    Partial<RoadRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -547,7 +549,7 @@ export interface World {
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */
   roadGrowth?: number;
-  /** Last day owed while a disposable road survey is still running. */
+  /** Last requested game day; retained while resumable road surveys are pending. */
   roadGrowthDue?: number;
   /** Incremental public roadwork, resumed after saving/restarting. */
   roadProject?: import('./road-projects.ts').RoadProject;
