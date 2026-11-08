@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.131.10 lets AI residents route around parked trailers and safely escape
+an existing overlap. Trailer placement changes trigger bounded replanning; owned
+trailers and their cargo stay where players leave them.
+
 Version 0.131.9 keeps only your current tractor outdoors in persistent-parking worlds. Switch
 models at a garage; spares stay invisibly stored with their own fuel, paint,
 condition and parked trailer cargo. World builders can disable this policy.

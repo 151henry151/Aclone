@@ -1,3 +1,4 @@
+import { trailerBlocks } from '../../shared/trailers';
 import { sceneryBlocksSegment } from '../../shared/ground-contacts';
 import { sceneryObstaclesNear } from '../../shared/scenery-obstacles';
 import { inlandLevel } from '../../shared/inland-water';
@@ -74,6 +75,20 @@ function windowFor(w: World, from: Point, target: Point): Window {
 }
 type Planning<T> = Generator<void, T, void>;
 const cache = new WeakMap<World, Map<string, Grid>>();
+/** Parked traffic is a per-route layer, not part of the expensive terrain-grid cache.
+ * Moving hitched rigs keep their existing collision handling. */
+function parkedTrailers(w: World) {
+  return Object.entries(w.trailers ?? {}).filter(
+    ([, t]) =>
+      (!t.attached || t.parkedWith) && !(t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside),
+  );
+}
+function parkedTraffic(w: World) {
+  return { ...w, trailers: Object.fromEntries(parkedTrailers(w)) };
+}
+function trafficKey(w: World) {
+  return JSON.stringify(parkedTrailers(w).map(([, t]) => [t.id, t.kind, t.x, t.z, t.heading]));
+}
 function geometryKey(w: World) {
   // The simulation clock advances every tick; it is not a route geometry edit.
   const { time: _time, ...settings } = w.settings;
@@ -219,7 +234,8 @@ class Queue {
 function canEscape(w: World, from: Point, to: Point) {
   if (
     !w.buildings.some((b) => blocksBuilding(b, from.x, from.z, 0, 2.2)) &&
-    !sceneryBlocksSegment(w, from, from, 2.2 + (step * Math.SQRT2) / 2)
+    !sceneryBlocksSegment(w, from, from, 2.2 + (step * Math.SQRT2) / 2) &&
+    !trailerBlocks(w, from, from, 2.2)
   )
     return false;
   const steps = Math.ceil(distance(from, to));
@@ -234,6 +250,7 @@ function canEscape(w: World, from: Point, to: Point) {
       h < inlandLevel(w, next.x, next.z, highWater(w)) + 0.05 ||
       creatorBlocks(w, next.x, next.z, h, 2.2) ||
       sceneryBlocksSegment(w, previous, next, 2.2, true) ||
+      trailerBlocks(w, previous, next, 2.2, undefined, true) ||
       w.buildings.some((b) => buildingBlocksMovement(b, previous, next, 0, 2.2))
     )
       return false;
@@ -261,13 +278,19 @@ function* portJourney(
     yield;
     if (!site.segment(path[i - 1], path[i])) throw Error('Spaceport access road is obstructed');
   }
+  const traffic = parkedTraffic(w),
+    middle: Point[] = [];
+  for (let i = 1; i < path.length; i++) {
+    yield;
+    middle.push(
+      ...(trailerBlocks(traffic, path[i - 1], path[i], 2.2)
+        ? yield* routeSteps(w, path[i - 1], path[i], 3, false)
+        : roadSamples({ a: path[i - 1], b: path[i], width: 4 }, 4).slice(1)),
+    );
+  }
   const start = yield* routeSteps(w, from, path[0], 3, false);
   const end = yield* routeSteps(w, path[path.length - 1], target, radius, false);
-  return [
-    ...start,
-    ...path.slice(1).flatMap((p, i) => roadSamples({ a: path[i], b: p, width: 4 }, 4).slice(1)),
-    ...end,
-  ];
+  return [...start, ...middle, ...end];
 }
 function* routeSteps(
   w: World,
@@ -286,6 +309,7 @@ function* routeSteps(
     if (staged) return staged;
   }
 
+  const traffic = parkedTraffic(w);
   const g = yield* grid(w, windowFor(w, from, target));
   const { clear, heights, sizeX, sizeZ } = g,
     size = sizeX,
@@ -301,7 +325,11 @@ function* routeSteps(
     const i = queue.pop().id;
     if (closed[i]) continue;
     closed[i] = 1;
-    if (clear[i] && distance(point(g, i), target) <= radius) {
+    if (
+      clear[i] &&
+      !trailerBlocks(traffic, point(g, i), point(g, i), 2.2) &&
+      distance(point(g, i), target) <= radius
+    ) {
       const path: Point[] = [];
       let at = i;
       while (at !== start) {
@@ -334,8 +362,20 @@ function* routeSteps(
         Math.abs(heights[i] - heights[j]) > 2
       )
         continue;
-      const escaping = !clear[i] && canEscape(w, i === start ? from : point(g, i), point(g, j));
+      const escaping =
+        (!clear[i] ||
+          trailerBlocks(
+            traffic,
+            i === start ? from : point(g, i),
+            i === start ? from : point(g, i),
+            2.2,
+          )) &&
+        canEscape(traffic, i === start ? from : point(g, i), point(g, j));
       if (!clear[j] && !escaping) continue;
+      if (
+        trailerBlocks(traffic, i === start ? from : point(g, i), point(g, j), 2.2, undefined, true)
+      )
+        continue;
       if (!escaping && sceneryBlocksSegment(w, i === start ? from : point(g, i), point(g, j), 2.2))
         continue;
       if (dx && dz && (!clear[z * size + nx] || !clear[nz * size + x]) && !escaping) continue;
@@ -359,6 +399,7 @@ const idle: Input = { throttle: 0, steer: 0, boost: false };
  * fuel, snow/rain grip, speed and heading. No teleport or strategy decisions. */
 export class Navigator {
   private path: Point[] = [];
+  private trafficKey: string;
   private planning?: { work?: Planning<Point[]>; key?: string; from?: Point };
   private planningError?: string;
   private next = 0;
@@ -378,6 +419,7 @@ export class Navigator {
     // A service visit is already complete inside its range. Requiring a clear
     // grid endpoint here can fail beside an inflated building obstacle.
     this.last = { x: p.x, z: p.z };
+    this.trafficKey = trafficKey(w);
     if (distance(p, target) > radius) {
       if (deferred) this.planning = {};
       else this.path = route(w, p, target, radius);
@@ -406,6 +448,15 @@ export class Navigator {
     budget: PlanningBudget = { remainingMs: navigationWorkBudgetMs },
   ): { input: Input; arrived?: boolean; error?: string } {
     if (p.atHome || p.task) return { input: idle, error: 'Cannot travel while indoors or busy' };
+    const traffic = trafficKey(w);
+    if (traffic !== this.trafficKey) {
+      this.trafficKey = traffic;
+      this.planning = {};
+      this.planningError = undefined;
+      this.path = [];
+      this.next = this.stuck = this.sample = 0;
+      this.last = { x: p.x, z: p.z };
+    }
     if (this.planningError) return { input: idle, error: this.planningError };
     if (this.planning) {
       if (budget.remainingMs <= 0) return { input: idle };

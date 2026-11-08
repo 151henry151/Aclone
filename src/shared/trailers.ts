@@ -308,17 +308,25 @@ export function trailerBlocks(
   to: { x: number; z: number },
   radius: number,
   except?: string,
+  allowEscape = false,
 ) {
   return Object.values(w.trailers ?? {}).some((t) => {
     if (t.id === except || (t.parkedWith && w.parkedVehicles?.[t.parkedWith]?.inside)) return false;
     const d = trailerDefs[t.kind],
       n = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 0.5));
-    for (let i = 0; i <= n; i++) {
+    const clearance = (i: number) => {
       const x = from.x + ((to.x - from.x) * i) / n - t.x,
         z = from.z + ((to.z - from.z) * i) / n - t.z;
       const lx = x * Math.cos(t.heading) - z * Math.sin(t.heading),
         lz = x * Math.sin(t.heading) + z * Math.cos(t.heading);
-      if (Math.abs(lx) < d.width / 2 + radius && Math.abs(lz) < d.length / 2 + radius) return true;
+      return Math.max(Math.abs(lx) - d.width / 2 - radius, Math.abs(lz) - d.length / 2 - radius);
+    };
+    let previous = clearance(0);
+    const escaping = allowEscape && previous < 0 && clearance(n) > previous;
+    for (let i = 0; i <= n; i++) {
+      const next = clearance(i);
+      if (next < 0 && (!escaping || next < previous)) return true;
+      previous = next;
     }
     return false;
   });

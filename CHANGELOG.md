@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.10] - 2026-11-08
+
+### Fixed
+
+- Route AI residents around parked trailers and replan when a trailer is parked, moved or stored, while retaining the shared planning budget and cached terrain.
+- Let characters escape outward from an existing trailer overlap without allowing entry through solid trailers or moving their cargo.
+
 ## [0.131.9] - 2026-11-07
 
 ### Fixed

@@ -34,6 +34,12 @@ Buy fuel cans and drive the motorboat to your stranded vessel. Reboarding appear
 
 ## Eight specialist trailers
 
+AI residents plan around parked trailers and update their route when one is moved,
+stored or left across their path. If a trailer already overlaps a character, move
+outward toward its nearest edge to escape; driving farther into it remains blocked.
+Residents use the same collision rules and ordinary steering, without relocating
+anybody's trailer or changing its cargo.
+
 Buy a trailer at an ordinary tractor garage with a tractor and clear dry space behind it. Use **Inventory → Your trailers**, Activities, or the nearby building window to load, unload, hitch and unhitch. Reverse the tractor hitch to the parked drawbar to reconnect. Trailers remain where parked; ownership and cargo survive reconnects and restarts. Buildings and terrain obstruct the whole trailer, and sharp reversing can jackknife it. Loaded trailers slow the tractor and increase fuel burn. Unhitch before changing vehicles.
 
 - **Harvest hay wagon — 45s.** 6.6 × 2.5 m platform; 600 weight, or 300 hay. Open bale racks, plank deck and tied bales. Other compatible dry goods are limited to 60 weight.

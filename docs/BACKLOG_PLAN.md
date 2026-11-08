@@ -7896,3 +7896,44 @@ Release verification for the tractor-storage slice:
   The primary checkout stays detached at 030d809 with its road WIP intact;
   `/home/henry/.codex/worktrees/pilot-entry/Aclone` retains the uncommitted NPC
   performance candidate. Integrate those deliberately before resuming their work.
+
+### Priority feedback — Trailer navigation and reversing lights (2026-11-08)
+
+Henry relayed Lightmun's report: parked trailers trap residents, and reversing to
+hitch a trailer at night needs rear illumination. Complete these as separate
+logical fixes, with relevant tests and browser verification before each release.
+
+1. Trailer navigation: reproduce with `node --import tsx --test
+tests/npc-trailer-navigation.test.ts`. A walking resident and a tractor driver
+   must reach a destination beyond rotated parked trailers using ordinary `move`
+   inputs; no relocation of the resident/trailer or cargo changes. A newly parked,
+   moved or removed trailer must invalidate an existing route without rebuilding
+   terrain grids or bypassing the shared planning time budget. Stored rigs must
+   not block routes. If already overlapped, movement strictly toward the nearest
+   free boundary must work, while inward movement and entry from outside remain
+   blocked. A genuinely blocked destination must fail safely without movement.
+   Run relevant navigation-budget, ground-collision, trailer and parking tests,
+   TypeScript, Prettier and build. Browser: watch actual NPC input-driven travel
+   around a trailer and recovery from overlap; capture passing evidence.
+2. Reverse illumination: add a failing light-state/render test before production.
+   Tractor reverse travel must illuminate the rear hitch area at night; forward
+   travel, stopped/parked tractors and non-tractors must not emit reverse light.
+   Expose enable/output/reach controls in World Builder with one canonical set of
+   defaults, preserving settings validation/save/export. Browser: reverse toward
+   a trailer at night, verify the rear ground/hitch is visible, then stop and drive
+   forward to verify light-off states, including low graphics. Keep light/shadow
+   costs bounded. Run relevant lighting/tractor/settings tests, TypeScript,
+   Prettier and build; update player/world-builder documentation.
+
+Status: navigation implementation verified; release 0.131.10 pending. Lighting follows.
+
+- Confirmed failing tests for missing planned detours, changed obstacles and
+  overlap escape before production changes; retained all assertions.
+- All 67 relevant navigation, budget, trailer, parking and ground tests pass.
+- Both Chromium flows pass: a tractor resident detours around the rotated trailer,
+  and an overlapped walking resident escapes using ordinary movement. The trailer
+  and cargo remain unchanged. Evidence: `output/trailer-feedback/browser/`.
+- TypeScript, production build and Prettier pass. Dynamic trailer changes reuse
+  cached terrain grids and consume the existing shared planning budget.
+- Preserve the separate road and NPC-performance WIP. The performance candidate
+  also edits navigation.ts and will require deliberate integration.

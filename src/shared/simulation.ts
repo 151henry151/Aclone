@@ -3491,6 +3491,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
         { x: nx, z: nz },
         p.vehicle === 5 ? 0.25 : (v.collisionRadius ?? 1.3),
         attachedTrailer(w, p)?.id,
+        true,
       )
     ) &&
     !creatorBlocksSegment(
