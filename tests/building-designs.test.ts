@@ -45,16 +45,26 @@ test('every catalogue building offers six complete designs with valid material l
         b.style = style.id;
         b.size = size.id;
         const model = buildingModel(b, (m) => m);
-        let triangles = 0;
+        let triangles = 0,
+          interiorTriangles = 0;
         model.traverse((o) => {
           if (o instanceof T.Mesh) {
-            triangles += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3;
+            const count = (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3;
+            let interior = false;
+            for (let ancestor: T.Object3D | null = o; ancestor; ancestor = ancestor.parent)
+              if (ancestor.userData.interior) interior = true;
+            if (interior) interiorTriangles += count;
+            else triangles += count;
             assert.ok([...o.geometry.attributes.position.array].every(Number.isFinite), kind);
           }
         });
         assert.ok(
           triangles < (kind === 'starport' ? 30000 : kind === 'boathouse' ? 3500 : 2200),
           `${kind} ${style.id}: ${triangles}`,
+        );
+        assert.ok(
+          interiorTriangles <= (kind === 'starport' ? 15000 : 6000),
+          `${kind} ${style.id}: ${interiorTriangles} interior triangles`,
         );
         model.traverse((o) => {
           if (o instanceof T.Mesh) {
@@ -197,14 +207,20 @@ test('lodging entrances remain outside the enlarged lobby instead of behind its 
     const b = { ...makeBuilding('preview', 'hotel', 0, 0), style: 'red-timber', size: size.id };
     const porch = buildingPlan(b).volumes[1];
     const root = buildingModel(b, (m) => m);
+    root.updateMatrixWorld(true);
+    const doors: T.Mesh[] = [];
+    root.traverse((o) => {
+      if (
+        o instanceof T.Mesh &&
+        o.geometry instanceof T.PlaneGeometry &&
+        Math.abs(o.geometry.parameters.height - 2.23) < 0.001 &&
+        o.parent?.userData.doorPivot
+      )
+        doors.push(o);
+    });
+    assert.ok(doors.length > 0, size.id + ' has an animated pedestrian door');
     assert.ok(
-      root.children.some(
-        (o) =>
-          o instanceof T.Mesh &&
-          o.geometry instanceof T.PlaneGeometry &&
-          Math.abs(o.geometry.parameters.height - 2.23) < 0.001 &&
-          o.position.z > porch.z + porch.depth / 2,
-      ),
+      doors.some((o) => o.getWorldPosition(new T.Vector3()).z > porch.z + porch.depth / 2),
       size.id,
     );
   }
