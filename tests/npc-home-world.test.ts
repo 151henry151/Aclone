@@ -77,7 +77,9 @@ test('home-world policy restores a traveller without transferring assets and rej
     assert.equal(q.online, false);
     const resident = (controller as any).residents[0];
     assert.ok(
-      !(controller as any).choices(resident, home, p).some((c: any) => c.id.startsWith('space_')),
+      !(await (controller as any).choices(resident, home, p, new AbortController().signal)).some(
+        (c: any) => c.id.startsWith('space_'),
+      ),
     );
     const port = home.buildings.find((b) => b.kind === 'starport')!;
     p.x = port.x;

@@ -168,11 +168,16 @@ test('physics ticks do not wait for planner choice building', async () => {
   s.store.close();
 });
 test('scheduler bounds concurrency for a 50-resident fixture; pausing discards late model actions', async () => {
+  let firstStarted!: () => void;
+  const firstDispatch = new Promise<void>((resolve) => (firstStarted = resolve));
   const resolvers: ((r: BrainResult) => void)[] = [];
   const s = setup(
     {
       decide() {
-        return new Promise((resolve) => resolvers.push(resolve));
+        return new Promise((resolve) => {
+          resolvers.push(resolve);
+          if (resolvers.length === 1) firstStarted();
+        });
       },
     },
     50,
@@ -180,10 +185,12 @@ test('scheduler bounds concurrency for a 50-resident fixture; pausing discards l
   const now = Date.now();
   s.residents.tick(0.05, now);
   assert.equal(resolvers.length, 0);
-  await flush();
+  await firstDispatch;
   assert.equal(resolvers.length, 1);
-  await flush();
+  await s.residents.dispatched();
   assert.equal(resolvers.length, 2);
+  await flush();
+  assert.equal(resolvers.length, 2, 'pending requests keep the concurrency slots occupied');
   s.residents.memory.pause('resident-0', true);
   resolvers[0](
     answer({
@@ -637,7 +644,7 @@ test('resident stays visible through delayed thinking, provider failure, backoff
     say(s.w, human.name, 'Resident, hello.', 'chat');
     s.residents.capture(s.w);
     s.residents.tick(0.05, now);
-    await flush();
+    await s.residents.dispatched();
     assert.equal(pending.length, 1);
     for (let i = 0; i < 10; i++) {
       now += 500;
@@ -655,7 +662,7 @@ test('resident stays visible through delayed thinking, provider failure, backoff
     assert.equal(pending.length, 1);
     now += 60000;
     s.residents.tick(0.05, now);
-    await flush();
+    await s.residents.dispatched();
     assert.equal(pending.length, 2);
     pending[1].resolve(
       answer({

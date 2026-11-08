@@ -257,7 +257,17 @@ The player notice discloses saved chat and relevant excerpts sent to TypeSafe/Je
 
 `Brain` is injectable; `OpenAIBrain`/`AnthropicBrain` handle provider formats and usage. Legacy `turn-tool.ts` smoke adapters support the full action union (Claude uses described field bounds plus Zod validation because its strict grammar cannot compile that union). Strict tool schemas describe outdoor vehicle switching and explicit garage retrieval as separate valid action shapes; the runtime action and garage rules still decide whether a particular request is legal. Configured residents use `conversation.ts`, `jev.ts` and `decision.ts`. `Residents` executes shared `act`/`move`; `Navigator` uses cached A* plus normal steering; `NpcMemory` persists state and `NpcBudget` reserves globally.
 
-Run `npm run check` and `npm run test:e2e -- tests/browser/npc.spec.ts`. Deterministic providers test legality, privacy, memory, failures, schedules, budgets and concurrency without keys/charges. Browser evidence uses real HTTP/WebSocket/UI, not live model intelligence. Paid legacy provider-only trial limits and measured results are retained in [release notes](RELEASE_NOTES.md#historical-npc-provider-trials); they do not test the entire current adaptive planner. Long-term survival, profitability and natural dialogue need live playtesting.
+Decision choice generation and observation preparation run in one bounded worker,
+using a copied world view and only the selected resident's journal/conversation.
+The live controller retains scheduling, action validation, budget reservations and
+persistence. World/character/conversation changes or operator pauses discard stale
+preparations before paid dispatch; failed workers can be replaced on retry. Expensive
+request phases and immediate reply saves yield to movement timers. This changes
+scheduling, not available gameplay choices, prices, privacy or world rules.
+
+For NPC changes, run the affected `node --import tsx --test tests/<name>.test.ts`
+files, `npm run build` and the relevant real browser flow. The broad
+`npm run check` and `npm run test:e2e -- tests/browser/npc.spec.ts` checks remain available. Deterministic providers test legality, privacy, memory, failures, schedules, budgets and concurrency without keys/charges. Browser evidence uses real HTTP/WebSocket/UI, not live model intelligence. Paid legacy provider-only trial limits and measured results are retained in [release notes](RELEASE_NOTES.md#historical-npc-provider-trials); they do not test the entire current adaptive planner. Long-term survival, profitability and natural dialogue need live playtesting.
 
 ## Gameplay request size
 

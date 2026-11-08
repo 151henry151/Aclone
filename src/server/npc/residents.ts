@@ -1,3 +1,4 @@
+import { setTimeout as yieldToMovement } from 'node:timers/promises';
 import { parkOnSignOff, restoreParkedSeat } from '../../shared/parked-vehicles';
 import { npcAccountRules } from '../../shared/npc-account-rules';
 import { checkResidentFuelPurchase } from './fuel';
@@ -15,7 +16,7 @@ import {
   recordBusinessAction,
 } from './business-requests.ts';
 import { checkHousingPurchase } from './housing.ts';
-import { savingChoices } from './ambitions.ts';
+import { refreshAmbition } from './ambitions.ts';
 import { planQuotes, changedQuote, checkOwnerCapitalAction } from './execution.ts';
 import {
   publicAddressees,
@@ -62,7 +63,7 @@ import {
   businessReturnDelay,
   cargoRelief,
 } from './business-policy.ts';
-import { economicMenu, enterpriseChoices } from './enterprise.ts';
+import { enterpriseChoices } from './enterprise.ts';
 import { carePlan } from './care.ts';
 import type { World, Player, Action } from '../../shared/types.ts';
 import { act, addPlayer, move, say } from '../../shared/simulation.ts';
@@ -85,12 +86,12 @@ import { careNeeded, secondsToDamage } from './strategy.ts';
 import { characterRevision } from './character-facts.ts';
 import { jevInstructions, LocalRequestError } from './jev.ts';
 import { farmerSituation } from './farmer.ts';
-import { adaptiveChoices, parishSurvey } from './adaptive.ts';
+import { parishSurvey } from './adaptive.ts';
+import { ChoicePreparation } from './choice-preparation';
 import { kindRecipe } from './chains.ts';
 import { conversationTool, conversationOutputLimit, unqueuedPromise } from './conversation.ts';
 import { operationAction } from './player-operations.ts';
 import { initialPresence, beginVisit } from './habits.ts';
-import { preferChoices } from './preferences.ts';
 import {
   conversationView,
   decisionAgenda,
@@ -142,6 +143,7 @@ export class Residents {
   private pollAt = 0;
   private planQueue: { resident: Resident; now: number }[] = [];
   private planning = false;
+  private choicePreparation = new ChoicePreparation();
   private planTimer?: ReturnType<typeof setTimeout>;
   constructor(
     private store: Store,
@@ -623,7 +625,7 @@ export class Residents {
     if (!row) throw Error('Resident account missing');
     return JSON.parse(String(row.state));
   }
-  private choices(r: Resident, w: World, p: Player) {
+  private async choices(r: Resident, w: World, p: Player, signal: AbortSignal) {
     const a = this.account(r);
     if (r.state.inSpace)
       return r.config.homeWorldOnly ? [] : spaceChoices(a, this.worlds, this.universe, w.settings);
@@ -657,17 +659,13 @@ export class Residents {
         ...c,
         tradeQuotes: planQuotes(w, c.plan),
       }));
-    const choices = [
-      ...savingChoices(w, p, r.state),
-      ...supplyChoices(w, p, r.state),
-      ...deliveries,
-      ...inspectionChoices(actual, p, r.state),
-      ...adaptiveChoices(w, p, r.state),
-    ];
+    refreshAmbition(w, p, r.state);
+    const choices = [...deliveries, ...inspectionChoices(actual, p, r.state)];
+    const after: typeof choices = [];
     const port = w.buildings.find((b) => b.kind === 'starport' && !b.construction);
     if (!r.config.homeWorldOnly && port && !p.task && !p.atHome && !p.game) {
       const visit: Step[] = [...travelPrep(p), { kind: 'travel', destination: port.id }];
-      choices.push({
+      after.push({
         id: 'space_takeoff',
         description:
           'Visit the spaceport and take off to explore galactic work, surveying or trade. Local money, skills and jobs remain here; galactic credits are separate. Consider unfinished work first.',
@@ -685,24 +683,20 @@ export class Residents {
         ),
       );
       if (n > 0)
-        choices.push({
+        after.push({
           id: 'space_exchange',
           description: `Convert ${n * w.settings.exchangeRate * 100} local cash to ${n} galactic credits at the port. One-way conversion, not profit.`,
           plan: [...visit, operation('exchange', { amount: n })],
           reconsiderSeconds: 600,
         });
     }
-    return learnedChoices(
-      r.state,
-      economicMenu(
-        w,
-        p,
-        preferChoices(focusCommitments(w, p, r.state, choices), r.config.preference, p.job),
-        r.config.preference,
-        visitorShouldHustle(r.config.id, r.state.presence),
-        r.state,
-      ),
-    ).map((c) => ({ ...c, tradeQuotes: planQuotes(w, c.plan) }));
+    return this.choicePreparation.run(w, p, r.state, signal, {
+      before: choices,
+      includeGoals: true,
+      after,
+      preference: r.config.preference,
+      busyVisit: visitorShouldHustle(r.config.id, r.state.presence),
+    });
   }
   private performSpace(r: Resident, w: World, step: Extract<Step, { kind: 'operation' }>) {
     const stateBefore = structuredClone(r.state),
@@ -1601,20 +1595,44 @@ export class Residents {
     const w = this.worlds.get(r.state.world),
       p = w?.players[r.state.playerId];
     if (w && !w.maintenance?.paused && p) {
-      try {
-        this.think(r, w, p, now);
-      } catch (err) {
-        console.error(`NPC ${r.config.id} think failed:`, err);
-        r.wake = false;
-        r.state.needsDecision = false;
-        r.state.nextAt = now + 60000;
-        r.state.until = r.state.nextAt;
-      }
+      this.planning = true;
+      const controller = new AbortController();
+      r.busy = controller;
+      r.chatBusy = this.dialogueDue(r, now);
+      void this.think(r, w, p, now, controller)
+        .catch(async (err) => {
+          await this.store.ready();
+          if (this.closed || controller.signal.aborted) return;
+          console.error(`NPC ${r.config.id} think failed:`, err);
+          r.wake = true;
+          r.state.needsDecision = true;
+          r.cooldown = now + 60000;
+          r.state.plannerRetryAt = r.cooldown;
+          r.state.nextAt = r.cooldown;
+          r.state.until = r.state.nextAt;
+        })
+        .finally(() => {
+          this.planning = false;
+          if (!r.pending && r.busy === controller) {
+            r.busy = undefined;
+            r.chatBusy = false;
+          }
+          this.pumpPlanner();
+        });
+      return;
     }
     this.pumpPlanner();
   }
-  private think(r: Resident, w: World, p: Player, now: number) {
+  private async think(r: Resident, w: World, p: Player, now: number, controller: AbortController) {
     const revision = characterRevision(p);
+    const conversationRevision = () =>
+      JSON.stringify([
+        r.state.conversationId,
+        r.state.helpQuestion,
+        r.state.questionFrom,
+        r.state.replyTo,
+      ]);
+    const preparedConversation = conversationRevision();
     const discardStaleReply = (world: World) => {
       const player = world.players[r.state.playerId];
       if (player && characterRevision(player) === revision) return false;
@@ -1633,6 +1651,36 @@ export class Residents {
       return true;
     };
     const chatOnly = this.dialogueDue(r, now);
+    const worldRevision = w.revision;
+    const preparedChoices =
+      !chatOnly && r.config.provider === 'jev'
+        ? await this.choices(r, w, p, controller.signal)
+        : undefined;
+    const preparationCurrent = () => {
+      if (
+        this.closed ||
+        controller.signal.aborted ||
+        this.memory.paused(r.config.id) ||
+        w.maintenance?.paused
+      )
+        return false;
+      if (
+        this.worlds.get(r.state.world) !== w ||
+        w.players[p.id] !== p ||
+        characterRevision(p) !== revision ||
+        w.revision !== worldRevision ||
+        conversationRevision() !== preparedConversation
+      ) {
+        r.wake = true;
+        r.state.needsDecision = true;
+        return false;
+      }
+      return true;
+    };
+    await this.store.ready();
+    if (!preparationCurrent()) return;
+    let phaseStarted = performance.now();
+    const preparationBudgetMs = 8;
     const snapshot = {
       netAssets: netAssets(w, p),
       liquidCapital: liquidCapital(w, p),
@@ -1644,10 +1692,21 @@ export class Residents {
       job: p.job ?? null,
     };
     const knownWorld = perceivedWorld(w, p, r.state, r.config.id === 'mabel');
+    const observation = await this.choicePreparation.observe(
+      knownWorld,
+      p,
+      r.state,
+      this.memory,
+      r.config.id,
+      controller.signal,
+    );
+    await this.store.ready();
+    if (!preparationCurrent()) return;
+    phaseStarted = performance.now();
     const request = structuredClone({
       instructions: instructions + '\nYour personality: ' + r.state.personality,
       observation: {
-        ...observe(knownWorld, p, r.state, this.memory, r.config.id),
+        ...observation,
         knowledge: marketKnowledge(w, r.state, r.config.id === 'mabel'),
         agenda: decisionAgenda(r.state),
         experiences: r.state.experiences,
@@ -1673,7 +1732,7 @@ export class Residents {
           : undefined,
         ...(!chatOnly && r.config.provider === 'jev'
           ? {
-              choices: this.choices(r, w, p),
+              choices: preparedChoices,
               space: { inSpace: !!r.state.inSpace, account: this.account(r) },
               parishSurvey: parishSurvey(knownWorld, p),
               farming: farmerSituation(knownWorld, p),
@@ -1683,6 +1742,14 @@ export class Residents {
           : {}),
       },
     });
+    // Observation, provider preparation and durable dispatch are separate turns;
+    // promise continuations alone do not let input timers or sockets run.
+    if (performance.now() - phaseStarted >= preparationBudgetMs) {
+      await yieldToMovement(0);
+      await this.store.ready();
+      if (!preparationCurrent()) return;
+    }
+    phaseStarted = performance.now();
     const { gameGuide: _guide, ...decisionObservation } = request.observation;
     let decisionRequest =
       r.config.provider === 'jev'
@@ -1737,6 +1804,12 @@ export class Residents {
       r.cooldown = now + 60000;
       return;
     }
+    if (performance.now() - phaseStarted >= preparationBudgetMs) {
+      await yieldToMovement(0);
+      await this.store.ready();
+      if (!preparationCurrent()) return;
+    }
+    phaseStarted = performance.now();
     const choices = 'choices' in request.observation ? request.observation.choices : undefined;
     const localChoice =
       !chatOnly &&
@@ -1812,7 +1885,6 @@ export class Residents {
     this.checkpoint(r, w);
     if (!chatOnly) r.nav = undefined;
     r.state.status = chatOnly ? 'Replying' : 'Thinking';
-    const controller = new AbortController();
     r.busy = controller;
     r.chatBusy = chatOnly;
     const pending: Promise<BrainResult> = chatOnly
@@ -1847,6 +1919,9 @@ export class Residents {
         : r.brain.decide(decisionRequest, controller.signal);
     r.pending = pending
       .then(async (result) => {
+        // An immediate/local answer must not chain its durable result save onto
+        // the dispatch save in the same turn.
+        await yieldToMovement(0);
         await this.store.ready();
         if (this.closed) return;
         if (reservation !== undefined)
@@ -2468,6 +2543,7 @@ export class Residents {
   }
   close() {
     this.closed = true;
+    void this.choicePreparation.close();
     if (this.planTimer) clearTimeout(this.planTimer);
     this.planTimer = undefined;
     this.planning = false;

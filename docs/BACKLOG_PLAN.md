@@ -7999,3 +7999,57 @@ Reverse-light release receipt:
   symlink. Evidence remains untracked under output/. No live grants or manual
   player edits. Primary road WIP and pilot-entry performance WIP remain intact;
   integrate their navigation/settings changes deliberately against these releases.
+
+### Resume performance before backlog item 19 — 2026-11-08
+
+The road slice stays pending until the original NPC responsiveness gate passes.
+Integrate the preserved pilot-entry candidate onto released 0.132.0 in this
+checkout, retaining tractor garage storage, trailer avoidance and reversing lights.
+The original failing-first tests and 249-test receipts remain under
+pilot-entry/output/npc-choice-preparation; do not rebuild those fixes from scratch.
+
+Completion criteria remain: exact menu/observation parity, selected journal and
+conversation privacy, cancellation/retry/stale reply safeguards, scheduler limits,
+strict provider schemas and the 96,000-byte request limit. Run affected NPC,
+checkpoint, road cache and navigation tests, including the new trailer navigation
+regressions, TypeScript and Prettier. No new gameplay values or rules are introduced.
+
+Run the existing populated-world browser replay with at least four actual NPC
+preparations: five seconds forward, one second left, one second right, ten seconds
+forward. Require successful independent NPC arrival, completed daily road work,
+connected client, forward speed >=1 m/s during the final straight section, and
+maximum server heartbeat below 100 ms. Retain original assertions and record FPS,
+ping/correction, profiles, browser errors and host load. Do not run tests/builds
+alongside the replay. Review a passing video before releasing or announcing.
+Old output/release-0.131.9 is failed candidate evidence, not a version reservation.
+The laptop currently has load averages below 1; the earlier heavy media jobs are
+no longer running. Both original WIP checkouts remain recoverable and unchanged.
+
+Resumed verification: 256 affected tests pass in two runs (50 focused and 206
+remaining), including storage/trailer compatibility, worker parity, conversation
+privacy, cancellation, strict schema variants, request size (95,977/96,000 bytes),
+checkpoint persistence and concurrency. The unmodified private-world replay passes
+all gates: five preparations/decisions, completed independent resident route and
+daily road work, maximum heartbeat 79.553 ms, p95 38.331 ms, zero gaps >=100 ms,
+maximum local ping 5 ms, correction 0.565 m and no browser errors. Minimum reported
+client FPS is 17; this is an NPC-stall fix, not universal smoothness certification.
+Evidence: output/npc-performance-resume/attempt-1/. Reviewed private video shows
+continuous terrain and the requested turns without an obvious long freeze or jump.
+Do not publish captured private labels; prepare anonymous demonstration evidence.
+Keep the provider action-schema correction in a separate logical commit from the
+worker/scheduling/cache change; release the verified checkpoint together.
+
+The anonymous public-evidence replay also passes unchanged assertions: five
+preparations, maximum heartbeat 94.029 ms, no gaps >=100 ms, maximum local ping
+30 ms, correction 0.877 m, no browser errors and minimum reported FPS 16. Business,
+resident and town display names are replaced and chat cleared before recording;
+raw private fixtures are never staged or posted. Both runs remain in the evidence;
+report frame-rate limitations rather than claiming all lag is fixed.
+
+Final release checks: production build (including `tsc --noEmit`) and Prettier
+pass. Review the unmasked anonymous 20.1-second clip,
+`output/npc-performance-resume/public-walk/video-review/walking_background_full_sequence.mp4`:
+forward movement, opposing turns, continued travel and release to 0 mph are visible;
+no obvious long freeze, teleport, collision or terrain gap. The reviewed clip
+contains generic resident labels and shipped map names, with no private chat,
+original human names or custom business labels. Prepare version 0.132.1.

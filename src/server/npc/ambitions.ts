@@ -15,12 +15,9 @@ export interface Ambition {
   requiredCash: number;
   chosenAt: number;
 }
-/** Savings is an executable income project with a purpose, not a wait instruction.
- * Targets come only from observed affordable-to-operate property, not a global
- * missing-building mandate. Jev can decline or change the milestone at review. */
-export function savingChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
-  if (p.task || p.learning || w.buildings.some((b) => b.owner === p.id && b.construction))
-    return [];
+/** Keep the live milestone current before preparing read-only income options. */
+export function refreshAmbition(w: World, p: Player, state: ResidentState) {
+  if (p.task || p.learning || w.buildings.some((b) => b.owner === p.id && b.construction)) return;
   if (
     state.ambition &&
     (state.ambition.world !== w.id ||
@@ -28,6 +25,14 @@ export function savingChoices(w: World, p: Player, state: ResidentState): Farmer
       w.buildings.some((b) => b.id === state.ambition?.target && b.owner === p.id))
   )
     delete state.ambition;
+}
+/** Savings is an executable income project with a purpose, not a wait instruction.
+ * Targets come only from observed affordable-to-operate property, not a global
+ * missing-building mandate. Jev can decline or change the milestone at review. */
+export function savingChoices(w: World, p: Player, state: ResidentState): FarmerChoice[] {
+  if (p.task || p.learning || w.buildings.some((b) => b.owner === p.id && b.construction))
+    return [];
+  refreshAmbition(w, p, state);
   const income = careerChoices(w, p, state)
     .filter(
       (c) =>

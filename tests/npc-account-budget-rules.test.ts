@@ -162,7 +162,7 @@ test('large account budgets retain the ordinary trade cap and courier hold reser
     store.close();
   }
 });
-test('resident conversion and off-world choices use the current or saved last local world', () => {
+test('resident conversion and off-world choices use the current or saved last local world', async () => {
   const { w, p } = localSetup(),
     other = createWorld('other', 'Other', 'owner'),
     store = new Store(':memory:'),
@@ -201,47 +201,53 @@ test('resident conversion and off-world choices use the current or saved last lo
       cash: 1000000,
       inventory: {},
     });
-    const choices = () => (rs as any).choices(resident, w, pilot) as FarmerChoice[];
-    const conversion = () =>
-      choices()
+    const choices = async () =>
+      (await (rs as any).choices(
+        resident,
+        w,
+        pilot,
+        new AbortController().signal,
+      )) as FarmerChoice[];
+    const conversion = async () =>
+      (await choices())
         .find((c) => c.id === 'space_exchange')
         ?.plan.filter(
           (s): s is Extract<Step, { kind: 'operation' }> =>
             s.kind === 'operation' && s.operation === 'exchange',
         )
         .map(operationAction)[0];
-    assert.equal(conversion()?.amount, 10);
+    assert.equal((await conversion())?.amount, 10);
     delete (w.settings as any).npcExchangeCashReserve;
     delete (w.settings as any).npcExchangeCreditLoad;
-    assert.equal(conversion()?.amount, 10);
+    assert.equal((await conversion())?.amount, 10);
     Object.assign(w.settings, { npcExchangeCashReserve: 5000, npcExchangeCreditLoad: 3 });
     const unit = w.settings.exchangeRate * 100;
     pilot.cash = 5000 + 2 * unit;
-    assert.equal(conversion()?.amount, 2);
+    assert.equal((await conversion())?.amount, 2);
     pilot.cash = 5000 + 5 * unit;
-    assert.equal(conversion()?.amount, 3);
+    assert.equal((await conversion())?.amount, 3);
     const a = (rs as any).account(resident);
     a.exchanged[w.id] = { day: Math.floor(w.time / 86400), amount: w.settings.exchangeCap - 1 };
     u.save(a);
-    assert.equal(conversion()?.amount, 1);
+    assert.equal((await conversion())?.amount, 1);
     const before = pilot.cash;
-    exchange(w, pilot, a, Number(conversion()!.amount));
+    exchange(w, pilot, a, Number((await conversion())!.amount));
     u.save(a);
     assert.equal(pilot.cash, before - unit);
-    assert.equal(conversion(), undefined);
+    assert.equal(await conversion(), undefined);
     a.exchanged = {};
     u.save(a);
     Object.assign(w.settings, { npcExchangeCreditLoad: 0 });
-    assert.equal(conversion(), undefined);
+    assert.equal(await conversion(), undefined);
     Object.assign(w.settings, { npcExchangeCashReserve: 0, npcExchangeCreditLoad: 3 });
     pilot.cash = unit;
-    assert.equal(conversion()?.amount, 1);
+    assert.equal((await conversion())?.amount, 1);
     Object.assign(w.settings, { npcAccountTradeBuyLoad: 2, npcAccountTradeCreditReserve: 0 });
     Object.assign(other.settings, { npcAccountTradeBuyLoad: 4, npcAccountTradeCreditReserve: 0 });
     a.credits = 100000;
     u.save(a);
     resident.state.inSpace = true;
-    assert.equal(trade(choices(), true)?.quantity, 2);
+    assert.equal(trade(await choices(), true)?.quantity, 2);
     resident.state.world = other.id;
     addPlayer(other, a.id, a.name);
     rs.memory.save(config.id, resident.state);
@@ -249,7 +255,12 @@ test('resident conversion and off-world choices use the current or saved last lo
     rs = new Residents(store, u, worlds, options);
     resident = (rs as any).residents[0];
     assert.equal(resident.state.world, other.id);
-    const away = (rs as any).choices(resident, other, other.players[a.id]) as FarmerChoice[];
+    const away = (await (rs as any).choices(
+      resident,
+      other,
+      other.players[a.id],
+      new AbortController().signal,
+    )) as FarmerChoice[];
     assert.equal(trade(away, true)?.quantity, 4);
     assert.equal(
       trade(spaceChoices(a, worlds, u), true)?.quantity,

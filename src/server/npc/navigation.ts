@@ -1,3 +1,4 @@
+import { roadGeometryStamp } from '../../shared/road-work';
 import { trailerBlocks } from '../../shared/trailers';
 import { sceneryBlocksSegment } from '../../shared/ground-contacts';
 import { sceneryObstaclesNear } from '../../shared/scenery-obstacles';
@@ -104,7 +105,7 @@ function geometryKey(w: World) {
     w.creator?.scenery,
     w.creator?.roads,
     w.creator?.resourceModels,
-    w.roads,
+    roadGeometryStamp(w.roads),
     w.retiredRoads,
     w.zones,
     w.towns.map((t) => [t.x, t.z, t.radius]),

@@ -6,8 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.132.1] - 2026-11-08
+
 ### Fixed
 
+- Keep NPC trade, savings and observation preparation off the movement thread; retain world rules and private-memory boundaries, and discard changed or cancelled requests before paid dispatch.
+- Let movement run between expensive request phases and immediate NPC reply saves; recover failed preparation without charging a model call.
+- Avoid repeatedly serializing mature road and river networks during route validation while retaining immediate detection of world edits.
 - Advertise both outdoor vehicle switching and garage retrieval as valid strict NPC provider actions, and keep complete requests within their existing limit by shortening repeated instructions.
 
 ## [0.132.0] - 2026-11-08

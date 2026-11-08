@@ -86,3 +86,54 @@ test('survey keys do not serialize thousands of unchanged resource records every
   w.additionalResources[2500].item = 'stone';
   assert.notEqual(roadGeometryKey(w), moved, 'resource kind changes update collision geometry');
 });
+
+test('mature survey keys stay compact while tracking in-place road and river edits', async () => {
+  const { roadGeometryKey } = await import('../src/shared/road-work');
+  const w = createWorld('compact-survey', 'Survey', 'owner');
+  w.roads = Array.from({ length: 2003 }, (_, i) => ({
+    a: { x: i, z: 300 },
+    b: { x: i + 1, z: 300 },
+    width: 5,
+  }));
+  w.northernIsland = {
+    version: 1,
+    seed: 123,
+    radius: 10000,
+    centreZ: -10000,
+    preserveZ: -500,
+    blendZ: -1000,
+    mountain: { x: 0, z: -10000, height: 1000, radius: 2000 },
+    regions: [],
+    ponds: [],
+    resources: [],
+    previousArea: 1000,
+    area: 65000,
+    rivers: [
+      {
+        id: 'river',
+        name: 'River',
+        points: Array.from({ length: 2500 }, (_, i) => ({
+          x: i * 1.3,
+          z: -10000 + i,
+          level: 1000 - i / 3,
+          width: 3,
+          depth: 0.3,
+        })),
+      },
+    ],
+  };
+  const key = roadGeometryKey(w);
+  assert.ok(key.length < 30000, `unchanged geometry key is ${key.length} characters`);
+  assert.equal(roadGeometryKey(w), key);
+  w.roads[1000].width++;
+  let changed = roadGeometryKey(w);
+  assert.notEqual(changed, key);
+  for (const field of ['x', 'z', 'level', 'width', 'depth'] as const) {
+    w.northernIsland.rivers[0].points[10][field]++;
+    const next = roadGeometryKey(w);
+    assert.notEqual(next, changed, `${field} edits invalidate the river survey`);
+    changed = next;
+  }
+  w.roads.reverse();
+  assert.notEqual(roadGeometryKey(w), changed, 'road ordering changes invalidate');
+});
