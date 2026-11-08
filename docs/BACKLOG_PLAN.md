@@ -9,13 +9,12 @@ supersedes those restrictions for that cut. Later authorizations and operations 
 
 ## Current priority — movement responsiveness, 2026-11-06
 
-Versions 0.131.4–0.131.7 are pushed, deployed and announced. Keep ordinary
-backlog work paused. The road/network/NPC fixes pass their recorded criteria;
-the remaining persistence-latency criterion does not. Do not describe overall
-responsiveness as finished. The next work is isolating durable database I/O
-from the movement loop without losing transaction ordering or saved events.
-The detailed measurements and unsuccessful experiments are at the end of this
-plan. Unfinished item 19 remains local work and must not be deployed.
+Versions 0.131.4–0.131.8 are pushed, deployed and announced. Keep ordinary
+backlog work paused. Periodic checkpoints now meet their isolated responsiveness
+criteria, but live profiling still finds a 733 ms pause during NPC choice
+preparation and 126–127 ms resident-save pauses. Do not describe overall
+responsiveness as finished. Isolate and repair decision-preparation work next;
+retain unfinished item 19 locally and exclude it from deployments.
 
 ## Completion protocol
 
@@ -7781,3 +7780,37 @@ Production build and changed-file Prettier checks pass. The reviewed 18.96-secon
 browser clip shows continuous travel, opposing turns and a clean stop without
 visible rubber-banding or terrain gaps. It begins already moving, so it does not
 prove initial keypress latency. Live deployment and verification remain pending.
+
+### Periodic saves — Done and live, 2026-11-07
+
+Release 0.131.8, commit `52d81ba3339beab73276d3cc07a9fb6a4b981924`, is pushed
+and matches the live checkout. The game health endpoint, public client and website
+report 0.131.8. Read-only browser checks pass with no errors, including map-worker
+availability and the building gallery. The deployment takes an online backup at
+`/var/lib/aclone/backups/pre-deploy-20261107-192154.sqlite`.
+The bot's screenshot announcement is verified:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1568783135905423390
+
+The 45-second live profile records 413 health requests: median 1.489 ms,
+p95 39.305 ms, maximum 732.788 ms, three above 100 ms. The largest pause is
+NPC `choices`/`adaptiveChoices` preparation, including cargo feasibility and
+water-site/chain surveys. Two 125.843/127.417 ms requests overlap resident
+memory/action checkpoint work. These remain open; the isolated periodic-save
+criteria passed, but overall responsiveness has not. Service PID 370797 and
+restart count 0 remain unchanged during profiling; inspector port 9229 is closed.
+Evidence stays under `output/release-0.131.8/` and `output/async-checkpoint/`.
+
+### NPC decision preparation — criteria before production, 2026-11-07
+
+Reproduce the live choice-generation pause on an isolated mature world. Keep
+actual eligible choices, quantities, prices, privacy boundaries and ordering;
+do not remove choices or lower world-configurable limits to meet a timing gate.
+Before production changes, add a regression that keeps a 10 ms event-loop
+heartbeat below 100 ms while the real adaptive catalogue is assembled. Require
+identical choices to the current synchronous calculation on the same snapshot,
+no live-world mutations, bounded concurrent preparation, cancellation on close,
+and no stale result applied after world/character changes. Cover failure without
+charging a model call and recovery on subsequent attempts. Run affected NPC
+planning/economics/privacy tests, TypeScript and formatting, then repeat walking
+and turning in the browser with decision preparation active. Preserve all timing
+outliers. Do not resume item 19 while the recorded responsiveness gate fails.
