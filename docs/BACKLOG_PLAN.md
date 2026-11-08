@@ -7,14 +7,13 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
-## Current priority — movement responsiveness, 2026-11-06
+## Current priority — resume road and river routing, 2026-11-08
 
-Versions 0.131.4–0.131.8 are pushed, deployed and announced. Keep ordinary
-backlog work paused. Periodic checkpoints now meet their isolated responsiveness
-criteria, but live profiling still finds a 733 ms pause during NPC choice
-preparation and 126–127 ms resident-save pauses. Do not describe overall
-responsiveness as finished. Isolate and repair decision-preparation work next;
-retain unfinished item 19 locally and exclude it from deployments.
+The NPC preparation responsiveness gate now passes and is released as 0.132.1.
+Resume item 19 from its preserved dirt-road/ford candidate, retaining all existing
+acceptance criteria. Paving, bridges and trucks remain pending. The checkpoint
+fixes measured NPC server stalls; client FPS dips remain and must continue to be
+measured during browser validation. Full release evidence is recorded below.
 
 ## Completion protocol
 
@@ -8053,3 +8052,24 @@ forward movement, opposing turns, continued travel and release to 0 mph are visi
 no obvious long freeze, teleport, collision or terrain gap. The reviewed clip
 contains generic resident labels and shipped map names, with no private chat,
 original human names or custom business labels. Prepare version 0.132.1.
+
+### NPC responsiveness — Done and live, 2026-11-08
+
+Release 0.132.1, commit `c539adb125b84f5acad4d0bcd78baf1fbde2cc16`, is pushed
+and deployed from backlog-implementation. The separate provider-schema commit
+`ee327e0` is included. All 256 relevant tests, both unchanged browser replays,
+TypeScript, production build and changed-file Prettier pass. The reviewed public
+clip shows the complete requested walking/turning sequence. Minimum reported
+16–17 FPS remains a limitation; do not claim general client performance is solved.
+
+The deployment's immediate public check hit a startup 502; subsequent independent
+checks pass: game and website report 0.132.1, correct script and map worker load,
+gallery hashes match and the public browser has no errors. Service PID 383656,
+zero automatic restarts, running exactly the pushed release commit. Database
+backup: `/var/lib/aclone/backups/pre-deploy-20261108-123836.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-123926.tar.gz`.
+
+The bot announcement and anonymous screenshot were posted and re-read:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569043825287241902
+Evidence: `output/npc-performance-resume/`. No main push, PR or player edits.
+Mark this priority slice done; resume item 19 next, leaving piloted spaceflight out.
