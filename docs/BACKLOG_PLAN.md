@@ -7,15 +7,16 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
-## Current priority — player-built bridges, 2026-11-08
+## Current priority — cold scenery survey stalls, 2026-11-08
 
 Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
 alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
 The focused calendar/climate allocation improvement is released as 0.135.1.
-Resume item 19 stage 4, paid player bridge construction and road integration,
-with all recorded criteria. Preserve the populated-world responsiveness gate;
-remaining client rendering costs and occasional slow frames are still open.
-Automotive manufacturing and highway trucks follow bridges in dependency order.
+Item 19 stage 4, paid player bridge construction and road integration, is released
+as 0.136.0. Fix the confirmed cold-scenery survey stalls next, preserving the
+populated-world responsiveness gate; remaining client rendering costs and
+occasional slow frames are still open. Automotive manufacturing and highway
+trucks follow this performance fix in dependency order.
 
 ## Completion protocol
 
@@ -9017,3 +9018,22 @@ Prettier and `git diff --check` pass, and the final long-context NPC check remai
 95,353/96,000 bytes after documentation updates. Production build retains the
 existing large-bundle warning. Release only the complete bridge slice as 0.136.0;
 keep factory/truck work and the separately identified cold-scenery follow-up open.
+
+**Item 19 stage 4 implementation done and pushed:**
+`9d4d721b0b144ce07b292cd5ec390d8dccba5523` on `backlog-implementation`, with the
+remote SHA verified through GitHub. All recorded feature gates pass. Exact-SHA
+deployment and the reviewed screenshot announcement are in progress; do not yet
+claim that this version is live.
+
+**Item 19 stage 4 done, pushed, deployed and announced (2026-11-08).**
+Version 0.136.0 runs exact commit `9d4d721b0b144ce07b292cd5ec390d8dccba5523`.
+The game service is active with zero automatic restarts, and health reports five
+worlds. The website deployment and read-only live browser check pass: release
+version, bridge/air-draft client keys, worker MIME, public gallery and zero browser
+errors. No live player account or data was changed by verification.
+Evidence: `output/player-bridges/live-verification.json`, game/website deployment
+logs, and `output/player-bridges/release/receipt.json`.
+The bot announcement includes the two reviewed bridge screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569116335328202843.
+Next: bound cold scenery generation during background road surveys before
+automotive manufacturing. Retain the documented client performance limitations.
