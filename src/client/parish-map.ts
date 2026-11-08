@@ -1,3 +1,4 @@
+import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { vehicleDef } from '../shared/vehicle-config';
 import { waterSourceRules } from '../shared/water-source-rules';
 import { mapIcon } from './map-icons';
@@ -1033,7 +1034,7 @@ export class ParishMap {
       );
     }
     for (const [key, v] of Object.entries(this.world.parkedVehicles ?? {})) {
-      if (v.owner !== this.me.id) continue;
+      if (v.owner !== this.me.id || v.inside === GARAGE_STORAGE) continue;
       const garage = this.world.buildings.find((b) => b.id === v.inside);
       const point = {
         x: garage?.x ?? v.x,

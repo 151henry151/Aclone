@@ -62,6 +62,7 @@
   "refuelSpeed": 0.5,
   "vehiclesPersist": false,
   "parkingNpcs": true,
+  "garageStoresSpareTractors": true,
   "parkingSignOff": true,
   "parkingGraceDays": 7,
   "parkingTowFee": 2000,

@@ -18,7 +18,7 @@ import { boatSlot } from './boats';
 import { hasMotor, vehicleDef } from './vehicle-config';
 import { vehiclePaint } from './appearance';
 import { vehicleRecord } from './vehicle-services';
-import { fuelCapacity, fuelVehicle, isTractor, switchVehicle } from './tractors';
+import { fuelCapacity, fuelVehicle, isTractor, returnTractor, switchVehicle } from './tractors';
 import { worldItems } from './world-catalogue';
 import { fuelRules } from './fuel-rules';
 export interface ParkedVehicle {
@@ -34,7 +34,21 @@ export interface ParkedVehicle {
   condition: number;
   paint?: string;
   parkedAt: number;
+  /** Building ID, or GARAGE_STORAGE for the shared spare-tractor store. */
   inside?: string;
+}
+export const GARAGE_STORAGE = '@tractor-garage';
+export const tractorGarage = (b?: Building) =>
+  b?.kind === 'garage' && !b.construction && !b.aircraftHangar;
+export function storesSpareTractors(w: World, p: Player) {
+  return persistentVehicles(w, p) && parkingRules(w.settings).garageStoresSpareTractors;
+}
+/** Resolve virtual storage only when a caller needs a real garage destination. */
+export function parkedGarage(w: World, p: Player, inside?: string) {
+  if (inside !== GARAGE_STORAGE) return w.buildings.find((b) => b.id === inside);
+  return w.buildings
+    .filter(tractorGarage)
+    .sort((a, b) => Math.hypot(p.x - a.x, p.z - a.z) - Math.hypot(p.x - b.x, p.z - b.z))[0];
 }
 export const parkedKey = (owner: string, slot: number) => `${owner}:${slot}`;
 export function persistentVehicles(w: World, p: Player) {
@@ -50,6 +64,15 @@ export function parkedVehicle(w: World, p: Player, slot: number) {
 export function parkedReturnReason(w: World, p: Player, slot: number, building?: Building) {
   if (!persistentVehicles(w, p)) return;
   const v = parkedVehicle(w, p, slot);
+  if (
+    isTractor(slot) &&
+    ((storesSpareTractors(w, p) &&
+      slot !== (isTractor(p.vehicle) ? p.vehicle : returnTractor(p))) ||
+      v?.inside === GARAGE_STORAGE)
+  ) {
+    if (!tractorGarage(building)) return 'Visit a completed tractor garage to switch tractors';
+    return;
+  }
   if (!v) return;
   if (v.inside) {
     if (building?.id !== v.inside) return 'Visit the garage where this vehicle is stored';
@@ -60,6 +83,7 @@ export function parkedReturnReason(w: World, p: Player, slot: number, building?:
   }
 }
 export function parkCurrentVehicle(w: World, p: Player, inside?: string) {
+  if (isTractor(p.vehicle)) p.lastTractor = p.vehicle;
   const record: ParkedVehicle = {
     owner: p.id,
     slot: p.vehicle,
@@ -126,6 +150,7 @@ export function switchPersistentVehicle(
     p.x = old.x - Math.cos(old.heading) * offset;
     p.z = old.z + Math.sin(old.heading) * offset;
   }
+  storeSpareTractors(w, p);
   p.engine = false;
   p.lights = false;
 }
@@ -164,11 +189,46 @@ export function prepareParkingRules(w: World) {
   w.parkingRulesVersion = 1;
   return true;
 }
+/** Storage retains the actual machine and its rig; it needs no outdoor parking space.
+ * Re-running this on load or rule activation is safe, including worlds with no garage yet. */
+export function storeSpareTractors(w: World, p: Player) {
+  if (!storesSpareTractors(w, p)) return false;
+  let changed = false;
+  const current = isTractor(p.vehicle) ? p.vehicle : returnTractor(p);
+  for (const v of Object.values(w.parkedVehicles ?? {})) {
+    if (v.owner !== p.id || !isTractor(v.slot) || v.slot === current) continue;
+    if (v.inside !== GARAGE_STORAGE) {
+      v.inside = GARAGE_STORAGE;
+      changed = true;
+    }
+  }
+  for (const [key, fuel] of Object.entries(p.parkedFuel ?? {})) {
+    const slot = Number(key);
+    if (!isTractor(slot) || slot === current || parkedVehicle(w, p, slot)) continue;
+    (w.parkedVehicles ??= {})[parkedKey(p.id, slot)] = {
+      owner: p.id,
+      slot,
+      x: p.x,
+      z: p.z,
+      y: p.y,
+      heading: p.heading,
+      fuel,
+      condition: vehicleRecord(w, p, slot).condition,
+      paint: vehiclePaint(p, slot),
+      parkedAt: w.time,
+      inside: GARAGE_STORAGE,
+    };
+    delete p.parkedFuel![slot];
+    changed = true;
+  }
+  return changed;
+}
 /** Each successful conversion consumes its legacy tank. Unsafe conversions remain pending. */
 export function migrateParkedVehicles(w: World) {
   let changed = false;
   for (const p of Object.values(w.players)) {
     if (!persistentVehicles(w, p)) continue;
+    changed = storeSpareTractors(w, p) || changed;
     for (const [key, fuel] of Object.entries(p.parkedFuel ?? {})) {
       const slot = Number(key);
       if (!parkableVehicle(w, slot) || slot === p.vehicle || parkedVehicle(w, p, slot)) continue;

@@ -1,3 +1,4 @@
+import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { parkingStatus, tractorWaypoint } from './parking-status';
 import { persistentVehicles } from '../shared/parked-vehicles';
 import { waterSourceRules } from '../shared/water-source-rules';
@@ -1266,7 +1267,7 @@ function drawMap() {
   }
   ctx.fillStyle = '#ffe791';
   for (const v of Object.values(world.parkedVehicles ?? {})) {
-    if (v.owner !== me.id) continue;
+    if (v.owner !== me.id || v.inside === GARAGE_STORAGE) continue;
     const garage = world.buildings.find((b) => b.id === v.inside);
     ctx.fillRect(sx(garage?.x ?? v.x) - 3, sz(garage?.z ?? v.z) - 3, 6, 6);
   }

@@ -2,6 +2,7 @@
 import type { Player, World } from '../shared/types';
 import { fuelVehicle, isTractor } from '../shared/tractors';
 import {
+  GARAGE_STORAGE,
   parkedRefuelStatus,
   parkedReturnReason,
   persistentVehicles,
@@ -11,7 +12,9 @@ import { vehicleDef } from '../shared/vehicle-config';
 /** Guidance always refers to the physical tank, never the walker's legacy fuel. */
 export function parkingStatus(w: World, p: Player) {
   if (p.vehicle !== 5 || !persistentVehicles(w, p) || p.inside || p.atHome || p.task) return;
-  const owned = Object.values(w.parkedVehicles ?? {}).filter((v) => v.owner === p.id);
+  const owned = Object.values(w.parkedVehicles ?? {}).filter(
+    (v) => v.owner === p.id && v.inside !== GARAGE_STORAGE,
+  );
   const v = owned.find((v) => v.slot === fuelVehicle(p, w)) ?? owned[0];
   if (!v) return;
   const garage = w.buildings.find((b) => b.id === v.inside);
@@ -42,7 +45,7 @@ export function parkingStatus(w: World, p: Player) {
 export function tractorWaypoint(w: World, p: Player) {
   if (!persistentVehicles(w, p)) return;
   return Object.values(w.parkedVehicles ?? {})
-    .filter((v) => v.owner === p.id && isTractor(v.slot))
+    .filter((v) => v.owner === p.id && isTractor(v.slot) && v.inside !== GARAGE_STORAGE)
     .map((v) => {
       const garage = w.buildings.find((b) => b.id === v.inside);
       return {

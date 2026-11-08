@@ -7814,3 +7814,62 @@ charging a model call and recovery on subsequent attempts. Run affected NPC
 planning/economics/privacy tests, TypeScript and formatting, then repeat walking
 and turning in the browser with decision preparation active. Preserve all timing
 outliers. Do not resume item 19 while the recorded responsiveness gate fails.
+
+### Priority fix — Keep spare tractors in garage storage (2026-11-07)
+
+Henry reports that Lightmun's fleet crowds his yard and makes boarding difficult.
+Before resuming backlog work, keep only the current/last-used tractor outdoors;
+switch models at a completed garage and keep all spare tractors invisible in storage.
+
+Completion criteria (before production changes):
+
+- Add fail-first tests in `tests/tractor-storage.test.ts`. Run
+  `node --import tsx --test tests/tractor-storage.test.ts`: migration of a crowded
+  saved fleet must preserve the current tractor's position, fuel, paint, condition
+  and attached trailer, while spare records become invisible garage storage.
+  Repeat migration and save/load without duplicating machines or losing assets.
+- Owned spare tractors, including ones with only legacy tanks or no parked record,
+  must refuse switching outside a completed garage. Garage switching must store the
+  previous tractor (even when reached on foot), restore the selected machine's
+  own tank/paint/condition and attached trailer, and leave only it outdoors.
+  Reject distant, unfinished and aircraft-only garages without mutation; preserve
+  existing cargo and blocked-departure safeguards. Aircraft and boats stay unchanged.
+- Expose `garageStoresSpareTractors` (default true) beside the existing parking
+  rules in World Builder; preserve it through settings validation, save/load and
+  portable designs. When false, retain the existing multiple parked tractor policy.
+  It applies when persistent parking is enabled; existing instant-switch worlds
+  retain their rules. Enabling it tidies existing fleets immediately.
+- Browser: load a local saved crowded fleet, confirm only the current tractor is
+  visible, walk away/return and use Find tractor, visit the garage, select a spare,
+  drive it out and park it. Confirm garage storage guidance, empty/no-spare state,
+  unavailable/blocked switching and the World Builder toggle. Capture a passing
+  screenshot and walkthrough; no live player mutations for testing.
+- Run relevant parking/tractor/render/snapshot/settings tests, `npx tsc --noEmit`,
+  production build and Prettier on changed paths. Update player/world-builder docs,
+  README and changelog. Keep unfinished roads and performance work out of this slice.
+- Commit, push, deploy and announce with screenshot only after these criteria pass,
+  following Henry's standing release instructions. Record verification and receipt.
+
+Status: implementation verified locally; release pending.
+
+- Confirmed the first three regression tests failed for the reported behaviors:
+  spare tractors stayed outside, owned spare recall bypassed the garage, and a
+  swap left the old tractor outdoors. Additional regressions caught obsolete map
+  pins (six markers instead of one) and resident plans naming virtual storage
+  instead of a real garage. Fixed these without relaxing the assertions.
+- 189 relevant tests pass across 22 files, including 10 new storage tests; fuel,
+  paint, condition, rig/cargo, save/load, rule/design round trips, no-garage worlds,
+  blocked departures, cargo limits and migration idempotence are covered.
+- Two actual Chromium browser flows pass: six-tractor migration → one rendered
+  tractor/map marker → board → garage swap → park → Find tractor → rule toggle;
+  and a single-tractor owner with no spares seeing disabled unaffordable purchase.
+  Screenshots and video are in `output/tractor-garage/browser/` (not committed).
+- TypeScript, production build and Prettier pass. A 48-player saved-world dry run
+  preserves ownership, current vehicles/tanks and every trailer; outdoor tractor
+  records fall from 12 to 9, with eight spare records safely stored (including
+  previously individually stored tractors). Repeat migration makes no change.
+  Release verification and the screenshot announcement follow before marking done.
+- The separate NPC-performance candidate and unfinished road work remain
+  unreleased in their original checkouts. Version 0.131.9 is now reserved for this
+  tractor fix; older performance evidence under `output/release-0.131.9/` is a
+  failed, unreleased candidate, not evidence for this release.

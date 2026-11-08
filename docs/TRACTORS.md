@@ -54,8 +54,14 @@ parked when changing machines; it is never duplicated or thrown away when choosi
 a smaller tank. Old saves' formerly shared fuel is adopted once when switching
 between legacy vehicles. Walking and robocrow scouting preserve the parked tank.
 
-Return to tractor recalls the last selected owned tractor. A garage is required
-for a new purchase; owned tractors can be recalled outside without another fee.
+In Puddlewick and other worlds with persistent parking, **Return to tractor** boards
+the last selected tractor where you left it. By default only that tractor remains
+outside; your other models stay invisibly in garage storage. Visit a completed
+tractor garage and use **Trade & services outside** to select another model or buy
+one. The old tractor goes into storage even if you walked to the garage. Each
+machine keeps its fuel, condition, paint and parked hitched trailer. World builders
+can disable spare storage to allow multiple parked tractors. Worlds without
+persistent parking retain instant recall of owned machines.
 Unload before moving to a machine with a smaller cargo limit. Tractors remain
 licence-exempt, like the starter tractor. Competitive minigames keep their existing
 standard tractor; the player's specialist and its fuel remain available afterwards.

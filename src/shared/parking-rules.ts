@@ -3,6 +3,7 @@ import defaults from '../../data/settings.json';
 export const parkingFields = {
   vehiclesPersist: { label: 'Vehicles persist in the world' },
   parkingNpcs: { label: 'Residents must return to parked vehicles' },
+  garageStoresSpareTractors: { label: 'Store spare tractors in garages' },
   parkingSignOff: { label: 'Park vehicles on sign-off' },
   parkingGraceDays: { label: 'Public-road parking grace (game days)', min: 0, max: 365, step: 1 },
   parkingTowFee: { label: 'Towing fee (hundredths of a denarius)', min: 0, max: 10000000, step: 1 },

@@ -7,6 +7,8 @@ import { parkedFootprintBlocked, vehicleFootprint } from './vehicle-footprint';
 import { parkingFields, parkingRules } from './parking-rules';
 import {
   migrateParkedVehicles,
+  GARAGE_STORAGE,
+  tractorGarage,
   removeAbsentParking,
   relocatedParkedTrailers,
   clearParkedRig,
@@ -1707,9 +1709,11 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       const returningParked = persistentVehicles(w, p) && !!parkedVehicle(w, p, slot);
       const garageDeparture =
         persistentVehicles(w, p) &&
-        parkingBuilding?.kind === 'garage' &&
+        tractorGarage(parkingBuilding) &&
         isTractor(slot) &&
-        (!parkedVehicle(w, p, slot) || parkedVehicle(w, p, slot)?.inside === parkingBuilding.id);
+        (!parkedVehicle(w, p, slot) ||
+          parkedVehicle(w, p, slot)?.inside === GARAGE_STORAGE ||
+          parkedVehicle(w, p, slot)?.inside === parkingBuilding!.id);
       const garagePoint = garageDeparture
         ? kerbParking(w, parkingBuilding!, slot, `${p.id}:${slot}`, (point) =>
             clearParkedRig(w, `${p.id}:${slot}`, point),
@@ -2779,7 +2783,12 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       )
         settleYoungGrowth(w);
       Object.assign(w.settings, clean);
-      if (clean.vehiclesPersist === true || clean.parkingNpcs === true) migrateParkedVehicles(w);
+      if (
+        clean.vehiclesPersist === true ||
+        clean.parkingNpcs === true ||
+        clean.garageStoresSpareTractors === true
+      )
+        migrateParkedVehicles(w);
       refreshPumpRecipes(w);
       if (importPricingChanged) repriceGovernmentStores(w);
       w.revision++;

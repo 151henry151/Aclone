@@ -1846,6 +1846,17 @@ restores instant switching, while returning to an existing parked machine
 recovers its saved tank once. Residents follow parking by default (`parkingNpcs`),
 and driving sign-off leaves a parked record unless `parkingSignOff` is disabled.
 
+**Store spare tractors in garages** (`garageStoresSpareTractors`, default true)
+keeps only the current/last-used tractor outdoors when persistence is enabled.
+Other owned tractors remain invisible and can be selected at any completed
+non-aircraft garage. Fuel, paint, condition and parked hitched trailer cargo stay
+with the machine. Existing crowded fleets are tidied on load or when this rule is
+enabled, without moving the current tractor or changing aircraft/boats. Storage
+works even before a world has a garage; build one to retrieve a spare. Disabling
+the rule permits multiple outdoor tractors again, while already stored machines
+remain safely retrievable at a garage. The existing resident-parking opt-out also
+applies. No per-frame fleet migration is added.
+
 Parking defaults are `parkingReturnRange: 3` metres for boarding/refuelling,
 `parkingDoorOffset: 1.4` metres to the driver's left, `parkingSearchRange: 30`
 metres for a dry clear kerb, `parkingGraceDays: 7` game days on public roads, and
@@ -1867,10 +1878,11 @@ be disabled independently. Existing door schedules and interior-detail settings
 still apply; an entrance opens for a crossing and occupied rooms light up.
 
 These rules are included in validation, world saves, rule summaries and portable
-designs. Migration retains current drivers, converts spare legacy fuel tanks
-once to safe home kerbs or compatible garages, and leaves a tank pending when no
-safe site is available. Enabling persistence or resident parking also attempts
-this migration immediately. It never creates a parked machine in water.
+designs. Migration retains current drivers and converts spare tractor tanks to
+invisible storage by default. With spare storage disabled, legacy tanks convert
+once to safe home kerbs or compatible garages, staying pending when no safe site
+exists. Enabling persistence, resident parking or spare storage attempts migration
+immediately. It never creates an outdoor parked machine in water.
 
 ## Pilot name tags
 

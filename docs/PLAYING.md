@@ -827,7 +827,8 @@ details, and world owners can reduce or hide interiors in F10 → Rules.
 
 Use **Find tractor** on the HUD, in **Menu** or **Inventory**, or in **Actions** on
 phones. The navigation arrow and distance point to your nearest owned parked
-tractor, including its garage if stored. This also works while using another
+tractor, including its garage if individually stored. Spare tractors in shared garage
+storage have no outdoor marker. This also works while using another
 vehicle; it does not choose an aircraft or another player's tractor. Worlds that
 require a printed Parish map still require one for navigation. If there is no
 parked tractor, the menu button explains that instead of changing your destination.
@@ -838,7 +839,8 @@ paint and condition. The driver's body steps down beside it; an attached trailer
 stays with the machine. Return within the world's boarding reach (3 m by default)
 to board. The HUD shows its distance and direction, and **Mark parked vehicle**
 adds a waypoint. Your parked machines also appear as gold squares on the parish
-map and minimap. Stored machines are marked at their garage.
+map and minimap. Individually stored machines are marked at their garage; invisible
+spare-tractor storage does not leave markers at the old parking spots.
 
 An empty tank stays empty while you walk. Buy Fuel into your inventory, return to
 the machine and choose **Refuel parked vehicle**, or use Fuel from Inventory while
@@ -846,11 +848,20 @@ beside it. The control explains missing fuel, a full tank or an out-of-range
 vehicle. The amount per Fuel follows the world's item definition. Other players
 can help when the world's roadside-refuelling policy allows it.
 
-At a garage, choosing another tractor stores the machine you arrived in and drives
-the selected stored or newly bought machine out to a clear point. The interior
-shows the actual stored tractor. A tractor parked elsewhere must be retrieved
-there; the garage cannot recall it remotely. Boats keep their existing mooring,
-crew, lifeboat and refuelling rules.
+By default, only your current (last-used) tractor stays outside, wherever you leave
+it. Your other tractors wait invisibly in garage storage with their fuel, paint,
+condition and any parked hitched trailer intact. Visit any completed tractor garage
+and choose **Trade & services outside** to switch models. Selecting a spare stores
+the previous tractor, even if you arrived on foot, and drives the chosen machine
+out to a clear point. Buying another tractor works the same way. Your currently
+parked tractor must still be boarded where you left it; selecting that same model
+at a distant garage does not recall it.
+
+World builders can turn **Store spare tractors in garages** off to keep several
+tractors parked outdoors. Already stored spares remain safely in storage until
+retrieved. Individually stored machines can appear in garage interiors; shared
+spare storage is invisible. Boats and aircraft keep their existing parking,
+mooring, crew, lifeboat and refuelling rules.
 
 Press **E/Ctrl**, click a building or use the touch/controller interaction to park
 at a clear kerb and walk to its entrance. The panel opens after you enter. For garage repairs, trailer purchases, bulk

@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.131.9 keeps only your current tractor outdoors in persistent-parking worlds. Switch
+models at a garage; spares stay invisibly stored with their own fuel, paint,
+condition and parked trailer cargo. World builders can disable this policy.
+See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
+
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
 **Version 0.131.8 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**

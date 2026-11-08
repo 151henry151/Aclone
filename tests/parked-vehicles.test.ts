@@ -1,4 +1,4 @@
-import { parkedVehicle } from '../src/shared/parked-vehicles';
+import { parkedVehicle, GARAGE_STORAGE } from '../src/shared/parked-vehicles';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -110,7 +110,7 @@ test('garage switching stores the old tractor and refuses remote recall of an ou
   p.fleet = [0, 5, 24];
   p.parkedFuel = { 24: 12 };
   act(w, p.id, { type: 'vehicle', slot: 24, building: b.id });
-  assert.equal((w as any).parkedVehicles?.['owner:0']?.inside, b.id);
+  assert.equal((w as any).parkedVehicles?.['owner:0']?.inside, GARAGE_STORAGE);
   assert.equal(p.fuel, 12);
   p.x = 70;
   act(w, p.id, { type: 'vehicle', slot: 5 });
@@ -243,6 +243,7 @@ test('parked refuelling honors help policy, custom item rate and full or missing
 test('legacy spare tanks migrate once to safe home parking, preserving the current driver', async () => {
   const parking = await import('../src/shared/parked-vehicles');
   const { w, p } = setup();
+  w.settings.garageStoresSpareTractors = false;
   const home = makeBuilding('home', 'home', 0, -12);
   home.owner = p.id;
   w.buildings = [home];
@@ -266,6 +267,7 @@ test('legacy spare tanks migrate once to safe home parking, preserving the curre
 test('migration leaves blocked legacy fuel pending and public activation respects later overrides', async () => {
   const parking = await import('../src/shared/parked-vehicles');
   const { w, p } = setup();
+  w.settings.garageStoresSpareTractors = false;
   p.parkedFuel = { 24: 17 };
   p.fleet = [0, 5, 24];
   w.settings.seaLevel = 50;
@@ -563,7 +565,7 @@ test('a garage visit drives a stored tractor out to a clear kerb and stores the 
   act(w, p.id, { type: 'vehicle', slot: 24, building: b.id });
   assert.equal(p.inside, undefined);
   assert.equal(p.vehicle, 24);
-  assert.equal(parkedVehicle(w, p, 0)?.inside, b.id);
+  assert.equal(parkedVehicle(w, p, 0)?.inside, GARAGE_STORAGE);
   assert.equal(
     p.parkedFuel?.[0],
     undefined,
@@ -707,7 +709,7 @@ test('enabling persistence migrates spare tanks immediately without changing the
   p.parkedFuel = { 24: 19 };
   act(w, p.id, { type: 'settings', patch: { vehiclesPersist: true } });
   assert.equal(parkedVehicle(w, p, 24)?.fuel, 19);
-  assert.equal(parkedVehicle(w, p, 24)?.inside, 'garage');
+  assert.equal(parkedVehicle(w, p, 24)?.inside, GARAGE_STORAGE);
   assert.equal(p.parkedFuel[24], undefined);
   assert.equal(p.vehicle, 0);
   assert.equal(p.fuel, 31);

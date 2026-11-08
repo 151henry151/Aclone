@@ -1,6 +1,12 @@
 import { withinBuildingRange } from '../../shared/simulation';
-import { parkedVehicle, persistentVehicles } from '../../shared/parked-vehicles';
-import { returnTractor } from '../../shared/tractors';
+import {
+  parkedVehicle,
+  persistentVehicles,
+  parkedGarage,
+  storesSpareTractors,
+  GARAGE_STORAGE,
+} from '../../shared/parked-vehicles';
+import { returnTractor, isTractor } from '../../shared/tractors';
 import { parkingRules } from '../../shared/parking-rules';
 import { npcJourneyRules } from '../../shared/npc-journey-rules';
 import { nearbyFuelTanker } from './fuel';
@@ -34,11 +40,12 @@ export function travelPrep(p: Player, w?: World, destination?: Step): Step[] {
       ? parkedVehicle(w, p, returnTractor(p))
       : undefined;
   if (w && parked) {
+    const garage = parkedGarage(w, p, parked.inside);
     // This is the recovery walk itself. Never prepend the same walk again.
     if (
       (destination?.kind === 'move' &&
         Math.hypot(destination.x - parked.x, destination.z - parked.z) < 0.01) ||
-      (destination?.kind === 'travel' && destination.destination === parked.inside)
+      (destination?.kind === 'travel' && destination.destination === garage?.id)
     )
       return [];
     if (parked.fuel <= 0 && !(p.inventory.fuel > 0)) return leaveDistractions(p);
@@ -46,20 +53,22 @@ export function travelPrep(p: Player, w?: World, destination?: Step): Step[] {
       ...leaveDistractions(p),
       ...returnToParked(w, p, parked.slot),
       parked.slot === 0
-        ? act({ type: 'vehicle', slot: 0, ...(parked.inside ? { building: parked.inside } : {}) })
+        ? act({ type: 'vehicle', slot: 0, ...(garage ? { building: garage.id } : {}) })
         : operation('vehicle', {
             slot: parked.slot,
-            ...(parked.inside ? { building: parked.inside } : {}),
+            ...(garage ? { building: garage.id } : {}),
           }),
       ...(parked.fuel <= 0 ? [act({ type: 'use', item: 'fuel' })] : []),
       act({ type: 'engine' }),
     ];
   }
-  const slot = travelVehicle(p);
+  const slot = travelVehicle(p) === 5 ? 5 : w && storesSpareTractors(w, p) ? returnTractor(p) : 0;
   return [
     ...leaveDistractions(p),
     ...(p.fuel <= 0 && (p.inventory.fuel ?? 0) > 0 ? [act({ type: 'use', item: 'fuel' })] : []),
-    ...(p.vehicle !== slot ? [act({ type: 'vehicle', slot })] : []),
+    ...(p.vehicle !== slot
+      ? [slot === 0 || slot === 5 ? act({ type: 'vehicle', slot }) : operation('vehicle', { slot })]
+      : []),
     ...(slot !== 5 && !p.engine ? [act({ type: 'engine' })] : []),
   ];
 }
@@ -68,7 +77,7 @@ export function returnToParked(w: World, p: Player, slot: number): Step[] {
   const v = parkedVehicle(w, p, slot);
   if (!v) return [];
   if (v.inside) {
-    const b = w.buildings.find((b) => b.id === v.inside);
+    const b = parkedGarage(w, p, v.inside);
     return b && !withinBuildingRange(w, p, b) ? [{ kind: 'travel', destination: b.id }] : [];
   }
   return Math.hypot(p.x - v.x, p.z - v.z) > parkingRules(w.settings).parkingReturnRange
@@ -93,16 +102,25 @@ export function parkingActionPrep(w: World, p: Player, step: Step): Step[] {
         : undefined;
   if (slot === undefined) return [];
   const v = parkedVehicle(w, p, slot);
-  const route = returnToParked(w, p, slot);
-  if (v?.inside) {
+  const spare =
+    storesSpareTractors(w, p) &&
+    isTractor(slot) &&
+    slot !== (isTractor(p.vehicle) ? p.vehicle : returnTractor(p));
+  const garage = parkedGarage(w, p, spare ? GARAGE_STORAGE : v?.inside);
+  const route: Step[] = garage
+    ? withinBuildingRange(w, p, garage)
+      ? []
+      : [{ kind: 'travel', destination: garage.id }]
+    : returnToParked(w, p, slot);
+  if (garage) {
     if (a.type === 'vehicle') {
       // Repair the accepted step too, so arrival cannot lose the storage location.
-      if (step.kind === 'act' && step.action.type === 'vehicle') step.action.building = v.inside;
+      if (step.kind === 'act' && step.action.type === 'vehicle') step.action.building = garage.id;
       else if (step.kind === 'operation') {
         step.parameters = step.parameters.filter((p) => p.name !== 'building');
-        step.parameters.push({ name: 'building', value: v.inside });
+        step.parameters.push({ name: 'building', value: garage.id });
       }
-    } else return [...route, operation('vehicle', { slot, building: v.inside })];
+    } else return [...route, operation('vehicle', { slot, building: garage.id })];
   }
   return route;
 }

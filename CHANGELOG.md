@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.9] - 2026-11-07
+
+### Fixed
+
+- Keep only the current tractor outdoors and store spare models invisibly at garages, clearing crowded saved fleets without losing fuel, paint, condition or trailer cargo.
+- Require garage visits to switch tractors, keep navigation focused on outdoor machines, and expose the storage policy in World Builder.
+
 ## [0.131.8] - 2026-11-07
 
 ### Fixed
