@@ -2,6 +2,28 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.135.1 — Less repeated environment-settings work
+
+Reuse protected calendar and climate rule subsets while settings are unchanged.
+Apply each live World Builder field edit, deletion and replacement immediately;
+keep prior results immutable and avoid retaining departed worlds. Preserve all
+canonical defaults, deterministic weather, seasonal boundaries and loan periods.
+
+The same 30,000-query weather workload retains its output checksum and takes
+253.4 ms median instead of 461.7 ms. Repeated paired rule lookups create two
+resolved objects instead of 2,000. In the populated walking/NPC replay, sampled
+calendar/climate rule CPU time falls from 566.4 ms to 170.4 ms. Frame p95 improves
+from 56.4 to 50.7 ms, minimum FPS is 18, and one frame takes 104 ms. These are local
+measurements with remaining rendering costs, not a universal smoothness promise.
+Five NPC decisions and daily road growth complete; maximum server heartbeat is
+74.95 ms, ping 106 ms and prediction correction 0.337 m, with no browser errors.
+
+All 95 relevant unit checks and three real browser flows pass, including clear/
+snow changes, invalid bounds, custom seasons, winter crops, saved settings and
+stale loan-quote rejection. Synchronize that banking test with the first loan's
+rendered confirmation before requesting a second quote. TypeScript, formatting
+and production build pass.
+
 ## 0.135.0 — Towns grow into cities
 
 Earn city status through sustained development: by default, 80 occupied

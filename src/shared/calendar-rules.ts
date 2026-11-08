@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
+import { cachedRuleValues } from './cached-rule-values';
 export const calendarRuleFields = {
   calendarYearDays: { label: 'Days per year', min: 4, max: 3650, step: 1 },
   calendarSpringDay: { label: 'Spring start (zero-based day)', min: 0, max: 3650, step: 1 },
@@ -10,14 +11,7 @@ export const calendarRuleFields = {
   calendarLunarDays: { label: 'Lunar phase period (game days)', min: 1, max: 3650, step: 0.1 },
 } as const;
 export type CalendarRules = Pick<typeof defaults, keyof typeof calendarRuleFields>;
-export function calendarRules(settings: Partial<CalendarRules> = {}): CalendarRules {
-  return Object.fromEntries(
-    Object.keys(calendarRuleFields).map((key) => [
-      key,
-      settings[key as keyof CalendarRules] ?? defaults[key as keyof CalendarRules],
-    ]),
-  ) as CalendarRules;
-}
+export const calendarRules = cachedRuleValues(defaults, calendarRuleFields);
 
 export function winterDays(settings: Partial<CalendarRules> = {}) {
   const r = calendarRules(settings);

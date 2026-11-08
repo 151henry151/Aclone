@@ -8727,3 +8727,70 @@ https://discord.com/channels/1562183434254680175/1565527790785404968/15690867777
 Evidence: `output/city-paving/`. Live Puddlewick is below default city thresholds;
 no player/world settings were edited to force qualification. Continue measured
 client-performance follow-up, then stage 4 bridges.
+
+### Performance follow-up — Repeated calendar/climate rule resolution
+
+The 0.135.0 populated-world client profile records 221.8 ms in `calendarRules`,
+110.0 ms in its field mapper and 111.6 ms in `climateRules` during walking.
+Both resolvers allocate field lists, pairs and settings objects on every call,
+including repeated environmental/sea/render queries against unchanged settings.
+Before production edits, define this narrow optimization's completion criteria:
+
+- Add `tests/environment-rule-cache.test.ts`: repeated lookups of unchanged
+  settings reuse an immutable resolved subset, including absent/partial defaults.
+  Every field's in-place edit/deletion must take effect on the next call, as must
+  replacement settings and switching worlds. A prior result must not change;
+  unrelated settings must not leak into the resolved rules or invalidate them.
+  Run first and confirm failure from repeated allocation, not missing fixtures.
+- Preserve exact existing calendar/weather/sky fingerprints and custom/zero rules.
+  Run relevant calendar/climate/environment, astronomy, ocean, snow, farming and
+  financial-calendar tests. Do not change canonical defaults or add gameplay knobs
+  for an internal allocation optimization.
+- Measure an identical repeated weather-query workload before/after, retain its
+  checksum, and demonstrate reduced resolver allocation/work. Repeat the unchanged
+  populated-world walking/NPC/daily-growth replay; retain the <100 ms server gate
+  and record client frame/ping/correction results without promising universal FPS.
+- Browser: run the climate editor's clear/snow/reload/invalid-bounds flow and the
+  calendar editor's custom-year/invalid/empty/planted-winter/reload flow. Preserve
+  immediate world-builder effects. Review successful walking video/screenshots.
+- Require clean TypeScript, changed-file Prettier and production build. Release
+  only after these criteria pass; bridges remain the next feature stage.
+
+Calendar/climate reuse: all four new regressions fail first on repeated object
+allocation, then pass with weakly cached, frozen rule subsets and immediate
+field-by-field change detection. No settings are stored in a global world cache;
+old results remain stable and unrelated settings stay out of the resolved subset.
+The identical 30,000-query benchmark's median falls from 461.7 ms to 253.4 ms
+(45.1%); all five output checksums match. For 1,000 paired lookups, resolved
+objects fall from 2,000 to two. All 95 affected unit tests pass, including frozen
+weather/calendar/sky fingerprints, every live rule edit, snow, farming, tides,
+storm risk and financial-calendar consumers. TypeScript passes. README reviewed;
+retain released 0.135.0 wording until browser/performance/release gates complete.
+The first browser command omitted the project's tsx loader and could not load
+JSON; rerun using the documented `node --import tsx` test runner.
+
+Browser verification: climate clear/snow/reload/invalid-bounds and custom-calendar
+winter/farm/reload flows pass. The banking test first races the first loan's
+100 ms panel refresh: it requests the second quote after server acceptance but
+before the browser renders the signed loan, and the scheduled refresh removes
+that quote. Wait for the actual rendered loan before requesting another. The
+retry passes unchanged stale-offer rejection, preserved signed periods and new
+calendar terms. No banking production logic or acceptance criterion changes.
+All three affected browser flows have passed; timed populated replay is next.
+
+Final performance verification passes: five NPC preparations/decisions, completed
+daily road growth and resident arrival, connected walking/left/right/forward/stop,
+no browser errors, server heartbeat maximum 74.95 ms with zero >=100 ms gaps.
+Client rule CPU self time falls 566.4→170.4 ms; frame p95 56.4→50.7 ms, minimum FPS
+18, maximum ping 106 ms and correction 0.337 m. One 104 ms client frame remains;
+measured `setWorld`/prediction calls peak at 23.9/21.3 ms. Retain that limitation.
+Final TypeScript, production build, formatting and diff checks pass. Prepare
+0.135.1 metadata; successful video review remains required before publishing.
+Evidence: `output/climate-rule-cache/`.
+
+Video review passes for the final 20.6-second walking/turning/stopping clip:
+no obvious long freeze, large teleport, collision or missing terrain, and no
+private names/chat in the reviewed evidence. The climate editor visibly reports
+inverted winter bounds; persistence is covered by browser assertions. Keep the
+recorded 18 FPS/106 ms ping/0.337 m correction/104 ms frame limitations. All gates
+for this focused optimization now pass; commit/push/deploy and announce 0.135.1.

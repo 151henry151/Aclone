@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
+import { cachedRuleValues } from './cached-rule-values';
 export const climateRuleFields = {
   climateSpringWetChance: { label: 'Spring wet-event chance', min: 0, max: 1, step: 0.01 },
   climateSummerWetChance: { label: 'Summer wet-event chance', min: 0, max: 1, step: 0.01 },
@@ -19,14 +20,7 @@ export const climateRuleFields = {
   climateForcedSnowstorm: { label: 'Forced snowstorm (m/day)', min: 0, max: 10, step: 0.001 },
 } as const;
 export type ClimateRules = Pick<typeof defaults, keyof typeof climateRuleFields>;
-export function climateRules(settings: Partial<ClimateRules> = {}): ClimateRules {
-  return Object.fromEntries(
-    Object.keys(climateRuleFields).map((key) => [
-      key,
-      settings[key as keyof ClimateRules] ?? defaults[key as keyof ClimateRules],
-    ]),
-  ) as ClimateRules;
-}
+export const climateRules = cachedRuleValues(defaults, climateRuleFields);
 export function climateRulesError(settings: Partial<ClimateRules>) {
   const rules = climateRules(settings);
   if (rules.climateWinterWetMin > rules.climateWinterWetMax)

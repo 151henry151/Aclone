@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.135.1] - 2026-11-08
+
+### Fixed
+
+- Reuse unchanged calendar and climate rule values during environment queries, reducing repeated allocation while applying World Builder edits immediately.
+
 ## [0.135.0] - 2026-11-08
 
 ### Added
