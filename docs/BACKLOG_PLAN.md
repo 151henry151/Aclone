@@ -7925,7 +7925,7 @@ tests/npc-trailer-navigation.test.ts`. A walking resident and a tractor driver
    costs bounded. Run relevant lighting/tractor/settings tests, TypeScript,
    Prettier and build; update player/world-builder documentation.
 
-Status: navigation **done — released as 0.131.10**; reversing lights in progress.
+Status: **both done** — navigation released as 0.131.10; reversing lights released as 0.132.0.
 
 - Confirmed failing tests for missing planned detours, changed obstacles and
   overlap escape before production changes; retained all assertions.
@@ -7960,7 +7960,7 @@ reload and was replaced with a clean passing rerun. Verified bot
 [screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1568994516780843119).
 No live player data edits or grants.
 
-Reverse illumination verification (0.132.0 candidate):
+Reverse illumination verification (released as 0.132.0):
 
 - Confirmed initial failures: no reverse beam controller, no nearby rear output,
   and unknown world settings. A short-range boundary test also failed because the
@@ -7981,3 +7981,21 @@ Reverse illumination verification (0.132.0 candidate):
 - TypeScript, production build and Prettier pass. Evidence is in
   `output/trailer-feedback/reverse-browser/`; release receipts follow.
   No unrelated road/performance work is included.
+
+Reverse-light release receipt:
+
+- Pushed and deployed `c09d20c207d704628f8cae11e12aa913baa6d698` from
+  backlog-implementation; no main push or PR. Backup:
+  `/var/lib/aclone/backups/pre-deploy-20261108-093057.sqlite`.
+- Public Chromium verification confirms game and website 0.132.0, all three new
+  rule keys in the served client, working map-worker/gallery assets and no browser
+  errors. Service active, PID 381392, zero automatic restarts.
+- Reviewed `output/trailer-feedback/video-review/night_reverse_and_hitch.mp4`:
+  rear illumination, engine-off beam extinction and “Trailer hitched.” confirmation.
+  Exact input/settings behavior is covered by the passing browser assertions.
+- Posted and verified the bot's
+  [night-hitching screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1568996798335291573).
+- Release checkout is clean apart from the intentionally untracked node_modules
+  symlink. Evidence remains untracked under output/. No live grants or manual
+  player edits. Primary road WIP and pilot-entry performance WIP remain intact;
+  integrate their navigation/settings changes deliberately against these releases.
