@@ -8549,3 +8549,15 @@ The 4 cm and zero-snow browser screenshots retain clear roads and normal thawed
 grass. Measurements support reduced road-query work, not a universal smoothness
 claim. All criteria pass; commit/push/deploy the 0.134.1 performance slice and
 post the reviewed local-test screenshot before continuing city-paving work.
+
+### Performance follow-up — Grass lookup checkpoint released, 2026-11-08
+
+**Done.** Push/deploy `0add0037c1b02f7e2a8fda1fc612a986dcd18b90` as 0.134.1.
+Read-only browser verification confirms game, client, map worker, website and
+gallery with no errors. Exact server commit matches; service active, PID 386237,
+zero restarts. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-143654.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-143806.tar.gz`.
+Verified bot announcement with reviewed screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569073652769624340
+Evidence: `output/scenery-road-lookup/`. Continue item 19 city paving.
