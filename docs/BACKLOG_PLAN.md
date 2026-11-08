@@ -13,8 +13,8 @@ Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
 alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
 The focused calendar/climate allocation improvement is released as 0.135.1.
 Item 19 stage 4, paid player bridge construction and road integration, is released
-as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1. Investigate
-the remaining client scene traversal/draw submission costs before automotive
+as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1 and parked
+vehicle batching as 0.136.2. Investigate remaining client rendering costs before automotive
 manufacturing, preserving the populated-world responsiveness gate. Highway
 trucks follow the factory in dependency order.
 
@@ -9189,3 +9189,17 @@ zero frames above 100 ms. Minimum FPS remains 15, maximum ping 167 ms and
 correction 0.355 m. Preserve those limitations; do not claim all lag is resolved.
 Prepare 0.136.2, verify reviewed artifacts, then push/deploy the exact commit and
 post the screenshot announcement. No factory/truck or other new item has begun.
+
+**Parked vehicle rendering done, pushed, deployed and announced.** Version 0.136.2
+runs exact commit `bca0e39ab5cdc26228930070ccc1c73ea74b844f`. Live health reports
+five worlds; the service is active with zero automatic restarts. Read-only live
+browser checks verify the matching game bundle, map worker, public site and gallery
+without errors. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-181552.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-181700.tar.gz`.
+The bot's screenshot announcement is verified at
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569128764678479952.
+Evidence and receipt are under `output/client-rendering/`. The reviewed 17-second
+clip shows forward walking, opposing turns and continued walking; it does not
+prove all lag is fixed. Keep the measured 15 FPS minimum and 167 ms ping spike
+open for the next performance investigation before factory/truck work.
