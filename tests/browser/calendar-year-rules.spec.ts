@@ -183,6 +183,9 @@ test('bank displays new calendar months, keeps signed periods and rejects a stal
     await expect(result.locator('[name="periodSeconds"]')).toHaveValue('6000');
     await accept();
     await expect.poll(() => p().loans?.length).toBe(1);
+    // Wait for the first acceptance's browser refresh before requesting another
+    // quote; server state can arrive before the scheduled panel refresh.
+    await expect(dialog.locator('[data-loan-status]')).toHaveCount(1);
     const nextDue = p().loans![0].nextDue;
     await quote();
     await expect(result.locator('[name="periodSeconds"]')).toHaveValue('6000');
