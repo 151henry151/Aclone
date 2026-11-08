@@ -1582,6 +1582,10 @@ export class Residents {
   }
   private runQueuedThink() {
     this.planTimer = undefined;
+    if (this.store.checkpointBusy) {
+      void this.store.ready().then(() => this.runQueuedThink());
+      return;
+    }
     this.planning = false;
     const item = this.planQueue.shift();
     if (!item || this.closed) {
@@ -1843,6 +1847,7 @@ export class Residents {
         : r.brain.decide(decisionRequest, controller.signal);
     r.pending = pending
       .then(async (result) => {
+        await this.store.ready();
         if (this.closed) return;
         if (reservation !== undefined)
           this.budget.settle(
@@ -1913,6 +1918,7 @@ export class Residents {
             this.checkpoint(r, this.worlds.get(r.state.world) ?? current);
             try {
               const chat = await r.dialogue.brain.decide(dialogueRequest, controller.signal);
+              await this.store.ready();
               if (this.closed) return;
               this.budget.settle(
                 chatReservation,
@@ -1940,6 +1946,7 @@ export class Residents {
                 decision: { ...result.decision, speech: d.speech, notebook: d.notebook },
               };
             } catch {
+              await this.store.ready();
               if (this.closed) return;
               this.budget.failed(chatReservation);
               if (discardDismissedChat()) return;
@@ -2121,6 +2128,8 @@ export class Residents {
             },
             controller.signal,
           );
+          await this.store.ready();
+          if (this.closed) return;
           if (spoken) {
             result = { ...result, decision: { ...result.decision, speech: spoken } };
             if (r.state.pendingAgreementReply) r.state.pendingAgreementReply.text = spoken.text;
@@ -2179,7 +2188,8 @@ export class Residents {
           this.checkpoint(r, finalWorld);
         }
       })
-      .catch((e) => {
+      .catch(async (e) => {
+        await this.store.ready();
         if (this.closed || controller.signal.aborted) return;
         if (reservation !== undefined) {
           if (e instanceof LocalRequestError) this.budget.notSent(reservation);
@@ -2279,6 +2289,8 @@ export class Residents {
     if (reservation === undefined) return;
     try {
       const answer = await r.dialogue.brain.decide(request, signal);
+      await this.store.ready();
+      if (this.closed) return;
       this.budget.settle(
         reservation,
         answer.inputTokens,
@@ -2291,6 +2303,8 @@ export class Residents {
       if (answer.gameplayRequest || !speech || speech.text.trim().startsWith('*')) return;
       return { text: speech.text, to: replyTo ?? null };
     } catch {
+      await this.store.ready();
+      if (this.closed) return;
       this.budget.failed(reservation);
       // Preserve the already-durable agreement and factual fallback, no retry.
       return;

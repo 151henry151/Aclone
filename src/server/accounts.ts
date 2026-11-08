@@ -68,6 +68,7 @@ export class Accounts {
     const before = this.credentials(id);
     if (before && !(await matches(data.currentPassword ?? '', String(before.password))))
       throw Error('Enter your current password');
+    await this.store.ready();
     const email = data.email?.trim()
       ? z.email().max(254).parse(data.email.trim()).toLowerCase()
       : (before?.email ?? null);
@@ -83,6 +84,7 @@ export class Accounts {
     )
       throw Error('Unable to save credentials. That email may already be in use.');
     const encoded = await hash(data.password);
+    await this.store.ready();
     // Recheck after asynchronous hashing so concurrent credential changes cannot overwrite one another.
     if (this.credentials(id)?.password !== before?.password)
       throw Error('Account changed. Please try again.');
@@ -106,6 +108,7 @@ export class Accounts {
         deliveryError = true;
       }
     }
+    await this.store.ready();
     return { ...this.status(id), deliveryError };
   }
   async login(name: string, value: string) {
@@ -115,6 +118,7 @@ export class Accounts {
     const before = row ? this.credentials(String(row.id)) : undefined;
     if (!(await matches(value, before ? String(before.password) : undefined)) || !row)
       throw Error('Invalid pilot name or password');
+    await this.store.ready();
     if (this.credentials(String(row.id))?.password !== before?.password)
       throw Error('Account changed. Please sign in again.');
     return this.rotate(String(row.id));
@@ -178,6 +182,7 @@ export class Accounts {
         String(this.store.db.prepare('SELECT name FROM accounts WHERE id=?').get(id)!.name),
       );
     } catch {
+      await this.store.ready();
       this.store.db.prepare('DELETE FROM recovery WHERE hash=?').run(tokenHash(token));
       throw Error('Email delivery failed. Please try again later.');
     }
@@ -199,6 +204,7 @@ export class Accounts {
   async reset(token: string, value: string) {
     this.link(token, 'reset');
     const encoded = await hash(value);
+    await this.store.ready();
     return this.store.transaction(() => {
       const id = this.link(token, 'reset');
       this.store.db.prepare('UPDATE credentials SET password=? WHERE account=?').run(encoded, id);

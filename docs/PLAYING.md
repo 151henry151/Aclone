@@ -261,6 +261,10 @@ window. A large first download should finish with the **CONNECTED** badge; refre
 the page after an update to load the latest client. Road construction and World
 Builder changes still take effect while unchanged road geometry is reused.
 
+Movement and connection updates continue during periodic background saves.
+Sign-in and actions that need the database may briefly wait for an active save;
+their results remain ordered and saved before confirmation.
+
 AI residents may briefly wait while calculating a safe ground route. The server
 splits that work across ticks so other players can keep moving. Ordinary clock
 updates retain the work already done; terrain and policy edits trigger replanning. Checkpoint saves

@@ -132,7 +132,13 @@ test('server batches periodic worlds and resident checkpoints without redundant 
       return exec(sql);
     });
     for (let i = 0; i < 100; i++) tick();
-    assert.equal(commits, 1, 'five worlds and playtime use one durable periodic commit');
+    assert.ok(app.store.checkpointBusy, 'periodic persistence must yield to the event loop');
+    await app.store.ready();
+    assert.equal(commits, 0, 'periodic disk commit must not run on the movement thread');
+    assert.equal(
+      app.store.loadWorlds().filter(({ world }) => world.id.startsWith('batch-')).length,
+      5,
+    );
     const w = app.worlds.values().next().value!;
     t.mock.method(app.residents!, 'tick', () => {
       app.store.saveWorld(w);

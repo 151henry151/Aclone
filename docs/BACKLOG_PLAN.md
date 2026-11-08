@@ -7724,3 +7724,60 @@ shutdown and backup consistency. Simply starting a second writer is unsafe as a
 performance solution: the main thread's BEGIN IMMEDIATE can still wait for its
 write lock, and a stale background snapshot must never overwrite a newer action.
 No further backlog item starts while this acceptance failure remains unresolved.
+
+### Resume persistence — asynchronous periodic saves, 2026-11-07
+
+Henry requested continuation. Retain the performance priority unless he chooses
+to resume roads in the pending priority question. Start with periodic checkpoints,
+without claiming that every synchronous NPC/account write has been removed.
+Completion criteria before production:
+
+- Use a separate SQLite connection holding a real write lock for 400 ms. A
+  periodic checkpoint must wait without freezing a 10 ms heartbeat or movement
+  input; no heartbeat gap above 100 ms during the blocked save. The baseline
+  synchronous save must reproduce the event-loop stall.
+- Save all worlds, public messages, ledger and playtime atomically, with FULL
+  durability. Keep late messages/ledger events queued; failed writes must retain
+  pending data for retry. Allow only one in-flight checkpoint, with no unbounded
+  snapshot queue and no stale save overtaking newer player/account/NPC writes.
+- Other database consumers must await the checkpoint asynchronously. Input,
+  acknowledgement, ping, simulation and snapshot delivery continue. Exercise
+  login/actions/disconnect, NPC model completion, shutdown and online backup
+  while the checkpoint is delayed. Preserve existing nested transaction tests.
+- Run focused persistence/server/account/NPC regressions, clean TypeScript and
+  changed-file formatting. Repeat the actual walking/turning browser flow while
+  a checkpoint is delayed; retain every measured outlier. Compare a disposable
+  full-database run on the live disk before any release. Do not include item 19
+  or the unproven page-cache-only change in this slice.
+
+The locked-writer regression reproduces a 434.3 ms main-thread stall. The worker
+passes it without weakening the 100 ms heartbeat gate. Additional regressions
+cover atomic multi-world rollback/retry, late history, overlapping-save refusal,
+backup ordering, idle worker replacement, delayed NPC completion, reconnects and
+shutdown. The reconnect test first fails because deferred old-session sign-off
+marks the replacement offline; keep the old peer discoverable until sign-off and
+skip movement for closed sockets. Shutdown initially throws with a save pending;
+its draining method now waits for commit and worker exit.
+
+Verification for the independent 0.131.8 slice: 34 focused account/HTTP/NPC/chat/
+checkpoint tests pass, followed by 16 final persistence/server tests after lifecycle
+changes, plus the delayed-NPC regression. TypeScript is clean. The actual browser
+walking/left/right/final-straight replay has 554 frame intervals, p95 51.3 ms,
+maximum 70.1 ms, none above 100 ms, maximum local ping 60 ms and no browser errors.
+Six checkpoints each wait 558–564 ms behind deliberately held SQLite write locks.
+NPC route arrival and daily road work also complete during the replay.
+
+A 40-save-per-variant disposable online backup on the server's real disk measures
+heartbeat p95/max 61.0/142.6 ms synchronously versus 22.1/78.6 ms with the worker.
+FULL sync and automatic WAL checkpoints are retained. The previous cache-only
+experiment and its regression remain preserved in the stash named "Preserve
+unproven page-cache experiment and regression"; neither is part of this release.
+All benchmark copies are removed. No live state or player grants are changed.
+Production build, final formatting, video review and live verification precede
+completion. Individual action and NPC saves remain synchronous; do not equate
+this periodic-save improvement with elimination of every server pause.
+
+Production build and changed-file Prettier checks pass. The reviewed 18.96-second
+browser clip shows continuous travel, opposing turns and a clean stop without
+visible rubber-banding or terrain gaps. It begins already moving, so it does not
+prove initial keypress latency. Live deployment and verification remain pending.

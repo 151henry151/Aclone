@@ -444,7 +444,8 @@ export async function createApp(options: AppOptions) {
       (data.life === undefined || w.players[String(data.id)]?.deaths === data.life);
     if (!current()) return;
     const result = await scriptEvents.run(w, event, data, current);
-    if (!result) return;
+    await store.ready();
+    if (!result || !current()) return;
     const effects = (result.effects ?? [])
       .slice(0, 32)
       .map((e) => ({ player: e.player, effect: validateEffect(w, e.effect) }));
@@ -492,6 +493,7 @@ export async function createApp(options: AppOptions) {
       if (n > max) throw Error('Request too large');
       chunks.push(chunk);
     }
+    await store.ready();
     return Buffer.concat(chunks);
   };
   const residents = options.npc
@@ -517,6 +519,7 @@ export async function createApp(options: AppOptions) {
         return json(res, 403, { error: 'Origin not allowed' });
       if (path === '/api/health')
         return json(res, 200, { ok: true, version: VERSION, worlds: worlds.size });
+      await store.ready();
       if (path === '/api/npc' && req.method === 'GET') {
         auth(req);
         return json(res, 200, { residents: residents?.status() ?? [] });
@@ -694,6 +697,7 @@ export async function createApp(options: AppOptions) {
               m.bytes,
             );
         }
+        await store.ready();
         worlds.set(id, w);
         store.saveWorld(w);
         return json(res, 201, { id, name });
@@ -771,6 +775,7 @@ export async function createApp(options: AppOptions) {
         if (existing < 0 && w.assets.length >= 32) throw Error('Asset limit reached');
         await mkdir(join(dataDir, 'assets'), { recursive: true });
         await writeFile(join(dataDir, 'assets', file), buf);
+        await store.ready();
         if (existing >= 0) w.assets[existing] = asset;
         else w.assets.push(asset);
         w.revision++;
@@ -898,6 +903,14 @@ export async function createApp(options: AppOptions) {
         )
           throw Error('Large requests require world ownership');
         const m = messageSchema.parse(JSON.parse(raw.toString()));
+        if (m.type === 'action') {
+          request = m.request;
+          if (!p.actions.allow(now)) throw Error('Too many actions; wait a moment');
+        }
+        if (m.type === 'hello' || m.type === 'action') {
+          await store.ready();
+          if (socket.readyState !== WebSocket.OPEN) return;
+        }
         if (m.type === 'hello') {
           if (p.account) throw Error('Already signed in');
           const a = universe.authenticate(m.token);
@@ -953,7 +966,6 @@ export async function createApp(options: AppOptions) {
           return;
         }
         request = m.request;
-        if (!p.actions.allow(now)) throw Error('Too many actions; wait a moment');
         const a = m.action as Action;
         if (
           p.world &&
@@ -1026,6 +1038,8 @@ export async function createApp(options: AppOptions) {
           if (w.owner !== p.account.id) throw Error('World owner required');
           const source = z.string().max(16384).parse(a.source);
           const checked = await scriptPool.run(w, source, 'ScriptReload', {});
+          await store.ready();
+          if (socket.readyState !== WebSocket.OPEN) return;
           for (const e of checked.effects ?? []) validateEffect(w, e.effect);
           w.script = source;
           scriptEvents.reset(w);
@@ -1107,8 +1121,14 @@ export async function createApp(options: AppOptions) {
       }
     });
     socket.on('close', () => {
-      leave(p);
-      peers.delete(p);
+      // Retain this peer until sign-off: a queued reconnect must find and retire
+      // the old session before its delayed close can mark the new pilot offline.
+      const finish = () => {
+        leave(p);
+        peers.delete(p);
+      };
+      if (store.checkpointBusy) void store.ready().then(finish);
+      else finish();
     });
     socket.on('error', () => socket.close());
   });
@@ -1142,7 +1162,12 @@ export async function createApp(options: AppOptions) {
           );
           last = now;
           for (const p of peers) {
-            if (p.account?.transit && p.account.transit.arrives <= Date.now() / 1000) {
+            if (p.socket.readyState !== WebSocket.OPEN) continue;
+            if (
+              !store.checkpointBusy &&
+              p.account?.transit &&
+              p.account.transit.arrives <= Date.now() / 1000
+            ) {
               try {
                 if (universe.arrive(p.account))
                   send(p, {
@@ -1182,7 +1207,7 @@ export async function createApp(options: AppOptions) {
             )
               void scriptEvent(w, 'Timer', { time: w.time }).catch(() => {});
           }
-          if (residents) {
+          if (residents && !store.checkpointBusy) {
             // Resident actions in this turn share one durable commit. Catch a
             // controller error inside the batch to retain earlier checkpoints.
             store.transaction(() => {
@@ -1198,10 +1223,9 @@ export async function createApp(options: AppOptions) {
             const frames = new Map<string, Frame>();
             for (const p of peers) snapshot(p, frames);
           }
-          if (counter % 100 === 0) {
-            store.transaction(() => {
-              for (const w of worlds.values()) store.saveWorld(w);
-              playtime.save();
+          if (counter % 100 === 0 && !store.checkpointBusy) {
+            void store.checkpoint(worlds.values(), playtime.checkpointRows()).catch((error) => {
+              console.error('Periodic checkpoint failed; retaining pending history:', error);
             });
           }
           if (counter % 600 === 0) {
@@ -1240,6 +1264,7 @@ export async function createApp(options: AppOptions) {
     });
   const close = async () => {
     if (timer) clearInterval(timer);
+    await store.ready();
     residents?.close();
     await scriptPool.close();
     clearInterval(backupTimer);
@@ -1259,7 +1284,7 @@ export async function createApp(options: AppOptions) {
       await closed;
     }
     playtime.save();
-    store.close();
+    await store.shutdown();
   };
   return { server, worlds, store, universe, accounts, residents, listen, close };
 }

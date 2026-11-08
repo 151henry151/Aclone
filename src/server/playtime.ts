@@ -102,6 +102,14 @@ export class Playtime {
       this.rows.get(id)!.recordedSeconds += seconds;
     }
   }
+  checkpointRows() {
+    return [...this.rows].map(([id, row]) => [
+      id,
+      row.since,
+      row.recordedSeconds,
+      row.estimatedSeconds,
+    ]);
+  }
   save() {
     this.store.transaction(() => {
       const write = this.store.db.prepare(

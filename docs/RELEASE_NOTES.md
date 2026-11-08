@@ -2,6 +2,22 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.131.8 — Keep moving during periodic saves
+
+Move periodic world, history and playtime writes off the movement thread. Keep
+SQLite FULL durability and atomic batches; retain pending events after failure
+and preserve events added while the save is running. Serialize account/NPC work
+with the checkpoint, keep a reconnect from being signed off by its old session,
+and drain the writer on shutdown. These are server scheduling controls, not new
+world gameplay rules. Individual action/NPC saves still use the existing path;
+this release does not claim to remove every possible server pause.
+
+The controlled walking/turning replay includes six approximately half-second
+checkpoint delays: maximum local ping 60 ms, maximum frame interval 70.1 ms,
+and no browser errors. A disposable full-database test on the server disk reduces
+the worst heartbeat gap from 142.6 ms to 78.6 ms; these measurements describe the
+tested workloads, not a guarantee for every device or network.
+
 ## 0.131.5 — Shorter server stalls
 
 Give player movement and network traffic time to run while AI residents calculate

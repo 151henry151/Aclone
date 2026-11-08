@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.131.8] - 2026-11-07
+
+### Fixed
+
+- Keep movement and connection updates running during periodic world saves by moving durable database writes to a separate worker.
+- Preserve atomic saves, pending history, account/NPC write ordering and reconnect state while checkpoints are in progress; drain the writer on shutdown.
+
 ## [0.131.7] - 2026-11-06
 
 ### Fixed

@@ -10,6 +10,13 @@ import { migrateEconomy } from '../shared/economy.ts';
 import { migrateTown } from '../shared/town.ts';
 import { normalizeTowns } from '../shared/civics.ts';
 import { DatabaseSync, backup } from 'node:sqlite';
+import { Worker } from 'node:worker_threads';
+import {
+  writeWorldCheckpoint,
+  durablePragmas,
+  type WorldCheckpoint,
+  type CheckpointRow,
+} from './checkpoint-data.ts';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { defaults, buildings } from '../shared/catalog.ts';
@@ -18,13 +25,20 @@ import type { CaretakerLogPage } from '../shared/caretaker.ts';
 import type { World } from '../shared/types.ts';
 export class Store {
   db: DatabaseSync;
+  private writer?: Worker;
+  private pendingCheckpoint?: Promise<void>;
+  get checkpointBusy() {
+    return !!this.pendingCheckpoint;
+  }
+  async ready() {
+    while (this.pendingCheckpoint) await this.pendingCheckpoint.catch(() => {});
+  }
   private transactionDepth = 0;
   private commitActions: (() => void)[][] = [];
   constructor(public path: string) {
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
-    this.db
-      .exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
+    this.db.exec(`PRAGMA journal_mode=WAL; ${durablePragmas}
  CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY,value TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS worlds (id TEXT PRIMARY KEY,state TEXT NOT NULL,saved REAL NOT NULL);
  CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,name TEXT UNIQUE COLLATE NOCASE NOT NULL,token_hash TEXT UNIQUE NOT NULL,state TEXT NOT NULL);
@@ -122,6 +136,8 @@ export class Store {
       });
   }
   transaction<T>(fn: () => T): T {
+    if (this.checkpointBusy)
+      throw Error('Await the periodic checkpoint before starting a database transaction');
     const level = this.transactionDepth++,
       savepoint = `nested_${level}`;
     const committed: (() => void)[] = [];
@@ -147,51 +163,99 @@ export class Store {
       this.transactionDepth--;
     }
   }
-  saveWorld(w: World, now = Date.now() / 1000, withinTransaction?: () => void) {
+  private prepareCheckpoint(w: World, now: number) {
     const pending = pendingPublicMessages(w);
-    this.transaction(() => {
-      withinTransaction?.();
-      const message = this.db.prepare(
-        `INSERT OR IGNORE INTO public_messages (world,message_id,time,name,text,kind,npc) VALUES (?,?,?,?,?,?,?)`,
-      );
-      const lastMessage = Number(
-        this.db
-          .prepare('SELECT COALESCE(MAX(message_id),0) AS id FROM public_messages WHERE world=?')
-          .get(w.id)!.id,
-      );
-      for (const m of new Set([...pending, ...w.messages]))
-        if (!m.to && m.id! > lastMessage)
-          message.run(w.id, m.id!, m.time, m.name, m.text, m.kind, Number(!!m.npc));
-      const insert = this.db.prepare(
-        'INSERT OR IGNORE INTO ledger (world,id,time,kind,amount,sender,recipient,reason,details) VALUES (?,?,?,?,?,?,?,?,?)',
-      );
-      for (const l of w.ledger)
-        insert.run(
-          w.id,
-          l.id,
-          l.time,
-          l.kind,
-          l.amount,
-          l.from,
-          l.to,
-          l.reason,
-          l.details ? JSON.stringify(l.details) : null,
-        );
-      this.db
-        .prepare('INSERT OR REPLACE INTO worlds VALUES (?,?,?)')
-        .run(w.id, JSON.stringify({ ...w, ledger: w.ledger.slice(-100) }), now);
-      const savedMessages = new Set(pending);
-      const savedLedger = new Set(w.ledger.map((l) => l.id));
-      const retainedLedger = new Set(w.ledger.slice(-100).map((l) => l.id));
-      // Only release durable entries after the outermost transaction commits.
-      // Later events in the same batch remain queued for the next checkpoint.
-      this.commitActions.at(-1)!.push(() => {
+    const record: WorldCheckpoint = {
+      id: w.id,
+      saved: now,
+      state: JSON.stringify({ ...w, ledger: w.ledger.slice(-100) }),
+      messages: [...new Set([...pending, ...w.messages])]
+        .filter((m) => !m.to)
+        .map((m) => [w.id, m.id!, m.time, m.name, m.text, m.kind, Number(!!m.npc)]),
+      ledger: w.ledger.map((l) => [
+        w.id,
+        l.id,
+        l.time,
+        l.kind,
+        l.amount,
+        l.from,
+        l.to,
+        l.reason,
+        l.details ? JSON.stringify(l.details) : null,
+      ]),
+    };
+    const savedMessages = new Set(pending),
+      savedLedger = new Set(w.ledger.map((l) => l.id)),
+      retainedLedger = new Set(w.ledger.slice(-100).map((l) => l.id));
+    return {
+      record,
+      committed: () => {
         const remaining = pending.filter((m) => !savedMessages.has(m));
         pending.length = 0;
         pending.push(...remaining);
         w.ledger = w.ledger.filter((l) => !savedLedger.has(l.id) || retainedLedger.has(l.id));
-      });
+      },
+    };
+  }
+  saveWorld(w: World, now = Date.now() / 1000, withinTransaction?: () => void) {
+    pendingPublicMessages(w);
+    this.transaction(() => {
+      withinTransaction?.();
+      const snapshot = this.prepareCheckpoint(w, now);
+      writeWorldCheckpoint(this.db, snapshot.record);
+      this.commitActions.at(-1)!.push(snapshot.committed);
     });
+  }
+  /** One frozen batch at a time. Callers must await ready() before another
+   * database operation; movement and in-memory simulation need not wait. */
+  checkpoint(worlds: Iterable<World>, playtime: CheckpointRow[] = []): Promise<void> {
+    if (this.checkpointBusy || this.transactionDepth)
+      return Promise.reject(Error('Checkpoint already busy'));
+    const snapshots = [...worlds].map((w) => this.prepareCheckpoint(w, Date.now() / 1000));
+    if (this.path === ':memory:')
+      return Promise.reject(Error('Background checkpoints require a file-backed database'));
+    if (!this.writer) {
+      const worker = new Worker(new URL('./checkpoint-worker.mjs', import.meta.url), {
+        workerData: { path: this.path },
+        execArgv: [],
+      });
+      worker.on('error', () => {});
+      worker.once('exit', () => {
+        if (this.writer === worker) this.writer = undefined;
+      });
+      this.writer = worker;
+    }
+    const worker = this.writer;
+    const result = new Promise<void>((resolve, reject) => {
+      const clear = () => {
+        worker.off('message', message);
+        worker.off('error', error);
+        worker.off('exit', exit);
+      };
+      const message = (value: { ok: boolean; error?: string }) => {
+        clear();
+        value.ok ? resolve() : reject(Error(value.error));
+      };
+      let failure: Error | undefined;
+      const error = (value: Error) => {
+        failure = value;
+      };
+      const exit = () => {
+        clear();
+        this.writer = undefined;
+        reject(failure ?? Error('Checkpoint writer exited before acknowledging its commit'));
+      };
+      worker.once('message', message);
+      worker.once('error', error);
+      worker.once('exit', exit);
+      worker.postMessage({ worlds: snapshots.map((s) => s.record), playtime });
+    }).then(() => {
+      for (const snapshot of snapshots) snapshot.committed();
+    });
+    this.pendingCheckpoint = result.finally(() => {
+      this.pendingCheckpoint = undefined;
+    });
+    return this.pendingCheckpoint;
   }
   publicMessages(
     world: string,
@@ -216,10 +280,22 @@ export class Store {
     return { entries, ...(rows.length > 100 ? { before: entries.at(-1)!.id } : {}) };
   }
   async backup(path: string) {
+    await this.ready();
     mkdirSync(dirname(path), { recursive: true });
     await backup(this.db, path);
   }
+  async shutdown() {
+    await this.ready();
+    const writer = this.writer;
+    const stopped = writer && new Promise<void>((resolve) => writer.once('exit', () => resolve()));
+    this.close();
+    await stopped;
+  }
   close() {
+    if (this.checkpointBusy)
+      throw Error('Await the periodic checkpoint before closing the database');
+    this.writer?.postMessage({ close: true });
+    this.writer = undefined;
     this.db.close();
   }
 }
