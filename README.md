@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.136.2 reduces the rendering work for parked vehicles by combining
+compatible stationary parts. The populated-world check uses 199 parked draws
+instead of 287, retaining every vehicle and its geometry. Boarding, custom models
+and glass remain intact; client frame-rate dips still need further work.
+
 Version 0.136.1 splits cold scenery preparation into small steps during background
 road surveys, reducing long simulation pauses without moving trees, rocks or
 resource deposits. Client frame-rate dips remain under investigation.
@@ -34,7 +39,7 @@ zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
 Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
-player-built bridges follow in 0.136.0. The released game is 0.136.1, and remaining client frame-rate dips are still being tracked.
+player-built bridges follow in 0.136.0. The released game is 0.136.2, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly
@@ -55,7 +60,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.136.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.136.2 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait

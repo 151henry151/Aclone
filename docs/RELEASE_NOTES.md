@@ -2,6 +2,31 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.136.2 — Render parked vehicles with fewer draws
+
+Combine compatible opaque stationary parts across the parked body's wheel and
+body groups. Retain exact material/texture distinctions, custom shader coordinates,
+creator hierarchy, transparent glass and hidden driver anchors. Reuse completed
+batches across snapshots; rebuild on paint/tuning edits and retire owned buffers
+without disposing shared assets. Apply ocean shading after lamp darkening and
+batching so the finished parked materials receive the effect.
+
+Validate 92 distinct selected unit tests, clean TypeScript and five real browser
+flows covering parking/boarding, mobile controls, reconnect, empty fuel and garage
+services. Correct the outdated garage browser expectation to require invisible
+spare storage, matching the already released policy. The final populated census
+reduces parked draws from 287 to 199 and whole-scene draws from 751 to 663.
+All 16 vehicles and their 42,150-triangle geometry inventory remain identical.
+Merged bounds submit 29,362 parked triangles versus 28,866 before; this change
+reduces draw submission, not geometric detail or fleet size.
+
+The unchanged populated walking/turning replay completes five NPC decisions,
+resident arrival and daily road growth with no browser errors. Maximum server
+heartbeat is 85.8 ms (limit 100), frame p95 48.8 ms and maximum frame 90.9 ms,
+with no frames above 100 ms. Minimum FPS remains 15 and maximum ping is 167 ms;
+these client responsiveness limits remain open. Reload after deployment to use
+the new client. No world migration, gameplay rule change or player grant is needed.
+
 ## 0.136.1 — Smaller background scenery-survey steps
 
 Split cold tree, boulder and gathering-ground preparation across resumable work

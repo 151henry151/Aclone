@@ -1386,7 +1386,7 @@ export class GameScene {
     g.userData.signY = sign.position.y;
     return g;
   }
-  private vehicle(slot: number, name?: string, paint?: string) {
+  private vehicle(slot: number, name?: string, paint?: string, oceanShading = true) {
     const v = vehicleDef(this.world, slot),
       g = new T.Group();
     if (slot === 5) {
@@ -1484,7 +1484,7 @@ export class GameScene {
       g.add(tag);
       g.userData.pilotLabel = tag;
     }
-    this.ocean?.absorb(g);
+    if (oceanShading) this.ocean?.absorb(g);
     return g;
   }
   private groundView() {
@@ -2409,8 +2409,9 @@ export class GameScene {
   private towLines = new TowLines();
   private bridges = new BridgeScene();
   private trailers = new TrailerScene();
-  private parkedVehicles = new ParkedVehicleScene((slot, name, paint) =>
-    this.vehicle(slot, name, paint),
+  private parkedVehicles = new ParkedVehicleScene(
+    (slot, name, paint) => this.vehicle(slot, name, paint, false),
+    (model) => this.ocean?.absorb(model),
   );
   private mooredGroup = new T.Group();
   private mooredKey = '';

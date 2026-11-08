@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.136.2] - 2026-11-08
+
+### Fixed
+
+- Combine compatible stationary vehicle parts into fewer rendering draws, preserve custom models and boarding animations, and apply ocean shading after parked lamp materials are finalized.
+
 ## [0.136.1] - 2026-11-08
 
 ### Fixed

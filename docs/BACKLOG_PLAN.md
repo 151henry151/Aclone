@@ -9108,3 +9108,84 @@ The same client CPU profile attributes substantial time to Three.js matrix-tree
 traversal, object projection and draw submission. Investigate those remaining
 costs before beginning factory/truck implementation; preserve existing static
 batching, animated doors/interiors, lighting, picking and scenery appearance.
+
+## Parked vehicle draw submission — completion criteria, 2026-11-08
+
+The populated browser scene census records 4,313 nodes, 751 submitted draw calls
+and 1,475,114 triangles. Parked vehicles contribute 287 calls / 28,866 triangles;
+their stationary bodies/wheels retain separate driven-model meshes. Target this
+confirmed contributor first. Keep the horizon, terrain detail, parked fleet and
+all world rules unchanged. This is renderer scheduling/batching, not a gameplay
+slider or a reduction in vehicle count.
+
+Before production code, extend parked-render tests to require compatible visible
+opaque parts to batch across stationary subgroups, while preserving transformed
+triangle positions/normals, material/render state, camera bounds, hidden drivers
+for mount animations, transparent parts, custom callbacks and shared assets.
+Creator-assigned models must retain their authored hierarchy. Repeated snapshots
+reuse geometry; tuning/paint changes rebuild; boarding/removal retires owned
+buffers without disposing shared live assets. Run and record the expected failed
+mesh-count assertion before implementing the batch.
+
+Run `node --import tsx --test tests/parked-render.test.ts <new batching tests>`
+and relevant mount/arrival/vehicle-visual tests, clean TypeScript and changed-file
+Prettier. In the same populated browser census, require parked draws <=200
+(previously 287), unchanged visible triangle count and fleet size, and no errors.
+Run the real parking/arrival/return-to-tractor flow, including an empty parked
+scene and camera clearance, plus the unchanged populated movement replay with
+resident arrival, daily growth, >=4 NPC decisions and <100 ms heartbeat. Review
+matching screenshots/video rather than claiming a fleet draw-count improvement
+alone solves all client frame-rate issues. Build, commit, push, deploy and post the
+reviewed screenshot only after these gates pass.
+
+The failing-first regressions cover nested geometry/material batches, shared
+buffer disposal, exact color/texture identity, creator component hierarchy and
+custom shader object space. All 44 selected batching/render/config/contact tests
+pass, and TypeScript is clean. The first actual census improves parked draws
+287 → 201, but still misses the <=200 gate. All 16 fleet entries and their exact
+42,150-triangle geometry inventory match the baseline. Submitted parked triangles
+rise 28,866 → 29,362 because merged bounds retain some previously culled parts;
+record this tradeoff rather than claim fewer submitted triangles.
+
+The real parking browser flow exposes an outdated garage assertion at line 211:
+it expects a spare tractor stored in the physical garage and displayed inside.
+The released spare-tractor policy intentionally uses `GARAGE_STORAGE` and hides
+spares. Update that assertion to require the virtual storage record and no visible
+parked tractor anywhere in the scene after departure; retain the arrival,
+boarding, dismount, camera and garage selection checks. The initial run reaches
+successful departure in the selected tractor before failing that old assertion.
+Do not change production garage policy to satisfy the obsolete expectation.
+
+Material census confirms the stock builder applies ocean shading before parked
+lamp copying and batching. Build parked stock geometry without that early effect;
+apply the same ocean shading once to the completed parked body after darkening
+and batching. Continue to leave genuinely custom shaders unbatched. Before that
+production change, `parked body finalization` fails 0 != 1: the completed-body
+callback is absent. Require one finalization per rebuild, preserved ocean-level
+uniform identity/world-position shader code, dark lamps and unchanged snapshot
+reuse. Re-run ocean rendering tests with the existing selected tests and all
+browser/geometry gates; do not relax the <=200 draw target.
+
+After the finalization-order fix the census reaches 199 parked draws (287 before,
+31% fewer), 663 total scene draws (751 before), with identical fleet/geometry
+inventory. Preserve shader overrides, transparent parts, creator components and
+render flags. A further failing hidden-driver-anchor test confirms that removing
+a mesh with children can detach its hidden driver; exclude such carrier meshes
+from batching. All 83 selected batching, parked-render/vehicle, contact, config
+and ocean-rendering tests then pass. The final browser run and populated movement
+replay remain mandatory before release.
+
+**Release verification passes for the parked rendering slice.** Final census
+(`output/client-rendering/final-census-4/`) records 199 parked / 663 total draws,
+identical 16-vehicle / 42,150-triangle inventory, and no browser errors. All five
+parking/arrival browser flows pass, including touch/controller, reconnect,
+empty-fuel walking/refuelling and outdoor garage service. The selected unit runs
+cover 92 distinct tests, all passing. Final production build includes TypeScript.
+
+The unchanged populated replay passes resident arrival, five NPC decisions,
+completed daily growth, connected movement/turns and zero browser errors.
+Heartbeat maximum 85.82 ms (<100), frame p95 48.8 ms, maximum frame 90.9 ms and
+zero frames above 100 ms. Minimum FPS remains 15, maximum ping 167 ms and
+correction 0.355 m. Preserve those limitations; do not claim all lag is resolved.
+Prepare 0.136.2, verify reviewed artifacts, then push/deploy the exact commit and
+post the screenshot announcement. No factory/truck or other new item has begun.

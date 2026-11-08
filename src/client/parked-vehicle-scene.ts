@@ -1,3 +1,4 @@
+import { batchParkedBody } from './parked-batching';
 import { creatorModel, disposeCreator } from './creator-model';
 import { vehicleGround } from './vehicle-ground';
 import { label } from './labels';
@@ -12,7 +13,10 @@ export class ParkedVehicleScene {
   private cameraRay = new T.Ray();
   private cameraBox = new T.Box3();
   private cameraHit = new T.Vector3();
-  constructor(private build: (slot: number, name: string, paint?: string) => T.Group) {}
+  constructor(
+    private build: (slot: number, name: string, paint?: string) => T.Group,
+    private finish?: (model: T.Group) => void,
+  ) {}
   update(w: World, x: number, z: number, range: number, ground?: (x: number, z: number) => number) {
     const alive = new Set<string>();
     for (const [id, v] of Object.entries(w.parkedVehicles ?? {})) {
@@ -57,6 +61,8 @@ export class ParkedVehicleScene {
             o.material = Array.isArray(o.material) ? o.material.map(dark) : dark(o.material);
           }
         });
+        if (!visual) batchParkedBody(model);
+        this.finish?.(model);
         model.updateMatrixWorld(true);
         const bounds = new T.Box3();
         model.traverseVisible((o) => {
