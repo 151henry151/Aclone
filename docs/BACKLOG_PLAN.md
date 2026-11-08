@@ -9289,3 +9289,78 @@ without errors. Database backup:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569133236595064913.
 Evidence and verified receipt are under `output/horizon-culling/`. Keep remaining
 frame-rate dips open; continue profiling before factory/haulage implementation.
+
+## Reuse stationary ground and river transforms — criteria, 2026-11-08
+
+The 0.136.3 populated profile still spends 929 ms in matrix-world updates during
+the walking replay. The scene census finds 244 ground meshes and 346 river/bank
+meshes using automatic transforms; the river meshes are hidden at the starting
+airfield but still recalculate matrices. These surfaces do not move their scene
+objects: ground is rebuilt when terrain changes and river motion lives in shader
+uniforms. Preserve geometry, world positions, streaming/detail/visibility rules,
+shader animation and disposal. Cache only the stationary transforms; do not add
+a gameplay switch for internal renderer bookkeeping.
+
+Before production edits, extend the actual ground-streaming browser regression
+to require zero repeated matrix composition/multiplication on complete ground
+tiles, correct nonzero tile world positions, and the same property after a road
+refresh replaces them. Existing cancellation/partial-build/retention assertions
+must still pass. Add real InlandWater unit coverage requiring zero repeated
+mesh transforms both near and far away, preserving visibility transitions, water
+time/tide/view uniforms and geometry through updates, and fresh valid meshes
+after reset. Confirm both tests fail for repeated matrix work first.
+
+Run `node --import tsx --test tests/static-terrain.test.ts
+tests/static-scene.test.ts tests/northern-island.test.ts`; run browser suites
+`terrain-streaming`, `flight-terrain`, `flight-view` and `river-fishing` with
+`TEST_GPU=1 npm run test:e2e -- tests/browser/<suite>.spec.ts`. Review visible
+ground/approach and river screenshots (including refused dry-bank fishing).
+Repeat the unchanged populated walking/turning replay: connected movement, no
+browser errors, NPC decisions, resident arrival, completed daily growth and
+maximum heartbeat below 100 ms. Require the same populated geometry/draw census
+and zero automatic transforms on ground/river meshes. Finish TypeScript/build
+and explicit-file Prettier, review the clip, then release/announce only if all
+criteria pass. Do not claim a guaranteed FPS gain from reduced matrix work.
+
+Both new regressions fail for the intended reason before production changes:
+river meshes compose 3,460 matrices over ten updates, and the ground fixture
+recomposes its completed tile ten times. Reuse the existing static-scenery freeze
+helper after tile installation and river reset. The 17 selected unit tests and
+TypeScript now pass; river uniforms, visibility transitions, disposal and fresh
+world meshes remain covered. Browser and populated-world gates are still pending.
+
+The four browser suites pass, including visible river fishing and dry-bank refusal,
+empty/distant/high/approach flight and ground replacement/cancellation. The scene
+census retains exactly 681 draws and 596,492 submitted triangles, the parked
+fleet/geometry and all 944,256 horizon triangles. Automatic transforms fall from
+245 to one on the ground group (244 meshes), and from 347 to zero for inland
+water (346 meshes). The renderer is hardware ANGLE on NVIDIA Quadro M1200.
+
+The unchanged populated replay passes its original checks: 88.16 ms maximum
+heartbeat, five NPC decisions, resident arrival, completed daily growth, connected
+movement and no errors. Frame p95 54.5 ms, maximum 70.7 ms, zero frames over
+100 ms; minimum FPS 16, maximum ping 385 ms, correction 0.817 m. Hold release
+while investigating that ping spike. It appears immediately after profiling
+starts; both released and candidate CPU profiles begin with a 410–465 ms
+unsampled program interval. The ping HUD retains one measurement for five
+seconds, so 43 high-ping samples are not 43 independent spikes. Run controlled
+baseline/candidate diagnostics with long-task observation before concluding
+whether this is measurement overhead or a real regression. Preserve all results.
+
+Controlled profiled baseline/candidate repeats record 140/173 ms maximum ping.
+Without CPU profiling, the same movement, NPC decisions, arrival, daily growth
+and heartbeat checks pass on both versions: baseline ping 35 ms / minimum 27 FPS,
+candidate ping 34 ms / minimum 28 FPS. Candidate maximum heartbeat is 77.39 ms,
+frame p95 52.1 ms, maximum frame 95 ms, zero frames over 100 ms and correction
+0.316 m. Baseline frame p95 is 48.1 ms and maximum 74.4 ms, so do not claim an
+FPS or tail-frame gain. The startup latency spike follows profiler activation
+and is not isolated to the change. These diagnostic runs supplement, rather than
+replace, the original passing profiled workload; all results remain in
+`output/static-terrain/`. Release the verified redundant-work reduction as 0.136.4
+after final build/format and clip review. No new gameplay setting or migration.
+
+Final build (including TypeScript) and explicit-file Prettier pass. The reviewed
+16.96-second clip shows forward walking, opposite turns and continued runway
+walking with intact ground, no obvious large teleport or prolonged freeze. It
+ends moving; the announcement still also shows slow movement, not a completed
+stop. Keep the claim limited to reduced redundant transform calculations.

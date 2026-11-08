@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.136.4] - 2026-11-08
+
+### Fixed
+
+- Reuse fixed ground-tile and river-bank transforms while preserving terrain refreshes, water animation and visibility.
+
 ## [0.136.3] - 2026-11-08
 
 ### Fixed

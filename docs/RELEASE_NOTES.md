@@ -2,6 +2,30 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.136.4 — Reuse stationary terrain and river transforms
+
+Cache the fixed transforms of completed ground tiles and river/bank meshes using
+the existing static-scenery helper. Preserve road/terrain replacement, cancellation,
+water time/tide uniforms and distance visibility. No geometry, terrain detail,
+gameplay rule or visibility range changes. Reload after deployment; no migration
+or player grant is needed.
+
+Validate 17 affected unit tests, TypeScript and four browser suites: streamed
+terrain replacement/cancellation, flight detail transitions, rendered flight views,
+and river fishing with dry-bank refusal. The populated census retains exactly
+681 draws and 596,492 submitted triangles. Remove repeated transform work on
+244 ground and 346 river/bank meshes, including hidden river reaches.
+
+The original profiled replay passes its <100 ms heartbeat gate, NPC decisions,
+arrival, daily growth and connected movement, but records a 385 ms startup ping.
+Controlled baseline/candidate comparisons associate that spike with profiler
+activation. Supplemental runs without CPU profiling keep the same workload and
+checks: baseline maximum ping 35 ms / minimum 27 FPS; candidate 34 ms / 28 FPS.
+Candidate maximum heartbeat is 77.39 ms, frame p95 52.1 ms and maximum 95 ms,
+with no frames over 100 ms. Baseline frame p95 is 48.1 ms and maximum 74.4 ms;
+these results support reduced redundant work, not a guaranteed frame-rate gain.
+Retain the original profiled results alongside these diagnostics.
+
 ## 0.136.3 — Cull offscreen distant terrain
 
 Partition the existing distant-island mesh into bounded sections and skip sections

@@ -5,6 +5,7 @@ import { waterLevel } from '../shared/ocean';
 import { terrainHeight } from '../shared/terrain';
 import { hash2, smoothstep } from '../shared/noise';
 import { riverBanks, riverSurfacePoints } from '../shared/inland-water';
+import { freezeScenery } from './static-scene';
 
 /** Shared moving surface for rivers and spring trickles. */
 export function riverSurfaceMaterial(uniforms: {
@@ -246,6 +247,8 @@ export class InlandWater {
       }
       add(positions, uv, indices);
     }
+    // Water moves in shader uniforms; its reaches and banks stay in world space.
+    freezeScenery(this.group, []);
   }
   update(w: World, time: number, x: number, z: number) {
     this.time.value = time;

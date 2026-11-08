@@ -4,6 +4,7 @@ import type { World } from '../shared/types';
 import { mapHalf } from '../shared/terrain';
 import { groundMaterial } from './materials';
 import { prepareSnowSurfaceSteps } from './snow-surface';
+import { freezeScenery } from './static-scene';
 
 import { groundGeometrySteps, groundTileSize } from './ground-geometry';
 export { groundTileSize } from './ground-geometry';
@@ -239,6 +240,7 @@ export class GroundTiles {
       tile.userData.ground = true;
       this.decorate(tile);
       this.group.add(tile);
+      freezeScenery(tile, []);
       installed = true;
       return tile;
     } finally {

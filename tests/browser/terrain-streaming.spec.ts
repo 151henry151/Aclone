@@ -47,6 +47,32 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         const tile = ground.group.children[0],
           grove = woods.group.children[0];
         const complete = !!tile.geometry.attributes.snowLift && !!grove.userData.snowDetails;
+        const transforms = (mesh: any) => {
+          let compositions = 0,
+            multiplications = 0;
+          const compose = mesh.matrix.compose.bind(mesh.matrix);
+          const multiply = mesh.matrixWorld.multiplyMatrices.bind(mesh.matrixWorld);
+          mesh.matrix.compose = (...args: any[]) => {
+            compositions++;
+            return compose(...args);
+          };
+          mesh.matrixWorld.multiplyMatrices = (...args: any[]) => {
+            multiplications++;
+            return multiply(...args);
+          };
+          for (let i = 0; i < 10; i++) ground.group.updateMatrixWorld();
+          return {
+            compositions,
+            multiplications,
+            position: [
+              mesh.matrixWorld.elements[12],
+              mesh.matrixWorld.elements[13],
+              mesh.matrixWorld.elements[14],
+            ],
+            expected: [mesh.userData.cx, 0, mesh.userData.cz],
+          };
+        };
+        const initialTransforms = transforms(tile);
         // A road revision retains each complete cell until a complete replacement exists.
         w.roads = [...(w.roads ?? []), { a: { x: 560, z: 560 }, b: { x: 590, z: 590 }, width: 6 }];
         ground.refresh(w);
@@ -82,6 +108,7 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         const refreshedTile = ground.group.children.find(
           (o: any) => o.userData.cx === tile.userData.cx && o.userData.cz === tile.userData.cz,
         );
+        const refreshedTransforms = transforms(refreshedTile);
         ground.update(1300, 576);
         const oldTileRetained = ground.group.children.includes(refreshedTile);
         woods.update(576, 576);
@@ -95,6 +122,8 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         const newPending = ground.group.children.length === 0;
         ground.clear();
         return {
+          initialTransforms,
+          refreshedTransforms,
           retainedOnRefresh,
           replacedOnRefresh,
           groundPending,
@@ -111,6 +140,17 @@ test('streamed scenery stays hidden until complete and cancels cleanly when chan
         performance.now = now;
       }
     });
+    for (const transforms of [result.initialTransforms, result.refreshedTransforms]) {
+      expect(transforms.position).toEqual(transforms.expected);
+      expect(
+        transforms.compositions,
+        'Stationary streamed ground must reuse its local matrix',
+      ).toBe(0);
+      expect(
+        transforms.multiplications,
+        'Stationary streamed ground must reuse its world matrix',
+      ).toBe(0);
+    }
     expect(result.retainedOnRefresh).toBe(true);
     expect(result.replacedOnRefresh).toBe(true);
     expect(result.groundPending).toBe(true);
