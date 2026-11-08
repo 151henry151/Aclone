@@ -2,6 +2,29 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.136.3 — Cull offscreen distant terrain
+
+Partition the existing distant-island mesh into bounded sections and skip sections
+outside the camera view. Preserve every triangle, original vertex normal, coastal
+refinement, terrain coverage hole, alpine snow rule and geographic curvature.
+Use conservative bounds for curved terrain and reuse static section transforms;
+the curved sea continues following the camera. No world migration, gameplay rule,
+visibility-distance change or player grant is required. Reload the client.
+
+Validate 21 affected horizon, marine, flight and northern-island unit tests,
+TypeScript and real coastal/flight browser flows. Repair a stale coastal fixture
+that did not consume the yielded world-building job; require visible land pixels
+as well as lighthouse flashes. The populated census retains all 944,256 island
+triangles while submitting 85,618 horizon triangles instead of 964,736. Total
+submitted triangles fall from 1,475,610 to 596,492; scene draws increase from 663
+to 681, remaining below the earlier 751-call budget.
+
+The unchanged populated walking/turning replay completes five NPC decisions,
+resident arrival and daily growth without browser errors. Maximum heartbeat is
+80.91 ms (<100), maximum ping 66 ms, frame p95 51.3 ms and maximum frame 75.8 ms,
+with no frames over 100 ms. Minimum FPS is 18; frame-rate dips remain open. These
+measurements demonstrate reduced geometry submission, not a guaranteed FPS gain.
+
 ## 0.136.2 — Render parked vehicles with fewer draws
 
 Combine compatible opaque stationary parts across the parked body's wheel and

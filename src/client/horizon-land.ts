@@ -90,9 +90,66 @@ export function* horizonGeometry(w: World): Generator<void, T.BufferGeometry> {
   return geometry;
 }
 
+/** Keep the existing sampled surface, but give the renderer bounded pieces to cull.
+ * Copy original normals at shared borders so lighting cannot expose chunk seams. */
+function* horizonSections(w: World): Generator<void, T.BufferGeometry[]> {
+  const source = yield* horizonGeometry(w);
+  const sections: T.BufferGeometry[] = [];
+  let complete = false;
+  try {
+    const position = source.getAttribute('position'),
+      normal = source.getAttribute('normal');
+    const buckets = new Map<
+      string,
+      { vertices: Map<number, number>; positions: number[]; normals: number[]; indices: number[] }
+    >();
+    // Renderer organization only; the terrain sampling resolution stays unchanged.
+    const span = 2048;
+    for (let i = 0; i < source.index!.count; i += 3) {
+      const ids = [source.index!.getX(i), source.index!.getX(i + 1), source.index!.getX(i + 2)];
+      const x = ids.reduce((n, id) => n + position.getX(id), 0) / 3;
+      const z = ids.reduce((n, id) => n + position.getZ(id), 0) / 3;
+      const key = Math.floor(x / span) + ':' + Math.floor(z / span);
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = { vertices: new Map(), positions: [], normals: [], indices: [] };
+        buckets.set(key, bucket);
+      }
+      for (const id of ids) {
+        let mapped = bucket.vertices.get(id);
+        if (mapped === undefined) {
+          mapped = bucket.positions.length / 3;
+          bucket.vertices.set(id, mapped);
+          bucket.positions.push(position.getX(id), position.getY(id), position.getZ(id));
+          bucket.normals.push(normal.getX(id), normal.getY(id), normal.getZ(id));
+        }
+        bucket.indices.push(mapped);
+      }
+      if (i % 1536 === 0) yield;
+    }
+    for (const bucket of buckets.values()) {
+      const geometry = new T.BufferGeometry();
+      geometry.setAttribute('position', new T.Float32BufferAttribute(bucket.positions, 3));
+      geometry.setAttribute('normal', new T.Float32BufferAttribute(bucket.normals, 3));
+      geometry.setIndex(bucket.indices);
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+      sections.push(geometry);
+      yield;
+    }
+    complete = true;
+    return sections;
+  } finally {
+    source.dispose();
+    if (!complete) for (const geometry of sections) geometry.dispose();
+  }
+}
+
 export class HorizonLand {
   readonly group = new T.Group();
-  private job?: Generator<void, T.BufferGeometry>;
+  private job?: Generator<void, T.BufferGeometry[]>;
+  private land: T.Mesh<T.BufferGeometry, T.MeshLambertMaterial>[] = [];
+  private curvedBounds = new T.Box3();
   private material?: T.MeshLambertMaterial;
   private coverage?: T.DataTexture;
   private origin = 0;
@@ -104,15 +161,19 @@ export class HorizonLand {
   private alpine?: ReturnType<typeof alpineSnowUniforms>;
   reset(w: World) {
     this.job?.return(undefined as never);
+    const materials = new Set<T.Material>();
     this.group.traverse((o) => {
       if (o instanceof T.Mesh) {
         o.geometry.dispose();
-        o.material.dispose();
+        materials.add(o.material);
       }
     });
+    if (this.material) materials.add(this.material);
+    for (const material of materials) material.dispose();
+    this.land = [];
     this.coverage?.dispose();
     this.group.clear();
-    this.job = horizonGeometry(w);
+    this.job = horizonSections(w);
     this.origin = Math.floor((-mapHalf(w) - 128) / 128) * 128;
     this.cells = Math.ceil((mapHalf(w) + 128 - this.origin) / 128);
     this.coverage = new T.DataTexture(
@@ -196,10 +257,16 @@ export class HorizonLand {
     while (this.job) {
       const step = this.job.next();
       if (step.done) {
-        const mesh = new T.Mesh(step.value, this.material!);
-        mesh.frustumCulled = false;
-        mesh.name = 'Island silhouette and supporting terrain';
-        this.group.add(mesh);
+        for (const geometry of step.value) {
+          const mesh = new T.Mesh(geometry, this.material!);
+          // The first update supplies bounds for the shader's geographic curvature.
+          mesh.frustumCulled = false;
+          mesh.name = 'Island silhouette and supporting terrain';
+          this.land.push(mesh);
+          this.group.add(mesh);
+          mesh.updateWorldMatrix(true, false);
+          mesh.matrixAutoUpdate = mesh.matrixWorldAutoUpdate = false;
+        }
         this.job = undefined;
         break;
       }
@@ -209,6 +276,25 @@ export class HorizonLand {
   }
   update(w: World, camera: T.Camera, ground: GroundTiles, level: number, daylight: number) {
     this.prepare();
+    for (const mesh of this.land) {
+      const box = mesh.geometry.boundingBox!;
+      const nearX = Math.max(box.min.x - camera.position.x, 0, camera.position.x - box.max.x);
+      const nearZ = Math.max(box.min.z - camera.position.z, 0, camera.position.z - box.max.z);
+      const farX = Math.max(
+        Math.abs(box.min.x - camera.position.x),
+        Math.abs(box.max.x - camera.position.x),
+      );
+      const farZ = Math.max(
+        Math.abs(box.min.z - camera.position.z),
+        Math.abs(box.max.z - camera.position.z),
+      );
+      // Expand around the entire curved surface, not just its undeformed mesh.
+      this.curvedBounds.copy(box);
+      this.curvedBounds.min.y -= (farX * farX + farZ * farZ) / (2 * refractedEarthRadius);
+      this.curvedBounds.max.y -= (nearX * nearX + nearZ * nearZ) / (2 * refractedEarthRadius);
+      this.curvedBounds.getBoundingSphere(mesh.geometry.boundingSphere!);
+      mesh.frustumCulled = true;
+    }
     this.level.value = level;
     this.snow.value = w.climate?.snow ?? 0;
     if (this.alpine) updateAlpineSnow(this.alpine, w);

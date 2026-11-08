@@ -30,7 +30,12 @@ test('offshore views retain supporting land and readable lighthouse flashes at 1
     const w=createWorld('puddlewick','Puddlewick','server');
     w.settings.mapSize=18500;w.terrainMapSize=12500;ensurePuddlewickLighthouses(w);
     w.buildings=w.buildings.filter(b=>b.kind==='lighthouse');w.creator={...defaultCreator(),scenery:false};w.climate={snow:0,snowDepth:0,wetness:0};
-    const game=new GameScene(document.getElementById('view'));game.renderer.setAnimationLoop(null);game.buildWorld(w);
+    const game=new GameScene(document.getElementById('view'));game.renderer.setAnimationLoop(null);
+    // World construction now yields work and GPU preparation; exhaust the real job.
+    for (const pending of game.buildWorld(w)) {
+      if (pending) await pending;
+      else await new Promise(r=>requestAnimationFrame(r));
+    }
     game.space.visible=false;game.land.visible=true;game.actors.visible=false;
     // No detailed tiles: verify the fallback supports the actual lighthouse geometry.
     game.ground.clear();
@@ -55,7 +60,20 @@ test('offshore views retain supporting land and readable lighthouse flashes at 1
       const pixel=signal.position.clone().project(game.camera);
       const gl=game.renderer.getContext(),rgba=new Uint8Array(9*9*4);
       gl.readPixels(Math.round((pixel.x+1)/2*gl.drawingBufferWidth)-4,Math.round((pixel.y+1)/2*gl.drawingBufferHeight)-4,9,9,gl.RGBA,gl.UNSIGNED_BYTE,rgba);
-      return {opacity:signal.material.opacity,visible:signal.visible,peak:Math.max(...rgba.filter((v,i)=>i%4===0)),triangles:game.renderer.info.render.triangles};
+      const triangles=game.renderer.info.render.triangles;
+      let landPixels=0;
+      if(!night){
+        const terrain=game.horizon.group.children.filter(c=>c.name==='Island silhouette and supporting terrain');
+        const withLand=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4),withoutLand=new Uint8Array(withLand.length);
+        gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,withLand);
+        for(const mesh of terrain)mesh.visible=false;
+        game.renderer.render(game.scene,game.camera);
+        gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,withoutLand);
+        for(let i=0;i<withLand.length;i+=4)if(Math.abs(withLand[i]-withoutLand[i])+Math.abs(withLand[i+1]-withoutLand[i+1])+Math.abs(withLand[i+2]-withoutLand[i+2])>15)landPixels++;
+        for(const mesh of terrain)mesh.visible=true;
+        game.renderer.render(game.scene,game.camera);
+      }
+      return {landPixels,opacity:signal.material.opacity,visible:signal.visible,peak:Math.max(...rgba.filter((v,i)=>i%4===0)),triangles,landSections:game.horizon.group.children.filter(c=>c.name==='Island silhouette and supporting terrain').length};
     };window.ready=true;
     </script>`,
       }),
@@ -71,7 +89,18 @@ test('offshore views retain supporting land and readable lighthouse flashes at 1
       expect(bright.peak).toBeGreaterThan(dim.peak + 20);
       await page.screenshot({ path: 'test-results/lighthouse-' + distance + '.png' });
     }
-    await page.evaluate(() => (window as any).drawCoast(1500, false, false));
+    const coast = await page.evaluate(() => (window as any).drawCoast(1500, false, false));
+    expect(
+      coast.landSections,
+      'The coastal fixture must finish building supporting land',
+    ).toBeGreaterThan(0);
+    expect(coast.triangles, 'The coast must render more than lighthouse sprites').toBeGreaterThan(
+      20000,
+    );
+    expect(
+      coast.landPixels,
+      'Supporting land must be visible in the rendered offshore view',
+    ).toBeGreaterThan(500);
     await page.screenshot({ path: 'test-results/coastal-support.png' });
     expect(errors).toEqual([]);
   } finally {

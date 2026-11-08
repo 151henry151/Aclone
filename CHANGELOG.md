@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.136.3] - 2026-11-08
+
+### Fixed
+
+- Cull offscreen sections of the distant island while preserving terrain detail, shoreline refinement and curvature; reuse stationary section transforms and keep the sea horizon following the camera.
+
 ## [0.136.2] - 2026-11-08
 
 ### Fixed

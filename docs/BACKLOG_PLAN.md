@@ -9203,3 +9203,78 @@ Evidence and receipt are under `output/client-rendering/`. The reviewed 17-secon
 clip shows forward walking, opposing turns and continued walking; it does not
 prove all lag is fixed. Keep the measured 15 FPS minimum and 167 ms ping spike
 open for the next performance investigation before factory/truck work.
+
+## Cull offscreen distant-island sections — criteria, 2026-11-08
+
+The final populated census still submits 944,256 island triangles plus 20,480
+curved-sea triangles through the horizon branch. The entire island is one mesh
+with frustum culling disabled, even at ground level facing away from most of it.
+Preserve all existing terrain vertices, normals, winding, coastal refinement,
+coverage holes, alpine snow, geographic curvature and visibility distances.
+Partition the same terrain into bounded renderer sections; this is internal
+render organization, not a new gameplay/world setting or lower terrain detail.
+
+Before production edits, require multiple bounded terrain meshes in the real
+`HorizonLand` class (currently one), exact triangle/normal parity with the original
+`horizonGeometry`, yielded construction and cleanup when reset interrupts work.
+Require conservative culling spheres containing every curvature-displaced vertex
+from near, high and distant observer positions. Keep the curved sea unchanged.
+In the same populated browser census, require horizon submitted triangles at most
+half the baseline 964,736 and total scene draw calls no more than the original 751. Retain full horizon geometry inventory and no browser errors.
+
+Run relevant horizon/flight/marine/northern-island tests, clean TypeScript and
+explicit-file Prettier. Run the actual coastal-visibility browser at 1/30 km and
+the flight-view flow (empty streamed terrain, distant town, high flight, landing
+approach). Run the unchanged populated movement/NPC/daily-growth replay with its
+<100 ms heartbeat gate. Review screenshots/video before release. Do not change
+visibility or terrain detail to satisfy budgets, and stop if these criteria fail.
+
+The initial geometry/culling regressions fail on the single unculled mesh and
+pass after partitioning. The populated census retains all 944,256 island
+triangles in 440 sections, while submitting 85,618 horizon triangles through 20
+draws. Whole-scene submissions fall to 596,492 triangles / 681 calls, within both
+gates. Coastal and flight browser flows pass, including 30 km offshore, empty
+streamed terrain and high/approach views. A follow-up failing regression detects
+40 redundant static matrix compositions in ten frames; bake section transforms
+once while retaining the camera-following sea, then repeat affected browser
+checks and the populated replay before release.
+
+The additional static-transform regression now passes: section geometry keeps its
+baked transforms while the sea follows the camera. All 21 selected horizon,
+flight-view, marine-visibility and northern-island tests pass. Cancellation/reset
+coverage verifies disposal of a partially built source and copied sections, then
+one disposal of the shared land material, followed by successful replacement-world
+preparation. No gameplay rule, terrain sampler or world-visible distance changes.
+
+The final census repeats 85,618 horizon triangles / 20 draws and 596,492 total
+triangles / 681 calls, retaining the full 944,256-triangle island. The unchanged
+populated replay passes: 80.91 ms maximum heartbeat (<100), five NPC decisions,
+resident arrival, completed daily growth, connected movement and no browser
+errors. Frame p95 is 51.3 ms, maximum 75.8 ms, zero frames over 100 ms, minimum
+FPS 18, maximum ping 66 ms and correction 0.449 m. This is a geometry-submission
+improvement, not proof that every frame-rate dip is resolved.
+
+Visual review caught a stale coastal test fixture despite its passing lighthouse
+assertions: it called the now-yielding world builder without consuming the job,
+so its screenshot contained no land. A new assertion fails with zero supporting
+sections (`output/horizon-culling/coastal-red.log`). Await the real build job and
+GPU preparation; additionally compare rendered pixels with/without the distant
+terrain to require visible supporting land. The corrected 1/30 km lighthouse and
+1.5 km daylight coast flow passes, with a visible continuous island and cliffs.
+Flight empty-town, loaded-town, high and approach checks also pass. Preserve the
+failed screenshot only as diagnostic evidence; publish verified evidence.
+
+Prepare 0.136.3 after final TypeScript/build/format checks and artifact review,
+then commit/push/deploy the exact SHA and announce with the reviewed screenshot.
+No factory/truck code has begun; remaining client frame-rate dips stay open.
+
+Verification commands for this slice: `node --import tsx --test
+tests/horizon-culling.test.ts tests/marine-visibility.test.ts
+tests/flight-view.test.ts tests/northern-island.test.ts` (21 passing);
+`TEST_GPU=1 npm run test:e2e -- tests/browser/coastal-visibility.spec.ts
+tests/browser/flight-view.spec.ts` (both flows pass with captured screenshots);
+`npm run build` (includes `tsc --noEmit`); explicit-file `npx prettier --write`
+on all changed files. Recorded browser runs use the equivalent local evidence
+config with video enabled. The reviewed 17-second populated clip shows walking,
+opposing turns and continued walking, with no visible terrain holes or prolonged
+freeze; it ends moving and does not demonstrate perfect smoothness.
