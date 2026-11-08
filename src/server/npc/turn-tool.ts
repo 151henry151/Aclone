@@ -11,6 +11,24 @@ const parameters = z.toJSONSchema(decisionSchema, {
       jsonSchema.anyOf = jsonSchema.oneOf;
       delete jsonSchema.oneOf;
     }
+    const discriminator = jsonSchema.properties?.type;
+    if (
+      jsonSchema.type === 'object' &&
+      typeof discriminator === 'object' &&
+      discriminator.const === 'vehicle' &&
+      jsonSchema.properties?.building &&
+      !jsonSchema.required?.includes('building')
+    ) {
+      // Strict providers require every advertised property. Represent the two
+      // existing action shapes instead of making garage retrieval compulsory.
+      const { properties, required = [], ...shape } = jsonSchema;
+      const { building: _garage, ...outdoors } = properties;
+      for (const key of Object.keys(jsonSchema)) delete jsonSchema[key];
+      jsonSchema.anyOf = [
+        { ...shape, properties: outdoors, required },
+        { ...shape, properties, required: [...required, 'building'] },
+      ];
+    }
   },
 });
 delete parameters.$schema;

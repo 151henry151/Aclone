@@ -73,3 +73,44 @@ test('Responses adapter rejects refusal, malformed output and errors without exp
     /^Error: AI provider HTTP 429$/,
   );
 });
+
+test('strict vehicle tools preserve outdoor switching and explicit garage retrieval', async () => {
+  const variants: any[] = [];
+  const visit = (s: any) => {
+    if (s?.type === 'object' && s.properties?.type?.const === 'vehicle') variants.push(s);
+    for (const value of Object.values(s ?? {}))
+      if (value && typeof value === 'object')
+        Array.isArray(value) ? value.forEach(visit) : visit(value);
+  };
+  visit(turnTool.parameters);
+  assert.equal(variants.length, 2, 'advertise both strict vehicle action shapes');
+  for (const action of [
+    { type: 'vehicle', slot: 0 },
+    { type: 'vehicle', slot: 0, building: 'garage' },
+  ]) {
+    const fields = Object.keys(action).sort();
+    assert.ok(
+      variants.some((v) => JSON.stringify([...v.required].sort()) === JSON.stringify(fields)),
+    );
+    const response = { ...d, plan: [{ kind: 'act', action }] };
+    const fake: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          status: 'completed',
+          output: [
+            { type: 'function_call', name: 'plan_turn', arguments: JSON.stringify(response) },
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+      );
+    assert.deepEqual(
+      (
+        await new OpenAIBrain('test', 'test', fake).decide(
+          { instructions: '', observation: {} },
+          new AbortController().signal,
+        )
+      ).decision,
+      response,
+    );
+  }
+});

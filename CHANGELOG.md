@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Advertise both outdoor vehicle switching and garage retrieval as valid strict NPC provider actions, and keep complete requests within their existing limit by shortening repeated instructions.
+
 ## [0.132.0] - 2026-11-08
 
 ### Added
