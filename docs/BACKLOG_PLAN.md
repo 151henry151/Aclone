@@ -7,13 +7,15 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
-## Current priority — resume road and river routing, 2026-11-08
+## Current priority — client performance, then bridge construction, 2026-11-08
 
-The NPC preparation responsiveness gate now passes and is released as 0.132.1.
-Resume item 19 from its preserved dirt-road/ford candidate, retaining all existing
-acceptance criteria. Paving, bridges and trucks remain pending. The checkpoint
-fixes measured NPC server stalls; client FPS dips remain and must continue to be
-measured during browser validation. Full release evidence is recorded below.
+Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
+alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
+The populated-world server responsiveness gate passes. Continue investigating
+measured client frame costs before the larger bridge implementation; the latest
+replay still reaches 17 FPS and 298 ms ping. Then resume item 19 stage 4, paid
+player bridge construction and road integration, with all recorded criteria.
+Bridges, automotive manufacturing and highway trucks remain pending.
 
 ## Completion protocol
 
@@ -331,11 +333,13 @@ implementation order rather than building paving before ford-aware persistence.
     - Survey current settlements and haulage economics read-only; define shared
       city/surface/ford/bridge records and configurable defaults. Decide access,
       toll and refrigeration policies before their implementations.
-    - Persistent useful alternate routes and deterministic ford-aware dirt
-      growth, including a new distant town, absent fords and multiple rivers.
-    - Sustained city qualification, slow density-directed paving, rural lanes
-      staying dirt, one boundary exit, city-only trunks, bank-ending paved
-      projects and dirt feeders. Count bridges, never dirt fords, as paved links.
+    - **Done, live in 0.133.0/0.134.0:** persistent useful alternate routes and
+      deterministic ford-aware dirt growth, including a new distant town, absent
+      fords and multiple rivers.
+    - **Done, live in 0.135.0:** sustained city qualification, slow density-directed
+      paving, rural lanes staying dirt, one boundary exit, city-only trunks,
+      bank-ending paved projects and dirt feeders. Dirt fords never count as paved
+      links; usable bridge integration belongs to the following stage.
     - Expensive contributed bridge construction, reservations, approaches,
       maintenance/removal and old-ford preservation.
     - Automotive factory construction, inputs/staffing and manufactured orders
@@ -8708,3 +8712,18 @@ Prepare 0.135.0 with complete player/world-builder/release documentation. Keep t
 released-model test maintenance in its own commit. Push and deploy the exact city
 feature commit, verify the live version/assets read-only, and announce through
 the Discord bot before marking this slice done. Evidence: `output/city-paving/`.
+
+### Item 19 — City paving released, 2026-11-08
+
+**Stage 3 done.** Push/deploy `051ee6c63379ff629a715c5492efeb8b596c382a` as
+0.135.0; preceding test-maintenance commit `78c87cc` remains separate. Read-only
+browser verification confirms game/client, map worker, website and gallery with
+no browser errors. Server commit matches; service active, PID 387197, zero
+restarts. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-152914.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-153018.tar.gz`.
+Verified bot announcement with two reviewed, explicitly local-test screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569086777753604147
+Evidence: `output/city-paving/`. Live Puddlewick is below default city thresholds;
+no player/world settings were edited to force qualification. Continue measured
+client-performance follow-up, then stage 4 bridges.
