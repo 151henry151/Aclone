@@ -566,6 +566,7 @@ export class GameScene {
       JSON.stringify(world.spaceportSite ?? null) +
       JSON.stringify(world.landscape ?? {}) +
       JSON.stringify(world.roads ?? []) +
+      JSON.stringify(world.pavedRoads ?? []) +
       JSON.stringify(world.retiredRoads ?? []) +
       ':' +
       world.buildings

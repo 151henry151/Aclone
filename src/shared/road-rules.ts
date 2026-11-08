@@ -1,6 +1,43 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const roadRuleFields = {
+  cityPaving: { label: 'Grow city pavement' },
+  cityBuildings: { label: 'City occupied buildings', min: 1, max: 10000, step: 1 },
+  cityBusinesses: { label: 'City businesses', min: 0, max: 10000, step: 1 },
+  cityResidents: { label: 'City residents', min: 0, max: 10000, step: 1 },
+  cityQualificationDays: {
+    label: 'Sustained city qualification (game days)',
+    min: 1,
+    max: 3650,
+    step: 1,
+  },
+  cityDemotionDays: { label: 'Sustained city shrinkage (game days)', min: 1, max: 3650, step: 1 },
+  cityRetentionFraction: {
+    label: 'City retention threshold (fraction of entry)',
+    min: 0,
+    max: 1,
+    step: 0.01,
+  },
+  cityPavingPerDay: {
+    label: 'Paving (metres/city/game day; 0 pauses)',
+    min: 0,
+    max: 1000,
+    step: 0.1,
+  },
+  cityDensityRadius: { label: 'Urban density radius (metres)', min: 5, max: 500, step: 1 },
+  cityDensityBuildings: {
+    label: 'Nearby occupied buildings for paving',
+    min: 1,
+    max: 1000,
+    step: 1,
+  },
+  cityDensityDays: { label: 'Sustained paving density (game days)', min: 1, max: 3650, step: 1 },
+  cityDensitySampleSpacing: {
+    label: 'Maximum density sample spacing (metres)',
+    min: 1,
+    max: 30,
+    step: 1,
+  },
   roadAlternateRoutes: { label: 'Grow useful alternate dirt routes' },
   roadAlternateSavingFraction: {
     label: 'Minimum alternate-route saving (fraction)',

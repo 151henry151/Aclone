@@ -1,3 +1,4 @@
+import { roadRules } from '../shared/road-rules';
 import { meetingTown, townMeeting } from '../shared/town-charter';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { constructionTerms, ruleLabels, type PublicTown } from '../shared/civics';
@@ -214,7 +215,16 @@ export function townPanel(w: World, me: Player, b: Pick<Building, 'id'>) {
       .filter(([k]) => town.permissions[group][k as 'build'])
       .map(([, l]) => l.toLowerCase())
       .join(', ') || 'nothing';
-  let html = `<h3>Town of ${esc(town.name)}</h3><p>${governanceLabels[town.governance]}${town.governance === 'direct' ? '' : ` · Mayor: ${town.mayor ? esc(name(w, town.mayor)) : 'none'}`} · Residents: ${town.residents.length} · Border ${Math.round(town.radius)}m</p>`;
+  const city = w.cityDevelopment?.[town.id],
+    road = roadRules(w.settings);
+  let html = `<h3>${city?.qualified ? 'City' : 'Town'} of ${esc(town.name)}</h3><p>${governanceLabels[town.governance]}${town.governance === 'direct' ? '' : ` · Mayor: ${town.mayor ? esc(name(w, town.mayor)) : 'none'}`} · Residents: ${town.residents.length} · Border ${Math.round(town.radius)}m</p>`;
+  if (city)
+    html += `<p>City qualification: ${city.counts.buildings}/${road.cityBuildings} occupied buildings · ${city.counts.businesses}/${road.cityBusinesses} businesses · ${city.counts.residents}/${road.cityResidents} residents. ${city.qualified ? `City status established${city.shrinkingDays ? ` · shrinkage ${city.shrinkingDays}/${road.cityDemotionDays} game days` : ''}` : `${city.eligibleDays}/${road.cityQualificationDays} sustained game days`}.</p>`;
+  html += `<p>${!road.cityPaving || road.cityPavingPerDay === 0 ? 'Paving paused' : city?.qualified ? `Paving up to ${road.cityPavingPerDay} m per game day along dense, connected streets` : 'Paving begins after sustained city qualification'}. Sparse farm lanes stay dirt.</p>`;
+  const project = w.pavingProjects?.[town.id],
+    status = w.pavingStatus?.[town.id];
+  if (project?.waitingForBridge || status?.waitingForBridge)
+    html += `<p>${(status?.metresRemaining ?? (project!.path.length > 1 ? 1 : 0)) > 0 ? 'River approach under construction' : 'Awaiting a bridge'} · fords never count as paved crossings.</p>`;
   html += `<p>Local rates: construction ${pct(town.tax)} · sales ${pct(town.salesTax)} · factory wages ${pct(town.wageTax)} · Treasury ${money(town.treasury)}</p><p class="note">World sales and wage taxes also apply. Sales tax is included in posted prices.</p><button data-do="taxes">Taxes &amp; rates</button>`;
   for (const t of town.pendingTaxes)
     html += `<p class="note">Scheduled: ${esc(ruleLabels[t.rule])} to ${pct(t.value)} in ${days(w, t.at)}.</p>`;
@@ -404,9 +414,10 @@ export function charterFormAction(entries: Entries): Action {
 
 export function townLocation(w: World, at: { x: number; z: number }) {
   const inside = townAt(w, at.x, at.z);
-  if (inside) return `In the town of ${inside.name}`;
+  const kind = (id: string) => (w.cityDevelopment?.[id]?.qualified ? 'city' : 'town');
+  if (inside) return `In the ${kind(inside.id)} of ${inside.name}`;
   const near = nearestTown(w, at.x, at.z);
-  return near ? `Closest town is ${near.name}` : 'Out in the sticks';
+  return near ? `Closest ${kind(near.id)} is ${near.name}` : 'Out in the sticks';
 }
 
 /** Price, local town tax and any refusal for building `kind` where the player stands. */

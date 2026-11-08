@@ -549,6 +549,25 @@ export interface World {
   roads?: import('./town.ts').Road[];
   /** Last game day on which road growth was considered. */
   roadGrowth?: number;
+  cityDevelopment?: Record<string, import('./city-development').CityDevelopment>;
+  cityAssessedDay?: number;
+  cityDayLength?: number;
+  pavingFeeders?: import('./road-projects').RoadProject[];
+  pavingStatus?: Record<
+    string,
+    {
+      destination: string;
+      metresRemaining: number;
+      waitingForBridge?: { near: import('./town').Point; far: import('./town').Point };
+    }
+  >;
+  pavingProjects?: Record<string, import('./city-trunks').PavingProject>;
+  pavedRoads?: import('./city-paving').PavedRoad[];
+  pavingDay?: number;
+  pavingDayLength?: number;
+  pavingDue?: number;
+  pavingEligibility?: Record<string, number>;
+  pavingPolicy?: string;
   /** Last requested game day; retained while resumable road surveys are pending. */
   roadGrowthDue?: number;
   /** Incremental public roadwork, resumed after saving/restarting. */

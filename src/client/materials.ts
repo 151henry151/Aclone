@@ -1,3 +1,4 @@
+import { effectivePavement } from '../shared/city-paving';
 import { alpineSnowUniforms, updateAlpineSnow } from './alpine-snow';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -150,8 +151,8 @@ function roadTexture(w: World, region: GroundRegion) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   for (const [extra, color] of [
-    [2, '#555'],
-    [0, '#fff'],
+    [2, '#550000'],
+    [0, '#ff0000'],
   ] as const) {
     ctx.strokeStyle = color;
     for (const { a, b, width } of roads) {
@@ -163,7 +164,7 @@ function roadTexture(w: World, region: GroundRegion) {
     }
   }
   if (centre) {
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#ff0000';
     ctx.beginPath();
     ctx.arc(
       (square.x - region.x) * scale,
@@ -173,6 +174,23 @@ function roadTexture(w: World, region: GroundRegion) {
       Math.PI * 2,
     );
     ctx.fill();
+  }
+  // Red retains all road coverage; green adds pavement in the same baked mask.
+  // No extra draw calls or texture sampling are needed as the network grows.
+  ctx.strokeStyle = '#ffff00';
+  for (const { a, b, width } of effectivePavement(w)) {
+    if (
+      Math.max(a.x, b.x) + width < region.x ||
+      Math.min(a.x, b.x) - width > region.x + region.size ||
+      Math.max(a.z, b.z) + width < region.z ||
+      Math.min(a.z, b.z) - width > region.z + region.size
+    )
+      continue;
+    ctx.lineWidth = width * scale;
+    ctx.beginPath();
+    ctx.moveTo((a.x - region.x) * scale, (a.z - region.z) * scale);
+    ctx.lineTo((b.x - region.x) * scale, (b.z - region.z) * scale);
+    ctx.stroke();
   }
   return canvasTexture(canvas);
 }
@@ -285,7 +303,9 @@ export function groundMaterial(
       vec2 maskUv=vec2((p.x-maskOrigin.x)/maskSize,1.-(p.y-maskOrigin.y)/maskSize);
       // Gravel wears away into the turf; noise breaks up the verge at two scales.
       float verge=noise(p*1.9)*.7+noise(p*.32)*1.4;
-      float road=smoothstep(.16,.84,texture2D(roadMask,maskUv).r+verge*.06);
+      vec2 roadCoverage=texture2D(roadMask,maskUv).rg;
+      float road=smoothstep(.16,.84,roadCoverage.r+verge*.06);
+      float pavement=smoothstep(.35,.7,roadCoverage.g);
 
       float beach=1.-smoothstep(shore+.3,shore+1.7,groundPosition.y);
       vec3 turf=texture2D(meadow,p/5.).rgb;
@@ -307,6 +327,7 @@ export function groundMaterial(
       vec3 riverGravel=texture2D(gravel,p/2.).rgb*vec3(.60,.57,.49);
       riverGravel=mix(riverGravel,texture2D(soilMap,p/3.).rgb*vec3(.61,.58,.48),noise(p*.22)*.5);
       base=mix(base,riverGravel,sediment);
+      base=mix(base,vec3(.055,.066,.07)*(.9+.2*noise(p*3.)),pavement);
       // Road surfaces shed snow; soft snowy verges remain visible outside the lane.
       // Shallow cover is broken by grass, deeper cover smooths into broad drifts.
       float depth=clamp(snowDepthVisual/.15,0.,1.);

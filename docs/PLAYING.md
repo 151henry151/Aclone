@@ -330,6 +330,18 @@ A world can hold several towns, each with a plinth, a circular border, a treasur
 
 Mayors change only the rules the world's charter delegates to towns, within its tax limit.
 
+## City development
+
+Town government shows progress toward city
+status, based on occupied buildings, businesses and distinct housed or registered
+residents. The default requirements must last 30 game days. Once a city qualifies,
+crews slowly pave connected streets serving dense clusters; nearby farm lanes
+can remain dirt. Grey pavement appears gradually on the ground and parish map.
+One connected boundary exit permits a route toward another city. Paved approaches
+wait at rivers for a bridge; the map marks “Bridge needed”, and a usable ford
+remains a dirt route. Temporary decline
+does not immediately remove city status, and existing pavement remains.
+
 ## Puddlewick services
 
 Default server-owned Puddlewick adds missing **Stonemason** (3 stone → 2 blocks) and **Desalination plant** (1 fuel → 12 water), ten-minute batches at defaults. Find them with M. Train mason/pump operator for paid work. New seeded services receive finite initial supplies/capital; existing businesses are never refilled on restart. Other catalog businesses await player development.

@@ -93,7 +93,25 @@ const recipe = z
       Object.keys(r.outputs).length <= 8 &&
       [...Object.values(r.inputs), ...Object.values(r.outputs)].every((n) => n >= 1 && n <= 1000),
   );
+const roadDesignSchema = z.object({
+  a: z.object({ x: coordinate, z: coordinate }),
+  b: z.object({ x: coordinate, z: coordinate }),
+  width: z.number().finite().min(0.1).max(100),
+});
 const designSchema = z.object({
+  townLayout: z.union([z.literal(1), z.literal(2)]).optional(),
+  roads: z.array(roadDesignSchema).max(100000).optional(),
+  retiredRoads: z.array(z.string().max(200)).max(100000).optional(),
+  pavedRoads: z
+    .array(
+      roadDesignSchema.extend({
+        town: z.string().max(120),
+        source: z.string().max(200).optional(),
+        kind: z.enum(['urban', 'trunk']),
+      }),
+    )
+    .max(100000)
+    .optional(),
   spaceportSite: z
     .object({
       layout: z.number().int().min(1).max(4).optional(),
@@ -434,6 +452,10 @@ export function exportDesign(w: World, includeMedia = false) {
     terrainMapSize: w.terrainMapSize,
     northernIsland: w.northernIsland,
     landscape: w.landscape,
+    roads: w.roads,
+    townLayout: w.townLayout,
+    retiredRoads: w.retiredRoads,
+    pavedRoads: w.pavedRoads,
     zones: w.zones,
     creator,
     script: w.script,
@@ -555,6 +577,26 @@ function applyValidatedDesign(w: World, input: unknown) {
       if (!Object.hasOwn(worldItems(w), id)) throw Error('Unknown world item: ' + id);
   }
   w.landscape = d.landscape;
+  w.roads = d.roads;
+  if (d.townLayout !== undefined) w.townLayout = d.townLayout;
+  w.retiredRoads = d.retiredRoads;
+  w.pavedRoads = d.pavedRoads;
+  // Designs carry authored surfaces, not the previous simulation's evidence or
+  // unfinished construction. Explicit undefined also clears the atomic copy-back.
+  for (const key of [
+    'cityDevelopment',
+    'cityAssessedDay',
+    'cityDayLength',
+    'pavingEligibility',
+    'pavingPolicy',
+    'pavingDay',
+    'pavingDue',
+    'pavingDayLength',
+    'pavingProjects',
+    'pavingFeeders',
+    'pavingStatus',
+  ] as const)
+    w[key] = undefined;
   w.landscapeHistory = [];
   w.terrain = d.terrain;
   w.coastalBluffs = d.coastalBluffs;

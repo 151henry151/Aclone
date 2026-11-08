@@ -1,3 +1,4 @@
+import { effectivePavement } from '../shared/city-paving';
 import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { vehicleDef } from '../shared/vehicle-config';
 import { waterSourceRules } from '../shared/water-source-rules';
@@ -41,7 +42,10 @@ export class ParishMap {
   private sheet: HTMLDivElement;
   private players = svg('g');
   private roadLayer = svg('g', { class: 'map-roads' });
+  private pavingBanks = svg('g', { class: 'map-paving-banks' });
+  private bankSignature = '';
   private shownRoads?: readonly Road[];
+  private shownPavement?: readonly Road[];
   private observer: ResizeObserver;
   private world: World;
   private me: Player;
@@ -360,7 +364,15 @@ export class ParishMap {
       this.panTo(centre.x, centre.z);
     }
     const roads = townRoads(w);
-    if (roads !== this.shownRoads) this.drawRoads(roads);
+    if (roads !== this.shownRoads || effectivePavement(w) !== this.shownPavement)
+      this.drawRoads(roads);
+    for (const label of this.host.querySelectorAll<SVGElement>('[data-map-town]')) {
+      const town = w.towns.find((t) => t.id === label.dataset.mapTown);
+      if (town)
+        label.textContent = `${w.cityDevelopment?.[town.id]?.qualified ? 'City' : 'Town'} of ${town.name}`;
+    }
+    const banks = JSON.stringify(w.pavingStatus);
+    if (banks !== this.bankSignature) this.drawPavingBanks();
     const tide = Math.round((waterLevel(w) - w.settings.seaLevel) * 10) / 10;
     if (tide !== this.tide) this.requestTerrain();
     this.updatePlayers();
@@ -521,6 +533,60 @@ export class ParishMap {
             'stroke-linecap': 'round',
           }),
         );
+    this.shownPavement = effectivePavement(this.world);
+    const pavedBatches = new Map<number, string[]>();
+    for (const road of this.shownPavement) {
+      if (!inBounds(this.bounds, road.a, 30) && !inBounds(this.bounds, road.b, 30)) continue;
+      const width = Math.max(2, road.width * this.scale),
+        paths = pavedBatches.get(width) ?? [];
+      paths.push(
+        `M${this.x(road.a.x)} ${this.y(road.a.z)}L${this.x(road.b.x)} ${this.y(road.b.z)}`,
+      );
+      pavedBatches.set(width, paths);
+    }
+    for (const [width, paths] of pavedBatches)
+      this.roadLayer.append(
+        svg('path', {
+          d: paths.join(''),
+          stroke: '#818a8c',
+          'stroke-width': width,
+          'stroke-linecap': 'round',
+          'data-paved-road': '',
+        }),
+      );
+  }
+  private drawPavingBanks() {
+    this.bankSignature = JSON.stringify(this.world.pavingStatus);
+    this.pavingBanks.replaceChildren();
+    for (const status of Object.values(this.world.pavingStatus ?? {})) {
+      const point = status.waitingForBridge?.near;
+      if (!point || !inBounds(this.bounds, point)) continue;
+      const marker = svg('circle', {
+        cx: this.x(point.x),
+        cy: this.y(point.z),
+        r: 5,
+        fill: '#e8bc67',
+        stroke: '#25372e',
+        'stroke-width': 2,
+        'data-paving-bank': '',
+      });
+      const title = svg('title');
+      const destination =
+        this.world.towns.find((t) => t.id === status.destination)?.name ?? 'another city';
+      title.textContent = `Bridge needed toward ${destination}`;
+      marker.append(title);
+      const label = svg('text', {
+        x: this.x(point.x) + 9,
+        y: this.y(point.z) - 8,
+        fill: '#ffe1a4',
+        stroke: '#25372e',
+        'stroke-width': 3,
+        'paint-order': 'stroke',
+        'font-size': 12,
+      });
+      label.textContent = 'Bridge needed';
+      this.pavingBanks.append(marker, label);
+    }
   }
   private draw() {
     const focusedSite = (document.activeElement as HTMLElement | null)?.dataset.site;
@@ -610,7 +676,8 @@ export class ParishMap {
         opacity: 0.8,
       });
       const title = svg('title');
-      title.textContent = `Town of ${t.name}`;
+      title.textContent = `${this.world.cityDevelopment?.[t.id]?.qualified ? 'City' : 'Town'} of ${t.name}`;
+      title.dataset.mapTown = t.id;
       border.append(title);
       const label = svg('text', {
         x: this.x(t.x),
@@ -620,11 +687,13 @@ export class ParishMap {
         'font-size': 13,
         'font-style': 'italic',
       });
-      label.textContent = `Town of ${t.name}`;
+      label.textContent = `${this.world.cityDevelopment?.[t.id]?.qualified ? 'City' : 'Town'} of ${t.name}`;
+      label.dataset.mapTown = t.id;
       drawing.append(border, label);
     }
     this.drawRoads(townRoads(this.world));
-    drawing.append(this.roadLayer);
+    this.drawPavingBanks();
+    drawing.append(this.roadLayer, this.pavingBanks);
     drawing.append(
       svg('rect', {
         x: this.x(60),

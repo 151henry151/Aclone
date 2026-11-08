@@ -1916,7 +1916,40 @@ qualification or paving rules. Dirt-road growth defaults to 12 metres per game d
 construction); new road width defaults to 5 metres. Pausing keeps the project and
 resuming adds only new days, not the paused allowance. A width change affects new
 projects; unfinished projects keep their surveyed width. Pending construction
-survives a save/restart. Alternate loops, city paving and bridges remain planned.
+survives a save/restart. Bridges remain planned.
+
+### City qualification and paving
+
+The same **Roads and river crossings** group configures city development. Defaults
+require 80 occupied buildings, 40 businesses and 35 distinct housed or registered
+residents for 30 game days. Completed public premises and businesses with known
+owners or employees count; a home must have an inhabitant. Empty houses and
+construction do not count. Business counts exclude residential and civic uses.
+Farm acreage never counts as extra development. Offline residents remain valid.
+
+City status survives brief changes: demotion needs 30 days below 80% of any entry
+threshold. Old saves start observing development rather than qualifying from
+unrecorded history. Changing qualification rules resets the observation period;
+existing cities receive the configured demotion grace. Existing pavement persists.
+
+Paving defaults to **1 metre per city per game day**. Existing streets qualify
+only where at least four occupied buildings lie within 60 metres at every sample,
+with samples no farther than 10 metres apart and density sustained for 30 days.
+Growth starts from the centre and stays connected, favouring dense corridors.
+Sparse homes and farm lanes remain dirt even inside a city border. A connected
+paved exit at one boundary permits a trunk toward another qualified city; paving
+every district is unnecessary. Trunks can cross countryside without qualifying
+nearby farm branches. At rivers, paved approaches stop on safe land awaiting a
+bridge; dirt feeders may use physically traversable fords. No bridge is free.
+
+Set `cityPaving`, `cityBuildings`, `cityBusinesses`, `cityResidents`,
+`cityQualificationDays`, `cityDemotionDays`, `cityRetentionFraction`,
+`cityPavingPerDay`, `cityDensityRadius`, `cityDensityBuildings`, `cityDensityDays`
+and `cityDensitySampleSpacing`. Zero rate or disabled paving pauses new pavement.
+These rules, roads, pavement and the starter-road layout travel with world designs;
+imported worlds earn their own city status. Save/restart retains qualification,
+density history and progress. Ground and map show pavement as grey, while town
+government shows counts and qualification or shrinkage progress.
 
 ## Pilot name tags
 

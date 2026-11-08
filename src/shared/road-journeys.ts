@@ -15,12 +15,14 @@ type Edge = { to: number; distance: number };
 export interface RoadJourneys {
   edges: Edge[][];
   anchors: number[];
+  roadCuts?: number[][];
 }
 /** Split centre lines at actual junctions and projected destination access points.
  * Short joins across overlapping lane widths retain their physical distance. */
 export function* roadJourneyGraphSteps(
   roads: readonly Road[],
   anchors: readonly Point[],
+  includeCuts = false,
 ): RoadWork<RoadJourneys> {
   const edges: Edge[][] = [],
     points: Point[] = [],
@@ -144,7 +146,11 @@ export function* roadJourneyGraphSteps(
       link(ordered[i - 1][1], ordered[i][1]);
     }
   }
-  return { edges, anchors: ids };
+  return {
+    edges,
+    anchors: ids,
+    ...(includeCuts ? { roadCuts: cuts.map((row) => [...row.keys()]) } : {}),
+  };
 }
 /** Dijkstra yields between settled junctions and uses a binary heap. */
 export function* roadJourneyDistances(graph: RoadJourneys, from: number): RoadWork<number[]> {

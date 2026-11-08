@@ -2,6 +2,34 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.135.0 — Towns grow into cities
+
+Earn city status through sustained development: by default, 80 occupied
+buildings, 40 businesses and 35 distinct housed/registered residents for 30 game
+days. The read-only Puddlewick survey found 52/27/26, so the existing town must
+grow before qualifying. Temporary decline has a separate grace period.
+
+Pave up to one metre per city per game day along centre-connected streets with
+sustained nearby development. Prioritize dense corridors and keep sparse farm
+lanes dirt, even inside city borders. Show pavement on the ground and map, city
+status in the HUD, and qualification counts in Town government. World Builder
+controls all thresholds, timing, density and growth rates; designs retain roads
+and pavement while imported simulations start fresh qualification.
+
+One connected boundary exit permits a paved trunk toward another city. Stop on
+safe riverbanks and mark “Bridge needed”; never count a dirt ford as a paved
+crossing. Grow separate dirt feeders where a physically usable ford exists.
+Keep old roads and completed pavement. Player-built bridges remain the next
+backlog stage; this release does not create free bridges.
+
+Affected road/city/import/render/snapshot/NPC tests and actual browser flows pass,
+including saved rules, farm dirt lanes, bridge-waiting maps and snow/thaw. The real
+river survey yields in bounded slices (11.7 ms maximum in the final unit run).
+The populated walking/turning replay completes five NPC decisions, daily growth
+and resident navigation with no browser errors and a maximum server heartbeat
+of 80.0 ms. Client FPS still dips to 17 and ping briefly reaches 298 ms (other
+probes: 1, 24, 90 and 5 ms); remaining client performance work is not complete.
+
 ## 0.134.1 — Less road-scanning work for countryside grass
 
 Reuse the nearby-road index when placing grass instead of checking every road

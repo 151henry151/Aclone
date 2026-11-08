@@ -1,3 +1,5 @@
+import { growCityPavement } from './city-paving';
+import { assessCityDevelopment } from './city-development';
 import { planAlternateRoadSteps } from './road-alternates';
 import defaults from '../../data/settings.json';
 import { roadRules } from './road-rules';
@@ -70,6 +72,7 @@ const jobs = new WeakMap<
 function* growRoadDay(w: World): RoadWork<boolean> {
   w.roadProject ??=
     (yield* planRoadDetourSteps(w)) ??
+    w.pavingFeeders?.shift() ??
     (yield* planTownRoadSteps(w)) ??
     (yield* planRoadConnectionSteps(w)) ??
     (yield* planBuildingRoad(w)) ??
@@ -93,6 +96,8 @@ function* growRoadDay(w: World): RoadWork<boolean> {
 /** Surveying gets a bounded slice even while the game clock remains within a day.
  * Commit each day's allowance only after its validated construction step finishes. */
 export function growRoads(w: World, start: number, end: number) {
+  assessCityDevelopment(w, start, end);
+  growCityPavement(w, start, end);
   const dayLength = w.settings.dayLength > 0 ? w.settings.dayLength : 600;
   w.roadGrowth ??= Math.floor(start / dayLength);
   const due = Math.max(w.roadGrowthDue ?? w.roadGrowth, Math.floor(end / dayLength));

@@ -148,6 +148,15 @@ export function prepareFrame(w: World): Frame {
     messages,
     landscapeHistory,
     roadProject,
+    pavingProjects,
+    pavingEligibility: _pavingEligibility,
+    pavingFeeders: _pavingFeeders,
+    pavingPolicy: _pavingPolicy,
+    pavingDay: _pavingDay,
+    pavingDue: _pavingDue,
+    pavingDayLength: _pavingDayLength,
+    cityAssessedDay: _cityAssessedDay,
+    cityDayLength: _cityDayLength,
     families: _families,
     tradeOffers: _offers,
     ...common
@@ -222,6 +231,18 @@ export function prepareFrame(w: World): Frame {
         },
       ]),
     );
+  common.pavingStatus = Object.fromEntries(
+    Object.entries(pavingProjects ?? {}).map(([id, p]) => [
+      id,
+      {
+        destination: p.destination,
+        metresRemaining: p.path
+          .slice(1)
+          .reduce((n, to, i) => n + Math.hypot(to.x - p.path[i].x, to.z - p.path[i].z), 0),
+        ...(p.waitingForBridge ? { waitingForBridge: p.waitingForBridge } : {}),
+      },
+    ]),
+  );
   common.landscapeUndo = !!landscapeHistory?.length;
   common.buildings = publicBuildings(w);
   (common as Record<string, unknown>).towns = publicTowns(w);

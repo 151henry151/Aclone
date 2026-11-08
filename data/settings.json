@@ -626,5 +626,17 @@
   "pilotNameTagMaxPixels": 24,
   "tractorReverseLights": true,
   "tractorReverseLightIntensity": 90,
-  "tractorReverseLightRange": 18
+  "tractorReverseLightRange": 18,
+  "cityPaving": true,
+  "cityBuildings": 80,
+  "cityBusinesses": 40,
+  "cityResidents": 35,
+  "cityQualificationDays": 30,
+  "cityDemotionDays": 30,
+  "cityRetentionFraction": 0.8,
+  "cityPavingPerDay": 1,
+  "cityDensityRadius": 60,
+  "cityDensityBuildings": 4,
+  "cityDensityDays": 30,
+  "cityDensitySampleSpacing": 10
 }

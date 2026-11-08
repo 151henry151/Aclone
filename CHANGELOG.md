@@ -6,6 +6,19 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.135.0] - 2026-11-08
+
+### Added
+
+- Qualify cities through sustained occupied buildings, businesses and resident counts; pave dense, connected streets gradually while retaining rural dirt lanes and existing roads.
+- Grow paved trunks only from a connected city boundary toward another city; stop at river banks awaiting bridges and retain separate ford access.
+- Configure city thresholds, hysteresis, paving rate and density policy in World Builder; show city progress in town government and distinguish pavement on the ground and parish map.
+- Preserve dirt roads, pavement and their starter layout in portable world designs.
+
+### Fixed
+
+- Keep NPC requests within their existing size budget after adding city rules by tightening repeated instruction wording without removing observations or guide excerpts.
+
 ## [0.134.1] - 2026-11-08
 
 ### Fixed

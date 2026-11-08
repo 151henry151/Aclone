@@ -2,6 +2,12 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.135.0 lets growing towns earn city status and slowly pave dense,
+connected streets. Farm lanes stay dirt; city-to-city pavement waits at river
+banks for future bridges, with “Bridge needed” on the map. World Builder controls
+qualification, density, hysteresis and paving speed. Current Puddlewick starts
+below the default city threshold and must grow to qualify.
+
 Version 0.134.1 reduces countryside rebuilding work by looking up nearby roads
 when placing grass, preserving road clearances and roadside density. Rendering
 and occasional latency spikes remain under investigation.
@@ -13,8 +19,8 @@ and parallel-road limits. Open parish maps show new construction without losing
 zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
-Version 0.133.0 lets dirt roads find usable river fords. City paving and bridges
-remain planned; remaining client frame-rate dips are still being tracked.
+Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
+bridges remain planned. The released game is 0.135.0, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly
@@ -35,7 +41,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.134.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.135.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait

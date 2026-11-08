@@ -2480,7 +2480,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         if (nameTagField && 'min' in nameTagField)
           num(v, nameTagField.min, nameTagField.max, nameTagField.step === 1);
         const roadField = roadRuleFields[key as keyof typeof roadRuleFields];
-        if (roadField && 'min' in roadField) num(v, roadField.min, roadField.max);
+        if (roadField && 'min' in roadField)
+          num(v, roadField.min, roadField.max, key.startsWith('city') && roadField.step === 1);
         const parkingField = parkingFields[key as keyof typeof parkingFields];
         if (parkingField && 'min' in parkingField)
           num(v, parkingField.min, parkingField.max, parkingField.step === 1);

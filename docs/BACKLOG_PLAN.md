@@ -8561,3 +8561,150 @@ zero restarts. Database backup:
 Verified bot announcement with reviewed screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569073652769624340
 Evidence: `output/scenery-road-lookup/`. Continue item 19 city paving.
+
+### Item 19 — City paving: refreshed survey and concrete criteria before production
+
+Read-only live survey on 2026-11-08: Puddlewick has 69 buildings, 52 completed
+occupied/public buildings, 27 businesses and 26 distinct housed/registered
+residents. Other settlements have at most three occupied buildings, two
+businesses and one resident. Effective road segments: 2,157. Private input stays
+in `output/city-paving/`. Count a completed public building, an inhabited home,
+or premises with a known owner/employee; do not count an empty owned house as
+inhabited. Businesses exclude residential and civic uses; acreage never counts.
+Deduplicate housed and registered residents. Keep canonical proposed defaults:
+80 occupied buildings, 40 businesses, 35 residents sustained 30 game days;
+demotion after 30 days below 80% of any entry threshold. Existing paving persists.
+
+Implement the entire dependent paving stage before releasing it:
+
+- `node --import tsx --test tests/city-paving.test.ts`: fail first for absent city
+  assessment/state, then cover sustained qualification, interrupted eligibility,
+  hysteresis, count deduplication, construction/empty houses/unknown owners,
+  changed settings, paused time, restart and no retroactive qualification.
+- Test continuous centre-connected paving, one metre per game day by default,
+  dense corridor/destination preference, four occupied buildings within 60 m
+  sustained 30 days, and continued dirt access to sparse farms inside a city.
+  Sample corridors at a configurable maximum 10 m spacing; all samples must
+  qualify. Persist progress; no leapfrogging, duplicate daily budgets, or
+  demolition when density/status falls. Re-evaluate changed roads/obstructions.
+- Test one suitable connected boundary exit enabling an intercity trunk without
+  paving every street. Both destinations must qualify; smaller towns and rural
+  side lanes stay dirt. Dry approaches stop safely at banks, exclude all fords
+  from paved connectivity, and grow safe dirt feeders to usable fords. Preserve
+  old roads; no automatic bridge. Test absent/blocked fords and terrain edits.
+- Validate every new gameplay switch/threshold/rate through F10 settings actions;
+  reject invalid values atomically, expose canonical defaults/help and current
+  values in rules/NPC observations, and round-trip rules/surfaces through designs.
+- Browser: use a local real-server world, watch qualification and daily pavement
+  growth on the ground and map, drive it, verify the farm lane stays dirt, then
+  show the no-city/low-density/paused and bridge-waiting states. Change settings
+  in F10, reload, and verify persistence. Check map focus/pan and terrain-cache
+  preservation. Capture and review successful screenshot/video evidence.
+- Run affected city/road/terrain/map/design/snapshot tests, `npx tsc --noEmit`,
+  changed-file Prettier and build. Repeat the populated walking/turning replay
+  with NPC choices/daily work and the unchanged <100 ms server heartbeat gate.
+  Record frame/ping limitations candidly. Do not deploy or announce partial city
+  data/schema work; stage 3 is complete only when its full criteria pass.
+
+City-stage progress (unreleased): qualification first fails because no assessment
+exists; sustained counts, gaps, demotion, restart, policy/day-length changes and
+legacy catch-up now pass. Dense-road tests first fail at zero pavement; gradual
+budgeted growth, sparse lanes, no leapfrogging and one-exit trunks now pass.
+A forced-yield regression catches publication before charging a day; construction
+now commits atomically after the entire daily job, discarding drafts after edits.
+River integration uses the real enlarged-island terrain and existing ford route:
+first fails on absent bank state, then passes safe dry approaches, retained ford
+geometry and separately queued dirt feeders. Evidence: `output/city-paving/`.
+
+Nineteen targeted city tests pass, including snapshot privacy/cache identity,
+canonical rule validation, portable geometry/layout and town status. Corrected
+new-world import fixtures before the relevant red run; no import safety rule was
+relaxed. Public empty houses do not count; this does not change the fresh survey's
+52/27/26 Puddlewick counts. README retains released 0.134.1 status while this stage
+is under verification. Browser tests first fail for absent pavement map ink,
+then confirm the stroke exists. A horizontal SVG path has zero geometric height,
+so verify its painted stroke and screen position rather than Playwright's box
+visibility heuristic. A further red check catches stale Town labels after city
+qualification; update only the label, preserving map navigation. Continue ground,
+driving, settings and bridge-waiting browser verification, remaining edge cases
+and affected performance gates before any city release.
+
+Resume after usage reset: the main city browser flow passes; the real river-bank
+flow first fails because no missing-bridge map marker is drawn. Add that marker
+without rebuilding terrain or disturbing navigation. Extend the completion
+criteria to keep the HUD's town/city wording consistent, discard trunks aimed at
+moved towns, exclude flooded/obstructed historical pavement from connectivity,
+and resume a bank approach after a crossing becomes dry. New tests fail for the
+stale HUD, moved destination, flooded connectivity and stale bridge wait, then
+pass after targeted fixes. Strengthen the disconnected-exit fixture to prove the
+origin remains qualified. A forced-yield/day-boundary regression passes without
+a production change: unchanged qualification does not restart the survey.
+All 26 city tests pass; river, browser and release performance checks remain.
+
+The real river daily-scheduler check completes in 4,099 bounded slices; maximum
+slice 10.2 ms, below the unchanged 100 ms gate. It catches replacement of untouched
+ford-road objects during atomic publication. Preserve original road records when
+geometry has not changed; keep new/extended construction atomic. The disabled-ford
+and flooded-bank checks pass. The successful bank browser capture initially shows
+its map before the terrain worker finishes; wait for the rendered terrain before
+capturing the final evidence, rather than claiming the blank map demonstrates
+river geography.
+
+NPC request regression: adding all canonical city rules increases the request to
+96,183 bytes against the unchanged 96,000-byte ceiling. Tighten duplicated NPC
+instruction wording while retaining observations, selected guide text, recall
+and action rules; request size becomes 95,898 bytes. NPC guide/conversation and
+road-policy tests pass, including custom city settings in resident observations.
+
+The broader gate also finds two legacy building-design assertions: whole-model
+triangle counts include the shipped furnished interiors, and a hotel-door check
+looks only at direct children although shipped doors now use animation pivots.
+Confirm them against the released source. Follow the item 17 validation contract
+already recorded above: retain the original exterior triangle ceiling, enforce
+the separate 6,000/15,000 interior ceilings, and check actual world-space doorway
+clearance through the pivot hierarchy. Do not change shipped building geometry
+or increase the exterior budget. Keep this test maintenance distinct from the
+city feature commit; verify it before release.
+
+Affected unit gate: 134/136 pass before the two legacy model-check repairs.
+An archive of released HEAD reproduces both exact failures (boathouse whole-model
+4,350 triangles; direct-child hotel door absent). All nine design checks then
+pass with unchanged exterior limits, separately enforced interior budgets, and
+world-space clearance for the animated door. No production model changes.
+Real city-bank scheduling passes at 11.7 ms maximum; absent/disabled fords,
+flooded banks, actual dirt-feeder daily budget/restart/obstruction, city rules,
+road graph/growth, snapshots, terrain, snow and NPC checks pass. All 136 affected
+checks have now passed across the focused runs. Keep browser, TypeScript/build,
+formatting and populated-world performance verification as remaining gates.
+
+All four browser checks pass: gradual city paving/driving/settings; the actual
+river-bank approach and rendered “Bridge needed” map; mature-map road batching;
+and snow/thaw down to zero. Improve coverage with visible town-government
+qualification/status as well. Two further red regressions expose stale city
+history when reimporting into an unoccupied world and wording that implies a ford
+exists even when none is usable. Clear simulation history explicitly on import
+while preserving authored surfaces, and describe fords as excluded from paved
+connectivity without claiming availability. All 55 city/import/NPC checks pass.
+
+### Item 19 — City paving release readiness, 2026-11-08
+
+All stage-3 completion criteria pass. The final touched-scope run passes 67/67
+checks; the broader affected scope passes 136 checks across focused runs. Four
+browser flows pass (city growth/driving/settings, rendered river-bank map,
+mature-road map updates and snow/thaw), followed by an expanded government-panel
+flow showing both qualification progress and established city status. TypeScript,
+changed-file Prettier, production build and diff whitespace checks pass.
+
+The unchanged populated-world replay completes five NPC preparations/decisions,
+daily road growth and NPC arrival while the player walks forward, turns both
+ways, continues and stops. Maximum server heartbeat gap is 79.97 ms with zero
+100 ms violations. Minimum client FPS remains 17; peak ping is 298 ms and maximum
+prediction correction is 0.575 m. These remain performance follow-ups, not a
+claim that all lag is fixed. Video review finds no obvious long freeze, teleport
+or missing terrain. The final city-driving and rendered river-bank clips pass
+review; all published screenshots must identify the accelerated local test world.
+
+Prepare 0.135.0 with complete player/world-builder/release documentation. Keep the
+released-model test maintenance in its own commit. Push and deploy the exact city
+feature commit, verify the live version/assets read-only, and announce through
+the Discord bot before marking this slice done. Evidence: `output/city-paving/`.
