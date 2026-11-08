@@ -7,15 +7,15 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
-## Current priority — client performance, then bridge construction, 2026-11-08
+## Current priority — player-built bridges, 2026-11-08
 
 Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
 alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
-The populated-world server responsiveness gate passes. Continue investigating
-measured client frame costs before the larger bridge implementation; the latest
-replay still reaches 17 FPS and 298 ms ping. Then resume item 19 stage 4, paid
-player bridge construction and road integration, with all recorded criteria.
-Bridges, automotive manufacturing and highway trucks remain pending.
+The focused calendar/climate allocation improvement is released as 0.135.1.
+Resume item 19 stage 4, paid player bridge construction and road integration,
+with all recorded criteria. Preserve the populated-world responsiveness gate;
+remaining client rendering costs and occasional slow frames are still open.
+Automotive manufacturing and highway trucks follow bridges in dependency order.
 
 ## Completion protocol
 
@@ -8794,3 +8794,16 @@ private names/chat in the reviewed evidence. The climate editor visibly reports
 inverted winter bounds; persistence is covered by browser assertions. Keep the
 recorded 18 FPS/106 ms ping/0.337 m correction/104 ms frame limitations. All gates
 for this focused optimization now pass; commit/push/deploy and announce 0.135.1.
+
+### Performance follow-up — Environment rule cache released, 2026-11-08
+
+**Done.** Push/deploy `2804659eb9de3780a97efbc083bf15189130eb42` as 0.135.1;
+keep browser synchronization maintenance separate in `9e73bd9`. Read-only public
+browser checks confirm game/client, map worker, website and gallery without
+errors; exact server commit matches, service active, PID 387753, zero restarts.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261108-154423.sqlite`;
+website backup: `/var/backups/aclone-website/site-20261108-154520.tar.gz`.
+Verified bot announcement with reviewed local-test screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569090581978816543
+Evidence: `output/climate-rule-cache/`. Continue item 19 stage 4 bridge construction;
+retain measured frame-rate limitations and existing performance acceptance gates.
