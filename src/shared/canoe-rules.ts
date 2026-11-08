@@ -2,6 +2,7 @@
 import defaults from '../../data/settings.json';
 export const CANOE = 34;
 export const canoeRuleFields = {
+  canoeAirDraft: { label: 'Canoe occupied height above water (m)', min: 0.1, max: 10, step: 0.1 },
   canoeSpeed: { label: 'Paddling speed (metres/second)', min: 0.2, max: 5, step: 0.1 },
   canoeCapacity: { label: 'Canoe hold weight', min: 1, max: 100, step: 1 },
   canoeMinDepth: { label: 'Minimum canoe depth (metres)', min: 0.01, max: 1, step: 0.01 },
@@ -51,5 +52,6 @@ export function canoeVehicle(settings: Partial<CanoeRules> = {}): import('./type
     collisionRadius: 0.46,
     length: 3.6,
     beam: 0.92,
+    airDraft: r.canoeAirDraft,
   };
 }

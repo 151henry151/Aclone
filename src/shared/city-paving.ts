@@ -1,3 +1,4 @@
+import { bridgeRoads } from './bridge-network';
 import { growPavedTrunkSteps } from './city-trunks';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
@@ -24,7 +25,8 @@ const pavementQueries = new WeakMap<
   }
 >();
 export function effectivePavement(w: World): readonly PavedRoad[] {
-  if (!w.pavedRoads?.length) return emptyPavement;
+  const bridgePavement = bridgeRoads(w).map((r) => ({ ...r, town: '', kind: 'trunk' as const }));
+  if (!w.pavedRoads?.length) return bridgePavement.length ? bridgePavement : emptyPavement;
   const roads = townRoads(w),
     stamp = roadGeometryStamp(w.pavedRoads),
     old = pavementQueries.get(w.pavedRoads);
@@ -36,7 +38,7 @@ export function effectivePavement(w: World): readonly PavedRoad[] {
   )
     return old.result;
   const sources = new Set(roads.map(roadKey)),
-    result = w.pavedRoads.filter((r) => !r.source || sources.has(r.source));
+    result = [...w.pavedRoads.filter((r) => !r.source || sources.has(r.source)), ...bridgePavement];
   pavementQueries.set(w.pavedRoads, {
     roads,
     stamp,

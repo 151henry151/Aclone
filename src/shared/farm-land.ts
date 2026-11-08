@@ -1,3 +1,4 @@
+import { bridgeReserved } from './bridge-geometry';
 import { constructionRules, constructionRuleFields } from './construction-rules';
 import { inlandLevel } from './inland-water';
 import { spawnReserved } from './spawn-reserve';
@@ -78,6 +79,7 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
   const roads = townRoads(w);
   for (let i = count; i < count + 4; i++) {
     const p = farmPlotPosition(b, i);
+    if (bridgeReserved(w, p.x, p.z, 6)) return 'Keep fields clear of the reserved bridge footprint';
     if (spawnReserved(w, p.x, p.z, 6))
       return 'Keep fields outside the town centre and respawn area';
     if (spaceportReserved(w, p.x, p.z, 6))

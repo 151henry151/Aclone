@@ -63,7 +63,8 @@
     "hitch": 3,
     "collisionRadius": 1.72,
     "length": 13.5,
-    "beam": 3.42
+    "beam": 3.42,
+    "airDraft": 4.2
   },
   {
     "name": "Hovercraft",
@@ -181,7 +182,8 @@
     "armour": 130,
     "price": 180000,
     "color": "#407983",
-    "hitch": 3
+    "hitch": 3,
+    "airDraft": 4.2
   },
   {
     "name": "Custom slot 13",
@@ -255,7 +257,8 @@
     "armour": 130,
     "price": 180000,
     "color": "#407983",
-    "hitch": 3
+    "hitch": 3,
+    "airDraft": 4.2
   },
   {
     "name": "Custom slot 18",
@@ -329,7 +332,8 @@
     "armour": 130,
     "price": 180000,
     "color": "#407983",
-    "hitch": 3
+    "hitch": 3,
+    "airDraft": 4.2
   },
   {
     "name": "Custom slot 23",
@@ -476,7 +480,8 @@
     "hitch": 3,
     "collisionRadius": 0.8,
     "length": 3.2,
-    "beam": 1.9
+    "beam": 1.9,
+    "airDraft": 2
   },
   {
     "name": "Fishing boat",
@@ -493,7 +498,8 @@
     "tank": 3200,
     "collisionRadius": 3.7,
     "length": 24.5,
-    "beam": 7.4
+    "beam": 7.4,
+    "airDraft": 9.1
   },
   {
     "name": "Charter boat",
@@ -512,7 +518,8 @@
     "headlight": 200,
     "lightRange": 140,
     "length": 14,
-    "beam": 4.8
+    "beam": 4.8,
+    "airDraft": 5.2
   },
   {
     "name": "Tugboat",
@@ -531,7 +538,8 @@
     "length": 16.8,
     "beam": 5.94,
     "headlight": 180,
-    "lightRange": 100
+    "lightRange": 100,
+    "airDraft": 6.9
   },
   {
     "name": "Outboard motorboat",
@@ -550,6 +558,7 @@
     "length": 4.3,
     "beam": 1.8,
     "headlight": 30,
-    "lightRange": 25
+    "lightRange": 25,
+    "airDraft": 2
   }
 ]

@@ -1,3 +1,4 @@
+import type { BridgeRules } from './bridge-rules';
 import type { NameTagRules } from './name-tag-rules';
 import type { RoadRules } from './road-rules';
 import type { ParkingRules } from './parking-rules';
@@ -71,6 +72,8 @@ export type Task = {
   repeat?: boolean;
 };
 export interface Player {
+  bridgeSurvey?: import('./bridge-types').BridgeSurvey;
+  bridgePasses?: Record<string, { entered: boolean }>;
   inside?: string;
   parkedSeat?: number;
   homeParking?: { building: string; slot: number };
@@ -405,6 +408,7 @@ export interface Settings
     Partial<ParkingRules>,
     Partial<NameTagRules>,
     Partial<RoadRules>,
+    Partial<BridgeRules>,
     Partial<FlightRules>,
     Partial<WalkingRules>,
     Partial<GatheringSceneryRules>,
@@ -487,6 +491,8 @@ export interface Settings
   exchangeCap: number;
 }
 export interface World {
+  bridges?: import('./bridge-types').Bridge[];
+  bridgeSequence?: number;
   parkingRulesVersion?: 1;
   parkedVehicles?: Record<string, import('./parked-vehicles').ParkedVehicle>;
   springs?: import('./springs').Spring[];
@@ -765,6 +771,8 @@ export interface VehicleDef {
   length?: number;
   beam?: number;
   draft?: number;
+  /** Maximum height above the waterline, including people and mast, in metres. */
+  airDraft?: number;
   freeboard?: number;
   width?: number;
 }

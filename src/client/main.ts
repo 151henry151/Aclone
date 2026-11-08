@@ -1,3 +1,4 @@
+import { bridgePanel, mountBridgePanel, type BridgeDraft } from './bridge-panel';
 import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { parkingStatus, tractorWaypoint } from './parking-status';
 import { persistentVehicles } from '../shared/parked-vehicles';
@@ -72,6 +73,23 @@ import { coursesPanel } from './courses';
 import { firstSteps } from '../shared/first-steps';
 import { Controller } from './controller';
 import { buildMenuHtml, mountBuildMenu } from './build-menu';
+let bridgeDraft: BridgeDraft | undefined;
+let bridgePanelSignature = '';
+const bridgeStateSignature = () =>
+  world && me
+    ? JSON.stringify([
+        me.bridgeSurvey,
+        me.cash,
+        me.inventory,
+        me.bridgePasses,
+        Math.round(me.x),
+        Math.round(me.z),
+        world.bridges?.map((b) => [b.id, b.revision, b.completedAt]),
+        world.settings.bridgeBuilding,
+        world.settings.bridgePublicAccess,
+        world.settings.bridgeToll,
+      ])
+    : '';
 let closeBuildPreview: (() => void) | undefined;
 import { labourQuote, labourShiftPay, labourDailyCap } from '../shared/public-labour.ts';
 import { actionVisible, refreshActionVisibility } from './action-visibility';
@@ -536,6 +554,16 @@ async function connect() {
       const previousWorld = world;
       world = mergeState(world, msg);
       me = world!.players[msg.me];
+      if (panel === 'bridges') {
+        const signature = bridgeStateSignature();
+        if (
+          signature !== bridgePanelSignature &&
+          !document.activeElement?.matches('input,select,textarea')
+        ) {
+          bridgePanelSignature = signature;
+          renderPanel();
+        }
+      }
       items = worldItems(world!);
       skills = worldSkills(world!);
       if (msg.account) account = msg.account;
@@ -607,6 +635,7 @@ async function connect() {
         !radioResult &&
         (msg.ok || visit !== undefined) &&
         !(panel === 'editor' && tab === 'Landscape') &&
+        panel !== 'bridges' &&
         panel &&
         view === $('modal-host').dataset.viewKey
       )
@@ -2194,10 +2223,34 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'bridges' && world && me) {
+    bridgePanelSignature = bridgeStateSignature();
+    if (!bridgeDraft || bridgeDraft.world !== world.id)
+      bridgeDraft = {
+        world: world.id,
+        a: { x: me.x, z: me.z },
+        b: { x: me.x + Math.sin(me.heading) * 30, z: me.z + Math.cos(me.heading) * 30 },
+        design: 'wide',
+      };
+    modal('Build a river bridge.', bridgePanel(world, me, bridgeDraft), true);
+    closeBuildPreview = mountBridgePanel(
+      $('modal-host'),
+      world,
+      me,
+      bridgeDraft,
+      (draft) => {
+        bridgeDraft = draft;
+        renderPanel();
+      },
+      send,
+    );
+    return;
+  }
   if (panel === 'construction') {
     modal(
       'Build something useful.',
-      buildMenuHtml(world.settings) +
+      button('River bridges', 'bridges') +
+        buildMenuHtml(world.settings) +
         `<h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world, me)}${foundTownForm(world, me)}`,
       true,
     );
@@ -2852,6 +2905,7 @@ app.addEventListener('click', async (e) => {
       'resources',
       'activities',
       'construction',
+      'bridges',
       'editor',
       'caretaker',
       'create',

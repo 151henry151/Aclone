@@ -1,3 +1,9 @@
+import { bridgeDesignSchema, exportBridges } from './bridge-design';
+import { bridgeRuleFields } from '../shared/bridge-rules';
+import { bridgeReservedFootprint } from '../shared/bridge-geometry';
+import { rectanglesOverlap } from '../shared/vehicle-footprint';
+import { finishRoadWork } from '../shared/road-work';
+import { inspectBridgeSteps } from '../shared/bridge-inspection';
 import { refreshPumpRecipes } from '../shared/fresh-water';
 import { normalizeMeat } from '../shared/meat-freshness';
 import { normalizeYoung } from '../shared/livestock';
@@ -99,6 +105,7 @@ const roadDesignSchema = z.object({
   width: z.number().finite().min(0.1).max(100),
 });
 const designSchema = z.object({
+  bridges: z.array(bridgeDesignSchema).max(bridgeRuleFields.bridgeMaximumCount.max).optional(),
   townLayout: z.union([z.literal(1), z.literal(2)]).optional(),
   roads: z.array(roadDesignSchema).max(100000).optional(),
   retiredRoads: z.array(z.string().max(200)).max(100000).optional(),
@@ -456,6 +463,7 @@ export function exportDesign(w: World, includeMedia = false) {
     townLayout: w.townLayout,
     retiredRoads: w.retiredRoads,
     pavedRoads: w.pavedRoads,
+    bridges: exportBridges(w.bridges, w.time),
     zones: w.zones,
     creator,
     script: w.script,
@@ -581,6 +589,26 @@ function applyValidatedDesign(w: World, input: unknown) {
   if (d.townLayout !== undefined) w.townLayout = d.townLayout;
   w.retiredRoads = d.retiredRoads;
   w.pavedRoads = d.pavedRoads;
+  w.bridges = d.bridges?.map((b) => ({
+    ...b,
+    owner: w.owner,
+    contributors: { [w.owner]: structuredClone(b.paid) },
+    foundedAt: w.time + b.foundedAt,
+    completedAt: b.completedAt === undefined ? undefined : w.time + b.completedAt,
+    wearAt: w.time + b.wearAt,
+  }));
+  w.bridgeSequence = Math.max(0, ...(w.bridges ?? []).map((b) => Number(b.id.slice(7))));
+  for (const [i, b] of (w.bridges ?? []).entries())
+    if (
+      w
+        .bridges!.slice(0, i)
+        .some(
+          (other) =>
+            b.id === other.id ||
+            rectanglesOverlap(bridgeReservedFootprint(b), bridgeReservedFootprint(other)),
+        )
+    )
+      throw Error('Duplicate or overlapping bridge sites');
   // Designs carry authored surfaces, not the previous simulation's evidence or
   // unfinished construction. Explicit undefined also clears the atomic copy-back.
   for (const key of [
@@ -668,6 +696,7 @@ function applyValidatedDesign(w: World, input: unknown) {
   configureRules(w, d.settings, d.townCharter);
   refreshPumpRecipes(w);
   w.landscape = validateLandscape(w, d.landscape);
+  for (const b of w.bridges ?? []) finishRoadWork(inspectBridgeSteps(w, b));
   if (w.terrain.length > landscapeRules(w.settings).terrainStampLimit)
     throw Error('Terrain stamp limit exceeded');
   const freight: NonNullable<World['mooredBoats']> = {};

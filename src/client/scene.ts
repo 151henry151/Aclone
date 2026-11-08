@@ -1,3 +1,4 @@
+import { BridgeScene } from './bridge-scene';
 import { nameTagRules } from '../shared/name-tag-rules';
 import { withinBuildingRange } from '../shared/simulation';
 import { VehicleMountScene } from './vehicle-mount-animation';
@@ -596,6 +597,8 @@ export class GameScene {
       world.buildings.map((b) => b.creatorModel ?? '').join(',');
     this.updateMooredBoats(world);
     this.updateSmallCraft(world);
+    if (!this.bridges.group.parent) this.scene.add(this.bridges.group);
+    this.bridges.update(world);
     const rebuilt = this.revision !== rev;
     if (rebuilt) {
       this.revision = rev;
@@ -829,6 +832,7 @@ export class GameScene {
     this.settling = undefined;
     this.onLoading?.();
     this.audio.clear();
+    this.bridges.clear();
     this.aircraftCrashes.clear();
     this.lastWorld = '';
     document.documentElement.classList.remove('scenery-view');
@@ -1860,6 +1864,7 @@ export class GameScene {
       if (!this.towLines.group.parent) this.scene.add(this.towLines.group);
       this.towLines.update(w, this.meshes, this.mooredGroup);
       if (!this.trailers.group.parent) this.scene.add(this.trailers.group);
+      this.bridges.update(w);
       this.trailers.update(w, this.meshes, bareSurface, dt);
       if (!this.parkedVehicles.group.parent) this.scene.add(this.parkedVehicles.group);
       this.parkedVehicles.update(w, p.x, p.z, this.camera.far, bareSurface);
@@ -2402,6 +2407,7 @@ export class GameScene {
     }
   }
   private towLines = new TowLines();
+  private bridges = new BridgeScene();
   private trailers = new TrailerScene();
   private parkedVehicles = new ParkedVehicleScene((slot, name, paint) =>
     this.vehicle(slot, name, paint),

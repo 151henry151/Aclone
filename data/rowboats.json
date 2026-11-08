@@ -13,6 +13,7 @@
     "hitch": 1,
     "collisionRadius": 0.75,
     "length": 3.8,
-    "beam": 1.5
+    "beam": 1.5,
+    "airDraft": 1.5
   }
 ]

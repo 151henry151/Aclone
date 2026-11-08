@@ -1,3 +1,5 @@
+import { bridgeReservedFootprint } from './bridge-geometry';
+import { rectanglesOverlap } from './vehicle-footprint';
 import { constructionRules } from './construction-rules';
 import { pastureParcelSize } from './pasture-land';
 import { inlandLevel } from './inland-water';
@@ -29,6 +31,20 @@ export function pastureBlocker(
   const obstacles = [...(w.creator?.objects ?? []), ...scatterObjects(w)];
   const size = pastureParcelSize(p),
     span = (p.parcels - first) * size;
+  const centre = pasturePoint(b, p.x + first * size + (span - size) / 2, p.z),
+    c = Math.cos(b.rotation),
+    sn = Math.sin(b.rotation);
+  const footprint = {
+    ...centre,
+    hx: span / 2,
+    hz: size / 2,
+    axes: [
+      { x: c, z: -sn },
+      { x: sn, z: c },
+    ],
+  };
+  if (w.bridges?.some((bridge) => rectanglesOverlap(footprint, bridgeReservedFootprint(bridge))))
+    return 'Keep pasture clear of the reserved bridge footprint';
   const across = Math.ceil(span / 2),
     deep = Math.ceil(size / 2);
   // Include every outer edge even when the parcel dimension is odd.

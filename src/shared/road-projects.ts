@@ -91,7 +91,12 @@ export function* planTownRoadSteps(w: World): RoadWork<RoadProject | undefined> 
 
 /** Join isolated public lanes without using runways as through roads. */
 export function* planRoadConnectionSteps(w: World): RoadWork<RoadProject | undefined> {
-  const groups = yield* roadComponentSteps(townRoads(w));
+  // Bridges offer crossings for real journeys; an isolated paid span is not a
+  // new settlement destination. City trunks and town routes can still use its
+  // anchors, and a bridge with an ordinary approach belongs to that network.
+  const groups = (yield* roadComponentSteps(townRoads(w))).filter((group) =>
+    group.some((road) => !road.bridge),
+  );
   if (groups.length < 2) return;
   const origin = w.towns[0] ?? { x: 0, z: 0 },
     site = roadSite(w);

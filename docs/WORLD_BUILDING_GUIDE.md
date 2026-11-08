@@ -571,3 +571,35 @@ people or individual pallets. In **Rules → Boat navigation**, set quay vessel
 limits and the extra seaward berth search. A search of zero keeps the first
 outside position. Every part of the ship must still clear the seabed and obstacles;
 raising a size limit cannot make shallow water safe.
+
+## Player-built bridge rules
+
+**F10 → Rules → Player-built bridges** controls new construction, public/owner-only
+access, explicit passage tolls, single-/two-lane clear widths, span and ramp limits,
+high-water clearance, grade, foundation rise/length and deck thickness. Single-lane
+width cannot exceed two-lane width; the maximum span must fit both bank seats.
+Funded designs keep their original geometry and bill when these values change.
+
+Costs are calculated once from main-span area and additional approach length.
+Every cash/material rate, founding deposit, world/project limit and office reach
+is editable. Defaults price an 8 × 40 m main span at 800s plus 600 Steel, 200 Wood,
+1,000 Gravel and 400 Stone, before approaches. Zero material/cash rates are valid;
+no automatically generated bridge bypasses the funding process. Public/free
+completed crossings participate in road routing; private, tolled, unfinished or
+unsafe crossings do not. Existing roads cannot be obstructed by new bridge sites.
+
+Maintenance controls cover wear per economic day (zero disables wear), minimum
+entry condition, repair condition, cash, Steel and reference area. Access changes
+and closure preserve physical decks so travellers can leave. Terrain/water/solid
+obstacle edits trigger bounded safety inspections; restore unsafe ground or remove
+an obstruction to reopen. Imported designs validate saved ramps, contributions,
+clearance and placement atomically, retain unfinished funding and economic ages,
+and remap ownership/contribution totals to the importing world owner. Private
+player passage permits and survey quotes are not exported.
+
+Boat catalogue **air draft** is the height above water used to test bridge
+clearance; tune it with the model rather than lowering it to pass through a deck.
+Defaults include 9.1 m for the fishing boat and 8.5 m for the enlarged cargo boat;
+new bridges default to 10 m high-water clearance. Canoes also expose their air
+draft in world rules. Existing saved bridge decks never silently move when boat
+or bridge design rules change.

@@ -2,6 +2,43 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.136.0 — Build river bridges together
+
+Open **Build → River bridges** on a dry bank, survey the opposite bank and review
+an itemized shared project. Fund cash and materials explicitly; contributions
+are final. A fully funded bridge supports loaded tractors/trailers on saved
+ramps and a steel-truss deck, with clearance for boats underneath. Default
+clearance accommodates the existing fleet, including the enlarged cargo boat.
+
+Keep old ford routes while suitable public bridges offer new ordinary and paved
+connections. Isolated bridge spans offer crossings for town/city journeys;
+they do not independently start unrelated public-road projects. Owners manage
+empty-site removal, while public bridges allow shared repairs. Explicit toll
+purchase and maintenance closures preserve an occupant's ability to leave.
+
+World Builder controls design, bill rates, project limits, access and upkeep;
+boat air draft is editable alongside draft. Save original surveys, foundation
+bases, unfinished contributions and maintenance state. Portable designs remap
+ownership and validate geometry/funding; terrain, water and obstruction edits
+trigger bounded safety inspections without deleting physical support.
+
+Validate 222 selected bridge/road/boat/trailer/construction/persistence tests,
+44 NPC/guide/finance checks, 11 road-cache/scheduling checks and focused follow-up
+regressions. Three browser flows cover shared funding, loaded deck reversal,
+invalid surveys/settings, maintenance/access/removal, boat passage/refusal,
+World Builder save/reload and actual rendered marine clearance.
+
+The first populated replay exposes unnecessary remote rail sweeps and an
+unintended public-road destination. Fix both; the unchanged replay then completes
+five NPC decisions, resident navigation and daily growth. Maximum heartbeat is
+85.33 ms (limit 100), ping 32 ms and prediction correction 0.632 m. There are no
+browser errors or frames above 100 ms; frame p95 is 55.4 ms and minimum FPS 16.
+Client rendering and cold-scenery survey stalls remain performance follow-ups.
+
+Deploy client and server together. Existing worlds receive canonical rule
+defaults; no bridge, money, materials or player vehicles are granted on upgrade.
+Preserve the pre-deploy database backup before rolling back bridge-aware state.
+
 ## 0.135.1 — Less repeated environment-settings work
 
 Reuse protected calendar and climate rule subsets while settings are unchanged.

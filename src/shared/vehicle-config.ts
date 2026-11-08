@@ -46,6 +46,7 @@ export const vehicleTuningSchema = z
     width: number(0.2, 30),
     beam: number(0.5, 20),
     draft: number(0.05, 20),
+    airDraft: number(0.1, 50),
     freeboard: number(0.1, 20),
     requiresCaptain: z.boolean(),
     persistentThrottle: z.boolean(),
@@ -109,7 +110,15 @@ export function vehicleDef(
   slot: number,
 ): VehicleDef & Omit<VehicleTuning, 'mode'> {
   if (slot === CANOE) return canoeVehicle(w?.settings);
-  return { ...vehicles[slot], ...w?.vehicleTuning?.[slot] };
+  const base = vehicles[slot],
+    tuning = w?.vehicleTuning?.[slot];
+  const result = { ...base, ...tuning };
+  if (result.mode === 3 && tuning?.airDraft === undefined) {
+    result.airDraft =
+      (base.airDraft ?? vehicles[result.trawling ? 30 : 3].airDraft!) +
+      (base.freeboard !== undefined ? (result.freeboard ?? base.freeboard) - base.freeboard : 0);
+  }
+  return result;
 }
 export function isTrawler(slot: number, w?: Pick<World, 'vehicleTuning'>) {
   return vehicleDef(w, slot).mode === 3 && (w?.vehicleTuning?.[slot]?.trawling ?? slot === 30);

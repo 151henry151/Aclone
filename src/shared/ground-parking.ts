@@ -1,3 +1,5 @@
+import { bridgeReservedFootprint } from './bridge-geometry';
+import { rectanglesOverlap, vehicleFootprint } from './vehicle-footprint';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from './types';
 import { obstacleRules } from './obstacle-rules';
@@ -9,6 +11,12 @@ import { spaceportPoint } from './spaceport-site';
 /** Protect existing public choke points without moving somebody else's vehicle. */
 export function parkingBlocker(w: World, p: Player): string | undefined {
   if (!obstacleRules(w.settings).clearRouteParking) return;
+  if (
+    w.bridges?.some((b) =>
+      rectanglesOverlap(bridgeReservedFootprint(b), vehicleFootprint(w, p.vehicle, p)),
+    )
+  )
+    return 'Keep the bridge passage and approaches clear of parked vehicles';
   const v = vehicleDef(w, p.vehicle),
     padding = Math.hypot((v.length ?? 0) / 2, (v.width ?? 0) / 2) || v.collisionRadius || 1.3;
   if (spawnReserved(w, p.x, p.z, padding))

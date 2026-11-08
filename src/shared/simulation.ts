@@ -1,3 +1,7 @@
+import { advanceBridgeInspections } from './bridge-inspection';
+import { bridgeGroundBlocked, updateBridgePassages } from './bridge-geometry';
+import { bridgeAction, advanceBridgeSurveys, maintainBridges } from './bridges';
+import { bridgeRuleFields, bridgeRulesError } from './bridge-rules';
 import { nameTagFields, nameTagRules } from './name-tag-rules';
 import { roadRuleFields } from './road-rules';
 import { beginVehicleMount } from './vehicle-mount';
@@ -2192,6 +2196,10 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       p.energy = 65000;
       break;
     }
+    case 'bridge': {
+      result = bridgeAction(w, p, a, (cash, reason) => charge(w, p, cash, reason));
+      break;
+    }
     case 'construct': {
       const requested = str(a.kind),
         kind = w.catalogue?.templates[requested]?.base ?? requested,
@@ -2416,6 +2424,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
             Object.hasOwn(parkingFields, key) ||
             Object.hasOwn(nameTagFields, key) ||
             Object.hasOwn(roadRuleFields, key) ||
+            Object.hasOwn(bridgeRuleFields, key) ||
             Object.hasOwn(radioRuleFields, key) ||
             Object.hasOwn(survivalRuleFields, key) ||
             Object.hasOwn(economyRuleFields, key) ||
@@ -2479,6 +2488,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const nameTagField = nameTagFields[key as keyof typeof nameTagFields];
         if (nameTagField && 'min' in nameTagField)
           num(v, nameTagField.min, nameTagField.max, nameTagField.step === 1);
+        const bridgeField = bridgeRuleFields[key as keyof typeof bridgeRuleFields];
+        if (bridgeField && 'min' in bridgeField)
+          num(v, bridgeField.min, bridgeField.max, bridgeField.step === 1);
         const roadField = roadRuleFields[key as keyof typeof roadRuleFields];
         if (roadField && 'min' in roadField)
           num(v, roadField.min, roadField.max, key.startsWith('city') && roadField.step === 1);
@@ -2733,6 +2745,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           'Keep landscape limits at or above retained undo history',
         );
       }
+      const bridgeError = bridgeRulesError(nextSettings);
+      requireThat(!bridgeError, bridgeError ?? 'Invalid bridge rules');
       const calendarError = calendarRulesError(nextSettings);
       requireThat(!calendarError, calendarError ?? 'Invalid calendar');
       const alpineError = alpineRulesError({ ...w.settings, ...clean });
@@ -3403,7 +3417,10 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
         v.collisionRadius ?? (v.mode === 8 ? 0.25 : 1.3),
         true,
       );
-    solidStopped = contact.stopped || redirectedBlocked;
+    solidStopped =
+      contact.stopped ||
+      redirectedBlocked ||
+      bridgeGroundBlocked(w, p, contact.point, towBefore.heading);
     nx = redirectedBlocked ? p.x : contact.point.x;
     nz = redirectedBlocked ? p.z : contact.point.z;
   }
@@ -3437,6 +3454,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
               ? rowboatRules(w.settings).rowboatMinDepth
               : v.draft,
           gentleCanoe,
+          v.airDraft,
         )
       : undefined;
   if (solidStopped) {
@@ -3557,6 +3575,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           dt,
     );
   moveTrailer(w, p, towBefore, dt, prediction);
+  if (onSolidGround(w, p)) updateBridgePassages(w, p);
   moveTow(w, p, towBefore, prediction);
   moveTender(w, p, towBefore, prediction);
   if (!prediction) {
@@ -3573,6 +3592,8 @@ function kill(
   at = w.time,
   destroyedBoat = false,
 ) {
+  delete p.bridgePasses;
+  delete p.bridgeSurvey;
   delete p.stormExposure;
   if (!comic) canoeDeath(w, p);
   detachTrailer(w, p, !comic && w.settings.loseInventoryOnDeath);
@@ -3873,6 +3894,9 @@ export function advance(w: World, seconds: number) {
   }
   advanceClimate(w, start, end);
   w.time = end;
+  advanceBridgeInspections(w);
+  advanceBridgeSurveys(w);
+  maintainBridges(w);
   towExpiredParking(w);
   advanceCapsizing(w, start, end, (p, force, cause, at) => kill(w, p, false, cause, at, force));
   advanceCharters(w, seconds);

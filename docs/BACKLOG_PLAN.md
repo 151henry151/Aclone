@@ -8807,3 +8807,213 @@ Verified bot announcement with reviewed local-test screenshot:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569090581978816543
 Evidence: `output/climate-rule-cache/`. Continue item 19 stage 4 bridge construction;
 retain measured frame-rate limitations and existing performance acceptance gates.
+
+### Item 19 stage 4 — Bridge policy, bill and completion criteria before production
+
+Build a supported steel-truss bridge with selectable single-/two-lane widths,
+clear-span river passage and dry approach ramps. Defaults: 4/8 m widths, maximum
+120 m bank-to-bank span, 8 m clearance beneath the deck above surveyed high water,
+12% maximum approach grade, up to 200 m per approach and 1 m maximum foundation
+rise across each bank seat. Survey the entire footprint, not just endpoints.
+Reject unsuitable banks, impassable approaches, protected land/obstructions and
+existing ford-road conflicts; keep boat passage free of supports. No automatic
+free crossing. Gameplay dimensions, limits and prices are canonical world rules.
+
+Cost calibration uses the existing catalogue, not imaginary freight earnings:
+Steel 74.75d/item, Wood 14d, Gravel 4d and Stone 6d; ordinary steel mills and
+shipyards cost 1,200d before materials. For an 8 m × 40 m main span, charge
+800s cash (80,000d at the default 100d/s) plus 600 Steel, 200 Wood, 1,000 Gravel
+and 400 Stone, valued at another 540.5s at catalogue prices. That is a major
+shared investment (cash alone about 66.7 steel-mill base prices), not early-game
+infrastructure. Price per main-span square metre: 25,000 hundredths cash,
+1.875 Steel, 0.625 Wood, 3.125 Gravel and 1.25 Stone, rounded up per bill.
+Additional dry approach length costs 2,000 hundredths, 10 Gravel and 3 Stone per
+metre. Width and span therefore change the design's bill. Validate actual-bank
+quotes against these rules; do not claim live trading can finance it quickly.
+
+Ownership/access policy: the founder owns the project; existing build and road
+permissions apply along its entire footprint. Any permitted nearby player can
+contribute only their own explicit cash/material amounts; donations are final
+and this is stated before submission. Reserve the entire site from founding,
+with a 10% cash deposit and limits of 64 bridges/world and 2 unfinished projects
+per founder. Serial authoritative actions prevent overlapping starts and duplicate
+completion. Completed bridges are public and toll-free by default. World owners
+can restrict access to the bridge owner or set a toll; travellers see refusal/
+price before entry. A purchased passage permits reversing/retreating without a
+second charge or mid-span lockout, and expires only after clearing the crossing.
+Never charge a contributor's account or traveller without their own action.
+
+Maintenance policy: retain the physical deck after closure; wear 0.01 condition
+per economic game day, close new entry below condition 20, and allow occupants to
+leave. A repair restores 25 condition for 500d plus 10 Steel, scaled by main-span
+area relative to the reference 320 m². Any player with access can pay for repair.
+Owner/admin removal requires an empty reserved footprint; losing permission or
+changing settings never deletes a funded project. World rules configure wear,
+closure, repair quantities and the reference area. Existing ford roads persist.
+
+Completion criteria, before production edits:
+
+- `node --import tsx --test tests/bridges.test.ts tests/bridge-routing.test.ts`:
+  first reproduce unsupported settings/action. Test real stable-bank surveys,
+  full-width dry approaches/grade/clearance, quoted money/material conservation,
+  narrow/wide/span-dependent bills, insufficient funds/materials, stale quotes,
+  overlap/concurrent contributions, permissions and deposit/project limits.
+- Exercise actual shared movement: unfinished decks never support a crossing;
+  completed decks support loaded tractors and trailers with continuous edge/
+  rail collision. Boats pass underneath when hull/superstructure fit and stop
+  before supports/decks otherwise. Rendered geometry and collision bounds agree.
+  Respect access/tolls before entry, reversing, death/reconnect and mid-crossing
+  policy edits. Keep parked vehicles out of reserved bridge passages.
+- Integrate completed usable anchors into ordinary and paved road graphs, including
+  a bridge away from the direct bank approach. Prove city trunks join the bridge
+  without paving fords or deleting old roads. Test multiple rivers/bridges,
+  absent/blocked fords, water/terrain/obstruction edits, closed/removed bridges,
+  city growth/shrinkage, changed rules and bounded work under the existing gate.
+- Test restart and portable design round trips for unfinished/complete projects,
+  donated resources, ownership remapping and passage permissions. Validate F10
+  defaults/custom/zero settings atomically; expose rules in docs and NPC guide/
+  observations, with ordinary resident access rules and no account grants.
+- Browser `tests/browser/bridges.spec.ts`: preview a genuine river span and bill;
+  show invalid-bank/overlap/insufficient-cash/material states; two local players
+  contribute and complete it; drive a loaded rig across, reverse and stop; sail
+  underneath; demonstrate access/toll/maintenance/occupied-removal refusals,
+  saved rules/reload, and map/ground agreement. Review successful screenshots and
+  video. Keep player controls responsive while surveying and rendering.
+- Run all directly affected road, movement/boats/trailers/parking, construction,
+  settings/design/snapshot/NPC tests, TypeScript, changed-file Prettier and build.
+  Repeat the populated walking/turning replay with NPC work and daily growth,
+  retaining the <100 ms server heartbeat gate and candid client frame limits.
+  No release of a partial bridge schema, preview or disconnected deck.
+
+Bridge stage progress after resuming: survey/default/cost/atomic-funding,
+competing-builder, restart and maintenance tests pass (11 checks), followed by
+four support/loaded-trailer/rail/access movement checks. The relevant existing
+road scheduling/policy and trailer tests pass (15); TypeScript passes at that
+checkpoint. No bridge release or completion is claimed.
+
+The browser's actual model bounds expose a calibration gap in the draft 8 m
+clearance: the fishing boat reaches 9.045 m and the enlarged cargo boat 8.440 m.
+Strengthen the default to **10 m**, preserving passage for the existing fleet.
+Add canonical per-vessel air draft, including occupied small craft, with editable
+world values and conservative dimensions close to rendered bounds. Keep the
+reference 800s main-span price; longer surveyed approaches add their normal bill.
+Do not publish the earlier 8 m proposal as the final rule. Rendering contacts and
+boat overhead checks have failing regressions; these remain the active work.
+
+Bridge verification after usage-limit recovery (still **unreleased**, 0.135.1
+remains live): saved ramp triangles now agree with wheel contacts and rendering.
+Add regressions first for construction/field/pasture/parking reservations,
+related-rule validation, road-cache invalidation, portable designs, terrain/water/
+obstacle safety inspections, stale panel quotes, live balances, outer-deck boat
+clearance and late-arriving parked vehicles. Record the initial failures under
+`output/player-bridges/`; preserve the original criteria and 96,000-byte NPC gate.
+
+Safety inspections run in bounded batches after geometry changes/restart; new
+entry closes while checking, the saved physical deck remains, and restoring the
+site reopens it. Import/export retains paid bills, saved surfaces and economic
+ages; remap ownership and aggregate contribution totals to the new owner without
+exporting private permits or quote capabilities. Validate malformed ramps,
+funding totals and overlapping sites atomically. Protect the full physical width,
+including outer rails and tiny protected-zone/town-border intersections. Apply
+existing `clearRouteParking` to bridge vehicles and trailer unhitching. Recheck
+parked obstructions at founding because vehicles can arrive after a quote.
+
+The first consolidated bridge run passes 33 tests; later targeted checks cover
+additional gaps. The 54-test affected land/snapshot/guide run passes 53 and exposes
+an over-budget NPC request after adding bridge rules. Tighten repeated resident
+instructions without removing live rules or guide excerpts; the subsequent
+34-test NPC/guide run passes, including the unchanged size gate (95,353/96,000
+bytes). Show bridge details near an office or while crossing, alongside canonical
+world rules. Reuse unchanged bridge road geometry without repeat serialization
+(the regression first records 1,000 unnecessary serializations, then zero).
+
+Browser work has verified genuine invalid-bank and insufficient-cash states,
+quoted costs, cash funding by one local player, material funding by another, and
+a completed loaded tractor/trailer crossing. It catches stale balance controls
+and a delayed action-result redraw; both are fixed. The invalid world-rule test
+must inspect the current server world after rollback, rather than its discarded
+fixture reference. Mid-span stopping uses release of the driving control; engine
+off is correctly refused by reserved-route parking protection. Complete the
+remaining reverse/access/toll/repair/removal/boat/reload browser checks, multiple
+river/ford preservation checks, final affected tests, TypeScript/format/build and
+populated performance replay before any release. README reviewed: keep the
+released 0.135.1 description until the bridge release gates pass.
+
+Foundation safety follow-up criteria: save each surveyed bank seat's lowest
+full-width ground level, retain that physical base on restart/import/render, and
+close entry if an excavation undercuts it. Run
+`node --import tsx --test tests/bridge-inspection.test.ts tests/bridge-design.test.ts tests/bridge-model.test.ts`;
+a dry excavation beneath a seat must fail inspection while retaining the deck,
+and restoring the ground must permit inspection again. Reject invalid imported
+foundation heights. Confirm the excavation regression fails before implementation.
+
+The latest targeted run passes 222 bridge/road/boat/trailer/construction/design/
+snapshot tests (`affected-final.log`), followed by 44 NPC/guide/finance tests
+(`npc-final.log`), retaining the 95,353/96,000-byte request gate. The separate
+multiple-river tests pass: closing/removing one crossing leaves the other intact;
+real paved approaches join a bridge while the old physically traversable ford
+route remains. The dry-foundation excavation regression first fails with a
+missing exception, then passes after persisting the surveyed seat bases; all
+nine inspection/design/model checks pass. Rendering retains those saved bases
+after terrain edits.
+
+The final access/clearance browser run passes both flows, including default air
+draft, custom 30 m air draft saved through F10/reload, underpass movement, and
+overheight refusal. Actual rendered boat bounds for all nine marine slots fit
+their default air drafts and the default 10 m bridge clearance. Correct the
+local video fixture's fuel capacity; wait for the unrelated refusal toast to
+clear before recording the underpass. Video review approves the corrected
+underpass image. Strengthen the loaded-rig browser flow to reverse on the deck,
+since the earlier reviewed recording reversed only beyond the approach.
+
+Prepare the performance fixture from the existing anonymous populated world,
+retaining 86 buildings, 2,003 roads and all scenery. Survey a naturally clear
+single-lane site on north-river-1 at point 296; do not remove obstacles or reduce
+world workload to manufacture a passing result. Final loaded-deck browser and
+populated replay/build gates remain pending at this checkpoint.
+
+Populated replay blocks release: daily road growth remains pending after the
+unchanged walking sequence and maximum heartbeat reaches 160.68 ms (five NPC
+decisions and resident arrival still finish). The CPU profile shows new remote
+road-connection planning with the bridge in the road graph. Inspect the bridge
+rail sweep first: it subdivides every long road segment at 0.4 m even when the
+bridge is kilometres away. Add a regression counting footprint-axis reads for
+a remote 20 km road query (expect fewer than 100), then conservatively clip
+sweep checks to the bridge vicinity while preserving actual crossing/rail tests.
+Retain the same populated fixture, movement sequence and <100 ms gate.
+
+The profile identifies the long-stall frames more precisely: a remote ford
+search synchronously generates cold scenery chunks (97–126 ms). The new isolated
+bridge was also treated as a destination by generic road-component repair,
+triggering an unrelated island-wide connection search. A standalone paid bridge
+should offer a crossing for town/city journeys; it should not create a new
+settlement destination or monopolize unrelated daily work. Add a failing test
+that one connected public lane plus a disconnected bridge does not automatically
+start a spur. Keep bridge anchors in routing and retain the existing tests for
+city approaches and real old fords. Only exclude all-bridge components as generic
+connection destinations; once a public approach joins one, it remains an ordinary
+network component. Cold-scenery batching remains a separate performance concern
+if the same populated replay still exposes it after removing the unintended job.
+
+Bridge release candidate 0.136.0: the strengthened loaded-deck browser flow
+passes (3.0 minutes), and review confirms a contiguous on-deck stop/reverse/
+resume sequence at 108–117 seconds. The remote-sweep test fails first at 100,008
+axis reads, then passes with conservative vicinity clipping; a 20 km sweep
+through actual rails still stops. The standalone-destination regression first
+produces an unintended connection, then passes. All 27 affected routing/growth/
+ford-preservation checks and two focused sweep checks pass after the fixes.
+
+The unchanged populated fixture and input sequence pass on attempt 2: maximum
+heartbeat 85.33 ms, ping 32 ms, correction 0.632 m, five NPC decisions, resident
+arrival and completed daily growth. Browser errors: zero. Frame p95 55.4 ms,
+maximum frame 85.9 ms, minimum FPS 16. Preserve the first failed run and profile;
+do not describe performance as solved. The cold-scenery generation stall exposed
+by the unnecessary long survey is a confirmed separate follow-up to prioritize
+before automotive manufacturing. Final production build/format, push, exact-SHA
+deployment and screenshot announcement are the remaining release operations.
+
+Release gates pass: TypeScript and production build are clean, changed-file
+Prettier and `git diff --check` pass, and the final long-context NPC check remains
+95,353/96,000 bytes after documentation updates. Production build retains the
+existing large-bundle warning. Release only the complete bridge slice as 0.136.0;
+keep factory/truck work and the separately identified cold-scenery follow-up open.

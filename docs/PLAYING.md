@@ -924,3 +924,47 @@ also clears the absent player's parked vehicles.
 Other worlds keep instant switching unless their owner enables persistence.
 Check **World rules & leaving safely** and the first-steps guidance for your
 world's choices.
+
+## Player-built river bridges
+
+Open **Build → River bridges** while standing on a dry river bank. Use your current
+bank, click the opposite bank on the local survey map and choose a single- or
+two-lane span. **Survey selected span** checks the full foundations, dry ramps,
+grade, reserved land, existing roads and boat clearance before quoting the bill.
+A rejected survey explains what to change. The preview shows span, clear width,
+approach length, clearance, total materials and founding deposit.
+
+Bridges are major shared projects. At default prices an 8 m × 40 m main span costs
+800s plus 600 Steel, 200 Wood, 1,000 Gravel and 400 Stone; approaches add cash,
+Gravel and Stone. The founder pays a 10% cash deposit and owns the reserved site.
+Nearby players with construction permission can contribute explicit cash and
+carried materials; **contributions are final and nonrefundable**, including on
+removal. Deliver goods to either end, enter quantities and select **Contribute
+selected amounts**. Other players' payments update the remaining bill. The deck
+opens only when the entire bill is funded and the site remains safe. The default
+limit is two unfinished projects per founder and 64 projects/bridges per world.
+
+Finished bridges carry tractors and loaded trailers. Keep your whole rig inside
+the rails; approach and reverse along the lane. Boats pass underneath if their
+configured air draft fits; bridge foundations occupy only the dry approaches.
+The default design leaves 10 m beneath the main deck above surveyed high water.
+Public, free bridges connect ordinary and paved roads; existing ford routes stay.
+Town and city journeys can select a suitable crossing. An isolated bridge alone
+does not start an unrelated public road to its location.
+Private or tolled crossings are excluded from automatic public road routing.
+
+Access is public and toll-free by default. World owners may make crossings
+owner-only or set a toll. At either bridge office, **Buy passage** explicitly pays
+the displayed toll to the world treasury. Movement never charges automatically.
+A passage lasts until your whole rig has cleared the bridge; reversing and
+retreating do not charge again. Access changes or wear do not remove the deck
+under an occupant. Death clears private passage permissions.
+
+Condition wears by 0.01 per economic game day by default; new entry closes below 20. **Pay for repair** restores up to 25 condition for 500d and 10 Steel on the
+reference 320 m² span, scaled by area. The owner or a caretaker can remove a
+bridge only with an empty crossing; no contributions are refunded. Keep parked
+vehicles, buildings and new fields outside its reserved passage and ramps.
+Terrain, water or obstruction edits trigger a safety inspection: entry closes
+while it runs, and a failed check explains what needs restoring. The saved deck
+stays in place. All design, funding, access, wear and repair rules are in
+**F10 → Rules → Player-built bridges**; displayed live terms override defaults.

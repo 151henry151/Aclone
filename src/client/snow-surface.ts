@@ -1,3 +1,4 @@
+import { bridgeDeckHeight } from '../shared/bridge-geometry';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -67,6 +68,8 @@ export function snowTrackHeight(w: World) {
     return value;
   };
   return (x: number, z: number) => {
+    const bridge = bridgeDeckHeight(w, x, z);
+    if (bridge !== undefined) return bridge;
     const gx = (x - origin) / step,
       gz = (z - origin) / step;
     const i = Math.floor(gx),

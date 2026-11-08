@@ -1,3 +1,4 @@
+import { bridgeRoads, bridgePathCuts, bridgeCoversRoad } from './bridge-network';
 import { inlandWaterAt } from './inland-water';
 import { terrainHeight } from './terrain';
 import { roadFordSteps } from './road-fords';
@@ -15,6 +16,7 @@ export interface PavingProject {
   path: Point[];
   width: number;
   feederQueued?: boolean;
+  bridges?: string;
   waitingForBridge?: { near: Point; far: Point };
 }
 /** Survey the first intervening river; endpoints alone cannot distinguish a ford
@@ -113,6 +115,13 @@ export function* growPavedTrunkSteps(
     delete projects[town.id];
     project = undefined;
   }
+  const bridgeKey = bridgeRoads(w)
+    .map((r) => r.bridge)
+    .join(',');
+  if (project?.waitingForBridge && (project.bridges ?? '') !== bridgeKey) {
+    delete projects[town.id];
+    project = undefined;
+  }
   if (project?.waitingForBridge) {
     const { near, far } = project.waitingForBridge;
     const site = roadSite(dry, project.width);
@@ -136,13 +145,18 @@ export function* growPavedTrunkSteps(
       if (!goals.length || roadDistance(connected, goals[0].x, goals[0].z) <= 0) continue;
       const goal = goals[0],
         start = exits.slice().sort((a, b) => pointDistance(a, goal) - pointDistance(b, goal))[0];
-      const bank = yield* bankApproach(w, start, goal, rules.roadWidth);
-      const path = bank?.path ?? (yield* roadRouteSteps(dry, start, goal, rules.roadWidth));
+      const crossing = bridgeKey
+        ? yield* roadRouteSteps(dry, start, goal, rules.roadWidth)
+        : undefined;
+      const bank = crossing ? undefined : yield* bankApproach(w, start, goal, rules.roadWidth);
+      const path =
+        crossing ?? bank?.path ?? (yield* roadRouteSteps(dry, start, goal, rules.roadWidth));
       if (path) {
         project = projects[town.id] = {
           destination: destination.id,
           goal,
-          path,
+          path: bridgePathCuts(w, path),
+          bridges: bridgeKey,
           width: rules.roadWidth,
           ...(bank ? { waitingForBridge: { near: bank.near, far: bank.far } } : {}),
         };
@@ -171,6 +185,10 @@ export function* growPavedTrunkSteps(
     const [a, b] = project.path,
       length = pointDistance(a, b);
     if (length < 1e-6) {
+      project.path.shift();
+      continue;
+    }
+    if (bridgeCoversRoad(w, a, b)) {
       project.path.shift();
       continue;
     }

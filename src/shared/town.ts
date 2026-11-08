@@ -1,3 +1,4 @@
+import { bridgeRoads } from './bridge-network';
 import { spaceportPavementDistance } from './spaceport-site';
 import { onAirfield, runwayRoad } from './airfield';
 import { landscapeRoads } from './landscape.ts';
@@ -10,6 +11,7 @@ export interface Point {
   z: number;
 }
 export interface Road {
+  bridge?: string;
   a: Point;
   b: Point;
   width: number;
@@ -204,6 +206,7 @@ const roadQueries = new WeakMap<
   object,
   {
     starter: readonly Road[];
+    bridges: readonly Road[];
     grown: RoadState;
     landscape: RoadState;
     retired: readonly string[];
@@ -214,13 +217,21 @@ const roadQueries = new WeakMap<
 export function townRoads(
   w: Pick<
     World,
-    'townLayout' | 'creator' | 'landscape' | 'settings' | 'roads' | 'retiredRoads' | 'airfield'
+    | 'townLayout'
+    | 'creator'
+    | 'landscape'
+    | 'settings'
+    | 'roads'
+    | 'retiredRoads'
+    | 'airfield'
+    | 'bridges'
   >,
 ): readonly Road[] {
   const starter =
     w.creator?.roads === false ? emptyRoads : w.townLayout === 2 ? expandedRoads : legacyRoads;
   const landscape = w.landscape ? landscapeRoads(w) : emptyRoads;
   const grown = w.roads ?? emptyRoads;
+  const bridges = bridgeRoads(w);
   const retired = w.retiredRoads ?? [];
   // Snapshots replace World/settings objects while retaining unchanged road arrays.
   // Compare numeric geometry as well as references: server construction/editor
@@ -230,6 +241,7 @@ export function townRoads(
   if (
     previous &&
     previous.starter === starter &&
+    previous.bridges === bridges &&
     unchangedRoads(grown, previous.grown) &&
     unchangedRoads(landscape, previous.landscape) &&
     retired.length === previous.retired.length &&
@@ -239,11 +251,12 @@ export function townRoads(
   )
     return previous.result;
   const removed = new Set(retired);
-  const result = [...starter, ...landscape, ...grown].filter(
+  const result = [...starter, ...landscape, ...grown, ...bridges].filter(
     (r) => (!removed.size || !removed.has(roadKey(r))) && !runwayRoad(w, r),
   );
   roadQueries.set(key, {
     starter,
+    bridges,
     grown: rememberRoads(grown),
     landscape: rememberRoads(landscape),
     retired: retired.slice(),

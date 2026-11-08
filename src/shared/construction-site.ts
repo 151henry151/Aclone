@@ -1,3 +1,5 @@
+import { bridgeReserved, bridgeReservedFootprint } from './bridge-geometry';
+import { rectanglesOverlap } from './vehicle-footprint';
 import { parkedFootprintBlocked } from './vehicle-footprint';
 import { pumpHouseSite, freshWaterReason } from './fresh-water';
 import { constructionRules } from './construction-rules';
@@ -85,6 +87,19 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site) {
+  if (
+    rectangles(b).some((r) =>
+      w.bridges?.some((bridge) => rectanglesOverlap(r, bridgeReservedFootprint(bridge))),
+    )
+  )
+    return 'Keep buildings clear of the reserved bridge footprint';
+  if (
+    b.kind === 'farm' &&
+    Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
+      bridgeReserved(w, p.x, p.z, 6),
+    )
+  )
+    return 'Keep fields clear of the reserved bridge footprint';
   const spawnReason = buildingSpawnReason(w, b);
   if (spawnReason) return spawnReason;
   if (

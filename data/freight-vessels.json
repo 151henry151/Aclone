@@ -22,6 +22,7 @@
     "crew": 2,
     "requiresCaptain": true,
     "draft": 3.75,
-    "freeboard": 3.6
+    "freeboard": 3.6,
+    "airDraft": 8.5
   }
 ]

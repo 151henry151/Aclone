@@ -96,7 +96,7 @@ export function vehicleEditor(w: World, slot: number) {
       ['8', 'Walking'],
     ],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (v.mode === 3 ? numberFields('draft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (v.mode === 3 ? numberFields('draft airDraft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
     v.mode === 3
       ? group(
           'Freight hold',

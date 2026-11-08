@@ -1,3 +1,7 @@
+import { obstacleRules } from './obstacle-rules';
+import { bridgeRectBlocked, bridgeReservedFootprint } from './bridge-geometry';
+import { trailerFootprint, rectanglesOverlap } from './vehicle-footprint';
+import { travelHeight } from './dock';
 import { cargoAccepts } from './cargo-policy';
 import { transferStock, type StockLife } from './stock-life';
 import { vehicleRunningRules } from './vehicle-running-rules';
@@ -110,6 +114,7 @@ export function detachTrailer(w: World, p: Player, loseCargo = false) {
 export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; heading: number }) {
   const d = trailerDefs[t.kind],
     radius = d.width / 2;
+  if (bridgeRectBlocked(w, trailerFootprint(t), trailerFootprint({ ...t, ...to }))) return false;
   const distance = Math.hypot(to.x - t.x, to.z - t.z),
     turn = Math.atan2(Math.sin(to.heading - t.heading), Math.cos(to.heading - t.heading));
   const steps = Math.max(
@@ -151,10 +156,10 @@ export function clearTrailer(w: World, t: Trailer, to: { x: number; z: number; h
         return false;
       if (trailerBlocks(w, q, q, radius, t.id)) return false;
     }
-    const y = terrainHeight(w, x, z);
+    const y = travelHeight(w, x, z);
     if (cliffBlocks(w, t, { x, z }, radius)) return false;
     if (landscapeBlocks(w, { x: t.x, z: t.z, y }, { x, z, y }, radius, false)) return false;
-    if (Math.abs(y - terrainHeight(w, t.x, t.z)) > Math.max(0.5, distance * 0.85)) return false;
+    if (Math.abs(y - travelHeight(w, t.x, t.z)) > Math.max(0.5, distance * 0.85)) return false;
   }
   return true;
 }
@@ -214,6 +219,11 @@ export function trailerAction(w: World, p: Player, a: Action) {
   );
   if (a.operation === 'unhitch') {
     need(t.attached === p.id, 'This trailer is not hitched');
+    need(
+      !obstacleRules(w.settings).clearRouteParking ||
+        !w.bridges?.some((b) => rectanglesOverlap(bridgeReservedFootprint(b), trailerFootprint(t))),
+      'Keep the bridge passage and approaches clear of parked trailers',
+    );
     delete t.attached;
     delete t.parkedWith;
     return 'Trailer parked here with its cargo.';

@@ -363,8 +363,8 @@ players do not block land travel. Grounded aircraft do. `clearRouteParking`
 defaults true: engine-off parking is refused in arrival/town-centre reservations,
 the spaceport gate and jetties. Existing arrival/town clearance settings determine
 those buffers. Turning this rule off permits parking there; it does not move any
-vehicle. The later bridge feature must register its narrow passages with this
-same policy.
+vehicle. Bridge decks and approaches use the same policy, including refusal to leave
+unhitched trailers in their reserved passage.
 
 In **F10 → Vehicles**, `length` and `width` set each land vehicle's oriented
 footprint; the walking slot uses `collisionRadius`. All these rules and catalogue
@@ -1950,6 +1950,36 @@ These rules, roads, pavement and the starter-road layout travel with world desig
 imported worlds earn their own city status. Save/restart retains qualification,
 density history and progress. Ground and map show pavement as grey, while town
 government shows counts and qualification or shrinkage progress.
+
+### Player-built river bridges
+
+**F10 → Rules → Player-built bridges** controls bridge construction, design limits,
+full-width foundation rise, deck clearance, approach grade/length, project limits,
+service reach, deposit, money/material prices, public access, toll and maintenance.
+Defaults provide 4 m single-lane or 8 m two-lane crossings, up to 120 m spans,
+10 m clearance above surveyed high water, 12% maximum approach grade and 200 m
+approaches at each end. The reference 8 × 40 m span costs 800s plus 600 steel,
+200 wood, 1,000 gravel and 400 stone; approaches add their own bill. Set prices
+and wear to zero where desired. Construction can be disabled independently.
+
+Players open **Build → River bridges**, survey opposite dry banks, review the
+bill and pay a 10% cash deposit to reserve the site. Contributions are explicit
+and final. Fully funded public, free and safe bridges join ordinary and paved
+road networks; old ford roads remain. Private or tolled bridges require access
+at the office before entry. Tolls are paid explicitly and go to the world treasury.
+Changing policy lets existing occupants leave. Removing a project requires an
+empty footprint and returns no resources. Maintenance and unsafe-site closures
+retain physical support while preventing new entry. Restoring an excavated
+foundation, flooded approach or obstructed site triggers another safety check.
+
+Saved projects retain their original surveyed dimensions, foundation bases and
+bills when design prices change. World designs include projects, donations and
+geometry, remapping ownership to the importing world owner. Private passage
+permits are not exported. The [world-builder guide](WORLD_BUILDING_GUIDE.md#player-built-bridge-rules)
+lists the detailed rules. **F10 → Vehicles → Performance, fuel and economy**
+includes boat draft and air draft in metres. Air draft determines overhead
+clearance; keep it consistent with custom models. Default vessels fit beneath
+the default bridge clearance.
 
 ## Pilot name tags
 

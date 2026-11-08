@@ -1,3 +1,5 @@
+import { publicBridges } from './bridge-network';
+import { bridgeDeckHeight, bridgeRectBlocked } from './bridge-geometry';
 import { finishRoadWork, riverGeometryStamp, type RoadWork } from './road-work';
 import { roadFordSteps } from './road-fords';
 import { roadRules } from './road-rules';
@@ -41,6 +43,7 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     }
   }
   const rules = roadRules(w.settings);
+  const bridgeWorld = { ...w, bridges: publicBridges(w) };
   const pad = width / 2 + 1,
     half = mapHalf(w) - pad,
     sea = highWater(w) + 0.5,
@@ -50,7 +53,7 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     const key = `${p.x}:${p.z}`;
     let h = heights.get(key);
     if (h === undefined) {
-      h = terrainHeight(w, p.x, p.z);
+      h = bridgeDeckHeight(bridgeWorld, p.x, p.z) ?? terrainHeight(w, p.x, p.z);
       heights.set(key, h);
     }
     return h;
@@ -173,15 +176,35 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     !occupied(p) && !fences.some((r) => intersects(r, p, p)) && dry(p) && allowed(p);
   // Cost includes actual intermediate rises, not just endpoint elevations. That
   // prevents a straight shortcut over a hill whose two ends are equally low.
-  function* costSteps(a: Point, b: Point, spacing = 2, scenery = true): RoadWork<number> {
-    if (allSolids.some((r) => intersects(r, a, b))) return Infinity;
+  /** Shared obstruction survey; bridges supply their own elevated water/grade policy. */
+  function* unobstructedSteps(a: Point, b: Point, scenery = true): RoadWork<boolean> {
+    if (allSolids.some((r) => intersects(r, a, b))) return false;
     if (scenery) {
       const parts = Math.max(1, Math.ceil(pointDistance(a, b) / 32));
       for (let i = 0; i < parts; i++) {
         yield;
         const point = (t: number) => ({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
-        if (sceneryBlocksSegment(w, point(i / parts), point((i + 1) / parts), pad)) return Infinity;
+        if (sceneryBlocksSegment(w, point(i / parts), point((i + 1) / parts), pad)) return false;
       }
+    }
+    return true;
+  }
+  function* costSteps(a: Point, b: Point, spacing = 2, scenery = true): RoadWork<number> {
+    if (!(yield* unobstructedSteps(a, b, scenery))) return Infinity;
+    if (bridgeWorld.bridges.length) {
+      const length = pointDistance(a, b) || 1,
+        dx = (b.x - a.x) / length,
+        dz = (b.z - a.z) / length;
+      const from = {
+        ...a,
+        hx: width / 2,
+        hz: 0.001,
+        axes: [
+          { x: dz, z: -dx },
+          { x: dx, z: dz },
+        ],
+      };
+      if (bridgeRectBlocked(bridgeWorld, from, { ...from, ...b })) return Infinity;
     }
     const length = pointDistance(a, b),
       n = Math.max(1, Math.ceil(length / spacing));
@@ -202,7 +225,8 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
         p = { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t };
       if (!dry(p) || !allowed(p)) return Infinity;
       if (nearInlandWater(w, p.x, p.z, pad) || nearInlandWater(w, prior.x, prior.z, pad)) {
-        for (const side of [-pad, pad]) {
+        const verge = bridgeDeckHeight(bridgeWorld, p.x, p.z) !== undefined ? width / 2 : pad;
+        for (const side of [-verge, verge]) {
           const q = sidePoint(p, side),
             before = sidePoint(prior, side);
           if (
@@ -235,7 +259,7 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
   const cost = (a: Point, b: Point, spacing = 2, scenery = true) =>
     finishRoadWork(costSteps(a, b, spacing, scenery));
   const segment = (a: Point, b: Point) => finishRoadWork(segmentSteps(a, b));
-  return { occupied, clear, segment, cost, costSteps, segmentSteps };
+  return { occupied, clear, segment, cost, costSteps, segmentSteps, unobstructedSteps };
 }
 
 /** Round corners and give long open stretches a little survey variation. Every
@@ -385,7 +409,7 @@ function* roadGridRoute(
       );
     }),
   );
-  const portals =
+  const fordPortals =
     distance > 800 && nearbyRiver
       ? (yield* roadFordSteps(w, site, width))
           .flatMap((f) => [
@@ -394,6 +418,15 @@ function* roadGridRoute(
           ])
           .filter((f) => f.p.x >= minX && f.p.x <= maxX && f.p.z >= minZ && f.p.z <= maxZ)
       : [];
+  const portals = [
+    ...fordPortals,
+    ...publicBridges(w)
+      .filter((b) => b.width >= width)
+      .flatMap((b) => [
+        { id: b.id + ':a', p: b.approachA, other: b.approachB, otherId: b.id + ':b' },
+        { id: b.id + ':b', p: b.approachB, other: b.approachA, otherId: b.id + ':a' },
+      ]),
+  ].filter((p) => p.p.x >= minX && p.p.x <= maxX && p.p.z >= minZ && p.p.z <= maxZ);
   type Node = { i: number; j: number; id?: string; p: Point; g: number; f: number; parent?: Node };
   const nodeKey = (n: Node) => n.id ?? `${n.i}:${n.j}`;
   const heap: Node[] = [],

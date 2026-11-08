@@ -1,3 +1,4 @@
+import { bridgeRules } from './bridge-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { ResourceNode } from './resources';
 import type { World } from './types';
@@ -122,6 +123,17 @@ export function roadGeometryKey(w: World): string {
     w.zones,
     roadGeometryStamp(w.roads),
     w.retiredRoads,
+    w.bridges?.map((b) => [
+      b.id,
+      b.a,
+      b.b,
+      b.approachA,
+      b.approachB,
+      b.width,
+      b.completedAt !== undefined,
+      !!b.closure,
+      b.condition >= bridgeRules(w.settings).bridgeMinimumCondition,
+    ]),
     w.towns.map((t) => [t.id, t.x, t.z, t.radius, t.permissions, t.residents]),
     w.buildings.map((b) => [
       b.id,

@@ -1,3 +1,4 @@
+import { bridgeRules } from './bridge-rules';
 import { roadRules } from './road-rules';
 import { nameTagRules } from './name-tag-rules';
 import { parkingRules } from './parking-rules';
@@ -78,6 +79,7 @@ export const rulesets: Record<
 };
 export function rulesSummary(w: Pick<World, 'settings'>): string {
   const roads = roadRules(w.settings);
+  const bridges = bridgeRules(w.settings);
   const obstacles = obstacleRules(w.settings);
   const s = w.settings,
     charter = charterRules(s),
@@ -124,6 +126,7 @@ export function rulesSummary(w: Pick<World, 'settings'>): string {
     `Freight quay vessel limits: ${navigation.quayMaxLength} × ${navigation.quayMaxBeam} m. Extra seaward berth search: ${navigation.boatBerthSearchDistance} m; full hull depth and clearance are required.`,
     `River docks: minimum depth ${navigation.riverDockDraft} m, vessel limit ${navigation.riverDockMaxLength} × ${navigation.riverDockMaxBeam} m. Existing docks and moorings persist when access limits change.`,
     `Pilot name tags: ${tags.pilotNameTags}, fade ${tags.pilotNameTagFadeStart}–${tags.pilotNameTagRange} m, scale ${tags.pilotNameTagScale}, opacity ${tags.pilotNameTagOpacity}, maximum ${tags.pilotNameTagMaxPixels} pixels.`,
+    `Bridge projects ${bridges.bridgeBuilding ? 'enabled' : 'disabled'}; ${bridges.bridgePublicAccess ? 'public' : 'owner-only'} access, toll ${bridges.bridgeToll} hundredths. New spans ${bridges.bridgeNarrowWidth}/${bridges.bridgeWidth} m clear width, maximum ${bridges.bridgeMaximumSpan} m, clearance ${bridges.bridgeClearance} m. Wear ${bridges.bridgeWearPerDay}/economic day; close below ${bridges.bridgeMinimumCondition} condition.`,
     `City paving ${roads.cityPaving ? 'on' : 'off'}: ${roads.cityBuildings} occupied buildings, ${roads.cityBusinesses} businesses and ${roads.cityResidents} residents for ${roads.cityQualificationDays} days; demote after ${roads.cityDemotionDays} days below ${roads.cityRetentionFraction * 100}%. Pave ${roads.cityPavingPerDay} m/city/day where ${roads.cityDensityBuildings} occupied buildings within ${roads.cityDensityRadius} m persist ${roads.cityDensityDays} days, sampling every ${roads.cityDensitySampleSpacing} m. Rural lanes stay dirt; trunks require a connected boundary exit and another city. Pavement awaits bridges at rivers.`,
     `Road alternate routes ${roads.roadAlternateRoutes ? 'on' : 'off'}: require ${roads.roadAlternateSavingFraction * 100}% and ${roads.roadAlternateSavingMetres} m saved; at most ${roads.roadAlternateParallelFraction * 100}% parallel within ${roads.roadAlternateParallelDistance} m.`,
     `Roads: growth ${roads.roadGrowthPerDay} m/game day, new width ${roads.roadWidth} m; ford routing ${roads.roadFords ? 'on' : 'off'}, ground-water depth limit ${roads.groundWaterDepth} m, maximum road grade ${roads.roadMaxGrade * 100}%.`,

@@ -1,3 +1,4 @@
+import { bridgeDeckHeight } from './bridge-geometry';
 import { quayDeckContains, quayDeckHeight } from './quay';
 import { highWater } from './ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -40,7 +41,7 @@ function walkingQuays(w: World) {
   return entry.quays;
 }
 export function travelHeight(w: World, x: number, z: number) {
-  const ground = terrainHeight(w, x, z);
+  const ground = bridgeDeckHeight(w, x, z) ?? terrainHeight(w, x, z);
   for (const b of walkingQuays(w))
     if (!b.construction && quayDeckContains(b, x, z)) return Math.max(ground, quayDeckHeight(w, b));
   if (

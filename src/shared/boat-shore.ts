@@ -1,3 +1,4 @@
+import { bridgeWaterClearance } from './bridge-geometry';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
 import { terrainHeight } from './terrain';
@@ -17,6 +18,7 @@ export function boatShoreCollision(
   halfLength = radius,
   minDepth = 0.05,
   gentle = false,
+  airDraft = 0,
 ) {
   const sin = Math.sin(heading),
     cos = Math.cos(heading);
@@ -35,12 +37,16 @@ export function boatShoreCollision(
   const wet = (p: Point) =>
     footprint.every(
       ([x, z]) =>
-        terrainHeight(w, p.x + x, p.z + z) < surfaceWaterLevel(w, p.x + x, p.z + z) - minDepth,
+        terrainHeight(w, p.x + x, p.z + z) < surfaceWaterLevel(w, p.x + x, p.z + z) - minDepth &&
+        airDraft <
+          bridgeWaterClearance(w, p.x + x, p.z + z, surfaceWaterLevel(w, p.x + x, p.z + z)),
     );
   const penetration = (p: Point) =>
     footprint.map(([x, z]) =>
       Math.max(
         0,
+        airDraft -
+          bridgeWaterClearance(w, p.x + x, p.z + z, surfaceWaterLevel(w, p.x + x, p.z + z)),
         terrainHeight(w, p.x + x, p.z + z) - surfaceWaterLevel(w, p.x + x, p.z + z) + minDepth,
       ),
     );

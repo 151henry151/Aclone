@@ -1,3 +1,4 @@
+import { bridgeDeckHeight } from './bridge-geometry';
 import { roadRules } from './road-rules';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types';
@@ -6,7 +7,9 @@ import { terrainHeight } from './terrain';
 type Point = { x: number; z: number };
 export function riverDepth(w: World, p: Point) {
   const water = inlandWaterAt(w, p.x, p.z);
-  return water ? Math.max(0, water.level - terrainHeight(w, p.x, p.z)) : 0;
+  return water
+    ? Math.max(0, water.level - (bridgeDeckHeight(w, p.x, p.z) ?? terrainHeight(w, p.x, p.z)))
+    : 0;
 }
 /** Sweep the vehicle, not just its destination. Ground vehicles stop at deep
  * channels; an already submerged saved position may retreat toward shallows. */

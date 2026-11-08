@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.136.0] - 2026-11-08
+
+### Added
+
+- Fund and build surveyed river bridges together, with saved ramps, loaded-vehicle crossings, boat clearance, explicit access and repair controls, and completed public connections in road networks.
+- Configure bridge design, costs, contributions, access and maintenance per world; preserve funded projects in portable designs and protect reserved approaches from construction and parking.
+
 ## [0.135.1] - 2026-11-08
 
 ### Fixed

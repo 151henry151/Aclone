@@ -1,3 +1,4 @@
+import { bridgeRules, bridgeRuleFields } from '../shared/bridge-rules';
 import { nameTagFields, nameTagRules } from '../shared/name-tag-rules';
 import { roadRuleFields, roadRules } from '../shared/road-rules';
 import { parkingFields, parkingRules } from '../shared/parking-rules';
@@ -182,6 +183,7 @@ export function settingsFields(settings: Settings = defaults) {
     ...Object.keys(parkingFields),
     ...Object.keys(nameTagFields),
     ...Object.keys(roadRuleFields),
+    ...Object.keys(bridgeRuleFields),
     ...Object.keys(radioRuleFields),
     ...Object.keys(flightRuleFields),
     ...Object.keys(walkingRuleFields),
@@ -739,6 +741,24 @@ export function settingsFields(settings: Settings = defaults) {
     .join(
       '',
     )}<p>Human and AI names fade with distance from your character. Fade start must not exceed visibility range. Screen height caps keep nearby names compact; scenery view hides them. Building signs keep their own visibility.</p></fieldset>`;
+  const bridges = bridgeRules(settings);
+  const bridgeFields = `<fieldset><legend>Player-built bridges</legend>${Object.entries(
+    bridgeRuleFields,
+  )
+    .map(([key, spec]) =>
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            bridges[key as keyof typeof bridges],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${bridges[key as keyof typeof bridges] ? 'checked' : ''}>${esc(spec.label)}</label>`,
+    )
+    .join(
+      '',
+    )}<p>Design dimensions and bills are saved when funded. Disabling construction retains existing projects. Contributions are final; the owner or world administrator may remove an empty bridge. Access and maintenance rules apply to new entry; occupants may finish crossing. Tolls require an explicit passage purchase before entry. Clear lane width excludes the side rails. Larger boat models need matching air draft in the vehicle editor.</p></fieldset>`;
   const roads = roadRules(settings);
   const roadFields = `<fieldset><legend>Roads and river crossings</legend>${Object.entries(
     roadRuleFields,
@@ -946,6 +966,7 @@ export function settingsFields(settings: Settings = defaults) {
     doorFields +
     nameTagControls +
     roadFields +
+    bridgeFields +
     parkedFields +
     meatFields +
     radioFields +
