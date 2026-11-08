@@ -8,7 +8,7 @@ import { buildingPlan, buildingBounds } from './building-shapes';
 import { onFarmLand } from './farm-land';
 import { onAirfield } from './airfield';
 import { inlandWaterAt, nearInlandWater } from './inland-water';
-import { spawnReserved } from './spawn-reserve';
+import { spawnReservations } from './spawn-reserve';
 import { bluffPoint, bluffEdge } from './coastal-bluffs';
 import { obstacleRules } from './obstacle-rules';
 export const sceneryChunkSize = 256;
@@ -293,10 +293,11 @@ export function sceneryChunk(w: World, i: number, j: number): readonly SceneryOb
   const grounds = cache.grounds.filter(
     (n) => n.x >= x0 - 16 && n.x < x0 + 272 && n.z >= z0 - 16 && n.z < z0 + 272,
   );
+  const reservations = spawnReservations(w);
   const clear = (x: number, z: number, margin: number) =>
     Math.abs(x) < half &&
     Math.abs(z) < half &&
-    !spawnReserved(w, x, z, margin) &&
+    !reservations.some((s) => Math.hypot(x - s.x, z - s.z) < s.radius + margin) &&
     !onAirfield(w, x, z, margin + 3) &&
     !onFarmLand(w, x, z, margin) &&
     !inlandWaterAt(w, x, z) &&

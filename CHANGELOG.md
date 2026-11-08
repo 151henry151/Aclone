@@ -6,6 +6,10 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Reuse spawn reservations while generating scenery and avoid allocating farm-plot lists for every candidate, reducing work shared by road surveys and resident navigation.
+
 ## [0.132.1] - 2026-11-08
 
 ### Fixed

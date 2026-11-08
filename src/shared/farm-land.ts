@@ -60,9 +60,15 @@ export function onFarmLand(
       s = Math.sin(b.rotation);
     const lx = dx * c - dz * s,
       lz = dx * s + dz * c;
-    return Array.from({ length: farmPlotCount(b) }, (_, i) => farmPlotLocal(i))
-      .slice(firstPlot)
-      .some((p) => Math.abs(lx - p.x) < 4 + padding && Math.abs(lz - p.z) < 4 + padding);
+    const count = farmPlotCount(b),
+      first = Math.trunc(firstPlot) || 0,
+      start = first < 0 ? Math.max(count + first, 0) : Math.min(first, count);
+    // Query directly: scenery and navigation call this for many candidate points.
+    for (let i = start; i < count; i++) {
+      const p = farmPlotLocal(i);
+      if (Math.abs(lx - p.x) < 4 + padding && Math.abs(lz - p.z) < 4 + padding) return true;
+    }
+    return false;
   });
 }
 export function farmExpansionBlocker(w: World, b: Building): string | undefined {
