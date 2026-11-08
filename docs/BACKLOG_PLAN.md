@@ -14,9 +14,11 @@ alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
 The focused calendar/climate allocation improvement is released as 0.135.1.
 Item 19 stage 4, paid player bridge construction and road integration, is released
 as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1 and parked
-vehicle batching as 0.136.2. Investigate remaining client rendering costs before automotive
-manufacturing, preserving the populated-world responsiveness gate. Highway
-trucks follow the factory in dependency order.
+vehicle batching as 0.136.2. Distant-island culling is released as 0.136.3 and
+stationary ground/river transforms as 0.136.4. The profiled and unprofiled
+populated-world gates pass; preserve their documented limits. Resume automotive
+manufacturing with a fresh read-only economic survey and calculated construction/
+production bills. Highway trucks follow the factory in dependency order.
 
 ## Completion protocol
 
@@ -9364,3 +9366,15 @@ Final build (including TypeScript) and explicit-file Prettier pass. The reviewed
 walking with intact ground, no obvious large teleport or prolonged freeze. It
 ends moving; the announcement still also shows slow movement, not a completed
 stop. Keep the claim limited to reduced redundant transform calculations.
+
+**Stationary terrain transforms done, pushed, deployed and announced.** Version
+0.136.4 runs exact commit `cb2ac34122831cc17e7d1ab6054af5ba61221b4f`. Read-only
+live browser checks verify game, website, worker and gallery with no errors. The
+service is active with zero automatic restarts; live health reports five worlds.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261108-184947.sqlite`;
+website backup: `/var/backups/aclone-website/site-20261108-185112.tar.gz`.
+Verified bot screenshot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569137594535645314.
+Evidence and receipt are under `output/static-terrain/`. Continue item 19 stage 5
+with the factory/economic survey; keep the populated responsiveness gate for every
+subsequent change and do not present these fixes as perfect performance.
