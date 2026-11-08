@@ -7850,7 +7850,7 @@ Completion criteria (before production changes):
 - Commit, push, deploy and announce with screenshot only after these criteria pass,
   following Henry's standing release instructions. Record verification and receipt.
 
-Status: implementation verified locally; release pending.
+Status: **done — released as 0.131.9**, 2026-11-07.
 
 - Confirmed the first three regression tests failed for the reported behaviors:
   spare tractors stayed outside, owned spare recall bypassed the garage, and a
@@ -7873,3 +7873,26 @@ Status: implementation verified locally; release pending.
   unreleased in their original checkouts. Version 0.131.9 is now reserved for this
   tractor fix; older performance evidence under `output/release-0.131.9/` is a
   failed, unreleased candidate, not evidence for this release.
+
+Release verification for the tractor-storage slice:
+
+- Commit `6e03bc5dd4627cb6102d343e1ac54afb7c4f20b7` pushed on
+  `backlog-implementation` and deployed explicitly; main was not pushed.
+- Database backup: `/var/lib/aclone/backups/pre-deploy-20261107-230208.sqlite`.
+  Game health and public website report 0.131.9. Public Chromium check confirms
+  the new client storage rule, working map worker and no browser errors.
+  Service is active, PID 372872, with zero automatic restarts.
+- Read-only live database verification: 31 human characters, none with more than
+  one outdoor tractor. Lightmun retains all four owned tractors: the Swift Kestrel
+  remains outside, while three spares are stored. Compared with the pre-deploy
+  backup, every one retains its fuel, condition and paint. Aircraft/other vehicles
+  remain as before. No grants or manual player edits were performed.
+- Posted and verified the bot's [screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1568838623518793878).
+- Video review confirms the clear garage selection → drive away → park → Find
+  tractor sequence. Reviewed clip:
+  `output/tractor-garage/browser/garage_swap_drive_and_park.mp4`.
+  Migration counts are test-backed; the recording is not a filmed before/after.
+- Active release checkout: `/home/henry/.codex/worktrees/tractor-garage/Aclone`.
+  The primary checkout stays detached at 030d809 with its road WIP intact;
+  `/home/henry/.codex/worktrees/pilot-entry/Aclone` retains the uncommitted NPC
+  performance candidate. Integrate those deliberately before resuming their work.
