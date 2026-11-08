@@ -374,8 +374,19 @@ function* roadGridRoute(
     maxZ = Math.min(half, Math.max(start.z, goal.z) + margin);
   // Fine local paths handle streets; coarse searches explicitly visit surveyed
   // ford approaches instead of hoping a grid vertex falls on a narrow crossing.
+  // A mainland survey must not validate every remote island ford. The widest
+  // skewed approach reaches sqrt(1 + 4²) times the normal bank clearance.
+  // If any approach can reach this search box, retain the full cached survey.
+  const nearbyRiver = w.northernIsland?.rivers.some((river) =>
+    river.points.some((p) => {
+      const reach = (p.width / 2 + width * 3) * Math.sqrt(17);
+      return (
+        p.x + reach >= minX && p.x - reach <= maxX && p.z + reach >= minZ && p.z - reach <= maxZ
+      );
+    }),
+  );
   const portals =
-    distance > 800
+    distance > 800 && nearbyRiver
       ? (yield* roadFordSteps(w, site, width))
           .flatMap((f) => [
             { id: f.id + ':a', p: f.a, other: f.b, otherId: f.id + ':b' },

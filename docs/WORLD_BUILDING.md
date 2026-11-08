@@ -1903,7 +1903,16 @@ as well as road planning. Lowering it may make an old ford impassable; it does n
 erase the existing road. Disabling ford routing prevents new ford roads without
 preventing otherwise shallow vehicle crossings. Deep water, steep banks and
 blocked approaches still refuse a new road. These settings travel with exported
-world designs. Dirt-road growth defaults to 12 metres per game day (0 pauses new
+world designs. Alternate dirt routes default to enabled, requiring both a 0.2
+fractional saving and 100 metres saved against the shortest existing road journey.
+The whole proposal is terrain-surveyed. At most 0.25 of its length may run within
+15 metres of existing road centre lines, excluding one lane-width at each endpoint.
+Set `roadAlternateRoutes`, `roadAlternateSavingFraction`, `roadAlternateSavingMetres`,
+`roadAlternateParallelFraction` and `roadAlternateParallelDistance` to tune this.
+Disabled or changed policy discards the remaining optional proposal, preserving
+laid roads; a new survey may begin when enabled. Required disconnected-town and
+property access projects retain priority. These are dirt-road settings, not city
+qualification or paving rules. Dirt-road growth defaults to 12 metres per game day (0 pauses new
 construction); new road width defaults to 5 metres. Pausing keeps the project and
 resuming adds only new days, not the paused allowance. A width change affects new
 projects; unfinished projects keep their surveyed width. Pending construction

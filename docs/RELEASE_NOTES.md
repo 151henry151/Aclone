@@ -2,6 +2,27 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.134.0 — Useful shortcuts between connected towns
+
+Keep growing useful dirt-road loops after required connections and property access
+are served. Compare the shortest existing journey with a completely surveyed
+proposal, including terrain, obstacles and river crossings. By default a shortcut
+must save both 20% and 100 metres, with no more than 25% of its length within
+15 metres of an existing road (apart from normal endpoint connections). All five
+policy values are world configurable. Build gradually with the normal road budget;
+keep old routes and unfinished construction through restarts.
+
+Watch new road lines appear on an open parish map while terrain, pan, zoom and
+focus stay in place. Reduce survey work by skipping remote fords for local searches,
+indexing nearby parallel segments and validating the most promising proposals first.
+City paving, bridges and manufactured highway trucks remain planned.
+
+The populated-world input replay completes daily growth, five NPC decisions and
+resident navigation while walking, with no browser errors. Its maximum server
+heartbeat gap is 99.24 ms against the unchanged <100 ms gate and maximum local
+ping is 65 ms. Client FPS still falls to 14 in this workload; these results do not
+claim that all performance problems are resolved.
+
 ## 0.133.0 — Dirt roads find river crossings
 
 Let growing road connections use shallow fords with validated lane widths and

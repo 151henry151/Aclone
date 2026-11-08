@@ -756,7 +756,7 @@ export function settingsFields(settings: Settings = defaults) {
     )
     .join(
       '',
-    )}<p>New dirt roads may cross physically usable fords. Depth also controls ground vehicles; lowering it can make an existing crossing impassable. Grade is rise divided by horizontal distance. Existing road geometry is retained when these rules change.</p></fieldset>`;
+    )}<p>Alternate routes require both savings thresholds after surveying the full route. The parallel limit counts length close to existing road centre lines, excluding one lane-width at either endpoint. Old roads remain. New dirt roads may cross physically usable fords. Depth also controls ground vehicles; lowering it can make an existing crossing impassable. Grade is rise divided by horizontal distance. Existing road geometry is retained when these rules change.</p></fieldset>`;
   const parking = parkingRules(settings);
   const parkedFields = `<fieldset><legend>Parked vehicles and arrivals</legend>${Object.entries(
     parkingFields,

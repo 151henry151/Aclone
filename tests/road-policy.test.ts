@@ -120,6 +120,11 @@ test('resident observations expose the live road and ground-water policy', async
       roadMaxGrade: 0.2,
       roadGrowthPerDay: 3,
       roadWidth: 4,
+      roadAlternateRoutes: false,
+      roadAlternateSavingFraction: 0.3,
+      roadAlternateSavingMetres: 250,
+      roadAlternateParallelFraction: 0.1,
+      roadAlternateParallelDistance: 25,
     });
     const state = residents.memory.load('mabel')!;
     const rules = observe(
@@ -135,6 +140,11 @@ test('resident observations expose the live road and ground-water policy', async
       'roadMaxGrade',
       'roadGrowthPerDay',
       'roadWidth',
+      'roadAlternateRoutes',
+      'roadAlternateSavingFraction',
+      'roadAlternateSavingMetres',
+      'roadAlternateParallelFraction',
+      'roadAlternateParallelDistance',
     ] as const)
       assert.equal((rules as any)[key], w.settings[key], key + ' is available to residents');
   } finally {

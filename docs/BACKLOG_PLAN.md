@@ -8412,3 +8412,71 @@ a useful loop gradually, drive the finished shortcut, inspect unchanged old road
 then disable alternate growth and verify no extra route is added. Test/edit/save
 F10 thresholds and show the no-benefit state. Capture and review screenshots/video
 before commit/push/deploy/announcement. City paving and bridges remain later.
+
+Alternate-route progress: the initial regression fails because a connected triangle
+receives no shortcut. Add a yielding road graph that splits real intersections and
+T junctions, retains lane-width joins with physical distance, and compares shortest
+journeys against completely surveyed paths. Grow useful loops with the existing
+daily allowance; retain old roads and save/reload progress. Required connections
+and property access retain priority. Disabling/changing optional-route policy
+discards its remaining proposal, preserving already built segments.
+
+All 77 relevant tests pass, including 13 new route/junction checks: useful triangle,
+spaceport access, efficient network, both benefit thresholds, parallel limit and
+override, impassable barrier, a traversable detour whose actual length erases the
+saving, junction splitting, bounded mature graph work, policies and design export.
+The NPC request budget first fails at 96,152 bytes after exposing the new rules;
+shorten instruction prose while retaining facts, privacy, guides and memory limits.
+The existing 96,000-byte gate now passes. Fix a test-only TypeScript narrowing
+error without changing its assertions. Browser/editor/driving and populated-world
+responsiveness verification are pending; alternate routes are not released.
+Evidence: `output/road-alternates/`.
+
+Browser first attempt finds a confirmed player-visible gap: an open parish map
+retains old road geometry after authoritative growth. Add a browser assertion that
+the rendered road path changes after the first day's construction, and verify
+road-only updates retain the terrain layer/job, zoom, pan and focus. Update only
+road geometry when it changes; avoid a full terrain rebuild. The initial driving
+check also finds the harness's steering sign reversed (A increases heading in the
+existing controls); correct the harness while retaining its lane-distance check.
+No performance threshold or gameplay assertion is relaxed; failed videos remain
+private. The five alternate-rule values now have explicit NPC observation checks.
+
+The final populated-world replay blocks release: server heartbeat stays below
+100 ms (81.399 ms maximum), but daily planning does not finish during the unchanged
+driving sequence. Profiling finds a local shortcut triggering a whole-island ford
+survey and parallel scoring visiting every road for each path sample. Before
+production fixes, require a local safe route to avoid distant ford depth checks
+and a 2,000-segment connected triangle to produce its useful alternate in fewer
+than 200,000 yielding operations. Preserve route safety, scoring and all existing
+ford checks; rerun the unchanged populated replay. Keep 0.133.0 live until it passes.
+
+The scoped replay still leaves daily work pending (82.287 ms heartbeat). Both
+new operation-count regressions pass, but the optional planner spends 5.43 CPU
+seconds surveying every plausible pair before choosing the same strongest route.
+Add a red-then-green best-first regression: retain the strongest rectangle shortcut
+and finish its planning in fewer than 10,000 yielding operations (initially 12,662).
+Use the straight-line distance only as an upper bound on possible benefit, never
+as acceptance of unsurveyed terrain. Preserve original ordering for tied scores.
+
+Best-first planning retains the identical route in the populated fixture while
+reducing isolated planning from 5.43 s to 0.53 s. All 56 affected road regressions
+pass, including the three new performance checks; all 15 alternate/junction checks
+are included. The prior NPC/provider/navigation and map checks remain green.
+TypeScript and production build pass. The unchanged populated replay now passes:
+99.238 ms maximum heartbeat, no gaps >=100 ms, five preparations/decisions,
+completed daily road work and NPC arrival, continuous final walking (minimum
+5 m/s), CONNECTED and no browser errors. Maximum ping 65 ms; minimum client FPS
+14 remains a limitation. Evidence: `output/road-alternates/best-first-replay/`.
+Prepare 0.134.0; complete the final browser/video review before commit and release.
+
+Final feature browser rerun passes after the planning optimizations: gradual
+shortcut growth, normal-keyboard driving, retained original roads, live map ink
+without terrain rebuild/pan/focus loss, efficient-network refusal and saved F10
+disabled/custom rules. Existing map navigation regression also passes. Reviewed
+20-second populated-world clip includes the full forward/left/right/forward/stop
+sequence without an obvious long freeze, teleport or terrain gap. Retain the
+measured 14 FPS limitation and narrow heartbeat headroom. Formatting and diff
+checks pass; no full-suite rerun is required for unrelated code. Commit/push the
+complete alternate-route slice; verify deployment and screenshot post before
+marking it done. City paving remains the next dependent stage.

@@ -1,4 +1,4 @@
-import { roadRules } from './road-rules';
+import { roadRules, roadAlternatePolicy } from './road-rules';
 import { finishRoadWork, type RoadWork } from './road-work';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from './types.ts';
@@ -13,13 +13,14 @@ import {
 } from './road-routing.ts';
 
 export interface RoadProject {
-  kind: 'town' | 'detour' | 'building' | 'connection';
+  kind: 'town' | 'detour' | 'building' | 'connection' | 'alternate';
   town?: string;
   building?: string;
   width: number;
   path: Point[];
   /** Additional branches reconnect every exit of a blocked junction. */
   branches?: Point[][];
+  alternatePolicy?: string;
   retire?: string[];
 }
 export function* safeNearestSteps(
@@ -193,6 +194,8 @@ export function* advanceRoadProjectSteps(
   project: RoadProject,
   budget: number,
 ): RoadWork<boolean> {
+  if (project.kind === 'alternate' && project.alternatePolicy !== roadAlternatePolicy(w.settings))
+    return false;
   const site = roadSite(w, project.width);
   if (project.kind === 'town' && !w.towns.some((t) => t.id === project.town)) return false;
   // An edited building/field or changed permission invalidates the route. Keep
@@ -243,7 +246,7 @@ export function* advanceRoadProjectSteps(
     }
     if (reverse) project.path.reverse();
   };
-  if (project.kind === 'town' || project.kind === 'connection') {
+  if (project.kind === 'town' || project.kind === 'connection' || project.kind === 'alternate') {
     lay(budget / 2);
     lay(budget / 2, true);
   } else lay(budget);

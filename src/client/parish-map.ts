@@ -5,7 +5,7 @@ import { mapIcon } from './map-icons';
 import { waterLevel } from '../shared/ocean';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World, Player } from '../shared/types';
-import { townRoads } from '../shared/town';
+import { townRoads, type Road } from '../shared/town';
 import { worldResources } from '../shared/resources';
 import { checkpoints } from '../shared/catalog';
 import {
@@ -40,6 +40,8 @@ export class ParishMap {
   private viewport: HTMLDivElement;
   private sheet: HTMLDivElement;
   private players = svg('g');
+  private roadLayer = svg('g', { class: 'map-roads' });
+  private shownRoads?: readonly Road[];
   private observer: ResizeObserver;
   private world: World;
   private me: Player;
@@ -357,6 +359,8 @@ export class ParishMap {
       this.draw();
       this.panTo(centre.x, centre.z);
     }
+    const roads = townRoads(w);
+    if (roads !== this.shownRoads) this.drawRoads(roads);
     const tide = Math.round((waterLevel(w) - w.settings.seaLevel) * 10) / 10;
     if (tide !== this.tide) this.requestTerrain();
     this.updatePlayers();
@@ -489,6 +493,35 @@ export class ParishMap {
     this.viewport.scrollTop = this.y(z) - this.viewport.clientHeight / 2;
     this.updateLabels();
   }
+  /** Road growth and edits update ink without replacing terrain or interrupting navigation. */
+  private drawRoads(allRoads: readonly Road[]) {
+    this.shownRoads = allRoads;
+    this.roadLayer.replaceChildren();
+    const roads = allRoads.filter(
+      (r) => inBounds(this.bounds, r.a, 30) || inBounds(this.bounds, r.b, 30),
+    );
+    // One opaque path per width/layer preserves round segment caps and overlaps
+    // without thousands of SVG nodes forcing layout during map opening/panning.
+    const roadBatches = new Map<number, string[]>();
+    for (const road of roads) {
+      const width = Math.max(2, road.width * this.scale);
+      const paths = roadBatches.get(width) ?? [];
+      paths.push(
+        `M${this.x(road.a.x)} ${this.y(road.a.z)}L${this.x(road.b.x)} ${this.y(road.b.z)}`,
+      );
+      roadBatches.set(width, paths);
+    }
+    for (const outline of [true, false])
+      for (const [width, paths] of roadBatches)
+        this.roadLayer.append(
+          svg('path', {
+            d: paths.join(''),
+            stroke: outline ? '#344b39' : '#c5b88e',
+            'stroke-width': width + (outline ? 3 : 0),
+            'stroke-linecap': 'round',
+          }),
+        );
+  }
   private draw() {
     const focusedSite = (document.activeElement as HTMLElement | null)?.dataset.site;
     const outer = this.zoom < 1;
@@ -590,28 +623,8 @@ export class ParishMap {
       label.textContent = `Town of ${t.name}`;
       drawing.append(border, label);
     }
-    const roads = townRoads(this.world).filter((r) => onSheet(r.a) || onSheet(r.b));
-    // One opaque path per width/layer preserves round segment caps and overlaps
-    // without thousands of SVG nodes forcing layout during map opening/panning.
-    const roadBatches = new Map<number, string[]>();
-    for (const road of roads) {
-      const width = Math.max(2, road.width * this.scale);
-      const paths = roadBatches.get(width) ?? [];
-      paths.push(
-        `M${this.x(road.a.x)} ${this.y(road.a.z)}L${this.x(road.b.x)} ${this.y(road.b.z)}`,
-      );
-      roadBatches.set(width, paths);
-    }
-    for (const outline of [true, false])
-      for (const [width, paths] of roadBatches)
-        drawing.append(
-          svg('path', {
-            d: paths.join(''),
-            stroke: outline ? '#344b39' : '#c5b88e',
-            'stroke-width': width + (outline ? 3 : 0),
-            'stroke-linecap': 'round',
-          }),
-        );
+    this.drawRoads(townRoads(this.world));
+    drawing.append(this.roadLayer);
     drawing.append(
       svg('rect', {
         x: this.x(60),

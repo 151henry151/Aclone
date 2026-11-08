@@ -156,6 +156,21 @@ Tractors tilt with the terrain under their tyres, including when parked on a hil
 
 Stars move nightly/seasonally. Two nearby moons (one about half-size) share a 28-day phase cycle (4h 40m), with a five-day mutual orbit; neither resets at year boundaries. First-person and chase camera drag look up and down. The calendar follows supplied historical information; climate, crop durations and balance are original tuning.
 
+## Alternate road routes
+
+Once required connections and property access are served, crews can add useful
+shortcuts between towns and the spaceport. They compare the shortest existing
+road journey with a fully surveyed route, including obstacles and river crossings.
+The default requires both 20% and 100 m saved, and rejects routes that mostly
+parallel an existing road. Construction shares the normal daily allowance; the
+old roads stay available and unfinished work survives a restart.
+
+In **F10 → Rules → Roads and river crossings**, world builders can switch alternate
+routes off or change the savings and parallel-road limits. Changing these rules
+discards an unfinished optional proposal for a fresh survey; already laid roads
+remain. An efficient network may receive no new route. City paving and bridges
+are still planned.
+
 ## River roads
 
 Growing dirt roads can search for shallow fords and safe approaches when connecting

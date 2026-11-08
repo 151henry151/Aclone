@@ -6,6 +6,18 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.134.0] - 2026-11-08
+
+### Added
+
+- Grow useful alternate dirt routes between connected towns and spaceport access when a terrain-safe shortcut saves enough travel; retain older roads and persistent construction progress.
+- Configure alternate-route enablement, distance and percentage savings, and parallel-road limits in World Builder and portable designs.
+
+### Fixed
+
+- Refresh road lines on an open parish map as construction or edits change them, preserving terrain, zoom, pan and focus.
+- Skip remote ford surveys for local road searches, index parallel-road checks and prioritize proposals by their best possible savings to reduce planning work.
+
 ## [0.133.0] - 2026-11-08
 
 ### Added

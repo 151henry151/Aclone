@@ -1,3 +1,4 @@
+import { planAlternateRoadSteps } from './road-alternates';
 import defaults from '../../data/settings.json';
 import { roadRules } from './road-rules';
 import { roadGeometryKey, type RoadWork } from './road-work';
@@ -71,7 +72,8 @@ function* growRoadDay(w: World): RoadWork<boolean> {
     (yield* planRoadDetourSteps(w)) ??
     (yield* planTownRoadSteps(w)) ??
     (yield* planRoadConnectionSteps(w)) ??
-    (yield* planBuildingRoad(w));
+    (yield* planBuildingRoad(w)) ??
+    (yield* planAlternateRoadSteps(w));
   if (!w.roadProject) return false;
   const target =
     w.roadProject.building && w.buildings.find((b) => b.id === w.roadProject!.building);

@@ -303,3 +303,35 @@ test('editing river coordinates invalidates cached crossing geography as well as
     'an in-place river edit matches a fresh survey after reload',
   );
 });
+
+test('a local survey does not prepare remote island fords outside its search area', async () => {
+  const { roadRouteSteps } = await import('../src/shared/road-routing');
+  const w = structuredClone(baseline);
+  const river = w.northernIsland!.rivers[0];
+  // Real remote shallow reach: local dry routes have no reason to validate it.
+  w.northernIsland!.rivers = [{ ...river, points: river.points.slice(8, 20) }];
+  let remoteDepthReads = 0;
+  for (const p of w.northernIsland!.rivers[0].points) {
+    const depth = p.depth;
+    Object.defineProperty(p, 'depth', {
+      enumerable: true,
+      get() {
+        remoteDepthReads++;
+        return depth;
+      },
+    });
+  }
+  const site = roadSite(w); // Prime geometry/water stamps outside the measured survey.
+  const a = { x: 0, z: -100 },
+    b = { x: 900, z: -100 };
+  assert.ok(site.clear(a) && site.clear(b));
+  remoteDepthReads = 0;
+  const work = roadRouteSteps(w, a, b);
+  let result = work.next();
+  while (!result.done) result = work.next();
+  assert.ok(result.value, 'the local terrain-safe route still exists');
+  assert.ok(
+    remoteDepthReads <= 24,
+    `only geometry checks may read distant depths (${remoteDepthReads})`,
+  );
+});
