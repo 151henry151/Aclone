@@ -9278,3 +9278,14 @@ on all changed files. Recorded browser runs use the equivalent local evidence
 config with video enabled. The reviewed 17-second populated clip shows walking,
 opposing turns and continued walking, with no visible terrain holes or prolonged
 freeze; it ends moving and does not demonstrate perfect smoothness.
+
+**Distant-island culling done, pushed, deployed and announced.** Version 0.136.3
+runs exact commit `f5a8d7692835fbf937fda11a803ab18412faed23`. Live health reports
+five worlds; the service is active with zero automatic restarts. Read-only live
+browser verification checks the matching game, website, worker and public gallery
+without errors. Database backup:
+`/var/lib/aclone/backups/pre-deploy-20261108-183351.sqlite`; website backup:
+`/var/backups/aclone-website/site-20261108-183459.tar.gz`. Bot announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569133236595064913.
+Evidence and verified receipt are under `output/horizon-culling/`. Keep remaining
+frame-rate dips open; continue profiling before factory/haulage implementation.
