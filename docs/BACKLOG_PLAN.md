@@ -7,16 +7,16 @@ request, deployment, live server edits or player grants. Henry authorized releas
 and deployment of this checkpoint on 2026-11-04; the release record below
 supersedes those restrictions for that cut. Later authorizations and operations are recorded below. Piloted spaceflight is excluded and remains pending.
 
-## Current priority — cold scenery survey stalls, 2026-11-08
+## Current priority — remaining client rendering cost, 2026-11-08
 
 Item 19 stages 2–3 are released: ford-aware dirt routes (0.133.0), useful
 alternate routes (0.134.0), and city qualification/gradual paving (0.135.0).
 The focused calendar/climate allocation improvement is released as 0.135.1.
 Item 19 stage 4, paid player bridge construction and road integration, is released
-as 0.136.0. Fix the confirmed cold-scenery survey stalls next, preserving the
-populated-world responsiveness gate; remaining client rendering costs and
-occasional slow frames are still open. Automotive manufacturing and highway
-trucks follow this performance fix in dependency order.
+as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1. Investigate
+the remaining client scene traversal/draw submission costs before automotive
+manufacturing, preserving the populated-world responsiveness gate. Highway
+trucks follow the factory in dependency order.
 
 ## Completion protocol
 
@@ -9090,3 +9090,21 @@ these limitations rather than describe all performance issues as solved. Evidenc
 is under `output/scenery-survey-scheduling/`. Prepare patch 0.136.1 with the
 reviewed movement artifact, final build/format, exact-SHA push/deploy and bot
 announcement. Do not start factory work before completing this release.
+
+**Cold scenery survey scheduling done, pushed, deployed and announced.**
+Version 0.136.1 runs exact commit `76770367914f9cf1cdc044797c2e728efca7a719`.
+The service is active with zero automatic restarts; health reports five worlds.
+The public site and read-only live browser checks pass with no browser errors.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261108-173956.sqlite`;
+website backup: `/var/backups/aclone-website/site-20261108-174120.tar.gz`.
+The reviewed movement screenshot is posted by the bot at
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569119795306172456.
+Receipt and live verification are in `output/scenery-survey-scheduling/`.
+The reviewed 17-second clip shows forward walking, opposing turns and continued
+walking, without loading/failure overlays or missing terrain. Do not claim it
+proves all lag is fixed.
+
+The same client CPU profile attributes substantial time to Three.js matrix-tree
+traversal, object projection and draw submission. Investigate those remaining
+costs before beginning factory/truck implementation; preserve existing static
+batching, animated doors/interiors, lighting, picking and scenery appearance.
