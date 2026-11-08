@@ -8369,3 +8369,46 @@ shows the full forward/left/right/forward sequence and stop, with no obvious lon
 freeze, teleport or terrain gap. Generic resident labels only; no private chat.
 Retain the measured client FPS/ping limitations. Proceed with the verified ford
 checkpoint and separate scenery optimization commits; no later item is complete.
+
+### Item 19 — Ford checkpoint released, 2026-11-08
+
+**Done: persistent ford-aware dirt connections and configurable road rules.**
+Push/deploy commit `517483e89de983f1cf359d064e1804bd23589a8a`, including the
+separate scenery-work fix `00b9106`. Game health, public client, map worker,
+marketing site and building gallery pass the read-only browser check; all report
+0.133.0 with no browser errors. Server PID 384383, restart count zero. Database
+backup `/var/lib/aclone/backups/pre-deploy-20261108-131046.sqlite`; website backup
+`/var/backups/aclone-website/site-20261108-134850.tar.gz`. Verified bot announcement
+with passing crossing screenshot:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569061266998435933
+Evidence: `output/roads-resume/`. **Item 19 remains in progress.**
+
+### Item 19 — Useful alternate routes: criteria before production
+
+Claim: keep growing useful loops after all destinations connect. Compare the
+shortest existing road journey with a completely surveyed terrain-safe proposal;
+consider towns and the spaceport without hard-coded names. Preserve older roads
+and build gradually. Reject insignificant savings and redundant parallel roads.
+
+Canonical per-world defaults: enable alternate routes; require both 20% shorter
+travel and 100 m saved. Reject proposals with more than 25% of their length within
+15 m of existing road centre lines (excluding the normal endpoint connections).
+Expose all five values in F10, validation, portable designs, rules summary and NPC
+observations; use the same rules when geometry/policy changes during construction.
+These defaults implement the prior settlement survey's benefit targets; the
+parallel rule prevents a second lane following an existing route.
+
+Before production, add and run failing tests in `tests/road-alternates.test.ts`:
+connected triangle/spaceport shortcut, an already efficient triangle, insufficient
+absolute/relative savings, terrain detour wiping out apparent straight-line gain,
+parallel duplication, disconnected destinations retaining connection priority,
+exact daily allowance, old-road preservation, changed rules, save/reload and
+repeated evaluation without duplicate loops. Verify actual graph junctions and
+mid-segment crossings when computing shortest travel. Keep survey work yielding
+inside graph construction, path search and scoring; retain <100 ms tick/replay
+gates on populated worlds. Relevant road tests, `npx tsc --noEmit`, production
+build and Prettier must pass. Browser: watch an existing connected network gain
+a useful loop gradually, drive the finished shortcut, inspect unchanged old roads,
+then disable alternate growth and verify no extra route is added. Test/edit/save
+F10 thresholds and show the no-benefit state. Capture and review screenshots/video
+before commit/push/deploy/announcement. City paving and bridges remain later.
