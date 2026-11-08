@@ -1,9 +1,44 @@
+import { isTractor } from '../shared/tractors';
+import defaults from '../../data/settings.json';
 import { vehicleDef } from '../shared/vehicle-config';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { Player, World } from '../shared/types';
 import { LIFEBOAT } from '../shared/boat-rescue';
 import { flarePosition, flareStrength } from './lifeboat-flare';
+/** Automatic work illumination uses existing synchronized motion, not a second switch. */
+function reversing(w: World, p: Player) {
+  return (
+    (w.settings.tractorReverseLights ?? defaults.tractorReverseLights) &&
+    (w.settings.tractorReverseLightIntensity ?? defaults.tractorReverseLightIntensity) > 0 &&
+    isTractor(p.vehicle) &&
+    p.engine &&
+    p.speed < 0 &&
+    !p.atHome &&
+    !p.hitch
+  );
+}
+const reversePosition = new T.Vector3(),
+  reverseTarget = new T.Vector3();
+export function updateReverseLight(light: T.SpotLight, w: World, p: Player, root: T.Group) {
+  light.intensity = 0;
+  light.castShadow = false;
+  if (!root.visible || !reversing(w, p)) return false;
+  light.color.set('#fff4df');
+  light.intensity =
+    w.settings.tractorReverseLightIntensity ?? defaults.tractorReverseLightIntensity;
+  light.distance = w.settings.tractorReverseLightRange ?? defaults.tractorReverseLightRange;
+  light.angle = Math.PI / 3;
+  light.penumbra = 0.65;
+  light.decay = 1;
+  if (root.userData.reverseLamp) reversePosition.copy(root.userData.reverseLamp);
+  else reversePosition.set(0, 1.8, -1.8);
+  // Aim behind the lamp itself, including short-range custom world settings.
+  reverseTarget.set(0, 0, reversePosition.z - 10);
+  light.position.copy(root.localToWorld(reversePosition));
+  light.target.position.copy(root.localToWorld(reverseTarget));
+  return true;
+}
 /** Materials remain per-vehicle, including after geometry batching. */
 export function vehicleLamp(material: T.MeshStandardMaterial, intensity: number) {
   material.userData.vehicleLamp = { intensity, color: material.color.clone() };
@@ -61,7 +96,8 @@ export class OtherVehicleLights {
         continue;
       }
       updateVehicleLamps(root, !!p.lights && !p.atHome && !p.hitch);
-      if (id === localId || !p.lights || p.atHome || p.hitch || !root.visible) continue;
+      if (id === localId || (!p.lights && !reversing(w, p)) || p.atHome || p.hitch || !root.visible)
+        continue;
       const distance = root.position.distanceTo(eye);
       if (distance < 140) sources.push({ p, root, distance });
     }
@@ -86,6 +122,11 @@ export class OtherVehicleLights {
         continue;
       }
       light.userData.player = s.p.id;
+      if (updateReverseLight(light, w, s.p, s.root)) {
+        light.intensity *= Math.min(1, (140 - s.distance) / 30);
+        continue;
+      }
+      light.color.set('#fff1b5');
       light.intensity =
         (vehicleDef(w, s.p.vehicle)?.headlight ?? 150) * Math.min(1, (140 - s.distance) / 30);
       light.distance = vehicleDef(w, s.p.vehicle)?.lightRange ?? 110;

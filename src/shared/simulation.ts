@@ -2560,7 +2560,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         if (landscapeField) num(v, landscapeField.min, landscapeField.max, true);
         if (alpineField && 'min' in alpineField) num(v, alpineField.min, alpineField.max);
         if (climateField) num(v, climateField.min, climateField.max);
-        if (vehicleRunningField) num(v, vehicleRunningField.min, vehicleRunningField.max);
+        if (vehicleRunningField && 'min' in vehicleRunningField)
+          num(v, vehicleRunningField.min, vehicleRunningField.max);
         if (boatNavigationField) num(v, boatNavigationField.min, boatNavigationField.max);
         if (fishingField) num(v, fishingField.min, fishingField.max, fishingField.step === 1);
         if (farmYieldField)

@@ -34,6 +34,13 @@ Buy fuel cans and drive the motorboat to your stranded vessel. Reboarding appear
 
 ## Eight specialist trailers
 
+Tractors automatically illuminate the rear hitch and ground while reversing with
+the engine running, even if the headlights are off. Back toward the drawbar, stop,
+then choose **Inventory → Your trailers → Hitch trailer**. The reversing beam
+switches off when stopped, moving forward or the engine is off. World builders can
+disable it or adjust brightness and reach under **Rules → Vehicle running costs
+and reversing lights**. Nearby reversing tractors share a bounded light pool.
+
 AI residents plan around parked trailers and update their route when one is moved,
 stored or left across their path. If a trailer already overlaps a character, move
 outward toward its nearest edge to escape; driving farther into it remains blocked.

@@ -1520,7 +1520,7 @@ shared JSON legacy defaults. They grant no fish, supplies or free towing time.
 
 ## Vehicle running costs
 
-F10 → Rules → **Vehicle running costs** controls maintenance wear and trailer
+F10 → Rules → **Vehicle running costs and reversing lights** controls maintenance wear and trailer
 penalties. `vehicleWearPerMetre` defaults to 0.0002 condition points per metre
 (0.2/km); range 0–1, with zero disabling distance wear. The existing
 `vehicleMaintenance` switch gates both wear and condition's speed/fuel effects.
@@ -1537,6 +1537,16 @@ base 1 and coefficient 0 remove that penalty. No trailer always gives factors 1.
 These multipliers combine with existing vehicle, terrain, load and condition
 effects. Live edits preserve cargo and fuel. Missing fields use shipped defaults;
 saves, portable designs, summaries and resident observations retain the rules.
+
+Automatic tractor reversing lights use `tractorReverseLights` (default true),
+`tractorReverseLightIntensity` (default 90, range 0–1000; zero disables output),
+and `tractorReverseLightRange` (default 18 metres, range 1–100). They illuminate
+behind a tractor moving backward with its engine running, independently of the
+headlight switch. Stopped, parked, indoor and passenger characters emit no reverse
+beam. These controls also apply on low graphics and survive save/load and portable
+world designs. A fixed shadow-free local beam and the existing two remote beam
+slots keep cost bounded; a nearby tractor's rear beam takes priority over its front
+beam while reversing. Settings do not change the tractor's fuel or movement.
 
 Refuelling distance and tank units per Fuel already belong to **Roadside fuel**
 (default 15 m and 8 units). Keep those existing rules for tanker sales, roadside

@@ -6,6 +6,13 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.132.0] - 2026-11-08
+
+### Added
+
+- Illuminate the rear hitch and ground automatically while tractors reverse, including nearby players' tractors; switch the beam off when stopped, moving forward or the engine is off.
+- Configure reversing lights, brightness and reach in World Builder, using bounded shadow-free lights for low graphics settings.
+
 ## [0.131.10] - 2026-11-08
 
 ### Fixed

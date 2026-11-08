@@ -37,7 +37,7 @@ declare const __ACLONE_BASE__: string;
 import { configureVehicleVisual } from './vehicle-custom';
 import { isTrawler } from '../shared/vehicle-config';
 import { vehicleDef } from '../shared/vehicle-config';
-import { OtherVehicleLights } from './vehicle-lights';
+import { OtherVehicleLights, updateReverseLight } from './vehicle-lights';
 import { createCharterBoat } from './charter-boat';
 import { CHARTER_BOAT, throttleBoat } from '../shared/boats';
 import { charterPassengerPosition } from '../shared/charter';
@@ -181,6 +181,7 @@ export class GameScene {
   private terrain?: T.Mesh;
   private sun = new T.DirectionalLight(0xffe9bb, 3);
   private otherVehicleLights = new OtherVehicleLights();
+  private reverseLight = new T.SpotLight('#fff4df', 0);
   private headlights = new T.SpotLight('#fff1b5', 150, 110, Math.PI / 3.5, 0.65, 1);
   private lightning = new T.Line(
     new T.BufferGeometry().setFromPoints([
@@ -370,6 +371,8 @@ export class GameScene {
     this.scene.add(
       this.sun.target,
       this.otherVehicleLights.group,
+      this.reverseLight,
+      this.reverseLight.target,
       this.headlights,
       this.headlights.target,
       this.townLighting.group,
@@ -832,6 +835,7 @@ export class GameScene {
     this.precipitation.mesh.visible = false;
     this.headlights.visible = false;
     this.otherVehicleLights.clear();
+    this.reverseLight.intensity = 0;
     this.townLighting.group.visible = false;
     this.lightning.visible = false;
     this.world = undefined;
@@ -1867,7 +1871,9 @@ export class GameScene {
       this.headlights.distance =
         p.vehicle === 5 ? 28 : (vehicleDef(this.world, p.vehicle).lightRange ?? 110);
       const local = this.meshes.get(p.id);
+      this.reverseLight.intensity = 0;
       if (local) {
+        updateReverseLight(this.reverseLight, w, p, local);
         if (
           this.cameraMode === 1 &&
           (local.userData.charterBoat || local.userData.tugboat || local.userData.cargoBoat)

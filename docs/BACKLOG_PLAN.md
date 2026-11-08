@@ -7959,3 +7959,25 @@ walkthrough clips were reviewed; the initial overlap recording had a development
 reload and was replaced with a clean passing rerun. Verified bot
 [screenshot announcement](https://discord.com/channels/1562183434254680175/1565527790785404968/1568994516780843119).
 No live player data edits or grants.
+
+Reverse illumination verification (0.132.0 candidate):
+
+- Confirmed initial failures: no reverse beam controller, no nearby rear output,
+  and unknown world settings. A short-range boundary test also failed because the
+  target could fall ahead of the lamp; anchored the aim behind the actual lamp.
+- All 27 relevant lighting, tractor, trailer, settings and vehicle-running tests
+  pass, including every tractor slot, legacy defaults, disabled/zero/custom output,
+  hidden/indoor/passenger/engine-off/forward/stopped states and save/design round trips.
+- Two Chromium checks pass: real midnight keyboard reversing on low graphics →
+  illuminated drawbar → stop → hitch loaded trailer → forward with reverse beam
+  off → change enable/brightness/reach in World Builder → reload retained values;
+  and existing per-player headlights on all six tractors. Cargo stays unchanged.
+- The initial settings screenshot hit a DOM replacement during the editor refresh;
+  fixed test synchronization and reran successfully. No acceptance assertion was removed.
+- Reuse the existing two remote beam slots, prioritising rear beams while reversing;
+  add one fixed local shadow-free spotlight. Switching does not allocate lights or
+  change shader light counts. Read canonical settings directly in the render loop
+  rather than allocating a settings object for every vehicle on every frame.
+- TypeScript, production build and Prettier pass. Evidence is in
+  `output/trailer-feedback/reverse-browser/`; release receipts follow.
+  No unrelated road/performance work is included.

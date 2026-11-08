@@ -374,21 +374,23 @@ export function settingsFields(settings: Settings = defaults) {
       '',
     )}<p>Quay limits govern vessel eligibility. Larger hulls lie outside the existing structure; the seaward search looks for sufficient draft within the configured distance. Zero disables that extra search. The entire hull must clear water, buildings and other boats. Tune vessel length, beam and draft in Vehicles.</p><p>River limits control depth and vessel eligibility, not jetty geometry. Dry banks and river water are still required. Existing moorings survive stricter limits; restoring limits restores access.</p><p>Zero impact damage still blocks shore crossing, recoils and idles the boat. Gentle canoe landings retain their exemption. Arrival uses the oriented hull and requires a clear water path. Shore access to boathouse menus retains its separate 40 m range. Rule edits do not move boats or change existing condition.</p></fieldset>`;
   const running = vehicleRunningRules(settings);
-  const runningFields = `<fieldset class="boat-death-settings"><legend>Vehicle running costs</legend>${Object.entries(
+  const runningFields = `<fieldset class="boat-death-settings"><legend>Vehicle running costs and reversing lights</legend>${Object.entries(
     vehicleRunningRuleFields,
   )
     .map(([key, spec]) =>
-      field(
-        spec.label,
-        key,
-        running[key as keyof typeof running],
-        'number',
-        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
-      ),
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            running[key as keyof typeof running],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${running[key as keyof typeof running] ? 'checked' : ''}>${esc(spec.label)}</label>`,
     )
     .join(
       '',
-    )}<p>Maintenance must be enabled for distance wear. Zero wear preserves condition while mileage still accumulates. Parked vehicles and minigames do not wear. Edits preserve condition, mileage and cargo.</p><p>Trailer speed factor = 1 / (base + load × speed coefficient); fuel factor = base + load × fuel coefficient. Load is cargo weight / trailer capacity. With no trailer both factors are 1; zero load coefficients remove only the load contribution.</p></fieldset>`;
+    )}<p>Tractor reversing lights turn on automatically while moving backward with the engine running, independently of headlights. Zero intensity disables illumination. Reach is in metres; lights cast no shadows.</p><p>Maintenance must be enabled for distance wear. Zero wear preserves condition while mileage still accumulates. Parked vehicles and minigames do not wear. Edits preserve condition, mileage and cargo.</p><p>Trailer speed factor = 1 / (base + load × speed coefficient); fuel factor = base + load × fuel coefficient. Load is cargo weight / trailer capacity. With no trailer both factors are 1; zero load coefficients remove only the load contribution.</p></fieldset>`;
   const fishing = fishingRules(settings);
   const fishingFields = `<fieldset class="boat-death-settings"><legend>Fishing rules</legend>${Object.entries(
     fishingRuleFields,

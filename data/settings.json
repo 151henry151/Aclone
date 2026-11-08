@@ -613,5 +613,8 @@
   "pilotNameTagFadeStart": 20,
   "pilotNameTagScale": 0.6,
   "pilotNameTagOpacity": 0.8,
-  "pilotNameTagMaxPixels": 24
+  "pilotNameTagMaxPixels": 24,
+  "tractorReverseLights": true,
+  "tractorReverseLightIntensity": 90,
+  "tractorReverseLightRange": 18
 }

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import defaults from '../../data/settings.json';
 export const vehicleRunningRuleFields = {
+  tractorReverseLights: { label: 'Automatic tractor reversing lights' },
+  tractorReverseLightIntensity: {
+    label: 'Reversing light intensity (0 = off)',
+    min: 0,
+    max: 1000,
+    step: 1,
+  },
+  tractorReverseLightRange: { label: 'Reversing light reach (metres)', min: 1, max: 100, step: 1 },
   vehicleWearPerMetre: {
     label: 'Condition loss per metre (0 = no distance wear)',
     min: 0,

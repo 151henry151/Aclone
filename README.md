@@ -2,6 +2,9 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.132.0 adds automatic tractor reversing illumination for night-time
+hitching. World builders can switch it off or tune brightness and reach.
+
 Version 0.131.10 lets AI residents route around parked trailers and safely escape
 an existing overlap. Trailer placement changes trigger bounded replanning; owned
 trailers and their cargo stay where players leave them.
@@ -13,7 +16,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.131.8 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.132.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait

@@ -372,6 +372,7 @@ export function fleetTractor(
   g.userData.exhaust = new T.Vector3(-0.48, d.seatY + 0.88, exhaustZ);
   g.userData.viewPitch = -0.12;
   g.userData.eye = new T.Vector3(0, d.seatY + 0.65, d.seatZ - 0.28);
+  g.userData.reverseLamp = new T.Vector3(0, Math.max(1.2, d.rr * 2), d.rear - 0.56);
   g.userData.lamp = new T.Vector3(0, slot === 28 ? 2.95 : 1.53, frontZ);
   g.userData.contacts = [];
   g.userData.tyreFootprints = [];
