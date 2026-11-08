@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.134.1 reduces countryside rebuilding work by looking up nearby roads
+when placing grass, preserving road clearances and roadside density. Rendering
+and occasional latency spikes remain under investigation.
+
 Version 0.134.0 adds useful alternate dirt roads between connected towns and
 spaceport access. Crews compare real terrain-safe journeys, grow qualifying
 shortcuts gradually and preserve older routes. World Builder controls the savings
@@ -31,7 +35,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.134.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.134.1 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait

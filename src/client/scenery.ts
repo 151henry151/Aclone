@@ -12,7 +12,8 @@ import { buildingPlan, buildingBounds } from '../shared/building-shapes';
 import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/simulation';
 import { contactShadow, texture } from './materials';
-import { townRoads, roadDistance as distanceToRoad } from '../shared/town';
+import { townRoads } from '../shared/town';
+import { nearbyRoadDistance } from './road-sampling';
 const mat = (color: string) => new T.MeshStandardMaterial({ color, roughness: 0.96 });
 export function random(seed: number) {
   return () => {
@@ -117,8 +118,8 @@ export function* countrysideSteps(root: T.Group, world: World, low: boolean) {
       ),
     };
   });
-  const roads = townRoads(world);
-  const roadDistance = (x: number, z: number) => distanceToRoad(roads, x, z);
+  const roadsideReach = 5;
+  const roadDistance = nearbyRoadDistance(townRoads(world), roadsideReach);
   const clear = (x: number, z: number, margin: number) =>
     !onAirfield(world, x, z, margin + 3) &&
     roadDistance(x, z) > margin &&
@@ -154,7 +155,7 @@ export function* countrysideSteps(root: T.Group, world: World, low: boolean) {
     const s = 0.18 + rand() * 0.32;
     grass.push([x, h, z, s, rand() * 6.28]);
     // Local tufts along the roadside, not just far-away woodland.
-    if (roadDistance(x, z) < 5)
+    if (roadDistance(x, z) < roadsideReach)
       for (let j = 0; j < 4; j++)
         grass.push([x + rand() * 1.5, h, z + rand() * 1.5, s, rand() * 6.28]);
     if (i % 7 === 0) flowers.push([x, h + 0.24, z, 0.6 + rand() * 0.5]);

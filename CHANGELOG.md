@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.134.1] - 2026-11-08
+
+### Fixed
+
+- Reuse nearby-road lookups while placing countryside grass, avoiding full-network scans per tuft while preserving road clearances and roadside density.
+
 ## [0.134.0] - 2026-11-08
 
 ### Added

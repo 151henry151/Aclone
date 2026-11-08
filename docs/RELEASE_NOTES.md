@@ -2,6 +2,21 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.134.1 — Less road-scanning work for countryside grass
+
+Reuse the nearby-road index when placing grass instead of checking every road
+segment for each tuft. Preserve the same seeded placement decisions, road-edge
+clearance and roadside density. Keep snow clearance for roads, the town square,
+runway and spaceport apron unchanged; no world gameplay rules change.
+
+In the populated-world replay, recorded road-distance CPU time falls from
+1,183 ms to 34 ms and countryside rebuilding from 1.65 s to 0.78 s. Daily road
+work, five NPC decisions, resident navigation and the walking/turning sequence
+complete, with no browser errors and a 93.95 ms maximum server heartbeat gap.
+Minimum recorded client FPS is 17, versus 14 in the preceding run; other rendering
+costs remain. One initial ping reaches 372 ms, with later probes of 4, 111 and
+1 ms. This patch removes a measured bottleneck without claiming all lag is fixed.
+
 ## 0.134.0 — Useful shortcuts between connected towns
 
 Keep growing useful dirt-road loops after required connections and property access

@@ -8499,3 +8499,53 @@ survey. First inspect the captured client profile for the remaining 14 FPS dips,
 following Henry's standing performance priority. Do not claim the passing server
 heartbeat alone proves responsive rendering; turn any confirmed client bottleneck
 into concrete failing-first criteria before changing production code.
+
+### Performance follow-up — Local road lookups for grass: criteria before production
+
+The passing alternate-route replay's client profile attributes about 1.2 seconds
+to exhaustive road-distance checks during countryside regeneration. Grass only
+uses distances within 5 metres, but checks all 2,003 road segments for each tuft.
+Reuse the bounded spatial lookup already used by snow, without changing road-edge
+clearances, roadside density, seeded placement or snow/paved-surface behaviour.
+
+Before production: `node --import tsx --test tests/scenery-road-lookup.test.ts`
+must fail when 2,600 scattered grass candidates plus the start of the roadside
+pass read more than 100,000 coordinates from a 2,000-segment distant network.
+Verify bounded distance decisions against exhaustive road distance at negative
+coordinates, cell boundaries, wide roads, zero-length and long diagonal segments,
+empty networks and rebuilt indexes after geometry edits. Keep snow's additional
+square/runway/spaceport surfaces unchanged. Run affected scenery/snow tests,
+TypeScript/build and Prettier. Replay actual walking/turning, NPC choices and daily
+road growth with the unchanged <100 ms server gate and no errors; compare the
+captured client road-distance cost and inspect screenshots/video for missing grass
+or new road overlaps. Do not infer universal frame-rate gains from this one fix.
+
+Grass regression fails correctly at 30,526,000 road-coordinate reads. Extract
+road-only distance lookup from the existing snow index and use it for grass's
+existing maximum 5 m roadside predicate. Keep square/runway/spaceport snow
+clearances in the surface wrapper. All 18 affected scenery, snow and surface
+checks pass, including exhaustive near-edge equivalence and distant/long/edited
+roads. README reviewed: keep released 0.134.0 information until browser/profile
+verification and this follow-up's release. No new gameplay rule is introduced.
+
+The grass check now reads 26,000 coordinates versus 30,526,000 before the fix.
+All 18 affected tests pass, plus strengthened exact cell-boundary/runway/spaceport
+comparisons. TypeScript/build and formatting pass. The unchanged populated-world
+replay passes at 93.946 ms maximum heartbeat, five preparations/decisions,
+completed growth and NPC arrival, continuous walking and no browser errors.
+Road-distance profile self time falls 1,182.828→34.158 ms; countryside inclusive
+1,645.524→784.5 ms, world build 2,757.069→2,192.806 ms. Minimum recorded client
+FPS rises 14→17, but rendering costs remain. One initial ping is 372 ms (held in
+the HUD until the next probe); later probes are 4, 111 and 1 ms. Preserve this
+limitation in release notes. The real snow/thaw browser test also passes all four
+depths, including zero snow, with no errors. Review screenshots/video, then
+release this independent performance fix as 0.134.1.
+Evidence: `output/scenery-road-lookup/`.
+
+Video review passes: the 20.2-second input clip shows forward travel, both turns,
+continued walking and stopping, without obvious long freezes, teleports, missing
+grass or grass covering pavement. Start-view grass matches the preceding replay.
+The 4 cm and zero-snow browser screenshots retain clear roads and normal thawed
+grass. Measurements support reduced road-query work, not a universal smoothness
+claim. All criteria pass; commit/push/deploy the 0.134.1 performance slice and
+post the reviewed local-test screenshot before continuing city-paving work.
