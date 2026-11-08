@@ -9037,3 +9037,56 @@ The bot announcement includes the two reviewed bridge screenshots:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569116335328202843.
 Next: bound cold scenery generation during background road surveys before
 automotive manufacturing. Retain the documented client performance limitations.
+
+## Cold scenery survey scheduling — completion criteria, 2026-11-08
+
+Before production edits, reproduce a cold road collision survey doing hundreds
+of terrain evaluations in one generator step. Add
+`tests/scenery-survey-budget.test.ts`: require at most 64 terrain-array reads per
+resume through the existing road segment planner, with all candidates retained.
+Check point clearance, ford-bank surveys, route endpoints and detour callers use
+the yielding path. Preserve a digest of pre-change chunk contents and compare
+collision/road outcomes, including solid-scenery off/trunks/all modes, cancellation
+and interleaved synchronous collision queries. Never publish partially generated
+chunks or stale geometry after an edit. Scheduling batches are an implementation
+bound, not a gameplay rule; existing scenery/collision world settings remain the
+canonical policy with no new sliders or duplicated defaults.
+
+Run the new regression first and record its specific failure. Then run selected
+scenery, solid-obstacle, road/ford/bridge routing, city-paving and scheduling tests
+with `node --import tsx --test <selected files>`, `npx tsc --noEmit`, explicit-file
+Prettier and production build. Measure an actual cold survey in the populated
+world, retaining every obstacle and the same route. Run the unchanged populated
+walking/driving browser replay with daily growth and resident decisions; require
+the existing <100 ms heartbeat gate, resident arrival, completed daily work,
+connected movement and zero browser errors. Record timings rather than claim all
+client FPS issues solved. Capture/review a brief passing movement clip and image
+for the patch announcement. Release only after these gates pass.
+
+Cold-scenery regression first fails at 1,172 terrain-array reads per segment
+resume, 1,164 for nearest-road lookup, and an unbounded route-endpoint lookup.
+The pre-change scenery fingerprint covers 462 objects. Yielding the candidate
+loop alone still fails at 80–91 reads: cold gathering-ground preparation also
+runs synchronously before the first chunk. Add a separate failing resource
+preparation regression and retain its 63-deposit fingerprint. Then yield both
+cold preparations and the point-clearance consumers in ford, route, nearest-road,
+detour and city-trunk work. All seven focused checks pass, including exact scenery
+and resource fingerprints, complete interleaved collision queries, cancellation
+and all three existing collision modes. No gameplay rule or density is changed.
+
+All 151 selected scenery/resource/contact/road/city/bridge checks pass, and
+TypeScript is clean. Compare the full cold ford survey using the same populated
+fixture and canonical width in both the released baseline and candidate:
+124 fords, identical result hash; maximum resume 165.73 → 56.98 ms, 35 → 1 resumes
+above 50 ms, total 15.44 → 15.46 seconds. Do not use the initial diagnostic that
+read an absent optional width directly and therefore returned an empty result.
+The actual comparison uses `roadRules(w.settings).roadWidth`.
+
+The unchanged populated browser replay passes: connected movement and turns,
+resident arrival, completed daily growth, five NPC decisions, no browser errors,
+maximum heartbeat 89.75 ms (<100), ping 55 ms and correction 0.681 m. Client frame
+p95 is 53 ms, maximum 103.2 ms, one frame over 100 ms and minimum FPS 19; retain
+these limitations rather than describe all performance issues as solved. Evidence
+is under `output/scenery-survey-scheduling/`. Prepare patch 0.136.1 with the
+reviewed movement artifact, final build/format, exact-SHA push/deploy and bot
+announcement. Do not start factory work before completing this release.

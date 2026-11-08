@@ -39,7 +39,11 @@ export function* roadFordSteps(
       for (const skew of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
         const a = { x: p.x - (dx - skew * dz) * reach, z: p.z - (dz + skew * dx) * reach };
         const b = { x: p.x + (dx - skew * dz) * reach, z: p.z + (dz + skew * dx) * reach };
-        if (site.clear(a) && site.clear(b) && (yield* site.segmentSteps(a, b))) {
+        if (
+          (yield* site.clearSteps(a)) &&
+          (yield* site.clearSteps(b)) &&
+          (yield* site.segmentSteps(a, b))
+        ) {
           fords.push({ id: `${river.id}:${i}`, a, b });
           last = p;
           break;

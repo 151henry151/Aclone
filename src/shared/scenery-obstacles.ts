@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { finishRoadWork, type RoadWork } from './road-work';
 import type { World } from './types';
 import { terrainHeight, mapHalf, woodland } from './terrain';
 import { hash2 } from './noise';
 import { townRoads, roadDistance, type Point } from './town';
-import { worldResources, type ResourceNode } from './resources';
+import { worldResourcesSteps, type ResourceNode } from './resources';
 import { buildingPlan, buildingBounds } from './building-shapes';
 import { onFarmLand } from './farm-land';
 import { onAirfield } from './airfield';
@@ -98,7 +99,7 @@ type Cache = {
   chunks: Map<string, SceneryObstacle[]>;
   buckets: Map<string, Map<string, SceneryObstacle[]>>;
   roads: ReturnType<typeof townRoads>;
-  grounds: ReturnType<typeof worldResources>;
+  grounds: ResourceNode[];
   coast: SceneryObstacle[];
   footprints: { x: number; z: number; radius: number }[];
 };
@@ -172,7 +173,7 @@ function geometryStamp(w: World) {
   ]);
 }
 /** Snapshots may replace World objects; reuse immutable geometry across their identities. */
-function layout(w: World): Cache {
+function* layout(w: World): RoadWork<Cache> {
   const old = checked.get(w);
   if (
     old?.time === w.time &&
@@ -236,7 +237,7 @@ function layout(w: World): Cache {
       chunks: new Map(),
       buckets: new Map(),
       roads: townRoads(w),
-      grounds: worldResources(w),
+      grounds: yield* worldResourcesSteps(w),
       coast: coastalBoulders(w),
       footprints: w.buildings.map((b) => {
         const bounds = buildingBounds(buildingPlan(b));
@@ -270,7 +271,15 @@ function layout(w: World): Cache {
 }
 /** Every candidate has its own random stream: exclusions never move surviving objects. */
 export function sceneryChunk(w: World, i: number, j: number): readonly SceneryObstacle[] {
-  const cache = layout(w),
+  return finishRoadWork(sceneryChunkSteps(w, i, j));
+}
+/** Survey callers can pause cold generation; only complete chunks enter the cache. */
+export function* sceneryChunkSteps(
+  w: World,
+  i: number,
+  j: number,
+): RoadWork<readonly SceneryObstacle[]> {
+  const cache = yield* layout(w),
     key = `${i}:${j}`,
     prior = cache.chunks.get(key);
   if (prior) return prior;
@@ -310,6 +319,7 @@ export function sceneryChunk(w: World, i: number, j: number): readonly SceneryOb
     footprints.every((b) => Math.hypot(b.x - x, b.z - z) > b.radius + 2 + margin);
   if (w.creator?.scenery !== false)
     for (let n = 0; n < 540; n++) {
+      if (n % 8 === 0) yield;
       const rand = random(Math.floor(hash2(i * 541 + n, j, 4201) * 4294967295)),
         x = x0 + rand() * 256,
         z = z0 + rand() * 256,
@@ -344,9 +354,13 @@ export function sceneryChunk(w: World, i: number, j: number): readonly SceneryOb
           kind === 'tree' ? (species < 1.25 ? 'pine' : species < 2 ? 'birch' : 'oak') : undefined,
       });
     }
-  for (const o of cache.coast) if (within(o) && o.y > w.settings.seaLevel) out.push(o);
+  for (const o of cache.coast) {
+    yield;
+    if (within(o) && o.y > w.settings.seaLevel) out.push(o);
+  }
   if (w.creator?.scenery !== false)
-    for (const node of cache.grounds)
+    for (const node of cache.grounds) {
+      yield;
       if (
         node.item === 'stone' &&
         node.x >= x0 - 4 &&
@@ -355,6 +369,7 @@ export function sceneryChunk(w: World, i: number, j: number): readonly SceneryOb
         node.z < z0 + 260
       )
         for (const o of stoneGroundBoulders(w, node)) if (within(o)) out.push(o);
+    }
   if (cache.chunks.size >= 256) {
     const oldest = cache.chunks.keys().next().value!;
     cache.chunks.delete(oldest);
@@ -366,6 +381,14 @@ export function sceneryChunk(w: World, i: number, j: number): readonly SceneryOb
 const bucketSize = 16;
 /** Spatial buckets bound work to nearby objects, never the whole island. */
 export function sceneryObstaclesNear(w: World, a: Point, b: Point, padding = 0): SceneryObstacle[] {
+  return finishRoadWork(sceneryObstaclesNearSteps(w, a, b, padding));
+}
+export function* sceneryObstaclesNearSteps(
+  w: World,
+  a: Point,
+  b: Point,
+  padding = 0,
+): RoadWork<SceneryObstacle[]> {
   const mode = obstacleRules(w.settings).solidScenery;
   if (mode === 'off') return [];
   const dx = b.x - a.x,
@@ -375,7 +398,7 @@ export function sceneryObstaclesNear(w: World, a: Point, b: Point, padding = 0):
     const t = length2 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / length2)) : 0;
     return Math.hypot(x - a.x - dx * t, z - a.z - dz * t) <= radius;
   };
-  const cache = layout(w),
+  const cache = yield* layout(w),
     r = padding + 5,
     minX = Math.min(a.x, b.x) - r,
     maxX = Math.max(a.x, b.x) + r,
@@ -389,7 +412,7 @@ export function sceneryObstaclesNear(w: World, a: Point, b: Point, padding = 0):
       let buckets = cache.buckets.get(key);
       if (!buckets) {
         buckets = new Map();
-        for (const o of sceneryChunk(w, i, j)) {
+        for (const o of yield* sceneryChunkSteps(w, i, j)) {
           const k = `${Math.floor(o.x / bucketSize)}:${Math.floor(o.z / bucketSize)}`,
             list = buckets.get(k) ?? [];
           list.push(o);

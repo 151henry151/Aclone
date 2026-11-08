@@ -41,7 +41,7 @@ export function* safeNearestSteps(
     for (const p of [projected, ...roadSamples(r, 4)]) {
       yield;
       const d = pointDistance(p, goal);
-      if (d < distance && site.clear(p)) {
+      if (d < distance && (yield* site.clearSteps(p))) {
         best = p;
         distance = d;
       }
@@ -79,7 +79,7 @@ export function* planTownRoadSteps(w: World): RoadWork<RoadProject | undefined> 
           })),
         );
     for (const goal of entries) {
-      if (!site.clear(goal)) continue;
+      if (!(yield* site.clearSteps(goal))) continue;
       const start = yield* safeNearestSteps(main, goal, site);
       if (!start) continue;
       const path = yield* roadRouteSteps(w, start, goal);
@@ -130,7 +130,7 @@ export function* planRoadDetourSteps(w: World): RoadWork<RoadProject | undefined
   for (const r of roads) {
     for (const p of roadSamples(r)) {
       yield;
-      if (siteFor(r.width).occupied(p)) {
+      if (yield* siteFor(r.width).occupiedSteps(p)) {
         blocked.push(r);
         break;
       }
@@ -150,7 +150,7 @@ export function* planRoadDetourSteps(w: World): RoadWork<RoadProject | undefined
         if (
           !removed.has(r) &&
           [...removed].some((o) => roadsTouch(o, r)) &&
-          [r.a, r.b].some((p) => site.occupied(p))
+          ((yield* site.occupiedSteps(r.a)) || (yield* site.occupiedSteps(r.b)))
         ) {
           removed.add(r);
           changed = true;
@@ -160,7 +160,8 @@ export function* planRoadDetourSteps(w: World): RoadWork<RoadProject | undefined
     const exits: Point[] = [];
     for (const r of removed)
       for (const p of [r.a, r.b])
-        if (site.clear(p) && !exits.some((q) => pointDistance(p, q) < 1)) exits.push(p);
+        if ((yield* site.clearSteps(p)) && !exits.some((q) => pointDistance(p, q) < 1))
+          exits.push(p);
     if (exits.length < 2) continue;
     // Join exits as a small tree rather than making a loop around each building.
     const connected = [exits.shift()!],

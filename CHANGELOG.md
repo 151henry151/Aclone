@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.136.1] - 2026-11-08
+
+### Fixed
+
+- Split cold scenery and gathering-ground preparation into small steps during road surveys, preserving collision checks while allowing movement and other simulation work between batches.
+
 ## [0.136.0] - 2026-11-08
 
 ### Added

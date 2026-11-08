@@ -2,6 +2,30 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.136.1 — Smaller background scenery-survey steps
+
+Split cold tree, boulder and gathering-ground preparation across resumable work
+batches. Road endpoints, river ford banks, detours and city trunks use those
+batches within the existing simulation scheduling budget. Preserve complete,
+synchronous collision answers for moving players, every scenery location and
+all existing World Builder collision policies; no density or safety reduction
+is used to improve the measurements.
+
+Validate 151 selected scenery/resource/contact/road/city/bridge tests, including
+failing-first bounded-work regressions and exact pre-change fingerprints for
+462 scenery objects and 63 deposits. In the unchanged populated-world river
+survey, retain all 124 fords and the exact route-result fingerprint. Maximum
+uninterrupted work falls from 165.7 ms to 57.0 ms; steps above 50 ms fall from 35
+to one. Total survey time remains approximately 15.5 seconds.
+
+The unchanged populated walking/turning replay completes resident navigation,
+five NPC decisions and daily road growth without browser errors. Maximum server
+heartbeat is 89.7 ms (limit 100), ping 55 ms and correction 0.681 m. Client frame
+p95 is 53 ms, with one 103.2 ms frame and minimum 19 FPS. This patch addresses
+background survey blocking; those client rendering limitations remain open.
+Reload after deployment to receive the matching client. No world migration or
+player data change is required.
+
 ## 0.136.0 — Build river bridges together
 
 Open **Build → River bridges** on a dry bank, survey the opposite bank and review

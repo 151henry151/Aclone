@@ -6,7 +6,8 @@ import type { Point } from './town';
 import { vehicleDef } from './vehicle-config';
 import { travelHeight } from './dock';
 import { obstacleRules } from './obstacle-rules';
-import { sceneryObstaclesNear } from './scenery-obstacles';
+import { finishRoadWork, type RoadWork } from './road-work';
+import { sceneryObstaclesNear, sceneryObstaclesNearSteps } from './scenery-obstacles';
 
 const dot = (a: Point, b: Point) => a.x * b.x + a.z * b.z;
 const subtract = (a: Point, b: Point) => ({ x: a.x - b.x, z: a.z - b.z });
@@ -36,7 +37,16 @@ export function circleContact(
   return { t, normal: { x: (q.x + d.x * t) / radius, z: (q.z + d.z * t) / radius } };
 }
 export function sceneryBlocksSegment(w: World, a: Point, b: Point, radius: number, escape = false) {
-  return sceneryObstaclesNear(w, a, b, radius).some(
+  return finishRoadWork(sceneryBlocksSegmentSteps(w, a, b, radius, escape));
+}
+export function* sceneryBlocksSegmentSteps(
+  w: World,
+  a: Point,
+  b: Point,
+  radius: number,
+  escape = false,
+): RoadWork<boolean> {
+  return (yield* sceneryObstaclesNearSteps(w, a, b, radius)).some(
     (o) =>
       (!escape && Math.hypot(a.x - o.x, a.z - o.z) < o.radius + radius) ||
       !!circleContact(a, b, o, o.radius + radius),

@@ -3,7 +3,7 @@ import { bridgeDeckHeight, bridgeRectBlocked } from './bridge-geometry';
 import { finishRoadWork, riverGeometryStamp, type RoadWork } from './road-work';
 import { roadFordSteps } from './road-fords';
 import { roadRules } from './road-rules';
-import { sceneryBlocksSegment } from './ground-contacts';
+import { sceneryBlocksSegmentSteps } from './ground-contacts';
 import { pastureParcelSize } from './pasture-land';
 import { inlandLevel, inlandWaterAt, nearInlandWater, invalidateInlandWater } from './inland-water';
 import { spaceportFences, spaceportStructureFences } from './spaceport-site';
@@ -157,8 +157,12 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     return true;
   };
   const allSolids = [...solids, ...fences];
-  const occupied = (p: Point) =>
-    solids.some((r) => intersects(r, p, p)) || sceneryBlocksSegment(w, p, p, pad);
+  function* occupiedSteps(p: Point): RoadWork<boolean> {
+    return (
+      solids.some((r) => intersects(r, p, p)) || (yield* sceneryBlocksSegmentSteps(w, p, p, pad))
+    );
+  }
+  const occupied = (p: Point) => finishRoadWork(occupiedSteps(p));
   const dry = (p: Point) => {
     if (Math.abs(p.x) >= half || Math.abs(p.z) >= half) return false;
     const water = inlandWaterAt(w, p.x, p.z),
@@ -172,8 +176,12 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     const town = townAt(w, p.x, p.z);
     return !town || town.permissions.residents.roads || town.permissions.guests.roads;
   };
-  const clear = (p: Point) =>
-    !occupied(p) && !fences.some((r) => intersects(r, p, p)) && dry(p) && allowed(p);
+  function* clearSteps(p: Point): RoadWork<boolean> {
+    return (
+      !(yield* occupiedSteps(p)) && !fences.some((r) => intersects(r, p, p)) && dry(p) && allowed(p)
+    );
+  }
+  const clear = (p: Point) => finishRoadWork(clearSteps(p));
   // Cost includes actual intermediate rises, not just endpoint elevations. That
   // prevents a straight shortcut over a hill whose two ends are equally low.
   /** Shared obstruction survey; bridges supply their own elevated water/grade policy. */
@@ -184,7 +192,8 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
       for (let i = 0; i < parts; i++) {
         yield;
         const point = (t: number) => ({ x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t });
-        if (sceneryBlocksSegment(w, point(i / parts), point((i + 1) / parts), pad)) return false;
+        if (yield* sceneryBlocksSegmentSteps(w, point(i / parts), point((i + 1) / parts), pad))
+          return false;
       }
     }
     return true;
@@ -259,7 +268,17 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
   const cost = (a: Point, b: Point, spacing = 2, scenery = true) =>
     finishRoadWork(costSteps(a, b, spacing, scenery));
   const segment = (a: Point, b: Point) => finishRoadWork(segmentSteps(a, b));
-  return { occupied, clear, segment, cost, costSteps, segmentSteps, unobstructedSteps };
+  return {
+    occupied,
+    clear,
+    occupiedSteps,
+    clearSteps,
+    segment,
+    cost,
+    costSteps,
+    segmentSteps,
+    unobstructedSteps,
+  };
 }
 
 /** Round corners and give long open stretches a little survey variation. Every
@@ -358,7 +377,7 @@ export function* roadRouteSteps(
   const direct = yield* roadGridRoute(w, start, goal, width);
   if (direct || pointDistance(start, goal) <= 800) return direct;
   const site = roadSite(w, width);
-  if (!site.clear(start) || !site.clear(goal)) return;
+  if (!(yield* site.clearSteps(start)) || !(yield* site.clearSteps(goal))) return;
   const candidates = (yield* roadFordSteps(w, site, width))
     .flatMap((f) => [
       { a: f.a, b: f.b },
@@ -387,7 +406,7 @@ function* roadGridRoute(
 ): RoadWork<Point[] | undefined> {
   const site = roadSite(w, width),
     distance = pointDistance(start, goal);
-  if (!site.clear(start) || !site.clear(goal)) return;
+  if (!(yield* site.clearSteps(start)) || !(yield* site.clearSteps(goal))) return;
   if (distance < 80 && (yield* site.segmentSteps(start, goal))) return [start, goal];
   const cell = distance > 2500 ? 96 : distance > 800 ? 24 : 8;
   const margin = Math.max(256, distance * 0.5),
@@ -559,7 +578,7 @@ function* roadGridRoute(
       if (n.g + cell * Math.hypot(di, dj) >= (costs.get(key) ?? Infinity)) continue;
       let valid = cached.get(key);
       if (valid === undefined) {
-        valid = site.clear(p);
+        valid = yield* site.clearSteps(p);
         cached.set(key, valid);
       }
       if (!valid) continue;

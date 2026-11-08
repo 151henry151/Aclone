@@ -57,7 +57,7 @@ function* bankApproach(
   ) {
     const near = point(Math.max(0, enter - offset)),
       far = point(Math.min(n, leave + offset));
-    if (!site.clear(near) || !site.clear(far)) continue;
+    if (!(yield* site.clearSteps(near)) || !(yield* site.clearSteps(far))) continue;
     const path = yield* roadRouteSteps(dry, start, near, width);
     if (path) return { path, near, far };
   }
@@ -125,7 +125,11 @@ export function* growPavedTrunkSteps(
   if (project?.waitingForBridge) {
     const { near, far } = project.waitingForBridge;
     const site = roadSite(dry, project.width);
-    if (!site.clear(near) || !site.clear(far) || (yield* site.segmentSteps(near, far))) {
+    if (
+      !(yield* site.clearSteps(near)) ||
+      !(yield* site.clearSteps(far)) ||
+      (yield* site.segmentSteps(near, far))
+    ) {
       // Water/terrain edits can invalidate the bank or remove the crossing.
       // Survey again from the still-connected paved exit before spending more.
       delete projects[town.id];

@@ -1,3 +1,4 @@
+import { finishRoadWork, type RoadWork } from './road-work';
 import defaults from '../../data/settings.json';
 import {
   gatheringRules,
@@ -91,7 +92,7 @@ export const resourceNodes: ResourceNode[] = Object.entries(gatheringSites).flat
 /** Countryside patches on a 400 m lattice. Stable IDs are derived from the lattice
  * cell, so depletion, tasks and NPC plans survive restarts without storing positions. */
 const patchCell = 400;
-function countrysidePatches(w: World): ResourceNode[] {
+function* countrysidePatches(w: World): RoadWork<ResourceNode[]> {
   const half = mapHalf(w);
   if (half <= legacyHalf) return [];
   const seed = terrainSeed(w) ^ 0x5bd1e995,
@@ -99,6 +100,7 @@ function countrysidePatches(w: World): ResourceNode[] {
     out: ResourceNode[] = [];
   for (let cz = -cells; cz < cells; cz++)
     for (let cx = -cells; cx < cells; cx++) {
+      if ((cx + cells) % 8 === 0) yield;
       if (hash2(cx, cz, seed) > 0.42) continue;
       const x = (cx + 0.5) * patchCell + (hash2(cx, cz, seed + 1) - 0.5) * 240,
         z = (cz + 0.5) * patchCell + (hash2(cx, cz, seed + 2) - 0.5) * 240;
@@ -129,6 +131,10 @@ const resourceCache = new WeakMap<
 >();
 /** Every gathering ground: original village sites, countryside patches and saved additions. */
 export function worldResources(w: World): ResourceNode[] {
+  return finishRoadWork(worldResourcesSteps(w));
+}
+/** Background surveys prepare cold geography without monopolizing a simulation tick. */
+export function* worldResourcesSteps(w: World): RoadWork<ResourceNode[]> {
   const key = `${w.id}:${mapHalf(w)}:${w.settings.seaLevel}:${w.landscape?.heightmap?.length ?? 0}:${w.terrain.length}:${w.additionalResources?.length ?? 0}:${JSON.stringify(w.resourceRelocations ?? {})}`;
   const cached = resourceCache.get(w);
   if (
@@ -137,7 +143,7 @@ export function worldResources(w: World): ResourceNode[] {
     cached.northern === w.northernIsland?.resources
   )
     return cached.nodes;
-  const base = w.northernIsland?.resources ?? [...resourceNodes, ...countrysidePatches(w)];
+  const base = w.northernIsland?.resources ?? [...resourceNodes, ...(yield* countrysidePatches(w))];
   const merged = new Map(base.map((n) => [n.id, n]));
   for (const n of w.additionalResources ?? []) merged.set(n.id, n);
   const nodes = [...merged.values()].map((n) =>
