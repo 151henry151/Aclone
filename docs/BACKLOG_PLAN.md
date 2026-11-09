@@ -10104,3 +10104,31 @@ Use the existing operator-only helper with the stable receipt key
 `grant:lightmun-farm-crop-selection-bug-bounty:2026-11-09`, a stopped service, a
 fresh backup and atomic world/receipt persistence. Verify the cash delta and
 fourth award before restarting; retain inventory, property and farm settings.
+
+### Farm crop-selection fix live — 2026-11-09
+
+Commit and push `3d3dbcb230a7636e808cbc8072b7be5c7878f0a7`; deploy that exact
+commit as 0.137.1. Public health reports five worlds, client assets load, the
+website reports 0.137.1 and a fresh browser passes game entry/gallery checks
+without page errors. The service is active/running with zero automatic restarts.
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261109-141203.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261109-141253.tar.gz`.
+The existing unrelated performance issue remains open.
+
+Award Lightmun 5 sheckles (50000 internal units) for this report using the
+existing helper. Persist the cash increase, fourth bounty and unique award ID
+atomically with its audit receipt while the service is stopped. Verify the new
+ledger entry 140493 against the pre-award backup and confirm the receipt/count
+survive restart. Document the reward in [BUG_BOUNTIES.md](BUG_BOUNTIES.md).
+The first invocation stopped before opening the database because its working
+directory was inaccessible to the service user; retry from /opt/aclone succeeds.
+An initial historical-ledger check assumed all previous grants used identical
+reason text. Inspect the older receipt, then verify this award by its exact new
+ledger ID against the backup; no grant retry or data correction was needed.
+Both existing reward-helper tests pass, including duplicate-payment protection.
+
+Post and verify the aclone-bot announcement with the saved Hops/Coffee screenshot
+and reward acknowledgement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569429833123889153
+Local logs, screenshot, deployment checks and bot receipt remain under
+output/farm-checkbox-investigation/release/. This slice is released and done.
