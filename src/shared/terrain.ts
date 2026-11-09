@@ -3,7 +3,7 @@ import { inlandGround, inlandWaterAt } from './inland-water';
 import { minMapSize, maxMapSize } from './world-limits';
 export { minMapSize, maxMapSize } from './world-limits';
 import { spaceportGround } from './spaceport-site';
-import { seabedHeight } from './seabed';
+import { seabedHeight, seabedUnchanged } from './seabed';
 import { bluffHeight, nearBluff, coastalRockCover } from './coastal-bluffs';
 import { airfieldHeight } from './airfield';
 import { heightmapAt } from './landscape.ts';
@@ -69,17 +69,24 @@ function countrysideHeight(w: World, x: number, z: number, half: number) {
 }
 export function terrainHeight(w: World, x: number, z: number) {
   const half = terrainHalf(w);
-  let h = villageHeight(w, x, z);
-  if (half > legacyHalf) {
-    const s = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
-    if (s > 0) h = h * (1 - s) + countrysideHeight(w, x, z, half) * s;
+  let h: number;
+  if (w.landscape?.heightmap) {
+    // Authored heightmaps replace all procedural terrain, including river beds.
+    h = heightmapAt(w.landscape.heightmap, x, z, half);
+  } else {
+    const blend =
+      half > legacyHalf
+        ? smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)))
+        : 0;
+    // Do not evaluate a terrain layer whose blend weight is exactly zero.
+    h = blend === 1 ? countrysideHeight(w, x, z, half) : villageHeight(w, x, z);
+    if (blend > 0 && blend < 1) h = h * (1 - blend) + countrysideHeight(w, x, z, half) * blend;
+    if (w.northernIsland && z < w.northernIsland.preserveZ) {
+      const north = northernBlend(w.northernIsland, z);
+      h += (Math.max(h, northernHeight(w.northernIsland, x, z, w.settings.seaLevel)) - h) * north;
+      h = inlandGround(w, x, z, h);
+    }
   }
-  if (w.northernIsland && z < w.northernIsland.preserveZ) {
-    const blend = northernBlend(w.northernIsland, z);
-    h += (Math.max(h, northernHeight(w.northernIsland, x, z, w.settings.seaLevel)) - h) * blend;
-    h = inlandGround(w, x, z, h);
-  }
-  if (w.landscape?.heightmap) h = heightmapAt(w.landscape.heightmap, x, z, half);
   for (const t of w.terrain)
     h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
   const surface = spaceportGround(
@@ -94,7 +101,7 @@ export function terrainHeight(w: World, x: number, z: number) {
       w.settings.runwayShoulder,
     ),
   );
-  if (w.landscape?.heightmap) return surface;
+  if (w.landscape?.heightmap || seabedUnchanged(surface, w.settings.seaLevel, half)) return surface;
   const blend = smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)));
   return (
     surface +

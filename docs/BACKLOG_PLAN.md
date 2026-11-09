@@ -10256,3 +10256,168 @@ that gate or start machinery if it fails. Finish with relevant tests, clean
 TypeScript, changed-file Prettier and the browser checks above. Stage 2 remains
 unreleased until these criteria all pass; the player survey/work controls are
 still reserved for stage 4.
+
+### Item 20 stage 2 blocked at terrain performance — 2026-11-09
+
+The first four tests fail for the intended missing behavior: terrainHeight ignores
+pads and the map-worker payload omits them. Add the minimal optional pad record,
+progress-scaled smooth rectangle/shoulder blend and local spatial buckets, plus
+map-job serialization. Five focused tests then pass, including completed slope
+acceptance, partial progress, rotation, pad replacement/removal, database/map
+round trips and successive regrading. Compare the shoulder boundary with the
+unmodified terrain result instead of a decimal literal (the existing heightmap
+returns 14.999999999999993 there). This is a precision correction, not a tolerance
+change to terrain behavior.
+
+The required performance gate **fails**. Run
+`PROFILE_EARTHWORKS=1 PROFILE_OUT=output/earthworks/performance-first npx tsx scripts/island-performance.ts`.
+Use 500000 terrain queries per sample, three warm-ups, 15 alternating paired
+zero/200-pad measurements, with 20% of query points in pad/shoulder regions.
+Use a paired 95% confidence interval without a discretionary slowdown allowance.
+The first spatial-grid implementation adds 42.15 ms per 500000 queries on the
+original island (12.4%) and 53.53 ms on the expanded island (5.8%); both intervals
+exclude zero.
+
+Attempt 1: add a cached overall bounding box and reuse the last pad-list index.
+The same benchmark (`performance-bounds`) still adds 27.03 ms (7.9%, confidence
+interval 20.87–33.19 ms) on the original island and 49.36 ms (5.4%, interval
+38.11–60.60 ms) on the expanded island. Attempt 2: bypass natural terrain noise
+inside a completed pad, preserving layered regrading. The tests pass, but the
+benchmark (`performance-plane`) still adds 39.38 ms (10.5%) and 44.31 ms (4.4%);
+both intervals again exclude zero. Revert that extra fast-path complexity and
+retain the simpler bounds-index prototype for continued investigation.
+
+Stop here under Henry's acceptance procedure. Stage 2 is **not done**, is not
+committed or deployed, and must not be announced as available. Placement limits,
+water/land exclusions, portable designs, selective chunk refreshes, obstacle
+removal and browser evidence remain pending, as do all machinery/work/contract
+stages. Do not start the next backlog item or weaken the performance gate.
+The deployed checkpoint remains 0.138.0 at 0af8053; its announcement is verified.
+Benchmark data and red/green logs remain in output/earthworks/. README continues
+to describe the released survey stage accurately.
+
+Before pausing, retain all five pad tests and run the relevant northern-island,
+map-worker and foundation suites: 21 tests pass. TypeScript, changed-file
+Prettier and `git diff --check` pass. The blocked performance check remains
+failing; these passing checks do not satisfy or replace it.
+
+### Resume the earthworks performance gate — 2026-11-09
+
+Henry requests further performance work. Keep the existing zero-versus-200-pad
+paired benchmark and its confidence test unchanged. Capture a CPU profile of the
+current failure before editing production code; then investigate index lookup,
+bucket filtering and shoulder arithmetic. Add differential correctness coverage
+against direct blending of 200 rotated/overlapping pads, including partial work,
+zero shoulders, negative coordinates and alternating world identities. Keep all
+existing pad tests green while optimizing. Repeat the unchanged performance gate,
+and additionally check partially finished pads and moving query locations so a
+win cannot depend on completed interiors or repeated-coordinate memoization.
+
+Do not release incomplete earthworks support. Completion of this performance
+subtask requires passing the benchmark on both island fixtures, relevant terrain
+regressions, clean TypeScript and changed-file Prettier. The other stage-2 criteria
+remain mandatory before its eventual release.
+
+The resumed CPU-profiled baseline fails again (original +33.34 ms per 500000
+queries; expanded +63.08 ms). The profile shows costs both in the pad lookup and
+in avoidable pre-existing terrain work. Tighten pad bounds/filtering, precompute
+half-extents and squared shoulder radii, replace bounded hypot with equivalent
+square-root arithmetic, and avoid multiplying by zero. The direct 200-pad
+reference comparisons pass; the same-code benchmark still fails (+22.89 ms and
++41.77 ms).
+
+Separately avoid evaluating village terrain where the countryside weight is one,
+and avoid procedural terrain beneath a replacing creator heightmap. Reuse the
+existing seabed exclusion before calculating its seed. Replace coastal index
+string keys with numeric columns/rows, share the empty candidate list and keep
+index construction outside the hot lookup. Freeze the released terrain, seabed
+and coastal implementations from commit 0af8053 as reference fixtures. Strict
+height equivalence across more than 12000 samples passes, including river/bank,
+coast, mountain, village/blend and heightmap boundaries, plus coastal index append,
+replacement and world-switch cases.
+
+The released-code comparison with 200 completed pads passes on both islands:
+original 342.48 → 298.29 ms per 500000 queries (12.9% faster; paired delta interval
+−50.47 to −37.93 ms), expanded 906.84 → 879.52 ms (3.0% faster; interval −44.58 to
+−10.06 ms). Do not conflate this with the stricter same-code/no-pad comparison.
+Ask Henry which baseline determines acceptance, since the zero-additional-cost
+interpretation was introduced in this plan rather than specified in the backlog.
+Retain both measurements. A partial-pad/moving-query comparison and browser,
+regression and type checks remain in progress before deciding completion.
+
+Follow-up benchmarks retain both interpretations. With the optimized implementation
+on both sides, zero → 200 pads costs 272.58 → 297.20 ms on the original island
+(9.0%; delta interval 20.18–29.06 ms) and 848.19 → 880.59 ms on the expanded island
+(3.8%; interval 13.37–51.44 ms). This strict zero-additional-cost test still fails;
+do not silently reclassify it as passing.
+
+With 200 half-finished pads and continuously changing sample coordinates, the
+released-code comparison passes: original 343.84 → 295.03 ms (14.2% faster;
+interval −52.90 to −44.72 ms), expanded 902.76 → 878.36 ms (2.7% faster; interval
+−44.54 to −4.26 ms). No coordinate-result memoization or completed-plane shortcut
+is used. Evidence is in output/earthworks/resume/{numeric-coast,current-comparison,
+partial-moving}/earthworks.json. These are terrain microbenchmarks, not claims
+that the separate intermittent server-heartbeat issue is fixed.
+
+Validation: the first targeted run passes 41/42 tests. The failure is the existing
+coastal movement fixture: the walker is still moving at 1.5 m/s after 20 ticks.
+Re-run with module resolution substituting the frozen released terrain/coastal/
+seabed modules; it fails identically. A replay shows procedural solid scenery
+pushes the walker sideways before the cliff, while the tractors stop at unrelated
+obstacles. This is not a changed terrain height or cliff collision regression.
+
+Isolate the cliff-specific test with the existing solid-scenery rule off, keep
+its original stop/reverse/height assertions, and strengthen it to require arrival
+within five metres of the actual lip. Add a separate 100-tick test with default
+solid scenery that requires the deflected walker to stay above the drop on every
+tick. Both the current and frozen released modules pass all seven coastal tests.
+Keep this fixture correction distinct from production movement behavior; no
+collision code changed. The other targeted terrain tests remain green.
+
+All four browser flows pass: construction survey/editor/phone preview, flight
+terrain/detail transition, empty/distant/high/approach views, and streamed chunk
+completion/cancellation. Inspect the screenshots and retain copies under
+output/earthworks/resume/screenshots/. The test worlds are disposable; no live
+player or terrain state changed. Await Henry's baseline choice before marking
+the performance gate complete. The performance work and terrain-pad prototype
+remain uncommitted and undeployed; production is still 0.138.0. Stage 2's other
+siting, import/export, invalidation and machinery criteria remain unfinished.
+
+Final verification is clean: TypeScript, changed-file Prettier and
+`git diff --check` pass. Retain the terrain and coastal test results and all four
+passing browser flows. No release, push or announcement is made while the
+performance-baseline clarification is pending.
+
+### Release the independent terrain optimization — 2026-11-09
+
+Henry authorizes commit, push and deployment of the performance checkpoint.
+Release only the independent terrain-layer, seabed-exclusion and coastal-index
+optimizations as 0.138.1. Preserve the terrain-pad prototype separately in the
+working tree; it is not part of this release and stage 2 remains unfinished.
+The request does not resolve the outstanding pad-baseline interpretation.
+
+Completion criteria for this checkpoint: isolate the exact production files;
+compare sampled heights strictly with 0.138.0; pass the relevant terrain,
+coastal movement, map-worker, foundation and streaming tests; pass TypeScript,
+changed-file Prettier and the production build. Recheck flight terrain, empty
+and distant town rendering, flight approaches, streamed chunk cancellation and
+construction survey previews in the browser. After pushing the exact release
+commit, deploy that SHA, verify public health/version/assets and the website,
+and publish a screenshot announcement. Keep the server-heartbeat issue open.
+
+Exact-release verification: 37 relevant tests pass using
+`npx tsx --test tests/terrain-equivalence.test.ts tests/northern-island.test.ts tests/coastal-bluffs.test.ts tests/seabed.test.ts tests/map-terrain-job.test.ts tests/foundation-roundtrip.test.ts tests/terrain-streaming.test.ts tests/terrain-views.test.ts tests/static-terrain.test.ts`.
+`BASE_PATH=/aclone/ npm run build` passes, including `tsc --noEmit`.
+Changed-file Prettier and `git diff --check` pass. All four GPU browser tests pass
+(construction-slope, flight-terrain, flight-view and terrain-streaming); inspect
+and retain the flight-approach screenshot for the announcement. Logs and release
+artifacts are under output/terrain-performance-release/. The cliff-fixture
+correction is a separate logical commit, with no movement-code change.
+
+The exact performance-only release also passes the paired moving-coordinate
+benchmark against frozen 0.138.0, with no pads on either side. Across 15 alternating
+pairs of 500000 queries after three warmups, original-island sampling falls from
+351.08 to 274.63 ms (21.8% less time; delta 95% interval −90.61 to −62.29 ms).
+Expanded-island sampling falls from 900.74 to 790.14 ms (12.3% less time;
+interval −129.82 to −91.38 ms). These are local terrain-query measurements, not
+whole-game FPS or evidence that the open server-heartbeat issue is resolved.

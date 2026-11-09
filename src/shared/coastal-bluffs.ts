@@ -21,44 +21,47 @@ function rotation(b: CoastalBluff) {
   }
   return r;
 }
-const spatial = new WeakMap<
-  CoastalBluff[],
-  { count: number; cells: Map<string, CoastalBluff[]> }
->();
-/** Most terrain samples are nowhere near a headland. Index the immutable saved
- * array once, including migration append operations, instead of testing 15 shapes per sample. */
-function candidates(bluffs: CoastalBluff[] | undefined, x: number, z: number) {
-  if (!bluffs?.length) return [];
-  let cached = spatial.get(bluffs);
-  if (!cached || cached.count !== bluffs.length) {
-    const cells = new Map<string, CoastalBluff[]>();
-    for (const b of bluffs) {
-      const corners = [
-        bluffPoint(b, -b.width, -b.inland),
-        bluffPoint(b, b.width, -b.inland),
-        bluffPoint(b, -b.width, 55),
-        bluffPoint(b, b.width, 55),
-      ];
-      for (
-        let ix = Math.floor(Math.min(...corners.map((p) => p.x)) / 256);
-        ix <= Math.floor(Math.max(...corners.map((p) => p.x)) / 256);
-        ix++
-      )
-        for (
-          let iz = Math.floor(Math.min(...corners.map((p) => p.z)) / 256);
-          iz <= Math.floor(Math.max(...corners.map((p) => p.z)) / 256);
-          iz++
-        ) {
-          const key = ix + ':' + iz;
-          const list = cells.get(key) ?? [];
-          list.push(b);
-          cells.set(key, list);
-        }
+type BluffIndex = { count: number; cells: Map<number, Map<number, CoastalBluff[]>> };
+const spatial = new WeakMap<CoastalBluff[], BluffIndex>();
+const emptyCandidates: readonly CoastalBluff[] = [];
+const bluffCell = 256;
+/** Build only on authored edits or migration appends; keep this cold loop out
+ * of the small per-sample lookup so the engine can inline it. */
+function indexBluffs(bluffs: CoastalBluff[]): BluffIndex {
+  const cells: BluffIndex['cells'] = new Map();
+  for (const b of bluffs) {
+    const corners = [
+      bluffPoint(b, -b.width, -b.inland),
+      bluffPoint(b, b.width, -b.inland),
+      bluffPoint(b, -b.width, 55),
+      bluffPoint(b, b.width, 55),
+    ];
+    const minX = Math.floor(Math.min(...corners.map((p) => p.x)) / bluffCell),
+      maxX = Math.floor(Math.max(...corners.map((p) => p.x)) / bluffCell),
+      minZ = Math.floor(Math.min(...corners.map((p) => p.z)) / bluffCell),
+      maxZ = Math.floor(Math.max(...corners.map((p) => p.z)) / bluffCell);
+    for (let ix = minX; ix <= maxX; ix++) {
+      let column = cells.get(ix);
+      if (!column) cells.set(ix, (column = new Map()));
+      for (let iz = minZ; iz <= maxZ; iz++) {
+        let list = column.get(iz);
+        if (!list) column.set(iz, (list = []));
+        list.push(b);
+      }
     }
-    cached = { count: bluffs.length, cells };
-    spatial.set(bluffs, cached);
   }
-  return cached.cells.get(Math.floor(x / 256) + ':' + Math.floor(z / 256)) ?? [];
+  const cached = { count: bluffs.length, cells };
+  spatial.set(bluffs, cached);
+  return cached;
+}
+/** Numeric cells avoid allocating and hashing a string for every terrain query. */
+function candidates(bluffs: CoastalBluff[] | undefined, x: number, z: number) {
+  if (!bluffs?.length) return emptyCandidates;
+  let cached = spatial.get(bluffs);
+  if (!cached || cached.count !== bluffs.length) cached = indexBluffs(bluffs);
+  return (
+    cached.cells.get(Math.floor(x / bluffCell))?.get(Math.floor(z / bluffCell)) ?? emptyCandidates
+  );
 }
 export function bluffLocal(b: CoastalBluff, x: number, z: number) {
   const dx = x - b.x,

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { fbm, smoothstep } from './noise';
 
+/** Cheap exclusion shared with terrain sampling, before seed/noise work. */
+export function seabedUnchanged(height: number, sea: number, half: number) {
+  return half <= 250 || height >= sea - 8;
+}
+
 /** Procedural bathymetry below the existing coast. No alteration above eight
  * metres below datum, so beaches, low-tide rocks and harbour berths stay put.
  * Caller preserves custom heightmaps and blends out around the original village. */
@@ -12,7 +17,7 @@ export function seabedHeight(
   half: number,
   seed: number,
 ) {
-  if (half <= 250 || height >= sea - 8) return height;
+  if (seabedUnchanged(height, sea, half)) return height;
   const scale = Math.min(1, (half - 250) / 4000);
   const mouth = half * 0.8;
   const bay =

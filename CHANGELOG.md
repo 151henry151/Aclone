@@ -6,6 +6,12 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.138.1] - 2026-11-09
+
+### Changed
+
+- Skip fully replaced terrain layers and avoid allocating string keys for coastal terrain samples, preserving existing ground heights.
+
 ## [0.138.0] - 2026-11-09
 
 ### Changed

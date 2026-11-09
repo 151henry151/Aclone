@@ -2,6 +2,10 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.138.1 reduces repeated terrain calculations while preserving ground
+heights, coastlines and construction surveys. Reload to use the updated client.
+The separate intermittent server pause remains under investigation.
+
 Version 0.138.0 adds size-aware construction slope limits and a cut/fill site survey,
 with World Builder controls for buildings, fields, pastures and the owner bypass.
 Existing property stays in place. Earthmoving machines and working terrain pads

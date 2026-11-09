@@ -2,6 +2,24 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.138.1 — Reduce terrain calculation work
+
+Skip terrain layers that are completely replaced by countryside or an authored
+heightmap, reuse the existing shallow-ground seabed exclusion, and remove string
+allocation from coastal lookups. Preserve terrain heights and existing world
+settings. Reload to use the updated client; no world migration is required.
+
+Local paired benchmarks against 0.138.0 measure 21.8% less terrain-query time
+on the original island and 12.3% less on the expanded island. These figures
+describe terrain sampling, not overall FPS.
+
+Differential checks compare more than 12000 samples with the released 0.138.0
+implementation. Relevant terrain tests and browser checks cover streamed chunks,
+flight detail transitions, empty and distant towns, approaches and construction
+surveys. These changes reduce terrain sampling work; they do not resolve the
+separately tracked intermittent server pause. Terrain pads and earthmoving
+machinery remain unreleased.
+
 ## 0.138.0 — Survey building slopes before spending
 
 The Build site plan colours high ground orange and low ground blue around a
