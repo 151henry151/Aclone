@@ -2,6 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, addPlayer, makeBuilding, advance, act } from '../src/shared/simulation';
+import { automaticPantries } from '../src/shared/automatic-provisions';
+import { shelter } from '../src/shared/lodging';
 import { homeProvisions } from '../src/shared/home-provisions';
 import { prepareAutomaticProvisions } from '../src/server/automatic-provisions-rules';
 import { FISHING_BOAT } from '../src/shared/boats';
@@ -235,4 +237,36 @@ test('remote room feeding stops at expiry and cannot use lodging business stock'
   assert.deepEqual(home.lodging.guests[p.id].stock, guest);
   assert.deepEqual(home.stock, business);
   assert.ok(p.hunger > 30000);
+});
+
+test('shelter and automatic meals use the requested catch-up time without copying the world', () => {
+  const { w, p, home } = setup();
+  home.kind = 'bnb';
+  home.owner = 'host';
+  home.lodging = { open: true, rate: 0, guests: { [p.id]: { until: 100, stock: { bread: 2 } } } };
+  w.buildings = [home];
+  w.time = 200;
+  p.atHome = true;
+  w.settings.autoConsumeInventory = false;
+  assert.equal(shelter(w, p, 99)?.stock, home.lodging.guests[p.id].stock);
+  assert.equal(automaticPantries(w, p, 99)[0]?.stock, home.lodging.guests[p.id].stock);
+  assert.equal(shelter(w, p, 100), undefined);
+  assert.deepEqual(automaticPantries(w, p, 100), []);
+  assert.equal(w.time, 200);
+});
+
+test('live survival does not enumerate unrelated world fields to set its catch-up clock', () => {
+  const { w, p } = setup();
+  Object.defineProperty(w, 'unrelatedExtension', {
+    enumerable: true,
+    get() {
+      assert.ok(
+        !new Error().stack?.includes('advanceSurvival'),
+        'Survival must not copy unrelated world state',
+      );
+      return undefined;
+    },
+  });
+  advance(w, 0.05);
+  assert.ok(p.hunger < 30000);
 });

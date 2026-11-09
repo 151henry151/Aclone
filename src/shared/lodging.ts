@@ -15,14 +15,14 @@ export const roomCount = (b: Building) =>
 export function isLighthouseKeeper(b: Building, p: Player) {
   return b.kind === 'lighthouse' && !b.construction && p.job === b.id && b.employees.includes(p.id);
 }
-export function shelter(w: World, p: Player) {
+export function shelter(w: World, p: Player, at = w.time) {
   if (!p.atHome) return;
   const b = w.buildings.find((b) => b.id === p.home && !b.construction);
   if (!b) return;
   if (b.kind === 'home' && b.owner === p.id) return { b, stock: b.stock, until: Infinity };
   if (b.kind === 'lighthouse' && !isLighthouseKeeper(b, p)) return;
   const guest = b.lodging?.guests[p.id];
-  if (guest && guest.until > w.time) return { b, stock: guest.stock, until: guest.until };
+  if (guest && guest.until > at) return { b, stock: guest.stock, until: guest.until };
 }
 export function lodgingAction(w: World, p: Player, b: Building, a: Action) {
   const items = worldItems(w);

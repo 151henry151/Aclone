@@ -18,7 +18,7 @@ All notable changes to Aclone are documented here. This project follows
 
 - Prepare walking residents and rain-umbrella graphics during world loading.
 
-- Avoid world-wide freshness scans for ordinary meals while preserving refrigerated-trailer fuel use.
+- Avoid world-wide freshness scans for ordinary meals and repeated world copies during survival updates; preserve refrigerated-trailer fuel use and exact room-expiry times.
 - Keep the highway chase camera outside nearby building walls and roofs when collecting and driving a truck.
 - Keep highway-truck resident travel in its owned vehicle and use wider semitrailer turns without relaxing collisions or articulation limits.
 

@@ -9,8 +9,8 @@ export interface AutomaticPantry {
 }
 /** Ordered sources, shared by live survival, offline catch-up and the home forecast.
  * A room is private and remains usable only until its booking expires. */
-export function automaticPantries(w: World, p: Player): AutomaticPantry[] {
-  const home = shelter(w, p);
+export function automaticPantries(w: World, p: Player, at = w.time): AutomaticPantry[] {
+  const home = shelter(w, p, at);
   const sources: AutomaticPantry[] = [];
   if (home) sources.push({ stock: p.roomPantries?.[home.b.id] ?? home.stock, until: home.until });
   else {
@@ -20,7 +20,7 @@ export function automaticPantries(w: World, p: Player): AutomaticPantry[] {
   if (w.settings.autoConsumeInventory && (p.online !== true || onlineInventory(w)))
     sources.push({ stock: p.inventory, until: Infinity });
   if (!home && w.settings.autoConsumeHomeStock) {
-    const remote = shelter(w, { ...p, atHome: true });
+    const remote = shelter(w, { ...p, atHome: true }, at);
     if (remote)
       sources.push({ stock: p.roomPantries?.[remote.b.id] ?? remote.stock, until: remote.until });
   }

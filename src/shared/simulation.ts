@@ -3932,14 +3932,14 @@ function advanceSurvival(w: World, p: Player, start: number, seconds: number) {
       elapsed += Math.min(grace, seconds - elapsed);
       continue;
     }
-    const current = shelter({ ...w, time: start + elapsed }, p);
+    const current = shelter(w, p, start + elapsed);
     if (!current) p.atHome = false;
     // Snap numerical boundaries so a near-zero duration cannot stall catch-up.
     for (const need of ['hunger', 'thirst'] as const) {
       for (const boundary of [feedThreshold, damageThreshold])
         if (Math.abs(p[need] - boundary) < 1e-7) p[need] = boundary;
     }
-    const pantries = automaticPantries({ ...w, time: start + elapsed }, p);
+    const pantries = automaticPantries(w, p, start + elapsed);
     for (const pantry of pantries) {
       const before = pantry.boat ? { ...pantry.stock } : undefined;
       feedShelterNow(w, p, pantry.stock, start + elapsed);
