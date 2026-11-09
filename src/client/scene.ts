@@ -260,6 +260,8 @@ export class GameScene {
   /** `live` means the world is already rendering behind the loading message. */
   onLoading?: (message?: string, warning?: string, live?: boolean) => void;
   private warmGeneration = 0;
+  /** Retain shader references after warmup so the first pedestrian is already prepared. */
+  private walkingWarmup?: T.Group;
   private sky = countrySky();
   private precipitation = new Precipitation();
   private tracks = new GroundTracks();
@@ -758,6 +760,11 @@ export class GameScene {
       }
       if (!current()) return;
       performance.mark('aclone-terrain-prepared');
+      // A seated arrival may have no walking actors yet. Prepare their atlas,
+      // skinning and umbrella morph variants before a resident can join mid-drive.
+      const walker = (this.walkingWarmup ??= this.vehicle(5));
+      walker.visible = false;
+      if (!walker.parent) this.scene.add(walker);
       this.onLoading?.('Loading countryside textures…');
       await waitForTextures();
       if (!current()) return;
@@ -778,6 +785,12 @@ export class GameScene {
       this.onLoading?.('Preparing daylight and night lighting…');
       const lamps = this.townLighting.group.visible,
         headlights = this.headlights.visible;
+      walker.position
+        .set(0, -1, -5)
+        .applyQuaternion(this.camera.quaternion)
+        .add(this.camera.position);
+      walker.visible = true;
+      for (let i = 0; i < 12; i++) walker.userData.umbrella.update(true, 0.1);
       try {
         for (const night of [false, true])
           for (const beam of [false, true]) {
@@ -793,6 +806,7 @@ export class GameScene {
             if (!(await finishGpuWork(this.renderer.getContext(), current))) return;
           }
       } finally {
+        walker.visible = false;
         this.townLighting.group.visible = lamps;
         this.headlights.visible = headlights;
       }
