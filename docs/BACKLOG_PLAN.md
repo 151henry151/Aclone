@@ -10204,3 +10204,55 @@ Final release checks pass: the nine slope tests and seven spring tests pass,
 TypeScript is clean, changed-file Prettier and `git diff --check` pass, and
 `BASE_PATH=/aclone/ npm run build` succeeds. The build retains the existing
 large-chunk warning and third-party annotation warnings; no new build error.
+
+### Item 20 stage 1 live — 2026-11-09
+
+Push and deploy `0af80537fe90b65dfb3e7a7eb5ea01d8b8271c30` as 0.138.0.
+Public health reports five worlds; the game entry, client assets, website version
+and gallery load in a fresh browser with no page errors. Retain database backup
+`/var/lib/aclone/backups/pre-deploy-20261109-143441.sqlite` and website backup
+`/var/backups/aclone-website/site-20261109-143556.tar.gz`. The existing unrelated
+server-pause performance issue remains open. No grants or live test-player edits.
+
+Post and verify the aclone-bot announcement with both local test-world screenshots:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569435637013028878
+The message explicitly distinguishes live surveying from planned machines/pads.
+Evidence is in output/construction-slope/release/. Stage 1 is done; item 20 as a
+whole remains in progress.
+
+### Item 20 stage 2 — indexed terrain pads, 2026-11-09
+
+Completion criteria before production code: represent oriented pads with owner,
+creation time, target height, shoulder width/grade, progress and finish. Defaults
+are a 60 m maximum side, 30 m maximum shoulder, 50% shoulder grade, 6 m maximum
+cut/fill, 256 pads and 500000 square metres including shoulders per world; expose
+these through Construction rules and enforce custom values at survey/import.
+Use an immutable pad-list update to invalidate a spatial index without scanning
+the list on each terrain query. Apply progress after stamps and before protected
+airfield, spaceport and bluff grading. Preserve old worlds with no pads.
+
+Write failing tests first in `tests/earthworks.test.ts`: completed rotated pads
+pass the grade rule, partial progress blends continuously, shoulder boundaries
+join unchanged ground and respect their configured grade, and the spatial cache
+observes progress/replacement/removal. Reject excessive size/depth/count/area,
+protected land, roads, buildings, fields, pastures, gathering grounds, river banks
+and unfinished or foreign pads; permit regrading one's completed pad. Retain
+completed pads underneath subsequent buildings on save/design reload. Verify
+snapshots, database and portable design round trips, including unfinished pads.
+Compare river beds, banks and fords before/after accepted nearby works.
+
+Extend rendering tests before code: changing a pad refreshes only intersecting
+streamed ground/scenery chunks, leaves unrelated chunks intact, refreshes the
+map worker, and removes procedural trees/boulders only when progress changes
+their ground. Run a disposable browser hillside scene through zero, half and
+complete progress, inspect screenshots/mesh heights and map contours, including
+empty pads and a rejected wet site. No live terrain changes.
+
+Extend `scripts/island-performance.ts` with a repeatable paired terrain sampling
+mode for zero versus 200 pads, including queries inside pads and outside them,
+warm-up and alternating runs. Report measurements and sampling variability;
+no measurable terrainHeight regression is required by the entry. Do not relax
+that gate or start machinery if it fails. Finish with relevant tests, clean
+TypeScript, changed-file Prettier and the browser checks above. Stage 2 remains
+unreleased until these criteria all pass; the player survey/work controls are
+still reserved for stage 4.
