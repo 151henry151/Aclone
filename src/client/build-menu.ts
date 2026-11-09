@@ -1,3 +1,4 @@
+import { slopeAssessment, slopeBypass } from '../shared/construction-slope';
 import { pumpHouseSite, freshWaterReason } from '../shared/fresh-water';
 import {
   constructionRefundPercentage,
@@ -46,7 +47,7 @@ export function buildMenuHtml(settings: Partial<ConstructionRules> = {}) {
     <label>Rotation <output data-bearing></output><input data-design="rotation" aria-label="Building rotation" type="range" min="0" max="345" step="15"></label>
     <div class="button-row"><button type="button" data-turn="-15">↶ Rotate left</button><button type="button" data-turn="15">Rotate right ↷</button></div>
     <p class="note">0° faces south; 90° east; 180° north; 270° west. Rotation turns the building, not the camera.</p></div>
-    <div><div class="build-preview" data-build-preview></div><canvas class="build-site" data-build-site width="440" height="190" aria-label="Site plan, north up"></canvas></div>
+    <div><div class="build-preview" data-build-preview></div><canvas class="build-site" data-build-site width="440" height="190" aria-label="Site plan, north up, cut and fill survey"></canvas><p class="note" data-slope-legend></p></div>
     <div class="build-estimate" data-build-estimate aria-live="polite"></div>
     <button type="button" class="primary" data-place-design>Place foundation</button>
   </div>`;
@@ -167,8 +168,10 @@ export function mountBuildMenu(
     } catch (error) {
       refusal = (error as Error).message;
     }
-    refusal ||= constructionSiteReason(w, b) ?? '';
-    b.foundationY = foundationProfile(w, b).level;
+    refusal ||= constructionSiteReason(w, b, p) ?? '';
+    const foundation = foundationProfile(w, b),
+      slope = slopeAssessment(w, foundation.surveys);
+    b.foundationY = foundation.level;
     if (
       w.buildings.some(
         (o) =>
@@ -192,7 +195,7 @@ export function mountBuildMenu(
     const currency = (n: number) => money(n, w.settings.denariiPerSheckle);
     host.querySelector('[data-build-estimate]')!.innerHTML =
       `<h3>${esc(def.name)}</h3><p>${bounds.width.toFixed(1)} × ${bounds.depth.toFixed(1)} m footprint · ${bounds.height.toFixed(1)} m high · <b>${q.capacity.toLocaleString()} storage per good</b>${roomCount(b) ? ` · ${roomCount(b)} guest rooms` : ''}</p>
-    <p>Ground variation ${foundationProfile(w, b).rise.toFixed(2)}m; level plinth and entrance steps shown. Maximum accepted variation ${constructionRules(w.settings).constructionMaximumRise}m.</p><p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
+    <p>Ground variation ${foundation.rise.toFixed(2)} m · steepest footprint axis ${slope.grade.toFixed(1)}%. Building limit ${slope.gradeLimit}% plus ${slope.allowance} m allowance, maximum ${slope.ceiling} m total rise. ${slopeBypass(w, p) ? 'Owner slope bypass is active; water and other siting protections still apply.' : 'Level plinth and entrance steps shown.'} ${foundation.rise < 0.01 ? 'No cut or fill needed.' : 'Cut/fill colours show a level survey target; placing a foundation does not reshape terrain.'}</p><p>Foundation: <b>${currency(q.price)}</b> + ${esc(taxName)}: ${currency(tax)} = <b>${currency(q.price + tax)}</b>. Materials are additional.</p>
     <ul class="build-materials">${Object.entries(q.materials)
       .map(
         ([item, n]) =>
@@ -213,7 +216,7 @@ export function mountBuildMenu(
       ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#253c35';
     ctx.fillRect(0, 0, 440, 190);
-    const range = Math.max(45, Math.max(bounds.width, bounds.depth) * 1.3),
+    const range = Math.max(18, Math.max(bounds.width, bounds.depth) * 1.3),
       scale = 150 / range;
     const draw = (o: typeof b, color: string) => {
       ctx.save();
@@ -252,6 +255,36 @@ export function mountBuildMenu(
     for (const o of w.buildings)
       if (Math.hypot(o.x - b.x, o.z - b.z) < range * 2) draw(o, '#a5b5a2');
     draw(b, refusal ? '#e49c78' : '#e5d088');
+    // Survey is reused from placement validation; never sample terrain from the render loop.
+    for (const survey of foundation.surveys) {
+      const nx = Math.max(1, Math.ceil(survey.width / 2)),
+        nz = Math.max(1, Math.ceil(survey.depth / 2));
+      const dx = survey.width / nx,
+        dz = survey.depth / nz;
+      for (let ix = 0; ix < nx; ix++)
+        for (let iz = 0; iz < nz; iz++) {
+          const start = survey.samples[ix * (nz + 1) + iz];
+          const height =
+            (start.height +
+              survey.samples[(ix + 1) * (nz + 1) + iz].height +
+              survey.samples[ix * (nz + 1) + iz + 1].height +
+              survey.samples[(ix + 1) * (nz + 1) + iz + 1].height) /
+            4;
+          const delta = height - slope.target;
+          ctx.save();
+          ctx.translate(220 + (start.x - p.x) * scale, 95 + (start.z - p.z) * scale);
+          ctx.rotate(-b.rotation);
+          ctx.fillStyle = Math.abs(delta) < 0.01 ? '#92ad89' : delta > 0 ? '#e79952' : '#609ed9';
+          ctx.globalAlpha =
+            Math.abs(delta) < 0.01
+              ? 0.7
+              : 0.45 + 0.55 * Math.min(1, Math.abs(delta) / Math.max(0.01, foundation.rise / 2));
+          ctx.fillRect(0, 0, dx * scale, dz * scale);
+          ctx.restore();
+        }
+    }
+    host.querySelector('[data-slope-legend]')!.textContent =
+      `Cut (orange) · Fill (blue) · Level (green). Survey target ${slope.target.toFixed(2)} m; strongest colour marks the largest change (±${(foundation.rise / 2).toFixed(2)} m).`;
     ctx.strokeStyle = '#fff0ad';
     ctx.lineWidth = 2;
     ctx.beginPath();

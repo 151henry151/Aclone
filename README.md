@@ -2,6 +2,11 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.138.0 adds size-aware construction slope limits and a cut/fill site survey,
+with World Builder controls for buildings, fields, pastures and the owner bypass.
+Existing property stays in place. Earthmoving machines and working terrain pads
+remain planned. Reload to use the new preview.
+
 Version 0.137.0 adds **manufactured highway trucks and full-size semitrailers**.
 Build and supply an automotive factory, hire engineers, then sell its finite
 output to players or limited external buyers. Couple box, refrigerated or timber
@@ -61,7 +66,7 @@ zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
 Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
-player-built bridges follow in 0.136.0. The released game is 0.137.1, and remaining client frame-rate dips are still being tracked.
+player-built bridges follow in 0.136.0. The released game is 0.138.0, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly

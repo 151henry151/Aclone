@@ -6,6 +6,16 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.138.0] - 2026-11-09
+
+### Changed
+
+- Check new building and farmland sites against configurable slope limits for their footprint size; retain existing foundations and purchased land, with a world-owner slope bypass that keeps other siting protections.
+
+### Added
+
+- Show measured grade and a coloured cut/fill survey in the construction site plan, with quantified refusal messages before payment.
+
 ## [0.137.1] - 2026-11-09
 
 ### Fixed

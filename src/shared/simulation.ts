@@ -1,3 +1,4 @@
+import { slopeAssessment, slopeBypass } from './construction-slope';
 import { coolingInterval } from './highway-refrigeration';
 import { highwayControls, highwaySurface, clearHighwayRig } from './highway-driving';
 import { HIGHWAY_TRACTOR, isSemitrailer, semiProducts } from './highway-definitions';
@@ -931,7 +932,7 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         );
         requireThat(b.pasture, 'No clear grazing parcel is available near this barn');
         const next = { ...b.pasture!, parcels: b.pasture!.parcels + 1 };
-        const blocker = pastureBlocker(w, b, next, b.pasture!.parcels);
+        const blocker = pastureBlocker(w, b, next, b.pasture!.parcels, undefined, p);
         requireThat(!blocker, blocker ?? 'Cannot expand here');
         const price = pastureCost(b, w.settings.pasturePriceMultiplier ?? 1);
         requireThat(p.cash >= price, 'Not enough personal cash for pasture land');
@@ -2356,17 +2357,21 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         'Desalination plants require dry ground on an ocean shoreline with a sea-water intake',
       );
       const rotation = chosenRotation ?? shore?.rotation ?? 0;
-      const siteReason = constructionSiteReason(w, {
-        id: 'construction',
-        kind,
-        style,
-        architecture,
-        size: size as BuildingSize | undefined,
-        x: site.x,
-        z: site.z,
-        rotation,
-        creatorBounds,
-      });
+      const siteReason = constructionSiteReason(
+        w,
+        {
+          id: 'construction',
+          kind,
+          style,
+          architecture,
+          size: size as BuildingSize | undefined,
+          x: site.x,
+          z: site.z,
+          rotation,
+          creatorBounds,
+        },
+        p,
+      );
       requireThat(!siteReason, siteReason!);
       const home = ['home', 'warehouse'].includes(kind);
       requireThat(
@@ -2543,8 +2548,9 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
         const fishingField = fishingRuleFields[key as keyof typeof fishingRuleFields];
         const farmYieldField = farmYieldRuleFields[key as keyof typeof farmYieldRuleFields];
         const gatheringRateField = gatheringRuleFields[key as keyof typeof gatheringRuleFields];
+        const constructionSpec = constructionRuleFields[key as keyof typeof constructionRuleFields];
         const constructionField =
-          constructionRuleFields[key as keyof typeof constructionRuleFields];
+          constructionSpec && 'min' in constructionSpec ? constructionSpec : undefined;
         const npcAccountField = npcAccountRuleFields[key as keyof typeof npcAccountRuleFields];
         const npcCargoField = npcCargoRuleFields[key as keyof typeof npcCargoRuleFields];
         const economyField = economyRuleFields[key as keyof typeof economyRuleFields];
@@ -2945,9 +2951,13 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
           requireThat(pump, freshWaterReason);
           Object.assign(b, { x: pump.x, z: pump.z, waterSource: pump.waterSource });
         }
-        const reason = constructionSiteReason(w, b);
+        const reason = constructionSiteReason(w, b, p);
         requireThat(!reason, reason!);
         b.foundationY = foundationProfile(w, b).level;
+      }
+      if (!slopeBypass(w, p)) {
+        const slope = slopeAssessment(w, foundationProfile(w, b).surveys);
+        requireThat(!slope.reason, slope.reason!);
       }
       const spawnReason = buildingSpawnReason(w, b);
       requireThat(!spawnReason, spawnReason!);

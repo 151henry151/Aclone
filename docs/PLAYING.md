@@ -260,6 +260,18 @@ Buy unclaimed property or player-listed buildings (a red **For sale** tag with t
 
 Open **Build**, choose a building, then its architectural model, surface finish, size and rotation before placing the foundation. The 3D preview shows the finished design at a fixed scale for the selected building type, so larger sizes look larger; the north-up site plan shows its footprint and nearby buildings. Rotate in 15° steps with the slider or arrow buttons: 0° faces south, 90° east, 180° north and 270° west. The selected footprint must fit on dry ground outside protected areas and other premises; desalination plants need ocean intakes and pump-houses need fresh water. World construction rules set centre spacing (strictly more than 12 m by default), remote shoreline placement reach (up to 4 m) and clearances. Keep the parish arrival/respawn area (default 12 m radius) and town centres (default 8 m radius) clear, including the whole rotated building footprint. New fields and pasture expansions must also stay outside these areas.
 
+The site plan shades high ground orange (cut), low ground blue (fill) and level
+ground green around a proposed level survey target. Darker differences indicate
+larger changes; the legend gives the target height and range. This is a survey:
+placing a foundation does not move the ground. New buildings normally allow
+12% grade along either rotated footprint axis plus 0.35 m of rise, with an
+absolute 2 m ceiling. Fields and pastures have separate, more lenient world
+limits. A refused site reports the measured rise, grade and permitted rise before
+charging anything. Choose a gentler site; player-operated earthmoving machinery
+is still planned. Existing foundations and purchased farmland are retained when
+rules change. World owners may bypass slope checks when their rule permits it;
+water, reservations, occupied land and other permissions still apply.
+
 Each built-in type offers five architectural models, with appropriate layouts such as porch cottages, bakery shops with oven rooms, tall processing mills, long boat sheds, low animal shelters and civic assembly halls. Independently choose rough stone, white clapboard, red timber, dressed stone, brick or industrial metal. Finishes do not change the roof shape or layout. Supply caches instead offer five shipping-container arrangements (20-foot, 40-foot, high cube, paired containers and a depot) in six paint colours; all use steel construction. Material bills follow the structure: stone uses more blocks, timber uses more wood, brick uses bricks, and industrial panels need steel and concrete. Every selected design needs gravel for its foundation, and specialist equipment materials remain in the bill.
 
 Suitable buildings offer **Expanded** (1.5× storage, default 1.55× cash/material cost) and **Large** (2× storage, default 2.15× cash/material cost). World construction rules set these cost multipliers for new sites; 1× removes the expansion surcharge. The estimate includes the selected model and finish’s cash price and shows town tax separately. Lodging gains rooms too; production recipes, speed and staffing do not change. Farm fields expand separately through farm administration. Expansions add wings, halls or upper floors. Door and window heights stay human-sized.

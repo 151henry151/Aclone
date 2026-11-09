@@ -450,17 +450,19 @@ export function settingsFields(settings: Settings = defaults) {
     constructionRuleFields,
   )
     .map(([key, spec]) =>
-      field(
-        spec.label,
-        key,
-        construction[key as keyof typeof construction],
-        'number',
-        `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
-      ),
+      'min' in spec
+        ? field(
+            spec.label,
+            key,
+            construction[key as keyof typeof construction],
+            'number',
+            `min="${spec.min}" max="${spec.max}" step="${spec.step}"`,
+          )
+        : `<label class="check"><input name="${key}" type="checkbox" ${construction[key as keyof typeof construction] ? 'checked' : ''}>${esc(spec.label)}</label>`,
     )
     .join(
       '',
-    )}<p>New pastures retain their recorded parcel size, including adjoining expansions; rule edits do not resize existing land. Farm limits are multiples of four; lowering the cap preserves purchased land and crops. Expanded/Large cost multipliers apply to cash and materials for new sites; 1 removes the surcharge. Existing sites retain their bills. Spacing measures building centres; rotated footprints must also remain clear. Reach applies to shoreline placement. Arrival/respawn coordinates affect new arrivals and future deaths, leaving current players in place. Changed coordinates must stay within the map on dry, unobstructed ground; keep the site usable after later terrain edits. Boat recovery and arena overrides remain. Spawn and town clearances protect buildings, fields and pastures. Refunds use the recorded base cash cost, excluding tax and materials. Zero removes only that buffer, reach or refund.</p></fieldset>`;
+    )}<p>Building grade is measured along both rotated footprint axes, plus the rise allowance, bounded by the absolute maximum rise. Fields and pastures use their own grade and rise limits. Owner bypass applies only to slope checks and never to water or protected/occupied land. Existing foundations and land remain unchanged. New pastures retain their recorded parcel size, including adjoining expansions; rule edits do not resize existing land. Farm limits are multiples of four; lowering the cap preserves purchased land and crops. Expanded/Large cost multipliers apply to cash and materials for new sites; 1 removes the surcharge. Existing sites retain their bills. Spacing measures building centres; rotated footprints must also remain clear. Reach applies to shoreline placement. Arrival/respawn coordinates affect new arrivals and future deaths, leaving current players in place. Changed coordinates must stay within the map on dry, unobstructed ground; keep the site usable after later terrain edits. Boat recovery and arena overrides remain. Spawn and town clearances protect buildings, fields and pastures. Refunds use the recorded base cash cost, excluding tax and materials. Zero removes only that buffer, reach or refund.</p></fieldset>`;
   const account = npcAccountRules(settings);
   const accountFields = `<fieldset class="boat-death-settings"><legend>Resident account trade budgets</legend>${Object.entries(
     npcAccountRuleFields,

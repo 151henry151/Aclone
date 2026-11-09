@@ -187,7 +187,7 @@ export function pickBuildSite(w: World, p: Player, kind: string, style?: string)
           w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
         )
           continue;
-        if (constructionSiteReason(w, { id: 'construction', kind, style, ...v, rotation: 0 }))
+        if (constructionSiteReason(w, { id: 'construction', kind, style, ...v, rotation: 0 }, p))
           continue;
         try {
           constructionTerms(w, p, kind, v);

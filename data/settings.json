@@ -669,5 +669,12 @@
   "bridgeRepairCash": 50000,
   "bridgeRepairSteel": 10,
   "bridgeRepairReferenceArea": 320,
-  "canoeAirDraft": 1.5
+  "canoeAirDraft": 1.5,
+  "constructionMaximumGrade": 12,
+  "constructionSlopeAllowance": 0.35,
+  "constructionOwnerSlopeBypass": true,
+  "farmMaximumGrade": 18,
+  "farmMaximumRise": 2,
+  "pastureMaximumGrade": 20,
+  "pastureMaximumRise": 4
 }

@@ -1,3 +1,4 @@
+import { surveySlope, slopeAssessment, slopeBypass } from './construction-slope';
 import { bridgeReserved } from './bridge-geometry';
 import { constructionRules, constructionRuleFields } from './construction-rules';
 import { inlandLevel } from './inland-water';
@@ -8,7 +9,7 @@ import { highWater } from './ocean';
 import { dockReserved } from './boathouse';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
-import type { Building, World } from './types.ts';
+import type { Building, World, Player } from './types.ts';
 import { terrainHeight, mapHalf } from './terrain.ts';
 import { blocksBuilding } from './building-shapes.ts';
 import { townRoads, roadDistance } from './town.ts';
@@ -72,7 +73,20 @@ export function onFarmLand(
     return false;
   });
 }
-export function farmExpansionBlocker(w: World, b: Building): string | undefined {
+export function farmPlotSlopeReason(
+  w: World,
+  b: Pick<Building, 'x' | 'z' | 'rotation'>,
+  index: number,
+) {
+  const p = farmPlotPosition(b, index);
+  const slope = slopeAssessment(w, [surveySlope(w, p.x, p.z, 8, 8, b.rotation)], 'field');
+  return slope.reason ? `New fields: ${slope.reason}` : undefined;
+}
+export function farmExpansionBlocker(
+  w: World,
+  b: Building,
+  actor?: Pick<Player, 'authority'>,
+): string | undefined {
   const count = farmPlotCount(b);
   const limit = constructionRules(w.settings).maximumFarmPlots;
   if (count >= limit) return `This farm already has the maximum ${limit} plots`;
@@ -98,7 +112,10 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
       return 'New fields enter a no-build zone';
     if (w.creator?.objects.some((o) => o.solid && Math.hypot(p.x - o.x, p.z - o.z) < o.radius + 6))
       return 'An obstacle occupies the new fields';
-    const heights: number[] = [];
+    if (!slopeBypass(w, actor)) {
+      const reason = farmPlotSlopeReason(w, b, i);
+      if (reason) return reason;
+    }
     // Check a conservative 10 m square including boundaries, not just the centre.
     for (const dx of [-5, 0, 5])
       for (const dz of [-5, 0, 5]) {
@@ -108,7 +125,6 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
           return 'New fields would leave the map';
         const height = terrainHeight(w, x, z);
         if (height <= inlandLevel(w, x, z, highWater(w)) + 0.1) return 'New fields need dry ground';
-        heights.push(height);
         if (roadDistance(roads, x, z) < 1) return 'A road crosses the new fields';
         if (w.zones.some((v) => v.kind === 'noBuild' && Math.hypot(x - v.x, z - v.z) < v.radius))
           return 'New fields enter a no-build zone';
@@ -122,7 +138,5 @@ export function farmExpansionBlocker(w: World, b: Building): string | undefined 
         if (w.creator?.objects.some((o) => o.solid && Math.hypot(x - o.x, z - o.z) < o.radius + 2))
           return 'An obstacle occupies the new fields';
       }
-    if (Math.max(...heights) - Math.min(...heights) > 2)
-      return 'New fields need reasonably level ground';
   }
 }

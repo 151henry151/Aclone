@@ -2505,7 +2505,7 @@ function buildingWindow(b: Building) {
         ? farmPolicyEditor(world, b)
         : `<p data-farm-policy-status>${esc(farmPolicySummary(world, b))}</p>`;
       if (selfOwned) {
-        const blocked = farmExpansionBlocker(world, b);
+        const blocked = farmExpansionBlocker(world, b, me);
         html += `<h3>Farmland</h3><p>${farmPlotCount(b)} / ${constructionRules(world.settings).maximumFarmPlots} plots · each plot is 7 × 6 metres. Buy an adjoining four-plot parcel using personal cash. Land remains with this farm when sold. Crops still need seed capital, care and manual harvesting.</p>${farmPlotCount(b) < constructionRules(world.settings).maximumFarmPlots ? button('Buy four more plots · ' + money(farmExpansionCost(b)), 'farm', `data-id="expand" data-building="${b.id}" ${!near || blocked || me.cash < farmExpansionCost(b) ? 'disabled' : ''}`) : ''}${blocked ? `<p class="note">${esc(blocked)}</p>` : ''}`;
       }
       const canTend =

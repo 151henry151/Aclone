@@ -2,7 +2,7 @@ import { bridgeReserved, bridgeReservedFootprint } from './bridge-geometry';
 import { rectanglesOverlap } from './vehicle-footprint';
 import { parkedFootprintBlocked } from './vehicle-footprint';
 import { pumpHouseSite, freshWaterReason } from './fresh-water';
-import { constructionRules } from './construction-rules';
+import { surveySlope, slopeAssessment, slopeBypass } from './construction-slope';
 import { quaySite } from './quay';
 import { sceneryObstaclesNear } from './scenery-obstacles';
 import { boatNavigationRules } from './boat-navigation-rules';
@@ -13,12 +13,12 @@ import { bluffLocal, bluffEdge, bluffPoint } from './coastal-bluffs';
 import { highWater } from './ocean';
 import { boathouseSite, dockObstruction, dockReserved } from './boathouse';
 import { RIVER_DOCK, riverDockSite } from './river-dock';
-import { farmPlotPosition, onFarmLand } from './farm-land';
+import { farmPlotPosition, onFarmLand, farmPlotSlopeReason } from './farm-land';
 import { onAirfield } from './airfield';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { buildingBounds, buildingPlan, type BuildingVolume } from './building-shapes';
 import { mapHalf, terrainHeight } from './terrain';
-import type { Building, World } from './types';
+import type { Building, World, Player } from './types';
 type Site = Pick<
   Building,
   | 'aircraftHangar'
@@ -65,28 +65,18 @@ const projectRadius = (a: Rect, axis: { x: number; z: number }) =>
 /** Sample every two metres, including each rotated corner and the doorway edge.
  * New buildings store this level; existing buildings retain their original datum. */
 export function foundationProfile(w: World, b: Site) {
-  const samples: number[] = [];
-  let wet = false;
-  for (const a of rectangles(b)) {
-    const nx = Math.max(1, Math.ceil(a.hx)),
-      nz = Math.max(1, Math.ceil(a.hz));
-    for (let ix = 0; ix <= nx; ix++)
-      for (let iz = 0; iz <= nz; iz++) {
-        const dx = ((ix / nx) * 2 - 1) * a.hx,
-          dz = ((iz / nz) * 2 - 1) * a.hz;
-        const x = a.x + dx * a.axes[0].x + dz * a.axes[1].x,
-          z = a.z + dx * a.axes[0].z + dz * a.axes[1].z;
-        const height = terrainHeight(w, x, z);
-        samples.push(height);
-        wet ||= height < inlandLevel(w, x, z, highWater(w));
-      }
-  }
-  const low = Math.min(...samples),
-    high = Math.max(...samples);
-  return { low, high, wet, level: high + 0.04, rise: high - low };
+  const surveys = rectangles(b).map((a) =>
+    surveySlope(w, a.x, a.z, a.hx * 2, a.hz * 2, b.rotation),
+  );
+  const low = Math.min(...surveys.map((s) => s.low)),
+    high = Math.max(...surveys.map((s) => s.high));
+  const wet = surveys.some((s) =>
+    s.samples.some((p) => p.height < inlandLevel(w, p.x, p.z, highWater(w))),
+  );
+  return { low, high, wet, level: high + 0.04, rise: high - low, surveys };
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
-export function constructionSiteReason(w: World, b: Site) {
+export function constructionSiteReason(w: World, b: Site, actor?: Pick<Player, 'authority'>) {
   if (
     rectangles(b).some((r) =>
       w.bridges?.some((bridge) => rectanglesOverlap(r, bridgeReservedFootprint(bridge))),
@@ -149,8 +139,15 @@ export function constructionSiteReason(w: World, b: Site) {
     return 'Keep fields outside the spaceport launch reservation';
   const foundation = foundationProfile(w, b);
   if (foundation.wet) return 'The building foundation must stay on dry land';
-  if (foundation.rise > constructionRules(w.settings).constructionMaximumRise)
-    return `Ground rises more than ${constructionRules(w.settings).constructionMaximumRise} metres across this footprint; choose a flatter site or smaller building`;
+  if (!slopeBypass(w, actor)) {
+    const slope = slopeAssessment(w, foundation.surveys);
+    if (slope.reason) return slope.reason;
+    if (b.kind === 'farm')
+      for (let i = 0; i < 4; i++) {
+        const reason = farmPlotSlopeReason(w, b, i);
+        if (reason) return reason;
+      }
+  }
   const rects = rectangles(b),
     edge = mapHalf(w);
   for (const a of rects) {

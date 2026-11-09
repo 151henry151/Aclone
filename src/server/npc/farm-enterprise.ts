@@ -107,7 +107,7 @@ export function farmEnterprises(w: World, p: Player): FarmerChoice[] {
       (b.plots ?? []).filter((plot) => plot.crop).length === farmPlotCount(b) &&
       (b.accounts?.receipts ?? 0) > 0 &&
       b.investment >= reserve &&
-      !farmExpansionBlocker(w, b) &&
+      !farmExpansionBlocker(w, b, p) &&
       growing.some(([item]) =>
         w.buildings.some(
           (s) =>

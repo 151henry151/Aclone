@@ -774,7 +774,7 @@ function applyValidatedDesign(w: World, input: unknown) {
   for (const b of w.buildings)
     if (b.pasture) {
       if (!isLivestockFarm(b)) throw Error('Only livestock farms can have pastures');
-      const blocker = pastureBlocker(w, b, b.pasture);
+      const blocker = pastureBlocker(w, b, b.pasture, 0, undefined, undefined, true);
       if (blocker) throw Error(blocker);
     }
   w.script = d.script;

@@ -2,6 +2,22 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.138.0 — Survey building slopes before spending
+
+The Build site plan colours high ground orange and low ground blue around a
+level survey target. New construction checks grade along both rotated footprint
+axes and reports measured rise, percentage and permitted rise before payment.
+World Builder controls the building, field and pasture limits and owner bypass.
+Existing foundations and purchased land retain their saved dimensions and levels.
+Relocating or resizing a building uses the new checks; renaming does not.
+
+This is the first earthmoving stage: surveying and siting. Terrain pads, machinery,
+material handling and contracts remain planned. Choose a gentler site for now;
+placing a foundation does not reshape the terrain. Reload after deployment.
+No world migration or player grant is required. Focused unit and browser checks
+cover steep refusal, gentle placement, level/phone previews, custom rules,
+permissions, field/pasture expansion, NPC siting and persistence.
+
 ## 0.137.1 — Save mixed farm planting choices
 
 Keep individual crop selections when switching tabs or reopening farm controls.

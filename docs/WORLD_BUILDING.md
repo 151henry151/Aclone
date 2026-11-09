@@ -1291,6 +1291,22 @@ designs, observations and summaries preserve these policies.
 
 ## Construction rules
 
+New-site slope rules use the actual rotated footprint: `constructionMaximumGrade`
+(default 12 percent) plus `constructionSlopeAllowance` (0.35 m) along each axis,
+subject to `constructionMaximumRise` (2 m across the whole footprint). Interior
+humps are included. `farmMaximumGrade`/`farmMaximumRise` default to 18%/2 m;
+`pastureMaximumGrade`/`pastureMaximumRise` default to 20%/4 m, using the same
+allowance. Grades accept 0–100%, allowance 0–2 m, and absolute rises 0–20 m.
+Zero grade allows only the absolute allowance; zero rise requires level land.
+New fields and adjoining pasture parcels use these rules, while existing land
+and foundation heights survive changes, restart and design export/import.
+
+`constructionOwnerSlopeBypass` defaults on and permits existing terrain-editor
+authority to bypass only the slope checks. Disable it to apply the same grades
+to owners. Other construction permissions, dry-land and reservation checks remain.
+The Build site plan displays cut/fill colours around its midpoint survey target;
+it does not reshape terrain. Player-operated earthworks are a later stage.
+
 **F10 → Rules → Construction rules** configures `constructionMinimumSpacing`
 (default 12 m), `constructionPlacementReach` (4 m), `spawnClearance` (12 m),
 `townCentreClearance` (8 m) and `constructionRefundShare` (0.75). Distance rules

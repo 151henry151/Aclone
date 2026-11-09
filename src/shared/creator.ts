@@ -1,5 +1,5 @@
+import { constructionSiteReason, foundationProfile } from './construction-site';
 import { survivalRules } from './survival-rules';
-import { buildingSpawnReason } from './spawn-reserve';
 import { vehicleDef, vehicleSlotSchema } from './vehicle-config';
 import { bookSchema, townEventSchema } from './world-stories.ts';
 import { ambientSchema } from './ambient.ts';
@@ -556,8 +556,20 @@ export function creatorAction(w: World, p: Player, a: Action) {
               ? { width: model.width, depth: model.depth, height: model.height }
               : undefined,
       };
-      const reason = buildingSpawnReason(w, candidate);
-      if (reason) throw Error(reason);
+      const changed =
+        candidate.x !== b.x ||
+        candidate.z !== b.z ||
+        candidate.rotation !== b.rotation ||
+        JSON.stringify(candidate.creatorBounds) !== JSON.stringify(b.creatorBounds);
+      if (changed) {
+        const reason = constructionSiteReason(
+          { ...w, buildings: w.buildings.filter((o) => o !== b) },
+          candidate,
+          p,
+        );
+        if (reason) throw Error(reason);
+        b.foundationY = foundationProfile(w, candidate).level;
+      }
     }
     if (patch.name) b.name = patch.name;
     if (patch.x !== undefined) b.x = patch.x;

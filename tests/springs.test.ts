@@ -60,7 +60,7 @@ test('the survey and ordinary construction share the configurable existing found
     b = makeBuilding('test', 'waterworks', 150, 0);
   assert.equal(constructionSiteReason(w, b), undefined);
   act(w, p.id, { type: 'settings', patch: { constructionMaximumRise: 0.2 } });
-  assert.match(constructionSiteReason(w, b) ?? '', /0\.2 metres/);
+  assert.match(constructionSiteReason(w, b) ?? '', /level it to within 0\.2 m/);
 });
 
 import { Store } from '../src/server/store';

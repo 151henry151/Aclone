@@ -230,7 +230,7 @@ export function farmAction(w: World, p: Player, b: Building, a: Action) {
   if (a.operation === 'expand') {
     check(b.owner === p.id, 'Only the owner can buy more farmland');
     check(!p.task, 'Finish your current activity first');
-    const blocker = farmExpansionBlocker(w, b);
+    const blocker = farmExpansionBlocker(w, b, p);
     check(!blocker, blocker ?? 'Cannot expand here');
     const cost = farmExpansionCost(b);
     check(p.cash >= cost, 'Not enough personal cash to buy this parcel');

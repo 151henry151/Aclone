@@ -10132,3 +10132,75 @@ and reward acknowledgement:
 https://discord.com/channels/1562183434254680175/1565527790785404968/1569429833123889153
 Local logs, screenshot, deployment checks and bot receipt remain under
 output/farm-checkbox-investigation/release/. This slice is released and done.
+
+### Item 20 stage 1 — size-aware construction slopes, 2026-11-09
+
+Start the earthmoving entry in its required order. This stage covers siting and
+survey feedback only; pads, machines, working passes and contracts remain next.
+Do not claim that players can hire or operate earthmoving machinery yet. Keep
+existing foundation levels, owned fields and pastures unchanged.
+
+Before production code, add tests for rotated 4 m, 12 m and 30 m footprints on
+5%, 12% and 25% planar slopes. Use 12% building grade plus 0.35 m allowance along
+each sampled footprint axis, bounded by the existing 2 m total-rise ceiling.
+Small/medium sites at 5% and 12% pass; 25% fails; a 30 m site passes at 5% but
+fails at 12% under the retained absolute ceiling. Sample interior bumps too.
+Fields use 18% plus 0.35 m, maximum 2 m; pastures use 20% plus 0.35 m, maximum
+4 m. All values are world rules, with a configurable world-owner slope bypass
+(default on) using existing terrain-editor authority. Bypass never permits water,
+protected land or occupied footprints. Existing buildings are not revalidated.
+
+Require quantified refusal with measured rise/grade and allowed rise before any
+charge. Test field/pasture expansion, initial farm fields, rotated axes, changed
+and missing settings, invalid edits, design export/import and database reload.
+Use the existing two-metre foundation sampling; share survey results with the
+site-plan cut/fill colours around the midpoint target. No new per-frame terrain
+scan. Keep NPC siting on the same authoritative checks.
+
+Commands: run failing-first `npx tsx --test tests/construction-slope.test.ts`, then
+relevant foundation, construction, farm/pasture, springs, shoreline and NPC-site
+consumers after the fix. Run `TEST_GPU=1 npm run test:e2e --
+tests/browser/construction-slope.spec.ts tests/browser/build-designer.spec.ts
+ tests/browser/construction-rules.spec.ts`. Browser steps: open Build on a steep
+site, inspect red/blue cut/fill shading and quantified refusal with placement
+disabled; choose a gentle site and place it; inspect a level site with no cut/fill;
+change grade/bypass in F10 and confirm persisted UI/server behavior; repeat the
+site preview at phone width, with screenshots and no browser errors. Finish with
+`npx tsc --noEmit`, changed-file Prettier and `git diff --check`. A release must
+plainly describe this stage without presenting unfinished machinery as available.
+
+The initial seven-case slope implementation is green. The first failing test
+proved a 4 m, 25% site was accepted by the old rule; the browser then failed on
+the missing cut/fill legend. The new survey checks both rotated axes and interior
+humps. Targeted consumers pass 59/60; the remaining spring assertion expects the
+old wording "0.2 metres", so update it to require the new quantified remedy
+"level it to within 0.2 m", keeping its configured ceiling unchanged. Fix two
+test-fixture bounds (heightmap ±40 m and sea level ≥−50 m) without altering the
+slope scenarios. Existing purchased pastures retain their terrain on design
+import; only new parcels receive the new grade check.
+
+Follow-up checks find and fix two browser issues before release: a boolean
+rendered through the text-field helper submitted its literal value instead of
+the normal checkbox value, and the existing 45 m plan extent made the coloured
+footprint too small. Require at least 500 orange and blue pixels (old view: 216
+orange), then use a tighter 18 m minimum extent. Retain the real footprint scale
+and nearby-building context. The new browser now passes in 33.1 s: steep refusal,
+visible cut/fill, editor save/reopen, owner bypass, gentle construction and level
+phone preview. Desktop/phone design selection and construction/refund browser
+checks also pass. The relocation audit adds a failing test for editor moves and
+placement with bypass disabled; fix both paths while keeping a rename or an
+unchanged layout from revalidating old foundations. The 22-test slope/creator/
+spawn run and 25-test spring/farm/pasture/NPC follow-up pass.
+
+Stage 1 is ready for release as 0.138.0 under Henry's standing instruction to
+commit, push, deploy and announce each completed slice. Final rules tests also
+prove changed/absent building grade, allowance and ceiling values affect the
+same footprint. Review the desktop cut/fill and phone-level screenshots. Release
+only this independently usable survey/siting stage; item 20 remains in progress.
+Next: spatially indexed terrain pads, persistence and map/chunk invalidation,
+with the specified 200-pad terrain performance comparison before machinery.
+
+Final release checks pass: the nine slope tests and seven spring tests pass,
+TypeScript is clean, changed-file Prettier and `git diff --check` pass, and
+`BASE_PATH=/aclone/ npm run build` succeeds. The build retains the existing
+large-chunk warning and third-party annotation warnings; no new build error.
