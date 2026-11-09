@@ -20,7 +20,7 @@ export function slopeSpeed(grade: number) {
 
 /** Smooth transition across the verge. Ordinary 4 cm snow permits 40% of dry
  * road speed (formerly ~20–33%); a metre permits ~10%, with a 6% crawl floor. */
-export function drivingSurface(w: World, x: number, z: number) {
+export function drivingSurface(w: World, x: number, z: number, includeRoad = false) {
   const conditions = roadConditions(w);
   const distance = roadSurfaceDistance(w, townRoads(w), x, z);
   const t = Math.max(0, Math.min(1, distance / 2));
@@ -32,10 +32,11 @@ export function drivingSurface(w: World, x: number, z: number) {
   const snowSpeed = 0.06 + 0.34 / (1 + Math.max(0, depth - WINTER_BASE_SNOW) * 7);
   const fieldSpeed = bareSpeed * (1 - cover) + snowSpeed * cover;
   const fieldGrip = conditions.grip * (1 - cover * 0.25);
-  return {
+  const result = {
     speed: conditions.speed + (fieldSpeed - conditions.speed) * offRoad,
     grip: conditions.grip + (fieldGrip - conditions.grip) * offRoad,
   };
+  return includeRoad ? { ...result, onRoad: distance <= 0 } : result;
 }
 
 /** Feet share the tractor snow lookup, while bare ground keeps its existing pace.

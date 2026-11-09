@@ -327,10 +327,16 @@ test('automotive templates and portable premises cannot bypass reserved manufact
   assert.deepEqual(target, initial);
 });
 
-test('all four products survive SQLite restart and fragmented work without duplicate output or wages', async () => {
+test('all manufactured products survive SQLite restart and fragmented work without duplicate output or wages', async () => {
   const { Store } = await import('../src/server/store');
   const { automotiveConfig, automotiveProducts } = await import('../src/shared/automotive-config');
   const { w, b } = setup();
+  w.automotive = structuredClone(automotiveConfig(w));
+  w.automotive.factory.readyCapacity = automotiveProducts.length;
+  const duration = automotiveProducts.reduce(
+    (sum, id) => sum + automotiveConfig(w).products[id].seconds,
+    0,
+  );
   for (const product of automotiveProducts) {
     for (const [id, n] of Object.entries(automotiveConfig(w).products[product].inputs))
       b.stock[id] = (b.stock[id] ?? 0) + n;
@@ -345,21 +351,21 @@ test('all four products survive SQLite restart and fragmented work without dupli
     const restored = store.loadWorlds()[0].world;
     assert.deepEqual(restored.buildings[0].manufacturing, state);
     const baseline = structuredClone(restored);
-    advance(baseline, 20000);
-    for (let i = 0; i < 200; i++) advance(restored, 100);
+    advance(baseline, duration);
+    for (let i = 0; i < 200; i++) advance(restored, duration / 200);
     const result = restored.buildings[0].manufacturing!;
     assert.equal(result.orders.length, 0);
     assert.deepEqual(
       result.ready.map((u) => u.product),
       automotiveProducts,
     );
-    assert.equal(new Set(result.ready.map((u) => u.id)).size, 4);
+    assert.equal(new Set(result.ready.map((u) => u.id)).size, automotiveProducts.length);
     assert.deepEqual(result, baseline.buildings[0].manufacturing);
     for (const p of Object.values(restored.players))
       assert.equal(p.cash, baseline.players[p.id].cash);
     const cash = restored.players['worker-0'].cash;
     advance(restored, 20000);
-    assert.equal(result.ready.length, 4);
+    assert.equal(result.ready.length, automotiveProducts.length);
     assert.equal(restored.players['worker-0'].cash, cash);
   } finally {
     store.close();

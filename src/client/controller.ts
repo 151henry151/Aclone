@@ -10,6 +10,7 @@ export const controllerDefaults = {
   boost: 5,
   radio: 8,
   radioTransmit: 7,
+  implement: 2,
 };
 export type ControllerBindings = typeof controllerDefaults;
 export function controllerInput(
@@ -59,6 +60,7 @@ export class Controller {
     private onInteract: () => void,
     private onRadio: () => void = () => {},
     private onRadioTransmit: (down: boolean) => void = () => {},
+    private onImplement: () => void = () => {},
   ) {
     try {
       const saved = JSON.parse(localStorage.getItem('aclone.controller') ?? '{}');
@@ -128,6 +130,7 @@ export class Controller {
         if (el?.matches('button,a')) el.click();
       }
     } else if (edge(this.config.confirm)) this.onInteract();
+    if (!menu && edge(this.config.implement)) this.onImplement();
     this.previous = pressed;
   }
 }

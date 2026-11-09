@@ -6,6 +6,26 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.139.0] - 2026-11-09
+
+### Added
+
+- Commission earthworks through the parish directory, hold fees until completion, refund abandoned jobs and split hand-over payments by contributed work; apply town and property permissions and let residents request affordable slope remedies.
+- Survey cut and fill, work terrain with moving earthmovers, deliver required materials and recover bounded spoil; retain unfinished work through abandonment and restarts and weather finished surfaces back to grass.
+- Manufacture bulldozers and backhoes at automotive factories, collect them with empty tanks and qualify as a plant operator at school; configure their assembly, prices, driving and qualification rules per world.
+- Add detailed earthmover cabs, animated tracks, blades and digging arms, switchable lamps and plate-shaped ground tracks; control implements with G, a remappable controller button or Inventory/Actions.
+- Preserve indexed terrain pads, partial grading and protected shoulders in saves and portable designs; configure pad limits in World Builder and reserve unfinished sites against construction.
+
+### Changed
+
+- Refresh ground, map and scenery affected by pad progress while retaining unrelated chunks; clear procedural trees and boulders where grading changes their ground.
+- Skip discarded countryside and northern-region calculations, reuse world seeds and remove string allocation from inland-water lookups while preserving sampled geography.
+
+### Fixed
+
+- Preserve the earthworks survey position and trailer selection after delivery; keep spoil mounds within the surveyed shoulder slope and depth limits.
+- Keep earthmover chase cameras clear of factory roofs, preserve model-specific ground contacts when editing vehicle settings and avoid uploading stationary track geometry every frame.
+
 ## [0.138.1] - 2026-11-09
 
 ### Changed

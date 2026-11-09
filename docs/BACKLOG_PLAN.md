@@ -10439,3 +10439,452 @@ commits and deployment. Stage 2 and its outstanding performance-baseline questio
 remain open, as does the separate server-heartbeat investigation. No player data
 repair or grant was performed. Logs, benchmark and announcement receipt remain
 under output/terrain-performance-release/.
+
+### Resume pads before machinery — 2026-11-09
+
+Henry requests terrain pads, excavators and earthmovers next. Keep the prescribed
+order: finish stage 2 before adding the plant-operator qualification and factory
+machines, then implement survey/work/material flows and contracts. The 0.138.1
+performance checkpoint remains separate from this unfinished feature.
+
+Clarify whether the no-regression acceptance baseline is the currently released
+0.138.1 game or the same new implementation without pads; preserve both results.
+Before further production changes, rerun the existing paired benchmark and pad
+correctness suite. Investigate skipping natural terrain only where a completed
+pad fully replaces it, without changing overlapping-pad order or protected
+bluff/airfield/spaceport grading. Add a failing test that a fully replacing pad
+avoids evaluating procedural ground, while shoulders and partially worked pads
+still sample it. Retain strict reference comparisons and the moving/partial
+benchmark. Do not start machinery while the pad performance gate is unresolved.
+
+Henry selects released 0.138.1 as the acceptance baseline. Freeze its terrain,
+coastal and seabed implementations before further optimization, and point the
+released comparison at those fixtures. Continue reporting the same-code overhead
+as diagnostic information; it is not the acceptance baseline.
+
+The first new failing test detects four unnecessary heightmap samples under a
+completed pad. A lazy base-height callback makes that test green, but worsens the
+benchmark (original +47.85 ms; expanded +114.59 ms versus 0.138.1). Replace the
+callback with a direct local-candidate-or-height result and retain the test;
+correctness stays green, but the benchmark still fails (+38.67 / +85.28 ms).
+
+Investigate countryside noise that is wholly discarded when coastline weight is
+exactly one. Compute that existing weight first and skip hills only for the fully
+replaced case. Preserve all partial-coast arithmetic and inland-water ordering;
+use the frozen 0.138.1 reference to test dense samples around the transition.
+This is an implementation optimization, not a change to geography or rules.
+
+The complete-coast fast path preserves all strict height comparisons, but the
+paired gate still fails: +11.98 ms original and +48.70 ms expanded. The retained
+CPU profile also identifies inland-water candidate lookup as hot. Freeze that
+0.138.1 dependency before replacing string grid keys with numeric columns, and
+cover river/pond edits, water, bank and terrain queries against it. Cache only the
+world-ID-derived seed (not sample coordinates), observing changed identifiers and
+explicit northern seeds. Preserve all constants and geographic calculations.
+
+Numeric inland cells and seed caching make the original-island 200-pad run pass
+(254.96 → 221.53 ms); the expanded run still fails (769.64 → 797.06 ms; delta
+interval 15.77–39.07 ms). Preserve the frozen northern-island dependency before
+testing exclusion of regions outside their influence bounds and northern hills
+wholly replaced by ocean. Compare forest, relief and height at region boundaries
+and across the island; retain all geographic calculations within active regions.
+
+The selected release-baseline gate passes with 200 completed pads: original
+257.35 → 224.31 ms, expanded 732.00 → 717.18 ms per 500000 queries. Half-finished
+pads with moving query coordinates also pass: original 261.47 → 226.28 ms;
+expanded 737.85 → 740.81 ms, delta interval −10.38 to 16.29 ms. The expanded
+partial run is statistically indistinguishable, not a demonstrated speedup.
+All 26 terrain/island/pad tests pass. Continue with site validation and portable
+save criteria, keeping the same-code overhead measurement as a diagnostic.
+
+Next failing tests: configure pad side/shoulder/grade/depth/count/area limits via
+Construction rules; reject non-finite or out-of-range geometry and protect roads,
+fields, pastures, buildings, gathering grounds, arrivals, no-build zones, bluffs,
+airfields, spaceports and water/banks. Permit only same-owner completed-pad
+regrading. Reject unsafe portable imports atomically, remap ownership and pad age,
+and preserve completed pads under buildings without moving stored foundations.
+
+Pad site tests first fail because the validator is absent. Add bounded world
+rules and atomic design validation, preserving completed pads under later
+foundations and remapping portable ownership/age. Eight site tests pass; a
+separate red/green reservation test covers buildings, field expansion and pasture
+claims. Add a red/green flooding case so cuts cannot lower dry ground beneath
+high water. TypeScript identifies the optional runway-shoulder setting; use the
+existing flight-rule fallback rather than duplicating its default.
+
+The scenery test first fails because a worked tree remains cached. Invalidate
+only obstacle chunks intersecting changed pad bounds and clear obstacles only
+where grading changes ground; distant cached chunks keep their identities.
+The browser test then fails because a pad update leaves its ground mesh intact.
+Add selective ground/scenery refreshes, map revision tracking and affected
+horizon vertices. The browser passes for half/completed pads and distant mesh
+retention. Add removal and an in-flight scene-build/snapshot race before calling
+rendering complete. The first broad relevant run passes 69 checks. Remaining
+checks include editor persistence, the stronger browser cases, final TypeScript,
+formatting and a final benchmark after integration. Stage 2 remains unreleased.
+
+The stronger browser test reproduces stale pad terrain when a newer snapshot
+arrives during a yielding scene rebuild. Capture the pad list used by that build
+and apply any later pad changes after installation. The race now passes, as do
+pad removal and the editor's new side/count setting persistence. Add explicit
+snapshot projection and accepted-nearby-work checks: river beds, banks and a
+shallow ford remain unchanged with half and complete progress. These 20 pad/site
+checks pass. The same-code diagnostic still shows about 20.06 / 22.09 ms overhead
+(original/expanded); retain that result without confusing it with the approved
+released-game acceptance baseline. No machines or work actions have been added.
+
+Final stage-2 verification passes: 57 additional relevant regressions, all five
+browser flows, `npx tsc --noEmit`, changed-file Prettier and `git diff --check`.
+The final integrated 200-pad release comparison records 257.18 → 224.30 ms on the
+original island (paired 95% delta interval −36.21 to −29.54 ms), and
+748.55 → 726.97 ms on the expanded island (−34.10 to −9.08 ms), per 500000 queries.
+Evidence: output/earthworks/next/final-release/earthworks.json and the browser
+screenshots under output/earthworks/browser/. Mark the terrain foundation stage
+verified locally; keep it Unreleased with the remaining earthmoving feature.
+The partial/moving run remains part of the recorded evidence. Production remains
+0.138.1. Do not confuse this with completion of the entire earthmoving item.
+
+### Stage 3 — Factory earthmovers and plant qualification
+
+Completion criteria before production changes:
+
+- Add append-only bulldozer/backhoe fleet slots without changing existing slots.
+  Queue both at an automotive factory using real configured inputs, payroll and
+  qualified elapsed work. Purchase exactly one completed unit, charge its actual
+  quote and deliver it empty of fuel; reject missing stock, insufficient funds,
+  duplicate ownership, blocked yards and garage acquisition atomically.
+- Teach `plant operator` through the existing school and configurable curriculum.
+  Count it against the skill limit, separately from driver and excavator. Require
+  it for boarding and movement even with vehicleLicences off by default; expose
+  an independent world rule allowing other world builders to waive it.
+- Keep driving, fuel, dimensions and visual configuration in the vehicle editor;
+  manufacturing names/prices/recipes stay in Automotive industry. Default dozer
+  speed is 8 km/h (2.2222222222222223 m/s), limited to 1.5 m/s off-road; backhoe
+  speed is 8 m/s, limited to 3 m/s off-road. Boost must not bypass these caps.
+  Use heavy fuel rates 0.08/0.06 tank units per second and 200/160-unit tanks.
+  Default factory asks are 8000000/7500000 hundredths of a denarius, comparable
+  to the existing highway tractor plus semitrailer. Existing saved automotive
+  configurations must receive defaults without losing any custom products.
+- Both models show a human-scale operator, cab, lights and exhaust. Animate the
+  dozer's tracks and blade, and the backhoe's wheels, loader, digging arm/bucket
+  and stabilisers. Use plate-shaped dozer ground prints within the existing track
+  system. The dozer cannot tow or serve as an arena vehicle. Work/material accounting
+  belongs to stage 4; do not claim that machine possession can already grade land.
+- Run the new focused `tests/earthmoving-machines.test.ts` first and confirm its
+  failure; retain tests for school, authoritative/predicted movement, factory
+  purchase and old-save compatibility. Then run the affected automotive,
+  vehicle-service, parking, tuning and track tests, plus TypeScript and Prettier.
+- Browser: use a disposable factory world to buy, fuel, board and drive each
+  machine; inspect front/side/rear models, controls, moving tracks/wheels, lights,
+  raised/lowered implements and cockpit. Exercise unavailable stock, missing
+  qualification and empty tank, and save/reload the world-builder settings.
+  Capture inspected screenshots. Do not deploy until these criteria pass.
+
+The first machinery run fails all five checks for the intended missing behavior:
+no machine fleet definitions/products, no plant-licence classification, and no
+machine driving caps. Use default assembly inputs of 160 Steel, 6 Electronics,
+12 Tools, 10 Wood and 30 Fuel over 9000 fully staffed seconds for the dozer;
+130 Steel, 10 Electronics, 12 Tools, 12 Wood and 24 Fuel over 8400 seconds for the
+backhoe. Keep these in the existing configurable manufacturing product catalogue.
+
+Stage 3 verification, 2026-11-09: **locally complete, unreleased**. The original
+five red machinery tests now pass. Further regressions caught and fixed missing
+qualification text at boarding, a factory roof hiding the chase camera, generic
+track contacts overwriting model contacts after a speed edit, stationary track
+matrix uploads, unlit lamp emission, and a lowered implement surviving a vehicle
+change. Residents no longer mistake manufactured plant for semitrailers.
+
+Run `npx tsx --test tests/earthmoving-machines.test.ts tests/earthmoving-models.test.ts
+ tests/automotive-manufacturing.test.ts tests/automotive-delivery.test.ts
+ tests/automotive-economy.test.ts tests/highway-driving.test.ts
+ tests/vehicle-services.test.ts tests/vehicle-config.test.ts tests/survival-rules.test.ts
+ tests/snapshots.test.ts tests/ground-tracks.test.ts tests/walking-snow.test.ts
+ tests/tractors.test.ts tests/parked-world.test.ts tests/driving-surface.test.ts
+ tests/town-square-surface.test.ts` (same runner as npm test, scoped per Henry's
+instruction): **146 passed**. TypeScript is clean and changed files are formatted.
+The GPU browser machinery flow passes in 38.2 seconds, including stock/qualification/
+empty-fuel failures, both purchases and models, camera clearance, implement
+controls, lights at midnight and saving/reloading speed without replacing contacts.
+Inspected `output/earthworks/machines/bulldozer-working.png` and
+`backhoe-night.png`; the prior roof-obscured screenshot is not accepted evidence.
+A browser rerun was necessary after a source edit caused Vite to reload mid-test.
+The final run had no page errors. No live world was changed.
+
+### Stage 4 — Survey, working passes and material balance
+
+Before production work, extend the criteria into `tests/earthworks-work.test.ts`:
+
+- Survey without charging or mutating the world. Integrate cut/fill over the pad
+  and shoulders at no coarser than the existing two-metre construction spacing.
+  Report natural range, depth-limited target range, shoulder extent, material,
+  cut/fill/net volumes, remaining fill, estimated travel/passes and engine fuel.
+  Confirm revalidates server-side and reserves the site. Invalid/occupied/wet
+  sites and missing permission leave cash, inventories and terrain unchanged.
+- Drive actual qualified plant through a confirmed pad with the implement down.
+  Only authoritative, fuelled, slow, grounded movement advances it; stationary,
+  raised, unqualified, predicted and out-of-pad movement do not. Upland stone
+  makes work slower using the existing resource provinces. Progress is based on
+  volume, persists through restart, and updates geometry at a bounded cadence.
+- Prove cut-only, fill-only and balanced jobs. Reuse cut before requiring external
+  fill; cap fill progress until real Topsoil/Gravel arrives from inventory or an
+  owned nearby tipping trailer. Never count a failed transfer or charge twice.
+  Spoil becomes real goods, with conversion below quarry yield even when machine
+  performance is tuned. A backhoe carries its spoil to a trailer or heap; a dozer
+  leaves a bounded edge berm. A full bucket must stop work rather than lose goods.
+- Complete within 0.15 m by default and release the construction reservation.
+  Preserve partial terrain when abandoned; only consented operators can resume.
+  Preserve work, delivered material and spoil through save/restart. Bare ground
+  and gravel finish become grass after configured game days, with no progress
+  during a stopped day clock. Prevent new roads across unfinished reservations.
+- Expose all gameplay quantities as Construction rules: working speed, per-metre
+  volumes, upland effort, transfer reach, bucket/heap capacity, fill conversion,
+  spoil/quarry cap, terrain publish interval, finish tolerance and weathering.
+  Canonical defaults live once in data/settings.json and travel in designs.
+- Browser: survey a suitable slope, inspect cut/fill, refusal and empty-material
+  states; confirm, lower the implement and drive passes until terrain changes.
+  Deliver fill through the real controls, abandon/resume, finish and build on it.
+  Check map/chunks, trees, bare/gravel/grass and save/reload. Run relevant work,
+  terrain, construction, road, inventory and navigation tests, TypeScript and
+  changed-file Prettier before declaring this stage done. Contracts and their
+  additional permissions remain stage 5; controller coverage remains stage 6.
+
+Stage 4 initial test run fails because `earthworks-work` is not implemented.
+Default working rules for the first implementation: maximum engaged speed
+1.5 m/s; dozer/backhoe volume 0.8/0.25 m³ per metre; stone effort multiplier 3;
+transfer reach 12 m; backhoe bucket 20 weight and site heap 1000 weight; delivered
+Topsoil/Gravel fills 1 m³ per item; spoil conversion 0.05 items per net cut m³,
+also capped at 0.25 of skilled quarry gathering yield per working second;
+publish terrain at most once per second; completion tolerance 0.15 m; grass
+returns after 5 game days; gravel finish uses one item per 8 m². Default survey
+side 16 m and shoulder 12 m. These values are world rules, not UI copies.
+
+The spoil berm uses a small conical terrain stamp within the surveyed shoulder:
+2 m radius, at most 0.5 m high, reaching full visual size at 20 weight by default;
+all three are Construction rules. Radius also fits inside the shoulder, and height
+is bounded by that shoulder's grade. Collecting the goods shrinks the mound.
+
+Stage 4 shared checks now pass for cut-only/fill-only/balanced pads, real movement
+and prediction isolation, quarry-rate-limited spoil, a full backhoe bucket,
+material transfer through inventory and tipping trailers, abandoned scar
+preservation, consented resumption, SQLite persistence, portable shape restoration,
+road reservations, weathering, regional stone effort and reduced-health work.
+
+The initial browser test failed at the missing Earthworks button as expected.
+After implementation, surveying, confirming, working, abandoning, reloading and
+resuming passed. The first continuation omitted restarting the engine after
+reconnect; the test now uses F4 as a player would. The resulting 1.6-minute
+keyboard-driven flow completed a balanced hillside pad. Inspected the survey and
+finished bare-ground screenshots in output/earthworks/working/. Further coverage
+for building on it, fill failures/transfers, finish changes and controls remains
+required before stage 4 is done. Do not start contracts yet.
+
+A map regression test caught economic/work counters invalidating the terrain
+payload every tick; the map now receives only published shape/finish/berm data.
+Pending work still persists independently of the one-second terrain cadence.
+The first balanced-job test also exposed floating-point progress just below 1;
+completion now snaps only numerical roundoff, without forgiving missing fill.
+
+Stage 4 final relevant run: 121 tests pass (earthworks work/terrain/site,
+construction/rules/expansion, roads and road policy/projects, NPC navigation and
+its budget, machines/models/ground tracks, parked-world collision). Both actual
+browser flows pass in 2.4 minutes, including constructing a foundation on the
+finished pad, refused empty inventory, carried and tipping-trailer fill delivery,
+and gravel/grass. The mobile display assertions also pass: remaining fill drops
+after each delivery and the deliver button disables when fully supplied.
+TypeScript found one nullable trailer reference in the browser fixture; correct
+the assertion and rerun cleanly. Final relevant output is
+`output/earthworks/next/work-relevant-final.log`; browser evidence is in
+`output/earthworks/working/` and `work-browser-full.log` / `work-browser-fill-display.log`.
+
+Henry selected released **0.138.1** as the performance acceptance baseline.
+The stage 4 repeat (`PROFILE_EARTHWORKS=1 PROFILE_TERRAIN_BASELINE=release
+PROFILE_OUT=output/earthworks/next/work-release npx tsx scripts/island-performance.ts`)
+passes with 200 pads: original island 260.498 → 226.987 ms per 500000 samples,
+paired 95% delta interval −39.604 to −27.418 ms; expanded island 740.361 →
+735.088 ms, interval −16.351 to +5.805 ms. The expanded result is statistically
+indistinguishable, not a demonstrated speedup.
+
+Screenshot inspection exposed one remaining mobile usability gap: successful
+material delivery reopens the survey and resets scroll and the selected trailer.
+Before production changes, extend the real phone flow to collapse the survey,
+deliver fill, and require the survey to remain collapsed and the chosen trailer
+to remain selected after the next delivery. Keep the remaining-fill assertions.
+Finish this regression before declaring stage 4 complete or starting contracts.
+
+Review also adds a shoulder-safety assertion before further production changes:
+finish an otherwise valid 6 m cut with 20 m shoulders, generate a real spoil
+berm, and require the final terrain to pass the same maximum-shoulder-grade
+validation as the survey. A mound's own slope limit must not be added on top of
+an already steep shoulder in a way that exceeds the advertised limit.
+
+Stage 4 verification is complete locally, unreleased. The phone regression first
+fails because the successful delivery reopens `<details>`. Keep the existing
+panel mounted and preserve each site's form choices during amount refreshes;
+the same desktop and mobile browser tests now pass in 2.5 minutes. Inspect the
+new mobile screenshot: the collapsed survey, supplied-fill status, disabled
+Deliver button and selected tipping trailer remain together on screen.
+The deep-cut berm regression first fails with the maximum-shoulder-grade refusal.
+Cap the berm using nearby edges of the same survey grid, accounting for existing
+shoulder slope and total fill depth. All 37 earthworks tests pass, then all 54
+focused earthworks/construction-rules/vehicle-config tests pass. TypeScript is
+clean; Prettier and diff whitespace checks pass. Do not count the nonexistent
+stock-life.test.ts path in that command as a tested file; material transfers are
+covered directly in earthworks-work.test.ts. Benchmark acceptance above remains
+valid: the mound adjustment runs only on published work changes, outside
+terrainHeight. Contracts and full controller/northern-hillside acceptance remain
+unimplemented; this combined feature is not released.
+
+### Stage 5 — Contracts, permissions and resident demand
+
+Completion criteria before production changes:
+
+- A client can post an unfinished confirmed pad with a bounded offered fee and
+  explicit client/operator fill responsibility. Posting spends nothing. A machine
+  owner with the required plant qualification accepts from the directory; charge
+  the client exactly once into persisted escrow, including the current town's
+  construction tax on the fee. Refuse insufficient cash, a second acceptance,
+  completed/pending-approval jobs and invalid/disabled offers without mutation.
+  Own unpaid work has no fee to tax; do not invent a separate surveying charge.
+- Credit actual authoritative work by operator. Completion settles once, dividing
+  the agreed fee by credited volume, returning any client's own share to them and
+  paying the town its recorded tax. Abandonment/cancellation refunds held funds
+  once and preserves the scar. A replacement operator reaccepts the same offer,
+  re-funds escrow, and completion pays all recorded contributors proportionally.
+  Freeze terms once paid work has been credited; no duplicate payment or refund
+  after reload, repeated completion or cancellation. Portable designs omit all
+  contract money and identities while saved worlds retain them.
+- Reuse town building permission and add an independently editable Earthworks
+  permission for residents/guests, defaulting to the legacy build/environment
+  permission when absent. Respect the town charter's outside-border policy.
+  Existing hard footprint, road, farm, water and protected-land exclusions remain.
+  In another owner's building-clearance area, create a pending survey requiring
+  that owner's confirmation; it neither grades nor reserves land until all
+  current required owners approve. Show the exact site to those owners. Revalidate
+  before approval/resume/acceptance. Owner-approved working sites retain their
+  agreed permission for the confirmed geometry.
+- List offers, accepted jobs and approval requests from both Parish directory and
+  World beside supply orders. Show fee, tax, fill responsibility, location,
+  progress, operator, contributed work, escrow and settlement/refund state; provide
+  real post/accept/abandon/approve controls, including empty and refusal states.
+- Residents may post a real paid contract for a desired business site refused
+  specifically by slope, only when it will become buildable after a legal pad and
+  they can afford the offer while retaining household/business/build reserves.
+  Use ordinary player actions and travel; never automate machinery work. Limit
+  repeat requests and prefer already completed owned pads for later construction.
+- Construction rules expose contract availability and resident posting/rate/limit
+  with canonical defaults in data/settings.json; reuse the existing cash-transfer
+  limit for offer bounds. Save/export/import and editor tests cover altered values.
+  Initially enable contracts and resident posting, quote resident offers at 1d per
+  cubic metre, and allow one outstanding contract per resident. Fill remains the
+  client's responsibility unless the posted offer assigns it to the operator.
+- Write failing tests in earthworks-contracts.test.ts and NPC/browser counterparts;
+  run payment/refund/handover, town/property permission, persistence and configurable
+  policy cases. Run relevant shared consumers, actual client/operator browser
+  flows on desktop/mobile, TypeScript and Prettier. Do not begin stage 6 until
+  these criteria pass.
+
+Stage 5 initial contract tests fail at the missing earthworks-contracts module;
+resident commissioning tests likewise fail at the missing NPC earthworks module.
+The first shared implementation passes fee/qualification/insufficient-cash,
+completion/tax, cancellation/save, town permission and property-approval cases.
+The hand-over test catches a repeated-abandonment permission refusal; make an
+already stopped job return without another refund. The town form test must now
+assert the new residents/guests earthworks checkbox as well as existing fields.
+
+The bounded browser red run fails at the missing World → Earthworks contracts
+button. Add directory/World access and site-specific fee, responsibility,
+approval, acceptance and cancellation controls without replacing the survey.
+A guest-operator test exposes checking only the client's town rights; require
+both parties' permission at acceptance and recheck the working operator. The NPC
+fixture's 15% slope is correctly buildable for its small mill, while 25% requires
+an illegal shoulder under the default 50% cap. Use a 20% slope that genuinely
+fails the building rule but admits a legal remedy; do not relax either rule.
+Internal cut supplies the pad's fill, so no external NPC material delivery is
+invented. A further red test catches requests despite a full building allowance;
+honor that existing world limit before commissioning. The 60-test shared run
+now passes (contracts, work, NPC commissioning/chains, town charter/UI/layout,
+construction rules). Browser acceptance remains in progress.
+
+The first two-session browser contract flow passes in 1.3 minutes: client posts,
+unqualified acceptance is refused, a qualified mobile operator accepts and
+abandons for a full refund, reaccepts, drives real passes and receives the fee.
+Tighten screenshot synchronization to wait for the actual Accepted/Held amount,
+not the generic word Held that also appears on an open offer. Collapse the survey
+to show contract details together on mobile. Add the property owner's browser
+flow for decline, protected-site refusal and successful confirmation.
+
+Lifecycle review adds failing tests before fixes: a client's death must refund
+escrow before ordinary death cash loss (the initial result incorrectly retains
+494000 instead of 500000), and an affected owner must be able to decline an
+unapproved survey without altering ground. Refund/cancel contracts alongside the
+existing charter/tow death cleanup, reset the implement, and apply the existing
+inventory-loss rule to machine bucket goods. Pending surveys can now be withdrawn
+by their client or declined by an affected owner. All 36 focused lifecycle,
+charter, tow and survival tests pass. No live player or property changes occurred.
+
+Stage 5 verification is complete locally, unreleased. The final 63 shared tests
+pass, including the ordinary resident business planner producing a paid slope
+remedy, and TypeScript is clean. Both client/operator and property-approval
+browser flows pass (1.7 minutes total). Inspect client-offer, mobile-accepted,
+paid and property-approved evidence under output/earthworks/contracts/. Changed
+source/tests/docs have been formatted. No commit, push, deployment or public
+announcement yet: final feature acceptance remains below.
+
+### Stage 6 — Northern hillside and complete control/render acceptance
+
+Before production changes, add a controller regression: an independently
+remappable implement button (standard button 2, Xbox X / PlayStation Square)
+fires once per press, respects saved bindings and does nothing while menus or a
+hidden/disconnected browser suspend gameplay. Keep driving, aircraft braking,
+radio and menu controls unchanged. This is a player's local input preference,
+not a world physics rule. Verify it through an emulated Gamepad API in the real
+browser, including changed binding, held-button suppression and on-screen touch
+controls. Run existing controller/flight input tests too.
+
+Use a generated northern-island world locally, without live data. Choose a legal
+natural hillside that fails the building grade rule before grading. Survey and
+confirm through Build → Earthworks; supply any net fill through the actual
+transfer control, then drive physical passes with the implement engaged until
+complete. Build a foundation on the result with no owner slope bypass. Place a
+road immediately outside the shoulder: reject an overlapping survey, keep the
+road's terrain unchanged and show its join to the finished bank. Verify trees
+and boulders in changed ground disappear in the shared obstacle generation and
+rendered scenery, while distant chunks survive; inspect map/ground mesh updates
+and screenshots. Earlier stage 2 isolated chunk/map evidence supplements the
+full player flow, not its actual survey/driving/building steps.
+
+Use bounded test-world speed/volume/material rules to keep the browser check
+practical, record those settings, and retain default-rule unit coverage. End
+with relevant tests, clean TypeScript, formatting and screenshots. If any
+criterion fails, fix it before release; do not start the next backlog item.
+
+Stage 6 is verified locally (2026-11-09). The controller regression first failed
+with 0 callbacks instead of 1; add the independent local implement binding and
+main-client gameplay/typing guards. All 22 controller/flight regressions pass.
+The final coherent relevant run passes 133 tests:
+`npx tsx --test tests/earthworks*.test.ts tests/earthmoving*.test.ts tests/npc-earthworks.test.ts tests/automotive-delivery.test.ts tests/automotive-manufacturing.test.ts tests/terrain-equivalence.test.ts tests/town-panel.test.ts tests/first-steps-controller.test.ts tests/flight.test.ts`.
+
+`TEST_GPU=1 npm run test:e2e -- tests/browser/earthworks-hillside.spec.ts`
+passes in 2.2 minutes on generated northern terrain at (984, -7432), without
+owner authority. A 16 × 16 m pad with a 12 m shoulder remedies the actual house
+grade refusal. A 16 m shoulder is refused for crossing the adjoining road; 17
+road-edge height samples remain identical after work. The browser supplies 200 m³
+through two carried items, drives physical passes, verifies cleared tree instances
+and stable distant chunks, then places a foundation at target + 0.04 m. Test-world
+rules use volume 10 m³/m, maximum working speed 2 m/s, stone effort 1 and fill
+100 m³/item, all within World Builder ranges. Defaults remain covered separately.
+
+Gamepad API emulation proves default button 2, held-button suppression, menu
+suppression, saved remapping to button 3 and on-screen mobile implement buttons.
+No physical controller hardware claim. Screenshots in output/earthworks/hillside/
+were inspected: survey, before, graded-road and foundation. The boulder-rendering
+check in earthworks-terrain.spec.ts also passes (8.9 seconds), retaining distant
+scenery. Its first run omitted the standalone fixture's public asset base; fix the
+fixture, keeping the assertions. Full-island software WebGL runs timed out during
+lighting preparation; hardware-rendered Performance graphics passed. Preserve
+this environment limitation, not an assertion of fixed overall performance.
+
+Prepare the coherent feature as 0.139.0 under standing commit/push/deploy and
+screenshot-announcement authorization. Update release/player/world-builder docs.
+Keep item 20 pending release verification until the branch is pushed and the live
+checks succeed. No later backlog item has been started.

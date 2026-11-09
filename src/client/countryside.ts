@@ -1,3 +1,4 @@
+import { earthworkIntersects, type EarthworkBounds } from '../shared/earthworks-ground';
 import { sceneryChunk, sceneryChunkSize } from '../shared/scenery-obstacles';
 import { sceneryInstances } from './scenery-instances';
 import { SnowAccumulation } from './snow-accumulation';
@@ -88,6 +89,28 @@ export class CountrysideChunks {
     this.pending = undefined;
     this.world = w;
     this.dirty = new Set(this.chunks.keys());
+  }
+  refreshEarthworks(w: World, changes: readonly EarthworkBounds[]) {
+    this.world = w;
+    for (const [key, mesh] of this.chunks) {
+      const [i, j] = key.split(':').map(Number);
+      if (
+        earthworkIntersects(
+          changes,
+          (i + 0.5) * chunkSize,
+          (j + 0.5) * chunkSize,
+          chunkSize / 2 + 2,
+        )
+      )
+        this.dirty.add(key);
+    }
+    if (
+      this.pending &&
+      earthworkIntersects(changes, this.pending.cx, this.pending.cz, chunkSize / 2 + 2)
+    ) {
+      this.pending.job.return(undefined as never);
+      this.pending = undefined;
+    }
   }
   clear() {
     this.dirty.clear();

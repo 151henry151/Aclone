@@ -91,3 +91,91 @@ test('coastal index preserves headlands after append, replacement and world swit
       reference.bluffHeight(replaced, x, 250, 3, 0),
     );
 });
+
+test('seabed replacement retains exact released heights across coast boundaries and world seeds', async () => {
+  const { terrainHeight: baseline } = await import('./fixtures/terrain-0.138.1');
+  for (const id of ['puddlewick', 'other-coast', '海岸']) {
+    const w = createWorld(id, id, 'owner');
+    w.settings.mapSize = 12500;
+    for (let i = 0; i < 4000; i++) {
+      const angle = i * 0.71;
+      const radius = 4500 + (i % 200) * 20;
+      const x = Math.cos(angle) * radius,
+        z = Math.sin(angle) * radius;
+      assert.equal(terrainHeight(w, x, z), baseline(w, x, z), `${id}: ${x},${z}`);
+    }
+  }
+});
+
+test('terrain seeds follow identifier and explicit northern-seed changes', async () => {
+  const { terrainSeed } = await import('../src/shared/terrain');
+  const { seedOf } = await import('../src/shared/noise');
+  const a = createWorld('seed-a', 'A', 'owner');
+  const b = createWorld('seed-b', 'B', 'owner');
+  for (const w of [a, b, a]) assert.equal(terrainSeed(w), seedOf(w.id));
+  a.id = 'renamed-海岸';
+  assert.equal(terrainSeed(a), seedOf(a.id));
+  const expanded = createWorld('puddlewick', 'P', 'owner');
+  expandPuddlewickIsland(expanded);
+  a.northernIsland = expanded.northernIsland;
+  a.northernIsland!.seed = 42;
+  assert.equal(terrainSeed(a), 42);
+  a.northernIsland!.seed = 0;
+  assert.equal(terrainSeed(a), 0);
+  delete a.northernIsland;
+  assert.equal(terrainSeed(a), seedOf(a.id));
+});
+
+test('indexed river queries preserve released water, banks and terrain through edits', async () => {
+  const live = await import('../src/shared/inland-water');
+  const old = await import('./fixtures/inland-water-0.138.1');
+  const w = createWorld('puddlewick', 'P', 'owner');
+  expandPuddlewickIsland(w);
+  const check = () => {
+    for (const r of w.northernIsland!.rivers)
+      for (const p of r.points)
+        for (const offset of [-350, -128, -1, 0, 1, 128, 350]) {
+          const x = p.x + offset,
+            z = p.z - offset * 0.5;
+          assert.equal(live.inlandGround(w, x, z, 90), old.inlandGround(w, x, z, 90));
+          assert.deepEqual(live.inlandWaterAt(w, x, z), old.inlandWaterAt(w, x, z));
+          assert.equal(live.nearInlandWater(w, x, z), old.nearInlandWater(w, x, z));
+        }
+  };
+  check();
+  const n = w.northernIsland!;
+  n.rivers = n.rivers.map((r) => ({ ...r, points: r.points.map((p) => ({ ...p, x: p.x + 8 })) }));
+  n.ponds.push({ id: 'test-pond', x: -100, z: -10000, rx: 40, rz: 30, level: 120, depth: 4 });
+  check();
+  n.rivers[0].points[0].x += 24;
+  live.invalidateInlandWater(w);
+  old.invalidateInlandWater(w);
+  check();
+});
+
+test('northern region exclusion retains released relief, forest and terrain at every region boundary', async () => {
+  const live = await import('../src/shared/northern-island');
+  const old = await import('./fixtures/northern-island-0.138.1');
+  const w = createWorld('puddlewick', 'P', 'owner');
+  expandPuddlewickIsland(w);
+  const n = w.northernIsland!;
+  const points: number[][] = [];
+  for (const r of n.regions)
+    for (const d of [-0.00001, 0, 0.00001])
+      for (let i = 0; i < 32; i++) {
+        const angle = (i * Math.PI) / 16;
+        points.push([
+          r.x + Math.cos(angle) * (r.radius + d),
+          r.z + Math.sin(angle) * (r.radius + d),
+        ]);
+      }
+  for (let i = 0; i < 5000; i++)
+    points.push([((i * 117.13) % 30000) - 15000, ((i * 331.37) % 35000) - 28000]);
+  for (const [x, z] of points) {
+    assert.deepEqual(live.northernRegion(n, x, z), old.northernRegion(n, x, z));
+    assert.equal(
+      live.northernHeight(n, x, z, w.settings.seaLevel),
+      old.northernHeight(n, x, z, w.settings.seaLevel),
+    );
+  }
+});

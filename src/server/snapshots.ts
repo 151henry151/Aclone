@@ -298,6 +298,7 @@ export function prepareFrame(w: World): Frame {
         smallCraft: p.smallCraft,
         lights: p.lights,
         boatLighting: p.boatLighting,
+        earthmovingImplement: p.earthmovingImplement,
         engineRunning: motorRunning(w, p),
         rowing: p.vehicle === CANOE || p.vehicle === ROWBOAT || (p.vehicle === 33 && p.fuel <= 0),
         team: p.team,

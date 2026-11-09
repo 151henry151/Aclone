@@ -1,3 +1,4 @@
+import { helmBlock } from '../shared/captain';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { parkingRules } from '../shared/parking-rules';
 import type { Player, World } from '../shared/types';
@@ -47,7 +48,7 @@ export function parkingStatus(w: World, p: Player) {
     point,
     distance,
     text: `${v.fuel <= 0 ? 'Out of fuel — ' : ''}${point.name} · ${Math.round(distance)} m ${direction}${garage ? ` · stored at ${garage.name}` : ''}`,
-    returnReason: parkedReturnReason(w, p, v.slot),
+    returnReason: parkedReturnReason(w, p, v.slot) ?? helmBlock(w, v.slot, p.skills),
     refuelReason: parkedRefuelStatus(w, p, p.id, v.slot).reason,
   };
 }

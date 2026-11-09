@@ -37,6 +37,27 @@ const expanded = structuredClone(original),
   started = performance.now();
 expandPuddlewickIsland(expanded);
 const generationMs = performance.now() - started;
+if (process.env.PROFILE_EARTHWORKS === '1') {
+  const { earthworksPerformance } = await import('./earthworks-performance');
+  const progress = Number(process.env.PROFILE_EARTHWORKS_PROGRESS ?? 1);
+  if (!Number.isFinite(progress) || progress < 0 || progress > 1)
+    throw Error('PROFILE_EARTHWORKS_PROGRESS must be between 0 and 1');
+  const released = process.env.PROFILE_TERRAIN_BASELINE === 'release';
+  const baseline = released
+    ? (await import('../tests/fixtures/terrain-0.138.1')).terrainHeight
+    : undefined;
+  const results = earthworksPerformance(
+    original,
+    expanded,
+    baseline,
+    released ? 'release 0.138.1 (1d4311e)' : 'current without pads',
+    progress,
+    process.env.PROFILE_TERRAIN_MOVING === '1',
+  );
+  writeFileSync(out + '/earthworks.json', JSON.stringify(results, null, 2));
+  console.log(JSON.stringify(results));
+  process.exit(results.some((r) => r.measurableRegression) ? 1 : 0);
+}
 const movement = obstaclePerformance(expanded, population || 32);
 writeFileSync(out + '/movement.json', JSON.stringify(movement, null, 2));
 console.log('Movement budget', JSON.stringify(movement));

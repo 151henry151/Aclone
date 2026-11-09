@@ -1,3 +1,4 @@
+import { earthworkIntersects, earthworkBounds } from '../shared/earthworks-ground';
 import { effectivePavement } from '../shared/city-paving';
 import { alpineSnowUniforms, updateAlpineSnow } from './alpine-snow';
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -202,7 +203,17 @@ function surfaceTexture(w: World, region: GroundRegion) {
       s.z + s.radius >= region.z &&
       s.z - s.radius <= region.z + region.size,
   );
-  if (!surfaces.length) return blankTexture([0, 0, 0, 0]);
+  const pads = (w.earthworks ?? []).filter(
+    (p) =>
+      p.progress > 0 &&
+      earthworkIntersects(
+        [earthworkBounds(p)],
+        region.x + region.size / 2,
+        region.z + region.size / 2,
+        region.size / 2,
+      ),
+  );
+  if (!surfaces.length && !pads.length) return blankTexture([0, 0, 0, 0]);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = region.pixels;
   const ctx = canvas.getContext('2d')!,
@@ -221,6 +232,25 @@ function surfaceTexture(w: World, region: GroundRegion) {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
+  }
+  for (const p of pads) {
+    ctx.save();
+    ctx.translate((p.x - region.x) * scale, (p.z - region.z) * scale);
+    ctx.rotate(-p.rotation);
+    const color = p.finish === 'gravel' ? '255,0,0' : p.finish === 'grass' ? '0,0,0' : '0,255,0';
+    ctx.fillStyle = `rgba(${color},${p.progress * 0.4})`;
+    ctx.beginPath();
+    ctx.roundRect(
+      -(p.width / 2 + p.shoulder) * scale,
+      -(p.depth / 2 + p.shoulder) * scale,
+      (p.width + 2 * p.shoulder) * scale,
+      (p.depth + 2 * p.shoulder) * scale,
+      p.shoulder * scale,
+    );
+    ctx.fill();
+    ctx.fillStyle = `rgba(${color},${p.progress})`;
+    ctx.fillRect((-p.width / 2) * scale, (-p.depth / 2) * scale, p.width * scale, p.depth * scale);
+    ctx.restore();
   }
   return canvasTexture(canvas);
 }

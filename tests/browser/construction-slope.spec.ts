@@ -104,6 +104,8 @@ test('construction slope survey shows cut/fill and refusals; owner rules and pho
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Rules', exact: true }).click();
     const group = page.getByRole('group', { name: 'Construction rules', exact: true });
+    await group.locator('[name="earthworksMaximumSide"]').fill('48');
+    await group.locator('[name="earthworksMaximumCount"]').fill('100');
     await group.locator('[name="constructionMaximumGrade"]').fill('30');
     await group.locator('[name="constructionOwnerSlopeBypass"]').check();
     await page.getByRole('button', { name: 'Apply changes to server', exact: true }).click();
@@ -117,6 +119,8 @@ test('construction slope survey shows cut/fill and refusals; owner rules and pho
     await waitForWorld(page);
     await page.keyboard.press('F10');
     await page.getByRole('button', { name: 'Rules', exact: true }).click();
+    await expect(group.locator('[name="earthworksMaximumSide"]')).toHaveValue('48');
+    await expect(group.locator('[name="earthworksMaximumCount"]')).toHaveValue('100');
     await expect(group.locator('[name="constructionMaximumGrade"]')).toHaveValue('30');
     await expect(group.locator('[name="constructionOwnerSlopeBypass"]')).toBeChecked();
     await group.locator('[name="constructionMaximumGrade"]').fill('12');

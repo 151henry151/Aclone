@@ -80,6 +80,8 @@ export function northernRegion(n: NorthernIsland, x: number, z: number) {
   let relief = 1,
     forest = 0;
   for (const r of n.regions) {
+    // Outside either bounding axis the circular influence is exactly zero.
+    if (Math.abs(x - r.x) >= r.radius || Math.abs(z - r.z) >= r.radius) continue;
     const weight = 1 - smoothstep(r.radius * 0.3, r.radius, Math.hypot(x - r.x, z - r.z));
     relief += (r.relief - 1) * weight;
     forest = Math.max(forest, r.forest * weight);
@@ -96,6 +98,7 @@ export function northernHeight(n: NorthernIsland, x: number, z: number, sea: num
     n.radius * (1 + 0.035 * Math.sin(angle * 5 + 1) + 0.022 * Math.sin(angle * 9 - 0.4));
   const radial = Math.hypot(dx, dz) / coastRadius;
   const coast = 1 - smoothstep(0.88, 1, radial);
+  if (coast === 0) return sea - 32;
   const region = northernRegion(n, x, z);
   const hills = fbm(x / 1450, z / 1450, 3, n.seed + 61);
   const shoulders = fbm(x / 460, z / 460, 2, n.seed + 73);

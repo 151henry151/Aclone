@@ -1,3 +1,4 @@
+import { earthworkBusinessPlan } from './earthworks';
 import { automotiveConfig } from '../../shared/automotive-config';
 import { productionRecipe } from '../../shared/production-recipe';
 import { meatRecipes, meatMenus } from '../../shared/meat-recipes';
@@ -149,53 +150,68 @@ export function recipeGraph(w: World): Record<string, GoodLink> {
   return graph;
 }
 
-export function pickBuildSite(w: World, p: Player, kind: string, style?: string) {
-  const founded = w.towns.filter((t) => t.founder === p.id);
-  if (kind === 'waterworks' || kind === 'pumpHouse')
-    return nearestWaterSite(w, founded[0] ?? p, kind);
-  const half = mapHalf(w) - 24;
-  const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
-  const radius = Math.max(footprint.width, footprint.depth) / 2;
-  // Bounded search in the actual map, around this resident's holdings and town.
-  // No legacy +/-230 m box: builders can settle the countryside too.
+function* buildSearchPoints(w: World, p: Player) {
   const centres = [
-    ...founded,
+    ...w.towns.filter((t) => t.founder === p.id),
     p,
     ...w.buildings.filter((b) => b.owner === p.id).slice(0, 3),
     ...w.towns.slice(0, 4),
   ];
   for (const centre of centres)
     for (const ring of [28, 56, 96, 160, 260, 400])
-      for (let i = 0; i < 12; i++) {
-        const v = {
+      for (let i = 0; i < 12; i++)
+        yield {
           x: Math.round(centre.x + Math.cos((i * Math.PI) / 6) * ring),
           z: Math.round(centre.z + Math.sin((i * Math.PI) / 6) * ring),
         };
-        if (
-          Math.abs(v.x) > half ||
-          Math.abs(v.z) > half ||
-          terrainHeight(w, v.x, v.z) <= w.settings.seaLevel + 1 ||
-          onFarmLand(w, v.x, v.z, radius)
-        )
-          continue;
-        if (
-          !w.buildings.every(
-            (b) =>
-              distance(v, b) >
-              Math.max(radius + 20, constructionRules(w.settings).constructionMinimumSpacing),
-          ) ||
-          w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
-        )
-          continue;
-        if (constructionSiteReason(w, { id: 'construction', kind, style, ...v, rotation: 0 }, p))
-          continue;
-        try {
-          constructionTerms(w, p, kind, v);
-        } catch {
-          continue;
-        }
-        return v;
-      }
+}
+
+export function pickBuildSite(w: World, p: Player, kind: string, style?: string) {
+  const founded = w.towns.filter((t) => t.founder === p.id);
+  if (kind === 'waterworks' || kind === 'pumpHouse')
+    return nearestWaterSite(w, founded[0] ?? p, kind);
+  for (const pad of w.earthworks ?? []) {
+    if (pad.owner !== p.id || pad.progress !== 1) continue;
+    const candidate = { id: 'construction', kind, style, x: pad.x, z: pad.z, rotation: 0 };
+    if (constructionSiteReason(w, candidate, p)) continue;
+    try {
+      constructionTerms(w, p, kind, pad);
+      return { x: pad.x, z: pad.z };
+    } catch {
+      /* Try another legal site. */
+    }
+  }
+  const half = mapHalf(w) - 24;
+  const footprint = buildingBounds(buildingPlan({ id: 'construction', kind, style }));
+  const radius = Math.max(footprint.width, footprint.depth) / 2;
+  // Bounded search in the actual map, around this resident's holdings and town.
+  // No legacy +/-230 m box: builders can settle the countryside too.
+  for (const v of buildSearchPoints(w, p)) {
+    if (
+      Math.abs(v.x) > half ||
+      Math.abs(v.z) > half ||
+      terrainHeight(w, v.x, v.z) <= w.settings.seaLevel + 1 ||
+      onFarmLand(w, v.x, v.z, radius)
+    )
+      continue;
+    if (
+      !w.buildings.every(
+        (b) =>
+          distance(v, b) >
+          Math.max(radius + 20, constructionRules(w.settings).constructionMinimumSpacing),
+      ) ||
+      w.zones.some((z) => z.kind === 'noBuild' && distance(v, z) < z.radius)
+    )
+      continue;
+    if (constructionSiteReason(w, { id: 'construction', kind, style, ...v, rotation: 0 }, p))
+      continue;
+    try {
+      constructionTerms(w, p, kind, v);
+    } catch {
+      continue;
+    }
+    return v;
+  }
   return undefined;
 }
 
@@ -230,7 +246,16 @@ function foundingSteps(w: World, p: Player, kind: string): Step[] | undefined {
   const def = worldBuildings(w)[kind];
   if (!def || def.tier > w.tier) return;
   const location = pickBuildSite(w, p, kind);
-  if (!location) return;
+  if (!location) {
+    // Bound expensive cut/fill surveys in a planning turn; ordinary flat sites win.
+    let checked = 0;
+    for (const candidate of buildSearchPoints(w, p)) {
+      const plan = earthworkBusinessPlan(w, p, kind, candidate);
+      if (plan) return [...travelPrep(p), ...plan];
+      if (++checked >= 3) break;
+    }
+    return;
+  }
   const budget = constructionBudget(w, p, kind, location);
   if (!budget) return;
   const owned = w.buildings.filter(
@@ -339,7 +364,7 @@ export function inventChainPlans(w: World, p: Player, state: ResidentState): Far
           ? w.towns.find((t) => t.founder === p.id && distance(t, site) < t.radius)
           : undefined;
       add(
-        `Found a ${def.name}${town ? ` in ${town.name}, the town I founded` : ''}: budget ${budget?.total} including materials, tax, startup capital and living reserve. ${c.reason}. Needs ${kindRecipe(w, c.kind)?.skill} staff and funded buyers; complete and supply the site before income.`,
+        `${plan.some((s) => s.kind === 'operation' && s.operation === 'earthwork') ? 'Commission earthworks for' : 'Found'} a ${def.name}${town ? ` in ${town.name}, the town I founded` : ''}: budget ${budget?.total} including materials, tax, startup capital and living reserve. ${c.reason}. Needs ${kindRecipe(w, c.kind)?.skill} staff and funded buyers; complete and supply the site before income.`,
         plan,
       );
     }

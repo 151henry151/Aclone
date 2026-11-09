@@ -1,3 +1,4 @@
+import { earthworkReserved } from './earthworks-reservations';
 import { surveySlope, slopeAssessment, slopeBypass } from './construction-slope';
 import { bridgeReserved } from './bridge-geometry';
 import { constructionRules, constructionRuleFields } from './construction-rules';
@@ -93,6 +94,8 @@ export function farmExpansionBlocker(
   const roads = townRoads(w);
   for (let i = count; i < count + 4; i++) {
     const p = farmPlotPosition(b, i);
+    if (earthworkReserved(w, p.x, p.z, 6))
+      return 'Complete the earthwork pad before claiming these fields';
     if (bridgeReserved(w, p.x, p.z, 6)) return 'Keep fields clear of the reserved bridge footprint';
     if (spawnReserved(w, p.x, p.z, 6))
       return 'Keep fields outside the town centre and respawn area';

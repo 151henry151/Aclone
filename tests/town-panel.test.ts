@@ -169,11 +169,12 @@ test('town forms convert to engine actions', () => {
       ['operation', 'rule'],
       ['rule', 'permissions'],
       ['residents.build', 'on'],
+      ['residents.earthworks', 'on'],
       ['guests.roads', 'on'],
     ]).value,
     {
-      residents: { build: true, roads: false, environment: false },
-      guests: { build: false, roads: true, environment: false },
+      residents: { build: true, roads: false, environment: false, earthworks: true },
+      guests: { build: false, roads: true, environment: false, earthworks: false },
     },
   );
   assert.deepEqual(

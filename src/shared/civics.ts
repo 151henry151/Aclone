@@ -397,7 +397,16 @@ function ruleValue(w: World, town: Town, rule: TownRule, value: unknown, owner: 
           v && ['build', 'roads', 'environment'].every((k) => typeof v[k] === 'boolean'),
           'Invalid permissions',
         );
-        return { build: !!v.build, roads: !!v.roads, environment: !!v.environment };
+        requireThat(
+          v.earthworks === undefined || typeof v.earthworks === 'boolean',
+          'Invalid earthworks permission',
+        );
+        return {
+          build: !!v.build,
+          roads: !!v.roads,
+          environment: !!v.environment,
+          ...(v.earthworks === undefined ? {} : { earthworks: !!v.earthworks }),
+        };
       };
       const v = value as Record<string, unknown>;
       return { residents: group(v.residents), guests: group(v.guests) };

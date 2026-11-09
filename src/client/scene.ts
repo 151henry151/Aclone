@@ -1,4 +1,8 @@
+import { earthworkDust } from '../shared/earthworks-work';
+import { changedEarthworkBounds } from '../shared/earthworks-ground';
 import { BuildingCamera } from './building-camera';
+import { BULLDOZER, isEarthmover } from '../shared/earthmoving-definitions';
+import { createEarthmover } from './earthmoving-model';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 import { createHighwayTractor } from './highway-model';
 import { BridgeScene } from './bridge-scene';
@@ -109,7 +113,7 @@ import {
   snowDepth,
 } from '../shared/environment';
 import { Precipitation } from './weather';
-import { GroundTracks, trackKind, wheelPrints } from './ground-tracks';
+import { GroundTracks, trackKind, wheelPrints, platePrintTexture } from './ground-tracks';
 import { prepareSnowSurface, snowTrackHeight, liftSnowShadow } from './snow-surface';
 import { cabView, chaseOffset, lookPitchFromDrag, cameraSurfaceFloor } from './camera-look';
 import { snowCover, snowDepthVisual, autumnTint, seasonalMaterial } from './materials';
@@ -216,6 +220,7 @@ export class GameScene {
   private lastWorld = '';
   private revision = '';
   private terrainRevision = '';
+  private earthworks?: World['earthworks'];
   private worldBuild?: Generator<void | Promise<unknown>>;
   private worldBuildError?: unknown;
   private snowJob?: Generator<void | Promise<unknown>>;
@@ -227,6 +232,7 @@ export class GameScene {
   private aircraftCrashes = new AircraftCrashes();
   private chimneyTime = 0;
   private smokesAt = 0;
+  private earthworkDustAt = 0;
   private stars: T.Points;
   private planets: T.Mesh[] = [];
   private lastTime = performance.now();
@@ -265,6 +271,7 @@ export class GameScene {
   private sky = countrySky();
   private precipitation = new Precipitation();
   private tracks = new GroundTracks();
+  private plateTracks?: GroundTracks;
   private customTracks = new Map<string, GroundTracks>();
   private fields = new FarmFields();
   private livestock = new LivestockScene();
@@ -605,10 +612,20 @@ export class GameScene {
     this.updateSmallCraft(world);
     if (!this.bridges.group.parent) this.scene.add(this.bridges.group);
     this.bridges.update(world);
+    const padChanges = changedEarthworkBounds(this.earthworks, world.earthworks);
+    this.earthworks = world.earthworks;
     const rebuilt = this.revision !== rev;
     if (rebuilt) {
       this.revision = rev;
       this.queueWorldBuild(world);
+    } else if (padChanges.length) {
+      if (mapHalf(world) <= legacyHalf + 50) this.queueWorldBuild(world);
+      else {
+        this.ground.refreshEarthworks(world, padChanges);
+        this.woods.refreshEarthworks(world, padChanges);
+        this.horizon.refreshEarthworks(world, padChanges);
+        this.renderer.shadowMap.needsUpdate = true;
+      }
     }
     if (this.lastWorld !== world.id) {
       this.motionClock = new MotionClock();
@@ -618,6 +635,11 @@ export class GameScene {
         dispose(tracks.mesh);
       }
       this.customTracks.clear();
+      if (this.plateTracks) {
+        this.actors.remove(this.plateTracks.mesh);
+        dispose(this.plateTracks.mesh);
+        this.plateTracks = undefined;
+      }
       this.plumes.clear();
       this.fields.reset();
       this.livestock.reset();
@@ -962,6 +984,7 @@ export class GameScene {
     }
   }
   private *buildWorld(w: World): Generator<void | Promise<unknown>> {
+    const preparedPads = w.earthworks;
     const land = new T.Group();
     let terrain: T.Mesh | undefined, water: T.Mesh | undefined, launchComplex: T.Group | undefined;
     const buildingMeshes: T.Group[] = [],
@@ -972,6 +995,7 @@ export class GameScene {
       const terrainRevision = JSON.stringify([
         w.id,
         w.terrain,
+        w.earthworks,
         w.coastalBluffs,
         w.northernIsland ? { ...w.northernIsland, resources: undefined } : null,
         w.airfield,
@@ -1317,6 +1341,18 @@ export class GameScene {
         else this.woods.reset(w, this.low);
       } else this.woods.clear();
       this.terrainRevision = terrainRevision;
+      // A newer progress snapshot can arrive while this scene is yielding.
+      // Apply it after installing the older scene, so that installation cannot
+      // overwrite already-requested local chunk and horizon refreshes.
+      const latest = this.world;
+      if (streamed && latest?.id === w.id) {
+        const lateChanges = changedEarthworkBounds(preparedPads, latest.earthworks);
+        if (lateChanges.length) {
+          this.ground.refreshEarthworks(latest, lateChanges);
+          this.woods.refreshEarthworks(latest, lateChanges);
+          this.horizon.refreshEarthworks(latest, lateChanges);
+        }
+      }
       updateResourceScenery(land, this.world ?? w);
       this.renderer.shadowMap.needsUpdate = true;
       installed = true;
@@ -1501,7 +1537,11 @@ export class GameScene {
       g.add(crow.group);
       g.userData.robocrow = crow;
     } else {
-      if (slot === HIGHWAY_TRACTOR) {
+      if (isEarthmover(slot)) {
+        const machine = createEarthmover(this.world!, slot, tractorPaint(paint)?.color ?? v.color);
+        g.add(...[...machine.children]);
+        Object.assign(g.userData, machine.userData);
+      } else if (slot === HIGHWAY_TRACTOR) {
         const truck = createHighwayTractor(this.world!, tractorPaint(paint)?.color ?? v.color);
         g.add(...[...truck.children]);
         Object.assign(g.userData, truck.userData);
@@ -1777,6 +1817,7 @@ export class GameScene {
         );
         const skipper = w.players[mesh.userData.playerId];
         if (skipper) mesh.userData.highwayAnimate?.(skipper, turn);
+        mesh.userData.earthmovingAnimate?.(!!skipper?.earthmovingImplement, pose.speed, travel, dt);
         if (mesh.userData.cargoBoat && skipper)
           mesh.userData.cargoBoat.setLoad(
             skipper.boatHold
@@ -2001,11 +2042,18 @@ export class GameScene {
           ),
         );
         const arriving = !!p.task?.arrival || !!p.task?.mount || !!p.inside;
-        const truckBody = p.vehicle === HIGHWAY_TRACTOR ? vehicleDef(w, p.vehicle) : undefined;
+        const truckBody =
+          p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)
+            ? vehicleDef(w, p.vehicle)
+            : undefined;
         const bodyClearance = truckBody ? Math.hypot(truckBody.length!, truckBody.width!) / 2 : 0;
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, { position: cam, near: this.camera.near });
-        if (p.vehicle === HIGHWAY_TRACTOR && !arriving && this.cameraMode === 0)
+        if (
+          (p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
+          !arriving &&
+          this.cameraMode === 0
+        )
           this.buildingCamera.clear(
             this.target,
             { position: cam, near: this.camera.near },
@@ -2034,7 +2082,11 @@ export class GameScene {
         );
         if (walking && !arriving && this.cameraMode === 0)
           this.parkedVehicles.clearCamera(this.target, this.camera);
-        if (p.vehicle === HIGHWAY_TRACTOR && !arriving && this.cameraMode === 0)
+        if (
+          (p.vehicle === HIGHWAY_TRACTOR || isEarthmover(p.vehicle)) &&
+          !arriving &&
+          this.cameraMode === 0
+        )
           this.buildingCamera.clear(this.target, this.camera, this.buildingMeshes, bodyClearance);
         local.userData.snapCamera = false;
         const cockpitPitch = this.lookPitch + (tractorView ? (local.userData.viewPitch ?? 0) : 0);
@@ -2103,6 +2155,13 @@ export class GameScene {
           const prints = wheelPrints(mesh.userData.tyreFootprints ?? [], mesh.matrixWorld);
           const asset = w.assets.find((a) => a.id === vehicleDef(w, q.vehicle).trackTexture);
           let tracks = this.tracks;
+          if (q.vehicle === BULLDOZER && !asset) {
+            if (!this.plateTracks) {
+              this.plateTracks = new GroundTracks(platePrintTexture());
+              this.actors.add(this.plateTracks.mesh);
+            }
+            tracks = this.plateTracks;
+          }
           if (asset) {
             let custom = this.customTracks.get(asset.url);
             if (!custom && this.customTracks.size < 4) {
@@ -2128,11 +2187,19 @@ export class GameScene {
               print.width,
             );
         }
-        for (const tracks of [this.tracks, ...this.customTracks.values()]) {
+        for (const tracks of [
+          this.tracks,
+          ...(this.plateTracks ? [this.plateTracks] : []),
+          ...this.customTracks.values(),
+        ]) {
           tracks.tick(dt);
           tracks.sync(snowHeight, snowDepth(w.climate));
         }
-        if (isTractor(p.vehicle) && Math.abs(p.speed) > 1 && this.elapsed - this.smokesAt > 0.18) {
+        if (
+          (isTractor(p.vehicle) || isEarthmover(p.vehicle)) &&
+          Math.abs(p.speed) > 1 &&
+          this.elapsed - this.smokesAt > 0.18
+        ) {
           this.smokesAt = this.elapsed;
           this.plumes.emit(
             pos
@@ -2142,6 +2209,15 @@ export class GameScene {
                   local.userData.exhaust?.clone() ?? new T.Vector3(-0.57 * 0.82, 2.8, 0.78 * 0.82)
                 ).applyQuaternion(local.quaternion),
               ),
+          );
+        }
+      }
+      if (this.elapsed - this.earthworkDustAt > 0.18 && earthworkDust(w, p)) {
+        const root = this.meshes.get(p.id);
+        if (root) {
+          this.earthworkDustAt = this.elapsed;
+          this.plumes.emit(
+            root.localToWorld(new T.Vector3(0, 0.35, vehicleDef(w, p.vehicle).length! / 2)),
           );
         }
       }

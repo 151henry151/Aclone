@@ -983,8 +983,7 @@ stays in place. All design, funding, access, wear and repair rules are in
 
 ## Automotive assembly
 
-This work is in development and is not available in the live release yet. The
-complete manufacturing, freight and economy release is still being verified.
+Automotive assembly and highway haulage are available from 0.137.0.
 
 A new Automotive factory costs 1,600s before town construction tax and requires
 400 Steel, 600 Wood, 1,600 Gravel and 20 Electronics delivered to finish the site.
@@ -1053,3 +1052,91 @@ places and next available collection. Local retail prices do not inflate export
 quotes. Unused time does not accumulate demand. World builders may change or
 disable this outlet. Keep unsold inventory and construction capital in mind when
 judging whether a factory has made money.
+
+## Earthmoving machines
+
+Automotive factories manufacture two earthmoving products: an 800s bulldozer
+and a 750s backhoe. Factories can set their own prices. Both are manufactured
+from supplied materials and engineering labour, collected outside the factory,
+and delivered with empty fuel tanks. They cannot be bought from the garage.
+A fully staffed factory takes 2½ hours for a bulldozer and 2 hours 20 minutes
+for a backhoe; understaffing increases the time in the same way as truck assembly.
+
+Learn **plant operator** at school before boarding either machine. Driver and
+the excavator gathering skill do not substitute for it. The lesson uses the
+world's usual school tuition and duration, and the qualification counts toward
+the skill limit unless the world exempts licences. World builders can separately
+waive plant qualification.
+
+Carry Fuel, use **Inventory → Refuel**, then start the engine with **F4** or the
+Actions button. The bulldozer tops out at 8 km/h on roads and 5.4 km/h off-road;
+the backhoe reaches 28.8 km/h on roads and 10.8 km/h off-road. Boost cannot exceed
+those limits. Neither machine tows agricultural trailers. **G**, controller
+**X / PlayStation Square** (remappable under Controller settings), or the
+**Lower/Raise implement** button in Inventory/Actions, controls the blade or
+buckets. Dismounting raises the equipment. **L** controls the lights and **C**
+cycles the camera, including the cab view.
+
+Open Build → Earthworks to survey a site, or find paid requests under
+World → Earthworks contracts.
+
+### Surveying and grading
+
+Open **Build → Earthworks**, or **Inventory/Actions → Earthworks** while aboard
+a machine. Drag the site plan to draw a pad; refine its centre, dimensions,
+rotation, target height and shoulder. Amber marks ground to cut, blue marks fill.
+The survey shows cut/fill volumes including shoulders, material, estimated travel,
+passes and fuel, and the permitted target range. It charges nothing. A refusal
+explains protected land, water, occupied sites or limits that prevent confirmation.
+
+Confirming reserves the site. With the plant qualification, fuel and engine on,
+lower the implement and drive slowly inside the pad. Both ends of a working pass
+must stay inside it. Stationary machines and client prediction cannot earn work.
+The default maximum working speed is 1.5 m/s; use short passes or reverse slowly
+in the faster backhoe. Stone-bearing uplands take more work, and low health reduces
+how much you move. Terrain changes gradually at the world's configured cadence.
+
+Cut supplies fill on the same job first. For a shortfall, stop nearby and use the
+site's **Deliver fill** form with Topsoil or Gravel from your inventory or your
+own nearby quarry tipping trailer. The panel reports what remains. Delivery
+consumes the goods once; working passes do not charge them again. Defaults allow
+one cubic metre per delivered item. Shortages stop progress before completion.
+
+A dozer leaves saleable surplus in an edge berm, limited by the slope already
+used by the shoulder; collect it from the site into
+your bag or tipping trailer. A backhoe carries its surplus in its separate bucket;
+use **Unload bucket** with a trailer selected, or leave the selector on the site
+heap to unload beside the pad. A full bucket or heap stops work without losing
+goods. Conversion and output rates are deliberately below skilled quarrying.
+
+At 100%, the footprint is level and construction is allowed again. **Spread
+gravel** consumes the displayed area's requirement from inventory or a selected
+tipping trailer. Bare and gravel finishes green over after five game days by
+default; a stopped day clock also stops this recovery. **Abandon work** releases
+the reservation but keeps the partial terrain and supplied material. The owner
+can resume or give another named operator permission to resume. Saved worlds
+retain work and bucket/site goods; portable designs retain the terrain and berm,
+but do not clone collectible spoil or private vehicle cargo.
+
+### Earthworks contracts
+
+**World → Earthworks contracts** and the Parish directory list requests across
+the world. A site owner can offer a fee in denarii and state whether they or the
+operator supplies fill. Posting costs nothing. An owner of a qualified earthmover
+can accept; the client must then have the fee plus the site's town construction
+tax in cash. That money is held until the pad completes.
+
+The contract pays for actual moved volume. If an operator abandons the job, the
+client receives the held money back and the scar remains. Another operator can
+accept the same offer; the fee and tax are held again, and eventual completion
+splits the fee between recorded contributors. Death releases held payments before
+normal death losses apply; a client's death cancels their offer. Credited work locks the offer's
+terms. A client can cancel an unfinished contract for a refund, but completed
+payments are final. Own unpaid work has no separate surveying charge or fee to tax.
+
+Town building and earthworks permissions apply to both clients and operators.
+Near another player's property clearance, a survey waits for that owner's
+confirmation before reserving land or changing ground. The owner sees its exact
+location, dimensions, level and shoulder in the contracts panel, and can decline
+the request; the client can withdraw it. Buildings,
+yards, fields, roads and protected geography remain excluded even with consent.

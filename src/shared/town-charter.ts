@@ -36,6 +36,7 @@ export const townRules = [
 export type TownRule = (typeof townRules)[number];
 
 export interface Permissions {
+  earthworks?: boolean;
   build: boolean;
   roads: boolean;
   environment: boolean;
@@ -213,6 +214,7 @@ export function nearestTown(w: World, x: number, z: number): Town | undefined {
 }
 
 const permissionVerbs = {
+  earthworks: 'carry out earthworks',
   build: 'build property',
   roads: 'build roads',
   environment: 'modify the environment',
@@ -228,7 +230,13 @@ export function townRefusal(
 ) {
   if (!town) return;
   const resident = !!player && town.residents.includes(player);
-  if (town.permissions[resident ? 'residents' : 'guests'][key]) return;
+  const permission = town.permissions[resident ? 'residents' : 'guests'];
+  if (
+    key === 'earthworks'
+      ? (permission.earthworks ?? (permission.build && permission.environment))
+      : permission[key]
+  )
+    return;
   return resident
     ? `${town.name} does not allow residents to ${permissionVerbs[key]}`
     : `Only residents may ${permissionVerbs[key]} in ${town.name}`;

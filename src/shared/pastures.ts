@@ -1,3 +1,4 @@
+import { earthworkReservedFootprint } from './earthworks-reservations';
 import { bridgeReservedFootprint } from './bridge-geometry';
 import { rectanglesOverlap } from './vehicle-footprint';
 import { surveySlope, slopeAssessment, slopeBypass } from './construction-slope';
@@ -45,6 +46,8 @@ export function pastureBlocker(
       { x: sn, z: c },
     ],
   };
+  if (earthworkReservedFootprint(w, footprint))
+    return 'Complete the earthwork pad before claiming this pasture';
   if (w.bridges?.some((bridge) => rectanglesOverlap(footprint, bridgeReservedFootprint(bridge))))
     return 'Keep pasture clear of the reserved bridge footprint';
   const survey = surveySlope(w, centre.x, centre.z, span, size, b.rotation);

@@ -1305,7 +1305,30 @@ and foundation heights survive changes, restart and design export/import.
 authority to bypass only the slope checks. Disable it to apply the same grades
 to owners. Other construction permissions, dry-land and reservation checks remain.
 The Build site plan displays cut/fill colours around its midpoint survey target;
-it does not reshape terrain. Player-operated earthworks are a later stage.
+it does not reshape terrain. Use Build → Earthworks to survey and reserve grading.
+
+Terrain pads use these Construction settings:
+`earthworksEnabled` (true), `earthworksMaximumSide` (60 m),
+`earthworksMaximumShoulder` (30 m), `earthworksMaximumGrade` (50%),
+`earthworksMaximumDepth` (6 m), `earthworksMaximumCount` (256), and
+`earthworksMaximumArea` (500000 m², including shoulders). Gathering grounds keep
+`earthworksResourceClearance` (12 m); inland channels and their bank blends keep
+`earthworksBankClearance` (320 m). Reducing either clearance removes its buffer,
+not the protected water or gathering ground itself. These values travel in world
+designs and can be edited under **F10 → Rules → Construction rules**.
+
+Portable `earthworks` records retain rotated dimensions, target, shoulder,
+progress and finish. Import remaps ownership to the new world owner and preserves
+age relative to world time. Invalid geometry or protected-site conflicts refuse
+the whole import. Completed pads may retain buildings and fields subsequently
+placed above them; their saved foundations stay fixed. Unfinished pads reserve
+their footprints and shoulders. Grading cannot flood land, fill water, cover
+protected sites or supersede another owner's works. Regrading one's completed
+pad is allowed. Progress refreshes nearby terrain and map contours and clears
+procedural obstacles only where their ground changes.
+
+Players confirm pads through Build → Earthworks, then operate manufactured
+machines and supply any net fill. Grading and weathering rules are described below.
 
 **F10 → Rules → Construction rules** configures `constructionMinimumSpacing`
 (default 12 m), `constructionPlacementReach` (4 m), `spawnClearance` (12 m),
@@ -2017,9 +2040,7 @@ world and included in exported designs; older worlds use the defaults.
 
 ## Automotive industry
 
-**F10 → Automotive industry** configures the developing factory system. This is
-not part of the current live release; the complete truck and factory economy
-release remains under verification. Rules are stored in `World.automotive` with canonical defaults
+**F10 → Automotive industry** configures the factory system released in 0.137.0. Rules are stored in `World.automotive` with canonical defaults
 in `data/automotive.json`, and travel with reusable world designs.
 
 Factory rules cover enablement, development tier (default 2), construction cash
@@ -2081,3 +2102,75 @@ the existing NPC input/payroll reserve settings. Configured prices and costs can
 make a recipe unprofitable, in which case they do not automatically fund it.
 Manufacturing, retail buying and exports use ordinary ownership/payment actions;
 no resident or factory is given starting supplies by this feature.
+
+### Earthmover configuration
+
+Automotive industry gains separate Bulldozer and Backhoe products. Names, prices,
+input recipes and fully staffed assembly times live there; existing saved rules
+receive the new defaults while retaining their earlier customised products.
+Factory posted prices remain independent. Defaults are 800s and 750s, respectively.
+Bulldozer assembly uses 160 Steel, 6 Electronics, 12 Tools, 10 Wood and 30 Fuel
+over 9,000 fully staffed seconds; backhoes use 130 Steel, 10 Electronics,
+12 Tools, 12 Wood and 24 Fuel over 8,400 seconds.
+
+**Rules → Construction → Earthworks plant licence** defaults on and requires
+`plant operator` even if general vehicle licences are off. Disabling it leaves
+the ordinary driver-licence policy in force. School tuition/duration and whether
+licences count against the skill limit use the existing survival settings.
+
+**Vehicles** holds each machine's road and off-road speed, acceleration, turning,
+fuel burn, tank, body dimensions, lights, custom models and contact geometry.
+Bulldozer defaults: 2.2222222222222223 m/s on roads, 1.5 m/s off-road,
+0.08 tank units/second and a 200-unit tank. Backhoe defaults: 8 m/s on roads,
+3 m/s off-road, 0.06 tank units/second and a 160-unit tank. Off-road speed accepts
+0.1–30 m/s, always capped by the main speed. Ground and road modes are supported;
+manufactured names/prices are intentionally edited in Automotive industry.
+
+Keep **Custom ground contacts** disabled to use the built-in tracks or wheels.
+Enable it when a replacement model needs explicit front/rear track and tyre
+sizes or wheelbase. Disabling Tracks suppresses prints. Editing unrelated
+performance values preserves the built-in contacts. All these rules travel
+with portable world designs.
+
+### Grading and spoil rules
+
+Construction rules also control actual grading. Defaults are 1.5 m/s maximum
+working speed, 0.8 m³ moved per metre by a bulldozer and 0.25 by a backhoe, with
+up to three times the effort in stone-rich provinces. Transfer reach is 12 m;
+the backhoe bucket holds 20 weight and each site heap 1,000 weight. A delivered
+Topsoil/Gravel item supplies 1 m³. Saleable spoil is limited to 0.05 items per net
+cut cubic metre and 25% of the configured skilled quarry gathering rate; both
+limits apply. Changing machine speed or volume cannot bypass the quarry cap.
+
+Terrain publication defaults to once per second, independently of saved work
+counters. Completion tolerance defaults to 0.15 m. Gravel finish uses one item
+per 8 m²; grass recovery takes five game days and pauses with the day clock.
+Initial survey dimensions are 16 m with a 12 m shoulder. Berm height also respects
+the slope already used by the finished shoulder and the total fill-depth limit. The visual spoil berm
+uses a 2 m radius and at most 0.5 m height, reaching its full visual size at
+20 weight. It is also constrained to the surveyed shoulder and its grade.
+All quantities are editable and included in portable designs.
+
+World saves preserve active jobs, consent, fill receipts, spoil and private
+machine buckets. Portable designs instead keep shape and progress, remap owners,
+stop imported jobs and omit collectible spoil and private cargo. Resuming an
+imported partial job requires material for the remaining net fill; already-shaped
+ground is credited. New road plans avoid active unfinished reservations.
+
+### Earthworks contract rules
+
+Construction rules include **Allow paid earthworks contracts** (on), **Allow
+residents to request earthworks contracts** (on), **Resident earthworks offer per
+cubic metre** (100 hundredths of a denarius, or 1d), and **Maximum outstanding
+earthworks contracts per resident** (1). Offers share the existing cash-transfer
+limit. Towns expose a separate Earthworks checkbox for residents and guests;
+older towns without that field inherit their build/environment permission.
+Disabling new contracts does not prevent refunding an existing agreement.
+
+Resident proposals use ordinary player actions and reserve no invented cash or
+materials. They require a business need, a slope-only refusal, a legal pad whose
+cut can supply its fill, and money left for the construction/startup/household
+budget plus the fee and tax. Planning bounds the expensive surveys; residents do
+not operate machinery automatically. Completed owned pads are considered first
+for subsequent building placement. World saves retain escrow and contributions;
+portable designs carry terrain and settings without copying paid agreements.

@@ -1,3 +1,4 @@
+import { isEarthmover, earthmovingVehicle } from './earthmoving-definitions';
 import { HIGHWAY_TRACTOR, highwayTractor } from './highway-definitions';
 import { cargoAccepts } from './cargo-policy';
 import { trailerDefs } from './trailer-definitions';
@@ -23,6 +24,7 @@ export const vehicleTuningSchema = z
       z.literal(8),
     ]),
     speed: number(1, 100),
+    offRoadSpeed: number(0.1, 30),
     acceleration: number(0.1, 50),
     turn: number(0.1, 6),
     armour: number(10, 1000),
@@ -112,10 +114,15 @@ export function vehicleDef(
   slot: number,
 ): VehicleDef & Omit<VehicleTuning, 'mode'> {
   if (slot === CANOE) return canoeVehicle(w?.settings);
-  const base: VehicleDef = slot === HIGHWAY_TRACTOR ? highwayTractor(w) : vehicles[slot],
+  const base: VehicleDef =
+      slot === HIGHWAY_TRACTOR
+        ? highwayTractor(w)
+        : isEarthmover(slot)
+          ? earthmovingVehicle(slot, w)
+          : vehicles[slot],
     tuning = w?.vehicleTuning?.[slot];
   const result = { ...base, ...tuning };
-  if (slot === HIGHWAY_TRACTOR) {
+  if (slot === HIGHWAY_TRACTOR || isEarthmover(slot)) {
     result.price = base.price;
     result.name = base.name;
   }
@@ -138,12 +145,12 @@ export function crewBerths(slot: number, w?: Pick<World, 'vehicleTuning'>) {
 export function validateVehicleTuning(w: World, slot: number, input: unknown, replace = false) {
   if (slot === CANOE) throw Error('Tune canoes in Portable canoes world rules');
   if (
-    slot === HIGHWAY_TRACTOR &&
+    (slot === HIGHWAY_TRACTOR || isEarthmover(slot)) &&
     input &&
     typeof input === 'object' &&
     ('price' in input || 'name' in input)
   )
-    throw Error('Set manufactured truck names and prices in Automotive industry');
+    throw Error('Set manufactured vehicle names and prices in Automotive industry');
   const tuning = vehicleTuningSchema.parse(input),
     v = { ...vehicles[slot], ...(replace ? {} : w.vehicleTuning?.[slot]), ...tuning };
   if (
@@ -152,6 +159,8 @@ export function validateVehicleTuning(w: World, slot: number, input: unknown, re
     tuning.mode !== vehicles[slot].mode
   )
     throw Error('Walking, creature, scout and lifeboat movement modes are reserved');
+  if (isEarthmover(slot) && ![0, 1].includes(v.mode))
+    throw Error('Earthmovers require ground or road movement');
   if (slot === HIGHWAY_TRACTOR && ![0, 1].includes(v.mode))
     throw Error('Highway tractors require ground or road movement');
   if (slot === HIGHWAY_TRACTOR && (v.height ?? 0) < 3.2)

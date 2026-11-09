@@ -69,6 +69,25 @@ export function trackPrintTexture() {
   printMap.needsUpdate = true;
   return printMap;
 }
+let plateMap: T.DataTexture | undefined;
+/** Transverse steel plate impressions share the existing bounded, fading track pool. */
+export function platePrintTexture() {
+  if (plateMap) return plateMap;
+  const width = 128,
+    height = 128,
+    data = new Uint8Array(width * height * 4);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const edge = Math.min(x, width - 1 - x, y, height - 1 - y);
+      const alpha = edge < 8 ? 0 : y % 24 < 17 ? 210 : 24;
+      data.set([255, 255, 255, alpha], (y * width + x) * 4);
+    }
+  plateMap = new T.DataTexture(data, width, height, T.RGBAFormat);
+  plateMap.colorSpace = T.SRGBColorSpace;
+  plateMap.magFilter = plateMap.minFilter = T.LinearFilter;
+  plateMap.needsUpdate = true;
+  return plateMap;
+}
 let rutMaps: { color: T.DataTexture; height: T.DataTexture } | undefined;
 /** A continuous compressed tyre channel with bevelled shoulders and tread on its floor.
  * Height is linear data; colours provide cavity shading when dynamic shadows are off. */

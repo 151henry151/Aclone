@@ -75,7 +75,7 @@ export function survivalRules(settings: Partial<SurvivalRules> = {}): SurvivalRu
     ]),
   ) as SurvivalRules;
 }
-const licences = new Set(['driver', 'pilot', 'captain']);
+const licences = new Set(['driver', 'pilot', 'captain', 'plant operator']);
 export function skillCounts(w: Pick<World, 'settings'>, id: string) {
   return survivalRules(w.settings).licencesCountSkills || !licences.has(id);
 }

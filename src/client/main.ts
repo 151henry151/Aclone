@@ -1,3 +1,5 @@
+import { earthworksPanel, mountEarthworksPanel } from './earthworks-panel';
+import { isEarthmover } from '../shared/earthmoving-definitions';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 import { manufacturingPanel, refreshManufacturing } from './automotive-panel';
 import { automotiveConfig } from '../shared/automotive-config';
@@ -639,6 +641,7 @@ async function connect() {
         (msg.ok || visit !== undefined) &&
         !(panel === 'editor' && tab === 'Landscape') &&
         panel !== 'bridges' &&
+        panel !== 'earthworks' &&
         panel &&
         view === $('modal-host').dataset.viewKey
       )
@@ -1945,7 +1948,7 @@ function renderPanel() {
   if (panel === 'controllerOptions') {
     modal(
       'Controller settings',
-      `<p>Left stick drives. A opens the nearby building. Menu opens Actions; B closes it. In menus use D-pad up/down to focus, left/right to change a selector or number, A to press a button. These controls also operate buying and building forms. Text entry uses your device keyboard.</p><form id="controller-settings">${Object.entries(
+      `<p>Left stick drives. A opens the nearby building. Menu opens Actions; B closes it. X (PlayStation Square) raises or lowers earthmoving equipment. In menus use D-pad up/down to focus, left/right to change a selector or number, A to press a button. These controls also operate buying and building forms. Text entry uses your device keyboard.</p><form id="controller-settings">${Object.entries(
         controller.config,
       )
         .map(
@@ -2087,7 +2090,7 @@ function renderPanel() {
   if (panel === 'mobile-actions') {
     modal(
       'On the move.',
-      `${outdoorServiceButton(scene.nearest()?.id)}<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button('Find tractor', 'find-tractor')}${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('CB radio', 'radio')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
+      `${outdoorServiceButton(scene.nearest()?.id)}${earthmovingControls()}<p>Hold the arrows to drive; use steering and throttle together. Drag the scenery to look around; pinch to zoom. Release the controls to slow down.</p><h3>Vehicle & camera</h3><div class="menu-grid">${button('Find tractor', 'find-tractor')}${hasMotor(world, me.vehicle) ? button(me.engine ? 'Stop engine' : 'Start engine', 'engine') : ''}${button(me.vehicle === 5 ? (me.lights ? 'Flashlight off' : 'Flashlight on') : poweredBoat(me.vehicle, world) || vehicleDef(world, me.vehicle).lights?.length ? 'Vehicle lighting' : me.lights ? 'Turn lights off' : 'Turn lights on', 'lights')}${button('CB radio', 'radio')}${button('Change camera', 'camera')}${button('Zoom in', 'camera-zoom', 'data-id="in"')}${button('Zoom out', 'camera-zoom', 'data-id="out"')}${button('Walk on foot', 'walk')}${button('Return to tractor', 'tractor')}${button('Toggle robocrow', 'crow')}${button(sound.status, 'sound')}</div>${
         world.settings.fighting
           ? `<h3>Weapon · ${esc(weapons[weapon].name)}</h3><p>Use Fire beside the driving controls. Hold and release Fire to throw a javelin.</p><div class="menu-grid">${Object.entries(
               weapons,
@@ -2187,7 +2190,7 @@ function renderPanel() {
             )
             .join(
               '',
-            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${springPanel(world, me)}${canoePanel(world, me)}${trailerPanel(world, me)}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Find tractor', 'find-tractor')}${button('Toggle robocrow', 'crow')}`
+            )}</div><p class="note">Discarding permanently removes an item without payment. Sell it or store it when possible.</p>${springPanel(world, me)}${canoePanel(world, me)}${trailerPanel(world, me)}${earthmovingControls()}${boatControls()}${button('Switch to walking', 'walk')}${button('Return to tractor', 'tractor')}${button('Find tractor', 'find-tractor')}${button('Toggle robocrow', 'crow')}`
         : `<p>${skillSlotsUsed(world, me)} of ${world.settings.maxSkills} skill slots used.</p>${me.skills.map((s) => `<div class="notice">${esc(world!.catalogue?.skills[s]?.name ?? s)} · Qualified</div>`).join('') || '<p>No qualifications yet. A visit to the school should sort that out.</p>'}${me.learning ? `<p>Learning ${esc(world.catalogue?.skills[me.learning.skill]?.name ?? me.learning.skill)} · ${Math.ceil((me.learning.end - world.time) / 60)} minutes remaining</p>` : ''}<p>Employment: ${esc(world.buildings.find((b) => b.id === me!.job)?.name ?? 'Between opportunities')}</p>${me.job ? button('Quit job', 'quit') : ''}`,
     );
     return;
@@ -2200,7 +2203,7 @@ function renderPanel() {
   if (panel === 'directory') {
     modal(
       'Parish directory.',
-      `${button('Taxes & rates', 'taxes')}<p>Find a building on the map, drive up, and press E. Transactions require you to be within 18 metres.</p><div class="directory">${world.buildings.map((b) => `<button data-do="building" data-id="${b.id}"><span><b>${esc(b.name)}</b><small>${esc(b.kind)} · ${b.owner ? (b.government ? 'Public service' : 'Player owned') : 'For sale ' + money(b.price)}</small></span><span>${Math.round(distance(me!, b))} m ↗</span></button>`).join('')}</div>`,
+      `${button('Taxes & rates', 'taxes')}${button('Earthworks contracts', 'earthworks')}<p>Find a building on the map, drive up, and press E. Transactions require you to be within 18 metres.</p><div class="directory">${world.buildings.map((b) => `<button data-do="building" data-id="${b.id}"><span><b>${esc(b.name)}</b><small>${esc(b.kind)} · ${b.owner ? (b.government ? 'Public service' : 'Player owned') : 'For sale ' + money(b.price)}</small></span><span>${Math.round(distance(me!, b))} m ↗</span></button>`).join('')}</div>`,
     );
     return;
   }
@@ -2251,10 +2254,20 @@ function renderPanel() {
     );
     return;
   }
+  if (panel === 'earthworks') {
+    modal('Earthworks', earthworksPanel(world, me), true);
+    closeBuildPreview = mountEarthworksPanel(
+      $('modal-host').querySelector<HTMLElement>('[data-earthworks-panel]')!,
+      () => ({ w: world!, p: me! }),
+      send,
+    );
+    return;
+  }
   if (panel === 'construction') {
     modal(
       'Build something useful.',
-      button('River bridges', 'bridges') +
+      button('Earthworks', 'earthworks') +
+        button('River bridges', 'bridges') +
         buildMenuHtml(world.settings) +
         `<h3>Town government</h3><p>Visit a council building or town centre to join, vote or stand for office.</p>${nearbyTownPanels(world, me)}${foundTownForm(world, me)}`,
       true,
@@ -2312,7 +2325,7 @@ function renderPanel() {
   if (panel === 'menu') {
     modal(
       'Parish business.',
-      `<div class="menu-grid">${button('Parish map', 'map')}${button('Find tractor', 'find-tractor')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Parish lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('HUD & layout', 'hud')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
+      `<div class="menu-grid">${button('Parish map', 'map')}${button('Find tractor', 'find-tractor')}${button('Journal & reports', 'reports')}${button('Statistics', 'statistics')}${button('Loans & repayments', 'loans')}${button('Quests', 'quests')}${button('Town events', 'townEvents')}${button('Courses & scoreboards', 'courses')}${world.settings.lotteryEnabled || world.lottery ? button('Parish lottery', 'lotteryPanel') : ''}${world.settings.parishOrders ? button('Parish supply orders', 'procurement') : ''}${button('Earthworks contracts', 'earthworks')}${button('Directory', 'directory')}${button('Players & roadside help', 'players')}${button('Mail, family & trades', 'social')}${button('AI neighbours', 'npc')}${button('Inventory', 'inventory')}${button('Qualifications', 'skills')}${button('Activities', 'activities')}${button('Construction', 'construction')}${button('World editor', 'editor')}${me.authority >= 20 ? button('Caretaker dashboard', 'caretaker') : ''}${button('HUD & layout', 'hud')}${button('Options & pilot key', 'options')}${button('World rules & leaving safely', 'worldRules')}${button('Taxes & rates', 'taxes')}${button('Controller settings', 'controllerOptions')}${button('Field guide', 'help')}${button('Leave activity', 'leaveGame')}</div><h3>Noticeboard</h3><p>${esc(world.messages.find((m) => m.name === 'Parish notice')?.text ?? 'No news is respectable news.')}</p><p class="note">Take off from the spaceport to visit another world. Your businesses stay behind and continue producing.</p>`,
     );
     return;
   }
@@ -2920,6 +2933,7 @@ app.addEventListener('click', async (e) => {
       'resources',
       'activities',
       'construction',
+      'earthworks',
       'bridges',
       'editor',
       'caretaker',
@@ -3127,6 +3141,9 @@ app.addEventListener('click', async (e) => {
         break;
       case 'boatIdle':
         send({ type: 'boatIdle' });
+        break;
+      case 'earthmoving-implement':
+        send({ type: 'earthmovingImplement' });
         break;
       case 'lights':
         if (
@@ -3873,6 +3890,8 @@ window.addEventListener('keydown', (e) => {
   }
   if (key === 'b' && throttleBoat(me?.vehicle ?? -1, world) && !e.repeat)
     send({ type: 'boatIdle' });
+  if (key === 'g' && isEarthmover(me?.vehicle ?? -1) && !e.repeat)
+    send({ type: 'earthmovingImplement' });
   if (key === 'f4') send({ type: 'engine' });
   if (key === 'l') send({ type: 'lights' });
   if (key === 'f5' || key === 'r') send({ type: 'crow' });
@@ -3926,6 +3945,17 @@ const controller = new Controller(
     if (world) openPanel('radio');
   },
   (down) => radioConsole.transmit(down),
+  () => {
+    if (
+      world &&
+      scene.ready &&
+      !panel &&
+      !mobile.drawer &&
+      !document.activeElement?.matches('input,textarea,select') &&
+      isEarthmover(world.players[account!.id]?.vehicle ?? -1)
+    )
+      send({ type: 'earthmovingImplement' });
+  },
 );
 document.addEventListener('submit', (e) => {
   const form = e.target as HTMLFormElement;
@@ -4100,6 +4130,10 @@ app.addEventListener('change', (e) => {
   if (world) creatorControls(world, e.target as HTMLElement);
 });
 
+function earthmovingControls() {
+  if (!world || !me || !isEarthmover(me.vehicle)) return '';
+  return `<section data-earthmoving-controls>${button('Earthworks', 'earthworks')}<h3>${esc(vehicleDef(world, me.vehicle).name)}</h3>${button(me.earthmovingImplement ? 'Raise implement (G)' : 'Lower implement (G)', 'earthmoving-implement')}<p>G raises or lowers the blade and digging equipment. Start the engine with F4; carry Fuel and use Refuel in Inventory.</p></section>`;
+}
 function boatControls(building?: string) {
   if (!world || !me || me.vehicle === CANOE) return '';
   const dock = boatLanding(world, me, boatSlot(me.vehicle, world), building);

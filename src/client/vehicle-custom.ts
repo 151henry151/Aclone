@@ -1,3 +1,4 @@
+import { isEarthmover } from '../shared/earthmoving-definitions';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
@@ -54,7 +55,12 @@ export function configureVehicleVisual(root: T.Group, w: World, slot: number) {
     root.add(lens);
     return { lens, l };
   });
-  if (v.tracks !== undefined || v.frontTrack !== undefined || v.rearTrack !== undefined) {
+  if (
+    v.tracks === false ||
+    (!isEarthmover(slot) && v.tracks !== undefined) ||
+    v.frontTrack !== undefined ||
+    v.rearTrack !== undefined
+  ) {
     root.userData.tyreFootprints =
       v.tracks === false
         ? []

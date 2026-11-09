@@ -1,3 +1,8 @@
+import {
+  changedEarthworkBounds,
+  earthworkIntersects,
+  earthworksTerrain,
+} from './earthworks-ground';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { finishRoadWork, type RoadWork } from './road-work';
 import type { World } from './types';
@@ -95,6 +100,7 @@ function random(seed: number) {
   return () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
 }
 type Cache = {
+  earthworks?: World['earthworks'];
   signature: string;
   chunks: Map<string, SceneryObstacle[]>;
   buckets: Map<string, Map<string, SceneryObstacle[]>>;
@@ -112,6 +118,7 @@ const checked = new WeakMap<
     landscape: World['landscape'];
     roadRef: World['roads'];
     terrain: World['terrain'];
+    earthworks?: World['earthworks'];
     revision: number;
     buildings: number;
     roads: number;
@@ -130,6 +137,28 @@ function identity(value: object | undefined) {
     identities.set(value, id);
   }
   return id;
+}
+function syncEarthworks(cache: Cache, w: World) {
+  const changes = changedEarthworkBounds(cache.earthworks, w.earthworks);
+  if (!changes.length) {
+    cache.earthworks = w.earthworks;
+    return;
+  }
+  for (const key of cache.chunks.keys()) {
+    const [i, j] = key.split(':').map(Number);
+    if (
+      earthworkIntersects(
+        changes,
+        (i + 0.5) * sceneryChunkSize,
+        (j + 0.5) * sceneryChunkSize,
+        sceneryChunkSize / 2 + 2,
+      )
+    ) {
+      cache.chunks.delete(key);
+      cache.buckets.delete(key);
+    }
+  }
+  cache.earthworks = w.earthworks;
 }
 /** Cheap per-tick change detection; large terrain/province payloads are serialized only on edits. */
 function geometryStamp(w: World) {
@@ -180,6 +209,7 @@ function* layout(w: World): RoadWork<Cache> {
     old.landscape === w.landscape &&
     old.roadRef === w.roads &&
     old.terrain === w.terrain &&
+    old.earthworks === w.earthworks &&
     old.revision === w.revision &&
     old.buildings === w.buildings.length &&
     old.roads === (w.roads?.length ?? 0) &&
@@ -189,6 +219,8 @@ function* layout(w: World): RoadWork<Cache> {
     return old.cache;
   const stamp = geometryStamp(w);
   if (old?.stamp === stamp) {
+    syncEarthworks(old.cache, w);
+    old.earthworks = w.earthworks;
     old.time = w.time;
     return old.cache;
   }
@@ -254,12 +286,14 @@ function* layout(w: World): RoadWork<Cache> {
     if (caches.size >= 8) caches.delete(caches.keys().next().value!);
     caches.set(w.id, cache);
   }
+  syncEarthworks(cache, w);
   checked.set(w, {
     time: w.time,
     stamp,
     landscape: w.landscape,
     roadRef: w.roads,
     terrain: w.terrain,
+    earthworks: w.earthworks,
     revision: w.revision,
     buildings: w.buildings.length,
     roads: w.roads?.length ?? 0,
@@ -303,7 +337,11 @@ export function* sceneryChunkSteps(
     (n) => n.x >= x0 - 16 && n.x < x0 + 272 && n.z >= z0 - 16 && n.z < z0 + 272,
   );
   const reservations = spawnReservations(w);
+  const unworked = w.earthworks?.length ? { ...w, earthworks: undefined } : undefined;
   const clear = (x: number, z: number, margin: number) =>
+    (!unworked ||
+      earthworksTerrain(w, x, z) === undefined ||
+      Math.abs(terrainHeight(w, x, z) - terrainHeight(unworked, x, z)) < 1e-8) &&
     Math.abs(x) < half &&
     Math.abs(z) < half &&
     !reservations.some((s) => Math.hypot(x - s.x, z - s.z) < s.radius + margin) &&

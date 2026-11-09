@@ -47,6 +47,7 @@ const permissionLabels = {
   build: 'Build property',
   roads: 'Build roads',
   environment: 'Modify environment',
+  earthworks: 'Carry out earthworks',
 };
 
 const townForm = (
@@ -106,7 +107,7 @@ function ruleForms(
           (['residents', 'guests'] as const)
             .map(
               (group) =>
-                `<fieldset><legend>${group === 'residents' ? 'Residents' : 'Guests'}</legend>${Object.entries(permissionLabels).map(([k, label]) => check(`${group}.${k}`, 'on', label, town.permissions[group][k as 'build']))}</fieldset>`,
+                `<fieldset><legend>${group === 'residents' ? 'Residents' : 'Guests'}</legend>${Object.entries(permissionLabels).map(([k, label]) => check(`${group}.${k}`, 'on', label, k === 'earthworks' ? (town.permissions[group].earthworks ?? (town.permissions[group].build && town.permissions[group].environment)) : town.permissions[group][k as 'build']))}</fieldset>`,
             )
             .join(''),
         );
@@ -212,7 +213,12 @@ export function townPanel(w: World, me: Player, b: Pick<Building, 'id'>) {
   const zone = (list: string[]) => list.join(', ') || 'nothing';
   const perms = (group: 'residents' | 'guests') =>
     Object.entries(permissionLabels)
-      .filter(([k]) => town.permissions[group][k as 'build'])
+      .filter(([k]) =>
+        k === 'earthworks'
+          ? (town.permissions[group].earthworks ??
+            (town.permissions[group].build && town.permissions[group].environment))
+          : town.permissions[group][k as 'build'],
+      )
       .map(([, l]) => l.toLowerCase())
       .join(', ') || 'nothing';
   const city = w.cityDevelopment?.[town.id],

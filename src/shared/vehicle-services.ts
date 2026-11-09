@@ -1,3 +1,5 @@
+import { isEarthmover } from './earthmoving-definitions';
+import { constructionRules } from './construction-rules';
 import { vehicleRunningRules } from './vehicle-running-rules';
 import defaults from '../../data/settings.json';
 import { economyRules } from './economy-rules';
@@ -45,6 +47,8 @@ export function recordTravel(w: World, p: Player, metres: number) {
   };
 }
 export function requiredLicence(w: World, slot: number) {
+  if (isEarthmover(slot) && constructionRules(w.settings).earthworksPlantLicence)
+    return 'plant operator';
   if (!w.settings.vehicleLicences || isTractor(slot) || [5, 6, 7, 29].includes(slot)) return;
   const mode = w.vehicleTuning?.[slot]?.mode ?? vehicleDef(w, slot)?.mode;
   return mode === 2 || mode === 6 ? 'pilot' : mode === 3 || mode === 5 ? 'captain' : 'driver';

@@ -1,3 +1,4 @@
+import { earthworksTerrain, blendEarthworks } from './earthworks-ground';
 import { northernHeight, northernBlend, northernRegion } from './northern-island';
 import { inlandGround, inlandWaterAt } from './inland-water';
 import { minMapSize, maxMapSize } from './world-limits';
@@ -26,8 +27,16 @@ export function terrainHalf(w: World) {
 }
 /** Beyond this the village square gives way to the generated countryside. */
 export const countrysideEdge = legacyHalf + 150;
-export const terrainSeed = (w: Pick<World, 'id' | 'northernIsland'>) =>
-  w.northernIsland?.seed ?? seedOf(w.id);
+let seedId: string | undefined,
+  cachedSeed = 0;
+export function terrainSeed(w: Pick<World, 'id' | 'northernIsland'>) {
+  if (w.northernIsland?.seed != null) return w.northernIsland.seed;
+  if (w.id !== seedId) {
+    cachedSeed = seedOf(w.id);
+    seedId = w.id;
+  }
+  return cachedSeed;
+}
 /** The hand-tuned village: a flat plateau, gentle surrounding hills and the harbour slope. */
 function villageHeight(w: World, x: number, z: number) {
   const hills = Math.sin(x * 0.021) * Math.cos(z * 0.019) * 8 + Math.sin(x * 0.047 + z * 0.025) * 3;
@@ -42,6 +51,13 @@ function villageHeight(w: World, x: number, z: number) {
 function countrysideHeight(w: World, x: number, z: number, half: number) {
   const seed = terrainSeed(w),
     d = Math.hypot(x, z);
+  const square = Math.max(Math.abs(x), Math.abs(z)) / half,
+    radial = d / half,
+    shoreNoise = fbm(x / 1500, z / 1500, 2, seed + 13) * 0.05;
+  const coast = smoothstep(0.8 + shoreNoise, 0.93 + shoreNoise, square * 0.6 + radial * 0.4);
+  // Full coastal replacement discards all hill noise. Preserve the partial
+  // coastline arithmetic below so existing terrain heights stay identical.
+  if (coast === 1) return -30;
   const relief = smoothstep(350, 1000, d);
   // Broad downs with smaller rolling shoulders, not high-frequency crags. Fewer
   // octaves keep slopes smooth and terrain sampling no dearer than before.
@@ -55,10 +71,6 @@ function countrysideHeight(w: World, x: number, z: number, half: number) {
   const inletFoothills =
     1 - smoothstep(120, 400, z) * (1 - smoothstep(0, 550 * scale, Math.abs(x) - inletWidth));
   let h = 6 + scale * relief * inletFoothills * (95 * (broad + 0.8) + 22 * detail) + detail * 2;
-  const square = Math.max(Math.abs(x), Math.abs(z)) / half,
-    radial = d / half,
-    shoreNoise = fbm(x / 1500, z / 1500, 2, seed + 13) * 0.05;
-  const coast = smoothstep(0.8 + shoreNoise, 0.93 + shoreNoise, square * 0.6 + radial * 0.4);
   h = h * (1 - coast) - 30 * coast;
   if (z > 150) {
     const halfWidth = 250 + (z - 150) * 0.5;
@@ -69,26 +81,31 @@ function countrysideHeight(w: World, x: number, z: number, half: number) {
 }
 export function terrainHeight(w: World, x: number, z: number) {
   const half = terrainHalf(w);
+  const local = w.earthworks?.length ? earthworksTerrain(w, x, z) : undefined;
   let h: number;
-  if (w.landscape?.heightmap) {
-    // Authored heightmaps replace all procedural terrain, including river beds.
-    h = heightmapAt(w.landscape.heightmap, x, z, half);
-  } else {
-    const blend =
-      half > legacyHalf
-        ? smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)))
-        : 0;
-    // Do not evaluate a terrain layer whose blend weight is exactly zero.
-    h = blend === 1 ? countrysideHeight(w, x, z, half) : villageHeight(w, x, z);
-    if (blend > 0 && blend < 1) h = h * (1 - blend) + countrysideHeight(w, x, z, half) * blend;
-    if (w.northernIsland && z < w.northernIsland.preserveZ) {
-      const north = northernBlend(w.northernIsland, z);
-      h += (Math.max(h, northernHeight(w.northernIsland, x, z, w.settings.seaLevel)) - h) * north;
-      h = inlandGround(w, x, z, h);
+  if (typeof local === 'number') h = local;
+  else {
+    if (w.landscape?.heightmap) {
+      // Authored heightmaps replace all procedural terrain, including river beds.
+      h = heightmapAt(w.landscape.heightmap, x, z, half);
+    } else {
+      const blend =
+        half > legacyHalf
+          ? smoothstep(legacyHalf, countrysideEdge, Math.max(Math.abs(x), Math.abs(z)))
+          : 0;
+      // Do not evaluate a terrain layer whose blend weight is exactly zero.
+      h = blend === 1 ? countrysideHeight(w, x, z, half) : villageHeight(w, x, z);
+      if (blend > 0 && blend < 1) h = h * (1 - blend) + countrysideHeight(w, x, z, half) * blend;
+      if (w.northernIsland && z < w.northernIsland.preserveZ) {
+        const north = northernBlend(w.northernIsland, z);
+        h += (Math.max(h, northernHeight(w.northernIsland, x, z, w.settings.seaLevel)) - h) * north;
+        h = inlandGround(w, x, z, h);
+      }
     }
+    for (const t of w.terrain)
+      h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
+    if (local) h = blendEarthworks(local, x, z, h);
   }
-  for (const t of w.terrain)
-    h += t.height * Math.max(0, 1 - Math.hypot(x - t.x, z - t.z) / t.radius);
   const surface = spaceportGround(
     w.spaceportSite,
     x,

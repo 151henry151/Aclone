@@ -2,6 +2,43 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.139.0 — Grade hillsides and hire earthmoving operators
+
+Manufacture bulldozers and backhoes at automotive factories, qualify as a plant
+operator and survey a level pad through Build → Earthworks. Drive slow working
+passes to move cut into fill, deliver shortfalls from inventory or a tipping
+trailer, and recover bounded spoil. Completed pads accept construction; partial
+work persists through abandonment and restart. Gravel finishes weather to grass.
+
+Clients can post paid contracts through the World list and parish directory.
+Acceptance holds the fee and town tax; completion pays by contributed work.
+Abandonment refunds the hold and allows a replacement operator. Town permissions
+and affected property owners control access. Residents can request affordable
+slope remedies using ordinary player actions. G, a remappable controller button
+(default X / PlayStation Square) and Inventory/Actions operate implements.
+World Builder exposes pad, machine, material, qualification and contract rules.
+
+Reload after deployment. Existing factories gain the new product definitions
+while retaining customised rules. They must manufacture machines from supplies
+and labour; no player grant or new live-world terrain is required.
+
+Verification includes 133 final focused tests, clean TypeScript, the generated
+northern-island survey → fill delivery → working passes → foundation browser
+flow, controller remapping, phone controls, road protection and selective tree
+and boulder removal. Earlier acceptance covers manufacturing, licence/empty
+states, cabs/night lighting, saved work, material balance, weathering and two-user
+contracts/property approval. Controller checks emulate the Gamepad API; physical
+controller hardware was not available for this verification.
+
+The 200-pad benchmark uses released 0.138.1 as Henry requested. The last paired
+run measures 260.50 → 226.99 ms per 500000 queries on the original island and
+740.36 → 735.09 ms on the expanded island. The latter's paired 95% change interval
+is −16.35 to +5.81 ms: statistically indistinguishable, not a demonstrated speedup.
+This is terrain sampling evidence, not an overall frame-rate claim. The previously
+tracked intermittent server pause remains unresolved. Full-island software WebGL
+startup exceeded the test's 60-second readiness window; the hardware-rendered
+acceptance run passes with Performance graphics.
+
 ## 0.138.1 — Reduce terrain calculation work
 
 Skip terrain layers that are completely replaced by countryside or an authored

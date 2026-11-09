@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { earthmovingProducts } from './earthmoving-definitions';
 import type { Action, Building, Player, World } from './types';
 import { automotiveConfig, automotiveProducts, type AutomotiveProduct } from './automotive-config';
 import {
@@ -61,10 +62,14 @@ export function automotiveSale(w: World, p: Player, b: Building, a: Action) {
   const kind = Object.keys(semiProducts).find(
     (k) => semiProducts[k as SemiKind] === unit.product,
   ) as SemiKind | undefined;
+  const slot =
+    unit.product === 'bulldozer' || unit.product === 'backhoe'
+      ? earthmovingProducts[unit.product]
+      : HIGHWAY_TRACTOR;
   if (!kind)
     need(
-      !(p.fleet ?? [0, 5]).includes(HIGHWAY_TRACTOR),
-      'You already own this highway tractor; retrieve it first',
+      !(p.fleet ?? [0, 5]).includes(slot),
+      'You already own this manufactured vehicle; retrieve it first',
     );
   else {
     need(
@@ -89,7 +94,7 @@ export function automotiveSale(w: World, p: Player, b: Building, a: Action) {
         },
       }
     : w;
-  const point = kerbParking(survey, b, HIGHWAY_TRACTOR);
+  const point = kerbParking(survey, b, slot);
   need(point, 'No safe clear delivery place outside this factory; clear the yard');
   const receipt = salesReceipt(w, b, price);
   // Every refusal is above this boundary: ownership, stock and payment change together.
@@ -104,12 +109,12 @@ export function automotiveSale(w: World, p: Player, b: Building, a: Action) {
       cargo: {},
     };
   else {
-    p.fleet = [...(p.fleet ?? [0, 5]), HIGHWAY_TRACTOR];
-    vehicleRecord(w, p, HIGHWAY_TRACTOR);
-    (w.parkedVehicles ??= {})[`${p.id}:${HIGHWAY_TRACTOR}`] = {
+    p.fleet = [...(p.fleet ?? [0, 5]), slot];
+    vehicleRecord(w, p, slot);
+    (w.parkedVehicles ??= {})[`${p.id}:${slot}`] = {
       ...point,
       owner: p.id,
-      slot: HIGHWAY_TRACTOR,
+      slot,
       fuel: 0,
       condition: 100,
       parkedAt: w.time,

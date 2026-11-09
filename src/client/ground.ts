@@ -1,3 +1,4 @@
+import { earthworkIntersects, type EarthworkBounds } from '../shared/earthworks-ground';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
 import type { World } from '../shared/types';
@@ -55,6 +56,28 @@ export class GroundTiles {
     this.pending = undefined;
     this.world = w;
     this.dirty = new Set(this.tiles.keys());
+  }
+  refreshEarthworks(w: World, changes: readonly EarthworkBounds[]) {
+    this.world = w;
+    for (const [key, mesh] of this.tiles) {
+      const [i, j] = key.split(':').map(Number);
+      if (
+        earthworkIntersects(
+          changes,
+          (i + 0.5) * groundTileSize,
+          (j + 0.5) * groundTileSize,
+          groundTileSize / 2 + 2,
+        )
+      )
+        this.dirty.add(key);
+    }
+    if (
+      this.pending &&
+      earthworkIntersects(changes, this.pending.cx, this.pending.cz, groundTileSize / 2 + 2)
+    ) {
+      this.pending.job.return(undefined as never);
+      this.pending = undefined;
+    }
   }
   clear() {
     this.dirty.clear();

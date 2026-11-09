@@ -85,7 +85,14 @@ const semitrailerSchema = z
 const semitrailersSchema = z
   .object({ box: semitrailerSchema, refrigerated: semitrailerSchema, stake: semitrailerSchema })
   .strict();
-export const automotiveProducts = ['tractor', 'box', 'refrigerated', 'stake'] as const;
+export const automotiveProducts = [
+  'tractor',
+  'box',
+  'refrigerated',
+  'stake',
+  'bulldozer',
+  'backhoe',
+] as const;
 export type AutomotiveProduct = (typeof automotiveProducts)[number];
 export const automotiveSchema = z
   .object({
@@ -99,6 +106,8 @@ export const automotiveSchema = z
     semitrailers: semitrailersSchema.default(defaults.semitrailers),
     products: z
       .object({
+        bulldozer: productSchema.default(defaults.products.bulldozer),
+        backhoe: productSchema.default(defaults.products.backhoe),
         tractor: productSchema,
         box: productSchema,
         refrigerated: productSchema,
@@ -127,6 +136,8 @@ export const automotivePatchSchema = z
       .optional(),
     products: z
       .object({
+        bulldozer: productSchema.partial().optional(),
+        backhoe: productSchema.partial().optional(),
         tractor: productSchema.partial().optional(),
         box: productSchema.partial().optional(),
         refrigerated: productSchema.partial().optional(),
@@ -136,8 +147,17 @@ export const automotivePatchSchema = z
       .optional(),
   })
   .strict();
+const upgraded = new WeakMap<AutomotiveConfig, AutomotiveConfig>();
 export function automotiveConfig(w?: Pick<World, 'automotive'>): AutomotiveConfig {
-  return w?.automotive ?? defaults;
+  const value = w?.automotive;
+  if (!value) return defaults;
+  if (value.products.bulldozer && value.products.backhoe) return value;
+  let result = upgraded.get(value);
+  if (!result) {
+    result = { ...value, products: { ...defaults.products, ...value.products } };
+    upgraded.set(value, result);
+  }
+  return result;
 }
 export function patchAutomotive(w: Pick<World, 'automotive'>, input: unknown) {
   const patch = automotivePatchSchema.parse(input),

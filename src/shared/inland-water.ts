@@ -11,61 +11,69 @@ type Segment = {
   bendB: number;
 };
 type Feature = Segment | IslandPond;
-const cache = new WeakMap<
-  NorthernIsland,
-  { rivers: NorthernIsland['rivers']; ponds: number; cells: Map<string, Feature[]> }
->();
+type WaterIndex = {
+  rivers: NorthernIsland['rivers'];
+  ponds: number;
+  cells: Map<number, Map<number, Feature[]>>;
+};
+const cache = new WeakMap<NorthernIsland, WaterIndex>();
+const noFeatures: readonly Feature[] = [];
 /** Discard cached spatial bounds/curves before surveying edited water geometry. */
 export function invalidateInlandWater(w: World) {
   if (w.northernIsland) cache.delete(w.northernIsland);
 }
 const cell = 256;
-function candidates(w: World, x: number, z: number) {
-  const n = w.northernIsland;
-  if (!n || z >= n.preserveZ) return [];
-  const cached = cache.get(n);
-  let cells = cached?.cells;
-  if (!cells || cached?.rivers !== n.rivers || cached.ponds !== n.ponds.length) {
-    cells = new Map();
-    const add = (f: Feature, minX: number, maxX: number, minZ: number, maxZ: number) => {
-      for (let iz = Math.floor(minZ / cell); iz <= Math.floor(maxZ / cell); iz++)
-        for (let ix = Math.floor(minX / cell); ix <= Math.floor(maxX / cell); ix++) {
-          const key = ix + ':' + iz,
-            list = cells!.get(key) ?? [];
-          list.push(f);
-          cells!.set(key, list);
-        }
-    };
-    for (const r of n.rivers)
-      for (let i = 1; i < r.points.length; i++) {
-        const a = r.points[i - 1],
-          b = r.points[i],
-          margin = Math.max(a.width, b.width) * 0.5 + 320;
-        add(
-          {
+function indexWater(n: NorthernIsland): WaterIndex {
+  const cells: WaterIndex['cells'] = new Map();
+  const add = (f: Feature, minX: number, maxX: number, minZ: number, maxZ: number) => {
+    for (let ix = Math.floor(minX / cell); ix <= Math.floor(maxX / cell); ix++) {
+      let column = cells.get(ix);
+      if (!column) cells.set(ix, (column = new Map()));
+      for (let iz = Math.floor(minZ / cell); iz <= Math.floor(maxZ / cell); iz++) {
+        let list = column.get(iz);
+        if (!list) column.set(iz, (list = []));
+        list.push(f);
+      }
+    }
+  };
+  for (const r of n.rivers)
+    for (let i = 1; i < r.points.length; i++) {
+      const a = r.points[i - 1],
+        b = r.points[i],
+        margin = Math.max(a.width, b.width) * 0.5 + 320;
+      add(
+        {
+          a,
+          b,
+          curve: curveCoefficients(
+            r.points[Math.max(0, i - 2)],
             a,
             b,
-            curve: curveCoefficients(
-              r.points[Math.max(0, i - 2)],
-              a,
-              b,
-              r.points[Math.min(r.points.length - 1, i + 1)],
-            ),
-            river: r.id,
-            bendA: riverBend(r.points, i - 1),
-            bendB: riverBend(r.points, i),
-          },
-          Math.min(a.x, b.x) - margin,
-          Math.max(a.x, b.x) + margin,
-          Math.min(a.z, b.z) - margin,
-          Math.max(a.z, b.z) + margin,
-        );
-      }
-    for (const p of n.ponds)
-      add(p, p.x - p.rx * 1.4, p.x + p.rx * 1.4, p.z - p.rz * 1.4, p.z + p.rz * 1.4);
-    cache.set(n, { rivers: n.rivers, ponds: n.ponds.length, cells });
-  }
-  return cells.get(Math.floor(x / cell) + ':' + Math.floor(z / cell)) ?? [];
+            r.points[Math.min(r.points.length - 1, i + 1)],
+          ),
+          river: r.id,
+          bendA: riverBend(r.points, i - 1),
+          bendB: riverBend(r.points, i),
+        },
+        Math.min(a.x, b.x) - margin,
+        Math.max(a.x, b.x) + margin,
+        Math.min(a.z, b.z) - margin,
+        Math.max(a.z, b.z) + margin,
+      );
+    }
+  for (const p of n.ponds)
+    add(p, p.x - p.rx * 1.4, p.x + p.rx * 1.4, p.z - p.rz * 1.4, p.z + p.rz * 1.4);
+  const indexed = { rivers: n.rivers, ponds: n.ponds.length, cells };
+  cache.set(n, indexed);
+  return indexed;
+}
+function candidates(w: World, x: number, z: number) {
+  const n = w.northernIsland;
+  if (!n || z >= n.preserveZ) return noFeatures;
+  let cached = cache.get(n);
+  if (!cached || cached.rivers !== n.rivers || cached.ponds !== n.ponds.length)
+    cached = indexWater(n);
+  return cached.cells.get(Math.floor(x / cell))?.get(Math.floor(z / cell)) ?? noFeatures;
 }
 function project(s: Segment, x: number, z: number) {
   const dx = s.b.x - s.a.x,

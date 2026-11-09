@@ -1,3 +1,4 @@
+import type { Earthwork } from './earthworks-ground';
 import type { BridgeRules } from './bridge-rules';
 import type { NameTagRules } from './name-tag-rules';
 import type { RoadRules } from './road-rules';
@@ -172,6 +173,8 @@ export interface Player {
   /** Private owned-machine finishes, keyed by vehicle slot. */
   vehiclePaints?: Record<number, string>;
   engine: boolean;
+  earthmovingImplement?: boolean;
+  earthmovingCargo?: Partial<Record<number, Stock>>;
   /** Public snapshot projection for audible motors. */
   engineRunning?: boolean;
   rowing?: boolean;
@@ -669,6 +672,7 @@ export interface World {
   buildings: Building[];
   zones: Zone[];
   terrain: { x: number; z: number; radius: number; height: number }[];
+  earthworks?: Earthwork[];
   lottery?: import('./lottery.ts').Lottery;
   townEventRuns?: Record<string, string>;
   messageSeq?: number;
@@ -750,6 +754,8 @@ export interface ItemDef {
   fuel?: number;
 }
 export interface VehicleDef {
+  /** Optional earthmover field-speed cap; configurable per vehicle. */
+  offRoadSpeed?: number;
   height?: number;
   stormClass?: 'small' | 'coastal' | 'seaworthy';
   holdCapacity?: number;

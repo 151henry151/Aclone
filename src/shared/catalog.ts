@@ -1,3 +1,4 @@
+import { BULLDOZER, BACKHOE, earthmovingVehicle } from './earthmoving-definitions';
 import { highwayTractor } from './highway-definitions';
 import { automotiveBuilding } from './automotive-config';
 import { canoeVehicle } from './canoe-rules';
@@ -24,6 +25,8 @@ export const vehicles: VehicleDef[] = [
   ...(freightVesselData as VehicleDef[]),
   ...(rowboatData as VehicleDef[]),
   highwayTractor(),
+  earthmovingVehicle(BULLDOZER),
+  earthmovingVehicle(BACKHOE),
 ];
 export const buildings: Record<string, BuildingDef> = {
   automotiveFactory: automotiveBuilding(),
@@ -60,6 +63,7 @@ export const skills = [
     'excavator',
     'mechanic',
     'driver',
+    'plant operator',
     'pilot',
     'captain',
   ]),

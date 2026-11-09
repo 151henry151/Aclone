@@ -145,6 +145,8 @@ export function automotivePurchaseChoices(
   for (const b of buildings) {
     if (b.kind !== 'automotiveFactory' || b.construction) continue;
     for (const unit of b.manufacturing?.ready ?? []) {
+      // Plant is operated by players; residents commission grading, not automated passes.
+      if (unit.product === 'bulldozer' || unit.product === 'backhoe') continue;
       const price = automotivePrice(w, b, unit.product);
       if (price === null || p.cash - price < livingReserve(w, p)) continue;
       if (

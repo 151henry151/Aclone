@@ -1,3 +1,4 @@
+import { earthworkReservedFootprint, earthworkReserved } from './earthworks-reservations';
 import { bridgeReserved, bridgeReservedFootprint } from './bridge-geometry';
 import { rectanglesOverlap } from './vehicle-footprint';
 import { parkedFootprintBlocked } from './vehicle-footprint';
@@ -77,6 +78,14 @@ export function foundationProfile(w: World, b: Site) {
 }
 /** Oriented footprint test shared with the purchase preview. No payment occurs before it passes. */
 export function constructionSiteReason(w: World, b: Site, actor?: Pick<Player, 'authority'>) {
+  if (
+    rectangles(b).some((r) => earthworkReservedFootprint(w, r)) ||
+    (b.kind === 'farm' &&
+      Array.from({ length: 4 }, (_, i) => farmPlotPosition(b, i)).some((p) =>
+        earthworkReserved(w, p.x, p.z, 6),
+      ))
+  )
+    return 'Complete the reserved earthwork pad before building here';
   if (
     rectangles(b).some((r) =>
       w.bridges?.some((bridge) => rectanglesOverlap(r, bridgeReservedFootprint(bridge))),

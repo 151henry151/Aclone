@@ -1,6 +1,9 @@
+import { earthworkAction, workEarthwork, weatherEarthworks } from './earthworks-work';
+import { cancelEarthworksOnDeath } from './earthworks-contracts';
 import { slopeAssessment, slopeBypass } from './construction-slope';
 import { coolingInterval } from './highway-refrigeration';
 import { highwayControls, highwaySurface, clearHighwayRig } from './highway-driving';
+import { isEarthmover } from './earthmoving-definitions';
 import { HIGHWAY_TRACTOR, isSemitrailer, semiProducts } from './highway-definitions';
 import {
   automotiveConfig,
@@ -1766,8 +1769,8 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       requireThat(!p.hitch, 'Leave the passenger seat at the dock before changing vehicles');
       const slot = num(a.slot, 0, vehicles.length - 1, true);
       requireThat(
-        slot !== HIGHWAY_TRACTOR || (p.fleet ?? []).includes(slot),
-        'Buy a manufactured highway tractor from an automotive factory',
+        (!isEarthmover(slot) && slot !== HIGHWAY_TRACTOR) || (p.fleet ?? []).includes(slot),
+        'Buy this manufactured vehicle from an automotive factory',
       );
       const parkingBuilding = w.buildings.find((b) => b.id === a.building);
       if (persistentVehicles(w, p)) {
@@ -2089,6 +2092,17 @@ export function act(w: World, id: string, a: Action, completedFreight = false): 
       break;
     case 'boatLights':
       changeBoatLighting(p, a.circuit, w);
+      break;
+    case 'earthwork':
+      return earthworkAction(w, p, a);
+    case 'earthmovingImplement':
+      requireThat(isEarthmover(p.vehicle), 'Board an earthmoving machine first');
+      requireThat(
+        !p.task && !p.game && !p.hitch && !p.atHome && !p.inside,
+        'Finish your activity and go outside first',
+      );
+      requireThat(!helmBlock(w, p.vehicle, p.skills), helmBlock(w, p.vehicle, p.skills) ?? '');
+      p.earthmovingImplement = !p.earthmovingImplement;
       break;
     case 'lights':
       p.lights = !p.lights;
@@ -3405,8 +3419,8 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
     v.mode === 8 && p.y <= ground + 1
       ? walkingSurface(w, p.x, p.z)
       : grounded
-        ? v.fuel > 0
-          ? drivingSurface(w, p.x, p.z)
+        ? v.fuel > 0 || isEarthmover(p.vehicle)
+          ? drivingSurface(w, p.x, p.z, isEarthmover(p.vehicle))
           : roadConditions(w)
         : { speed: 1, grip: 1 };
   const traction =
@@ -3433,7 +3447,13 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
         : trawling
           ? trawlParameters(w, p.vehicle).speed
           : v.speed) *
-    (input.boost && !p.carrying && !rowing && !throttleBoat(p.vehicle, w) ? 1.7 : 1) *
+    (input.boost &&
+    !isEarthmover(p.vehicle) &&
+    !p.carrying &&
+    !rowing &&
+    !throttleBoat(p.vehicle, w)
+      ? 1.7
+      : 1) *
     tractorSurface(surface.speed, traction) *
     (0.7 + condition * 0.003);
   if (p.vehicle === HIGHWAY_TRACTOR)
@@ -3466,6 +3486,11 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
       dt *
       ([0, 1, 4].includes(v.mode) && p.speed < 0 ? -1 : 1) *
       (Math.abs(p.speed) > 0.1 ? 1 : 0);
+  }
+  if (isEarthmover(p.vehicle)) {
+    const field = !('onRoad' in surface && surface.onRoad);
+    const limit = Math.min(v.speed, field ? (v.offRoadSpeed ?? v.speed) : v.speed);
+    p.speed = clamp(p.speed, -limit * 0.4, limit);
   }
   if (v.mode === 2 || v.mode === 6)
     p.y = Math.max(
@@ -3700,6 +3725,7 @@ export function move(w: World, p: Player, input: Input, dt: number, prediction =
           (1 + (100 - condition) * 0.003) *
           dt,
     );
+  workEarthwork(w, p, previousPosition, dt, prediction);
   moveTrailer(w, p, towBefore, dt, prediction);
   if (onSolidGround(w, p)) updateBridgePassages(w, p);
   moveTow(w, p, towBefore, prediction);
@@ -3724,6 +3750,8 @@ function kill(
   if (!comic) canoeDeath(w, p);
   detachTrailer(w, p, !comic && w.settings.loseInventoryOnDeath);
   cancelPlayerTows(w, p.id);
+  cancelEarthworksOnDeath(w, p.id);
+  delete p.earthmovingImplement;
   for (const t of Object.values(w.mooredBoats ?? {}))
     if (t.owner === p.id) {
       delete t.towedBy;
@@ -3788,6 +3816,7 @@ function kill(
     }
     if (w.settings.loseInventoryOnDeath) {
       p.inventory = {};
+      delete p.earthmovingCargo;
       delete p.inventoryLife;
     }
     if (w.settings.loseJobOnDeath) {
@@ -4022,6 +4051,7 @@ export function advance(w: World, seconds: number) {
       cycle(w, b, t);
   }
   advanceManufacturing(w, start, end);
+  weatherEarthworks(w, seconds);
   advanceClimate(w, start, end);
   w.time = end;
   advanceBridgeInspections(w);

@@ -2,14 +2,22 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.139.0 adds **bulldozers, backhoes and working earthworks**. Manufacture
+machines at automotive factories, learn plant operation, then survey and grade
+hillsides into level building pads. Move cut into fill, deliver any shortfall,
+recover spoil or hire another operator through paid contracts. Keyboard, touch
+and remappable controller controls operate the equipment. World Builder controls
+the machinery, grading, materials and contract rules. Reload after updating.
+See [earthmoving](docs/PLAYING.md#earthmoving-machines).
+
 Version 0.138.1 reduces repeated terrain calculations while preserving ground
 heights, coastlines and construction surveys. Reload to use the updated client.
 The separate intermittent server pause remains under investigation.
 
 Version 0.138.0 adds size-aware construction slope limits and a cut/fill site survey,
 with World Builder controls for buildings, fields, pastures and the owner bypass.
-Existing property stays in place. Earthmoving machines and working terrain pads
-remain planned. Reload to use the new preview.
+Existing property stays in place. The earthmoving tools below provide a remedy
+for steep sites.
 
 Version 0.137.0 adds **manufactured highway trucks and full-size semitrailers**.
 Build and supply an automotive factory, hire engineers, then sell its finite
@@ -70,7 +78,7 @@ zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
 Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
-player-built bridges follow in 0.136.0. The released game is 0.138.0, and remaining client frame-rate dips are still being tracked.
+player-built bridges follow in 0.136.0. The released game is 0.139.0, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly
@@ -459,6 +467,15 @@ Collision regression tests cover driving out of overlapping worksite walls and e
 
 For isolated island travel and populated/mobile rendering checks, see the [geography verification commands](docs/NORTHERN_ISLAND.md). They generate local fixtures and do not connect to production.
 
+For the earthworks terrain benchmark, run
+`PROFILE_EARTHWORKS=1 PROFILE_TERRAIN_BASELINE=release npx tsx scripts/island-performance.ts`.
+This compares 200 pads against a frozen 0.138.1 terrain implementation. Omit
+`PROFILE_TERRAIN_BASELINE` to measure pad overhead against the current code with
+no pads. Set `PROFILE_EARTHWORKS_PROGRESS=0.5 PROFILE_TERRAIN_MOVING=1` to cover
+partial work and changing query coordinates. Results include alternating paired
+samples and confidence intervals under `output/island-performance/earthworks.json`;
+keep these distinct from whole-game frame rates and server heartbeat checks.
+
 Production builds include precompressed client files; deploy the entire `dist/` directory. See [hosting and performance](docs/HOSTING.md#connection-and-multiplayer-checks) for cache behavior and startup diagnostics.
 
 CI runs unit/type/format checks, eight isolated browser shards, public-website checks, and deployed-build checks under `/aclone/`. Gameplay browser tests wait for the startup overlay to disappear before sending controls; the HUD alone is visible during settling. Use the startup test for input-during-loading behavior. Flight physics tests include a complete takeoff, controlled approach, landing and stop with delayed discrete controls. See [browser-check guidance](CONTRIBUTING.md#ci-browser-checks) for timing and teardown troubleshooting.
@@ -602,3 +619,8 @@ and [art notes](docs/ART.md#canal-boat) for controls, costs and model details.
 The Marsh Courier hovercraft has a rubber skirt, enclosed cockpit, guarded rear
 fan and cargo lockers, with working speed/fuel instruments and individual paint.
 See [the art notes](docs/ART.md#hovercraft).
+
+Factory-built bulldozers and backhoes use plant-operator training and per-world
+machine settings. See the [machine and grading guide](docs/PLAYING.md#earthmoving-machines)
+and [world-builder notes](docs/WORLD_BUILDING.md#earthmover-configuration)
+for surveying, working passes, material handling and paid contracts.

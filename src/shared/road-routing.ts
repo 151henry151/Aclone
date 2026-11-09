@@ -87,6 +87,9 @@ export function roadSite(w: World, width = roadRules(w.settings).roadWidth) {
     };
   };
   const solids: Rect[] = [];
+  for (const e of w.earthworks ?? [])
+    if (e.progress < 1 && e.work?.active !== false)
+      solids.push(rect(e.x, e.z, e.width / 2 + e.shoulder, e.depth / 2 + e.shoulder, e.rotation));
   for (const b of w.buildings) {
     const plan = buildingPlan(b),
       c = Math.cos(b.rotation),

@@ -1,3 +1,4 @@
+import { isEarthmover } from '../shared/earthmoving-definitions';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 import { CARGO_BOAT } from '../shared/boats';
 import { stormClass } from '../shared/storm-capsizing';
@@ -55,7 +56,7 @@ export function vehicleEditor(w: World, slot: number) {
   const numberFields = (keys: string) =>
     keys
       .split(' ')
-      .filter((key) => key !== 'price' || slot !== HIGHWAY_TRACTOR)
+      .filter((key) => key !== 'price' || !(slot === HIGHWAY_TRACTOR || isEarthmover(slot)))
       .map((key) => input(key, values[key as keyof typeof values]))
       .join('');
   const bool = (key: string, value: boolean) =>
@@ -79,15 +80,15 @@ export function vehicleEditor(w: World, slot: number) {
   ];
   const group = (title: string, body: string) =>
     `<details><summary>${title}</summary><div class="settings-grid">${body}</div></details>`;
-  return `<p>Configure each vehicle independently for this world. Custom slots 9–24 are available for your own designs. Upload GLB/OBJ models and images in Assets, then assemble named components in Workshop. Lengths use metres; speed uses m/s; fuel uses tank units per real second; price uses hundredths of a denarius (10,000 = 1s).</p>${slot === HIGHWAY_TRACTOR ? '<p>Set manufactured vehicle names and prices in Automotive industry. Each factory may post its own asking price.</p>' : ''}<form data-vehicle-editor>${select(
+  return `<p>Configure each vehicle independently for this world. Custom slots 9–24 are available for your own designs. Upload GLB/OBJ models and images in Assets, then assemble named components in Workshop. Lengths use metres; speed uses m/s; fuel uses tank units per real second; price uses hundredths of a denarius (10,000 = 1s).</p>${slot === HIGHWAY_TRACTOR || isEarthmover(slot) ? '<p>Set manufactured vehicle names and prices in Automotive industry. Each factory may post its own asking price.</p>' : ''}<form data-vehicle-editor>${select(
     'slot',
     vehicles.flatMap((_, i) =>
       i === CANOE ? [] : [[String(i), `${i + 1}: ${vehicleDef(w, i).name}`]],
     ),
     slot,
-  )}${slot === HIGHWAY_TRACTOR ? '' : input('name', v.name, 'text')}${select(
+  )}${slot === HIGHWAY_TRACTOR || isEarthmover(slot) ? '' : input('name', v.name, 'text')}${select(
     'mode',
-    (slot === HIGHWAY_TRACTOR
+    (slot === HIGHWAY_TRACTOR || isEarthmover(slot)
       ? [
           ['0', 'Ground vehicle'],
           ['1', 'Road vehicle'],
@@ -103,7 +104,7 @@ export function vehicleEditor(w: World, slot: number) {
           ['8', 'Walking'],
         ]) as [string, string][],
     v.mode,
-  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (slot === HIGHWAY_TRACTOR ? numberFields('height') : '') + (v.mode === 3 ? numberFields('draft airDraft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
+  )}${group('Performance, fuel and economy', numberFields('speed acceleration turn armour fuel tank capacity price hitch torque traction snowTraction rainTraction collisionRadius length width beam') + (slot === HIGHWAY_TRACTOR || isEarthmover(slot) ? numberFields('height') + (isEarthmover(slot) ? numberFields('offRoadSpeed') : '') : '') + (v.mode === 3 ? numberFields('draft airDraft') : '') + (slot === CARGO_BOAT ? numberFields('freeboard') : '') + input('color', v.color, 'color') + bool('persistentThrottle', v.persistentThrottle ?? [30, 31, 32].includes(slot)))}${
     v.mode === 3
       ? group(
           'Freight hold',
@@ -139,7 +140,21 @@ export function vehicleEditor(w: World, slot: number) {
       input('spoilageDays', v.spoilageDays ?? w.settings.boatCargoSpoilageDays ?? 5) +
       bool('retainFuel', v.retainFuel ?? w.settings.retainBoatFuelOnDeath !== false) +
       '<p>Recovery is for boats. Spoilage is measured in game days; zero means no expiry. Death overrides apply to this vehicle only.</p>',
-  )}${group('Tyres and tracks', bool('tracks', v.tracks ?? [0, 24, 25, 26, 27, 28].includes(slot)) + numberFields('frontTrack rearTrack frontTyre rearTyre wheelbase') + select('trackTexture', images, v.trackTexture))}${group('Cockpit and instruments', bool('customCockpit', !!v.cockpit) + ['x', 'y', 'z'].map((k) => input('eye_' + k, v.cockpit?.[k as 'x'] ?? (k === 'y' ? 2 : 0))).join('') + select('dashboard', images, v.dashboard) + ['speed', 'fuel', 'heading', 'altitude', 'pitch', 'condition'].map((key) => `<label><input type="checkbox" name="instrument_${key}" ${(v.instruments ?? ['speed', 'fuel', 'heading']).includes(key as 'speed') ? 'checked' : ''}>${label(key)}</label>`).join('') + '<p>The eye position is relative to the vehicle. Optional dashboard artwork sits below the selected live instrument readouts.</p>')}${group(
+  )}${group(
+    'Tyres and tracks',
+    bool('tracks', v.tracks ?? [0, 24, 25, 26, 27, 28].includes(slot)) +
+      (isEarthmover(slot)
+        ? bool(
+            'customGroundContacts',
+            ['frontTrack', 'rearTrack', 'frontTyre', 'rearTyre', 'wheelbase'].some((key) =>
+              Object.hasOwn(tuning, key),
+            ),
+          ) +
+          '<p>Built-in earthmovers use their model’s own ground contacts. Enable custom ground contacts to override them for a replacement model.</p>'
+        : '') +
+      numberFields('frontTrack rearTrack frontTyre rearTyre wheelbase') +
+      select('trackTexture', images, v.trackTexture),
+  )}${group('Cockpit and instruments', bool('customCockpit', !!v.cockpit) + ['x', 'y', 'z'].map((k) => input('eye_' + k, v.cockpit?.[k as 'x'] ?? (k === 'y' ? 2 : 0))).join('') + select('dashboard', images, v.dashboard) + ['speed', 'fuel', 'heading', 'altitude', 'pitch', 'condition'].map((key) => `<label><input type="checkbox" name="instrument_${key}" ${(v.instruments ?? ['speed', 'fuel', 'heading']).includes(key as 'speed') ? 'checked' : ''}>${label(key)}</label>`).join('') + '<p>The eye position is relative to the vehicle. Optional dashboard artwork sits below the selected live instrument readouts.</p>')}${group(
     'Lighting',
     numberFields('headlight lightRange') +
       Array.from({ length: 12 }, (_, i) => {
@@ -168,7 +183,17 @@ export function vehicleForm(form: HTMLFormElement) {
   const d = new FormData(form),
     values: Record<string, unknown> = {};
   for (const key of Object.keys(vehicleTuningSchema.shape)) {
-    if (['price', 'name'].includes(key) && Number(d.get('slot')) === HIGHWAY_TRACTOR) continue;
+    if (
+      isEarthmover(Number(d.get('slot'))) &&
+      d.get('customGroundContacts') !== 'true' &&
+      ['frontTrack', 'rearTrack', 'frontTyre', 'rearTyre', 'wheelbase'].includes(key)
+    )
+      continue;
+    if (
+      ['price', 'name'].includes(key) &&
+      (Number(d.get('slot')) === HIGHWAY_TRACTOR || isEarthmover(Number(d.get('slot'))))
+    )
+      continue;
     const value = d.get(key);
     if (value === null || value === '') continue;
     values[key] = [

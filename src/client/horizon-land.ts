@@ -1,3 +1,4 @@
+import { earthworkIntersects, type EarthworkBounds } from '../shared/earthworks-ground';
 import { alpineSnowUniforms, updateAlpineSnow } from './alpine-snow';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import * as T from 'three';
@@ -148,6 +149,71 @@ function* horizonSections(w: World): Generator<void, T.BufferGeometry[]> {
 export class HorizonLand {
   readonly group = new T.Group();
   private job?: Generator<void, T.BufferGeometry[]>;
+  private earthworkRefresh?: { world: World; changes: EarthworkBounds[] };
+  refreshEarthworks(world: World, changes: readonly EarthworkBounds[]) {
+    this.earthworkRefresh = {
+      world,
+      changes: [...(this.earthworkRefresh?.changes ?? []), ...changes],
+    };
+    if (!this.job) this.refreshPadVertices();
+  }
+  private refreshPadVertices() {
+    const pending = this.earthworkRefresh;
+    if (!pending) return;
+    const { world, changes } = pending;
+    this.earthworkRefresh = undefined;
+    for (const mesh of this.land) {
+      const g = mesh.geometry,
+        box = g.boundingBox!;
+      if (
+        !changes.some(
+          (b) =>
+            box.max.x >= b.minX &&
+            box.min.x <= b.maxX &&
+            box.max.z >= b.minZ &&
+            box.min.z <= b.maxZ,
+        )
+      )
+        continue;
+      const pos = g.getAttribute('position'),
+        normal = g.getAttribute('normal');
+      const changed = new Set<number>();
+      for (let i = 0; i < pos.count; i++)
+        if (earthworkIntersects(changes, pos.getX(i), pos.getZ(i), 0)) {
+          pos.setY(i, terrainHeight(world, pos.getX(i), pos.getZ(i)));
+          changed.add(i);
+        }
+      if (!changed.size) continue;
+      const affected = new Set<number>();
+      for (let i = 0; i < g.index!.count; i += 3) {
+        const a = g.index!.getX(i),
+          b = g.index!.getX(i + 1),
+          c = g.index!.getX(i + 2);
+        if (changed.has(a) || changed.has(b) || changed.has(c)) {
+          affected.add(a);
+          affected.add(b);
+          affected.add(c);
+        }
+      }
+      // Sample the same world-space derivative on both sides of section borders.
+      // Preserve every unrelated vertex normal and all section/mesh identities.
+      const n = new T.Vector3();
+      for (const i of affected) {
+        const x = pos.getX(i),
+          z = pos.getZ(i);
+        n.set(
+          terrainHeight(world, x - 1, z) - terrainHeight(world, x + 1, z),
+          2,
+          terrainHeight(world, x, z - 1) - terrainHeight(world, x, z + 1),
+        ).normalize();
+        normal.setXYZ(i, n.x, n.y, n.z);
+      }
+      pos.needsUpdate = true;
+      normal.needsUpdate = true;
+      g.computeBoundingBox();
+      g.computeBoundingSphere();
+    }
+  }
   private land: T.Mesh<T.BufferGeometry, T.MeshLambertMaterial>[] = [];
   private curvedBounds = new T.Box3();
   private material?: T.MeshLambertMaterial;
@@ -160,6 +226,7 @@ export class HorizonLand {
   private snow = { value: 0 };
   private alpine?: ReturnType<typeof alpineSnowUniforms>;
   reset(w: World) {
+    this.earthworkRefresh = undefined;
     this.job?.return(undefined as never);
     const materials = new Set<T.Material>();
     this.group.traverse((o) => {
@@ -268,6 +335,7 @@ export class HorizonLand {
           mesh.matrixAutoUpdate = mesh.matrixWorldAutoUpdate = false;
         }
         this.job = undefined;
+        this.refreshPadVertices();
         break;
       }
       if (performance.now() >= deadline) break;

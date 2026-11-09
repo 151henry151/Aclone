@@ -68,6 +68,30 @@
       },
       "seconds": 3600,
       "price": 2900000
+    },
+    "bulldozer": {
+      "name": "Bulldozer",
+      "inputs": {
+        "steel": 160,
+        "electronics": 6,
+        "tools": 12,
+        "wood": 10,
+        "fuel": 30
+      },
+      "seconds": 9000,
+      "price": 8000000
+    },
+    "backhoe": {
+      "name": "Backhoe",
+      "inputs": {
+        "steel": 130,
+        "electronics": 10,
+        "tools": 12,
+        "wood": 12,
+        "fuel": 24
+      },
+      "seconds": 8400,
+      "price": 7500000
     }
   },
   "delivery": {

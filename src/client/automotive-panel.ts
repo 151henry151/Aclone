@@ -1,5 +1,6 @@
 import { automotiveExportQuote } from '../shared/automotive-exports';
 import { automotivePrice } from '../shared/automotive-sales';
+import { earthmovingProducts } from '../shared/earthmoving-definitions';
 import { HIGHWAY_TRACTOR } from '../shared/highway-definitions';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Action, Building, Player, Stock, World } from '../shared/types';
@@ -55,7 +56,14 @@ export function manufacturingPanel(w: World, p: Player, b: Building) {
                     ? 'Closed for sale'
                     : p.cash < price
                       ? 'Not enough cash'
-                      : v.product === 'tractor' && p.fleet?.includes(HIGHWAY_TRACTOR)
+                      : (v.product === 'tractor' ||
+                            v.product === 'bulldozer' ||
+                            v.product === 'backhoe') &&
+                          p.fleet?.includes(
+                            v.product === 'tractor'
+                              ? HIGHWAY_TRACTOR
+                              : earthmovingProducts[v.product],
+                          )
                         ? 'Already owned'
                         : '';
             return `<li>Ready: ${esc(r.products[v.product].name)} · ${price === null ? 'Sales closed' : cash(price)}<form data-action="manufacturing">${hidden('building', b.id)}${hidden('op', 'buy')}${hidden('unit', v.id)}${hidden('expectedPrice', String(price ?? 0))}<button ${reason ? 'disabled' : ''}>Buy ${esc(r.products[v.product].name)}</button><span class="note">${esc(reason || 'Delivered to a clear place outside; no free fuel.')}</span></form></li>`;

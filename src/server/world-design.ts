@@ -1,3 +1,4 @@
+import { earthworkDesignSchema, exportEarthworks, importEarthworks } from './earthworks-design';
 import { applyBuildingTemplate } from '../shared/world-catalogue';
 import {
   automotiveSchema,
@@ -112,6 +113,10 @@ const roadDesignSchema = z.object({
   width: z.number().finite().min(0.1).max(100),
 });
 const designSchema = z.object({
+  earthworks: z
+    .array(earthworkDesignSchema)
+    .max(constructionRuleFields.earthworksMaximumCount.max)
+    .optional(),
   bridges: z.array(bridgeDesignSchema).max(bridgeRuleFields.bridgeMaximumCount.max).optional(),
   townLayout: z.union([z.literal(1), z.literal(2)]).optional(),
   roads: z.array(roadDesignSchema).max(100000).optional(),
@@ -460,6 +465,7 @@ export function exportDesign(w: World, includeMedia = false) {
     settings: w.settings,
     townCharter: w.townCharter ?? {},
     terrain: w.terrain,
+    earthworks: exportEarthworks(w),
     coastalBluffs: w.coastalBluffs,
     spaceportSite: w.spaceportSite,
     additionalResources: w.additionalResources,
@@ -713,6 +719,7 @@ function applyValidatedDesign(w: World, input: unknown) {
   configureRules(w, d.settings, d.townCharter);
   refreshPumpRecipes(w);
   w.landscape = validateLandscape(w, d.landscape);
+  importEarthworks(w, d.earthworks);
   for (const b of w.bridges ?? []) finishRoadWork(inspectBridgeSteps(w, b));
   if (w.terrain.length > landscapeRules(w.settings).terrainStampLimit)
     throw Error('Terrain stamp limit exceeded');

@@ -1,3 +1,4 @@
+import { earthworkTerrainSnapshot } from '../shared/earthworks-ground';
 import { effectivePavement } from '../shared/city-paving';
 import { GARAGE_STORAGE } from '../shared/parked-vehicles';
 import { vehicleDef } from '../shared/vehicle-config';
@@ -344,6 +345,7 @@ export class ParishMap {
       w.terrainMapSize,
       w.northernIsland ? { ...w.northernIsland, resources: undefined } : null,
       w.terrain,
+      earthworkTerrainSnapshot(w.earthworks),
       w.coastalBluffs,
       w.additionalResources?.map((n) => [n.id, n.item, n.x, n.z]),
       w.resourceRelocations,

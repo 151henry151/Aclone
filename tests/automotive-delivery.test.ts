@@ -51,7 +51,7 @@ function setup(product: AutomotiveProduct = 'tractor') {
 }
 
 test('append the highway tractor without reassigning any existing fleet slot', () => {
-  assert.equal(vehicles.length, 38);
+  assert.equal(vehicles.length, 40);
   assert.equal(vehicles[35].name, 'Coastal cargo boat');
   assert.match(vehicles[36].name, /rowboat/i);
   assert.equal(vehicles[TRUCK].name, 'Highway tractor unit');

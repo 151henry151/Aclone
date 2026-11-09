@@ -1,3 +1,4 @@
+import { earthworkTerrainSnapshot } from '../shared/earthworks-ground';
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { World } from '../shared/types';
 import { terrainHeight } from '../shared/terrain';
@@ -11,6 +12,7 @@ export type ChartWorld = Pick<
   | 'terrainMapSize'
   | 'northernIsland'
   | 'terrain'
+  | 'earthworks'
   | 'landscape'
   | 'coastalBluffs'
   | 'airfield'
@@ -37,6 +39,7 @@ export function chartWorld(w: World): ChartWorld {
     terrainMapSize: w.terrainMapSize,
     northernIsland: w.northernIsland ? { ...w.northernIsland, resources: [] } : undefined,
     terrain: w.terrain,
+    earthworks: earthworkTerrainSnapshot(w.earthworks),
     landscape: w.landscape?.heightmap
       ? ({ heightmap: w.landscape.heightmap } as World['landscape'])
       : undefined,
