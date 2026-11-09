@@ -17,7 +17,7 @@ as 0.136.0. Cold-scenery survey scheduling is released as 0.136.1 and parked
 vehicle batching as 0.136.2. Distant-island culling is released as 0.136.3 and
 stationary ground/river transforms as 0.136.4. The profiled and unprofiled
 populated-world checks for those earlier releases are recorded below. Automotive
-manufacturing and highway haulage are ready for the authorized 0.137.0 checkpoint.
+manufacturing and highway haulage are released in the authorized 0.137.0 checkpoint.
 Gameplay/economic tests and the corrected factory-camera browser pass. The final
 populated replay still fails the 100 ms heartbeat target at 131.87 ms. On
 2026-11-09 Henry explicitly requested commit, push, deploy and announce after
@@ -337,7 +337,8 @@ implementation order rather than building paving before ford-aware persistence.
     sign-off/sign-in/towing/solid footprints and trailers; NPC return constraint;
     mount/dismount and approach/panel timing on desktop/mobile/controller.
 19. **Alternate road routes and gradual city paving** together with **River
-    crossings, bridges and highway haulage**, in this exact sub-order:
+    crossings, bridges and highway haulage — gameplay delivered through 0.137.0**
+    (known performance gate exception authorized on 2026-11-09), in this exact sub-order:
     - Survey current settlements and haulage economics read-only; define shared
       city/surface/ford/bridge records and configurable defaults. Decide access,
       toll and refrigeration policies before their implementations.
@@ -348,12 +349,12 @@ implementation order rather than building paving before ford-aware persistence.
       paving, rural lanes staying dirt, one boundary exit, city-only trunks,
       bank-ending paved projects and dirt feeders. Dirt fords never count as paved
       links; usable bridge integration belongs to the following stage.
-    - Expensive contributed bridge construction, reservations, approaches,
+    - **Done, live in 0.136.0:** expensive contributed bridge construction, reservations, approaches,
       maintenance/removal and old-ford preservation.
-    - Automotive factory construction, inputs/staffing and manufactured orders
+    - **Done, live in 0.137.0:** automotive factory construction, inputs/staffing and manufactured orders
       and deliveries; then detailed highway tractors and specialised trailers,
       articulation, loading, surface speeds and profitable long-run balance.
-    - Restart/export, concurrent construction, water/terrain/obstruction edits,
+    - **Gameplay checks pass:** restart/export, concurrent construction, water/terrain/obstruction edits,
       bridge removal, growth/shrinkage and browser travel validation.
 20. **Earthmoving machines and a building slope limit** (factory and solid
     scenery now exist): grade rule/refusal/site shading; cached earthwork pads;
@@ -10020,3 +10021,27 @@ gallery, interactive previews and WebGL/no-JavaScript fallbacks. Preserve the
 known 131.87 ms performance failure as the explicitly accepted release exception.
 The source is split into manufacturing 97c30fe, pedestrian warmup 163bc52 and
 survival copying cbe5498; release metadata follows as a separate commit.
+
+### 0.137.0 checkpoint live — 2026-11-09
+
+Push and deploy release commit `6794609b55e639ad803091325f39b3c6db48c542` on
+`backlog-implementation`; verify the exact SHA through GitHub and on the server.
+The service is active/running with zero restarts; public health reports 0.137.0
+and all five worlds. The prefixed JavaScript asset loads successfully. Publish
+the website and verify the live entry page and automotive factory gallery in a
+fresh unauthenticated browser, with no page errors or player-data changes.
+
+Database backup: `/var/lib/aclone/backups/pre-deploy-20261109-082451.sqlite`.
+Website backup: `/var/backups/aclone-website/site-20261109-082612.tar.gz`.
+
+The announcement is posted by aclone-bot in #announcements with three verified
+1440 × 900 real-game images: highway rig, automotive factory and loaded bridge
+crossing. It mentions the World Builder controls together and explicitly retains
+the intermittent-lag caveat. Announcement:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569342597799874754
+
+Item 19 gameplay is delivered. The 131.87 ms server pause remains an open
+performance issue under Henry's explicit checkpoint-release exception; its
+100 ms test has not been weakened. No player grant, main push, pull request or
+new backlog implementation is part of this release. Keep the next backlog item
+pending. Local evidence and bot receipt: output/automotive-factory/release/.
