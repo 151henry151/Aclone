@@ -2,6 +2,14 @@
 
 **A small, persistent universe with an unreasonable number of tractors.**
 
+Version 0.137.0 adds **manufactured highway trucks and full-size semitrailers**.
+Build and supply an automotive factory, hire engineers, then sell its finite
+output to players or limited external buyers. Couple box, refrigerated or timber
+trailers for heavy road freight. World Builder controls the economics and
+handling. Reload after updating. See [automotive assembly](docs/PLAYING.md#automotive-assembly)
+and [measured haulage economics](docs/HAULAGE.md#manufactured-highway-haulage).
+The intermittent server pause remains an open performance issue.
+
 Version 0.136.4 reuses stationary ground and river transforms, removing repeated
 CPU calculations for 590 meshes in the populated test scene. Terrain rebuilding,
 water animation and flight approaches remain intact. This reduces redundant work;
@@ -49,7 +57,7 @@ zoom or position. Local searches avoid remote ford surveys and unnecessary road
 comparisons.
 
 Version 0.133.0 lets dirt roads find usable river fords. City paving follows in 0.135.0;
-player-built bridges follow in 0.136.0. The released game is 0.136.4, and remaining client frame-rate dips are still being tracked.
+player-built bridges follow in 0.136.0. The released game is 0.137.0, and remaining client frame-rate dips are still being tracked.
 
 Version 0.132.1 keeps NPC decision preparation from blocking movement, with
 background preparation and bounded request phases. It also avoids repeatedly
@@ -70,7 +78,7 @@ See [parking and arriving](docs/PLAYING.md#parking-and-arriving).
 
 [Play the alpha](https://nogits.com/aclone/) · [Building gallery](https://nogits.com/buildings/) · [Player guide](docs/PLAYING.md) · [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
-**Version 0.136.4 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
+**Version 0.137.0 · development alpha · GPL-3.0-or-later · Node.js 24.22.1+ (24.x LTS)**
 
 Version 0.131.8 keeps movement and network updates running while periodic world saves
 wait on the disk. Saves remain atomic and fully durable; account/NPC changes wait
@@ -165,7 +173,11 @@ remain editable. See [contact rules](docs/WORLD_BUILDING.md#solid-scenery-and-ve
 
 The development [backlog](docs/BACKLOG.md) and [implementation order](docs/BACKLOG_PLAN.md)
 include later, optional land-use districts, regional freight and desert terrain,
-oil extraction and petrol stations. These remain planned features.
+oil extraction and petrol stations. These remain planned features. Highway haulage
+and automotive manufacturing are included in 0.137.0. The factory camera and
+survival-copy regressions pass; the latest populated-world test still records a
+132 ms server pause against the 100 ms target. Henry authorized this checkpoint's
+release with that issue documented for follow-up. See the plan for verification.
 
 Version 0.123.0’s Calendar rules let world builders choose year and season lengths. Planting,
 winter crop losses and daylight follow the local seasons; existing loan schedules

@@ -6,6 +6,8 @@ All notable changes to Aclone are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.137.0] - 2026-11-09
+
 ### Added
 
 - Build automotive factories and manufacture finite vehicles from supplied materials, reserved payroll and qualified engineering work; retain orders, completed inventory and estate value across restarts.
@@ -17,7 +19,6 @@ All notable changes to Aclone are documented here. This project follows
 ### Fixed
 
 - Prepare walking residents and rain-umbrella graphics during world loading.
-
 - Avoid world-wide freshness scans for ordinary meals and repeated world copies during survival updates; preserve refrigerated-trailer fuel use and exact room-expiry times.
 - Keep the highway chase camera outside nearby building walls and roofs when collecting and driving a truck.
 - Keep highway-truck resident travel in its owned vehicle and use wider semitrailer turns without relaxing collisions or articulation limits.

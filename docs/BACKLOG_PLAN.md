@@ -10012,3 +10012,11 @@ check fails because the new factory lacks its catalogue gallery image. Generate
 only automotiveFactory through the existing real-model architecture renderer,
 review its contact sheet, add the WebP asset and rerun website checks. Preserve
 the failure log under output/automotive-factory/release/website-check.log.
+
+Release preparation checks pass: the prefixed game build/TypeScript is clean.
+Generate and review the real-model factory gallery image, then pass the website
+check at four screen widths, all images/navigation/keyboard focus, the 55-building
+gallery, interactive previews and WebGL/no-JavaScript fallbacks. Preserve the
+known 131.87 ms performance failure as the explicitly accepted release exception.
+The source is split into manufacturing 97c30fe, pedestrian warmup 163bc52 and
+survival copying cbe5498; release metadata follows as a separate commit.

@@ -2,6 +2,59 @@
 
 Historical feature summaries moved from the README, followed by upgrade details and validation records. For current behavior use the [player guide](PLAYING.md); for changes by release/date use [CHANGELOG](../CHANGELOG.md). Older descriptions can be superseded (notably offline starvation in 0.15.0, waterworks seeding in 0.21.2 and NPC providers).
 
+## 0.137.0 — Manufacture highway trucks and haul full-size loads
+
+**Known performance issue:** the final populated replay records a 131.87 ms
+server heartbeat against the unchanged 100 ms target. Henry authorized release
+of this checkpoint on 2026-11-09 after that result was reported. This is a release
+exception, not a passing performance test. The factory camera passes the stronger
+body-visibility browser test and video review; 40 survival/provision and nine
+camera checks pass. Removing repeated world copies did not resolve the server
+pause. Frame p95 is 57.1 ms, maximum 92.9 ms, minimum FPS 25 and maximum ping
+114 ms. Earlier passing measurements below remain historical evidence.
+
+Build a large automotive factory, supply its materials and fund its engineering
+crew. Assembly reserves actual inputs and payroll; finished units are finite
+stock, purchased and collected in a clear yard. The new highway tractor pulls
+box, refrigerated and timber semitrailers. Use pavement for roughly 65 mph,
+dirt roads for 45 mph and ordinary tractors for smaller jobs and rough ground.
+The whole rig participates in collisions, bridge clearance and reversing.
+Refrigeration consumes its own fuel and slows existing raw-meat ageing without
+resetting freshness or adding a fish expiry system.
+
+External collectors buy at 80% of the world product price before sales tax, with
+one collection place per six real hours shared across the world by default.
+World Builder configures this outlet and the factory, recipes, performance,
+geometry and refrigeration. Residents use ordinary paid supply, work, purchase
+and assembly actions. No factories, vehicles or inputs are granted on upgrade.
+Existing vehicle slots retain their meanings; the highway tractor is appended.
+Reload the client after deployment.
+
+Validate the 249-test manufacturing/driving/direct-consumer run, the 110-test
+road/city/bridge boundary run, and focused follow-ups for collection countdowns,
+NPC input bids and parked batching. Browser flows cover real assembly, blocked
+then successful delivery, empty and unpowered states, limited exports, World
+Builder changes, reversing/coupling, keyboard/controller/touch brakes, lamps,
+visible timber loads, a narrow-gate refusal and a fully loaded river crossing.
+Startup flows verify missing textures, neutral input and prepared pedestrian
+shaders. Keep TypeScript, formatting and production builds clean.
+
+The paid factory replay makes twelve units, sells eleven and retains one unsold;
+its combined owner/business contribution is 295.2521s after inputs, crew and sales
+tax, excluding construction/transport. The full steel trip uses 7,500 purchased
+ore to manufacture 1,500 steel over 250 production hours, sells to a finite funded
+buyer and returns empty. Its 438.0024s contribution includes fuel/wear provisions,
+but excludes 880s truck/trailer capital and is not repeatable seven-minute income.
+See HAULAGE.md for the production and handling bottlenecks.
+
+An earlier populated loaded-rig replay passed the original <100 ms server heartbeat gate
+(maximum 79.57 ms), with 41 ms maximum ping, 8 cm maximum correction, working
+assembly, resident decisions, route arrival and daily road growth. Frame p95 is
+52.3 ms, maximum 117.8 ms (one frame over 100 ms), minimum FPS 28. A profiled
+repeat passes at 87.12 ms heartbeat and 87.7 ms maximum frame interval but does
+not reproduce or isolate the earlier hitch. Remaining client frame dips are
+open; this release does not claim perfect performance on every machine.
+
 ## 0.136.4 — Reuse stationary terrain and river transforms
 
 Cache the fixed transforms of completed ground tiles and river/bank meshes using
