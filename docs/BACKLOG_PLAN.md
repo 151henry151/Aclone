@@ -356,7 +356,7 @@ implementation order rather than building paving before ford-aware persistence.
       articulation, loading, surface speeds and profitable long-run balance.
     - **Gameplay checks pass:** restart/export, concurrent construction, water/terrain/obstruction edits,
       bridge removal, growth/shrinkage and browser travel validation.
-20. **Earthmoving machines and a building slope limit** (factory and solid
+20. **Done, live in 0.139.0 — Earthmoving machines and a building slope limit** (factory and solid
     scenery now exist): grade rule/refusal/site shading; cached earthwork pads;
     plant licence/manufactured machines; survey/passes/material balance and
     weathering; contracts/permissions/NPC posting; hillside-to-building browser
@@ -10888,3 +10888,35 @@ Prepare the coherent feature as 0.139.0 under standing commit/push/deploy and
 screenshot-announcement authorization. Update release/player/world-builder docs.
 Keep item 20 pending release verification until the branch is pushed and the live
 checks succeed. No later backlog item has been started.
+
+### Item 20 release verification — 0.139.0
+
+**Done and live.** Commit `fce33e56c3c092fb72d39b27dd05ea9eeb91a061`
+adds the complete remaining earthmoving feature and was pushed only to
+`backlog-implementation`. Verify the same SHA through GitHub and the live
+checkout. No PR or push to main. Final TypeScript/production build,
+changed-file Prettier and whitespace checks pass. The untracked node_modules
+symlink, output artifacts and NPC status files remain unstaged.
+
+Deploy with `DEPLOY_REF=fce33e56c3c092fb72d39b27dd05ea9eeb91a061 bash scripts/deploy-nogits.sh`.
+The online SQLite backup is
+`/var/lib/aclone/backups/pre-deploy-20261109-184718.sqlite`.
+Public health reports 0.139.0 and five worlds; systemd is active. Publish the
+website with scripts/deploy-website.sh; its backup is
+`/var/backups/aclone-website/site-20261109-184832.tar.gz`.
+The public game entry, website version, illustrated world-building guide and
+factory gallery load without browser errors. Check the new technical settings
+in WORLD_BUILDING.md at the released commit too: an initial extra smoke probe
+incorrectly expected those headings in the separate beginner guide generated
+from WORLD_BUILDING_GUIDE.md; correct the target while retaining the reference
+content assertions. This required no product change.
+
+Post and verify the authorized announcement as aclone-bot, with three inspected
+screenshots covering both machines, the graded hillside and a funded contract:
+https://discord.com/channels/1562183434254680175/1565527790785404968/1569499646269853801
+The images are explicitly identified as local release-verification worlds.
+Evidence and receipts are under output/earthworks/release/, untracked. No live
+player grants or terrain edits were made. The intermittent server-pause issue
+remains open; terrain benchmark acceptance is against Henry's selected 0.138.1
+baseline and does not claim overall FPS improvement. No later backlog item was
+started during this earthmoving release.
